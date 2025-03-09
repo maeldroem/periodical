@@ -1,0 +1,24 @@
+[package]
+name = "periodical"
+version = "0.1.0"
+authors = ["Mældrøm"]
+edition = "2024"
+description = "Management of all kinds of time intervals, repeating intervals, scheduling operations and much more!"
+documentation = "https://docs.rs/periodical"
+repository = "https://github.com/maeldroem/periodical"
+license = "BSD-3-Clause"
+keywords = ["time", "interval", "ranges", "scheduling", "periods"]
+categories = ["date-and-time"]
+
+[lints.clippy]
+complexity = "warn"
+perf = "warn"
+style = "warn"
+pedantic = "warn"
+
+[features]
+serde = ["dep:serde", "chrono/serde"]
+
+[dependencies]
+chrono = "0.4.40"
+serde = { version = "1.0.219", optional = true }
