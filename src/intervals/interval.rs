@@ -169,3 +169,97 @@ impl Interval {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::test_utils::datetime;
+
+    fn interval_openness_provider() -> Vec<(Interval, Option<Openness>)> {
+        vec![
+            (
+                // Interval
+                Interval::ClosedAbsolute(ClosedAbsoluteInterval::new(
+                    datetime(&Utc, 2025, 1, 1, 8, 0, 0),
+                    datetime(&Utc, 2025, 1, 1, 16, 0, 0),
+                )),
+                // Expected
+                Some(Openness::Closed),
+            ),
+            (
+                Interval::ClosedRelative(ClosedRelativeInterval::new(
+                    Duration::hours(8),
+                    Duration::hours(8),
+                )),
+                Some(Openness::Closed),
+            ),
+            (
+                Interval::HalfOpenAbsolute(HalfOpenAbsoluteInterval::new(
+                    datetime(&Utc, 2025, 1, 1, 8, 0, 0),
+                    OpeningDirection::ToFuture,
+                )),
+                Some(Openness::HalfOpen),
+            ),
+            (
+                Interval::HalfOpenRelative(HalfOpenRelativeInterval::new(
+                    Duration::hours(8),
+                    OpeningDirection::ToPast,
+                )),
+                Some(Openness::HalfOpen),
+            ),
+            (Interval::Open(OpenInterval), Some(Openness::Open)),
+            (Interval::Empty(EmptyInterval), None),
+        ]
+    }
+
+    fn interval_relativity_provider() -> Vec<(Interval, Option<Relativity>)> {
+        vec![
+            (
+                // Interval
+                Interval::ClosedAbsolute(ClosedAbsoluteInterval::new(
+                    datetime(&Utc, 2025, 1, 1, 8, 0, 0),
+                    datetime(&Utc, 2025, 1, 1, 16, 0, 0),
+                )),
+                // Expected
+                Some(Relativity::Absolute),
+            ),
+            (
+                Interval::ClosedRelative(ClosedRelativeInterval::new(
+                    Duration::hours(8),
+                    Duration::hours(8),
+                )),
+                Some(Relativity::Relative),
+            ),
+            (
+                Interval::HalfOpenAbsolute(HalfOpenAbsoluteInterval::new(
+                    datetime(&Utc, 2025, 1, 1, 8, 0, 0),
+                    OpeningDirection::ToFuture,
+                )),
+                Some(Relativity::Absolute),
+            ),
+            (
+                Interval::HalfOpenRelative(HalfOpenRelativeInterval::new(
+                    Duration::hours(8),
+                    OpeningDirection::ToPast,
+                )),
+                Some(Relativity::Relative),
+            ),
+            (Interval::Open(OpenInterval), None),
+            (Interval::Empty(EmptyInterval), None),
+        ]
+    }
+
+    #[test]
+    fn interval_openness() {
+        for (interval, expected) in interval_openness_provider() {
+            assert_eq!(interval.openness(), expected);
+        }
+    }
+
+    #[test]
+    fn interval_relativity() {
+        for (interval, expected) in interval_relativity_provider() {
+            assert_eq!(interval.relativity(), expected);
+        }
+    }
+}
