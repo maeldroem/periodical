@@ -2,6 +2,9 @@ use chrono::{DateTime, Duration, Utc};
 
 use super::meta::{Duration as IntervalDuration, OpeningDirection, Openness, Relativity};
 
+/// A closed absolute interval
+///
+/// Interval set with absolute time, with a defined start and end
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ClosedAbsoluteInterval {
     from: DateTime<Utc>,
@@ -9,12 +12,40 @@ pub struct ClosedAbsoluteInterval {
 }
 
 impl ClosedAbsoluteInterval {
+    /// Creates a new instance of a closed absolute interval
     #[must_use]
     pub fn new(from: DateTime<Utc>, to: DateTime<Utc>) -> Self {
         ClosedAbsoluteInterval { from, to }
     }
+
+    /// Returns a reference to the start time
+    #[must_use]
+    pub fn from(&self) -> &DateTime<Utc> {
+        &self.from
+    }
+
+    /// Returns a reference to the end time
+    #[must_use]
+    pub fn to(&self) -> &DateTime<Utc> {
+        &self.to
+    }
+
+    /// Returns a mutable reference to the start time
+    #[must_use]
+    pub fn from_mut(&mut self) -> &mut DateTime<Utc> {
+        &mut self.from
+    }
+
+    /// Returns a mutable reference to the end time
+    #[must_use]
+    pub fn to_mut(&mut self) -> &mut DateTime<Utc> {
+        &mut self.to
+    }
 }
 
+/// A closed relative interval
+///
+/// An interval set with relative time, with a defined start and end
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ClosedRelativeInterval {
     offset: Duration,
@@ -22,12 +53,41 @@ pub struct ClosedRelativeInterval {
 }
 
 impl ClosedRelativeInterval {
+    /// Creates a new instance of a closed relative interval
     #[must_use]
     pub fn new(offset: Duration, length: Duration) -> Self {
         ClosedRelativeInterval { offset, length }
     }
+
+    /// Returns a reference to the offset
+    #[must_use]
+    pub fn offset(&self) -> &Duration {
+        &self.offset
+    }
+
+    /// Returns a reference to the length
+    #[must_use]
+    pub fn length(&self) -> &Duration {
+        &self.length
+    }
+
+    /// Returns a mutable reference to the offset
+    #[must_use]
+    pub fn offset_mut(&mut self) -> &mut Duration {
+        &mut self.offset
+    }
+
+    /// Returns a mutable reference to the length
+    #[must_use]
+    pub fn length_mut(&mut self) -> &mut Duration {
+        &mut self.length
+    }
 }
 
+/// A half-open absolute interval
+///
+/// An interval set with absolute time, has a defined reference time and an opening direction (only one defined bound).
+/// Infinite duration.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct HalfOpenAbsoluteInterval {
     reference_time: DateTime<Utc>,
@@ -35,6 +95,7 @@ pub struct HalfOpenAbsoluteInterval {
 }
 
 impl HalfOpenAbsoluteInterval {
+    /// Creates a new instance of a half-open absolute interval
     #[must_use]
     pub fn new(reference_time: DateTime<Utc>, opening_direction: OpeningDirection) -> Self {
         HalfOpenAbsoluteInterval {
@@ -42,8 +103,30 @@ impl HalfOpenAbsoluteInterval {
             opening_direction,
         }
     }
+
+    /// Returns a reference to the reference time
+    #[must_use]
+    pub fn reference_time(&self) -> &DateTime<Utc> {
+        &self.reference_time
+    }
+
+    /// Returns the opening direction of the interval
+    #[must_use]
+    pub fn opening_direction(&self) -> OpeningDirection {
+        self.opening_direction
+    }
+
+    /// Returns a mutable reference to the reference time
+    #[must_use]
+    pub fn reference_time_mut(&mut self) -> &mut DateTime<Utc> {
+        &mut self.reference_time
+    }
 }
 
+/// A half-open relative interval
+///
+/// An interval set with relative time, has a relative reference time (offset) and an opening direction.
+/// Infinite duration.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct HalfOpenRelativeInterval {
     offset: Duration,
@@ -51,6 +134,7 @@ pub struct HalfOpenRelativeInterval {
 }
 
 impl HalfOpenRelativeInterval {
+    /// Creates a new instance of a half-open relative interval
     #[must_use]
     pub fn new(offset: Duration, opening_direction: OpeningDirection) -> Self {
         HalfOpenRelativeInterval {
@@ -58,8 +142,30 @@ impl HalfOpenRelativeInterval {
             opening_direction,
         }
     }
+
+    /// Returns a reference to the offset
+    #[must_use]
+    pub fn offset(&self) -> &Duration {
+        &self.offset
+    }
+
+    /// Returns the opening direction of the interval
+    #[must_use]
+    pub fn opening_direction(&self) -> OpeningDirection {
+        self.opening_direction
+    }
+
+    /// Returns a mutable reference to the offset
+    #[must_use]
+    pub fn offset_mut(&mut self) -> &mut Duration {
+        &mut self.offset
+    }
 }
 
+/// An open interval
+///
+/// Interval without relativity (not absolute nor relative) and without any bounds.
+/// Is equivalent to _time itself_ (all time), infinite duration.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct OpenInterval;
 
@@ -167,6 +273,42 @@ impl Interval {
             )),
             _ => self.clone(),
         }
+    }
+}
+
+impl From<ClosedAbsoluteInterval> for Interval {
+    fn from(value: ClosedAbsoluteInterval) -> Self {
+        Interval::ClosedAbsolute(value)
+    }
+}
+
+impl From<ClosedRelativeInterval> for Interval {
+    fn from(value: ClosedRelativeInterval) -> Self {
+        Interval::ClosedRelative(value)
+    }
+}
+
+impl From<HalfOpenAbsoluteInterval> for Interval {
+    fn from(value: HalfOpenAbsoluteInterval) -> Self {
+        Interval::HalfOpenAbsolute(value)
+    }
+}
+
+impl From<HalfOpenRelativeInterval> for Interval {
+    fn from(value: HalfOpenRelativeInterval) -> Self {
+        Interval::HalfOpenRelative(value)
+    }
+}
+
+impl From<OpenInterval> for Interval {
+    fn from(value: OpenInterval) -> Self {
+        Interval::Open(value)
+    }
+}
+
+impl From<EmptyInterval> for Interval {
+    fn from(value: EmptyInterval) -> Self {
+        Interval::Empty(value)
     }
 }
 

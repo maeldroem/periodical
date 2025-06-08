@@ -1,4 +1,10 @@
-use chrono::Duration;
+use std::cmp::Ordering;
+
+use chrono::{DateTime, Duration, Utc};
+
+use crate::intervals::Interval;
+use crate::intervals::interval::{ClosedAbsoluteInterval, HalfOpenAbsoluteInterval};
+use crate::intervals::meta::{OpeningDirection, Relativity};
 
 /// Time precision used for comparisons
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
@@ -12,7 +18,7 @@ pub enum Precision {
 }
 
 /// Where the given time was found relative to a time interval
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum ContainmentPosition {
     /// The given time was found before the time interval's beginning
     OutsideBefore,
@@ -28,8 +34,15 @@ pub enum ContainmentPosition {
     Inside,
 }
 
+/// Errors that can happen when computing the containment position of some time inside an interval
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum ContainmentPositionError {
+    /// The interval is relative, therefore we can't determine the containment position of the given time
+    RelativeInterval,
+}
+
 /// Where the other time interval was found relative to the current time interval
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum OverlapPosition {
     /// The given other time interval was found before the time interval
     OutsideBefore,
@@ -59,4 +72,68 @@ pub enum OverlapPosition {
     ContainsAndSameEnd,
     /// The given other time interval was found beginning before the time interval's start and ending after the time interval's end
     Contains,
+}
+
+/// Errors that can happen when computing the overlap position of two intervals
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+enum OverlapPositionError {
+    RelativeInterval,
+}
+
+impl Interval {
+    pub fn containment_position(
+        &self,
+        time: DateTime<Utc>,
+    ) -> Result<ContainmentPosition, ContainmentPositionError> {
+        match self {
+            Interval::ClosedRelative(_) | Interval::HalfOpenRelative(_) => {
+                Err(ContainmentPositionError::RelativeInterval)
+            }
+            Interval::ClosedAbsolute(interval) => Ok(containment_position_closed(interval, time)),
+            Interval::HalfOpenAbsolute(interval) => {
+                Ok(containment_position_half_open(interval, time))
+            }
+            Interval::Empty(_) => Ok(ContainmentPosition::Outside),
+            Interval::Open(_) => Ok(ContainmentPosition::Inside),
+        }
+    }
+
+    #[must_use]
+    pub fn overlap_position(&self, other: &Self) -> Result<OverlapPosition, OverlapPositionError> {
+        if matches!(self.relativity(), Some(Relativity::Relative))
+            || matches!(other.relativity(), Some(Relativity::Relative))
+        {}
+
+        todo!()
+    }
+}
+
+fn containment_position_closed(
+    interval: &ClosedAbsoluteInterval,
+    time: DateTime<Utc>,
+) -> ContainmentPosition {
+    match (time.cmp(interval.from()), time.cmp(interval.to())) {
+        (Ordering::Less, _) => ContainmentPosition::OutsideBefore,
+        (_, Ordering::Greater) => ContainmentPosition::OutsideAfter,
+        (Ordering::Equal, _) => ContainmentPosition::OnStart,
+        (_, Ordering::Equal) => ContainmentPosition::OnEnd,
+        (Ordering::Greater, Ordering::Less) => ContainmentPosition::Inside,
+    }
+}
+
+fn containment_position_half_open(
+    interval: &HalfOpenAbsoluteInterval,
+    time: DateTime<Utc>,
+) -> ContainmentPosition {
+    match (
+        time.cmp(interval.reference_time()),
+        interval.opening_direction(),
+    ) {
+        (Ordering::Less, OpeningDirection::ToPast)
+        | (Ordering::Greater, OpeningDirection::ToFuture) => ContainmentPosition::Inside,
+        (Ordering::Equal, OpeningDirection::ToPast) => ContainmentPosition::OnEnd,
+        (Ordering::Greater, OpeningDirection::ToPast) => ContainmentPosition::OutsideAfter,
+        (Ordering::Less, OpeningDirection::ToFuture) => ContainmentPosition::OutsideBefore,
+        (Ordering::Equal, OpeningDirection::ToFuture) => ContainmentPosition::OnStart,
+    }
 }
