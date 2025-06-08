@@ -76,35 +76,79 @@ pub enum OverlapPosition {
 
 /// Errors that can happen when computing the overlap position of two intervals
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-enum OverlapPositionError {
+pub enum OverlapPositionError {
     RelativeInterval,
+    MalformedInterval,
 }
 
 impl Interval {
+    /// Returns the containment position of the given time
+    ///
+    /// # Errors
+    ///
+    /// If the interval the operation is done on is relative, the methods returns [`ContainmentPositionError::RelativeInterval`]
     pub fn containment_position(
         &self,
         time: DateTime<Utc>,
     ) -> Result<ContainmentPosition, ContainmentPositionError> {
         match self {
-            Interval::ClosedRelative(_) | Interval::HalfOpenRelative(_) => {
+            Self::ClosedRelative(_) | Self::HalfOpenRelative(_) => {
                 Err(ContainmentPositionError::RelativeInterval)
             }
-            Interval::ClosedAbsolute(interval) => Ok(containment_position_closed(interval, time)),
-            Interval::HalfOpenAbsolute(interval) => {
-                Ok(containment_position_half_open(interval, time))
-            }
-            Interval::Empty(_) => Ok(ContainmentPosition::Outside),
-            Interval::Open(_) => Ok(ContainmentPosition::Inside),
+            Self::ClosedAbsolute(interval) => Ok(containment_position_closed(interval, time)),
+            Self::HalfOpenAbsolute(interval) => Ok(containment_position_half_open(interval, time)),
+            Self::Empty(_) => Ok(ContainmentPosition::Outside),
+            Self::Open(_) => Ok(ContainmentPosition::Inside),
         }
     }
 
-    #[must_use]
+    /// Returns the overlap position of the given interval
+    ///
+    /// The other interval is compared to the current interval, that means that if you, for example, compare
+    /// a closed absolute interval (instance) with an open interval (given interval), you will get [`OverlapPosition::Contains`]
+    /// as the open interval _contains_ any closed absolute interval.
+    ///
+    /// # Errors
+    ///
+    /// - Returns [`OverlapPositionError::RelativeInterval`] if the current or given interval is relative.
+    /// - Returns [`OverlapPositionError::MalformedInterval`] if the current or given interval is malformed in any way
+    ///   (e.g. the start time is after the end time)
     pub fn overlap_position(&self, other: &Self) -> Result<OverlapPosition, OverlapPositionError> {
-        if matches!(self.relativity(), Some(Relativity::Relative))
-            || matches!(other.relativity(), Some(Relativity::Relative))
-        {}
-
-        todo!()
+        match (self, other) {
+            (Self::ClosedRelative(_) | Self::HalfOpenRelative(_), _)
+            | (_, Self::ClosedRelative(_) | Self::HalfOpenRelative(_)) => {
+                Err(OverlapPositionError::RelativeInterval)
+            }
+            (Self::ClosedAbsolute(interval), Self::ClosedAbsolute(other_interval)) => {
+                overlap_position_closed_pair(interval, other_interval)
+            }
+            (Self::ClosedAbsolute(interval), Self::HalfOpenAbsolute(other_interval)) => {
+                overlap_position_closed_half_open(interval, other_interval)
+            }
+            (Self::HalfOpenAbsolute(interval), Self::ClosedAbsolute(other_interval)) => {
+                overlap_position_half_open_closed(interval, other_interval)
+            }
+            (Self::HalfOpenAbsolute(interval), Self::HalfOpenAbsolute(other_interval)) => {
+                overlap_position_half_open_pair(interval, other_interval)
+            }
+            // empty intervals are not comparable through time as they don't have a specific time frame
+            (Self::Empty(_), _) | (_, Self::Empty(_)) => Ok(OverlapPosition::Outside),
+            (Self::Open(_), Self::Open(_)) => Ok(OverlapPosition::Equal),
+            (Self::Open(_), Self::HalfOpenAbsolute(half_open_interval)) => {
+                match half_open_interval.opening_direction() {
+                    OpeningDirection::ToPast => Ok(OverlapPosition::InsideAndSameStart),
+                    OpeningDirection::ToFuture => Ok(OverlapPosition::InsideAndSameEnd),
+                }
+            }
+            (Self::Open(_), Self::ClosedAbsolute(_)) => Ok(OverlapPosition::Inside),
+            (Self::HalfOpenAbsolute(half_open_interval), Self::Open(_)) => {
+                match half_open_interval.opening_direction() {
+                    OpeningDirection::ToPast => Ok(OverlapPosition::ContainsAndSameStart),
+                    OpeningDirection::ToFuture => Ok(OverlapPosition::ContainsAndSameEnd),
+                }
+            }
+            (Self::ClosedAbsolute(_), Self::Open(_)) => Ok(OverlapPosition::Contains),
+        }
     }
 }
 
@@ -136,4 +180,32 @@ fn containment_position_half_open(
         (Ordering::Less, OpeningDirection::ToFuture) => ContainmentPosition::OutsideBefore,
         (Ordering::Equal, OpeningDirection::ToFuture) => ContainmentPosition::OnStart,
     }
+}
+
+fn overlap_position_closed_pair(
+    a: &ClosedAbsoluteInterval,
+    b: &ClosedAbsoluteInterval,
+) -> Result<OverlapPosition, OverlapPositionError> {
+    todo!()
+}
+
+fn overlap_position_closed_half_open(
+    a: &ClosedAbsoluteInterval,
+    b: &HalfOpenAbsoluteInterval,
+) -> Result<OverlapPosition, OverlapPositionError> {
+    todo!()
+}
+
+fn overlap_position_half_open_closed(
+    a: &HalfOpenAbsoluteInterval,
+    b: &ClosedAbsoluteInterval,
+) -> Result<OverlapPosition, OverlapPositionError> {
+    todo!()
+}
+
+fn overlap_position_half_open_pair(
+    a: &HalfOpenAbsoluteInterval,
+    b: &HalfOpenAbsoluteInterval,
+) -> Result<OverlapPosition, OverlapPositionError> {
+    todo!()
 }
