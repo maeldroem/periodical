@@ -67,6 +67,14 @@ impl ClosedAbsoluteInterval {
         self.to_inclusivity
     }
 
+    /// Returns whether the interval is malformed
+    ///
+    /// The interval is considered malformed if the from time is past the to time.
+    #[must_use]
+    pub fn is_malformed(&self) -> bool {
+        self.from > self.to
+    }
+
     /// Sets the from time of the interval
     pub fn set_from(&mut self, new_from: DateTime<Utc>) {
         self.from = new_from;

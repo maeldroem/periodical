@@ -4,7 +4,7 @@ use chrono::{DateTime, Duration, Utc};
 
 use crate::intervals::Interval;
 use crate::intervals::interval::{ClosedAbsoluteInterval, HalfOpenAbsoluteInterval};
-use crate::intervals::meta::{OpeningDirection, Relativity};
+use crate::intervals::meta::OpeningDirection;
 
 /// Time precision used for comparisons
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
@@ -186,7 +186,7 @@ fn overlap_position_closed_pair(
     a: &ClosedAbsoluteInterval,
     b: &ClosedAbsoluteInterval,
 ) -> Result<OverlapPosition, OverlapPositionError> {
-    if a.from() > a.to() || b.from() > b.to() {
+    if a.is_malformed() || b.is_malformed() {
         return Err(OverlapPositionError::MalformedInterval);
     }
 
@@ -216,7 +216,7 @@ fn overlap_position_closed_half_open(
     a: &ClosedAbsoluteInterval,
     b: &HalfOpenAbsoluteInterval,
 ) -> Result<OverlapPosition, OverlapPositionError> {
-    if a.from() > a.to() {
+    if a.is_malformed() {
         return Err(OverlapPositionError::MalformedInterval);
     }
 
@@ -248,7 +248,7 @@ fn overlap_position_half_open_closed(
     a: &HalfOpenAbsoluteInterval,
     b: &ClosedAbsoluteInterval,
 ) -> Result<OverlapPosition, OverlapPositionError> {
-    if b.from() > b.to() {
+    if b.is_malformed() {
         return Err(OverlapPositionError::MalformedInterval);
     }
 
