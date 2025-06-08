@@ -129,7 +129,7 @@ impl Interval {
                 overlap_position_half_open_closed(interval, other_interval)
             }
             (Self::HalfOpenAbsolute(interval), Self::HalfOpenAbsolute(other_interval)) => {
-                overlap_position_half_open_pair(interval, other_interval)
+                Ok(overlap_position_half_open_pair(interval, other_interval))
             }
             // empty intervals are not comparable through time as they don't have a specific time frame
             (Self::Empty(_), _) | (_, Self::Empty(_)) => Ok(OverlapPosition::Outside),
@@ -186,26 +186,144 @@ fn overlap_position_closed_pair(
     a: &ClosedAbsoluteInterval,
     b: &ClosedAbsoluteInterval,
 ) -> Result<OverlapPosition, OverlapPositionError> {
-    todo!()
+    if a.from() > a.to() || b.from() > b.to() {
+        return Err(OverlapPositionError::MalformedInterval);
+    }
+
+    let b_from_cmp = (b.from().cmp(a.from()), b.from().cmp(a.to()));
+    let b_to_cmp = (b.to().cmp(a.from()), b.to().cmp(a.to()));
+
+    let overlap_position = match (b_from_cmp, b_to_cmp) {
+        (_, (Ordering::Less, _)) => OverlapPosition::OutsideBefore,
+        ((_, Ordering::Greater), _) => OverlapPosition::OutsideAfter,
+        (_, (Ordering::Equal, _)) => OverlapPosition::OnStart,
+        ((_, Ordering::Equal), _) => OverlapPosition::OnEnd,
+        ((Ordering::Less, _), (_, Ordering::Less)) => OverlapPosition::CrossesStart,
+        ((Ordering::Greater, _), (_, Ordering::Greater)) => OverlapPosition::CrossesEnd,
+        ((Ordering::Greater, _), (_, Ordering::Less)) => OverlapPosition::Inside,
+        ((Ordering::Equal, _), (_, Ordering::Less)) => OverlapPosition::InsideAndSameStart,
+        ((Ordering::Greater, _), (_, Ordering::Equal)) => OverlapPosition::InsideAndSameEnd,
+        ((Ordering::Equal, _), (_, Ordering::Equal)) => OverlapPosition::Equal,
+        ((Ordering::Equal, _), (_, Ordering::Greater)) => OverlapPosition::ContainsAndSameStart,
+        ((Ordering::Less, _), (_, Ordering::Equal)) => OverlapPosition::ContainsAndSameEnd,
+        ((Ordering::Less, _), (_, Ordering::Greater)) => OverlapPosition::Contains,
+    };
+
+    Ok(overlap_position)
 }
 
 fn overlap_position_closed_half_open(
     a: &ClosedAbsoluteInterval,
     b: &HalfOpenAbsoluteInterval,
 ) -> Result<OverlapPosition, OverlapPositionError> {
-    todo!()
+    if a.from() > a.to() {
+        return Err(OverlapPositionError::MalformedInterval);
+    }
+
+    let overlap_position = match (
+        b.reference_time().cmp(a.from()),
+        b.reference_time().cmp(a.to()),
+        b.opening_direction(),
+    ) {
+        (Ordering::Less, _, OpeningDirection::ToPast) => OverlapPosition::OutsideBefore,
+        (_, Ordering::Greater, OpeningDirection::ToFuture) => OverlapPosition::OutsideAfter,
+        (Ordering::Equal, _, OpeningDirection::ToPast) => OverlapPosition::OnStart,
+        (_, Ordering::Equal, OpeningDirection::ToFuture) => OverlapPosition::OnEnd,
+        (Ordering::Greater, Ordering::Less, OpeningDirection::ToPast) => {
+            OverlapPosition::CrossesStart
+        }
+        (Ordering::Greater, Ordering::Less, OpeningDirection::ToFuture) => {
+            OverlapPosition::CrossesEnd
+        }
+        (Ordering::Equal, _, OpeningDirection::ToFuture) => OverlapPosition::ContainsAndSameStart,
+        (_, Ordering::Equal, OpeningDirection::ToPast) => OverlapPosition::ContainsAndSameEnd,
+        (Ordering::Less, _, OpeningDirection::ToFuture)
+        | (_, Ordering::Greater, OpeningDirection::ToPast) => OverlapPosition::Contains,
+    };
+
+    Ok(overlap_position)
 }
 
 fn overlap_position_half_open_closed(
     a: &HalfOpenAbsoluteInterval,
     b: &ClosedAbsoluteInterval,
 ) -> Result<OverlapPosition, OverlapPositionError> {
-    todo!()
+    if b.from() > b.to() {
+        return Err(OverlapPositionError::MalformedInterval);
+    }
+
+    let overlap_position = match (
+        b.from().cmp(a.reference_time()),
+        b.to().cmp(a.reference_time()),
+        a.opening_direction(),
+    ) {
+        (_, Ordering::Less, OpeningDirection::ToFuture) => OverlapPosition::OutsideBefore,
+        (Ordering::Greater, _, OpeningDirection::ToPast) => OverlapPosition::OutsideAfter,
+        (_, Ordering::Equal, OpeningDirection::ToFuture) => OverlapPosition::OnStart,
+        (Ordering::Equal, _, OpeningDirection::ToPast) => OverlapPosition::OnEnd,
+        (Ordering::Less, Ordering::Greater, OpeningDirection::ToFuture) => {
+            OverlapPosition::CrossesStart
+        }
+        (Ordering::Less, Ordering::Greater, OpeningDirection::ToPast) => {
+            OverlapPosition::CrossesEnd
+        }
+        (Ordering::Less, Ordering::Less, OpeningDirection::ToPast)
+        | (Ordering::Greater, Ordering::Greater, OpeningDirection::ToFuture) => {
+            OverlapPosition::Inside
+        }
+        (Ordering::Equal, Ordering::Greater, OpeningDirection::ToFuture) => {
+            OverlapPosition::InsideAndSameStart
+        }
+        (Ordering::Less, Ordering::Equal, OpeningDirection::ToPast) => {
+            OverlapPosition::InsideAndSameEnd
+        }
+    };
+
+    Ok(overlap_position)
 }
 
 fn overlap_position_half_open_pair(
     a: &HalfOpenAbsoluteInterval,
     b: &HalfOpenAbsoluteInterval,
-) -> Result<OverlapPosition, OverlapPositionError> {
-    todo!()
+) -> OverlapPosition {
+    match (
+        b.reference_time().cmp(a.reference_time()),
+        a.opening_direction(),
+        b.opening_direction(),
+    ) {
+        (Ordering::Less, OpeningDirection::ToPast, OpeningDirection::ToPast) => {
+            OverlapPosition::InsideAndSameStart
+        }
+        (Ordering::Less, OpeningDirection::ToPast, OpeningDirection::ToFuture) => {
+            OverlapPosition::CrossesEnd
+        }
+        (Ordering::Less, OpeningDirection::ToFuture, OpeningDirection::ToPast) => {
+            OverlapPosition::OutsideBefore
+        }
+        (Ordering::Less, OpeningDirection::ToFuture, OpeningDirection::ToFuture) => {
+            OverlapPosition::ContainsAndSameEnd
+        }
+        (Ordering::Equal, OpeningDirection::ToPast, OpeningDirection::ToPast)
+        | (Ordering::Equal, OpeningDirection::ToFuture, OpeningDirection::ToFuture) => {
+            OverlapPosition::Equal
+        }
+        (Ordering::Equal, OpeningDirection::ToPast, OpeningDirection::ToFuture) => {
+            OverlapPosition::OnEnd
+        }
+        (Ordering::Equal, OpeningDirection::ToFuture, OpeningDirection::ToPast) => {
+            OverlapPosition::OnStart
+        }
+        (Ordering::Greater, OpeningDirection::ToPast, OpeningDirection::ToPast) => {
+            OverlapPosition::ContainsAndSameStart
+        }
+        (Ordering::Greater, OpeningDirection::ToPast, OpeningDirection::ToFuture) => {
+            OverlapPosition::OutsideAfter
+        }
+        (Ordering::Greater, OpeningDirection::ToFuture, OpeningDirection::ToPast) => {
+            OverlapPosition::CrossesStart
+        }
+        (Ordering::Greater, OpeningDirection::ToFuture, OpeningDirection::ToFuture) => {
+            OverlapPosition::InsideAndSameEnd
+        }
+    }
 }
