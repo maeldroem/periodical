@@ -4,7 +4,7 @@ use chrono::{DateTime, Duration, Utc};
 
 use crate::intervals::Interval;
 use crate::intervals::interval::{ClosedAbsoluteInterval, HalfOpenAbsoluteInterval};
-use crate::intervals::meta::OpeningDirection;
+use crate::intervals::meta::{BoundInclusivity, OpeningDirection};
 
 /// Time precision used for comparisons
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
@@ -39,6 +39,8 @@ pub enum ContainmentPosition {
 pub enum ContainmentPositionError {
     /// The interval is relative, therefore we can't determine the containment position of the given time
     RelativeInterval,
+    /// The interval was malformed, therefore we can't determine the containment position of the given time safely
+    MalformedInterval,
 }
 
 /// Where the other time interval was found relative to the current time interval
@@ -77,7 +79,9 @@ pub enum OverlapPosition {
 /// Errors that can happen when computing the overlap position of two intervals
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum OverlapPositionError {
+    /// One interval was relative, therefore we can't determine the overlap position of the given time
     RelativeInterval,
+    /// One interval was malformed, therefore we can't determine the overlap position of the given time safely
     MalformedInterval,
 }
 
@@ -95,7 +99,7 @@ impl Interval {
             Self::ClosedRelative(_) | Self::HalfOpenRelative(_) => {
                 Err(ContainmentPositionError::RelativeInterval)
             }
-            Self::ClosedAbsolute(interval) => Ok(containment_position_closed(interval, time)),
+            Self::ClosedAbsolute(interval) => containment_position_closed(interval, time),
             Self::HalfOpenAbsolute(interval) => Ok(containment_position_half_open(interval, time)),
             Self::Empty(_) => Ok(ContainmentPosition::Outside),
             Self::Open(_) => Ok(ContainmentPosition::Inside),
@@ -155,14 +159,26 @@ impl Interval {
 fn containment_position_closed(
     interval: &ClosedAbsoluteInterval,
     time: DateTime<Utc>,
-) -> ContainmentPosition {
-    match (time.cmp(interval.from()), time.cmp(interval.to())) {
+) -> Result<ContainmentPosition, ContainmentPositionError> {
+    if interval.is_malformed() {
+        return Err(ContainmentPositionError::MalformedInterval);
+    }
+
+    let containment_position = match (time.cmp(interval.from()), time.cmp(interval.to())) {
         (Ordering::Less, _) => ContainmentPosition::OutsideBefore,
         (_, Ordering::Greater) => ContainmentPosition::OutsideAfter,
-        (Ordering::Equal, _) => ContainmentPosition::OnStart,
-        (_, Ordering::Equal) => ContainmentPosition::OnEnd,
+        (Ordering::Equal, _) => match interval.from_inclusivity() {
+            BoundInclusivity::Inclusive => ContainmentPosition::OnStart,
+            BoundInclusivity::Exclusive => ContainmentPosition::OutsideBefore,
+        },
+        (_, Ordering::Equal) => match interval.to_inclusivity() {
+            BoundInclusivity::Inclusive => ContainmentPosition::OnEnd,
+            BoundInclusivity::Exclusive => ContainmentPosition::OutsideAfter,
+        },
         (Ordering::Greater, Ordering::Less) => ContainmentPosition::Inside,
-    }
+    };
+
+    Ok(containment_position)
 }
 
 fn containment_position_half_open(
@@ -175,10 +191,20 @@ fn containment_position_half_open(
     ) {
         (Ordering::Less, OpeningDirection::ToPast)
         | (Ordering::Greater, OpeningDirection::ToFuture) => ContainmentPosition::Inside,
-        (Ordering::Equal, OpeningDirection::ToPast) => ContainmentPosition::OnEnd,
+        (Ordering::Equal, OpeningDirection::ToPast) => {
+            match interval.reference_time_inclusivity() {
+                BoundInclusivity::Inclusive => ContainmentPosition::OnEnd,
+                BoundInclusivity::Exclusive => ContainmentPosition::OutsideAfter,
+            }
+        }
         (Ordering::Greater, OpeningDirection::ToPast) => ContainmentPosition::OutsideAfter,
         (Ordering::Less, OpeningDirection::ToFuture) => ContainmentPosition::OutsideBefore,
-        (Ordering::Equal, OpeningDirection::ToFuture) => ContainmentPosition::OnStart,
+        (Ordering::Equal, OpeningDirection::ToFuture) => {
+            match interval.reference_time_inclusivity() {
+                BoundInclusivity::Inclusive => ContainmentPosition::OnStart,
+                BoundInclusivity::Exclusive => ContainmentPosition::OutsideBefore,
+            }
+        }
     }
 }
 

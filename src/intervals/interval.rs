@@ -461,6 +461,8 @@ impl Interval {
             _ => self.clone(),
         }
     }
+
+    // TODO: Convenience method like today() until_now() after_now() etc.
 }
 
 impl From<ClosedAbsoluteInterval> for Interval {
