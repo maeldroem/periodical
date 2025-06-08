@@ -1,6 +1,8 @@
 use chrono::{DateTime, Duration, Utc};
 
-use super::meta::{Duration as IntervalDuration, OpeningDirection, Openness, Relativity};
+use super::meta::{
+    BoundInclusivity, Duration as IntervalDuration, OpeningDirection, Openness, Relativity,
+};
 
 /// A closed absolute interval
 ///
@@ -9,13 +11,36 @@ use super::meta::{Duration as IntervalDuration, OpeningDirection, Openness, Rela
 pub struct ClosedAbsoluteInterval {
     from: DateTime<Utc>,
     to: DateTime<Utc>,
+    from_inclusivity: BoundInclusivity,
+    to_inclusivity: BoundInclusivity,
 }
 
 impl ClosedAbsoluteInterval {
     /// Creates a new instance of a closed absolute interval
     #[must_use]
     pub fn new(from: DateTime<Utc>, to: DateTime<Utc>) -> Self {
-        ClosedAbsoluteInterval { from, to }
+        ClosedAbsoluteInterval {
+            from,
+            to,
+            from_inclusivity: BoundInclusivity::default(),
+            to_inclusivity: BoundInclusivity::default(),
+        }
+    }
+
+    /// Creates a new instance of a closed absolute interval with given inclusivity for the bounds
+    #[must_use]
+    pub fn with_inclusivity(
+        from: DateTime<Utc>,
+        from_inclusivity: BoundInclusivity,
+        to: DateTime<Utc>,
+        to_inclusivity: BoundInclusivity,
+    ) -> Self {
+        ClosedAbsoluteInterval {
+            from,
+            to,
+            from_inclusivity,
+            to_inclusivity,
+        }
     }
 
     /// Returns a reference to the start time
@@ -30,16 +55,36 @@ impl ClosedAbsoluteInterval {
         &self.to
     }
 
-    /// Returns a mutable reference to the start time
+    /// Returns the inclusivity of the start bound
     #[must_use]
-    pub fn from_mut(&mut self) -> &mut DateTime<Utc> {
-        &mut self.from
+    pub fn from_inclusivity(&self) -> BoundInclusivity {
+        self.from_inclusivity
     }
 
-    /// Returns a mutable reference to the end time
+    /// Returns the inclusivity of the end bound
     #[must_use]
-    pub fn to_mut(&mut self) -> &mut DateTime<Utc> {
-        &mut self.to
+    pub fn to_inclusivity(&self) -> BoundInclusivity {
+        self.to_inclusivity
+    }
+
+    /// Sets the from time of the interval
+    pub fn set_from(&mut self, new_from: DateTime<Utc>) {
+        self.from = new_from;
+    }
+
+    /// Sets the to time of the interval
+    pub fn set_to(&mut self, new_to: DateTime<Utc>) {
+        self.to = new_to;
+    }
+
+    /// Sets the inclusivity of the start bound
+    pub fn set_from_inclusivity(&mut self, new_inclusivity: BoundInclusivity) {
+        self.from_inclusivity = new_inclusivity;
+    }
+
+    /// Sets the inclusivity of the end bound
+    pub fn set_to_inclusivity(&mut self, new_inclusivity: BoundInclusivity) {
+        self.to_inclusivity = new_inclusivity;
     }
 }
 
@@ -50,13 +95,36 @@ impl ClosedAbsoluteInterval {
 pub struct ClosedRelativeInterval {
     offset: Duration,
     length: Duration,
+    from_inclusivity: BoundInclusivity,
+    to_inclusivity: BoundInclusivity,
 }
 
 impl ClosedRelativeInterval {
     /// Creates a new instance of a closed relative interval
     #[must_use]
     pub fn new(offset: Duration, length: Duration) -> Self {
-        ClosedRelativeInterval { offset, length }
+        ClosedRelativeInterval {
+            offset,
+            length,
+            from_inclusivity: BoundInclusivity::default(),
+            to_inclusivity: BoundInclusivity::default(),
+        }
+    }
+
+    /// Creates a new instance of a closed relative interval with given inclusivity for the bounds
+    #[must_use]
+    pub fn with_inclusivity(
+        offset: Duration,
+        start_inclusivity: BoundInclusivity,
+        length: Duration,
+        end_inclusivity: BoundInclusivity,
+    ) -> Self {
+        ClosedRelativeInterval {
+            offset,
+            length,
+            from_inclusivity: start_inclusivity,
+            to_inclusivity: end_inclusivity,
+        }
     }
 
     /// Returns a reference to the offset
@@ -71,16 +139,36 @@ impl ClosedRelativeInterval {
         &self.length
     }
 
-    /// Returns a mutable reference to the offset
+    /// Returns the inclusivity of the start bound
     #[must_use]
-    pub fn offset_mut(&mut self) -> &mut Duration {
-        &mut self.offset
+    pub fn from_inclusivity(&self) -> BoundInclusivity {
+        self.from_inclusivity
     }
 
-    /// Returns a mutable reference to the length
+    /// Returns the inclusivity of the end bound
     #[must_use]
-    pub fn length_mut(&mut self) -> &mut Duration {
-        &mut self.length
+    pub fn to_inclusivity(&self) -> BoundInclusivity {
+        self.to_inclusivity
+    }
+
+    /// Sets the offset of the interval
+    pub fn set_offset(&mut self, new_offset: Duration) {
+        self.offset = new_offset;
+    }
+
+    /// Sets the length of the interval
+    pub fn set_length(&mut self, new_length: Duration) {
+        self.length = new_length;
+    }
+
+    /// Sets the inclusivity of the start bound
+    pub fn set_from_inclusivity(&mut self, new_inclusivity: BoundInclusivity) {
+        self.from_inclusivity = new_inclusivity;
+    }
+
+    /// Sets the inclusivity of the end bound
+    pub fn set_to_inclusivity(&mut self, new_inclusivity: BoundInclusivity) {
+        self.to_inclusivity = new_inclusivity;
     }
 }
 
@@ -92,6 +180,7 @@ impl ClosedRelativeInterval {
 pub struct HalfOpenAbsoluteInterval {
     reference_time: DateTime<Utc>,
     opening_direction: OpeningDirection,
+    reference_time_inclusivity: BoundInclusivity,
 }
 
 impl HalfOpenAbsoluteInterval {
@@ -101,6 +190,21 @@ impl HalfOpenAbsoluteInterval {
         HalfOpenAbsoluteInterval {
             reference_time,
             opening_direction,
+            reference_time_inclusivity: BoundInclusivity::default(),
+        }
+    }
+
+    /// Creates a new instance of a half-open absolute interval with given inclusivity for the bound
+    #[must_use]
+    pub fn with_inclusivity(
+        reference_time: DateTime<Utc>,
+        reference_time_inclusivity: BoundInclusivity,
+        opening_direction: OpeningDirection,
+    ) -> Self {
+        HalfOpenAbsoluteInterval {
+            reference_time,
+            opening_direction,
+            reference_time_inclusivity,
         }
     }
 
@@ -116,10 +220,20 @@ impl HalfOpenAbsoluteInterval {
         self.opening_direction
     }
 
-    /// Returns a mutable reference to the reference time
+    /// Returns the inclusivity of the reference time
     #[must_use]
-    pub fn reference_time_mut(&mut self) -> &mut DateTime<Utc> {
-        &mut self.reference_time
+    pub fn reference_time_inclusivity(&self) -> BoundInclusivity {
+        self.reference_time_inclusivity
+    }
+
+    /// Sets the reference time of the interval
+    pub fn set_reference_time(&mut self, new_reference_time: DateTime<Utc>) {
+        self.reference_time = new_reference_time;
+    }
+
+    /// Sets the inclusivity of the reference time
+    pub fn set_reference_time_inclusivity(&mut self, new_inclusivity: BoundInclusivity) {
+        self.reference_time_inclusivity = new_inclusivity;
     }
 }
 
@@ -131,6 +245,7 @@ impl HalfOpenAbsoluteInterval {
 pub struct HalfOpenRelativeInterval {
     offset: Duration,
     opening_direction: OpeningDirection,
+    reference_time_inclusivity: BoundInclusivity,
 }
 
 impl HalfOpenRelativeInterval {
@@ -140,6 +255,21 @@ impl HalfOpenRelativeInterval {
         HalfOpenRelativeInterval {
             offset,
             opening_direction,
+            reference_time_inclusivity: BoundInclusivity::default(),
+        }
+    }
+
+    /// Creates a new instance of a half-open relative interval with given inclusivity for the bound
+    #[must_use]
+    pub fn with_inclusivity(
+        offset: Duration,
+        reference_time_inclusivity: BoundInclusivity,
+        opening_direction: OpeningDirection,
+    ) -> Self {
+        HalfOpenRelativeInterval {
+            offset,
+            opening_direction,
+            reference_time_inclusivity,
         }
     }
 
@@ -155,10 +285,20 @@ impl HalfOpenRelativeInterval {
         self.opening_direction
     }
 
-    /// Returns a mutable reference to the offset
+    /// Returns the inclusivity of the reference time
     #[must_use]
-    pub fn offset_mut(&mut self) -> &mut Duration {
-        &mut self.offset
+    pub fn reference_time_inclusivity(&self) -> BoundInclusivity {
+        self.reference_time_inclusivity
+    }
+
+    /// Sets the offset of the interval
+    pub fn set_offset(&mut self, new_offset: Duration) {
+        self.offset = new_offset;
+    }
+
+    /// Sets the inclusivity of the reference time
+    pub fn set_reference_time_inclusivity(&mut self, new_inclusivity: BoundInclusivity) {
+        self.reference_time_inclusivity = new_inclusivity;
     }
 }
 
@@ -219,10 +359,10 @@ impl Interval {
     #[must_use]
     pub fn duration(&self) -> IntervalDuration {
         match self {
-            Self::ClosedAbsolute(ClosedAbsoluteInterval { from, to }) => {
+            Self::ClosedAbsolute(ClosedAbsoluteInterval { from, to, .. }) => {
                 IntervalDuration::Finite(*to - from)
             }
-            Self::ClosedRelative(ClosedRelativeInterval { offset: _, length }) => {
+            Self::ClosedRelative(ClosedRelativeInterval { length, .. }) => {
                 IntervalDuration::Finite(*length)
             }
             Self::HalfOpenAbsolute(_) | Self::HalfOpenRelative(_) | Self::Open(_) => {
@@ -232,18 +372,56 @@ impl Interval {
         }
     }
 
+    /// Returns the inclusivity of the start and end bounds
+    ///
+    /// The first element of the tuple contains the inclusivity of the start bound,
+    /// the second contains the inclusivity of the end bound.
+    ///
+    /// If the concept of inclusivity doesn't apply for a bound (i.e. in case of infinity for the side going to infinity
+    /// in the case of half-open intervals, for both bounds for open and empty intervals) then it will be equal to [`None`]
+    #[must_use]
+    pub fn bounds_inclusivity(&self) -> (Option<BoundInclusivity>, Option<BoundInclusivity>) {
+        match self {
+            Interval::ClosedAbsolute(ClosedAbsoluteInterval {
+                from_inclusivity,
+                to_inclusivity,
+                ..
+            })
+            | Interval::ClosedRelative(ClosedRelativeInterval {
+                from_inclusivity,
+                to_inclusivity,
+                ..
+            }) => (Some(*from_inclusivity), Some(*to_inclusivity)),
+            Interval::HalfOpenAbsolute(HalfOpenAbsoluteInterval {
+                reference_time_inclusivity,
+                opening_direction,
+                ..
+            })
+            | Interval::HalfOpenRelative(HalfOpenRelativeInterval {
+                reference_time_inclusivity,
+                opening_direction,
+                ..
+            }) => match opening_direction {
+                OpeningDirection::ToPast => (None, Some(*reference_time_inclusivity)),
+                OpeningDirection::ToFuture => (Some(*reference_time_inclusivity), None),
+            },
+            _ => (None, None),
+        }
+    }
+
     /// Creates a relative clone of the current time interval, given a reference time
     ///
     /// If the current time interval is already relative or has undefined relativity, it just returns a clone of itself.
     #[must_use]
     pub fn to_relative(&self, reference_time: &DateTime<Utc>) -> Self {
         match self {
-            Self::ClosedAbsolute(ClosedAbsoluteInterval { from, to }) => Self::ClosedRelative(
+            Self::ClosedAbsolute(ClosedAbsoluteInterval { from, to, .. }) => Self::ClosedRelative(
                 ClosedRelativeInterval::new(*from - reference_time, *to - reference_time),
             ),
             Self::HalfOpenAbsolute(HalfOpenAbsoluteInterval {
                 reference_time: og_reference_time,
                 opening_direction,
+                ..
             }) => Self::HalfOpenRelative(HalfOpenRelativeInterval::new(
                 *og_reference_time - reference_time,
                 *opening_direction,
@@ -258,7 +436,7 @@ impl Interval {
     #[must_use]
     pub fn to_absolute(&self, reference_time: &DateTime<Utc>) -> Self {
         match self {
-            Self::ClosedRelative(ClosedRelativeInterval { offset, length }) => {
+            Self::ClosedRelative(ClosedRelativeInterval { offset, length, .. }) => {
                 Self::ClosedAbsolute(ClosedAbsoluteInterval::new(
                     *reference_time + *offset,
                     *reference_time + *offset + *length,
@@ -267,6 +445,7 @@ impl Interval {
             Self::HalfOpenRelative(HalfOpenRelativeInterval {
                 offset,
                 opening_direction,
+                ..
             }) => Self::HalfOpenAbsolute(HalfOpenAbsoluteInterval::new(
                 *reference_time + *offset,
                 *opening_direction,

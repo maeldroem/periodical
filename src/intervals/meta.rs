@@ -33,3 +33,15 @@ pub enum Duration {
     Finite(chrono::Duration),
     Infinite,
 }
+
+/// Inclusivity of an interval's time bound
+///
+/// Inclusive by default, exclusive meaning that the given bound time shouldn't count.
+/// For example, if two intervals "touch" but one of them has an exclusive bound on this point, then
+/// they are counted as not overlapping.
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Default)]
+pub enum BoundInclusivity {
+    #[default]
+    Inclusive,
+    Exclusive,
+}
