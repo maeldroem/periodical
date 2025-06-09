@@ -1,8 +1,6 @@
 use chrono::{DateTime, Duration, Utc};
 
-use super::meta::{
-    BoundInclusivity, Duration as IntervalDuration, OpeningDirection, Openness, Relativity,
-};
+use super::meta::{BoundInclusivity, Duration as IntervalDuration, OpeningDirection, Openness, Relativity};
 
 /// A closed absolute interval
 ///
@@ -367,15 +365,9 @@ impl Interval {
     #[must_use]
     pub fn duration(&self) -> IntervalDuration {
         match self {
-            Self::ClosedAbsolute(ClosedAbsoluteInterval { from, to, .. }) => {
-                IntervalDuration::Finite(*to - from)
-            }
-            Self::ClosedRelative(ClosedRelativeInterval { length, .. }) => {
-                IntervalDuration::Finite(*length)
-            }
-            Self::HalfOpenAbsolute(_) | Self::HalfOpenRelative(_) | Self::Open(_) => {
-                IntervalDuration::Infinite
-            }
+            Self::ClosedAbsolute(ClosedAbsoluteInterval { from, to, .. }) => IntervalDuration::Finite(*to - from),
+            Self::ClosedRelative(ClosedRelativeInterval { length, .. }) => IntervalDuration::Finite(*length),
+            Self::HalfOpenAbsolute(_) | Self::HalfOpenRelative(_) | Self::Open(_) => IntervalDuration::Infinite,
             Self::Empty(_) => IntervalDuration::Finite(Duration::zero()),
         }
     }
@@ -444,12 +436,9 @@ impl Interval {
     #[must_use]
     pub fn to_absolute(&self, reference_time: &DateTime<Utc>) -> Self {
         match self {
-            Self::ClosedRelative(ClosedRelativeInterval { offset, length, .. }) => {
-                Self::ClosedAbsolute(ClosedAbsoluteInterval::new(
-                    *reference_time + *offset,
-                    *reference_time + *offset + *length,
-                ))
-            }
+            Self::ClosedRelative(ClosedRelativeInterval { offset, length, .. }) => Self::ClosedAbsolute(
+                ClosedAbsoluteInterval::new(*reference_time + *offset, *reference_time + *offset + *length),
+            ),
             Self::HalfOpenRelative(HalfOpenRelativeInterval {
                 offset,
                 opening_direction,
@@ -518,10 +507,7 @@ mod tests {
                 Some(Openness::Closed),
             ),
             (
-                Interval::ClosedRelative(ClosedRelativeInterval::new(
-                    Duration::hours(8),
-                    Duration::hours(8),
-                )),
+                Interval::ClosedRelative(ClosedRelativeInterval::new(Duration::hours(8), Duration::hours(8))),
                 Some(Openness::Closed),
             ),
             (
@@ -555,10 +541,7 @@ mod tests {
                 Some(Relativity::Absolute),
             ),
             (
-                Interval::ClosedRelative(ClosedRelativeInterval::new(
-                    Duration::hours(8),
-                    Duration::hours(8),
-                )),
+                Interval::ClosedRelative(ClosedRelativeInterval::new(Duration::hours(8), Duration::hours(8))),
                 Some(Relativity::Relative),
             ),
             (
