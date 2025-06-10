@@ -1,3 +1,13 @@
+//! Interval comparisons
+//!
+//! Comparisons with intervals are implemented here. You will find methods like
+//!
+//! - `contains`
+//! - `overlaps`
+//!
+//! You will also find things that touch to precision of interval bounds as well as rule sets to decide what counts
+//! as overlapping and what doesn't.
+
 use std::cmp::Ordering;
 
 use chrono::{DateTime, Duration, Utc};
