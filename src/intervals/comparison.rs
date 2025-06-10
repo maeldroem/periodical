@@ -27,9 +27,17 @@ pub enum ContainmentPosition {
     /// The given time was found outside the time interval (result only possible when dealing with empty intervals)
     Outside,
     /// The given time was found exactly on the start of the time interval
-    OnStart,
+    /// 
+    /// The contained bound inclusivity indicates the bound inclusivity of the start bound.
+    /// 
+    /// See [`Interval::containment_position`] for more details.
+    OnStart(BoundInclusivity),
     /// The given time was found exactly on the end of the time interval
-    OnEnd,
+    /// 
+    /// The contained bound inclusivity indicates the bound inclusivity of the end bound.
+    /// 
+    /// See [`Interval::containment_position`] for more details.
+    OnEnd(BoundInclusivity),
     /// The given time was found within the time interval
     Inside,
 }
@@ -44,6 +52,8 @@ pub enum ContainmentPositionError {
 }
 
 /// Where the other time interval was found relative to the current time interval
+/// 
+/// See [`Interval::overlap_position`] for more information
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum OverlapPosition {
     /// The given other time interval was found before the time interval
@@ -53,25 +63,84 @@ pub enum OverlapPosition {
     /// The given other time interval was found outside the time interval (result only possible when dealing with empty intervals)
     Outside,
     /// The given other time interval was found ending on the beginning of the time interval
-    OnStart,
+    /// 
+    /// The contained bound inclusivities define the reference interval's start inclusivity and the compared interval's
+    /// end inclusivity.
+    /// 
+    /// See [`Interval::overlap_position`] for more details.
+    OnStart(BoundInclusivity, BoundInclusivity),
     /// The given other time interval was found starting on the end of the time interval
-    OnEnd,
+    /// 
+    /// The contained bound inclusivities define the reference interval's end inclusivity and the compared interval's
+    /// start inclusivity.
+    /// 
+    /// See [`Interval::overlap_position`] for more details.
+    OnEnd(BoundInclusivity, BoundInclusivity),
     /// The given other time interval was found beginning outside the time interval but ending inside
     CrossesStart,
     /// The given other time interval was found beginning inside the time interval but ending outside
     CrossesEnd,
     /// The given other time interval was found completely inside the time interval
     Inside,
-    /// The given other time interval was found beginning on the start of of the time interval and ending inside the time interval
-    InsideAndSameStart,
-    /// The given other time interval was found beginning inside the time interval and ending at the end of the time interval
-    InsideAndSameEnd,
+    /// The given other time interval was found beginning on the start of the time interval and ending inside
+    /// the time interval
+    /// 
+    /// The contained bound inclusivities define the reference interval's start inclusivity and the compared interval's
+    /// start inclusivity.
+    /// 
+    /// Since when comparing an open interval with a half-open one can result in such an overlap position but no
+    /// defined bound is involved (i.e. the bound is infinity), both the reference and compared inclusivity are
+    /// [`Option`]s.
+    /// 
+    /// See [`Interval::overlap_position`] for more details.
+    InsideAndSameStart(Option<BoundInclusivity>, Option<BoundInclusivity>),
+    /// The given other time interval was found beginning inside the time interval and ending at the end of
+    /// the time interval
+    /// 
+    /// The contained bound inclusivities define the reference interval's end inclusivity and the compared interval's
+    /// end inclusivity.
+    /// 
+    /// Since when comparing an open interval with a half-open one can result in such an overlap position but no
+    /// defined bound is involved (i.e. the bound is infinity), both the reference and compared inclusivity are
+    /// [`Option`]s.
+    /// 
+    /// See [`Interval::overlap_position`] for more details.
+    InsideAndSameEnd(Option<BoundInclusivity>, Option<BoundInclusivity>),
     /// The given other time interval was found beginning and ending at the same times as the time interval
-    Equal,
-    /// The given other time interval was found beginning on the same point as the time interval and ending after the time interval
-    ContainsAndSameStart,
-    /// The given other time interval was found beginning before the time interval and ending at the same time as the time interval
-    ContainsAndSameEnd,
+    /// 
+    /// The contained bound inclusivities define the reference interval's start and end inclusivities (first tuple),
+    /// and the compared interval's start and end inclusivities (second tuple).
+    /// 
+    /// Since half-open intervals only have a single defined bound, the second element of each tuple is an [`Option`].
+    /// Also, when you compare two open intervals, they don't have defined bounds but still are equal, so all elements
+    /// are [`Option`]s in the end.
+    /// 
+    /// See [`Interval::overlap_position`] for more details.
+    Equal((Option<BoundInclusivity>, Option<BoundInclusivity>), (Option<BoundInclusivity>, Option<BoundInclusivity>)),
+    /// The given other time interval was found beginning on the same point as the time interval and ending after
+    /// the time interval
+    /// 
+    /// The contained bound inclusivities define the reference interval's start inclusivity and the compared interval's
+    /// start inclusivity.
+    /// 
+    /// Since when comparing an half-open interval with an open one can result in such an overlap position but no
+    /// defined bound is involved (i.e. the bound is infinity), both the reference and compared inclusivity are
+    /// [`Option`]s.
+    /// 
+    /// See [`Interval::overlap_position`] for more details.
+    ContainsAndSameStart(Option<BoundInclusivity>, Option<BoundInclusivity>),
+    /// The given other time interval was found beginning before the time interval and ending at the same time as
+    /// the time interval
+    /// 
+    /// The contained bound inclusivities define the reference interval's end inclusivity and the compared interval's
+    /// end inclusivity.
+    /// 
+    /// Since when comparing an half-open interval with an open one can result in such an overlap position but no
+    /// defined bound is involved (i.e. the bound is infinity), both the reference and compared inclusivity are
+    /// [`Option`]s.
+    /// 
+    /// See [`Interval::overlap_position`] for more details.
+    ContainsAndSameEnd(Option<BoundInclusivity>, Option<BoundInclusivity>),
     /// The given other time interval was found beginning before the time interval's start and ending after the time interval's end
     Contains,
 }
@@ -87,6 +156,16 @@ pub enum OverlapPositionError {
 
 impl Interval {
     /// Returns the containment position of the given time
+    /// 
+    /// # Bound inclusivity
+    /// 
+    /// When checking the containment position, the reference interval's bound inclusivities are considered
+    /// as inclusive. Then, on cases where the result could be ambiguous (e.g. if the time ends up on the reference
+    /// interval's start but the inclusivity of this bound is exclusive, does it qualify
+    /// as [`ContainmentPosition::OnStart`]?), we simply include the inclusivity of the concerned bound and let the
+    /// receiver make the call on whether it counts or not.
+    /// 
+    /// This way, we can guarantee maximum flexibility of this process.
     ///
     /// # Errors
     ///
@@ -109,8 +188,35 @@ impl Interval {
     /// Returns the overlap position of the given interval
     ///
     /// The other interval is compared to the current interval, that means that if you, for example, compare
-    /// a closed absolute interval (instance) with an open interval (given interval), you will get [`OverlapPosition::Contains`]
-    /// as the open interval _contains_ any closed absolute interval.
+    /// a closed absolute interval (instance) with an open interval (given interval), you will get
+    /// [`OverlapPosition::Contains`] as the open interval _contains_ any closed absolute interval.
+    /// 
+    /// # Bound inclusivity
+    /// 
+    /// When checking the overlap position, the all bound inclusivities are considered as inclusive. 
+    /// Then, on cases where the result could be ambiguous (e.g. if the compared interval's start ends up on
+    /// the reference interval's start but the reference's inclusivity of this bound is exclusive, or maybe both
+    /// intervals' concerned bound are exclusive, does it qualify as [`OverlapPosition::OnStart`]?),
+    /// we simply include the inclusivity of the concerned bound and let the receiver make the call on whether
+    /// it counts or not.
+    /// 
+    /// This way, we can guarantee maximum flexibility of this process.
+    /// 
+    /// Ambiguous overlap positions contains the reference interval concerned bound's inclusivity first,
+    /// then the compared interval concerned bound's inclusivity second.
+    /// 
+    /// The only exception to that is [`OverlapPosition::Equal`], where its first tuple is the bound inclusivities for
+    /// the reference interval, and its second tuple is the bound inclusivities for the compared interval.
+    /// 
+    /// Since half-open and open intervals are also subject to the overlap position check, most ambiguous overlap
+    /// positions have one or all of their elements as [`Option`]s. Those elements are set to [`None`] only when
+    /// there is no bound to speak of. The order of the elements remains the same though: first the reference, then
+    /// the compared.
+    /// 
+    /// In the case of a pair of half-open intervals being compared, since they only have one bound, the second element
+    /// of each tuple will be [`None`].
+    /// In the case of a pair of open intervals being compared, since they have no bounds but still are equal, all
+    /// elements will be [`None`].
     ///
     /// # Errors
     ///
@@ -137,18 +243,18 @@ impl Interval {
             }
             // empty intervals are not comparable through time as they don't have a specific time frame
             (Self::Empty(_), _) | (_, Self::Empty(_)) => Ok(OverlapPosition::Outside),
-            (Self::Open(_), Self::Open(_)) => Ok(OverlapPosition::Equal),
+            (Self::Open(_), Self::Open(_)) => Ok(OverlapPosition::Equal((None, None), (None, None))),
             (Self::Open(_), Self::HalfOpenAbsolute(half_open_interval)) => {
                 match half_open_interval.opening_direction() {
-                    OpeningDirection::ToPast => Ok(OverlapPosition::InsideAndSameStart),
-                    OpeningDirection::ToFuture => Ok(OverlapPosition::InsideAndSameEnd),
+                    OpeningDirection::ToPast => Ok(OverlapPosition::InsideAndSameStart(None, None)),
+                    OpeningDirection::ToFuture => Ok(OverlapPosition::InsideAndSameEnd(None, None)),
                 }
             }
             (Self::Open(_), Self::ClosedAbsolute(_)) => Ok(OverlapPosition::Inside),
             (Self::HalfOpenAbsolute(half_open_interval), Self::Open(_)) => {
                 match half_open_interval.opening_direction() {
-                    OpeningDirection::ToPast => Ok(OverlapPosition::ContainsAndSameStart),
-                    OpeningDirection::ToFuture => Ok(OverlapPosition::ContainsAndSameEnd),
+                    OpeningDirection::ToPast => Ok(OverlapPosition::ContainsAndSameStart(None, None)),
+                    OpeningDirection::ToFuture => Ok(OverlapPosition::ContainsAndSameEnd(None, None)),
                 }
             }
             (Self::ClosedAbsolute(_), Self::Open(_)) => Ok(OverlapPosition::Contains),
@@ -167,44 +273,25 @@ fn containment_position_closed(
     let containment_position = match (time.cmp(interval.from()), time.cmp(interval.to())) {
         (Ordering::Less, _) => ContainmentPosition::OutsideBefore,
         (_, Ordering::Greater) => ContainmentPosition::OutsideAfter,
-        (Ordering::Equal, _) => match interval.from_inclusivity() {
-            BoundInclusivity::Inclusive => ContainmentPosition::OnStart,
-            BoundInclusivity::Exclusive => ContainmentPosition::OutsideBefore,
-        },
-        (_, Ordering::Equal) => match interval.to_inclusivity() {
-            BoundInclusivity::Inclusive => ContainmentPosition::OnEnd,
-            BoundInclusivity::Exclusive => ContainmentPosition::OutsideAfter,
-        },
+        (Ordering::Equal, _) => ContainmentPosition::OnStart(interval.from_inclusivity()),
+        (_, Ordering::Equal) => ContainmentPosition::OnEnd(interval.to_inclusivity()),
         (Ordering::Greater, Ordering::Less) => ContainmentPosition::Inside,
     };
 
     Ok(containment_position)
 }
 
-fn containment_position_half_open(
-    interval: &HalfOpenAbsoluteInterval,
-    time: DateTime<Utc>,
-) -> ContainmentPosition {
+fn containment_position_half_open(interval: &HalfOpenAbsoluteInterval, time: DateTime<Utc>) -> ContainmentPosition {
     match (
         time.cmp(interval.reference_time()),
         interval.opening_direction(),
     ) {
         (Ordering::Less, OpeningDirection::ToPast)
         | (Ordering::Greater, OpeningDirection::ToFuture) => ContainmentPosition::Inside,
-        (Ordering::Equal, OpeningDirection::ToPast) => {
-            match interval.reference_time_inclusivity() {
-                BoundInclusivity::Inclusive => ContainmentPosition::OnEnd,
-                BoundInclusivity::Exclusive => ContainmentPosition::OutsideAfter,
-            }
-        }
+        (Ordering::Equal, OpeningDirection::ToPast) => ContainmentPosition::OnEnd(interval.reference_time_inclusivity()),
         (Ordering::Greater, OpeningDirection::ToPast) => ContainmentPosition::OutsideAfter,
         (Ordering::Less, OpeningDirection::ToFuture) => ContainmentPosition::OutsideBefore,
-        (Ordering::Equal, OpeningDirection::ToFuture) => {
-            match interval.reference_time_inclusivity() {
-                BoundInclusivity::Inclusive => ContainmentPosition::OnStart,
-                BoundInclusivity::Exclusive => ContainmentPosition::OutsideBefore,
-            }
-        }
+        (Ordering::Equal, OpeningDirection::ToFuture) => ContainmentPosition::OnStart(interval.reference_time_inclusivity()),
     }
 }
 
@@ -222,16 +309,16 @@ fn overlap_position_closed_pair(
     let overlap_position = match (b_from_cmp, b_to_cmp) {
         (_, (Ordering::Less, _)) => OverlapPosition::OutsideBefore,
         ((_, Ordering::Greater), _) => OverlapPosition::OutsideAfter,
-        (_, (Ordering::Equal, _)) => OverlapPosition::OnStart,
-        ((_, Ordering::Equal), _) => OverlapPosition::OnEnd,
+        (_, (Ordering::Equal, _)) => OverlapPosition::OnStart(a.from_inclusivity(), b.to_inclusivity()),
+        ((_, Ordering::Equal), _) => OverlapPosition::OnEnd(a.to_inclusivity(), b.from_inclusivity()),
         ((Ordering::Less, _), (_, Ordering::Less)) => OverlapPosition::CrossesStart,
         ((Ordering::Greater, _), (_, Ordering::Greater)) => OverlapPosition::CrossesEnd,
         ((Ordering::Greater, _), (_, Ordering::Less)) => OverlapPosition::Inside,
-        ((Ordering::Equal, _), (_, Ordering::Less)) => OverlapPosition::InsideAndSameStart,
-        ((Ordering::Greater, _), (_, Ordering::Equal)) => OverlapPosition::InsideAndSameEnd,
-        ((Ordering::Equal, _), (_, Ordering::Equal)) => OverlapPosition::Equal,
-        ((Ordering::Equal, _), (_, Ordering::Greater)) => OverlapPosition::ContainsAndSameStart,
-        ((Ordering::Less, _), (_, Ordering::Equal)) => OverlapPosition::ContainsAndSameEnd,
+        ((Ordering::Equal, _), (_, Ordering::Less)) => OverlapPosition::InsideAndSameStart(Some(a.from_inclusivity()), Some(b.from_inclusivity())),
+        ((Ordering::Greater, _), (_, Ordering::Equal)) => OverlapPosition::InsideAndSameEnd(Some(a.to_inclusivity()), Some(b.to_inclusivity())),
+        ((Ordering::Equal, _), (_, Ordering::Equal)) => OverlapPosition::Equal((Some(a.from_inclusivity()), Some(a.to_inclusivity())), (Some(b.from_inclusivity()), Some(b.to_inclusivity()))),
+        ((Ordering::Equal, _), (_, Ordering::Greater)) => OverlapPosition::ContainsAndSameStart(Some(a.from_inclusivity()), Some(b.from_inclusivity())),
+        ((Ordering::Less, _), (_, Ordering::Equal)) => OverlapPosition::ContainsAndSameEnd(Some(a.to_inclusivity()), Some(b.to_inclusivity())),
         ((Ordering::Less, _), (_, Ordering::Greater)) => OverlapPosition::Contains,
     };
 
@@ -253,16 +340,16 @@ fn overlap_position_closed_half_open(
     ) {
         (Ordering::Less, _, OpeningDirection::ToPast) => OverlapPosition::OutsideBefore,
         (_, Ordering::Greater, OpeningDirection::ToFuture) => OverlapPosition::OutsideAfter,
-        (Ordering::Equal, _, OpeningDirection::ToPast) => OverlapPosition::OnStart,
-        (_, Ordering::Equal, OpeningDirection::ToFuture) => OverlapPosition::OnEnd,
+        (Ordering::Equal, _, OpeningDirection::ToPast) => OverlapPosition::OnStart(a.from_inclusivity(), b.reference_time_inclusivity()),
+        (_, Ordering::Equal, OpeningDirection::ToFuture) => OverlapPosition::OnEnd(a.to_inclusivity(), b.reference_time_inclusivity()),
         (Ordering::Greater, Ordering::Less, OpeningDirection::ToPast) => {
             OverlapPosition::CrossesStart
         }
         (Ordering::Greater, Ordering::Less, OpeningDirection::ToFuture) => {
             OverlapPosition::CrossesEnd
         }
-        (Ordering::Equal, _, OpeningDirection::ToFuture) => OverlapPosition::ContainsAndSameStart,
-        (_, Ordering::Equal, OpeningDirection::ToPast) => OverlapPosition::ContainsAndSameEnd,
+        (Ordering::Equal, _, OpeningDirection::ToFuture) => OverlapPosition::ContainsAndSameStart(Some(a.from_inclusivity()), Some(b.reference_time_inclusivity())),
+        (_, Ordering::Equal, OpeningDirection::ToPast) => OverlapPosition::ContainsAndSameEnd(Some(a.to_inclusivity()), Some(b.reference_time_inclusivity())),
         (Ordering::Less, _, OpeningDirection::ToFuture)
         | (_, Ordering::Greater, OpeningDirection::ToPast) => OverlapPosition::Contains,
     };
@@ -285,8 +372,8 @@ fn overlap_position_half_open_closed(
     ) {
         (_, Ordering::Less, OpeningDirection::ToFuture) => OverlapPosition::OutsideBefore,
         (Ordering::Greater, _, OpeningDirection::ToPast) => OverlapPosition::OutsideAfter,
-        (_, Ordering::Equal, OpeningDirection::ToFuture) => OverlapPosition::OnStart,
-        (Ordering::Equal, _, OpeningDirection::ToPast) => OverlapPosition::OnEnd,
+        (_, Ordering::Equal, OpeningDirection::ToFuture) => OverlapPosition::OnStart(a.reference_time_inclusivity(), b.to_inclusivity()),
+        (Ordering::Equal, _, OpeningDirection::ToPast) => OverlapPosition::OnEnd(a.reference_time_inclusivity(), b.from_inclusivity()),
         (Ordering::Less, Ordering::Greater, OpeningDirection::ToFuture) => {
             OverlapPosition::CrossesStart
         }
@@ -298,10 +385,10 @@ fn overlap_position_half_open_closed(
             OverlapPosition::Inside
         }
         (Ordering::Equal, Ordering::Greater, OpeningDirection::ToFuture) => {
-            OverlapPosition::InsideAndSameStart
+            OverlapPosition::InsideAndSameStart(Some(a.reference_time_inclusivity()), Some(b.from_inclusivity()))
         }
         (Ordering::Less, Ordering::Equal, OpeningDirection::ToPast) => {
-            OverlapPosition::InsideAndSameEnd
+            OverlapPosition::InsideAndSameEnd(Some(a.reference_time_inclusivity()), Some(b.to_inclusivity()))
         }
     };
 
@@ -318,7 +405,7 @@ fn overlap_position_half_open_pair(
         b.opening_direction(),
     ) {
         (Ordering::Less, OpeningDirection::ToPast, OpeningDirection::ToPast) => {
-            OverlapPosition::InsideAndSameStart
+            OverlapPosition::InsideAndSameStart(Some(a.reference_time_inclusivity()), Some(b.reference_time_inclusivity()))
         }
         (Ordering::Less, OpeningDirection::ToPast, OpeningDirection::ToFuture) => {
             OverlapPosition::CrossesEnd
@@ -327,20 +414,20 @@ fn overlap_position_half_open_pair(
             OverlapPosition::OutsideBefore
         }
         (Ordering::Less, OpeningDirection::ToFuture, OpeningDirection::ToFuture) => {
-            OverlapPosition::ContainsAndSameEnd
+            OverlapPosition::ContainsAndSameEnd(Some(a.reference_time_inclusivity()), Some(b.reference_time_inclusivity()))
         }
         (Ordering::Equal, OpeningDirection::ToPast, OpeningDirection::ToPast)
         | (Ordering::Equal, OpeningDirection::ToFuture, OpeningDirection::ToFuture) => {
-            OverlapPosition::Equal
+            OverlapPosition::Equal((Some(a.reference_time_inclusivity()), None), (Some(b.reference_time_inclusivity()), None))
         }
         (Ordering::Equal, OpeningDirection::ToPast, OpeningDirection::ToFuture) => {
-            OverlapPosition::OnEnd
+            OverlapPosition::OnEnd(a.reference_time_inclusivity(), b.reference_time_inclusivity())
         }
         (Ordering::Equal, OpeningDirection::ToFuture, OpeningDirection::ToPast) => {
-            OverlapPosition::OnStart
+            OverlapPosition::OnStart(a.reference_time_inclusivity(), b.reference_time_inclusivity())
         }
         (Ordering::Greater, OpeningDirection::ToPast, OpeningDirection::ToPast) => {
-            OverlapPosition::ContainsAndSameStart
+            OverlapPosition::ContainsAndSameStart(Some(a.reference_time_inclusivity()), Some(b.reference_time_inclusivity()))
         }
         (Ordering::Greater, OpeningDirection::ToPast, OpeningDirection::ToFuture) => {
             OverlapPosition::OutsideAfter
@@ -349,7 +436,7 @@ fn overlap_position_half_open_pair(
             OverlapPosition::CrossesStart
         }
         (Ordering::Greater, OpeningDirection::ToFuture, OpeningDirection::ToFuture) => {
-            OverlapPosition::InsideAndSameEnd
+            OverlapPosition::InsideAndSameEnd(Some(a.reference_time_inclusivity()), Some(b.reference_time_inclusivity()))
         }
     }
 }
