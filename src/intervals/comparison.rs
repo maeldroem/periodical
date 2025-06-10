@@ -56,7 +56,15 @@ pub enum ContainmentPositionError {
 /// See [`Interval::contains_using_rule_set`] for more.
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum ContainmentRuleSet {
-    // TODO
+    /// Strict rule set
+    ///
+    /// Mathematical interpretation of bounds, so the time needs to fall on an inclusive bound in order to be counted
+    /// as contained.
+    Strict,
+    /// Lenient rule set
+    ///
+    /// If the time falls on an exclusive bound, it is still counted as contained.
+    Lenient,
 }
 
 /// Where the other time interval was found relative to the current time interval
@@ -170,7 +178,99 @@ pub enum OverlapPositionError {
 /// See [`Interval::overlaps_using_rule_set`] for more.
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum OverlapRuleSet {
-    // TODO
+    /// Strict rule set
+    ///
+    /// Mathematical interpretation of bounds. Here's a table of interactions for ambiguous cases:
+    ///
+    /// ```txt
+    /// [] = inclusive bounds, () = exclusive bounds
+    ///
+    /// Reference:                 [-------]
+    /// OutsideBefore       [------)       :
+    /// OutsideAfter               :       (-----]
+    /// InsideAndSameEnd           (-------]
+    /// InsideAndSameStart         [-------)
+    /// Inside                     (-------)
+    /// CrossesStart            [----------)
+    /// CrossesEnd                 (----------]
+    ///
+    /// Reference:                 (-------)
+    /// OutsideBefore       [------]       :
+    /// OutsideAfter               :       [-----]
+    /// Contains                   [-------]
+    /// ContainsAndSameStart       (-------]
+    /// ContainsAndSameEnd         [-------)
+    /// Contains                 [---------]
+    /// Contains                   [----------]
+    /// ```
+    Strict,
+    /// Continuous to future rule set
+    ///
+    /// Like the [strict rule set](OverlapRuleSet::Strict), but counts as [`OnStart`](OverlapPosition::OnStart) when
+    /// the reference interval's inclusive start bound meets the compared interval's exclusive end bound, and counts as
+    /// [`OnEnd`](OverlapPosition::OnEnd) when the reference interval's exclusive end bound meets the compared
+    /// interval's inclusive start bound. Here's a table to illustrate it:
+    ///
+    /// ```txt
+    /// [] = inclusive bounds, () = exclusive bounds
+    ///
+    /// Reference:            [------)
+    /// OnStart          [----)      :
+    /// OnEnd                 :      [-----]
+    /// ```
+    ContinuousToFuture,
+    /// Continuous to past rule set
+    ///
+    /// Like the [strict rule set](OverlapRuleSet::Strict), but counts as [`OnStart`](OverlapPosition::OnStart) when
+    /// the reference interval's exclusive start bound meets the compared interval's inclusive end bound, and counts as
+    /// [`OnEnd`](OverlapPosition::OnEnd) when the reference interval's inclusive end bound meets the compared
+    /// interval's exclusive start bound. Here's a table to illustrate it:
+    ///
+    /// ```txt
+    /// [] = inclusive bounds, () = exclusive bounds
+    ///
+    /// Reference:            (------]
+    /// OnStart          [----]      :
+    /// OnEnd                 :      (-----]
+    /// ```
+    ContinuousToPast,
+    /// Lenient rule set
+    ///
+    /// Allows interactions that would count as not overlapping (or not overlapping _as much_) under the strict rule set
+    /// but doesn't allow cases where two exclusive bounds of opposite source (start/end) meet. Here's a table to
+    /// illustrate it:
+    ///
+    /// ```txt
+    /// [] = inclusive bounds, () = exclusive bounds
+    ///
+    /// Reference:                [------]
+    /// OnStart             [-----)      :
+    /// OnEnd                     :      (-----]
+    /// Equal                     (------]
+    /// Equal                     [------)
+    /// Equal                     (------)
+    /// InsideAndSameStart        (---]  :
+    /// InsideAndSameEnd          :  [---)
+    /// ContainsAndSameStart      (----------]
+    /// ContainsAndSameEnd    [----------)
+    ///
+    /// Reference:                (------)
+    /// OnStart             [-----]      :
+    /// OnEnd                     :      [-----]
+    /// Equal                     [------]
+    /// Equal                     (------]
+    /// Equal                     [------)
+    /// InsideAndSameStart        [---]  :
+    /// InsideAndSameEnd          :  [---]
+    /// ContainsAndSameStart      [---------]
+    /// ContainsAndSameEnd     [---------]
+    /// ```
+    Lenient,
+    /// Very lenient rule set
+    ///
+    /// Same as the [lenient rule set](OverlapRuleSet::Lenient), but allows cases where two exclusive bounds of
+    /// opposite source (start/end) meet.
+    VeryLenient,
 }
 
 impl Interval {
