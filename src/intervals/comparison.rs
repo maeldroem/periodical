@@ -42,6 +42,50 @@ pub enum ContainmentPosition {
     Inside,
 }
 
+impl ContainmentPosition {
+    /// Discards the information about bound inclusivity but conserves the variant
+    ///
+    /// **Careful!** This method discards data about bound inclusivity and cannot be recovered after conversion.
+    #[must_use]
+    pub fn to_simple(self) -> SimpleContainmentPosition {
+        match self {
+            Self::OutsideBefore => SimpleContainmentPosition::OutsideBefore,
+            Self::OutsideAfter => SimpleContainmentPosition::OutsideAfter,
+            Self::Outside => SimpleContainmentPosition::Outside,
+            Self::OnStart(_) => SimpleContainmentPosition::OnStart,
+            Self::OnEnd(_) => SimpleContainmentPosition::OnEnd,
+            Self::Inside => SimpleContainmentPosition::Inside,
+        }
+    }
+
+    /// Uses a rule set to transform the containment position into a simple but opinionated one.
+    ///
+    /// **Careful!** This method discards data about bound inclusivity and cannot be recovered after conversion.
+    #[must_use]
+    pub fn to_simple_using_rule_set(self, rule_set: ContainmentRuleSet) -> SimpleContainmentPosition {
+        rule_set.disambiguate(self)
+    }
+}
+
+/// Same as [`ContainmentPosition`] but without information about bound inclusivity
+///
+/// Used for methods that resolve ambiguities caused by bound inclusivity.
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum SimpleContainmentPosition {
+    /// See [`ContainmentPosition::OutsideBefore`]
+    OutsideBefore,
+    /// See [`ContainmentPosition::OutsideAfter`]
+    OutsideAfter,
+    /// See [`ContainmentPosition::Outside`]
+    Outside,
+    /// See [`ContainmentPosition::OnStart`]
+    OnStart,
+    /// See [`ContainmentPosition::OnEnd`]
+    OnEnd,
+    /// See [`ContainmentPosition::Inside`]
+    Inside,
+}
+
 /// Errors that can happen when computing the containment position of some time inside an interval
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum ContainmentPositionError {
@@ -65,6 +109,45 @@ pub enum ContainmentRuleSet {
     ///
     /// If the time falls on an exclusive bound, it is still counted as contained.
     Lenient,
+}
+
+impl ContainmentRuleSet {
+    /// Disambiguates a containment position according to the rule set
+    ///
+    /// **Careful!** This method discards data about bound inclusivity and cannot be recovered after conversion.
+    #[must_use]
+    pub fn disambiguate(&self, containment_position: ContainmentPosition) -> SimpleContainmentPosition {
+        match self {
+            Self::Strict => strict_containment_rule_set_disambiguation(containment_position),
+            Self::Lenient => lenient_containment_rule_set_disambiguation(containment_position),
+        }
+    }
+}
+
+fn strict_containment_rule_set_disambiguation(containment_position: ContainmentPosition) -> SimpleContainmentPosition {
+    match containment_position {
+        ContainmentPosition::OutsideBefore | ContainmentPosition::OnStart(BoundInclusivity::Exclusive) => {
+            SimpleContainmentPosition::OutsideBefore
+        },
+        ContainmentPosition::OutsideAfter | ContainmentPosition::OnEnd(BoundInclusivity::Exclusive) => {
+            SimpleContainmentPosition::OutsideAfter
+        },
+        ContainmentPosition::Outside => SimpleContainmentPosition::Outside,
+        ContainmentPosition::OnStart(BoundInclusivity::Inclusive) => SimpleContainmentPosition::OnStart,
+        ContainmentPosition::OnEnd(BoundInclusivity::Inclusive) => SimpleContainmentPosition::OnEnd,
+        ContainmentPosition::Inside => SimpleContainmentPosition::Inside,
+    }
+}
+
+fn lenient_containment_rule_set_disambiguation(containment_position: ContainmentPosition) -> SimpleContainmentPosition {
+    match containment_position {
+        ContainmentPosition::OutsideBefore => SimpleContainmentPosition::OutsideBefore,
+        ContainmentPosition::OutsideAfter => SimpleContainmentPosition::OutsideAfter,
+        ContainmentPosition::Outside => SimpleContainmentPosition::Outside,
+        ContainmentPosition::OnStart(_) => SimpleContainmentPosition::OnStart,
+        ContainmentPosition::OnEnd(_) => SimpleContainmentPosition::OnEnd,
+        ContainmentPosition::Inside => SimpleContainmentPosition::Inside,
+    }
 }
 
 /// Where the other time interval was found relative to the current time interval
@@ -161,6 +244,74 @@ pub enum OverlapPosition {
     /// See [`Interval::overlap_position`] for more details.
     ContainsAndSameEnd(Option<BoundInclusivity>, Option<BoundInclusivity>),
     /// The given other time interval was found beginning before the time interval's start and ending after the time interval's end
+    Contains,
+}
+
+impl OverlapPosition {
+    /// Discards the information about bound inclusivity but conserves the variant
+    ///
+    /// **Careful!** This method discards data about bound inclusivity and cannot be recovered after conversion.
+    #[must_use]
+    pub fn to_simple(self) -> SimpleOverlapPosition {
+        match self {
+            OverlapPosition::OutsideBefore => SimpleOverlapPosition::OutsideBefore,
+            OverlapPosition::OutsideAfter => SimpleOverlapPosition::OutsideAfter,
+            OverlapPosition::Outside => SimpleOverlapPosition::Outside,
+            OverlapPosition::OnStart(..) => SimpleOverlapPosition::OnStart,
+            OverlapPosition::OnEnd(..) => SimpleOverlapPosition::OnEnd,
+            OverlapPosition::CrossesStart => SimpleOverlapPosition::CrossesStart,
+            OverlapPosition::CrossesEnd => SimpleOverlapPosition::CrossesEnd,
+            OverlapPosition::Inside => SimpleOverlapPosition::Inside,
+            OverlapPosition::InsideAndSameStart(..) => SimpleOverlapPosition::InsideAndSameStart,
+            OverlapPosition::InsideAndSameEnd(..) => SimpleOverlapPosition::InsideAndSameEnd,
+            OverlapPosition::Equal(..) => SimpleOverlapPosition::Equal,
+            OverlapPosition::ContainsAndSameStart(..) => SimpleOverlapPosition::ContainsAndSameStart,
+            OverlapPosition::ContainsAndSameEnd(..) => SimpleOverlapPosition::ContainsAndSameEnd,
+            OverlapPosition::Contains => SimpleOverlapPosition::Contains,
+        }
+    }
+
+    /// Uses a rule set to transform the overlap position into a simple but opinionated one.
+    ///
+    /// **Careful!** This method discards data about bound inclusivity and cannot be recovered after conversion.
+    #[must_use]
+    pub fn to_simple_using_rule_set(self, rule_set: OverlapRuleSet) -> SimpleOverlapPosition {
+        rule_set.disambiguate(self)
+    }
+}
+
+/// Same as [`OverlapPosition`] but without information about bound inclusivity
+///
+/// Used for methods that resolve ambiguities caused by bound inclusivity.
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum SimpleOverlapPosition {
+    /// See [`OverlapPosition::OutsideBefore`]
+    OutsideBefore,
+    /// See [`OverlapPosition::OutsideAfter`]
+    OutsideAfter,
+    /// See [`OverlapPosition::Outside`]
+    Outside,
+    /// See [`OverlapPosition::OnStart`]
+    OnStart,
+    /// See [`OverlapPosition::OnEnd`]
+    OnEnd,
+    /// See [`OverlapPosition::CrossesStart`]
+    CrossesStart,
+    /// See [`OverlapPosition::CrossesEnd`]
+    CrossesEnd,
+    /// See [`OverlapPosition::Inside`]
+    Inside,
+    /// See [`OverlapPosition::InsideAndSameStart`]
+    InsideAndSameStart,
+    /// See [`OverlapPosition::InsideAndSameEnd`]
+    InsideAndSameEnd,
+    /// See [`OverlapPosition::Equal`]
+    Equal,
+    /// See [`OverlapPosition::ContainsAndSameStart`]
+    ContainsAndSameStart,
+    /// See [`OverlapPosition::ContainsAndSameEnd`]
+    ContainsAndSameEnd,
+    /// See [`OverlapPosition::Contains`]
     Contains,
 }
 
@@ -271,6 +422,157 @@ pub enum OverlapRuleSet {
     /// Same as the [lenient rule set](OverlapRuleSet::Lenient), but allows cases where two exclusive bounds of
     /// opposite source (start/end) meet.
     VeryLenient,
+}
+
+impl OverlapRuleSet {
+    /// Disambiguates an overlap position according to the rule set
+    ///
+    /// **Careful!** This method discards data about bound inclusivity and cannot be recovered after conversion.
+    #[must_use]
+    pub fn disambiguate(&self, overlap_position: OverlapPosition) -> SimpleOverlapPosition {
+        match self {
+            Self::Strict => strict_overlap_rule_set_disambiguation(overlap_position),
+            Self::ContinuousToFuture => continuous_to_future_overlap_rule_set_disambiguation(overlap_position),
+            Self::ContinuousToPast => continuous_to_past_overlap_rule_set_disambiguation(overlap_position),
+            Self::Lenient => lenient_overlap_rule_set_disambiguation(overlap_position),
+            Self::VeryLenient => very_lenient_overlap_rule_set_disambiguation(overlap_position),
+        }
+    }
+}
+
+fn strict_overlap_rule_set_disambiguation(overlap_position: OverlapPosition) -> SimpleOverlapPosition {
+    type OP = OverlapPosition;
+    type SimpleOP = SimpleOverlapPosition;
+    type BI = BoundInclusivity;
+
+    match overlap_position {
+        OP::Outside => SimpleOP::Outside,
+        OP::OnStart(BI::Inclusive, BI::Inclusive) => SimpleOP::OnStart,
+        OP::OnStart(..) | OP::OutsideBefore => SimpleOP::OutsideBefore,
+        OP::OnEnd(BI::Inclusive, BI::Inclusive) => SimpleOP::OnEnd,
+        OP::OnEnd(..) | OP::OutsideAfter => SimpleOP::OutsideAfter,
+        OP::CrossesStart
+        | OP::InsideAndSameStart(Some(BI::Exclusive), Some(BI::Inclusive))
+        | OP::Equal((Some(BI::Exclusive), Some(BI::Inclusive)), (Some(BI::Inclusive), Some(BI::Exclusive)))
+        | OP::ContainsAndSameEnd(Some(BI::Inclusive), Some(BI::Exclusive)) => SimpleOP::CrossesStart,
+        OP::CrossesEnd
+        | OP::Equal((Some(BI::Inclusive), Some(BI::Exclusive)), (Some(BI::Exclusive), Some(BI::Inclusive)))
+        | OP::ContainsAndSameStart(Some(BI::Inclusive), Some(BI::Exclusive)) => SimpleOP::CrossesEnd,
+        OP::Inside
+        | OP::InsideAndSameStart(Some(BI::Inclusive), Some(BI::Exclusive))
+        | OP::Equal((Some(BI::Inclusive), Some(BI::Inclusive)), (Some(BI::Exclusive), Some(BI::Exclusive))) => {
+            SimpleOP::Inside
+        },
+        OP::InsideAndSameStart(incl_ref, incl_comp) if incl_ref == incl_comp => SimpleOP::InsideAndSameStart,
+        OP::InsideAndSameEnd(incl_ref, incl_comp) if incl_ref == incl_comp => SimpleOP::InsideAndSameEnd,
+        OP::Equal((incl_ref_from, incl_ref_to), (incl_comp_from, incl_comp_to))
+            if incl_ref_from == incl_comp_from && incl_ref_to == incl_comp_to =>
+        {
+            SimpleOP::Equal
+        },
+        OP::Equal((Some(BI::Inclusive), Some(BI::Inclusive)), (Some(BI::Inclusive), Some(BI::Exclusive)))
+        | OP::Equal((Some(BI::Exclusive), Some(BI::Inclusive)), (Some(BI::Exclusive), Some(BI::Exclusive))) => {
+            SimpleOP::InsideAndSameStart
+        },
+        OP::Equal((Some(BI::Inclusive), Some(BI::Inclusive)), (Some(BI::Exclusive), Some(BI::Inclusive)))
+        | OP::Equal((Some(BI::Inclusive), Some(BI::Exclusive)), (Some(BI::Exclusive), Some(BI::Exclusive))) => {
+            SimpleOP::InsideAndSameEnd
+        },
+        OP::Equal((Some(BI::Inclusive), Some(BI::Exclusive)), (Some(BI::Inclusive), Some(BI::Inclusive)))
+        | OP::Equal((Some(BI::Exclusive), Some(BI::Exclusive)), (Some(BI::Exclusive), Some(BI::Inclusive))) => {
+            SimpleOP::ContainsAndSameStart
+        },
+        OP::Equal((Some(BI::Exclusive), Some(BI::Inclusive)), (Some(BI::Inclusive), Some(BI::Inclusive)))
+        | OP::Equal((Some(BI::Exclusive), Some(BI::Exclusive)), (Some(BI::Inclusive), Some(BI::Exclusive))) => {
+            SimpleOP::ContainsAndSameEnd
+        },
+        OP::Equal((Some(BI::Exclusive), Some(BI::Exclusive)), (Some(BI::Inclusive), Some(BI::Inclusive)))
+        | OP::ContainsAndSameStart(Some(BI::Exclusive), Some(BI::Inclusive))
+        | OP::ContainsAndSameEnd(Some(BI::Exclusive), Some(BI::Inclusive))
+        | OP::Contains => SimpleOP::Contains,
+        OP::ContainsAndSameStart(incl_ref, incl_comp) if incl_ref == incl_comp => SimpleOP::ContainsAndSameStart,
+        OP::ContainsAndSameEnd(incl_ref, incl_comp) if incl_ref == incl_comp => SimpleOP::ContainsAndSameEnd,
+        OP::InsideAndSameStart(None, Some(_)) | OP::InsideAndSameStart(Some(_), None) => {
+            unreachable!(
+                "OverlapPosition::InsideAndSameStart can't be created from a defined bound and an infinite bound"
+            )
+        },
+        OP::InsideAndSameEnd(None, Some(_)) | OP::InsideAndSameEnd(Some(_), None) => {
+            unreachable!(
+                "OverlapPosition::InsideAndSameEnd can't be created from a defined bound and an infinite bound"
+            )
+        },
+        OP::ContainsAndSameStart(None, Some(_)) | OP::ContainsAndSameStart(Some(_), None) => {
+            unreachable!(
+                "OverlapPosition::ContainsAndSameStart can't be created from a defined bound and an infinite bound"
+            )
+        },
+        OP::ContainsAndSameEnd(None, Some(_)) | OP::ContainsAndSameEnd(Some(_), None) => {
+            unreachable!(
+                "OverlapPosition::ContainsAndSameEnd can't be created from a defined bound and an infinite bound"
+            )
+        },
+        OP::InsideAndSameStart(..)
+        | OP::InsideAndSameEnd(..)
+        | OP::Equal(..)
+        | OP::ContainsAndSameStart(..)
+        | OP::ContainsAndSameEnd(..) => unreachable!("Already handled dynamically"),
+    }
+}
+
+fn continuous_to_future_overlap_rule_set_disambiguation(overlap_position: OverlapPosition) -> SimpleOverlapPosition {
+    type OP = OverlapPosition;
+    type SimpleOP = SimpleOverlapPosition;
+    type BI = BoundInclusivity;
+
+    match overlap_position {
+        OP::OnStart(BI::Inclusive, _) => SimpleOP::OnStart,
+        OP::OnStart(..) => SimpleOP::OutsideBefore,
+        OP::OnEnd(_, BI::Inclusive) => SimpleOP::OnEnd,
+        OP::OnEnd(..) => SimpleOP::OutsideAfter,
+        _ => strict_overlap_rule_set_disambiguation(overlap_position),
+    }
+}
+
+fn continuous_to_past_overlap_rule_set_disambiguation(overlap_position: OverlapPosition) -> SimpleOverlapPosition {
+    type OP = OverlapPosition;
+    type SimpleOP = SimpleOverlapPosition;
+    type BI = BoundInclusivity;
+
+    match overlap_position {
+        OP::OnStart(_, BI::Inclusive) => SimpleOP::OnStart,
+        OP::OnStart(..) => SimpleOP::OutsideBefore,
+        OP::OnEnd(BI::Inclusive, _) => SimpleOP::OnEnd,
+        OP::OnEnd(..) => SimpleOP::OutsideAfter,
+        _ => strict_overlap_rule_set_disambiguation(overlap_position),
+    }
+}
+
+fn lenient_overlap_rule_set_disambiguation(overlap_position: OverlapPosition) -> SimpleOverlapPosition {
+    type OP = OverlapPosition;
+    type SimpleOP = SimpleOverlapPosition;
+    type BI = BoundInclusivity;
+
+    match overlap_position {
+        OP::OutsideBefore | OP::OnStart(BI::Exclusive, BI::Exclusive) => SimpleOP::OutsideBefore,
+        OP::OutsideAfter | OP::OnEnd(BI::Exclusive, BI::Exclusive) => SimpleOP::OutsideAfter,
+        OP::Outside => SimpleOP::Outside,
+        OP::OnStart(..) => SimpleOP::OnStart,
+        OP::OnEnd(..) => SimpleOP::OnEnd,
+        OP::CrossesStart => SimpleOP::CrossesStart,
+        OP::CrossesEnd => SimpleOP::CrossesEnd,
+        OP::Inside => SimpleOP::Inside,
+        OP::InsideAndSameStart(..) => SimpleOP::InsideAndSameStart,
+        OP::InsideAndSameEnd(..) => SimpleOP::InsideAndSameEnd,
+        OP::Equal(..) => SimpleOP::Equal,
+        OP::Contains => SimpleOP::Contains,
+        OP::ContainsAndSameStart(..) => SimpleOP::ContainsAndSameStart,
+        OP::ContainsAndSameEnd(..) => SimpleOP::ContainsAndSameEnd,
+    }
+}
+
+fn very_lenient_overlap_rule_set_disambiguation(overlap_position: OverlapPosition) -> SimpleOverlapPosition {
+    overlap_position.to_simple()
 }
 
 impl Interval {
