@@ -585,6 +585,47 @@ fn very_lenient_overlap_rule_set_disambiguation(overlap_position: OverlapPositio
     overlap_position.to_simple()
 }
 
+/// All rules for overlapping by converting a [`SimpleOverlapPosition`] into a [`bool`]
+///
+/// All variants take an [`OverlapRuleSet`], but also describe or contain more information about how to determine
+/// what counts as overlapping and what doesn't.
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum OverlapRule {
+    /// Counts adjacent / "touching" intervals as overlapping
+    AllowAdjacency,
+    /// Doesn't count adjacent / "touching" intervals as overlapping
+    DenyAdjacency,
+}
+
+impl OverlapRule {
+    /// Returns whether the given [`SimpleOverlapPosition`] counts as overlap
+    #[must_use]
+    pub fn counts_as_overlap(&self, simple_overlap_position: SimpleOverlapPosition) -> bool {
+        match self {
+            Self::AllowAdjacency => allow_adjacency_overlap_rules_counts_as_overlap(simple_overlap_position),
+            Self::DenyAdjacency => deny_adjacency_overlap_rules_counts_as_overlap(simple_overlap_position),
+        }
+    }
+}
+
+fn allow_adjacency_overlap_rules_counts_as_overlap(simple_overlap_position: SimpleOverlapPosition) -> bool {
+    !matches!(
+        simple_overlap_position,
+        SimpleOverlapPosition::OutsideBefore | SimpleOverlapPosition::OutsideAfter | SimpleOverlapPosition::Outside
+    )
+}
+
+fn deny_adjacency_overlap_rules_counts_as_overlap(simple_overlap_position: SimpleOverlapPosition) -> bool {
+    !matches!(
+        simple_overlap_position,
+        SimpleOverlapPosition::OutsideBefore
+            | SimpleOverlapPosition::OutsideAfter
+            | SimpleOverlapPosition::Outside
+            | SimpleOverlapPosition::OnStart
+            | SimpleOverlapPosition::OnEnd
+    )
+}
+
 impl Interval {
     /// Returns the containment position of the given time
     ///
@@ -600,7 +641,10 @@ impl Interval {
     ///
     /// # Errors
     ///
-    /// If the interval the operation is done on is relative, the methods returns [`ContainmentPositionError::RelativeInterval`]
+    /// - Returns [`RelativeInterval`](ContainmentPositionError::RelativeInterval) if the interval the operation
+    ///   is done on is relative
+    /// - Returns [`MalformedInterval`](ContainmentPositionError::MalformedInterval) if the interval is malformed
+    ///   (see [`ClosedAbsoluteInterval::is_malformed`](crate::intervals::interval::ClosedAbsoluteInterval::is_malformed))
     pub fn containment_position(&self, time: DateTime<Utc>) -> Result<ContainmentPosition, ContainmentPositionError> {
         match self {
             Self::ClosedRelative(_) | Self::HalfOpenRelative(_) => Err(ContainmentPositionError::RelativeInterval),
@@ -611,9 +655,28 @@ impl Interval {
         }
     }
 
+    /// Returns the simple containment position of the given time using a given [containment rule set](ContainmentRuleSet)
+    ///
+    /// See [`Interval::containment_position`] for more details about containment position.
+    ///
+    /// # Errors
+    ///
+    /// - Returns [`RelativeInterval`](ContainmentPositionError::RelativeInterval) if the interval the operation
+    ///   is done on is relative
+    /// - Returns [`MalformedInterval`](ContainmentPositionError::MalformedInterval) if the interval is malformed
+    ///   (see [`ClosedAbsoluteInterval::is_malformed`](crate::intervals::interval::ClosedAbsoluteInterval::is_malformed))
+    pub fn simple_containment_position(
+        &self,
+        time: DateTime<Utc>,
+        rule_set: ContainmentRuleSet,
+    ) -> Result<SimpleContainmentPosition, ContainmentPositionError> {
+        self.containment_position(time)
+            .map(|containment_position| rule_set.disambiguate(containment_position))
+    }
+
     /// Returns whether a certain time is contained in the interval
     ///
-    /// This method uses [`Interval::containment_position`]. If this aforementionned method returns an [`Err`],
+    /// This method uses [`Interval::containment_position`]. If this aforementioned method returns an [`Err`],
     /// then this method returns false.
     ///
     /// If it returns [`Ok`], then the provided function is in charge of determining whether the [`ContainmentPosition`]
@@ -672,7 +735,7 @@ impl Interval {
     ///
     /// - Returns [`OverlapPositionError::RelativeInterval`] if the current or given interval is relative.
     /// - Returns [`OverlapPositionError::MalformedInterval`] if the current or given interval is malformed in any way
-    ///   (e.g. the start time is after the end time)
+    ///   (see [`ClosedAbsoluteInterval::is_malformed`](crate::intervals::interval::ClosedAbsoluteInterval::is_malformed))
     pub fn overlap_position(&self, other: &Self) -> Result<OverlapPosition, OverlapPositionError> {
         match (self, other) {
             (Self::ClosedRelative(_) | Self::HalfOpenRelative(_), _)
@@ -709,28 +772,114 @@ impl Interval {
         }
     }
 
-    /// Returns whether the given other interval overlaps the current interval
+    /// Returns the simple overlap position of the given interval using a given rule set
     ///
-    /// This method uses [`Interval::overlap_position`]. If this aforementionned method returns an [`Err`],
+    /// See [`Interval::overlap_position`] for more details about overlap position.
+    ///
+    /// # Errors
+    ///
+    /// - Returns [`OverlapPositionError::RelativeInterval`] if the current or given interval is relative.
+    /// - Returns [`OverlapPositionError::MalformedInterval`] if the current or given interval is malformed in any way
+    ///   (see [`ClosedAbsoluteInterval::is_malformed`](crate::intervals::interval::ClosedAbsoluteInterval::is_malformed))
+    pub fn simple_overlap_position(
+        &self,
+        other: &Self,
+        rule_set: OverlapRuleSet,
+    ) -> Result<SimpleOverlapPosition, OverlapPositionError> {
+        self.overlap_position(other)
+            .map(|overlap_position| rule_set.disambiguate(overlap_position))
+    }
+
+    /// Returns whether the given other interval overlaps the current one using predetermined rules
+    ///
+    /// Uses the [`Strict` rule set](OverlapRuleSet::Strict) with the following additional rules:
+    ///
+    /// - [`DenyAdjacency`](OverlapRule::DenyAdjacency)
+    ///
+    /// Those have been chosen because they are the closest to how we mathematically and humanly interpret overlaps.
+    ///
+    /// # See also
+    ///
+    /// If you are looking to choose the rule set and the rules, see [`Interval::overlaps`].
+    ///
+    /// If you want even more granular control, see [`Interval::overlaps_using_simple`].
+    #[must_use]
+    pub fn simple_overlaps(&self, other: &Self) -> bool {
+        self.overlaps(other, OverlapRuleSet::Strict, [OverlapRule::DenyAdjacency])
+    }
+
+    /// Returns whether the given other interval overlaps the current one using the given [overlap rules](`OverlapRule`)
+    ///
+    /// This method uses [`Interval::simple_overlap_position`]. If this aforementioned method returns an [`Err`],
+    /// then this method returns false.
+    ///
+    /// If it returns [`Ok`], then the [`OverlapRule`]s are checked. This method returns true only if all provided
+    /// [`OverlapRule`]s are respected (i.e. returned true when calling [`OverlapRule::counts_as_overlap`]).
+    ///
+    /// # See also
+    ///
+    /// If you are looking for the most simple way of checking for overlap, see [`Interval::simple_overlaps`].
+    ///
+    /// If you are looking for more control over what counts as overlap, see [`Interval::overlaps_using_simple`].
+    ///
+    /// If you want extremely granular control over what counts as overlap, see [`Interval::overlaps_using`].
+    #[must_use]
+    pub fn overlaps(
+        &self,
+        other: &Self,
+        rule_set: OverlapRuleSet,
+        rules: impl IntoIterator<Item = OverlapRule>,
+    ) -> bool {
+        self.simple_overlap_position(other, rule_set)
+            .map(|simple_overlap_position| {
+                rules
+                    .into_iter()
+                    .all(|rule| rule.counts_as_overlap(simple_overlap_position))
+            })
+            .unwrap_or(false)
+    }
+
+    /// Returns whether the given other interval overlaps the current interval using a custom function
+    ///
+    /// This method uses [`Interval::overlap_position`]. If this aforementioned method returns an [`Err`],
     /// then this method returns false.
     ///
     /// If it returns [`Ok`], then the provided function is in charge of determining whether the [`OverlapPosition`]
     /// given by [`Interval::overlap_position`] counts as overlapping or not.
     ///
-    /// If instead you want predetermined decisions on whether some positions count as overlapping or not,
-    /// check out [`Interval::overlaps_using_rule_set`].
+    /// # See also
+    ///
+    /// If you are looking for control over what's considered as overlapping but still want
+    /// predetermined [`SimpleOverlapPosition`]s, see [`Interval::overlaps_using_simple`].
+    ///
+    /// If you are looking for predetermined decisions on what's considered as overlapping, see [`Interval::overlaps`].
     #[must_use]
-    pub fn overlaps<F>(&self, other: &Self, f: F) -> bool
+    pub fn overlaps_using<F>(&self, other: &Self, f: F) -> bool
     where
         F: FnOnce(OverlapPosition) -> bool,
     {
         self.overlap_position(other).map(f).unwrap_or(false)
     }
 
-    /// TODO
+    /// Returns whether the given other interval overlaps the current interval using a custom function
+    ///
+    /// This method uses [`Interval::simple_overlap_position`]. If this aforementionned method returns an [`Err`],
+    /// then this method returns false.
+    ///
+    /// If it returns [`Ok`], then the provided function is in charge of determining whether the [`SimpleOverlapPosition`]
+    /// given by [`Interval::simple_overlap_position`] counts as overlapping or not.
+    ///
+    /// # See also
+    ///
+    /// If you are looking for more granular control over what's considered as overlapping, see [`Interval::overlaps_using`].
+    ///
+    /// If you are looking for predetermined decisions on what's considered as overlapping, see [`Interval::overlaps`].
     #[must_use]
-    pub fn overlaps_using_rule_set(&self, other: &Self, rule_set: OverlapRuleSet) -> bool {
-        todo!()
+    pub fn overlaps_using_simple<F>(&self, other: &Self, rule_set: OverlapRuleSet, f: F) -> bool
+    where
+        F: FnOnce(SimpleOverlapPosition) -> bool,
+    {
+        self.simple_overlap_position(other, rule_set).map(f).unwrap_or(false)
     }
 }
 
