@@ -160,6 +160,60 @@ fn lenient_containment_rule_set_disambiguation(containment_position: Containment
     }
 }
 
+/// All rules for containment by converting a [`SimpleContainmentPosition`] into a [`bool`]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum ContainmentRule {
+    /// Doesn't count as contained when the time is on the start of the interval
+    DenyOnStart,
+    /// Doesn't count as contained when the time is on the end of the interval
+    DenyOnEnd,
+    /// Doesn't count as contained when the time is on either end of the interval
+    DenyOnBounds,
+}
+
+impl ContainmentRule {
+    /// Returns whether the given [`SimpleContainmentPosition`] counts as contained
+    #[must_use]
+    pub fn counts_as_contained(&self, simple_containment_position: SimpleContainmentPosition) -> bool {
+        match self {
+            Self::DenyOnStart => deny_on_start_containment_rule_counts_as_contained(simple_containment_position),
+            Self::DenyOnEnd => deny_on_end_containment_rule_counts_as_contained(simple_containment_position),
+            Self::DenyOnBounds => deny_on_bounds_containment_rule_counts_as_contained(simple_containment_position),
+        }
+    }
+}
+
+fn deny_on_start_containment_rule_counts_as_contained(simple_containment_position: SimpleContainmentPosition) -> bool {
+    !matches!(
+        simple_containment_position,
+        SimpleContainmentPosition::OutsideBefore
+            | SimpleContainmentPosition::OutsideAfter
+            | SimpleContainmentPosition::Outside
+            | SimpleContainmentPosition::OnStart
+    )
+}
+
+fn deny_on_end_containment_rule_counts_as_contained(simple_containment_position: SimpleContainmentPosition) -> bool {
+    !matches!(
+        simple_containment_position,
+        SimpleContainmentPosition::OutsideBefore
+            | SimpleContainmentPosition::OutsideAfter
+            | SimpleContainmentPosition::Outside
+            | SimpleContainmentPosition::OnEnd
+    )
+}
+
+fn deny_on_bounds_containment_rule_counts_as_contained(simple_containment_position: SimpleContainmentPosition) -> bool {
+    !matches!(
+        simple_containment_position,
+        SimpleContainmentPosition::OutsideBefore
+            | SimpleContainmentPosition::OutsideAfter
+            | SimpleContainmentPosition::Outside
+            | SimpleContainmentPosition::OnStart
+            | SimpleContainmentPosition::OnEnd
+    )
+}
+
 /// Where the other time interval was found relative to the current time interval
 ///
 /// See [`Interval::overlap_position`] for more information
@@ -586,15 +640,24 @@ fn very_lenient_overlap_rule_set_disambiguation(overlap_position: OverlapPositio
 }
 
 /// All rules for overlapping by converting a [`SimpleOverlapPosition`] into a [`bool`]
-///
-/// All variants take an [`OverlapRuleSet`], but also describe or contain more information about how to determine
-/// what counts as overlapping and what doesn't.
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum OverlapRule {
     /// Counts adjacent / "touching" intervals as overlapping
     AllowAdjacency,
     /// Doesn't count adjacent / "touching" intervals as overlapping
     DenyAdjacency,
+    /// Counts interval as overlapping if it is adjacent only in the past compared to the reference interval
+    AllowPastAdjacency,
+    /// Doesn't count interval as overlapping if it is adjacent only in the past compared to the reference interval
+    ///
+    /// Same as [`OverlapRule::AllowFutureAdjacency`]
+    DenyPastAdjacency,
+    /// Counts interval as overlapping if it is adjacent only in the future compared to the reference interval
+    AllowFutureAdjacency,
+    /// Doesn't count interval as overlapping if it is adjacent only in the future compared to the reference interval
+    ///
+    /// Same as [`OverlapRule::AllowPastAdjacency`]
+    DenyFutureAdjacency,
 }
 
 impl OverlapRule {
@@ -604,6 +667,12 @@ impl OverlapRule {
         match self {
             Self::AllowAdjacency => allow_adjacency_overlap_rules_counts_as_overlap(simple_overlap_position),
             Self::DenyAdjacency => deny_adjacency_overlap_rules_counts_as_overlap(simple_overlap_position),
+            Self::AllowPastAdjacency | Self::DenyFutureAdjacency => {
+                allow_past_adjacency_overlap_rules_counts_as_overlap(simple_overlap_position)
+            },
+            Self::AllowFutureAdjacency | Self::DenyPastAdjacency => {
+                allow_future_adjacency_overlap_rules_counts_as_overlap(simple_overlap_position)
+            },
         }
     }
 }
@@ -623,6 +692,26 @@ fn deny_adjacency_overlap_rules_counts_as_overlap(simple_overlap_position: Simpl
             | SimpleOverlapPosition::Outside
             | SimpleOverlapPosition::OnStart
             | SimpleOverlapPosition::OnEnd
+    )
+}
+
+fn allow_past_adjacency_overlap_rules_counts_as_overlap(simple_overlap_position: SimpleOverlapPosition) -> bool {
+    !matches!(
+        simple_overlap_position,
+        SimpleOverlapPosition::OutsideBefore
+            | SimpleOverlapPosition::OutsideAfter
+            | SimpleOverlapPosition::Outside
+            | SimpleOverlapPosition::OnEnd
+    )
+}
+
+fn allow_future_adjacency_overlap_rules_counts_as_overlap(simple_overlap_position: SimpleOverlapPosition) -> bool {
+    !matches!(
+        simple_overlap_position,
+        SimpleOverlapPosition::OutsideBefore
+            | SimpleOverlapPosition::OutsideAfter
+            | SimpleOverlapPosition::Outside
+            | SimpleOverlapPosition::OnStart
     )
 }
 
@@ -674,7 +763,55 @@ impl Interval {
             .map(|containment_position| rule_set.disambiguate(containment_position))
     }
 
-    /// Returns whether a certain time is contained in the interval
+    /// Returns whether the given time is contained in the interval using predetermined rules
+    ///
+    /// Uses the [`Strict` rule set](ContainmentRuleSet::Strict) with no additional rules.
+    ///
+    /// The rule set has been chosen because they are the closest to how we mathematically
+    /// and humanly interpret containment.
+    ///
+    /// # See also
+    ///
+    /// If you are looking to choose the rule set and the rules, see [`Interval::contains`].
+    ///
+    /// If you want even more granular control, see [`Interval::contains_using_simple`].
+    #[must_use]
+    pub fn simple_contains(&self, time: DateTime<Utc>) -> bool {
+        self.contains(time, ContainmentRuleSet::Strict, [])
+    }
+
+    /// Returns whether the given time is contained in the interval using the given [containment rules](`ContainmentRule`)
+    ///
+    /// This method uses [`Interval::simple_containment_position`]. If this aforementioned method returns an [`Err`],
+    /// then this method returns false.
+    ///
+    /// If it returns [`Ok`], then the [`ContainmentRule`]s are checked. This method returns true only if all provided
+    /// [`ContainmentRule`]s are respected (i.e. returned true when calling [`ContainmentRule::counts_as_contained`]).
+    ///
+    /// # See also
+    ///
+    /// If you are looking for the simplest way of checking for containment, see [`Interval::simple_contains`].
+    ///
+    /// If you are looking for more control over what counts as contained, see [`Interval::contains_using_simple`].
+    ///
+    /// If you want extremely granular control over what counts as contained, see [`Interval::contains_using`].
+    #[must_use]
+    pub fn contains(
+        &self,
+        time: DateTime<Utc>,
+        rule_set: ContainmentRuleSet,
+        rules: impl IntoIterator<Item = ContainmentRule>,
+    ) -> bool {
+        self.simple_containment_position(time, rule_set)
+            .map(|simple_containment_position| {
+                rules
+                    .into_iter()
+                    .all(|rule| rule.counts_as_contained(simple_containment_position))
+            })
+            .unwrap_or(false)
+    }
+
+    /// Returns whether a certain time is contained in the interval using a custom function
     ///
     /// This method uses [`Interval::containment_position`]. If this aforementioned method returns an [`Err`],
     /// then this method returns false.
@@ -682,20 +819,39 @@ impl Interval {
     /// If it returns [`Ok`], then the provided function is in charge of determining whether the [`ContainmentPosition`]
     /// given by [`Interval::containment_position`] counts as the passed time being contained in the interval.
     ///
-    /// If instead you want predetermined decisions on whether some positions count as contained or not,
-    /// check out [`Interval::contains_using_rule_set`].
+    /// # See also
+    ///
+    /// If you are looking for control over what's considered as containment but still want
+    /// predetermined [`SimpleContainmentPosition`]s, see [`Interval::contains_using_simple`].
+    ///
+    /// If you are looking for predetermined decisions on what's considered as contained, see [`Interval::contains`].
     #[must_use]
-    pub fn contains<F>(&self, time: DateTime<Utc>, f: F) -> bool
+    pub fn contains_using<F>(&self, time: DateTime<Utc>, f: F) -> bool
     where
         F: FnOnce(ContainmentPosition) -> bool,
     {
         self.containment_position(time).map(f).unwrap_or(false)
     }
 
-    /// TODO
+    /// Returns whether the given time is contained in the interval using a custom function
+    ///
+    /// This method uses [`Interval::simple_containment_position`]. If this aforementioned method returns an [`Err`],
+    /// then this method returns false.
+    ///
+    /// If it returns [`Ok`], then the provided function is in charge of determining whether the [`SimpleContainmentPosition`]
+    /// given by [`Interval::simple_containment_position`] counts as contained or not.
+    ///
+    /// # See also
+    ///
+    /// If you are looking for more granular control over what's considered as contained, see [`Interval::overlaps_using`].
+    ///
+    /// If you are looking for predetermined decisions on what's considered as overlapping, see [`Interval::overlaps`].
     #[must_use]
-    pub fn contains_using_rule_set(&self, time: DateTime<Utc>, rule_set: ContainmentRuleSet) -> bool {
-        todo!();
+    pub fn contains_using_simple<F>(&self, time: DateTime<Utc>, rule_set: ContainmentRuleSet, f: F) -> bool
+    where
+        F: FnOnce(SimpleContainmentPosition) -> bool,
+    {
+        self.simple_containment_position(time, rule_set).map(f).unwrap_or(false)
     }
 
     /// Returns the overlap position of the given interval
@@ -818,7 +974,7 @@ impl Interval {
     ///
     /// # See also
     ///
-    /// If you are looking for the most simple way of checking for overlap, see [`Interval::simple_overlaps`].
+    /// If you are looking for the simplest way of checking for overlap, see [`Interval::simple_overlaps`].
     ///
     /// If you are looking for more control over what counts as overlap, see [`Interval::overlaps_using_simple`].
     ///
