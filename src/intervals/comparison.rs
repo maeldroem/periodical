@@ -10,7 +10,7 @@
 
 use std::cmp::Ordering;
 
-use chrono::{DateTime, Duration, Utc};
+use chrono::{DateTime, Duration, DurationRound, RoundingError, Utc};
 
 use crate::intervals::Interval;
 use crate::intervals::interval::{ClosedAbsoluteInterval, HalfOpenAbsoluteInterval};
@@ -25,6 +25,28 @@ pub enum Precision {
     ToPast(Duration),
     /// Ceils the compared times to the given duration
     ToFuture(Duration),
+}
+
+impl Precision {
+    /// Uses the given precision to precise the given time
+    /// 
+    /// # Errors
+    /// 
+    /// Time conversions can fail for different reasons, for example if the time would overflow after conversion,
+    /// if the given duration used is too big, negative or zero, etc.
+    /// 
+    /// For more details, check [`chrono`'s limitations on the `DurationRound` trait](https://docs.rs/chrono/latest/chrono/round/trait.DurationRound.html#limitations).
+    pub fn try_precise_time(&self, time: DateTime<Utc>) -> Result<DateTime<Utc>, RoundingError> {
+        match self {
+            Self::ToNearest(duration) => time.duration_round(*duration),
+            Self::ToPast(duration) => time.duration_trunc(*duration),
+            Self::ToFuture(duration) => time.duration_round_up(*duration),
+        }
+    }
+
+    // pub fn try_precise_interval(&self, interval: Interval) -> Result<Interval, RoundingError> {
+    //     match 
+    // }
 }
 
 /// Where the given time was found relative to a time interval
@@ -744,6 +766,17 @@ impl Interval {
         }
     }
 
+    /// Tries to return the containment position of the given time with the given [`Precision`]
+    /// 
+    /// Acts like [`Interval::containment_position`] but precises the given time with the given precision
+    /// 
+    /// # Errors
+    /// 
+    /// See [`Precision::try_precise_time`]
+    pub fn try_containment_position_with_precision(&self, time: DateTime<Utc>, precision: Precision) -> Result<Result<ContainmentPosition, ContainmentPositionError>, RoundingError> {
+        Ok(self.containment_position(precision.try_precise_time(time)?))
+    }
+
     /// Returns the simple containment position of the given time using a given [containment rule set](ContainmentRuleSet)
     ///
     /// See [`Interval::containment_position`] for more details about containment position.
@@ -763,6 +796,17 @@ impl Interval {
             .map(|containment_position| rule_set.disambiguate(containment_position))
     }
 
+    /// Tries to return the simple containment position of the given time using a given [containment rule set](ContainmentRuleSet) and the given [`Precision`]
+    /// 
+    /// Acts like [`Interval::simple_containment_position`] but precises the given time with the given precision
+    /// 
+    /// # Errors
+    /// 
+    /// See [`Precision::try_precise_time`]
+    pub fn try_simple_containment_position_with_precision(&self, time: DateTime<Utc>, rule_set: ContainmentRuleSet, precision: Precision) -> Result<Result<SimpleContainmentPosition, ContainmentPositionError>, RoundingError> {
+        Ok(self.simple_containment_position(precision.try_precise_time(time)?, rule_set))
+    }
+
     /// Returns whether the given time is contained in the interval using predetermined rules
     ///
     /// Uses the [`Strict` rule set](ContainmentRuleSet::Strict) with no additional rules.
@@ -778,6 +822,17 @@ impl Interval {
     #[must_use]
     pub fn simple_contains(&self, time: DateTime<Utc>) -> bool {
         self.contains(time, ContainmentRuleSet::Strict, [])
+    }
+
+    /// Tries to return whether the given time (with the given precision) is contained in the interval using predetermined rules
+    /// 
+    /// Acts like [`Interval::simple_contains`] but precises the given time with the given precision
+    /// 
+    /// # Errors
+    /// 
+    /// See [`Precision::try_precise_time`]
+    pub fn try_simple_contains_with_precision(&self, time: DateTime<Utc>, precision: Precision) -> Result<bool, RoundingError> {
+        Ok(self.simple_contains(precision.try_precise_time(time)?))
     }
 
     /// Returns whether the given time is contained in the interval using the given [containment rules](`ContainmentRule`)
@@ -811,7 +866,18 @@ impl Interval {
             .unwrap_or(false)
     }
 
-    /// Returns whether a certain time is contained in the interval using a custom function
+    /// Ties to return whether the given time (with the given precision) is contained in the interval using the given [containment rules](`ContainmentRule`)
+    /// 
+    /// Acts like [`Interval::contains`] but precises the given time with the given precision
+    /// 
+    /// # Errors
+    /// 
+    /// See [`Precision::try_precise_time`]
+    pub fn try_contains_with_precision(&self, time: DateTime<Utc>, rule_set: ContainmentRuleSet, rules: impl IntoIterator<Item = ContainmentRule>, precision: Precision) -> Result<bool, RoundingError> {
+        Ok(self.contains(precision.try_precise_time(time)?, rule_set, rules))
+    }
+
+    /// Returns whether the given time is contained in the interval using a custom function
     ///
     /// This method uses [`Interval::containment_position`]. If this aforementioned method returns an [`Err`],
     /// then this method returns false.
@@ -833,6 +899,20 @@ impl Interval {
         self.containment_position(time).map(f).unwrap_or(false)
     }
 
+    /// Tries to return whether the given time (with the given precision) is contained in the interval using a custom function
+    /// 
+    /// Acts like [`Interval::contains_using`] but precises the given time with the given precision
+    /// 
+    /// # Errors
+    /// 
+    /// See [`Precision::try_precise_time`]
+    pub fn try_contains_using_with_precision<F>(&self, time: DateTime<Utc>, f: F, precision: Precision) -> Result<bool, RoundingError>
+    where
+        F: FnOnce(ContainmentPosition) -> bool,
+    {
+        Ok(self.contains_using(precision.try_precise_time(time)?, f))
+    }
+
     /// Returns whether the given time is contained in the interval using a custom function
     ///
     /// This method uses [`Interval::simple_containment_position`]. If this aforementioned method returns an [`Err`],
@@ -852,6 +932,20 @@ impl Interval {
         F: FnOnce(SimpleContainmentPosition) -> bool,
     {
         self.simple_containment_position(time, rule_set).map(f).unwrap_or(false)
+    }
+
+    /// Tries to return whether the given time (with the given precision) is contained in the interval using a custom function
+    /// 
+    /// Acts like [`Interval::contains_using_simple`] but precises the given time with the given precision
+    /// 
+    /// # Errors
+    /// 
+    /// See [`Precision::try_precise_time`] and [`Interval::containment_position`]
+    pub fn try_contains_using_simple_with_precision<F>(&self, time: DateTime<Utc>, rule_set: ContainmentRuleSet, f: F, precision: Precision) -> Result<bool, RoundingError>
+    where
+        F: FnOnce(SimpleContainmentPosition) -> bool,
+    {
+        Ok(self.contains_using_simple(precision.try_precise_time(time)?, rule_set, f))
     }
 
     /// Returns the overlap position of the given interval
@@ -1047,7 +1141,7 @@ fn containment_position_closed(
         return Err(ContainmentPositionError::MalformedInterval);
     }
 
-    let containment_position = match (time.cmp(interval.from()), time.cmp(interval.to())) {
+    let containment_position = match (time.cmp(&interval.from()), time.cmp(&interval.to())) {
         (Ordering::Less, _) => ContainmentPosition::OutsideBefore,
         (_, Ordering::Greater) => ContainmentPosition::OutsideAfter,
         (Ordering::Equal, _) => ContainmentPosition::OnStart(interval.from_inclusivity()),
@@ -1059,7 +1153,7 @@ fn containment_position_closed(
 }
 
 fn containment_position_half_open(interval: &HalfOpenAbsoluteInterval, time: DateTime<Utc>) -> ContainmentPosition {
-    match (time.cmp(interval.reference_time()), interval.opening_direction()) {
+    match (time.cmp(&interval.reference_time()), interval.opening_direction()) {
         (Ordering::Less, OpeningDirection::ToPast) | (Ordering::Greater, OpeningDirection::ToFuture) => {
             ContainmentPosition::Inside
         },
@@ -1082,8 +1176,8 @@ fn overlap_position_closed_pair(
         return Err(OverlapPositionError::MalformedInterval);
     }
 
-    let b_from_cmp = (b.from().cmp(a.from()), b.from().cmp(a.to()));
-    let b_to_cmp = (b.to().cmp(a.from()), b.to().cmp(a.to()));
+    let b_from_cmp = (b.from().cmp(&a.from()), b.from().cmp(&a.to()));
+    let b_to_cmp = (b.to().cmp(&a.from()), b.to().cmp(&a.to()));
 
     let overlap_position = match (b_from_cmp, b_to_cmp) {
         (_, (Ordering::Less, _)) => OverlapPosition::OutsideBefore,
@@ -1124,8 +1218,8 @@ fn overlap_position_closed_half_open(
     }
 
     let overlap_position = match (
-        b.reference_time().cmp(a.from()),
-        b.reference_time().cmp(a.to()),
+        b.reference_time().cmp(&a.from()),
+        b.reference_time().cmp(&a.to()),
         b.opening_direction(),
     ) {
         (Ordering::Less, _, OpeningDirection::ToPast) => OverlapPosition::OutsideBefore,
@@ -1161,8 +1255,8 @@ fn overlap_position_half_open_closed(
     }
 
     let overlap_position = match (
-        b.from().cmp(a.reference_time()),
-        b.to().cmp(a.reference_time()),
+        b.from().cmp(&a.reference_time()),
+        b.to().cmp(&a.reference_time()),
         a.opening_direction(),
     ) {
         (_, Ordering::Less, OpeningDirection::ToFuture) => OverlapPosition::OutsideBefore,
@@ -1190,7 +1284,7 @@ fn overlap_position_half_open_closed(
 
 fn overlap_position_half_open_pair(a: &HalfOpenAbsoluteInterval, b: &HalfOpenAbsoluteInterval) -> OverlapPosition {
     match (
-        b.reference_time().cmp(a.reference_time()),
+        b.reference_time().cmp(&a.reference_time()),
         a.opening_direction(),
         b.opening_direction(),
     ) {

@@ -1,4 +1,11 @@
-use chrono::{DateTime, Duration, Utc};
+//! Intervals
+//! 
+//! The core of intervals is implemented here. You will find the implementations for each different variant
+//! of intervals, but also find how the principal structure, [`Interval`] works.
+
+use chrono::{DateTime, Duration, RoundingError, Utc};
+
+use crate::intervals::comparison::Precision;
 
 use super::meta::{BoundInclusivity, Duration as IntervalDuration, OpeningDirection, Openness, Relativity};
 
@@ -41,16 +48,34 @@ impl ClosedAbsoluteInterval {
         }
     }
 
-    /// Returns a reference to the start time
+    /// Returns the start time
     #[must_use]
-    pub fn from(&self) -> &DateTime<Utc> {
-        &self.from
+    pub fn from(&self) -> DateTime<Utc> {
+        self.from
     }
 
-    /// Returns a reference to the end time
+    /// Returns the end time
     #[must_use]
-    pub fn to(&self) -> &DateTime<Utc> {
-        &self.to
+    pub fn to(&self) -> DateTime<Utc> {
+        self.to
+    }
+
+    /// Tries to return the start time rounded with the given precision
+    /// 
+    /// # Errors
+    /// 
+    /// See [`Precision::try_precise_time`]
+    pub fn try_from_with_precision(&self, precision: Precision) -> Result<DateTime<Utc>, RoundingError> {
+        precision.try_precise_time(self.from)
+    }
+
+    /// Tries to return the start time rounded with the given precision
+    /// 
+    /// # Errors
+    /// 
+    /// See [`Precision::try_precise_time`]
+    pub fn try_to_with_precision(&self, precision: Precision) -> Result<DateTime<Utc>, RoundingError> {
+        precision.try_precise_time(self.to)
     }
 
     /// Returns the inclusivity of the start bound
@@ -133,16 +158,16 @@ impl ClosedRelativeInterval {
         }
     }
 
-    /// Returns a reference to the offset
+    /// Returns the offset of the interval
     #[must_use]
-    pub fn offset(&self) -> &Duration {
-        &self.offset
+    pub fn offset(&self) -> Duration {
+        self.offset
     }
 
-    /// Returns a reference to the length
+    /// Returns the length of the interval
     #[must_use]
-    pub fn length(&self) -> &Duration {
-        &self.length
+    pub fn length(&self) -> Duration {
+        self.length
     }
 
     /// Returns the inclusivity of the start bound
@@ -214,10 +239,19 @@ impl HalfOpenAbsoluteInterval {
         }
     }
 
-    /// Returns a reference to the reference time
+    /// Returns the reference time of the interval
     #[must_use]
-    pub fn reference_time(&self) -> &DateTime<Utc> {
-        &self.reference_time
+    pub fn reference_time(&self) -> DateTime<Utc> {
+        self.reference_time
+    }
+
+    /// Tries to return the reference time with the given precision
+    /// 
+    /// # Errors
+    /// 
+    /// See [`Precision::try_precise_time`]
+    pub fn try_reference_time_with_precision(&self, precision: Precision) -> Result<DateTime<Utc>, RoundingError> {
+        precision.try_precise_time(self.reference_time)
     }
 
     /// Returns the opening direction of the interval
@@ -279,10 +313,10 @@ impl HalfOpenRelativeInterval {
         }
     }
 
-    /// Returns a reference to the offset
+    /// Returns the offset of the interval
     #[must_use]
-    pub fn offset(&self) -> &Duration {
-        &self.offset
+    pub fn offset(&self) -> Duration {
+        self.offset
     }
 
     /// Returns the opening direction of the interval
