@@ -1,3 +1,5 @@
+//! `Intervals` iterator and its derivatives
+
 use std::collections::VecDeque;
 
 use crate::collections::set_ops::*;

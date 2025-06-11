@@ -1,3 +1,5 @@
+//! Everything that has to do with intervals
+
 pub mod comparison;
 pub mod interval;
 pub mod meta;

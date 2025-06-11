@@ -1,3 +1,8 @@
+//! Implementations of set operations
+//! 
+//! In this module you will find the different structures for lazy set operations as well as their implementations
+//! for dealing with intervals, but also with other structures from the library that also have set operations.
+
 use crate::collections::Intervals;
 use crate::intervals::Interval;
 
