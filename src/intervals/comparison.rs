@@ -863,7 +863,7 @@ impl Interval {
 
     /// Returns whether the given other interval overlaps the current interval using a custom function
     ///
-    /// This method uses [`Interval::simple_overlap_position`]. If this aforementionned method returns an [`Err`],
+    /// This method uses [`Interval::simple_overlap_position`]. If this aforementioned method returns an [`Err`],
     /// then this method returns false.
     ///
     /// If it returns [`Ok`], then the provided function is in charge of determining whether the [`SimpleOverlapPosition`]
