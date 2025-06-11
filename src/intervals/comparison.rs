@@ -44,9 +44,50 @@ impl Precision {
         }
     }
 
-    // pub fn try_precise_interval(&self, interval: Interval) -> Result<Interval, RoundingError> {
-    //     match 
-    // }
+    /// Uses the given precision to precise the times of the given interval
+    /// 
+    /// # Errors
+    /// 
+    /// - If the given interval is relative, then this method returns [`RelativeInterval`](IntervalPrecisionError::RelativeInterval)
+    /// - If the given interval is open or empty, then this method returns [`IntervalWithoutBounds`](IntervalPrecisionError::IntervalWithoutBounds)
+    /// - If the rounding/precising of the time went wrong, then this method returns [`RoundingError`](IntervalPrecisionError::RoundingError)
+    pub fn try_precise_interval(&self, interval: Interval) -> Result<Interval, IntervalPrecisionError> {
+        let wrap_rounding_err = |err: RoundingError| IntervalPrecisionError::RoundingError(err);
+
+        match interval {
+            Interval::ClosedRelative(_)
+            | Interval::HalfOpenRelative(_) => Err(IntervalPrecisionError::RelativeInterval),
+            Interval::Open(_)
+            | Interval::Empty(_) => Err(IntervalPrecisionError::IntervalWithoutBounds),
+            Interval::ClosedAbsolute(mut interval) => {
+                interval.set_from(interval.try_from_with_precision(*self).map_err(wrap_rounding_err)?);
+                interval.set_to(interval.try_to_with_precision(*self).map_err(wrap_rounding_err)?);
+
+                Ok(Interval::ClosedAbsolute(interval))
+            },
+            Interval::HalfOpenAbsolute(mut interval) => {
+                interval.set_reference_time(interval.try_reference_time_with_precision(*self).map_err(wrap_rounding_err)?);
+
+                Ok(Interval::HalfOpenAbsolute(interval))
+            }
+        }
+    }
+}
+
+/// Errors that can occur when using [`Precision::try_precise_interval`]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum IntervalPrecisionError {
+    /// The given interval was relative
+    /// 
+    /// Therefore, since a relative interval has no concrete times, they cannot be rounded/precised.
+    RelativeInterval,
+    /// The given interval didn't have defined bounds
+    /// 
+    /// That happens with [open intervals](crate::intervals::interval::OpenInterval)
+    /// and [empty intervals](crate::intervals::interval::EmptyInterval).
+    IntervalWithoutBounds,
+    /// Rounding a time produced a [`RoundingError`] from [`chrono`]
+    RoundingError(RoundingError),
 }
 
 /// Where the given time was found relative to a time interval
@@ -766,17 +807,6 @@ impl Interval {
         }
     }
 
-    /// Tries to return the containment position of the given time with the given [`Precision`]
-    /// 
-    /// Acts like [`Interval::containment_position`] but precises the given time with the given precision
-    /// 
-    /// # Errors
-    /// 
-    /// See [`Precision::try_precise_time`]
-    pub fn try_containment_position_with_precision(&self, time: DateTime<Utc>, precision: Precision) -> Result<Result<ContainmentPosition, ContainmentPositionError>, RoundingError> {
-        Ok(self.containment_position(precision.try_precise_time(time)?))
-    }
-
     /// Returns the simple containment position of the given time using a given [containment rule set](ContainmentRuleSet)
     ///
     /// See [`Interval::containment_position`] for more details about containment position.
@@ -796,17 +826,6 @@ impl Interval {
             .map(|containment_position| rule_set.disambiguate(containment_position))
     }
 
-    /// Tries to return the simple containment position of the given time using a given [containment rule set](ContainmentRuleSet) and the given [`Precision`]
-    /// 
-    /// Acts like [`Interval::simple_containment_position`] but precises the given time with the given precision
-    /// 
-    /// # Errors
-    /// 
-    /// See [`Precision::try_precise_time`]
-    pub fn try_simple_containment_position_with_precision(&self, time: DateTime<Utc>, rule_set: ContainmentRuleSet, precision: Precision) -> Result<Result<SimpleContainmentPosition, ContainmentPositionError>, RoundingError> {
-        Ok(self.simple_containment_position(precision.try_precise_time(time)?, rule_set))
-    }
-
     /// Returns whether the given time is contained in the interval using predetermined rules
     ///
     /// Uses the [`Strict` rule set](ContainmentRuleSet::Strict) with no additional rules.
@@ -822,17 +841,6 @@ impl Interval {
     #[must_use]
     pub fn simple_contains(&self, time: DateTime<Utc>) -> bool {
         self.contains(time, ContainmentRuleSet::Strict, [])
-    }
-
-    /// Tries to return whether the given time (with the given precision) is contained in the interval using predetermined rules
-    /// 
-    /// Acts like [`Interval::simple_contains`] but precises the given time with the given precision
-    /// 
-    /// # Errors
-    /// 
-    /// See [`Precision::try_precise_time`]
-    pub fn try_simple_contains_with_precision(&self, time: DateTime<Utc>, precision: Precision) -> Result<bool, RoundingError> {
-        Ok(self.simple_contains(precision.try_precise_time(time)?))
     }
 
     /// Returns whether the given time is contained in the interval using the given [containment rules](`ContainmentRule`)
@@ -866,17 +874,6 @@ impl Interval {
             .unwrap_or(false)
     }
 
-    /// Ties to return whether the given time (with the given precision) is contained in the interval using the given [containment rules](`ContainmentRule`)
-    /// 
-    /// Acts like [`Interval::contains`] but precises the given time with the given precision
-    /// 
-    /// # Errors
-    /// 
-    /// See [`Precision::try_precise_time`]
-    pub fn try_contains_with_precision(&self, time: DateTime<Utc>, rule_set: ContainmentRuleSet, rules: impl IntoIterator<Item = ContainmentRule>, precision: Precision) -> Result<bool, RoundingError> {
-        Ok(self.contains(precision.try_precise_time(time)?, rule_set, rules))
-    }
-
     /// Returns whether the given time is contained in the interval using a custom function
     ///
     /// This method uses [`Interval::containment_position`]. If this aforementioned method returns an [`Err`],
@@ -899,20 +896,6 @@ impl Interval {
         self.containment_position(time).map(f).unwrap_or(false)
     }
 
-    /// Tries to return whether the given time (with the given precision) is contained in the interval using a custom function
-    /// 
-    /// Acts like [`Interval::contains_using`] but precises the given time with the given precision
-    /// 
-    /// # Errors
-    /// 
-    /// See [`Precision::try_precise_time`]
-    pub fn try_contains_using_with_precision<F>(&self, time: DateTime<Utc>, f: F, precision: Precision) -> Result<bool, RoundingError>
-    where
-        F: FnOnce(ContainmentPosition) -> bool,
-    {
-        Ok(self.contains_using(precision.try_precise_time(time)?, f))
-    }
-
     /// Returns whether the given time is contained in the interval using a custom function
     ///
     /// This method uses [`Interval::simple_containment_position`]. If this aforementioned method returns an [`Err`],
@@ -932,20 +915,6 @@ impl Interval {
         F: FnOnce(SimpleContainmentPosition) -> bool,
     {
         self.simple_containment_position(time, rule_set).map(f).unwrap_or(false)
-    }
-
-    /// Tries to return whether the given time (with the given precision) is contained in the interval using a custom function
-    /// 
-    /// Acts like [`Interval::contains_using_simple`] but precises the given time with the given precision
-    /// 
-    /// # Errors
-    /// 
-    /// See [`Precision::try_precise_time`] and [`Interval::containment_position`]
-    pub fn try_contains_using_simple_with_precision<F>(&self, time: DateTime<Utc>, rule_set: ContainmentRuleSet, f: F, precision: Precision) -> Result<bool, RoundingError>
-    where
-        F: FnOnce(SimpleContainmentPosition) -> bool,
-    {
-        Ok(self.contains_using_simple(precision.try_precise_time(time)?, rule_set, f))
     }
 
     /// Returns the overlap position of the given interval
