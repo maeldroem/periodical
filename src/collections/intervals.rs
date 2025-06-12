@@ -2,7 +2,7 @@
 
 use std::collections::VecDeque;
 
-use crate::collections::set_ops::*;
+use crate::collections::interval_ops::*;
 use crate::intervals::Interval;
 
 /// Simple iterator type containing [`Interval`]s
