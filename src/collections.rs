@@ -1,7 +1,5 @@
 //! All collection structures
 
-pub mod intervals;
-pub mod interval_ops;
+pub mod interval_iter;
 
-pub use intervals::*;
-pub use interval_ops::*;
+pub use interval_iter::*;

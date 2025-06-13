@@ -1,9 +1,10 @@
-//! Interval comparisons
+//! Interval operations and comparisons
 //!
-//! Comparisons with intervals are implemented here. You will find methods like
+//! Operations and comparisons with intervals are implemented here. You will find methods like
 //!
 //! - `contains`
 //! - `overlaps`
+//! - `try_extend`
 //!
 //! You will also find things that touch to precision of interval bounds as well as rule sets to decide what counts
 //! as overlapping and what doesn't.
@@ -13,8 +14,8 @@ use std::cmp::Ordering;
 use chrono::{DateTime, Duration, DurationRound, RoundingError, Utc};
 
 use crate::intervals::Interval;
-use crate::intervals::interval::{ClosedAbsoluteInterval, HalfOpenAbsoluteInterval};
-use crate::intervals::meta::{BoundInclusivity, OpeningDirection};
+use crate::intervals::interval::{ClosedAbsoluteInterval, HalfOpenAbsoluteInterval, OpenInterval};
+use crate::intervals::meta::{BoundInclusivity, OpeningDirection, Relativity};
 
 /// Time precision used for comparisons
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
@@ -29,12 +30,12 @@ pub enum Precision {
 
 impl Precision {
     /// Uses the given precision to precise the given time
-    /// 
+    ///
     /// # Errors
-    /// 
+    ///
     /// Time conversions can fail for different reasons, for example if the time would overflow after conversion,
     /// if the given duration used is too big, negative or zero, etc.
-    /// 
+    ///
     /// For more details, check [`chrono`'s limitations on the `DurationRound` trait](https://docs.rs/chrono/latest/chrono/round/trait.DurationRound.html#limitations).
     pub fn try_precise_time(&self, time: DateTime<Utc>) -> Result<DateTime<Utc>, RoundingError> {
         match self {
@@ -45,9 +46,9 @@ impl Precision {
     }
 
     /// Uses the given precision to precise the times of the given interval
-    /// 
+    ///
     /// # Errors
-    /// 
+    ///
     /// - If the given interval is relative, then this method returns [`RelativeInterval`](IntervalPrecisionError::RelativeInterval)
     /// - If the given interval is open or empty, then this method returns [`IntervalWithoutBounds`](IntervalPrecisionError::IntervalWithoutBounds)
     /// - If the rounding/precising of the time went wrong, then this method returns [`RoundingError`](IntervalPrecisionError::RoundingError)
@@ -55,10 +56,10 @@ impl Precision {
         let wrap_rounding_err = |err: RoundingError| IntervalPrecisionError::RoundingError(err);
 
         match interval {
-            Interval::ClosedRelative(_)
-            | Interval::HalfOpenRelative(_) => Err(IntervalPrecisionError::RelativeInterval),
-            Interval::Open(_)
-            | Interval::Empty(_) => Err(IntervalPrecisionError::IntervalWithoutBounds),
+            Interval::ClosedRelative(_) | Interval::HalfOpenRelative(_) => {
+                Err(IntervalPrecisionError::RelativeInterval)
+            },
+            Interval::Open(_) | Interval::Empty(_) => Err(IntervalPrecisionError::IntervalWithoutBounds),
             Interval::ClosedAbsolute(mut interval) => {
                 interval.set_from(interval.try_from_with_precision(*self).map_err(wrap_rounding_err)?);
                 interval.set_to(interval.try_to_with_precision(*self).map_err(wrap_rounding_err)?);
@@ -66,10 +67,14 @@ impl Precision {
                 Ok(Interval::ClosedAbsolute(interval))
             },
             Interval::HalfOpenAbsolute(mut interval) => {
-                interval.set_reference_time(interval.try_reference_time_with_precision(*self).map_err(wrap_rounding_err)?);
+                interval.set_reference_time(
+                    interval
+                        .try_reference_time_with_precision(*self)
+                        .map_err(wrap_rounding_err)?,
+                );
 
                 Ok(Interval::HalfOpenAbsolute(interval))
-            }
+            },
         }
     }
 }
@@ -78,11 +83,11 @@ impl Precision {
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum IntervalPrecisionError {
     /// The given interval was relative
-    /// 
+    ///
     /// Therefore, since a relative interval has no concrete times, they cannot be rounded/precised.
     RelativeInterval,
     /// The given interval didn't have defined bounds
-    /// 
+    ///
     /// That happens with [open intervals](crate::intervals::interval::OpenInterval)
     /// and [empty intervals](crate::intervals::interval::EmptyInterval).
     IntervalWithoutBounds,
@@ -778,6 +783,15 @@ fn allow_future_adjacency_overlap_rules_counts_as_overlap(simple_overlap_positio
     )
 }
 
+/// Errors that can occur when calling [`try_extend`](Interval::try_extend)
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum IntervalExtensionError {
+    /// The current interval or given interval was relative and therefore can't be extended
+    RelativeInterval,
+    /// The current interval and the given interval were empty and therefore can't be extended
+    BothEmptyIntervals,
+}
+
 impl Interval {
     /// Returns the containment position of the given time
     ///
@@ -1099,6 +1113,132 @@ impl Interval {
         F: FnOnce(SimpleOverlapPosition) -> bool,
     {
         self.simple_overlap_position(other, rule_set).map(f).unwrap_or(false)
+    }
+
+    /// Creates an extended interval from the current one and given one
+    ///
+    /// Instead of uniting two intervals, this method takes the lowest point of both intervals' lower bound and the
+    /// highest point of both intervals' upper bound, then creates an interval that spans those two points.
+    ///
+    /// Regarding bound inclusivity, for each point will get the bound inclusivity of the interval from which the point
+    /// was taken.
+    ///
+    /// # Errors
+    ///
+    /// - If the current interval or given interval is relative, this method returns [`RelativeInterval`](IntervalExtensionError::RelativeInterval)
+    /// - If the current interval and the given interval are [`Empty`](Interval::Empty), this method returns [`BothEmptyIntervals`](IntervalExtensionError::BothEmptyIntervals)
+    pub fn try_extend(&self, other: &Self) -> Result<Self, IntervalExtensionError> {
+        match (self, other) {
+            (Interval::ClosedRelative(_) | Interval::HalfOpenRelative(_), _)
+            | (_, Interval::ClosedRelative(_) | Interval::HalfOpenRelative(_)) => {
+                Err(IntervalExtensionError::RelativeInterval)
+            },
+            (Interval::ClosedAbsolute(closed_a), Interval::ClosedAbsolute(closed_b)) => {
+                let (new_from, new_from_inclusivity) = match closed_a.from().cmp(&closed_b.from()) {
+                    Ordering::Equal => (
+                        closed_a.from(),
+                        if closed_a.from_inclusivity() == BoundInclusivity::Inclusive
+                            || closed_b.from_inclusivity() == BoundInclusivity::Inclusive
+                        {
+                            BoundInclusivity::Inclusive
+                        } else {
+                            BoundInclusivity::Exclusive
+                        },
+                    ),
+                    Ordering::Less => (closed_a.from(), closed_a.from_inclusivity()),
+                    Ordering::Greater => (closed_b.from(), closed_b.from_inclusivity()),
+                };
+
+                let (new_to, new_to_inclusivity) = match closed_a.to().cmp(&closed_b.to()) {
+                    Ordering::Equal => (
+                        closed_a.to(),
+                        if closed_a.to_inclusivity() == BoundInclusivity::Inclusive
+                            || closed_b.to_inclusivity() == BoundInclusivity::Inclusive
+                        {
+                            BoundInclusivity::Inclusive
+                        } else {
+                            BoundInclusivity::Exclusive
+                        },
+                    ),
+                    Ordering::Less => (closed_b.to(), closed_b.to_inclusivity()),
+                    Ordering::Greater => (closed_a.to(), closed_a.to_inclusivity()),
+                };
+
+                Ok(Interval::ClosedAbsolute(ClosedAbsoluteInterval::with_inclusivity(
+                    new_from,
+                    new_from_inclusivity,
+                    new_to,
+                    new_to_inclusivity,
+                )))
+            },
+            (Interval::ClosedAbsolute(closed), Interval::HalfOpenAbsolute(half_open))
+            | (Interval::HalfOpenAbsolute(half_open), Interval::ClosedAbsolute(closed)) => {
+                let (new_reference_time, new_inclusivity) = match half_open.opening_direction() {
+                    OpeningDirection::ToPast => {
+                        if closed.to() > half_open.reference_time() {
+                            (closed.to(), closed.to_inclusivity())
+                        } else if closed.from() > half_open.reference_time() {
+                            (closed.from(), closed.from_inclusivity())
+                        } else {
+                            (half_open.reference_time(), half_open.reference_time_inclusivity())
+                        }
+                    },
+                    OpeningDirection::ToFuture => {
+                        if closed.from() < half_open.reference_time() {
+                            (closed.from(), closed.from_inclusivity())
+                        } else if closed.to() < half_open.reference_time() {
+                            (closed.to(), closed.to_inclusivity())
+                        } else {
+                            (half_open.reference_time(), half_open.reference_time_inclusivity())
+                        }
+                    },
+                };
+
+                Ok(Interval::HalfOpenAbsolute(HalfOpenAbsoluteInterval::with_inclusivity(
+                    new_reference_time,
+                    new_inclusivity,
+                    half_open.opening_direction(),
+                )))
+            },
+            (Interval::HalfOpenAbsolute(half_open_a), Interval::HalfOpenAbsolute(half_open_b)) => Ok(
+                match (half_open_a.opening_direction(), half_open_b.opening_direction()) {
+                    (OpeningDirection::ToFuture, OpeningDirection::ToPast)
+                    | (OpeningDirection::ToPast, OpeningDirection::ToFuture) => Interval::Open(OpenInterval),
+                    (OpeningDirection::ToPast, OpeningDirection::ToPast) => {
+                        Interval::HalfOpenAbsolute(HalfOpenAbsoluteInterval::with_inclusivity(
+                            half_open_a.reference_time().max(half_open_b.reference_time()),
+                            if half_open_a.reference_time_inclusivity() == BoundInclusivity::Inclusive
+                                || half_open_b.reference_time_inclusivity() == BoundInclusivity::Inclusive
+                            {
+                                BoundInclusivity::Inclusive
+                            } else {
+                                BoundInclusivity::Exclusive
+                            },
+                            OpeningDirection::ToPast,
+                        ))
+                    },
+                    (OpeningDirection::ToFuture, OpeningDirection::ToFuture) => {
+                        Interval::HalfOpenAbsolute(HalfOpenAbsoluteInterval::with_inclusivity(
+                            half_open_a.reference_time().min(half_open_b.reference_time()),
+                            if half_open_a.reference_time_inclusivity() == BoundInclusivity::Inclusive
+                                || half_open_b.reference_time_inclusivity() == BoundInclusivity::Inclusive
+                            {
+                                BoundInclusivity::Inclusive
+                            } else {
+                                BoundInclusivity::Exclusive
+                            },
+                            OpeningDirection::ToFuture,
+                        ))
+                    },
+                },
+            ),
+            (Interval::Open(_), _) | (_, Interval::Open(_)) => Ok(Interval::Open(OpenInterval)),
+            (interval @ (Interval::ClosedAbsolute(_) | Interval::HalfOpenAbsolute(_)), Interval::Empty(_))
+            | (Interval::Empty(_), interval @ (Interval::ClosedAbsolute(_) | Interval::HalfOpenAbsolute(_))) => {
+                Ok(interval.clone())
+            },
+            (Interval::Empty(_), Interval::Empty(_)) => Err(IntervalExtensionError::BothEmptyIntervals),
+        }
     }
 }
 

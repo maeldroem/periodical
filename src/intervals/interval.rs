@@ -1,11 +1,11 @@
 //! Intervals
-//! 
+//!
 //! The core of intervals is implemented here. You will find the implementations for each different variant
 //! of intervals, but also find how the principal structure, [`Interval`] works.
 
 use chrono::{DateTime, Duration, RoundingError, Utc};
 
-use crate::intervals::comparison::Precision;
+use crate::intervals::ops::Precision;
 
 use super::meta::{BoundInclusivity, Duration as IntervalDuration, OpeningDirection, Openness, Relativity};
 
@@ -14,10 +14,10 @@ use super::meta::{BoundInclusivity, Duration as IntervalDuration, OpeningDirecti
 /// Interval set with absolute time, with a defined start and end
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ClosedAbsoluteInterval {
-    from: DateTime<Utc>,
-    to: DateTime<Utc>,
-    from_inclusivity: BoundInclusivity,
-    to_inclusivity: BoundInclusivity,
+    pub(super) from: DateTime<Utc>,
+    pub(super) to: DateTime<Utc>,
+    pub(super) from_inclusivity: BoundInclusivity,
+    pub(super) to_inclusivity: BoundInclusivity,
 }
 
 impl ClosedAbsoluteInterval {
@@ -61,18 +61,18 @@ impl ClosedAbsoluteInterval {
     }
 
     /// Tries to return the start time rounded with the given precision
-    /// 
+    ///
     /// # Errors
-    /// 
+    ///
     /// See [`Precision::try_precise_time`]
     pub fn try_from_with_precision(&self, precision: Precision) -> Result<DateTime<Utc>, RoundingError> {
         precision.try_precise_time(self.from)
     }
 
     /// Tries to return the start time rounded with the given precision
-    /// 
+    ///
     /// # Errors
-    /// 
+    ///
     /// See [`Precision::try_precise_time`]
     pub fn try_to_with_precision(&self, precision: Precision) -> Result<DateTime<Utc>, RoundingError> {
         precision.try_precise_time(self.to)
@@ -124,10 +124,10 @@ impl ClosedAbsoluteInterval {
 /// An interval set with relative time, with a defined start and end
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ClosedRelativeInterval {
-    offset: Duration,
-    length: Duration,
-    from_inclusivity: BoundInclusivity,
-    to_inclusivity: BoundInclusivity,
+    pub(super) offset: Duration,
+    pub(super) length: Duration,
+    pub(super) from_inclusivity: BoundInclusivity,
+    pub(super) to_inclusivity: BoundInclusivity,
 }
 
 impl ClosedRelativeInterval {
@@ -209,9 +209,9 @@ impl ClosedRelativeInterval {
 /// Infinite duration.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct HalfOpenAbsoluteInterval {
-    reference_time: DateTime<Utc>,
-    opening_direction: OpeningDirection,
-    reference_time_inclusivity: BoundInclusivity,
+    pub(super) reference_time: DateTime<Utc>,
+    pub(super) opening_direction: OpeningDirection,
+    pub(super) reference_time_inclusivity: BoundInclusivity,
 }
 
 impl HalfOpenAbsoluteInterval {
@@ -246,9 +246,9 @@ impl HalfOpenAbsoluteInterval {
     }
 
     /// Tries to return the reference time with the given precision
-    /// 
+    ///
     /// # Errors
-    /// 
+    ///
     /// See [`Precision::try_precise_time`]
     pub fn try_reference_time_with_precision(&self, precision: Precision) -> Result<DateTime<Utc>, RoundingError> {
         precision.try_precise_time(self.reference_time)
@@ -283,9 +283,9 @@ impl HalfOpenAbsoluteInterval {
 /// Infinite duration.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct HalfOpenRelativeInterval {
-    offset: Duration,
-    opening_direction: OpeningDirection,
-    reference_time_inclusivity: BoundInclusivity,
+    pub(super) offset: Duration,
+    pub(super) opening_direction: OpeningDirection,
+    pub(super) reference_time_inclusivity: BoundInclusivity,
 }
 
 impl HalfOpenRelativeInterval {
