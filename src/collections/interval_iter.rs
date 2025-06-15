@@ -9,7 +9,7 @@
 use std::collections::VecDeque;
 
 use crate::intervals::Interval;
-use crate::intervals::ops::{OverlapRule, OverlapRuleSet};
+use crate::intervals::ops::{IntervalExtensionError, OverlapRule, OverlapRuleSet};
 
 /// Simple iterator type containing [`Interval`]s
 pub struct Intervals(VecDeque<Interval>);
@@ -68,74 +68,122 @@ pub trait IntervalIterator: Iterator {
     where
         Self: Sized,
     {
-        todo!()
+        SimpleUnion::new(self)
     }
 
     fn union<RI>(self, rule_set: OverlapRuleSet, rules: RI) -> Union<Self, RI>
     where
         Self: Sized,
-        RI: IntoIterator<Item = OverlapRule>,
+        RI: IntoIterator<Item = OverlapRule> + Clone,
+    {
+        Union::new(self, rule_set, rules)
+    }
+
+    fn union_with<F, E>(self, f: F) -> UnionWith<Self, F>
+    where
+        Self: Sized,
+        F: FnMut(Self::Item, Self::Item) -> Result<UnionResult<Self::Item>, E>,
+    {
+        UnionWith::new(self, f)
+    }
+
+    fn simple_intersection(self) -> SimpleIntersection<Self>
+    where
+        Self: Sized,
+    {
+        todo!("Intersections of each pair of intervals")
+    }
+
+    fn intersection<RI>(self, rule_set: OverlapRuleSet, rules: RI) -> Intersection<Self, RI>
+    where
+        Self: Sized,
+        RI: IntoIterator<Item = Self::Item>,
     {
         todo!()
     }
 
-    fn union_with<F>(self, f: F) -> UnionWith<Self, F>
+    fn intersection_with<F, E>(self, f: F) -> IntersectionWith<Self, F>
     where
         Self: Sized,
-        F: FnMut(Self::Item, Self::Item) -> Self::Item,
+        F: FnMut(Self::Item, Self::Item) -> Result<IntersectionResult<Self::Item>, E>,
     {
         todo!()
     }
 
-    fn simple_union_to_one(self) -> SimpleUnionToOne<Self>
+    fn intersection_with_one(self, interval: Self::Item) -> IntersectionWithOne<Self>
     where
         Self: Sized,
     {
         todo!()
     }
 
-    fn union_to_one<RI>(self, rule_set: OverlapRuleSet, rules: RI) -> UnionToOne<Self, RI>
+    fn difference_with_one(self, interval: Self::Item) -> DifferenceWithOne<Self>
     where
         Self: Sized,
-        RI: IntoIterator<Item = OverlapRule>,
     {
         todo!()
     }
 
-    fn union_to_one_with<F>(self, f: F) -> UnionToOneWith<Self, F>
+    fn difference(self, other: Self) -> Difference<Self, Self>
     where
         Self: Sized,
-        F: FnMut(Self::Item, Self::Item) -> Option<Self::Item>,
     {
         todo!()
     }
+
+    fn difference_next_peer(self) -> DifferenceNextPeer<Self>
+    where
+        Self: Sized,
+    {
+        todo!("takes the next peer as the right-hand side operand for the difference")
+    }
+
+    fn difference_prev_peer(self) -> DifferencePreviousPeer<Self>
+    where
+        Self: Sized,
+    {
+        todo!("takes the previous peer as the right-hand side operand for the difference")
+    }
+
+    fn sym_difference_with_one(self, interval: Self::Item) -> SymmetricDifferenceWithOne<Self>
+    where
+        Self: Sized,
+    {
+        todo!()
+    }
+
+    fn sym_difference(self, other: Self) -> SymmetricDifference<Self, Self>
+    where
+        Self: Sized,
+    {
+        todo!()
+    }
+
+    fn sym_difference_peer(self) -> SymmetricDifferencePeer<Self>
+    where
+        Self: Sized,
+    {
+        todo!("symmetric difference between pairs of elements")
+    }
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum UnionResult<T> {
+    United(T),
+    Separate(T),
 }
 
 pub struct SimpleUnion<I> {
     iter: I,
-    running_result: Vec<Interval>,
+    last_separate_interval: Option<Interval>,
 }
 
-impl<I> SimpleUnion<I>
-where
-    I: Iterator<Item = Interval>,
-{
+impl<I> SimpleUnion<I> {
     /// Creates an instance of [`SimpleUnion`] using the given iterator
-    ///
-    /// # Technical details
-    ///
-    /// To try avoiding unnecessary memory allocations, this method uses the iterator's [`size_hint`](Iterator::size_hint)
-    /// method, tries to unwrap its upper bound or uses the lower bound if this fails, then divides this number by 3
-    /// and rounds the number up using [`div_ceil`](usize::div_ceil).
-    ///
-    /// This is only a rough estimate of how much memory the union will take, this will probably be subject to change
-    /// if a better approach is discovered or reported.
     pub fn new(iter: I) -> Self {
-        let size_hint = iter.size_hint();
-
         SimpleUnion {
             iter,
-            running_result: Vec::with_capacity(size_hint.1.unwrap_or(size_hint.0).div_ceil(3)),
+            last_separate_interval: None,
         }
     }
 }
@@ -148,15 +196,30 @@ where
 
     fn next(&mut self) -> Option<Self::Item> {
         // Unite until separate, then finally return the first united interval and process until all intervals are exhausted
-        let new_interval = self.iter.next()?;
-        let last_interval = self.running_result.last_mut();
+        let mut united_interval: Option<Interval> = self.last_separate_interval.take();
 
-        if last_interval.is_none() {
-            self.running_result.push(new_interval.clone());
-            return Some(new_interval);
+        loop {
+            let next_interval = self.iter.next()?;
+
+            if united_interval.is_none() {
+                united_interval = Some(next_interval);
+                continue;
+            }
+
+            // Safe unwrap as check for None is present above
+            match simple_unite_intervals(united_interval.as_ref().unwrap(), next_interval) {
+                Ok(UnionResult::United(new_united)) => {
+                    united_interval = Some(new_united);
+                },
+                Ok(UnionResult::Separate(new_basis)) => {
+                    self.last_separate_interval = Some(new_basis);
+                    break;
+                },
+                Err(_) => break,
+            }
         }
 
-        None
+        united_interval
     }
 }
 
@@ -164,189 +227,143 @@ impl<I> IntervalIterator for SimpleUnion<I> where I: Iterator<Item = Interval> {
 
 pub struct Union<I, RI> {
     iter: I,
+    last_separate_interval: Option<Interval>,
     rule_set: OverlapRuleSet,
     rules: RI,
-    running_result: Vec<Interval>,
 }
 
-impl<I, RI> Union<I, RI>
-where
-    I: Iterator<Item = Interval>,
-{
+impl<I, RI> Union<I, RI> {
     pub fn new(iter: I, rule_set: OverlapRuleSet, rules: RI) -> Self {
-        Union { iter, rule_set, rules }
+        Union {
+            iter,
+            last_separate_interval: None,
+            rule_set,
+            rules,
+        }
     }
 }
 
 impl<I, RI> Iterator for Union<I, RI>
 where
     I: Iterator<Item = Interval>,
-    RI: IntoIterator<Item = OverlapRule>,
+    RI: IntoIterator<Item = OverlapRule> + Clone,
 {
     type Item = Interval;
 
     fn next(&mut self) -> Option<Self::Item> {
-        todo!()
+        let mut united_interval: Option<Interval> = self.last_separate_interval.take();
+
+        loop {
+            let next_interval = self.iter.next()?;
+
+            if united_interval.is_none() {
+                united_interval = Some(next_interval);
+                continue;
+            }
+
+            // Safe unwrap of `united_intervals` as check for None is present above
+            // Perhaps the cloning of self.rules is unnecessary, but how can we make it a reference without having
+            // all elements of the iterator as references when the into-iterable object is created?
+            // Perhaps impl IntoIterator<Item = Borrow<Interval>>? idk
+            match unite_intervals(
+                united_interval.as_ref().unwrap(),
+                next_interval,
+                self.rule_set,
+                self.rules.clone(),
+            ) {
+                Ok(UnionResult::United(new_united)) => {
+                    united_interval = Some(new_united);
+                },
+                Ok(UnionResult::Separate(new_basis)) => {
+                    self.last_separate_interval = Some(new_basis);
+                    break;
+                },
+                Err(_) => break,
+            }
+        }
+
+        united_interval
     }
 }
 
 impl<I, RI> IntervalIterator for Union<I, RI>
 where
     I: Iterator<Item = Interval>,
-    RI: IntoIterator<Item = OverlapRule>,
+    RI: IntoIterator<Item = OverlapRule> + Clone,
 {
-}
-
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub enum UnionResult<T> {
-    United(T),
-    Separate(T),
 }
 
 pub struct UnionWith<I, F> {
     iter: I,
+    last_separate_interval: Option<Interval>,
     f: F,
-    running_result: Vec<Interval>,
 }
 
-impl<I, F> UnionWith<I, F>
-where
-    I: Iterator<Item = Interval>,
-{
+impl<I, F> UnionWith<I, F> {
     pub fn new(iter: I, f: F) -> Self {
-        UnionWith { iter, f }
+        UnionWith {
+            iter,
+            last_separate_interval: None,
+            f,
+        }
     }
 }
 
-impl<I, F> Iterator for UnionWith<I, F>
+impl<I, F, E> Iterator for UnionWith<I, F>
 where
     I: Iterator<Item = Interval>,
-    F: Fn(Interval, Interval) -> UnionResult<Interval>,
+    F: Fn(Interval, Interval) -> Result<UnionResult<Interval>, E>,
 {
     type Item = Interval;
 
     fn next(&mut self) -> Option<Self::Item> {
-        todo!()
+        let mut united_interval: Option<Interval> = self.last_separate_interval.take();
+
+        loop {
+            let next_interval = self.iter.next()?;
+
+            if united_interval.is_none() {
+                united_interval = Some(next_interval);
+                continue;
+            }
+
+            // Safe unwrap of `united_intervals` as check for None is present above
+            match (self.f)(united_interval.clone().unwrap(), next_interval) {
+                Ok(UnionResult::United(new_united)) => {
+                    united_interval = Some(new_united);
+                },
+                Ok(UnionResult::Separate(new_basis)) => {
+                    self.last_separate_interval = Some(new_basis);
+                    break;
+                },
+                Err(_) => break,
+            }
+        }
+
+        united_interval
     }
 }
 
-impl<I, F> IntervalIterator for UnionWith<I, F>
+impl<I, F, E> IntervalIterator for UnionWith<I, F>
 where
     I: Iterator<Item = Interval>,
-    F: Fn(Interval, Interval) -> UnionResult<Interval>,
+    F: Fn(Interval, Interval) -> Result<UnionResult<Interval>, E>,
 {
 }
 
-pub struct SimpleUnionToOne<I> {
-    iter: I,
-    current_united: Interval,
-}
-
-impl<I> SimpleUnionToOne<I>
-where
-    I: Iterator<Item = Interval>,
-{
-    pub fn new(iter: I) -> Self {
-        SimpleUnionToOne { iter }
-    }
-}
-
-impl<I> Iterator for SimpleUnionToOne<I>
-where
-    I: Iterator<Item = Interval>,
-{
-    type Item = Interval;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        todo!()
-    }
-}
-
-impl<I> IntervalIterator for SimpleUnionToOne<I> where I: Iterator<Item = Interval> {}
-
-pub struct UnionToOne<I, RI> {
-    iter: I,
-    rule_set: OverlapRuleSet,
-    rules: RI,
-    current_united: Interval,
-}
-
-impl<I, RI> UnionToOne<I, RI>
-where
-    I: Iterator<Item = Interval>,
-{
-    pub fn new(iter: I, rule_set: OverlapRuleSet, rules: RI) -> Self {
-        UnionToOne { iter, rule_set, rules }
-    }
-}
-
-impl<I, RI> Iterator for UnionToOne<I, RI>
-where
-    I: Iterator<Item = Interval>,
-    RI: IntoIterator<Item = OverlapRule>,
-{
-    type Item = Interval;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        todo!()
-    }
-}
-
-impl<I, RI> IntervalIterator for UnionToOne<I, RI>
-where
-    I: Iterator<Item = Interval>,
-    RI: IntoIterator<Item = OverlapRule>,
-{
-}
-
-pub struct UnionToOneWith<I, F> {
-    iter: I,
-    f: F,
-    current_united: Interval,
-}
-
-impl<I, F> UnionToOneWith<I, F>
-where
-    I: Iterator<Item = Interval>,
-{
-    pub fn new(iter: I, f: F) -> Self {
-        UnionToOneWith { iter, f }
-    }
-}
-
-impl<I, F> Iterator for UnionToOneWith<I, F>
-where
-    I: Iterator<Item = Interval>,
-    F: Fn(Interval, Interval) -> Option<Interval>,
-{
-    type Item = Interval;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        todo!()
-    }
-}
-
-impl<I, F> IntervalIterator for UnionToOneWith<I, F>
-where
-    I: Iterator<Item = Interval>,
-    F: Fn(Interval, Interval) -> Option<Interval>,
-{
-}
-
-fn simple_unite_intervals(a: Interval, b: Interval) -> UnionResult<Interval> {
+fn simple_unite_intervals(a: &Interval, b: Interval) -> Result<UnionResult<Interval>, IntervalExtensionError> {
     unite_intervals(a, b, OverlapRuleSet::Strict, [OverlapRule::DenyAdjacency])
 }
 
 fn unite_intervals(
-    a: Interval,
+    a: &Interval,
     b: Interval,
     rule_set: OverlapRuleSet,
     rules: impl IntoIterator<Item = OverlapRule>,
-) -> UnionResult<Interval> {
+) -> Result<UnionResult<Interval>, IntervalExtensionError> {
     if !a.overlaps(&b, rule_set, rules) {
-        return UnionResult::Separate(b);
+        return Ok(UnionResult::Separate(b));
     }
 
-    // UnionResult::United()
-    todo!()
+    a.try_extend(&b).map(UnionResult::United)
 }

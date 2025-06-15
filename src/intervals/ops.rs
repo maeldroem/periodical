@@ -14,8 +14,8 @@ use std::cmp::Ordering;
 use chrono::{DateTime, Duration, DurationRound, RoundingError, Utc};
 
 use crate::intervals::Interval;
-use crate::intervals::interval::{ClosedAbsoluteInterval, HalfOpenAbsoluteInterval, OpenInterval};
-use crate::intervals::meta::{BoundInclusivity, OpeningDirection, Relativity};
+use crate::intervals::interval::{ClosedAbsoluteInterval, EmptyInterval, HalfOpenAbsoluteInterval, OpenInterval};
+use crate::intervals::meta::{BoundInclusivity, OpeningDirection};
 
 /// Time precision used for comparisons
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
@@ -788,8 +788,6 @@ fn allow_future_adjacency_overlap_rules_counts_as_overlap(simple_overlap_positio
 pub enum IntervalExtensionError {
     /// The current interval or given interval was relative and therefore can't be extended
     RelativeInterval,
-    /// The current interval and the given interval were empty and therefore can't be extended
-    BothEmptyIntervals,
 }
 
 impl Interval {
@@ -1126,7 +1124,6 @@ impl Interval {
     /// # Errors
     ///
     /// - If the current interval or given interval is relative, this method returns [`RelativeInterval`](IntervalExtensionError::RelativeInterval)
-    /// - If the current interval and the given interval are [`Empty`](Interval::Empty), this method returns [`BothEmptyIntervals`](IntervalExtensionError::BothEmptyIntervals)
     pub fn try_extend(&self, other: &Self) -> Result<Self, IntervalExtensionError> {
         match (self, other) {
             (Interval::ClosedRelative(_) | Interval::HalfOpenRelative(_), _)
@@ -1134,110 +1131,21 @@ impl Interval {
                 Err(IntervalExtensionError::RelativeInterval)
             },
             (Interval::ClosedAbsolute(closed_a), Interval::ClosedAbsolute(closed_b)) => {
-                let (new_from, new_from_inclusivity) = match closed_a.from().cmp(&closed_b.from()) {
-                    Ordering::Equal => (
-                        closed_a.from(),
-                        if closed_a.from_inclusivity() == BoundInclusivity::Inclusive
-                            || closed_b.from_inclusivity() == BoundInclusivity::Inclusive
-                        {
-                            BoundInclusivity::Inclusive
-                        } else {
-                            BoundInclusivity::Exclusive
-                        },
-                    ),
-                    Ordering::Less => (closed_a.from(), closed_a.from_inclusivity()),
-                    Ordering::Greater => (closed_b.from(), closed_b.from_inclusivity()),
-                };
-
-                let (new_to, new_to_inclusivity) = match closed_a.to().cmp(&closed_b.to()) {
-                    Ordering::Equal => (
-                        closed_a.to(),
-                        if closed_a.to_inclusivity() == BoundInclusivity::Inclusive
-                            || closed_b.to_inclusivity() == BoundInclusivity::Inclusive
-                        {
-                            BoundInclusivity::Inclusive
-                        } else {
-                            BoundInclusivity::Exclusive
-                        },
-                    ),
-                    Ordering::Less => (closed_b.to(), closed_b.to_inclusivity()),
-                    Ordering::Greater => (closed_a.to(), closed_a.to_inclusivity()),
-                };
-
-                Ok(Interval::ClosedAbsolute(ClosedAbsoluteInterval::with_inclusivity(
-                    new_from,
-                    new_from_inclusivity,
-                    new_to,
-                    new_to_inclusivity,
-                )))
+                Ok(try_extend_closed_pair(closed_a, closed_b))
             },
             (Interval::ClosedAbsolute(closed), Interval::HalfOpenAbsolute(half_open))
             | (Interval::HalfOpenAbsolute(half_open), Interval::ClosedAbsolute(closed)) => {
-                let (new_reference_time, new_inclusivity) = match half_open.opening_direction() {
-                    OpeningDirection::ToPast => {
-                        if closed.to() > half_open.reference_time() {
-                            (closed.to(), closed.to_inclusivity())
-                        } else if closed.from() > half_open.reference_time() {
-                            (closed.from(), closed.from_inclusivity())
-                        } else {
-                            (half_open.reference_time(), half_open.reference_time_inclusivity())
-                        }
-                    },
-                    OpeningDirection::ToFuture => {
-                        if closed.from() < half_open.reference_time() {
-                            (closed.from(), closed.from_inclusivity())
-                        } else if closed.to() < half_open.reference_time() {
-                            (closed.to(), closed.to_inclusivity())
-                        } else {
-                            (half_open.reference_time(), half_open.reference_time_inclusivity())
-                        }
-                    },
-                };
-
-                Ok(Interval::HalfOpenAbsolute(HalfOpenAbsoluteInterval::with_inclusivity(
-                    new_reference_time,
-                    new_inclusivity,
-                    half_open.opening_direction(),
-                )))
+                Ok(try_extend_closed_half_open(closed, half_open))
             },
-            (Interval::HalfOpenAbsolute(half_open_a), Interval::HalfOpenAbsolute(half_open_b)) => Ok(
-                match (half_open_a.opening_direction(), half_open_b.opening_direction()) {
-                    (OpeningDirection::ToFuture, OpeningDirection::ToPast)
-                    | (OpeningDirection::ToPast, OpeningDirection::ToFuture) => Interval::Open(OpenInterval),
-                    (OpeningDirection::ToPast, OpeningDirection::ToPast) => {
-                        Interval::HalfOpenAbsolute(HalfOpenAbsoluteInterval::with_inclusivity(
-                            half_open_a.reference_time().max(half_open_b.reference_time()),
-                            if half_open_a.reference_time_inclusivity() == BoundInclusivity::Inclusive
-                                || half_open_b.reference_time_inclusivity() == BoundInclusivity::Inclusive
-                            {
-                                BoundInclusivity::Inclusive
-                            } else {
-                                BoundInclusivity::Exclusive
-                            },
-                            OpeningDirection::ToPast,
-                        ))
-                    },
-                    (OpeningDirection::ToFuture, OpeningDirection::ToFuture) => {
-                        Interval::HalfOpenAbsolute(HalfOpenAbsoluteInterval::with_inclusivity(
-                            half_open_a.reference_time().min(half_open_b.reference_time()),
-                            if half_open_a.reference_time_inclusivity() == BoundInclusivity::Inclusive
-                                || half_open_b.reference_time_inclusivity() == BoundInclusivity::Inclusive
-                            {
-                                BoundInclusivity::Inclusive
-                            } else {
-                                BoundInclusivity::Exclusive
-                            },
-                            OpeningDirection::ToFuture,
-                        ))
-                    },
-                },
-            ),
+            (Interval::HalfOpenAbsolute(half_open_a), Interval::HalfOpenAbsolute(half_open_b)) => {
+                Ok(try_extend_half_open_pair(half_open_a, half_open_b))
+            },
             (Interval::Open(_), _) | (_, Interval::Open(_)) => Ok(Interval::Open(OpenInterval)),
             (interval @ (Interval::ClosedAbsolute(_) | Interval::HalfOpenAbsolute(_)), Interval::Empty(_))
             | (Interval::Empty(_), interval @ (Interval::ClosedAbsolute(_) | Interval::HalfOpenAbsolute(_))) => {
                 Ok(interval.clone())
             },
-            (Interval::Empty(_), Interval::Empty(_)) => Err(IntervalExtensionError::BothEmptyIntervals),
+            (Interval::Empty(_), Interval::Empty(_)) => Ok(Interval::Empty(EmptyInterval)),
         }
     }
 }
@@ -1433,6 +1341,105 @@ fn overlap_position_half_open_pair(a: &HalfOpenAbsoluteInterval, b: &HalfOpenAbs
                 Some(a.reference_time_inclusivity()),
                 Some(b.reference_time_inclusivity()),
             )
+        },
+    }
+}
+
+fn try_extend_closed_pair(a: &ClosedAbsoluteInterval, b: &ClosedAbsoluteInterval) -> Interval {
+    let (new_from, new_from_inclusivity) = match a.from().cmp(&b.from()) {
+        Ordering::Equal => (
+            a.from(),
+            if a.from_inclusivity() == BoundInclusivity::Inclusive
+                || b.from_inclusivity() == BoundInclusivity::Inclusive
+            {
+                BoundInclusivity::Inclusive
+            } else {
+                BoundInclusivity::Exclusive
+            },
+        ),
+        Ordering::Less => (a.from(), a.from_inclusivity()),
+        Ordering::Greater => (b.from(), b.from_inclusivity()),
+    };
+
+    let (new_to, new_to_inclusivity) = match a.to().cmp(&b.to()) {
+        Ordering::Equal => (
+            a.to(),
+            if a.to_inclusivity() == BoundInclusivity::Inclusive || b.to_inclusivity() == BoundInclusivity::Inclusive {
+                BoundInclusivity::Inclusive
+            } else {
+                BoundInclusivity::Exclusive
+            },
+        ),
+        Ordering::Less => (b.to(), b.to_inclusivity()),
+        Ordering::Greater => (a.to(), a.to_inclusivity()),
+    };
+
+    Interval::ClosedAbsolute(ClosedAbsoluteInterval::with_inclusivity(
+        new_from,
+        new_from_inclusivity,
+        new_to,
+        new_to_inclusivity,
+    ))
+}
+
+fn try_extend_closed_half_open(closed: &ClosedAbsoluteInterval, half_open: &HalfOpenAbsoluteInterval) -> Interval {
+    let (new_reference_time, new_inclusivity) = match half_open.opening_direction() {
+        OpeningDirection::ToPast => {
+            if closed.to() > half_open.reference_time() {
+                (closed.to(), closed.to_inclusivity())
+            } else if closed.from() > half_open.reference_time() {
+                (closed.from(), closed.from_inclusivity())
+            } else {
+                (half_open.reference_time(), half_open.reference_time_inclusivity())
+            }
+        },
+        OpeningDirection::ToFuture => {
+            if closed.from() < half_open.reference_time() {
+                (closed.from(), closed.from_inclusivity())
+            } else if closed.to() < half_open.reference_time() {
+                (closed.to(), closed.to_inclusivity())
+            } else {
+                (half_open.reference_time(), half_open.reference_time_inclusivity())
+            }
+        },
+    };
+
+    Interval::HalfOpenAbsolute(HalfOpenAbsoluteInterval::with_inclusivity(
+        new_reference_time,
+        new_inclusivity,
+        half_open.opening_direction(),
+    ))
+}
+
+fn try_extend_half_open_pair(a: &HalfOpenAbsoluteInterval, b: &HalfOpenAbsoluteInterval) -> Interval {
+    match (a.opening_direction(), b.opening_direction()) {
+        (OpeningDirection::ToFuture, OpeningDirection::ToPast)
+        | (OpeningDirection::ToPast, OpeningDirection::ToFuture) => Interval::Open(OpenInterval),
+        (OpeningDirection::ToPast, OpeningDirection::ToPast) => {
+            Interval::HalfOpenAbsolute(HalfOpenAbsoluteInterval::with_inclusivity(
+                a.reference_time().max(b.reference_time()),
+                if a.reference_time_inclusivity() == BoundInclusivity::Inclusive
+                    || b.reference_time_inclusivity() == BoundInclusivity::Inclusive
+                {
+                    BoundInclusivity::Inclusive
+                } else {
+                    BoundInclusivity::Exclusive
+                },
+                OpeningDirection::ToPast,
+            ))
+        },
+        (OpeningDirection::ToFuture, OpeningDirection::ToFuture) => {
+            Interval::HalfOpenAbsolute(HalfOpenAbsoluteInterval::with_inclusivity(
+                a.reference_time().min(b.reference_time()),
+                if a.reference_time_inclusivity() == BoundInclusivity::Inclusive
+                    || b.reference_time_inclusivity() == BoundInclusivity::Inclusive
+                {
+                    BoundInclusivity::Inclusive
+                } else {
+                    BoundInclusivity::Exclusive
+                },
+                OpeningDirection::ToFuture,
+            ))
         },
     }
 }
