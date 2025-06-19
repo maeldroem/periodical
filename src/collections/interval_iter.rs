@@ -57,6 +57,21 @@ impl FromIterator<Interval> for Intervals {
 // but since they are simple enough, we should just remove them for now, implement the specialized iterators,
 // continue developing the lib until we can rule whether such traits are needed
 
+// NOTE: Most of the operations in this file can be MAJORLY IMPROVED in terms of performance
+// Suggestions for improvement:
+// - Most operations can be done in parallel, but that would require them to be eagerly-evaluated, therefore it would
+//   put into question whether we still need those methods as iterators. Or perhaps we can keep the iterators but
+//   create methods that explicitly allow this eager evaluation?
+// - Operations that "merges" two iterators may benefit from a point system: we merge all interval points into one list
+//   and read from this list, therefore when we encounter a point that comes from the second iterator, we can apply
+//   the operation and continue from there instead of checking for overlap of all elements of the first iter upon
+//   each element of the second iter. This strategy is applicable to iterators but requires both sets of intervals
+//   to be sorted chronologically.
+// Current opinion: Such eager and constrained methods should be implemented on the IntervalIterator trait,
+// that way, the caller can choose which one fits his needs: if they want to unite elements progressively of a list
+// that is unsorted or sorted non-chronologically, they can choose to use the Union iterator. But if they need
+// a fast way of uniting a list of intervals that is sorted chronologically, then they can call such methods.
+
 /// Iterator trait to allow composition of multiple interval operations
 ///
 /// This is to extend [`Iterator`] in the same way that it works: if you create a map from an iterator,
@@ -124,9 +139,10 @@ pub trait IntervalIterator: Iterator {
         todo!()
     }
 
-    fn difference(self, other: Self) -> Difference<Self, Self>
+    fn difference<J>(self, other: J) -> Difference<Self, J>
     where
         Self: Sized,
+        J: IntoIterator<Item = Self::Item>,
     {
         todo!()
     }
@@ -152,9 +168,10 @@ pub trait IntervalIterator: Iterator {
         todo!()
     }
 
-    fn sym_difference(self, other: Self) -> SymmetricDifference<Self, Self>
+    fn sym_difference<J>(self, other: J) -> SymmetricDifference<Self, J>
     where
         Self: Sized,
+        J: IntoIterator<Item = Self::Item>,
     {
         todo!()
     }
@@ -167,12 +184,17 @@ pub trait IntervalIterator: Iterator {
     }
 }
 
+/// Represents the result of a union
+// NOTE: Perhaps move to another place since it's a generic that could be used for other things?
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum UnionResult<T> {
+    /// Union was successful, the united element is contained within this variant
     United(T),
-    Separate(T),
+    /// Union was unsuccessful, both elements involved are contained within this variant
+    Separate(T, T),
 }
 
+#[derive(Debug, Clone)]
 pub struct SimpleUnion<I> {
     iter: I,
     last_separate_interval: Option<Interval>,
@@ -211,7 +233,7 @@ where
                 Ok(UnionResult::United(new_united)) => {
                     united_interval = Some(new_united);
                 },
-                Ok(UnionResult::Separate(new_basis)) => {
+                Ok(UnionResult::Separate(_, new_basis)) => {
                     self.last_separate_interval = Some(new_basis);
                     break;
                 },
@@ -225,6 +247,7 @@ where
 
 impl<I> IntervalIterator for SimpleUnion<I> where I: Iterator<Item = Interval> {}
 
+#[derive(Debug, Clone)]
 pub struct Union<I, RI> {
     iter: I,
     last_separate_interval: Option<Interval>,
@@ -274,7 +297,7 @@ where
                 Ok(UnionResult::United(new_united)) => {
                     united_interval = Some(new_united);
                 },
-                Ok(UnionResult::Separate(new_basis)) => {
+                Ok(UnionResult::Separate(_, new_basis)) => {
                     self.last_separate_interval = Some(new_basis);
                     break;
                 },
@@ -293,6 +316,7 @@ where
 {
 }
 
+#[derive(Debug, Clone)]
 pub struct UnionWith<I, F> {
     iter: I,
     last_separate_interval: Option<Interval>,
@@ -332,7 +356,7 @@ where
                 Ok(UnionResult::United(new_united)) => {
                     united_interval = Some(new_united);
                 },
-                Ok(UnionResult::Separate(new_basis)) => {
+                Ok(UnionResult::Separate(_, new_basis)) => {
                     self.last_separate_interval = Some(new_basis);
                     break;
                 },
@@ -362,8 +386,126 @@ fn unite_intervals(
     rules: impl IntoIterator<Item = OverlapRule>,
 ) -> Result<UnionResult<Interval>, IntervalExtensionError> {
     if !a.overlaps(&b, rule_set, rules) {
-        return Ok(UnionResult::Separate(b));
+        return Ok(UnionResult::Separate(a.clone(), b));
     }
 
     a.try_extend(&b).map(UnionResult::United)
+}
+
+/// Represents the result of an intersection
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum IntersectionResult<T> {
+    /// Intersection was successful, the intersected element is contained within this variant
+    Intersects(T),
+    /// Intersection was unsuccessful, both elements involved are contained within this variant
+    Separate(T, T),
+}
+
+#[derive(Debug, Clone)]
+pub struct SimpleIntersection<I> {
+    iter: I,
+    last_interval: Option<Interval>,
+}
+
+impl<I> SimpleIntersection<I> {
+    pub fn new(iter: I) -> Self {
+        SimpleIntersection {
+            iter,
+            last_interval: None,
+        }
+    }
+}
+
+impl<I> Iterator for SimpleIntersection<I>
+where
+    I: Iterator<Item = Interval>,
+{
+    type Item = Interval;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let mut next_interval = self.iter.next()?;
+
+        // match self.last_interval {
+        //     Some(last_interval) =>
+        // }
+        todo!()
+    }
+}
+
+impl<I> IntervalIterator for SimpleIntersection<I> where I: Iterator<Item = Interval> {}
+
+#[derive(Debug, Clone)]
+pub struct Intersection<I, RI> {
+    iter: I,
+    rule_set: OverlapRuleSet,
+    rules: RI,
+}
+
+#[derive(Debug, Clone)]
+pub struct IntersectionWith<I, F> {
+    iter: I,
+    f: F,
+}
+
+#[derive(Debug, Clone)]
+pub struct IntersectionWithOne<I> {
+    iter: I,
+    interval: Interval,
+}
+
+/// Represents the result of a difference
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum DifferenceResult<T> {
+    /// Difference was successful, the difference of the two elements is contained within this variant
+    Difference(T),
+    /// Difference was unsuccessful, both elements involved are contained within this variant
+    Separate(T, T),
+}
+
+#[derive(Debug, Clone)]
+pub struct DifferenceWithOne<I> {
+    iter: I,
+    interval: Interval,
+}
+
+#[derive(Debug, Clone)]
+pub struct Difference<I, J> {
+    iter: I,
+    other_iter: J,
+}
+
+#[derive(Debug, Clone)]
+pub struct DifferenceNextPeer<I> {
+    iter: I,
+}
+
+#[derive(Debug, Clone)]
+pub struct DifferencePreviousPeer<I> {
+    iter: I,
+}
+
+/// Represents the result of a symmetric difference
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum SymmetricDifferenceResult<T> {
+    /// Symmetric difference was successful, the symmetric difference of both elements is contained within this variant
+    SymmetricDifference(T, T),
+    /// Symmetric difference was unsuccessful, both elements involved are contained within this variant
+    Separate(T, T),
+}
+
+#[derive(Debug, Clone)]
+pub struct SymmetricDifferenceWithOne<I> {
+    iter: I,
+    interval: Interval,
+}
+
+#[derive(Debug, Clone)]
+pub struct SymmetricDifference<I, J> {
+    iter: I,
+    other_iter: J,
+}
+
+#[derive(Debug, Clone)]
+pub struct SymmetricDifferencePeer<I> {
+    iter: I,
 }

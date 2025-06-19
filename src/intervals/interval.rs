@@ -9,6 +9,18 @@ use crate::intervals::ops::Precision;
 
 use super::meta::{BoundInclusivity, Duration as IntervalDuration, OpeningDirection, Openness, Relativity};
 
+pub enum AbsoluteIntervalBound {
+    Finite(DateTime<Utc>, BoundInclusivity),
+    InfinitePast,
+    InfiniteFuture,
+}
+
+pub enum RelativeIntervalBound {
+    Finite(Duration, BoundInclusivity),
+    InfinitePast,
+    InfiniteFuture,
+}
+
 /// A closed absolute interval
 ///
 /// Interval set with absolute time, with a defined start and end
@@ -119,6 +131,43 @@ impl ClosedAbsoluteInterval {
     }
 }
 
+pub enum ClosedAbsoluteIntervalConversionErr {
+    WrongVariant,
+}
+
+impl TryFrom<AbsoluteInterval> for ClosedAbsoluteInterval {
+    type Error = ClosedAbsoluteIntervalConversionErr;
+
+    fn try_from(value: AbsoluteInterval) -> Result<Self, Self::Error> {
+        match value {
+            AbsoluteInterval::Closed(interval) => Ok(interval),
+            _ => Err(Self::Error::WrongVariant),
+        }
+    }
+}
+
+impl TryFrom<ClosedInterval> for ClosedAbsoluteInterval {
+    type Error = ClosedAbsoluteIntervalConversionErr;
+
+    fn try_from(value: ClosedInterval) -> Result<Self, Self::Error> {
+        match value {
+            ClosedInterval::Absolute(interval) => Ok(interval),
+            ClosedInterval::Relative(_) => Err(Self::Error::WrongVariant),
+        }
+    }
+}
+
+impl TryFrom<Interval> for ClosedAbsoluteInterval {
+    type Error = ClosedAbsoluteIntervalConversionErr;
+
+    fn try_from(value: Interval) -> Result<Self, Self::Error> {
+        match value {
+            Interval::ClosedAbsolute(interval) => Ok(interval),
+            _ => Err(Self::Error::WrongVariant),
+        }
+    }
+}
+
 /// A closed relative interval
 ///
 /// An interval set with relative time, with a defined start and end
@@ -203,6 +252,43 @@ impl ClosedRelativeInterval {
     }
 }
 
+pub enum ClosedRelativeIntervalConversionErr {
+    WrongVariant,
+}
+
+impl TryFrom<RelativeInterval> for ClosedRelativeInterval {
+    type Error = ClosedRelativeIntervalConversionErr;
+
+    fn try_from(value: RelativeInterval) -> Result<Self, Self::Error> {
+        match value {
+            RelativeInterval::Closed(interval) => Ok(interval),
+            _ => Err(Self::Error::WrongVariant),
+        }
+    }
+}
+
+impl TryFrom<ClosedInterval> for ClosedRelativeInterval {
+    type Error = ClosedRelativeIntervalConversionErr;
+
+    fn try_from(value: ClosedInterval) -> Result<Self, Self::Error> {
+        match value {
+            ClosedInterval::Relative(interval) => Ok(interval),
+            ClosedInterval::Absolute(_) => Err(Self::Error::WrongVariant),
+        }
+    }
+}
+
+impl TryFrom<Interval> for ClosedRelativeInterval {
+    type Error = ClosedRelativeIntervalConversionErr;
+
+    fn try_from(value: Interval) -> Result<Self, Self::Error> {
+        match value {
+            Interval::ClosedRelative(interval) => Ok(interval),
+            _ => Err(Self::Error::WrongVariant),
+        }
+    }
+}
+
 /// A half-open absolute interval
 ///
 /// An interval set with absolute time, has a defined reference time and an opening direction (only one defined bound).
@@ -277,6 +363,43 @@ impl HalfOpenAbsoluteInterval {
     }
 }
 
+pub enum HalfOpenAbsoluteIntervalConversionErr {
+    WrongVariant,
+}
+
+impl TryFrom<AbsoluteInterval> for HalfOpenAbsoluteInterval {
+    type Error = HalfOpenAbsoluteIntervalConversionErr;
+
+    fn try_from(value: AbsoluteInterval) -> Result<Self, Self::Error> {
+        match value {
+            AbsoluteInterval::HalfOpen(interval) => Ok(interval),
+            _ => Err(Self::Error::WrongVariant),
+        }
+    }
+}
+
+impl TryFrom<HalfOpenInterval> for HalfOpenAbsoluteInterval {
+    type Error = HalfOpenAbsoluteIntervalConversionErr;
+
+    fn try_from(value: HalfOpenInterval) -> Result<Self, Self::Error> {
+        match value {
+            HalfOpenInterval::Absolute(interval) => Ok(interval),
+            HalfOpenInterval::Relative(_) => Err(Self::Error::WrongVariant),
+        }
+    }
+}
+
+impl TryFrom<Interval> for HalfOpenAbsoluteInterval {
+    type Error = HalfOpenAbsoluteIntervalConversionErr;
+
+    fn try_from(value: Interval) -> Result<Self, Self::Error> {
+        match value {
+            Interval::HalfOpenAbsolute(interval) => Ok(interval),
+            _ => Err(Self::Error::WrongVariant),
+        }
+    }
+}
+
 /// A half-open relative interval
 ///
 /// An interval set with relative time, has a relative reference time (offset) and an opening direction.
@@ -342,12 +465,86 @@ impl HalfOpenRelativeInterval {
     }
 }
 
+pub enum HalfOpenRelativeIntervalConversionErr {
+    WrongVariant,
+}
+
+impl TryFrom<RelativeInterval> for HalfOpenRelativeInterval {
+    type Error = HalfOpenRelativeIntervalConversionErr;
+
+    fn try_from(value: RelativeInterval) -> Result<Self, Self::Error> {
+        match value {
+            RelativeInterval::HalfOpen(interval) => Ok(interval),
+            _ => Err(Self::Error::WrongVariant),
+        }
+    }
+}
+
+impl TryFrom<HalfOpenInterval> for HalfOpenRelativeInterval {
+    type Error = HalfOpenRelativeIntervalConversionErr;
+
+    fn try_from(value: HalfOpenInterval) -> Result<Self, Self::Error> {
+        match value {
+            HalfOpenInterval::Relative(interval) => Ok(interval),
+            HalfOpenInterval::Absolute(_) => Err(Self::Error::WrongVariant),
+        }
+    }
+}
+
+impl TryFrom<Interval> for HalfOpenRelativeInterval {
+    type Error = HalfOpenRelativeIntervalConversionErr;
+
+    fn try_from(value: Interval) -> Result<Self, Self::Error> {
+        match value {
+            Interval::HalfOpenRelative(interval) => Ok(interval),
+            _ => Err(Self::Error::WrongVariant),
+        }
+    }
+}
+
 /// An open interval
 ///
 /// Interval without relativity (not absolute nor relative) and without any bounds.
 /// Is equivalent to _time itself_ (all time), infinite duration.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct OpenInterval;
+
+pub enum OpenIntervalConversionErr {
+    WrongVariant,
+}
+
+impl TryFrom<AbsoluteInterval> for OpenInterval {
+    type Error = OpenIntervalConversionErr;
+
+    fn try_from(value: AbsoluteInterval) -> Result<Self, Self::Error> {
+        match value {
+            AbsoluteInterval::Open(interval) => Ok(interval),
+            _ => Err(Self::Error::WrongVariant),
+        }
+    }
+}
+
+impl TryFrom<RelativeInterval> for OpenInterval {
+    type Error = OpenIntervalConversionErr;
+
+    fn try_from(value: RelativeInterval) -> Result<Self, Self::Error> {
+        match value {
+            RelativeInterval::Open(interval) => Ok(interval),
+            _ => Err(Self::Error::WrongVariant),
+        }
+    }
+}
+
+impl TryFrom<Interval> for OpenInterval {
+    type Error = OpenIntervalConversionErr;
+
+    fn try_from(value: Interval) -> Result<Self, Self::Error> {
+        match value {
+            Interval::Open(interval) => Ok(interval),
+            _ => Err(Self::Error::WrongVariant),
+        }
+    }
+}
 
 /// No interval
 ///
@@ -359,6 +556,148 @@ pub struct OpenInterval;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct EmptyInterval;
 
+pub enum EmptyIntervalConversionErr {
+    WrongVariant,
+}
+
+impl TryFrom<AbsoluteInterval> for EmptyInterval {
+    type Error = EmptyIntervalConversionErr;
+
+    fn try_from(value: AbsoluteInterval) -> Result<Self, Self::Error> {
+        match value {
+            AbsoluteInterval::Empty(interval) => Ok(interval),
+            _ => Err(Self::Error::WrongVariant),
+        }
+    }
+}
+
+impl TryFrom<RelativeInterval> for EmptyInterval {
+    type Error = EmptyIntervalConversionErr;
+
+    fn try_from(value: RelativeInterval) -> Result<Self, Self::Error> {
+        match value {
+            RelativeInterval::Empty(interval) => Ok(interval),
+            _ => Err(Self::Error::WrongVariant),
+        }
+    }
+}
+
+impl TryFrom<Interval> for EmptyInterval {
+    type Error = EmptyIntervalConversionErr;
+
+    fn try_from(value: Interval) -> Result<Self, Self::Error> {
+        match value {
+            Interval::Empty(interval) => Ok(interval),
+            _ => Err(Self::Error::WrongVariant),
+        }
+    }
+}
+
+/// Represents any absolute interval, including empty and open intervals
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum AbsoluteInterval {
+    Closed(ClosedAbsoluteInterval),
+    HalfOpen(HalfOpenAbsoluteInterval),
+    Open(OpenInterval),
+    Empty(EmptyInterval),
+}
+
+impl From<ClosedAbsoluteInterval> for AbsoluteInterval {
+    fn from(value: ClosedAbsoluteInterval) -> Self {
+        AbsoluteInterval::Closed(value)
+    }
+}
+
+impl From<HalfOpenAbsoluteInterval> for AbsoluteInterval {
+    fn from(value: HalfOpenAbsoluteInterval) -> Self {
+        AbsoluteInterval::HalfOpen(value)
+    }
+}
+
+impl From<OpenInterval> for AbsoluteInterval {
+    fn from(value: OpenInterval) -> Self {
+        AbsoluteInterval::Open(value)
+    }
+}
+
+impl From<EmptyInterval> for AbsoluteInterval {
+    fn from(value: EmptyInterval) -> Self {
+        AbsoluteInterval::Empty(value)
+    }
+}
+
+/// Represents any relative interval, including empty and open interval
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum RelativeInterval {
+    Closed(ClosedRelativeInterval),
+    HalfOpen(HalfOpenRelativeInterval),
+    Open(OpenInterval),
+    Empty(EmptyInterval),
+}
+
+impl From<ClosedRelativeInterval> for RelativeInterval {
+    fn from(value: ClosedRelativeInterval) -> Self {
+        RelativeInterval::Closed(value)
+    }
+}
+
+impl From<HalfOpenRelativeInterval> for RelativeInterval {
+    fn from(value: HalfOpenRelativeInterval) -> Self {
+        RelativeInterval::HalfOpen(value)
+    }
+}
+
+impl From<OpenInterval> for RelativeInterval {
+    fn from(value: OpenInterval) -> Self {
+        RelativeInterval::Open(value)
+    }
+}
+
+impl From<EmptyInterval> for RelativeInterval {
+    fn from(value: EmptyInterval) -> Self {
+        RelativeInterval::Empty(value)
+    }
+}
+
+/// Represents any closed interval, absolute or relative
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ClosedInterval {
+    Absolute(ClosedAbsoluteInterval),
+    Relative(ClosedRelativeInterval),
+}
+
+impl From<ClosedAbsoluteInterval> for ClosedInterval {
+    fn from(value: ClosedAbsoluteInterval) -> Self {
+        ClosedInterval::Absolute(value)
+    }
+}
+
+impl From<ClosedRelativeInterval> for ClosedInterval {
+    fn from(value: ClosedRelativeInterval) -> Self {
+        ClosedInterval::Relative(value)
+    }
+}
+
+/// Represents any half-open interval, absolute or relative
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum HalfOpenInterval {
+    Absolute(HalfOpenAbsoluteInterval),
+    Relative(HalfOpenRelativeInterval),
+}
+
+impl From<HalfOpenAbsoluteInterval> for HalfOpenInterval {
+    fn from(value: HalfOpenAbsoluteInterval) -> Self {
+        HalfOpenInterval::Absolute(value)
+    }
+}
+
+impl From<HalfOpenRelativeInterval> for HalfOpenInterval {
+    fn from(value: HalfOpenRelativeInterval) -> Self {
+        HalfOpenInterval::Relative(value)
+    }
+}
+
+/// Any kind of interval
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Interval {
     ClosedAbsolute(ClosedAbsoluteInterval),
@@ -521,6 +860,46 @@ impl From<OpenInterval> for Interval {
 impl From<EmptyInterval> for Interval {
     fn from(value: EmptyInterval) -> Self {
         Interval::Empty(value)
+    }
+}
+
+impl From<AbsoluteInterval> for Interval {
+    fn from(value: AbsoluteInterval) -> Self {
+        match value {
+            AbsoluteInterval::Closed(interval) => Interval::ClosedAbsolute(interval),
+            AbsoluteInterval::HalfOpen(interval) => Interval::HalfOpenAbsolute(interval),
+            AbsoluteInterval::Open(interval) => Interval::Open(interval),
+            AbsoluteInterval::Empty(interval) => Interval::Empty(interval),
+        }
+    }
+}
+
+impl From<RelativeInterval> for Interval {
+    fn from(value: RelativeInterval) -> Self {
+        match value {
+            RelativeInterval::Closed(interval) => Interval::ClosedRelative(interval),
+            RelativeInterval::HalfOpen(interval) => Interval::HalfOpenRelative(interval),
+            RelativeInterval::Open(interval) => Interval::Open(interval),
+            RelativeInterval::Empty(interval) => Interval::Empty(interval),
+        }
+    }
+}
+
+impl From<ClosedInterval> for Interval {
+    fn from(value: ClosedInterval) -> Self {
+        match value {
+            ClosedInterval::Absolute(interval) => Interval::ClosedAbsolute(interval),
+            ClosedInterval::Relative(interval) => Interval::ClosedRelative(interval),
+        }
+    }
+}
+
+impl From<HalfOpenInterval> for Interval {
+    fn from(value: HalfOpenInterval) -> Self {
+        match value {
+            HalfOpenInterval::Absolute(interval) => Interval::HalfOpenAbsolute(interval),
+            HalfOpenInterval::Relative(interval) => Interval::HalfOpenRelative(interval),
+        }
     }
 }
 
