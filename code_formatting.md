@@ -241,3 +241,26 @@ about how the acronym of a type is funny because is spells another thing is tota
 
 Follow this rule both in explicit implementations and when deriving the traits.
 
+### Unit tests should be separated from the code
+
+Normally you would put the `tests` module in the file that it is testing, however, those tests can take a lot of space.
+
+You should prefer creating an adjacent file named the same as the file it is testing, but suffixed with `_tests`.
+Example: `shiny.rs`, `shiny_tests.rs`.
+
+Don't forget to declare the test file in the parent module:
+
+```rs
+/*
+src/
+  lib.rs
+  shiny.rs
+  shiny_tests.rs
+*/
+
+// lib.rs
+mod shiny;
+
+#[cfg(test)]
+mod shiny_tests;
+```
