@@ -4,6 +4,8 @@
 //! of intervals, but also find how the principal structure, [`Interval`] works.
 
 use std::cmp::Ordering;
+use std::error::Error;
+use std::fmt::Display;
 
 use chrono::{DateTime, Duration, RoundingError, Utc};
 
@@ -14,7 +16,7 @@ use super::meta::{
 use super::ops::Precision;
 
 /// An absolute start bound, including [inclusivity](BoundInclusivity)
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum AbsoluteStartBound {
     Finite(DateTime<Utc>, BoundInclusivity),
     InfinitePast,
@@ -90,8 +92,21 @@ impl PartialOrd<AbsoluteEndBound> for AbsoluteStartBound {
     }
 }
 
+impl Display for AbsoluteStartBound {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Absolute start: ");
+
+        match self {
+            Self::Finite(time, inclusivity) => {
+                write!(f, "{time} ({inclusivity})")
+            },
+            Self::InfinitePast => write!(f, "Infinite past"),
+        }
+    }
+}
+
 /// An absolute end bound, including [inclusivity](BoundInclusivity)
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum AbsoluteEndBound {
     Finite(DateTime<Utc>, BoundInclusivity),
     InfiniteFuture,
@@ -141,16 +156,42 @@ impl PartialOrd<AbsoluteStartBound> for AbsoluteEndBound {
     }
 }
 
+impl Display for AbsoluteEndBound {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Absolute end: ");
+
+        match self {
+            Self::Finite(time, inclusivity) => {
+                write!(f, "{time} ({inclusivity})")
+            },
+            Self::InfiniteFuture => write!(f, "Infinite future"),
+        }
+    }
+}
+
 /// A relative start interval bound, including [inclusivity](BoundInclusivity)
 ///
 /// # Why no [`PartialOrd`] implementation
 ///
 /// Partial ordering is only correct if all bound offsets were created from the same reference,
 /// which we can't guarantee.
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum RelativeStartBound {
     Finite(Duration, BoundInclusivity),
     InfinitePast,
+}
+
+impl Display for RelativeStartBound {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Relative start: ");
+
+        match self {
+            Self::Finite(offset, inclusivity) => {
+                write!(f, "{offset} ({inclusivity})")
+            },
+            Self::InfinitePast => write!(f, "Infinite past"),
+        }
+    }
 }
 
 /// A relative end interval bound, including [inclusivity](BoundInclusivity)
@@ -159,10 +200,23 @@ pub enum RelativeStartBound {
 ///
 /// Partial ordering is only correct if all bound offsets were created from the same reference,
 /// which we can't guarantee.
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum RelativeEndBound {
     Finite(Duration, BoundInclusivity),
     InfiniteFuture,
+}
+
+impl Display for RelativeEndBound {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Relative end: ");
+
+        match self {
+            Self::Finite(offset, inclusivity) => {
+                write!(f, "{offset} ({inclusivity})")
+            },
+            Self::InfiniteFuture => write!(f, "Infinite future"),
+        }
+    }
 }
 
 /// Bounds of an absolute interval
@@ -170,7 +224,7 @@ pub enum RelativeEndBound {
 /// # Invariant
 ///
 /// Either two bounds are defined, or no bounds are defined (in the case of an empty interval)
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct AbsoluteBounds {
     start: Option<AbsoluteStartBound>,
     end: Option<AbsoluteEndBound>,
@@ -211,6 +265,37 @@ impl Ord for AbsoluteBounds {
     }
 }
 
+impl Display for AbsoluteBounds {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match (self.start, self.end) {
+            (None, _) | (_, None) => write!(f, "Empty interval bounds"),
+            (Some(start), Some(end)) => {
+                match start {
+                    AbsoluteStartBound::Finite(time, inclusivity) => {
+                        write!(f, "{time} ({inclusivity})");
+                    },
+                    AbsoluteStartBound::InfinitePast => {
+                        write!(f, "Infinite past");
+                    },
+                }
+
+                write!(f, " - ");
+
+                match end {
+                    AbsoluteEndBound::Finite(time, inclusivity) => {
+                        write!(f, "{time} ({inclusivity})");
+                    },
+                    AbsoluteEndBound::InfiniteFuture => {
+                        write!(f, "Infinite future");
+                    },
+                }
+
+                Ok(())
+            },
+        }
+    }
+}
+
 /// Represents something that has absolute bounds
 // NOTE: Do blanket impls for most things using those traits
 // Ex: impl<T: HasAbsoluteBounds> PreciseTime for T
@@ -242,7 +327,7 @@ pub trait HasAbsoluteBounds {
 /// # Invariant
 ///
 /// Either two bounds are defined, or no bounds are defined (in the case of an empty interval)
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct RelativeBounds {
     start: Option<RelativeStartBound>,
     end: Option<RelativeEndBound>,
@@ -268,6 +353,37 @@ impl RelativeBounds {
 impl HasRelativeBounds for RelativeBounds {
     fn relative_bounds(&self) -> RelativeBounds {
         self.clone()
+    }
+}
+
+impl Display for RelativeBounds {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match (self.start, self.end) {
+            (None, _) | (_, None) => write!(f, "Empty interval bounds"),
+            (Some(start), Some(end)) => {
+                match start {
+                    RelativeStartBound::Finite(offset, inclusivity) => {
+                        write!(f, "{offset} ({inclusivity})");
+                    },
+                    RelativeStartBound::InfinitePast => {
+                        write!(f, "Infinite past");
+                    },
+                }
+
+                write!(f, " - ");
+
+                match end {
+                    RelativeEndBound::Finite(offset, inclusivity) => {
+                        write!(f, "{offset} ({inclusivity})");
+                    },
+                    RelativeEndBound::InfiniteFuture => {
+                        write!(f, "Infinite future");
+                    },
+                }
+
+                Ok(())
+            },
+        }
     }
 }
 
@@ -317,7 +433,7 @@ pub trait ToRelative {
 /// A closed absolute interval
 ///
 /// Interval set with absolute time, with a defined start and end
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ClosedAbsoluteInterval {
     pub(super) from: DateTime<Utc>,
     pub(super) to: DateTime<Utc>,
@@ -473,9 +589,20 @@ impl ToRelative for ClosedAbsoluteInterval {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum ClosedAbsoluteIntervalConversionErr {
     WrongVariant,
 }
+
+impl Display for ClosedAbsoluteIntervalConversionErr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::WrongVariant => write!(f, "Wrong variant"),
+        }
+    }
+}
+
+impl Error for ClosedAbsoluteIntervalConversionErr {}
 
 impl TryFrom<AbsoluteInterval> for ClosedAbsoluteInterval {
     type Error = ClosedAbsoluteIntervalConversionErr;
@@ -491,7 +618,7 @@ impl TryFrom<AbsoluteInterval> for ClosedAbsoluteInterval {
 /// A closed relative interval
 ///
 /// An interval set with relative time, with a defined start and end
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ClosedRelativeInterval {
     pub(super) offset: Duration,
     pub(super) length: Duration,
@@ -620,9 +747,20 @@ impl ToRelative for ClosedRelativeInterval {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum ClosedRelativeIntervalConversionErr {
     WrongVariant,
 }
+
+impl Display for ClosedRelativeIntervalConversionErr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::WrongVariant => write!(f, "Wrong variant"),
+        }
+    }
+}
+
+impl Error for ClosedRelativeIntervalConversionErr {}
 
 impl TryFrom<RelativeInterval> for ClosedRelativeInterval {
     type Error = ClosedRelativeIntervalConversionErr;
@@ -639,7 +777,7 @@ impl TryFrom<RelativeInterval> for ClosedRelativeInterval {
 ///
 /// An interval set with absolute time, has a defined reference time and an opening direction (only one defined bound).
 /// Infinite duration.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct HalfOpenAbsoluteInterval {
     pub(super) reference_time: DateTime<Utc>,
     pub(super) opening_direction: OpeningDirection,
@@ -763,9 +901,20 @@ impl ToRelative for HalfOpenAbsoluteInterval {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum HalfOpenAbsoluteIntervalConversionErr {
     WrongVariant,
 }
+
+impl Display for HalfOpenAbsoluteIntervalConversionErr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::WrongVariant => write!(f, "Wrong variant"),
+        }
+    }
+}
+
+impl Error for HalfOpenAbsoluteIntervalConversionErr {}
 
 impl TryFrom<AbsoluteInterval> for HalfOpenAbsoluteInterval {
     type Error = HalfOpenAbsoluteIntervalConversionErr;
@@ -782,7 +931,7 @@ impl TryFrom<AbsoluteInterval> for HalfOpenAbsoluteInterval {
 ///
 /// An interval set with relative time, has a relative reference time (offset) and an opening direction.
 /// Infinite duration.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct HalfOpenRelativeInterval {
     pub(super) offset: Duration,
     pub(super) opening_direction: OpeningDirection,
@@ -897,9 +1046,20 @@ impl ToRelative for HalfOpenRelativeInterval {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum HalfOpenRelativeIntervalConversionErr {
     WrongVariant,
 }
+
+impl Display for HalfOpenRelativeIntervalConversionErr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::WrongVariant => write!(f, "Wrong variant"),
+        }
+    }
+}
+
+impl Error for HalfOpenRelativeIntervalConversionErr {}
 
 impl TryFrom<RelativeInterval> for HalfOpenRelativeInterval {
     type Error = HalfOpenRelativeIntervalConversionErr;
@@ -916,7 +1076,7 @@ impl TryFrom<RelativeInterval> for HalfOpenRelativeInterval {
 ///
 /// Interval without relativity (not absolute nor relative) and without any bounds.
 /// Is equivalent to _time itself_ (all time), infinite duration.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct OpenInterval;
 
 impl HasOpenness for OpenInterval {
@@ -965,9 +1125,20 @@ impl ToRelative for OpenInterval {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum OpenIntervalConversionErr {
     WrongVariant,
 }
+
+impl Display for OpenIntervalConversionErr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::WrongVariant => write!(f, "Wrong variant"),
+        }
+    }
+}
+
+impl Error for OpenIntervalConversionErr {}
 
 impl TryFrom<AbsoluteInterval> for OpenInterval {
     type Error = OpenIntervalConversionErr;
@@ -998,7 +1169,7 @@ impl TryFrom<RelativeInterval> for OpenInterval {
 ///
 /// In regards to operations such as the overlap position, an empty interval has no defined place,
 /// it simply represents the _lack_ of a time interval, like the complement of an open interval
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct EmptyInterval;
 
 impl HasOpenness for EmptyInterval {
@@ -1047,9 +1218,20 @@ impl ToRelative for EmptyInterval {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum EmptyIntervalConversionErr {
     WrongVariant,
 }
+
+impl Display for EmptyIntervalConversionErr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::WrongVariant => write!(f, "Wrong variant"),
+        }
+    }
+}
+
+impl Error for EmptyIntervalConversionErr {}
 
 impl TryFrom<AbsoluteInterval> for EmptyInterval {
     type Error = EmptyIntervalConversionErr;
@@ -1074,7 +1256,7 @@ impl TryFrom<RelativeInterval> for EmptyInterval {
 }
 
 /// Represents any absolute interval, including empty and open intervals
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum AbsoluteInterval {
     Closed(ClosedAbsoluteInterval),
     HalfOpen(HalfOpenAbsoluteInterval),
@@ -1128,7 +1310,7 @@ impl From<EmptyInterval> for AbsoluteInterval {
 }
 
 /// Represents any relative interval, including empty and open interval
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum RelativeInterval {
     Closed(ClosedRelativeInterval),
     HalfOpen(HalfOpenRelativeInterval),

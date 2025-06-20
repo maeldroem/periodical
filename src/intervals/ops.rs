@@ -17,7 +17,7 @@ use crate::intervals::interval::{ClosedAbsoluteInterval, EmptyInterval, HalfOpen
 use crate::intervals::meta::{BoundInclusivity, OpeningDirection};
 
 /// Time precision used for comparisons
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Precision {
     /// Rounds the compared times to the given duration (e.g. if the duration is 1 second, the times will be rounded to the nearest second)
     ToNearest(Duration),
@@ -79,7 +79,7 @@ impl Precision {
 }
 
 /// Errors that can occur when using [`Precision::try_precise_interval`]
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum IntervalPrecisionError {
     /// The given interval was relative
     ///
@@ -95,7 +95,7 @@ pub enum IntervalPrecisionError {
 }
 
 /// Where the given time was found relative to a time interval
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ContainmentPosition {
     /// The given time was found before the time interval's beginning
     OutsideBefore,
@@ -147,7 +147,7 @@ impl ContainmentPosition {
 /// Same as [`ContainmentPosition`] but without information about bound inclusivity
 ///
 /// Used for methods that resolve ambiguities caused by bound inclusivity.
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SimpleContainmentPosition {
     /// See [`ContainmentPosition::OutsideBefore`]
     OutsideBefore,
@@ -164,7 +164,7 @@ pub enum SimpleContainmentPosition {
 }
 
 /// Errors that can happen when computing the containment position of some time inside an interval
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ContainmentPositionError {
     /// The interval is relative, therefore we can't determine the containment position of the given time
     RelativeInterval,
@@ -175,7 +175,7 @@ pub enum ContainmentPositionError {
 /// Different rule sets for determining whether different [`ContainmentPosition`]s are considered as containing or not.
 ///
 /// See [`Interval::contains_using_rule_set`] for more.
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ContainmentRuleSet {
     /// Strict rule set
     ///
@@ -228,7 +228,7 @@ fn lenient_containment_rule_set_disambiguation(containment_position: Containment
 }
 
 /// All rules for containment by converting a [`SimpleContainmentPosition`] into a [`bool`]
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ContainmentRule {
     /// Doesn't count as contained when the time is on the start of the interval
     DenyOnStart,
@@ -284,7 +284,7 @@ fn deny_on_bounds_containment_rule_counts_as_contained(simple_containment_positi
 /// Where the other time interval was found relative to the current time interval
 ///
 /// See [`Interval::overlap_position`] for more information
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum OverlapPosition {
     /// The given other time interval was found before the time interval
     OutsideBefore,
@@ -414,7 +414,7 @@ impl OverlapPosition {
 /// Same as [`OverlapPosition`] but without information about bound inclusivity
 ///
 /// Used for methods that resolve ambiguities caused by bound inclusivity.
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SimpleOverlapPosition {
     /// See [`OverlapPosition::OutsideBefore`]
     OutsideBefore,
@@ -447,7 +447,7 @@ pub enum SimpleOverlapPosition {
 }
 
 /// Errors that can happen when computing the overlap position of two intervals
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum OverlapPositionError {
     /// One interval was relative, therefore we can't determine the overlap position of the given time
     RelativeInterval,
@@ -458,7 +458,7 @@ pub enum OverlapPositionError {
 /// Different rule sets for determining whether different [`OverlapPosition`]s are considered as overlapping or not.
 ///
 /// See [`Interval::overlaps_using_rule_set`] for more.
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum OverlapRuleSet {
     /// Strict rule set
     ///
@@ -707,7 +707,7 @@ fn very_lenient_overlap_rule_set_disambiguation(overlap_position: OverlapPositio
 }
 
 /// All rules for overlapping by converting a [`SimpleOverlapPosition`] into a [`bool`]
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum OverlapRule {
     /// Counts adjacent / "touching" intervals as overlapping
     AllowAdjacency,
@@ -783,7 +783,7 @@ fn allow_future_adjacency_overlap_rules_counts_as_overlap(simple_overlap_positio
 }
 
 /// Errors that can occur when calling [`try_extend`](Interval::try_extend)
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum IntervalExtensionError {
     /// The current interval or given interval was relative and therefore can't be extended
     RelativeInterval,

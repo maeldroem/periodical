@@ -185,7 +185,7 @@ pub trait IntervalIterator: Iterator {
 
 /// Represents the result of a union
 // NOTE: Perhaps move to another place since it's a generic that could be used for other things?
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum UnionResult<T> {
     /// Union was successful, the united element is contained within this variant
     United(T),
@@ -392,7 +392,7 @@ fn unite_intervals(
 }
 
 /// Represents the result of an intersection
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum IntersectionResult<T> {
     /// Intersection was successful, the intersected element is contained within this variant
     Intersects(T),
@@ -453,7 +453,7 @@ pub struct IntersectionWithOne<I> {
 }
 
 /// Represents the result of a difference
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DifferenceResult<T> {
     /// Difference was successful, the difference of the two elements is contained within this variant
     Difference(T),
@@ -484,7 +484,7 @@ pub struct DifferencePreviousPeer<I> {
 }
 
 /// Represents the result of a symmetric difference
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SymmetricDifferenceResult<T> {
     /// Symmetric difference was successful, the symmetric difference of both elements is contained within this variant
     SymmetricDifference(T, T),
