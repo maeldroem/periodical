@@ -11,13 +11,30 @@ pub enum Openness {
     HalfOpen,
     /// Covers the entire time
     Open,
+    /// Is technically bounded in time, but nowhere precise, used for [empty intervals](super::interval::EmptyInterval)
+    Empty,
+}
+
+/// Trait for any interval representation that supports the concept of [`Openness`]
+pub trait HasOpenness {
+    fn openness(&self) -> Openness;
 }
 
 /// Whether the time interval is bound to specific timestamps
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum Relativity {
+    /// Bounds are set using offsets
     Relative,
+    /// Bounds are set using specific timestamps
     Absolute,
+    /// Uses concepts rather than bounds, like [open](super::interval::OpenInterval)
+    /// and [empty](super::interval::EmptyInterval) intervals
+    Any,
+}
+
+/// Trait for any interval representation that supports the concept of [`Relativity`]
+pub trait HasRelativity {
+    fn relativity(&self) -> Relativity;
 }
 
 /// The direction in which a half-open time interval is open
@@ -32,6 +49,11 @@ pub enum OpeningDirection {
 pub enum Duration {
     Finite(chrono::Duration),
     Infinite,
+}
+
+/// Trait for any interval representation that supports the concept of [`Duration`]
+pub trait HasDuration {
+    fn duration(&self) -> Duration;
 }
 
 /// Inclusivity of an interval's time bound

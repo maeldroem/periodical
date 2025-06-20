@@ -3,22 +3,315 @@
 //! The core of intervals is implemented here. You will find the implementations for each different variant
 //! of intervals, but also find how the principal structure, [`Interval`] works.
 
+use std::cmp::Ordering;
+
 use chrono::{DateTime, Duration, RoundingError, Utc};
 
-use crate::intervals::ops::Precision;
+use super::meta::{
+    BoundInclusivity, Duration as IntervalDuration, HasDuration, HasOpenness, HasRelativity, OpeningDirection,
+    Openness, Relativity,
+};
+use super::ops::Precision;
 
-use super::meta::{BoundInclusivity, Duration as IntervalDuration, OpeningDirection, Openness, Relativity};
-
-pub enum AbsoluteIntervalBound {
+/// An absolute start bound, including [inclusivity](BoundInclusivity)
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum AbsoluteStartBound {
     Finite(DateTime<Utc>, BoundInclusivity),
     InfinitePast,
+}
+
+impl PartialEq<AbsoluteEndBound> for AbsoluteStartBound {
+    fn eq(&self, other: &AbsoluteEndBound) -> bool {
+        match (self, other) {
+            (
+                AbsoluteStartBound::Finite(start_time, start_inclusivity),
+                AbsoluteEndBound::Finite(end_time, end_inclusivity),
+            ) => {
+                start_time == end_time
+                    && *start_inclusivity == BoundInclusivity::Inclusive
+                    && *end_inclusivity == BoundInclusivity::Inclusive
+            },
+            _ => false,
+        }
+    }
+}
+
+impl PartialOrd for AbsoluteStartBound {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for AbsoluteStartBound {
+    fn cmp(&self, other: &Self) -> Ordering {
+        match (self, other) {
+            (AbsoluteStartBound::InfinitePast, _) => Ordering::Less,
+            (_, AbsoluteStartBound::InfinitePast) => Ordering::Greater,
+            (
+                AbsoluteStartBound::Finite(time_og, inclusivity_og),
+                AbsoluteStartBound::Finite(time_other, inclusivity_other),
+            ) => {
+                let time_cmp = time_og.cmp(time_other);
+
+                if matches!(time_cmp, Ordering::Less | Ordering::Greater) {
+                    return time_cmp;
+                }
+
+                match (inclusivity_og, inclusivity_other) {
+                    (BoundInclusivity::Inclusive, BoundInclusivity::Inclusive)
+                    | (BoundInclusivity::Exclusive, BoundInclusivity::Exclusive) => Ordering::Equal,
+                    (BoundInclusivity::Inclusive, BoundInclusivity::Exclusive) => Ordering::Less,
+                    (BoundInclusivity::Exclusive, BoundInclusivity::Inclusive) => Ordering::Greater,
+                }
+            },
+        }
+    }
+}
+
+impl PartialOrd<AbsoluteEndBound> for AbsoluteStartBound {
+    fn partial_cmp(&self, other: &AbsoluteEndBound) -> Option<Ordering> {
+        match (self, other) {
+            (AbsoluteStartBound::InfinitePast, _) | (_, AbsoluteEndBound::InfiniteFuture) => Some(Ordering::Less),
+            (
+                AbsoluteStartBound::Finite(start_time, start_inclusivity),
+                AbsoluteEndBound::Finite(end_time, end_inclusivity),
+            ) => {
+                match start_time.cmp(end_time) {
+                    Ordering::Less => Some(Ordering::Less),
+                    Ordering::Greater => Some(Ordering::Greater),
+                    Ordering::Equal => match (start_inclusivity, end_inclusivity) {
+                        // think of it as a start bound of a later interval compared to the end bound of an earlier one
+                        (BoundInclusivity::Inclusive, BoundInclusivity::Inclusive) => Some(Ordering::Equal),
+                        _ => Some(Ordering::Greater),
+                    },
+                }
+            },
+        }
+    }
+}
+
+/// An absolute end bound, including [inclusivity](BoundInclusivity)
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum AbsoluteEndBound {
+    Finite(DateTime<Utc>, BoundInclusivity),
     InfiniteFuture,
 }
 
-pub enum RelativeIntervalBound {
+impl PartialOrd for AbsoluteEndBound {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for AbsoluteEndBound {
+    fn cmp(&self, other: &Self) -> Ordering {
+        match (self, other) {
+            (AbsoluteEndBound::InfiniteFuture, _) => Ordering::Greater,
+            (_, AbsoluteEndBound::InfiniteFuture) => Ordering::Less,
+            (
+                AbsoluteEndBound::Finite(time_og, inclusivity_og),
+                AbsoluteEndBound::Finite(time_other, inclusivity_other),
+            ) => {
+                let time_cmp = time_og.cmp(time_other);
+
+                if matches!(time_cmp, Ordering::Less | Ordering::Greater) {
+                    return time_cmp;
+                }
+
+                match (inclusivity_og, inclusivity_other) {
+                    (BoundInclusivity::Inclusive, BoundInclusivity::Inclusive)
+                    | (BoundInclusivity::Exclusive, BoundInclusivity::Exclusive) => Ordering::Equal,
+                    (BoundInclusivity::Inclusive, BoundInclusivity::Exclusive) => Ordering::Greater,
+                    (BoundInclusivity::Exclusive, BoundInclusivity::Inclusive) => Ordering::Less,
+                }
+            },
+        }
+    }
+}
+
+impl PartialEq<AbsoluteStartBound> for AbsoluteEndBound {
+    fn eq(&self, other: &AbsoluteStartBound) -> bool {
+        other.eq(self)
+    }
+}
+
+impl PartialOrd<AbsoluteStartBound> for AbsoluteEndBound {
+    fn partial_cmp(&self, other: &AbsoluteStartBound) -> Option<Ordering> {
+        other.partial_cmp(self).map(Ordering::reverse)
+    }
+}
+
+/// A relative start interval bound, including [inclusivity](BoundInclusivity)
+///
+/// # Why no [`PartialOrd`] implementation
+///
+/// Partial ordering is only correct if all bound offsets were created from the same reference,
+/// which we can't guarantee.
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum RelativeStartBound {
     Finite(Duration, BoundInclusivity),
     InfinitePast,
+}
+
+/// A relative end interval bound, including [inclusivity](BoundInclusivity)
+///
+/// # Why no [`PartialOrd`] implementation
+///
+/// Partial ordering is only correct if all bound offsets were created from the same reference,
+/// which we can't guarantee.
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum RelativeEndBound {
+    Finite(Duration, BoundInclusivity),
     InfiniteFuture,
+}
+
+/// Bounds of an absolute interval
+///
+/// # Invariant
+///
+/// Either two bounds are defined, or no bounds are defined (in the case of an empty interval)
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AbsoluteBounds {
+    start: Option<AbsoluteStartBound>,
+    end: Option<AbsoluteEndBound>,
+}
+
+impl AbsoluteBounds {
+    /// Creates a new instance of absolute bounds
+    #[must_use]
+    pub fn new(start: AbsoluteStartBound, end: AbsoluteEndBound) -> Self {
+        AbsoluteBounds {
+            start: Some(start),
+            end: Some(end),
+        }
+    }
+
+    /// Creates a new instance of absolute bounds for an empty interval
+    #[must_use]
+    pub fn new_empty() -> Self {
+        AbsoluteBounds { start: None, end: None }
+    }
+}
+
+impl HasAbsoluteBounds for AbsoluteBounds {
+    fn absolute_bounds(&self) -> AbsoluteBounds {
+        self.clone()
+    }
+}
+
+impl PartialOrd for AbsoluteBounds {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for AbsoluteBounds {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.start.cmp(&other.start)
+    }
+}
+
+/// Represents something that has absolute bounds
+// NOTE: Do blanket impls for most things using those traits
+// Ex: impl<T: HasAbsoluteBounds> PreciseTime for T
+pub trait HasAbsoluteBounds {
+    /// Returns the absolute bounds
+    #[must_use]
+    fn absolute_bounds(&self) -> AbsoluteBounds;
+
+    /// Returns the absolute start bound
+    #[must_use]
+    fn absolute_start_bound(&self) -> Option<AbsoluteStartBound> {
+        self.absolute_bounds().start
+    }
+
+    /// Returns the absolute end bound
+    #[must_use]
+    fn absolute_end_bound(&self) -> Option<AbsoluteEndBound> {
+        self.absolute_bounds().end
+    }
+}
+
+/// Bounds of a relative interval
+///
+/// # Why no [`PartialOrd`] implementation
+///
+/// Partial ordering is only correct if all bound offsets were created from the same reference,
+/// which we can't guarantee.
+///
+/// # Invariant
+///
+/// Either two bounds are defined, or no bounds are defined (in the case of an empty interval)
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RelativeBounds {
+    start: Option<RelativeStartBound>,
+    end: Option<RelativeEndBound>,
+}
+
+impl RelativeBounds {
+    /// Creates an instance of relative bounds
+    #[must_use]
+    pub fn new(start: RelativeStartBound, end: RelativeEndBound) -> Self {
+        RelativeBounds {
+            start: Some(start),
+            end: Some(end),
+        }
+    }
+
+    /// Creates an instance of empty relative bounds (for empty intervals)
+    #[must_use]
+    pub fn new_empty() -> Self {
+        RelativeBounds { start: None, end: None }
+    }
+}
+
+impl HasRelativeBounds for RelativeBounds {
+    fn relative_bounds(&self) -> RelativeBounds {
+        self.clone()
+    }
+}
+
+/// Represents something that has relative bounds
+pub trait HasRelativeBounds {
+    /// Returns the relative bounds
+    #[must_use]
+    fn relative_bounds(&self) -> RelativeBounds;
+
+    /// Returns the relative start bound
+    #[must_use]
+    fn relative_start_bound(&self) -> Option<RelativeStartBound> {
+        self.relative_bounds().start
+    }
+
+    /// Returns the relative end bound
+    #[must_use]
+    fn relative_end_bound(&self) -> Option<RelativeEndBound> {
+        self.relative_bounds().end
+    }
+}
+
+/// Conversion trait for every interval that can be converted into an absolute interval
+pub trait ToAbsolute {
+    type AbsoluteType;
+
+    /// Converts any interval into an absolute interval
+    ///
+    /// If relative, then a new absolute interval is created from the relative one.
+    /// If absolute or [any](super::meta::Relativity::Any), then a clone of the current interval is made.
+    #[must_use]
+    fn to_absolute(&self, reference_time: DateTime<Utc>) -> Self::AbsoluteType;
+}
+
+/// Conversion trait for every interval that can be converted into a relative interval
+pub trait ToRelative {
+    type RelativeType;
+
+    /// Converts any interval into a relative interval
+    ///
+    /// If absolute, then a new relative interval is created from the absolute one.
+    /// If relative or [any](super::meta::Relativity::Any), then a clone of the current interval is made.
+    #[must_use]
+    fn to_relative(&self, reference_time: DateTime<Utc>) -> Self::RelativeType;
 }
 
 /// A closed absolute interval
@@ -72,6 +365,7 @@ impl ClosedAbsoluteInterval {
         self.to
     }
 
+    // REPLACE WITH BLANKET IMPLEMENTATION FROM HasAbsoluteBounds
     /// Tries to return the start time rounded with the given precision
     ///
     /// # Errors
@@ -131,6 +425,54 @@ impl ClosedAbsoluteInterval {
     }
 }
 
+impl HasOpenness for ClosedAbsoluteInterval {
+    fn openness(&self) -> Openness {
+        Openness::Closed
+    }
+}
+
+impl HasRelativity for ClosedAbsoluteInterval {
+    fn relativity(&self) -> Relativity {
+        Relativity::Absolute
+    }
+}
+
+impl HasDuration for ClosedAbsoluteInterval {
+    fn duration(&self) -> IntervalDuration {
+        IntervalDuration::Finite(self.to - self.from)
+    }
+}
+
+impl HasAbsoluteBounds for ClosedAbsoluteInterval {
+    fn absolute_bounds(&self) -> AbsoluteBounds {
+        AbsoluteBounds::new(
+            AbsoluteStartBound::Finite(self.from, self.from_inclusivity),
+            AbsoluteEndBound::Finite(self.to, self.to_inclusivity),
+        )
+    }
+}
+
+impl ToAbsolute for ClosedAbsoluteInterval {
+    type AbsoluteType = ClosedAbsoluteInterval;
+
+    fn to_absolute(&self, _reference_time: DateTime<Utc>) -> Self::AbsoluteType {
+        self.clone()
+    }
+}
+
+impl ToRelative for ClosedAbsoluteInterval {
+    type RelativeType = ClosedRelativeInterval;
+
+    fn to_relative(&self, reference_time: DateTime<Utc>) -> Self::RelativeType {
+        ClosedRelativeInterval::with_inclusivity(
+            self.from - reference_time,
+            self.from_inclusivity,
+            self.to - self.from,
+            self.to_inclusivity,
+        )
+    }
+}
+
 pub enum ClosedAbsoluteIntervalConversionErr {
     WrongVariant,
 }
@@ -141,28 +483,6 @@ impl TryFrom<AbsoluteInterval> for ClosedAbsoluteInterval {
     fn try_from(value: AbsoluteInterval) -> Result<Self, Self::Error> {
         match value {
             AbsoluteInterval::Closed(interval) => Ok(interval),
-            _ => Err(Self::Error::WrongVariant),
-        }
-    }
-}
-
-impl TryFrom<ClosedInterval> for ClosedAbsoluteInterval {
-    type Error = ClosedAbsoluteIntervalConversionErr;
-
-    fn try_from(value: ClosedInterval) -> Result<Self, Self::Error> {
-        match value {
-            ClosedInterval::Absolute(interval) => Ok(interval),
-            ClosedInterval::Relative(_) => Err(Self::Error::WrongVariant),
-        }
-    }
-}
-
-impl TryFrom<Interval> for ClosedAbsoluteInterval {
-    type Error = ClosedAbsoluteIntervalConversionErr;
-
-    fn try_from(value: Interval) -> Result<Self, Self::Error> {
-        match value {
-            Interval::ClosedAbsolute(interval) => Ok(interval),
             _ => Err(Self::Error::WrongVariant),
         }
     }
@@ -252,6 +572,54 @@ impl ClosedRelativeInterval {
     }
 }
 
+impl HasOpenness for ClosedRelativeInterval {
+    fn openness(&self) -> Openness {
+        Openness::Closed
+    }
+}
+
+impl HasRelativity for ClosedRelativeInterval {
+    fn relativity(&self) -> Relativity {
+        Relativity::Relative
+    }
+}
+
+impl HasDuration for ClosedRelativeInterval {
+    fn duration(&self) -> IntervalDuration {
+        IntervalDuration::Finite(self.length)
+    }
+}
+
+impl HasRelativeBounds for ClosedRelativeInterval {
+    fn relative_bounds(&self) -> RelativeBounds {
+        RelativeBounds::new(
+            RelativeStartBound::Finite(self.offset, self.from_inclusivity),
+            RelativeEndBound::Finite(self.offset + self.length, self.to_inclusivity),
+        )
+    }
+}
+
+impl ToAbsolute for ClosedRelativeInterval {
+    type AbsoluteType = ClosedAbsoluteInterval;
+
+    fn to_absolute(&self, reference_time: DateTime<Utc>) -> Self::AbsoluteType {
+        ClosedAbsoluteInterval::with_inclusivity(
+            reference_time + self.offset,
+            self.from_inclusivity,
+            reference_time + self.offset + self.length,
+            self.to_inclusivity,
+        )
+    }
+}
+
+impl ToRelative for ClosedRelativeInterval {
+    type RelativeType = ClosedRelativeInterval;
+
+    fn to_relative(&self, _reference_time: DateTime<Utc>) -> Self::RelativeType {
+        self.clone()
+    }
+}
+
 pub enum ClosedRelativeIntervalConversionErr {
     WrongVariant,
 }
@@ -262,28 +630,6 @@ impl TryFrom<RelativeInterval> for ClosedRelativeInterval {
     fn try_from(value: RelativeInterval) -> Result<Self, Self::Error> {
         match value {
             RelativeInterval::Closed(interval) => Ok(interval),
-            _ => Err(Self::Error::WrongVariant),
-        }
-    }
-}
-
-impl TryFrom<ClosedInterval> for ClosedRelativeInterval {
-    type Error = ClosedRelativeIntervalConversionErr;
-
-    fn try_from(value: ClosedInterval) -> Result<Self, Self::Error> {
-        match value {
-            ClosedInterval::Relative(interval) => Ok(interval),
-            ClosedInterval::Absolute(_) => Err(Self::Error::WrongVariant),
-        }
-    }
-}
-
-impl TryFrom<Interval> for ClosedRelativeInterval {
-    type Error = ClosedRelativeIntervalConversionErr;
-
-    fn try_from(value: Interval) -> Result<Self, Self::Error> {
-        match value {
-            Interval::ClosedRelative(interval) => Ok(interval),
             _ => Err(Self::Error::WrongVariant),
         }
     }
@@ -363,6 +709,60 @@ impl HalfOpenAbsoluteInterval {
     }
 }
 
+impl HasOpenness for HalfOpenAbsoluteInterval {
+    fn openness(&self) -> Openness {
+        Openness::HalfOpen
+    }
+}
+
+impl HasRelativity for HalfOpenAbsoluteInterval {
+    fn relativity(&self) -> Relativity {
+        Relativity::Absolute
+    }
+}
+
+impl HasDuration for HalfOpenAbsoluteInterval {
+    fn duration(&self) -> IntervalDuration {
+        IntervalDuration::Infinite
+    }
+}
+
+impl HasAbsoluteBounds for HalfOpenAbsoluteInterval {
+    fn absolute_bounds(&self) -> AbsoluteBounds {
+        if self.opening_direction == OpeningDirection::ToFuture {
+            return AbsoluteBounds::new(
+                AbsoluteStartBound::Finite(self.reference_time, self.reference_time_inclusivity),
+                AbsoluteEndBound::InfiniteFuture,
+            );
+        }
+
+        AbsoluteBounds::new(
+            AbsoluteStartBound::InfinitePast,
+            AbsoluteEndBound::Finite(self.reference_time, self.reference_time_inclusivity),
+        )
+    }
+}
+
+impl ToAbsolute for HalfOpenAbsoluteInterval {
+    type AbsoluteType = HalfOpenAbsoluteInterval;
+
+    fn to_absolute(&self, _reference_time: DateTime<Utc>) -> Self::AbsoluteType {
+        self.clone()
+    }
+}
+
+impl ToRelative for HalfOpenAbsoluteInterval {
+    type RelativeType = HalfOpenRelativeInterval;
+
+    fn to_relative(&self, reference_time: DateTime<Utc>) -> Self::RelativeType {
+        HalfOpenRelativeInterval::with_inclusivity(
+            self.reference_time - reference_time,
+            self.reference_time_inclusivity,
+            self.opening_direction,
+        )
+    }
+}
+
 pub enum HalfOpenAbsoluteIntervalConversionErr {
     WrongVariant,
 }
@@ -373,28 +773,6 @@ impl TryFrom<AbsoluteInterval> for HalfOpenAbsoluteInterval {
     fn try_from(value: AbsoluteInterval) -> Result<Self, Self::Error> {
         match value {
             AbsoluteInterval::HalfOpen(interval) => Ok(interval),
-            _ => Err(Self::Error::WrongVariant),
-        }
-    }
-}
-
-impl TryFrom<HalfOpenInterval> for HalfOpenAbsoluteInterval {
-    type Error = HalfOpenAbsoluteIntervalConversionErr;
-
-    fn try_from(value: HalfOpenInterval) -> Result<Self, Self::Error> {
-        match value {
-            HalfOpenInterval::Absolute(interval) => Ok(interval),
-            HalfOpenInterval::Relative(_) => Err(Self::Error::WrongVariant),
-        }
-    }
-}
-
-impl TryFrom<Interval> for HalfOpenAbsoluteInterval {
-    type Error = HalfOpenAbsoluteIntervalConversionErr;
-
-    fn try_from(value: Interval) -> Result<Self, Self::Error> {
-        match value {
-            Interval::HalfOpenAbsolute(interval) => Ok(interval),
             _ => Err(Self::Error::WrongVariant),
         }
     }
@@ -465,6 +843,60 @@ impl HalfOpenRelativeInterval {
     }
 }
 
+impl HasOpenness for HalfOpenRelativeInterval {
+    fn openness(&self) -> Openness {
+        Openness::HalfOpen
+    }
+}
+
+impl HasRelativity for HalfOpenRelativeInterval {
+    fn relativity(&self) -> Relativity {
+        Relativity::Relative
+    }
+}
+
+impl HasDuration for HalfOpenRelativeInterval {
+    fn duration(&self) -> IntervalDuration {
+        IntervalDuration::Infinite
+    }
+}
+
+impl HasRelativeBounds for HalfOpenRelativeInterval {
+    fn relative_bounds(&self) -> RelativeBounds {
+        if self.opening_direction == OpeningDirection::ToFuture {
+            return RelativeBounds::new(
+                RelativeStartBound::Finite(self.offset, self.reference_time_inclusivity),
+                RelativeEndBound::InfiniteFuture,
+            );
+        }
+
+        RelativeBounds::new(
+            RelativeStartBound::InfinitePast,
+            RelativeEndBound::Finite(self.offset, self.reference_time_inclusivity),
+        )
+    }
+}
+
+impl ToAbsolute for HalfOpenRelativeInterval {
+    type AbsoluteType = HalfOpenAbsoluteInterval;
+
+    fn to_absolute(&self, reference_time: DateTime<Utc>) -> Self::AbsoluteType {
+        HalfOpenAbsoluteInterval::with_inclusivity(
+            reference_time + self.offset,
+            self.reference_time_inclusivity,
+            self.opening_direction,
+        )
+    }
+}
+
+impl ToRelative for HalfOpenRelativeInterval {
+    type RelativeType = HalfOpenRelativeInterval;
+
+    fn to_relative(&self, _reference_time: DateTime<Utc>) -> Self::RelativeType {
+        self.clone()
+    }
+}
+
 pub enum HalfOpenRelativeIntervalConversionErr {
     WrongVariant,
 }
@@ -480,34 +912,58 @@ impl TryFrom<RelativeInterval> for HalfOpenRelativeInterval {
     }
 }
 
-impl TryFrom<HalfOpenInterval> for HalfOpenRelativeInterval {
-    type Error = HalfOpenRelativeIntervalConversionErr;
-
-    fn try_from(value: HalfOpenInterval) -> Result<Self, Self::Error> {
-        match value {
-            HalfOpenInterval::Relative(interval) => Ok(interval),
-            HalfOpenInterval::Absolute(_) => Err(Self::Error::WrongVariant),
-        }
-    }
-}
-
-impl TryFrom<Interval> for HalfOpenRelativeInterval {
-    type Error = HalfOpenRelativeIntervalConversionErr;
-
-    fn try_from(value: Interval) -> Result<Self, Self::Error> {
-        match value {
-            Interval::HalfOpenRelative(interval) => Ok(interval),
-            _ => Err(Self::Error::WrongVariant),
-        }
-    }
-}
-
 /// An open interval
 ///
 /// Interval without relativity (not absolute nor relative) and without any bounds.
 /// Is equivalent to _time itself_ (all time), infinite duration.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct OpenInterval;
+
+impl HasOpenness for OpenInterval {
+    fn openness(&self) -> Openness {
+        Openness::Open
+    }
+}
+
+impl HasRelativity for OpenInterval {
+    fn relativity(&self) -> Relativity {
+        Relativity::Any
+    }
+}
+
+impl HasDuration for OpenInterval {
+    fn duration(&self) -> IntervalDuration {
+        IntervalDuration::Infinite
+    }
+}
+
+impl HasAbsoluteBounds for OpenInterval {
+    fn absolute_bounds(&self) -> AbsoluteBounds {
+        AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture)
+    }
+}
+
+impl HasRelativeBounds for OpenInterval {
+    fn relative_bounds(&self) -> RelativeBounds {
+        RelativeBounds::new(RelativeStartBound::InfinitePast, RelativeEndBound::InfiniteFuture)
+    }
+}
+
+impl ToAbsolute for OpenInterval {
+    type AbsoluteType = OpenInterval;
+
+    fn to_absolute(&self, _reference_time: DateTime<Utc>) -> Self::AbsoluteType {
+        self.clone()
+    }
+}
+
+impl ToRelative for OpenInterval {
+    type RelativeType = OpenInterval;
+
+    fn to_relative(&self, _reference_time: DateTime<Utc>) -> Self::RelativeType {
+        self.clone()
+    }
+}
 
 pub enum OpenIntervalConversionErr {
     WrongVariant,
@@ -535,17 +991,6 @@ impl TryFrom<RelativeInterval> for OpenInterval {
     }
 }
 
-impl TryFrom<Interval> for OpenInterval {
-    type Error = OpenIntervalConversionErr;
-
-    fn try_from(value: Interval) -> Result<Self, Self::Error> {
-        match value {
-            Interval::Open(interval) => Ok(interval),
-            _ => Err(Self::Error::WrongVariant),
-        }
-    }
-}
-
 /// No interval
 ///
 /// Equivalent to the [empty set](https://en.wikipedia.org/wiki/Empty_set), this allows for still performing
@@ -555,6 +1000,52 @@ impl TryFrom<Interval> for OpenInterval {
 /// it simply represents the _lack_ of a time interval, like the complement of an open interval
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct EmptyInterval;
+
+impl HasOpenness for EmptyInterval {
+    fn openness(&self) -> Openness {
+        Openness::Empty
+    }
+}
+
+impl HasRelativity for EmptyInterval {
+    fn relativity(&self) -> Relativity {
+        Relativity::Any
+    }
+}
+
+impl HasDuration for EmptyInterval {
+    fn duration(&self) -> IntervalDuration {
+        IntervalDuration::Finite(Duration::zero())
+    }
+}
+
+impl HasAbsoluteBounds for EmptyInterval {
+    fn absolute_bounds(&self) -> AbsoluteBounds {
+        AbsoluteBounds::new_empty()
+    }
+}
+
+impl HasRelativeBounds for EmptyInterval {
+    fn relative_bounds(&self) -> RelativeBounds {
+        RelativeBounds::new_empty()
+    }
+}
+
+impl ToAbsolute for EmptyInterval {
+    type AbsoluteType = EmptyInterval;
+
+    fn to_absolute(&self, _reference_time: DateTime<Utc>) -> Self::AbsoluteType {
+        self.clone()
+    }
+}
+
+impl ToRelative for EmptyInterval {
+    type RelativeType = EmptyInterval;
+
+    fn to_relative(&self, _reference_time: DateTime<Utc>) -> Self::RelativeType {
+        self.clone()
+    }
+}
 
 pub enum EmptyIntervalConversionErr {
     WrongVariant,
@@ -582,17 +1073,6 @@ impl TryFrom<RelativeInterval> for EmptyInterval {
     }
 }
 
-impl TryFrom<Interval> for EmptyInterval {
-    type Error = EmptyIntervalConversionErr;
-
-    fn try_from(value: Interval) -> Result<Self, Self::Error> {
-        match value {
-            Interval::Empty(interval) => Ok(interval),
-            _ => Err(Self::Error::WrongVariant),
-        }
-    }
-}
-
 /// Represents any absolute interval, including empty and open intervals
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AbsoluteInterval {
@@ -600,6 +1080,27 @@ pub enum AbsoluteInterval {
     HalfOpen(HalfOpenAbsoluteInterval),
     Open(OpenInterval),
     Empty(EmptyInterval),
+}
+
+impl ToAbsolute for AbsoluteInterval {
+    type AbsoluteType = AbsoluteInterval;
+
+    fn to_absolute(&self, _reference_time: DateTime<Utc>) -> Self::AbsoluteType {
+        self.clone()
+    }
+}
+
+impl ToRelative for AbsoluteInterval {
+    type RelativeType = RelativeInterval;
+
+    fn to_relative(&self, reference_time: DateTime<Utc>) -> Self::RelativeType {
+        match self {
+            Self::Closed(closed) => RelativeInterval::Closed(closed.to_relative(reference_time)),
+            Self::HalfOpen(half_open) => RelativeInterval::HalfOpen(half_open.to_relative(reference_time)),
+            Self::Open(open) => RelativeInterval::Open(open.to_relative(reference_time)),
+            Self::Empty(empty) => RelativeInterval::Empty(empty.to_relative(reference_time)),
+        }
+    }
 }
 
 impl From<ClosedAbsoluteInterval> for AbsoluteInterval {
@@ -635,6 +1136,27 @@ pub enum RelativeInterval {
     Empty(EmptyInterval),
 }
 
+impl ToAbsolute for RelativeInterval {
+    type AbsoluteType = AbsoluteInterval;
+
+    fn to_absolute(&self, reference_time: DateTime<Utc>) -> Self::AbsoluteType {
+        match self {
+            Self::Closed(closed) => AbsoluteInterval::Closed(closed.to_absolute(reference_time)),
+            Self::HalfOpen(half_open) => AbsoluteInterval::HalfOpen(half_open.to_absolute(reference_time)),
+            Self::Open(open) => AbsoluteInterval::Open(open.to_absolute(reference_time)),
+            Self::Empty(empty) => AbsoluteInterval::Empty(empty.to_absolute(reference_time)),
+        }
+    }
+}
+
+impl ToRelative for RelativeInterval {
+    type RelativeType = RelativeInterval;
+
+    fn to_relative(&self, _reference_time: DateTime<Utc>) -> Self::RelativeType {
+        self.clone()
+    }
+}
+
 impl From<ClosedRelativeInterval> for RelativeInterval {
     fn from(value: ClosedRelativeInterval) -> Self {
         RelativeInterval::Closed(value)
@@ -656,337 +1178,5 @@ impl From<OpenInterval> for RelativeInterval {
 impl From<EmptyInterval> for RelativeInterval {
     fn from(value: EmptyInterval) -> Self {
         RelativeInterval::Empty(value)
-    }
-}
-
-/// Represents any closed interval, absolute or relative
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum ClosedInterval {
-    Absolute(ClosedAbsoluteInterval),
-    Relative(ClosedRelativeInterval),
-}
-
-impl From<ClosedAbsoluteInterval> for ClosedInterval {
-    fn from(value: ClosedAbsoluteInterval) -> Self {
-        ClosedInterval::Absolute(value)
-    }
-}
-
-impl From<ClosedRelativeInterval> for ClosedInterval {
-    fn from(value: ClosedRelativeInterval) -> Self {
-        ClosedInterval::Relative(value)
-    }
-}
-
-/// Represents any half-open interval, absolute or relative
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum HalfOpenInterval {
-    Absolute(HalfOpenAbsoluteInterval),
-    Relative(HalfOpenRelativeInterval),
-}
-
-impl From<HalfOpenAbsoluteInterval> for HalfOpenInterval {
-    fn from(value: HalfOpenAbsoluteInterval) -> Self {
-        HalfOpenInterval::Absolute(value)
-    }
-}
-
-impl From<HalfOpenRelativeInterval> for HalfOpenInterval {
-    fn from(value: HalfOpenRelativeInterval) -> Self {
-        HalfOpenInterval::Relative(value)
-    }
-}
-
-/// Any kind of interval
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum Interval {
-    ClosedAbsolute(ClosedAbsoluteInterval),
-    ClosedRelative(ClosedRelativeInterval),
-    HalfOpenAbsolute(HalfOpenAbsoluteInterval),
-    HalfOpenRelative(HalfOpenRelativeInterval),
-    Open(OpenInterval),
-    Empty(EmptyInterval),
-}
-
-impl Interval {
-    /// Returns the openness of the interval, if possible
-    ///
-    /// Since an empty time interval doesn't have a defined openness, it will return [`None`]
-    #[must_use]
-    pub fn openness(&self) -> Option<Openness> {
-        match self {
-            Self::ClosedAbsolute(_) | Self::ClosedRelative(_) => Some(Openness::Closed),
-            Self::HalfOpenAbsolute(_) | Self::HalfOpenRelative(_) => Some(Openness::HalfOpen),
-            Self::Open(_) => Some(Openness::Open),
-            Self::Empty(_) => None,
-        }
-    }
-
-    /// Returns the relativity of the interval, if possible
-    ///
-    /// Since neither an open time interval nor an empty one have a defined relativity, it will return [`None`]
-    #[must_use]
-    pub fn relativity(&self) -> Option<Relativity> {
-        match self {
-            Self::ClosedAbsolute(_) | Self::HalfOpenAbsolute(_) => Some(Relativity::Absolute),
-            Self::ClosedRelative(_) | Self::HalfOpenRelative(_) => Some(Relativity::Relative),
-            Self::Open(_) | Self::Empty(_) => None,
-        }
-    }
-
-    /// Returns the duration of the time interval, finite or infinite.
-    #[must_use]
-    pub fn duration(&self) -> IntervalDuration {
-        match self {
-            Self::ClosedAbsolute(ClosedAbsoluteInterval { from, to, .. }) => IntervalDuration::Finite(*to - from),
-            Self::ClosedRelative(ClosedRelativeInterval { length, .. }) => IntervalDuration::Finite(*length),
-            Self::HalfOpenAbsolute(_) | Self::HalfOpenRelative(_) | Self::Open(_) => IntervalDuration::Infinite,
-            Self::Empty(_) => IntervalDuration::Finite(Duration::zero()),
-        }
-    }
-
-    /// Returns the inclusivity of the start and end bounds
-    ///
-    /// The first element of the tuple contains the inclusivity of the start bound,
-    /// the second contains the inclusivity of the end bound.
-    ///
-    /// If the concept of inclusivity doesn't apply for a bound (i.e. in case of infinity for the side going to infinity
-    /// in the case of half-open intervals, for both bounds for open and empty intervals) then it will be equal to [`None`]
-    #[must_use]
-    pub fn bounds_inclusivity(&self) -> (Option<BoundInclusivity>, Option<BoundInclusivity>) {
-        match self {
-            Interval::ClosedAbsolute(ClosedAbsoluteInterval {
-                from_inclusivity,
-                to_inclusivity,
-                ..
-            })
-            | Interval::ClosedRelative(ClosedRelativeInterval {
-                from_inclusivity,
-                to_inclusivity,
-                ..
-            }) => (Some(*from_inclusivity), Some(*to_inclusivity)),
-            Interval::HalfOpenAbsolute(HalfOpenAbsoluteInterval {
-                reference_time_inclusivity,
-                opening_direction,
-                ..
-            })
-            | Interval::HalfOpenRelative(HalfOpenRelativeInterval {
-                reference_time_inclusivity,
-                opening_direction,
-                ..
-            }) => match opening_direction {
-                OpeningDirection::ToPast => (None, Some(*reference_time_inclusivity)),
-                OpeningDirection::ToFuture => (Some(*reference_time_inclusivity), None),
-            },
-            _ => (None, None),
-        }
-    }
-
-    /// Creates a relative clone of the current time interval, given a reference time
-    ///
-    /// If the current time interval is already relative or has undefined relativity, it just returns a clone of itself.
-    #[must_use]
-    pub fn to_relative(&self, reference_time: &DateTime<Utc>) -> Self {
-        match self {
-            Self::ClosedAbsolute(ClosedAbsoluteInterval { from, to, .. }) => Self::ClosedRelative(
-                ClosedRelativeInterval::new(*from - reference_time, *to - reference_time),
-            ),
-            Self::HalfOpenAbsolute(HalfOpenAbsoluteInterval {
-                reference_time: og_reference_time,
-                opening_direction,
-                ..
-            }) => Self::HalfOpenRelative(HalfOpenRelativeInterval::new(
-                *og_reference_time - reference_time,
-                *opening_direction,
-            )),
-            _ => self.clone(),
-        }
-    }
-
-    /// Creates an absolute clone of the current time interval, given a reference time
-    ///
-    /// If the current time interval is already absolute or has undefined relativity, it just returns a clone of itself
-    #[must_use]
-    pub fn to_absolute(&self, reference_time: &DateTime<Utc>) -> Self {
-        match self {
-            Self::ClosedRelative(ClosedRelativeInterval { offset, length, .. }) => Self::ClosedAbsolute(
-                ClosedAbsoluteInterval::new(*reference_time + *offset, *reference_time + *offset + *length),
-            ),
-            Self::HalfOpenRelative(HalfOpenRelativeInterval {
-                offset,
-                opening_direction,
-                ..
-            }) => Self::HalfOpenAbsolute(HalfOpenAbsoluteInterval::new(
-                *reference_time + *offset,
-                *opening_direction,
-            )),
-            _ => self.clone(),
-        }
-    }
-
-    // TODO: Convenience method like today() until_now() after_now() etc.
-}
-
-impl From<ClosedAbsoluteInterval> for Interval {
-    fn from(value: ClosedAbsoluteInterval) -> Self {
-        Interval::ClosedAbsolute(value)
-    }
-}
-
-impl From<ClosedRelativeInterval> for Interval {
-    fn from(value: ClosedRelativeInterval) -> Self {
-        Interval::ClosedRelative(value)
-    }
-}
-
-impl From<HalfOpenAbsoluteInterval> for Interval {
-    fn from(value: HalfOpenAbsoluteInterval) -> Self {
-        Interval::HalfOpenAbsolute(value)
-    }
-}
-
-impl From<HalfOpenRelativeInterval> for Interval {
-    fn from(value: HalfOpenRelativeInterval) -> Self {
-        Interval::HalfOpenRelative(value)
-    }
-}
-
-impl From<OpenInterval> for Interval {
-    fn from(value: OpenInterval) -> Self {
-        Interval::Open(value)
-    }
-}
-
-impl From<EmptyInterval> for Interval {
-    fn from(value: EmptyInterval) -> Self {
-        Interval::Empty(value)
-    }
-}
-
-impl From<AbsoluteInterval> for Interval {
-    fn from(value: AbsoluteInterval) -> Self {
-        match value {
-            AbsoluteInterval::Closed(interval) => Interval::ClosedAbsolute(interval),
-            AbsoluteInterval::HalfOpen(interval) => Interval::HalfOpenAbsolute(interval),
-            AbsoluteInterval::Open(interval) => Interval::Open(interval),
-            AbsoluteInterval::Empty(interval) => Interval::Empty(interval),
-        }
-    }
-}
-
-impl From<RelativeInterval> for Interval {
-    fn from(value: RelativeInterval) -> Self {
-        match value {
-            RelativeInterval::Closed(interval) => Interval::ClosedRelative(interval),
-            RelativeInterval::HalfOpen(interval) => Interval::HalfOpenRelative(interval),
-            RelativeInterval::Open(interval) => Interval::Open(interval),
-            RelativeInterval::Empty(interval) => Interval::Empty(interval),
-        }
-    }
-}
-
-impl From<ClosedInterval> for Interval {
-    fn from(value: ClosedInterval) -> Self {
-        match value {
-            ClosedInterval::Absolute(interval) => Interval::ClosedAbsolute(interval),
-            ClosedInterval::Relative(interval) => Interval::ClosedRelative(interval),
-        }
-    }
-}
-
-impl From<HalfOpenInterval> for Interval {
-    fn from(value: HalfOpenInterval) -> Self {
-        match value {
-            HalfOpenInterval::Absolute(interval) => Interval::HalfOpenAbsolute(interval),
-            HalfOpenInterval::Relative(interval) => Interval::HalfOpenRelative(interval),
-        }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::test_utils::datetime;
-
-    fn interval_openness_provider() -> Vec<(Interval, Option<Openness>)> {
-        vec![
-            (
-                // Interval
-                Interval::ClosedAbsolute(ClosedAbsoluteInterval::new(
-                    datetime(&Utc, 2025, 1, 1, 8, 0, 0),
-                    datetime(&Utc, 2025, 1, 1, 16, 0, 0),
-                )),
-                // Expected
-                Some(Openness::Closed),
-            ),
-            (
-                Interval::ClosedRelative(ClosedRelativeInterval::new(Duration::hours(8), Duration::hours(8))),
-                Some(Openness::Closed),
-            ),
-            (
-                Interval::HalfOpenAbsolute(HalfOpenAbsoluteInterval::new(
-                    datetime(&Utc, 2025, 1, 1, 8, 0, 0),
-                    OpeningDirection::ToFuture,
-                )),
-                Some(Openness::HalfOpen),
-            ),
-            (
-                Interval::HalfOpenRelative(HalfOpenRelativeInterval::new(
-                    Duration::hours(8),
-                    OpeningDirection::ToPast,
-                )),
-                Some(Openness::HalfOpen),
-            ),
-            (Interval::Open(OpenInterval), Some(Openness::Open)),
-            (Interval::Empty(EmptyInterval), None),
-        ]
-    }
-
-    fn interval_relativity_provider() -> Vec<(Interval, Option<Relativity>)> {
-        vec![
-            (
-                // Interval
-                Interval::ClosedAbsolute(ClosedAbsoluteInterval::new(
-                    datetime(&Utc, 2025, 1, 1, 8, 0, 0),
-                    datetime(&Utc, 2025, 1, 1, 16, 0, 0),
-                )),
-                // Expected
-                Some(Relativity::Absolute),
-            ),
-            (
-                Interval::ClosedRelative(ClosedRelativeInterval::new(Duration::hours(8), Duration::hours(8))),
-                Some(Relativity::Relative),
-            ),
-            (
-                Interval::HalfOpenAbsolute(HalfOpenAbsoluteInterval::new(
-                    datetime(&Utc, 2025, 1, 1, 8, 0, 0),
-                    OpeningDirection::ToFuture,
-                )),
-                Some(Relativity::Absolute),
-            ),
-            (
-                Interval::HalfOpenRelative(HalfOpenRelativeInterval::new(
-                    Duration::hours(8),
-                    OpeningDirection::ToPast,
-                )),
-                Some(Relativity::Relative),
-            ),
-            (Interval::Open(OpenInterval), None),
-            (Interval::Empty(EmptyInterval), None),
-        ]
-    }
-
-    #[test]
-    fn interval_openness() {
-        for (interval, expected) in interval_openness_provider() {
-            assert_eq!(interval.openness(), expected);
-        }
-    }
-
-    #[test]
-    fn interval_relativity() {
-        for (interval, expected) in interval_relativity_provider() {
-            assert_eq!(interval.relativity(), expected);
-        }
     }
 }

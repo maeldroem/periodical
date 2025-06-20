@@ -13,7 +13,6 @@ use std::cmp::Ordering;
 
 use chrono::{DateTime, Duration, DurationRound, RoundingError, Utc};
 
-use crate::intervals::Interval;
 use crate::intervals::interval::{ClosedAbsoluteInterval, EmptyInterval, HalfOpenAbsoluteInterval, OpenInterval};
 use crate::intervals::meta::{BoundInclusivity, OpeningDirection};
 

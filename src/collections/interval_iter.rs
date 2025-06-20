@@ -8,7 +8,6 @@
 
 use std::collections::VecDeque;
 
-use crate::intervals::Interval;
 use crate::intervals::ops::{IntervalExtensionError, OverlapRule, OverlapRuleSet};
 
 /// Simple iterator type containing [`Interval`]s

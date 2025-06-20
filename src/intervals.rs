@@ -4,4 +4,4 @@ pub mod interval;
 pub mod meta;
 pub mod ops;
 
-pub use interval::Interval;
+pub use interval::{AbsoluteInterval, ClosedAbsoluteInterval, ClosedRelativeInterval, RelativeInterval};
