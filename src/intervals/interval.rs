@@ -15,11 +15,77 @@ use super::meta::{
 };
 use super::ops::Precision;
 
+/// Conversion trait for every interval that can be converted into an absolute interval
+pub trait ToAbsolute {
+    type AbsoluteType;
+
+    /// Converts any interval into an absolute interval
+    ///
+    /// If relative, then a new absolute interval is created from the relative one.
+    /// If absolute or [any](super::meta::Relativity::Any), then a clone of the current interval is made.
+    #[must_use]
+    fn to_absolute(&self, reference_time: DateTime<Utc>) -> Self::AbsoluteType;
+}
+
+/// Conversion trait for every interval that can be converted into a relative interval
+pub trait ToRelative {
+    type RelativeType;
+
+    /// Converts any interval into a relative interval
+    ///
+    /// If absolute, then a new relative interval is created from the absolute one.
+    /// If relative or [any](super::meta::Relativity::Any), then a clone of the current interval is made.
+    #[must_use]
+    fn to_relative(&self, reference_time: DateTime<Utc>) -> Self::RelativeType;
+}
+
+
 /// An absolute start bound, including [inclusivity](BoundInclusivity)
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum AbsoluteStartBound {
     Finite(DateTime<Utc>, BoundInclusivity),
     InfinitePast,
+}
+
+impl AbsoluteStartBound {
+    /// Returns the time of the bound, if finite
+    #[must_use]
+    pub fn time(&self) -> Option<DateTime<Utc>> {
+        if let Self::Finite(time, _) = self {
+            return Some(*time);
+        }
+
+        None
+    }
+
+    /// Returns the inclusivity of the bound, if finite
+    #[must_use]
+    pub fn inclusivity(&self) -> Option<BoundInclusivity> {
+        if let Self::Finite(_, inclusivity) = self {
+            return Some(*inclusivity);
+        }
+
+        None
+    }
+}
+
+impl ToAbsolute for AbsoluteStartBound {
+    type AbsoluteType = AbsoluteStartBound;
+
+    fn to_absolute(&self, _reference_time: DateTime<Utc>) -> Self::AbsoluteType {
+        self.clone()
+    }
+}
+
+impl ToRelative for AbsoluteStartBound {
+    type RelativeType = RelativeStartBound;
+
+    fn to_relative(&self, reference_time: DateTime<Utc>) -> Self::RelativeType {
+        match self {
+            AbsoluteStartBound::InfinitePast => RelativeStartBound::InfinitePast,
+            AbsoluteStartBound::Finite(time, inclusivity) => RelativeStartBound::Finite(*time - reference_time, *inclusivity),
+        }
+    }
 }
 
 impl PartialEq<AbsoluteEndBound> for AbsoluteStartBound {
@@ -112,6 +178,47 @@ pub enum AbsoluteEndBound {
     InfiniteFuture,
 }
 
+impl AbsoluteEndBound {
+    /// Returns the time of the bound, if finite
+    #[must_use]
+    pub fn time(&self) -> Option<DateTime<Utc>> {
+        if let Self::Finite(time, _) = self {
+            return Some(*time);
+        }
+
+        None
+    }
+
+    /// Returns the inclusivity of the bound, if finite
+    #[must_use]
+    pub fn inclusivity(&self) -> Option<BoundInclusivity> {
+        if let Self::Finite(_, inclusivity) = self {
+            return Some(*inclusivity);
+        }
+
+        None
+    }
+}
+
+impl ToAbsolute for AbsoluteEndBound {
+    type AbsoluteType = AbsoluteEndBound;
+
+    fn to_absolute(&self, _reference_time: DateTime<Utc>) -> Self::AbsoluteType {
+        self.clone()
+    }
+}
+
+impl ToRelative for AbsoluteEndBound {
+    type RelativeType = RelativeEndBound;
+
+    fn to_relative(&self, reference_time: DateTime<Utc>) -> Self::RelativeType {
+        match self {
+            AbsoluteEndBound::InfiniteFuture => RelativeEndBound::InfiniteFuture,
+            AbsoluteEndBound::Finite(time, inclusivity) => RelativeEndBound::Finite(*time - reference_time, *inclusivity),
+        }
+    }
+}
+
 impl PartialOrd for AbsoluteEndBound {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
@@ -181,6 +288,47 @@ pub enum RelativeStartBound {
     InfinitePast,
 }
 
+impl RelativeStartBound {
+    /// Returns the offset of the bound, if finite
+    #[must_use]
+    pub fn offset(&self) -> Option<Duration> {
+        if let Self::Finite(offset, _) = self {
+            return Some(*offset);
+        }
+
+        None
+    }
+
+    /// Returns the inclusivity of the bound, if finite
+    #[must_use]
+    pub fn inclusivity(&self) -> Option<BoundInclusivity> {
+        if let Self::Finite(_, inclusivity) = self {
+            return Some(*inclusivity);
+        }
+
+        None
+    }
+}
+
+impl ToAbsolute for RelativeStartBound {
+    type AbsoluteType = AbsoluteStartBound;
+
+    fn to_absolute(&self, reference_time: DateTime<Utc>) -> Self::AbsoluteType {
+        match self {
+            RelativeStartBound::InfinitePast => AbsoluteStartBound::InfinitePast,
+            RelativeStartBound::Finite(offset, inclusivity) => AbsoluteStartBound::Finite(reference_time + *offset, *inclusivity),
+        }
+    }
+}
+
+impl ToRelative for RelativeStartBound {
+    type RelativeType = RelativeStartBound;
+
+    fn to_relative(&self, _reference_time: DateTime<Utc>) -> Self::RelativeType {
+        self.clone()
+    }
+}
+
 impl Display for RelativeStartBound {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "Relative start: ");
@@ -195,6 +343,8 @@ impl Display for RelativeStartBound {
 }
 
 /// A relative end interval bound, including [inclusivity](BoundInclusivity)
+/// 
+/// This contains an offset from the reference time to the end bound, not the length of the relative interval
 ///
 /// # Why no [`PartialOrd`] implementation
 ///
@@ -204,6 +354,47 @@ impl Display for RelativeStartBound {
 pub enum RelativeEndBound {
     Finite(Duration, BoundInclusivity),
     InfiniteFuture,
+}
+
+impl RelativeEndBound {
+    /// Returns the offset of the bound, if finite
+    #[must_use]
+    pub fn offset(&self) -> Option<Duration> {
+        if let Self::Finite(offset, _) = self {
+            return Some(*offset);
+        }
+
+        None
+    }
+
+    /// Returns the inclusivity of the bound, if finite
+    #[must_use]
+    pub fn inclusivity(&self) -> Option<BoundInclusivity> {
+        if let Self::Finite(_, inclusivity) = self {
+            return Some(*inclusivity);
+        }
+
+        None
+    }
+}
+
+impl ToAbsolute for RelativeEndBound {
+    type AbsoluteType = AbsoluteEndBound;
+
+    fn to_absolute(&self, reference_time: DateTime<Utc>) -> Self::AbsoluteType {
+        match self {
+            RelativeEndBound::InfiniteFuture => AbsoluteEndBound::InfiniteFuture,
+            RelativeEndBound::Finite(offset, inclusivity) => AbsoluteEndBound::Finite(reference_time + *offset, *inclusivity),
+        }
+    }
+}
+
+impl ToRelative for RelativeEndBound {
+    type RelativeType = RelativeEndBound;
+
+    fn to_relative(&self, _reference_time: DateTime<Utc>) -> Self::RelativeType {
+        self.clone()
+    }
 }
 
 impl Display for RelativeEndBound {
@@ -219,6 +410,80 @@ impl Display for RelativeEndBound {
     }
 }
 
+/// Represents something that has absolute bounds
+pub trait HasAbsoluteBounds {
+    /// Returns the absolute bounds
+    #[must_use]
+    fn abs_bounds(&self) -> AbsoluteBounds;
+
+    /// Returns the absolute start bound
+    #[must_use]
+    fn abs_start(&self) -> Option<AbsoluteStartBound> {
+        self.abs_bounds().start
+    }
+
+    /// Returns the absolute end bound
+    #[must_use]
+    fn abs_end(&self) -> Option<AbsoluteEndBound> {
+        self.abs_bounds().end
+    }
+
+    /// Returns the time of the absolute start bound
+    #[must_use]
+    fn abs_start_time(&self) -> Option<DateTime<Utc>> {
+        self.abs_start().and_then(|bound| {
+            if let AbsoluteStartBound::Finite(time, _) = bound {
+                return Some(time);
+            }
+
+            None
+        })
+    }
+
+    /// Returns the time of the absolute end bound
+    #[must_use]
+    fn abs_end_time(&self) -> Option<DateTime<Utc>> {
+        self.abs_end().and_then(|bound| {
+            if let AbsoluteEndBound::Finite(time, _) = bound {
+                return Some(time);
+            }
+
+            None
+        })
+    }
+
+    /// Returns the bound inclusivity of the absolute start bound
+    #[must_use]
+    fn abs_start_inclusivity(&self) -> Option<BoundInclusivity> {
+        self.abs_start().and_then(|bound| {
+            if let AbsoluteStartBound::Finite(_, inclusivity) = bound {
+                return Some(inclusivity);
+            }
+
+            None
+        })
+    }
+
+    /// Returns the bound inclusivity of the absolute end bound
+    #[must_use]
+    fn abs_end_inclusivity(&self) -> Option<BoundInclusivity> {
+        self.abs_end().and_then(|bound| {
+            if let AbsoluteEndBound::Finite(_, inclusivity) = bound {
+                return Some(inclusivity);
+            }
+
+            None
+        })
+    }
+
+    /// Returns whether the bounds are those for an empty interval
+    #[must_use]
+    fn is_empty(&self) -> bool {
+        let bounds = self.abs_bounds();
+        bounds.start.is_none() || bounds.end.is_none()
+    }
+}
+
 /// Bounds of an absolute interval
 ///
 /// # Invariant
@@ -231,13 +496,26 @@ pub struct AbsoluteBounds {
 }
 
 impl AbsoluteBounds {
-    /// Creates a new instance of absolute bounds
+    /// Creates a new instance of absolute bounds without checking if the bounds are in order
     #[must_use]
-    pub fn new(start: AbsoluteStartBound, end: AbsoluteEndBound) -> Self {
+    pub fn unchecked_new(start: AbsoluteStartBound, end: AbsoluteEndBound) -> Self {
         AbsoluteBounds {
             start: Some(start),
             end: Some(end),
         }
+    }
+
+    /// Creates a new instance of absolute bounds
+    #[must_use]
+    pub fn new(start: AbsoluteStartBound, end: AbsoluteEndBound) -> Self {
+        // If the start time is after the end time, swap the two to preserve order
+        if let (AbsoluteStartBound::Finite(ref mut start_time, _), AbsoluteEndBound::Finite(ref mut end_time, _)) = (start, end) {
+            if start_time > end_time {
+                std::mem::swap(start_time, end_time)
+            }
+        }
+
+        Self::unchecked_new(start, end)
     }
 
     /// Creates a new instance of absolute bounds for an empty interval
@@ -245,10 +523,58 @@ impl AbsoluteBounds {
     pub fn new_empty() -> Self {
         AbsoluteBounds { start: None, end: None }
     }
+
+    /// Sets the start bound without checking if it is in the right order
+    /// 
+    /// Returns whether the operation was successful as this method still guarantees [`AbsoluteBounds`]' invariant
+    pub fn unchecked_set_start(&mut self, new_start: AbsoluteStartBound) -> bool {
+        if self.is_empty() {
+            return false;
+        }
+
+        self.start = Some(new_start);
+        true
+    }
+
+    /// Sets the end bound without checking if it is in the right order
+    /// 
+    /// Returns whether the operation was successful as this method still guarantees [`AbsoluteBounds`]' invariant.
+    pub fn unchecked_set_end(&mut self, new_end: AbsoluteEndBound) -> bool {
+        if self.is_empty() {
+            return false;
+        }
+
+        self.end = Some(new_end);
+        true
+    }
+
+    /// Sets the start bound
+    /// 
+    /// Returns whether the operation was successful: the new start must be in order compared to the end and shouldn't
+    /// compromise [`AbsoluteBounds`]' invariant.
+    pub fn set_start(&mut self, new_start: AbsoluteStartBound) -> bool {
+        if self.end.is_none_or(|end_time| new_start > end_time) {
+            return false;
+        }
+
+        self.unchecked_set_start(new_start)
+    }
+
+    /// Sets the end bound
+    /// 
+    /// Returns whether the operation was successful: the new end must be in order compared to the start and shouldn't
+    /// compromise [`AbsoluteBounds`]' invariant.
+    pub fn set_end(&mut self, new_end: AbsoluteEndBound) -> bool {
+        if self.start.is_none_or(|start_time| new_end < start_time) {
+            return false;
+        }
+
+        self.unchecked_set_end(new_end)
+    }
 }
 
 impl HasAbsoluteBounds for AbsoluteBounds {
-    fn absolute_bounds(&self) -> AbsoluteBounds {
+    fn abs_bounds(&self) -> AbsoluteBounds {
         self.clone()
     }
 }
@@ -296,24 +622,101 @@ impl Display for AbsoluteBounds {
     }
 }
 
-/// Represents something that has absolute bounds
-// NOTE: Do blanket impls for most things using those traits
-// Ex: impl<T: HasAbsoluteBounds> PreciseTime for T
-pub trait HasAbsoluteBounds {
-    /// Returns the absolute bounds
-    #[must_use]
-    fn absolute_bounds(&self) -> AbsoluteBounds;
+impl ToAbsolute for AbsoluteBounds {
+    type AbsoluteType = AbsoluteBounds;
 
-    /// Returns the absolute start bound
+    fn to_absolute(&self, _reference_time: DateTime<Utc>) -> Self::AbsoluteType {
+        self.clone()
+    }
+}
+
+impl ToRelative for AbsoluteBounds {
+    type RelativeType = RelativeBounds;
+
+    fn to_relative(&self, reference_time: DateTime<Utc>) -> Self::RelativeType {
+        if self.is_empty() {
+            return RelativeBounds::new_empty();
+        }
+
+        RelativeBounds::new(
+            self.abs_start().unwrap().to_relative(reference_time),
+            self.abs_end().unwrap().to_relative(reference_time),
+        )
+    }
+}
+
+/// Represents something that has relative bounds
+pub trait HasRelativeBounds {
+    /// Returns the relative bounds
     #[must_use]
-    fn absolute_start_bound(&self) -> Option<AbsoluteStartBound> {
-        self.absolute_bounds().start
+    fn rel_bounds(&self) -> RelativeBounds;
+
+    /// Returns the relative start bound
+    #[must_use]
+    fn rel_start(&self) -> Option<RelativeStartBound> {
+        self.rel_bounds().start
     }
 
-    /// Returns the absolute end bound
+    /// Returns the relative end bound
     #[must_use]
-    fn absolute_end_bound(&self) -> Option<AbsoluteEndBound> {
-        self.absolute_bounds().end
+    fn rel_end(&self) -> Option<RelativeEndBound> {
+        self.rel_bounds().end
+    }
+
+
+    /// Returns the offset of the relative start bound
+    #[must_use]
+    fn rel_start_offset(&self) -> Option<Duration> {
+        self.rel_start().and_then(|bound| {
+            if let RelativeStartBound::Finite(offset, _) = bound {
+                return Some(offset);
+            }
+
+            None
+        })
+    }
+
+    /// Returns the offset of the relative end bound
+    #[must_use]
+    fn rel_end_offset(&self) -> Option<Duration> {
+        self.rel_end().and_then(|bound| {
+            if let RelativeEndBound::Finite(offset, _) = bound {
+                return Some(offset);
+            }
+
+            None
+        })
+    }
+
+    /// Returns the bound inclusivity of the relative start bound
+    #[must_use]
+    fn rel_start_inclusivity(&self) -> Option<BoundInclusivity> {
+        self.rel_start().and_then(|bound| {
+            if let RelativeStartBound::Finite(_, inclusivity) = bound {
+                return Some(inclusivity);
+            }
+
+            None
+        })
+    }
+
+    /// Returns the bound inclusivity of the relative end bound
+    #[must_use]
+    fn rel_end_inclusivity(&self) -> Option<BoundInclusivity> {
+        self.rel_end().and_then(|bound| {
+            if let RelativeEndBound::Finite(_, inclusivity) = bound {
+                return Some(inclusivity);
+            }
+
+            None
+        })
+    }
+
+    /// Returns whether the bounds are those for an empty interval
+    #[must_use]
+    fn is_empty(&self) -> bool {
+        let bounds = self.rel_bounds();
+        bounds.start.is_none() || bounds.end.is_none()
     }
 }
 
@@ -348,10 +751,34 @@ impl RelativeBounds {
     pub fn new_empty() -> Self {
         RelativeBounds { start: None, end: None }
     }
+
+    /// Sets the start bound
+    /// 
+    /// Returns whether the operation was successful: it shouldn't compromise [`RelativeBounds`]' invariant.
+    pub fn set_start(&mut self, new_start: RelativeStartBound) -> bool {
+        if self.is_empty() {
+            return false;
+        }
+
+        self.start = Some(new_start);
+        true
+    }
+
+    /// Sets the end bound
+    /// 
+    /// Returns whether the operation was successful: it shouldn't compromise [`RelativeBounds`]' invariant.
+    pub fn set_end(&mut self, new_end: RelativeEndBound) -> bool {
+        if self.is_empty() {
+            return false;
+        }
+
+        self.end = Some(new_end);
+        true
+    }
 }
 
 impl HasRelativeBounds for RelativeBounds {
-    fn relative_bounds(&self) -> RelativeBounds {
+    fn rel_bounds(&self) -> RelativeBounds {
         self.clone()
     }
 }
@@ -387,47 +814,27 @@ impl Display for RelativeBounds {
     }
 }
 
-/// Represents something that has relative bounds
-pub trait HasRelativeBounds {
-    /// Returns the relative bounds
-    #[must_use]
-    fn relative_bounds(&self) -> RelativeBounds;
+impl ToAbsolute for RelativeBounds {
+    type AbsoluteType = AbsoluteBounds;
 
-    /// Returns the relative start bound
-    #[must_use]
-    fn relative_start_bound(&self) -> Option<RelativeStartBound> {
-        self.relative_bounds().start
-    }
+    fn to_absolute(&self, reference_time: DateTime<Utc>) -> Self::AbsoluteType {
+        if self.is_empty() {
+            return AbsoluteBounds::new_empty();
+        }
 
-    /// Returns the relative end bound
-    #[must_use]
-    fn relative_end_bound(&self) -> Option<RelativeEndBound> {
-        self.relative_bounds().end
+        AbsoluteBounds::unchecked_new(
+            self.rel_start().unwrap().to_absolute(reference_time),
+            self.rel_end().unwrap().to_absolute(reference_time),
+        )
     }
 }
 
-/// Conversion trait for every interval that can be converted into an absolute interval
-pub trait ToAbsolute {
-    type AbsoluteType;
+impl ToRelative for RelativeBounds {
+    type RelativeType = RelativeBounds;
 
-    /// Converts any interval into an absolute interval
-    ///
-    /// If relative, then a new absolute interval is created from the relative one.
-    /// If absolute or [any](super::meta::Relativity::Any), then a clone of the current interval is made.
-    #[must_use]
-    fn to_absolute(&self, reference_time: DateTime<Utc>) -> Self::AbsoluteType;
-}
-
-/// Conversion trait for every interval that can be converted into a relative interval
-pub trait ToRelative {
-    type RelativeType;
-
-    /// Converts any interval into a relative interval
-    ///
-    /// If absolute, then a new relative interval is created from the absolute one.
-    /// If relative or [any](super::meta::Relativity::Any), then a clone of the current interval is made.
-    #[must_use]
-    fn to_relative(&self, reference_time: DateTime<Utc>) -> Self::RelativeType;
+    fn to_relative(&self, _reference_time: DateTime<Utc>) -> Self::RelativeType {
+        self.clone()
+    }
 }
 
 /// A closed absolute interval
@@ -442,9 +849,9 @@ pub struct ClosedAbsoluteInterval {
 }
 
 impl ClosedAbsoluteInterval {
-    /// Creates a new instance of a closed absolute interval
+    /// Creates a new instance of a closed absolute interval without checking if from is greater than to
     #[must_use]
-    pub fn new(from: DateTime<Utc>, to: DateTime<Utc>) -> Self {
+    pub fn unchecked_new(from: DateTime<Utc>, to: DateTime<Utc>) -> Self {
         ClosedAbsoluteInterval {
             from,
             to,
@@ -453,9 +860,20 @@ impl ClosedAbsoluteInterval {
         }
     }
 
-    /// Creates a new instance of a closed absolute interval with given inclusivity for the bounds
+    /// Creates a new instance of a closed absolute interval
     #[must_use]
-    pub fn with_inclusivity(
+    pub fn new(mut from: DateTime<Utc>, mut to: DateTime<Utc>) -> Self {
+        if from > to {
+            std::mem::swap(&mut from, &mut to);
+        }
+
+        Self::unchecked_new(from, to)
+    }
+
+    /// Creates a new instance of a closed absolute interval with given inclusivity for the bounds without checking
+    /// if from is greater than to
+    #[must_use]
+    pub fn unchecked_with_inclusivity(
         from: DateTime<Utc>,
         from_inclusivity: BoundInclusivity,
         to: DateTime<Utc>,
@@ -467,6 +885,21 @@ impl ClosedAbsoluteInterval {
             from_inclusivity,
             to_inclusivity,
         }
+    }
+
+    /// Creates a new instance of a closed absolute interval with given inclusivity for the bounds
+    #[must_use]
+    pub fn with_inclusivity(
+        mut from: DateTime<Utc>,
+        from_inclusivity: BoundInclusivity,
+        mut to: DateTime<Utc>,
+        to_inclusivity: BoundInclusivity,
+    ) -> Self {
+        if from > to {
+            std::mem::swap(&mut from, &mut to);
+        }
+
+        Self::unchecked_with_inclusivity(from, from_inclusivity, to, to_inclusivity)
     }
 
     /// Returns the start time
@@ -481,25 +914,6 @@ impl ClosedAbsoluteInterval {
         self.to
     }
 
-    // REPLACE WITH BLANKET IMPLEMENTATION FROM HasAbsoluteBounds
-    /// Tries to return the start time rounded with the given precision
-    ///
-    /// # Errors
-    ///
-    /// See [`Precision::try_precise_time`]
-    pub fn try_from_with_precision(&self, precision: Precision) -> Result<DateTime<Utc>, RoundingError> {
-        precision.try_precise_time(self.from)
-    }
-
-    /// Tries to return the start time rounded with the given precision
-    ///
-    /// # Errors
-    ///
-    /// See [`Precision::try_precise_time`]
-    pub fn try_to_with_precision(&self, precision: Precision) -> Result<DateTime<Utc>, RoundingError> {
-        precision.try_precise_time(self.to)
-    }
-
     /// Returns the inclusivity of the start bound
     #[must_use]
     pub fn from_inclusivity(&self) -> BoundInclusivity {
@@ -512,22 +926,38 @@ impl ClosedAbsoluteInterval {
         self.to_inclusivity
     }
 
-    /// Returns whether the interval is malformed
-    ///
-    /// The interval is considered malformed if the from time is past the to time.
-    #[must_use]
-    pub fn is_malformed(&self) -> bool {
-        self.from > self.to
-    }
-
-    /// Sets the from time of the interval
-    pub fn set_from(&mut self, new_from: DateTime<Utc>) {
+    /// Sets the from time of the interval without checking if it is before the to time
+    pub fn unchecked_set_from(&mut self, new_from: DateTime<Utc>) {
         self.from = new_from;
     }
 
-    /// Sets the to time of the interval
-    pub fn set_to(&mut self, new_to: DateTime<Utc>) {
+    /// Sets the to time of the interval without checking if it is after the from time
+    pub fn unchecked_set_to(&mut self, new_to: DateTime<Utc>) {
         self.to = new_to;
+    }
+
+    /// Sets the from time of the interval
+    /// 
+    /// Returns boolean indicating whether the change was successful.
+    pub fn set_from(&mut self, new_from: DateTime<Utc>) -> bool {
+        if new_from > self.to {
+            return false;
+        }
+
+        self.unchecked_set_from(new_from);
+        true
+    }
+
+    /// Sets the to time of the interval
+    /// 
+    /// Returns boolean indicating whether the change was successful.
+    pub fn set_to(&mut self, new_to: DateTime<Utc>) -> bool {
+        if new_to < self.from {
+            return false;
+        }
+
+        self.unchecked_set_to(new_to);
+        true
     }
 
     /// Sets the inclusivity of the start bound
@@ -560,8 +990,8 @@ impl HasDuration for ClosedAbsoluteInterval {
 }
 
 impl HasAbsoluteBounds for ClosedAbsoluteInterval {
-    fn absolute_bounds(&self) -> AbsoluteBounds {
-        AbsoluteBounds::new(
+    fn abs_bounds(&self) -> AbsoluteBounds {
+        AbsoluteBounds::unchecked_new(
             AbsoluteStartBound::Finite(self.from, self.from_inclusivity),
             AbsoluteEndBound::Finite(self.to, self.to_inclusivity),
         )
@@ -718,7 +1148,7 @@ impl HasDuration for ClosedRelativeInterval {
 }
 
 impl HasRelativeBounds for ClosedRelativeInterval {
-    fn relative_bounds(&self) -> RelativeBounds {
+    fn rel_bounds(&self) -> RelativeBounds {
         RelativeBounds::new(
             RelativeStartBound::Finite(self.offset, self.from_inclusivity),
             RelativeEndBound::Finite(self.offset + self.length, self.to_inclusivity),
@@ -730,7 +1160,7 @@ impl ToAbsolute for ClosedRelativeInterval {
     type AbsoluteType = ClosedAbsoluteInterval;
 
     fn to_absolute(&self, reference_time: DateTime<Utc>) -> Self::AbsoluteType {
-        ClosedAbsoluteInterval::with_inclusivity(
+        ClosedAbsoluteInterval::unchecked_with_inclusivity(
             reference_time + self.offset,
             self.from_inclusivity,
             reference_time + self.offset + self.length,
@@ -866,7 +1296,7 @@ impl HasDuration for HalfOpenAbsoluteInterval {
 }
 
 impl HasAbsoluteBounds for HalfOpenAbsoluteInterval {
-    fn absolute_bounds(&self) -> AbsoluteBounds {
+    fn abs_bounds(&self) -> AbsoluteBounds {
         if self.opening_direction == OpeningDirection::ToFuture {
             return AbsoluteBounds::new(
                 AbsoluteStartBound::Finite(self.reference_time, self.reference_time_inclusivity),
@@ -1011,7 +1441,7 @@ impl HasDuration for HalfOpenRelativeInterval {
 }
 
 impl HasRelativeBounds for HalfOpenRelativeInterval {
-    fn relative_bounds(&self) -> RelativeBounds {
+    fn rel_bounds(&self) -> RelativeBounds {
         if self.opening_direction == OpeningDirection::ToFuture {
             return RelativeBounds::new(
                 RelativeStartBound::Finite(self.offset, self.reference_time_inclusivity),
@@ -1098,13 +1528,13 @@ impl HasDuration for OpenInterval {
 }
 
 impl HasAbsoluteBounds for OpenInterval {
-    fn absolute_bounds(&self) -> AbsoluteBounds {
+    fn abs_bounds(&self) -> AbsoluteBounds {
         AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture)
     }
 }
 
 impl HasRelativeBounds for OpenInterval {
-    fn relative_bounds(&self) -> RelativeBounds {
+    fn rel_bounds(&self) -> RelativeBounds {
         RelativeBounds::new(RelativeStartBound::InfinitePast, RelativeEndBound::InfiniteFuture)
     }
 }
@@ -1191,13 +1621,13 @@ impl HasDuration for EmptyInterval {
 }
 
 impl HasAbsoluteBounds for EmptyInterval {
-    fn absolute_bounds(&self) -> AbsoluteBounds {
+    fn abs_bounds(&self) -> AbsoluteBounds {
         AbsoluteBounds::new_empty()
     }
 }
 
 impl HasRelativeBounds for EmptyInterval {
-    fn relative_bounds(&self) -> RelativeBounds {
+    fn rel_bounds(&self) -> RelativeBounds {
         RelativeBounds::new_empty()
     }
 }
@@ -1309,6 +1739,43 @@ impl From<EmptyInterval> for AbsoluteInterval {
     }
 }
 
+impl From<AbsoluteBounds> for AbsoluteInterval {
+    fn from(value: AbsoluteBounds) -> Self {
+        type StartB = AbsoluteStartBound;
+        type EndB = AbsoluteEndBound;
+
+        if value.is_empty() {
+            return AbsoluteInterval::Empty(EmptyInterval);
+        }
+
+        match (value.abs_start().unwrap(), value.abs_end().unwrap()) {
+            (StartB::InfinitePast, EndB::InfiniteFuture) => AbsoluteInterval::Open(OpenInterval),
+            (StartB::InfinitePast, EndB::Finite(time, inclusivity)) => {
+                AbsoluteInterval::HalfOpen(HalfOpenAbsoluteInterval::with_inclusivity(
+                    time,
+                    inclusivity,
+                    OpeningDirection::ToPast,
+                ))
+            },
+            (StartB::Finite(time, inclusivity), EndB::InfiniteFuture) => {
+                AbsoluteInterval::HalfOpen(HalfOpenAbsoluteInterval::with_inclusivity(
+                    time,
+                    inclusivity,
+                    OpeningDirection::ToFuture,
+                ))
+            },
+            (StartB::Finite(start_time, start_inclusivity), EndB::Finite(end_time, end_inclusivity)) => {
+                AbsoluteInterval::Closed(ClosedAbsoluteInterval::unchecked_with_inclusivity(
+                    start_time,
+                    start_inclusivity,
+                    end_time,
+                    end_inclusivity,
+                ))
+            }
+        }
+    }
+}
+
 /// Represents any relative interval, including empty and open interval
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum RelativeInterval {
@@ -1360,5 +1827,42 @@ impl From<OpenInterval> for RelativeInterval {
 impl From<EmptyInterval> for RelativeInterval {
     fn from(value: EmptyInterval) -> Self {
         RelativeInterval::Empty(value)
+    }
+}
+
+impl From<RelativeBounds> for RelativeInterval {
+    fn from(value: RelativeBounds) -> Self {
+        type StartB = RelativeStartBound;
+        type EndB = RelativeEndBound;
+
+        if value.is_empty() {
+            return RelativeInterval::Empty(EmptyInterval);
+        }
+
+        match (value.rel_start().unwrap(), value.rel_end().unwrap()) {
+            (StartB::InfinitePast, EndB::InfiniteFuture) => RelativeInterval::Open(OpenInterval),
+            (StartB::InfinitePast, EndB::Finite(offset, inclusivity)) => {
+                RelativeInterval::HalfOpen(HalfOpenRelativeInterval::with_inclusivity(
+                    offset,
+                    inclusivity,
+                    OpeningDirection::ToPast,
+                ))
+            },
+            (StartB::Finite(offset, inclusivity), EndB::InfiniteFuture) => {
+                RelativeInterval::HalfOpen(HalfOpenRelativeInterval::with_inclusivity(
+                    offset,
+                    inclusivity,
+                    OpeningDirection::ToFuture,
+                ))
+            },
+            (StartB::Finite(start_offset, start_inclusivity), EndB::Finite(end_offset, end_inclusivity)) => {
+                RelativeInterval::Closed(ClosedRelativeInterval::with_inclusivity(
+                    start_offset,
+                    start_inclusivity,
+                    end_offset - start_offset,
+                    end_inclusivity,
+                ))
+            }
+        }
     }
 }

@@ -13,8 +13,8 @@ use std::cmp::Ordering;
 
 use chrono::{DateTime, Duration, DurationRound, RoundingError, Utc};
 
-use crate::intervals::interval::{ClosedAbsoluteInterval, EmptyInterval, HalfOpenAbsoluteInterval, OpenInterval};
-use crate::intervals::meta::{BoundInclusivity, OpeningDirection};
+use super::interval::{AbsoluteBounds, AbsoluteEndBound, AbsoluteInterval, AbsoluteStartBound, EmptyInterval, HasAbsoluteBounds};
+use super::meta::BoundInclusivity;
 
 /// Time precision used for comparisons
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -43,37 +43,50 @@ impl Precision {
             Self::ToFuture(duration) => time.duration_round_up(*duration),
         }
     }
+}
 
-    /// Uses the given precision to precise the times of the given interval
-    ///
-    /// # Errors
-    ///
-    /// - If the given interval is relative, then this method returns [`RelativeInterval`](IntervalPrecisionError::RelativeInterval)
-    /// - If the given interval is open or empty, then this method returns [`IntervalWithoutBounds`](IntervalPrecisionError::IntervalWithoutBounds)
-    /// - If the rounding/precising of the time went wrong, then this method returns [`RoundingError`](IntervalPrecisionError::RoundingError)
-    pub fn try_precise_interval(&self, interval: Interval) -> Result<Interval, IntervalPrecisionError> {
-        let wrap_rounding_err = |err: RoundingError| IntervalPrecisionError::RoundingError(err);
+pub trait TryPreciseAbsoluteBounds {
+    fn try_precise_start_bound(&self, precision: Precision) -> Result<Option<AbsoluteStartBound>, RoundingError>;
 
-        match interval {
-            Interval::ClosedRelative(_) | Interval::HalfOpenRelative(_) => {
-                Err(IntervalPrecisionError::RelativeInterval)
-            },
-            Interval::Open(_) | Interval::Empty(_) => Err(IntervalPrecisionError::IntervalWithoutBounds),
-            Interval::ClosedAbsolute(mut interval) => {
-                interval.set_from(interval.try_from_with_precision(*self).map_err(wrap_rounding_err)?);
-                interval.set_to(interval.try_to_with_precision(*self).map_err(wrap_rounding_err)?);
+    fn try_precise_end_bound(&self, precision: Precision) -> Result<Option<AbsoluteEndBound>, RoundingError>;
 
-                Ok(Interval::ClosedAbsolute(interval))
-            },
-            Interval::HalfOpenAbsolute(mut interval) => {
-                interval.set_reference_time(
-                    interval
-                        .try_reference_time_with_precision(*self)
-                        .map_err(wrap_rounding_err)?,
-                );
+    fn try_precise_bounds(&self, precision: Precision) -> Result<AbsoluteBounds, RoundingError> {
+        self.try_precise_bounds_with_different_precision(precision, precision)
+    }
 
-                Ok(Interval::HalfOpenAbsolute(interval))
-            },
+    fn try_precise_bounds_with_different_precision(&self, precision_start: Precision, precision_end: Precision) -> Result<AbsoluteBounds, RoundingError> {
+        let start = self.try_precise_start_bound(precision_start)?;
+        let end = self.try_precise_end_bound(precision_end)?;
+
+        Ok(match (start, end) {
+            (None, _) | (_, None) => AbsoluteBounds::new_empty(),
+            (Some(start), Some(end)) => AbsoluteBounds::new(start, end),
+        })
+    }
+}
+
+impl<T: HasAbsoluteBounds> TryPreciseAbsoluteBounds for T {
+    fn try_precise_start_bound(&self, precision: Precision) -> Result<Option<AbsoluteStartBound>, RoundingError> {
+        match self.abs_start() {
+            None => Ok(None),
+            Some(AbsoluteStartBound::InfinitePast) => Ok(Some(AbsoluteStartBound::InfinitePast)),
+            Some(AbsoluteStartBound::Finite(time, inclusivity)) => {
+                let precised_time = precision.try_precise_time(time)?;
+
+                Ok(Some(AbsoluteStartBound::Finite(precised_time, inclusivity)))
+            }
+        }
+    }
+
+    fn try_precise_end_bound(&self, precision: Precision) -> Result<Option<AbsoluteEndBound>, RoundingError> {
+        match self.abs_end() {
+            None => Ok(None),
+            Some(AbsoluteEndBound::InfiniteFuture) => Ok(Some(AbsoluteEndBound::InfiniteFuture)),
+            Some(AbsoluteEndBound::Finite(time, inclusivity)) => {
+                let precised_time = precision.try_precise_time(time)?;
+
+                Ok(Some(AbsoluteEndBound::Finite(precised_time, inclusivity)))
+            }
         }
     }
 }
@@ -96,7 +109,7 @@ pub enum IntervalPrecisionError {
 
 /// Where the given time was found relative to a time interval
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum ContainmentPosition {
+pub enum TimeContainmentPosition {
     /// The given time was found before the time interval's beginning
     OutsideBefore,
     /// The given time was found after the time interval's end
@@ -119,19 +132,19 @@ pub enum ContainmentPosition {
     Inside,
 }
 
-impl ContainmentPosition {
+impl TimeContainmentPosition {
     /// Discards the information about bound inclusivity but conserves the variant
     ///
     /// **Careful!** This method discards data about bound inclusivity and cannot be recovered after conversion.
     #[must_use]
-    pub fn to_simple(self) -> SimpleContainmentPosition {
+    pub fn to_simple(self) -> SimpleTimeContainmentPosition {
         match self {
-            Self::OutsideBefore => SimpleContainmentPosition::OutsideBefore,
-            Self::OutsideAfter => SimpleContainmentPosition::OutsideAfter,
-            Self::Outside => SimpleContainmentPosition::Outside,
-            Self::OnStart(_) => SimpleContainmentPosition::OnStart,
-            Self::OnEnd(_) => SimpleContainmentPosition::OnEnd,
-            Self::Inside => SimpleContainmentPosition::Inside,
+            Self::OutsideBefore => SimpleTimeContainmentPosition::OutsideBefore,
+            Self::OutsideAfter => SimpleTimeContainmentPosition::OutsideAfter,
+            Self::Outside => SimpleTimeContainmentPosition::Outside,
+            Self::OnStart(_) => SimpleTimeContainmentPosition::OnStart,
+            Self::OnEnd(_) => SimpleTimeContainmentPosition::OnEnd,
+            Self::Inside => SimpleTimeContainmentPosition::Inside,
         }
     }
 
@@ -139,7 +152,7 @@ impl ContainmentPosition {
     ///
     /// **Careful!** This method discards data about bound inclusivity and cannot be recovered after conversion.
     #[must_use]
-    pub fn to_simple_using_rule_set(self, rule_set: ContainmentRuleSet) -> SimpleContainmentPosition {
+    pub fn to_simple_using_rule_set(self, rule_set: TimeContainmentRuleSet) -> SimpleTimeContainmentPosition {
         rule_set.disambiguate(self)
     }
 }
@@ -148,7 +161,7 @@ impl ContainmentPosition {
 ///
 /// Used for methods that resolve ambiguities caused by bound inclusivity.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum SimpleContainmentPosition {
+pub enum SimpleTimeContainmentPosition {
     /// See [`ContainmentPosition::OutsideBefore`]
     OutsideBefore,
     /// See [`ContainmentPosition::OutsideAfter`]
@@ -165,7 +178,7 @@ pub enum SimpleContainmentPosition {
 
 /// Errors that can happen when computing the containment position of some time inside an interval
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum ContainmentPositionError {
+pub enum TimeContainmentPositionError {
     /// The interval is relative, therefore we can't determine the containment position of the given time
     RelativeInterval,
     /// The interval was malformed, therefore we can't determine the containment position of the given time safely
@@ -176,7 +189,7 @@ pub enum ContainmentPositionError {
 ///
 /// See [`Interval::contains_using_rule_set`] for more.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum ContainmentRuleSet {
+pub enum TimeContainmentRuleSet {
     /// Strict rule set
     ///
     /// Mathematical interpretation of bounds, so the time needs to fall on an inclusive bound in order to be counted
@@ -188,12 +201,12 @@ pub enum ContainmentRuleSet {
     Lenient,
 }
 
-impl ContainmentRuleSet {
+impl TimeContainmentRuleSet {
     /// Disambiguates a containment position according to the rule set
     ///
     /// **Careful!** This method discards data about bound inclusivity and cannot be recovered after conversion.
     #[must_use]
-    pub fn disambiguate(&self, containment_position: ContainmentPosition) -> SimpleContainmentPosition {
+    pub fn disambiguate(&self, containment_position: TimeContainmentPosition) -> SimpleTimeContainmentPosition {
         match self {
             Self::Strict => strict_containment_rule_set_disambiguation(containment_position),
             Self::Lenient => lenient_containment_rule_set_disambiguation(containment_position),
@@ -201,35 +214,35 @@ impl ContainmentRuleSet {
     }
 }
 
-fn strict_containment_rule_set_disambiguation(containment_position: ContainmentPosition) -> SimpleContainmentPosition {
+fn strict_containment_rule_set_disambiguation(containment_position: TimeContainmentPosition) -> SimpleTimeContainmentPosition {
     match containment_position {
-        ContainmentPosition::OutsideBefore | ContainmentPosition::OnStart(BoundInclusivity::Exclusive) => {
-            SimpleContainmentPosition::OutsideBefore
+        TimeContainmentPosition::OutsideBefore | TimeContainmentPosition::OnStart(BoundInclusivity::Exclusive) => {
+            SimpleTimeContainmentPosition::OutsideBefore
         },
-        ContainmentPosition::OutsideAfter | ContainmentPosition::OnEnd(BoundInclusivity::Exclusive) => {
-            SimpleContainmentPosition::OutsideAfter
+        TimeContainmentPosition::OutsideAfter | TimeContainmentPosition::OnEnd(BoundInclusivity::Exclusive) => {
+            SimpleTimeContainmentPosition::OutsideAfter
         },
-        ContainmentPosition::Outside => SimpleContainmentPosition::Outside,
-        ContainmentPosition::OnStart(BoundInclusivity::Inclusive) => SimpleContainmentPosition::OnStart,
-        ContainmentPosition::OnEnd(BoundInclusivity::Inclusive) => SimpleContainmentPosition::OnEnd,
-        ContainmentPosition::Inside => SimpleContainmentPosition::Inside,
+        TimeContainmentPosition::Outside => SimpleTimeContainmentPosition::Outside,
+        TimeContainmentPosition::OnStart(BoundInclusivity::Inclusive) => SimpleTimeContainmentPosition::OnStart,
+        TimeContainmentPosition::OnEnd(BoundInclusivity::Inclusive) => SimpleTimeContainmentPosition::OnEnd,
+        TimeContainmentPosition::Inside => SimpleTimeContainmentPosition::Inside,
     }
 }
 
-fn lenient_containment_rule_set_disambiguation(containment_position: ContainmentPosition) -> SimpleContainmentPosition {
+fn lenient_containment_rule_set_disambiguation(containment_position: TimeContainmentPosition) -> SimpleTimeContainmentPosition {
     match containment_position {
-        ContainmentPosition::OutsideBefore => SimpleContainmentPosition::OutsideBefore,
-        ContainmentPosition::OutsideAfter => SimpleContainmentPosition::OutsideAfter,
-        ContainmentPosition::Outside => SimpleContainmentPosition::Outside,
-        ContainmentPosition::OnStart(_) => SimpleContainmentPosition::OnStart,
-        ContainmentPosition::OnEnd(_) => SimpleContainmentPosition::OnEnd,
-        ContainmentPosition::Inside => SimpleContainmentPosition::Inside,
+        TimeContainmentPosition::OutsideBefore => SimpleTimeContainmentPosition::OutsideBefore,
+        TimeContainmentPosition::OutsideAfter => SimpleTimeContainmentPosition::OutsideAfter,
+        TimeContainmentPosition::Outside => SimpleTimeContainmentPosition::Outside,
+        TimeContainmentPosition::OnStart(_) => SimpleTimeContainmentPosition::OnStart,
+        TimeContainmentPosition::OnEnd(_) => SimpleTimeContainmentPosition::OnEnd,
+        TimeContainmentPosition::Inside => SimpleTimeContainmentPosition::Inside,
     }
 }
 
 /// All rules for containment by converting a [`SimpleContainmentPosition`] into a [`bool`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum ContainmentRule {
+pub enum TimeContainmentRule {
     /// Doesn't count as contained when the time is on the start of the interval
     DenyOnStart,
     /// Doesn't count as contained when the time is on the end of the interval
@@ -238,10 +251,10 @@ pub enum ContainmentRule {
     DenyOnBounds,
 }
 
-impl ContainmentRule {
+impl TimeContainmentRule {
     /// Returns whether the given [`SimpleContainmentPosition`] counts as contained
     #[must_use]
-    pub fn counts_as_contained(&self, simple_containment_position: SimpleContainmentPosition) -> bool {
+    pub fn counts_as_contained(&self, simple_containment_position: SimpleTimeContainmentPosition) -> bool {
         match self {
             Self::DenyOnStart => deny_on_start_containment_rule_counts_as_contained(simple_containment_position),
             Self::DenyOnEnd => deny_on_end_containment_rule_counts_as_contained(simple_containment_position),
@@ -250,70 +263,70 @@ impl ContainmentRule {
     }
 }
 
-fn deny_on_start_containment_rule_counts_as_contained(simple_containment_position: SimpleContainmentPosition) -> bool {
+fn deny_on_start_containment_rule_counts_as_contained(simple_containment_position: SimpleTimeContainmentPosition) -> bool {
     !matches!(
         simple_containment_position,
-        SimpleContainmentPosition::OutsideBefore
-            | SimpleContainmentPosition::OutsideAfter
-            | SimpleContainmentPosition::Outside
-            | SimpleContainmentPosition::OnStart
+        SimpleTimeContainmentPosition::OutsideBefore
+            | SimpleTimeContainmentPosition::OutsideAfter
+            | SimpleTimeContainmentPosition::Outside
+            | SimpleTimeContainmentPosition::OnStart
     )
 }
 
-fn deny_on_end_containment_rule_counts_as_contained(simple_containment_position: SimpleContainmentPosition) -> bool {
+fn deny_on_end_containment_rule_counts_as_contained(simple_containment_position: SimpleTimeContainmentPosition) -> bool {
     !matches!(
         simple_containment_position,
-        SimpleContainmentPosition::OutsideBefore
-            | SimpleContainmentPosition::OutsideAfter
-            | SimpleContainmentPosition::Outside
-            | SimpleContainmentPosition::OnEnd
+        SimpleTimeContainmentPosition::OutsideBefore
+            | SimpleTimeContainmentPosition::OutsideAfter
+            | SimpleTimeContainmentPosition::Outside
+            | SimpleTimeContainmentPosition::OnEnd
     )
 }
 
-fn deny_on_bounds_containment_rule_counts_as_contained(simple_containment_position: SimpleContainmentPosition) -> bool {
+fn deny_on_bounds_containment_rule_counts_as_contained(simple_containment_position: SimpleTimeContainmentPosition) -> bool {
     !matches!(
         simple_containment_position,
-        SimpleContainmentPosition::OutsideBefore
-            | SimpleContainmentPosition::OutsideAfter
-            | SimpleContainmentPosition::Outside
-            | SimpleContainmentPosition::OnStart
-            | SimpleContainmentPosition::OnEnd
+        SimpleTimeContainmentPosition::OutsideBefore
+            | SimpleTimeContainmentPosition::OutsideAfter
+            | SimpleTimeContainmentPosition::Outside
+            | SimpleTimeContainmentPosition::OnStart
+            | SimpleTimeContainmentPosition::OnEnd
     )
 }
 
-/// Where the other time interval was found relative to the current time interval
+/// Where the current time interval was found relative to the other time interval
 ///
 /// See [`Interval::overlap_position`] for more information
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum OverlapPosition {
-    /// The given other time interval was found before the time interval
+    /// The current time interval was found before the given other time interval
     OutsideBefore,
-    /// The given other time interval was found after the time interval
+    /// The current time interval was found after the given other time interval
     OutsideAfter,
-    /// The given other time interval was found outside the time interval (result only possible when dealing with empty intervals)
+    /// The current time interval was found outside the given other time interval (result only possible when dealing with empty intervals)
     Outside,
-    /// The given other time interval was found ending on the beginning of the time interval
-    ///
-    /// The contained bound inclusivities define the reference interval's start inclusivity and the compared interval's
-    /// end inclusivity.
-    ///
-    /// See [`Interval::overlap_position`] for more details.
-    OnStart(BoundInclusivity, BoundInclusivity),
-    /// The given other time interval was found starting on the end of the time interval
+    /// The current time interval was found ending on the beginning of the given other time interval
     ///
     /// The contained bound inclusivities define the reference interval's end inclusivity and the compared interval's
     /// start inclusivity.
     ///
     /// See [`Interval::overlap_position`] for more details.
+    OnStart(BoundInclusivity, BoundInclusivity),
+    /// The current time interval was found starting on the end of the given other time interval
+    ///
+    /// The contained bound inclusivities define the reference interval's start inclusivity and the compared interval's
+    /// end inclusivity.
+    ///
+    /// See [`Interval::overlap_position`] for more details.
     OnEnd(BoundInclusivity, BoundInclusivity),
-    /// The given other time interval was found beginning outside the time interval but ending inside
+    /// The current time interval was found beginning outside the given other time interval but ending inside
     CrossesStart,
-    /// The given other time interval was found beginning inside the time interval but ending outside
+    /// The current time interval was found beginning inside the given other time interval but ending outside
     CrossesEnd,
-    /// The given other time interval was found completely inside the time interval
+    /// The current time interval was found completely inside the given other time interval
     Inside,
-    /// The given other time interval was found beginning on the start of the time interval and ending inside
-    /// the time interval
+    /// The current time interval was found beginning on the start of the given other time interval and ending inside
+    /// that time interval
     ///
     /// The contained bound inclusivities define the reference interval's start inclusivity and the compared interval's
     /// start inclusivity.
@@ -324,8 +337,8 @@ pub enum OverlapPosition {
     ///
     /// See [`Interval::overlap_position`] for more details.
     InsideAndSameStart(Option<BoundInclusivity>, Option<BoundInclusivity>),
-    /// The given other time interval was found beginning inside the time interval and ending at the end of
-    /// the time interval
+    /// The current time interval was found beginning inside the given other time interval and ending at the end of
+    /// that time interval
     ///
     /// The contained bound inclusivities define the reference interval's end inclusivity and the compared interval's
     /// end inclusivity.
@@ -336,7 +349,7 @@ pub enum OverlapPosition {
     ///
     /// See [`Interval::overlap_position`] for more details.
     InsideAndSameEnd(Option<BoundInclusivity>, Option<BoundInclusivity>),
-    /// The given other time interval was found beginning and ending at the same times as the time interval
+    /// The current time interval was found beginning and ending at the same times as the given other time interval
     ///
     /// The contained bound inclusivities define the reference interval's start and end inclusivities (first tuple),
     /// and the compared interval's start and end inclusivities (second tuple).
@@ -350,8 +363,8 @@ pub enum OverlapPosition {
         (Option<BoundInclusivity>, Option<BoundInclusivity>),
         (Option<BoundInclusivity>, Option<BoundInclusivity>),
     ),
-    /// The given other time interval was found beginning on the same point as the time interval and ending after
-    /// the time interval
+    /// The current time interval was found beginning on the same point as the given other time interval and ending
+    /// after that time interval
     ///
     /// The contained bound inclusivities define the reference interval's start inclusivity and the compared interval's
     /// start inclusivity.
@@ -362,8 +375,8 @@ pub enum OverlapPosition {
     ///
     /// See [`Interval::overlap_position`] for more details.
     ContainsAndSameStart(Option<BoundInclusivity>, Option<BoundInclusivity>),
-    /// The given other time interval was found beginning before the time interval and ending at the same time as
-    /// the time interval
+    /// The current time interval was found beginning before the given other time interval and ending at the same time
+    /// as that time interval
     ///
     /// The contained bound inclusivities define the reference interval's end inclusivity and the compared interval's
     /// end inclusivity.
@@ -374,7 +387,8 @@ pub enum OverlapPosition {
     ///
     /// See [`Interval::overlap_position`] for more details.
     ContainsAndSameEnd(Option<BoundInclusivity>, Option<BoundInclusivity>),
-    /// The given other time interval was found beginning before the time interval's start and ending after the time interval's end
+    /// The current time interval was found beginning before the given other time interval's start
+    /// and ending after that time interval's end
     Contains,
 }
 
@@ -782,14 +796,10 @@ fn allow_future_adjacency_overlap_rules_counts_as_overlap(simple_overlap_positio
     )
 }
 
-/// Errors that can occur when calling [`try_extend`](Interval::try_extend)
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum IntervalExtensionError {
-    /// The current interval or given interval was relative and therefore can't be extended
-    RelativeInterval,
-}
+pub trait CanPositionTimeContainment {
+    /// Error type if the time containment positioning failed
+    type Error;
 
-impl Interval {
     /// Returns the containment position of the given time
     ///
     /// # Bound inclusivity
@@ -797,86 +807,72 @@ impl Interval {
     /// When checking the containment position, the reference interval's bound inclusivities are considered
     /// as inclusive. Then, on cases where the result could be ambiguous (e.g. if the time ends up on the reference
     /// interval's start but the inclusivity of this bound is exclusive, does it qualify
-    /// as [`ContainmentPosition::OnStart`]?), we simply include the inclusivity of the concerned bound and let the
+    /// as [`TimeContainmentPosition::OnStart`]?), we simply include the inclusivity of the concerned bound and let the
     /// receiver make the call on whether it counts or not.
     ///
     /// This way, we can guarantee maximum flexibility of this process.
-    ///
-    /// # Errors
-    ///
-    /// - Returns [`RelativeInterval`](ContainmentPositionError::RelativeInterval) if the interval the operation
-    ///   is done on is relative
-    /// - Returns [`MalformedInterval`](ContainmentPositionError::MalformedInterval) if the interval is malformed
-    ///   (see [`ClosedAbsoluteInterval::is_malformed`](crate::intervals::interval::ClosedAbsoluteInterval::is_malformed))
-    pub fn containment_position(&self, time: DateTime<Utc>) -> Result<ContainmentPosition, ContainmentPositionError> {
-        match self {
-            Self::ClosedRelative(_) | Self::HalfOpenRelative(_) => Err(ContainmentPositionError::RelativeInterval),
-            Self::ClosedAbsolute(interval) => containment_position_closed(interval, time),
-            Self::HalfOpenAbsolute(interval) => Ok(containment_position_half_open(interval, time)),
-            Self::Empty(_) => Ok(ContainmentPosition::Outside),
-            Self::Open(_) => Ok(ContainmentPosition::Inside),
-        }
-    }
+    fn time_containment_position(&self, time: DateTime<Utc>) -> Result<TimeContainmentPosition, Self::Error>;
 
-    /// Returns the simple containment position of the given time using a given [containment rule set](ContainmentRuleSet)
+    /// Returns the simple containment position of the given time using a given [containment rule set](TimeContainmentRuleSet)
     ///
-    /// See [`Interval::containment_position`] for more details about containment position.
+    /// See [`CanPositionTimeContainment::time_containment_position`] for more details about containment position.
     ///
     /// # Errors
     ///
-    /// - Returns [`RelativeInterval`](ContainmentPositionError::RelativeInterval) if the interval the operation
+    /// - Returns [`RelativeInterval`](TimeContainmentPositionError::RelativeInterval) if the interval the operation
     ///   is done on is relative
-    /// - Returns [`MalformedInterval`](ContainmentPositionError::MalformedInterval) if the interval is malformed
+    /// - Returns [`MalformedInterval`](TimeContainmentPositionError::MalformedInterval) if the interval is malformed
     ///   (see [`ClosedAbsoluteInterval::is_malformed`](crate::intervals::interval::ClosedAbsoluteInterval::is_malformed))
-    pub fn simple_containment_position(
+    #[must_use]
+    fn simple_time_containment_position(
         &self,
         time: DateTime<Utc>,
-        rule_set: ContainmentRuleSet,
-    ) -> Result<SimpleContainmentPosition, ContainmentPositionError> {
-        self.containment_position(time)
+        rule_set: TimeContainmentRuleSet,
+    ) -> Result<SimpleTimeContainmentPosition, Self::Error> {
+        self.time_containment_position(time)
             .map(|containment_position| rule_set.disambiguate(containment_position))
     }
 
     /// Returns whether the given time is contained in the interval using predetermined rules
     ///
-    /// Uses the [`Strict` rule set](ContainmentRuleSet::Strict) with no additional rules.
+    /// Uses the [`Strict` rule set](TimeContainmentRuleSet::Strict) with no additional rules.
     ///
     /// The rule set has been chosen because they are the closest to how we mathematically
     /// and humanly interpret containment.
     ///
     /// # See also
     ///
-    /// If you are looking to choose the rule set and the rules, see [`Interval::contains`].
+    /// If you are looking to choose the rule set and the rules, see [`CanPositionTimeContainment::contains`].
     ///
-    /// If you want even more granular control, see [`Interval::contains_using_simple`].
+    /// If you want even more granular control, see [`CanPositionTimeContainment::contains_using_simple`].
     #[must_use]
-    pub fn simple_contains(&self, time: DateTime<Utc>) -> bool {
-        self.contains(time, ContainmentRuleSet::Strict, [])
+    fn simple_contains(&self, time: DateTime<Utc>) -> bool {
+        self.contains(time, TimeContainmentRuleSet::Strict, [])
     }
 
-    /// Returns whether the given time is contained in the interval using the given [containment rules](`ContainmentRule`)
+    /// Returns whether the given time is contained in the interval using the given [containment rules](`TimeContainmentRule`)
     ///
-    /// This method uses [`Interval::simple_containment_position`]. If this aforementioned method returns an [`Err`],
-    /// then this method returns false.
+    /// This method uses [`CanPositionTimeContainment::simple_time_containment_position`].
+    /// If this aforementioned method returns an [`Err`], then this method returns false.
     ///
-    /// If it returns [`Ok`], then the [`ContainmentRule`]s are checked. This method returns true only if all provided
-    /// [`ContainmentRule`]s are respected (i.e. returned true when calling [`ContainmentRule::counts_as_contained`]).
+    /// If it returns [`Ok`], then the [`TimeContainmentRule`]s are checked. This method returns true only if all provided
+    /// [`TimeContainmentRule`]s are respected (i.e. returned true when calling [`TimeContainmentRule::counts_as_contained`]).
     ///
     /// # See also
     ///
-    /// If you are looking for the simplest way of checking for containment, see [`Interval::simple_contains`].
+    /// If you are looking for the simplest way of checking for containment, see [`CanPositionTimeContainment::simple_contains`].
     ///
-    /// If you are looking for more control over what counts as contained, see [`Interval::contains_using_simple`].
+    /// If you are looking for more control over what counts as contained, see [`CanPositionTimeContainment::contains_using_simple`].
     ///
-    /// If you want extremely granular control over what counts as contained, see [`Interval::contains_using`].
+    /// If you want extremely granular control over what counts as contained, see [`CanPositionTimeContainment::contains_using`].
     #[must_use]
-    pub fn contains(
+    fn contains(
         &self,
         time: DateTime<Utc>,
-        rule_set: ContainmentRuleSet,
-        rules: impl IntoIterator<Item = ContainmentRule>,
+        rule_set: TimeContainmentRuleSet,
+        rules: impl IntoIterator<Item = TimeContainmentRule>,
     ) -> bool {
-        self.simple_containment_position(time, rule_set)
+        self.simple_time_containment_position(time, rule_set)
             .map(|simple_containment_position| {
                 rules
                     .into_iter()
@@ -887,52 +883,103 @@ impl Interval {
 
     /// Returns whether the given time is contained in the interval using a custom function
     ///
-    /// This method uses [`Interval::containment_position`]. If this aforementioned method returns an [`Err`],
-    /// then this method returns false.
+    /// This method uses [`CanPositionTimeContainment::time_containment_position`].
+    /// If this aforementioned method returns an [`Err`], then this method returns false.
     ///
-    /// If it returns [`Ok`], then the provided function is in charge of determining whether the [`ContainmentPosition`]
-    /// given by [`Interval::containment_position`] counts as the passed time being contained in the interval.
+    /// If it returns [`Ok`], then the provided function is in charge of determining whether the [`TimeContainmentPosition`]
+    /// given by [`CanPositionTimeContainment::time_containment_position`] counts as the passed time being contained
+    /// in the interval.
     ///
     /// # See also
     ///
     /// If you are looking for control over what's considered as containment but still want
-    /// predetermined [`SimpleContainmentPosition`]s, see [`Interval::contains_using_simple`].
+    /// predetermined [`SimpleTimeContainmentPosition`]s, see [`CanPositionTimeContainment::contains_using_simple`].
     ///
-    /// If you are looking for predetermined decisions on what's considered as contained, see [`Interval::contains`].
+    /// If you are looking for predetermined decisions on what's considered as contained, see [`CanPositionTimeContainment::contains`].
     #[must_use]
-    pub fn contains_using<F>(&self, time: DateTime<Utc>, f: F) -> bool
+    fn contains_using<F>(&self, time: DateTime<Utc>, f: F) -> bool
     where
-        F: FnOnce(ContainmentPosition) -> bool,
+        F: FnOnce(TimeContainmentPosition) -> bool,
     {
-        self.containment_position(time).map(f).unwrap_or(false)
+        self.time_containment_position(time).map(f).unwrap_or(false)
     }
 
     /// Returns whether the given time is contained in the interval using a custom function
     ///
-    /// This method uses [`Interval::simple_containment_position`]. If this aforementioned method returns an [`Err`],
-    /// then this method returns false.
+    /// This method uses [`CanPositionTimeContainment::simple_time_containment_position`].
+    /// If this aforementioned method returns an [`Err`], then this method returns false.
     ///
-    /// If it returns [`Ok`], then the provided function is in charge of determining whether the [`SimpleContainmentPosition`]
-    /// given by [`Interval::simple_containment_position`] counts as contained or not.
+    /// If it returns [`Ok`], then the provided function is in charge of determining whether the [`SimpleTimeContainmentPosition`]
+    /// given by [`CanPositionTimeContainment::simple_time_containment_position`] counts as contained or not.
     ///
     /// # See also
     ///
-    /// If you are looking for more granular control over what's considered as contained, see [`Interval::overlaps_using`].
+    /// If you are looking for more granular control over what's considered as contained, see [`CanPositionTimeContainment::contains_using`].
     ///
-    /// If you are looking for predetermined decisions on what's considered as overlapping, see [`Interval::overlaps`].
+    /// If you are looking for predetermined decisions on what's considered as contained, see [`CanPositionTimeContainment::simple_contains`].
     #[must_use]
-    pub fn contains_using_simple<F>(&self, time: DateTime<Utc>, rule_set: ContainmentRuleSet, f: F) -> bool
+    fn contains_using_simple<F>(&self, time: DateTime<Utc>, rule_set: TimeContainmentRuleSet, f: F) -> bool
     where
-        F: FnOnce(SimpleContainmentPosition) -> bool,
+        F: FnOnce(SimpleTimeContainmentPosition) -> bool,
     {
-        self.simple_containment_position(time, rule_set).map(f).unwrap_or(false)
+        self.simple_time_containment_position(time, rule_set).map(f).unwrap_or(false)
     }
+}
+
+impl<T: HasAbsoluteBounds> CanPositionTimeContainment for T {
+    type Error = ();
+
+    fn time_containment_position(&self, time: DateTime<Utc>) -> Result<TimeContainmentPosition, Self::Error> {
+        type StartB = AbsoluteStartBound;
+        type EndB = AbsoluteEndBound;
+        type ContPos = TimeContainmentPosition;
+
+        let bounds = self.abs_bounds();
+
+        if bounds.is_empty() {
+            return Ok(ContPos::Outside);
+        }
+
+        let containment_position = match (bounds.abs_start().unwrap(), bounds.abs_end().unwrap()) {
+            (StartB::InfinitePast, EndB::InfiniteFuture) => ContPos::Inside,
+            (StartB::InfinitePast, EndB::Finite(ref end_time, inclusivity)) => {
+                match time.cmp(end_time) {
+                    Ordering::Less => ContPos::Inside,
+                    Ordering::Equal => ContPos::OnEnd(inclusivity),
+                    Ordering::Greater => ContPos::OutsideAfter,
+                }
+            },
+            (StartB::Finite(ref start_time, inclusivity), EndB::InfiniteFuture) => {
+                match time.cmp(start_time) {
+                    Ordering::Less => ContPos::OutsideBefore,
+                    Ordering::Equal => ContPos::OnStart(inclusivity),
+                    Ordering::Greater => ContPos::Inside,
+                }
+            },
+            (StartB::Finite(ref start_time, start_inclusivity), EndB::Finite(ref end_time, end_inclusivity)) => {
+                match (time.cmp(start_time), time.cmp(end_time)) {
+                    (Ordering::Less, _) => ContPos::OutsideBefore,
+                    (Ordering::Equal, _) => ContPos::OnStart(start_inclusivity),
+                    (_, Ordering::Less) => ContPos::Inside,
+                    (_, Ordering::Equal) => ContPos::OnEnd(end_inclusivity),
+                    (_, Ordering::Greater) => ContPos::OutsideAfter,
+                }
+            }
+        };
+
+        Ok(containment_position)
+    }
+}
+
+pub trait CanPositionOverlap {
+    /// Error type if the overlap positioning failed
+    type Error;
 
     /// Returns the overlap position of the given interval
     ///
-    /// The other interval is compared to the current interval, that means that if you, for example, compare
+    /// The current interval is compared to the other interval, that means that if you, for example, compare
     /// a closed absolute interval (instance) with an open interval (given interval), you will get
-    /// [`OverlapPosition::Contains`] as the open interval _contains_ any closed absolute interval.
+    /// [`OverlapPosition::Inside`] as the closed absolute interval _is contained_ by an open interval.
     ///
     /// # Bound inclusivity
     ///
@@ -960,62 +1007,16 @@ impl Interval {
     /// of each tuple will be [`None`].
     /// In the case of a pair of open intervals being compared, since they have no bounds but still are equal, all
     /// elements will be [`None`].
-    ///
-    /// # Errors
-    ///
-    /// - Returns [`OverlapPositionError::RelativeInterval`] if the current or given interval is relative.
-    /// - Returns [`OverlapPositionError::MalformedInterval`] if the current or given interval is malformed in any way
-    ///   (see [`ClosedAbsoluteInterval::is_malformed`](crate::intervals::interval::ClosedAbsoluteInterval::is_malformed))
-    pub fn overlap_position(&self, other: &Self) -> Result<OverlapPosition, OverlapPositionError> {
-        match (self, other) {
-            (Self::ClosedRelative(_) | Self::HalfOpenRelative(_), _)
-            | (_, Self::ClosedRelative(_) | Self::HalfOpenRelative(_)) => Err(OverlapPositionError::RelativeInterval),
-            (Self::ClosedAbsolute(interval), Self::ClosedAbsolute(other_interval)) => {
-                overlap_position_closed_pair(interval, other_interval)
-            },
-            (Self::ClosedAbsolute(interval), Self::HalfOpenAbsolute(other_interval)) => {
-                overlap_position_closed_half_open(interval, other_interval)
-            },
-            (Self::HalfOpenAbsolute(interval), Self::ClosedAbsolute(other_interval)) => {
-                overlap_position_half_open_closed(interval, other_interval)
-            },
-            (Self::HalfOpenAbsolute(interval), Self::HalfOpenAbsolute(other_interval)) => {
-                Ok(overlap_position_half_open_pair(interval, other_interval))
-            },
-            // empty intervals are not comparable through time as they don't have a specific time frame
-            (Self::Empty(_), _) | (_, Self::Empty(_)) => Ok(OverlapPosition::Outside),
-            (Self::Open(_), Self::Open(_)) => Ok(OverlapPosition::Equal((None, None), (None, None))),
-            (Self::Open(_), Self::HalfOpenAbsolute(half_open_interval)) => {
-                match half_open_interval.opening_direction() {
-                    OpeningDirection::ToPast => Ok(OverlapPosition::InsideAndSameStart(None, None)),
-                    OpeningDirection::ToFuture => Ok(OverlapPosition::InsideAndSameEnd(None, None)),
-                }
-            },
-            (Self::Open(_), Self::ClosedAbsolute(_)) => Ok(OverlapPosition::Inside),
-            (Self::HalfOpenAbsolute(half_open_interval), Self::Open(_)) => {
-                match half_open_interval.opening_direction() {
-                    OpeningDirection::ToPast => Ok(OverlapPosition::ContainsAndSameStart(None, None)),
-                    OpeningDirection::ToFuture => Ok(OverlapPosition::ContainsAndSameEnd(None, None)),
-                }
-            },
-            (Self::ClosedAbsolute(_), Self::Open(_)) => Ok(OverlapPosition::Contains),
-        }
-    }
+    fn overlap_position(&self, other: &Self) -> Result<OverlapPosition, Self::Error>;
 
     /// Returns the simple overlap position of the given interval using a given rule set
     ///
-    /// See [`Interval::overlap_position`] for more details about overlap position.
-    ///
-    /// # Errors
-    ///
-    /// - Returns [`OverlapPositionError::RelativeInterval`] if the current or given interval is relative.
-    /// - Returns [`OverlapPositionError::MalformedInterval`] if the current or given interval is malformed in any way
-    ///   (see [`ClosedAbsoluteInterval::is_malformed`](crate::intervals::interval::ClosedAbsoluteInterval::is_malformed))
-    pub fn simple_overlap_position(
+    /// See [`CanPositionOverlap::overlap_position`] for more details about overlap position.
+    fn simple_overlap_position(
         &self,
         other: &Self,
         rule_set: OverlapRuleSet,
-    ) -> Result<SimpleOverlapPosition, OverlapPositionError> {
+    ) -> Result<SimpleOverlapPosition, Self::Error> {
         self.overlap_position(other)
             .map(|overlap_position| rule_set.disambiguate(overlap_position))
     }
@@ -1030,11 +1031,11 @@ impl Interval {
     ///
     /// # See also
     ///
-    /// If you are looking to choose the rule set and the rules, see [`Interval::overlaps`].
+    /// If you are looking to choose the rule set and the rules, see [`CanPositionOverlap::overlaps`].
     ///
-    /// If you want even more granular control, see [`Interval::overlaps_using_simple`].
+    /// If you want even more granular control, see [`CanPositionOverlap::overlaps_using_simple`].
     #[must_use]
-    pub fn simple_overlaps(&self, other: &Self) -> bool {
+    fn simple_overlaps(&self, other: &Self) -> bool {
         self.overlaps(other, OverlapRuleSet::Strict, [OverlapRule::DenyAdjacency])
     }
 
@@ -1048,13 +1049,13 @@ impl Interval {
     ///
     /// # See also
     ///
-    /// If you are looking for the simplest way of checking for overlap, see [`Interval::simple_overlaps`].
+    /// If you are looking for the simplest way of checking for overlap, see [`CanPositionOverlap::simple_overlaps`].
     ///
-    /// If you are looking for more control over what counts as overlap, see [`Interval::overlaps_using_simple`].
+    /// If you are looking for more control over what counts as overlap, see [`CanPositionOverlap::overlaps_using_simple`].
     ///
-    /// If you want extremely granular control over what counts as overlap, see [`Interval::overlaps_using`].
+    /// If you want extremely granular control over what counts as overlap, see [`CanPositionOverlap::overlaps_using`].
     #[must_use]
-    pub fn overlaps(
+    fn overlaps(
         &self,
         other: &Self,
         rule_set: OverlapRuleSet,
@@ -1071,20 +1072,20 @@ impl Interval {
 
     /// Returns whether the given other interval overlaps the current interval using a custom function
     ///
-    /// This method uses [`Interval::overlap_position`]. If this aforementioned method returns an [`Err`],
+    /// This method uses [`CanPositionOverlap::overlap_position`]. If this aforementioned method returns an [`Err`],
     /// then this method returns false.
     ///
     /// If it returns [`Ok`], then the provided function is in charge of determining whether the [`OverlapPosition`]
-    /// given by [`Interval::overlap_position`] counts as overlapping or not.
+    /// given by [`CanPositionOverlap::overlap_position`] counts as overlapping or not.
     ///
     /// # See also
     ///
     /// If you are looking for control over what's considered as overlapping but still want
-    /// predetermined [`SimpleOverlapPosition`]s, see [`Interval::overlaps_using_simple`].
+    /// predetermined [`SimpleOverlapPosition`]s, see [`CanPositionOverlap::overlaps_using_simple`].
     ///
-    /// If you are looking for predetermined decisions on what's considered as overlapping, see [`Interval::overlaps`].
+    /// If you are looking for predetermined decisions on what's considered as overlapping, see [`CanPositionOverlap::overlaps`].
     #[must_use]
-    pub fn overlaps_using<F>(&self, other: &Self, f: F) -> bool
+    fn overlaps_using<F>(&self, other: &Self, f: F) -> bool
     where
         F: FnOnce(OverlapPosition) -> bool,
     {
@@ -1093,352 +1094,269 @@ impl Interval {
 
     /// Returns whether the given other interval overlaps the current interval using a custom function
     ///
-    /// This method uses [`Interval::simple_overlap_position`]. If this aforementioned method returns an [`Err`],
+    /// This method uses [`CanPositionOverlap::simple_overlap_position`]. If this aforementioned method returns an [`Err`],
     /// then this method returns false.
     ///
     /// If it returns [`Ok`], then the provided function is in charge of determining whether the [`SimpleOverlapPosition`]
-    /// given by [`Interval::simple_overlap_position`] counts as overlapping or not.
+    /// given by [`CanPositionOverlap::simple_overlap_position`] counts as overlapping or not.
     ///
     /// # See also
     ///
-    /// If you are looking for more granular control over what's considered as overlapping, see [`Interval::overlaps_using`].
+    /// If you are looking for more granular control over what's considered as overlapping, see [`CanPositionOverlap::overlaps_using`].
     ///
-    /// If you are looking for predetermined decisions on what's considered as overlapping, see [`Interval::overlaps`].
+    /// If you are looking for predetermined decisions on what's considered as overlapping, see [`CanPositionOverlap::overlaps`].
     #[must_use]
-    pub fn overlaps_using_simple<F>(&self, other: &Self, rule_set: OverlapRuleSet, f: F) -> bool
+    fn overlaps_using_simple<F>(&self, other: &Self, rule_set: OverlapRuleSet, f: F) -> bool
     where
         F: FnOnce(SimpleOverlapPosition) -> bool,
     {
         self.simple_overlap_position(other, rule_set).map(f).unwrap_or(false)
     }
+}
+
+impl<T: HasAbsoluteBounds> CanPositionOverlap for T {
+    type Error = ();
+
+    fn overlap_position(&self, other: &Self) -> Result<OverlapPosition, Self::Error> {
+        type StartB = AbsoluteStartBound;
+        type EndB = AbsoluteEndBound;
+        type OP = OverlapPosition;
+
+        if self.is_empty() || other.is_empty() {
+            return Ok(OverlapPosition::Outside);
+        }
+
+        let self_start = self.abs_start().unwrap();
+        let self_end = self.abs_end().unwrap();
+        let other_start = other.abs_start().unwrap();
+        let other_end = other.abs_end().unwrap();
+
+        let overlap_position = match ((self_start, self_end), (other_start, other_end)) {
+            ((StartB::InfinitePast, EndB::InfiniteFuture), (StartB::InfinitePast, EndB::InfiniteFuture)) => {
+                OP::Equal((None, None), (None, None))
+            },
+            ((StartB::InfinitePast, EndB::InfiniteFuture), (StartB::InfinitePast, EndB::Finite(..))) => OP::ContainsAndSameStart(None, None),
+            ((StartB::InfinitePast, EndB::InfiniteFuture), (StartB::Finite(..), EndB::InfiniteFuture)) => OP::ContainsAndSameEnd(None, None),
+            ((StartB::InfinitePast, EndB::InfiniteFuture), _) => OP::Contains,
+            ((StartB::InfinitePast, EndB::Finite(..)), (StartB::InfinitePast, EndB::InfiniteFuture)) => OP::InsideAndSameStart(None, None),
+            ((StartB::Finite(..), EndB::InfiniteFuture), (StartB::InfinitePast, EndB::InfiniteFuture)) => OP::InsideAndSameEnd(None, None),
+            (_, (StartB::InfinitePast, EndB::InfiniteFuture)) => OP::Inside,
+            ((StartB::InfinitePast, EndB::Finite(ref og_time, og_inclusivity)), (StartB::InfinitePast, EndB::Finite(ref other_time, other_inclusivity))) => {
+                match og_time.cmp(other_time) {
+                    Ordering::Less => OP::InsideAndSameStart(None, None),
+                    Ordering::Equal => OP::Equal((None, Some(og_inclusivity)), (None, Some(other_inclusivity))),
+                    Ordering::Greater => OP::ContainsAndSameStart(None, None),
+                }
+            },
+            ((StartB::Finite(ref og_time, og_inclusivity), EndB::InfiniteFuture), (StartB::Finite(ref other_time, other_inclusivity), EndB::InfiniteFuture)) => {
+                match og_time.cmp(other_time) {
+                    Ordering::Less => OP::ContainsAndSameEnd(None, None),
+                    Ordering::Equal => OP::Equal((Some(og_inclusivity), None), (Some(other_inclusivity), None)),
+                    Ordering::Greater => OP::InsideAndSameEnd(None, None),
+                }
+            },
+            ((StartB::InfinitePast, EndB::Finite(ref og_time, og_inclusivity)), (StartB::Finite(ref other_time, other_inclusivity), EndB::InfiniteFuture)) => {
+                match og_time.cmp(other_time) {
+                    Ordering::Less => OP::OutsideBefore,
+                    Ordering::Equal => OP::OnStart(og_inclusivity, other_inclusivity),
+                    Ordering::Greater => OP::CrossesStart,
+                }
+            },
+            ((StartB::Finite(ref og_time, og_inclusivity), EndB::InfiniteFuture), (StartB::InfinitePast, EndB::Finite(ref other_time, other_inclusivity))) => {
+                match og_time.cmp(other_time) {
+                    Ordering::Less => OP::CrossesStart,
+                    Ordering::Equal => OP::OnEnd(og_inclusivity, other_inclusivity),
+                    Ordering::Greater => OP::OutsideAfter,
+                }
+            },
+            (
+                (StartB::InfinitePast, EndB::Finite(ref ref_time, ref_inclusivity)),
+                (StartB::Finite(ref other_start_time, other_start_inclusivity), EndB::Finite(ref other_end_time, other_end_inclusivity))
+            ) => overlap_position_half_open_past_closed(ref_time, ref_inclusivity, other_start_time, other_start_inclusivity, other_end_time, other_end_inclusivity),
+            (
+                (StartB::Finite(ref ref_time, ref_inclusivity), EndB::InfiniteFuture),
+                (StartB::Finite(ref other_start_time, other_start_inclusivity), EndB::Finite(ref other_end_time, other_end_inclusivity))
+            ) => overlap_position_half_open_future_closed(ref_time, ref_inclusivity, other_start_time, other_start_inclusivity, other_end_time, other_end_inclusivity),
+            (
+                (StartB::Finite(ref og_start_time, og_start_inclusivity), EndB::Finite(ref og_end_time, og_end_inclusivity)),
+                (StartB::InfinitePast, EndB::Finite(ref ref_time, ref_inclusivity)),
+            ) => overlap_position_closed_half_open_past(og_start_time, og_start_inclusivity, og_end_time, og_end_inclusivity, ref_time, ref_inclusivity),
+            (
+                (StartB::Finite(ref og_start_time, og_start_inclusivity), EndB::Finite(ref og_end_time, og_end_inclusivity)),
+                (StartB::Finite(ref ref_time, ref_inclusivity), EndB::InfiniteFuture),
+            ) => overlap_position_closed_half_open_future(og_start_time, og_start_inclusivity, og_end_time, og_end_inclusivity, ref_time, ref_inclusivity),
+            (
+                (StartB::Finite(ref og_start_time, og_start_inclusivity), EndB::Finite(ref og_end_time, og_end_inclusivity)),
+                (StartB::Finite(ref other_start_time, other_start_inclusivity), EndB::Finite(ref other_end_time, other_end_inclusivity)),
+            ) => overlap_position_closed_pair(og_start_time, og_start_inclusivity, og_end_time, og_end_inclusivity, other_start_time, other_start_inclusivity, other_end_time, other_end_inclusivity),
+        };
+
+        Ok(overlap_position)
+    }
+}
+
+fn overlap_position_half_open_past_closed(
+    ref_time: &DateTime<Utc>,
+    ref_inclusivity: BoundInclusivity,
+    other_start_time: &DateTime<Utc>,
+    other_start_inclusivity: BoundInclusivity,
+    other_end_time: &DateTime<Utc>,
+    other_end_inclusivity: BoundInclusivity,
+) -> OverlapPosition {
+    match (ref_time.cmp(other_start_time), ref_time.cmp(other_end_time)) {
+        (Ordering::Less, _) => OverlapPosition::OutsideBefore,
+        (Ordering::Equal, _) => OverlapPosition::OnStart(ref_inclusivity, other_start_inclusivity),
+        (Ordering::Greater, Ordering::Less) => OverlapPosition::CrossesStart,
+        (_, Ordering::Equal) => OverlapPosition::ContainsAndSameEnd(Some(ref_inclusivity), Some(other_end_inclusivity)),
+        (_, Ordering::Greater) => OverlapPosition::Contains,
+    }
+}
+
+fn overlap_position_half_open_future_closed(
+    ref_time: &DateTime<Utc>,
+    ref_inclusivity: BoundInclusivity,
+    other_start_time: &DateTime<Utc>,
+    other_start_inclusivity: BoundInclusivity,
+    other_end_time: &DateTime<Utc>,
+    other_end_inclusivity: BoundInclusivity,
+) -> OverlapPosition {
+    match (ref_time.cmp(other_start_time), ref_time.cmp(other_end_time)) {
+        (Ordering::Less, _) => OverlapPosition::Contains,
+        (Ordering::Equal, _) => OverlapPosition::ContainsAndSameStart(Some(ref_inclusivity), Some(other_start_inclusivity)),
+        (Ordering::Greater, Ordering::Less) => OverlapPosition::CrossesEnd,
+        (_, Ordering::Equal) => OverlapPosition::OnEnd(ref_inclusivity, other_end_inclusivity),
+        (_, Ordering::Greater) => OverlapPosition::OutsideAfter,
+    }
+}
+
+fn overlap_position_closed_half_open_past(
+    og_start_time: &DateTime<Utc>,
+    og_start_inclusivity: BoundInclusivity,
+    og_end_time: &DateTime<Utc>,
+    og_end_inclusivity: BoundInclusivity,
+    ref_time: &DateTime<Utc>,
+    ref_inclusivity: BoundInclusivity,
+) -> OverlapPosition {
+    match (ref_time.cmp(og_start_time), ref_time.cmp(og_end_time)) {
+        (Ordering::Less, _) => OverlapPosition::OutsideAfter,
+        (Ordering::Equal, _) => OverlapPosition::OnEnd(og_start_inclusivity, ref_inclusivity),
+        (Ordering::Greater, Ordering::Less) => OverlapPosition::CrossesEnd,
+        (_, Ordering::Equal) => OverlapPosition::InsideAndSameEnd(Some(og_end_inclusivity), Some(ref_inclusivity)),
+        (_, Ordering::Greater) => OverlapPosition::Inside,
+    }
+}
+
+fn overlap_position_closed_half_open_future(
+    og_start_time: &DateTime<Utc>,
+    og_start_inclusivity: BoundInclusivity,
+    og_end_time: &DateTime<Utc>,
+    og_end_inclusivity: BoundInclusivity,
+    ref_time: &DateTime<Utc>,
+    ref_inclusivity: BoundInclusivity,
+) -> OverlapPosition {
+    match (ref_time.cmp(og_start_time), ref_time.cmp(og_end_time)) {
+        (Ordering::Less, _) => OverlapPosition::Inside,
+        (Ordering::Equal, _) => OverlapPosition::InsideAndSameStart(Some(og_start_inclusivity), Some(ref_inclusivity)),
+        (Ordering::Greater, Ordering::Less) => OverlapPosition::CrossesStart,
+        (_, Ordering::Equal) => OverlapPosition::OnStart(og_end_inclusivity, ref_inclusivity),
+        (_, Ordering::Greater) => OverlapPosition::OutsideBefore,
+    }
+}
+
+fn overlap_position_closed_pair(
+    og_start_time: &DateTime<Utc>,
+    og_start_inclusivity: BoundInclusivity,
+    og_end_time: &DateTime<Utc>,
+    og_end_inclusivity: BoundInclusivity,
+    other_start_time: &DateTime<Utc>,
+    other_start_inclusivity: BoundInclusivity,
+    other_end_time: &DateTime<Utc>,
+    other_end_inclusivity: BoundInclusivity,
+) -> OverlapPosition {
+    let og_start_cmp = (og_start_time.cmp(other_start_time), og_start_time.cmp(other_end_time));
+    let og_end_cmp = (og_end_time.cmp(other_start_time), og_end_time.cmp(other_end_time));
+
+    match (og_start_cmp, og_end_cmp) {
+        (_, (Ordering::Less, _)) => OverlapPosition::OutsideBefore,
+        ((_, Ordering::Greater), _) => OverlapPosition::OutsideAfter,
+        (_, (Ordering::Equal, _)) => OverlapPosition::OnStart(og_end_inclusivity, other_start_inclusivity),
+        ((_, Ordering::Equal), _) => OverlapPosition::OnEnd(og_start_inclusivity, other_end_inclusivity),
+        ((Ordering::Less, _), (Ordering::Greater, Ordering::Less)) => OverlapPosition::CrossesStart,
+        ((Ordering::Greater, Ordering::Less), (_, Ordering::Greater)) => OverlapPosition::CrossesEnd,
+        ((Ordering::Greater, _), (_, Ordering::Less)) => OverlapPosition::Inside,
+        ((Ordering::Equal, _), (_, Ordering::Less)) => OverlapPosition::InsideAndSameStart(Some(og_start_inclusivity), Some(other_start_inclusivity)),
+        ((Ordering::Greater, _), (_, Ordering::Equal)) => OverlapPosition::InsideAndSameEnd(Some(og_end_inclusivity), Some(other_end_inclusivity)),
+        ((Ordering::Equal, _), (_, Ordering::Equal)) => OverlapPosition::Equal((Some(og_start_inclusivity), Some(og_end_inclusivity)), (Some(other_start_inclusivity), Some(other_end_inclusivity))),
+        ((Ordering::Equal, _), (_, Ordering::Greater)) => OverlapPosition::ContainsAndSameStart(Some(og_start_inclusivity), Some(other_start_inclusivity)),
+        ((Ordering::Less, _), (_, Ordering::Equal)) => OverlapPosition::ContainsAndSameEnd(Some(og_end_inclusivity), Some(other_end_inclusivity)),
+        ((Ordering::Less, _), (_, Ordering::Greater)) => OverlapPosition::Contains,
+    }
+}
+
+pub trait Extensible {
+    /// Error type if the interval extension failed
+    type Error;
 
     /// Creates an extended interval from the current one and given one
     ///
     /// Instead of uniting two intervals, this method takes the lowest point of both intervals' lower bound and the
     /// highest point of both intervals' upper bound, then creates an interval that spans those two points.
     ///
-    /// Regarding bound inclusivity, for each point will get the bound inclusivity of the interval from which the point
-    /// was taken.
-    ///
-    /// # Errors
-    ///
-    /// - If the current interval or given interval is relative, this method returns [`RelativeInterval`](IntervalExtensionError::RelativeInterval)
-    pub fn try_extend(&self, other: &Self) -> Result<Self, IntervalExtensionError> {
-        match (self, other) {
-            (Interval::ClosedRelative(_) | Interval::HalfOpenRelative(_), _)
-            | (_, Interval::ClosedRelative(_) | Interval::HalfOpenRelative(_)) => {
-                Err(IntervalExtensionError::RelativeInterval)
-            },
-            (Interval::ClosedAbsolute(closed_a), Interval::ClosedAbsolute(closed_b)) => {
-                Ok(try_extend_closed_pair(closed_a, closed_b))
-            },
-            (Interval::ClosedAbsolute(closed), Interval::HalfOpenAbsolute(half_open))
-            | (Interval::HalfOpenAbsolute(half_open), Interval::ClosedAbsolute(closed)) => {
-                Ok(try_extend_closed_half_open(closed, half_open))
-            },
-            (Interval::HalfOpenAbsolute(half_open_a), Interval::HalfOpenAbsolute(half_open_b)) => {
-                Ok(try_extend_half_open_pair(half_open_a, half_open_b))
-            },
-            (Interval::Open(_), _) | (_, Interval::Open(_)) => Ok(Interval::Open(OpenInterval)),
-            (interval @ (Interval::ClosedAbsolute(_) | Interval::HalfOpenAbsolute(_)), Interval::Empty(_))
-            | (Interval::Empty(_), interval @ (Interval::ClosedAbsolute(_) | Interval::HalfOpenAbsolute(_))) => {
-                Ok(interval.clone())
-            },
-            (Interval::Empty(_), Interval::Empty(_)) => Ok(Interval::Empty(EmptyInterval)),
+    /// Regarding bound inclusivity, for each point we will get the bound inclusivity of the interval from which
+    /// the point was taken. If they were equal, we choose the most inclusive bound.
+    /// 
+    /// If both intervals are empty, the method just returns an empty interval.
+    /// 
+    /// If one of the intervals is empty, the method just return a clone of the other non-empty interval.
+    fn extend(&self, other: &Self) -> Result<AbsoluteInterval, Self::Error>;
+}
+
+impl<T: HasAbsoluteBounds> Extensible for T {
+    type Error = ();
+
+    fn extend(&self, other: &Self) -> Result<AbsoluteInterval, Self::Error>
+    where
+        Self: Sized
+    {
+        let is_self_empty = self.is_empty();
+        let is_other_empty = other.is_empty();
+
+        if is_self_empty && is_other_empty {
+            return Ok(AbsoluteInterval::Empty(EmptyInterval));
         }
-    }
-}
 
-fn containment_position_closed(
-    interval: &ClosedAbsoluteInterval,
-    time: DateTime<Utc>,
-) -> Result<ContainmentPosition, ContainmentPositionError> {
-    if interval.is_malformed() {
-        return Err(ContainmentPositionError::MalformedInterval);
-    }
+        if is_self_empty {
+            return Ok(AbsoluteInterval::from(other.abs_bounds()));
+        }
 
-    let containment_position = match (time.cmp(&interval.from()), time.cmp(&interval.to())) {
-        (Ordering::Less, _) => ContainmentPosition::OutsideBefore,
-        (_, Ordering::Greater) => ContainmentPosition::OutsideAfter,
-        (Ordering::Equal, _) => ContainmentPosition::OnStart(interval.from_inclusivity()),
-        (_, Ordering::Equal) => ContainmentPosition::OnEnd(interval.to_inclusivity()),
-        (Ordering::Greater, Ordering::Less) => ContainmentPosition::Inside,
-    };
+        if is_other_empty {
+            return Ok(AbsoluteInterval::from(self.abs_bounds()));
+        }
 
-    Ok(containment_position)
-}
-
-fn containment_position_half_open(interval: &HalfOpenAbsoluteInterval, time: DateTime<Utc>) -> ContainmentPosition {
-    match (time.cmp(&interval.reference_time()), interval.opening_direction()) {
-        (Ordering::Less, OpeningDirection::ToPast) | (Ordering::Greater, OpeningDirection::ToFuture) => {
-            ContainmentPosition::Inside
-        },
-        (Ordering::Equal, OpeningDirection::ToPast) => {
-            ContainmentPosition::OnEnd(interval.reference_time_inclusivity())
-        },
-        (Ordering::Greater, OpeningDirection::ToPast) => ContainmentPosition::OutsideAfter,
-        (Ordering::Less, OpeningDirection::ToFuture) => ContainmentPosition::OutsideBefore,
-        (Ordering::Equal, OpeningDirection::ToFuture) => {
-            ContainmentPosition::OnStart(interval.reference_time_inclusivity())
-        },
-    }
-}
-
-fn overlap_position_closed_pair(
-    a: &ClosedAbsoluteInterval,
-    b: &ClosedAbsoluteInterval,
-) -> Result<OverlapPosition, OverlapPositionError> {
-    if a.is_malformed() || b.is_malformed() {
-        return Err(OverlapPositionError::MalformedInterval);
-    }
-
-    let b_from_cmp = (b.from().cmp(&a.from()), b.from().cmp(&a.to()));
-    let b_to_cmp = (b.to().cmp(&a.from()), b.to().cmp(&a.to()));
-
-    let overlap_position = match (b_from_cmp, b_to_cmp) {
-        (_, (Ordering::Less, _)) => OverlapPosition::OutsideBefore,
-        ((_, Ordering::Greater), _) => OverlapPosition::OutsideAfter,
-        (_, (Ordering::Equal, _)) => OverlapPosition::OnStart(a.from_inclusivity(), b.to_inclusivity()),
-        ((_, Ordering::Equal), _) => OverlapPosition::OnEnd(a.to_inclusivity(), b.from_inclusivity()),
-        ((Ordering::Less, _), (_, Ordering::Less)) => OverlapPosition::CrossesStart,
-        ((Ordering::Greater, _), (_, Ordering::Greater)) => OverlapPosition::CrossesEnd,
-        ((Ordering::Greater, _), (_, Ordering::Less)) => OverlapPosition::Inside,
-        ((Ordering::Equal, _), (_, Ordering::Less)) => {
-            OverlapPosition::InsideAndSameStart(Some(a.from_inclusivity()), Some(b.from_inclusivity()))
-        },
-        ((Ordering::Greater, _), (_, Ordering::Equal)) => {
-            OverlapPosition::InsideAndSameEnd(Some(a.to_inclusivity()), Some(b.to_inclusivity()))
-        },
-        ((Ordering::Equal, _), (_, Ordering::Equal)) => OverlapPosition::Equal(
-            (Some(a.from_inclusivity()), Some(a.to_inclusivity())),
-            (Some(b.from_inclusivity()), Some(b.to_inclusivity())),
-        ),
-        ((Ordering::Equal, _), (_, Ordering::Greater)) => {
-            OverlapPosition::ContainsAndSameStart(Some(a.from_inclusivity()), Some(b.from_inclusivity()))
-        },
-        ((Ordering::Less, _), (_, Ordering::Equal)) => {
-            OverlapPosition::ContainsAndSameEnd(Some(a.to_inclusivity()), Some(b.to_inclusivity()))
-        },
-        ((Ordering::Less, _), (_, Ordering::Greater)) => OverlapPosition::Contains,
-    };
-
-    Ok(overlap_position)
-}
-
-fn overlap_position_closed_half_open(
-    a: &ClosedAbsoluteInterval,
-    b: &HalfOpenAbsoluteInterval,
-) -> Result<OverlapPosition, OverlapPositionError> {
-    if a.is_malformed() {
-        return Err(OverlapPositionError::MalformedInterval);
-    }
-
-    let overlap_position = match (
-        b.reference_time().cmp(&a.from()),
-        b.reference_time().cmp(&a.to()),
-        b.opening_direction(),
-    ) {
-        (Ordering::Less, _, OpeningDirection::ToPast) => OverlapPosition::OutsideBefore,
-        (_, Ordering::Greater, OpeningDirection::ToFuture) => OverlapPosition::OutsideAfter,
-        (Ordering::Equal, _, OpeningDirection::ToPast) => {
-            OverlapPosition::OnStart(a.from_inclusivity(), b.reference_time_inclusivity())
-        },
-        (_, Ordering::Equal, OpeningDirection::ToFuture) => {
-            OverlapPosition::OnEnd(a.to_inclusivity(), b.reference_time_inclusivity())
-        },
-        (Ordering::Greater, Ordering::Less, OpeningDirection::ToPast) => OverlapPosition::CrossesStart,
-        (Ordering::Greater, Ordering::Less, OpeningDirection::ToFuture) => OverlapPosition::CrossesEnd,
-        (Ordering::Equal, _, OpeningDirection::ToFuture) => {
-            OverlapPosition::ContainsAndSameStart(Some(a.from_inclusivity()), Some(b.reference_time_inclusivity()))
-        },
-        (_, Ordering::Equal, OpeningDirection::ToPast) => {
-            OverlapPosition::ContainsAndSameEnd(Some(a.to_inclusivity()), Some(b.reference_time_inclusivity()))
-        },
-        (Ordering::Less, _, OpeningDirection::ToFuture) | (_, Ordering::Greater, OpeningDirection::ToPast) => {
-            OverlapPosition::Contains
-        },
-    };
-
-    Ok(overlap_position)
-}
-
-fn overlap_position_half_open_closed(
-    a: &HalfOpenAbsoluteInterval,
-    b: &ClosedAbsoluteInterval,
-) -> Result<OverlapPosition, OverlapPositionError> {
-    if b.is_malformed() {
-        return Err(OverlapPositionError::MalformedInterval);
-    }
-
-    let overlap_position = match (
-        b.from().cmp(&a.reference_time()),
-        b.to().cmp(&a.reference_time()),
-        a.opening_direction(),
-    ) {
-        (_, Ordering::Less, OpeningDirection::ToFuture) => OverlapPosition::OutsideBefore,
-        (Ordering::Greater, _, OpeningDirection::ToPast) => OverlapPosition::OutsideAfter,
-        (_, Ordering::Equal, OpeningDirection::ToFuture) => {
-            OverlapPosition::OnStart(a.reference_time_inclusivity(), b.to_inclusivity())
-        },
-        (Ordering::Equal, _, OpeningDirection::ToPast) => {
-            OverlapPosition::OnEnd(a.reference_time_inclusivity(), b.from_inclusivity())
-        },
-        (Ordering::Less, Ordering::Greater, OpeningDirection::ToFuture) => OverlapPosition::CrossesStart,
-        (Ordering::Less, Ordering::Greater, OpeningDirection::ToPast) => OverlapPosition::CrossesEnd,
-        (Ordering::Less, Ordering::Less, OpeningDirection::ToPast)
-        | (Ordering::Greater, Ordering::Greater, OpeningDirection::ToFuture) => OverlapPosition::Inside,
-        (Ordering::Equal, Ordering::Greater, OpeningDirection::ToFuture) => {
-            OverlapPosition::InsideAndSameStart(Some(a.reference_time_inclusivity()), Some(b.from_inclusivity()))
-        },
-        (Ordering::Less, Ordering::Equal, OpeningDirection::ToPast) => {
-            OverlapPosition::InsideAndSameEnd(Some(a.reference_time_inclusivity()), Some(b.to_inclusivity()))
-        },
-    };
-
-    Ok(overlap_position)
-}
-
-fn overlap_position_half_open_pair(a: &HalfOpenAbsoluteInterval, b: &HalfOpenAbsoluteInterval) -> OverlapPosition {
-    match (
-        b.reference_time().cmp(&a.reference_time()),
-        a.opening_direction(),
-        b.opening_direction(),
-    ) {
-        (Ordering::Less, OpeningDirection::ToPast, OpeningDirection::ToPast) => OverlapPosition::InsideAndSameStart(
-            Some(a.reference_time_inclusivity()),
-            Some(b.reference_time_inclusivity()),
-        ),
-        (Ordering::Less, OpeningDirection::ToPast, OpeningDirection::ToFuture) => OverlapPosition::CrossesEnd,
-        (Ordering::Less, OpeningDirection::ToFuture, OpeningDirection::ToPast) => OverlapPosition::OutsideBefore,
-        (Ordering::Less, OpeningDirection::ToFuture, OpeningDirection::ToFuture) => {
-            OverlapPosition::ContainsAndSameEnd(
-                Some(a.reference_time_inclusivity()),
-                Some(b.reference_time_inclusivity()),
-            )
-        },
-        (Ordering::Equal, OpeningDirection::ToPast, OpeningDirection::ToPast)
-        | (Ordering::Equal, OpeningDirection::ToFuture, OpeningDirection::ToFuture) => OverlapPosition::Equal(
-            (Some(a.reference_time_inclusivity()), None),
-            (Some(b.reference_time_inclusivity()), None),
-        ),
-        (Ordering::Equal, OpeningDirection::ToPast, OpeningDirection::ToFuture) => {
-            OverlapPosition::OnEnd(a.reference_time_inclusivity(), b.reference_time_inclusivity())
-        },
-        (Ordering::Equal, OpeningDirection::ToFuture, OpeningDirection::ToPast) => {
-            OverlapPosition::OnStart(a.reference_time_inclusivity(), b.reference_time_inclusivity())
-        },
-        (Ordering::Greater, OpeningDirection::ToPast, OpeningDirection::ToPast) => {
-            OverlapPosition::ContainsAndSameStart(
-                Some(a.reference_time_inclusivity()),
-                Some(b.reference_time_inclusivity()),
-            )
-        },
-        (Ordering::Greater, OpeningDirection::ToPast, OpeningDirection::ToFuture) => OverlapPosition::OutsideAfter,
-        (Ordering::Greater, OpeningDirection::ToFuture, OpeningDirection::ToPast) => OverlapPosition::CrossesStart,
-        (Ordering::Greater, OpeningDirection::ToFuture, OpeningDirection::ToFuture) => {
-            OverlapPosition::InsideAndSameEnd(
-                Some(a.reference_time_inclusivity()),
-                Some(b.reference_time_inclusivity()),
-            )
-        },
-    }
-}
-
-fn try_extend_closed_pair(a: &ClosedAbsoluteInterval, b: &ClosedAbsoluteInterval) -> Interval {
-    let (new_from, new_from_inclusivity) = match a.from().cmp(&b.from()) {
-        Ordering::Equal => (
-            a.from(),
-            if a.from_inclusivity() == BoundInclusivity::Inclusive
-                || b.from_inclusivity() == BoundInclusivity::Inclusive
-            {
-                BoundInclusivity::Inclusive
-            } else {
-                BoundInclusivity::Exclusive
-            },
-        ),
-        Ordering::Less => (a.from(), a.from_inclusivity()),
-        Ordering::Greater => (b.from(), b.from_inclusivity()),
-    };
-
-    let (new_to, new_to_inclusivity) = match a.to().cmp(&b.to()) {
-        Ordering::Equal => (
-            a.to(),
-            if a.to_inclusivity() == BoundInclusivity::Inclusive || b.to_inclusivity() == BoundInclusivity::Inclusive {
-                BoundInclusivity::Inclusive
-            } else {
-                BoundInclusivity::Exclusive
-            },
-        ),
-        Ordering::Less => (b.to(), b.to_inclusivity()),
-        Ordering::Greater => (a.to(), a.to_inclusivity()),
-    };
-
-    Interval::ClosedAbsolute(ClosedAbsoluteInterval::with_inclusivity(
-        new_from,
-        new_from_inclusivity,
-        new_to,
-        new_to_inclusivity,
-    ))
-}
-
-fn try_extend_closed_half_open(closed: &ClosedAbsoluteInterval, half_open: &HalfOpenAbsoluteInterval) -> Interval {
-    let (new_reference_time, new_inclusivity) = match half_open.opening_direction() {
-        OpeningDirection::ToPast => {
-            if closed.to() > half_open.reference_time() {
-                (closed.to(), closed.to_inclusivity())
-            } else if closed.from() > half_open.reference_time() {
-                (closed.from(), closed.from_inclusivity())
-            } else {
-                (half_open.reference_time(), half_open.reference_time_inclusivity())
-            }
-        },
-        OpeningDirection::ToFuture => {
-            if closed.from() < half_open.reference_time() {
-                (closed.from(), closed.from_inclusivity())
-            } else if closed.to() < half_open.reference_time() {
-                (closed.to(), closed.to_inclusivity())
-            } else {
-                (half_open.reference_time(), half_open.reference_time_inclusivity())
-            }
-        },
-    };
-
-    Interval::HalfOpenAbsolute(HalfOpenAbsoluteInterval::with_inclusivity(
-        new_reference_time,
-        new_inclusivity,
-        half_open.opening_direction(),
-    ))
-}
-
-fn try_extend_half_open_pair(a: &HalfOpenAbsoluteInterval, b: &HalfOpenAbsoluteInterval) -> Interval {
-    match (a.opening_direction(), b.opening_direction()) {
-        (OpeningDirection::ToFuture, OpeningDirection::ToPast)
-        | (OpeningDirection::ToPast, OpeningDirection::ToFuture) => Interval::Open(OpenInterval),
-        (OpeningDirection::ToPast, OpeningDirection::ToPast) => {
-            Interval::HalfOpenAbsolute(HalfOpenAbsoluteInterval::with_inclusivity(
-                a.reference_time().max(b.reference_time()),
-                if a.reference_time_inclusivity() == BoundInclusivity::Inclusive
-                    || b.reference_time_inclusivity() == BoundInclusivity::Inclusive
-                {
-                    BoundInclusivity::Inclusive
+        let new_start_bound = match (self.abs_start().unwrap(), other.abs_start().unwrap()) {
+            (bound @ AbsoluteStartBound::InfinitePast, _)
+            | (_, bound @ AbsoluteStartBound::InfinitePast) => bound,
+            (og_bound @ AbsoluteStartBound::Finite(..), other_bound @ AbsoluteStartBound::Finite(..)) => {
+                if og_bound <= other_bound {
+                    og_bound
                 } else {
-                    BoundInclusivity::Exclusive
-                },
-                OpeningDirection::ToPast,
-            ))
-        },
-        (OpeningDirection::ToFuture, OpeningDirection::ToFuture) => {
-            Interval::HalfOpenAbsolute(HalfOpenAbsoluteInterval::with_inclusivity(
-                a.reference_time().min(b.reference_time()),
-                if a.reference_time_inclusivity() == BoundInclusivity::Inclusive
-                    || b.reference_time_inclusivity() == BoundInclusivity::Inclusive
-                {
-                    BoundInclusivity::Inclusive
+                    other_bound
+                }
+            },
+        };
+
+        let new_end_bound = match (self.abs_end().unwrap(), other.abs_end().unwrap()) {
+            (bound @ AbsoluteEndBound::InfiniteFuture, _)
+            | (_, bound @ AbsoluteEndBound::InfiniteFuture) => bound,
+            (og_bound @ AbsoluteEndBound::Finite(..), other_bound @ AbsoluteEndBound::Finite(..)) => {
+                if og_bound >= other_bound {
+                    og_bound
                 } else {
-                    BoundInclusivity::Exclusive
-                },
-                OpeningDirection::ToFuture,
-            ))
-        },
+                    other_bound
+                }
+            }
+        };
+
+        Ok(AbsoluteInterval::from(AbsoluteBounds::new(new_start_bound, new_end_bound)))
     }
 }
