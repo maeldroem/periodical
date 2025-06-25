@@ -1,7 +1,7 @@
 //! Intervals
 //!
 //! The core of intervals is implemented here. You will find the implementations for each different variant
-//! of intervals, but also find how the principal structure, [`Interval`] works.
+//! of intervals, but also find how the principal structure, [`AbsoluteInterval`] works.
 
 use std::cmp::Ordering;
 use std::error::Error;
@@ -72,7 +72,7 @@ impl ToAbsolute for AbsoluteStartBound {
     type AbsoluteType = AbsoluteStartBound;
 
     fn to_absolute(&self, _reference_time: DateTime<Utc>) -> Self::AbsoluteType {
-        self.clone()
+        *self
     }
 }
 
@@ -161,14 +161,19 @@ impl PartialOrd<AbsoluteEndBound> for AbsoluteStartBound {
 
 impl Display for AbsoluteStartBound {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Absolute start: ");
+        let mut result = Ok(());
+        result = result.and(write!(f, "Absolute start: "));
 
         match self {
             Self::Finite(time, inclusivity) => {
-                write!(f, "{time} ({inclusivity})")
+                result = result.and(write!(f, "{time} ({inclusivity})"));
             },
-            Self::InfinitePast => write!(f, "Infinite past"),
+            Self::InfinitePast => {
+                result = result.and(write!(f, "Infinite past"));
+            },
         }
+
+        result
     }
 }
 
@@ -205,7 +210,7 @@ impl ToAbsolute for AbsoluteEndBound {
     type AbsoluteType = AbsoluteEndBound;
 
     fn to_absolute(&self, _reference_time: DateTime<Utc>) -> Self::AbsoluteType {
-        self.clone()
+        *self
     }
 }
 
@@ -268,14 +273,19 @@ impl PartialOrd<AbsoluteStartBound> for AbsoluteEndBound {
 
 impl Display for AbsoluteEndBound {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Absolute end: ");
+        let mut result = Ok(());
+        result = result.and(write!(f, "Absolute end: "));
 
         match self {
             Self::Finite(time, inclusivity) => {
-                write!(f, "{time} ({inclusivity})")
+                result = result.and(write!(f, "{time} ({inclusivity})"));
             },
-            Self::InfiniteFuture => write!(f, "Infinite future"),
+            Self::InfiniteFuture => {
+                result = result.and(write!(f, "Infinite future"));
+            },
         }
+
+        result
     }
 }
 
@@ -330,20 +340,25 @@ impl ToRelative for RelativeStartBound {
     type RelativeType = RelativeStartBound;
 
     fn to_relative(&self, _reference_time: DateTime<Utc>) -> Self::RelativeType {
-        self.clone()
+        *self
     }
 }
 
 impl Display for RelativeStartBound {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Relative start: ");
+        let mut result = Ok(());
+        result = result.and(write!(f, "Relative start: "));
 
         match self {
             Self::Finite(offset, inclusivity) => {
-                write!(f, "{offset} ({inclusivity})")
+                result = result.and(write!(f, "{offset} ({inclusivity})"));
             },
-            Self::InfinitePast => write!(f, "Infinite past"),
+            Self::InfinitePast => {
+                result = result.and(write!(f, "Infinite past"));
+            },
         }
+
+        result
     }
 }
 
@@ -400,20 +415,25 @@ impl ToRelative for RelativeEndBound {
     type RelativeType = RelativeEndBound;
 
     fn to_relative(&self, _reference_time: DateTime<Utc>) -> Self::RelativeType {
-        self.clone()
+        *self
     }
 }
 
 impl Display for RelativeEndBound {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Relative end: ");
+        let mut result = Ok(());
+        result = result.and(write!(f, "Relative end: "));
 
         match self {
             Self::Finite(offset, inclusivity) => {
-                write!(f, "{offset} ({inclusivity})")
+                result = result.and(write!(f, "{offset} ({inclusivity})"));
             },
-            Self::InfiniteFuture => write!(f, "Infinite future"),
+            Self::InfiniteFuture => {
+                result = result.and(write!(f, "Infinite future"));
+            },
         }
+
+        result
     }
 }
 
@@ -520,7 +540,7 @@ impl AbsoluteBounds {
             (start, end)
         {
             if start_time > end_time {
-                std::mem::swap(start_time, end_time)
+                std::mem::swap(start_time, end_time);
             }
         }
 
@@ -605,27 +625,29 @@ impl Display for AbsoluteBounds {
         match (self.start, self.end) {
             (None, _) | (_, None) => write!(f, "Empty interval bounds"),
             (Some(start), Some(end)) => {
+                let mut result = Ok(());
+
                 match start {
                     AbsoluteStartBound::Finite(time, inclusivity) => {
-                        write!(f, "{time} ({inclusivity})");
+                        result = result.and(write!(f, "{time} ({inclusivity})"));
                     },
                     AbsoluteStartBound::InfinitePast => {
-                        write!(f, "Infinite past");
+                        result = result.and(write!(f, "Infinite past"));
                     },
                 }
 
-                write!(f, " - ");
+                result = result.and(write!(f, " - "));
 
                 match end {
                     AbsoluteEndBound::Finite(time, inclusivity) => {
-                        write!(f, "{time} ({inclusivity})");
+                        result = result.and(write!(f, "{time} ({inclusivity})"));
                     },
                     AbsoluteEndBound::InfiniteFuture => {
-                        write!(f, "Infinite future");
+                        result = result.and(write!(f, "Infinite future"));
                     },
                 }
 
-                Ok(())
+                result
             },
         }
     }
@@ -796,27 +818,29 @@ impl Display for RelativeBounds {
         match (self.start, self.end) {
             (None, _) | (_, None) => write!(f, "Empty interval bounds"),
             (Some(start), Some(end)) => {
+                let mut result = Ok(());
+
                 match start {
                     RelativeStartBound::Finite(offset, inclusivity) => {
-                        write!(f, "{offset} ({inclusivity})");
+                        result = result.and(write!(f, "{offset} ({inclusivity})"));
                     },
                     RelativeStartBound::InfinitePast => {
-                        write!(f, "Infinite past");
+                        result = result.and(write!(f, "Infinite past"));
                     },
                 }
 
-                write!(f, " - ");
+                result = result.and(write!(f, " - "));
 
                 match end {
                     RelativeEndBound::Finite(offset, inclusivity) => {
-                        write!(f, "{offset} ({inclusivity})");
+                        result = result.and(write!(f, "{offset} ({inclusivity})"));
                     },
                     RelativeEndBound::InfiniteFuture => {
-                        write!(f, "Infinite future");
+                        result = result.and(write!(f, "Infinite future"));
                     },
                 }
 
-                Ok(())
+                result
             },
         }
     }
@@ -1551,7 +1575,7 @@ impl ToAbsolute for OpenInterval {
     type AbsoluteType = OpenInterval;
 
     fn to_absolute(&self, _reference_time: DateTime<Utc>) -> Self::AbsoluteType {
-        self.clone()
+        *self
     }
 }
 
@@ -1559,7 +1583,7 @@ impl ToRelative for OpenInterval {
     type RelativeType = OpenInterval;
 
     fn to_relative(&self, _reference_time: DateTime<Utc>) -> Self::RelativeType {
-        self.clone()
+        *self
     }
 }
 
@@ -1644,7 +1668,7 @@ impl ToAbsolute for EmptyInterval {
     type AbsoluteType = EmptyInterval;
 
     fn to_absolute(&self, _reference_time: DateTime<Utc>) -> Self::AbsoluteType {
-        self.clone()
+        *self
     }
 }
 
@@ -1652,7 +1676,7 @@ impl ToRelative for EmptyInterval {
     type RelativeType = EmptyInterval;
 
     fn to_relative(&self, _reference_time: DateTime<Utc>) -> Self::RelativeType {
-        self.clone()
+        *self
     }
 }
 
@@ -1700,6 +1724,50 @@ pub enum AbsoluteInterval {
     HalfOpen(HalfOpenAbsoluteInterval),
     Open(OpenInterval),
     Empty(EmptyInterval),
+}
+
+impl HasDuration for AbsoluteInterval {
+    fn duration(&self) -> IntervalDuration {
+        match self {
+            Self::Closed(interval) => interval.duration(),
+            Self::HalfOpen(interval) => interval.duration(),
+            Self::Open(interval) => interval.duration(),
+            Self::Empty(interval) => interval.duration(),
+        }
+    }
+}
+
+impl HasRelativity for AbsoluteInterval {
+    fn relativity(&self) -> Relativity {
+        match self {
+            Self::Closed(interval) => interval.relativity(),
+            Self::HalfOpen(interval) => interval.relativity(),
+            Self::Open(interval) => interval.relativity(),
+            Self::Empty(interval) => interval.relativity(),
+        }
+    }
+}
+
+impl HasOpenness for AbsoluteInterval {
+    fn openness(&self) -> Openness {
+        match self {
+            Self::Closed(interval) => interval.openness(),
+            Self::HalfOpen(interval) => interval.openness(),
+            Self::Open(interval) => interval.openness(),
+            Self::Empty(interval) => interval.openness(),
+        }
+    }
+}
+
+impl HasAbsoluteBounds for AbsoluteInterval {
+    fn abs_bounds(&self) -> AbsoluteBounds {
+        match self {
+            Self::Closed(interval) => interval.abs_bounds(),
+            Self::HalfOpen(interval) => interval.abs_bounds(),
+            Self::Open(interval) => interval.abs_bounds(),
+            Self::Empty(interval) => interval.abs_bounds(),
+        }
+    }
 }
 
 impl ToAbsolute for AbsoluteInterval {
@@ -1783,6 +1851,50 @@ pub enum RelativeInterval {
     HalfOpen(HalfOpenRelativeInterval),
     Open(OpenInterval),
     Empty(EmptyInterval),
+}
+
+impl HasDuration for RelativeInterval {
+    fn duration(&self) -> IntervalDuration {
+        match self {
+            Self::Closed(interval) => interval.duration(),
+            Self::HalfOpen(interval) => interval.duration(),
+            Self::Open(interval) => interval.duration(),
+            Self::Empty(interval) => interval.duration(),
+        }
+    }
+}
+
+impl HasRelativity for RelativeInterval {
+    fn relativity(&self) -> Relativity {
+        match self {
+            Self::Closed(interval) => interval.relativity(),
+            Self::HalfOpen(interval) => interval.relativity(),
+            Self::Open(interval) => interval.relativity(),
+            Self::Empty(interval) => interval.relativity(),
+        }
+    }
+}
+
+impl HasOpenness for RelativeInterval {
+    fn openness(&self) -> Openness {
+        match self {
+            Self::Closed(interval) => interval.openness(),
+            Self::HalfOpen(interval) => interval.openness(),
+            Self::Open(interval) => interval.openness(),
+            Self::Empty(interval) => interval.openness(),
+        }
+    }
+}
+
+impl HasRelativeBounds for RelativeInterval {
+    fn rel_bounds(&self) -> RelativeBounds {
+        match self {
+            Self::Closed(interval) => interval.rel_bounds(),
+            Self::HalfOpen(interval) => interval.rel_bounds(),
+            Self::Open(interval) => interval.rel_bounds(),
+            Self::Empty(interval) => interval.rel_bounds(),
+        }
+    }
 }
 
 impl ToAbsolute for RelativeInterval {

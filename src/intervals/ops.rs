@@ -19,7 +19,7 @@ use super::interval::{
 use super::meta::BoundInclusivity;
 
 /// Time precision used for comparisons
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Precision {
     /// Rounds the compared times to the given duration (e.g. if the duration is 1 second, the times will be rounded to the nearest second)
     ToNearest(Duration),
@@ -47,15 +47,40 @@ impl Precision {
     }
 }
 
+/// Trait to try to re-precise absolute bounds
 pub trait TryPreciseAbsoluteBounds {
+    /// Precises the start bound with the given precision
+    /// 
+    /// # Errors
+    /// 
+    /// If the rounding failed, usually if the [`Duration`] contained within the [`Precision`] is not usable during
+    /// rounding, which can happen if it is negative, or if it's too long.
     fn try_precise_start_bound(&self, precision: Precision) -> Result<Option<AbsoluteStartBound>, RoundingError>;
 
+    /// Precises the end bound with the given precision
+    /// 
+    /// # Errors
+    /// 
+    /// If the rounding failed, usually if the [`Duration`] contained within the [`Precision`] is not usable during
+    /// rounding, which can happen if it is negative, or if it's too long.
     fn try_precise_end_bound(&self, precision: Precision) -> Result<Option<AbsoluteEndBound>, RoundingError>;
 
+    /// Precises the start and end bound with the given precision
+    /// 
+    /// # Errors
+    /// 
+    /// If the rounding failed, usually if the [`Duration`] contained within the [`Precision`] is not usable during
+    /// rounding, which can happen if it is negative, or if it's too long.
     fn try_precise_bounds(&self, precision: Precision) -> Result<AbsoluteBounds, RoundingError> {
         self.try_precise_bounds_with_different_precision(precision, precision)
     }
 
+    /// Precises the start and end bound with different precisions for both of them
+    /// 
+    /// # Errors
+    /// 
+    /// If the rounding failed, usually if the [`Duration`] contained within the [`Precision`] is not usable during
+    /// rounding, which can happen if it is negative, or if it's too long.
     fn try_precise_bounds_with_different_precision(
         &self,
         precision_start: Precision,
@@ -97,24 +122,8 @@ impl<T: HasAbsoluteBounds> TryPreciseAbsoluteBounds for T {
     }
 }
 
-/// Errors that can occur when using [`Precision::try_precise_interval`]
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum IntervalPrecisionError {
-    /// The given interval was relative
-    ///
-    /// Therefore, since a relative interval has no concrete times, they cannot be rounded/precised.
-    RelativeInterval,
-    /// The given interval didn't have defined bounds
-    ///
-    /// That happens with [open intervals](crate::intervals::interval::OpenInterval)
-    /// and [empty intervals](crate::intervals::interval::EmptyInterval).
-    IntervalWithoutBounds,
-    /// Rounding a time produced a [`RoundingError`] from [`chrono`]
-    RoundingError(RoundingError),
-}
-
 /// Where the given time was found relative to a time interval
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum TimeContainmentPosition {
     /// The given time was found before the time interval's beginning
     OutsideBefore,
@@ -163,10 +172,10 @@ impl TimeContainmentPosition {
     }
 }
 
-/// Same as [`ContainmentPosition`] but without information about bound inclusivity
+/// Same as [`TimeContainmentPosition`] but without information about bound inclusivity
 ///
 /// Used for methods that resolve ambiguities caused by bound inclusivity.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum SimpleTimeContainmentPosition {
     /// See [`ContainmentPosition::OutsideBefore`]
     OutsideBefore,
@@ -182,19 +191,10 @@ pub enum SimpleTimeContainmentPosition {
     Inside,
 }
 
-/// Errors that can happen when computing the containment position of some time inside an interval
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum TimeContainmentPositionError {
-    /// The interval is relative, therefore we can't determine the containment position of the given time
-    RelativeInterval,
-    /// The interval was malformed, therefore we can't determine the containment position of the given time safely
-    MalformedInterval,
-}
-
-/// Different rule sets for determining whether different [`ContainmentPosition`]s are considered as containing or not.
+/// Different rule sets for determining whether different [`TimeContainmentPosition`]s are considered as containing or not.
 ///
-/// See [`Interval::contains_using_rule_set`] for more.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+/// See [`CanPositionTimeContainment::contains`] for more.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum TimeContainmentRuleSet {
     /// Strict rule set
     ///
@@ -250,8 +250,11 @@ fn lenient_containment_rule_set_disambiguation(
     }
 }
 
-/// All rules for containment by converting a [`SimpleContainmentPosition`] into a [`bool`]
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+/// Time containment rules used as the reference for the predefined decisions
+pub const SIMPLE_TIME_CONTAINMENT_RULES: [TimeContainmentRule; 0] = [];
+
+/// All rules for containment by converting a [`SimpleTimeContainmentPosition`] into a [`bool`]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum TimeContainmentRule {
     /// Doesn't count as contained when the time is on the start of the interval
     DenyOnStart,
@@ -312,8 +315,8 @@ fn deny_on_bounds_containment_rule_counts_as_contained(
 
 /// Where the current time interval was found relative to the other time interval
 ///
-/// See [`Interval::overlap_position`] for more information
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+/// See [`CanPositionOverlap::overlap_position`] for more information
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum OverlapPosition {
     /// The current time interval was found before the given other time interval
     OutsideBefore,
@@ -444,7 +447,7 @@ impl OverlapPosition {
 /// Same as [`OverlapPosition`] but without information about bound inclusivity
 ///
 /// Used for methods that resolve ambiguities caused by bound inclusivity.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum SimpleOverlapPosition {
     /// See [`OverlapPosition::OutsideBefore`]
     OutsideBefore,
@@ -476,19 +479,10 @@ pub enum SimpleOverlapPosition {
     Contains,
 }
 
-/// Errors that can happen when computing the overlap position of two intervals
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum OverlapPositionError {
-    /// One interval was relative, therefore we can't determine the overlap position of the given time
-    RelativeInterval,
-    /// One interval was malformed, therefore we can't determine the overlap position of the given time safely
-    MalformedInterval,
-}
-
 /// Different rule sets for determining whether different [`OverlapPosition`]s are considered as overlapping or not.
 ///
 /// See [`Interval::overlaps_using_rule_set`] for more.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum OverlapRuleSet {
     /// Strict rule set
     ///
@@ -736,8 +730,10 @@ fn very_lenient_overlap_rule_set_disambiguation(overlap_position: OverlapPositio
     overlap_position.to_simple()
 }
 
+pub const SIMPLE_OVERLAP_RULES: [OverlapRule; 1] = [OverlapRule::DenyAdjacency];
+
 /// All rules for overlapping by converting a [`SimpleOverlapPosition`] into a [`bool`]
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum OverlapRule {
     /// Counts adjacent / "touching" intervals as overlapping
     AllowAdjacency,
@@ -812,6 +808,7 @@ fn allow_future_adjacency_overlap_rules_counts_as_overlap(simple_overlap_positio
     )
 }
 
+/// Capacity to position where a given time is contained in an interval
 pub trait CanPositionTimeContainment {
     /// Error type if the time containment positioning failed
     type Error;
@@ -827,6 +824,11 @@ pub trait CanPositionTimeContainment {
     /// receiver make the call on whether it counts or not.
     ///
     /// This way, we can guarantee maximum flexibility of this process.
+    /// 
+    /// # Errors
+    /// 
+    /// If this process is fallible in a given implementor,
+    /// they can use the associated type [`Error`](CanPositionTimeContainment::Error).
     fn time_containment_position(&self, time: DateTime<Utc>) -> Result<TimeContainmentPosition, Self::Error>;
 
     /// Returns the simple containment position of the given time using a given [containment rule set](TimeContainmentRuleSet)
@@ -834,12 +836,9 @@ pub trait CanPositionTimeContainment {
     /// See [`CanPositionTimeContainment::time_containment_position`] for more details about containment position.
     ///
     /// # Errors
-    ///
-    /// - Returns [`RelativeInterval`](TimeContainmentPositionError::RelativeInterval) if the interval the operation
-    ///   is done on is relative
-    /// - Returns [`MalformedInterval`](TimeContainmentPositionError::MalformedInterval) if the interval is malformed
-    ///   (see [`ClosedAbsoluteInterval::is_malformed`](crate::intervals::interval::ClosedAbsoluteInterval::is_malformed))
-    #[must_use]
+    /// 
+    /// If this process is fallible in a given implementor,
+    /// they can use the associated type [`Error`](CanPositionTimeContainment::Error).
     fn simple_time_containment_position(
         &self,
         time: DateTime<Utc>,
@@ -863,7 +862,7 @@ pub trait CanPositionTimeContainment {
     /// If you want even more granular control, see [`CanPositionTimeContainment::contains_using_simple`].
     #[must_use]
     fn simple_contains(&self, time: DateTime<Utc>) -> bool {
-        self.contains(time, TimeContainmentRuleSet::Strict, [])
+        self.contains(time, TimeContainmentRuleSet::Strict, &SIMPLE_TIME_CONTAINMENT_RULES)
     }
 
     /// Returns whether the given time is contained in the interval using the given [containment rules](`TimeContainmentRule`)
@@ -882,12 +881,10 @@ pub trait CanPositionTimeContainment {
     ///
     /// If you want extremely granular control over what counts as contained, see [`CanPositionTimeContainment::contains_using`].
     #[must_use]
-    fn contains(
-        &self,
-        time: DateTime<Utc>,
-        rule_set: TimeContainmentRuleSet,
-        rules: impl IntoIterator<Item = TimeContainmentRule>,
-    ) -> bool {
+    fn contains<'a, RI>(&self, time: DateTime<Utc>, rule_set: TimeContainmentRuleSet, rules: &'a RI) -> bool
+    where
+        &'a RI: IntoIterator<Item = &'a TimeContainmentRule>,
+    {
         self.simple_time_containment_position(time, rule_set)
             .map(|simple_containment_position| {
                 rules
@@ -985,6 +982,7 @@ impl<T: HasAbsoluteBounds> CanPositionTimeContainment for T {
     }
 }
 
+/// Capacity to position an overlap between two intervals
 pub trait CanPositionOverlap {
     /// Error type if the overlap positioning failed
     type Error;
@@ -1021,11 +1019,21 @@ pub trait CanPositionOverlap {
     /// of each tuple will be [`None`].
     /// In the case of a pair of open intervals being compared, since they have no bounds but still are equal, all
     /// elements will be [`None`].
+    /// 
+    /// # Errors
+    /// 
+    /// If this process is fallible in a given implementor,
+    /// they can use the associated type [`Error`](CanPositionOverlap::Error).
     fn overlap_position(&self, other: &Self) -> Result<OverlapPosition, Self::Error>;
 
     /// Returns the simple overlap position of the given interval using a given rule set
     ///
     /// See [`CanPositionOverlap::overlap_position`] for more details about overlap position.
+    /// 
+    /// # Errors
+    /// 
+    /// If this process is fallible in a given implementor,
+    /// they can use the associated type [`Error`](CanPositionOverlap::Error).
     fn simple_overlap_position(
         &self,
         other: &Self,
@@ -1050,7 +1058,7 @@ pub trait CanPositionOverlap {
     /// If you want even more granular control, see [`CanPositionOverlap::overlaps_using_simple`].
     #[must_use]
     fn simple_overlaps(&self, other: &Self) -> bool {
-        self.overlaps(other, OverlapRuleSet::Strict, [OverlapRule::DenyAdjacency])
+        self.overlaps(other, OverlapRuleSet::Strict, &SIMPLE_OVERLAP_RULES)
     }
 
     /// Returns whether the given other interval overlaps the current one using the given [overlap rules](`OverlapRule`)
@@ -1069,7 +1077,10 @@ pub trait CanPositionOverlap {
     ///
     /// If you want extremely granular control over what counts as overlap, see [`CanPositionOverlap::overlaps_using`].
     #[must_use]
-    fn overlaps(&self, other: &Self, rule_set: OverlapRuleSet, rules: impl IntoIterator<Item = OverlapRule>) -> bool {
+    fn overlaps<'a, RI>(&self, other: &Self, rule_set: OverlapRuleSet, rules: &'a RI) -> bool
+    where
+        &'a RI: IntoIterator<Item = &'a OverlapRule>,
+    {
         self.simple_overlap_position(other, rule_set)
             .map(|simple_overlap_position| {
                 rules
@@ -1127,10 +1138,6 @@ impl<T: HasAbsoluteBounds> CanPositionOverlap for T {
     type Error = ();
 
     fn overlap_position(&self, other: &Self) -> Result<OverlapPosition, Self::Error> {
-        type StartB = AbsoluteStartBound;
-        type EndB = AbsoluteEndBound;
-        type OP = OverlapPosition;
-
         if self.is_empty() || other.is_empty() {
             return Ok(OverlapPosition::Outside);
         }
@@ -1140,243 +1147,221 @@ impl<T: HasAbsoluteBounds> CanPositionOverlap for T {
         let other_start = other.abs_start().unwrap();
         let other_end = other.abs_end().unwrap();
 
-        let overlap_position = match ((self_start, self_end), (other_start, other_end)) {
-            ((StartB::InfinitePast, EndB::InfiniteFuture), (StartB::InfinitePast, EndB::InfiniteFuture)) => {
-                OP::Equal((None, None), (None, None))
-            },
-            ((StartB::InfinitePast, EndB::InfiniteFuture), (StartB::InfinitePast, EndB::Finite(..))) => {
-                OP::ContainsAndSameStart(None, None)
-            },
-            ((StartB::InfinitePast, EndB::InfiniteFuture), (StartB::Finite(..), EndB::InfiniteFuture)) => {
-                OP::ContainsAndSameEnd(None, None)
-            },
-            ((StartB::InfinitePast, EndB::InfiniteFuture), _) => OP::Contains,
-            ((StartB::InfinitePast, EndB::Finite(..)), (StartB::InfinitePast, EndB::InfiniteFuture)) => {
-                OP::InsideAndSameStart(None, None)
-            },
-            ((StartB::Finite(..), EndB::InfiniteFuture), (StartB::InfinitePast, EndB::InfiniteFuture)) => {
-                OP::InsideAndSameEnd(None, None)
-            },
-            (_, (StartB::InfinitePast, EndB::InfiniteFuture)) => OP::Inside,
-            (
-                (StartB::InfinitePast, EndB::Finite(ref og_time, og_inclusivity)),
-                (StartB::InfinitePast, EndB::Finite(ref other_time, other_inclusivity)),
-            ) => match og_time.cmp(other_time) {
-                Ordering::Less => OP::InsideAndSameStart(None, None),
-                Ordering::Equal => OP::Equal((None, Some(og_inclusivity)), (None, Some(other_inclusivity))),
-                Ordering::Greater => OP::ContainsAndSameStart(None, None),
-            },
-            (
-                (StartB::Finite(ref og_time, og_inclusivity), EndB::InfiniteFuture),
-                (StartB::Finite(ref other_time, other_inclusivity), EndB::InfiniteFuture),
-            ) => match og_time.cmp(other_time) {
-                Ordering::Less => OP::ContainsAndSameEnd(None, None),
-                Ordering::Equal => OP::Equal((Some(og_inclusivity), None), (Some(other_inclusivity), None)),
-                Ordering::Greater => OP::InsideAndSameEnd(None, None),
-            },
-            (
-                (StartB::InfinitePast, EndB::Finite(ref og_time, og_inclusivity)),
-                (StartB::Finite(ref other_time, other_inclusivity), EndB::InfiniteFuture),
-            ) => match og_time.cmp(other_time) {
-                Ordering::Less => OP::OutsideBefore,
-                Ordering::Equal => OP::OnStart(og_inclusivity, other_inclusivity),
-                Ordering::Greater => OP::CrossesStart,
-            },
-            (
-                (StartB::Finite(ref og_time, og_inclusivity), EndB::InfiniteFuture),
-                (StartB::InfinitePast, EndB::Finite(ref other_time, other_inclusivity)),
-            ) => match og_time.cmp(other_time) {
-                Ordering::Less => OP::CrossesStart,
-                Ordering::Equal => OP::OnEnd(og_inclusivity, other_inclusivity),
-                Ordering::Greater => OP::OutsideAfter,
-            },
-            (
-                (StartB::InfinitePast, EndB::Finite(ref ref_time, ref_inclusivity)),
-                (
-                    StartB::Finite(ref other_start_time, other_start_inclusivity),
-                    EndB::Finite(ref other_end_time, other_end_inclusivity),
-                ),
-            ) => overlap_position_half_open_past_closed(
-                ref_time,
-                ref_inclusivity,
-                other_start_time,
-                other_start_inclusivity,
-                other_end_time,
-                other_end_inclusivity,
-            ),
-            (
-                (StartB::Finite(ref ref_time, ref_inclusivity), EndB::InfiniteFuture),
-                (
-                    StartB::Finite(ref other_start_time, other_start_inclusivity),
-                    EndB::Finite(ref other_end_time, other_end_inclusivity),
-                ),
-            ) => overlap_position_half_open_future_closed(
-                ref_time,
-                ref_inclusivity,
-                other_start_time,
-                other_start_inclusivity,
-                other_end_time,
-                other_end_inclusivity,
-            ),
-            (
-                (
-                    StartB::Finite(ref og_start_time, og_start_inclusivity),
-                    EndB::Finite(ref og_end_time, og_end_inclusivity),
-                ),
-                (StartB::InfinitePast, EndB::Finite(ref ref_time, ref_inclusivity)),
-            ) => overlap_position_closed_half_open_past(
-                og_start_time,
-                og_start_inclusivity,
-                og_end_time,
-                og_end_inclusivity,
-                ref_time,
-                ref_inclusivity,
-            ),
-            (
-                (
-                    StartB::Finite(ref og_start_time, og_start_inclusivity),
-                    EndB::Finite(ref og_end_time, og_end_inclusivity),
-                ),
-                (StartB::Finite(ref ref_time, ref_inclusivity), EndB::InfiniteFuture),
-            ) => overlap_position_closed_half_open_future(
-                og_start_time,
-                og_start_inclusivity,
-                og_end_time,
-                og_end_inclusivity,
-                ref_time,
-                ref_inclusivity,
-            ),
-            (
-                (
-                    StartB::Finite(ref og_start_time, og_start_inclusivity),
-                    EndB::Finite(ref og_end_time, og_end_inclusivity),
-                ),
-                (
-                    StartB::Finite(ref other_start_time, other_start_inclusivity),
-                    EndB::Finite(ref other_end_time, other_end_inclusivity),
-                ),
-            ) => overlap_position_closed_pair(
-                og_start_time,
-                og_start_inclusivity,
-                og_end_time,
-                og_end_inclusivity,
-                other_start_time,
-                other_start_inclusivity,
-                other_end_time,
-                other_end_inclusivity,
-            ),
-        };
+        let overlap_position = overlap_position_bounds((self_start, self_end), (other_start, other_end));
 
         Ok(overlap_position)
     }
 }
 
+// Can't really make this function shorter
+#[allow(clippy::too_many_lines)]
+fn overlap_position_bounds(og: (AbsoluteStartBound, AbsoluteEndBound), other: (AbsoluteStartBound, AbsoluteEndBound)) -> OverlapPosition {
+    type StartB = AbsoluteStartBound;
+    type EndB = AbsoluteEndBound;
+    type OP = OverlapPosition;
+    
+    match (og, other) {
+        ((StartB::InfinitePast, EndB::InfiniteFuture), (StartB::InfinitePast, EndB::InfiniteFuture)) => {
+            OP::Equal((None, None), (None, None))
+        },
+        ((StartB::InfinitePast, EndB::InfiniteFuture), (StartB::InfinitePast, EndB::Finite(..))) => {
+            OP::ContainsAndSameStart(None, None)
+        },
+        ((StartB::InfinitePast, EndB::InfiniteFuture), (StartB::Finite(..), EndB::InfiniteFuture)) => {
+            OP::ContainsAndSameEnd(None, None)
+        },
+        ((StartB::InfinitePast, EndB::InfiniteFuture), _) => OP::Contains,
+        ((StartB::InfinitePast, EndB::Finite(..)), (StartB::InfinitePast, EndB::InfiniteFuture)) => {
+            OP::InsideAndSameStart(None, None)
+        },
+        ((StartB::Finite(..), EndB::InfiniteFuture), (StartB::InfinitePast, EndB::InfiniteFuture)) => {
+            OP::InsideAndSameEnd(None, None)
+        },
+        (_, (StartB::InfinitePast, EndB::InfiniteFuture)) => OP::Inside,
+        (
+            (StartB::InfinitePast, EndB::Finite(ref og_time, og_inclusivity)),
+            (StartB::InfinitePast, EndB::Finite(ref other_time, other_inclusivity)),
+        ) => match og_time.cmp(other_time) {
+            Ordering::Less => OP::InsideAndSameStart(None, None),
+            Ordering::Equal => OP::Equal((None, Some(og_inclusivity)), (None, Some(other_inclusivity))),
+            Ordering::Greater => OP::ContainsAndSameStart(None, None),
+        },
+        (
+            (StartB::Finite(ref og_time, og_inclusivity), EndB::InfiniteFuture),
+            (StartB::Finite(ref other_time, other_inclusivity), EndB::InfiniteFuture),
+        ) => match og_time.cmp(other_time) {
+            Ordering::Less => OP::ContainsAndSameEnd(None, None),
+            Ordering::Equal => OP::Equal((Some(og_inclusivity), None), (Some(other_inclusivity), None)),
+            Ordering::Greater => OP::InsideAndSameEnd(None, None),
+        },
+        (
+            (StartB::InfinitePast, EndB::Finite(ref og_time, og_inclusivity)),
+            (StartB::Finite(ref other_time, other_inclusivity), EndB::InfiniteFuture),
+        ) => match og_time.cmp(other_time) {
+            Ordering::Less => OP::OutsideBefore,
+            Ordering::Equal => OP::OnStart(og_inclusivity, other_inclusivity),
+            Ordering::Greater => OP::CrossesStart,
+        },
+        (
+            (StartB::Finite(ref og_time, og_inclusivity), EndB::InfiniteFuture),
+            (StartB::InfinitePast, EndB::Finite(ref other_time, other_inclusivity)),
+        ) => match og_time.cmp(other_time) {
+            Ordering::Less => OP::CrossesStart,
+            Ordering::Equal => OP::OnEnd(og_inclusivity, other_inclusivity),
+            Ordering::Greater => OP::OutsideAfter,
+        },
+        (
+            (StartB::InfinitePast, EndB::Finite(ref ref_time, ref_inclusivity)),
+            (
+                StartB::Finite(ref other_start_time, other_start_inclusivity),
+                EndB::Finite(ref other_end_time, other_end_inclusivity),
+            ),
+        ) => overlap_position_half_open_past_closed(
+            (ref_time, ref_inclusivity),
+            (other_start_time, other_start_inclusivity),
+            (other_end_time, other_end_inclusivity),
+        ),
+        (
+            (StartB::Finite(ref ref_time, ref_inclusivity), EndB::InfiniteFuture),
+            (
+                StartB::Finite(ref other_start_time, other_start_inclusivity),
+                EndB::Finite(ref other_end_time, other_end_inclusivity),
+            ),
+        ) => overlap_position_half_open_future_closed(
+            (ref_time, ref_inclusivity),
+            (other_start_time, other_start_inclusivity),
+            (other_end_time, other_end_inclusivity),
+        ),
+        (
+            (
+                StartB::Finite(ref og_start_time, og_start_inclusivity),
+                EndB::Finite(ref og_end_time, og_end_inclusivity),
+            ),
+            (StartB::InfinitePast, EndB::Finite(ref ref_time, ref_inclusivity)),
+        ) => overlap_position_closed_half_open_past(
+            (og_start_time, og_start_inclusivity),
+            (og_end_time, og_end_inclusivity),
+            (ref_time, ref_inclusivity),
+        ),
+        (
+            (
+                StartB::Finite(ref og_start_time, og_start_inclusivity),
+                EndB::Finite(ref og_end_time, og_end_inclusivity),
+            ),
+            (StartB::Finite(ref ref_time, ref_inclusivity), EndB::InfiniteFuture),
+        ) => overlap_position_closed_half_open_future(
+            (og_start_time, og_start_inclusivity),
+            (og_end_time, og_end_inclusivity),
+            (ref_time, ref_inclusivity),
+        ),
+        (
+            (
+                StartB::Finite(ref og_start_time, og_start_inclusivity),
+                EndB::Finite(ref og_end_time, og_end_inclusivity),
+            ),
+            (
+                StartB::Finite(ref other_start_time, other_start_inclusivity),
+                EndB::Finite(ref other_end_time, other_end_inclusivity),
+            ),
+        ) => overlap_position_closed_pair(
+            (og_start_time, og_start_inclusivity),
+            (og_end_time, og_end_inclusivity),
+            (other_start_time, other_start_inclusivity),
+            (other_end_time, other_end_inclusivity),
+        ),
+    }
+}
+
 fn overlap_position_half_open_past_closed(
-    ref_time: &DateTime<Utc>,
-    ref_inclusivity: BoundInclusivity,
-    other_start_time: &DateTime<Utc>,
-    other_start_inclusivity: BoundInclusivity,
-    other_end_time: &DateTime<Utc>,
-    other_end_inclusivity: BoundInclusivity,
+    ref_bound: (&DateTime<Utc>, BoundInclusivity),
+    other_start: (&DateTime<Utc>, BoundInclusivity),
+    other_end: (&DateTime<Utc>, BoundInclusivity),
 ) -> OverlapPosition {
-    match (ref_time.cmp(other_start_time), ref_time.cmp(other_end_time)) {
+    match (ref_bound.0.cmp(other_start.0), ref_bound.0.cmp(other_end.0)) {
         (Ordering::Less, _) => OverlapPosition::OutsideBefore,
-        (Ordering::Equal, _) => OverlapPosition::OnStart(ref_inclusivity, other_start_inclusivity),
+        (Ordering::Equal, _) => OverlapPosition::OnStart(ref_bound.1, other_start.1),
         (Ordering::Greater, Ordering::Less) => OverlapPosition::CrossesStart,
-        (_, Ordering::Equal) => OverlapPosition::ContainsAndSameEnd(Some(ref_inclusivity), Some(other_end_inclusivity)),
+        (_, Ordering::Equal) => OverlapPosition::ContainsAndSameEnd(Some(ref_bound.1), Some(other_end.1)),
         (_, Ordering::Greater) => OverlapPosition::Contains,
     }
 }
 
 fn overlap_position_half_open_future_closed(
-    ref_time: &DateTime<Utc>,
-    ref_inclusivity: BoundInclusivity,
-    other_start_time: &DateTime<Utc>,
-    other_start_inclusivity: BoundInclusivity,
-    other_end_time: &DateTime<Utc>,
-    other_end_inclusivity: BoundInclusivity,
+    ref_bound: (&DateTime<Utc>, BoundInclusivity),
+    other_start: (&DateTime<Utc>, BoundInclusivity),
+    other_end: (&DateTime<Utc>, BoundInclusivity),
 ) -> OverlapPosition {
-    match (ref_time.cmp(other_start_time), ref_time.cmp(other_end_time)) {
+    match (ref_bound.0.cmp(other_start.0), ref_bound.0.cmp(other_end.0)) {
         (Ordering::Less, _) => OverlapPosition::Contains,
         (Ordering::Equal, _) => {
-            OverlapPosition::ContainsAndSameStart(Some(ref_inclusivity), Some(other_start_inclusivity))
+            OverlapPosition::ContainsAndSameStart(Some(ref_bound.1), Some(other_start.1))
         },
         (Ordering::Greater, Ordering::Less) => OverlapPosition::CrossesEnd,
-        (_, Ordering::Equal) => OverlapPosition::OnEnd(ref_inclusivity, other_end_inclusivity),
+        (_, Ordering::Equal) => OverlapPosition::OnEnd(ref_bound.1, other_end.1),
         (_, Ordering::Greater) => OverlapPosition::OutsideAfter,
     }
 }
 
 fn overlap_position_closed_half_open_past(
-    og_start_time: &DateTime<Utc>,
-    og_start_inclusivity: BoundInclusivity,
-    og_end_time: &DateTime<Utc>,
-    og_end_inclusivity: BoundInclusivity,
-    ref_time: &DateTime<Utc>,
-    ref_inclusivity: BoundInclusivity,
+    og_start: (&DateTime<Utc>, BoundInclusivity),
+    og_end: (&DateTime<Utc>, BoundInclusivity),
+    ref_bound: (&DateTime<Utc>, BoundInclusivity),
 ) -> OverlapPosition {
-    match (ref_time.cmp(og_start_time), ref_time.cmp(og_end_time)) {
+    match (ref_bound.0.cmp(og_start.0), ref_bound.0.cmp(og_end.0)) {
         (Ordering::Less, _) => OverlapPosition::OutsideAfter,
-        (Ordering::Equal, _) => OverlapPosition::OnEnd(og_start_inclusivity, ref_inclusivity),
+        (Ordering::Equal, _) => OverlapPosition::OnEnd(og_start.1, ref_bound.1),
         (Ordering::Greater, Ordering::Less) => OverlapPosition::CrossesEnd,
-        (_, Ordering::Equal) => OverlapPosition::InsideAndSameEnd(Some(og_end_inclusivity), Some(ref_inclusivity)),
+        (_, Ordering::Equal) => OverlapPosition::InsideAndSameEnd(Some(og_end.1), Some(ref_bound.1)),
         (_, Ordering::Greater) => OverlapPosition::Inside,
     }
 }
 
 fn overlap_position_closed_half_open_future(
-    og_start_time: &DateTime<Utc>,
-    og_start_inclusivity: BoundInclusivity,
-    og_end_time: &DateTime<Utc>,
-    og_end_inclusivity: BoundInclusivity,
-    ref_time: &DateTime<Utc>,
-    ref_inclusivity: BoundInclusivity,
+    og_start: (&DateTime<Utc>, BoundInclusivity),
+    og_end: (&DateTime<Utc>, BoundInclusivity),
+    ref_bound: (&DateTime<Utc>, BoundInclusivity),
 ) -> OverlapPosition {
-    match (ref_time.cmp(og_start_time), ref_time.cmp(og_end_time)) {
+    match (ref_bound.0.cmp(og_start.0), ref_bound.0.cmp(og_end.0)) {
         (Ordering::Less, _) => OverlapPosition::Inside,
-        (Ordering::Equal, _) => OverlapPosition::InsideAndSameStart(Some(og_start_inclusivity), Some(ref_inclusivity)),
+        (Ordering::Equal, _) => OverlapPosition::InsideAndSameStart(Some(og_start.1), Some(ref_bound.1)),
         (Ordering::Greater, Ordering::Less) => OverlapPosition::CrossesStart,
-        (_, Ordering::Equal) => OverlapPosition::OnStart(og_end_inclusivity, ref_inclusivity),
+        (_, Ordering::Equal) => OverlapPosition::OnStart(og_end.1, ref_bound.1),
         (_, Ordering::Greater) => OverlapPosition::OutsideBefore,
     }
 }
 
 fn overlap_position_closed_pair(
-    og_start_time: &DateTime<Utc>,
-    og_start_inclusivity: BoundInclusivity,
-    og_end_time: &DateTime<Utc>,
-    og_end_inclusivity: BoundInclusivity,
-    other_start_time: &DateTime<Utc>,
-    other_start_inclusivity: BoundInclusivity,
-    other_end_time: &DateTime<Utc>,
-    other_end_inclusivity: BoundInclusivity,
+    og_start: (&DateTime<Utc>, BoundInclusivity),
+    og_end: (&DateTime<Utc>, BoundInclusivity),
+    other_start: (&DateTime<Utc>, BoundInclusivity),
+    other_end: (&DateTime<Utc>, BoundInclusivity),
 ) -> OverlapPosition {
-    let og_start_cmp = (og_start_time.cmp(other_start_time), og_start_time.cmp(other_end_time));
-    let og_end_cmp = (og_end_time.cmp(other_start_time), og_end_time.cmp(other_end_time));
+    let og_start_cmp = (og_start.0.cmp(other_start.0), og_start.0.cmp(other_end.0));
+    let og_end_cmp = (og_end.0.cmp(other_start.0), og_end.0.cmp(other_end.0));
 
     match (og_start_cmp, og_end_cmp) {
         (_, (Ordering::Less, _)) => OverlapPosition::OutsideBefore,
         ((_, Ordering::Greater), _) => OverlapPosition::OutsideAfter,
-        (_, (Ordering::Equal, _)) => OverlapPosition::OnStart(og_end_inclusivity, other_start_inclusivity),
-        ((_, Ordering::Equal), _) => OverlapPosition::OnEnd(og_start_inclusivity, other_end_inclusivity),
+        (_, (Ordering::Equal, _)) => OverlapPosition::OnStart(og_end.1, other_start.1),
+        ((_, Ordering::Equal), _) => OverlapPosition::OnEnd(og_start.1, other_end.1),
         ((Ordering::Less, _), (Ordering::Greater, Ordering::Less)) => OverlapPosition::CrossesStart,
         ((Ordering::Greater, Ordering::Less), (_, Ordering::Greater)) => OverlapPosition::CrossesEnd,
         ((Ordering::Greater, _), (_, Ordering::Less)) => OverlapPosition::Inside,
         ((Ordering::Equal, _), (_, Ordering::Less)) => {
-            OverlapPosition::InsideAndSameStart(Some(og_start_inclusivity), Some(other_start_inclusivity))
+            OverlapPosition::InsideAndSameStart(Some(og_start.1), Some(other_start.1))
         },
         ((Ordering::Greater, _), (_, Ordering::Equal)) => {
-            OverlapPosition::InsideAndSameEnd(Some(og_end_inclusivity), Some(other_end_inclusivity))
+            OverlapPosition::InsideAndSameEnd(Some(og_end.1), Some(other_end.1))
         },
         ((Ordering::Equal, _), (_, Ordering::Equal)) => OverlapPosition::Equal(
-            (Some(og_start_inclusivity), Some(og_end_inclusivity)),
-            (Some(other_start_inclusivity), Some(other_end_inclusivity)),
+            (Some(og_start.1), Some(og_end.1)),
+            (Some(other_start.1), Some(other_end.1)),
         ),
         ((Ordering::Equal, _), (_, Ordering::Greater)) => {
-            OverlapPosition::ContainsAndSameStart(Some(og_start_inclusivity), Some(other_start_inclusivity))
+            OverlapPosition::ContainsAndSameStart(Some(og_start.1), Some(other_start.1))
         },
         ((Ordering::Less, _), (_, Ordering::Equal)) => {
-            OverlapPosition::ContainsAndSameEnd(Some(og_end_inclusivity), Some(other_end_inclusivity))
+            OverlapPosition::ContainsAndSameEnd(Some(og_end.1), Some(other_end.1))
         },
         ((Ordering::Less, _), (_, Ordering::Greater)) => OverlapPosition::Contains,
     }
@@ -1397,6 +1382,11 @@ pub trait Extensible {
     /// If both intervals are empty, the method just returns an empty interval.
     ///
     /// If one of the intervals is empty, the method just return a clone of the other non-empty interval.
+    /// 
+    /// # Errors
+    /// 
+    /// If this process is fallible in a given implementor,
+    /// they can use the associated type [`Error`](Extensible::Error).
     fn extend(&self, other: &Self) -> Result<AbsoluteInterval, Self::Error>;
 }
 

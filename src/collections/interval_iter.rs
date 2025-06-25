@@ -6,35 +6,16 @@
 //! For example, set operations, like unions, intersections, etc. But also operations like using a certain precision
 //! to re-precise interval times.
 
-use std::collections::VecDeque;
+use std::iter::Peekable;
 
-use crate::intervals::ops::{IntervalExtensionError, OverlapRule, OverlapRuleSet};
+use chrono::{DateTime, Utc};
 
-/// Simple iterator type containing [`Interval`]s
-pub struct Intervals(VecDeque<Interval>);
-
-impl Iterator for Intervals {
-    type Item = Interval;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.0.pop_back()
-    }
-}
-
-impl DoubleEndedIterator for Intervals {
-    fn next_back(&mut self) -> Option<Self::Item> {
-        self.0.pop_front()
-    }
-}
-
-impl FromIterator<Interval> for Intervals {
-    fn from_iter<I>(iter: I) -> Self
-    where
-        I: IntoIterator<Item = Interval>,
-    {
-        Intervals(iter.into_iter().collect::<VecDeque<Interval>>())
-    }
-}
+use crate::intervals::interval::{ToAbsolute, ToRelative};
+use crate::intervals::ops::{
+    CanPositionOverlap, Extensible, OverlapRule, OverlapRuleSet, Precision, SIMPLE_OVERLAP_RULES,
+    TryPreciseAbsoluteBounds,
+};
+use crate::intervals::{AbsoluteInterval, RelativeInterval};
 
 // TODO: This should contain overlap rules and a function etc. but those should be split into different kinds of Union
 // structures. Also, since by doing that they would become specialized for intervals, the module should be renamed
@@ -71,324 +52,452 @@ impl FromIterator<Interval> for Intervals {
 // that is unsorted or sorted non-chronologically, they can choose to use the Union iterator. But if they need
 // a fast way of uniting a list of intervals that is sorted chronologically, then they can call such methods.
 
-/// Iterator trait to allow composition of multiple interval operations
-///
-/// This is to extend [`Iterator`] in the same way that it works: if you create a map from an iterator,
-/// you are still able to call methods like `filter` or `collect` on them.
-///
-/// This trait seeks to extend it to include interval operations on all interval operation structures.
-pub trait IntervalIterator: Iterator {
-    fn simple_union(self) -> SimpleUnion<Self>
-    where
-        Self: Sized,
-    {
+// / Iterator trait to allow composition of multiple interval operations
+// /
+// / This is to extend [`Iterator`] in the same way that it works: if you create a map from an iterator,
+// / you are still able to call methods like `filter` or `collect` on them.
+// /
+// / This trait seeks to extend it to include interval operations on all interval operation structures.
+
+pub trait AbsoluteOrRelativeInterval {}
+
+impl AbsoluteOrRelativeInterval for AbsoluteInterval {}
+
+impl AbsoluteOrRelativeInterval for RelativeInterval {}
+
+pub trait RelativeToAbsoluteIntervalIterator: Iterator + Sized {
+    fn to_absolute(self, reference_time: DateTime<Utc>) -> RelativeToAbsolute<Self> {
+        RelativeToAbsolute::new(self, reference_time)
+    }
+}
+
+impl<I> RelativeToAbsoluteIntervalIterator for I where I: Iterator<Item = RelativeInterval> {}
+
+/// Converts relative intervals to absolute intervals
+pub struct RelativeToAbsolute<I> {
+    iter: I,
+    reference_time: DateTime<Utc>,
+}
+
+impl<I> RelativeToAbsolute<I> {
+    pub fn new(iter: I, reference_time: DateTime<Utc>) -> Self {
+        RelativeToAbsolute { iter, reference_time }
+    }
+}
+
+impl<I> Iterator for RelativeToAbsolute<I>
+where
+    I: Iterator<Item = RelativeInterval>,
+{
+    type Item = AbsoluteInterval;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        Some(self.iter.next()?.to_absolute(self.reference_time))
+    }
+}
+
+impl<I> DoubleEndedIterator for RelativeToAbsolute<I>
+where
+    I: DoubleEndedIterator<Item = RelativeInterval>,
+{
+    fn next_back(&mut self) -> Option<Self::Item> {
+        Some(self.iter.next_back()?.to_absolute(self.reference_time))
+    }
+}
+
+pub trait AbsoluteToRelativeIntervalIterator: Iterator + Sized {
+    fn to_relative(self, reference_time: DateTime<Utc>) -> AbsoluteToRelative<Self> {
+        AbsoluteToRelative::new(self, reference_time)
+    }
+}
+
+impl<I> AbsoluteToRelativeIntervalIterator for I where I: Iterator<Item = AbsoluteInterval> {}
+
+/// Converts absolute intervals to relative intervals
+pub struct AbsoluteToRelative<I> {
+    iter: I,
+    reference_time: DateTime<Utc>,
+}
+
+impl<I> AbsoluteToRelative<I> {
+    pub fn new(iter: I, reference_time: DateTime<Utc>) -> Self {
+        AbsoluteToRelative { iter, reference_time }
+    }
+}
+
+impl<I> Iterator for AbsoluteToRelative<I>
+where
+    I: Iterator<Item = AbsoluteInterval>,
+{
+    type Item = RelativeInterval;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        Some(self.iter.next()?.to_relative(self.reference_time))
+    }
+}
+
+impl<I> DoubleEndedIterator for AbsoluteToRelative<I>
+where
+    I: DoubleEndedIterator<Item = AbsoluteInterval>,
+{
+    fn next_back(&mut self) -> Option<Self::Item> {
+        Some(self.iter.next_back()?.to_relative(self.reference_time))
+    }
+}
+
+pub trait PrecisionChangeIntervalIterator: Iterator + Sized {
+    fn change_precision(self, precision: Precision) -> PrecisionChange<Self> {
+        PrecisionChange::new(self, precision, precision)
+    }
+
+    fn change_start_end_precision(self, start_precision: Precision, end_precision: Precision) -> PrecisionChange<Self> {
+        PrecisionChange::new(self, start_precision, end_precision)
+    }
+}
+
+impl<I> PrecisionChangeIntervalIterator for I where I: Iterator<Item = AbsoluteInterval> {}
+
+/// Changes the precision of start end end times
+pub struct PrecisionChange<I> {
+    iter: I,
+    precision_start: Precision,
+    precision_end: Precision,
+}
+
+impl<I> PrecisionChange<I> {
+    pub fn new(iter: I, precision_start: Precision, precision_end: Precision) -> Self {
+        PrecisionChange {
+            iter,
+            precision_start,
+            precision_end,
+        }
+    }
+}
+
+impl<I> Iterator for PrecisionChange<I>
+where
+    I: Iterator<Item = AbsoluteInterval>,
+{
+    type Item = I::Item;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        loop {
+            let bounds_option = self
+                .iter
+                .next()?
+                .try_precise_bounds_with_different_precision(self.precision_start, self.precision_end)
+                .ok();
+
+            if let Some(bounds) = bounds_option {
+                return Some(AbsoluteInterval::from(bounds));
+            }
+        }
+    }
+}
+
+impl<I> DoubleEndedIterator for PrecisionChange<I>
+where
+    I: DoubleEndedIterator<Item = AbsoluteInterval>,
+{
+    fn next_back(&mut self) -> Option<Self::Item> {
+        loop {
+            let bounds_option = self
+                .iter
+                .next_back()?
+                .try_precise_bounds_with_different_precision(self.precision_start, self.precision_end)
+                .ok();
+
+            if let Some(bounds) = bounds_option {
+                return Some(AbsoluteInterval::from(bounds));
+            }
+        }
+    }
+}
+
+pub trait UnitableIntervalIterator: Iterator + Sized {
+    fn simple_union(self) -> SimpleUnion<Peekable<Self>> {
         SimpleUnion::new(self)
     }
 
-    fn union<RI>(self, rule_set: OverlapRuleSet, rules: RI) -> Union<Self, RI>
+    fn union<'a, RI>(self, rule_set: OverlapRuleSet, rules: &'a RI) -> Union<'a, Peekable<Self>, RI>
     where
-        Self: Sized,
-        RI: IntoIterator<Item = OverlapRule> + Clone,
+        &'a RI: IntoIterator<Item = &'a OverlapRule>,
     {
         Union::new(self, rule_set, rules)
     }
 
-    fn union_with<F, E>(self, f: F) -> UnionWith<Self, F>
+    fn union_with<'a, F, E>(self, f: F) -> UnionWith<Peekable<Self>, F>
     where
-        Self: Sized,
-        F: FnMut(Self::Item, Self::Item) -> Result<UnionResult<Self::Item>, E>,
+        Self::Item: 'a,
+        F: FnMut(Self::Item, Self::Item) -> Result<UnionResult<Self::Item, &'a Self::Item>, E>,
     {
         UnionWith::new(self, f)
     }
+}
 
-    fn simple_intersection(self) -> SimpleIntersection<Self>
-    where
-        Self: Sized,
-    {
-        todo!("Intersections of each pair of intervals")
-    }
-
-    fn intersection<RI>(self, rule_set: OverlapRuleSet, rules: RI) -> Intersection<Self, RI>
-    where
-        Self: Sized,
-        RI: IntoIterator<Item = Self::Item>,
-    {
-        todo!()
-    }
-
-    fn intersection_with<F, E>(self, f: F) -> IntersectionWith<Self, F>
-    where
-        Self: Sized,
-        F: FnMut(Self::Item, Self::Item) -> Result<IntersectionResult<Self::Item>, E>,
-    {
-        todo!()
-    }
-
-    fn intersection_with_one(self, interval: Self::Item) -> IntersectionWithOne<Self>
-    where
-        Self: Sized,
-    {
-        todo!()
-    }
-
-    fn difference_with_one(self, interval: Self::Item) -> DifferenceWithOne<Self>
-    where
-        Self: Sized,
-    {
-        todo!()
-    }
-
-    fn difference<J>(self, other: J) -> Difference<Self, J>
-    where
-        Self: Sized,
-        J: IntoIterator<Item = Self::Item>,
-    {
-        todo!()
-    }
-
-    fn difference_next_peer(self) -> DifferenceNextPeer<Self>
-    where
-        Self: Sized,
-    {
-        todo!("takes the next peer as the right-hand side operand for the difference")
-    }
-
-    fn difference_prev_peer(self) -> DifferencePreviousPeer<Self>
-    where
-        Self: Sized,
-    {
-        todo!("takes the previous peer as the right-hand side operand for the difference")
-    }
-
-    fn sym_difference_with_one(self, interval: Self::Item) -> SymmetricDifferenceWithOne<Self>
-    where
-        Self: Sized,
-    {
-        todo!()
-    }
-
-    fn sym_difference<J>(self, other: J) -> SymmetricDifference<Self, J>
-    where
-        Self: Sized,
-        J: IntoIterator<Item = Self::Item>,
-    {
-        todo!()
-    }
-
-    fn sym_difference_peer(self) -> SymmetricDifferencePeer<Self>
-    where
-        Self: Sized,
-    {
-        todo!("symmetric difference between pairs of elements")
-    }
+impl<I> UnitableIntervalIterator for I
+where
+    I: Iterator,
+    I::Item: AbsoluteOrRelativeInterval,
+{
 }
 
 /// Represents the result of a union
 // NOTE: Perhaps move to another place since it's a generic that could be used for other things?
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum UnionResult<T> {
+pub enum UnionResult<U, S> {
     /// Union was successful, the united element is contained within this variant
-    United(T),
+    United(U),
     /// Union was unsuccessful, both elements involved are contained within this variant
-    Separate(T, T),
+    Separate(S, S),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Hash)]
 pub struct SimpleUnion<I> {
     iter: I,
-    last_separate_interval: Option<Interval>,
 }
 
-impl<I> SimpleUnion<I> {
-    /// Creates an instance of [`SimpleUnion`] using the given iterator
+impl<I> SimpleUnion<Peekable<I>>
+where
+    I: Iterator,
+{
     pub fn new(iter: I) -> Self {
         SimpleUnion {
-            iter,
-            last_separate_interval: None,
+            // Instead of using
+            // iter: Union::new(iter, OverlapRuleSet::Strict, &[OverlapRule::DenyAdjacency]),
+            // We use simple_unite_abs_intervals() in the Iterator impl, so that when looking at what the final iterator
+            // is composed of, we just see "SimpleUnion" and not
+            // SimpleUnion<Union<Peekable<I>, &[OverlapRule]>>, which could be confusing
+            iter: iter.peekable(),
         }
     }
 }
 
-impl<I> Iterator for SimpleUnion<I>
+impl<I> Iterator for SimpleUnion<Peekable<I>>
 where
-    I: Iterator<Item = Interval>,
+    I: Iterator<Item = AbsoluteInterval>,
 {
-    type Item = Interval;
+    type Item = I::Item;
 
     fn next(&mut self) -> Option<Self::Item> {
-        // Unite until separate, then finally return the first united interval and process until all intervals are exhausted
-        let mut united_interval: Option<Interval> = self.last_separate_interval.take();
+        let mut united_interval = self.iter.next()?;
 
         loop {
-            let next_interval = self.iter.next()?;
-
-            if united_interval.is_none() {
-                united_interval = Some(next_interval);
-                continue;
-            }
-
-            // Safe unwrap as check for None is present above
-            match simple_unite_intervals(united_interval.as_ref().unwrap(), next_interval) {
-                Ok(UnionResult::United(new_united)) => {
-                    united_interval = Some(new_united);
+            match self.iter.peek() {
+                Some(peeked) => match simple_unite_abs_intervals(&united_interval, peeked) {
+                    Ok(UnionResult::United(united)) => {
+                        united_interval = united;
+                    },
+                    Ok(UnionResult::Separate(..)) | Err(()) => {
+                        return Some(united_interval);
+                    },
                 },
-                Ok(UnionResult::Separate(_, new_basis)) => {
-                    self.last_separate_interval = Some(new_basis);
-                    break;
+                None => {
+                    return Some(united_interval);
                 },
-                Err(_) => break,
             }
         }
-
-        united_interval
     }
 }
 
-impl<I> IntervalIterator for SimpleUnion<I> where I: Iterator<Item = Interval> {}
-
-#[derive(Debug, Clone)]
-pub struct Union<I, RI> {
+#[derive(Debug, Clone, Hash)]
+pub struct Union<'u, I, RI> {
     iter: I,
-    last_separate_interval: Option<Interval>,
     rule_set: OverlapRuleSet,
-    rules: RI,
+    rules: &'u RI,
 }
 
-impl<I, RI> Union<I, RI> {
-    pub fn new(iter: I, rule_set: OverlapRuleSet, rules: RI) -> Self {
+impl<'u, I, RI> Union<'u, Peekable<I>, RI>
+where
+    I: Iterator,
+    &'u RI: IntoIterator<Item = &'u OverlapRule>,
+{
+    pub fn new(iter: I, rule_set: OverlapRuleSet, rules: &'u RI) -> Self {
         Union {
-            iter,
-            last_separate_interval: None,
+            iter: iter.peekable(),
             rule_set,
             rules,
         }
     }
 }
 
-impl<I, RI> Iterator for Union<I, RI>
+impl<'u, I, RI> Iterator for Union<'u, Peekable<I>, RI>
 where
-    I: Iterator<Item = Interval>,
-    RI: IntoIterator<Item = OverlapRule> + Clone,
+    I: Iterator<Item = AbsoluteInterval>,
+    &'u RI: IntoIterator<Item = &'u OverlapRule>,
 {
-    type Item = Interval;
+    type Item = I::Item;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let mut united_interval: Option<Interval> = self.last_separate_interval.take();
+        let mut united_interval = self.iter.next()?;
 
         loop {
-            let next_interval = self.iter.next()?;
-
-            if united_interval.is_none() {
-                united_interval = Some(next_interval);
-                continue;
-            }
-
-            // Safe unwrap of `united_intervals` as check for None is present above
-            // Perhaps the cloning of self.rules is unnecessary, but how can we make it a reference without having
-            // all elements of the iterator as references when the into-iterable object is created?
-            // Perhaps impl IntoIterator<Item = Borrow<Interval>>? idk
-            match unite_intervals(
-                united_interval.as_ref().unwrap(),
-                next_interval,
-                self.rule_set,
-                self.rules.clone(),
-            ) {
-                Ok(UnionResult::United(new_united)) => {
-                    united_interval = Some(new_united);
+            match self.iter.peek() {
+                Some(peeked) => match unite_abs_intervals(&united_interval, peeked, self.rule_set, self.rules) {
+                    Ok(UnionResult::United(united)) => {
+                        united_interval = united;
+                    },
+                    Ok(UnionResult::Separate(..)) | Err(()) => {
+                        return Some(united_interval);
+                    },
                 },
-                Ok(UnionResult::Separate(_, new_basis)) => {
-                    self.last_separate_interval = Some(new_basis);
-                    break;
+                None => {
+                    return Some(united_interval);
                 },
-                Err(_) => break,
             }
         }
-
-        united_interval
     }
-}
-
-impl<I, RI> IntervalIterator for Union<I, RI>
-where
-    I: Iterator<Item = Interval>,
-    RI: IntoIterator<Item = OverlapRule> + Clone,
-{
 }
 
 #[derive(Debug, Clone)]
 pub struct UnionWith<I, F> {
     iter: I,
-    last_separate_interval: Option<Interval>,
     f: F,
 }
 
-impl<I, F> UnionWith<I, F> {
+impl<I, F> UnionWith<Peekable<I>, F>
+where
+    I: Iterator,
+{
     pub fn new(iter: I, f: F) -> Self {
         UnionWith {
-            iter,
-            last_separate_interval: None,
+            iter: iter.peekable(),
             f,
         }
     }
 }
 
-impl<I, F, E> Iterator for UnionWith<I, F>
+impl<I, F> Iterator for UnionWith<Peekable<I>, F>
 where
-    I: Iterator<Item = Interval>,
-    F: Fn(Interval, Interval) -> Result<UnionResult<Interval>, E>,
+    I: Iterator<Item = AbsoluteInterval>,
+    // https://doc.rust-lang.org/nomicon/hrtb.html
+    F: for<'a> Fn(
+        &'a I::Item,
+        &'a I::Item,
+    ) -> Result<UnionResult<I::Item, &'a I::Item>, <I::Item as Extensible>::Error>,
 {
-    type Item = Interval;
+    type Item = I::Item;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let mut united_interval: Option<Interval> = self.last_separate_interval.take();
+        let mut united_interval = self.iter.next()?;
 
         loop {
-            let next_interval = self.iter.next()?;
-
-            if united_interval.is_none() {
-                united_interval = Some(next_interval);
-                continue;
-            }
-
-            // Safe unwrap of `united_intervals` as check for None is present above
-            match (self.f)(united_interval.clone().unwrap(), next_interval) {
-                Ok(UnionResult::United(new_united)) => {
-                    united_interval = Some(new_united);
+            match self.iter.peek() {
+                Some(peeked) => match (self.f)(&united_interval, peeked) {
+                    Ok(UnionResult::United(united)) => {
+                        united_interval = united;
+                    },
+                    Ok(UnionResult::Separate(..)) | Err(()) => {
+                        return Some(united_interval);
+                    },
                 },
-                Ok(UnionResult::Separate(_, new_basis)) => {
-                    self.last_separate_interval = Some(new_basis);
-                    break;
+                None => {
+                    return Some(united_interval);
                 },
-                Err(_) => break,
             }
         }
-
-        united_interval
     }
 }
 
-impl<I, F, E> IntervalIterator for UnionWith<I, F>
+fn simple_unite_abs_intervals<'a>(
+    a: &'a AbsoluteInterval,
+    b: &'a AbsoluteInterval,
+) -> Result<UnionResult<AbsoluteInterval, &'a AbsoluteInterval>, <AbsoluteInterval as Extensible>::Error> {
+    unite_abs_intervals(a, b, OverlapRuleSet::Strict, &SIMPLE_OVERLAP_RULES)
+}
+
+fn unite_abs_intervals<'a, 'b, RI>(
+    a: &'a AbsoluteInterval,
+    b: &'a AbsoluteInterval,
+    rule_set: OverlapRuleSet,
+    rules: &'b RI,
+) -> Result<UnionResult<AbsoluteInterval, &'a AbsoluteInterval>, <AbsoluteInterval as Extensible>::Error>
 where
-    I: Iterator<Item = Interval>,
-    F: Fn(Interval, Interval) -> Result<UnionResult<Interval>, E>,
+    &'b RI: IntoIterator<Item = &'b OverlapRule>,
+{
+    if !a.overlaps(b, rule_set, rules) {
+        return Ok(UnionResult::Separate(a, b));
+    }
+
+    a.extend(b).map(UnionResult::United)
+}
+
+pub trait IntersectableIntervalIterator: Sized {
+    fn simple_intersection(self) -> SimpleIntersection<Self> {
+        todo!("Intersections of each pair of intervals")
+    }
+
+    fn intersection<RI>(self, rule_set: OverlapRuleSet, rules: RI) -> Intersection<Self, RI>
+    where
+        RI: IntoIterator<Item = AbsoluteInterval>,
+    {
+        todo!()
+    }
+
+    fn intersection_with<F, E>(self, f: F) -> IntersectionWith<Self, F>
+    where
+        F: FnMut(AbsoluteInterval, AbsoluteInterval) -> Result<IntersectionResult<AbsoluteInterval>, E>,
+    {
+        todo!()
+    }
+
+    fn intersection_with_one(self, interval: AbsoluteInterval) -> IntersectionWithOne<Self> {
+        todo!()
+    }
+}
+
+impl<I> IntersectableIntervalIterator for I where I: Iterator<Item = AbsoluteInterval> {}
+
+pub trait DifferentiableIntervalIterator: Sized {
+    fn difference_with_one(self, interval: AbsoluteInterval) -> DifferenceWithOne<Self> {
+        todo!()
+    }
+
+    fn difference<J>(self, other: J) -> Difference<Self, J>
+    where
+        J: Iterator<Item = AbsoluteInterval>,
+    {
+        todo!()
+    }
+
+    fn difference_next_peer(self) -> DifferenceNextPeer<Self> {
+        todo!("takes the next peer as the right-hand side operand for the difference")
+    }
+
+    fn difference_prev_peer(self) -> DifferencePreviousPeer<Self> {
+        todo!("takes the previous peer as the right-hand side operand for the difference")
+    }
+}
+
+impl<I> DifferentiableIntervalIterator for I
+where
+    I: Iterator,
+    I::Item: AbsoluteOrRelativeInterval,
 {
 }
 
-fn simple_unite_intervals(a: &Interval, b: Interval) -> Result<UnionResult<Interval>, IntervalExtensionError> {
-    unite_intervals(a, b, OverlapRuleSet::Strict, [OverlapRule::DenyAdjacency])
-}
-
-fn unite_intervals(
-    a: &Interval,
-    b: Interval,
-    rule_set: OverlapRuleSet,
-    rules: impl IntoIterator<Item = OverlapRule>,
-) -> Result<UnionResult<Interval>, IntervalExtensionError> {
-    if !a.overlaps(&b, rule_set, rules) {
-        return Ok(UnionResult::Separate(a.clone(), b));
+pub trait SymmetricallyDifferentiableIntervalIterator: Sized {
+    fn sym_difference_with_one(self, interval: AbsoluteInterval) -> SymmetricDifferenceWithOne<Self> {
+        todo!()
     }
 
-    a.try_extend(&b).map(UnionResult::United)
+    fn sym_difference<J>(self, other: J) -> SymmetricDifference<Self, J>
+    where
+        J: IntoIterator<Item = AbsoluteInterval>,
+    {
+        todo!()
+    }
+
+    fn sym_difference_peer(self) -> SymmetricDifferencePeer<Self> {
+        todo!("symmetric difference between pairs of elements")
+    }
+}
+
+impl<I> SymmetricallyDifferentiableIntervalIterator for I
+where
+    I: Iterator,
+    I::Item: AbsoluteOrRelativeInterval,
+{
 }
 
 /// Represents the result of an intersection
@@ -403,35 +512,16 @@ pub enum IntersectionResult<T> {
 #[derive(Debug, Clone)]
 pub struct SimpleIntersection<I> {
     iter: I,
-    last_interval: Option<Interval>,
 }
 
-impl<I> SimpleIntersection<I> {
-    pub fn new(iter: I) -> Self {
-        SimpleIntersection {
-            iter,
-            last_interval: None,
-        }
-    }
-}
-
-impl<I> Iterator for SimpleIntersection<I>
+impl<I> SimpleIntersection<Peekable<I>>
 where
-    I: Iterator<Item = Interval>,
+    I: Iterator,
 {
-    type Item = Interval;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        let mut next_interval = self.iter.next()?;
-
-        // match self.last_interval {
-        //     Some(last_interval) =>
-        // }
-        todo!()
+    pub fn new(iter: I) -> Self {
+        SimpleIntersection { iter: iter.peekable() }
     }
 }
-
-impl<I> IntervalIterator for SimpleIntersection<I> where I: Iterator<Item = Interval> {}
 
 #[derive(Debug, Clone)]
 pub struct Intersection<I, RI> {
@@ -449,7 +539,7 @@ pub struct IntersectionWith<I, F> {
 #[derive(Debug, Clone)]
 pub struct IntersectionWithOne<I> {
     iter: I,
-    interval: Interval,
+    interval: AbsoluteInterval,
 }
 
 /// Represents the result of a difference
@@ -464,7 +554,7 @@ pub enum DifferenceResult<T> {
 #[derive(Debug, Clone)]
 pub struct DifferenceWithOne<I> {
     iter: I,
-    interval: Interval,
+    interval: AbsoluteInterval,
 }
 
 #[derive(Debug, Clone)]
@@ -495,7 +585,7 @@ pub enum SymmetricDifferenceResult<T> {
 #[derive(Debug, Clone)]
 pub struct SymmetricDifferenceWithOne<I> {
     iter: I,
-    interval: Interval,
+    interval: AbsoluteInterval,
 }
 
 #[derive(Debug, Clone)]
@@ -508,3 +598,44 @@ pub struct SymmetricDifference<I, J> {
 pub struct SymmetricDifferencePeer<I> {
     iter: I,
 }
+
+/*
+If we want to implement an operation "dispatcher" for multiple types, since we can easily run in the problem that
+we can't do
+
+impl<T: Iterator<Item = A>> CustomOperatorIter for T {}
+impl<T: Iterator<Item = B>> CustomOperatorIter for T {}
+
+as both have the signature `impl CustomOperatorIter for T` (associated type "Item" doesn't count),
+we get a "conflicting implementations" error.
+
+the solution is to do something like this:
+
+trait Operation {
+    fn my_custom_op(&self);
+}
+
+trait AOrB {
+    fn my_custom_op<T: Iterator<Item = Self>>(&self);
+}
+
+impl AOrB for A {
+    fn my_custom_op<T: Iterator<Item = Self>>(&self) {...}
+}
+
+impl AOrB for B {
+    fn my_custom_op<T: Iterator<Item = Self>>(&self) {...}
+}
+
+impl<T> Operation for T
+where
+    T: Iterator,
+    T::Item: AOrB,
+{
+    fn my_custom_op(&self) {
+        <T::Item as AOrB>::my_custom_op(self);
+    }
+}
+
+Note: `where T: Iterator, T::Item: AOrB` can also be written as `where T: Iterator<Item: AOrB>`
+*/
