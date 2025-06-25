@@ -109,6 +109,15 @@ pub enum BoundInclusivity {
     Exclusive,
 }
 
+impl BoundInclusivity {
+    pub fn opposite(&self) -> BoundInclusivity {
+        match self {
+            BoundInclusivity::Inclusive => BoundInclusivity::Exclusive,
+            BoundInclusivity::Exclusive => BoundInclusivity::Inclusive,
+        }
+    }
+}
+
 impl Display for BoundInclusivity {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -116,4 +125,10 @@ impl Display for BoundInclusivity {
             Self::Exclusive => write!(f, "Exclusive bound"),
         }
     }
+}
+
+/// Trait for returning the inclusivity of a bound
+pub trait HasBoundInclusivity {
+    /// Returns the bound inclusivity of the bound
+    fn inclusivity(&self) -> BoundInclusivity;
 }
