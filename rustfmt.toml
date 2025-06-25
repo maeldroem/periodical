@@ -7,6 +7,7 @@ newline_style = "Unix"
 reorder_impl_items = true
 reorder_imports = true
 reorder_modules = true
+struct_lit_single_line = false
 use_field_init_shorthand = true
 use_try_shorthand = true
 wrap_comments = true
