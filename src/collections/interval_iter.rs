@@ -52,12 +52,7 @@ use crate::intervals::{AbsoluteInterval, RelativeInterval};
 // that is unsorted or sorted non-chronologically, they can choose to use the Union iterator. But if they need
 // a fast way of uniting a list of intervals that is sorted chronologically, then they can call such methods.
 
-// / Iterator trait to allow composition of multiple interval operations
-// /
-// / This is to extend [`Iterator`] in the same way that it works: if you create a map from an iterator,
-// / you are still able to call methods like `filter` or `collect` on them.
-// /
-// / This trait seeks to extend it to include interval operations on all interval operation structures.
+// NOTE: Implement FusedIterator and exhaustion field in iterators
 
 pub trait AbsoluteOrRelativeInterval {}
 
@@ -65,7 +60,9 @@ impl AbsoluteOrRelativeInterval for AbsoluteInterval {}
 
 impl AbsoluteOrRelativeInterval for RelativeInterval {}
 
+/// Dispatcher trait for the [`RelativeToAbsolute`] conversion iterator
 pub trait RelativeToAbsoluteIntervalIterator: Iterator + Sized {
+    /// Converts [`RelativeInterval`]s to [`AbsoluteInterval`]s
     fn to_absolute(self, reference_time: DateTime<Utc>) -> RelativeToAbsolute<Self> {
         RelativeToAbsolute::new(self, reference_time)
     }
@@ -105,7 +102,9 @@ where
     }
 }
 
+/// Dispatcher trait for the [`AbsoluteToRelative`] conversion iterator
 pub trait AbsoluteToRelativeIntervalIterator: Iterator + Sized {
+    /// Converts [`AbsoluteInterval`]s to [`RelativeInterval`]s
     fn to_relative(self, reference_time: DateTime<Utc>) -> AbsoluteToRelative<Self> {
         AbsoluteToRelative::new(self, reference_time)
     }
@@ -145,11 +144,14 @@ where
     }
 }
 
+/// Dispatcher trait for the [`PrecisionChange`] iterator
 pub trait PrecisionChangeIntervalIterator: Iterator + Sized {
+    /// Changes the precision of the interval with the given [`Precision`]
     fn change_precision(self, precision: Precision) -> PrecisionChange<Self> {
         PrecisionChange::new(self, precision, precision)
     }
 
+    /// Changes the precision of start and end bounds with the given [`Precision`]s
     fn change_start_end_precision(self, start_precision: Precision, end_precision: Precision) -> PrecisionChange<Self> {
         PrecisionChange::new(self, start_precision, end_precision)
     }
@@ -214,24 +216,56 @@ where
     }
 }
 
+/// Dispatcher trait for union iterators
 pub trait UnitableIntervalIterator: Iterator + Sized {
-    fn simple_union(self) -> SimpleUnion<Peekable<Self>> {
-        SimpleUnion::new(self)
+    /// Unites peer intervals of the iterator using predefined rules
+    fn peer_simple_union(self) -> PeerSimpleUnion<Peekable<Self>> {
+        PeerSimpleUnion::new(self)
     }
 
-    fn union<'a, RI>(self, rule_set: OverlapRuleSet, rules: &'a RI) -> Union<'a, Peekable<Self>, RI>
+    /// Unites peer intervals of the iterator using the given [`OverlapRuleSet`] and [`OverlapRule`]s
+    fn peer_union<'a, RI>(self, rule_set: OverlapRuleSet, rules: &'a RI) -> PeerUnion<'a, Peekable<Self>, RI>
     where
         &'a RI: IntoIterator<Item = &'a OverlapRule>,
     {
-        Union::new(self, rule_set, rules)
+        PeerUnion::new(self, rule_set, rules)
     }
 
-    fn union_with<'a, F, E>(self, f: F) -> UnionWith<Peekable<Self>, F>
+    /// Unites peer intervals of the iterator using the given closure
+    fn peer_union_with<'a, F, E>(self, f: F) -> PeerUnionWith<Peekable<Self>, F>
     where
         Self::Item: 'a,
         F: FnMut(Self::Item, Self::Item) -> Result<UnionResult<Self::Item, &'a Self::Item>, E>,
     {
-        UnionWith::new(self, f)
+        PeerUnionWith::new(self, f)
+    }
+
+    fn simple_union<I>(self, other: I) -> SimpleUnion<Self, <I as IntoIterator>::IntoIter>
+    where
+        I: IntoIterator<Item = Self::Item>,
+    {
+        todo!()
+    }
+
+    fn union<'a, I, RI>(
+        self,
+        other: I,
+        rule_set: OverlapRuleSet,
+        rules: &'a RI,
+    ) -> Union<'a, Self, <I as IntoIterator>::IntoIter, RI>
+    where
+        I: IntoIterator<Item = Self::Item>,
+        &'a RI: IntoIterator<Item = &'a OverlapRule>,
+    {
+        todo!()
+    }
+
+    fn union_with<I, F, E>(self, other: I, f: F) -> UnionWith<Self, <I as IntoIterator>::IntoIter, F>
+    where
+        I: IntoIterator<Item = Self::Item>,
+        F: for<'a> Fn(&'a Self::Item, &'a Self::Item) -> Result<IntersectionResult<Self::Item, &'a Self::Item>, E>,
+    {
+        todo!()
     }
 }
 
@@ -244,7 +278,7 @@ where
 
 /// Represents the result of a union
 // NOTE: Perhaps move to another place since it's a generic that could be used for other things?
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum UnionResult<U, S> {
     /// Union was successful, the united element is contained within this variant
     United(U),
@@ -252,28 +286,27 @@ pub enum UnionResult<U, S> {
     Separate(S, S),
 }
 
+/// Peer union iterator for intervals using predefined rules
 #[derive(Debug, Clone, Hash)]
-pub struct SimpleUnion<I> {
+pub struct PeerSimpleUnion<I> {
     iter: I,
 }
 
-impl<I> SimpleUnion<Peekable<I>>
+impl<I> PeerSimpleUnion<Peekable<I>>
 where
     I: Iterator,
 {
     pub fn new(iter: I) -> Self {
-        SimpleUnion {
-            // Instead of using
-            // iter: Union::new(iter, OverlapRuleSet::Strict, &[OverlapRule::DenyAdjacency]),
-            // We use simple_unite_abs_intervals() in the Iterator impl, so that when looking at what the final iterator
-            // is composed of, we just see "SimpleUnion" and not
-            // SimpleUnion<Union<Peekable<I>, &[OverlapRule]>>, which could be confusing
+        PeerSimpleUnion {
+            // Instead of using PeerUnion as a proxy, we use simple_unite_abs_intervals() in the Iterator impl,
+            // so that when looking at what the final iterator is composed of, we just see "PeerSimpleUnion" and not
+            // PeerSimpleUnion<PeerUnion<Peekable<I>, &[OverlapRule]>>, which could be confusing
             iter: iter.peekable(),
         }
     }
 }
 
-impl<I> Iterator for SimpleUnion<Peekable<I>>
+impl<I> Iterator for PeerSimpleUnion<Peekable<I>>
 where
     I: Iterator<Item = AbsoluteInterval>,
 {
@@ -284,7 +317,7 @@ where
 
         loop {
             match self.iter.peek() {
-                Some(peeked) => match simple_unite_abs_intervals(&united_interval, peeked) {
+                Some(peeked) => match peer_simple_unite_abs_intervals(&united_interval, peeked) {
                     Ok(UnionResult::United(united)) => {
                         united_interval = united;
                     },
@@ -300,20 +333,21 @@ where
     }
 }
 
+/// Peer union iterator for intervals using the given [`OverlapRuleSet`] and given [`OverlapRule`]s
 #[derive(Debug, Clone, Hash)]
-pub struct Union<'u, I, RI> {
+pub struct PeerUnion<'u, I, RI> {
     iter: I,
     rule_set: OverlapRuleSet,
     rules: &'u RI,
 }
 
-impl<'u, I, RI> Union<'u, Peekable<I>, RI>
+impl<'u, I, RI> PeerUnion<'u, Peekable<I>, RI>
 where
     I: Iterator,
     &'u RI: IntoIterator<Item = &'u OverlapRule>,
 {
     pub fn new(iter: I, rule_set: OverlapRuleSet, rules: &'u RI) -> Self {
-        Union {
+        PeerUnion {
             iter: iter.peekable(),
             rule_set,
             rules,
@@ -321,7 +355,7 @@ where
     }
 }
 
-impl<'u, I, RI> Iterator for Union<'u, Peekable<I>, RI>
+impl<'u, I, RI> Iterator for PeerUnion<'u, Peekable<I>, RI>
 where
     I: Iterator<Item = AbsoluteInterval>,
     &'u RI: IntoIterator<Item = &'u OverlapRule>,
@@ -333,7 +367,7 @@ where
 
         loop {
             match self.iter.peek() {
-                Some(peeked) => match unite_abs_intervals(&united_interval, peeked, self.rule_set, self.rules) {
+                Some(peeked) => match peer_unite_abs_intervals(&united_interval, peeked, self.rule_set, self.rules) {
                     Ok(UnionResult::United(united)) => {
                         united_interval = united;
                     },
@@ -349,25 +383,26 @@ where
     }
 }
 
+/// Peer union iterator for intervals using the given closure
 #[derive(Debug, Clone)]
-pub struct UnionWith<I, F> {
+pub struct PeerUnionWith<I, F> {
     iter: I,
     f: F,
 }
 
-impl<I, F> UnionWith<Peekable<I>, F>
+impl<I, F> PeerUnionWith<Peekable<I>, F>
 where
     I: Iterator,
 {
     pub fn new(iter: I, f: F) -> Self {
-        UnionWith {
+        PeerUnionWith {
             iter: iter.peekable(),
             f,
         }
     }
 }
 
-impl<I, F> Iterator for UnionWith<Peekable<I>, F>
+impl<I, F> Iterator for PeerUnionWith<Peekable<I>, F>
 where
     I: Iterator<Item = AbsoluteInterval>,
     // https://doc.rust-lang.org/nomicon/hrtb.html
@@ -399,14 +434,14 @@ where
     }
 }
 
-fn simple_unite_abs_intervals<'a>(
+fn peer_simple_unite_abs_intervals<'a>(
     a: &'a AbsoluteInterval,
     b: &'a AbsoluteInterval,
 ) -> Result<UnionResult<AbsoluteInterval, &'a AbsoluteInterval>, <AbsoluteInterval as Extensible>::Error> {
-    unite_abs_intervals(a, b, OverlapRuleSet::Strict, &SIMPLE_OVERLAP_RULES)
+    peer_unite_abs_intervals(a, b, OverlapRuleSet::Strict, &SIMPLE_OVERLAP_RULES)
 }
 
-fn unite_abs_intervals<'a, 'b, RI>(
+fn peer_unite_abs_intervals<'a, 'b, RI>(
     a: &'a AbsoluteInterval,
     b: &'a AbsoluteInterval,
     rule_set: OverlapRuleSet,
@@ -422,31 +457,188 @@ where
     a.extend(b).map(UnionResult::United)
 }
 
-pub trait IntersectableIntervalIterator: Sized {
-    fn simple_intersection(self) -> SimpleIntersection<Self> {
+/// Union of intervals of two sets using predefined rules
+#[derive(Debug, Clone, Hash)]
+pub struct SimpleUnion<I, O> {
+    iter: I,
+    other: O,
+}
+
+impl<I, O> SimpleUnion<I, O> {
+    pub fn new(iter: I, other: O) -> Self {
+        SimpleUnion { iter, other }
+    }
+}
+
+/// Union of intervals of two sets using the given [`OverlapRuleSet`] and [`OverlapRule`]s
+#[derive(Debug, Clone, Hash)]
+pub struct Union<'u, I, O, RI> {
+    iter: I,
+    other: O,
+    rule_set: OverlapRuleSet,
+    rules: &'u RI,
+}
+
+impl<'u, I, O, RI> Union<'u, I, O, RI> {
+    pub fn new(iter: I, other: O, rule_set: OverlapRuleSet, rules: &'u RI) -> Self
+    where
+        &'u RI: IntoIterator<Item = &'u OverlapRule>,
+    {
+        Union {
+            iter,
+            other,
+            rule_set,
+            rules,
+        }
+    }
+}
+
+/// Union of intervals of two sets using the given closure
+#[derive(Debug, Clone)]
+pub struct UnionWith<I, O, F> {
+    iter: I,
+    other: O,
+    f: F,
+}
+
+impl<I, O, F> UnionWith<I, O, F> {
+    pub fn new(iter: I, other: O, f: F) -> Self {
+        UnionWith { iter, other, f }
+    }
+}
+
+/// Dispatcher trait for intersection iterators
+pub trait IntersectableIntervalIterator: Iterator + Sized {
+    /// Intersects peer intervals of the iterator using predefined rules
+    fn peer_simple_intersection(self) -> PeerSimpleIntersection<Self> {
         todo!("Intersections of each pair of intervals")
     }
 
-    fn intersection<RI>(self, rule_set: OverlapRuleSet, rules: RI) -> Intersection<Self, RI>
+    /// Intersects peer intervals of the iterator using the given [`OverlapRuleSet`] and [`OverlapRule`]s
+    fn peer_intersection<'a, RI>(self, rule_set: OverlapRuleSet, rules: &'a RI) -> PeerIntersection<Self, RI>
     where
-        RI: IntoIterator<Item = AbsoluteInterval>,
+        &'a RI: IntoIterator<Item = &'a OverlapRule>,
     {
         todo!()
     }
 
-    fn intersection_with<F, E>(self, f: F) -> IntersectionWith<Self, F>
+    /// Intersects peer intervals of the iterator using the given closure
+    fn peer_intersection_with<F, E>(self, f: F) -> PeerIntersectionWith<Self, F>
     where
-        F: FnMut(AbsoluteInterval, AbsoluteInterval) -> Result<IntersectionResult<AbsoluteInterval>, E>,
+        F: for<'a> FnMut(&'a Self::Item, &'a Self::Item) -> Result<IntersectionResult<Self::Item, &'a Self::Item>, E>,
     {
         todo!()
     }
 
-    fn intersection_with_one(self, interval: AbsoluteInterval) -> IntersectionWithOne<Self> {
+    /// Intersection of intervals against another set of intervals using predefined rules
+    fn simple_intersection<'a, I>(self, other: I) -> SimpleIntersection<Self, <I as IntoIterator>::IntoIter>
+    where
+        I: IntoIterator<Item = Self::Item>,
+    {
+        todo!()
+    }
+
+    /// Intersection of intervals against another set of intervals using the given [`OverlapRuleSet`] and [`OverlapRule`]s
+    fn intersection<'a, I, RI>(
+        self,
+        other: I,
+        rule_set: OverlapRuleSet,
+        rules: &'a RI,
+    ) -> Intersection<Self, <I as IntoIterator>::IntoIter, RI>
+    where
+        I: IntoIterator<Item = Self::Item>,
+        &'a RI: IntoIterator<Item = &'a OverlapRule>,
+    {
+        todo!()
+    }
+
+    /// Intersection of intervals against another set of intervals using the given closure
+    fn intersection_with<I, F, E>(self, other: I, f: F) -> IntersectionWith<Self, <I as IntoIterator>::IntoIter, F>
+    where
+        I: IntoIterator<Item = Self::Item>,
+        F: for<'a> Fn(&'a Self::Item, &'a Self::Item) -> Result<IntersectionResult<Self::Item, &'a Self::Item>, E>,
+    {
         todo!()
     }
 }
 
 impl<I> IntersectableIntervalIterator for I where I: Iterator<Item = AbsoluteInterval> {}
+
+/// Represents the result of an intersection
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum IntersectionResult<I, S> {
+    /// Intersection was successful, the intersected element is contained within this variant
+    Intersects(I),
+    /// Intersection was unsuccessful, both elements involved are contained within this variant
+    Separate(S, S),
+}
+
+/// Intersection of peer intervals using predefined rules
+#[derive(Debug, Clone, Hash)]
+pub struct PeerSimpleIntersection<I> {
+    iter: I,
+}
+
+impl<I> PeerSimpleIntersection<Peekable<I>>
+where
+    I: Iterator,
+{
+    pub fn new(iter: I) -> Self {
+        PeerSimpleIntersection { iter: iter.peekable() }
+    }
+}
+
+impl<I> Iterator for PeerSimpleIntersection<Peekable<I>>
+where
+    I: Iterator<Item = AbsoluteInterval>,
+{
+    type Item = I::Item;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let next = self.iter.next()?;
+
+        todo!()
+    }
+}
+
+/// Intersection of peer intervals using the given rule set and rules
+#[derive(Debug, Clone, Hash)]
+pub struct PeerIntersection<'i, I, RI> {
+    iter: I,
+    rule_set: OverlapRuleSet,
+    rules: &'i RI,
+}
+
+/// Intersection of peer intervals using the given closure
+#[derive(Debug, Clone)]
+pub struct PeerIntersectionWith<I, F> {
+    iter: I,
+    f: F,
+}
+
+/// Intersection of intervals of two sets using predefined rules
+#[derive(Debug, Clone, Hash)]
+pub struct SimpleIntersection<I, O> {
+    iter: I,
+    others: O,
+}
+
+/// Intersection of intervals of two sets using the given [`OverlapRuleSet`] and [`OverlapRule`]s
+#[derive(Debug, Clone, Hash)]
+pub struct Intersection<'i, I, O, RI> {
+    iter: I,
+    others: O,
+    rule_set: OverlapRuleSet,
+    rules: &'i RI,
+}
+
+/// Intersection of intervals of two sets using the given closure
+#[derive(Debug, Clone)]
+pub struct IntersectionWith<I, O, F> {
+    iter: I,
+    others: O,
+    f: F,
+}
 
 pub trait DifferentiableIntervalIterator: Sized {
     fn difference_with_one(self, interval: AbsoluteInterval) -> DifferenceWithOne<Self> {
@@ -498,48 +690,6 @@ where
     I: Iterator,
     I::Item: AbsoluteOrRelativeInterval,
 {
-}
-
-/// Represents the result of an intersection
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum IntersectionResult<T> {
-    /// Intersection was successful, the intersected element is contained within this variant
-    Intersects(T),
-    /// Intersection was unsuccessful, both elements involved are contained within this variant
-    Separate(T, T),
-}
-
-#[derive(Debug, Clone)]
-pub struct SimpleIntersection<I> {
-    iter: I,
-}
-
-impl<I> SimpleIntersection<Peekable<I>>
-where
-    I: Iterator,
-{
-    pub fn new(iter: I) -> Self {
-        SimpleIntersection { iter: iter.peekable() }
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct Intersection<I, RI> {
-    iter: I,
-    rule_set: OverlapRuleSet,
-    rules: RI,
-}
-
-#[derive(Debug, Clone)]
-pub struct IntersectionWith<I, F> {
-    iter: I,
-    f: F,
-}
-
-#[derive(Debug, Clone)]
-pub struct IntersectionWithOne<I> {
-    iter: I,
-    interval: AbsoluteInterval,
 }
 
 /// Represents the result of a difference

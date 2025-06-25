@@ -50,25 +50,25 @@ impl Precision {
 /// Trait to try to re-precise absolute bounds
 pub trait TryPreciseAbsoluteBounds {
     /// Precises the start bound with the given precision
-    /// 
+    ///
     /// # Errors
-    /// 
+    ///
     /// If the rounding failed, usually if the [`Duration`] contained within the [`Precision`] is not usable during
     /// rounding, which can happen if it is negative, or if it's too long.
     fn try_precise_start_bound(&self, precision: Precision) -> Result<Option<AbsoluteStartBound>, RoundingError>;
 
     /// Precises the end bound with the given precision
-    /// 
+    ///
     /// # Errors
-    /// 
+    ///
     /// If the rounding failed, usually if the [`Duration`] contained within the [`Precision`] is not usable during
     /// rounding, which can happen if it is negative, or if it's too long.
     fn try_precise_end_bound(&self, precision: Precision) -> Result<Option<AbsoluteEndBound>, RoundingError>;
 
     /// Precises the start and end bound with the given precision
-    /// 
+    ///
     /// # Errors
-    /// 
+    ///
     /// If the rounding failed, usually if the [`Duration`] contained within the [`Precision`] is not usable during
     /// rounding, which can happen if it is negative, or if it's too long.
     fn try_precise_bounds(&self, precision: Precision) -> Result<AbsoluteBounds, RoundingError> {
@@ -76,9 +76,9 @@ pub trait TryPreciseAbsoluteBounds {
     }
 
     /// Precises the start and end bound with different precisions for both of them
-    /// 
+    ///
     /// # Errors
-    /// 
+    ///
     /// If the rounding failed, usually if the [`Duration`] contained within the [`Precision`] is not usable during
     /// rounding, which can happen if it is negative, or if it's too long.
     fn try_precise_bounds_with_different_precision(
@@ -824,9 +824,9 @@ pub trait CanPositionTimeContainment {
     /// receiver make the call on whether it counts or not.
     ///
     /// This way, we can guarantee maximum flexibility of this process.
-    /// 
+    ///
     /// # Errors
-    /// 
+    ///
     /// If this process is fallible in a given implementor,
     /// they can use the associated type [`Error`](CanPositionTimeContainment::Error).
     fn time_containment_position(&self, time: DateTime<Utc>) -> Result<TimeContainmentPosition, Self::Error>;
@@ -836,7 +836,7 @@ pub trait CanPositionTimeContainment {
     /// See [`CanPositionTimeContainment::time_containment_position`] for more details about containment position.
     ///
     /// # Errors
-    /// 
+    ///
     /// If this process is fallible in a given implementor,
     /// they can use the associated type [`Error`](CanPositionTimeContainment::Error).
     fn simple_time_containment_position(
@@ -1019,9 +1019,9 @@ pub trait CanPositionOverlap {
     /// of each tuple will be [`None`].
     /// In the case of a pair of open intervals being compared, since they have no bounds but still are equal, all
     /// elements will be [`None`].
-    /// 
+    ///
     /// # Errors
-    /// 
+    ///
     /// If this process is fallible in a given implementor,
     /// they can use the associated type [`Error`](CanPositionOverlap::Error).
     fn overlap_position(&self, other: &Self) -> Result<OverlapPosition, Self::Error>;
@@ -1029,9 +1029,9 @@ pub trait CanPositionOverlap {
     /// Returns the simple overlap position of the given interval using a given rule set
     ///
     /// See [`CanPositionOverlap::overlap_position`] for more details about overlap position.
-    /// 
+    ///
     /// # Errors
-    /// 
+    ///
     /// If this process is fallible in a given implementor,
     /// they can use the associated type [`Error`](CanPositionOverlap::Error).
     fn simple_overlap_position(
@@ -1155,11 +1155,14 @@ impl<T: HasAbsoluteBounds> CanPositionOverlap for T {
 
 // Can't really make this function shorter
 #[allow(clippy::too_many_lines)]
-fn overlap_position_bounds(og: (AbsoluteStartBound, AbsoluteEndBound), other: (AbsoluteStartBound, AbsoluteEndBound)) -> OverlapPosition {
+fn overlap_position_bounds(
+    og: (AbsoluteStartBound, AbsoluteEndBound),
+    other: (AbsoluteStartBound, AbsoluteEndBound),
+) -> OverlapPosition {
     type StartB = AbsoluteStartBound;
     type EndB = AbsoluteEndBound;
     type OP = OverlapPosition;
-    
+
     match (og, other) {
         ((StartB::InfinitePast, EndB::InfiniteFuture), (StartB::InfinitePast, EndB::InfiniteFuture)) => {
             OP::Equal((None, None), (None, None))
@@ -1293,9 +1296,7 @@ fn overlap_position_half_open_future_closed(
 ) -> OverlapPosition {
     match (ref_bound.0.cmp(other_start.0), ref_bound.0.cmp(other_end.0)) {
         (Ordering::Less, _) => OverlapPosition::Contains,
-        (Ordering::Equal, _) => {
-            OverlapPosition::ContainsAndSameStart(Some(ref_bound.1), Some(other_start.1))
-        },
+        (Ordering::Equal, _) => OverlapPosition::ContainsAndSameStart(Some(ref_bound.1), Some(other_start.1)),
         (Ordering::Greater, Ordering::Less) => OverlapPosition::CrossesEnd,
         (_, Ordering::Equal) => OverlapPosition::OnEnd(ref_bound.1, other_end.1),
         (_, Ordering::Greater) => OverlapPosition::OutsideAfter,
@@ -1382,9 +1383,9 @@ pub trait Extensible {
     /// If both intervals are empty, the method just returns an empty interval.
     ///
     /// If one of the intervals is empty, the method just return a clone of the other non-empty interval.
-    /// 
+    ///
     /// # Errors
-    /// 
+    ///
     /// If this process is fallible in a given implementor,
     /// they can use the associated type [`Error`](Extensible::Error).
     fn extend(&self, other: &Self) -> Result<AbsoluteInterval, Self::Error>;
