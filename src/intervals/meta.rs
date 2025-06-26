@@ -110,6 +110,8 @@ pub enum BoundInclusivity {
 }
 
 impl BoundInclusivity {
+    /// Returns the opposite bound inclusivity
+    #[must_use]
     pub fn opposite(&self) -> BoundInclusivity {
         match self {
             BoundInclusivity::Inclusive => BoundInclusivity::Exclusive,
@@ -130,5 +132,6 @@ impl Display for BoundInclusivity {
 /// Trait for returning the inclusivity of a bound
 pub trait HasBoundInclusivity {
     /// Returns the bound inclusivity of the bound
+    #[must_use]
     fn inclusivity(&self) -> BoundInclusivity;
 }

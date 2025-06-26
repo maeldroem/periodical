@@ -50,16 +50,19 @@ pub struct AbsoluteFiniteBound {
 
 impl AbsoluteFiniteBound {
     /// Creates a new instance of an absolute finite bound using just a given time
+    #[must_use]
     pub fn new(time: DateTime<Utc>) -> Self {
         Self::new_with_inclusivity(time, BoundInclusivity::default())
     }
 
     /// Creates a new instance of an absolute finite bound using the given time and bound inclusivity
+    #[must_use]
     pub fn new_with_inclusivity(time: DateTime<Utc>, inclusivity: BoundInclusivity) -> Self {
         AbsoluteFiniteBound { time, inclusivity }
     }
 
     /// Returns the time of the absolute finite bound
+    #[must_use]
     pub fn time(&self) -> DateTime<Utc> {
         self.time
     }
@@ -129,16 +132,19 @@ pub struct RelativeFiniteBound {
 
 impl RelativeFiniteBound {
     /// Creates a new relative finite bound using just the offset
+    #[must_use]
     pub fn new(offset: Duration) -> Self {
         Self::new_with_inclusivity(offset, BoundInclusivity::default())
     }
 
     /// Creates a new relative finite bound using the given offset and inclusivity
+    #[must_use]
     pub fn new_with_inclusivity(offset: Duration, inclusivity: BoundInclusivity) -> Self {
         RelativeFiniteBound { offset, inclusivity }
     }
 
     /// Returns the offset
+    #[must_use]
     pub fn offset(&self) -> Duration {
         self.offset
     }
@@ -438,6 +444,28 @@ impl Display for AbsoluteEndBound {
     }
 }
 
+/// Swaps an absolute start bound with an absolute end bound
+pub fn swap_absolute_bounds(start: &mut AbsoluteStartBound, end: &mut AbsoluteEndBound) {
+    // We temporarily reborrow start and end for the match arms so that when a pattern matches, they move out of their
+    // temporary scope and we can use the original mutable references without guard patterns shenanigans.
+    // When destructuring, however, the scope of the reborrowed value extends up to where it is used within the body,
+    // So we always finish our business with the reborrowed values first before accessing the original ones.
+    match (&mut *start, &mut *end) {
+        (AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture) => {},
+        (AbsoluteStartBound::InfinitePast, AbsoluteEndBound::Finite(finite_end)) => {
+            *start = AbsoluteStartBound::Finite(*finite_end);
+            *end = AbsoluteEndBound::InfiniteFuture;
+        },
+        (AbsoluteStartBound::Finite(finite_start), AbsoluteEndBound::InfiniteFuture) => {
+            *end = AbsoluteEndBound::Finite(*finite_start);
+            *start = AbsoluteStartBound::InfinitePast;
+        },
+        (AbsoluteStartBound::Finite(finite_start), AbsoluteEndBound::Finite(finite_end)) => {
+            std::mem::swap(finite_start, finite_end);
+        },
+    }
+}
+
 /// A relative start interval bound, including [inclusivity](BoundInclusivity)
 ///
 /// # Why no [`PartialOrd`] implementation
@@ -586,6 +614,30 @@ impl Display for RelativeEndBound {
     }
 }
 
+/// Swaps a relative start bound with a relative end bound
+///
+/// Make sure the two bounds **share the same reference point** before using this method!
+pub fn swap_relative_bounds(start: &mut RelativeStartBound, end: &mut RelativeEndBound) {
+    // We temporarily reborrow start and end for the match arms so that when a pattern matches, they move out of their
+    // temporary scope and we can use the original mutable references without guard patterns shenanigans.
+    // When destructuring, however, the scope of the reborrowed value extends up to where it is used within the body,
+    // So we always finish our business with the reborrowed values first before accessing the original ones.
+    match (&mut *start, &mut *end) {
+        (RelativeStartBound::InfinitePast, RelativeEndBound::InfiniteFuture) => {},
+        (RelativeStartBound::InfinitePast, RelativeEndBound::Finite(finite_end)) => {
+            *start = RelativeStartBound::Finite(*finite_end);
+            *end = RelativeEndBound::InfiniteFuture;
+        },
+        (RelativeStartBound::Finite(finite_start), RelativeEndBound::InfiniteFuture) => {
+            *end = RelativeEndBound::Finite(*finite_start);
+            *start = RelativeStartBound::InfinitePast;
+        },
+        (RelativeStartBound::Finite(finite_start), RelativeEndBound::Finite(finite_end)) => {
+            std::mem::swap(finite_start, finite_end);
+        },
+    }
+}
+
 /// Represents something that has absolute bounds
 pub trait HasAbsoluteBounds {
     /// Type of the absolute bounds
@@ -653,11 +705,13 @@ impl AbsoluteBounds {
     }
 
     /// Returns the absolute start bound
+    #[must_use]
     pub fn start(&self) -> &AbsoluteStartBound {
         &self.start
     }
 
     /// Returns the absolute end bound
+    #[must_use]
     pub fn end(&self) -> &AbsoluteEndBound {
         &self.end
     }
@@ -810,15 +864,12 @@ pub enum AbsoluteBoundsOrEmpty {
 }
 
 impl HasAbsoluteBounds for AbsoluteBoundsOrEmpty {
-    type AbsoluteBounds<'a> = Option<&'a AbsoluteBounds>;
+    type AbsoluteBounds<'a> = &'a AbsoluteBoundsOrEmpty;
     type AbsoluteStartBound<'a> = Option<&'a AbsoluteStartBound>;
     type AbsoluteEndBound<'a> = Option<&'a AbsoluteEndBound>;
 
     fn abs_bounds(&self) -> Self::AbsoluteBounds<'_> {
-        match self {
-            Self::Empty => None,
-            Self::Bound(bounds) => Some(bounds),
-        }
+        self
     }
 
     fn abs_start(&self) -> Self::AbsoluteStartBound<'_> {
@@ -914,6 +965,7 @@ pub struct RelativeBounds {
 
 impl RelativeBounds {
     /// Creates an instance of relative bound without checking if the bounds are in order
+    #[must_use]
     pub fn unchecked_new(start: RelativeStartBound, end: RelativeEndBound) -> Self {
         RelativeBounds { start, end }
     }
@@ -941,11 +993,13 @@ impl RelativeBounds {
     }
 
     /// Returns the relative start bound
+    #[must_use]
     pub fn start(&self) -> &RelativeStartBound {
         &self.start
     }
 
     /// Returns the relative end bound
+    #[must_use]
     pub fn end(&self) -> &RelativeEndBound {
         &self.end
     }
@@ -1232,13 +1286,13 @@ impl ClosedAbsoluteInterval {
 
     /// Returns the start time
     #[must_use]
-    pub fn from(&self) -> DateTime<Utc> {
+    pub fn from_time(&self) -> DateTime<Utc> {
         self.from
     }
 
     /// Returns the end time
     #[must_use]
-    pub fn to(&self) -> DateTime<Utc> {
+    pub fn to_time(&self) -> DateTime<Utc> {
         self.to
     }
 
@@ -1606,7 +1660,7 @@ impl HalfOpenAbsoluteInterval {
     ///
     /// See [`Precision::try_precise_time`]
     pub fn try_reference_time_with_precision(&self, precision: Precision) -> Result<DateTime<Utc>, RoundingError> {
-        precision.try_precise_time(self.reference_time)
+        precision.precise_time(self.reference_time)
     }
 
     /// Returns the opening direction of the interval

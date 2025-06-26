@@ -12,8 +12,7 @@ use chrono::{DateTime, Utc};
 
 use crate::intervals::interval::{ToAbsolute, ToRelative};
 use crate::intervals::ops::{
-    CanPositionOverlap, Extensible, OverlapRule, OverlapRuleSet, Precision, SIMPLE_OVERLAP_RULES,
-    TryPreciseAbsoluteBounds,
+    CanPositionOverlap, Extensible, OverlapRule, OverlapRuleSet, PreciseAbsoluteBounds, Precision, SIMPLE_OVERLAP_RULES,
 };
 use crate::intervals::{AbsoluteInterval, RelativeInterval};
 
@@ -185,7 +184,7 @@ where
     fn next(&mut self) -> Option<Self::Item> {
         self.iter
             .next()?
-            .try_precise_bounds_with_different_precision(self.precision_start, self.precision_end)
+            .precise_bounds_with_different_precision(self.precision_start, self.precision_end)
             .ok()
             .map(AbsoluteInterval::from)
     }
@@ -200,7 +199,7 @@ where
             let bounds_option = self
                 .iter
                 .next_back()?
-                .try_precise_bounds_with_different_precision(self.precision_start, self.precision_end)
+                .precise_bounds_with_different_precision(self.precision_start, self.precision_end)
                 .ok();
 
             if let Some(bounds) = bounds_option {
@@ -237,11 +236,11 @@ pub trait UnitableIntervalIterator: Iterator + Sized {
     /// Unites two interval iterators using predefined rule
     ///
     /// Both iterators must be chronologically ordered, otherwise this results in undefined results
-    fn simple_union<I>(self, other: I) -> SimpleUnion<Self, <I as IntoIterator>::IntoIter>
+    fn simple_union<I>(self, other: I) -> SimpleUnion<Peekable<Self>, Peekable<<I as IntoIterator>::IntoIter>>
     where
         I: IntoIterator<Item = Self::Item>,
     {
-        todo!()
+        SimpleUnion::new(self, other.into_iter())
     }
 
     /// Unites two interval iterators using the given [`OverlapRuleSet`] and [`OverlapRule`]s
@@ -250,21 +249,25 @@ pub trait UnitableIntervalIterator: Iterator + Sized {
         other: I,
         rule_set: OverlapRuleSet,
         rules: &'a RI,
-    ) -> Union<'a, Self, <I as IntoIterator>::IntoIter, RI>
+    ) -> Union<'a, Peekable<Self>, Peekable<<I as IntoIterator>::IntoIter>, RI>
     where
         I: IntoIterator<Item = Self::Item>,
         &'a RI: IntoIterator<Item = &'a OverlapRule>,
     {
-        todo!()
+        Union::new(self, other.into_iter(), rule_set, rules)
     }
 
     /// Unites two interval iterators using the given closure
-    fn union_with<I, F, E>(self, other: I, f: F) -> UnionWith<Self, <I as IntoIterator>::IntoIter, F>
+    fn union_with<I, F, E>(
+        self,
+        other: I,
+        f: F,
+    ) -> UnionWith<Peekable<Self>, Peekable<<I as IntoIterator>::IntoIter>, F>
     where
         I: IntoIterator<Item = Self::Item>,
         F: for<'a> FnMut(&'a Self::Item, &'a Self::Item) -> Result<IntersectionResult<Self::Item, &'a Self::Item>, E>,
     {
-        todo!()
+        UnionWith::new(self, other.into_iter(), f)
     }
 }
 
@@ -326,11 +329,11 @@ where
         loop {
             if let Some(peeked) = self.iter.peek() {
                 match simple_unite_abs_intervals(&united_interval, peeked) {
-                    Ok(UnionResult::United(united)) => {
+                    UnionResult::United(united) => {
                         united_interval = united;
                         continue;
                     },
-                    Ok(UnionResult::Separate(..)) | Err(()) => {
+                    UnionResult::Separate(..) => {
                         return Some(united_interval);
                     },
                 }
@@ -388,11 +391,11 @@ where
         loop {
             if let Some(peeked) = self.iter.peek() {
                 match unite_abs_intervals(&united_interval, peeked, self.rule_set, self.rules) {
-                    Ok(UnionResult::United(united)) => {
+                    UnionResult::United(united) => {
                         united_interval = united;
                         continue;
                     },
-                    Ok(UnionResult::Separate(..)) | Err(()) => {
+                    UnionResult::Separate(..) => {
                         return Some(united_interval);
                     },
                 }
@@ -432,11 +435,11 @@ where
     }
 }
 
-impl<I, F, E> Iterator for PeerUnionWith<Peekable<I>, F>
+impl<I, F> Iterator for PeerUnionWith<Peekable<I>, F>
 where
     I: Iterator<Item = AbsoluteInterval>,
     // https://doc.rust-lang.org/nomicon/hrtb.html
-    F: for<'a> FnMut(&'a I::Item, &'a I::Item) -> Result<UnionResult<I::Item, &'a I::Item>, E>,
+    F: for<'a> FnMut(&'a I::Item, &'a I::Item) -> UnionResult<I::Item, &'a I::Item>,
 {
     type Item = I::Item;
 
@@ -453,11 +456,11 @@ where
         loop {
             if let Some(peeked) = self.iter.peek() {
                 match (self.f)(&united_interval, peeked) {
-                    Ok(UnionResult::United(united)) => {
+                    UnionResult::United(united) => {
                         united_interval = united;
                         continue;
                     },
-                    Ok(UnionResult::Separate(..)) | Err(_) => {
+                    UnionResult::Separate(..) => {
                         return Some(united_interval);
                     },
                 }
@@ -469,10 +472,10 @@ where
     }
 }
 
-impl<I, F, E> FusedIterator for PeerUnionWith<Peekable<I>, F>
+impl<I, F> FusedIterator for PeerUnionWith<Peekable<I>, F>
 where
     I: Iterator<Item = AbsoluteInterval>,
-    F: for<'a> FnMut(&'a I::Item, &'a I::Item) -> Result<UnionResult<I::Item, &'a I::Item>, E>,
+    F: for<'a> FnMut(&'a I::Item, &'a I::Item) -> UnionResult<I::Item, &'a I::Item>,
 {
 }
 
@@ -526,21 +529,21 @@ where
                 .map(|peeked| simple_unite_abs_intervals(&united_interval, peeked));
 
             match (peeked_union_with_og, peeked_union_with_other) {
-                (Some(Ok(UnionResult::United(og_united))), Some(Ok(UnionResult::United(other_united)))) => {
+                (Some(UnionResult::United(og_united)), Some(UnionResult::United(other_united))) => {
                     // Extension should normally never fail since both unions originate from `united_interval`
-                    united_interval = og_united.extend(&other_united).unwrap_or(og_united);
+                    united_interval = og_united.extend(&other_united);
 
                     // Both iterators should advance as we used peeked values
                     self.iter.next();
                     self.other.next();
                 },
-                (Some(Ok(UnionResult::United(og_united))), _) => {
+                (Some(UnionResult::United(og_united)), _) => {
                     united_interval = og_united;
 
                     // Since the peeked interval of `self.other` was separate, we only advance `self.iter`
                     self.iter.next();
                 },
-                (_, Some(Ok(UnionResult::United(other_united)))) => {
+                (_, Some(UnionResult::United(other_united))) => {
                     united_interval = other_united;
 
                     // Since the peeked interval of `self.iter` was separate, we only advance `self.other`
@@ -635,21 +638,21 @@ where
                 .map(|peeked| unite_abs_intervals(&united_interval, peeked, self.rule_set, self.rules));
 
             match (peeked_union_with_og, peeked_union_with_other) {
-                (Some(Ok(UnionResult::United(og_united))), Some(Ok(UnionResult::United(other_united)))) => {
+                (Some(UnionResult::United(og_united)), Some(UnionResult::United(other_united))) => {
                     // Extension should normally never fail since both unions originate from `united_interval`
-                    united_interval = og_united.extend(&other_united).unwrap_or(og_united);
+                    united_interval = og_united.extend(&other_united);
 
                     // Both iterators should advance as we used peeked values
                     self.iter.next();
                     self.other.next();
                 },
-                (Some(Ok(UnionResult::United(og_united))), _) => {
+                (Some(UnionResult::United(og_united)), _) => {
                     united_interval = og_united;
 
                     // Since the peeked interval of `self.other` was separate, we only advance `self.iter`
                     self.iter.next();
                 },
-                (_, Some(Ok(UnionResult::United(other_united)))) => {
+                (_, Some(UnionResult::United(other_united))) => {
                     united_interval = other_united;
 
                     // Since the peeked interval of `self.iter` was separate, we only advance `self.other`
@@ -711,14 +714,11 @@ where
     }
 }
 
-impl<I, O, F, E> Iterator for UnionWith<Peekable<I>, Peekable<O>, F>
+impl<I, O, F> Iterator for UnionWith<Peekable<I>, Peekable<O>, F>
 where
     I: Iterator<Item = AbsoluteInterval>,
     O: Iterator<Item = AbsoluteInterval>,
-    F: for<'a> FnMut(
-        &'a AbsoluteInterval,
-        &'a AbsoluteInterval,
-    ) -> Result<UnionResult<AbsoluteInterval, &'a AbsoluteInterval>, E>,
+    F: for<'a> FnMut(&'a AbsoluteInterval, &'a AbsoluteInterval) -> UnionResult<AbsoluteInterval, &'a AbsoluteInterval>,
 {
     type Item = AbsoluteInterval;
 
@@ -737,21 +737,21 @@ where
             let peeked_union_with_other = self.other.peek().map(|peeked| (self.f)(&united_interval, peeked));
 
             match (peeked_union_with_og, peeked_union_with_other) {
-                (Some(Ok(UnionResult::United(og_united))), Some(Ok(UnionResult::United(other_united)))) => {
+                (Some(UnionResult::United(og_united)), Some(UnionResult::United(other_united))) => {
                     // Extension should normally never fail since both unions originate from `united_interval`
-                    united_interval = og_united.extend(&other_united).unwrap_or(og_united);
+                    united_interval = og_united.extend(&other_united);
 
                     // Both iterators should advance as we used peeked values
                     self.iter.next();
                     self.other.next();
                 },
-                (Some(Ok(UnionResult::United(og_united))), _) => {
+                (Some(UnionResult::United(og_united)), _) => {
                     united_interval = og_united;
 
                     // Since the peeked interval of `self.other` was separate, we only advance `self.iter`
                     self.iter.next();
                 },
-                (_, Some(Ok(UnionResult::United(other_united)))) => {
+                (_, Some(UnionResult::United(other_united))) => {
                     united_interval = other_united;
 
                     // Since the peeked interval of `self.iter` was separate, we only advance `self.other`
@@ -781,21 +781,18 @@ where
     }
 }
 
-impl<I, O, F, E> FusedIterator for UnionWith<Peekable<I>, Peekable<O>, F>
+impl<I, O, F> FusedIterator for UnionWith<Peekable<I>, Peekable<O>, F>
 where
     I: Iterator<Item = AbsoluteInterval>,
     O: Iterator<Item = AbsoluteInterval>,
-    F: for<'a> FnMut(
-        &'a AbsoluteInterval,
-        &'a AbsoluteInterval,
-    ) -> Result<UnionResult<AbsoluteInterval, &'a AbsoluteInterval>, E>,
+    F: for<'a> FnMut(&'a AbsoluteInterval, &'a AbsoluteInterval) -> UnionResult<AbsoluteInterval, &'a AbsoluteInterval>,
 {
 }
 
 fn simple_unite_abs_intervals<'a>(
     a: &'a AbsoluteInterval,
     b: &'a AbsoluteInterval,
-) -> Result<UnionResult<AbsoluteInterval, &'a AbsoluteInterval>, <AbsoluteInterval as Extensible>::Error> {
+) -> UnionResult<AbsoluteInterval, &'a AbsoluteInterval> {
     unite_abs_intervals(a, b, OverlapRuleSet::Strict, &SIMPLE_OVERLAP_RULES)
 }
 
@@ -804,15 +801,15 @@ fn unite_abs_intervals<'a, 'b, RI>(
     b: &'a AbsoluteInterval,
     rule_set: OverlapRuleSet,
     rules: &'b RI,
-) -> Result<UnionResult<AbsoluteInterval, &'a AbsoluteInterval>, <AbsoluteInterval as Extensible>::Error>
+) -> UnionResult<AbsoluteInterval, &'a AbsoluteInterval>
 where
     &'b RI: IntoIterator<Item = &'b OverlapRule>,
 {
     if !a.overlaps(b, rule_set, rules) {
-        return Ok(UnionResult::Separate(a, b));
+        return UnionResult::Separate(a, b);
     }
 
-    a.extend(b).map(UnionResult::United)
+    UnionResult::United(a.extend(b))
 }
 
 /// Dispatcher trait for intersection iterators
