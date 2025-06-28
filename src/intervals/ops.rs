@@ -66,7 +66,7 @@ pub trait PreciseAbsoluteBounds {
 
     /// Precises the start and end bound with different precisions for both of them
     #[must_use]
-    fn precise_bounds_with_different_precision(
+    fn precise_bounds_with_different_precisions(
         &self,
         precision_start: Precision,
         precision_end: Precision,
@@ -75,7 +75,7 @@ pub trait PreciseAbsoluteBounds {
     /// Precises the start and end bound with the given precision
     #[must_use]
     fn precise_bounds(&self, precision: Precision) -> Self::PrecisedBoundsOutput {
-        self.precise_bounds_with_different_precision(precision, precision)
+        self.precise_bounds_with_different_precisions(precision, precision)
     }
 
     /// Precises the start bound with the given precision
@@ -92,7 +92,7 @@ impl PreciseAbsoluteBounds for AbsoluteBounds {
     type PrecisedStartBoundOutput = Result<AbsoluteStartBound, RoundingError>;
     type PrecisedEndBoundOutput = Result<AbsoluteEndBound, RoundingError>;
 
-    fn precise_bounds_with_different_precision(
+    fn precise_bounds_with_different_precisions(
         &self,
         precision_start: Precision,
         precision_end: Precision,
@@ -114,16 +114,16 @@ impl PreciseAbsoluteBounds for AbsoluteBoundsOrEmpty {
     type PrecisedStartBoundOutput = Result<Option<AbsoluteStartBound>, RoundingError>;
     type PrecisedEndBoundOutput = Result<Option<AbsoluteEndBound>, RoundingError>;
 
-    fn precise_bounds_with_different_precision(
+    fn precise_bounds_with_different_precisions(
         &self,
-        precision_start: Precision,
-        precision_end: Precision,
+        start_precision: Precision,
+        end_precision: Precision,
     ) -> Self::PrecisedBoundsOutput {
         if let AbsoluteBoundsOrEmpty::Bound(abs_bounds) = self {
             return Ok(AbsoluteBoundsOrEmpty::Bound(precise_abs_bounds(
                 abs_bounds,
-                precision_start,
-                precision_end,
+                start_precision,
+                end_precision,
             )?));
         }
 
@@ -152,7 +152,7 @@ impl PreciseAbsoluteBounds for AbsoluteInterval {
     type PrecisedStartBoundOutput = Result<Option<AbsoluteStartBound>, RoundingError>;
     type PrecisedEndBoundOutput = Result<Option<AbsoluteEndBound>, RoundingError>;
 
-    fn precise_bounds_with_different_precision(
+    fn precise_bounds_with_different_precisions(
         &self,
         precision_start: Precision,
         precision_end: Precision,
