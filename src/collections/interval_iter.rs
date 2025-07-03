@@ -7,7 +7,6 @@
 //! to re-precise interval times.
 
 use std::iter::{FusedIterator, Peekable};
-use std::ops::ControlFlow;
 
 use chrono::{DateTime, RoundingError, Utc};
 
@@ -19,6 +18,7 @@ use crate::intervals::ops::{
     CanPositionOverlap, Extensible, OverlapRule, OverlapRuleSet, PreciseAbsoluteBounds, Precision, SIMPLE_OVERLAP_RULES,
 };
 use crate::intervals::{AbsoluteInterval, RelativeInterval};
+use crate::ops::{DifferenceResult, IntersectionResult, RunningResult, SymmetricDifferenceResult, UnionResult};
 
 // TODO: This should contain overlap rules and a function etc. but those should be split into different kinds of Union
 // structures. Also, since by doing that they would become specialized for intervals, the module should be renamed
@@ -115,7 +115,7 @@ pub trait RelativeToAbsoluteIntervalIterator: Iterator + Sized {
 impl<I> RelativeToAbsoluteIntervalIterator for I
 where
     I: Iterator,
-    I::Item: RelativeToAbsoluteOperable,
+    I::Item: RelativeToAbsoluteOperable<Item = I::Item>,
 {
 }
 
@@ -134,9 +134,9 @@ impl<I> RelativeToAbsolute<I> {
 impl<I> Iterator for RelativeToAbsolute<I>
 where
     I: Iterator,
-    I::Item: RelativeToAbsoluteOperable,
+    I::Item: RelativeToAbsoluteOperable<Item = I::Item>,
 {
-    type Item = <I::Item as RelativeToAbsoluteOperable>::Item;
+    type Item = I::Item;
 
     fn next(&mut self) -> Option<Self::Item> {
         Some(self.iter.next()?.to_absolute(self.reference_time))
@@ -146,7 +146,7 @@ where
 impl<I> DoubleEndedIterator for RelativeToAbsolute<I>
 where
     I: DoubleEndedIterator,
-    I::Item: RelativeToAbsoluteOperable,
+    I::Item: RelativeToAbsoluteOperable<Item = I::Item>,
 {
     fn next_back(&mut self) -> Option<Self::Item> {
         Some(self.iter.next_back()?.to_absolute(self.reference_time))
@@ -211,7 +211,7 @@ pub trait AbsoluteToRelativeIntervalIterator: Iterator + Sized {
 impl<I> AbsoluteToRelativeIntervalIterator for I
 where
     I: Iterator,
-    I::Item: AbsoluteToRelativeOperable,
+    I::Item: AbsoluteToRelativeOperable<Item = I::Item>,
 {
 }
 
@@ -230,9 +230,9 @@ impl<I> AbsoluteToRelative<I> {
 impl<I> Iterator for AbsoluteToRelative<I>
 where
     I: Iterator,
-    I::Item: AbsoluteToRelativeOperable,
+    I::Item: AbsoluteToRelativeOperable<Item = I::Item>,
 {
-    type Item = <I::Item as AbsoluteToRelativeOperable>::Item;
+    type Item = I::Item;
 
     fn next(&mut self) -> Option<Self::Item> {
         Some(self.iter.next()?.to_relative(self.reference_time))
@@ -242,7 +242,7 @@ where
 impl<I> DoubleEndedIterator for AbsoluteToRelative<I>
 where
     I: DoubleEndedIterator,
-    I::Item: AbsoluteToRelativeOperable,
+    I::Item: AbsoluteToRelativeOperable<Item = I::Item>,
 {
     fn next_back(&mut self) -> Option<Self::Item> {
         Some(self.iter.next_back()?.to_relative(self.reference_time))
@@ -254,14 +254,29 @@ pub trait PrecisionChangeOperable {
     type Item: PrecisionChangeOperable;
     type Error;
 
-    fn change_start_end_precision(&self, start_precision: Precision, end_precision: Precision) -> Result<Self::Item, Self::Error>;
+    /// Changes the start and end bounds with the given precisions (one for each bound)
+    ///
+    /// # Errors
+    ///
+    /// Precising a time usually is prone to errors, therefore this trait has the associated type
+    /// [`Error`](PrecisionChangeOperable::Error) that allows for defining what kind of error will be produced by this
+    /// process.
+    fn change_start_end_precision(
+        &self,
+        start_precision: Precision,
+        end_precision: Precision,
+    ) -> Result<Self::Item, Self::Error>;
 }
 
 impl<T: Sized + PrecisionChangeOperable> PrecisionChangeOperable for &T {
     type Item = T::Item;
     type Error = T::Error;
 
-    fn change_start_end_precision(&self, start_precision: Precision, end_precision: Precision) -> Result<Self::Item, Self::Error> {
+    fn change_start_end_precision(
+        &self,
+        start_precision: Precision,
+        end_precision: Precision,
+    ) -> Result<Self::Item, Self::Error> {
         (**self).change_start_end_precision(start_precision, end_precision)
     }
 }
@@ -270,7 +285,11 @@ impl<T: Sized + PrecisionChangeOperable> PrecisionChangeOperable for &mut T {
     type Item = T::Item;
     type Error = T::Error;
 
-    fn change_start_end_precision(&self, start_precision: Precision, end_precision: Precision) -> Result<Self::Item, Self::Error> {
+    fn change_start_end_precision(
+        &self,
+        start_precision: Precision,
+        end_precision: Precision,
+    ) -> Result<Self::Item, Self::Error> {
         (**self).change_start_end_precision(start_precision, end_precision)
     }
 }
@@ -279,7 +298,11 @@ impl PrecisionChangeOperable for AbsoluteBounds {
     type Item = Self;
     type Error = RoundingError;
 
-    fn change_start_end_precision(&self, start_precision: Precision, end_precision: Precision) -> Result<Self::Item, Self::Error> {
+    fn change_start_end_precision(
+        &self,
+        start_precision: Precision,
+        end_precision: Precision,
+    ) -> Result<Self::Item, Self::Error> {
         self.precise_bounds_with_different_precisions(start_precision, end_precision)
     }
 }
@@ -288,7 +311,11 @@ impl PrecisionChangeOperable for AbsoluteBoundsOrEmpty {
     type Item = Self;
     type Error = RoundingError;
 
-    fn change_start_end_precision(&self, start_precision: Precision, end_precision: Precision) -> Result<Self::Item, Self::Error> {
+    fn change_start_end_precision(
+        &self,
+        start_precision: Precision,
+        end_precision: Precision,
+    ) -> Result<Self::Item, Self::Error> {
         self.precise_bounds_with_different_precisions(start_precision, end_precision)
     }
 }
@@ -297,7 +324,11 @@ impl PrecisionChangeOperable for AbsoluteInterval {
     type Item = Self;
     type Error = RoundingError;
 
-    fn change_start_end_precision(&self, start_precision: Precision, end_precision: Precision) -> Result<Self::Item, Self::Error> {
+    fn change_start_end_precision(
+        &self,
+        start_precision: Precision,
+        end_precision: Precision,
+    ) -> Result<Self::Item, Self::Error> {
         self.precise_bounds_with_different_precisions(start_precision, end_precision)
     }
 }
@@ -318,7 +349,7 @@ pub trait PrecisionChangeIntervalIterator: Iterator + Sized {
 impl<I> PrecisionChangeIntervalIterator for I
 where
     I: Iterator,
-    I::Item: PrecisionChangeOperable,
+    I::Item: PrecisionChangeOperable<Item = I::Item>,
 {
 }
 
@@ -342,9 +373,9 @@ impl<I> PrecisionChange<I> {
 impl<I> Iterator for PrecisionChange<I>
 where
     I: Iterator,
-    I::Item: PrecisionChangeOperable,
+    I::Item: PrecisionChangeOperable<Item = I::Item>,
 {
-    type Item = <I::Item as PrecisionChangeOperable>::Item;
+    type Item = I::Item;
 
     fn next(&mut self) -> Option<Self::Item> {
         self.iter
@@ -357,7 +388,7 @@ where
 impl<I> DoubleEndedIterator for PrecisionChange<I>
 where
     I: DoubleEndedIterator,
-    I::Item: PrecisionChangeOperable,
+    I::Item: PrecisionChangeOperable<Item = I::Item>,
 {
     fn next_back(&mut self) -> Option<Self::Item> {
         self.iter
@@ -376,41 +407,35 @@ pub trait UnionOperable {
         peeked: &Self,
         rule_set: OverlapRuleSet,
         rules: &'a RI,
-    ) -> ControlFlow<Option<Self::Item>, Self::Item>
+    ) -> RunningResult<Self::Item, Self::Item>
     where
         &'a RI: IntoIterator<Item = &'a OverlapRule>;
 
-    fn peer_union_with<F>(
-        united_so_far: &Self,
-        peeked: &Self,
-        f: F,
-    ) -> ControlFlow<Option<Self::Item>, Self::Item>
+    fn peer_union_with<F>(united_so_far: &Self, peeked: &Self, f: F) -> RunningResult<Self::Item, Self::Item>
     where
         F: for<'a> FnMut(&'a Self::Item, &'a Self::Item) -> UnionResult<Self::Item, &'a Self::Item>;
 
-    fn union<'a, OgIter, OtherIter, RI>(
-        og_iter: &mut Peekable<OgIter>,
-        other_iter: &mut Peekable<OtherIter>,
+    fn union<'a, I, RI>(
+        og_iter: &mut Peekable<I>,
+        other_iter: &mut Peekable<I>,
         united_so_far: &Self,
         exhausted: &mut bool,
         rule_set: OverlapRuleSet,
         rules: &'a RI,
-    ) -> ControlFlow<Option<Self::Item>, Self::Item>
+    ) -> RunningResult<Self::Item, Self::Item>
     where
-        OgIter: Iterator<Item = Self::Item>,
-        OtherIter: Iterator<Item = Self::Item>,
+        I: Iterator<Item = Self::Item>,
         &'a RI: IntoIterator<Item = &'a OverlapRule>;
 
-    fn union_with<OgIter, OtherIter, F>(
-        og_iter: &mut Peekable<OgIter>,
-        other_iter: &mut Peekable<OtherIter>,
+    fn union_with<I, F>(
+        og_iter: &mut Peekable<I>,
+        other_iter: &mut Peekable<I>,
         united_so_far: &Self,
         exhausted: &mut bool,
         f: F,
-    ) -> ControlFlow<Option<Self::Item>, Self::Item>
+    ) -> RunningResult<Self::Item, Self::Item>
     where
-        OgIter: Iterator<Item = Self::Item>,
-        OtherIter: Iterator<Item = Self::Item>,
+        I: Iterator<Item = Self::Item>,
         F: for<'a> FnMut(&'a Self::Item, &'a Self::Item) -> UnionResult<Self::Item, &'a Self::Item>;
 }
 
@@ -422,43 +447,36 @@ impl UnionOperable for AbsoluteBounds {
         peeked: &Self,
         rule_set: OverlapRuleSet,
         rules: &'a RI,
-    ) -> ControlFlow<Option<Self::Item>, Self::Item>
+    ) -> RunningResult<Self::Item, Self::Item>
     where
         &'a RI: IntoIterator<Item = &'a OverlapRule>,
     {
-        Self::peer_union_with(
-            united_so_far,
-            peeked,
-            |united_so_far, peeked| unite_abs_bounds(united_so_far, peeked, rule_set, rules)
-        )
+        Self::peer_union_with(united_so_far, peeked, |united_so_far, peeked| {
+            unite_abs_bounds(united_so_far, peeked, rule_set, rules)
+        })
     }
 
-    fn peer_union_with<F>(
-        united_so_far: &Self,
-        peeked: &Self,
-        mut f: F,
-    ) -> ControlFlow<Option<Self::Item>, Self::Item>
+    fn peer_union_with<F>(united_so_far: &Self, peeked: &Self, mut f: F) -> RunningResult<Self::Item, Self::Item>
     where
         F: for<'a> FnMut(&'a Self::Item, &'a Self::Item) -> UnionResult<Self::Item, &'a Self::Item>,
     {
         match (f)(united_so_far, peeked) {
-            UnionResult::United(united) => ControlFlow::Continue(united),
-            UnionResult::Separate(..) => ControlFlow::Break(Some(united_so_far.clone())),
+            UnionResult::United(united) => RunningResult::Running(united),
+            UnionResult::Separate(..) => RunningResult::Done(united_so_far.clone()),
         }
     }
 
-    fn union<'a, OgIter, OtherIter, RI>(
-        og_iter: &mut Peekable<OgIter>,
-        other_iter: &mut Peekable<OtherIter>,
+    fn union<'a, I, RI>(
+        og_iter: &mut Peekable<I>,
+        other_iter: &mut Peekable<I>,
         united_so_far: &Self,
         exhausted: &mut bool,
         rule_set: OverlapRuleSet,
         rules: &'a RI,
-    ) -> ControlFlow<Option<Self::Item>, Self::Item>
+    ) -> RunningResult<Self::Item, Self::Item>
     where
-        OgIter: Iterator<Item = Self::Item>,
-        OtherIter: Iterator<Item = Self::Item>,
-        &'a RI: IntoIterator<Item = &'a OverlapRule>
+        I: Iterator<Item = Self::Item>,
+        &'a RI: IntoIterator<Item = &'a OverlapRule>,
     {
         Self::union_with(
             og_iter,
@@ -469,24 +487,19 @@ impl UnionOperable for AbsoluteBounds {
         )
     }
 
-    fn union_with<OgIter, OtherIter, F>(
-        og_iter: &mut Peekable<OgIter>,
-        other_iter: &mut Peekable<OtherIter>,
+    fn union_with<I, F>(
+        og_iter: &mut Peekable<I>,
+        other_iter: &mut Peekable<I>,
         united_so_far: &Self,
         exhausted: &mut bool,
         mut f: F,
-    ) -> ControlFlow<Option<Self::Item>, Self::Item>
+    ) -> RunningResult<Self::Item, Self::Item>
     where
-        OgIter: Iterator<Item = Self::Item>,
-        OtherIter: Iterator<Item = Self::Item>,
-        F: for<'a> FnMut(&'a Self::Item, &'a Self::Item) -> UnionResult<Self::Item, &'a Self::Item>
+        I: Iterator<Item = Self::Item>,
+        F: for<'a> FnMut(&'a Self::Item, &'a Self::Item) -> UnionResult<Self::Item, &'a Self::Item>,
     {
-        let peeked_union_with_og = og_iter
-            .peek()
-            .map(|peeked| (f)(united_so_far, peeked));
-        let peeked_union_with_other = other_iter
-            .peek()
-            .map(|peeked| (f)(united_so_far, peeked));
+        let peeked_union_with_og = og_iter.peek().map(|peeked| (f)(united_so_far, peeked));
+        let peeked_union_with_other = other_iter.peek().map(|peeked| (f)(united_so_far, peeked));
 
         match (peeked_union_with_og, peeked_union_with_other) {
             (Some(UnionResult::United(og_united)), Some(UnionResult::United(other_united))) => {
@@ -494,24 +507,24 @@ impl UnionOperable for AbsoluteBounds {
                 og_iter.next();
                 other_iter.next();
 
-                ControlFlow::Continue(og_united.extend(&other_united))
+                RunningResult::Running(og_united.extend(&other_united))
             },
             (Some(UnionResult::United(og_united)), _) => {
                 // Since the peeked interval of `other_iter` was separate, we only advance `og_iter`
                 og_iter.next();
 
-                ControlFlow::Continue(og_united)
+                RunningResult::Running(og_united)
             },
             (_, Some(UnionResult::United(other_united))) => {
                 // Since the peeked interval of `og_iter` was separate, we only advance `other_iter`
                 other_iter.next();
 
-                ControlFlow::Continue(other_united)
+                RunningResult::Running(other_united)
             },
             (None, None) => {
                 // Don't know how to return the `exhausted` info other than using a mutable pointer to the flag
                 *exhausted = true;
-                ControlFlow::Break(Some(united_so_far.clone()))
+                RunningResult::Done(united_so_far.clone())
             },
             (peeked_union_with_og, peeked_union_with_other) => {
                 // We advance any iterator that isn't exhausted for the next iteration,
@@ -526,7 +539,7 @@ impl UnionOperable for AbsoluteBounds {
                     other_iter.next();
                 }
 
-                ControlFlow::Break(Some(united_so_far.clone()))
+                RunningResult::Done(united_so_far.clone())
             },
         }
     }
@@ -540,43 +553,36 @@ impl UnionOperable for AbsoluteBoundsOrEmpty {
         peeked: &Self,
         rule_set: OverlapRuleSet,
         rules: &'a RI,
-    ) -> ControlFlow<Option<Self::Item>, Self::Item>
+    ) -> RunningResult<Self::Item, Self::Item>
     where
         &'a RI: IntoIterator<Item = &'a OverlapRule>,
     {
-        Self::peer_union_with(
-            united_so_far,
-            peeked,
-            |united_so_far, peeked| unite_abs_bounds_or_empty(united_so_far, peeked, rule_set, rules)
-        )
+        Self::peer_union_with(united_so_far, peeked, |united_so_far, peeked| {
+            unite_abs_bounds_or_empty(united_so_far, peeked, rule_set, rules)
+        })
     }
 
-    fn peer_union_with<F>(
-        united_so_far: &Self,
-        peeked: &Self,
-        mut f: F,
-    ) -> ControlFlow<Option<Self::Item>, Self::Item>
+    fn peer_union_with<F>(united_so_far: &Self, peeked: &Self, mut f: F) -> RunningResult<Self::Item, Self::Item>
     where
         F: for<'a> FnMut(&'a Self::Item, &'a Self::Item) -> UnionResult<Self::Item, &'a Self::Item>,
     {
         match (f)(united_so_far, peeked) {
-            UnionResult::United(united) => ControlFlow::Continue(united),
-            UnionResult::Separate(..) => ControlFlow::Break(Some(united_so_far.clone())),
+            UnionResult::United(united) => RunningResult::Running(united),
+            UnionResult::Separate(..) => RunningResult::Done(united_so_far.clone()),
         }
     }
 
-    fn union<'a, OgIter, OtherIter, RI>(
-        og_iter: &mut Peekable<OgIter>,
-        other_iter: &mut Peekable<OtherIter>,
+    fn union<'a, I, RI>(
+        og_iter: &mut Peekable<I>,
+        other_iter: &mut Peekable<I>,
         united_so_far: &Self,
         exhausted: &mut bool,
         rule_set: OverlapRuleSet,
         rules: &'a RI,
-    ) -> ControlFlow<Option<Self::Item>, Self::Item>
+    ) -> RunningResult<Self::Item, Self::Item>
     where
-        OgIter: Iterator<Item = Self::Item>,
-        OtherIter: Iterator<Item = Self::Item>,
-        &'a RI: IntoIterator<Item = &'a OverlapRule>
+        I: Iterator<Item = Self::Item>,
+        &'a RI: IntoIterator<Item = &'a OverlapRule>,
     {
         Self::union_with(
             og_iter,
@@ -587,24 +593,19 @@ impl UnionOperable for AbsoluteBoundsOrEmpty {
         )
     }
 
-    fn union_with<OgIter, OtherIter, F>(
-        og_iter: &mut Peekable<OgIter>,
-        other_iter: &mut Peekable<OtherIter>,
+    fn union_with<I, F>(
+        og_iter: &mut Peekable<I>,
+        other_iter: &mut Peekable<I>,
         united_so_far: &Self,
         exhausted: &mut bool,
         mut f: F,
-    ) -> ControlFlow<Option<Self::Item>, Self::Item>
+    ) -> RunningResult<Self::Item, Self::Item>
     where
-        OgIter: Iterator<Item = Self::Item>,
-        OtherIter: Iterator<Item = Self::Item>,
-        F: for<'a> FnMut(&'a Self::Item, &'a Self::Item) -> UnionResult<Self::Item, &'a Self::Item>
+        I: Iterator<Item = Self::Item>,
+        F: for<'a> FnMut(&'a Self::Item, &'a Self::Item) -> UnionResult<Self::Item, &'a Self::Item>,
     {
-        let peeked_union_with_og = og_iter
-            .peek()
-            .map(|peeked| (f)(united_so_far, peeked));
-        let peeked_union_with_other = other_iter
-            .peek()
-            .map(|peeked| (f)(united_so_far, peeked));
+        let peeked_union_with_og = og_iter.peek().map(|peeked| (f)(united_so_far, peeked));
+        let peeked_union_with_other = other_iter.peek().map(|peeked| (f)(united_so_far, peeked));
 
         match (peeked_union_with_og, peeked_union_with_other) {
             (Some(UnionResult::United(og_united)), Some(UnionResult::United(other_united))) => {
@@ -612,24 +613,24 @@ impl UnionOperable for AbsoluteBoundsOrEmpty {
                 og_iter.next();
                 other_iter.next();
 
-                ControlFlow::Continue(og_united.extend(&other_united))
+                RunningResult::Running(og_united.extend(&other_united))
             },
             (Some(UnionResult::United(og_united)), _) => {
                 // Since the peeked interval of `other_iter` was separate, we only advance `og_iter`
                 og_iter.next();
 
-                ControlFlow::Continue(og_united)
+                RunningResult::Running(og_united)
             },
             (_, Some(UnionResult::United(other_united))) => {
                 // Since the peeked interval of `og_iter` was separate, we only advance `other_iter`
                 other_iter.next();
 
-                ControlFlow::Continue(other_united)
+                RunningResult::Running(other_united)
             },
             (None, None) => {
                 // Don't know how to return the `exhausted` info other than using a mutable pointer to the flag
                 *exhausted = true;
-                ControlFlow::Break(Some(united_so_far.clone()))
+                RunningResult::Done(united_so_far.clone())
             },
             (peeked_union_with_og, peeked_union_with_other) => {
                 // We advance any iterator that isn't exhausted for the next iteration,
@@ -644,7 +645,7 @@ impl UnionOperable for AbsoluteBoundsOrEmpty {
                     other_iter.next();
                 }
 
-                ControlFlow::Break(Some(united_so_far.clone()))
+                RunningResult::Done(united_so_far.clone())
             },
         }
     }
@@ -658,48 +659,36 @@ impl UnionOperable for AbsoluteInterval {
         peeked: &Self,
         rule_set: OverlapRuleSet,
         rules: &'a RI,
-    ) -> ControlFlow<Option<Self::Item>, Self::Item>
+    ) -> RunningResult<Self::Item, Self::Item>
     where
         &'a RI: IntoIterator<Item = &'a OverlapRule>,
     {
-        Self::peer_union_with(
-            united_so_far,
-            peeked,
-            |united_so_far, peeked| unite_abs_intervals(
-                united_so_far,
-                peeked,
-                rule_set,
-                rules,
-            ),
-        )
+        Self::peer_union_with(united_so_far, peeked, |united_so_far, peeked| {
+            unite_abs_intervals(united_so_far, peeked, rule_set, rules)
+        })
     }
 
-    fn peer_union_with<F>(
-        united_so_far: &Self,
-        peeked: &Self,
-        mut f: F,
-    ) -> ControlFlow<Option<Self::Item>, Self::Item>
+    fn peer_union_with<F>(united_so_far: &Self, peeked: &Self, mut f: F) -> RunningResult<Self::Item, Self::Item>
     where
         F: for<'a> FnMut(&'a Self::Item, &'a Self::Item) -> UnionResult<Self::Item, &'a Self::Item>,
     {
         match (f)(united_so_far, peeked) {
-            UnionResult::United(united) => ControlFlow::Continue(united),
-            UnionResult::Separate(..) => ControlFlow::Break(Some(united_so_far.clone())),
+            UnionResult::United(united) => RunningResult::Running(united),
+            UnionResult::Separate(..) => RunningResult::Done(united_so_far.clone()),
         }
     }
 
-    fn union<'a, OgIter, OtherIter, RI>(
-        og_iter: &mut Peekable<OgIter>,
-        other_iter: &mut Peekable<OtherIter>,
+    fn union<'a, I, RI>(
+        og_iter: &mut Peekable<I>,
+        other_iter: &mut Peekable<I>,
         united_so_far: &Self,
         exhausted: &mut bool,
         rule_set: OverlapRuleSet,
         rules: &'a RI,
-    ) -> ControlFlow<Option<Self::Item>, Self::Item>
+    ) -> RunningResult<Self::Item, Self::Item>
     where
-        OgIter: Iterator<Item = Self::Item>,
-        OtherIter: Iterator<Item = Self::Item>,
-        &'a RI: IntoIterator<Item = &'a OverlapRule>
+        I: Iterator<Item = Self::Item>,
+        &'a RI: IntoIterator<Item = &'a OverlapRule>,
     {
         Self::union_with(
             og_iter,
@@ -710,24 +699,19 @@ impl UnionOperable for AbsoluteInterval {
         )
     }
 
-    fn union_with<OgIter, OtherIter, F>(
-        og_iter: &mut Peekable<OgIter>,
-        other_iter: &mut Peekable<OtherIter>,
+    fn union_with<I, F>(
+        og_iter: &mut Peekable<I>,
+        other_iter: &mut Peekable<I>,
         united_so_far: &Self,
         exhausted: &mut bool,
         mut f: F,
-    ) -> ControlFlow<Option<Self::Item>, Self::Item>
+    ) -> RunningResult<Self::Item, Self::Item>
     where
-        OgIter: Iterator<Item = Self::Item>,
-        OtherIter: Iterator<Item = Self::Item>,
-        F: for<'a> FnMut(&'a Self::Item, &'a Self::Item) -> UnionResult<Self::Item, &'a Self::Item>
+        I: Iterator<Item = Self::Item>,
+        F: for<'a> FnMut(&'a Self::Item, &'a Self::Item) -> UnionResult<Self::Item, &'a Self::Item>,
     {
-        let peeked_union_with_og = og_iter
-            .peek()
-            .map(|peeked| (f)(united_so_far, peeked));
-        let peeked_union_with_other = other_iter
-            .peek()
-            .map(|peeked| (f)(united_so_far, peeked));
+        let peeked_union_with_og = og_iter.peek().map(|peeked| (f)(united_so_far, peeked));
+        let peeked_union_with_other = other_iter.peek().map(|peeked| (f)(united_so_far, peeked));
 
         match (peeked_union_with_og, peeked_union_with_other) {
             (Some(UnionResult::United(og_united)), Some(UnionResult::United(other_united))) => {
@@ -735,24 +719,24 @@ impl UnionOperable for AbsoluteInterval {
                 og_iter.next();
                 other_iter.next();
 
-                ControlFlow::Continue(og_united.extend(&other_united))
+                RunningResult::Running(og_united.extend(&other_united))
             },
             (Some(UnionResult::United(og_united)), _) => {
                 // Since the peeked interval of `other_iter` was separate, we only advance `og_iter`
                 og_iter.next();
 
-                ControlFlow::Continue(og_united)
+                RunningResult::Running(og_united)
             },
             (_, Some(UnionResult::United(other_united))) => {
                 // Since the peeked interval of `og_iter` was separate, we only advance `other_iter`
                 other_iter.next();
 
-                ControlFlow::Continue(other_united)
+                RunningResult::Running(other_united)
             },
             (None, None) => {
                 // Don't know how to return the `exhausted` info other than using a mutable pointer to the flag
                 *exhausted = true;
-                ControlFlow::Break(Some(united_so_far.clone()))
+                RunningResult::Done(united_so_far.clone())
             },
             (peeked_union_with_og, peeked_union_with_other) => {
                 // We advance any iterator that isn't exhausted for the next iteration,
@@ -767,7 +751,7 @@ impl UnionOperable for AbsoluteInterval {
                     other_iter.next();
                 }
 
-                ControlFlow::Break(Some(united_so_far.clone()))
+                RunningResult::Done(united_so_far.clone())
             },
         }
     }
@@ -811,7 +795,7 @@ fn unite_abs_intervals<'a, 'b, RI>(
     rule_set: OverlapRuleSet,
     rules: &'b RI,
 ) -> UnionResult<AbsoluteInterval, &'a AbsoluteInterval>
-where   
+where
     &'b RI: IntoIterator<Item = &'b OverlapRule>,
 {
     if !a.overlaps(b, rule_set, rules) {
@@ -847,36 +831,27 @@ pub trait UnitableIntervalIterator: Iterator + Sized {
     /// Unites two interval iterators using predefined rule
     ///
     /// Both iterators must be chronologically ordered, otherwise this results in undefined results
-    fn simple_union<I>(self, other: I) -> SimpleUnion<Peekable<Self>, Peekable<<I as IntoIterator>::IntoIter>>
+    fn simple_union<I>(self, other: I) -> SimpleUnion<Peekable<Self>>
     where
-        I: IntoIterator<Item = Self::Item>,
+        I: IntoIterator<IntoIter = Self>,
     {
         SimpleUnion::new(self, other.into_iter())
     }
 
     /// Unites two interval iterators using the given [`OverlapRuleSet`] and [`OverlapRule`]s
-    fn union<'a, I, RI>(
-        self,
-        other: I,
-        rule_set: OverlapRuleSet,
-        rules: &'a RI,
-    ) -> Union<'a, Peekable<Self>, Peekable<<I as IntoIterator>::IntoIter>, RI>
+    fn union<'a, I, RI>(self, other: I, rule_set: OverlapRuleSet, rules: &'a RI) -> Union<'a, Peekable<Self>, RI>
     where
-        I: IntoIterator<Item = Self::Item>,
+        I: IntoIterator<IntoIter = Self>,
         &'a RI: IntoIterator<Item = &'a OverlapRule>,
     {
         Union::new(self, other.into_iter(), rule_set, rules)
     }
 
     /// Unites two interval iterators using the given closure
-    fn union_with<I, F, E>(
-        self,
-        other: I,
-        f: F,
-    ) -> UnionWith<Peekable<Self>, Peekable<<I as IntoIterator>::IntoIter>, F>
+    fn union_with<I, F>(self, other: I, f: F) -> UnionWith<Peekable<Self>, F>
     where
-        I: IntoIterator<Item = Self::Item>,
-        F: for<'a> FnMut(&'a Self::Item, &'a Self::Item) -> Result<IntersectionResult<Self::Item, &'a Self::Item>, E>,
+        I: IntoIterator<IntoIter = Self>,
+        F: for<'a> FnMut(&'a Self::Item, &'a Self::Item) -> UnionResult<Self::Item, &'a Self::Item>,
     {
         UnionWith::new(self, other.into_iter(), f)
     }
@@ -885,45 +860,8 @@ pub trait UnitableIntervalIterator: Iterator + Sized {
 impl<I> UnitableIntervalIterator for I
 where
     I: Iterator,
-    I::Item: UnionOperable,
+    I::Item: UnionOperable<Item = I::Item>,
 {
-}
-
-/// Represents the result of a union
-// NOTE: Perhaps move to another place since it's a generic that could be used for other things?
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum UnionResult<U, S> {
-    /// Union was successful, the united element is contained within this variant
-    United(U),
-    /// Union was unsuccessful, both elements involved are contained within this variant
-    Separate(S, S),
-}
-
-impl<U, S> UnionResult<U, S> {
-    /// Maps the contents of the [`United`](UnionResult::United) variant
-    pub fn map_united<F, T>(self, f: F) ->  UnionResult<T, S>
-    where
-        F: FnOnce(U) -> T,
-    {
-        match self {
-            UnionResult::United(u) => UnionResult::United((f)(u)),
-            UnionResult::Separate(a, b) => UnionResult::Separate(a, b),
-        }
-    }
-
-    /// Maps the contents of the [`Separate`](UnionResult::Separate) variant
-    pub fn map_separate<F, T>(self, f: F) ->  UnionResult<U, T>
-    where
-        F: FnOnce((S, S)) -> (T, T),
-    {
-        match self {
-            UnionResult::United(u) => UnionResult::United(u),
-            UnionResult::Separate(a, b) => {
-                let new_separate = (f)((a, b));
-                UnionResult::Separate(new_separate.0, new_separate.1)
-            },
-        }
-    }
 }
 
 /// Peer union iterator for intervals using predefined rules
@@ -939,9 +877,6 @@ where
 {
     pub fn new(iter: I) -> Self {
         PeerSimpleUnion {
-            // Instead of using PeerUnion as a proxy, we use simple_unite_abs_intervals() in the Iterator impl,
-            // so that when looking at what the final iterator is composed of, we just see "PeerSimpleUnion" and not
-            // PeerSimpleUnion<PeerUnion<Peekable<I>, &[OverlapRule]>>, which could be confusing
             iter: iter.peekable(),
             exhausted: false,
         }
@@ -951,9 +886,9 @@ where
 impl<I> Iterator for PeerSimpleUnion<Peekable<I>>
 where
     I: Iterator,
-    I::Item: UnionOperable,
+    I::Item: UnionOperable<Item = I::Item>,
 {
-    type Item = <I::Item as UnionOperable>::Item;
+    type Item = I::Item;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.exhausted {
@@ -966,35 +901,28 @@ where
         };
 
         loop {
-            if let Some(peeked) = self.iter.peek() {
-                let tmp = UnionOperable::peer_union(
-                    &united_so_far,
-                    peeked,
-                    OverlapRuleSet::Strict,
-                    &SIMPLE_OVERLAP_RULES
-                );
+            let Some(peeked) = self.iter.peek() else {
+                self.exhausted = true;
+                return Some(united_so_far);
+            };
 
-                match tmp {
-                    ControlFlow::Continue(x) => {
-                        // Error here: mismatched type
-                        // united_so_far is `I::Item`
-                        //             x is `<I::Item as UnionOperable>::Item`
-                        // both are concretely equal to `impl UnionOperable` though
-                        united_so_far = x;
-                    },
-                    ControlFlow::Break(y) => {
-                        return y;
-                    } 
-                }
+            let running_result =
+                UnionOperable::peer_union(&united_so_far, peeked, OverlapRuleSet::Strict, &SIMPLE_OVERLAP_RULES);
+
+            match running_result {
+                RunningResult::Running(runner) => united_so_far = runner,
+                RunningResult::Done(result) => return Some(result),
             }
-
-            self.exhausted = true;
-            return Some(united_so_far);
         }
     }
 }
 
-impl<I> FusedIterator for PeerSimpleUnion<Peekable<I>> where I: Iterator<Item = AbsoluteInterval> {}
+impl<I> FusedIterator for PeerSimpleUnion<Peekable<I>>
+where
+    I: Iterator,
+    I::Item: UnionOperable<Item = I::Item>,
+{
+}
 
 /// Peer union iterator for intervals using the given [`OverlapRuleSet`] and given [`OverlapRule`]s
 #[derive(Debug, Clone, Hash)]
@@ -1023,7 +951,7 @@ where
 impl<'u, I, RI> Iterator for PeerUnion<'u, Peekable<I>, RI>
 where
     I: Iterator,
-    I::Item: UnionOperable,
+    I::Item: UnionOperable<Item = I::Item>,
     &'u RI: IntoIterator<Item = &'u OverlapRule>,
 {
     type Item = I::Item;
@@ -1039,19 +967,25 @@ where
         };
 
         loop {
-            if let Some(peeked) = self.iter.peek() {
-                united_so_far = UnionOperable::peer_union(&united_so_far, peeked, self.rule_set, self.rules)?;
-            }
+            let Some(peeked) = self.iter.peek() else {
+                self.exhausted = true;
+                return Some(united_so_far);
+            };
 
-            self.exhausted = true;
-            return Some(united_so_far);
+            let running_result = UnionOperable::peer_union(&united_so_far, peeked, self.rule_set, self.rules);
+
+            match running_result {
+                RunningResult::Running(runner) => united_so_far = runner,
+                RunningResult::Done(result) => return Some(result),
+            }
         }
     }
 }
 
 impl<'u, I, RI> FusedIterator for PeerUnion<'u, Peekable<I>, RI>
 where
-    I: Iterator<Item = AbsoluteInterval>,
+    I: Iterator,
+    I::Item: UnionOperable<Item = I::Item>,
     &'u RI: IntoIterator<Item = &'u OverlapRule>,
 {
 }
@@ -1080,8 +1014,7 @@ where
 impl<I, F> Iterator for PeerUnionWith<Peekable<I>, F>
 where
     I: Iterator,
-    I::Item: UnionOperable,
-    // https://doc.rust-lang.org/nomicon/hrtb.html
+    I::Item: UnionOperable<Item = I::Item>,
     F: for<'a> FnMut(&'a I::Item, &'a I::Item) -> UnionResult<I::Item, &'a I::Item>,
 {
     type Item = I::Item;
@@ -1097,37 +1030,42 @@ where
         };
 
         loop {
-            if let Some(peeked) = self.iter.peek() {
-                united_so_far = UnionOperable::peer_union_with(&united_so_far, peeked, self.f)?;
-            }
+            let Some(peeked) = self.iter.peek() else {
+                self.exhausted = true;
+                return Some(united_so_far);
+            };
 
-            self.exhausted = true;
-            return Some(united_so_far);
+            let running_result = UnionOperable::peer_union_with(&united_so_far, peeked, &mut self.f);
+
+            match running_result {
+                RunningResult::Running(runner) => united_so_far = runner,
+                RunningResult::Done(result) => return Some(result),
+            }
         }
     }
 }
 
 impl<I, F> FusedIterator for PeerUnionWith<Peekable<I>, F>
 where
-    I: Iterator<Item = AbsoluteInterval>,
+    I: Iterator,
+    I::Item: UnionOperable<Item = I::Item>,
     F: for<'a> FnMut(&'a I::Item, &'a I::Item) -> UnionResult<I::Item, &'a I::Item>,
 {
 }
 
 /// Union of intervals of two sets using predefined rules
 #[derive(Debug, Clone, Hash)]
-pub struct SimpleUnion<I, O> {
+pub struct SimpleUnion<I> {
     iter: I,
-    other: O,
+    other: I,
     exhausted: bool,
 }
 
-impl<I, O> SimpleUnion<Peekable<I>, Peekable<O>>
+impl<I> SimpleUnion<Peekable<I>>
 where
     I: Iterator,
-    O: Iterator,
 {
-    pub fn new(iter: I, other: O) -> Self {
+    pub fn new(iter: I, other: I) -> Self {
         SimpleUnion {
             iter: iter.peekable(),
             other: other.peekable(),
@@ -1136,12 +1074,12 @@ where
     }
 }
 
-impl<I, O> Iterator for SimpleUnion<Peekable<I>, Peekable<O>>
+impl<I> Iterator for SimpleUnion<Peekable<I>>
 where
-    I: Iterator<Item = AbsoluteInterval>,
-    O: Iterator<Item = AbsoluteInterval>,
+    I: Iterator,
+    I::Item: UnionOperable<Item = I::Item>,
 {
-    type Item = AbsoluteInterval;
+    type Item = I::Item;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.exhausted {
@@ -1154,41 +1092,45 @@ where
         };
 
         loop {
-            united_so_far = UnionOperable::union(
+            let running_result = UnionOperable::union(
                 &mut self.iter,
                 &mut self.other,
                 &united_so_far,
                 &mut self.exhausted,
                 OverlapRuleSet::Strict,
-                SIMPLE_OVERLAP_RULES
-            )?;
+                &SIMPLE_OVERLAP_RULES,
+            );
+
+            match running_result {
+                RunningResult::Running(runner) => united_so_far = runner,
+                RunningResult::Done(result) => return Some(result),
+            }
         }
     }
 }
 
-impl<I, O> FusedIterator for SimpleUnion<Peekable<I>, Peekable<O>>
+impl<I> FusedIterator for SimpleUnion<Peekable<I>>
 where
-    I: Iterator<Item = AbsoluteInterval>,
-    O: Iterator<Item = AbsoluteInterval>,
+    I: Iterator,
+    I::Item: UnionOperable<Item = I::Item>,
 {
 }
 
 /// Union of intervals of two sets using the given [`OverlapRuleSet`] and [`OverlapRule`]s
 #[derive(Debug, Clone, Hash)]
-pub struct Union<'u, I, O, RI> {
+pub struct Union<'u, I, RI> {
     iter: I,
-    other: O,
+    other: I,
     rule_set: OverlapRuleSet,
     rules: &'u RI,
     exhausted: bool,
 }
 
-impl<'u, I, O, RI> Union<'u, Peekable<I>, Peekable<O>, RI>
+impl<'u, I, RI> Union<'u, Peekable<I>, RI>
 where
     I: Iterator,
-    O: Iterator,
 {
-    pub fn new(iter: I, other: O, rule_set: OverlapRuleSet, rules: &'u RI) -> Self
+    pub fn new(iter: I, other: I, rule_set: OverlapRuleSet, rules: &'u RI) -> Self
     where
         &'u RI: IntoIterator<Item = &'u OverlapRule>,
     {
@@ -1202,13 +1144,13 @@ where
     }
 }
 
-impl<'u, I, O, RI> Iterator for Union<'u, Peekable<I>, Peekable<O>, &'u RI>
+impl<'u, I, RI> Iterator for Union<'u, Peekable<I>, &'u RI>
 where
-    I: Iterator<Item = AbsoluteInterval>,
-    O: Iterator<Item = AbsoluteInterval>,
+    I: Iterator,
+    I::Item: UnionOperable<Item = I::Item>,
     &'u RI: IntoIterator<Item = &'u OverlapRule>,
 {
-    type Item = AbsoluteInterval;
+    type Item = I::Item;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.exhausted {
@@ -1221,41 +1163,45 @@ where
         };
 
         loop {
-            united_so_far = UnionOperable::union(
+            let running_result = UnionOperable::union(
                 &mut self.iter,
-                self.other,
-                &united_so_far, 
+                &mut self.other,
+                &united_so_far,
                 &mut self.exhausted,
                 self.rule_set,
-                self.rules
-            )?;
+                self.rules,
+            );
+
+            match running_result {
+                RunningResult::Running(runner) => united_so_far = runner,
+                RunningResult::Done(result) => return Some(result),
+            }
         }
     }
 }
 
-impl<'u, I, O, RI> FusedIterator for Union<'u, Peekable<I>, Peekable<O>, &'u RI>
+impl<'u, I, RI> FusedIterator for Union<'u, Peekable<I>, &'u RI>
 where
-    I: Iterator<Item = AbsoluteInterval>,
-    O: Iterator<Item = AbsoluteInterval>,
+    I: Iterator,
+    I::Item: UnionOperable<Item = I::Item>,
     &'u RI: IntoIterator<Item = &'u OverlapRule>,
 {
 }
 
 /// Union of intervals of two sets using the given closure
 #[derive(Debug, Clone)]
-pub struct UnionWith<I, O, F> {
+pub struct UnionWith<I, F> {
     iter: I,
-    other: O,
+    other: I,
     f: F,
     exhausted: bool,
 }
 
-impl<I, O, F> UnionWith<Peekable<I>, Peekable<O>, F>
+impl<I, F> UnionWith<Peekable<I>, F>
 where
     I: Iterator,
-    O: Iterator,
 {
-    pub fn new(iter: I, other: O, f: F) -> Self {
+    pub fn new(iter: I, other: I, f: F) -> Self {
         UnionWith {
             iter: iter.peekable(),
             other: other.peekable(),
@@ -1265,13 +1211,13 @@ where
     }
 }
 
-impl<I, O, F> Iterator for UnionWith<Peekable<I>, Peekable<O>, F>
+impl<I, F> Iterator for UnionWith<Peekable<I>, F>
 where
-    I: Iterator<Item = AbsoluteInterval>,
-    O: Iterator<Item = AbsoluteInterval>,
-    F: for<'a> FnMut(&'a AbsoluteInterval, &'a AbsoluteInterval) -> UnionResult<AbsoluteInterval, &'a AbsoluteInterval>,
+    I: Iterator,
+    I::Item: UnionOperable<Item = I::Item>,
+    F: for<'a> FnMut(&'a I::Item, &'a I::Item) -> UnionResult<I::Item, &'a I::Item>,
 {
-    type Item = AbsoluteInterval;
+    type Item = I::Item;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.exhausted {
@@ -1284,25 +1230,31 @@ where
         };
 
         loop {
-            united_so_far = UnionOperable::union_with(
+            let running_result = UnionOperable::union_with(
                 &mut self.iter,
-                self.other,
-                &united_so_far, 
+                &mut self.other,
+                &united_so_far,
                 &mut self.exhausted,
-                self.f,
-            )?;
+                &mut self.f,
+            );
+
+            match running_result {
+                RunningResult::Running(runner) => united_so_far = runner,
+                RunningResult::Done(result) => return Some(result),
+            }
         }
     }
 }
 
-impl<I, O, F> FusedIterator for UnionWith<Peekable<I>, Peekable<O>, F>
+impl<I, F> FusedIterator for UnionWith<Peekable<I>, F>
 where
-    I: Iterator<Item = AbsoluteInterval>,
-    O: Iterator<Item = AbsoluteInterval>,
-    F: for<'a> FnMut(&'a AbsoluteInterval, &'a AbsoluteInterval) -> UnionResult<AbsoluteInterval, &'a AbsoluteInterval>,
+    I: Iterator,
+    I::Item: UnionOperable<Item = I::Item>,
+    F: for<'a> FnMut(&'a I::Item, &'a I::Item) -> UnionResult<I::Item, &'a I::Item>,
 {
 }
 
+// TODO: REWORK GENERICS
 /// Dispatcher trait for intersection iterators
 pub trait IntersectableIntervalIterator: Iterator + Sized {
     /// Intersects peer intervals of the iterator using predefined rules
@@ -1358,16 +1310,11 @@ pub trait IntersectableIntervalIterator: Iterator + Sized {
     }
 }
 
-impl<I> IntersectableIntervalIterator for I where I: Iterator<Item = AbsoluteInterval> {}
-
-/// Represents the result of an intersection
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum IntersectionResult<I, S> {
-    /// Intersection was successful, the intersected element is contained within this variant
-    Intersects(I),
-    /// Intersection was unsuccessful, both elements involved are contained within this variant
-    Separate(S, S),
-}
+// impl<I> IntersectableIntervalIterator for I
+// where
+//     I: Iterator,
+//     I::Item: IntersectionOperable<Item = I::Item>,
+// {}
 
 /// Intersection of peer intervals using predefined rules
 #[derive(Debug, Clone, Hash)]
@@ -1386,7 +1333,7 @@ where
 
 impl<I> Iterator for PeerSimpleIntersection<Peekable<I>>
 where
-    I: Iterator<Item = AbsoluteInterval>,
+    I: Iterator<Item = AbsoluteInterval>, // CHANGE TO GENERIC
 {
     type Item = I::Item;
 
@@ -1436,6 +1383,7 @@ pub struct IntersectionWith<I, O, F> {
     f: F,
 }
 
+// TODO: REWORK TO GENERIC
 pub trait DifferentiableIntervalIterator: Sized {
     fn difference_with_one(self, interval: AbsoluteInterval) -> DifferenceWithOne<Self> {
         todo!()
@@ -1460,10 +1408,11 @@ pub trait DifferentiableIntervalIterator: Sized {
 // impl<I> DifferentiableIntervalIterator for I
 // where
 //     I: Iterator,
-//     I::Item: DifferenceOperable,
+//     I::Item: DifferenceOperable<Item = I::Item>,
 // {
 // }
 
+// TODO: REWORK TO GENERIC
 pub trait SymmetricallyDifferentiableIntervalIterator: Sized {
     fn sym_difference_with_one(self, interval: AbsoluteInterval) -> SymmetricDifferenceWithOne<Self> {
         todo!()
@@ -1484,19 +1433,11 @@ pub trait SymmetricallyDifferentiableIntervalIterator: Sized {
 // impl<I> SymmetricallyDifferentiableIntervalIterator for I
 // where
 //     I: Iterator,
-//     I::Item: SymmetricDifferenceOperable,
+//     I::Item: SymmetricDifferenceOperable<Item = I::Item>,
 // {
 // }
 
-/// Represents the result of a difference
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum DifferenceResult<T> {
-    /// Difference was successful, the difference of the two elements is contained within this variant
-    Difference(T),
-    /// Difference was unsuccessful, both elements involved are contained within this variant
-    Separate(T, T),
-}
-
+// TODO: MOVE THOSE AND REWORK THEM
 #[derive(Debug, Clone)]
 pub struct DifferenceWithOne<I> {
     iter: I,
@@ -1517,15 +1458,6 @@ pub struct DifferenceNextPeer<I> {
 #[derive(Debug, Clone)]
 pub struct DifferencePreviousPeer<I> {
     iter: I,
-}
-
-/// Represents the result of a symmetric difference
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum SymmetricDifferenceResult<T> {
-    /// Symmetric difference was successful, the symmetric difference of both elements is contained within this variant
-    SymmetricDifference(T, T),
-    /// Symmetric difference was unsuccessful, both elements involved are contained within this variant
-    Separate(T, T),
 }
 
 #[derive(Debug, Clone)]
@@ -1604,9 +1536,9 @@ impl<I> CustomIter<I> {
 impl<I> Iterator for CustomIter<I>
 where
     I: Iterator,
-    I::Item: CustomOperable,
+    I::Item: CustomOperable<Item = I::Item>,
 {
-    type Item = <I::Item as CustomOperable>::Item;
+    type Item = I::Item;
 
     fn next(&mut self) -> Option<Self::Item> {
         Some(self.iter.next()?.custom_op())
@@ -1622,8 +1554,12 @@ trait CustomIterDispatch: Iterator + Sized {
 impl<I> CustomIterDispatch for I
 where
     I: Iterator,
-    I::Item: CustomOperable,
+    I::Item: CustomOperable<Item = I::Item>,
 {}
 
 Note: `where T: Iterator, T::Item: Operable` can also be written as `where T: Iterator<Item: Operable>`
+
+In the future, implementing Iterator on a type that has non-overlapping trait bounds on its generics
+will be allowed (see https://github.com/rust-lang/rust/issues/20400, emulation: https://github.com/rust-lang/rfcs/pull/1672#issuecomment-1405377983).
+When this kind of implementations become standard, this crate should adopt it.
 */

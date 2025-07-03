@@ -1,5 +1,6 @@
 pub mod collections;
 pub mod intervals;
+pub mod ops;
 pub mod scheduling;
 
 #[cfg(feature = "serde")]
