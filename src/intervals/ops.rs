@@ -13,11 +13,13 @@ use std::cmp::Ordering;
 
 use chrono::{DateTime, Duration, DurationRound, RoundingError, Utc};
 
+use crate::collections::SymmetricDifference;
 use crate::intervals::ClosedAbsoluteInterval;
 use crate::intervals::interval::{
     AbsoluteBoundsOrEmpty, AbsoluteFiniteBound, HalfOpenAbsoluteInterval, OpenInterval, swap_absolute_bounds,
 };
 use crate::intervals::meta::HasBoundInclusivity;
+use crate::ops::{DifferenceResult, IntersectionResult, UnionResult};
 
 use super::interval::{
     AbsoluteBounds, AbsoluteEndBound, AbsoluteInterval, AbsoluteStartBound, EmptyInterval, HasAbsoluteBounds,
@@ -295,12 +297,13 @@ pub enum SimpleTimeContainmentPosition {
 /// Different rule sets for determining whether different [`TimeContainmentPosition`]s are considered as containing or not.
 ///
 /// See [`CanPositionTimeContainment::contains`] for more.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum TimeContainmentRuleSet {
     /// Strict rule set
     ///
     /// Mathematical interpretation of bounds, so the time needs to fall on an inclusive bound in order to be counted
     /// as contained.
+    #[default]
     Strict,
     /// Lenient rule set
     ///
@@ -352,7 +355,7 @@ fn lenient_containment_rule_set_disambiguation(
 }
 
 /// Time containment rules used as the reference for the predefined decisions
-pub const SIMPLE_TIME_CONTAINMENT_RULES: [TimeContainmentRule; 0] = [];
+pub const DEFAULT_TIME_CONTAINMENT_RULES: [TimeContainmentRule; 0] = [];
 
 /// All rules for containment by converting a [`SimpleTimeContainmentPosition`] into a [`bool`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -583,7 +586,7 @@ pub enum SimpleOverlapPosition {
 /// Different rule sets for determining whether different [`OverlapPosition`]s are considered as overlapping or not.
 ///
 /// See [`Interval::overlaps_using_rule_set`] for more.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum OverlapRuleSet {
     /// Strict rule set
     ///
@@ -610,6 +613,7 @@ pub enum OverlapRuleSet {
     /// Contains                 [---------]
     /// Contains                   [----------]
     /// ```
+    #[default]
     Strict,
     /// Continuous to future rule set
     ///
@@ -831,7 +835,8 @@ fn very_lenient_overlap_rule_set_disambiguation(overlap_position: OverlapPositio
     overlap_position.to_simple()
 }
 
-pub const SIMPLE_OVERLAP_RULES: [OverlapRule; 1] = [OverlapRule::DenyAdjacency];
+/// Default overlap rules
+pub const DEFAULT_OVERLAP_RULES: [OverlapRule; 1] = [OverlapRule::DenyAdjacency];
 
 /// All rules for overlapping by converting a [`SimpleOverlapPosition`] into a [`bool`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -951,7 +956,7 @@ pub trait CanPositionTimeContainment {
 
     /// Returns whether the given time is contained in the interval using predetermined rules
     ///
-    /// Uses the [`Strict` rule set](TimeContainmentRuleSet::Strict) with no additional rules.
+    /// Uses the [default rule set](TimeContainmentRuleSet::default) with default rules.
     ///
     /// The rule set has been chosen because they are the closest to how we mathematically
     /// and humanly interpret containment.
@@ -963,7 +968,7 @@ pub trait CanPositionTimeContainment {
     /// If you want even more granular control, see [`CanPositionTimeContainment::contains_using_simple`].
     #[must_use]
     fn simple_contains(&self, time: DateTime<Utc>) -> bool {
-        self.contains(time, TimeContainmentRuleSet::Strict, &SIMPLE_TIME_CONTAINMENT_RULES)
+        self.contains(time, TimeContainmentRuleSet::default(), &DEFAULT_TIME_CONTAINMENT_RULES)
     }
 
     /// Returns whether the given time is contained in the interval using the given [containment rules](`TimeContainmentRule`)
@@ -1197,9 +1202,7 @@ pub trait CanPositionOverlap {
 
     /// Returns whether the given other interval overlaps the current one using predetermined rules
     ///
-    /// Uses the [`Strict` rule set](OverlapRuleSet::Strict) with the following additional rules:
-    ///
-    /// - [`DenyAdjacency`](OverlapRule::DenyAdjacency)
+    /// Uses the [default rule set](OverlapRuleSet::default) with the default rules,
     ///
     /// Those have been chosen because they are the closest to how we mathematically and humanly interpret overlaps.
     ///
@@ -1210,7 +1213,7 @@ pub trait CanPositionOverlap {
     /// If you want even more granular control, see [`CanPositionOverlap::overlaps_using_simple`].
     #[must_use]
     fn simple_overlaps(&self, other: &Self) -> bool {
-        self.overlaps(other, OverlapRuleSet::Strict, &SIMPLE_OVERLAP_RULES)
+        self.overlaps(other, OverlapRuleSet::default(), &DEFAULT_OVERLAP_RULES)
     }
 
     /// Returns whether the given other interval overlaps the current one using the given [overlap rules](`OverlapRule`)
@@ -1593,7 +1596,7 @@ pub trait Abridgable {
     ///
     /// If both intervals are empty, the method just returns an empty interval.
     ///
-    /// If one of the intervals is empty, the method just return a clone of the other non-empty interval.
+    /// If one of the intervals is empty, the method just returns a clone of the other non-empty interval.
     #[must_use]
     fn abridge(&self, other: &Self) -> Self::Output;
 }
@@ -1670,4 +1673,184 @@ fn abridge_abs_bounds(og_bounds: &AbsoluteBounds, other_bounds: &AbsoluteBounds)
     }
 
     AbsoluteBounds::unchecked_new(highest_start, lowest_end)
+}
+
+/// Unites two [`AbsoluteBounds`] using the given rules
+pub fn unite_absolute_bounds<'a, 'b, RI>(
+    a: &'a AbsoluteBounds,
+    b: &'a AbsoluteBounds,
+    rule_set: OverlapRuleSet,
+    rules: &'b RI,
+) -> UnionResult<AbsoluteBounds, &'a AbsoluteBounds>
+where
+    &'b RI: IntoIterator<Item = &'b OverlapRule>,
+{
+    if !a.overlaps(b, rule_set, rules) {
+        return UnionResult::Separate(a, b);
+    }
+
+    UnionResult::United(a.extend(b))
+}
+
+/// Unites two [`AbsoluteBoundsOrEmpty`] using the given rules
+pub fn unite_absolute_bounds_or_empty<'a, 'b, RI>(
+    a: &'a AbsoluteBoundsOrEmpty,
+    b: &'a AbsoluteBoundsOrEmpty,
+    rule_set: OverlapRuleSet,
+    rules: &'b RI,
+) -> UnionResult<AbsoluteBoundsOrEmpty, &'a AbsoluteBoundsOrEmpty>
+where
+    &'b RI: IntoIterator<Item = &'b OverlapRule>,
+{
+    if !a.overlaps(b, rule_set, rules) {
+        return UnionResult::Separate(a, b);
+    }
+
+    UnionResult::United(a.extend(b))
+}
+
+/// Unites two [`AbsoluteInterval`]s using the given rules
+pub fn unite_absolute_intervals<'a, 'b, RI>(
+    a: &'a AbsoluteInterval,
+    b: &'a AbsoluteInterval,
+    rule_set: OverlapRuleSet,
+    rules: &'b RI,
+) -> UnionResult<AbsoluteInterval, &'a AbsoluteInterval>
+where
+    &'b RI: IntoIterator<Item = &'b OverlapRule>,
+{
+    if !a.overlaps(b, rule_set, rules) {
+        return UnionResult::Separate(a, b);
+    }
+
+    UnionResult::United(a.extend(b))
+}
+
+/// Intersects two [`AbsoluteBounds`] using the given rules
+pub fn intersect_absolute_bounds<'a, 'b, RI>(
+    a: &'a AbsoluteBounds,
+    b: &'a AbsoluteBounds,
+    rule_set: OverlapRuleSet,
+    rules: &'b RI,
+) -> IntersectionResult<AbsoluteBounds, &'a AbsoluteBounds>
+where
+    &'b RI: IntoIterator<Item = &'b OverlapRule>,
+{
+    if !a.overlaps(b, rule_set, rules) {
+        return IntersectionResult::Separate(a, b);
+    }
+
+    IntersectionResult::Intersected(a.abridge(b))
+}
+
+/// Intersects two [`AbsoluteBoundsOrEmpty`] using the given rules
+pub fn intersect_absolute_bounds_or_empty<'a, 'b, RI>(
+    a: &'a AbsoluteBoundsOrEmpty,
+    b: &'a AbsoluteBoundsOrEmpty,
+    rule_set: OverlapRuleSet,
+    rules: &'b RI,
+) -> IntersectionResult<AbsoluteBoundsOrEmpty, &'a AbsoluteBoundsOrEmpty>
+where
+    &'b RI: IntoIterator<Item = &'b OverlapRule>,
+{
+    if !a.overlaps(b, rule_set, rules) {
+        return IntersectionResult::Separate(a, b);
+    }
+
+    IntersectionResult::Intersected(a.abridge(b))
+}
+
+/// Intersects two [`AbsoluteInterval`]s using the given rules
+pub fn intersect_absolute_intervals<'a, 'b, RI>(
+    a: &'a AbsoluteInterval,
+    b: &'a AbsoluteInterval,
+    rule_set: OverlapRuleSet,
+    rules: &'b RI,
+) -> IntersectionResult<AbsoluteInterval, &'a AbsoluteInterval>
+where
+    &'b RI: IntoIterator<Item = &'b OverlapRule>,
+{
+    if !a.overlaps(b, rule_set, rules) {
+        return IntersectionResult::Separate(a, b);
+    }
+
+    IntersectionResult::Intersected(a.abridge(b))
+}
+
+/// Differentiates two [`AbsoluteBounds`] using the given rules
+pub fn differentiate_absolute_bounds<'a, 'b, RI>(
+    a: &'a AbsoluteBounds,
+    b: &'a AbsoluteBounds,
+    rule_set: OverlapRuleSet,
+    rules: &'b RI,
+) -> DifferenceResult<AbsoluteBounds, &'a AbsoluteBounds>
+where
+    &'b RI: IntoIterator<Item = &'b OverlapRule>,
+{
+    todo!()
+}
+
+/// Differentiates two [`AbsoluteBoundsOrEmpty`] using the given rules
+pub fn differentiate_absolute_bounds_or_empty<'a, 'b, RI>(
+    a: &'a AbsoluteBoundsOrEmpty,
+    b: &'a AbsoluteBoundsOrEmpty,
+    rule_set: OverlapRuleSet,
+    rules: &'b RI,
+) -> DifferenceResult<AbsoluteBoundsOrEmpty, &'a AbsoluteBoundsOrEmpty>
+where
+    &'b RI: IntoIterator<Item = &'b OverlapRule>,
+{
+    todo!()
+}
+
+/// Differentiates two [`AbsoluteInterval`]s using the given rules
+pub fn differentiate_absolute_intervals<'a, 'b, RI>(
+    a: &'a AbsoluteInterval,
+    b: &'a AbsoluteInterval,
+    rule_set: OverlapRuleSet,
+    rules: &'b RI,
+) -> DifferenceResult<AbsoluteInterval, &'a AbsoluteInterval>
+where
+    &'b RI: IntoIterator<Item = &'b OverlapRule>,
+{
+    todo!()
+}
+
+/// Symmetrically differentiates two [`AbsoluteBounds`] using the given rules
+pub fn symmetrically_differentiate_absolute_bounds<'a, 'b, RI>(
+    a: &'a AbsoluteBounds,
+    b: &'a AbsoluteBounds,
+    rule_set: OverlapRuleSet,
+    rules: &'b RI,
+) -> SymmetricDifference<AbsoluteBounds, &'a AbsoluteBounds>
+where
+    &'b RI: IntoIterator<Item = &'b OverlapRule>,
+{
+    todo!()
+}
+
+/// Symmetrically differentiates two [`AbsoluteBoundsOrEmpty`] using the given rules
+pub fn symmetrically_differentiate_absolute_bounds_or_empty<'a, 'b, RI>(
+    a: &'a AbsoluteBoundsOrEmpty,
+    b: &'a AbsoluteBoundsOrEmpty,
+    rule_set: OverlapRuleSet,
+    rules: &'b RI,
+) -> SymmetricDifference<AbsoluteBoundsOrEmpty, &'a AbsoluteBoundsOrEmpty>
+where
+    &'b RI: IntoIterator<Item = &'b OverlapRule>,
+{
+    todo!()
+}
+
+/// Symmetrically differentiates two [`AbsoluteInterval`]s using the given rules
+pub fn symmetrically_differentiate_absolute_intervals<'a, 'b, RI>(
+    a: &'a AbsoluteInterval,
+    b: &'a AbsoluteInterval,
+    rule_set: OverlapRuleSet,
+    rules: &'b RI,
+) -> SymmetricDifference<AbsoluteInterval, &'a AbsoluteInterval>
+where
+    &'b RI: IntoIterator<Item = &'b OverlapRule>,
+{
+    todo!()
 }
