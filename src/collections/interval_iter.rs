@@ -11,13 +11,13 @@ use std::iter::{FusedIterator, Peekable};
 use chrono::{DateTime, RoundingError, Utc};
 
 use crate::intervals::interval::{
-    AbsoluteBounds, AbsoluteBoundsOrEmpty, HasAbsoluteBounds, HasRelativeBounds, RelativeBounds, RelativeBoundsOrEmpty,
-    ToAbsolute, ToRelative,
+    AbsoluteBounds, EmptiableAbsoluteBounds, EmptiableRelativeBounds, HasAbsoluteBounds, HasRelativeBounds,
+    RelativeBounds, ToAbsolute, ToRelative,
 };
 use crate::intervals::ops::{
-    DEFAULT_OVERLAP_RULES, OverlapRule, OverlapRuleSet, PreciseAbsoluteBounds, Precision, intersect_absolute_bounds,
-    intersect_absolute_bounds_or_empty, intersect_absolute_intervals, unite_absolute_bounds,
-    unite_absolute_bounds_or_empty, unite_absolute_intervals,
+    CanPositionOverlap, DEFAULT_OVERLAP_RULES, OverlapRule, OverlapRuleSet, PreciseAbsoluteBounds, Precision,
+    intersect_abs_bounds, intersect_abs_intervals, intersect_emptiable_abs_bounds, unite_abs_bounds,
+    unite_abs_intervals, unite_emptiable_abs_bounds,
 };
 use crate::intervals::{AbsoluteInterval, RelativeInterval};
 use crate::ops::{DifferenceResult, IntersectionResult, RunningResult, SymmetricDifferenceResult, UnionResult};
@@ -90,8 +90,8 @@ impl RelativeToAbsoluteOperable for RelativeBounds {
     }
 }
 
-impl RelativeToAbsoluteOperable for RelativeBoundsOrEmpty {
-    type Item = AbsoluteBoundsOrEmpty;
+impl RelativeToAbsoluteOperable for EmptiableRelativeBounds {
+    type Item = EmptiableAbsoluteBounds;
 
     fn to_absolute(&self, reference_time: DateTime<Utc>) -> Self::Item {
         <Self as ToAbsolute>::to_absolute(self, reference_time)
@@ -107,14 +107,14 @@ impl RelativeToAbsoluteOperable for RelativeInterval {
 }
 
 /// Dispatcher trait for the [`RelativeToAbsolute`] conversion iterator
-pub trait RelativeToAbsoluteIntervalIterator: Iterator + Sized {
+pub trait RelativeToAbsoluteIteratorDispatcher: Iterator + Sized {
     /// Converts [`RelativeInterval`]s to [`AbsoluteInterval`]s
     fn to_absolute(self, reference_time: DateTime<Utc>) -> RelativeToAbsolute<Self> {
         RelativeToAbsolute::new(self, reference_time)
     }
 }
 
-impl<I> RelativeToAbsoluteIntervalIterator for I
+impl<I> RelativeToAbsoluteIteratorDispatcher for I
 where
     I: Iterator,
     I::Item: RelativeToAbsoluteOperable<Item = I::Item>,
@@ -186,8 +186,8 @@ impl AbsoluteToRelativeOperable for AbsoluteBounds {
     }
 }
 
-impl AbsoluteToRelativeOperable for AbsoluteBoundsOrEmpty {
-    type Item = RelativeBoundsOrEmpty;
+impl AbsoluteToRelativeOperable for EmptiableAbsoluteBounds {
+    type Item = EmptiableRelativeBounds;
 
     fn to_relative(&self, reference_time: DateTime<Utc>) -> Self::Item {
         <Self as ToRelative>::to_relative(self, reference_time)
@@ -203,14 +203,14 @@ impl AbsoluteToRelativeOperable for AbsoluteInterval {
 }
 
 /// Dispatcher trait for the [`AbsoluteToRelative`] conversion iterator
-pub trait AbsoluteToRelativeIntervalIterator: Iterator + Sized {
+pub trait AbsoluteToRelativeIteratorDispatcher: Iterator + Sized {
     /// Converts [`AbsoluteInterval`]s to [`RelativeInterval`]s
     fn to_relative(self, reference_time: DateTime<Utc>) -> AbsoluteToRelative<Self> {
         AbsoluteToRelative::new(self, reference_time)
     }
 }
 
-impl<I> AbsoluteToRelativeIntervalIterator for I
+impl<I> AbsoluteToRelativeIteratorDispatcher for I
 where
     I: Iterator,
     I::Item: AbsoluteToRelativeOperable<Item = I::Item>,
@@ -309,7 +309,7 @@ impl PrecisionChangeOperable for AbsoluteBounds {
     }
 }
 
-impl PrecisionChangeOperable for AbsoluteBoundsOrEmpty {
+impl PrecisionChangeOperable for EmptiableAbsoluteBounds {
     type Item = Self;
     type Error = RoundingError;
 
@@ -336,7 +336,7 @@ impl PrecisionChangeOperable for AbsoluteInterval {
 }
 
 /// Dispatcher trait for the [`PrecisionChange`] iterator
-pub trait PrecisionChangeIntervalIterator: Iterator + Sized {
+pub trait PrecisionChangeIteratorDispatcher: Iterator + Sized {
     /// Changes the precision of the interval with the given [`Precision`]
     fn change_precision(self, precision: Precision) -> PrecisionChange<Self> {
         PrecisionChange::new(self, precision, precision)
@@ -348,7 +348,7 @@ pub trait PrecisionChangeIntervalIterator: Iterator + Sized {
     }
 }
 
-impl<I> PrecisionChangeIntervalIterator for I
+impl<I> PrecisionChangeIteratorDispatcher for I
 where
     I: Iterator,
     I::Item: PrecisionChangeOperable<Item = I::Item>,
@@ -433,7 +433,7 @@ impl UnionOperable for AbsoluteBounds {
         &'a RI: IntoIterator<Item = &'a OverlapRule>,
     {
         Self::peer_union_with(united_so_far, peeked, |united_so_far, peeked| {
-            unite_absolute_bounds(united_so_far, peeked, rule_set, rules)
+            unite_abs_bounds(united_so_far, peeked, rule_set, rules)
         })
     }
 
@@ -448,7 +448,7 @@ impl UnionOperable for AbsoluteBounds {
     }
 }
 
-impl UnionOperable for AbsoluteBoundsOrEmpty {
+impl UnionOperable for EmptiableAbsoluteBounds {
     type Item = Self;
 
     fn peer_union<'a, RI>(
@@ -461,7 +461,7 @@ impl UnionOperable for AbsoluteBoundsOrEmpty {
         &'a RI: IntoIterator<Item = &'a OverlapRule>,
     {
         Self::peer_union_with(united_so_far, peeked, |united_so_far, peeked| {
-            unite_absolute_bounds_or_empty(united_so_far, peeked, rule_set, rules)
+            unite_emptiable_abs_bounds(united_so_far, peeked, rule_set, rules)
         })
     }
 
@@ -489,7 +489,7 @@ impl UnionOperable for AbsoluteInterval {
         &'a RI: IntoIterator<Item = &'a OverlapRule>,
     {
         Self::peer_union_with(united_so_far, peeked, |united_so_far, peeked| {
-            unite_absolute_intervals(united_so_far, peeked, rule_set, rules)
+            unite_abs_intervals(united_so_far, peeked, rule_set, rules)
         })
     }
 
@@ -505,7 +505,7 @@ impl UnionOperable for AbsoluteInterval {
 }
 
 /// Dispatcher trait for union iterators
-pub trait UnitableIntervalIterator: Iterator + Sized {
+pub trait UnitableIteratorDispatcher: Iterator + Sized {
     /// Unites peer intervals of the iterator using predefined rules
     fn peer_simple_union(self) -> PeerSimpleUnion<Peekable<Self>> {
         PeerSimpleUnion::new(self)
@@ -528,7 +528,7 @@ pub trait UnitableIntervalIterator: Iterator + Sized {
     }
 }
 
-impl<I> UnitableIntervalIterator for I
+impl<I> UnitableIteratorDispatcher for I
 where
     I: Iterator,
     I::Item: UnionOperable<Item = I::Item>,
@@ -751,7 +751,7 @@ impl IntersectionOperable for AbsoluteBounds {
         &'a RI: IntoIterator<Item = &'a OverlapRule>,
     {
         Self::peer_intersection_with(current, peeked, |current, peeked| {
-            intersect_absolute_bounds(current, peeked, rule_set, rules)
+            intersect_abs_bounds(current, peeked, rule_set, rules)
         })
     }
 
@@ -766,7 +766,7 @@ impl IntersectionOperable for AbsoluteBounds {
     }
 }
 
-impl IntersectionOperable for AbsoluteBoundsOrEmpty {
+impl IntersectionOperable for EmptiableAbsoluteBounds {
     type Item = Self;
 
     fn peer_intersection<'a, RI>(current: &Self, peeked: &Self, rule_set: OverlapRuleSet, rules: &'a RI) -> Self::Item
@@ -774,7 +774,7 @@ impl IntersectionOperable for AbsoluteBoundsOrEmpty {
         &'a RI: IntoIterator<Item = &'a OverlapRule>,
     {
         Self::peer_intersection_with(current, peeked, |current, peeked| {
-            intersect_absolute_bounds_or_empty(current, peeked, rule_set, rules)
+            intersect_emptiable_abs_bounds(current, peeked, rule_set, rules)
         })
     }
 
@@ -797,7 +797,7 @@ impl IntersectionOperable for AbsoluteInterval {
         &'a RI: IntoIterator<Item = &'a OverlapRule>,
     {
         Self::peer_intersection_with(current, peeked, |current, peeked| {
-            intersect_absolute_intervals(current, peeked, rule_set, rules)
+            intersect_abs_intervals(current, peeked, rule_set, rules)
         })
     }
 
@@ -813,7 +813,7 @@ impl IntersectionOperable for AbsoluteInterval {
 }
 
 /// Dispatcher trait for intersection iterators
-pub trait IntersectableIntervalIterator: Iterator + Sized {
+pub trait IntersectableIteratorDispatcher: Iterator + Sized {
     /// Intersects peer intervals of the iterator using predefined rules
     fn peer_simple_intersection(self) -> PeerSimpleIntersection<Peekable<Self>> {
         PeerSimpleIntersection::new(self)
@@ -840,7 +840,7 @@ pub trait IntersectableIntervalIterator: Iterator + Sized {
     }
 }
 
-impl<I> IntersectableIntervalIterator for I
+impl<I> IntersectableIteratorDispatcher for I
 where
     I: Iterator,
     I::Item: IntersectionOperable<Item = I::Item>,
@@ -1112,7 +1112,7 @@ where
 {
 }
 
-pub trait DifferentiableIntervalIterator: Sized {
+pub trait DifferentiableIteratorDispatcher: Sized {
     fn difference_with_one(self, interval: AbsoluteInterval) -> DifferenceWithOne<Self> {
         todo!()
     }
@@ -1141,7 +1141,7 @@ pub trait DifferentiableIntervalIterator: Sized {
 // }
 
 // TODO: REWORK TO GENERIC
-pub trait SymmetricallyDifferentiableIntervalIterator: Sized {
+pub trait SymmetricallyDifferentiableIteratorDispatcher: Sized {
     fn sym_difference_with_one(self, interval: AbsoluteInterval) -> SymmetricDifferenceWithOne<Self> {
         todo!()
     }
@@ -1203,6 +1203,65 @@ pub struct SymmetricDifference<I, J> {
 #[derive(Debug, Clone)]
 pub struct SymmetricDifferencePeer<I> {
     iter: I,
+}
+
+/// Ad-hoc trait for structures that can use overlap positioning
+pub trait OverlapOperable {
+    type Item: OverlapOperable;
+
+    fn overlap() {}
+}
+
+#[derive(Debug, Clone, Hash)]
+pub struct SimpleOverlap<I> {
+    iter: I,
+    interval: AbsoluteInterval,
+    exhausted: bool,
+}
+
+impl<I> SimpleOverlap<I> {
+    pub fn new(iter: I, interval: AbsoluteInterval) -> Self {
+        SimpleOverlap {
+            iter,
+            interval,
+            exhausted: false,
+        }
+    }
+}
+
+impl<I> Iterator for SimpleOverlap<I>
+where
+    I: Iterator,
+    I::Item: CanPositionOverlap,
+{
+    type Item = I::Item;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        loop {
+            let current = self.iter.next()?;
+
+            if current.simple_overlaps(&self.interval) {
+                return Some(current);
+            }
+        }
+    }
+}
+
+#[derive(Debug, Clone, Hash)]
+pub struct Overlap<'o, I, RI> {
+    iter: I,
+    interval: AbsoluteInterval,
+    rule_set: OverlapRuleSet,
+    rules: &'o RI,
+    exhausted: bool,
+}
+
+#[derive(Debug, Clone)]
+pub struct OverlapWith<I, F> {
+    iter: I,
+    interval: AbsoluteInterval,
+    f: F,
+    exhausted: bool,
 }
 
 /*

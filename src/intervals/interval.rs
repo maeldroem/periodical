@@ -638,34 +638,53 @@ pub fn swap_relative_bounds(start: &mut RelativeStartBound, end: &mut RelativeEn
     }
 }
 
-/// Represents something that has absolute bounds
+/// Represents something that has **non-empty** absolute bounds
 pub trait HasAbsoluteBounds {
-    /// Type of the absolute bounds
-    type AbsoluteBounds<'a>
-    where
-        Self: 'a;
-
-    /// Type of the absolute start bound
-    type AbsoluteStartBound<'a>
-    where
-        Self: 'a;
-
-    /// Type of the absolute end bound
-    type AbsoluteEndBound<'a>
-    where
-        Self: 'a;
-
     /// Returns the absolute bounds
     #[must_use]
-    fn abs_bounds(&self) -> Self::AbsoluteBounds<'_>;
+    fn abs_bounds(&self) -> AbsoluteBounds;
 
     /// Returns the absolute start bound
     #[must_use]
-    fn abs_start(&self) -> Self::AbsoluteStartBound<'_>;
+    fn abs_start(&self) -> AbsoluteStartBound;
 
     /// Returns the absolute end bound
     #[must_use]
-    fn abs_end(&self) -> Self::AbsoluteEndBound<'_>;
+    fn abs_end(&self) -> AbsoluteEndBound;
+}
+
+/// Represents something that has possibly empty absolute bounds
+pub trait HasEmptiableAbsoluteBounds {
+    /// Returns the [`EmptiableAbsoluteBounds`] of self
+    #[must_use]
+    fn emptiable_abs_bounds(&self) -> EmptiableAbsoluteBounds;
+
+    /// Returns an [`Option`] of [the absolute start bound](AbsoluteStartBound)
+    #[must_use]
+    fn partial_abs_start(&self) -> Option<AbsoluteStartBound>;
+
+    /// Returns an [`Option`] of [the absolute end bound](AbsoluteEndBound)
+    #[must_use]
+    fn partial_abs_end(&self) -> Option<AbsoluteEndBound>;
+}
+
+/// All implementors of [`HasAbsoluteBounds`] implement [`HasEmptiableAbsoluteBounds`].
+/// This could change in the future to separate emptiable from non-emptiable bounds.
+impl<T> HasEmptiableAbsoluteBounds for T
+where
+    T: HasAbsoluteBounds,
+{
+    fn emptiable_abs_bounds(&self) -> EmptiableAbsoluteBounds {
+        EmptiableAbsoluteBounds::Bound(self.abs_bounds())
+    }
+
+    fn partial_abs_start(&self) -> Option<AbsoluteStartBound> {
+        Some(self.abs_start())
+    }
+
+    fn partial_abs_end(&self) -> Option<AbsoluteEndBound> {
+        Some(self.abs_end())
+    }
 }
 
 /// Bounds of a non-empty absolute interval
@@ -752,20 +771,16 @@ impl AbsoluteBounds {
 }
 
 impl HasAbsoluteBounds for AbsoluteBounds {
-    type AbsoluteBounds<'a> = &'a AbsoluteBounds;
-    type AbsoluteStartBound<'a> = &'a AbsoluteStartBound;
-    type AbsoluteEndBound<'a> = &'a AbsoluteEndBound;
-
-    fn abs_bounds(&self) -> Self::AbsoluteBounds<'_> {
-        self
+    fn abs_bounds(&self) -> AbsoluteBounds {
+        self.clone()
     }
 
-    fn abs_start(&self) -> Self::AbsoluteStartBound<'_> {
-        self.start()
+    fn abs_start(&self) -> AbsoluteStartBound {
+        self.start().clone()
     }
 
-    fn abs_end(&self) -> Self::AbsoluteEndBound<'_> {
-        self.end()
+    fn abs_end(&self) -> AbsoluteEndBound {
+        self.end().clone()
     }
 }
 
@@ -845,49 +860,45 @@ impl Display for AbsoluteBoundsConversionErr {
 
 impl Error for AbsoluteBoundsConversionErr {}
 
-impl TryFrom<AbsoluteBoundsOrEmpty> for AbsoluteBounds {
+impl TryFrom<EmptiableAbsoluteBounds> for AbsoluteBounds {
     type Error = AbsoluteBoundsConversionErr;
 
-    fn try_from(value: AbsoluteBoundsOrEmpty) -> Result<Self, Self::Error> {
+    fn try_from(value: EmptiableAbsoluteBounds) -> Result<Self, Self::Error> {
         match value {
-            AbsoluteBoundsOrEmpty::Empty => Err(AbsoluteBoundsConversionErr::EmptyVariant),
-            AbsoluteBoundsOrEmpty::Bound(bounds) => Ok(bounds),
+            EmptiableAbsoluteBounds::Empty => Err(AbsoluteBoundsConversionErr::EmptyVariant),
+            EmptiableAbsoluteBounds::Bound(bounds) => Ok(bounds),
         }
     }
 }
 
 // Bounds of an absolute interval
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub enum AbsoluteBoundsOrEmpty {
+pub enum EmptiableAbsoluteBounds {
     Empty,
     Bound(AbsoluteBounds),
 }
 
-impl HasAbsoluteBounds for AbsoluteBoundsOrEmpty {
-    type AbsoluteBounds<'a> = &'a AbsoluteBoundsOrEmpty;
-    type AbsoluteStartBound<'a> = Option<&'a AbsoluteStartBound>;
-    type AbsoluteEndBound<'a> = Option<&'a AbsoluteEndBound>;
-
-    fn abs_bounds(&self) -> Self::AbsoluteBounds<'_> {
-        self
+impl HasEmptiableAbsoluteBounds for EmptiableAbsoluteBounds {
+    fn emptiable_abs_bounds(&self) -> EmptiableAbsoluteBounds {
+        self.clone()
     }
 
-    fn abs_start(&self) -> Self::AbsoluteStartBound<'_> {
+    fn partial_abs_start(&self) -> Option<AbsoluteStartBound> {
         match self {
             Self::Empty => None,
-            Self::Bound(bounds) => Some(bounds.start()),
+            Self::Bound(bounds) => Some(*bounds.start()),
         }
     }
 
-    fn abs_end(&self) -> Self::AbsoluteEndBound<'_> {
+    fn partial_abs_end(&self) -> Option<AbsoluteEndBound> {
         match self {
             Self::Empty => None,
-            Self::Bound(bounds) => Some(bounds.end()),
+            Self::Bound(bounds) => Some(*bounds.end()),
         }
     }
 }
 
-impl ToAbsolute for AbsoluteBoundsOrEmpty {
+impl ToAbsolute for EmptiableAbsoluteBounds {
     type AbsoluteType = Self;
 
     fn to_absolute(&self, _reference_time: DateTime<Utc>) -> Self::AbsoluteType {
@@ -895,24 +906,24 @@ impl ToAbsolute for AbsoluteBoundsOrEmpty {
     }
 }
 
-impl ToRelative for AbsoluteBoundsOrEmpty {
-    type RelativeType = RelativeBoundsOrEmpty;
+impl ToRelative for EmptiableAbsoluteBounds {
+    type RelativeType = EmptiableRelativeBounds;
 
     fn to_relative(&self, reference_time: DateTime<Utc>) -> Self::RelativeType {
         match self {
-            Self::Empty => RelativeBoundsOrEmpty::Empty,
-            Self::Bound(abs_bounds) => RelativeBoundsOrEmpty::Bound(abs_bounds.to_relative(reference_time)),
+            Self::Empty => EmptiableRelativeBounds::Empty,
+            Self::Bound(abs_bounds) => EmptiableRelativeBounds::Bound(abs_bounds.to_relative(reference_time)),
         }
     }
 }
 
-impl From<AbsoluteBounds> for AbsoluteBoundsOrEmpty {
+impl From<AbsoluteBounds> for EmptiableAbsoluteBounds {
     fn from(value: AbsoluteBounds) -> Self {
-        AbsoluteBoundsOrEmpty::Bound(value)
+        EmptiableAbsoluteBounds::Bound(value)
     }
 }
 
-impl Display for AbsoluteBoundsOrEmpty {
+impl Display for EmptiableAbsoluteBounds {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Empty => write!(f, "Empty absolute interval bounds"),
@@ -921,34 +932,53 @@ impl Display for AbsoluteBoundsOrEmpty {
     }
 }
 
-/// Represents something that has relative bounds
+/// Represents something that has **non-empty** relative bounds
 pub trait HasRelativeBounds {
-    /// Type of relative bound
-    type RelativeBounds<'a>
-    where
-        Self: 'a;
-
-    /// Type of the relative start bound
-    type RelativeStartBound<'a>
-    where
-        Self: 'a;
-
-    /// Type of the relative end bound
-    type RelativeEndBound<'a>
-    where
-        Self: 'a;
-
     /// Returns the relative bounds
     #[must_use]
-    fn rel_bounds(&self) -> Self::RelativeBounds<'_>;
+    fn rel_bounds(&self) -> RelativeBounds;
 
     /// Returns the relative start bound
     #[must_use]
-    fn rel_start(&self) -> Self::RelativeStartBound<'_>;
+    fn rel_start(&self) -> RelativeStartBound;
 
     /// Returns the relative end bound
     #[must_use]
-    fn rel_end(&self) -> Self::RelativeEndBound<'_>;
+    fn rel_end(&self) -> RelativeEndBound;
+}
+
+/// Represents something that has possibly empty relative bounds
+pub trait HasEmptiableRelativeBounds {
+    /// Returns the [`EmptiableRelativeBounds`] of self
+    #[must_use]
+    fn emptiable_rel_bounds(&self) -> EmptiableRelativeBounds;
+
+    /// Returns an [`Option`] of [the relative start bound](RelativeStartBound)
+    #[must_use]
+    fn partial_rel_start(&self) -> Option<RelativeStartBound>;
+
+    /// Returns an [`Option`] of [the relative end bound](RelativeEndBound)
+    #[must_use]
+    fn partial_rel_end(&self) -> Option<RelativeEndBound>;
+}
+
+/// All implementors of [`HasRelativeBounds`] implement [`HasEmptiableRelativeBounds`].
+/// This could change in the future to separate emptiable from non-emptiable bounds.
+impl<T> HasEmptiableRelativeBounds for T
+where
+    T: HasRelativeBounds,
+{
+    fn emptiable_rel_bounds(&self) -> EmptiableRelativeBounds {
+        EmptiableRelativeBounds::Bound(self.rel_bounds())
+    }
+
+    fn partial_rel_start(&self) -> Option<RelativeStartBound> {
+        Some(self.rel_start())
+    }
+
+    fn partial_rel_end(&self) -> Option<RelativeEndBound> {
+        Some(self.rel_end())
+    }
 }
 
 /// Bounds of a non-empty relative interval
@@ -1059,20 +1089,16 @@ impl RelativeBounds {
 }
 
 impl HasRelativeBounds for RelativeBounds {
-    type RelativeBounds<'a> = &'a RelativeBounds;
-    type RelativeStartBound<'a> = &'a RelativeStartBound;
-    type RelativeEndBound<'a> = &'a RelativeEndBound;
-
-    fn rel_bounds(&self) -> Self::RelativeBounds<'_> {
-        self
+    fn rel_bounds(&self) -> RelativeBounds {
+        self.clone()
     }
 
-    fn rel_start(&self) -> Self::RelativeStartBound<'_> {
-        self.start()
+    fn rel_start(&self) -> RelativeStartBound {
+        self.start().clone()
     }
 
-    fn rel_end(&self) -> Self::RelativeEndBound<'_> {
-        self.end()
+    fn rel_end(&self) -> RelativeEndBound {
+        self.end().clone()
     }
 }
 
@@ -1140,63 +1166,56 @@ impl Display for RelativeBoundsConversionErr {
 
 impl Error for RelativeBoundsConversionErr {}
 
-impl TryFrom<RelativeBoundsOrEmpty> for RelativeBounds {
+impl TryFrom<EmptiableRelativeBounds> for RelativeBounds {
     type Error = RelativeBoundsConversionErr;
 
-    fn try_from(value: RelativeBoundsOrEmpty) -> Result<Self, Self::Error> {
+    fn try_from(value: EmptiableRelativeBounds) -> Result<Self, Self::Error> {
         match value {
-            RelativeBoundsOrEmpty::Empty => Err(RelativeBoundsConversionErr::EmptyVariant),
-            RelativeBoundsOrEmpty::Bound(bounds) => Ok(bounds),
+            EmptiableRelativeBounds::Empty => Err(RelativeBoundsConversionErr::EmptyVariant),
+            EmptiableRelativeBounds::Bound(bounds) => Ok(bounds),
         }
     }
 }
 
 /// Bounds of a relative interval
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub enum RelativeBoundsOrEmpty {
+pub enum EmptiableRelativeBounds {
     Empty,
     Bound(RelativeBounds),
 }
 
-impl HasRelativeBounds for RelativeBoundsOrEmpty {
-    type RelativeBounds<'a> = Option<&'a RelativeBounds>;
-    type RelativeStartBound<'a> = Option<&'a RelativeStartBound>;
-    type RelativeEndBound<'a> = Option<&'a RelativeEndBound>;
+impl HasEmptiableRelativeBounds for EmptiableRelativeBounds {
+    fn emptiable_rel_bounds(&self) -> EmptiableRelativeBounds {
+        self.clone()
+    }
 
-    fn rel_bounds(&self) -> Self::RelativeBounds<'_> {
+    fn partial_rel_start(&self) -> Option<RelativeStartBound> {
         match self {
             Self::Empty => None,
-            Self::Bound(bounds) => Some(bounds),
+            Self::Bound(bounds) => Some(bounds.start().clone()),
         }
     }
 
-    fn rel_start(&self) -> Self::RelativeStartBound<'_> {
+    fn partial_rel_end(&self) -> Option<RelativeEndBound> {
         match self {
             Self::Empty => None,
-            Self::Bound(bounds) => Some(bounds.start()),
-        }
-    }
-
-    fn rel_end(&self) -> Self::RelativeEndBound<'_> {
-        match self {
-            Self::Empty => None,
-            Self::Bound(bounds) => Some(bounds.end()),
+            Self::Bound(bounds) => Some(bounds.end().clone()),
         }
     }
 }
 
-impl ToAbsolute for RelativeBoundsOrEmpty {
-    type AbsoluteType = AbsoluteBoundsOrEmpty;
+impl ToAbsolute for EmptiableRelativeBounds {
+    type AbsoluteType = EmptiableAbsoluteBounds;
 
     fn to_absolute(&self, reference_time: DateTime<Utc>) -> Self::AbsoluteType {
         match self {
-            Self::Empty => AbsoluteBoundsOrEmpty::Empty,
-            Self::Bound(abs_bounds) => AbsoluteBoundsOrEmpty::Bound(abs_bounds.to_absolute(reference_time)),
+            Self::Empty => EmptiableAbsoluteBounds::Empty,
+            Self::Bound(abs_bounds) => EmptiableAbsoluteBounds::Bound(abs_bounds.to_absolute(reference_time)),
         }
     }
 }
 
-impl ToRelative for RelativeBoundsOrEmpty {
+impl ToRelative for EmptiableRelativeBounds {
     type RelativeType = Self;
 
     fn to_relative(&self, _reference_time: DateTime<Utc>) -> Self::RelativeType {
@@ -1204,13 +1223,13 @@ impl ToRelative for RelativeBoundsOrEmpty {
     }
 }
 
-impl From<RelativeBounds> for RelativeBoundsOrEmpty {
+impl From<RelativeBounds> for EmptiableRelativeBounds {
     fn from(value: RelativeBounds) -> Self {
-        RelativeBoundsOrEmpty::Bound(value)
+        EmptiableRelativeBounds::Bound(value)
     }
 }
 
-impl Display for RelativeBoundsOrEmpty {
+impl Display for EmptiableRelativeBounds {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Empty => write!(f, "Empty relative interval bounds"),
@@ -1372,22 +1391,18 @@ impl HasDuration for ClosedAbsoluteInterval {
 }
 
 impl HasAbsoluteBounds for ClosedAbsoluteInterval {
-    type AbsoluteBounds<'a> = AbsoluteBounds;
-    type AbsoluteStartBound<'a> = AbsoluteStartBound;
-    type AbsoluteEndBound<'a> = AbsoluteEndBound;
-
-    fn abs_bounds(&self) -> Self::AbsoluteBounds<'_> {
+    fn abs_bounds(&self) -> AbsoluteBounds {
         AbsoluteBounds::unchecked_new(self.abs_start(), self.abs_end())
     }
 
-    fn abs_start(&self) -> Self::AbsoluteStartBound<'_> {
+    fn abs_start(&self) -> AbsoluteStartBound {
         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
             self.from,
             self.from_inclusivity,
         ))
     }
 
-    fn abs_end(&self) -> Self::AbsoluteEndBound<'_> {
+    fn abs_end(&self) -> AbsoluteEndBound {
         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(self.to, self.to_inclusivity))
     }
 }
@@ -1542,22 +1557,18 @@ impl HasDuration for ClosedRelativeInterval {
 }
 
 impl HasRelativeBounds for ClosedRelativeInterval {
-    type RelativeBounds<'a> = RelativeBounds;
-    type RelativeStartBound<'a> = RelativeStartBound;
-    type RelativeEndBound<'a> = RelativeEndBound;
-
-    fn rel_bounds(&self) -> Self::RelativeBounds<'_> {
+    fn rel_bounds(&self) -> RelativeBounds {
         RelativeBounds::new(self.rel_start(), self.rel_end())
     }
 
-    fn rel_start(&self) -> Self::RelativeStartBound<'_> {
+    fn rel_start(&self) -> RelativeStartBound {
         RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
             self.offset,
             self.from_inclusivity,
         ))
     }
 
-    fn rel_end(&self) -> Self::RelativeEndBound<'_> {
+    fn rel_end(&self) -> RelativeEndBound {
         RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
             self.offset + self.length,
             self.to_inclusivity,
@@ -1705,15 +1716,11 @@ impl HasDuration for HalfOpenAbsoluteInterval {
 }
 
 impl HasAbsoluteBounds for HalfOpenAbsoluteInterval {
-    type AbsoluteBounds<'a> = AbsoluteBounds;
-    type AbsoluteStartBound<'a> = AbsoluteStartBound;
-    type AbsoluteEndBound<'a> = AbsoluteEndBound;
-
-    fn abs_bounds(&self) -> Self::AbsoluteBounds<'_> {
+    fn abs_bounds(&self) -> AbsoluteBounds {
         AbsoluteBounds::new(self.abs_start(), self.abs_end())
     }
 
-    fn abs_start(&self) -> Self::AbsoluteStartBound<'_> {
+    fn abs_start(&self) -> AbsoluteStartBound {
         match self.opening_direction {
             OpeningDirection::ToPast => AbsoluteStartBound::InfinitePast,
             OpeningDirection::ToFuture => AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
@@ -1723,7 +1730,7 @@ impl HasAbsoluteBounds for HalfOpenAbsoluteInterval {
         }
     }
 
-    fn abs_end(&self) -> Self::AbsoluteEndBound<'_> {
+    fn abs_end(&self) -> AbsoluteEndBound {
         match self.opening_direction {
             OpeningDirection::ToPast => AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
                 self.reference_time,
@@ -1864,15 +1871,11 @@ impl HasDuration for HalfOpenRelativeInterval {
 }
 
 impl HasRelativeBounds for HalfOpenRelativeInterval {
-    type RelativeBounds<'a> = RelativeBounds;
-    type RelativeStartBound<'a> = RelativeStartBound;
-    type RelativeEndBound<'a> = RelativeEndBound;
-
-    fn rel_bounds(&self) -> Self::RelativeBounds<'_> {
+    fn rel_bounds(&self) -> RelativeBounds {
         RelativeBounds::new(self.rel_start(), self.rel_end())
     }
 
-    fn rel_start(&self) -> Self::RelativeStartBound<'_> {
+    fn rel_start(&self) -> RelativeStartBound {
         match self.opening_direction {
             OpeningDirection::ToPast => RelativeStartBound::InfinitePast,
             OpeningDirection::ToFuture => RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
@@ -1882,7 +1885,7 @@ impl HasRelativeBounds for HalfOpenRelativeInterval {
         }
     }
 
-    fn rel_end(&self) -> Self::RelativeEndBound<'_> {
+    fn rel_end(&self) -> RelativeEndBound {
         match self.opening_direction {
             OpeningDirection::ToPast => RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
                 self.offset,
@@ -1965,37 +1968,29 @@ impl HasDuration for OpenInterval {
 }
 
 impl HasAbsoluteBounds for OpenInterval {
-    type AbsoluteBounds<'a> = AbsoluteBounds;
-    type AbsoluteStartBound<'a> = AbsoluteStartBound;
-    type AbsoluteEndBound<'a> = AbsoluteEndBound;
-
     fn abs_bounds(&self) -> AbsoluteBounds {
         AbsoluteBounds::new(self.abs_start(), self.abs_end())
     }
 
-    fn abs_start(&self) -> Self::AbsoluteStartBound<'_> {
+    fn abs_start(&self) -> AbsoluteStartBound {
         AbsoluteStartBound::InfinitePast
     }
 
-    fn abs_end(&self) -> Self::AbsoluteEndBound<'_> {
+    fn abs_end(&self) -> AbsoluteEndBound {
         AbsoluteEndBound::InfiniteFuture
     }
 }
 
 impl HasRelativeBounds for OpenInterval {
-    type RelativeBounds<'a> = RelativeBounds;
-    type RelativeStartBound<'a> = RelativeStartBound;
-    type RelativeEndBound<'a> = RelativeEndBound;
-
     fn rel_bounds(&self) -> RelativeBounds {
         RelativeBounds::new(self.rel_start(), self.rel_end())
     }
 
-    fn rel_start(&self) -> Self::RelativeStartBound<'_> {
+    fn rel_start(&self) -> RelativeStartBound {
         RelativeStartBound::InfinitePast
     }
 
-    fn rel_end(&self) -> Self::RelativeEndBound<'_> {
+    fn rel_end(&self) -> RelativeEndBound {
         RelativeEndBound::InfiniteFuture
     }
 }
@@ -2081,38 +2076,30 @@ impl HasDuration for EmptyInterval {
     }
 }
 
-impl HasAbsoluteBounds for EmptyInterval {
-    type AbsoluteBounds<'a> = AbsoluteBoundsOrEmpty;
-    type AbsoluteStartBound<'a> = Option<AbsoluteStartBound>;
-    type AbsoluteEndBound<'a> = Option<AbsoluteEndBound>;
-
-    fn abs_bounds(&self) -> Self::AbsoluteBounds<'_> {
-        AbsoluteBoundsOrEmpty::Empty
+impl HasEmptiableAbsoluteBounds for EmptyInterval {
+    fn emptiable_abs_bounds(&self) -> EmptiableAbsoluteBounds {
+        EmptiableAbsoluteBounds::Empty
     }
 
-    fn abs_start(&self) -> Self::AbsoluteStartBound<'_> {
+    fn partial_abs_start(&self) -> Option<AbsoluteStartBound> {
         None
     }
 
-    fn abs_end(&self) -> Self::AbsoluteEndBound<'_> {
+    fn partial_abs_end(&self) -> Option<AbsoluteEndBound> {
         None
     }
 }
 
-impl HasRelativeBounds for EmptyInterval {
-    type RelativeBounds<'a> = RelativeBoundsOrEmpty;
-    type RelativeStartBound<'a> = Option<RelativeStartBound>;
-    type RelativeEndBound<'a> = Option<RelativeEndBound>;
-
-    fn rel_bounds(&self) -> Self::RelativeBounds<'_> {
-        RelativeBoundsOrEmpty::Empty
+impl HasEmptiableRelativeBounds for EmptyInterval {
+    fn emptiable_rel_bounds(&self) -> EmptiableRelativeBounds {
+        EmptiableRelativeBounds::Empty
     }
 
-    fn rel_start(&self) -> Self::RelativeStartBound<'_> {
+    fn partial_rel_start(&self) -> Option<RelativeStartBound> {
         None
     }
 
-    fn rel_end(&self) -> Self::RelativeEndBound<'_> {
+    fn partial_rel_end(&self) -> Option<RelativeEndBound> {
         None
     }
 }
@@ -2212,35 +2199,31 @@ impl HasOpenness for AbsoluteInterval {
     }
 }
 
-impl HasAbsoluteBounds for AbsoluteInterval {
-    type AbsoluteBounds<'a> = AbsoluteBoundsOrEmpty;
-    type AbsoluteStartBound<'a> = Option<AbsoluteStartBound>;
-    type AbsoluteEndBound<'a> = Option<AbsoluteEndBound>;
-
-    fn abs_bounds(&self) -> Self::AbsoluteBounds<'_> {
+impl HasEmptiableAbsoluteBounds for AbsoluteInterval {
+    fn emptiable_abs_bounds(&self) -> EmptiableAbsoluteBounds {
         match self {
-            Self::Closed(interval) => AbsoluteBoundsOrEmpty::from(interval.abs_bounds()),
-            Self::HalfOpen(interval) => AbsoluteBoundsOrEmpty::from(interval.abs_bounds()),
-            Self::Open(interval) => AbsoluteBoundsOrEmpty::from(interval.abs_bounds()),
-            Self::Empty(interval) => interval.abs_bounds(),
+            Self::Closed(interval) => EmptiableAbsoluteBounds::from(interval.abs_bounds()),
+            Self::HalfOpen(interval) => EmptiableAbsoluteBounds::from(interval.abs_bounds()),
+            Self::Open(interval) => EmptiableAbsoluteBounds::from(interval.abs_bounds()),
+            Self::Empty(interval) => interval.emptiable_abs_bounds(),
         }
     }
 
-    fn abs_start(&self) -> Self::AbsoluteStartBound<'_> {
+    fn partial_abs_start(&self) -> Option<AbsoluteStartBound> {
         match self {
-            Self::Closed(interval) => Some(interval.abs_start()),
-            Self::HalfOpen(interval) => Some(interval.abs_start()),
-            Self::Open(interval) => Some(interval.abs_start()),
-            Self::Empty(interval) => interval.abs_start(),
+            Self::Closed(interval) => interval.partial_abs_start(),
+            Self::HalfOpen(interval) => interval.partial_abs_start(),
+            Self::Open(interval) => interval.partial_abs_start(),
+            Self::Empty(interval) => interval.partial_abs_start(),
         }
     }
 
-    fn abs_end(&self) -> Self::AbsoluteEndBound<'_> {
+    fn partial_abs_end(&self) -> Option<AbsoluteEndBound> {
         match self {
-            Self::Closed(interval) => Some(interval.abs_end()),
-            Self::HalfOpen(interval) => Some(interval.abs_end()),
-            Self::Open(interval) => Some(interval.abs_end()),
-            Self::Empty(interval) => interval.abs_end(),
+            Self::Closed(interval) => interval.partial_abs_end(),
+            Self::HalfOpen(interval) => interval.partial_abs_end(),
+            Self::Open(interval) => interval.partial_abs_end(),
+            Self::Empty(interval) => interval.partial_abs_end(),
         }
     }
 }
@@ -2299,15 +2282,15 @@ impl From<AbsoluteBounds> for AbsoluteInterval {
             (StartB::InfinitePast, EndB::InfiniteFuture) => AbsoluteInterval::Open(OpenInterval),
             (StartB::InfinitePast, EndB::Finite(AbsoluteFiniteBound { time, inclusivity })) => {
                 AbsoluteInterval::HalfOpen(HalfOpenAbsoluteInterval::with_inclusivity(
-                    *time,
-                    *inclusivity,
+                    time,
+                    inclusivity,
                     OpeningDirection::ToPast,
                 ))
             },
             (StartB::Finite(AbsoluteFiniteBound { time, inclusivity }), EndB::InfiniteFuture) => {
                 AbsoluteInterval::HalfOpen(HalfOpenAbsoluteInterval::with_inclusivity(
-                    *time,
-                    *inclusivity,
+                    time,
+                    inclusivity,
                     OpeningDirection::ToFuture,
                 ))
             },
@@ -2321,34 +2304,34 @@ impl From<AbsoluteBounds> for AbsoluteInterval {
                     inclusivity: end_inclusivity,
                 }),
             ) => AbsoluteInterval::Closed(ClosedAbsoluteInterval::unchecked_with_inclusivity(
-                *start_time,
-                *start_inclusivity,
-                *end_time,
-                *end_inclusivity,
+                start_time,
+                start_inclusivity,
+                end_time,
+                end_inclusivity,
             )),
         }
     }
 }
 
-impl From<AbsoluteBoundsOrEmpty> for AbsoluteInterval {
-    fn from(value: AbsoluteBoundsOrEmpty) -> Self {
+impl From<EmptiableAbsoluteBounds> for AbsoluteInterval {
+    fn from(value: EmptiableAbsoluteBounds) -> Self {
         type StartB = AbsoluteStartBound;
         type EndB = AbsoluteEndBound;
 
-        match (value.abs_start(), value.abs_end()) {
+        match (value.partial_abs_start(), value.partial_abs_end()) {
             (None, _) | (_, None) => AbsoluteInterval::Empty(EmptyInterval),
             (Some(StartB::InfinitePast), Some(EndB::InfiniteFuture)) => AbsoluteInterval::Open(OpenInterval),
             (Some(StartB::InfinitePast), Some(EndB::Finite(AbsoluteFiniteBound { time, inclusivity }))) => {
                 AbsoluteInterval::HalfOpen(HalfOpenAbsoluteInterval::with_inclusivity(
-                    *time,
-                    *inclusivity,
+                    time,
+                    inclusivity,
                     OpeningDirection::ToPast,
                 ))
             },
             (Some(StartB::Finite(AbsoluteFiniteBound { time, inclusivity })), Some(EndB::InfiniteFuture)) => {
                 AbsoluteInterval::HalfOpen(HalfOpenAbsoluteInterval::with_inclusivity(
-                    *time,
-                    *inclusivity,
+                    time,
+                    inclusivity,
                     OpeningDirection::ToFuture,
                 ))
             },
@@ -2362,10 +2345,10 @@ impl From<AbsoluteBoundsOrEmpty> for AbsoluteInterval {
                     inclusivity: end_inclusivity,
                 })),
             ) => AbsoluteInterval::Closed(ClosedAbsoluteInterval::unchecked_with_inclusivity(
-                *start_time,
-                *start_inclusivity,
-                *end_time,
-                *end_inclusivity,
+                start_time,
+                start_inclusivity,
+                end_time,
+                end_inclusivity,
             )),
         }
     }
@@ -2413,35 +2396,31 @@ impl HasOpenness for RelativeInterval {
     }
 }
 
-impl HasRelativeBounds for RelativeInterval {
-    type RelativeBounds<'a> = RelativeBoundsOrEmpty;
-    type RelativeStartBound<'a> = Option<RelativeStartBound>;
-    type RelativeEndBound<'a> = Option<RelativeEndBound>;
-
-    fn rel_bounds(&self) -> Self::RelativeBounds<'_> {
+impl HasEmptiableRelativeBounds for RelativeInterval {
+    fn emptiable_rel_bounds(&self) -> EmptiableRelativeBounds {
         match self {
-            Self::Closed(interval) => RelativeBoundsOrEmpty::from(interval.rel_bounds()),
-            Self::HalfOpen(interval) => RelativeBoundsOrEmpty::from(interval.rel_bounds()),
-            Self::Open(interval) => RelativeBoundsOrEmpty::from(interval.rel_bounds()),
-            Self::Empty(interval) => interval.rel_bounds(),
+            Self::Closed(interval) => EmptiableRelativeBounds::from(interval.rel_bounds()),
+            Self::HalfOpen(interval) => EmptiableRelativeBounds::from(interval.rel_bounds()),
+            Self::Open(interval) => EmptiableRelativeBounds::from(interval.rel_bounds()),
+            Self::Empty(interval) => interval.emptiable_rel_bounds(),
         }
     }
 
-    fn rel_start(&self) -> Self::RelativeStartBound<'_> {
+    fn partial_rel_start(&self) -> Option<RelativeStartBound> {
         match self {
-            Self::Closed(interval) => Some(interval.rel_start()),
-            Self::HalfOpen(interval) => Some(interval.rel_start()),
-            Self::Open(interval) => Some(interval.rel_start()),
-            Self::Empty(interval) => interval.rel_start(),
+            Self::Closed(interval) => interval.partial_rel_start(),
+            Self::HalfOpen(interval) => interval.partial_rel_start(),
+            Self::Open(interval) => interval.partial_rel_start(),
+            Self::Empty(interval) => interval.partial_rel_start(),
         }
     }
 
-    fn rel_end(&self) -> Self::RelativeEndBound<'_> {
+    fn partial_rel_end(&self) -> Option<RelativeEndBound> {
         match self {
-            Self::Closed(interval) => Some(interval.rel_end()),
-            Self::HalfOpen(interval) => Some(interval.rel_end()),
-            Self::Open(interval) => Some(interval.rel_end()),
-            Self::Empty(interval) => interval.rel_end(),
+            Self::Closed(interval) => interval.partial_rel_end(),
+            Self::HalfOpen(interval) => interval.partial_rel_end(),
+            Self::Open(interval) => interval.partial_rel_end(),
+            Self::Empty(interval) => interval.partial_rel_end(),
         }
     }
 }
@@ -2500,15 +2479,15 @@ impl From<RelativeBounds> for RelativeInterval {
             (StartB::InfinitePast, EndB::InfiniteFuture) => RelativeInterval::Open(OpenInterval),
             (StartB::InfinitePast, EndB::Finite(RelativeFiniteBound { offset, inclusivity })) => {
                 RelativeInterval::HalfOpen(HalfOpenRelativeInterval::with_inclusivity(
-                    *offset,
-                    *inclusivity,
+                    offset,
+                    inclusivity,
                     OpeningDirection::ToPast,
                 ))
             },
             (StartB::Finite(RelativeFiniteBound { offset, inclusivity }), EndB::InfiniteFuture) => {
                 RelativeInterval::HalfOpen(HalfOpenRelativeInterval::with_inclusivity(
-                    *offset,
-                    *inclusivity,
+                    offset,
+                    inclusivity,
                     OpeningDirection::ToFuture,
                 ))
             },
@@ -2522,34 +2501,34 @@ impl From<RelativeBounds> for RelativeInterval {
                     inclusivity: end_inclusivity,
                 }),
             ) => RelativeInterval::Closed(ClosedRelativeInterval::with_inclusivity(
-                *start_offset,
-                *start_inclusivity,
-                *end_offset - *start_offset,
-                *end_inclusivity,
+                start_offset,
+                start_inclusivity,
+                end_offset - start_offset,
+                end_inclusivity,
             )),
         }
     }
 }
 
-impl From<RelativeBoundsOrEmpty> for RelativeInterval {
-    fn from(value: RelativeBoundsOrEmpty) -> Self {
+impl From<EmptiableRelativeBounds> for RelativeInterval {
+    fn from(value: EmptiableRelativeBounds) -> Self {
         type StartB = RelativeStartBound;
         type EndB = RelativeEndBound;
 
-        match (value.rel_start(), value.rel_end()) {
+        match (value.partial_rel_start(), value.partial_rel_end()) {
             (None, _) | (_, None) => RelativeInterval::Empty(EmptyInterval),
             (Some(StartB::InfinitePast), Some(EndB::InfiniteFuture)) => RelativeInterval::Open(OpenInterval),
             (Some(StartB::InfinitePast), Some(EndB::Finite(RelativeFiniteBound { offset, inclusivity }))) => {
                 RelativeInterval::HalfOpen(HalfOpenRelativeInterval::with_inclusivity(
-                    *offset,
-                    *inclusivity,
+                    offset,
+                    inclusivity,
                     OpeningDirection::ToPast,
                 ))
             },
             (Some(StartB::Finite(RelativeFiniteBound { offset, inclusivity })), Some(EndB::InfiniteFuture)) => {
                 RelativeInterval::HalfOpen(HalfOpenRelativeInterval::with_inclusivity(
-                    *offset,
-                    *inclusivity,
+                    offset,
+                    inclusivity,
                     OpeningDirection::ToFuture,
                 ))
             },
@@ -2563,10 +2542,10 @@ impl From<RelativeBoundsOrEmpty> for RelativeInterval {
                     inclusivity: end_inclusivity,
                 })),
             ) => RelativeInterval::Closed(ClosedRelativeInterval::with_inclusivity(
-                *start_offset,
-                *start_inclusivity,
-                *end_offset - *start_offset,
-                *end_inclusivity,
+                start_offset,
+                start_inclusivity,
+                end_offset - start_offset,
+                end_inclusivity,
             )),
         }
     }

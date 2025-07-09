@@ -10,13 +10,15 @@
 //! as overlapping and what doesn't.
 
 use std::cmp::Ordering;
+use std::convert::Infallible;
 
 use chrono::{DateTime, Duration, DurationRound, RoundingError, Utc};
 
 use crate::collections::SymmetricDifference;
 use crate::intervals::ClosedAbsoluteInterval;
 use crate::intervals::interval::{
-    AbsoluteBoundsOrEmpty, AbsoluteFiniteBound, HalfOpenAbsoluteInterval, OpenInterval, swap_absolute_bounds,
+    AbsoluteFiniteBound, EmptiableAbsoluteBounds, HalfOpenAbsoluteInterval, HasEmptiableAbsoluteBounds, OpenInterval,
+    swap_absolute_bounds,
 };
 use crate::intervals::meta::HasBoundInclusivity;
 use crate::ops::{DifferenceResult, IntersectionResult, UnionResult};
@@ -111,7 +113,7 @@ impl PreciseAbsoluteBounds for AbsoluteBounds {
     }
 }
 
-impl PreciseAbsoluteBounds for AbsoluteBoundsOrEmpty {
+impl PreciseAbsoluteBounds for EmptiableAbsoluteBounds {
     type PrecisedBoundsOutput = Result<Self, RoundingError>;
     type PrecisedStartBoundOutput = Result<Option<AbsoluteStartBound>, RoundingError>;
     type PrecisedEndBoundOutput = Result<Option<AbsoluteEndBound>, RoundingError>;
@@ -121,19 +123,19 @@ impl PreciseAbsoluteBounds for AbsoluteBoundsOrEmpty {
         start_precision: Precision,
         end_precision: Precision,
     ) -> Self::PrecisedBoundsOutput {
-        if let AbsoluteBoundsOrEmpty::Bound(abs_bounds) = self {
-            return Ok(AbsoluteBoundsOrEmpty::Bound(precise_abs_bounds(
+        if let EmptiableAbsoluteBounds::Bound(abs_bounds) = self {
+            return Ok(EmptiableAbsoluteBounds::Bound(precise_abs_bounds(
                 abs_bounds,
                 start_precision,
                 end_precision,
             )?));
         }
 
-        Ok(AbsoluteBoundsOrEmpty::Empty)
+        Ok(EmptiableAbsoluteBounds::Empty)
     }
 
     fn precise_start_bound(&self, precision: Precision) -> Self::PrecisedStartBoundOutput {
-        if let AbsoluteBoundsOrEmpty::Bound(abs_bounds) = self {
+        if let EmptiableAbsoluteBounds::Bound(abs_bounds) = self {
             return Ok(Some(precise_abs_start_bound(abs_bounds.start(), precision)?));
         }
 
@@ -141,7 +143,7 @@ impl PreciseAbsoluteBounds for AbsoluteBoundsOrEmpty {
     }
 
     fn precise_end_bound(&self, precision: Precision) -> Self::PrecisedEndBoundOutput {
-        if let AbsoluteBoundsOrEmpty::Bound(abs_bounds) = self {
+        if let EmptiableAbsoluteBounds::Bound(abs_bounds) = self {
             return Ok(Some(precise_abs_end_bound(abs_bounds.end(), precision)?));
         }
 
@@ -159,7 +161,7 @@ impl PreciseAbsoluteBounds for AbsoluteInterval {
         precision_start: Precision,
         precision_end: Precision,
     ) -> Self::PrecisedBoundsOutput {
-        if let AbsoluteBoundsOrEmpty::Bound(ref abs_bounds) = self.abs_bounds() {
+        if let EmptiableAbsoluteBounds::Bound(ref abs_bounds) = self.emptiable_abs_bounds() {
             return Ok(AbsoluteInterval::from(precise_abs_bounds(
                 abs_bounds,
                 precision_start,
@@ -171,7 +173,7 @@ impl PreciseAbsoluteBounds for AbsoluteInterval {
     }
 
     fn precise_start_bound(&self, precision: Precision) -> Self::PrecisedStartBoundOutput {
-        if let AbsoluteBoundsOrEmpty::Bound(abs_bounds) = self.abs_bounds() {
+        if let EmptiableAbsoluteBounds::Bound(abs_bounds) = self.emptiable_abs_bounds() {
             return Ok(Some(precise_abs_start_bound(abs_bounds.start(), precision)?));
         }
 
@@ -179,7 +181,7 @@ impl PreciseAbsoluteBounds for AbsoluteInterval {
     }
 
     fn precise_end_bound(&self, precision: Precision) -> Self::PrecisedEndBoundOutput {
-        if let AbsoluteBoundsOrEmpty::Bound(abs_bounds) = self.abs_bounds() {
+        if let EmptiableAbsoluteBounds::Bound(abs_bounds) = self.emptiable_abs_bounds() {
             return Ok(Some(precise_abs_end_bound(abs_bounds.end(), precision)?));
         }
 
@@ -187,7 +189,8 @@ impl PreciseAbsoluteBounds for AbsoluteInterval {
     }
 }
 
-fn precise_abs_bounds(
+/// Precises [`AbsoluteBounds`] with the given [`Precision`]s
+pub fn precise_abs_bounds(
     bounds: &AbsoluteBounds,
     precision_start: Precision,
     precision_end: Precision,
@@ -198,7 +201,8 @@ fn precise_abs_bounds(
     ))
 }
 
-fn precise_abs_start_bound(
+/// Precises an [`AbsoluteStartBound`] with the given [`Precision`]
+pub fn precise_abs_start_bound(
     bound: &AbsoluteStartBound,
     precision: Precision,
 ) -> Result<AbsoluteStartBound, RoundingError> {
@@ -213,7 +217,11 @@ fn precise_abs_start_bound(
     }
 }
 
-fn precise_abs_end_bound(bound: &AbsoluteEndBound, precision: Precision) -> Result<AbsoluteEndBound, RoundingError> {
+/// Precises an [`AbsoluteEndBound`] with the given [`Precision`]
+pub fn precise_abs_end_bound(
+    bound: &AbsoluteEndBound,
+    precision: Precision,
+) -> Result<AbsoluteEndBound, RoundingError> {
     match bound {
         AbsoluteEndBound::InfiniteFuture => Ok(*bound),
         AbsoluteEndBound::Finite(finite_bound) => {
@@ -324,7 +332,8 @@ impl TimeContainmentRuleSet {
     }
 }
 
-fn strict_containment_rule_set_disambiguation(
+/// Disambiguates a [`TimeContainmentPosition`] using [the strict rule set](TimeContainmentRuleSet::Strict)
+pub fn strict_containment_rule_set_disambiguation(
     containment_position: TimeContainmentPosition,
 ) -> SimpleTimeContainmentPosition {
     match containment_position {
@@ -341,7 +350,8 @@ fn strict_containment_rule_set_disambiguation(
     }
 }
 
-fn lenient_containment_rule_set_disambiguation(
+/// Disambiguates a [`TimeContainmentPosition`] using [the lenient rule set](TimeContainmentRuleSet::Lenient)
+pub fn lenient_containment_rule_set_disambiguation(
     containment_position: TimeContainmentPosition,
 ) -> SimpleTimeContainmentPosition {
     match containment_position {
@@ -380,7 +390,8 @@ impl TimeContainmentRule {
     }
 }
 
-fn deny_on_start_containment_rule_counts_as_contained(
+/// Checks whether the given [`SimpleTimeContainmentPosition`] respects [the 'deny on start' rule](TimeContainmentRule::DenyOnStart)
+pub fn deny_on_start_containment_rule_counts_as_contained(
     simple_containment_position: SimpleTimeContainmentPosition,
 ) -> bool {
     !matches!(
@@ -392,7 +403,8 @@ fn deny_on_start_containment_rule_counts_as_contained(
     )
 }
 
-fn deny_on_end_containment_rule_counts_as_contained(
+/// Checks whether the given [`SimpleTimeContainmentPosition`] respects [the 'deny on end' rule](TimeContainmentRule::DenyOnEnd)
+pub fn deny_on_end_containment_rule_counts_as_contained(
     simple_containment_position: SimpleTimeContainmentPosition,
 ) -> bool {
     !matches!(
@@ -404,7 +416,8 @@ fn deny_on_end_containment_rule_counts_as_contained(
     )
 }
 
-fn deny_on_bounds_containment_rule_counts_as_contained(
+/// Checks whether the given [`SimpleTimeContainmentPosition`] respects [the 'deny on bounds' rule](TimeContainmentRule::DenyOnBounds)
+pub fn deny_on_bounds_containment_rule_counts_as_contained(
     simple_containment_position: SimpleTimeContainmentPosition,
 ) -> bool {
     !matches!(
@@ -700,7 +713,8 @@ impl OverlapRuleSet {
     }
 }
 
-fn strict_overlap_rule_set_disambiguation(overlap_position: OverlapPosition) -> SimpleOverlapPosition {
+/// Disambiguates an [`OverlapPosition`] using [the strict rule set](OverlapRuleSet::Strict)
+pub fn strict_overlap_rule_set_disambiguation(overlap_position: OverlapPosition) -> SimpleOverlapPosition {
     type OP = OverlapPosition;
     type SimpleOP = SimpleOverlapPosition;
     type BI = BoundInclusivity;
@@ -780,7 +794,10 @@ fn strict_overlap_rule_set_disambiguation(overlap_position: OverlapPosition) -> 
     }
 }
 
-fn continuous_to_future_overlap_rule_set_disambiguation(overlap_position: OverlapPosition) -> SimpleOverlapPosition {
+/// Disambiguates an [`OverlapPosition`] using [the 'continuous to future' rule set](OverlapRuleSet::ContinuousToFuture)
+pub fn continuous_to_future_overlap_rule_set_disambiguation(
+    overlap_position: OverlapPosition,
+) -> SimpleOverlapPosition {
     type OP = OverlapPosition;
     type SimpleOP = SimpleOverlapPosition;
     type BI = BoundInclusivity;
@@ -794,7 +811,8 @@ fn continuous_to_future_overlap_rule_set_disambiguation(overlap_position: Overla
     }
 }
 
-fn continuous_to_past_overlap_rule_set_disambiguation(overlap_position: OverlapPosition) -> SimpleOverlapPosition {
+/// Disambiguates an [`OverlapPosition`] using [the 'continuous to past' rule set](OverlapRuleSet::ContinuousToPast)
+pub fn continuous_to_past_overlap_rule_set_disambiguation(overlap_position: OverlapPosition) -> SimpleOverlapPosition {
     type OP = OverlapPosition;
     type SimpleOP = SimpleOverlapPosition;
     type BI = BoundInclusivity;
@@ -808,7 +826,8 @@ fn continuous_to_past_overlap_rule_set_disambiguation(overlap_position: OverlapP
     }
 }
 
-fn lenient_overlap_rule_set_disambiguation(overlap_position: OverlapPosition) -> SimpleOverlapPosition {
+/// Disambiguates an [`OverlapPosition`] using [the lenient rule set](OverlapRuleSet::Lenient)
+pub fn lenient_overlap_rule_set_disambiguation(overlap_position: OverlapPosition) -> SimpleOverlapPosition {
     type OP = OverlapPosition;
     type SimpleOP = SimpleOverlapPosition;
     type BI = BoundInclusivity;
@@ -831,7 +850,8 @@ fn lenient_overlap_rule_set_disambiguation(overlap_position: OverlapPosition) ->
     }
 }
 
-fn very_lenient_overlap_rule_set_disambiguation(overlap_position: OverlapPosition) -> SimpleOverlapPosition {
+/// Disambiguates an [`OverlapPosition`] using [the very lenient rule set](OverlapRuleSet::VeryLenient)
+pub fn very_lenient_overlap_rule_set_disambiguation(overlap_position: OverlapPosition) -> SimpleOverlapPosition {
     overlap_position.to_simple()
 }
 
@@ -876,14 +896,16 @@ impl OverlapRule {
     }
 }
 
-fn allow_adjacency_overlap_rules_counts_as_overlap(simple_overlap_position: SimpleOverlapPosition) -> bool {
+/// Checks whether the given [`SimpleOverlapPosition`] respects [the 'allow adjacency' rule](OverlapRule::AllowAdjacency)
+pub fn allow_adjacency_overlap_rules_counts_as_overlap(simple_overlap_position: SimpleOverlapPosition) -> bool {
     !matches!(
         simple_overlap_position,
         SimpleOverlapPosition::OutsideBefore | SimpleOverlapPosition::OutsideAfter | SimpleOverlapPosition::Outside
     )
 }
 
-fn deny_adjacency_overlap_rules_counts_as_overlap(simple_overlap_position: SimpleOverlapPosition) -> bool {
+/// Checks whether the given [`SimpleOverlapPosition`] respects [the 'deny adjacency' rule](OverlapRule::DenyAdjacency)
+pub fn deny_adjacency_overlap_rules_counts_as_overlap(simple_overlap_position: SimpleOverlapPosition) -> bool {
     !matches!(
         simple_overlap_position,
         SimpleOverlapPosition::OutsideBefore
@@ -894,7 +916,8 @@ fn deny_adjacency_overlap_rules_counts_as_overlap(simple_overlap_position: Simpl
     )
 }
 
-fn allow_past_adjacency_overlap_rules_counts_as_overlap(simple_overlap_position: SimpleOverlapPosition) -> bool {
+/// Checks whether the given [`SimpleOverlapPosition`] respects [the 'allow past adjacency' rule](OverlapRule::AllowPastAdjacency)
+pub fn allow_past_adjacency_overlap_rules_counts_as_overlap(simple_overlap_position: SimpleOverlapPosition) -> bool {
     !matches!(
         simple_overlap_position,
         SimpleOverlapPosition::OutsideBefore
@@ -904,7 +927,8 @@ fn allow_past_adjacency_overlap_rules_counts_as_overlap(simple_overlap_position:
     )
 }
 
-fn allow_future_adjacency_overlap_rules_counts_as_overlap(simple_overlap_position: SimpleOverlapPosition) -> bool {
+/// Checks whether the given [`SimpleOverlapPosition`] respects [the 'allow future adjacency' rule](OverlapRule::AllowFutureAdjacency)
+pub fn allow_future_adjacency_overlap_rules_counts_as_overlap(simple_overlap_position: SimpleOverlapPosition) -> bool {
     !matches!(
         simple_overlap_position,
         SimpleOverlapPosition::OutsideBefore
@@ -1055,11 +1079,11 @@ impl CanPositionTimeContainment for AbsoluteBounds {
     }
 }
 
-impl CanPositionTimeContainment for AbsoluteBoundsOrEmpty {
+impl CanPositionTimeContainment for EmptiableAbsoluteBounds {
     type Error = ();
 
     fn time_containment_position(&self, time: DateTime<Utc>) -> Result<TimeContainmentPosition, Self::Error> {
-        let AbsoluteBoundsOrEmpty::Bound(bounds) = self else {
+        let EmptiableAbsoluteBounds::Bound(bounds) = self else {
             return Ok(TimeContainmentPosition::Outside);
         };
 
@@ -1067,7 +1091,8 @@ impl CanPositionTimeContainment for AbsoluteBoundsOrEmpty {
     }
 }
 
-fn time_containment_position_abs_bounds(bounds: &AbsoluteBounds, time: DateTime<Utc>) -> TimeContainmentPosition {
+/// Returns the [`TimeContainmentPosition`] of the given time within the given [`AbsoluteBounds`]
+pub fn time_containment_position_abs_bounds(bounds: &AbsoluteBounds, time: DateTime<Utc>) -> TimeContainmentPosition {
     type StartB = AbsoluteStartBound;
     type EndB = AbsoluteEndBound;
     type ContPos = TimeContainmentPosition;
@@ -1100,7 +1125,7 @@ impl CanPositionTimeContainment for AbsoluteInterval {
     type Error = ();
 
     fn time_containment_position(&self, time: DateTime<Utc>) -> Result<TimeContainmentPosition, Self::Error> {
-        self.abs_bounds().time_containment_position(time)
+        self.emptiable_abs_bounds().time_containment_position(time)
     }
 }
 
@@ -1132,12 +1157,15 @@ impl CanPositionTimeContainment for EmptyInterval {
     type Error = ();
 
     fn time_containment_position(&self, time: DateTime<Utc>) -> Result<TimeContainmentPosition, Self::Error> {
-        self.abs_bounds().time_containment_position(time)
+        self.emptiable_abs_bounds().time_containment_position(time)
     }
 }
 
-/// Capacity to position an overlap between two intervals
-pub trait CanPositionOverlap {
+/// Capacity to position an overlap from a given [`HasEmptiableAbsoluteBounds`] implementor
+pub trait CanPositionOverlap<Rhs = Self>
+where
+    Rhs: HasEmptiableAbsoluteBounds,
+{
     /// Error type if the overlap positioning failed
     type Error;
 
@@ -1181,7 +1209,7 @@ pub trait CanPositionOverlap {
     ///
     /// If this process is fallible in a given implementor,
     /// they can use the associated type [`Error`](CanPositionOverlap::Error).
-    fn overlap_position(&self, other: &Self) -> Result<OverlapPosition, Self::Error>;
+    fn overlap_position(&self, other: &Rhs) -> Result<OverlapPosition, Self::Error>;
 
     /// Returns the simple overlap position of the given interval using a given rule set
     ///
@@ -1193,7 +1221,7 @@ pub trait CanPositionOverlap {
     /// they can use the associated type [`Error`](CanPositionOverlap::Error).
     fn simple_overlap_position(
         &self,
-        other: &Self,
+        other: &Rhs,
         rule_set: OverlapRuleSet,
     ) -> Result<SimpleOverlapPosition, Self::Error> {
         self.overlap_position(other)
@@ -1212,7 +1240,7 @@ pub trait CanPositionOverlap {
     ///
     /// If you want even more granular control, see [`CanPositionOverlap::overlaps_using_simple`].
     #[must_use]
-    fn simple_overlaps(&self, other: &Self) -> bool {
+    fn simple_overlaps(&self, other: &Rhs) -> bool {
         self.overlaps(other, OverlapRuleSet::default(), &DEFAULT_OVERLAP_RULES)
     }
 
@@ -1232,7 +1260,7 @@ pub trait CanPositionOverlap {
     ///
     /// If you want extremely granular control over what counts as overlap, see [`CanPositionOverlap::overlaps_using`].
     #[must_use]
-    fn overlaps<'a, RI>(&self, other: &Self, rule_set: OverlapRuleSet, rules: &'a RI) -> bool
+    fn overlaps<'a, RI>(&self, other: &Rhs, rule_set: OverlapRuleSet, rules: &'a RI) -> bool
     where
         &'a RI: IntoIterator<Item = &'a OverlapRule>,
     {
@@ -1260,7 +1288,7 @@ pub trait CanPositionOverlap {
     ///
     /// If you are looking for predetermined decisions on what's considered as overlapping, see [`CanPositionOverlap::overlaps`].
     #[must_use]
-    fn overlaps_using<F>(&self, other: &Self, f: F) -> bool
+    fn overlaps_using<F>(&self, other: &Rhs, f: F) -> bool
     where
         F: FnOnce(OverlapPosition) -> bool,
     {
@@ -1281,7 +1309,7 @@ pub trait CanPositionOverlap {
     ///
     /// If you are looking for predetermined decisions on what's considered as overlapping, see [`CanPositionOverlap::overlaps`].
     #[must_use]
-    fn overlaps_using_simple<F>(&self, other: &Self, rule_set: OverlapRuleSet, f: F) -> bool
+    fn overlaps_using_simple<F>(&self, other: &Rhs, rule_set: OverlapRuleSet, f: F) -> bool
     where
         F: FnOnce(SimpleOverlapPosition) -> bool,
     {
@@ -1289,36 +1317,37 @@ pub trait CanPositionOverlap {
     }
 }
 
-impl CanPositionOverlap for AbsoluteBounds {
-    type Error = ();
+impl<T, Rhs> CanPositionOverlap<Rhs> for T
+where
+    Rhs: HasEmptiableAbsoluteBounds,
+    T: HasEmptiableAbsoluteBounds,
+{
+    type Error = Infallible;
 
-    fn overlap_position(&self, other: &Self) -> Result<OverlapPosition, Self::Error> {
-        Ok(overlap_position_bounds(self, other))
+    fn overlap_position(&self, other: &Rhs) -> Result<OverlapPosition, Self::Error> {
+        Ok(overlap_position_emptiable_abs_bounds(
+            &self.emptiable_abs_bounds(),
+            &other.emptiable_abs_bounds(),
+        ))
     }
 }
 
-impl CanPositionOverlap for AbsoluteBoundsOrEmpty {
-    type Error = ();
-
-    fn overlap_position(&self, other: &Self) -> Result<OverlapPosition, Self::Error> {
-        let (Self::Bound(og_bounds), Self::Bound(other_bounds)) = (self, other) else {
-            // An empty interval is nowhere, even if we compare it against an open interval.
-            return Ok(OverlapPosition::Outside);
-        };
-
-        Ok(overlap_position_bounds(og_bounds, other_bounds))
+/// Positions the overlap between two implementors of [`HasEmptiableAbsoluteBounds`]
+pub fn overlap_position_emptiable_abs_bounds<T, U>(og: &T, other: &U) -> OverlapPosition
+where
+    T: HasEmptiableAbsoluteBounds,
+    U: HasEmptiableAbsoluteBounds,
+{
+    match (og.emptiable_abs_bounds(), other.emptiable_abs_bounds()) {
+        (_, EmptiableAbsoluteBounds::Empty) | (EmptiableAbsoluteBounds::Empty, _) => OverlapPosition::Outside,
+        (EmptiableAbsoluteBounds::Bound(ref og_bounds), EmptiableAbsoluteBounds::Bound(ref other_bounds)) => {
+            overlap_position_abs_bounds(og_bounds, other_bounds)
+        },
     }
 }
 
-impl CanPositionOverlap for AbsoluteInterval {
-    type Error = ();
-
-    fn overlap_position(&self, other: &Self) -> Result<OverlapPosition, Self::Error> {
-        self.abs_bounds().overlap_position(&other.abs_bounds())
-    }
-}
-
-fn overlap_position_bounds(og: &AbsoluteBounds, other: &AbsoluteBounds) -> OverlapPosition {
+/// Positions the overlap between two [`AbsoluteBounds`]
+pub fn overlap_position_abs_bounds(og: &AbsoluteBounds, other: &AbsoluteBounds) -> OverlapPosition {
     type StartB = AbsoluteStartBound;
     type EndB = AbsoluteEndBound;
     type OP = OverlapPosition;
@@ -1393,7 +1422,8 @@ fn overlap_position_bounds(og: &AbsoluteBounds, other: &AbsoluteBounds) -> Overl
     }
 }
 
-fn overlap_position_half_open_past_closed(
+/// Positions the overlap between a half-open interval going to the past and a closed interval
+pub fn overlap_position_half_open_past_closed(
     ref_bound: &AbsoluteFiniteBound,
     other_start: &AbsoluteFiniteBound,
     other_end: &AbsoluteFiniteBound,
@@ -1412,7 +1442,8 @@ fn overlap_position_half_open_past_closed(
     }
 }
 
-fn overlap_position_half_open_future_closed(
+/// Positions the overlap between a half-open interval going to the future and a closed interval
+pub fn overlap_position_half_open_future_closed(
     ref_bound: &AbsoluteFiniteBound,
     other_start: &AbsoluteFiniteBound,
     other_end: &AbsoluteFiniteBound,
@@ -1431,7 +1462,8 @@ fn overlap_position_half_open_future_closed(
     }
 }
 
-fn overlap_position_closed_half_open_past(
+/// Positions the overlap between a closed interval and a half-open interval going to the past
+pub fn overlap_position_closed_half_open_past(
     og_start: &AbsoluteFiniteBound,
     og_end: &AbsoluteFiniteBound,
     ref_bound: &AbsoluteFiniteBound,
@@ -1450,7 +1482,8 @@ fn overlap_position_closed_half_open_past(
     }
 }
 
-fn overlap_position_closed_half_open_future(
+/// Positions the overlap between a closed interval and a half-open interval going to the future
+pub fn overlap_position_closed_half_open_future(
     og_start: &AbsoluteFiniteBound,
     og_end: &AbsoluteFiniteBound,
     ref_bound: &AbsoluteFiniteBound,
@@ -1469,7 +1502,8 @@ fn overlap_position_closed_half_open_future(
     }
 }
 
-fn overlap_position_closed_pair(
+/// Positions the overlap between two closed intervals
+pub fn overlap_position_closed_pair(
     og_start: &AbsoluteFiniteBound,
     og_end: &AbsoluteFiniteBound,
     other_start: &AbsoluteFiniteBound,
@@ -1513,7 +1547,7 @@ fn overlap_position_closed_pair(
 }
 
 /// Capacity to extend an interval with another
-pub trait Extensible: Sized {
+pub trait Extensible<Rhs = Self> {
     /// Output type
     type Output;
 
@@ -1529,38 +1563,71 @@ pub trait Extensible: Sized {
     ///
     /// If one of the intervals is empty, the method just return a clone of the other non-empty interval.
     #[must_use]
-    fn extend(&self, other: &Self) -> Self::Output;
+    fn extend(&self, other: &Rhs) -> Self::Output;
 }
 
-impl Extensible for AbsoluteBounds {
+impl<Rhs> Extensible<Rhs> for AbsoluteBounds
+where
+    Rhs: HasEmptiableAbsoluteBounds,
+{
     type Output = Self;
 
-    fn extend(&self, other: &Self) -> Self::Output {
-        extend_abs_bounds(self, other)
+    fn extend(&self, other: &Rhs) -> Self::Output {
+        extend_abs_bounds_with_emptiable_abs_bounds(&self.abs_bounds(), &other.emptiable_abs_bounds())
     }
 }
 
-impl Extensible for AbsoluteBoundsOrEmpty {
+impl<Rhs> Extensible<Rhs> for EmptiableAbsoluteBounds
+where
+    Rhs: HasEmptiableAbsoluteBounds,
+{
     type Output = Self;
 
-    fn extend(&self, other: &Self) -> Self::Output {
-        match (self, other) {
-            (Self::Empty, Self::Empty) => Self::Empty,
-            (Self::Empty, bound @ Self::Bound(..)) | (bound @ Self::Bound(..), Self::Empty) => bound.clone(),
-            (Self::Bound(og_bounds), Self::Bound(other_bounds)) => Self::Bound(og_bounds.extend(other_bounds)),
-        }
+    fn extend(&self, other: &Rhs) -> Self::Output {
+        extend_emptiable_abs_bounds(&self.emptiable_abs_bounds(), &other.emptiable_abs_bounds())
     }
 }
 
-impl Extensible for AbsoluteInterval {
+impl<Rhs> Extensible<Rhs> for AbsoluteInterval
+where
+    Rhs: HasEmptiableAbsoluteBounds,
+{
     type Output = Self;
 
-    fn extend(&self, other: &Self) -> Self::Output {
-        Self::from(self.abs_bounds().extend(&other.abs_bounds()))
+    fn extend(&self, other: &Rhs) -> Self::Output {
+        AbsoluteInterval::from(self.emptiable_abs_bounds().extend(&other.emptiable_abs_bounds()))
     }
 }
 
-fn extend_abs_bounds(og_bounds: &AbsoluteBounds, other_bounds: &AbsoluteBounds) -> AbsoluteBounds {
+/// Extends two [`EmptiableAbsoluteBounds`]
+pub fn extend_emptiable_abs_bounds(
+    og_bounds: &EmptiableAbsoluteBounds,
+    other_bounds: &EmptiableAbsoluteBounds,
+) -> EmptiableAbsoluteBounds {
+    match (og_bounds, other_bounds) {
+        (EmptiableAbsoluteBounds::Empty, EmptiableAbsoluteBounds::Empty) => EmptiableAbsoluteBounds::Empty,
+        (EmptiableAbsoluteBounds::Empty, bound @ EmptiableAbsoluteBounds::Bound(..))
+        | (bound @ EmptiableAbsoluteBounds::Bound(..), EmptiableAbsoluteBounds::Empty) => bound.clone(),
+        (EmptiableAbsoluteBounds::Bound(og_bounds), EmptiableAbsoluteBounds::Bound(other_bounds)) => {
+            EmptiableAbsoluteBounds::Bound(og_bounds.extend(other_bounds))
+        },
+    }
+}
+
+/// Extends an [`AbsoluteBounds`] with an [`EmptiableAbsoluteBounds`]
+pub fn extend_abs_bounds_with_emptiable_abs_bounds(
+    og_bounds: &AbsoluteBounds,
+    other_bounds: &EmptiableAbsoluteBounds,
+) -> AbsoluteBounds {
+    let EmptiableAbsoluteBounds::Bound(other_non_empty_bounds) = other_bounds else {
+        return og_bounds.clone();
+    };
+
+    extend_abs_bounds(og_bounds, other_non_empty_bounds)
+}
+
+/// Extends two [`AbsoluteBounds`]
+pub fn extend_abs_bounds(og_bounds: &AbsoluteBounds, other_bounds: &AbsoluteBounds) -> AbsoluteBounds {
     let new_start_bound = match (og_bounds.abs_start(), other_bounds.abs_start()) {
         (bound @ AbsoluteStartBound::InfinitePast, _) | (_, bound @ AbsoluteStartBound::InfinitePast) => bound,
         (og_bound @ AbsoluteStartBound::Finite(..), other_bound @ AbsoluteStartBound::Finite(..)) => {
@@ -1575,11 +1642,11 @@ fn extend_abs_bounds(og_bounds: &AbsoluteBounds, other_bounds: &AbsoluteBounds) 
         },
     };
 
-    AbsoluteBounds::new(*new_start_bound, *new_end_bound)
+    AbsoluteBounds::new(new_start_bound, new_end_bound)
 }
 
 /// Capacity to abridge an interval with another, think of it as the inverse of [`Extensible`]
-pub trait Abridgable {
+pub trait Abridgable<Rhs = Self> {
     /// Output type
     type Output;
 
@@ -1598,50 +1665,79 @@ pub trait Abridgable {
     ///
     /// If one of the intervals is empty, the method just returns a clone of the other non-empty interval.
     #[must_use]
-    fn abridge(&self, other: &Self) -> Self::Output;
+    fn abridge(&self, other: &Rhs) -> Self::Output;
 }
 
-impl Abridgable for AbsoluteBounds {
+impl<Rhs> Abridgable<Rhs> for AbsoluteBounds
+where
+    Rhs: HasEmptiableAbsoluteBounds,
+{
     type Output = Self;
 
-    fn abridge(&self, other: &Self) -> Self::Output {
-        abridge_abs_bounds(self, other)
+    fn abridge(&self, other: &Rhs) -> Self::Output {
+        abridge_abs_bounds_with_emptiable_abs_bounds(&self.abs_bounds(), &other.emptiable_abs_bounds())
     }
 }
 
-impl Abridgable for AbsoluteBoundsOrEmpty {
+impl<Rhs> Abridgable<Rhs> for EmptiableAbsoluteBounds
+where
+    Rhs: HasEmptiableAbsoluteBounds,
+{
     type Output = Self;
 
-    fn abridge(&self, other: &Self) -> Self::Output {
-        match (self, other) {
-            (Self::Empty, Self::Empty) => Self::Empty,
-            (Self::Empty, bound @ Self::Bound(..)) | (bound @ Self::Bound(..), Self::Empty) => bound.clone(),
-            (Self::Bound(og_bounds), Self::Bound(other_bounds)) => Self::Bound(og_bounds.abridge(other_bounds)),
-        }
+    fn abridge(&self, other: &Rhs) -> Self::Output {
+        abridge_emptiable_abs_bounds(&self.emptiable_abs_bounds(), &other.emptiable_abs_bounds())
     }
 }
 
-impl Abridgable for AbsoluteInterval {
+impl<Rhs> Abridgable<Rhs> for AbsoluteInterval
+where
+    Rhs: HasEmptiableAbsoluteBounds,
+{
     type Output = Self;
 
-    fn abridge(&self, other: &Self) -> Self::Output {
-        Self::from(self.abs_bounds().abridge(&other.abs_bounds()))
+    fn abridge(&self, other: &Rhs) -> Self::Output {
+        Self::from(self.emptiable_abs_bounds().abridge(&other.emptiable_abs_bounds()))
     }
 }
 
-fn abridge_abs_bounds(og_bounds: &AbsoluteBounds, other_bounds: &AbsoluteBounds) -> AbsoluteBounds {
+/// Abridges two [`EmptiableAbsoluteBounds`]
+pub fn abridge_emptiable_abs_bounds(
+    og_bounds: &EmptiableAbsoluteBounds,
+    other_bounds: &EmptiableAbsoluteBounds,
+) -> EmptiableAbsoluteBounds {
+    match (og_bounds, other_bounds) {
+        (EmptiableAbsoluteBounds::Empty, EmptiableAbsoluteBounds::Empty) => EmptiableAbsoluteBounds::Empty,
+        (EmptiableAbsoluteBounds::Empty, bound @ EmptiableAbsoluteBounds::Bound(..))
+        | (bound @ EmptiableAbsoluteBounds::Bound(..), EmptiableAbsoluteBounds::Empty) => bound.clone(),
+        (EmptiableAbsoluteBounds::Bound(og_bounds), EmptiableAbsoluteBounds::Bound(other_bounds)) => {
+            EmptiableAbsoluteBounds::Bound(og_bounds.abridge(other_bounds))
+        },
+    }
+}
+
+/// Abridges an [`AbsoluteBounds`] with an [`EmptiableAbsoluteBounds`]
+pub fn abridge_abs_bounds_with_emptiable_abs_bounds(
+    og_bounds: &AbsoluteBounds,
+    other_bounds: &EmptiableAbsoluteBounds,
+) -> AbsoluteBounds {
+    let EmptiableAbsoluteBounds::Bound(other_non_empty_bounds) = other_bounds else {
+        return og_bounds.clone();
+    };
+
+    abridge_abs_bounds(og_bounds, other_non_empty_bounds)
+}
+
+/// Abridges two [`AbsoluteBounds`]
+pub fn abridge_abs_bounds(og_bounds: &AbsoluteBounds, other_bounds: &AbsoluteBounds) -> AbsoluteBounds {
     let mut highest_start = match (og_bounds.abs_start(), other_bounds.abs_start()) {
         (AbsoluteStartBound::InfinitePast, bound @ AbsoluteStartBound::Finite(..))
         | (
             bound @ (AbsoluteStartBound::Finite(..) | AbsoluteStartBound::InfinitePast),
             AbsoluteStartBound::InfinitePast,
-        ) => *bound,
+        ) => bound,
         (og_bound @ AbsoluteStartBound::Finite(..), other_bound @ AbsoluteStartBound::Finite(..)) => {
-            if og_bound >= other_bound {
-                *og_bound
-            } else {
-                *other_bound
-            }
+            if og_bound >= other_bound { og_bound } else { other_bound }
         },
     };
 
@@ -1650,13 +1746,9 @@ fn abridge_abs_bounds(og_bounds: &AbsoluteBounds, other_bounds: &AbsoluteBounds)
         | (
             bound @ (AbsoluteEndBound::Finite(..) | AbsoluteEndBound::InfiniteFuture),
             AbsoluteEndBound::InfiniteFuture,
-        ) => *bound,
+        ) => bound,
         (og_bound @ AbsoluteEndBound::Finite(..), other_bound @ AbsoluteEndBound::Finite(..)) => {
-            if og_bound <= other_bound {
-                *og_bound
-            } else {
-                *other_bound
-            }
+            if og_bound <= other_bound { og_bound } else { other_bound }
         },
     };
 
@@ -1676,7 +1768,7 @@ fn abridge_abs_bounds(og_bounds: &AbsoluteBounds, other_bounds: &AbsoluteBounds)
 }
 
 /// Unites two [`AbsoluteBounds`] using the given rules
-pub fn unite_absolute_bounds<'a, 'b, RI>(
+pub fn unite_abs_bounds<'a, 'b, RI>(
     a: &'a AbsoluteBounds,
     b: &'a AbsoluteBounds,
     rule_set: OverlapRuleSet,
@@ -1693,12 +1785,12 @@ where
 }
 
 /// Unites two [`AbsoluteBoundsOrEmpty`] using the given rules
-pub fn unite_absolute_bounds_or_empty<'a, 'b, RI>(
-    a: &'a AbsoluteBoundsOrEmpty,
-    b: &'a AbsoluteBoundsOrEmpty,
+pub fn unite_emptiable_abs_bounds<'a, 'b, RI>(
+    a: &'a EmptiableAbsoluteBounds,
+    b: &'a EmptiableAbsoluteBounds,
     rule_set: OverlapRuleSet,
     rules: &'b RI,
-) -> UnionResult<AbsoluteBoundsOrEmpty, &'a AbsoluteBoundsOrEmpty>
+) -> UnionResult<EmptiableAbsoluteBounds, &'a EmptiableAbsoluteBounds>
 where
     &'b RI: IntoIterator<Item = &'b OverlapRule>,
 {
@@ -1710,7 +1802,7 @@ where
 }
 
 /// Unites two [`AbsoluteInterval`]s using the given rules
-pub fn unite_absolute_intervals<'a, 'b, RI>(
+pub fn unite_abs_intervals<'a, 'b, RI>(
     a: &'a AbsoluteInterval,
     b: &'a AbsoluteInterval,
     rule_set: OverlapRuleSet,
@@ -1727,7 +1819,7 @@ where
 }
 
 /// Intersects two [`AbsoluteBounds`] using the given rules
-pub fn intersect_absolute_bounds<'a, 'b, RI>(
+pub fn intersect_abs_bounds<'a, 'b, RI>(
     a: &'a AbsoluteBounds,
     b: &'a AbsoluteBounds,
     rule_set: OverlapRuleSet,
@@ -1744,12 +1836,12 @@ where
 }
 
 /// Intersects two [`AbsoluteBoundsOrEmpty`] using the given rules
-pub fn intersect_absolute_bounds_or_empty<'a, 'b, RI>(
-    a: &'a AbsoluteBoundsOrEmpty,
-    b: &'a AbsoluteBoundsOrEmpty,
+pub fn intersect_emptiable_abs_bounds<'a, 'b, RI>(
+    a: &'a EmptiableAbsoluteBounds,
+    b: &'a EmptiableAbsoluteBounds,
     rule_set: OverlapRuleSet,
     rules: &'b RI,
-) -> IntersectionResult<AbsoluteBoundsOrEmpty, &'a AbsoluteBoundsOrEmpty>
+) -> IntersectionResult<EmptiableAbsoluteBounds, &'a EmptiableAbsoluteBounds>
 where
     &'b RI: IntoIterator<Item = &'b OverlapRule>,
 {
@@ -1761,7 +1853,7 @@ where
 }
 
 /// Intersects two [`AbsoluteInterval`]s using the given rules
-pub fn intersect_absolute_intervals<'a, 'b, RI>(
+pub fn intersect_abs_intervals<'a, 'b, RI>(
     a: &'a AbsoluteInterval,
     b: &'a AbsoluteInterval,
     rule_set: OverlapRuleSet,
@@ -1778,7 +1870,7 @@ where
 }
 
 /// Differentiates two [`AbsoluteBounds`] using the given rules
-pub fn differentiate_absolute_bounds<'a, 'b, RI>(
+pub fn differentiate_abs_bounds<'a, 'b, RI>(
     a: &'a AbsoluteBounds,
     b: &'a AbsoluteBounds,
     rule_set: OverlapRuleSet,
@@ -1791,12 +1883,12 @@ where
 }
 
 /// Differentiates two [`AbsoluteBoundsOrEmpty`] using the given rules
-pub fn differentiate_absolute_bounds_or_empty<'a, 'b, RI>(
-    a: &'a AbsoluteBoundsOrEmpty,
-    b: &'a AbsoluteBoundsOrEmpty,
+pub fn differentiate_emptiable_abs_bounds<'a, 'b, RI>(
+    a: &'a EmptiableAbsoluteBounds,
+    b: &'a EmptiableAbsoluteBounds,
     rule_set: OverlapRuleSet,
     rules: &'b RI,
-) -> DifferenceResult<AbsoluteBoundsOrEmpty, &'a AbsoluteBoundsOrEmpty>
+) -> DifferenceResult<EmptiableAbsoluteBounds, &'a EmptiableAbsoluteBounds>
 where
     &'b RI: IntoIterator<Item = &'b OverlapRule>,
 {
@@ -1804,7 +1896,7 @@ where
 }
 
 /// Differentiates two [`AbsoluteInterval`]s using the given rules
-pub fn differentiate_absolute_intervals<'a, 'b, RI>(
+pub fn differentiate_abs_intervals<'a, 'b, RI>(
     a: &'a AbsoluteInterval,
     b: &'a AbsoluteInterval,
     rule_set: OverlapRuleSet,
@@ -1817,7 +1909,7 @@ where
 }
 
 /// Symmetrically differentiates two [`AbsoluteBounds`] using the given rules
-pub fn symmetrically_differentiate_absolute_bounds<'a, 'b, RI>(
+pub fn symmetrically_differentiate_abs_bounds<'a, 'b, RI>(
     a: &'a AbsoluteBounds,
     b: &'a AbsoluteBounds,
     rule_set: OverlapRuleSet,
@@ -1830,12 +1922,12 @@ where
 }
 
 /// Symmetrically differentiates two [`AbsoluteBoundsOrEmpty`] using the given rules
-pub fn symmetrically_differentiate_absolute_bounds_or_empty<'a, 'b, RI>(
-    a: &'a AbsoluteBoundsOrEmpty,
-    b: &'a AbsoluteBoundsOrEmpty,
+pub fn symmetrically_differentiate_emptiable_abs_bounds<'a, 'b, RI>(
+    a: &'a EmptiableAbsoluteBounds,
+    b: &'a EmptiableAbsoluteBounds,
     rule_set: OverlapRuleSet,
     rules: &'b RI,
-) -> SymmetricDifference<AbsoluteBoundsOrEmpty, &'a AbsoluteBoundsOrEmpty>
+) -> SymmetricDifference<EmptiableAbsoluteBounds, &'a EmptiableAbsoluteBounds>
 where
     &'b RI: IntoIterator<Item = &'b OverlapRule>,
 {
@@ -1843,7 +1935,7 @@ where
 }
 
 /// Symmetrically differentiates two [`AbsoluteInterval`]s using the given rules
-pub fn symmetrically_differentiate_absolute_intervals<'a, 'b, RI>(
+pub fn symmetrically_differentiate_abs_intervals<'a, 'b, RI>(
     a: &'a AbsoluteInterval,
     b: &'a AbsoluteInterval,
     rule_set: OverlapRuleSet,
