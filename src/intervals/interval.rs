@@ -776,11 +776,11 @@ impl HasAbsoluteBounds for AbsoluteBounds {
     }
 
     fn abs_start(&self) -> AbsoluteStartBound {
-        self.start().clone()
+        *self.start()
     }
 
     fn abs_end(&self) -> AbsoluteEndBound {
-        self.end().clone()
+        *self.end()
     }
 }
 
@@ -1094,11 +1094,11 @@ impl HasRelativeBounds for RelativeBounds {
     }
 
     fn rel_start(&self) -> RelativeStartBound {
-        self.start().clone()
+        *self.start()
     }
 
     fn rel_end(&self) -> RelativeEndBound {
-        self.end().clone()
+        *self.end()
     }
 }
 
@@ -1192,14 +1192,14 @@ impl HasEmptiableRelativeBounds for EmptiableRelativeBounds {
     fn partial_rel_start(&self) -> Option<RelativeStartBound> {
         match self {
             Self::Empty => None,
-            Self::Bound(bounds) => Some(bounds.start().clone()),
+            Self::Bound(bounds) => Some(*bounds.start()),
         }
     }
 
     fn partial_rel_end(&self) -> Option<RelativeEndBound> {
         match self {
             Self::Empty => None,
-            Self::Bound(bounds) => Some(bounds.end().clone()),
+            Self::Bound(bounds) => Some(*bounds.end()),
         }
     }
 }

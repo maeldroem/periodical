@@ -11,8 +11,8 @@ use std::iter::{FusedIterator, Peekable};
 use chrono::{DateTime, RoundingError, Utc};
 
 use crate::intervals::interval::{
-    AbsoluteBounds, EmptiableAbsoluteBounds, EmptiableRelativeBounds, HasAbsoluteBounds, HasRelativeBounds,
-    RelativeBounds, ToAbsolute, ToRelative,
+    AbsoluteBounds, EmptiableAbsoluteBounds, EmptiableRelativeBounds, HasEmptiableAbsoluteBounds,
+    HasEmptiableRelativeBounds, RelativeBounds, ToAbsolute, ToRelative,
 };
 use crate::intervals::ops::{
     CanPositionOverlap, DEFAULT_OVERLAP_RULES, OverlapRule, OverlapRuleSet, PreciseAbsoluteBounds, Precision,
@@ -61,7 +61,7 @@ use crate::ops::{DifferenceResult, IntersectionResult, RunningResult, SymmetricD
 
 /// Ad-hoc trait for relative-bounded structures that can change their relativity to absolute
 pub trait RelativeToAbsoluteOperable {
-    type Item: HasAbsoluteBounds;
+    type Item: HasEmptiableAbsoluteBounds;
 
     fn to_absolute(&self, reference_time: DateTime<Utc>) -> Self::Item;
 }
@@ -157,7 +157,7 @@ where
 
 /// Ad-hoc trait for absolute-bounded structures that can change their relativity to relative
 pub trait AbsoluteToRelativeOperable {
-    type Item: HasRelativeBounds;
+    type Item: HasEmptiableRelativeBounds;
 
     fn to_relative(&self, reference_time: DateTime<Utc>) -> Self::Item;
 }
@@ -542,11 +542,11 @@ pub struct PeerSimpleUnion<I> {
     exhausted: bool,
 }
 
-impl<I> PeerSimpleUnion<Peekable<I>>
+impl<I> PeerSimpleUnion<I>
 where
     I: Iterator,
 {
-    pub fn new(iter: I) -> Self {
+    pub fn new(iter: I) -> PeerSimpleUnion<Peekable<I>> {
         PeerSimpleUnion {
             iter: iter.peekable(),
             exhausted: false,
@@ -592,6 +592,9 @@ where
     }
 }
 
+// TODO: If a reverse Peekable becomes standard or when we'll import a crate that does that,
+// implement DoubleEndedIterator for PeerSimpleUnion
+
 impl<I> FusedIterator for PeerSimpleUnion<Peekable<I>>
 where
     I: Iterator,
@@ -608,12 +611,12 @@ pub struct PeerUnion<'u, I, RI> {
     exhausted: bool,
 }
 
-impl<'u, I, RI> PeerUnion<'u, Peekable<I>, RI>
+impl<'u, I, RI> PeerUnion<'u, I, RI>
 where
     I: Iterator,
     &'u RI: IntoIterator<Item = &'u OverlapRule>,
 {
-    pub fn new(iter: I, rule_set: OverlapRuleSet, rules: &'u RI) -> Self {
+    pub fn new(iter: I, rule_set: OverlapRuleSet, rules: &'u RI) -> PeerUnion<'u, Peekable<I>, RI> {
         PeerUnion {
             iter: iter.peekable(),
             rule_set,
@@ -657,6 +660,9 @@ where
     }
 }
 
+// TODO: If a reverse Peekable becomes standard or when we'll import a crate that does that,
+// implement DoubleEndedIterator for PeerUnion
+
 impl<'u, I, RI> FusedIterator for PeerUnion<'u, Peekable<I>, RI>
 where
     I: Iterator,
@@ -673,11 +679,11 @@ pub struct PeerUnionWith<I, F> {
     exhausted: bool,
 }
 
-impl<I, F> PeerUnionWith<Peekable<I>, F>
+impl<I, F> PeerUnionWith<I, F>
 where
     I: Iterator,
 {
-    pub fn new(iter: I, f: F) -> Self {
+    pub fn new(iter: I, f: F) -> PeerUnionWith<Peekable<I>, F> {
         PeerUnionWith {
             iter: iter.peekable(),
             f,
@@ -719,6 +725,9 @@ where
         }
     }
 }
+
+// TODO: If a reverse Peekable becomes standard or when we'll import a crate that does that,
+// implement DoubleEndedIterator for PeerUnionWith
 
 impl<I, F> FusedIterator for PeerUnionWith<Peekable<I>, F>
 where
@@ -854,12 +863,12 @@ pub struct PeerSimpleIntersection<I> {
     exhausted: bool,
 }
 
-impl<I> PeerSimpleIntersection<Peekable<I>>
+impl<I> PeerSimpleIntersection<I>
 where
     I: Iterator,
 {
     /// Creates a new instance of [`PeerSimpleIntersection`]
-    pub fn new(iter: I) -> Self {
+    pub fn new(iter: I) -> PeerSimpleIntersection<Peekable<I>> {
         PeerSimpleIntersection {
             iter: iter.peekable(),
             exhausted: false,
@@ -941,12 +950,12 @@ pub struct PeerIntersection<'i, I, RI> {
     exhausted: bool,
 }
 
-impl<'i, I, RI> PeerIntersection<'i, Peekable<I>, RI>
+impl<'i, I, RI> PeerIntersection<'i, I, RI>
 where
     I: Iterator,
 {
     /// Creates a new instance of [`PeerIntersection`]
-    pub fn new(iter: I, rule_set: OverlapRuleSet, rules: &'i RI) -> Self {
+    pub fn new(iter: I, rule_set: OverlapRuleSet, rules: &'i RI) -> PeerIntersection<'i, Peekable<I>, RI> {
         PeerIntersection {
             iter: iter.peekable(),
             rule_set,
@@ -1032,12 +1041,12 @@ pub struct PeerIntersectionWith<I, F> {
     exhausted: bool,
 }
 
-impl<I, F> PeerIntersectionWith<Peekable<I>, F>
+impl<I, F> PeerIntersectionWith<I, F>
 where
     I: Iterator,
 {
     /// Creates a new instance of [`PeerIntersectionWith`]
-    pub fn new(iter: I, f: F) -> Self {
+    pub fn new(iter: I, f: F) -> PeerIntersectionWith<Peekable<I>, F> {
         PeerIntersectionWith {
             iter: iter.peekable(),
             f,
@@ -1112,16 +1121,22 @@ where
 {
 }
 
-pub trait DifferentiableIteratorDispatcher: Sized {
-    fn difference_with_one(self, interval: AbsoluteInterval) -> DifferenceWithOne<Self> {
-        todo!()
+/// A very ad-hoc trait for structures that can be differentiated (_differentiated_ as set difference)
+pub trait DifferenceOperable {
+    type Item: DifferenceOperable;
+}
+
+/// Dispatcher trait for difference iterators
+pub trait DifferentiableIteratorDispatcher: Iterator + Sized {
+    fn difference_with_one<B>(self, comparator: B) -> DifferenceWithOne<Peekable<Self>, B> {
+        DifferenceWithOne::new(self, comparator)
     }
 
-    fn difference<J>(self, other: J) -> Difference<Self, J>
+    fn difference<'d, J, O>(self, other_iter: J) -> Difference<'d, Self, O>
     where
-        J: Iterator<Item = AbsoluteInterval>,
+        J: IntoIterator<Item = &'d O>,
     {
-        todo!()
+        Difference::new(self, other_iter)
     }
 
     fn difference_next_peer(self) -> DifferenceNextPeer<Self> {
@@ -1133,12 +1148,64 @@ pub trait DifferentiableIteratorDispatcher: Sized {
     }
 }
 
-// impl<I> DifferentiableIntervalIterator for I
-// where
-//     I: Iterator,
-//     I::Item: DifferenceOperable<Item = I::Item>,
-// {
-// }
+impl<I> DifferentiableIteratorDispatcher for I
+where
+    I: Iterator,
+    I::Item: DifferenceOperable<Item = I::Item>,
+{
+}
+
+#[derive(Debug, Clone)]
+pub struct DifferenceWithOne<I, B> {
+    iter: I,
+    comparator: B,
+    exhausted: bool,
+}
+
+impl<I, B> DifferenceWithOne<I, B>
+where
+    I: Iterator,
+{
+    pub fn new(iter: I, comparator: B) -> DifferenceWithOne<Peekable<I>, B> {
+        DifferenceWithOne {
+            iter: iter.peekable(),
+            comparator,
+            exhausted: false,
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct Difference<'d, I, O> {
+    iter: I,
+    others: Vec<&'d O>,
+    exhausted: bool,
+}
+
+impl<'d, I, O> Difference<'d, I, O> {
+    pub fn new<J>(iter: I, other_iter: J) -> Difference<'d, I, O>
+    where
+        J: IntoIterator<Item = &'d O>,
+    {
+        Difference {
+            iter,
+            others: other_iter.into_iter().collect(),
+            exhausted: false,
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct DifferenceNextPeer<I> {
+    iter: I,
+    exhausted: bool,
+}
+
+#[derive(Debug, Clone)]
+pub struct DifferencePreviousPeer<I> {
+    iter: I,
+    exhausted: bool,
+}
 
 // TODO: REWORK TO GENERIC
 pub trait SymmetricallyDifferentiableIteratorDispatcher: Sized {
@@ -1166,27 +1233,6 @@ pub trait SymmetricallyDifferentiableIteratorDispatcher: Sized {
 // }
 
 // TODO: MOVE THOSE AND REWORK THEM
-#[derive(Debug, Clone)]
-pub struct DifferenceWithOne<I> {
-    iter: I,
-    interval: AbsoluteInterval,
-}
-
-#[derive(Debug, Clone)]
-pub struct Difference<I, J> {
-    iter: I,
-    other_iter: J,
-}
-
-#[derive(Debug, Clone)]
-pub struct DifferenceNextPeer<I> {
-    iter: I,
-}
-
-#[derive(Debug, Clone)]
-pub struct DifferencePreviousPeer<I> {
-    iter: I,
-}
 
 #[derive(Debug, Clone)]
 pub struct SymmetricDifferenceWithOne<I> {
@@ -1229,23 +1275,23 @@ impl<I> SimpleOverlap<I> {
     }
 }
 
-impl<I> Iterator for SimpleOverlap<I>
-where
-    I: Iterator,
-    I::Item: CanPositionOverlap,
-{
-    type Item = I::Item;
+// impl<I> Iterator for SimpleOverlap<I>
+// where
+//     I: Iterator,
+//     I::Item: CanPositionOverlap,
+// {
+//     type Item = I::Item;
 
-    fn next(&mut self) -> Option<Self::Item> {
-        loop {
-            let current = self.iter.next()?;
+//     fn next(&mut self) -> Option<Self::Item> {
+//         loop {
+//             let current = self.iter.next()?;
 
-            if current.simple_overlaps(&self.interval) {
-                return Some(current);
-            }
-        }
-    }
-}
+//             if current.simple_overlaps(&self.interval) {
+//                 return Some(current);
+//             }
+//         }
+//     }
+// }
 
 #[derive(Debug, Clone, Hash)]
 pub struct Overlap<'o, I, RI> {

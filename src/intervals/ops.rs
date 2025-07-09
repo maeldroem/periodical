@@ -190,6 +190,13 @@ impl PreciseAbsoluteBounds for AbsoluteInterval {
 }
 
 /// Precises [`AbsoluteBounds`] with the given [`Precision`]s
+///
+/// # Errors
+///
+/// Time conversions can fail for different reasons, for example if the time would overflow after conversion,
+/// if the given duration used is too big, negative or zero, etc.
+///
+/// For more details, check [`chrono`'s limitations on the `DurationRound` trait](https://docs.rs/chrono/latest/chrono/round/trait.DurationRound.html#limitations).
 pub fn precise_abs_bounds(
     bounds: &AbsoluteBounds,
     precision_start: Precision,
@@ -202,6 +209,13 @@ pub fn precise_abs_bounds(
 }
 
 /// Precises an [`AbsoluteStartBound`] with the given [`Precision`]
+///
+/// # Errors
+///
+/// Time conversions can fail for different reasons, for example if the time would overflow after conversion,
+/// if the given duration used is too big, negative or zero, etc.
+///
+/// For more details, check [`chrono`'s limitations on the `DurationRound` trait](https://docs.rs/chrono/latest/chrono/round/trait.DurationRound.html#limitations).
 pub fn precise_abs_start_bound(
     bound: &AbsoluteStartBound,
     precision: Precision,
@@ -218,6 +232,13 @@ pub fn precise_abs_start_bound(
 }
 
 /// Precises an [`AbsoluteEndBound`] with the given [`Precision`]
+///
+/// # Errors
+///
+/// Time conversions can fail for different reasons, for example if the time would overflow after conversion,
+/// if the given duration used is too big, negative or zero, etc.
+///
+/// For more details, check [`chrono`'s limitations on the `DurationRound` trait](https://docs.rs/chrono/latest/chrono/round/trait.DurationRound.html#limitations).
 pub fn precise_abs_end_bound(
     bound: &AbsoluteEndBound,
     precision: Precision,
@@ -333,6 +354,7 @@ impl TimeContainmentRuleSet {
 }
 
 /// Disambiguates a [`TimeContainmentPosition`] using [the strict rule set](TimeContainmentRuleSet::Strict)
+#[must_use]
 pub fn strict_containment_rule_set_disambiguation(
     containment_position: TimeContainmentPosition,
 ) -> SimpleTimeContainmentPosition {
@@ -351,6 +373,7 @@ pub fn strict_containment_rule_set_disambiguation(
 }
 
 /// Disambiguates a [`TimeContainmentPosition`] using [the lenient rule set](TimeContainmentRuleSet::Lenient)
+#[must_use]
 pub fn lenient_containment_rule_set_disambiguation(
     containment_position: TimeContainmentPosition,
 ) -> SimpleTimeContainmentPosition {
@@ -391,6 +414,7 @@ impl TimeContainmentRule {
 }
 
 /// Checks whether the given [`SimpleTimeContainmentPosition`] respects [the 'deny on start' rule](TimeContainmentRule::DenyOnStart)
+#[must_use]
 pub fn deny_on_start_containment_rule_counts_as_contained(
     simple_containment_position: SimpleTimeContainmentPosition,
 ) -> bool {
@@ -404,6 +428,7 @@ pub fn deny_on_start_containment_rule_counts_as_contained(
 }
 
 /// Checks whether the given [`SimpleTimeContainmentPosition`] respects [the 'deny on end' rule](TimeContainmentRule::DenyOnEnd)
+#[must_use]
 pub fn deny_on_end_containment_rule_counts_as_contained(
     simple_containment_position: SimpleTimeContainmentPosition,
 ) -> bool {
@@ -417,6 +442,7 @@ pub fn deny_on_end_containment_rule_counts_as_contained(
 }
 
 /// Checks whether the given [`SimpleTimeContainmentPosition`] respects [the 'deny on bounds' rule](TimeContainmentRule::DenyOnBounds)
+#[must_use]
 pub fn deny_on_bounds_containment_rule_counts_as_contained(
     simple_containment_position: SimpleTimeContainmentPosition,
 ) -> bool {
@@ -714,6 +740,7 @@ impl OverlapRuleSet {
 }
 
 /// Disambiguates an [`OverlapPosition`] using [the strict rule set](OverlapRuleSet::Strict)
+#[must_use]
 pub fn strict_overlap_rule_set_disambiguation(overlap_position: OverlapPosition) -> SimpleOverlapPosition {
     type OP = OverlapPosition;
     type SimpleOP = SimpleOverlapPosition;
@@ -795,6 +822,7 @@ pub fn strict_overlap_rule_set_disambiguation(overlap_position: OverlapPosition)
 }
 
 /// Disambiguates an [`OverlapPosition`] using [the 'continuous to future' rule set](OverlapRuleSet::ContinuousToFuture)
+#[must_use]
 pub fn continuous_to_future_overlap_rule_set_disambiguation(
     overlap_position: OverlapPosition,
 ) -> SimpleOverlapPosition {
@@ -812,6 +840,7 @@ pub fn continuous_to_future_overlap_rule_set_disambiguation(
 }
 
 /// Disambiguates an [`OverlapPosition`] using [the 'continuous to past' rule set](OverlapRuleSet::ContinuousToPast)
+#[must_use]
 pub fn continuous_to_past_overlap_rule_set_disambiguation(overlap_position: OverlapPosition) -> SimpleOverlapPosition {
     type OP = OverlapPosition;
     type SimpleOP = SimpleOverlapPosition;
@@ -827,6 +856,7 @@ pub fn continuous_to_past_overlap_rule_set_disambiguation(overlap_position: Over
 }
 
 /// Disambiguates an [`OverlapPosition`] using [the lenient rule set](OverlapRuleSet::Lenient)
+#[must_use]
 pub fn lenient_overlap_rule_set_disambiguation(overlap_position: OverlapPosition) -> SimpleOverlapPosition {
     type OP = OverlapPosition;
     type SimpleOP = SimpleOverlapPosition;
@@ -851,6 +881,7 @@ pub fn lenient_overlap_rule_set_disambiguation(overlap_position: OverlapPosition
 }
 
 /// Disambiguates an [`OverlapPosition`] using [the very lenient rule set](OverlapRuleSet::VeryLenient)
+#[must_use]
 pub fn very_lenient_overlap_rule_set_disambiguation(overlap_position: OverlapPosition) -> SimpleOverlapPosition {
     overlap_position.to_simple()
 }
@@ -897,6 +928,7 @@ impl OverlapRule {
 }
 
 /// Checks whether the given [`SimpleOverlapPosition`] respects [the 'allow adjacency' rule](OverlapRule::AllowAdjacency)
+#[must_use]
 pub fn allow_adjacency_overlap_rules_counts_as_overlap(simple_overlap_position: SimpleOverlapPosition) -> bool {
     !matches!(
         simple_overlap_position,
@@ -905,6 +937,7 @@ pub fn allow_adjacency_overlap_rules_counts_as_overlap(simple_overlap_position: 
 }
 
 /// Checks whether the given [`SimpleOverlapPosition`] respects [the 'deny adjacency' rule](OverlapRule::DenyAdjacency)
+#[must_use]
 pub fn deny_adjacency_overlap_rules_counts_as_overlap(simple_overlap_position: SimpleOverlapPosition) -> bool {
     !matches!(
         simple_overlap_position,
@@ -917,6 +950,7 @@ pub fn deny_adjacency_overlap_rules_counts_as_overlap(simple_overlap_position: S
 }
 
 /// Checks whether the given [`SimpleOverlapPosition`] respects [the 'allow past adjacency' rule](OverlapRule::AllowPastAdjacency)
+#[must_use]
 pub fn allow_past_adjacency_overlap_rules_counts_as_overlap(simple_overlap_position: SimpleOverlapPosition) -> bool {
     !matches!(
         simple_overlap_position,
@@ -928,6 +962,7 @@ pub fn allow_past_adjacency_overlap_rules_counts_as_overlap(simple_overlap_posit
 }
 
 /// Checks whether the given [`SimpleOverlapPosition`] respects [the 'allow future adjacency' rule](OverlapRule::AllowFutureAdjacency)
+#[must_use]
 pub fn allow_future_adjacency_overlap_rules_counts_as_overlap(simple_overlap_position: SimpleOverlapPosition) -> bool {
     !matches!(
         simple_overlap_position,
@@ -1092,6 +1127,7 @@ impl CanPositionTimeContainment for EmptiableAbsoluteBounds {
 }
 
 /// Returns the [`TimeContainmentPosition`] of the given time within the given [`AbsoluteBounds`]
+#[must_use]
 pub fn time_containment_position_abs_bounds(bounds: &AbsoluteBounds, time: DateTime<Utc>) -> TimeContainmentPosition {
     type StartB = AbsoluteStartBound;
     type EndB = AbsoluteEndBound;
@@ -1347,6 +1383,7 @@ where
 }
 
 /// Positions the overlap between two [`AbsoluteBounds`]
+#[must_use]
 pub fn overlap_position_abs_bounds(og: &AbsoluteBounds, other: &AbsoluteBounds) -> OverlapPosition {
     type StartB = AbsoluteStartBound;
     type EndB = AbsoluteEndBound;
@@ -1423,6 +1460,7 @@ pub fn overlap_position_abs_bounds(og: &AbsoluteBounds, other: &AbsoluteBounds) 
 }
 
 /// Positions the overlap between a half-open interval going to the past and a closed interval
+#[must_use]
 pub fn overlap_position_half_open_past_closed(
     ref_bound: &AbsoluteFiniteBound,
     other_start: &AbsoluteFiniteBound,
@@ -1443,6 +1481,7 @@ pub fn overlap_position_half_open_past_closed(
 }
 
 /// Positions the overlap between a half-open interval going to the future and a closed interval
+#[must_use]
 pub fn overlap_position_half_open_future_closed(
     ref_bound: &AbsoluteFiniteBound,
     other_start: &AbsoluteFiniteBound,
@@ -1463,6 +1502,7 @@ pub fn overlap_position_half_open_future_closed(
 }
 
 /// Positions the overlap between a closed interval and a half-open interval going to the past
+#[must_use]
 pub fn overlap_position_closed_half_open_past(
     og_start: &AbsoluteFiniteBound,
     og_end: &AbsoluteFiniteBound,
@@ -1483,6 +1523,7 @@ pub fn overlap_position_closed_half_open_past(
 }
 
 /// Positions the overlap between a closed interval and a half-open interval going to the future
+#[must_use]
 pub fn overlap_position_closed_half_open_future(
     og_start: &AbsoluteFiniteBound,
     og_end: &AbsoluteFiniteBound,
@@ -1503,6 +1544,7 @@ pub fn overlap_position_closed_half_open_future(
 }
 
 /// Positions the overlap between two closed intervals
+#[must_use]
 pub fn overlap_position_closed_pair(
     og_start: &AbsoluteFiniteBound,
     og_end: &AbsoluteFiniteBound,
@@ -1600,6 +1642,7 @@ where
 }
 
 /// Extends two [`EmptiableAbsoluteBounds`]
+#[must_use]
 pub fn extend_emptiable_abs_bounds(
     og_bounds: &EmptiableAbsoluteBounds,
     other_bounds: &EmptiableAbsoluteBounds,
@@ -1615,6 +1658,7 @@ pub fn extend_emptiable_abs_bounds(
 }
 
 /// Extends an [`AbsoluteBounds`] with an [`EmptiableAbsoluteBounds`]
+#[must_use]
 pub fn extend_abs_bounds_with_emptiable_abs_bounds(
     og_bounds: &AbsoluteBounds,
     other_bounds: &EmptiableAbsoluteBounds,
@@ -1627,6 +1671,7 @@ pub fn extend_abs_bounds_with_emptiable_abs_bounds(
 }
 
 /// Extends two [`AbsoluteBounds`]
+#[must_use]
 pub fn extend_abs_bounds(og_bounds: &AbsoluteBounds, other_bounds: &AbsoluteBounds) -> AbsoluteBounds {
     let new_start_bound = match (og_bounds.abs_start(), other_bounds.abs_start()) {
         (bound @ AbsoluteStartBound::InfinitePast, _) | (_, bound @ AbsoluteStartBound::InfinitePast) => bound,
@@ -1702,6 +1747,7 @@ where
 }
 
 /// Abridges two [`EmptiableAbsoluteBounds`]
+#[must_use]
 pub fn abridge_emptiable_abs_bounds(
     og_bounds: &EmptiableAbsoluteBounds,
     other_bounds: &EmptiableAbsoluteBounds,
@@ -1717,6 +1763,7 @@ pub fn abridge_emptiable_abs_bounds(
 }
 
 /// Abridges an [`AbsoluteBounds`] with an [`EmptiableAbsoluteBounds`]
+#[must_use]
 pub fn abridge_abs_bounds_with_emptiable_abs_bounds(
     og_bounds: &AbsoluteBounds,
     other_bounds: &EmptiableAbsoluteBounds,
@@ -1729,6 +1776,7 @@ pub fn abridge_abs_bounds_with_emptiable_abs_bounds(
 }
 
 /// Abridges two [`AbsoluteBounds`]
+#[must_use]
 pub fn abridge_abs_bounds(og_bounds: &AbsoluteBounds, other_bounds: &AbsoluteBounds) -> AbsoluteBounds {
     let mut highest_start = match (og_bounds.abs_start(), other_bounds.abs_start()) {
         (AbsoluteStartBound::InfinitePast, bound @ AbsoluteStartBound::Finite(..))
