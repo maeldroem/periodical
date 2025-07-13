@@ -1852,20 +1852,13 @@ where
     UnionResult::United(a.extend(b))
 }
 
-// pub fn unite_abs_bounds_with_emptiable_abs_bounds<'a, 'b, RI>(
-//     a: &'a AbsoluteBounds,
-//     b: &'a EmptiableAbsoluteBounds,
-//     rule_set: OverlapRuleSet,
-//     rules: &'b RI,
-// ) -> UnionResult<AbsoluteBounds, &'a AbsoluteBounds,>
-
-/// Unites two [`AbsoluteInterval`]s using the given rules
-pub fn unite_abs_intervals<'a, RI>(
-    a: &AbsoluteInterval,
-    b: &AbsoluteInterval,
+/// Unites an [`AbsoluteBounds`] with an [`EmptiableAbsoluteBounds`] using the given rules
+pub fn unite_abs_bounds_with_emptiable_abs_bounds<'a, RI>(
+    a: &AbsoluteBounds,
+    b: &EmptiableAbsoluteBounds,
     rule_set: OverlapRuleSet,
     rules: RI,
-) -> UnionResult<AbsoluteInterval>
+) -> UnionResult<AbsoluteBounds>
 where
     RI: IntoIterator<Item = &'a OverlapRule>,
 {
@@ -1893,7 +1886,7 @@ where
     IntersectionResult::Intersected(a.abridge(b))
 }
 
-/// Intersects two [`AbsoluteBoundsOrEmpty`] using the given rules
+/// Intersects two [`EmptiableAbsoluteBounds`] using the given rules
 pub fn intersect_emptiable_abs_bounds<'ri, RI>(
     a: &EmptiableAbsoluteBounds,
     b: &EmptiableAbsoluteBounds,
@@ -1910,13 +1903,13 @@ where
     IntersectionResult::Intersected(a.abridge(b))
 }
 
-/// Intersects two [`AbsoluteInterval`]s using the given rules
-pub fn intersect_abs_intervals<'ri, RI>(
-    a: &AbsoluteInterval,
-    b: &AbsoluteInterval,
+/// Intersects an [`AbsoluteBounds`] with an [`EmptiableAbsoluteBounds`] using the given rules
+pub fn intersect_abs_bounds_with_emptiable_abs_bounds<'ri, RI>(
+    a: &AbsoluteBounds,
+    b: &EmptiableAbsoluteBounds,
     rule_set: OverlapRuleSet,
     rules: RI,
-) -> IntersectionResult<AbsoluteInterval>
+) -> IntersectionResult<AbsoluteBounds>
 where
     RI: IntoIterator<Item = &'ri OverlapRule>,
 {
@@ -1940,7 +1933,7 @@ where
     todo!()
 }
 
-/// Differentiates two [`AbsoluteBoundsOrEmpty`] using the given rules
+/// Differentiates two [`EmptiableAbsoluteBounds`] using the given rules
 pub fn differentiate_emptiable_abs_bounds<'ri, RI>(
     a: &EmptiableAbsoluteBounds,
     b: &EmptiableAbsoluteBounds,
@@ -1979,7 +1972,7 @@ where
     todo!()
 }
 
-/// Symmetrically differentiates two [`AbsoluteBoundsOrEmpty`] using the given rules
+/// Symmetrically differentiates two [`EmptiableAbsoluteBounds`] using the given rules
 pub fn symmetrically_differentiate_emptiable_abs_bounds<'ri, RI>(
     a: &EmptiableAbsoluteBounds,
     b: &EmptiableAbsoluteBounds,

@@ -853,7 +853,7 @@ pub enum AbsoluteBoundsConversionErr {
 impl Display for AbsoluteBoundsConversionErr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::EmptyVariant => write!(f, "Provided AbsoluteBoundsOrEmpty was empty"),
+            Self::EmptyVariant => write!(f, "Provided EmptiableAbsoluteBounds was empty"),
         }
     }
 }
@@ -1159,7 +1159,7 @@ pub enum RelativeBoundsConversionErr {
 impl Display for RelativeBoundsConversionErr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::EmptyVariant => write!(f, "Provided RelativeBoundsOrEmpty was empty"),
+            Self::EmptyVariant => write!(f, "Provided EmptiableRelativeBounds was empty"),
         }
     }
 }

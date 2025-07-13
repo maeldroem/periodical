@@ -79,9 +79,6 @@ impl<U> UnionResult<U> {
     }
 }
 
-// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-// TODO: Refactor code below so that no UNNECESSARY "separate" tuples
-
 /// Represents the result of an intersection
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum IntersectionResult<I> {

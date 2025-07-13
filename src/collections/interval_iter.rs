@@ -16,8 +16,7 @@ use crate::intervals::interval::{
 };
 use crate::intervals::ops::{
     CanPositionOverlap, DEFAULT_OVERLAP_RULES, OverlapRule, OverlapRuleSet, PreciseAbsoluteBounds, Precision,
-    intersect_abs_bounds, intersect_abs_intervals, intersect_emptiable_abs_bounds, unite_abs_bounds,
-    unite_abs_intervals, unite_emptiable_abs_bounds,
+    intersect_abs_bounds, intersect_emptiable_abs_bounds, unite_abs_bounds, unite_emptiable_abs_bounds,
 };
 use crate::intervals::{AbsoluteInterval, RelativeInterval};
 use crate::ops::{DifferenceResult, IntersectionResult, RunningResult, SymmetricDifferenceResult, UnionResult};
@@ -488,8 +487,13 @@ impl PeerUnionOperable for AbsoluteInterval {
     where
         RI: IntoIterator<Item = &'ri OverlapRule>,
     {
-        match unite_abs_intervals(united_so_far, peeked, rule_set, rules) {
-            UnionResult::United(united) => RunningResult::Running(united),
+        match unite_emptiable_abs_bounds(
+            &united_so_far.emptiable_abs_bounds(),
+            &peeked.emptiable_abs_bounds(),
+            rule_set,
+            rules,
+        ) {
+            UnionResult::United(united) => RunningResult::Running(AbsoluteInterval::from(united)),
             UnionResult::Separate => RunningResult::Done(united_so_far.clone()),
         }
     }
@@ -783,18 +787,20 @@ where
     }
 }
 
-impl<Rhs> UnionOperable<Rhs> for EmptiableAbsoluteBounds {
+impl<Rhs> UnionOperable<Rhs> for EmptiableAbsoluteBounds
+where
+    Rhs: HasEmptiableAbsoluteBounds,
+{
     type Output = Self;
 
     fn union<'ri, RI>(a: Self, b: &Rhs, rule_set: OverlapRuleSet, rules: RI) -> Self::Output
     where
         RI: IntoIterator<Item = &'ri OverlapRule>,
     {
-        todo!()
-        // match unite_emptiable_abs_bounds(&a, b, rule_set, rules) {
-        //     UnionResult::United(united) => united,
-        //     UnionResult::Separate => a,
-        // }
+        match unite_emptiable_abs_bounds(&a, &b.emptiable_abs_bounds(), rule_set, rules) {
+            UnionResult::United(united) => united,
+            UnionResult::Separate => a,
+        }
     }
 
     fn union_with<F>(a: Self, b: &Rhs, mut f: F) -> Self::Output
@@ -808,18 +814,20 @@ impl<Rhs> UnionOperable<Rhs> for EmptiableAbsoluteBounds {
     }
 }
 
-impl<Rhs> UnionOperable<Rhs> for AbsoluteInterval {
+impl<Rhs> UnionOperable<Rhs> for AbsoluteInterval
+where
+    Rhs: HasEmptiableAbsoluteBounds,
+{
     type Output = Self;
 
     fn union<'ri, RI>(a: Self, b: &Rhs, rule_set: OverlapRuleSet, rules: RI) -> Self::Output
     where
         RI: IntoIterator<Item = &'ri OverlapRule>,
     {
-        todo!()
-        // match unite_abs_intervals(&a, b, rule_set, rules) {
-        //     UnionResult::United(united) => united,
-        //     UnionResult::Separate => a,
-        // }
+        match unite_emptiable_abs_bounds(&a.emptiable_abs_bounds(), &b.emptiable_abs_bounds(), rule_set, rules) {
+            UnionResult::United(united) => AbsoluteInterval::from(united),
+            UnionResult::Separate => a,
+        }
     }
 
     fn union_with<F>(a: Self, b: &Rhs, mut f: F) -> Self::Output
@@ -910,17 +918,19 @@ where
             return None;
         }
 
-        let Some(mut united_so_far) = self.next() else {
+        let Some(current) = self.iter.next() else {
             self.exhausted = true;
             return None;
         };
 
-        for other in self.other_iter.clone() {
-            united_so_far =
-                UnionOperable::<O>::union(united_so_far, other, OverlapRuleSet::default(), &DEFAULT_OVERLAP_RULES);
-        }
-
-        Some(united_so_far)
+        Some(
+            self.other_iter
+                .clone()
+                .into_iter()
+                .fold(current, |united_so_far, other| {
+                    UnionOperable::<O>::union(united_so_far, other, OverlapRuleSet::default(), &DEFAULT_OVERLAP_RULES)
+                }),
+        )
     }
 }
 
@@ -937,17 +947,19 @@ where
             return None;
         }
 
-        let Some(mut united_so_far) = self.next_back() else {
+        let Some(current) = self.iter.next_back() else {
             self.exhausted = true;
             return None;
         };
 
-        for other in self.other_iter.clone() {
-            united_so_far =
-                UnionOperable::<O>::union(united_so_far, other, OverlapRuleSet::default(), &DEFAULT_OVERLAP_RULES);
-        }
-
-        Some(united_so_far)
+        Some(
+            self.other_iter
+                .clone()
+                .into_iter()
+                .fold(current, |united_so_far, other| {
+                    UnionOperable::<O>::union(united_so_far, other, OverlapRuleSet::default(), &DEFAULT_OVERLAP_RULES)
+                }),
+        )
     }
 }
 
@@ -998,22 +1010,25 @@ where
             return None;
         }
 
-        let Some(mut united_so_far) = self.next() else {
+        let Some(current) = self.iter.next() else {
             self.exhausted = true;
             return None;
         };
 
-        for other in self.other_iter.clone() {
-            united_so_far = UnionOperable::union(united_so_far, other, self.rule_set, self.rules.clone());
-        }
-
-        Some(united_so_far)
+        Some(
+            self.other_iter
+                .clone()
+                .into_iter()
+                .fold(current, |united_so_far, other| {
+                    UnionOperable::union(united_so_far, other, self.rule_set, self.rules.clone())
+                }),
+        )
     }
 }
 
 impl<'o, 'ri, I, J, O, RI> DoubleEndedIterator for Union<I, J, RI>
 where
-    I: Iterator,
+    I: DoubleEndedIterator,
     I::Item: UnionOperable<O, Output = I::Item>,
     J: IntoIterator<Item = &'o O> + Clone,
     O: 'o,
@@ -1025,17 +1040,31 @@ where
             return None;
         }
 
-        let Some(mut united_so_far) = self.next_back() else {
+        let Some(current) = self.iter.next_back() else {
             self.exhausted = true;
             return None;
         };
 
-        for other in self.other_iter.clone() {
-            united_so_far = UnionOperable::union(united_so_far, other, self.rule_set, self.rules.clone());
-        }
-
-        Some(united_so_far)
+        Some(
+            self.other_iter
+                .clone()
+                .into_iter()
+                .fold(current, |united_so_far, other| {
+                    UnionOperable::union(united_so_far, other, self.rule_set, self.rules.clone())
+                }),
+        )
     }
+}
+
+impl<'o, 'ri, I, J, O, RI> FusedIterator for Union<I, J, RI>
+where
+    I: Iterator,
+    I::Item: UnionOperable<O, Output = I::Item>,
+    J: IntoIterator<Item = &'o O> + Clone,
+    O: 'o,
+    O: HasEmptiableAbsoluteBounds,
+    RI: IntoIterator<Item = &'ri OverlapRule> + Clone,
+{
 }
 
 #[derive(Debug, Clone)]
@@ -1064,12 +1093,29 @@ where
     J: IntoIterator<Item = &'o O> + Clone,
     O: 'o,
     O: HasEmptiableAbsoluteBounds,
-    F: FnMut(&I::Item, &O) -> UnionResult<I::Item>,
+    F: FnMut(&I::Item, &'o O) -> UnionResult<I::Item>,
 {
     type Item = I::Item;
 
     fn next(&mut self) -> Option<Self::Item> {
-        todo!()
+        if self.exhausted {
+            return None;
+        }
+
+        let Some(current) = self.iter.next() else {
+            self.exhausted = true;
+            return None;
+        };
+
+        Some(
+            self.other_iter
+                .clone()
+                .into_iter()
+                .fold(current, |united_so_far, other| match (self.f)(&united_so_far, other) {
+                    UnionResult::United(united) => united,
+                    UnionResult::Separate => united_so_far,
+                }),
+        )
     }
 }
 
@@ -1080,10 +1126,27 @@ where
     J: IntoIterator<Item = &'o O> + Clone,
     O: 'o,
     O: HasEmptiableAbsoluteBounds,
-    F: FnMut(&I::Item, &O) -> UnionResult<I::Item>,
+    F: FnMut(&I::Item, &'o O) -> UnionResult<I::Item>,
 {
     fn next_back(&mut self) -> Option<Self::Item> {
-        todo!()
+        if self.exhausted {
+            return None;
+        }
+
+        let Some(current) = self.iter.next_back() else {
+            self.exhausted = true;
+            return None;
+        };
+
+        Some(
+            self.other_iter
+                .clone()
+                .into_iter()
+                .fold(current, |united_so_far, other| match (self.f)(&united_so_far, other) {
+                    UnionResult::United(united) => united,
+                    UnionResult::Separate => united_so_far,
+                }),
+        )
     }
 }
 
@@ -1168,8 +1231,13 @@ impl PeerIntersectionOperable for AbsoluteInterval {
     where
         RI: IntoIterator<Item = &'ri OverlapRule>,
     {
-        match intersect_abs_intervals(current, peeked, rule_set, rules) {
-            IntersectionResult::Intersected(intersected) => intersected,
+        match intersect_emptiable_abs_bounds(
+            &current.emptiable_abs_bounds(),
+            &peeked.emptiable_abs_bounds(),
+            rule_set,
+            rules,
+        ) {
+            IntersectionResult::Intersected(intersected) => AbsoluteInterval::from(intersected),
             IntersectionResult::Separate => current.clone(),
         }
     }
