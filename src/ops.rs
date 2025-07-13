@@ -49,14 +49,14 @@ impl<R, D> RunningResult<R, D> {
 
 /// Represents the result of a union
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum UnionResult<U, S> {
+pub enum UnionResult<U> {
     /// Union was successful, the united element is contained within this variant
     United(U),
-    /// Union was unsuccessful, both elements involved are contained within this variant
-    Separate(S, S),
+    /// Union was unsuccessful
+    Separate,
 }
 
-impl<U, S> UnionResult<U, S> {
+impl<U> UnionResult<U> {
     /// Whether the [`UnionResult`] is of the [`United`](UnionResult::United) variant
     pub fn is_united(&self) -> bool {
         matches!(self, Self::United(_))
@@ -64,45 +64,34 @@ impl<U, S> UnionResult<U, S> {
 
     /// Whether the [`UnionResult`] is of the [`Separate`](UnionResult::Separate) variant
     pub fn is_separate(&self) -> bool {
-        matches!(self, Self::Separate(..))
+        matches!(self, Self::Separate)
     }
 
     /// Maps the contents of the [`United`](UnionResult::United) variant
-    pub fn map_united<F, T>(self, f: F) -> UnionResult<T, S>
+    pub fn map_united<F, T>(self, f: F) -> UnionResult<T>
     where
         F: FnOnce(U) -> T,
     {
         match self {
             UnionResult::United(u) => UnionResult::United((f)(u)),
-            UnionResult::Separate(a, b) => UnionResult::Separate(a, b),
-        }
-    }
-
-    /// Maps the contents of the [`Separate`](UnionResult::Separate) variant
-    pub fn map_separate<F, T>(self, f: F) -> UnionResult<U, T>
-    where
-        F: FnOnce((S, S)) -> (T, T),
-    {
-        match self {
-            UnionResult::United(u) => UnionResult::United(u),
-            UnionResult::Separate(a, b) => {
-                let new_separate = (f)((a, b));
-                UnionResult::Separate(new_separate.0, new_separate.1)
-            },
+            UnionResult::Separate => UnionResult::Separate,
         }
     }
 }
+
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+// TODO: Refactor code below so that no UNNECESSARY "separate" tuples
 
 /// Represents the result of an intersection
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum IntersectionResult<I, S> {
+pub enum IntersectionResult<I> {
     /// Intersection was successful, the intersected element is contained within this variant
     Intersected(I),
-    /// Intersection was unsuccessful, both elements involved are contained within this variant
-    Separate(S, S),
+    /// Intersection was unsuccessful
+    Separate,
 }
 
-impl<I, S> IntersectionResult<I, S> {
+impl<I> IntersectionResult<I> {
     /// Whether the [`IntersectionResult`] is of the [`Intersected`](IntersectionResult::Intersected) variant
     pub fn is_intersected(&self) -> bool {
         matches!(self, Self::Intersected(_))
@@ -110,45 +99,31 @@ impl<I, S> IntersectionResult<I, S> {
 
     /// Whether the [`IntersectionResult`] is of the [`Separate`](IntersectionResult::Separate) variant
     pub fn is_separate(&self) -> bool {
-        matches!(self, Self::Separate(..))
+        matches!(self, Self::Separate)
     }
 
     /// Maps the contents of the [`Intersected`](IntersectionResult::Intersected) variant
-    pub fn map_intersected<F, T>(self, f: F) -> IntersectionResult<T, S>
+    pub fn map_intersected<F, T>(self, f: F) -> IntersectionResult<T>
     where
         F: FnOnce(I) -> T,
     {
         match self {
             Self::Intersected(i) => IntersectionResult::Intersected((f)(i)),
-            Self::Separate(a, b) => IntersectionResult::Separate(a, b),
-        }
-    }
-
-    /// Maps the contents of the [`Separate`](IntersectionResult::Separate) variant
-    pub fn map_separate<F, T>(self, f: F) -> IntersectionResult<I, T>
-    where
-        F: FnOnce((S, S)) -> (T, T),
-    {
-        match self {
-            IntersectionResult::Intersected(i) => IntersectionResult::Intersected(i),
-            IntersectionResult::Separate(a, b) => {
-                let new_separate = (f)((a, b));
-                IntersectionResult::Separate(new_separate.0, new_separate.1)
-            },
+            Self::Separate => IntersectionResult::Separate,
         }
     }
 }
 
 /// Represents the result of a difference
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum DifferenceResult<D, S> {
+pub enum DifferenceResult<D> {
     /// Difference was successful, the resulting element is contained within this variant
     Difference(D),
-    /// Difference was unsuccessful, both elements involved are contained within this variant
-    Separate(S, S),
+    /// Difference was unsuccessful
+    Separate,
 }
 
-impl<D, S> DifferenceResult<D, S> {
+impl<D> DifferenceResult<D> {
     /// Whether the [`DifferenceResult`] is of the [`Difference`](DifferenceResult::Difference) variant
     pub fn is_difference(&self) -> bool {
         matches!(self, Self::Difference(_))
@@ -156,45 +131,31 @@ impl<D, S> DifferenceResult<D, S> {
 
     /// Whether the [`DifferenceResult`] is of the [`Separate`](DifferenceResult::Separate) variant
     pub fn is_separate(&self) -> bool {
-        matches!(self, Self::Separate(..))
+        matches!(self, Self::Separate)
     }
 
     /// Maps the contents of the [`Difference`](DifferenceResult::Difference) variant
-    pub fn map_difference<F, T>(self, f: F) -> DifferenceResult<T, S>
+    pub fn map_difference<F, T>(self, f: F) -> DifferenceResult<T>
     where
         F: FnOnce(D) -> T,
     {
         match self {
             Self::Difference(d) => DifferenceResult::Difference((f)(d)),
-            Self::Separate(a, b) => DifferenceResult::Separate(a, b),
-        }
-    }
-
-    /// Maps the contents of the [`Separate`](DifferenceResult::Separate) variant
-    pub fn map_separate<F, T>(self, f: F) -> DifferenceResult<D, T>
-    where
-        F: FnOnce((S, S)) -> (T, T),
-    {
-        match self {
-            DifferenceResult::Difference(d) => DifferenceResult::Difference(d),
-            DifferenceResult::Separate(a, b) => {
-                let new_separate = (f)((a, b));
-                DifferenceResult::Separate(new_separate.0, new_separate.1)
-            },
+            Self::Separate => DifferenceResult::Separate,
         }
     }
 }
 
 /// Represents the result of a symmetric difference
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum SymmetricDifferenceResult<D, S> {
+pub enum SymmetricDifferenceResult<D1, D2 = D1> {
     /// Symmetric difference was successful, the resulting elements are contained within this variant
-    SymmetricDifference(D, D),
+    SymmetricDifference(D1, D2),
     /// Symmetric difference was unsuccessful, both elements involved are contained within this variant
-    Separate(S, S),
+    Separate,
 }
 
-impl<D, S> SymmetricDifferenceResult<D, S> {
+impl<D1, D2> SymmetricDifferenceResult<D1, D2> {
     /// Whether the [`SymmetricDifferenceResult`] is of the
     /// [`SymmetricDifference`](SymmetricDifferenceResult::SymmetricDifference) variant
     pub fn is_symmetric_difference(&self) -> bool {
@@ -203,36 +164,20 @@ impl<D, S> SymmetricDifferenceResult<D, S> {
 
     /// Whether the [`SymmetricDifferenceResult`] is of the [`Separate`](SymmetricDifferenceResult::Separate) variant
     pub fn is_separate(&self) -> bool {
-        matches!(self, Self::Separate(..))
+        matches!(self, Self::Separate)
     }
 
     /// Maps the contents of the [`SymmetricDifference`](SymmetricDifferenceResult::SymmetricDifference) variant
-    pub fn map_symmetric_difference<F, T>(self, f: F) -> SymmetricDifferenceResult<T, S>
+    pub fn map_symmetric_difference<F, T, U>(self, f: F) -> SymmetricDifferenceResult<T, U>
     where
-        F: FnOnce((D, D)) -> (T, T),
+        F: FnOnce(D1, D2) -> (T, U),
     {
         match self {
-            Self::SymmetricDifference(a, b) => {
-                let new_symmetric_difference = (f)((a, b));
+            Self::SymmetricDifference(d1, d2) => {
+                let new_symmetric_difference = (f)(d1, d2);
                 SymmetricDifferenceResult::SymmetricDifference(new_symmetric_difference.0, new_symmetric_difference.1)
             },
-            Self::Separate(a, b) => SymmetricDifferenceResult::Separate(a, b),
-        }
-    }
-
-    /// Maps the contents of the [`Separate`](SymmetricDifferenceResult::Separate) variant
-    pub fn map_separate<F, T>(self, f: F) -> SymmetricDifferenceResult<D, T>
-    where
-        F: FnOnce((S, S)) -> (T, T),
-    {
-        match self {
-            SymmetricDifferenceResult::SymmetricDifference(a, b) => {
-                SymmetricDifferenceResult::SymmetricDifference(a, b)
-            },
-            SymmetricDifferenceResult::Separate(a, b) => {
-                let new_separate = (f)((a, b));
-                SymmetricDifferenceResult::Separate(new_separate.0, new_separate.1)
-            },
+            Self::Separate => SymmetricDifferenceResult::Separate,
         }
     }
 }

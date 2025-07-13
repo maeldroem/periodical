@@ -57,8 +57,6 @@ use crate::ops::{DifferenceResult, IntersectionResult, RunningResult, SymmetricD
 // that is unsorted or sorted non-chronologically, they can choose to use the Union iterator. But if they need
 // a fast way of uniting a list of intervals that is sorted chronologically, then they can call such methods.
 
-// NOTE: Implement FusedIterator and exhaustion field in iterators
-
 /// Ad-hoc trait for relative-bounded structures that can change their relativity to absolute
 pub trait RelativeToAbsoluteOperable {
     type Item: HasEmptiableAbsoluteBounds;
@@ -400,121 +398,124 @@ where
     }
 }
 
-/// A very ad-hoc trait for structures that can do unions
-pub trait UnionOperable {
-    type Item: UnionOperable;
+/// A very ad-hoc trait for structures that can do unions with peers
+pub trait PeerUnionOperable {
+    type Output: PeerUnionOperable;
 
     /// Try uniting the peer with the accumulated value using the given rules
-    fn peer_union<'a, RI>(
+    fn peer_union<'ri, RI>(
         united_so_far: &Self,
         peeked: &Self,
         rule_set: OverlapRuleSet,
-        rules: &'a RI,
-    ) -> RunningResult<Self::Item, Self::Item>
+        rules: RI,
+    ) -> RunningResult<Self::Output, Self::Output>
     where
-        &'a RI: IntoIterator<Item = &'a OverlapRule>;
+        RI: IntoIterator<Item = &'ri OverlapRule>;
 
     /// Try uniting the peer with the accumulated value using the given closure
-    fn peer_union_with<F>(united_so_far: &Self, peeked: &Self, f: F) -> RunningResult<Self::Item, Self::Item>
+    fn peer_union_with<F>(united_so_far: &Self, peeked: &Self, f: F) -> RunningResult<Self::Output, Self::Output>
     where
-        F: for<'a> FnMut(&'a Self::Item, &'a Self::Item) -> UnionResult<Self::Item, &'a Self::Item>;
+        F: FnMut(&Self, &Self) -> UnionResult<Self::Output>;
 }
 
-impl UnionOperable for AbsoluteBounds {
-    type Item = Self;
+impl PeerUnionOperable for AbsoluteBounds {
+    type Output = Self;
 
-    fn peer_union<'a, RI>(
+    fn peer_union<'ri, RI>(
         united_so_far: &Self,
         peeked: &Self,
         rule_set: OverlapRuleSet,
-        rules: &'a RI,
-    ) -> RunningResult<Self::Item, Self::Item>
+        rules: RI,
+    ) -> RunningResult<Self::Output, Self::Output>
     where
-        &'a RI: IntoIterator<Item = &'a OverlapRule>,
+        RI: IntoIterator<Item = &'ri OverlapRule>,
     {
-        Self::peer_union_with(united_so_far, peeked, |united_so_far, peeked| {
-            unite_abs_bounds(united_so_far, peeked, rule_set, rules)
-        })
+        match unite_abs_bounds(united_so_far, peeked, rule_set, rules) {
+            UnionResult::United(united) => RunningResult::Running(united),
+            UnionResult::Separate => RunningResult::Done(united_so_far.clone()),
+        }
     }
 
-    fn peer_union_with<F>(united_so_far: &Self, peeked: &Self, mut f: F) -> RunningResult<Self::Item, Self::Item>
+    fn peer_union_with<F>(united_so_far: &Self, peeked: &Self, mut f: F) -> RunningResult<Self::Output, Self::Output>
     where
-        F: for<'a> FnMut(&'a Self::Item, &'a Self::Item) -> UnionResult<Self::Item, &'a Self::Item>,
+        F: FnMut(&Self, &Self) -> UnionResult<Self::Output>,
     {
         match (f)(united_so_far, peeked) {
             UnionResult::United(united) => RunningResult::Running(united),
-            UnionResult::Separate(..) => RunningResult::Done(united_so_far.clone()),
+            UnionResult::Separate => RunningResult::Done(united_so_far.clone()),
         }
     }
 }
 
-impl UnionOperable for EmptiableAbsoluteBounds {
-    type Item = Self;
+impl PeerUnionOperable for EmptiableAbsoluteBounds {
+    type Output = Self;
 
-    fn peer_union<'a, RI>(
+    fn peer_union<'ri, RI>(
         united_so_far: &Self,
         peeked: &Self,
         rule_set: OverlapRuleSet,
-        rules: &'a RI,
-    ) -> RunningResult<Self::Item, Self::Item>
+        rules: RI,
+    ) -> RunningResult<Self::Output, Self::Output>
     where
-        &'a RI: IntoIterator<Item = &'a OverlapRule>,
+        RI: IntoIterator<Item = &'ri OverlapRule>,
     {
-        Self::peer_union_with(united_so_far, peeked, |united_so_far, peeked| {
-            unite_emptiable_abs_bounds(united_so_far, peeked, rule_set, rules)
-        })
+        match unite_emptiable_abs_bounds(united_so_far, peeked, rule_set, rules) {
+            UnionResult::United(united) => RunningResult::Running(united),
+            UnionResult::Separate => RunningResult::Done(united_so_far.clone()),
+        }
     }
 
-    fn peer_union_with<F>(united_so_far: &Self, peeked: &Self, mut f: F) -> RunningResult<Self::Item, Self::Item>
+    fn peer_union_with<F>(united_so_far: &Self, peeked: &Self, mut f: F) -> RunningResult<Self::Output, Self::Output>
     where
-        F: for<'a> FnMut(&'a Self::Item, &'a Self::Item) -> UnionResult<Self::Item, &'a Self::Item>,
+        F: FnMut(&Self, &Self) -> UnionResult<Self::Output>,
     {
         match (f)(united_so_far, peeked) {
             UnionResult::United(united) => RunningResult::Running(united),
-            UnionResult::Separate(..) => RunningResult::Done(united_so_far.clone()),
+            UnionResult::Separate => RunningResult::Done(united_so_far.clone()),
         }
     }
 }
 
-impl UnionOperable for AbsoluteInterval {
-    type Item = Self;
+impl PeerUnionOperable for AbsoluteInterval {
+    type Output = Self;
 
-    fn peer_union<'a, RI>(
+    fn peer_union<'ri, RI>(
         united_so_far: &Self,
         peeked: &Self,
         rule_set: OverlapRuleSet,
-        rules: &'a RI,
-    ) -> RunningResult<Self::Item, Self::Item>
+        rules: RI,
+    ) -> RunningResult<Self::Output, Self::Output>
     where
-        &'a RI: IntoIterator<Item = &'a OverlapRule>,
+        RI: IntoIterator<Item = &'ri OverlapRule>,
     {
-        Self::peer_union_with(united_so_far, peeked, |united_so_far, peeked| {
-            unite_abs_intervals(united_so_far, peeked, rule_set, rules)
-        })
+        match unite_abs_intervals(united_so_far, peeked, rule_set, rules) {
+            UnionResult::United(united) => RunningResult::Running(united),
+            UnionResult::Separate => RunningResult::Done(united_so_far.clone()),
+        }
     }
 
-    fn peer_union_with<F>(united_so_far: &Self, peeked: &Self, mut f: F) -> RunningResult<Self::Item, Self::Item>
+    fn peer_union_with<F>(united_so_far: &Self, peeked: &Self, mut f: F) -> RunningResult<Self::Output, Self::Output>
     where
-        F: for<'a> FnMut(&'a Self::Item, &'a Self::Item) -> UnionResult<Self::Item, &'a Self::Item>,
+        F: FnMut(&Self, &Self) -> UnionResult<Self::Output>,
     {
         match (f)(united_so_far, peeked) {
             UnionResult::United(united) => RunningResult::Running(united),
-            UnionResult::Separate(..) => RunningResult::Done(united_so_far.clone()),
+            UnionResult::Separate => RunningResult::Done(united_so_far.clone()),
         }
     }
 }
 
-/// Dispatcher trait for union iterators
-pub trait UnitableIteratorDispatcher: Iterator + Sized {
+/// Dispatcher trait for peer union iterators
+pub trait PeerUnitableIteratorDispatcher: Iterator + Sized {
     /// Unites peer intervals of the iterator using predefined rules
     fn peer_simple_union(self) -> PeerSimpleUnion<Peekable<Self>> {
         PeerSimpleUnion::new(self)
     }
 
     /// Unites peer intervals of the iterator using the given [`OverlapRuleSet`] and [`OverlapRule`]s
-    fn peer_union<'a, RI>(self, rule_set: OverlapRuleSet, rules: &'a RI) -> PeerUnion<'a, Peekable<Self>, RI>
+    fn peer_union<'ri, RI>(self, rule_set: OverlapRuleSet, rules: RI) -> PeerUnion<Peekable<Self>, RI>
     where
-        &'a RI: IntoIterator<Item = &'a OverlapRule>,
+        RI: IntoIterator<Item = &'ri OverlapRule> + Clone,
     {
         PeerUnion::new(self, rule_set, rules)
     }
@@ -522,16 +523,16 @@ pub trait UnitableIteratorDispatcher: Iterator + Sized {
     /// Unites peer intervals of the iterator using the given closure
     fn peer_union_with<F>(self, f: F) -> PeerUnionWith<Peekable<Self>, F>
     where
-        F: for<'a> FnMut(&'a Self::Item, &'a Self::Item) -> UnionResult<Self::Item, &'a Self::Item>,
+        F: FnMut(&Self::Item, &Self::Item) -> UnionResult<Self::Item>,
     {
         PeerUnionWith::new(self, f)
     }
 }
 
-impl<I> UnitableIteratorDispatcher for I
+impl<I> PeerUnitableIteratorDispatcher for I
 where
     I: Iterator,
-    I::Item: UnionOperable<Item = I::Item>,
+    I::Item: PeerUnionOperable<Output = I::Item>,
 {
 }
 
@@ -557,7 +558,7 @@ where
 impl<I> Iterator for PeerSimpleUnion<Peekable<I>>
 where
     I: Iterator,
-    I::Item: UnionOperable<Item = I::Item>,
+    I::Item: PeerUnionOperable<Output = I::Item>,
 {
     type Item = I::Item;
 
@@ -577,7 +578,7 @@ where
                 return Some(united_so_far);
             };
 
-            let running_result = UnionOperable::peer_union(
+            let running_result = PeerUnionOperable::peer_union(
                 &united_so_far,
                 peeked,
                 OverlapRuleSet::default(),
@@ -598,25 +599,24 @@ where
 impl<I> FusedIterator for PeerSimpleUnion<Peekable<I>>
 where
     I: Iterator,
-    I::Item: UnionOperable<Item = I::Item>,
+    I::Item: PeerUnionOperable<Output = I::Item>,
 {
 }
 
 /// Peer union iterator for intervals using the given [`OverlapRuleSet`] and given [`OverlapRule`]s
 #[derive(Debug, Clone, Hash)]
-pub struct PeerUnion<'u, I, RI> {
+pub struct PeerUnion<I, RI> {
     iter: I,
     rule_set: OverlapRuleSet,
-    rules: &'u RI,
+    rules: RI,
     exhausted: bool,
 }
 
-impl<'u, I, RI> PeerUnion<'u, I, RI>
+impl<I, RI> PeerUnion<I, RI>
 where
     I: Iterator,
-    &'u RI: IntoIterator<Item = &'u OverlapRule>,
 {
-    pub fn new(iter: I, rule_set: OverlapRuleSet, rules: &'u RI) -> PeerUnion<'u, Peekable<I>, RI> {
+    pub fn new(iter: I, rule_set: OverlapRuleSet, rules: RI) -> PeerUnion<Peekable<I>, RI> {
         PeerUnion {
             iter: iter.peekable(),
             rule_set,
@@ -626,11 +626,11 @@ where
     }
 }
 
-impl<'u, I, RI> Iterator for PeerUnion<'u, Peekable<I>, RI>
+impl<'ri, I, RI> Iterator for PeerUnion<Peekable<I>, RI>
 where
     I: Iterator,
-    I::Item: UnionOperable<Item = I::Item>,
-    &'u RI: IntoIterator<Item = &'u OverlapRule>,
+    I::Item: PeerUnionOperable<Output = I::Item>,
+    RI: IntoIterator<Item = &'ri OverlapRule> + Clone,
 {
     type Item = I::Item;
 
@@ -650,7 +650,8 @@ where
                 return Some(united_so_far);
             };
 
-            let running_result = UnionOperable::peer_union(&united_so_far, peeked, self.rule_set, self.rules);
+            let running_result =
+                PeerUnionOperable::peer_union(&united_so_far, peeked, self.rule_set, self.rules.clone());
 
             match running_result {
                 RunningResult::Running(runner) => united_so_far = runner,
@@ -663,11 +664,11 @@ where
 // TODO: If a reverse Peekable becomes standard or when we'll import a crate that does that,
 // implement DoubleEndedIterator for PeerUnion
 
-impl<'u, I, RI> FusedIterator for PeerUnion<'u, Peekable<I>, RI>
+impl<'ri, I, RI> FusedIterator for PeerUnion<Peekable<I>, RI>
 where
     I: Iterator,
-    I::Item: UnionOperable<Item = I::Item>,
-    &'u RI: IntoIterator<Item = &'u OverlapRule>,
+    I::Item: PeerUnionOperable<Output = I::Item>,
+    RI: IntoIterator<Item = &'ri OverlapRule> + Clone,
 {
 }
 
@@ -695,8 +696,8 @@ where
 impl<I, F> Iterator for PeerUnionWith<Peekable<I>, F>
 where
     I: Iterator,
-    I::Item: UnionOperable<Item = I::Item>,
-    F: for<'a> FnMut(&'a I::Item, &'a I::Item) -> UnionResult<I::Item, &'a I::Item>,
+    I::Item: PeerUnionOperable<Output = I::Item>,
+    F: FnMut(&I::Item, &I::Item) -> UnionResult<I::Item>,
 {
     type Item = I::Item;
 
@@ -716,7 +717,7 @@ where
                 return Some(united_so_far);
             };
 
-            let running_result = UnionOperable::peer_union_with(&united_so_far, peeked, &mut self.f);
+            let running_result = PeerUnionOperable::peer_union_with(&united_so_far, peeked, &mut self.f);
 
             match running_result {
                 RunningResult::Running(runner) => united_so_far = runner,
@@ -732,91 +733,454 @@ where
 impl<I, F> FusedIterator for PeerUnionWith<Peekable<I>, F>
 where
     I: Iterator,
-    I::Item: UnionOperable<Item = I::Item>,
-    F: for<'a> FnMut(&'a I::Item, &'a I::Item) -> UnionResult<I::Item, &'a I::Item>,
+    I::Item: PeerUnionOperable<Output = I::Item>,
+    F: FnMut(&I::Item, &I::Item) -> UnionResult<I::Item>,
+{
+}
+
+/// A very ad-hoc trait for structures that can do unions
+pub trait UnionOperable<Rhs = Self> {
+    type Output: UnionOperable<Rhs>;
+
+    fn union<'ri, RI>(a: Self, b: &Rhs, rule_set: OverlapRuleSet, rules: RI) -> Self::Output
+    where
+        RI: IntoIterator<Item = &'ri OverlapRule>;
+
+    fn union_with<F>(a: Self, b: &Rhs, f: F) -> Self::Output
+    where
+        F: FnMut(&Self, &Rhs) -> UnionResult<Self::Output>;
+}
+
+impl<Rhs> UnionOperable<Rhs> for AbsoluteBounds
+where
+    Rhs: HasEmptiableAbsoluteBounds,
+{
+    type Output = Self;
+
+    fn union<'ri, RI>(a: Self, b: &Rhs, rule_set: OverlapRuleSet, rules: RI) -> Self::Output
+    where
+        RI: IntoIterator<Item = &'ri OverlapRule>,
+    {
+        let a_emptiable_bounds = a.emptiable_abs_bounds();
+        let b_emptiable_bounds = b.emptiable_abs_bounds();
+
+        let union_result = unite_emptiable_abs_bounds(&a_emptiable_bounds, &b_emptiable_bounds, rule_set, rules);
+
+        match union_result {
+            UnionResult::United(EmptiableAbsoluteBounds::Bound(united)) => united,
+            UnionResult::United(EmptiableAbsoluteBounds::Empty) | UnionResult::Separate => a,
+        }
+    }
+
+    fn union_with<F>(a: Self, b: &Rhs, mut f: F) -> Self::Output
+    where
+        F: FnMut(&Self, &Rhs) -> UnionResult<Self::Output>,
+    {
+        match (f)(&a, b) {
+            UnionResult::United(united) => united,
+            UnionResult::Separate => a,
+        }
+    }
+}
+
+impl<Rhs> UnionOperable<Rhs> for EmptiableAbsoluteBounds {
+    type Output = Self;
+
+    fn union<'ri, RI>(a: Self, b: &Rhs, rule_set: OverlapRuleSet, rules: RI) -> Self::Output
+    where
+        RI: IntoIterator<Item = &'ri OverlapRule>,
+    {
+        todo!()
+        // match unite_emptiable_abs_bounds(&a, b, rule_set, rules) {
+        //     UnionResult::United(united) => united,
+        //     UnionResult::Separate => a,
+        // }
+    }
+
+    fn union_with<F>(a: Self, b: &Rhs, mut f: F) -> Self::Output
+    where
+        F: FnMut(&Self, &Rhs) -> UnionResult<Self::Output>,
+    {
+        match (f)(&a, b) {
+            UnionResult::United(united) => united,
+            UnionResult::Separate => a,
+        }
+    }
+}
+
+impl<Rhs> UnionOperable<Rhs> for AbsoluteInterval {
+    type Output = Self;
+
+    fn union<'ri, RI>(a: Self, b: &Rhs, rule_set: OverlapRuleSet, rules: RI) -> Self::Output
+    where
+        RI: IntoIterator<Item = &'ri OverlapRule>,
+    {
+        todo!()
+        // match unite_abs_intervals(&a, b, rule_set, rules) {
+        //     UnionResult::United(united) => united,
+        //     UnionResult::Separate => a,
+        // }
+    }
+
+    fn union_with<F>(a: Self, b: &Rhs, mut f: F) -> Self::Output
+    where
+        F: FnMut(&Self, &Rhs) -> UnionResult<Self::Output>,
+    {
+        match (f)(&a, b) {
+            UnionResult::United(united) => united,
+            UnionResult::Separate => a,
+        }
+    }
+}
+
+/// Dispatcher trait for union iterators
+pub trait UnitableIteratorDispatcher: Iterator + Sized {
+    /// Unites each item with every overlapping element of the given other iterator using simple rules
+    ///
+    /// ⚠️⏱️ This is suboptimal. It checks every element of the given other iterator against each element of the current
+    /// iterator. It is only useful in _some_ cases. Use [`TODO TODO TODO`] instead.
+    fn simple_union<J>(self, other_iter: J) -> SimpleUnion<Self, J>
+    where
+        J: IntoIterator + Clone,
+    {
+        SimpleUnion::new(self, other_iter)
+    }
+
+    /// Unites each item with every overlapping element of the given other iterator using the given rules
+    ///
+    /// ⚠️⏱️ This is suboptimal. It checks every element of the given other iterator against each element of the current
+    /// iterator. It is only useful in _some_ cases. Use [`TODO TODO TODO`] instead.
+    fn union<'ri, J, RI>(self, other_iter: J, rule_set: OverlapRuleSet, rules: RI) -> Union<Self, J, RI>
+    where
+        J: IntoIterator + Clone,
+        RI: IntoIterator<Item = &'ri OverlapRule> + Clone,
+    {
+        Union::new(self, other_iter, rule_set, rules)
+    }
+
+    /// Unites each item with every overlapping element of the given other iterator using the given closure
+    ///
+    /// ⚠️⏱️ This is suboptimal. It checks every element of the given other iterator against each element of the current
+    /// iterator. It is only useful in _some_ cases. Use [`TODO TODO TODO`] instead.
+    fn union_with<J, F>(self, other_iter: J, f: F) -> UnionWith<Self, J, F>
+    where
+        J: IntoIterator + Clone,
+        F: FnMut(&Self::Item, J::Item) -> UnionResult<Self::Item>,
+    {
+        UnionWith::new(self, other_iter, f)
+    }
+}
+
+impl<I> UnitableIteratorDispatcher for I
+where
+    I: Iterator,
+    I::Item: UnionOperable<Output = I::Item>,
+{
+}
+
+#[derive(Debug, Clone, Hash)]
+pub struct SimpleUnion<I, J> {
+    iter: I,
+    other_iter: J,
+    exhausted: bool,
+}
+
+impl<I, J> SimpleUnion<I, J> {
+    pub fn new(iter: I, other_iter: J) -> Self {
+        SimpleUnion {
+            iter,
+            other_iter,
+            exhausted: false,
+        }
+    }
+}
+
+impl<'o, I, J, O> Iterator for SimpleUnion<I, J>
+where
+    I: Iterator,
+    I::Item: UnionOperable<O, Output = I::Item>,
+    J: IntoIterator<Item = &'o O> + Clone,
+    O: 'o,
+    O: HasEmptiableAbsoluteBounds,
+{
+    type Item = I::Item;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.exhausted {
+            return None;
+        }
+
+        let Some(mut united_so_far) = self.next() else {
+            self.exhausted = true;
+            return None;
+        };
+
+        for other in self.other_iter.clone() {
+            united_so_far =
+                UnionOperable::<O>::union(united_so_far, other, OverlapRuleSet::default(), &DEFAULT_OVERLAP_RULES);
+        }
+
+        Some(united_so_far)
+    }
+}
+
+impl<'o, I, J, O> DoubleEndedIterator for SimpleUnion<I, J>
+where
+    I: DoubleEndedIterator,
+    I::Item: UnionOperable<O, Output = I::Item>,
+    J: IntoIterator<Item = &'o O> + Clone,
+    O: 'o,
+    O: HasEmptiableAbsoluteBounds,
+{
+    fn next_back(&mut self) -> Option<Self::Item> {
+        if self.exhausted {
+            return None;
+        }
+
+        let Some(mut united_so_far) = self.next_back() else {
+            self.exhausted = true;
+            return None;
+        };
+
+        for other in self.other_iter.clone() {
+            united_so_far =
+                UnionOperable::<O>::union(united_so_far, other, OverlapRuleSet::default(), &DEFAULT_OVERLAP_RULES);
+        }
+
+        Some(united_so_far)
+    }
+}
+
+impl<'o, I, J, O> FusedIterator for SimpleUnion<I, J>
+where
+    I: Iterator,
+    I::Item: UnionOperable<O, Output = I::Item>,
+    J: IntoIterator<Item = &'o O> + Clone,
+    O: 'o,
+    O: HasEmptiableAbsoluteBounds,
+{
+}
+
+#[derive(Debug, Clone, Hash)]
+pub struct Union<I, J, RI> {
+    iter: I,
+    other_iter: J,
+    rule_set: OverlapRuleSet,
+    rules: RI,
+    exhausted: bool,
+}
+
+impl<I, J, RI> Union<I, J, RI> {
+    pub fn new(iter: I, other_iter: J, rule_set: OverlapRuleSet, rules: RI) -> Self {
+        Union {
+            iter,
+            other_iter,
+            rule_set,
+            rules,
+            exhausted: false,
+        }
+    }
+}
+
+impl<'o, 'ri, I, J, O, RI> Iterator for Union<I, J, RI>
+where
+    I: Iterator,
+    I::Item: UnionOperable<O, Output = I::Item>,
+    J: IntoIterator<Item = &'o O> + Clone,
+    O: 'o,
+    O: HasEmptiableAbsoluteBounds,
+    RI: IntoIterator<Item = &'ri OverlapRule> + Clone,
+{
+    type Item = I::Item;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.exhausted {
+            return None;
+        }
+
+        let Some(mut united_so_far) = self.next() else {
+            self.exhausted = true;
+            return None;
+        };
+
+        for other in self.other_iter.clone() {
+            united_so_far = UnionOperable::union(united_so_far, other, self.rule_set, self.rules.clone());
+        }
+
+        Some(united_so_far)
+    }
+}
+
+impl<'o, 'ri, I, J, O, RI> DoubleEndedIterator for Union<I, J, RI>
+where
+    I: Iterator,
+    I::Item: UnionOperable<O, Output = I::Item>,
+    J: IntoIterator<Item = &'o O> + Clone,
+    O: 'o,
+    O: HasEmptiableAbsoluteBounds,
+    RI: IntoIterator<Item = &'ri OverlapRule> + Clone,
+{
+    fn next_back(&mut self) -> Option<Self::Item> {
+        if self.exhausted {
+            return None;
+        }
+
+        let Some(mut united_so_far) = self.next_back() else {
+            self.exhausted = true;
+            return None;
+        };
+
+        for other in self.other_iter.clone() {
+            united_so_far = UnionOperable::union(united_so_far, other, self.rule_set, self.rules.clone());
+        }
+
+        Some(united_so_far)
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct UnionWith<I, J, F> {
+    iter: I,
+    other_iter: J,
+    f: F,
+    exhausted: bool,
+}
+
+impl<I, J, F> UnionWith<I, J, F> {
+    pub fn new(iter: I, other_iter: J, f: F) -> Self {
+        UnionWith {
+            iter,
+            other_iter,
+            f,
+            exhausted: false,
+        }
+    }
+}
+
+impl<'o, I, J, O, F> Iterator for UnionWith<I, J, F>
+where
+    I: Iterator,
+    I::Item: UnionOperable<O, Output = I::Item>,
+    J: IntoIterator<Item = &'o O> + Clone,
+    O: 'o,
+    O: HasEmptiableAbsoluteBounds,
+    F: FnMut(&I::Item, &O) -> UnionResult<I::Item>,
+{
+    type Item = I::Item;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        todo!()
+    }
+}
+
+impl<'o, I, J, O, F> DoubleEndedIterator for UnionWith<I, J, F>
+where
+    I: DoubleEndedIterator,
+    I::Item: UnionOperable<O, Output = I::Item>,
+    J: IntoIterator<Item = &'o O> + Clone,
+    O: 'o,
+    O: HasEmptiableAbsoluteBounds,
+    F: FnMut(&I::Item, &O) -> UnionResult<I::Item>,
+{
+    fn next_back(&mut self) -> Option<Self::Item> {
+        todo!()
+    }
+}
+
+impl<'o, I, J, O, F> FusedIterator for UnionWith<I, J, F>
+where
+    I: DoubleEndedIterator,
+    I::Item: UnionOperable<O, Output = I::Item>,
+    J: IntoIterator<Item = &'o O> + Clone,
+    O: 'o,
+    O: HasEmptiableAbsoluteBounds,
+    F: FnMut(&I::Item, &O) -> UnionResult<I::Item>,
 {
 }
 
 /// A very ad-hoc trait for structures that can do intersections
-pub trait IntersectionOperable {
-    type Item: IntersectionOperable;
+pub trait PeerIntersectionOperable {
+    type Item: PeerIntersectionOperable;
 
     /// Intersects the current element with the peeked one using the given rules
-    fn peer_intersection<'a, RI>(current: &Self, peeked: &Self, rule_set: OverlapRuleSet, rules: &'a RI) -> Self::Item
+    fn peer_intersection<'ri, RI>(current: &Self, peeked: &Self, rule_set: OverlapRuleSet, rules: RI) -> Self::Item
     where
-        &'a RI: IntoIterator<Item = &'a OverlapRule>;
+        RI: IntoIterator<Item = &'ri OverlapRule>;
 
     /// Intersects the current element with the peeked one using the given closure
     fn peer_intersection_with<F>(current: &Self, peeked: &Self, f: F) -> Self::Item
     where
-        F: for<'a> FnMut(&'a Self::Item, &'a Self::Item) -> IntersectionResult<Self::Item, &'a Self::Item>;
+        F: FnMut(&Self::Item, &Self::Item) -> IntersectionResult<Self::Item>;
 }
 
-impl IntersectionOperable for AbsoluteBounds {
+impl PeerIntersectionOperable for AbsoluteBounds {
     type Item = Self;
 
-    fn peer_intersection<'a, RI>(current: &Self, peeked: &Self, rule_set: OverlapRuleSet, rules: &'a RI) -> Self::Item
+    fn peer_intersection<'ri, RI>(current: &Self, peeked: &Self, rule_set: OverlapRuleSet, rules: RI) -> Self::Item
     where
-        &'a RI: IntoIterator<Item = &'a OverlapRule>,
+        RI: IntoIterator<Item = &'ri OverlapRule>,
     {
-        Self::peer_intersection_with(current, peeked, |current, peeked| {
-            intersect_abs_bounds(current, peeked, rule_set, rules)
-        })
+        match intersect_abs_bounds(current, peeked, rule_set, rules) {
+            IntersectionResult::Intersected(intersected) => intersected,
+            IntersectionResult::Separate => current.clone(),
+        }
     }
 
     fn peer_intersection_with<F>(current: &Self, peeked: &Self, mut f: F) -> Self::Item
     where
-        F: for<'a> FnMut(&'a Self::Item, &'a Self::Item) -> IntersectionResult<Self::Item, &'a Self::Item>,
+        F: FnMut(&Self::Item, &Self::Item) -> IntersectionResult<Self::Item>,
     {
         match (f)(current, peeked) {
             IntersectionResult::Intersected(intersected) => intersected,
-            IntersectionResult::Separate(..) => current.clone(),
+            IntersectionResult::Separate => current.clone(),
         }
     }
 }
 
-impl IntersectionOperable for EmptiableAbsoluteBounds {
+impl PeerIntersectionOperable for EmptiableAbsoluteBounds {
     type Item = Self;
 
-    fn peer_intersection<'a, RI>(current: &Self, peeked: &Self, rule_set: OverlapRuleSet, rules: &'a RI) -> Self::Item
+    fn peer_intersection<'ri, RI>(current: &Self, peeked: &Self, rule_set: OverlapRuleSet, rules: RI) -> Self::Item
     where
-        &'a RI: IntoIterator<Item = &'a OverlapRule>,
+        RI: IntoIterator<Item = &'ri OverlapRule>,
     {
-        Self::peer_intersection_with(current, peeked, |current, peeked| {
-            intersect_emptiable_abs_bounds(current, peeked, rule_set, rules)
-        })
+        match intersect_emptiable_abs_bounds(current, peeked, rule_set, rules) {
+            IntersectionResult::Intersected(intersected) => intersected,
+            IntersectionResult::Separate => current.clone(),
+        }
     }
 
     fn peer_intersection_with<F>(current: &Self, peeked: &Self, mut f: F) -> Self::Item
     where
-        F: for<'a> FnMut(&'a Self::Item, &'a Self::Item) -> IntersectionResult<Self::Item, &'a Self::Item>,
+        F: FnMut(&Self::Item, &Self::Item) -> IntersectionResult<Self::Item>,
     {
         match (f)(current, peeked) {
             IntersectionResult::Intersected(intersected) => intersected,
-            IntersectionResult::Separate(..) => current.clone(),
+            IntersectionResult::Separate => current.clone(),
         }
     }
 }
 
-impl IntersectionOperable for AbsoluteInterval {
+impl PeerIntersectionOperable for AbsoluteInterval {
     type Item = Self;
 
-    fn peer_intersection<'a, RI>(current: &Self, peeked: &Self, rule_set: OverlapRuleSet, rules: &'a RI) -> Self::Item
+    fn peer_intersection<'ri, RI>(current: &Self, peeked: &Self, rule_set: OverlapRuleSet, rules: RI) -> Self::Item
     where
-        &'a RI: IntoIterator<Item = &'a OverlapRule>,
+        RI: IntoIterator<Item = &'ri OverlapRule>,
     {
-        Self::peer_intersection_with(current, peeked, |current, peeked| {
-            intersect_abs_intervals(current, peeked, rule_set, rules)
-        })
+        match intersect_abs_intervals(current, peeked, rule_set, rules) {
+            IntersectionResult::Intersected(intersected) => intersected,
+            IntersectionResult::Separate => current.clone(),
+        }
     }
 
     fn peer_intersection_with<F>(current: &Self, peeked: &Self, mut f: F) -> Self::Item
     where
-        F: for<'a> FnMut(&'a Self::Item, &'a Self::Item) -> IntersectionResult<Self::Item, &'a Self::Item>,
+        F: for<'a> FnMut(&'a Self::Item, &'a Self::Item) -> IntersectionResult<Self::Item>,
     {
         match (f)(current, peeked) {
             IntersectionResult::Intersected(intersected) => intersected,
-            IntersectionResult::Separate(..) => current.clone(),
+            IntersectionResult::Separate => current.clone(),
         }
     }
 }
@@ -829,13 +1193,9 @@ pub trait IntersectableIteratorDispatcher: Iterator + Sized {
     }
 
     /// Intersects peer intervals of the iterator using the given [`OverlapRuleSet`] and [`OverlapRule`]s
-    fn peer_intersection<'a, RI>(
-        self,
-        rule_set: OverlapRuleSet,
-        rules: &'a RI,
-    ) -> PeerIntersection<'a, Peekable<Self>, RI>
+    fn peer_intersection<'ri, RI>(self, rule_set: OverlapRuleSet, rules: RI) -> PeerIntersection<Peekable<Self>, RI>
     where
-        &'a RI: IntoIterator<Item = &'a OverlapRule>,
+        RI: IntoIterator<Item = &'ri OverlapRule> + Clone,
     {
         PeerIntersection::new(self, rule_set, rules)
     }
@@ -843,7 +1203,7 @@ pub trait IntersectableIteratorDispatcher: Iterator + Sized {
     /// Intersects peer intervals of the iterator using the given closure
     fn peer_intersection_with<F>(self, f: F) -> PeerIntersectionWith<Peekable<Self>, F>
     where
-        F: for<'a> FnMut(&'a Self::Item, &'a Self::Item) -> IntersectionResult<Self::Item, &'a Self::Item>,
+        F: FnMut(&Self::Item, &Self::Item) -> IntersectionResult<Self::Item>,
     {
         PeerIntersectionWith::new(self, f)
     }
@@ -852,7 +1212,7 @@ pub trait IntersectableIteratorDispatcher: Iterator + Sized {
 impl<I> IntersectableIteratorDispatcher for I
 where
     I: Iterator,
-    I::Item: IntersectionOperable<Item = I::Item>,
+    I::Item: PeerIntersectionOperable<Item = I::Item>,
 {
 }
 
@@ -879,7 +1239,7 @@ where
 impl<I> Iterator for PeerSimpleIntersection<Peekable<I>>
 where
     I: Iterator,
-    I::Item: IntersectionOperable<Item = I::Item>,
+    I::Item: PeerIntersectionOperable<Item = I::Item>,
 {
     type Item = I::Item;
 
@@ -898,7 +1258,7 @@ where
             return Some(current);
         };
 
-        Some(IntersectionOperable::peer_intersection(
+        Some(PeerIntersectionOperable::peer_intersection(
             &current,
             peeked,
             OverlapRuleSet::default(),
@@ -910,7 +1270,7 @@ where
 impl<I> DoubleEndedIterator for PeerSimpleIntersection<Peekable<I>>
 where
     I: DoubleEndedIterator,
-    I::Item: IntersectionOperable<Item = I::Item>,
+    I::Item: PeerIntersectionOperable<Item = I::Item>,
 {
     fn next_back(&mut self) -> Option<Self::Item> {
         if self.exhausted {
@@ -925,7 +1285,7 @@ where
         // No early exhaustion check as peek() uses next() and not next_back()
         let peeked = self.iter.peek()?;
 
-        Some(IntersectionOperable::peer_intersection(
+        Some(PeerIntersectionOperable::peer_intersection(
             &current,
             peeked,
             OverlapRuleSet::default(),
@@ -937,25 +1297,25 @@ where
 impl<I> FusedIterator for PeerSimpleIntersection<Peekable<I>>
 where
     I: Iterator,
-    I::Item: IntersectionOperable<Item = I::Item>,
+    I::Item: PeerIntersectionOperable<Item = I::Item>,
 {
 }
 
 /// Intersection of peer intervals using the given rule set and rules
 #[derive(Debug, Clone, Hash)]
-pub struct PeerIntersection<'i, I, RI> {
+pub struct PeerIntersection<I, RI> {
     iter: I,
     rule_set: OverlapRuleSet,
-    rules: &'i RI,
+    rules: RI,
     exhausted: bool,
 }
 
-impl<'i, I, RI> PeerIntersection<'i, I, RI>
+impl<I, RI> PeerIntersection<I, RI>
 where
     I: Iterator,
 {
     /// Creates a new instance of [`PeerIntersection`]
-    pub fn new(iter: I, rule_set: OverlapRuleSet, rules: &'i RI) -> PeerIntersection<'i, Peekable<I>, RI> {
+    pub fn new(iter: I, rule_set: OverlapRuleSet, rules: RI) -> PeerIntersection<Peekable<I>, RI> {
         PeerIntersection {
             iter: iter.peekable(),
             rule_set,
@@ -965,11 +1325,11 @@ where
     }
 }
 
-impl<'i, I, RI> Iterator for PeerIntersection<'i, Peekable<I>, RI>
+impl<'ri, I, RI> Iterator for PeerIntersection<Peekable<I>, RI>
 where
     I: Iterator,
-    I::Item: IntersectionOperable<Item = I::Item>,
-    &'i RI: IntoIterator<Item = &'i OverlapRule>,
+    I::Item: PeerIntersectionOperable<Item = I::Item>,
+    RI: IntoIterator<Item = &'ri OverlapRule> + Clone,
 {
     type Item = I::Item;
 
@@ -988,20 +1348,20 @@ where
             return Some(current);
         };
 
-        Some(IntersectionOperable::peer_intersection(
+        Some(PeerIntersectionOperable::peer_intersection(
             &current,
             peeked,
             self.rule_set,
-            self.rules,
+            self.rules.clone(),
         ))
     }
 }
 
-impl<'i, I, RI> DoubleEndedIterator for PeerIntersection<'i, Peekable<I>, RI>
+impl<'ri, I, RI> DoubleEndedIterator for PeerIntersection<Peekable<I>, RI>
 where
     I: DoubleEndedIterator,
-    I::Item: IntersectionOperable<Item = I::Item>,
-    &'i RI: IntoIterator<Item = &'i OverlapRule>,
+    I::Item: PeerIntersectionOperable<Item = I::Item>,
+    RI: IntoIterator<Item = &'ri OverlapRule> + Clone,
 {
     fn next_back(&mut self) -> Option<Self::Item> {
         if self.exhausted {
@@ -1016,20 +1376,20 @@ where
         // No early exhaustion check as peek() uses next() and not next_back()
         let peeked = self.iter.peek()?;
 
-        Some(IntersectionOperable::peer_intersection(
+        Some(PeerIntersectionOperable::peer_intersection(
             &current,
             peeked,
             self.rule_set,
-            self.rules,
+            self.rules.clone(),
         ))
     }
 }
 
-impl<'i, I, RI> FusedIterator for PeerIntersection<'i, Peekable<I>, RI>
+impl<'ri, I, RI> FusedIterator for PeerIntersection<Peekable<I>, RI>
 where
     I: Iterator,
-    I::Item: IntersectionOperable<Item = I::Item>,
-    &'i RI: IntoIterator<Item = &'i OverlapRule>,
+    I::Item: PeerIntersectionOperable<Item = I::Item>,
+    RI: IntoIterator<Item = &'ri OverlapRule> + Clone,
 {
 }
 
@@ -1058,8 +1418,8 @@ where
 impl<I, F> Iterator for PeerIntersectionWith<Peekable<I>, F>
 where
     I: Iterator,
-    I::Item: IntersectionOperable<Item = I::Item>,
-    F: for<'a> FnMut(&'a I::Item, &'a I::Item) -> IntersectionResult<I::Item, &'a I::Item>,
+    I::Item: PeerIntersectionOperable<Item = I::Item>,
+    F: FnMut(&I::Item, &I::Item) -> IntersectionResult<I::Item>,
 {
     type Item = I::Item;
 
@@ -1078,7 +1438,7 @@ where
             return Some(current);
         };
 
-        Some(IntersectionOperable::peer_intersection_with(
+        Some(PeerIntersectionOperable::peer_intersection_with(
             &current,
             peeked,
             &mut self.f,
@@ -1089,8 +1449,8 @@ where
 impl<I, F> DoubleEndedIterator for PeerIntersectionWith<Peekable<I>, F>
 where
     I: DoubleEndedIterator,
-    I::Item: IntersectionOperable<Item = I::Item>,
-    F: for<'a> FnMut(&'a I::Item, &'a I::Item) -> IntersectionResult<I::Item, &'a I::Item>,
+    I::Item: PeerIntersectionOperable<Item = I::Item>,
+    F: FnMut(&I::Item, &I::Item) -> IntersectionResult<I::Item>,
 {
     fn next_back(&mut self) -> Option<Self::Item> {
         if self.exhausted {
@@ -1105,7 +1465,7 @@ where
         // No early exhaustion check as peek() uses next() and not next_back()
         let peeked = self.iter.peek()?;
 
-        Some(IntersectionOperable::peer_intersection_with(
+        Some(PeerIntersectionOperable::peer_intersection_with(
             &current,
             peeked,
             &mut self.f,
@@ -1116,8 +1476,8 @@ where
 impl<I, F> FusedIterator for PeerIntersectionWith<Peekable<I>, F>
 where
     I: Iterator,
-    I::Item: IntersectionOperable<Item = I::Item>,
-    F: for<'a> FnMut(&'a I::Item, &'a I::Item) -> IntersectionResult<I::Item, &'a I::Item>,
+    I::Item: PeerIntersectionOperable<Item = I::Item>,
+    F: FnMut(&I::Item, &I::Item) -> IntersectionResult<I::Item>,
 {
 }
 
@@ -1132,9 +1492,9 @@ pub trait DifferentiableIteratorDispatcher: Iterator + Sized {
         DifferenceWithOne::new(self, comparator)
     }
 
-    fn difference<'d, J, O>(self, other_iter: J) -> Difference<'d, Self, O>
+    fn difference<J, O>(self, other_iter: J) -> Difference<Self, J>
     where
-        J: IntoIterator<Item = &'d O>,
+        J: IntoIterator + Clone,
     {
         Difference::new(self, other_iter)
     }
@@ -1176,20 +1536,17 @@ where
 }
 
 #[derive(Debug, Clone)]
-pub struct Difference<'d, I, O> {
+pub struct Difference<I, J> {
     iter: I,
-    others: Vec<&'d O>,
+    other_iter: J,
     exhausted: bool,
 }
 
-impl<'d, I, O> Difference<'d, I, O> {
-    pub fn new<J>(iter: I, other_iter: J) -> Difference<'d, I, O>
-    where
-        J: IntoIterator<Item = &'d O>,
-    {
+impl<I, J> Difference<I, J> {
+    pub fn new(iter: I, other_iter: J) -> Difference<I, J> {
         Difference {
             iter,
-            others: other_iter.into_iter().collect(),
+            other_iter,
             exhausted: false,
         }
     }
@@ -1326,30 +1683,30 @@ struct Foo(u8);
 struct Bar(u8);
 
 trait CustomOperable {
-    type Item: CustomOperable;
-    fn custom_op(&self) -> Self::Item;
+    type Output: CustomOperable;
+    fn custom_op(&self) -> Self::Output;
 }
 
 impl<T> CustomOperable for &T
 where
     T: CustomOperable
 {
-    type Item = T::Item;
-    fn custom_op(&self) -> Self::Item {
+    type Output = T::Output;
+    fn custom_op(&self) -> Self::Output {
         (**self).custom_op()
     }
 }
 
 impl CustomOperable for Foo {
-    type Item = Self;
-    fn custom_op(&self) -> Self::Item {
+    type Output = Self;
+    fn custom_op(&self) -> Self::Output {
         Self(self.0.saturating_add(1))
     }
 }
 
 impl CustomOperable for Bar {
-    type Item = Self;
-    fn custom_op(&self) -> Self::Item {
+    type Output = Self;
+    fn custom_op(&self) -> Self::Output {
         Self(self.0.saturating_add(2))
     }
 }
@@ -1369,7 +1726,7 @@ impl<I> CustomIter<I> {
 impl<I> Iterator for CustomIter<I>
 where
     I: Iterator,
-    I::Item: CustomOperable<Item = I::Item>,
+    I::Item: CustomOperable<Output = I::Item>,
 {
     type Item = I::Item;
 
@@ -1387,7 +1744,7 @@ trait CustomIterDispatch: Iterator + Sized {
 impl<I> CustomIterDispatch for I
 where
     I: Iterator,
-    I::Item: CustomOperable<Item = I::Item>,
+    I::Item: CustomOperable<Output = I::Item>,
 {}
 
 Note: `where T: Iterator, T::Item: Operable` can also be written as `where T: Iterator<Item: Operable>`
