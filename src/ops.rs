@@ -114,16 +114,29 @@ impl<I> IntersectionResult<I> {
 /// Represents the result of a difference
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum DifferenceResult<D> {
-    /// Difference was successful, the resulting element is contained within this variant
-    Difference(D),
+    /// Difference was successful and resulted in one shrunken element
+    DifferenceShrunk(D),
+    /// Difference was successful and resulted in two split elements
+    DifferenceSplit(D, D),
     /// Difference was unsuccessful
     Separate,
 }
 
 impl<D> DifferenceResult<D> {
-    /// Whether the [`DifferenceResult`] is of the [`Difference`](DifferenceResult::Difference) variant
+    /// Whether the [`DifferenceResult`] is of the [`DifferenceShrunk`](DifferenceResult::DifferenceShrunk) or
+    /// [`DifferenceSplit`](DifferenceResult::DifferenceSplit) variant
     pub fn is_difference(&self) -> bool {
-        matches!(self, Self::Difference(_))
+        matches!(self, Self::DifferenceShrunk(_) | Self::DifferenceSplit(..))
+    }
+
+    /// Whether the [`DifferenceResult`] is of the [`DifferenceShrunk`](DifferenceResult::DifferenceShrunk) variant
+    pub fn is_difference_shrunk(&self) -> bool {
+        matches!(self, Self::DifferenceShrunk(_))
+    }
+
+    /// Whether the [`DifferenceResult`] is of the [`DifferenceSplit`](DifferenceResult::DifferenceSplit) variant
+    pub fn is_difference_split(&self) -> bool {
+        matches!(self, Self::DifferenceSplit(..))
     }
 
     /// Whether the [`DifferenceResult`] is of the [`Separate`](DifferenceResult::Separate) variant
@@ -131,13 +144,17 @@ impl<D> DifferenceResult<D> {
         matches!(self, Self::Separate)
     }
 
-    /// Maps the contents of the [`Difference`](DifferenceResult::Difference) variant
+    /// Maps the contents of the [`DifferenceShrunk`](DifferenceResult::DifferenceShrunk) and
+    /// [`DifferenceSplit`](DifferenceResult::DifferenceSplit) variants
+    ///
+    /// Uses a closure that describes the transformation from the original difference elements to the transformed one.
     pub fn map_difference<F, T>(self, f: F) -> DifferenceResult<T>
     where
-        F: FnOnce(D) -> T,
+        F: Fn(D) -> T,
     {
         match self {
-            Self::Difference(d) => DifferenceResult::Difference((f)(d)),
+            Self::DifferenceShrunk(d) => DifferenceResult::DifferenceShrunk((f)(d)),
+            Self::DifferenceSplit(d1, d2) => DifferenceResult::DifferenceSplit((f)(d1), (f)(d2)),
             Self::Separate => DifferenceResult::Separate,
         }
     }
@@ -145,18 +162,35 @@ impl<D> DifferenceResult<D> {
 
 /// Represents the result of a symmetric difference
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum SymmetricDifferenceResult<D1, D2 = D1> {
-    /// Symmetric difference was successful, the resulting elements are contained within this variant
-    SymmetricDifference(D1, D2),
-    /// Symmetric difference was unsuccessful, both elements involved are contained within this variant
+pub enum SymmetricDifferenceResult<D> {
+    /// Symmetric difference was successful and resulted in one shrunken element
+    SymmetricDifferenceShrunk(D),
+    /// Symmetric difference was successful and resulted in two split elements
+    SymmetricDifferenceSplit(D, D),
+    /// Symmetric difference was unsuccessful
     Separate,
 }
 
-impl<D1, D2> SymmetricDifferenceResult<D1, D2> {
-    /// Whether the [`SymmetricDifferenceResult`] is of the
-    /// [`SymmetricDifference`](SymmetricDifferenceResult::SymmetricDifference) variant
+impl<D> SymmetricDifferenceResult<D> {
+    /// Whether the [`SymmetricDifferenceResult`] is of the [`SymmetricDifferenceShrunk`](SymmetricDifferenceResult::SymmetricDifferenceShrunk)
+    /// or [`SymmetricDifferenceSplit`](SymmetricDifferenceResult::SymmetricDifferenceSplit) variant
     pub fn is_symmetric_difference(&self) -> bool {
-        matches!(self, Self::SymmetricDifference(..))
+        matches!(
+            self,
+            Self::SymmetricDifferenceShrunk(_) | Self::SymmetricDifferenceSplit(..)
+        )
+    }
+
+    /// Whether the [`SymmetricDifferenceResult`] is of the
+    /// [`SymmetricDifferenceShrunk`](SymmetricDifferenceResult::SymmetricDifferenceShrunk) variant
+    pub fn is_symmetric_difference_shrunk(&self) -> bool {
+        matches!(self, Self::SymmetricDifferenceShrunk(_))
+    }
+
+    /// Whether the [`SymmetricDifferenceResult`] is of the
+    /// [`SymmetricDifferenceSplit`](SymmetricDifferenceResult::SymmetricDifferenceSplit) variant
+    pub fn is_symmetric_difference_split(&self) -> bool {
+        matches!(self, Self::SymmetricDifferenceSplit(..))
     }
 
     /// Whether the [`SymmetricDifferenceResult`] is of the [`Separate`](SymmetricDifferenceResult::Separate) variant
@@ -164,15 +198,18 @@ impl<D1, D2> SymmetricDifferenceResult<D1, D2> {
         matches!(self, Self::Separate)
     }
 
-    /// Maps the contents of the [`SymmetricDifference`](SymmetricDifferenceResult::SymmetricDifference) variant
-    pub fn map_symmetric_difference<F, T, U>(self, f: F) -> SymmetricDifferenceResult<T, U>
+    /// Maps the contents of the [`SymmetricDifferenceShrunk`](SymmetricDifferenceResult::SymmetricDifferenceShrunk)
+    /// and [`SymmetricDifferenceSplit`](SymmetricDifferenceResult::SymmetricDifferenceSplit) variants
+    ///
+    /// Uses a closure that describes the transformation from the original difference elements to the transformed one.
+    pub fn map_symmetric_difference<F, T>(self, f: F) -> SymmetricDifferenceResult<T>
     where
-        F: FnOnce(D1, D2) -> (T, U),
+        F: Fn(D) -> T,
     {
         match self {
-            Self::SymmetricDifference(d1, d2) => {
-                let new_symmetric_difference = (f)(d1, d2);
-                SymmetricDifferenceResult::SymmetricDifference(new_symmetric_difference.0, new_symmetric_difference.1)
+            Self::SymmetricDifferenceShrunk(d) => SymmetricDifferenceResult::SymmetricDifferenceShrunk((f)(d)),
+            Self::SymmetricDifferenceSplit(d1, d2) => {
+                SymmetricDifferenceResult::SymmetricDifferenceSplit((f)(d1), (f)(d2))
             },
             Self::Separate => SymmetricDifferenceResult::Separate,
         }
