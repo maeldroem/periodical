@@ -168,11 +168,6 @@ impl ToRelative for AbsoluteFiniteBound {
 }
 
 /// A relative finite bound
-///
-/// # Why no [`Ord`] implementation?
-///
-/// Since a relative point is relative to a given reference, we can't guarantee that both operands originate
-/// from the same reference. If you want to compare them, use [`ToAbsolute`] first.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct RelativeFiniteBound {
     offset: Duration,
@@ -271,23 +266,25 @@ impl ToRelative for AbsoluteStartBound {
 
 impl PartialEq<AbsoluteEndBound> for AbsoluteStartBound {
     fn eq(&self, other: &AbsoluteEndBound) -> bool {
-        match (self, other) {
-            (
-                AbsoluteStartBound::Finite(AbsoluteFiniteBound {
-                    time: start_time,
-                    inclusivity: start_inclusivity,
-                }),
-                AbsoluteEndBound::Finite(AbsoluteFiniteBound {
-                    time: end_time,
-                    inclusivity: end_inclusivity,
-                }),
-            ) => {
-                start_time == end_time
-                    && *start_inclusivity == BoundInclusivity::Inclusive
-                    && *end_inclusivity == BoundInclusivity::Inclusive
-            },
-            _ => false,
-        }
+        let AbsoluteStartBound::Finite(AbsoluteFiniteBound {
+            time: start_time,
+            inclusivity: start_inclusivity,
+        }) = self
+        else {
+            return false;
+        };
+        let AbsoluteEndBound::Finite(AbsoluteFiniteBound {
+            time: end_time,
+            inclusivity: end_inclusivity,
+        }) = other
+        else {
+            return false;
+        };
+
+        // If the times are equal, anything other than double inclusive bounds is invalid
+        start_time == end_time
+            && *start_inclusivity == BoundInclusivity::Inclusive
+            && *end_inclusivity == BoundInclusivity::Inclusive
     }
 }
 
@@ -347,9 +344,8 @@ impl PartialOrd<AbsoluteEndBound> for AbsoluteStartBound {
                     Ordering::Less => Some(Ordering::Less),
                     Ordering::Greater => Some(Ordering::Greater),
                     Ordering::Equal => match (start_inclusivity, end_inclusivity) {
-                        // think of it as a start bound of a later interval compared to the end bound of an earlier one
                         (BoundInclusivity::Inclusive, BoundInclusivity::Inclusive) => Some(Ordering::Equal),
-                        _ => Some(Ordering::Greater),
+                        _ => None, // If the times are equal, anything other than double inclusive bounds is invalid
                     },
                 }
             },
@@ -516,11 +512,6 @@ pub fn swap_absolute_bounds(start: &mut AbsoluteStartBound, end: &mut AbsoluteEn
 }
 
 /// A relative start interval bound, including [inclusivity](BoundInclusivity)
-///
-/// # Why no [`PartialOrd`] implementation
-///
-/// Partial ordering is only correct if all bound offsets were created from the same reference,
-/// which we can't guarantee.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum RelativeStartBound {
     Finite(RelativeFiniteBound),
@@ -570,6 +561,95 @@ impl ToRelative for RelativeStartBound {
     }
 }
 
+impl PartialEq<RelativeEndBound> for RelativeStartBound {
+    fn eq(&self, other: &RelativeEndBound) -> bool {
+        let RelativeStartBound::Finite(RelativeFiniteBound {
+            offset: start_offset,
+            inclusivity: start_inclusivity,
+        }) = self
+        else {
+            return false;
+        };
+        let RelativeEndBound::Finite(RelativeFiniteBound {
+            offset: end_offset,
+            inclusivity: end_inclusivity,
+        }) = other
+        else {
+            return false;
+        };
+
+        // If the offsets are equal, anything other than double inclusive bounds is invalid
+        start_offset == end_offset
+            && *start_inclusivity == BoundInclusivity::Inclusive
+            && *end_inclusivity == BoundInclusivity::Inclusive
+    }
+}
+
+impl PartialOrd for RelativeStartBound {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for RelativeStartBound {
+    fn cmp(&self, other: &Self) -> Ordering {
+        match (self, other) {
+            (RelativeStartBound::InfinitePast, _) => Ordering::Less,
+            (_, RelativeStartBound::InfinitePast) => Ordering::Greater,
+            (
+                RelativeStartBound::Finite(RelativeFiniteBound {
+                    offset: offset_og,
+                    inclusivity: inclusivity_og,
+                }),
+                RelativeStartBound::Finite(RelativeFiniteBound {
+                    offset: offset_other,
+                    inclusivity: inclusivity_other,
+                }),
+            ) => {
+                let offset_cmp = offset_og.cmp(offset_other);
+
+                if matches!(offset_cmp, Ordering::Less | Ordering::Greater) {
+                    return offset_cmp;
+                }
+
+                match (inclusivity_og, inclusivity_other) {
+                    (BoundInclusivity::Inclusive, BoundInclusivity::Inclusive)
+                    | (BoundInclusivity::Exclusive, BoundInclusivity::Exclusive) => Ordering::Equal,
+                    (BoundInclusivity::Inclusive, BoundInclusivity::Exclusive) => Ordering::Less,
+                    (BoundInclusivity::Exclusive, BoundInclusivity::Inclusive) => Ordering::Greater,
+                }
+            },
+        }
+    }
+}
+
+impl PartialOrd<RelativeEndBound> for RelativeStartBound {
+    fn partial_cmp(&self, other: &RelativeEndBound) -> Option<Ordering> {
+        match (self, other) {
+            (RelativeStartBound::InfinitePast, _) | (_, RelativeEndBound::InfiniteFuture) => Some(Ordering::Less),
+            (
+                RelativeStartBound::Finite(RelativeFiniteBound {
+                    offset: start_offset,
+                    inclusivity: start_inclusivity,
+                }),
+                RelativeEndBound::Finite(RelativeFiniteBound {
+                    offset: end_offset,
+                    inclusivity: end_inclusivity,
+                }),
+            ) => {
+                match start_offset.cmp(end_offset) {
+                    Ordering::Less => Some(Ordering::Less),
+                    Ordering::Greater => Some(Ordering::Greater),
+                    Ordering::Equal => match (start_inclusivity, end_inclusivity) {
+                        (BoundInclusivity::Inclusive, BoundInclusivity::Inclusive) => Some(Ordering::Equal),
+                        _ => None, // If the offsets are equal, anything other than double inclusive bounds is invalid
+                    },
+                }
+            },
+        }
+    }
+}
+
 impl Display for RelativeStartBound {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut result = Ok(());
@@ -590,12 +670,7 @@ impl Display for RelativeStartBound {
 
 /// A relative end interval bound, including [inclusivity](BoundInclusivity)
 ///
-/// This contains an offset from the reference time to the end bound, not the length of the relative interval
-///
-/// # Why no [`PartialOrd`] implementation
-///
-/// Partial ordering is only correct if all bound offsets were created from the same reference,
-/// which we can't guarantee.
+/// This contains an offset from the reference time to the end bound, not the length of the relative interval.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum RelativeEndBound {
     Finite(RelativeFiniteBound),
@@ -664,8 +739,6 @@ impl Display for RelativeEndBound {
 }
 
 /// Swaps a relative start bound with a relative end bound
-///
-/// Make sure the two bounds **share the same reference point** before using this method!
 pub fn swap_relative_bounds(start: &mut RelativeStartBound, end: &mut RelativeEndBound) {
     // We temporarily reborrow start and end for the match arms so that when a pattern matches, they move out of their
     // temporary scope and we can use the original mutable references without guard patterns shenanigans.
@@ -751,25 +824,40 @@ impl AbsoluteBounds {
     }
 
     /// Creates a new instance of absolute bounds
+    ///
+    /// If the given bounds are not in chronological order, they are swapped.
+    /// If their [partial comparison](PartialOrd) resulted in [`None`], meaning they had the same time but inclusivities
+    /// other than inclusive for both, we set their inclusivities to [`Inclusive`](BoundInclusivity::Inclusive).
     #[must_use]
-    pub fn new(start: AbsoluteStartBound, end: AbsoluteEndBound) -> Self {
-        // If the start time is after the end time, swap the two to preserve order
-        if let (
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound {
-                time: ref mut start_time,
-                ..
-            }),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound {
-                time: ref mut end_time, ..
-            }),
-        ) = (start, end)
-        {
-            if start_time > end_time {
-                std::mem::swap(start_time, end_time);
-            }
-        }
+    pub fn new(mut start: AbsoluteStartBound, mut end: AbsoluteEndBound) -> Self {
+        match start.partial_cmp(&end) {
+            None => {
+                if let AbsoluteStartBound::Finite(ref mut finite_start) = start {
+                    finite_start.set_inclusivity(BoundInclusivity::default());
+                }
 
-        Self::unchecked_new(start, end)
+                if let AbsoluteEndBound::Finite(ref mut finite_end) = end {
+                    finite_end.set_inclusivity(BoundInclusivity::default());
+                }
+
+                match start.partial_cmp(&end) {
+                    Some(Ordering::Equal | Ordering::Less) => Self::unchecked_new(start, end),
+                    Some(Ordering::Greater) => {
+                        swap_absolute_bounds(&mut start, &mut end);
+                        Self::unchecked_new(start, end)
+                    },
+                    None => unimplemented!(
+                        "Something went wrong when instantiating `AbsoluteBounds` with bounds that partially compared to `None`"
+                    ),
+                }
+            },
+            Some(Ordering::Equal | Ordering::Less) => Self::unchecked_new(start, end),
+            Some(Ordering::Greater) => {
+                // If the start time is after the end time, swap the two to preserve order
+                swap_absolute_bounds(&mut start, &mut end);
+                Self::unchecked_new(start, end)
+            },
+        }
     }
 
     /// Returns the absolute start bound
@@ -796,9 +884,10 @@ impl AbsoluteBounds {
 
     /// Sets the start bound
     ///
-    /// Returns whether the operation was successful: the new start must be in chronological order
+    /// Returns whether the operation was successful: the new start must be in chronological order and if it is equal
+    /// to the end bound, both bounds must be inclusive.
     pub fn set_start(&mut self, new_start: AbsoluteStartBound) -> bool {
-        if new_start > *self.end() {
+        if new_start.partial_cmp(self.end()).is_none_or(Ordering::is_gt) {
             return false;
         }
 
@@ -808,9 +897,10 @@ impl AbsoluteBounds {
 
     /// Sets the end bound
     ///
-    /// Returns whether the operation was successful: the new end must be in chronological order
+    /// Returns whether the operation was successful: the new end must be in chronological order and if it is equal
+    /// to the start bound, both bounds must be inclusive.
     pub fn set_end(&mut self, new_end: AbsoluteEndBound) -> bool {
-        if new_end < *self.start() {
+        if self.start().partial_cmp(&new_end).is_none_or(Ordering::is_gt) {
             return false;
         }
 
@@ -1031,11 +1121,6 @@ where
 }
 
 /// Bounds of a non-empty relative interval
-///
-/// # Why no [`PartialOrd`] implementation
-///
-/// Partial ordering is only correct if all bound offsets were created from the same reference,
-/// which we can't guarantee.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct RelativeBounds {
     start: RelativeStartBound,
@@ -1049,26 +1134,42 @@ impl RelativeBounds {
         RelativeBounds { start, end }
     }
 
-    /// Creates an instance of relative bounds
+    /// Creates a new instance of relative bounds
+    ///
+    /// If the given bounds are not in chronological order, they are swapped.
+    /// If their [partial comparison](PartialOrd) resulted in [`None`], meaning they had the same offsets
+    /// but inclusivities other than inclusive for both,
+    /// we set their inclusivities to [`Inclusive`](BoundInclusivity::Inclusive).
     #[must_use]
-    pub fn new(start: RelativeStartBound, end: RelativeEndBound) -> Self {
-        if let (
-            RelativeStartBound::Finite(RelativeFiniteBound {
-                offset: ref mut start_offset,
-                ..
-            }),
-            RelativeEndBound::Finite(RelativeFiniteBound {
-                offset: ref mut end_offset,
-                ..
-            }),
-        ) = (start, end)
-        {
-            if start_offset > end_offset {
-                std::mem::swap(start_offset, end_offset);
-            }
-        }
+    pub fn new(mut start: RelativeStartBound, mut end: RelativeEndBound) -> Self {
+        match start.partial_cmp(&end) {
+            None => {
+                if let RelativeStartBound::Finite(ref mut finite_start) = start {
+                    finite_start.set_inclusivity(BoundInclusivity::default());
+                }
 
-        Self::unchecked_new(start, end)
+                if let RelativeEndBound::Finite(ref mut finite_end) = end {
+                    finite_end.set_inclusivity(BoundInclusivity::default());
+                }
+
+                match start.partial_cmp(&end) {
+                    Some(Ordering::Equal | Ordering::Less) => Self::unchecked_new(start, end),
+                    Some(Ordering::Greater) => {
+                        swap_relative_bounds(&mut start, &mut end);
+                        Self::unchecked_new(start, end)
+                    },
+                    None => unimplemented!(
+                        "Something went wrong when instantiating `RelativeBounds` with bounds that partially compared to `None`"
+                    ),
+                }
+            },
+            Some(Ordering::Equal | Ordering::Less) => Self::unchecked_new(start, end),
+            Some(Ordering::Greater) => {
+                // If the start time is after the end time, swap the two to preserve order
+                swap_relative_bounds(&mut start, &mut end);
+                Self::unchecked_new(start, end)
+            },
+        }
     }
 
     /// Returns the relative start bound
@@ -1095,19 +1196,11 @@ impl RelativeBounds {
 
     /// Sets the relative start bound
     ///
-    /// Returns whether the change was successful: the new start must be in chronological order
+    /// Returns whether the change was successful: the new start must be in chronological order and if it is equal
+    /// to the end bound, both bounds must be inclusive.
     pub fn set_start(&mut self, start: RelativeStartBound) -> bool {
-        if let (
-            RelativeStartBound::Finite(RelativeFiniteBound {
-                offset: new_start_offset,
-                ..
-            }),
-            RelativeEndBound::Finite(RelativeFiniteBound { offset: end_offset, .. }),
-        ) = (start, self.end())
-        {
-            if new_start_offset > *end_offset {
-                return false;
-            }
+        if start.partial_cmp(self.end()).is_none_or(Ordering::is_gt) {
+            return false;
         }
 
         self.unchecked_set_start(start);
@@ -1116,20 +1209,11 @@ impl RelativeBounds {
 
     /// Sets the relative end bound
     ///
-    /// Returns whether the change was successful: the new end must be in chronological order
+    /// Returns whether the change was successful: the new end must be in chronological order and if it is equal
+    /// to the start bound, both bounds must be inclusive.
     pub fn set_end(&mut self, end: RelativeEndBound) -> bool {
-        if let (
-            RelativeEndBound::Finite(RelativeFiniteBound {
-                offset: new_end_offset, ..
-            }),
-            RelativeStartBound::Finite(RelativeFiniteBound {
-                offset: start_offset, ..
-            }),
-        ) = (end, self.start())
-        {
-            if new_end_offset < *start_offset {
-                return false;
-            }
+        if self.start().partial_cmp(self.end()).is_none_or(Ordering::is_gt) {
+            return false;
         }
 
         self.unchecked_set_end(end);
@@ -1338,6 +1422,10 @@ impl ClosedAbsoluteInterval {
     }
 
     /// Creates a new instance of a closed absolute interval with given inclusivity for the bounds
+    ///
+    /// If the given times are not in chronological order, we swap them so they are in chronological order.
+    /// If the given times are equal but have bound inclusivities other than inclusive,
+    /// we set them to [`Inclusive`](BoundInclusivity::Inclusive).
     #[must_use]
     pub fn with_inclusivity(
         mut from: DateTime<Utc>,
@@ -1345,11 +1433,14 @@ impl ClosedAbsoluteInterval {
         mut to: DateTime<Utc>,
         to_inclusivity: BoundInclusivity,
     ) -> Self {
-        if from > to {
-            std::mem::swap(&mut from, &mut to);
+        match from.cmp(&to) {
+            Ordering::Less => Self::unchecked_with_inclusivity(from, from_inclusivity, to, to_inclusivity),
+            Ordering::Equal => Self::unchecked_new(from, to),
+            Ordering::Greater => {
+                std::mem::swap(&mut from, &mut to);
+                Self::unchecked_with_inclusivity(from, from_inclusivity, to, to_inclusivity)
+            },
         }
-
-        Self::unchecked_with_inclusivity(from, from_inclusivity, to, to_inclusivity)
     }
 
     /// Returns the start time
@@ -1388,36 +1479,76 @@ impl ClosedAbsoluteInterval {
 
     /// Sets the from time of the interval
     ///
-    /// Returns boolean indicating whether the change was successful.
+    /// Returns boolean indicating whether the change was successful: the new from must be in chronological order
+    /// and if it is equal to the to time, then the bounds must be inclusive already.
     pub fn set_from(&mut self, new_from: DateTime<Utc>) -> bool {
-        if new_from > self.to {
-            return false;
+        match new_from.cmp(&self.to) {
+            Ordering::Less => self.unchecked_set_from(new_from),
+            Ordering::Equal => {
+                if self.from_inclusivity != BoundInclusivity::Inclusive
+                    || self.to_inclusivity != BoundInclusivity::Inclusive
+                {
+                    return false;
+                }
+
+                self.unchecked_set_from(new_from);
+            },
+            Ordering::Greater => {
+                return false;
+            },
         }
 
-        self.unchecked_set_from(new_from);
         true
     }
 
     /// Sets the to time of the interval
     ///
-    /// Returns boolean indicating whether the change was successful.
+    /// Returns boolean indicating whether the change was successful: the new to must be in chronological order
+    /// and if it is equal to the from time, then the bounds must be inclusive already.
     pub fn set_to(&mut self, new_to: DateTime<Utc>) -> bool {
-        if new_to < self.from {
-            return false;
+        match self.from.cmp(&new_to) {
+            Ordering::Less => self.unchecked_set_to(new_to),
+            Ordering::Equal => {
+                if self.from_inclusivity != BoundInclusivity::Inclusive
+                    || self.to_inclusivity != BoundInclusivity::Inclusive
+                {
+                    return false;
+                }
+
+                self.unchecked_set_to(new_to);
+            },
+            Ordering::Greater => {
+                return false;
+            },
         }
 
-        self.unchecked_set_to(new_to);
         true
     }
 
     /// Sets the inclusivity of the start bound
-    pub fn set_from_inclusivity(&mut self, new_inclusivity: BoundInclusivity) {
+    ///
+    /// Returns whether the operation was successful: if the start and end times are equal, the inclusivities can't be
+    /// set to anything other than inclusive.
+    pub fn set_from_inclusivity(&mut self, new_inclusivity: BoundInclusivity) -> bool {
+        if self.from == self.to && new_inclusivity != BoundInclusivity::Inclusive {
+            return false;
+        }
+
         self.from_inclusivity = new_inclusivity;
+        true
     }
 
     /// Sets the inclusivity of the end bound
-    pub fn set_to_inclusivity(&mut self, new_inclusivity: BoundInclusivity) {
+    ///
+    /// Returns whether the operation was successful: if the start and end times are equal, the inclusivities can't be
+    /// set to anything other than inclusive.
+    pub fn set_to_inclusivity(&mut self, new_inclusivity: BoundInclusivity) -> bool {
+        if self.from == self.to && new_inclusivity != BoundInclusivity::Inclusive {
+            return false;
+        }
+
         self.to_inclusivity = new_inclusivity;
+        true
     }
 }
 
@@ -1527,6 +1658,8 @@ impl ClosedRelativeInterval {
     }
 
     /// Creates a new instance of a closed relative interval with given inclusivity for the bounds
+    ///
+    /// If the length is 0, then the inclusivities will be set to inclusive.
     #[must_use]
     pub fn with_inclusivity(
         offset: Duration,
@@ -1534,6 +1667,10 @@ impl ClosedRelativeInterval {
         length: Duration,
         end_inclusivity: BoundInclusivity,
     ) -> Self {
+        if length.is_zero() {
+            return Self::new(offset, length);
+        }
+
         ClosedRelativeInterval {
             offset,
             length,
@@ -1572,18 +1709,48 @@ impl ClosedRelativeInterval {
     }
 
     /// Sets the length of the interval
-    pub fn set_length(&mut self, new_length: Duration) {
+    ///
+    /// Returns whether the operation is successful: if the length is 0, then the bound inclusivities must be inclusive.
+    pub fn set_length(&mut self, new_length: Duration) -> bool {
+        if new_length.is_zero()
+            && (self.from_inclusivity != BoundInclusivity::Inclusive
+                || self.to_inclusivity != BoundInclusivity::Inclusive)
+        {
+            return false;
+        }
+
         self.length = new_length;
+        true
     }
 
     /// Sets the inclusivity of the start bound
-    pub fn set_from_inclusivity(&mut self, new_inclusivity: BoundInclusivity) {
+    ///
+    /// Returns whether the operation is successful: if the length is 0, then the bound inclusivities must be inclusive.
+    pub fn set_from_inclusivity(&mut self, new_inclusivity: BoundInclusivity) -> bool {
+        if self.length.is_zero()
+            && (self.from_inclusivity != BoundInclusivity::Inclusive
+                || self.to_inclusivity != BoundInclusivity::Inclusive)
+        {
+            return false;
+        }
+
         self.from_inclusivity = new_inclusivity;
+        true
     }
 
     /// Sets the inclusivity of the end bound
-    pub fn set_to_inclusivity(&mut self, new_inclusivity: BoundInclusivity) {
+    ///
+    /// Returns whether the operation is successful: if the length is 0, then the bound inclusivities must be inclusive.
+    pub fn set_to_inclusivity(&mut self, new_inclusivity: BoundInclusivity) -> bool {
+        if self.length.is_zero()
+            && (self.from_inclusivity != BoundInclusivity::Inclusive
+                || self.to_inclusivity != BoundInclusivity::Inclusive)
+        {
+            return false;
+        }
+
         self.to_inclusivity = new_inclusivity;
+        true
     }
 }
 
