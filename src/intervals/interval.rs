@@ -371,6 +371,12 @@ impl Display for AbsoluteStartBound {
     }
 }
 
+impl From<AbsoluteFiniteBound> for AbsoluteStartBound {
+    fn from(value: AbsoluteFiniteBound) -> Self {
+        Self::Finite(value)
+    }
+}
+
 /// An absolute end bound, including [inclusivity](BoundInclusivity)
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum AbsoluteEndBound {
@@ -486,6 +492,12 @@ impl Display for AbsoluteEndBound {
         }
 
         result
+    }
+}
+
+impl From<AbsoluteFiniteBound> for AbsoluteEndBound {
+    fn from(value: AbsoluteFiniteBound) -> Self {
+        Self::Finite(value)
     }
 }
 
@@ -668,6 +680,12 @@ impl Display for RelativeStartBound {
     }
 }
 
+impl From<RelativeFiniteBound> for RelativeStartBound {
+    fn from(value: RelativeFiniteBound) -> Self {
+        Self::Finite(value)
+    }
+}
+
 /// A relative end interval bound, including [inclusivity](BoundInclusivity)
 ///
 /// This contains an offset from the reference time to the end bound, not the length of the relative interval.
@@ -735,6 +753,12 @@ impl Display for RelativeEndBound {
         }
 
         result
+    }
+}
+
+impl From<RelativeFiniteBound> for RelativeEndBound {
+    fn from(value: RelativeFiniteBound) -> Self {
+        Self::Finite(value)
     }
 }
 
