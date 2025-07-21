@@ -1550,8 +1550,37 @@ where
 }
 
 /// A very ad-hoc trait for structures that can be differentiated (_differentiated_ as set difference)
-pub trait DifferenceOperable {
-    type Item: DifferenceOperable;
+pub trait DifferenceOperable<Rhs = Self> {
+    type Output: DifferenceOperable<Rhs>;
+
+    fn difference<'ri, RI>(a: Self, b: &Rhs, rule_set: OverlapRuleSet, rules: RI) -> Self::Output
+    where
+        RI: IntoIterator<Item = &'ri OverlapRule>;
+
+    fn difference_with<F>(a: Self, b: &Rhs, f: F) -> Self::Output
+    where
+        F: FnMut(&Self, &Rhs) -> DifferenceResult<Self::Output>;
+}
+
+impl<Rhs> DifferenceOperable<Rhs> for AbsoluteBounds
+where
+    Rhs: HasEmptiableAbsoluteBounds,
+{
+    type Output = Self;
+
+    fn difference<'ri, RI>(a: Self, b: &Rhs, rule_set: OverlapRuleSet, rules: RI) -> Self::Output
+    where
+        RI: IntoIterator<Item = &'ri OverlapRule>,
+    {
+        todo!()
+    }
+
+    fn difference_with<F>(a: Self, b: &Rhs, f: F) -> Self::Output
+    where
+        F: FnMut(&Self, &Rhs) -> DifferenceResult<Self::Output>,
+    {
+        todo!()
+    }
 }
 
 /// Dispatcher trait for difference iterators
@@ -1579,7 +1608,7 @@ pub trait DifferentiableIteratorDispatcher: Iterator + Sized {
 impl<I> DifferentiableIteratorDispatcher for I
 where
     I: Iterator,
-    I::Item: DifferenceOperable<Item = I::Item>,
+    I::Item: DifferenceOperable<Output = I::Item>,
 {
 }
 

@@ -455,7 +455,7 @@ pub fn deny_on_bounds_containment_rule_counts_as_contained(
 
 /// Where the current time interval was found relative to the other time interval
 ///
-/// See [`CanPositionOverlap::overlap_position`] for more information
+/// See [`overlap_position`](CanPositionOverlap::overlap_position) for more information
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum OverlapPosition {
     /// The current time interval was found before the given other time interval
@@ -469,14 +469,14 @@ pub enum OverlapPosition {
     /// The contained bound inclusivities define the reference interval's end inclusivity and the compared interval's
     /// start inclusivity.
     ///
-    /// See [`Interval::overlap_position`] for more details.
+    /// See [`overlap_position`](CanPositionOverlap::overlap_position) for more details.
     OnStart(BoundInclusivity, BoundInclusivity),
     /// The current time interval was found starting on the end of the given other time interval
     ///
     /// The contained bound inclusivities define the reference interval's start inclusivity and the compared interval's
     /// end inclusivity.
     ///
-    /// See [`Interval::overlap_position`] for more details.
+    /// See [`overlap_position`](CanPositionOverlap::overlap_position) for more details.
     OnEnd(BoundInclusivity, BoundInclusivity),
     /// The current time interval was found beginning outside the given other time interval but ending inside
     CrossesStart,
@@ -494,7 +494,7 @@ pub enum OverlapPosition {
     /// defined bound is involved (i.e. the bound is infinity), both the reference and compared inclusivity are
     /// [`Option`]s.
     ///
-    /// See [`Interval::overlap_position`] for more details.
+    /// See [`overlap_position`](CanPositionOverlap::overlap_position) for more details.
     InsideAndSameStart(Option<BoundInclusivity>, Option<BoundInclusivity>),
     /// The current time interval was found beginning inside the given other time interval and ending at the end of
     /// that time interval
@@ -506,7 +506,7 @@ pub enum OverlapPosition {
     /// defined bound is involved (i.e. the bound is infinity), both the reference and compared inclusivity are
     /// [`Option`]s.
     ///
-    /// See [`Interval::overlap_position`] for more details.
+    /// See [`overlap_position`](CanPositionOverlap::overlap_position) for more details.
     InsideAndSameEnd(Option<BoundInclusivity>, Option<BoundInclusivity>),
     /// The current time interval was found beginning and ending at the same times as the given other time interval
     ///
@@ -517,7 +517,7 @@ pub enum OverlapPosition {
     /// Also, when you compare two open intervals, they don't have defined bounds but still are equal, so all elements
     /// are [`Option`]s in the end.
     ///
-    /// See [`Interval::overlap_position`] for more details.
+    /// See [`overlap_position`](CanPositionOverlap::overlap_position) for more details.
     Equal(
         (Option<BoundInclusivity>, Option<BoundInclusivity>),
         (Option<BoundInclusivity>, Option<BoundInclusivity>),
@@ -532,7 +532,7 @@ pub enum OverlapPosition {
     /// defined bound is involved (i.e. the bound is infinity), both the reference and compared inclusivity are
     /// [`Option`]s.
     ///
-    /// See [`Interval::overlap_position`] for more details.
+    /// See [`overlap_position`](CanPositionOverlap::overlap_position) for more details.
     ContainsAndSameStart(Option<BoundInclusivity>, Option<BoundInclusivity>),
     /// The current time interval was found beginning before the given other time interval and ending at the same time
     /// as that time interval
@@ -544,7 +544,7 @@ pub enum OverlapPosition {
     /// defined bound is involved (i.e. the bound is infinity), both the reference and compared inclusivity are
     /// [`Option`]s.
     ///
-    /// See [`Interval::overlap_position`] for more details.
+    /// See [`overlap_position`](CanPositionOverlap::overlap_position) for more details.
     ContainsAndSameEnd(Option<BoundInclusivity>, Option<BoundInclusivity>),
     /// The current time interval was found beginning before the given other time interval's start
     /// and ending after that time interval's end
@@ -2395,7 +2395,115 @@ pub trait GapFillable<Rhs = Self> {
     type Output;
 
     /// Returns a result that contains a version of `self` that no longer has a strict gap with the given `rhs`
+    /// 
+    /// # Errors
+    /// 
+    /// If the two intervals are not overlapping, it should result in [`GapFillError::Overlap`].
     fn fill_gap(&self, rhs: &Rhs) -> Result<Self::Output, GapFillError>;
+}
+
+impl<Rhs> GapFillable<Rhs> for AbsoluteBounds
+where
+    Rhs: HasEmptiableAbsoluteBounds,
+{
+    type Output = Self;
+
+    fn fill_gap(&self, rhs: &Rhs) -> Result<Self::Output, GapFillError> {
+        fill_gap_abs_bounds_with_emptiable_abs_bounds(self, &rhs.emptiable_abs_bounds())
+    }
+}
+
+impl<Rhs> GapFillable<Rhs> for EmptiableAbsoluteBounds
+where
+    Rhs: HasEmptiableAbsoluteBounds,
+{
+    type Output = Self;
+
+    fn fill_gap(&self, rhs: &Rhs) -> Result<Self::Output, GapFillError> {
+        fill_gap_emptiable_abs_bounds(self, &rhs.emptiable_abs_bounds())
+    }
+}
+
+impl<Rhs> GapFillable<Rhs> for AbsoluteInterval
+where
+    Rhs: HasEmptiableAbsoluteBounds,
+{
+    type Output = Self;
+
+    fn fill_gap(&self, rhs: &Rhs) -> Result<Self::Output, GapFillError> {
+        fill_gap_emptiable_abs_bounds(&self.emptiable_abs_bounds(), &rhs.emptiable_abs_bounds())
+            .map(AbsoluteInterval::from)
+    }
+}
+
+/// Returns a result that contains a version of `a` that no longer has a strict gap with the given `b`
+#[must_use]
+pub fn fill_gap_abs_bounds(a: &AbsoluteBounds, b: &AbsoluteBounds) -> Result<AbsoluteBounds, GapFillError> {
+    type Sop = SimpleOverlapPosition;
+
+    let Ok(overlap_position) = a.simple_overlap_position(b, OverlapRuleSet::default());
+
+    match overlap_position {
+        Sop::Outside => unreachable!("Only empty intervals can produce `OverlapPosition::Outside`"),
+        Sop::OutsideBefore => {
+            let AbsoluteStartBound::Finite(finite_bound) = b.abs_start() else {
+                unreachable!(
+                    "If the start of the compared bounds is `InfinitePast`, \
+                    then it is impossible that the overlap was `OutsideBefore`"
+                );
+            };
+
+            let new_end_bound = AbsoluteEndBound::from(AbsoluteFiniteBound::new_with_inclusivity(
+                finite_bound.time(),
+                finite_bound.inclusivity().opposite(), // So that it fully closes the gap
+            ));
+
+            Ok(a.grow_end(new_end_bound))
+        },
+        Sop::OutsideAfter => {
+            let AbsoluteEndBound::Finite(finite_bound) = b.abs_end() else {
+                unreachable!(
+                    "If the end of the compared bounds is `InfiniteFuture`, \
+                    then it is impossible that the overlap was `OutsideAfter`"
+                );
+            };
+
+            let new_start_bound = AbsoluteStartBound::from(AbsoluteFiniteBound::new_with_inclusivity(
+                finite_bound.time(),
+                finite_bound.inclusivity().opposite(), // So that it fully closes the gap
+            ));
+
+            Ok(a.grow_start(new_start_bound))
+        },
+        _ => Err(GapFillError::Overlap),
+    }
+}
+
+/// Returns a result that contains a version of `a` that no longer has a strict gap with the given `b`
+#[must_use]
+pub fn fill_gap_abs_bounds_with_emptiable_abs_bounds(
+    a: &AbsoluteBounds,
+    b: &EmptiableAbsoluteBounds
+) -> Result<AbsoluteBounds, GapFillError> {
+    let EmptiableAbsoluteBounds::Bound(b_abs_bounds) = b else {
+        return Ok(a.clone());
+    };
+
+    fill_gap_abs_bounds(a, b_abs_bounds)
+}
+
+/// Returns a result that contains a version of `a` that no longer has a strict gap with the given `b`
+#[must_use]
+pub fn fill_gap_emptiable_abs_bounds(
+    a: &EmptiableAbsoluteBounds,
+    b: &EmptiableAbsoluteBounds,
+) -> Result<EmptiableAbsoluteBounds, GapFillError> {
+    let EmptiableAbsoluteBounds::Bound(a_abs_bounds) = a else {
+        return Ok(a.clone());
+    };
+
+    fill_gap_abs_bounds_with_emptiable_abs_bounds(a_abs_bounds, b)
+        .map(EmptiableAbsoluteBounds::from)
 }
 
 /// Result of an overlap removal
