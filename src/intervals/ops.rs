@@ -1060,10 +1060,10 @@ pub trait CanPositionTimeContainment {
         RI: IntoIterator<Item = &'a TimeContainmentRule>,
     {
         self.disambiguated_time_containment_position(time, rule_set)
-            .map(|simple_containment_position| {
+            .map(|disambiguated_containment_position| {
                 rules
                     .into_iter()
-                    .all(|rule| rule.counts_as_contained(simple_containment_position))
+                    .all(|rule| rule.counts_as_contained(disambiguated_containment_position))
             })
             .unwrap_or(false)
     }
@@ -1822,6 +1822,8 @@ pub enum CutResult<T> {
     /// The cutting point was outside the given interval, or the cut itself was unsuccessful
     Uncut,
     /// The cut was successful, contains the cut two parts
+    ///
+    /// The two parts are in chronological order, since all intervals are too.
     Cut(T, T),
 }
 
@@ -2136,6 +2138,416 @@ pub fn shrink_end_emptiable_abs_bounds(
     EmptiableAbsoluteBounds::from(shrink_end_abs_bounds(bounds, at))
 }
 
+/// Errors that can be produced when using [`GapFillable`]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum GapFillError {
+    Overlap,
+}
+
+/// Capacity to fill the gap between two intervals if they don't strictly overlap
+pub trait GapFillable<Rhs = Self> {
+    /// Output type
+    type Output;
+
+    /// Returns a result that contains a version of `self` that no longer has a strict gap with the given `rhs`
+    ///
+    /// # Errors
+    ///
+    /// If the two intervals are not overlapping, it should result in [`GapFillError::Overlap`].
+    fn fill_gap(&self, rhs: &Rhs) -> Result<Self::Output, GapFillError>;
+}
+
+impl<Rhs> GapFillable<Rhs> for AbsoluteBounds
+where
+    Rhs: HasEmptiableAbsoluteBounds,
+{
+    type Output = Self;
+
+    fn fill_gap(&self, rhs: &Rhs) -> Result<Self::Output, GapFillError> {
+        fill_gap_abs_bounds_with_emptiable_abs_bounds(self, &rhs.emptiable_abs_bounds())
+    }
+}
+
+impl<Rhs> GapFillable<Rhs> for EmptiableAbsoluteBounds
+where
+    Rhs: HasEmptiableAbsoluteBounds,
+{
+    type Output = Self;
+
+    fn fill_gap(&self, rhs: &Rhs) -> Result<Self::Output, GapFillError> {
+        fill_gap_emptiable_abs_bounds(self, &rhs.emptiable_abs_bounds())
+    }
+}
+
+impl<Rhs> GapFillable<Rhs> for AbsoluteInterval
+where
+    Rhs: HasEmptiableAbsoluteBounds,
+{
+    type Output = Self;
+
+    fn fill_gap(&self, rhs: &Rhs) -> Result<Self::Output, GapFillError> {
+        fill_gap_emptiable_abs_bounds(&self.emptiable_abs_bounds(), &rhs.emptiable_abs_bounds())
+            .map(AbsoluteInterval::from)
+    }
+}
+
+/// Returns a result that contains a version of `a` that no longer has a strict gap with the given `b`
+///
+/// # Errors
+///
+/// If the given bounds overlap, this method fails with [`GapFillError::Overlap`]
+pub fn fill_gap_abs_bounds(a: &AbsoluteBounds, b: &AbsoluteBounds) -> Result<AbsoluteBounds, GapFillError> {
+    type Dop = DisambiguatedOverlapPosition;
+
+    let Ok(overlap_position) = a.disambiguated_overlap_position(b, OverlapRuleSet::default());
+
+    match overlap_position {
+        Dop::Outside => unreachable!("Only empty intervals can produce `OverlapPosition::Outside`"),
+        Dop::OutsideBefore => {
+            let AbsoluteStartBound::Finite(finite_bound) = b.abs_start() else {
+                unreachable!(
+                    "If the start of the compared bounds is `InfinitePast`, \
+                    then it is impossible that the overlap was `OutsideBefore`"
+                );
+            };
+
+            let new_end_bound = AbsoluteEndBound::from(AbsoluteFiniteBound::new_with_inclusivity(
+                finite_bound.time(),
+                finite_bound.inclusivity().opposite(), // So that it fully closes the gap
+            ));
+
+            Ok(a.grow_end(new_end_bound))
+        },
+        Dop::OutsideAfter => {
+            let AbsoluteEndBound::Finite(finite_bound) = b.abs_end() else {
+                unreachable!(
+                    "If the end of the compared bounds is `InfiniteFuture`, \
+                    then it is impossible that the overlap was `OutsideAfter`"
+                );
+            };
+
+            let new_start_bound = AbsoluteStartBound::from(AbsoluteFiniteBound::new_with_inclusivity(
+                finite_bound.time(),
+                finite_bound.inclusivity().opposite(), // So that it fully closes the gap
+            ));
+
+            Ok(a.grow_start(new_start_bound))
+        },
+        _ => Err(GapFillError::Overlap),
+    }
+}
+
+/// Returns a result that contains a version of `a` that no longer has a strict gap with the given `b`
+///
+/// # Errors
+///
+/// If the given bounds overlap, this method fails with [`GapFillError::Overlap`]
+pub fn fill_gap_abs_bounds_with_emptiable_abs_bounds(
+    a: &AbsoluteBounds,
+    b: &EmptiableAbsoluteBounds,
+) -> Result<AbsoluteBounds, GapFillError> {
+    let EmptiableAbsoluteBounds::Bound(b_abs_bounds) = b else {
+        return Ok(a.clone());
+    };
+
+    fill_gap_abs_bounds(a, b_abs_bounds)
+}
+
+/// Returns a result that contains a version of `a` that no longer has a strict gap with the given `b`
+///
+/// # Errors
+///
+/// If the given bounds overlap, this method fails with [`GapFillError::Overlap`]
+pub fn fill_gap_emptiable_abs_bounds(
+    a: &EmptiableAbsoluteBounds,
+    b: &EmptiableAbsoluteBounds,
+) -> Result<EmptiableAbsoluteBounds, GapFillError> {
+    let EmptiableAbsoluteBounds::Bound(a_abs_bounds) = a else {
+        return Ok(a.clone());
+    };
+
+    fill_gap_abs_bounds_with_emptiable_abs_bounds(a_abs_bounds, b).map(EmptiableAbsoluteBounds::from)
+}
+
+/// Result of an overlap removal
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum OverlapRemovalResult<T> {
+    Single(T),
+    Split(T, T),
+}
+
+impl<T> OverlapRemovalResult<T> {
+    /// Returns whether the [`OverlapRemovalResult`] is of the [`Single`](OverlapRemovalResult::Single) variant
+    #[must_use]
+    pub fn is_single(&self) -> bool {
+        matches!(self, Self::Single(_))
+    }
+
+    /// Returns whether the [`OverlapRemovalResult`] is of the [`Split`](OverlapRemovalResult::Split) variant
+    #[must_use]
+    pub fn is_split(&self) -> bool {
+        matches!(self, Self::Split(..))
+    }
+
+    /// Maps the contents of the variants
+    ///
+    /// Uses a closure that describes the transformation from `T` to `U`, used for each element in the enum.
+    #[must_use]
+    pub fn map<F, U>(self, mut f: F) -> OverlapRemovalResult<U>
+    where
+        F: FnMut(T) -> U,
+    {
+        match self {
+            Self::Single(s) => OverlapRemovalResult::Single((f)(s)),
+            Self::Split(s1, s2) => OverlapRemovalResult::Split((f)(s1), (f)(s2)),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum OverlapRemovalErr {
+    NoOverlap,
+}
+
+/// Capacity to remove overlap between two intervals that strictly overlap
+pub trait OverlapRemovable<Rhs = Self> {
+    /// Output type
+    type Output;
+
+    /// Returns a result that contains a version of `self` that no longer has a strict overlap with the given `rhs`
+    ///
+    /// # Errors
+    ///
+    /// If the given bounds don't overlap, this method returns [`OverlapRemovalErr::NoOverlap`].
+    fn remove_overlap(&self, rhs: &Rhs) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalErr>;
+}
+
+impl<Rhs> OverlapRemovable<Rhs> for AbsoluteBounds
+where
+    Rhs: HasEmptiableAbsoluteBounds,
+{
+    type Output = EmptiableAbsoluteBounds;
+
+    fn remove_overlap(&self, rhs: &Rhs) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalErr> {
+        remove_overlap_abs_bounds_with_emptiable_abs_bounds(self, &rhs.emptiable_abs_bounds())
+    }
+}
+
+impl<Rhs> OverlapRemovable<Rhs> for EmptiableAbsoluteBounds
+where
+    Rhs: HasEmptiableAbsoluteBounds,
+{
+    type Output = Self;
+
+    fn remove_overlap(&self, rhs: &Rhs) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalErr> {
+        remove_overlap_emptiable_abs_bounds(self, &rhs.emptiable_abs_bounds())
+    }
+}
+
+impl<Rhs> OverlapRemovable<Rhs> for AbsoluteInterval
+where
+    Rhs: HasEmptiableAbsoluteBounds,
+{
+    type Output = Self;
+
+    fn remove_overlap(&self, rhs: &Rhs) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalErr> {
+        remove_overlap_emptiable_abs_bounds(&self.emptiable_abs_bounds(), &rhs.emptiable_abs_bounds())
+            .map(|overlap_removal_res| overlap_removal_res.map(AbsoluteInterval::from))
+    }
+}
+
+/// Removes overlap between two overlapping [`AbsoluteBounds`]
+///
+/// # Errors
+///
+/// If the given bounds don't overlap, this method returns [`OverlapRemovalErr::NoOverlap`].
+pub fn remove_overlap_abs_bounds(
+    a: &AbsoluteBounds,
+    b: &AbsoluteBounds,
+) -> Result<OverlapRemovalResult<EmptiableAbsoluteBounds>, OverlapRemovalErr> {
+    type Dop = DisambiguatedOverlapPosition;
+
+    let Ok(disambiguated_overlap_position) = a.disambiguated_overlap_position(b, OverlapRuleSet::default());
+
+    match disambiguated_overlap_position {
+        Dop::Outside => unreachable!("Only empty intervals can produce `OverlapPosition::Outside`"),
+        Dop::OutsideBefore | Dop::OutsideAfter => Err(OverlapRemovalErr::NoOverlap),
+        Dop::OnStart => {
+            let AbsoluteEndBound::Finite(mut finite_bound) = a.abs_end() else {
+                unreachable!(
+                    "If the end of the reference bounds is `InfiniteFuture`, \
+                    then it is impossible that the overlap was `OnStart`"
+                );
+            };
+
+            // Since `OnStart` only happens when two inclusive bounds are equal (since we are using the strict rule set)
+            // we can just set the end inclusivity to exclusive.
+            finite_bound.set_inclusivity(BoundInclusivity::Exclusive);
+
+            Ok(OverlapRemovalResult::Single(EmptiableAbsoluteBounds::from(
+                AbsoluteBounds::new(a.abs_start(), AbsoluteEndBound::from(finite_bound)),
+            )))
+        },
+        Dop::OnEnd => {
+            let AbsoluteStartBound::Finite(mut finite_bound) = a.abs_start() else {
+                unreachable!(
+                    "If the start of the reference bounds is `InfinitePast`, \
+                    then it is impossible that the overlap was `OnEnd`"
+                );
+            };
+
+            // Since `OnEnd` only happens when two inclusive bounds are equal (since we are using the strict rule set)
+            // we can just set the start inclusivity to exclusive.
+            finite_bound.set_inclusivity(BoundInclusivity::Exclusive);
+
+            Ok(OverlapRemovalResult::Single(EmptiableAbsoluteBounds::from(
+                AbsoluteBounds::new(AbsoluteStartBound::from(finite_bound), a.abs_end()),
+            )))
+        },
+        Dop::CrossesStart => {
+            let AbsoluteStartBound::Finite(finite_bound) = b.abs_start() else {
+                unreachable!(
+                    "If the start of the compared bounds is `InfinitePast`, \
+                    then it is impossible that the overlap was `CrossesStart`"
+                );
+            };
+
+            let new_end = AbsoluteEndBound::from(AbsoluteFiniteBound::new_with_inclusivity(
+                finite_bound.time(),
+                finite_bound.inclusivity().opposite(),
+            ));
+
+            Ok(OverlapRemovalResult::Single(EmptiableAbsoluteBounds::from(
+                AbsoluteBounds::new(a.abs_start(), new_end),
+            )))
+        },
+        Dop::CrossesEnd => {
+            let AbsoluteEndBound::Finite(finite_bound) = b.abs_end() else {
+                unreachable!(
+                    "If the end of the compared bounds is `InfiniteFuture`, \
+                    then it is impossible that the overlap was `CrossesEnd`"
+                );
+            };
+
+            let new_start = AbsoluteStartBound::from(AbsoluteFiniteBound::new_with_inclusivity(
+                finite_bound.time(),
+                finite_bound.inclusivity().opposite(),
+            ));
+
+            Ok(OverlapRemovalResult::Single(EmptiableAbsoluteBounds::from(
+                AbsoluteBounds::new(new_start, a.abs_end()),
+            )))
+        },
+        Dop::Equal | Dop::Inside | Dop::InsideAndSameStart | Dop::InsideAndSameEnd => {
+            Ok(OverlapRemovalResult::Single(EmptiableAbsoluteBounds::Empty))
+        },
+        Dop::ContainsAndSameStart => Ok(OverlapRemovalResult::Single(EmptiableAbsoluteBounds::from(
+            remove_end_overlap(a, b),
+        ))),
+        Dop::ContainsAndSameEnd => Ok(OverlapRemovalResult::Single(EmptiableAbsoluteBounds::from(
+            remove_start_overlap(a, b),
+        ))),
+        Dop::Contains => Ok(OverlapRemovalResult::Split(
+            EmptiableAbsoluteBounds::from(remove_start_overlap(a, b)),
+            EmptiableAbsoluteBounds::from(remove_end_overlap(a, b)),
+        )),
+    }
+}
+
+/// Removes the overlap of the two given [`AbsoluteBounds`] with
+/// an [`ContainsAndSameEnd`](OverlapPosition::ContainsAndSameEnd) overlap
+#[must_use]
+pub fn remove_start_overlap(a: &AbsoluteBounds, b: &AbsoluteBounds) -> AbsoluteBounds {
+    let AbsoluteStartBound::Finite(finite_bound) = b.abs_start() else {
+        unreachable!(
+            "If the start of the compared bounds is `InfiniteStart`, \
+            then it is impossible that the overlap was `ContainsAndSameEnd`"
+        );
+    };
+
+    let cut_type = match finite_bound.inclusivity().opposite() {
+        BoundInclusivity::Inclusive => CutType::InclusiveBoth,
+        BoundInclusivity::Exclusive => CutType::ExclusiveBoth,
+    };
+
+    match a.cut_at(finite_bound.time(), cut_type) {
+        CutResult::Uncut => {
+            // The only way we can get Uncut as a result would be if the rule set is strict
+            // and that `a` start at the same time as `b` does, but b is exclusive on this point whereas
+            // `a` is inclusive.
+
+            // TODO: Fix, this feels flaky
+            let point = AbsoluteFiniteBound::new(finite_bound.time());
+
+            AbsoluteBounds::new(AbsoluteStartBound::from(point), AbsoluteEndBound::from(point))
+        },
+        CutResult::Cut(new_a, _) => new_a,
+    }
+}
+
+/// Removes the overlap of the two given [`AbsoluteBounds`] with
+/// an [`ContainsAndSameStart`](OverlapPosition::ContainsAndSameStart) overlap
+#[must_use]
+pub fn remove_end_overlap(a: &AbsoluteBounds, b: &AbsoluteBounds) -> AbsoluteBounds {
+    let AbsoluteEndBound::Finite(finite_bound) = b.abs_end() else {
+        unreachable!(
+            "If the end of the compared bounds is `InfiniteFuture`, \
+            then it is impossible that the overlap was `ContainsAndSameStart`"
+        );
+    };
+
+    let cut_type = match finite_bound.inclusivity().opposite() {
+        BoundInclusivity::Inclusive => CutType::InclusiveBoth,
+        BoundInclusivity::Exclusive => CutType::ExclusiveBoth,
+    };
+
+    match a.cut_at(finite_bound.time(), cut_type) {
+        CutResult::Uncut => {
+            // The only way we can get Uncut as a result would be if the rule set is strict
+            // and that `a` ends at the same time as `b` does, but b is exclusive on this point whereas
+            // `a` is inclusive.
+
+            // TODO: Fix, this feels flaky
+            let point = AbsoluteFiniteBound::new(finite_bound.time());
+
+            AbsoluteBounds::new(AbsoluteStartBound::from(point), AbsoluteEndBound::from(point))
+        },
+        CutResult::Cut(_, new_a) => new_a,
+    }
+}
+
+/// Removes the overlap of an [`AbsoluteBounds`] with an [`EmptiableAbsoluteBounds`]
+///
+/// # Errors
+///
+/// If the given bounds don't overlap, this method returns [`OverlapRemovalErr::NoOverlap`].
+pub fn remove_overlap_abs_bounds_with_emptiable_abs_bounds(
+    a: &AbsoluteBounds,
+    b: &EmptiableAbsoluteBounds,
+) -> Result<OverlapRemovalResult<EmptiableAbsoluteBounds>, OverlapRemovalErr> {
+    let EmptiableAbsoluteBounds::Bound(b_abs_bounds) = b else {
+        return Ok(OverlapRemovalResult::Single(EmptiableAbsoluteBounds::from(a.clone())));
+    };
+
+    remove_overlap_abs_bounds(a, b_abs_bounds)
+}
+
+/// Removes the overlap of two [`EmptiableAbsoluteBounds`]
+///
+/// # Errors
+///
+/// If the given bounds don't overlap, this method returns [`OverlapRemovalErr::NoOverlap`].
+pub fn remove_overlap_emptiable_abs_bounds(
+    a: &EmptiableAbsoluteBounds,
+    b: &EmptiableAbsoluteBounds,
+) -> Result<OverlapRemovalResult<EmptiableAbsoluteBounds>, OverlapRemovalErr> {
+    let EmptiableAbsoluteBounds::Bound(a_abs_bounds) = a else {
+        return Ok(OverlapRemovalResult::Single(a.clone()));
+    };
+
+    remove_overlap_abs_bounds_with_emptiable_abs_bounds(a_abs_bounds, b)
+}
+
 /// Result of an overlap/gap removal
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum OverlapOrGapRemovalResult<T> {
@@ -2298,74 +2710,16 @@ pub fn remove_overlap_or_gap_abs_bounds(
         Dop::Inside | Dop::InsideAndSameStart | Dop::InsideAndSameEnd | Dop::Equal => {
             OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBounds::Empty)
         },
-        Dop::ContainsAndSameStart => OverlapOrGapRemovalResult::Single(remove_overlap_or_gap_cut_end(a, b)),
-        Dop::ContainsAndSameEnd => OverlapOrGapRemovalResult::Single(remove_overlap_or_gap_cut_start(a, b)),
+        Dop::ContainsAndSameStart => {
+            OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBounds::from(remove_end_overlap(a, b)))
+        },
+        Dop::ContainsAndSameEnd => {
+            OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBounds::from(remove_start_overlap(a, b)))
+        },
         Dop::Contains => OverlapOrGapRemovalResult::Split(
-            remove_overlap_or_gap_cut_start(a, b),
-            remove_overlap_or_gap_cut_end(a, b),
+            EmptiableAbsoluteBounds::from(remove_start_overlap(a, b)),
+            EmptiableAbsoluteBounds::from(remove_end_overlap(a, b)),
         ),
-    }
-}
-
-fn remove_overlap_or_gap_cut_start(a: &AbsoluteBounds, b: &AbsoluteBounds) -> EmptiableAbsoluteBounds {
-    let AbsoluteStartBound::Finite(finite_bound) = b.abs_start() else {
-        unreachable!(
-            "If the start of the compared bounds is `InfiniteStart`, \
-            then it is impossible that the overlap was `ContainsAndSameEnd`"
-        );
-    };
-
-    let cut_type = match finite_bound.inclusivity().opposite() {
-        BoundInclusivity::Inclusive => CutType::InclusiveBoth,
-        BoundInclusivity::Exclusive => CutType::ExclusiveBoth,
-    };
-
-    match a.cut_at(finite_bound.time(), cut_type) {
-        CutResult::Uncut => {
-            // The only way we can get Uncut as a result would be if the rule set is strict
-            // and that `a` start at the same time as `b` does, but b is exclusive on this point whereas
-            // `a` is inclusive.
-
-            // TODO: Fix, this feels flaky
-            let point = AbsoluteFiniteBound::new(finite_bound.time());
-
-            EmptiableAbsoluteBounds::from(AbsoluteBounds::new(
-                AbsoluteStartBound::from(point),
-                AbsoluteEndBound::from(point),
-            ))
-        },
-        CutResult::Cut(new_a, _) => EmptiableAbsoluteBounds::from(new_a),
-    }
-}
-
-fn remove_overlap_or_gap_cut_end(a: &AbsoluteBounds, b: &AbsoluteBounds) -> EmptiableAbsoluteBounds {
-    let AbsoluteEndBound::Finite(finite_bound) = b.abs_end() else {
-        unreachable!(
-            "If the end of the compared bounds is `InfiniteFuture`, \
-            then it is impossible that the overlap was `ContainsAndSameStart`"
-        );
-    };
-
-    let cut_type = match finite_bound.inclusivity().opposite() {
-        BoundInclusivity::Inclusive => CutType::InclusiveBoth,
-        BoundInclusivity::Exclusive => CutType::ExclusiveBoth,
-    };
-
-    match a.cut_at(finite_bound.time(), cut_type) {
-        CutResult::Uncut => {
-            // The only way we can get Uncut as a result would be if the rule set is strict
-            // and that `a` ends at the same time as `b` does, but b is exclusive on this point whereas
-            // `a` is inclusive.
-
-            // TODO: Fix, this feels flaky
-            let point = AbsoluteFiniteBound::new(finite_bound.time());
-
-            EmptiableAbsoluteBounds::from(AbsoluteBounds::new(
-                AbsoluteStartBound::from(point),
-                AbsoluteEndBound::from(point),
-            ))
-        },
-        CutResult::Cut(_, new_a) => EmptiableAbsoluteBounds::from(new_a),
     }
 }
 
@@ -2395,146 +2749,6 @@ pub fn remove_overlap_or_gap_emptiable_abs_bounds(
     }
 
     OverlapOrGapRemovalResult::Single(a.clone())
-}
-
-/// Errors that can be produced when using [`GapFillable`]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum GapFillError {
-    Overlap,
-}
-
-/// Capacity to fill the gap between two intervals if they don't strictly overlap
-pub trait GapFillable<Rhs = Self> {
-    /// Output type
-    type Output;
-
-    /// Returns a result that contains a version of `self` that no longer has a strict gap with the given `rhs`
-    ///
-    /// # Errors
-    ///
-    /// If the two intervals are not overlapping, it should result in [`GapFillError::Overlap`].
-    fn fill_gap(&self, rhs: &Rhs) -> Result<Self::Output, GapFillError>;
-}
-
-impl<Rhs> GapFillable<Rhs> for AbsoluteBounds
-where
-    Rhs: HasEmptiableAbsoluteBounds,
-{
-    type Output = Self;
-
-    fn fill_gap(&self, rhs: &Rhs) -> Result<Self::Output, GapFillError> {
-        fill_gap_abs_bounds_with_emptiable_abs_bounds(self, &rhs.emptiable_abs_bounds())
-    }
-}
-
-impl<Rhs> GapFillable<Rhs> for EmptiableAbsoluteBounds
-where
-    Rhs: HasEmptiableAbsoluteBounds,
-{
-    type Output = Self;
-
-    fn fill_gap(&self, rhs: &Rhs) -> Result<Self::Output, GapFillError> {
-        fill_gap_emptiable_abs_bounds(self, &rhs.emptiable_abs_bounds())
-    }
-}
-
-impl<Rhs> GapFillable<Rhs> for AbsoluteInterval
-where
-    Rhs: HasEmptiableAbsoluteBounds,
-{
-    type Output = Self;
-
-    fn fill_gap(&self, rhs: &Rhs) -> Result<Self::Output, GapFillError> {
-        fill_gap_emptiable_abs_bounds(&self.emptiable_abs_bounds(), &rhs.emptiable_abs_bounds())
-            .map(AbsoluteInterval::from)
-    }
-}
-
-/// Returns a result that contains a version of `a` that no longer has a strict gap with the given `b`
-#[must_use]
-pub fn fill_gap_abs_bounds(a: &AbsoluteBounds, b: &AbsoluteBounds) -> Result<AbsoluteBounds, GapFillError> {
-    type Dop = DisambiguatedOverlapPosition;
-
-    let Ok(overlap_position) = a.disambiguated_overlap_position(b, OverlapRuleSet::default());
-
-    match overlap_position {
-        Dop::Outside => unreachable!("Only empty intervals can produce `OverlapPosition::Outside`"),
-        Dop::OutsideBefore => {
-            let AbsoluteStartBound::Finite(finite_bound) = b.abs_start() else {
-                unreachable!(
-                    "If the start of the compared bounds is `InfinitePast`, \
-                    then it is impossible that the overlap was `OutsideBefore`"
-                );
-            };
-
-            let new_end_bound = AbsoluteEndBound::from(AbsoluteFiniteBound::new_with_inclusivity(
-                finite_bound.time(),
-                finite_bound.inclusivity().opposite(), // So that it fully closes the gap
-            ));
-
-            Ok(a.grow_end(new_end_bound))
-        },
-        Dop::OutsideAfter => {
-            let AbsoluteEndBound::Finite(finite_bound) = b.abs_end() else {
-                unreachable!(
-                    "If the end of the compared bounds is `InfiniteFuture`, \
-                    then it is impossible that the overlap was `OutsideAfter`"
-                );
-            };
-
-            let new_start_bound = AbsoluteStartBound::from(AbsoluteFiniteBound::new_with_inclusivity(
-                finite_bound.time(),
-                finite_bound.inclusivity().opposite(), // So that it fully closes the gap
-            ));
-
-            Ok(a.grow_start(new_start_bound))
-        },
-        _ => Err(GapFillError::Overlap),
-    }
-}
-
-/// Returns a result that contains a version of `a` that no longer has a strict gap with the given `b`
-#[must_use]
-pub fn fill_gap_abs_bounds_with_emptiable_abs_bounds(
-    a: &AbsoluteBounds,
-    b: &EmptiableAbsoluteBounds,
-) -> Result<AbsoluteBounds, GapFillError> {
-    let EmptiableAbsoluteBounds::Bound(b_abs_bounds) = b else {
-        return Ok(a.clone());
-    };
-
-    fill_gap_abs_bounds(a, b_abs_bounds)
-}
-
-/// Returns a result that contains a version of `a` that no longer has a strict gap with the given `b`
-#[must_use]
-pub fn fill_gap_emptiable_abs_bounds(
-    a: &EmptiableAbsoluteBounds,
-    b: &EmptiableAbsoluteBounds,
-) -> Result<EmptiableAbsoluteBounds, GapFillError> {
-    let EmptiableAbsoluteBounds::Bound(a_abs_bounds) = a else {
-        return Ok(a.clone());
-    };
-
-    fill_gap_abs_bounds_with_emptiable_abs_bounds(a_abs_bounds, b).map(EmptiableAbsoluteBounds::from)
-}
-
-/// Result of an overlap removal
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum OverlapRemovalResult<T> {
-    Single(T),
-    Split(T, T),
-    NoOverlap,
-}
-
-/// Capacity to remove overlap between two intervals that strictly overlap
-pub trait OverlapRemovable<Rhs = Self> {
-    /// Output type
-    type Output;
-
-    /// Returns a result that contains a version of `self` that no longer has a strict overlap with the given `rhs`
-    #[must_use]
-    fn remove_overlap() -> OverlapRemovalResult<Self::Output>;
 }
 
 // TODO: Change interval iters so that they use the following traits
