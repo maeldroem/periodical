@@ -5,6 +5,37 @@
 //! from [`intervals::ops`](crate::intervals::ops), which is for operations specialized in handling intervals and
 //! can't be used (or can't be used as efficiently) for other structures.
 
+use chrono::{DateTime, Duration, DurationRound, RoundingError, Utc};
+
+/// Time precision used for comparisons
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum Precision {
+    /// Rounds the compared times to the given duration (e.g. if the duration is 1 second, the times will be rounded to the nearest second)
+    ToNearest(Duration),
+    /// Floors the compared times to the given duration (e.g. if the duration is 5 minutes, the times will be floored to the 5-minutes part they are in)
+    ToPast(Duration),
+    /// Ceils the compared times to the given duration
+    ToFuture(Duration),
+}
+
+impl Precision {
+    /// Uses the given precision to precise the given time
+    ///
+    /// # Errors
+    ///
+    /// Time conversions can fail for different reasons, for example if the time would overflow after conversion,
+    /// if the given duration used is too big, negative or zero, etc.
+    ///
+    /// For more details, check [`chrono`'s limitations on the `DurationRound` trait](https://docs.rs/chrono/latest/chrono/round/trait.DurationRound.html#limitations).
+    pub fn precise_time(&self, time: DateTime<Utc>) -> Result<DateTime<Utc>, RoundingError> {
+        match self {
+            Self::ToNearest(duration) => time.duration_round(*duration),
+            Self::ToPast(duration) => time.duration_trunc(*duration),
+            Self::ToFuture(duration) => time.duration_round_up(*duration),
+        }
+    }
+}
+
 /// Represents a running result
 ///
 /// This enum is mostly used for iterators doing fold-like operations.

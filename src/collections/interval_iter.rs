@@ -10,16 +10,21 @@ use std::iter::{FusedIterator, Peekable};
 
 use chrono::{DateTime, RoundingError, Utc};
 
-use crate::intervals::interval::{
-    AbsoluteBounds, EmptiableAbsoluteBounds, EmptiableRelativeBounds, HasEmptiableAbsoluteBounds,
-    HasEmptiableRelativeBounds, RelativeBounds, ToAbsolute, ToRelative,
+use crate::intervals::absolute::{
+    AbsoluteBounds, AbsoluteInterval, EmptiableAbsoluteBounds, HasEmptiableAbsoluteBounds,
 };
-use crate::intervals::ops::{
-    CanPositionOverlap, DEFAULT_OVERLAP_RULES, OverlapRule, OverlapRuleSet, PreciseAbsoluteBounds, Precision,
+use crate::intervals::ops::overlap_position::{DEFAULT_OVERLAP_RULES, OverlapRule, OverlapRuleSet};
+use crate::intervals::ops::precision::PreciseAbsoluteBounds;
+use crate::intervals::ops::relativity_conversion::{ToAbsolute, ToRelative};
+use crate::intervals::ops::set_ops::{
     intersect_abs_bounds, intersect_emptiable_abs_bounds, unite_abs_bounds, unite_emptiable_abs_bounds,
 };
-use crate::intervals::{AbsoluteInterval, RelativeInterval};
-use crate::ops::{DifferenceResult, IntersectionResult, RunningResult, SymmetricDifferenceResult, UnionResult};
+use crate::intervals::relative::{
+    EmptiableRelativeBounds, HasEmptiableRelativeBounds, RelativeBounds, RelativeInterval,
+};
+use crate::ops::{
+    DifferenceResult, IntersectionResult, Precision, RunningResult, SymmetricDifferenceResult, UnionResult,
+};
 
 // TODO: This should contain overlap rules and a function etc. but those should be split into different kinds of Union
 // structures. Also, since by doing that they would become specialized for intervals, the module should be renamed
