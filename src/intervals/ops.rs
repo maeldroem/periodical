@@ -281,14 +281,14 @@ impl TimeContainmentPosition {
     ///
     /// **Careful!** This method discards data about bound inclusivity and cannot be recovered after conversion.
     #[must_use]
-    pub fn to_simple(self) -> SimpleTimeContainmentPosition {
+    pub fn to_simple(self) -> DisambiguatedTimeContainmentPosition {
         match self {
-            Self::OutsideBefore => SimpleTimeContainmentPosition::OutsideBefore,
-            Self::OutsideAfter => SimpleTimeContainmentPosition::OutsideAfter,
-            Self::Outside => SimpleTimeContainmentPosition::Outside,
-            Self::OnStart(_) => SimpleTimeContainmentPosition::OnStart,
-            Self::OnEnd(_) => SimpleTimeContainmentPosition::OnEnd,
-            Self::Inside => SimpleTimeContainmentPosition::Inside,
+            Self::OutsideBefore => DisambiguatedTimeContainmentPosition::OutsideBefore,
+            Self::OutsideAfter => DisambiguatedTimeContainmentPosition::OutsideAfter,
+            Self::Outside => DisambiguatedTimeContainmentPosition::Outside,
+            Self::OnStart(_) => DisambiguatedTimeContainmentPosition::OnStart,
+            Self::OnEnd(_) => DisambiguatedTimeContainmentPosition::OnEnd,
+            Self::Inside => DisambiguatedTimeContainmentPosition::Inside,
         }
     }
 
@@ -296,7 +296,7 @@ impl TimeContainmentPosition {
     ///
     /// **Careful!** This method discards data about bound inclusivity and cannot be recovered after conversion.
     #[must_use]
-    pub fn to_simple_using_rule_set(self, rule_set: TimeContainmentRuleSet) -> SimpleTimeContainmentPosition {
+    pub fn to_simple_using_rule_set(self, rule_set: TimeContainmentRuleSet) -> DisambiguatedTimeContainmentPosition {
         rule_set.disambiguate(self)
     }
 }
@@ -305,24 +305,24 @@ impl TimeContainmentPosition {
 ///
 /// Used for methods that resolve ambiguities caused by bound inclusivity.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum SimpleTimeContainmentPosition {
-    /// See [`ContainmentPosition::OutsideBefore`]
+pub enum DisambiguatedTimeContainmentPosition {
+    /// See [`OutsideBefore`](TimeContainmentPosition::OutsideBefore)
     OutsideBefore,
-    /// See [`ContainmentPosition::OutsideAfter`]
+    /// See [`OutsideAfter`](TimeContainmentPosition::OutsideAfter)
     OutsideAfter,
-    /// See [`ContainmentPosition::Outside`]
+    /// See [`Outside`](TimeContainmentPosition::Outside)
     Outside,
-    /// See [`ContainmentPosition::OnStart`]
+    /// See [`OnStart`](TimeContainmentPosition::OnStart)
     OnStart,
-    /// See [`ContainmentPosition::OnEnd`]
+    /// See [`OnEnd`](TimeContainmentPosition::OnEnd)
     OnEnd,
-    /// See [`ContainmentPosition::Inside`]
+    /// See [`Inside`](TimeContainmentPosition::Inside)
     Inside,
 }
 
 /// Different rule sets for determining whether different [`TimeContainmentPosition`]s are considered as containing or not.
 ///
-/// See [`CanPositionTimeContainment::contains`] for more.
+/// See [`contains`](CanPositionTimeContainment::contains) for more.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum TimeContainmentRuleSet {
     /// Strict rule set
@@ -342,7 +342,7 @@ impl TimeContainmentRuleSet {
     ///
     /// **Careful!** This method discards data about bound inclusivity and cannot be recovered after conversion.
     #[must_use]
-    pub fn disambiguate(&self, containment_position: TimeContainmentPosition) -> SimpleTimeContainmentPosition {
+    pub fn disambiguate(&self, containment_position: TimeContainmentPosition) -> DisambiguatedTimeContainmentPosition {
         match self {
             Self::Strict => strict_containment_rule_set_disambiguation(containment_position),
             Self::Lenient => lenient_containment_rule_set_disambiguation(containment_position),
@@ -354,18 +354,18 @@ impl TimeContainmentRuleSet {
 #[must_use]
 pub fn strict_containment_rule_set_disambiguation(
     containment_position: TimeContainmentPosition,
-) -> SimpleTimeContainmentPosition {
+) -> DisambiguatedTimeContainmentPosition {
     match containment_position {
         TimeContainmentPosition::OutsideBefore | TimeContainmentPosition::OnStart(BoundInclusivity::Exclusive) => {
-            SimpleTimeContainmentPosition::OutsideBefore
+            DisambiguatedTimeContainmentPosition::OutsideBefore
         },
         TimeContainmentPosition::OutsideAfter | TimeContainmentPosition::OnEnd(BoundInclusivity::Exclusive) => {
-            SimpleTimeContainmentPosition::OutsideAfter
+            DisambiguatedTimeContainmentPosition::OutsideAfter
         },
-        TimeContainmentPosition::Outside => SimpleTimeContainmentPosition::Outside,
-        TimeContainmentPosition::OnStart(BoundInclusivity::Inclusive) => SimpleTimeContainmentPosition::OnStart,
-        TimeContainmentPosition::OnEnd(BoundInclusivity::Inclusive) => SimpleTimeContainmentPosition::OnEnd,
-        TimeContainmentPosition::Inside => SimpleTimeContainmentPosition::Inside,
+        TimeContainmentPosition::Outside => DisambiguatedTimeContainmentPosition::Outside,
+        TimeContainmentPosition::OnStart(BoundInclusivity::Inclusive) => DisambiguatedTimeContainmentPosition::OnStart,
+        TimeContainmentPosition::OnEnd(BoundInclusivity::Inclusive) => DisambiguatedTimeContainmentPosition::OnEnd,
+        TimeContainmentPosition::Inside => DisambiguatedTimeContainmentPosition::Inside,
     }
 }
 
@@ -373,21 +373,21 @@ pub fn strict_containment_rule_set_disambiguation(
 #[must_use]
 pub fn lenient_containment_rule_set_disambiguation(
     containment_position: TimeContainmentPosition,
-) -> SimpleTimeContainmentPosition {
+) -> DisambiguatedTimeContainmentPosition {
     match containment_position {
-        TimeContainmentPosition::OutsideBefore => SimpleTimeContainmentPosition::OutsideBefore,
-        TimeContainmentPosition::OutsideAfter => SimpleTimeContainmentPosition::OutsideAfter,
-        TimeContainmentPosition::Outside => SimpleTimeContainmentPosition::Outside,
-        TimeContainmentPosition::OnStart(_) => SimpleTimeContainmentPosition::OnStart,
-        TimeContainmentPosition::OnEnd(_) => SimpleTimeContainmentPosition::OnEnd,
-        TimeContainmentPosition::Inside => SimpleTimeContainmentPosition::Inside,
+        TimeContainmentPosition::OutsideBefore => DisambiguatedTimeContainmentPosition::OutsideBefore,
+        TimeContainmentPosition::OutsideAfter => DisambiguatedTimeContainmentPosition::OutsideAfter,
+        TimeContainmentPosition::Outside => DisambiguatedTimeContainmentPosition::Outside,
+        TimeContainmentPosition::OnStart(_) => DisambiguatedTimeContainmentPosition::OnStart,
+        TimeContainmentPosition::OnEnd(_) => DisambiguatedTimeContainmentPosition::OnEnd,
+        TimeContainmentPosition::Inside => DisambiguatedTimeContainmentPosition::Inside,
     }
 }
 
 /// Time containment rules used as the reference for the predefined decisions
 pub const DEFAULT_TIME_CONTAINMENT_RULES: [TimeContainmentRule; 0] = [];
 
-/// All rules for containment by converting a [`SimpleTimeContainmentPosition`] into a [`bool`]
+/// All rules for containment by converting a [`DisambiguatedTimeContainmentPosition`] into a [`bool`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum TimeContainmentRule {
     /// Doesn't count as contained when the time is on the start of the interval
@@ -401,7 +401,7 @@ pub enum TimeContainmentRule {
 impl TimeContainmentRule {
     /// Returns whether the given [`SimpleContainmentPosition`] counts as contained
     #[must_use]
-    pub fn counts_as_contained(&self, simple_containment_position: SimpleTimeContainmentPosition) -> bool {
+    pub fn counts_as_contained(&self, simple_containment_position: DisambiguatedTimeContainmentPosition) -> bool {
         match self {
             Self::DenyOnStart => deny_on_start_containment_rule_counts_as_contained(simple_containment_position),
             Self::DenyOnEnd => deny_on_end_containment_rule_counts_as_contained(simple_containment_position),
@@ -410,46 +410,46 @@ impl TimeContainmentRule {
     }
 }
 
-/// Checks whether the given [`SimpleTimeContainmentPosition`] respects [the 'deny on start' rule](TimeContainmentRule::DenyOnStart)
+/// Checks whether the given [`DisambiguatedTimeContainmentPosition`] respects [the 'deny on start' rule](TimeContainmentRule::DenyOnStart)
 #[must_use]
 pub fn deny_on_start_containment_rule_counts_as_contained(
-    simple_containment_position: SimpleTimeContainmentPosition,
+    simple_containment_position: DisambiguatedTimeContainmentPosition,
 ) -> bool {
     !matches!(
         simple_containment_position,
-        SimpleTimeContainmentPosition::OutsideBefore
-            | SimpleTimeContainmentPosition::OutsideAfter
-            | SimpleTimeContainmentPosition::Outside
-            | SimpleTimeContainmentPosition::OnStart
+        DisambiguatedTimeContainmentPosition::OutsideBefore
+            | DisambiguatedTimeContainmentPosition::OutsideAfter
+            | DisambiguatedTimeContainmentPosition::Outside
+            | DisambiguatedTimeContainmentPosition::OnStart
     )
 }
 
-/// Checks whether the given [`SimpleTimeContainmentPosition`] respects [the 'deny on end' rule](TimeContainmentRule::DenyOnEnd)
+/// Checks whether the given [`DisambiguatedTimeContainmentPosition`] respects [the 'deny on end' rule](TimeContainmentRule::DenyOnEnd)
 #[must_use]
 pub fn deny_on_end_containment_rule_counts_as_contained(
-    simple_containment_position: SimpleTimeContainmentPosition,
+    simple_containment_position: DisambiguatedTimeContainmentPosition,
 ) -> bool {
     !matches!(
         simple_containment_position,
-        SimpleTimeContainmentPosition::OutsideBefore
-            | SimpleTimeContainmentPosition::OutsideAfter
-            | SimpleTimeContainmentPosition::Outside
-            | SimpleTimeContainmentPosition::OnEnd
+        DisambiguatedTimeContainmentPosition::OutsideBefore
+            | DisambiguatedTimeContainmentPosition::OutsideAfter
+            | DisambiguatedTimeContainmentPosition::Outside
+            | DisambiguatedTimeContainmentPosition::OnEnd
     )
 }
 
-/// Checks whether the given [`SimpleTimeContainmentPosition`] respects [the 'deny on bounds' rule](TimeContainmentRule::DenyOnBounds)
+/// Checks whether the given [`DisambiguatedTimeContainmentPosition`] respects [the 'deny on bounds' rule](TimeContainmentRule::DenyOnBounds)
 #[must_use]
 pub fn deny_on_bounds_containment_rule_counts_as_contained(
-    simple_containment_position: SimpleTimeContainmentPosition,
+    simple_containment_position: DisambiguatedTimeContainmentPosition,
 ) -> bool {
     !matches!(
         simple_containment_position,
-        SimpleTimeContainmentPosition::OutsideBefore
-            | SimpleTimeContainmentPosition::OutsideAfter
-            | SimpleTimeContainmentPosition::Outside
-            | SimpleTimeContainmentPosition::OnStart
-            | SimpleTimeContainmentPosition::OnEnd
+        DisambiguatedTimeContainmentPosition::OutsideBefore
+            | DisambiguatedTimeContainmentPosition::OutsideAfter
+            | DisambiguatedTimeContainmentPosition::Outside
+            | DisambiguatedTimeContainmentPosition::OnStart
+            | DisambiguatedTimeContainmentPosition::OnEnd
     )
 }
 
@@ -556,22 +556,22 @@ impl OverlapPosition {
     ///
     /// **Careful!** This method discards data about bound inclusivity and cannot be recovered after conversion.
     #[must_use]
-    pub fn to_simple(self) -> SimpleOverlapPosition {
+    pub fn to_simple(self) -> DisambiguatedOverlapPosition {
         match self {
-            OverlapPosition::OutsideBefore => SimpleOverlapPosition::OutsideBefore,
-            OverlapPosition::OutsideAfter => SimpleOverlapPosition::OutsideAfter,
-            OverlapPosition::Outside => SimpleOverlapPosition::Outside,
-            OverlapPosition::OnStart(..) => SimpleOverlapPosition::OnStart,
-            OverlapPosition::OnEnd(..) => SimpleOverlapPosition::OnEnd,
-            OverlapPosition::CrossesStart => SimpleOverlapPosition::CrossesStart,
-            OverlapPosition::CrossesEnd => SimpleOverlapPosition::CrossesEnd,
-            OverlapPosition::Inside => SimpleOverlapPosition::Inside,
-            OverlapPosition::InsideAndSameStart(..) => SimpleOverlapPosition::InsideAndSameStart,
-            OverlapPosition::InsideAndSameEnd(..) => SimpleOverlapPosition::InsideAndSameEnd,
-            OverlapPosition::Equal(..) => SimpleOverlapPosition::Equal,
-            OverlapPosition::ContainsAndSameStart(..) => SimpleOverlapPosition::ContainsAndSameStart,
-            OverlapPosition::ContainsAndSameEnd(..) => SimpleOverlapPosition::ContainsAndSameEnd,
-            OverlapPosition::Contains => SimpleOverlapPosition::Contains,
+            OverlapPosition::OutsideBefore => DisambiguatedOverlapPosition::OutsideBefore,
+            OverlapPosition::OutsideAfter => DisambiguatedOverlapPosition::OutsideAfter,
+            OverlapPosition::Outside => DisambiguatedOverlapPosition::Outside,
+            OverlapPosition::OnStart(..) => DisambiguatedOverlapPosition::OnStart,
+            OverlapPosition::OnEnd(..) => DisambiguatedOverlapPosition::OnEnd,
+            OverlapPosition::CrossesStart => DisambiguatedOverlapPosition::CrossesStart,
+            OverlapPosition::CrossesEnd => DisambiguatedOverlapPosition::CrossesEnd,
+            OverlapPosition::Inside => DisambiguatedOverlapPosition::Inside,
+            OverlapPosition::InsideAndSameStart(..) => DisambiguatedOverlapPosition::InsideAndSameStart,
+            OverlapPosition::InsideAndSameEnd(..) => DisambiguatedOverlapPosition::InsideAndSameEnd,
+            OverlapPosition::Equal(..) => DisambiguatedOverlapPosition::Equal,
+            OverlapPosition::ContainsAndSameStart(..) => DisambiguatedOverlapPosition::ContainsAndSameStart,
+            OverlapPosition::ContainsAndSameEnd(..) => DisambiguatedOverlapPosition::ContainsAndSameEnd,
+            OverlapPosition::Contains => DisambiguatedOverlapPosition::Contains,
         }
     }
 
@@ -579,7 +579,7 @@ impl OverlapPosition {
     ///
     /// **Careful!** This method discards data about bound inclusivity and cannot be recovered after conversion.
     #[must_use]
-    pub fn to_simple_using_rule_set(self, rule_set: OverlapRuleSet) -> SimpleOverlapPosition {
+    pub fn to_simple_using_rule_set(self, rule_set: OverlapRuleSet) -> DisambiguatedOverlapPosition {
         rule_set.disambiguate(self)
     }
 }
@@ -588,7 +588,7 @@ impl OverlapPosition {
 ///
 /// Used for methods that resolve ambiguities caused by bound inclusivity.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum SimpleOverlapPosition {
+pub enum DisambiguatedOverlapPosition {
     /// See [`OverlapPosition::OutsideBefore`]
     OutsideBefore,
     /// See [`OverlapPosition::OutsideAfter`]
@@ -725,7 +725,7 @@ impl OverlapRuleSet {
     ///
     /// **Careful!** This method discards data about bound inclusivity and cannot be recovered after conversion.
     #[must_use]
-    pub fn disambiguate(&self, overlap_position: OverlapPosition) -> SimpleOverlapPosition {
+    pub fn disambiguate(&self, overlap_position: OverlapPosition) -> DisambiguatedOverlapPosition {
         match self {
             Self::Strict => strict_overlap_rule_set_disambiguation(overlap_position),
             Self::ContinuousToFuture => continuous_to_future_overlap_rule_set_disambiguation(overlap_position),
@@ -738,83 +738,83 @@ impl OverlapRuleSet {
 
 /// Disambiguates an [`OverlapPosition`] using [the strict rule set](OverlapRuleSet::Strict)
 #[must_use]
-pub fn strict_overlap_rule_set_disambiguation(overlap_position: OverlapPosition) -> SimpleOverlapPosition {
-    type OP = OverlapPosition;
-    type SimpleOP = SimpleOverlapPosition;
-    type BI = BoundInclusivity;
+pub fn strict_overlap_rule_set_disambiguation(overlap_position: OverlapPosition) -> DisambiguatedOverlapPosition {
+    type Op = OverlapPosition;
+    type Dop = DisambiguatedOverlapPosition;
+    type Bi = BoundInclusivity;
 
     match overlap_position {
-        OP::Outside => SimpleOP::Outside,
-        OP::OnStart(BI::Inclusive, BI::Inclusive) => SimpleOP::OnStart,
-        OP::OnStart(..) | OP::OutsideBefore => SimpleOP::OutsideBefore,
-        OP::OnEnd(BI::Inclusive, BI::Inclusive) => SimpleOP::OnEnd,
-        OP::OnEnd(..) | OP::OutsideAfter => SimpleOP::OutsideAfter,
-        OP::CrossesStart
-        | OP::InsideAndSameStart(Some(BI::Exclusive), Some(BI::Inclusive))
-        | OP::Equal((Some(BI::Exclusive), Some(BI::Inclusive)), (Some(BI::Inclusive), Some(BI::Exclusive)))
-        | OP::ContainsAndSameEnd(Some(BI::Inclusive), Some(BI::Exclusive)) => SimpleOP::CrossesStart,
-        OP::CrossesEnd
-        | OP::Equal((Some(BI::Inclusive), Some(BI::Exclusive)), (Some(BI::Exclusive), Some(BI::Inclusive)))
-        | OP::ContainsAndSameStart(Some(BI::Inclusive), Some(BI::Exclusive)) => SimpleOP::CrossesEnd,
-        OP::Inside
-        | OP::InsideAndSameStart(Some(BI::Inclusive), Some(BI::Exclusive))
-        | OP::Equal((Some(BI::Inclusive), Some(BI::Inclusive)), (Some(BI::Exclusive), Some(BI::Exclusive))) => {
-            SimpleOP::Inside
+        Op::Outside => Dop::Outside,
+        Op::OnStart(Bi::Inclusive, Bi::Inclusive) => Dop::OnStart,
+        Op::OnStart(..) | Op::OutsideBefore => Dop::OutsideBefore,
+        Op::OnEnd(Bi::Inclusive, Bi::Inclusive) => Dop::OnEnd,
+        Op::OnEnd(..) | Op::OutsideAfter => Dop::OutsideAfter,
+        Op::CrossesStart
+        | Op::InsideAndSameStart(Some(Bi::Exclusive), Some(Bi::Inclusive))
+        | Op::Equal((Some(Bi::Exclusive), Some(Bi::Inclusive)), (Some(Bi::Inclusive), Some(Bi::Exclusive)))
+        | Op::ContainsAndSameEnd(Some(Bi::Inclusive), Some(Bi::Exclusive)) => Dop::CrossesStart,
+        Op::CrossesEnd
+        | Op::Equal((Some(Bi::Inclusive), Some(Bi::Exclusive)), (Some(Bi::Exclusive), Some(Bi::Inclusive)))
+        | Op::ContainsAndSameStart(Some(Bi::Inclusive), Some(Bi::Exclusive)) => Dop::CrossesEnd,
+        Op::Inside
+        | Op::InsideAndSameStart(Some(Bi::Inclusive), Some(Bi::Exclusive))
+        | Op::Equal((Some(Bi::Inclusive), Some(Bi::Inclusive)), (Some(Bi::Exclusive), Some(Bi::Exclusive))) => {
+            Dop::Inside
         },
-        OP::InsideAndSameStart(incl_ref, incl_comp) if incl_ref == incl_comp => SimpleOP::InsideAndSameStart,
-        OP::InsideAndSameEnd(incl_ref, incl_comp) if incl_ref == incl_comp => SimpleOP::InsideAndSameEnd,
-        OP::Equal((incl_ref_from, incl_ref_to), (incl_comp_from, incl_comp_to))
+        Op::InsideAndSameStart(incl_ref, incl_comp) if incl_ref == incl_comp => Dop::InsideAndSameStart,
+        Op::InsideAndSameEnd(incl_ref, incl_comp) if incl_ref == incl_comp => Dop::InsideAndSameEnd,
+        Op::Equal((incl_ref_from, incl_ref_to), (incl_comp_from, incl_comp_to))
             if incl_ref_from == incl_comp_from && incl_ref_to == incl_comp_to =>
         {
-            SimpleOP::Equal
+            Dop::Equal
         },
-        OP::Equal((Some(BI::Inclusive), Some(BI::Inclusive)), (Some(BI::Inclusive), Some(BI::Exclusive)))
-        | OP::Equal((Some(BI::Exclusive), Some(BI::Inclusive)), (Some(BI::Exclusive), Some(BI::Exclusive))) => {
-            SimpleOP::InsideAndSameStart
+        Op::Equal((Some(Bi::Inclusive), Some(Bi::Inclusive)), (Some(Bi::Inclusive), Some(Bi::Exclusive)))
+        | Op::Equal((Some(Bi::Exclusive), Some(Bi::Inclusive)), (Some(Bi::Exclusive), Some(Bi::Exclusive))) => {
+            Dop::InsideAndSameStart
         },
-        OP::Equal((Some(BI::Inclusive), Some(BI::Inclusive)), (Some(BI::Exclusive), Some(BI::Inclusive)))
-        | OP::Equal((Some(BI::Inclusive), Some(BI::Exclusive)), (Some(BI::Exclusive), Some(BI::Exclusive))) => {
-            SimpleOP::InsideAndSameEnd
+        Op::Equal((Some(Bi::Inclusive), Some(Bi::Inclusive)), (Some(Bi::Exclusive), Some(Bi::Inclusive)))
+        | Op::Equal((Some(Bi::Inclusive), Some(Bi::Exclusive)), (Some(Bi::Exclusive), Some(Bi::Exclusive))) => {
+            Dop::InsideAndSameEnd
         },
-        OP::Equal((Some(BI::Inclusive), Some(BI::Exclusive)), (Some(BI::Inclusive), Some(BI::Inclusive)))
-        | OP::Equal((Some(BI::Exclusive), Some(BI::Exclusive)), (Some(BI::Exclusive), Some(BI::Inclusive))) => {
-            SimpleOP::ContainsAndSameStart
+        Op::Equal((Some(Bi::Inclusive), Some(Bi::Exclusive)), (Some(Bi::Inclusive), Some(Bi::Inclusive)))
+        | Op::Equal((Some(Bi::Exclusive), Some(Bi::Exclusive)), (Some(Bi::Exclusive), Some(Bi::Inclusive))) => {
+            Dop::ContainsAndSameStart
         },
-        OP::Equal((Some(BI::Exclusive), Some(BI::Inclusive)), (Some(BI::Inclusive), Some(BI::Inclusive)))
-        | OP::Equal((Some(BI::Exclusive), Some(BI::Exclusive)), (Some(BI::Inclusive), Some(BI::Exclusive))) => {
-            SimpleOP::ContainsAndSameEnd
+        Op::Equal((Some(Bi::Exclusive), Some(Bi::Inclusive)), (Some(Bi::Inclusive), Some(Bi::Inclusive)))
+        | Op::Equal((Some(Bi::Exclusive), Some(Bi::Exclusive)), (Some(Bi::Inclusive), Some(Bi::Exclusive))) => {
+            Dop::ContainsAndSameEnd
         },
-        OP::Equal((Some(BI::Exclusive), Some(BI::Exclusive)), (Some(BI::Inclusive), Some(BI::Inclusive)))
-        | OP::ContainsAndSameStart(Some(BI::Exclusive), Some(BI::Inclusive))
-        | OP::ContainsAndSameEnd(Some(BI::Exclusive), Some(BI::Inclusive))
-        | OP::Contains => SimpleOP::Contains,
-        OP::ContainsAndSameStart(incl_ref, incl_comp) if incl_ref == incl_comp => SimpleOP::ContainsAndSameStart,
-        OP::ContainsAndSameEnd(incl_ref, incl_comp) if incl_ref == incl_comp => SimpleOP::ContainsAndSameEnd,
-        OP::InsideAndSameStart(None, Some(_)) | OP::InsideAndSameStart(Some(_), None) => {
+        Op::Equal((Some(Bi::Exclusive), Some(Bi::Exclusive)), (Some(Bi::Inclusive), Some(Bi::Inclusive)))
+        | Op::ContainsAndSameStart(Some(Bi::Exclusive), Some(Bi::Inclusive))
+        | Op::ContainsAndSameEnd(Some(Bi::Exclusive), Some(Bi::Inclusive))
+        | Op::Contains => Dop::Contains,
+        Op::ContainsAndSameStart(incl_ref, incl_comp) if incl_ref == incl_comp => Dop::ContainsAndSameStart,
+        Op::ContainsAndSameEnd(incl_ref, incl_comp) if incl_ref == incl_comp => Dop::ContainsAndSameEnd,
+        Op::InsideAndSameStart(None, Some(_)) | Op::InsideAndSameStart(Some(_), None) => {
             unreachable!(
                 "OverlapPosition::InsideAndSameStart can't be created from a defined bound and an infinite bound"
             )
         },
-        OP::InsideAndSameEnd(None, Some(_)) | OP::InsideAndSameEnd(Some(_), None) => {
+        Op::InsideAndSameEnd(None, Some(_)) | Op::InsideAndSameEnd(Some(_), None) => {
             unreachable!(
                 "OverlapPosition::InsideAndSameEnd can't be created from a defined bound and an infinite bound"
             )
         },
-        OP::ContainsAndSameStart(None, Some(_)) | OP::ContainsAndSameStart(Some(_), None) => {
+        Op::ContainsAndSameStart(None, Some(_)) | Op::ContainsAndSameStart(Some(_), None) => {
             unreachable!(
                 "OverlapPosition::ContainsAndSameStart can't be created from a defined bound and an infinite bound"
             )
         },
-        OP::ContainsAndSameEnd(None, Some(_)) | OP::ContainsAndSameEnd(Some(_), None) => {
+        Op::ContainsAndSameEnd(None, Some(_)) | Op::ContainsAndSameEnd(Some(_), None) => {
             unreachable!(
                 "OverlapPosition::ContainsAndSameEnd can't be created from a defined bound and an infinite bound"
             )
         },
-        OP::InsideAndSameStart(..)
-        | OP::InsideAndSameEnd(..)
-        | OP::Equal(..)
-        | OP::ContainsAndSameStart(..)
-        | OP::ContainsAndSameEnd(..) => unreachable!("Already handled dynamically"),
+        Op::InsideAndSameStart(..)
+        | Op::InsideAndSameEnd(..)
+        | Op::Equal(..)
+        | Op::ContainsAndSameStart(..)
+        | Op::ContainsAndSameEnd(..) => unreachable!("Already handled dynamically"),
     }
 }
 
@@ -822,71 +822,73 @@ pub fn strict_overlap_rule_set_disambiguation(overlap_position: OverlapPosition)
 #[must_use]
 pub fn continuous_to_future_overlap_rule_set_disambiguation(
     overlap_position: OverlapPosition,
-) -> SimpleOverlapPosition {
-    type OP = OverlapPosition;
-    type SimpleOP = SimpleOverlapPosition;
-    type BI = BoundInclusivity;
+) -> DisambiguatedOverlapPosition {
+    type Op = OverlapPosition;
+    type Dop = DisambiguatedOverlapPosition;
+    type Bi = BoundInclusivity;
 
     match overlap_position {
-        OP::OnStart(BI::Inclusive, _) => SimpleOP::OnStart,
-        OP::OnStart(..) => SimpleOP::OutsideBefore,
-        OP::OnEnd(_, BI::Inclusive) => SimpleOP::OnEnd,
-        OP::OnEnd(..) => SimpleOP::OutsideAfter,
+        Op::OnStart(Bi::Inclusive, _) => Dop::OnStart,
+        Op::OnStart(..) => Dop::OutsideBefore,
+        Op::OnEnd(_, Bi::Inclusive) => Dop::OnEnd,
+        Op::OnEnd(..) => Dop::OutsideAfter,
         _ => strict_overlap_rule_set_disambiguation(overlap_position),
     }
 }
 
 /// Disambiguates an [`OverlapPosition`] using [the 'continuous to past' rule set](OverlapRuleSet::ContinuousToPast)
 #[must_use]
-pub fn continuous_to_past_overlap_rule_set_disambiguation(overlap_position: OverlapPosition) -> SimpleOverlapPosition {
-    type OP = OverlapPosition;
-    type SimpleOP = SimpleOverlapPosition;
-    type BI = BoundInclusivity;
+pub fn continuous_to_past_overlap_rule_set_disambiguation(
+    overlap_position: OverlapPosition,
+) -> DisambiguatedOverlapPosition {
+    type Op = OverlapPosition;
+    type Dop = DisambiguatedOverlapPosition;
+    type Bi = BoundInclusivity;
 
     match overlap_position {
-        OP::OnStart(_, BI::Inclusive) => SimpleOP::OnStart,
-        OP::OnStart(..) => SimpleOP::OutsideBefore,
-        OP::OnEnd(BI::Inclusive, _) => SimpleOP::OnEnd,
-        OP::OnEnd(..) => SimpleOP::OutsideAfter,
+        Op::OnStart(_, Bi::Inclusive) => Dop::OnStart,
+        Op::OnStart(..) => Dop::OutsideBefore,
+        Op::OnEnd(Bi::Inclusive, _) => Dop::OnEnd,
+        Op::OnEnd(..) => Dop::OutsideAfter,
         _ => strict_overlap_rule_set_disambiguation(overlap_position),
     }
 }
 
 /// Disambiguates an [`OverlapPosition`] using [the lenient rule set](OverlapRuleSet::Lenient)
 #[must_use]
-pub fn lenient_overlap_rule_set_disambiguation(overlap_position: OverlapPosition) -> SimpleOverlapPosition {
-    type OP = OverlapPosition;
-    type SimpleOP = SimpleOverlapPosition;
-    type BI = BoundInclusivity;
+pub fn lenient_overlap_rule_set_disambiguation(overlap_position: OverlapPosition) -> DisambiguatedOverlapPosition {
+    type Op = OverlapPosition;
+    type Dop = DisambiguatedOverlapPosition;
+    type Bi = BoundInclusivity;
 
     match overlap_position {
-        OP::OutsideBefore | OP::OnStart(BI::Exclusive, BI::Exclusive) => SimpleOP::OutsideBefore,
-        OP::OutsideAfter | OP::OnEnd(BI::Exclusive, BI::Exclusive) => SimpleOP::OutsideAfter,
-        OP::Outside => SimpleOP::Outside,
-        OP::OnStart(..) => SimpleOP::OnStart,
-        OP::OnEnd(..) => SimpleOP::OnEnd,
-        OP::CrossesStart => SimpleOP::CrossesStart,
-        OP::CrossesEnd => SimpleOP::CrossesEnd,
-        OP::Inside => SimpleOP::Inside,
-        OP::InsideAndSameStart(..) => SimpleOP::InsideAndSameStart,
-        OP::InsideAndSameEnd(..) => SimpleOP::InsideAndSameEnd,
-        OP::Equal(..) => SimpleOP::Equal,
-        OP::Contains => SimpleOP::Contains,
-        OP::ContainsAndSameStart(..) => SimpleOP::ContainsAndSameStart,
-        OP::ContainsAndSameEnd(..) => SimpleOP::ContainsAndSameEnd,
+        Op::OutsideBefore | Op::OnStart(Bi::Exclusive, Bi::Exclusive) => Dop::OutsideBefore,
+        Op::OutsideAfter | Op::OnEnd(Bi::Exclusive, Bi::Exclusive) => Dop::OutsideAfter,
+        Op::Outside => Dop::Outside,
+        Op::OnStart(..) => Dop::OnStart,
+        Op::OnEnd(..) => Dop::OnEnd,
+        Op::CrossesStart => Dop::CrossesStart,
+        Op::CrossesEnd => Dop::CrossesEnd,
+        Op::Inside => Dop::Inside,
+        Op::InsideAndSameStart(..) => Dop::InsideAndSameStart,
+        Op::InsideAndSameEnd(..) => Dop::InsideAndSameEnd,
+        Op::Equal(..) => Dop::Equal,
+        Op::Contains => Dop::Contains,
+        Op::ContainsAndSameStart(..) => Dop::ContainsAndSameStart,
+        Op::ContainsAndSameEnd(..) => Dop::ContainsAndSameEnd,
     }
 }
 
 /// Disambiguates an [`OverlapPosition`] using [the very lenient rule set](OverlapRuleSet::VeryLenient)
 #[must_use]
-pub fn very_lenient_overlap_rule_set_disambiguation(overlap_position: OverlapPosition) -> SimpleOverlapPosition {
+pub fn very_lenient_overlap_rule_set_disambiguation(overlap_position: OverlapPosition) -> DisambiguatedOverlapPosition {
     overlap_position.to_simple()
 }
 
 /// Default overlap rules
 pub const DEFAULT_OVERLAP_RULES: [OverlapRule; 1] = [OverlapRule::DenyAdjacency];
 
-/// All rules for overlapping by converting a [`SimpleOverlapPosition`] into a [`bool`]
+/// All rules for overlapping by converting a [`DisambiguatedOverlapPosition`] into a [`bool`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum OverlapRule {
     /// Counts adjacent / "touching" intervals as overlapping
@@ -908,65 +910,75 @@ pub enum OverlapRule {
 }
 
 impl OverlapRule {
-    /// Returns whether the given [`SimpleOverlapPosition`] counts as overlap
+    /// Returns whether the given [`DisambiguatedOverlapPosition`] counts as overlap
     #[must_use]
-    pub fn counts_as_overlap(&self, simple_overlap_position: SimpleOverlapPosition) -> bool {
+    pub fn counts_as_overlap(&self, disambiguated_overlap_position: DisambiguatedOverlapPosition) -> bool {
         match self {
-            Self::AllowAdjacency => allow_adjacency_overlap_rules_counts_as_overlap(simple_overlap_position),
-            Self::DenyAdjacency => deny_adjacency_overlap_rules_counts_as_overlap(simple_overlap_position),
+            Self::AllowAdjacency => allow_adjacency_overlap_rules_counts_as_overlap(disambiguated_overlap_position),
+            Self::DenyAdjacency => deny_adjacency_overlap_rules_counts_as_overlap(disambiguated_overlap_position),
             Self::AllowPastAdjacency | Self::DenyFutureAdjacency => {
-                allow_past_adjacency_overlap_rules_counts_as_overlap(simple_overlap_position)
+                allow_past_adjacency_overlap_rules_counts_as_overlap(disambiguated_overlap_position)
             },
             Self::AllowFutureAdjacency | Self::DenyPastAdjacency => {
-                allow_future_adjacency_overlap_rules_counts_as_overlap(simple_overlap_position)
+                allow_future_adjacency_overlap_rules_counts_as_overlap(disambiguated_overlap_position)
             },
         }
     }
 }
 
-/// Checks whether the given [`SimpleOverlapPosition`] respects [the 'allow adjacency' rule](OverlapRule::AllowAdjacency)
+/// Checks whether the given [`DisambiguatedOverlapPosition`] respects [the 'allow adjacency' rule](OverlapRule::AllowAdjacency)
 #[must_use]
-pub fn allow_adjacency_overlap_rules_counts_as_overlap(simple_overlap_position: SimpleOverlapPosition) -> bool {
+pub fn allow_adjacency_overlap_rules_counts_as_overlap(
+    disambiguated_overlap_position: DisambiguatedOverlapPosition,
+) -> bool {
     !matches!(
-        simple_overlap_position,
-        SimpleOverlapPosition::OutsideBefore | SimpleOverlapPosition::OutsideAfter | SimpleOverlapPosition::Outside
+        disambiguated_overlap_position,
+        DisambiguatedOverlapPosition::OutsideBefore
+            | DisambiguatedOverlapPosition::OutsideAfter
+            | DisambiguatedOverlapPosition::Outside
     )
 }
 
-/// Checks whether the given [`SimpleOverlapPosition`] respects [the 'deny adjacency' rule](OverlapRule::DenyAdjacency)
+/// Checks whether the given [`DisambiguatedOverlapPosition`] respects [the 'deny adjacency' rule](OverlapRule::DenyAdjacency)
 #[must_use]
-pub fn deny_adjacency_overlap_rules_counts_as_overlap(simple_overlap_position: SimpleOverlapPosition) -> bool {
+pub fn deny_adjacency_overlap_rules_counts_as_overlap(
+    disambiguated_overlap_position: DisambiguatedOverlapPosition,
+) -> bool {
     !matches!(
-        simple_overlap_position,
-        SimpleOverlapPosition::OutsideBefore
-            | SimpleOverlapPosition::OutsideAfter
-            | SimpleOverlapPosition::Outside
-            | SimpleOverlapPosition::OnStart
-            | SimpleOverlapPosition::OnEnd
+        disambiguated_overlap_position,
+        DisambiguatedOverlapPosition::OutsideBefore
+            | DisambiguatedOverlapPosition::OutsideAfter
+            | DisambiguatedOverlapPosition::Outside
+            | DisambiguatedOverlapPosition::OnStart
+            | DisambiguatedOverlapPosition::OnEnd
     )
 }
 
-/// Checks whether the given [`SimpleOverlapPosition`] respects [the 'allow past adjacency' rule](OverlapRule::AllowPastAdjacency)
+/// Checks whether the given [`DisambiguatedOverlapPosition`] respects [the 'allow past adjacency' rule](OverlapRule::AllowPastAdjacency)
 #[must_use]
-pub fn allow_past_adjacency_overlap_rules_counts_as_overlap(simple_overlap_position: SimpleOverlapPosition) -> bool {
+pub fn allow_past_adjacency_overlap_rules_counts_as_overlap(
+    disambiguated_overlap_position: DisambiguatedOverlapPosition,
+) -> bool {
     !matches!(
-        simple_overlap_position,
-        SimpleOverlapPosition::OutsideBefore
-            | SimpleOverlapPosition::OutsideAfter
-            | SimpleOverlapPosition::Outside
-            | SimpleOverlapPosition::OnEnd
+        disambiguated_overlap_position,
+        DisambiguatedOverlapPosition::OutsideBefore
+            | DisambiguatedOverlapPosition::OutsideAfter
+            | DisambiguatedOverlapPosition::Outside
+            | DisambiguatedOverlapPosition::OnEnd
     )
 }
 
-/// Checks whether the given [`SimpleOverlapPosition`] respects [the 'allow future adjacency' rule](OverlapRule::AllowFutureAdjacency)
+/// Checks whether the given [`DisambiguatedOverlapPosition`] respects [the 'allow future adjacency' rule](OverlapRule::AllowFutureAdjacency)
 #[must_use]
-pub fn allow_future_adjacency_overlap_rules_counts_as_overlap(simple_overlap_position: SimpleOverlapPosition) -> bool {
+pub fn allow_future_adjacency_overlap_rules_counts_as_overlap(
+    disambiguated_overlap_position: DisambiguatedOverlapPosition,
+) -> bool {
     !matches!(
-        simple_overlap_position,
-        SimpleOverlapPosition::OutsideBefore
-            | SimpleOverlapPosition::OutsideAfter
-            | SimpleOverlapPosition::Outside
-            | SimpleOverlapPosition::OnStart
+        disambiguated_overlap_position,
+        DisambiguatedOverlapPosition::OutsideBefore
+            | DisambiguatedOverlapPosition::OutsideAfter
+            | DisambiguatedOverlapPosition::Outside
+            | DisambiguatedOverlapPosition::OnStart
     )
 }
 
@@ -993,7 +1005,7 @@ pub trait CanPositionTimeContainment {
     /// they can use the associated type [`Error`](CanPositionTimeContainment::Error).
     fn time_containment_position(&self, time: DateTime<Utc>) -> Result<TimeContainmentPosition, Self::Error>;
 
-    /// Returns the simple containment position of the given time using a given [containment rule set](TimeContainmentRuleSet)
+    /// Returns the disambiguated containment position of the given time using a given [containment rule set](TimeContainmentRuleSet)
     ///
     /// See [`CanPositionTimeContainment::time_containment_position`] for more details about containment position.
     ///
@@ -1001,11 +1013,11 @@ pub trait CanPositionTimeContainment {
     ///
     /// If this process is fallible in a given implementor,
     /// they can use the associated type [`Error`](CanPositionTimeContainment::Error).
-    fn simple_time_containment_position(
+    fn disambiguated_time_containment_position(
         &self,
         time: DateTime<Utc>,
         rule_set: TimeContainmentRuleSet,
-    ) -> Result<SimpleTimeContainmentPosition, Self::Error> {
+    ) -> Result<DisambiguatedTimeContainmentPosition, Self::Error> {
         self.time_containment_position(time)
             .map(|containment_position| rule_set.disambiguate(containment_position))
     }
@@ -1019,9 +1031,9 @@ pub trait CanPositionTimeContainment {
     ///
     /// # See also
     ///
-    /// If you are looking to choose the rule set and the rules, see [`CanPositionTimeContainment::contains`].
+    /// If you are looking to choose the rule set and the rules, see [`contains`](CanPositionTimeContainment::contains).
     ///
-    /// If you want even more granular control, see [`CanPositionTimeContainment::contains_using_simple`].
+    /// If you want even more granular control, see [`contains_using_simple`](CanPositionTimeContainment::contains_using_simple).
     #[must_use]
     fn simple_contains(&self, time: DateTime<Utc>) -> bool {
         self.contains(time, TimeContainmentRuleSet::default(), &DEFAULT_TIME_CONTAINMENT_RULES)
@@ -1029,7 +1041,7 @@ pub trait CanPositionTimeContainment {
 
     /// Returns whether the given time is contained in the interval using the given [containment rules](`TimeContainmentRule`)
     ///
-    /// This method uses [`CanPositionTimeContainment::simple_time_containment_position`].
+    /// This method uses [`disambiguated_time_containment_position`](CanPositionTimeContainment::disambiguated_time_containment_position).
     /// If this aforementioned method returns an [`Err`], then this method returns false.
     ///
     /// If it returns [`Ok`], then the [`TimeContainmentRule`]s are checked. This method returns true only if all provided
@@ -1037,17 +1049,17 @@ pub trait CanPositionTimeContainment {
     ///
     /// # See also
     ///
-    /// If you are looking for the simplest way of checking for containment, see [`CanPositionTimeContainment::simple_contains`].
+    /// If you are looking for the simplest way of checking for containment, see [`simple_contains`](CanPositionTimeContainment::simple_contains).
     ///
-    /// If you are looking for more control over what counts as contained, see [`CanPositionTimeContainment::contains_using_simple`].
+    /// If you are looking for more control over what counts as contained, see [`contains_using_simple`](CanPositionTimeContainment::contains_using_simple).
     ///
-    /// If you want extremely granular control over what counts as contained, see [`CanPositionTimeContainment::contains_using`].
+    /// If you want extremely granular control over what counts as contained, see [`contains_using`](CanPositionTimeContainment::contains_using).
     #[must_use]
     fn contains<'a, RI>(&self, time: DateTime<Utc>, rule_set: TimeContainmentRuleSet, rules: RI) -> bool
     where
         RI: IntoIterator<Item = &'a TimeContainmentRule>,
     {
-        self.simple_time_containment_position(time, rule_set)
+        self.disambiguated_time_containment_position(time, rule_set)
             .map(|simple_containment_position| {
                 rules
                     .into_iter()
@@ -1058,19 +1070,19 @@ pub trait CanPositionTimeContainment {
 
     /// Returns whether the given time is contained in the interval using a custom function
     ///
-    /// This method uses [`CanPositionTimeContainment::time_containment_position`].
+    /// This method uses [`time_containment_position`](CanPositionTimeContainment::time_containment_position).
     /// If this aforementioned method returns an [`Err`], then this method returns false.
     ///
     /// If it returns [`Ok`], then the provided function is in charge of determining whether the [`TimeContainmentPosition`]
-    /// given by [`CanPositionTimeContainment::time_containment_position`] counts as the passed time being contained
-    /// in the interval.
+    /// given by [`time_containment_position`](CanPositionTimeContainment::time_containment_position) counts as
+    /// the passed time being contained in the interval.
     ///
     /// # See also
     ///
     /// If you are looking for control over what's considered as containment but still want
-    /// predetermined [`SimpleTimeContainmentPosition`]s, see [`CanPositionTimeContainment::contains_using_simple`].
+    /// predetermined [`DisambiguatedTimeContainmentPosition`]s, see [`contains_using_simple`](CanPositionTimeContainment::contains_using_simple).
     ///
-    /// If you are looking for predetermined decisions on what's considered as contained, see [`CanPositionTimeContainment::contains`].
+    /// If you are looking for predetermined decisions on what's considered as contained, see [`contains`](CanPositionTimeContainment::contains).
     #[must_use]
     fn contains_using<F>(&self, time: DateTime<Utc>, f: F) -> bool
     where
@@ -1081,23 +1093,23 @@ pub trait CanPositionTimeContainment {
 
     /// Returns whether the given time is contained in the interval using a custom function
     ///
-    /// This method uses [`CanPositionTimeContainment::simple_time_containment_position`].
+    /// This method uses [`disambiguated_time_containment_position`](CanPositionTimeContainment::disambiguated_time_containment_position).
     /// If this aforementioned method returns an [`Err`], then this method returns false.
     ///
-    /// If it returns [`Ok`], then the provided function is in charge of determining whether the [`SimpleTimeContainmentPosition`]
-    /// given by [`CanPositionTimeContainment::simple_time_containment_position`] counts as contained or not.
+    /// If it returns [`Ok`], then the provided function is in charge of determining whether the [`DisambiguatedTimeContainmentPosition`]
+    /// given by [`disambiguated_time_containment_position`](CanPositionTimeContainment::disambiguated_time_containment_position) counts as contained or not.
     ///
     /// # See also
     ///
-    /// If you are looking for more granular control over what's considered as contained, see [`CanPositionTimeContainment::contains_using`].
+    /// If you are looking for more granular control over what's considered as contained, see [`contains_using`](CanPositionTimeContainment::contains_using).
     ///
-    /// If you are looking for predetermined decisions on what's considered as contained, see [`CanPositionTimeContainment::simple_contains`].
+    /// If you are looking for predetermined decisions on what's considered as contained, see [`simple_contains`](CanPositionTimeContainment::simple_contains).
     #[must_use]
     fn contains_using_simple<F>(&self, time: DateTime<Utc>, rule_set: TimeContainmentRuleSet, f: F) -> bool
     where
-        F: FnOnce(SimpleTimeContainmentPosition) -> bool,
+        F: FnOnce(DisambiguatedTimeContainmentPosition) -> bool,
     {
-        self.simple_time_containment_position(time, rule_set)
+        self.disambiguated_time_containment_position(time, rule_set)
             .map(f)
             .unwrap_or(false)
     }
@@ -1196,7 +1208,7 @@ pub trait CanPositionOverlap<Rhs = Self> {
     /// they can use the associated type [`Error`](CanPositionOverlap::Error).
     fn overlap_position(&self, other: &Rhs) -> Result<OverlapPosition, Self::Error>;
 
-    /// Returns the simple overlap position of the given interval using a given rule set
+    /// Returns the disambiguated overlap position of the given interval using a given rule set
     ///
     /// See [`CanPositionOverlap::overlap_position`] for more details about overlap position.
     ///
@@ -1204,12 +1216,12 @@ pub trait CanPositionOverlap<Rhs = Self> {
     ///
     /// If this process is fallible in a given implementor,
     /// they can use the associated type [`Error`](CanPositionOverlap::Error).
-    fn simple_overlap_position(
+    fn disambiguated_overlap_position(
         &self,
-        other: &Rhs,
+        rhs: &Rhs,
         rule_set: OverlapRuleSet,
-    ) -> Result<SimpleOverlapPosition, Self::Error> {
-        self.overlap_position(other)
+    ) -> Result<DisambiguatedOverlapPosition, Self::Error> {
+        self.overlap_position(rhs)
             .map(|overlap_position| rule_set.disambiguate(overlap_position))
     }
 
@@ -1231,7 +1243,7 @@ pub trait CanPositionOverlap<Rhs = Self> {
 
     /// Returns whether the given other interval overlaps the current one using the given [overlap rules](`OverlapRule`)
     ///
-    /// This method uses [`Interval::simple_overlap_position`]. If this aforementioned method returns an [`Err`],
+    /// This method uses [`disambiguated_overlap_position`](CanPositionOverlap::disambiguated_overlap_position). If this aforementioned method returns an [`Err`],
     /// then this method returns false.
     ///
     /// If it returns [`Ok`], then the [`OverlapRule`]s are checked. This method returns true only if all provided
@@ -1239,21 +1251,21 @@ pub trait CanPositionOverlap<Rhs = Self> {
     ///
     /// # See also
     ///
-    /// If you are looking for the simplest way of checking for overlap, see [`CanPositionOverlap::simple_overlaps`].
+    /// If you are looking for the simplest way of checking for overlap, see [`simple_overlaps`](CanPositionOverlap::simple_overlaps).
     ///
-    /// If you are looking for more control over what counts as overlap, see [`CanPositionOverlap::overlaps_using_simple`].
+    /// If you are looking for more control over what counts as overlap, see [`overlaps_using_simple`](CanPositionOverlap::overlaps_using_simple).
     ///
-    /// If you want extremely granular control over what counts as overlap, see [`CanPositionOverlap::overlaps_using`].
+    /// If you want extremely granular control over what counts as overlap, see [`overlaps_using`](CanPositionOverlap::overlaps_using).
     #[must_use]
     fn overlaps<'a, RI>(&self, other: &Rhs, rule_set: OverlapRuleSet, rules: RI) -> bool
     where
         RI: IntoIterator<Item = &'a OverlapRule>,
     {
-        self.simple_overlap_position(other, rule_set)
-            .map(|simple_overlap_position| {
+        self.disambiguated_overlap_position(other, rule_set)
+            .map(|disambiguated_overlap_position| {
                 rules
                     .into_iter()
-                    .all(|rule| rule.counts_as_overlap(simple_overlap_position))
+                    .all(|rule| rule.counts_as_overlap(disambiguated_overlap_position))
             })
             .unwrap_or(false)
     }
@@ -1269,7 +1281,7 @@ pub trait CanPositionOverlap<Rhs = Self> {
     /// # See also
     ///
     /// If you are looking for control over what's considered as overlapping but still want
-    /// predetermined [`SimpleOverlapPosition`]s, see [`CanPositionOverlap::overlaps_using_simple`].
+    /// predetermined [`DisambiguatedOverlapPosition`]s, see [`CanPositionOverlap::overlaps_using_simple`].
     ///
     /// If you are looking for predetermined decisions on what's considered as overlapping, see [`CanPositionOverlap::overlaps`].
     #[must_use]
@@ -1282,11 +1294,11 @@ pub trait CanPositionOverlap<Rhs = Self> {
 
     /// Returns whether the given other interval overlaps the current interval using a custom function
     ///
-    /// This method uses [`CanPositionOverlap::simple_overlap_position`]. If this aforementioned method returns an [`Err`],
+    /// This method uses [`disambiguated_overlap_position`](CanPositionOverlap::disambiguated_overlap_position). If this aforementioned method returns an [`Err`],
     /// then this method returns false.
     ///
-    /// If it returns [`Ok`], then the provided function is in charge of determining whether the [`SimpleOverlapPosition`]
-    /// given by [`CanPositionOverlap::simple_overlap_position`] counts as overlapping or not.
+    /// If it returns [`Ok`], then the provided function is in charge of determining whether the [`DisambiguatedOverlapPosition`]
+    /// given by [`disambiguated_overlap_position`](CanPositionOverlap::disambiguated_overlap_position) counts as overlapping or not.
     ///
     /// # See also
     ///
@@ -1296,9 +1308,11 @@ pub trait CanPositionOverlap<Rhs = Self> {
     #[must_use]
     fn overlaps_using_simple<F>(&self, other: &Rhs, rule_set: OverlapRuleSet, f: F) -> bool
     where
-        F: FnOnce(SimpleOverlapPosition) -> bool,
+        F: FnOnce(DisambiguatedOverlapPosition) -> bool,
     {
-        self.simple_overlap_position(other, rule_set).map(f).unwrap_or(false)
+        self.disambiguated_overlap_position(other, rule_set)
+            .map(f)
+            .unwrap_or(false)
     }
 }
 
@@ -2211,13 +2225,13 @@ pub fn remove_overlap_or_gap_abs_bounds(
     b: &AbsoluteBounds,
     rule_set: OverlapRuleSet,
 ) -> OverlapOrGapRemovalResult<EmptiableAbsoluteBounds> {
-    type Sop = SimpleOverlapPosition;
+    type Dop = DisambiguatedOverlapPosition;
 
-    let Ok(overlap_position) = a.simple_overlap_position(b, rule_set);
+    let Ok(overlap_position) = a.disambiguated_overlap_position(b, rule_set);
 
     match overlap_position {
-        Sop::Outside => unreachable!("Only empty intervals can produce `OverlapPosition::Outside`"),
-        Sop::OutsideBefore => {
+        Dop::Outside => unreachable!("Only empty intervals can produce `OverlapPosition::Outside`"),
+        Dop::OutsideBefore => {
             let AbsoluteStartBound::Finite(finite_bound) = b.abs_start() else {
                 unreachable!(
                     "If the start of the compared bounds is `InfinitePast`, \
@@ -2232,7 +2246,7 @@ pub fn remove_overlap_or_gap_abs_bounds(
 
             OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBounds::from(a.grow_end(new_end_bound)))
         },
-        Sop::OutsideAfter => {
+        Dop::OutsideAfter => {
             let AbsoluteEndBound::Finite(finite_bound) = b.abs_end() else {
                 unreachable!(
                     "If the end of the compared bounds is `InfiniteFuture`, \
@@ -2247,11 +2261,11 @@ pub fn remove_overlap_or_gap_abs_bounds(
 
             OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBounds::from(a.grow_start(new_start_bound)))
         },
-        Sop::OnStart | Sop::OnEnd => {
+        Dop::OnStart | Dop::OnEnd => {
             // No gaps nor overlaps already
             OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBounds::from(a.clone()))
         },
-        Sop::CrossesStart => {
+        Dop::CrossesStart => {
             let AbsoluteStartBound::Finite(finite_bound) = b.abs_start() else {
                 unreachable!(
                     "If the start of the compared bounds is `InfinitePast`, \
@@ -2266,7 +2280,7 @@ pub fn remove_overlap_or_gap_abs_bounds(
 
             OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBounds::from(a.shrink_end(new_end_bound)))
         },
-        Sop::CrossesEnd => {
+        Dop::CrossesEnd => {
             let AbsoluteEndBound::Finite(finite_bound) = b.abs_end() else {
                 unreachable!(
                     "If the end of the compared bounds is `InfiniteFuture`, \
@@ -2281,12 +2295,12 @@ pub fn remove_overlap_or_gap_abs_bounds(
 
             OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBounds::from(a.shrink_start(new_start_bound)))
         },
-        Sop::Inside | Sop::InsideAndSameStart | Sop::InsideAndSameEnd | Sop::Equal => {
+        Dop::Inside | Dop::InsideAndSameStart | Dop::InsideAndSameEnd | Dop::Equal => {
             OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBounds::Empty)
         },
-        Sop::ContainsAndSameStart => OverlapOrGapRemovalResult::Single(remove_overlap_or_gap_cut_end(a, b)),
-        Sop::ContainsAndSameEnd => OverlapOrGapRemovalResult::Single(remove_overlap_or_gap_cut_start(a, b)),
-        Sop::Contains => OverlapOrGapRemovalResult::Split(
+        Dop::ContainsAndSameStart => OverlapOrGapRemovalResult::Single(remove_overlap_or_gap_cut_end(a, b)),
+        Dop::ContainsAndSameEnd => OverlapOrGapRemovalResult::Single(remove_overlap_or_gap_cut_start(a, b)),
+        Dop::Contains => OverlapOrGapRemovalResult::Split(
             remove_overlap_or_gap_cut_start(a, b),
             remove_overlap_or_gap_cut_end(a, b),
         ),
@@ -2395,9 +2409,9 @@ pub trait GapFillable<Rhs = Self> {
     type Output;
 
     /// Returns a result that contains a version of `self` that no longer has a strict gap with the given `rhs`
-    /// 
+    ///
     /// # Errors
-    /// 
+    ///
     /// If the two intervals are not overlapping, it should result in [`GapFillError::Overlap`].
     fn fill_gap(&self, rhs: &Rhs) -> Result<Self::Output, GapFillError>;
 }
@@ -2439,13 +2453,13 @@ where
 /// Returns a result that contains a version of `a` that no longer has a strict gap with the given `b`
 #[must_use]
 pub fn fill_gap_abs_bounds(a: &AbsoluteBounds, b: &AbsoluteBounds) -> Result<AbsoluteBounds, GapFillError> {
-    type Sop = SimpleOverlapPosition;
+    type Dop = DisambiguatedOverlapPosition;
 
-    let Ok(overlap_position) = a.simple_overlap_position(b, OverlapRuleSet::default());
+    let Ok(overlap_position) = a.disambiguated_overlap_position(b, OverlapRuleSet::default());
 
     match overlap_position {
-        Sop::Outside => unreachable!("Only empty intervals can produce `OverlapPosition::Outside`"),
-        Sop::OutsideBefore => {
+        Dop::Outside => unreachable!("Only empty intervals can produce `OverlapPosition::Outside`"),
+        Dop::OutsideBefore => {
             let AbsoluteStartBound::Finite(finite_bound) = b.abs_start() else {
                 unreachable!(
                     "If the start of the compared bounds is `InfinitePast`, \
@@ -2460,7 +2474,7 @@ pub fn fill_gap_abs_bounds(a: &AbsoluteBounds, b: &AbsoluteBounds) -> Result<Abs
 
             Ok(a.grow_end(new_end_bound))
         },
-        Sop::OutsideAfter => {
+        Dop::OutsideAfter => {
             let AbsoluteEndBound::Finite(finite_bound) = b.abs_end() else {
                 unreachable!(
                     "If the end of the compared bounds is `InfiniteFuture`, \
@@ -2483,7 +2497,7 @@ pub fn fill_gap_abs_bounds(a: &AbsoluteBounds, b: &AbsoluteBounds) -> Result<Abs
 #[must_use]
 pub fn fill_gap_abs_bounds_with_emptiable_abs_bounds(
     a: &AbsoluteBounds,
-    b: &EmptiableAbsoluteBounds
+    b: &EmptiableAbsoluteBounds,
 ) -> Result<AbsoluteBounds, GapFillError> {
     let EmptiableAbsoluteBounds::Bound(b_abs_bounds) = b else {
         return Ok(a.clone());
@@ -2502,8 +2516,7 @@ pub fn fill_gap_emptiable_abs_bounds(
         return Ok(a.clone());
     };
 
-    fill_gap_abs_bounds_with_emptiable_abs_bounds(a_abs_bounds, b)
-        .map(EmptiableAbsoluteBounds::from)
+    fill_gap_abs_bounds_with_emptiable_abs_bounds(a_abs_bounds, b).map(EmptiableAbsoluteBounds::from)
 }
 
 /// Result of an overlap removal
