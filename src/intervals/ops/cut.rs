@@ -2,13 +2,16 @@
 
 use chrono::{DateTime, Utc};
 
+use super::prelude::*;
 use super::time_containment_position::CanPositionTimeContainment;
 
+use crate::intervals::ClosedAbsoluteInterval;
 use crate::intervals::absolute::{
     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteInterval, AbsoluteStartBound,
-    EmptiableAbsoluteBounds, HasEmptiableAbsoluteBounds,
+    EmptiableAbsoluteBounds, HalfOpenAbsoluteInterval, HasEmptiableAbsoluteBounds,
 };
 use crate::intervals::meta::BoundInclusivity;
+use crate::intervals::special::{EmptyInterval, OpenInterval};
 
 /// Cut types, used by [`Cuttable`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
@@ -114,6 +117,41 @@ impl Cuttable for AbsoluteInterval {
     fn cut_at(&self, at: DateTime<Utc>, cut_type: CutType) -> CutResult<Self::Output> {
         cut_emptiable_abs_bounds(&self.emptiable_abs_bounds(), at, cut_type)
             .map_cut(|c1, c2| (AbsoluteInterval::from(c1), AbsoluteInterval::from(c2)))
+    }
+}
+
+impl Cuttable for ClosedAbsoluteInterval {
+    type Output = AbsoluteInterval;
+
+    fn cut_at(&self, at: DateTime<Utc>, cut_type: CutType) -> CutResult<Self::Output> {
+        cut_abs_bounds(&self.abs_bounds(), at, cut_type)
+            .map_cut(|c1, c2| (AbsoluteInterval::from(c1), AbsoluteInterval::from(c2)))
+    }
+}
+
+impl Cuttable for HalfOpenAbsoluteInterval {
+    type Output = AbsoluteInterval;
+
+    fn cut_at(&self, at: DateTime<Utc>, cut_type: CutType) -> CutResult<Self::Output> {
+        cut_abs_bounds(&self.abs_bounds(), at, cut_type)
+            .map_cut(|c1, c2| (AbsoluteInterval::from(c1), AbsoluteInterval::from(c2)))
+    }
+}
+
+impl Cuttable for OpenInterval {
+    type Output = AbsoluteInterval;
+
+    fn cut_at(&self, at: DateTime<Utc>, cut_type: CutType) -> CutResult<Self::Output> {
+        cut_abs_bounds(&self.abs_bounds(), at, cut_type)
+            .map_cut(|c1, c2| (AbsoluteInterval::from(c1), AbsoluteInterval::from(c2)))
+    }
+}
+
+impl Cuttable for EmptyInterval {
+    type Output = ();
+
+    fn cut_at(&self, _at: DateTime<Utc>, _cut_type: CutType) -> CutResult<Self::Output> {
+        CutResult::Uncut
     }
 }
 
