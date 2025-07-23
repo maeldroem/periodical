@@ -6,7 +6,6 @@ use crate::intervals::absolute::{
     AbsoluteBounds, AbsoluteEndBound, AbsoluteInterval, AbsoluteStartBound, EmptiableAbsoluteBounds,
     HalfOpenAbsoluteInterval, HasAbsoluteBounds, HasEmptiableAbsoluteBounds, swap_absolute_bounds,
 };
-use crate::intervals::meta::Interval;
 use crate::intervals::relative::{
     EmptiableRelativeBounds, HalfOpenRelativeInterval, HasEmptiableRelativeBounds, HasRelativeBounds, RelativeBounds,
     RelativeEndBound, RelativeStartBound, swap_relative_bounds,
@@ -242,14 +241,115 @@ impl Abridgable<HalfOpenRelativeInterval> for OpenInterval {
     }
 }
 
-impl<Rhs> Abridgable<Rhs> for EmptyInterval
-where
-    Rhs: Interval + Clone,
-{
-    type Output = Rhs;
+impl Abridgable<OpenInterval> for OpenInterval {
+    type Output = OpenInterval;
 
-    fn abridge(&self, rhs: &Rhs) -> Self::Output {
+    fn abridge(&self, _rhs: &OpenInterval) -> Self::Output {
+        self.clone()
+    }
+}
+
+impl Abridgable<EmptyInterval> for OpenInterval {
+    type Output = EmptyInterval;
+
+    fn abridge(&self, rhs: &EmptyInterval) -> Self::Output {
         rhs.clone()
+    }
+}
+
+impl Abridgable<AbsoluteBounds> for EmptyInterval {
+    type Output = AbsoluteInterval;
+
+    fn abridge(&self, rhs: &AbsoluteBounds) -> Self::Output {
+        AbsoluteInterval::from(rhs.clone())
+    }
+}
+
+impl Abridgable<EmptiableAbsoluteBounds> for EmptyInterval {
+    type Output = AbsoluteInterval;
+
+    fn abridge(&self, rhs: &EmptiableAbsoluteBounds) -> Self::Output {
+        AbsoluteInterval::from(rhs.clone())
+    }
+}
+
+impl Abridgable<AbsoluteInterval> for EmptyInterval {
+    type Output = AbsoluteInterval;
+
+    fn abridge(&self, rhs: &AbsoluteInterval) -> Self::Output {
+        rhs.clone()
+    }
+}
+
+impl Abridgable<ClosedAbsoluteInterval> for EmptyInterval {
+    type Output = AbsoluteInterval;
+
+    fn abridge(&self, rhs: &ClosedAbsoluteInterval) -> Self::Output {
+        AbsoluteInterval::from(rhs.clone())
+    }
+}
+
+impl Abridgable<HalfOpenAbsoluteInterval> for EmptyInterval {
+    type Output = AbsoluteInterval;
+
+    fn abridge(&self, rhs: &HalfOpenAbsoluteInterval) -> Self::Output {
+        AbsoluteInterval::from(rhs.clone())
+    }
+}
+
+impl Abridgable<RelativeBounds> for EmptyInterval {
+    type Output = RelativeInterval;
+
+    fn abridge(&self, rhs: &RelativeBounds) -> Self::Output {
+        RelativeInterval::from(rhs.clone())
+    }
+}
+
+impl Abridgable<EmptiableRelativeBounds> for EmptyInterval {
+    type Output = RelativeInterval;
+
+    fn abridge(&self, rhs: &EmptiableRelativeBounds) -> Self::Output {
+        RelativeInterval::from(rhs.clone())
+    }
+}
+
+impl Abridgable<RelativeInterval> for EmptyInterval {
+    type Output = RelativeInterval;
+
+    fn abridge(&self, rhs: &RelativeInterval) -> Self::Output {
+        rhs.clone()
+    }
+}
+
+impl Abridgable<ClosedRelativeInterval> for EmptyInterval {
+    type Output = RelativeInterval;
+
+    fn abridge(&self, rhs: &ClosedRelativeInterval) -> Self::Output {
+        RelativeInterval::from(rhs.clone())
+    }
+}
+
+impl Abridgable<HalfOpenRelativeInterval> for EmptyInterval {
+    type Output = RelativeInterval;
+
+    fn abridge(&self, rhs: &HalfOpenRelativeInterval) -> Self::Output {
+        RelativeInterval::from(rhs.clone())
+    }
+}
+
+impl Abridgable<OpenInterval> for EmptyInterval {
+    type Output = EmptyInterval;
+
+    fn abridge(&self, _rhs: &OpenInterval) -> Self::Output {
+        self.clone()
+    }
+}
+
+impl Abridgable<EmptyInterval> for EmptyInterval {
+    type Output = EmptyInterval;
+
+    fn abridge(&self, _rhs: &EmptyInterval) -> Self::Output {
+        self.clone()
     }
 }
 
