@@ -8,10 +8,12 @@ use chrono::{DateTime, Utc};
 use super::prelude::*;
 
 use crate::intervals::absolute::{
-    AbsoluteBounds, AbsoluteEndBound, AbsoluteStartBound, EmptiableAbsoluteBounds, HasAbsoluteBounds,
-    HasEmptiableAbsoluteBounds,
+    AbsoluteBounds, AbsoluteEndBound, AbsoluteStartBound, EmptiableAbsoluteBounds, HalfOpenAbsoluteInterval,
+    HasAbsoluteBounds, HasEmptiableAbsoluteBounds,
 };
 use crate::intervals::meta::BoundInclusivity;
+use crate::intervals::special::{EmptyInterval, OpenInterval};
+use crate::intervals::{AbsoluteInterval, ClosedAbsoluteInterval};
 
 /// Where the given time was found relative to a time interval
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -348,10 +350,63 @@ pub trait CanPositionTimeContainment {
     }
 }
 
-impl<T> CanPositionTimeContainment for T
-where
-    T: HasEmptiableAbsoluteBounds,
-{
+impl CanPositionTimeContainment for AbsoluteBounds {
+    type Error = Infallible;
+
+    fn time_containment_position(&self, time: DateTime<Utc>) -> Result<TimeContainmentPosition, Self::Error> {
+        Ok(time_containment_position_abs_bounds(self, time))
+    }
+}
+
+impl CanPositionTimeContainment for EmptiableAbsoluteBounds {
+    type Error = Infallible;
+
+    fn time_containment_position(&self, time: DateTime<Utc>) -> Result<TimeContainmentPosition, Self::Error> {
+        let EmptiableAbsoluteBounds::Bound(bounds) = self else {
+            return Ok(TimeContainmentPosition::Outside);
+        };
+
+        Ok(time_containment_position_abs_bounds(bounds, time))
+    }
+}
+
+impl CanPositionTimeContainment for AbsoluteInterval {
+    type Error = Infallible;
+
+    fn time_containment_position(&self, time: DateTime<Utc>) -> Result<TimeContainmentPosition, Self::Error> {
+        let EmptiableAbsoluteBounds::Bound(bounds) = self.emptiable_abs_bounds() else {
+            return Ok(TimeContainmentPosition::Outside);
+        };
+
+        Ok(time_containment_position_abs_bounds(&bounds, time))
+    }
+}
+
+impl CanPositionTimeContainment for ClosedAbsoluteInterval {
+    type Error = Infallible;
+
+    fn time_containment_position(&self, time: DateTime<Utc>) -> Result<TimeContainmentPosition, Self::Error> {
+        Ok(time_containment_position_abs_bounds(&self.abs_bounds(), time))
+    }
+}
+
+impl CanPositionTimeContainment for HalfOpenAbsoluteInterval {
+    type Error = Infallible;
+
+    fn time_containment_position(&self, time: DateTime<Utc>) -> Result<TimeContainmentPosition, Self::Error> {
+        Ok(time_containment_position_abs_bounds(&self.abs_bounds(), time))
+    }
+}
+
+impl CanPositionTimeContainment for OpenInterval {
+    type Error = Infallible;
+
+    fn time_containment_position(&self, time: DateTime<Utc>) -> Result<TimeContainmentPosition, Self::Error> {
+        Ok(time_containment_position_abs_bounds(&self.abs_bounds(), time))
+    }
+}
+
+impl CanPositionTimeContainment for EmptyInterval {
     type Error = Infallible;
 
     fn time_containment_position(&self, time: DateTime<Utc>) -> Result<TimeContainmentPosition, Self::Error> {

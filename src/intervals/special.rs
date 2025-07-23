@@ -7,6 +7,8 @@ use std::fmt::Display;
 
 use chrono::Duration;
 
+use crate::intervals::meta::Interval;
+
 use super::absolute::{
     AbsoluteBounds, AbsoluteEndBound, AbsoluteInterval, AbsoluteStartBound, EmptiableAbsoluteBounds, HasAbsoluteBounds,
     HasEmptiableAbsoluteBounds,
@@ -23,6 +25,8 @@ use super::relative::{
 /// Is equivalent to _time itself_ (all time), infinite duration.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct OpenInterval;
+
+impl Interval for OpenInterval {}
 
 impl HasOpenness for OpenInterval {
     fn openness(&self) -> Openness {
@@ -116,6 +120,8 @@ impl TryFrom<RelativeInterval> for OpenInterval {
 /// it simply represents the _lack_ of a time interval, like the complement of an open interval
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct EmptyInterval;
+
+impl Interval for EmptyInterval {}
 
 impl HasOpenness for EmptyInterval {
     fn openness(&self) -> Openness {

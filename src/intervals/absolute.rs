@@ -6,6 +6,8 @@ use std::fmt::Display;
 
 use chrono::{DateTime, Utc};
 
+use crate::intervals::meta::Interval;
+
 use super::meta::{
     BoundInclusivity, Duration as IntervalDuration, HasBoundInclusivity, HasDuration, HasOpenness, HasRelativity,
     OpeningDirection, Openness, Relativity,
@@ -467,6 +469,8 @@ impl AbsoluteBounds {
     }
 }
 
+impl Interval for AbsoluteBounds {}
+
 impl HasAbsoluteBounds for AbsoluteBounds {
     fn abs_bounds(&self) -> AbsoluteBounds {
         self.clone()
@@ -555,6 +559,8 @@ pub enum EmptiableAbsoluteBounds {
     Empty,
     Bound(AbsoluteBounds),
 }
+
+impl Interval for EmptiableAbsoluteBounds {}
 
 impl HasEmptiableAbsoluteBounds for EmptiableAbsoluteBounds {
     fn emptiable_abs_bounds(&self) -> EmptiableAbsoluteBounds {
@@ -772,6 +778,8 @@ impl ClosedAbsoluteInterval {
     }
 }
 
+impl Interval for ClosedAbsoluteInterval {}
+
 impl HasOpenness for ClosedAbsoluteInterval {
     fn openness(&self) -> Openness {
         Openness::Closed
@@ -898,6 +906,8 @@ impl HalfOpenAbsoluteInterval {
     }
 }
 
+impl Interval for HalfOpenAbsoluteInterval {}
+
 impl HasOpenness for HalfOpenAbsoluteInterval {
     fn openness(&self) -> Openness {
         Openness::HalfOpen
@@ -976,6 +986,8 @@ pub enum AbsoluteInterval {
     Open(OpenInterval),
     Empty(EmptyInterval),
 }
+
+impl Interval for AbsoluteInterval {}
 
 impl HasDuration for AbsoluteInterval {
     fn duration(&self) -> IntervalDuration {

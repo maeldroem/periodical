@@ -4,6 +4,16 @@
 
 use std::fmt::Display;
 
+/// All intervals implement this trait
+///
+/// This trait is used for restricting parameters to intervals when the parameter itself is not important, but want
+/// to avoid implementing the method on non-interval types.
+///
+/// For example, extending an [`OpenInterval`](crate::intervals::special::OpenInterval) with any other interval will
+/// produce an [`OpenInterval`](crate::intervals::special::OpenInterval) anyways, but we don't want to allow calls
+/// like `open_interval.extend(3)`, so this trait is used to restrict this parameter to interval types only.
+pub trait Interval {}
+
 /// How open is the time interval
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Openness {

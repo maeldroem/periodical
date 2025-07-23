@@ -3,8 +3,8 @@
 use super::abridge::Abridgable;
 use super::extend::Extensible;
 use super::overlap_position::{CanPositionOverlap, DEFAULT_OVERLAP_RULES, OverlapRule, OverlapRuleSet};
-use super::prelude::*;
 
+use crate::intervals::RelativeInterval;
 use crate::intervals::absolute::{
     AbsoluteBounds, AbsoluteInterval, EmptiableAbsoluteBounds, HasEmptiableAbsoluteBounds,
 };
@@ -17,17 +17,9 @@ pub trait Unitable<Rhs = Self> {
     /// Output type
     type Output;
 
-    /// Unites two intervals using the given rules
-    #[must_use]
-    fn unite<'ri, RI>(&self, rhs: &Rhs, rule_set: OverlapRuleSet, rules: RI) -> UnionResult<Self::Output>
-    where
-        RI: IntoIterator<Item = &'ri OverlapRule>;
-
     /// Unites two intervals using default overlap rules
     #[must_use]
-    fn simple_unite(&self, rhs: &Rhs) -> UnionResult<Self::Output> {
-        self.unite(rhs, OverlapRuleSet::default(), &DEFAULT_OVERLAP_RULES)
-    }
+    fn unite(&self, rhs: &Rhs) -> UnionResult<Self::Output>;
 
     /// Unites two intervals using the given closure
     #[must_use]
@@ -45,11 +37,8 @@ where
 {
     type Output = Self;
 
-    fn unite<'ri, RI>(&self, rhs: &Rhs, rule_set: OverlapRuleSet, rules: RI) -> UnionResult<Self::Output>
-    where
-        RI: IntoIterator<Item = &'ri OverlapRule>,
-    {
-        unite_abs_bounds_with_emptiable_abs_bounds(self, &rhs.emptiable_abs_bounds(), rule_set, rules)
+    fn unite(&self, rhs: &Rhs) -> UnionResult<Self::Output> {
+        unite_abs_bounds_with_emptiable_abs_bounds(self, &rhs.emptiable_abs_bounds())
     }
 }
 
@@ -59,11 +48,8 @@ where
 {
     type Output = Self;
 
-    fn unite<'ri, RI>(&self, rhs: &Rhs, rule_set: OverlapRuleSet, rules: RI) -> UnionResult<Self::Output>
-    where
-        RI: IntoIterator<Item = &'ri OverlapRule>,
-    {
-        unite_emptiable_abs_bounds(self, &rhs.emptiable_abs_bounds(), rule_set, rules)
+    fn unite(&self, rhs: &Rhs) -> UnionResult<Self::Output> {
+        unite_emptiable_abs_bounds(self, &rhs.emptiable_abs_bounds())
     }
 }
 
@@ -73,48 +59,24 @@ where
 {
     type Output = Self;
 
-    fn unite<'ri, RI>(&self, rhs: &Rhs, rule_set: OverlapRuleSet, rules: RI) -> UnionResult<Self::Output>
-    where
-        RI: IntoIterator<Item = &'ri OverlapRule>,
-    {
-        unite_emptiable_abs_bounds(
-            &self.emptiable_abs_bounds(),
-            &rhs.emptiable_abs_bounds(),
-            rule_set,
-            rules,
-        )
-        .map_united(AbsoluteInterval::from)
+    fn unite(&self, rhs: &Rhs) -> UnionResult<Self::Output> {
+        unite_emptiable_abs_bounds(&self.emptiable_abs_bounds(), &rhs.emptiable_abs_bounds())
+            .map_united(AbsoluteInterval::from)
     }
 }
 
-/// Unites two [`AbsoluteBounds`] using the given rules
-pub fn unite_abs_bounds<'a, RI>(
-    a: &AbsoluteBounds,
-    b: &AbsoluteBounds,
-    rule_set: OverlapRuleSet,
-    rules: RI,
-) -> UnionResult<AbsoluteBounds>
-where
-    RI: IntoIterator<Item = &'a OverlapRule>,
-{
-    if !a.overlaps(b, rule_set, rules) {
-        return UnionResult::Separate;
-    }
+impl<Rhs> Unitable<Rhs> for RelativeInterval {
+    type Output = Self;
 
-    UnionResult::United(a.extend(b))
+    fn unite(&self, rhs: &Rhs) -> UnionResult<Self::Output> {
+        unite_rel_bounds_with_emptiable_rel_bounds()
+    }
 }
 
-/// Unites two [`EmptiableAbsoluteBounds`] using the given rules
-pub fn unite_emptiable_abs_bounds<'a, RI>(
-    a: &EmptiableAbsoluteBounds,
-    b: &EmptiableAbsoluteBounds,
-    rule_set: OverlapRuleSet,
-    rules: RI,
-) -> UnionResult<EmptiableAbsoluteBounds>
-where
-    RI: IntoIterator<Item = &'a OverlapRule>,
-{
-    if !a.overlaps(b, rule_set, rules) {
+/// Unites two [`AbsoluteBounds`]
+#[must_use]
+pub fn unite_abs_bounds(a: &AbsoluteBounds, b: &AbsoluteBounds) -> UnionResult<AbsoluteBounds> {
+    if !a.simple_overlaps(b) {
         return UnionResult::Separate;
     }
 
@@ -122,20 +84,33 @@ where
 }
 
 /// Unites an [`AbsoluteBounds`] with an [`EmptiableAbsoluteBounds`] using the given rules
-pub fn unite_abs_bounds_with_emptiable_abs_bounds<'a, RI>(
+#[must_use]
+pub fn unite_abs_bounds_with_emptiable_abs_bounds(
     a: &AbsoluteBounds,
     b: &EmptiableAbsoluteBounds,
-    rule_set: OverlapRuleSet,
-    rules: RI,
-) -> UnionResult<AbsoluteBounds>
-where
-    RI: IntoIterator<Item = &'a OverlapRule>,
-{
-    if !a.overlaps(b, rule_set, rules) {
+) -> UnionResult<AbsoluteBounds> {
+    if !a.simple_overlaps(b) {
         return UnionResult::Separate;
     }
 
     UnionResult::United(a.extend(b))
+}
+
+/// Unites two [`EmptiableAbsoluteBounds`]
+#[must_use]
+pub fn unite_emptiable_abs_bounds(
+    a: &EmptiableAbsoluteBounds,
+    b: &EmptiableAbsoluteBounds,
+) -> UnionResult<EmptiableAbsoluteBounds> {
+    if !a.simple_overlaps(b) {
+        return UnionResult::Separate;
+    }
+
+    UnionResult::United(a.extend(b))
+}
+
+pub fn unite_rel_bounds(a: &RelativeBounds, b: &RelativeBounds) -> UnionResult<RelativeBounds> {
+    todo!()
 }
 
 /// Capacity to unite an interval with another
@@ -145,15 +120,7 @@ pub trait Intersectable<Rhs = Self> {
 
     /// Intersects two intervals using the given rules
     #[must_use]
-    fn intersect<'ri, RI>(&self, rhs: &Rhs, rule_set: OverlapRuleSet, rules: RI) -> IntersectionResult<Self::Output>
-    where
-        RI: IntoIterator<Item = &'ri OverlapRule>;
-
-    /// Intersects two intervals using default overlap rules
-    #[must_use]
-    fn simple_intersect(&self, rhs: &Rhs) -> IntersectionResult<Self::Output> {
-        self.intersect(rhs, OverlapRuleSet::default(), &DEFAULT_OVERLAP_RULES)
-    }
+    fn intersect(&self, rhs: &Rhs) -> IntersectionResult<Self::Output>;
 
     /// Intersects two intervals using the given closure
     #[must_use]

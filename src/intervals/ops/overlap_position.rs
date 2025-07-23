@@ -7,9 +7,15 @@ use super::prelude::*;
 
 use crate::intervals::absolute::{
     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, EmptiableAbsoluteBounds,
-    HasEmptiableAbsoluteBounds,
+    HalfOpenAbsoluteInterval, HasEmptiableAbsoluteBounds,
 };
-use crate::intervals::meta::BoundInclusivity;
+use crate::intervals::meta::{BoundInclusivity, Interval};
+use crate::intervals::relative::{
+    EmptiableRelativeBounds, HalfOpenRelativeInterval, HasEmptiableRelativeBounds, RelativeBounds, RelativeEndBound,
+    RelativeFiniteBound, RelativeStartBound,
+};
+use crate::intervals::special::{EmptyInterval, OpenInterval};
+use crate::intervals::{AbsoluteInterval, ClosedAbsoluteInterval, ClosedRelativeInterval, RelativeInterval};
 
 /// Where the current time interval was found relative to the other time interval
 ///
@@ -585,7 +591,7 @@ pub trait CanPositionOverlap<Rhs = Self> {
     ///
     /// If this process is fallible in a given implementor,
     /// they can use the associated type [`Error`](CanPositionOverlap::Error).
-    fn overlap_position(&self, other: &Rhs) -> Result<OverlapPosition, Self::Error>;
+    fn overlap_position(&self, rhs: &Rhs) -> Result<OverlapPosition, Self::Error>;
 
     /// Returns the disambiguated overlap position of the given interval using a given rule set
     ///
@@ -616,8 +622,8 @@ pub trait CanPositionOverlap<Rhs = Self> {
     ///
     /// If you want even more granular control, see [`CanPositionOverlap::overlaps_using_simple`].
     #[must_use]
-    fn simple_overlaps(&self, other: &Rhs) -> bool {
-        self.overlaps(other, OverlapRuleSet::default(), &DEFAULT_OVERLAP_RULES)
+    fn simple_overlaps(&self, rhs: &Rhs) -> bool {
+        self.overlaps(rhs, OverlapRuleSet::default(), &DEFAULT_OVERLAP_RULES)
     }
 
     /// Returns whether the given other interval overlaps the current one using the given [overlap rules](`OverlapRule`)
@@ -636,11 +642,11 @@ pub trait CanPositionOverlap<Rhs = Self> {
     ///
     /// If you want extremely granular control over what counts as overlap, see [`overlaps_using`](CanPositionOverlap::overlaps_using).
     #[must_use]
-    fn overlaps<'a, RI>(&self, other: &Rhs, rule_set: OverlapRuleSet, rules: RI) -> bool
+    fn overlaps<'a, RI>(&self, rhs: &Rhs, rule_set: OverlapRuleSet, rules: RI) -> bool
     where
         RI: IntoIterator<Item = &'a OverlapRule>,
     {
-        self.disambiguated_overlap_position(other, rule_set)
+        self.disambiguated_overlap_position(rhs, rule_set)
             .map(|disambiguated_overlap_position| {
                 rules
                     .into_iter()
@@ -664,11 +670,11 @@ pub trait CanPositionOverlap<Rhs = Self> {
     ///
     /// If you are looking for predetermined decisions on what's considered as overlapping, see [`CanPositionOverlap::overlaps`].
     #[must_use]
-    fn overlaps_using<F>(&self, other: &Rhs, f: F) -> bool
+    fn overlaps_using<F>(&self, rhs: &Rhs, f: F) -> bool
     where
         F: FnOnce(OverlapPosition) -> bool,
     {
-        self.overlap_position(other).map(f).unwrap_or(false)
+        self.overlap_position(rhs).map(f).unwrap_or(false)
     }
 
     /// Returns whether the given other interval overlaps the current interval using a custom function
@@ -685,125 +691,276 @@ pub trait CanPositionOverlap<Rhs = Self> {
     ///
     /// If you are looking for predetermined decisions on what's considered as overlapping, see [`CanPositionOverlap::overlaps`].
     #[must_use]
-    fn overlaps_using_simple<F>(&self, other: &Rhs, rule_set: OverlapRuleSet, f: F) -> bool
+    fn overlaps_using_simple<F>(&self, rhs: &Rhs, rule_set: OverlapRuleSet, f: F) -> bool
     where
         F: FnOnce(DisambiguatedOverlapPosition) -> bool,
     {
-        self.disambiguated_overlap_position(other, rule_set)
+        self.disambiguated_overlap_position(rhs, rule_set)
             .map(f)
             .unwrap_or(false)
     }
 }
 
-impl<T, Rhs> CanPositionOverlap<Rhs> for T
+// Note: the impls below could be shorten by a lot when non-overlapping trait bounds (and overlapping ones?)
+// become stable
+
+impl<Rhs> CanPositionOverlap<Rhs> for AbsoluteBounds
 where
     Rhs: HasEmptiableAbsoluteBounds,
-    T: HasEmptiableAbsoluteBounds,
 {
     type Error = Infallible;
 
-    fn overlap_position(&self, other: &Rhs) -> Result<OverlapPosition, Self::Error> {
-        Ok(overlap_position_emptiable_abs_bounds(
-            &self.emptiable_abs_bounds(),
-            &other.emptiable_abs_bounds(),
-        ))
+    fn overlap_position(&self, rhs: &Rhs) -> Result<OverlapPosition, Self::Error> {
+        Ok(overlap_position_emptiable_abs_bounds(self, rhs))
     }
 }
 
-/// Positions the overlap between two implementors of [`HasEmptiableAbsoluteBounds`]
-pub fn overlap_position_emptiable_abs_bounds<T, U>(og: &T, other: &U) -> OverlapPosition
+impl<Rhs> CanPositionOverlap<Rhs> for EmptiableAbsoluteBounds
 where
-    T: HasEmptiableAbsoluteBounds,
-    U: HasEmptiableAbsoluteBounds,
+    Rhs: HasEmptiableAbsoluteBounds,
 {
-    match (og.emptiable_abs_bounds(), other.emptiable_abs_bounds()) {
-        (_, EmptiableAbsoluteBounds::Empty) | (EmptiableAbsoluteBounds::Empty, _) => OverlapPosition::Outside,
-        (EmptiableAbsoluteBounds::Bound(ref og_bounds), EmptiableAbsoluteBounds::Bound(ref other_bounds)) => {
-            overlap_position_abs_bounds(og_bounds, other_bounds)
-        },
+    type Error = Infallible;
+
+    fn overlap_position(&self, rhs: &Rhs) -> Result<OverlapPosition, Self::Error> {
+        Ok(overlap_position_emptiable_abs_bounds(self, rhs))
+    }
+}
+
+impl<Rhs> CanPositionOverlap<Rhs> for AbsoluteInterval
+where
+    Rhs: HasEmptiableAbsoluteBounds,
+{
+    type Error = Infallible;
+
+    fn overlap_position(&self, rhs: &Rhs) -> Result<OverlapPosition, Self::Error> {
+        Ok(overlap_position_emptiable_abs_bounds(self, rhs))
+    }
+}
+
+impl<Rhs> CanPositionOverlap<Rhs> for ClosedAbsoluteInterval
+where
+    Rhs: HasEmptiableAbsoluteBounds,
+{
+    type Error = Infallible;
+
+    fn overlap_position(&self, rhs: &Rhs) -> Result<OverlapPosition, Self::Error> {
+        Ok(overlap_position_emptiable_abs_bounds(self, rhs))
+    }
+}
+
+impl<Rhs> CanPositionOverlap<Rhs> for HalfOpenAbsoluteInterval
+where
+    Rhs: HasEmptiableAbsoluteBounds,
+{
+    type Error = Infallible;
+
+    fn overlap_position(&self, rhs: &Rhs) -> Result<OverlapPosition, Self::Error> {
+        Ok(overlap_position_emptiable_abs_bounds(self, rhs))
+    }
+}
+
+impl<Rhs> CanPositionOverlap<Rhs> for RelativeBounds
+where
+    Rhs: HasEmptiableRelativeBounds,
+{
+    type Error = Infallible;
+
+    fn overlap_position(&self, rhs: &Rhs) -> Result<OverlapPosition, Self::Error> {
+        Ok(overlap_position_emptiable_rel_bounds(self, rhs))
+    }
+}
+
+impl<Rhs> CanPositionOverlap<Rhs> for EmptiableRelativeBounds
+where
+    Rhs: HasEmptiableRelativeBounds,
+{
+    type Error = Infallible;
+
+    fn overlap_position(&self, rhs: &Rhs) -> Result<OverlapPosition, Self::Error> {
+        Ok(overlap_position_emptiable_rel_bounds(self, rhs))
+    }
+}
+
+impl<Rhs> CanPositionOverlap<Rhs> for RelativeInterval
+where
+    Rhs: HasEmptiableRelativeBounds,
+{
+    type Error = Infallible;
+
+    fn overlap_position(&self, rhs: &Rhs) -> Result<OverlapPosition, Self::Error> {
+        Ok(overlap_position_emptiable_rel_bounds(self, rhs))
+    }
+}
+
+impl<Rhs> CanPositionOverlap<Rhs> for ClosedRelativeInterval
+where
+    Rhs: HasEmptiableRelativeBounds,
+{
+    type Error = Infallible;
+
+    fn overlap_position(&self, rhs: &Rhs) -> Result<OverlapPosition, Self::Error> {
+        Ok(overlap_position_emptiable_rel_bounds(self, rhs))
+    }
+}
+
+impl<Rhs> CanPositionOverlap<Rhs> for HalfOpenRelativeInterval
+where
+    Rhs: HasEmptiableRelativeBounds,
+{
+    type Error = Infallible;
+
+    fn overlap_position(&self, rhs: &Rhs) -> Result<OverlapPosition, Self::Error> {
+        Ok(overlap_position_emptiable_rel_bounds(self, rhs))
+    }
+}
+
+impl CanPositionOverlap<AbsoluteBounds> for OpenInterval {
+    type Error = Infallible;
+
+    fn overlap_position(&self, rhs: &AbsoluteBounds) -> Result<OverlapPosition, Self::Error> {
+        Ok(overlap_position_emptiable_abs_bounds(self, rhs))
+    }
+}
+
+impl CanPositionOverlap<EmptiableAbsoluteBounds> for OpenInterval {
+    type Error = Infallible;
+
+    fn overlap_position(&self, rhs: &EmptiableAbsoluteBounds) -> Result<OverlapPosition, Self::Error> {
+        Ok(overlap_position_emptiable_abs_bounds(self, rhs))
+    }
+}
+
+impl CanPositionOverlap<AbsoluteInterval> for OpenInterval {
+    type Error = Infallible;
+
+    fn overlap_position(&self, rhs: &AbsoluteInterval) -> Result<OverlapPosition, Self::Error> {
+        Ok(overlap_position_emptiable_abs_bounds(self, rhs))
+    }
+}
+
+impl CanPositionOverlap<ClosedAbsoluteInterval> for OpenInterval {
+    type Error = Infallible;
+
+    fn overlap_position(&self, rhs: &ClosedAbsoluteInterval) -> Result<OverlapPosition, Self::Error> {
+        Ok(overlap_position_emptiable_abs_bounds(self, rhs))
+    }
+}
+
+impl CanPositionOverlap<HalfOpenAbsoluteInterval> for OpenInterval {
+    type Error = Infallible;
+
+    fn overlap_position(&self, rhs: &HalfOpenAbsoluteInterval) -> Result<OverlapPosition, Self::Error> {
+        Ok(overlap_position_emptiable_abs_bounds(self, rhs))
+    }
+}
+
+impl CanPositionOverlap<OpenInterval> for OpenInterval {
+    type Error = Infallible;
+
+    fn overlap_position(&self, _rhs: &OpenInterval) -> Result<OverlapPosition, Self::Error> {
+        Ok(OverlapPosition::Equal((None, None), (None, None)))
+    }
+}
+
+impl CanPositionOverlap<EmptyInterval> for OpenInterval {
+    type Error = Infallible;
+
+    fn overlap_position(&self, _rhs: &EmptyInterval) -> Result<OverlapPosition, Self::Error> {
+        Ok(OverlapPosition::Outside)
+    }
+}
+
+impl<Rhs> CanPositionOverlap<Rhs> for EmptyInterval
+where
+    Rhs: Interval,
+{
+    type Error = Infallible;
+
+    fn overlap_position(&self, _rhs: &Rhs) -> Result<OverlapPosition, Self::Error> {
+        Ok(OverlapPosition::Outside)
     }
 }
 
 /// Positions the overlap between two [`AbsoluteBounds`]
 #[must_use]
 pub fn overlap_position_abs_bounds(og: &AbsoluteBounds, other: &AbsoluteBounds) -> OverlapPosition {
-    type StartB = AbsoluteStartBound;
-    type EndB = AbsoluteEndBound;
-    type OP = OverlapPosition;
+    type Sb = AbsoluteStartBound;
+    type Eb = AbsoluteEndBound;
+    type Op = OverlapPosition;
 
     match ((og.start(), og.end()), (other.start(), other.end())) {
-        ((StartB::InfinitePast, EndB::InfiniteFuture), (StartB::InfinitePast, EndB::InfiniteFuture)) => {
-            OP::Equal((None, None), (None, None))
+        ((Sb::InfinitePast, Eb::InfiniteFuture), (Sb::InfinitePast, Eb::InfiniteFuture)) => {
+            Op::Equal((None, None), (None, None))
         },
-        ((StartB::InfinitePast, EndB::InfiniteFuture), (StartB::InfinitePast, EndB::Finite(..))) => {
-            OP::ContainsAndSameStart(None, None)
+        ((Sb::InfinitePast, Eb::InfiniteFuture), (Sb::InfinitePast, Eb::Finite(..))) => {
+            Op::ContainsAndSameStart(None, None)
         },
-        ((StartB::InfinitePast, EndB::InfiniteFuture), (StartB::Finite(..), EndB::InfiniteFuture)) => {
-            OP::ContainsAndSameEnd(None, None)
+        ((Sb::InfinitePast, Eb::InfiniteFuture), (Sb::Finite(..), Eb::InfiniteFuture)) => {
+            Op::ContainsAndSameEnd(None, None)
         },
-        ((StartB::InfinitePast, EndB::InfiniteFuture), _) => OP::Contains,
-        ((StartB::InfinitePast, EndB::Finite(..)), (StartB::InfinitePast, EndB::InfiniteFuture)) => {
-            OP::InsideAndSameStart(None, None)
+        ((Sb::InfinitePast, Eb::InfiniteFuture), _) => Op::Contains,
+        ((Sb::InfinitePast, Eb::Finite(..)), (Sb::InfinitePast, Eb::InfiniteFuture)) => {
+            Op::InsideAndSameStart(None, None)
         },
-        ((StartB::Finite(..), EndB::InfiniteFuture), (StartB::InfinitePast, EndB::InfiniteFuture)) => {
-            OP::InsideAndSameEnd(None, None)
+        ((Sb::Finite(..), Eb::InfiniteFuture), (Sb::InfinitePast, Eb::InfiniteFuture)) => {
+            Op::InsideAndSameEnd(None, None)
         },
-        (_, (StartB::InfinitePast, EndB::InfiniteFuture)) => OP::Inside,
-        ((StartB::InfinitePast, EndB::Finite(og_end)), (StartB::InfinitePast, EndB::Finite(other_end))) => {
+        (_, (Sb::InfinitePast, Eb::InfiniteFuture)) => Op::Inside,
+        ((Sb::InfinitePast, Eb::Finite(og_end)), (Sb::InfinitePast, Eb::Finite(other_end))) => {
             match og_end.time().cmp(&other_end.time()) {
-                Ordering::Less => OP::InsideAndSameStart(None, None),
-                Ordering::Equal => OP::Equal(
+                Ordering::Less => Op::InsideAndSameStart(None, None),
+                Ordering::Equal => Op::Equal(
                     (None, Some(og_end.inclusivity())),
                     (None, Some(other_end.inclusivity())),
                 ),
-                Ordering::Greater => OP::ContainsAndSameStart(None, None),
+                Ordering::Greater => Op::ContainsAndSameStart(None, None),
             }
         },
-        ((StartB::Finite(og_start), EndB::InfiniteFuture), (StartB::Finite(other_start), EndB::InfiniteFuture)) => {
+        ((Sb::Finite(og_start), Eb::InfiniteFuture), (Sb::Finite(other_start), Eb::InfiniteFuture)) => {
             match og_start.time().cmp(&other_start.time()) {
-                Ordering::Less => OP::ContainsAndSameEnd(None, None),
-                Ordering::Equal => OP::Equal(
+                Ordering::Less => Op::ContainsAndSameEnd(None, None),
+                Ordering::Equal => Op::Equal(
                     (Some(og_start.inclusivity()), None),
                     (Some(other_start.inclusivity()), None),
                 ),
-                Ordering::Greater => OP::InsideAndSameEnd(None, None),
+                Ordering::Greater => Op::InsideAndSameEnd(None, None),
             }
         },
-        ((StartB::InfinitePast, EndB::Finite(og_end)), (StartB::Finite(other_start), EndB::InfiniteFuture)) => {
+        ((Sb::InfinitePast, Eb::Finite(og_end)), (Sb::Finite(other_start), Eb::InfiniteFuture)) => {
             match og_end.time().cmp(&other_start.time()) {
-                Ordering::Less => OP::OutsideBefore,
-                Ordering::Equal => OP::OnStart(og_end.inclusivity(), other_start.inclusivity()),
-                Ordering::Greater => OP::CrossesStart,
+                Ordering::Less => Op::OutsideBefore,
+                Ordering::Equal => Op::OnStart(og_end.inclusivity(), other_start.inclusivity()),
+                Ordering::Greater => Op::CrossesStart,
             }
         },
-        ((StartB::Finite(og_start), EndB::InfiniteFuture), (StartB::InfinitePast, EndB::Finite(other_end))) => {
+        ((Sb::Finite(og_start), Eb::InfiniteFuture), (Sb::InfinitePast, Eb::Finite(other_end))) => {
             match og_start.time().cmp(&other_end.time()) {
-                Ordering::Less => OP::CrossesStart,
-                Ordering::Equal => OP::OnEnd(og_start.inclusivity(), other_end.inclusivity()),
-                Ordering::Greater => OP::OutsideAfter,
+                Ordering::Less => Op::CrossesStart,
+                Ordering::Equal => Op::OnEnd(og_start.inclusivity(), other_end.inclusivity()),
+                Ordering::Greater => Op::OutsideAfter,
             }
         },
-        ((StartB::InfinitePast, EndB::Finite(ref_bound)), (StartB::Finite(other_start), EndB::Finite(other_end))) => {
-            overlap_position_half_open_past_closed(ref_bound, other_start, other_end)
+        ((Sb::InfinitePast, Eb::Finite(ref_bound)), (Sb::Finite(other_start), Eb::Finite(other_end))) => {
+            overlap_position_abs_half_open_past_closed(ref_bound, other_start, other_end)
         },
-        ((StartB::Finite(ref_bound), EndB::InfiniteFuture), (StartB::Finite(other_start), EndB::Finite(other_end))) => {
-            overlap_position_half_open_future_closed(ref_bound, other_start, other_end)
+        ((Sb::Finite(ref_bound), Eb::InfiniteFuture), (Sb::Finite(other_start), Eb::Finite(other_end))) => {
+            overlap_position_abs_half_open_future_closed(ref_bound, other_start, other_end)
         },
-        ((StartB::Finite(og_start), EndB::Finite(og_end)), (StartB::InfinitePast, EndB::Finite(ref_bound))) => {
-            overlap_position_closed_half_open_past(og_start, og_end, ref_bound)
+        ((Sb::Finite(og_start), Eb::Finite(og_end)), (Sb::InfinitePast, Eb::Finite(ref_bound))) => {
+            overlap_position_abs_closed_half_open_past(og_start, og_end, ref_bound)
         },
-        ((StartB::Finite(og_start), EndB::Finite(og_end)), (StartB::Finite(ref_bound), EndB::InfiniteFuture)) => {
-            overlap_position_closed_half_open_future(og_start, og_end, ref_bound)
+        ((Sb::Finite(og_start), Eb::Finite(og_end)), (Sb::Finite(ref_bound), Eb::InfiniteFuture)) => {
+            overlap_position_abs_closed_half_open_future(og_start, og_end, ref_bound)
         },
-        ((StartB::Finite(og_start), EndB::Finite(og_end)), (StartB::Finite(other_start), EndB::Finite(other_end))) => {
-            overlap_position_closed_pair(og_start, og_end, other_start, other_end)
+        ((Sb::Finite(og_start), Eb::Finite(og_end)), (Sb::Finite(other_start), Eb::Finite(other_end))) => {
+            overlap_position_abs_closed_pair(og_start, og_end, other_start, other_end)
         },
     }
 }
 
 /// Positions the overlap between a half-open interval going to the past and a closed interval
 #[must_use]
-pub fn overlap_position_half_open_past_closed(
+pub fn overlap_position_abs_half_open_past_closed(
     ref_bound: &AbsoluteFiniteBound,
     other_start: &AbsoluteFiniteBound,
     other_end: &AbsoluteFiniteBound,
@@ -824,7 +981,7 @@ pub fn overlap_position_half_open_past_closed(
 
 /// Positions the overlap between a half-open interval going to the future and a closed interval
 #[must_use]
-pub fn overlap_position_half_open_future_closed(
+pub fn overlap_position_abs_half_open_future_closed(
     ref_bound: &AbsoluteFiniteBound,
     other_start: &AbsoluteFiniteBound,
     other_end: &AbsoluteFiniteBound,
@@ -845,7 +1002,7 @@ pub fn overlap_position_half_open_future_closed(
 
 /// Positions the overlap between a closed interval and a half-open interval going to the past
 #[must_use]
-pub fn overlap_position_closed_half_open_past(
+pub fn overlap_position_abs_closed_half_open_past(
     og_start: &AbsoluteFiniteBound,
     og_end: &AbsoluteFiniteBound,
     ref_bound: &AbsoluteFiniteBound,
@@ -866,7 +1023,7 @@ pub fn overlap_position_closed_half_open_past(
 
 /// Positions the overlap between a closed interval and a half-open interval going to the future
 #[must_use]
-pub fn overlap_position_closed_half_open_future(
+pub fn overlap_position_abs_closed_half_open_future(
     og_start: &AbsoluteFiniteBound,
     og_end: &AbsoluteFiniteBound,
     ref_bound: &AbsoluteFiniteBound,
@@ -887,7 +1044,7 @@ pub fn overlap_position_closed_half_open_future(
 
 /// Positions the overlap between two closed intervals
 #[must_use]
-pub fn overlap_position_closed_pair(
+pub fn overlap_position_abs_closed_pair(
     og_start: &AbsoluteFiniteBound,
     og_end: &AbsoluteFiniteBound,
     other_start: &AbsoluteFiniteBound,
@@ -927,5 +1084,241 @@ pub fn overlap_position_closed_pair(
             OverlapPosition::ContainsAndSameEnd(Some(og_end.inclusivity()), Some(other_end.inclusivity()))
         },
         ((Ordering::Less, _), (_, Ordering::Greater)) => OverlapPosition::Contains,
+    }
+}
+
+/// Positions the overlap between two implementors of [`HasEmptiableAbsoluteBounds`]
+#[must_use]
+pub fn overlap_position_emptiable_abs_bounds<T, U>(og: &T, other: &U) -> OverlapPosition
+where
+    T: HasEmptiableAbsoluteBounds,
+    U: HasEmptiableAbsoluteBounds,
+{
+    match (og.emptiable_abs_bounds(), other.emptiable_abs_bounds()) {
+        (_, EmptiableAbsoluteBounds::Empty) | (EmptiableAbsoluteBounds::Empty, _) => OverlapPosition::Outside,
+        (EmptiableAbsoluteBounds::Bound(ref og_bounds), EmptiableAbsoluteBounds::Bound(ref other_bounds)) => {
+            overlap_position_abs_bounds(og_bounds, other_bounds)
+        },
+    }
+}
+
+/// Positions the overlap between two [`RelativeBounds`]
+#[must_use]
+pub fn overlap_position_rel_bounds(og: &RelativeBounds, other: &RelativeBounds) -> OverlapPosition {
+    type Sb = RelativeStartBound;
+    type Eb = RelativeEndBound;
+    type Op = OverlapPosition;
+
+    match ((og.start(), og.end()), (other.start(), other.end())) {
+        ((Sb::InfinitePast, Eb::InfiniteFuture), (Sb::InfinitePast, Eb::InfiniteFuture)) => {
+            Op::Equal((None, None), (None, None))
+        },
+        ((Sb::InfinitePast, Eb::InfiniteFuture), (Sb::InfinitePast, Eb::Finite(..))) => {
+            Op::ContainsAndSameStart(None, None)
+        },
+        ((Sb::InfinitePast, Eb::InfiniteFuture), (Sb::Finite(..), Eb::InfiniteFuture)) => {
+            Op::ContainsAndSameEnd(None, None)
+        },
+        ((Sb::InfinitePast, Eb::InfiniteFuture), _) => Op::Contains,
+        ((Sb::InfinitePast, Eb::Finite(..)), (Sb::InfinitePast, Eb::InfiniteFuture)) => {
+            Op::InsideAndSameStart(None, None)
+        },
+        ((Sb::Finite(..), Eb::InfiniteFuture), (Sb::InfinitePast, Eb::InfiniteFuture)) => {
+            Op::InsideAndSameEnd(None, None)
+        },
+        (_, (Sb::InfinitePast, Eb::InfiniteFuture)) => Op::Inside,
+        ((Sb::InfinitePast, Eb::Finite(og_end)), (Sb::InfinitePast, Eb::Finite(other_end))) => {
+            match og_end.offset().cmp(&other_end.offset()) {
+                Ordering::Less => Op::InsideAndSameStart(None, None),
+                Ordering::Equal => Op::Equal(
+                    (None, Some(og_end.inclusivity())),
+                    (None, Some(other_end.inclusivity())),
+                ),
+                Ordering::Greater => Op::ContainsAndSameStart(None, None),
+            }
+        },
+        ((Sb::Finite(og_start), Eb::InfiniteFuture), (Sb::Finite(other_start), Eb::InfiniteFuture)) => {
+            match og_start.offset().cmp(&other_start.offset()) {
+                Ordering::Less => Op::ContainsAndSameEnd(None, None),
+                Ordering::Equal => Op::Equal(
+                    (Some(og_start.inclusivity()), None),
+                    (Some(other_start.inclusivity()), None),
+                ),
+                Ordering::Greater => Op::InsideAndSameEnd(None, None),
+            }
+        },
+        ((Sb::InfinitePast, Eb::Finite(og_end)), (Sb::Finite(other_start), Eb::InfiniteFuture)) => {
+            match og_end.offset().cmp(&other_start.offset()) {
+                Ordering::Less => Op::OutsideBefore,
+                Ordering::Equal => Op::OnStart(og_end.inclusivity(), other_start.inclusivity()),
+                Ordering::Greater => Op::CrossesStart,
+            }
+        },
+        ((Sb::Finite(og_start), Eb::InfiniteFuture), (Sb::InfinitePast, Eb::Finite(other_end))) => {
+            match og_start.offset().cmp(&other_end.offset()) {
+                Ordering::Less => Op::CrossesStart,
+                Ordering::Equal => Op::OnEnd(og_start.inclusivity(), other_end.inclusivity()),
+                Ordering::Greater => Op::OutsideAfter,
+            }
+        },
+        ((Sb::InfinitePast, Eb::Finite(ref_bound)), (Sb::Finite(other_start), Eb::Finite(other_end))) => {
+            overlap_position_rel_half_open_past_closed(ref_bound, other_start, other_end)
+        },
+        ((Sb::Finite(ref_bound), Eb::InfiniteFuture), (Sb::Finite(other_start), Eb::Finite(other_end))) => {
+            overlap_position_rel_half_open_future_closed(ref_bound, other_start, other_end)
+        },
+        ((Sb::Finite(og_start), Eb::Finite(og_end)), (Sb::InfinitePast, Eb::Finite(ref_bound))) => {
+            overlap_position_rel_closed_half_open_past(og_start, og_end, ref_bound)
+        },
+        ((Sb::Finite(og_start), Eb::Finite(og_end)), (Sb::Finite(ref_bound), Eb::InfiniteFuture)) => {
+            overlap_position_rel_closed_half_open_future(og_start, og_end, ref_bound)
+        },
+        ((Sb::Finite(og_start), Eb::Finite(og_end)), (Sb::Finite(other_start), Eb::Finite(other_end))) => {
+            overlap_position_rel_closed_pair(og_start, og_end, other_start, other_end)
+        },
+    }
+}
+
+/// Positions the overlap between a half-open interval going to the past and a closed interval
+#[must_use]
+pub fn overlap_position_rel_half_open_past_closed(
+    ref_bound: &RelativeFiniteBound,
+    other_start: &RelativeFiniteBound,
+    other_end: &RelativeFiniteBound,
+) -> OverlapPosition {
+    match (
+        ref_bound.offset().cmp(&other_start.offset()),
+        ref_bound.offset().cmp(&other_end.offset()),
+    ) {
+        (Ordering::Less, _) => OverlapPosition::OutsideBefore,
+        (Ordering::Equal, _) => OverlapPosition::OnStart(ref_bound.inclusivity(), other_start.inclusivity()),
+        (Ordering::Greater, Ordering::Less) => OverlapPosition::CrossesStart,
+        (_, Ordering::Equal) => {
+            OverlapPosition::ContainsAndSameEnd(Some(ref_bound.inclusivity()), Some(other_end.inclusivity()))
+        },
+        (_, Ordering::Greater) => OverlapPosition::Contains,
+    }
+}
+
+/// Positions the overlap between a half-open interval going to the future and a closed interval
+#[must_use]
+pub fn overlap_position_rel_half_open_future_closed(
+    ref_bound: &RelativeFiniteBound,
+    other_start: &RelativeFiniteBound,
+    other_end: &RelativeFiniteBound,
+) -> OverlapPosition {
+    match (
+        ref_bound.offset().cmp(&other_start.offset()),
+        ref_bound.offset().cmp(&other_end.offset()),
+    ) {
+        (Ordering::Less, _) => OverlapPosition::Contains,
+        (Ordering::Equal, _) => {
+            OverlapPosition::ContainsAndSameStart(Some(ref_bound.inclusivity()), Some(other_start.inclusivity()))
+        },
+        (Ordering::Greater, Ordering::Less) => OverlapPosition::CrossesEnd,
+        (_, Ordering::Equal) => OverlapPosition::OnEnd(ref_bound.inclusivity(), other_end.inclusivity()),
+        (_, Ordering::Greater) => OverlapPosition::OutsideAfter,
+    }
+}
+
+/// Positions the overlap between a closed interval and a half-open interval going to the past
+#[must_use]
+pub fn overlap_position_rel_closed_half_open_past(
+    og_start: &RelativeFiniteBound,
+    og_end: &RelativeFiniteBound,
+    ref_bound: &RelativeFiniteBound,
+) -> OverlapPosition {
+    match (
+        ref_bound.offset().cmp(&og_start.offset()),
+        ref_bound.offset().cmp(&og_end.offset()),
+    ) {
+        (Ordering::Less, _) => OverlapPosition::OutsideAfter,
+        (Ordering::Equal, _) => OverlapPosition::OnEnd(og_start.inclusivity(), ref_bound.inclusivity()),
+        (Ordering::Greater, Ordering::Less) => OverlapPosition::CrossesEnd,
+        (_, Ordering::Equal) => {
+            OverlapPosition::InsideAndSameEnd(Some(og_end.inclusivity()), Some(ref_bound.inclusivity()))
+        },
+        (_, Ordering::Greater) => OverlapPosition::Inside,
+    }
+}
+
+/// Positions the overlap between a closed interval and a half-open interval going to the future
+#[must_use]
+pub fn overlap_position_rel_closed_half_open_future(
+    og_start: &RelativeFiniteBound,
+    og_end: &RelativeFiniteBound,
+    ref_bound: &RelativeFiniteBound,
+) -> OverlapPosition {
+    match (
+        ref_bound.offset().cmp(&og_start.offset()),
+        ref_bound.offset().cmp(&og_end.offset()),
+    ) {
+        (Ordering::Less, _) => OverlapPosition::Inside,
+        (Ordering::Equal, _) => {
+            OverlapPosition::InsideAndSameStart(Some(og_start.inclusivity()), Some(ref_bound.inclusivity()))
+        },
+        (Ordering::Greater, Ordering::Less) => OverlapPosition::CrossesStart,
+        (_, Ordering::Equal) => OverlapPosition::OnStart(og_end.inclusivity(), ref_bound.inclusivity()),
+        (_, Ordering::Greater) => OverlapPosition::OutsideBefore,
+    }
+}
+
+/// Positions the overlap between two closed intervals
+#[must_use]
+pub fn overlap_position_rel_closed_pair(
+    og_start: &RelativeFiniteBound,
+    og_end: &RelativeFiniteBound,
+    other_start: &RelativeFiniteBound,
+    other_end: &RelativeFiniteBound,
+) -> OverlapPosition {
+    let og_start_cmp = (
+        og_start.offset().cmp(&other_start.offset()),
+        og_start.offset().cmp(&other_end.offset()),
+    );
+    let og_end_cmp = (
+        og_end.offset().cmp(&other_start.offset()),
+        og_end.offset().cmp(&other_end.offset()),
+    );
+
+    match (og_start_cmp, og_end_cmp) {
+        (_, (Ordering::Less, _)) => OverlapPosition::OutsideBefore,
+        ((_, Ordering::Greater), _) => OverlapPosition::OutsideAfter,
+        (_, (Ordering::Equal, _)) => OverlapPosition::OnStart(og_end.inclusivity(), other_start.inclusivity()),
+        ((_, Ordering::Equal), _) => OverlapPosition::OnEnd(og_start.inclusivity(), other_end.inclusivity()),
+        ((Ordering::Less, _), (Ordering::Greater, Ordering::Less)) => OverlapPosition::CrossesStart,
+        ((Ordering::Greater, Ordering::Less), (_, Ordering::Greater)) => OverlapPosition::CrossesEnd,
+        ((Ordering::Greater, _), (_, Ordering::Less)) => OverlapPosition::Inside,
+        ((Ordering::Equal, _), (_, Ordering::Less)) => {
+            OverlapPosition::InsideAndSameStart(Some(og_start.inclusivity()), Some(other_start.inclusivity()))
+        },
+        ((Ordering::Greater, _), (_, Ordering::Equal)) => {
+            OverlapPosition::InsideAndSameEnd(Some(og_end.inclusivity()), Some(other_end.inclusivity()))
+        },
+        ((Ordering::Equal, _), (_, Ordering::Equal)) => OverlapPosition::Equal(
+            (Some(og_start.inclusivity()), Some(og_end.inclusivity())),
+            (Some(other_start.inclusivity()), Some(other_end.inclusivity())),
+        ),
+        ((Ordering::Equal, _), (_, Ordering::Greater)) => {
+            OverlapPosition::ContainsAndSameStart(Some(og_start.inclusivity()), Some(other_start.inclusivity()))
+        },
+        ((Ordering::Less, _), (_, Ordering::Equal)) => {
+            OverlapPosition::ContainsAndSameEnd(Some(og_end.inclusivity()), Some(other_end.inclusivity()))
+        },
+        ((Ordering::Less, _), (_, Ordering::Greater)) => OverlapPosition::Contains,
+    }
+}
+
+/// Positions the overlap between two implementors of [`HasEmptiableRelativeBounds`]
+#[must_use]
+pub fn overlap_position_emptiable_rel_bounds<T, U>(og: &T, other: &U) -> OverlapPosition
+where
+    T: HasEmptiableRelativeBounds,
+    U: HasEmptiableRelativeBounds,
+{
+    match (og.emptiable_rel_bounds(), other.emptiable_rel_bounds()) {
+        (_, EmptiableRelativeBounds::Empty) | (EmptiableRelativeBounds::Empty, _) => OverlapPosition::Outside,
+        (EmptiableRelativeBounds::Bound(ref og_bounds), EmptiableRelativeBounds::Bound(ref other_bounds)) => {
+            overlap_position_rel_bounds(og_bounds, other_bounds)
+        },
     }
 }

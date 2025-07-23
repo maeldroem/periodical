@@ -6,6 +6,8 @@ use std::fmt::Display;
 
 use chrono::Duration;
 
+use crate::intervals::meta::Interval;
+
 use super::meta::{
     BoundInclusivity, Duration as IntervalDuration, HasBoundInclusivity, HasDuration, HasOpenness, HasRelativity,
     OpeningDirection, Openness, Relativity,
@@ -238,6 +240,56 @@ impl RelativeEndBound {
     }
 }
 
+impl PartialOrd for RelativeEndBound {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for RelativeEndBound {
+    fn cmp(&self, other: &Self) -> Ordering {
+        match (self, other) {
+            (RelativeEndBound::InfiniteFuture, _) => Ordering::Greater,
+            (_, RelativeEndBound::InfiniteFuture) => Ordering::Less,
+            (
+                RelativeEndBound::Finite(RelativeFiniteBound {
+                    offset: offset_og,
+                    inclusivity: inclusivity_og,
+                }),
+                RelativeEndBound::Finite(RelativeFiniteBound {
+                    offset: offset_other,
+                    inclusivity: inclusivity_other,
+                }),
+            ) => {
+                let offset_cmp = offset_og.cmp(offset_other);
+
+                if matches!(offset_cmp, Ordering::Less | Ordering::Greater) {
+                    return offset_cmp;
+                }
+
+                match (inclusivity_og, inclusivity_other) {
+                    (BoundInclusivity::Inclusive, BoundInclusivity::Inclusive)
+                    | (BoundInclusivity::Exclusive, BoundInclusivity::Exclusive) => Ordering::Equal,
+                    (BoundInclusivity::Inclusive, BoundInclusivity::Exclusive) => Ordering::Greater,
+                    (BoundInclusivity::Exclusive, BoundInclusivity::Inclusive) => Ordering::Less,
+                }
+            },
+        }
+    }
+}
+
+impl PartialEq<RelativeStartBound> for RelativeEndBound {
+    fn eq(&self, other: &RelativeStartBound) -> bool {
+        other.eq(self)
+    }
+}
+
+impl PartialOrd<RelativeStartBound> for RelativeEndBound {
+    fn partial_cmp(&self, other: &RelativeStartBound) -> Option<Ordering> {
+        other.partial_cmp(self).map(Ordering::reverse)
+    }
+}
+
 impl Display for RelativeEndBound {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut result = Ok(());
@@ -434,6 +486,8 @@ impl RelativeBounds {
     }
 }
 
+impl Interval for RelativeBounds {}
+
 impl HasRelativeBounds for RelativeBounds {
     fn rel_bounds(&self) -> RelativeBounds {
         self.clone()
@@ -510,6 +564,8 @@ pub enum EmptiableRelativeBounds {
     Empty,
     Bound(RelativeBounds),
 }
+
+impl Interval for EmptiableRelativeBounds {}
 
 impl HasEmptiableRelativeBounds for EmptiableRelativeBounds {
     fn emptiable_rel_bounds(&self) -> EmptiableRelativeBounds {
@@ -666,6 +722,8 @@ impl ClosedRelativeInterval {
     }
 }
 
+impl Interval for ClosedRelativeInterval {}
+
 impl HasOpenness for ClosedRelativeInterval {
     fn openness(&self) -> Openness {
         Openness::Closed
@@ -795,6 +853,8 @@ impl HalfOpenRelativeInterval {
     }
 }
 
+impl Interval for HalfOpenRelativeInterval {}
+
 impl HasOpenness for HalfOpenRelativeInterval {
     fn openness(&self) -> Openness {
         Openness::HalfOpen
@@ -873,6 +933,8 @@ pub enum RelativeInterval {
     Open(OpenInterval),
     Empty(EmptyInterval),
 }
+
+impl Interval for RelativeInterval {}
 
 impl HasDuration for RelativeInterval {
     fn duration(&self) -> IntervalDuration {
