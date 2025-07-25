@@ -78,6 +78,38 @@ impl<R, D> RunningResult<R, D> {
     }
 }
 
+/// Represents the result of a complement
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum ComplementResult<C> {
+    /// Complement was successful and resulted in a single element
+    Single(C),
+    /// Complement was successful and resulted in two elements
+    Split(C, C),
+}
+
+impl<C> ComplementResult<C> {
+    /// Whether the [`ComplementResult`] is of the [`Single`](ComplementResult::Single) variant
+    pub fn is_single(&self) -> bool {
+        matches!(self, Self::Single(_))
+    }
+
+    /// Whether the [`ComplementResult`] is of the [`Split`](ComplementResult::Split) variant
+    pub fn is_split(&self) -> bool {
+        matches!(self, Self::Split(..))
+    }
+
+    /// Maps the contents of the variants using the given transformation closure
+    pub fn map<F, T>(self, mut f: F) -> ComplementResult<T>
+    where
+        F: FnMut(C) -> T,
+    {
+        match self {
+            Self::Single(c) => ComplementResult::Single((f)(c)),
+            Self::Split(c1, c2) => ComplementResult::Split((f)(c1), (f)(c2)),
+        }
+    }
+}
+
 /// Represents the result of a union
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum UnionResult<U> {

@@ -10,6 +10,7 @@
 //! as overlapping and what doesn't.
 
 pub mod abridge;
+pub mod complement;
 pub mod cut;
 pub mod extend;
 pub mod fill_gap;
