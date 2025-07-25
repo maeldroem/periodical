@@ -1,10 +1,10 @@
 //! Removal of overlaps and gaps between intervals
 
-use super::grow::Growable;
+use super::grow::{GrowableEndBound, GrowableStartBound};
 use super::overlap_position::{CanPositionOverlap, DisambiguatedOverlapPosition, OverlapRuleSet};
 use super::prelude::*;
 use super::remove_overlap::{remove_end_overlap, remove_start_overlap};
-use super::shrink::Shrinkable;
+use super::shrink::{ShrinkableEndBound, ShrinkableStartBound};
 
 use crate::intervals::absolute::{
     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteInterval, AbsoluteStartBound,

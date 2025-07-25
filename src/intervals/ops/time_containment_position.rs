@@ -3,7 +3,7 @@
 use std::cmp::Ordering;
 use std::convert::Infallible;
 
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Duration, Utc};
 
 use super::prelude::*;
 
@@ -12,8 +12,11 @@ use crate::intervals::absolute::{
     HasAbsoluteBounds, HasEmptiableAbsoluteBounds,
 };
 use crate::intervals::meta::BoundInclusivity;
+use crate::intervals::relative::{
+    EmptiableRelativeBounds, HalfOpenRelativeInterval, RelativeBounds, RelativeEndBound, RelativeStartBound,
+};
 use crate::intervals::special::{EmptyInterval, OpenInterval};
-use crate::intervals::{AbsoluteInterval, ClosedAbsoluteInterval};
+use crate::intervals::{AbsoluteInterval, ClosedAbsoluteInterval, ClosedRelativeInterval, RelativeInterval};
 
 /// Where the given time was found relative to a time interval
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -218,7 +221,9 @@ pub fn deny_on_bounds_containment_rule_counts_as_contained(
 }
 
 /// Capacity to position where a given time is contained in an interval
-pub trait CanPositionTimeContainment {
+///
+/// The generic type parameter `P` corresponds to the positionable type
+pub trait CanPositionTimeContainment<P> {
     /// Error type if the time containment positioning failed
     type Error;
 
@@ -238,7 +243,7 @@ pub trait CanPositionTimeContainment {
     ///
     /// If this process is fallible in a given implementor,
     /// they can use the associated type [`Error`](CanPositionTimeContainment::Error).
-    fn time_containment_position(&self, time: DateTime<Utc>) -> Result<TimeContainmentPosition, Self::Error>;
+    fn time_containment_position(&self, positionable: P) -> Result<TimeContainmentPosition, Self::Error>;
 
     /// Returns the disambiguated containment position of the given time using a given [containment rule set](TimeContainmentRuleSet)
     ///
@@ -250,10 +255,10 @@ pub trait CanPositionTimeContainment {
     /// they can use the associated type [`Error`](CanPositionTimeContainment::Error).
     fn disambiguated_time_containment_position(
         &self,
-        time: DateTime<Utc>,
+        positionable: P,
         rule_set: TimeContainmentRuleSet,
     ) -> Result<DisambiguatedTimeContainmentPosition, Self::Error> {
-        self.time_containment_position(time)
+        self.time_containment_position(positionable)
             .map(|containment_position| rule_set.disambiguate(containment_position))
     }
 
@@ -270,8 +275,12 @@ pub trait CanPositionTimeContainment {
     ///
     /// If you want even more granular control, see [`contains_using_simple`](CanPositionTimeContainment::contains_using_simple).
     #[must_use]
-    fn simple_contains(&self, time: DateTime<Utc>) -> bool {
-        self.contains(time, TimeContainmentRuleSet::default(), &DEFAULT_TIME_CONTAINMENT_RULES)
+    fn simple_contains(&self, positionable: P) -> bool {
+        self.contains(
+            positionable,
+            TimeContainmentRuleSet::default(),
+            &DEFAULT_TIME_CONTAINMENT_RULES,
+        )
     }
 
     /// Returns whether the given time is contained in the interval using the given [containment rules](`TimeContainmentRule`)
@@ -290,11 +299,11 @@ pub trait CanPositionTimeContainment {
     ///
     /// If you want extremely granular control over what counts as contained, see [`contains_using`](CanPositionTimeContainment::contains_using).
     #[must_use]
-    fn contains<'a, RI>(&self, time: DateTime<Utc>, rule_set: TimeContainmentRuleSet, rules: RI) -> bool
+    fn contains<'a, RI>(&self, positionable: P, rule_set: TimeContainmentRuleSet, rules: RI) -> bool
     where
         RI: IntoIterator<Item = &'a TimeContainmentRule>,
     {
-        self.disambiguated_time_containment_position(time, rule_set)
+        self.disambiguated_time_containment_position(positionable, rule_set)
             .map(|disambiguated_containment_position| {
                 rules
                     .into_iter()
@@ -319,11 +328,11 @@ pub trait CanPositionTimeContainment {
     ///
     /// If you are looking for predetermined decisions on what's considered as contained, see [`contains`](CanPositionTimeContainment::contains).
     #[must_use]
-    fn contains_using<F>(&self, time: DateTime<Utc>, f: F) -> bool
+    fn contains_using<F>(&self, positionable: P, f: F) -> bool
     where
         F: FnOnce(TimeContainmentPosition) -> bool,
     {
-        self.time_containment_position(time).map(f).unwrap_or(false)
+        self.time_containment_position(positionable).map(f).unwrap_or(false)
     }
 
     /// Returns whether the given time is contained in the interval using a custom function
@@ -340,81 +349,185 @@ pub trait CanPositionTimeContainment {
     ///
     /// If you are looking for predetermined decisions on what's considered as contained, see [`simple_contains`](CanPositionTimeContainment::simple_contains).
     #[must_use]
-    fn contains_using_simple<F>(&self, time: DateTime<Utc>, rule_set: TimeContainmentRuleSet, f: F) -> bool
+    fn contains_using_simple<F>(&self, positionable: P, rule_set: TimeContainmentRuleSet, f: F) -> bool
     where
         F: FnOnce(DisambiguatedTimeContainmentPosition) -> bool,
     {
-        self.disambiguated_time_containment_position(time, rule_set)
+        self.disambiguated_time_containment_position(positionable, rule_set)
             .map(f)
             .unwrap_or(false)
     }
 }
 
-impl CanPositionTimeContainment for AbsoluteBounds {
+impl<P> CanPositionTimeContainment<P> for AbsoluteBounds
+where
+    P: Into<DateTime<Utc>>,
+{
     type Error = Infallible;
 
-    fn time_containment_position(&self, time: DateTime<Utc>) -> Result<TimeContainmentPosition, Self::Error> {
-        Ok(time_containment_position_abs_bounds(self, time))
+    fn time_containment_position(&self, positionable: P) -> Result<TimeContainmentPosition, Self::Error> {
+        Ok(time_containment_position_abs_bounds(self, positionable.into()))
     }
 }
 
-impl CanPositionTimeContainment for EmptiableAbsoluteBounds {
+impl<P> CanPositionTimeContainment<P> for EmptiableAbsoluteBounds
+where
+    P: Into<DateTime<Utc>>,
+{
     type Error = Infallible;
 
-    fn time_containment_position(&self, time: DateTime<Utc>) -> Result<TimeContainmentPosition, Self::Error> {
+    fn time_containment_position(&self, positionable: P) -> Result<TimeContainmentPosition, Self::Error> {
         let EmptiableAbsoluteBounds::Bound(bounds) = self else {
             return Ok(TimeContainmentPosition::Outside);
         };
 
-        Ok(time_containment_position_abs_bounds(bounds, time))
+        Ok(time_containment_position_abs_bounds(bounds, positionable.into()))
     }
 }
 
-impl CanPositionTimeContainment for AbsoluteInterval {
+impl<P> CanPositionTimeContainment<P> for AbsoluteInterval
+where
+    P: Into<DateTime<Utc>>,
+{
     type Error = Infallible;
 
-    fn time_containment_position(&self, time: DateTime<Utc>) -> Result<TimeContainmentPosition, Self::Error> {
+    fn time_containment_position(&self, positionable: P) -> Result<TimeContainmentPosition, Self::Error> {
         let EmptiableAbsoluteBounds::Bound(bounds) = self.emptiable_abs_bounds() else {
             return Ok(TimeContainmentPosition::Outside);
         };
 
-        Ok(time_containment_position_abs_bounds(&bounds, time))
+        Ok(time_containment_position_abs_bounds(&bounds, positionable.into()))
     }
 }
 
-impl CanPositionTimeContainment for ClosedAbsoluteInterval {
+impl<P> CanPositionTimeContainment<P> for ClosedAbsoluteInterval
+where
+    P: Into<DateTime<Utc>>,
+{
     type Error = Infallible;
 
-    fn time_containment_position(&self, time: DateTime<Utc>) -> Result<TimeContainmentPosition, Self::Error> {
-        Ok(time_containment_position_abs_bounds(&self.abs_bounds(), time))
+    fn time_containment_position(&self, positionable: P) -> Result<TimeContainmentPosition, Self::Error> {
+        Ok(time_containment_position_abs_bounds(
+            &self.abs_bounds(),
+            positionable.into(),
+        ))
     }
 }
 
-impl CanPositionTimeContainment for HalfOpenAbsoluteInterval {
+impl<P> CanPositionTimeContainment<P> for HalfOpenAbsoluteInterval
+where
+    P: Into<DateTime<Utc>>,
+{
     type Error = Infallible;
 
-    fn time_containment_position(&self, time: DateTime<Utc>) -> Result<TimeContainmentPosition, Self::Error> {
-        Ok(time_containment_position_abs_bounds(&self.abs_bounds(), time))
+    fn time_containment_position(&self, positionable: P) -> Result<TimeContainmentPosition, Self::Error> {
+        Ok(time_containment_position_abs_bounds(
+            &self.abs_bounds(),
+            positionable.into(),
+        ))
     }
 }
 
-impl CanPositionTimeContainment for OpenInterval {
+impl<P> CanPositionTimeContainment<P> for RelativeBounds
+where
+    P: Into<Duration>,
+{
     type Error = Infallible;
 
-    fn time_containment_position(&self, time: DateTime<Utc>) -> Result<TimeContainmentPosition, Self::Error> {
-        Ok(time_containment_position_abs_bounds(&self.abs_bounds(), time))
+    fn time_containment_position(&self, positionable: P) -> Result<TimeContainmentPosition, Self::Error> {
+        Ok(time_containment_position_rel_bounds(self, positionable.into()))
     }
 }
 
-impl CanPositionTimeContainment for EmptyInterval {
+impl<P> CanPositionTimeContainment<P> for EmptiableRelativeBounds
+where
+    P: Into<Duration>,
+{
     type Error = Infallible;
 
-    fn time_containment_position(&self, time: DateTime<Utc>) -> Result<TimeContainmentPosition, Self::Error> {
-        let EmptiableAbsoluteBounds::Bound(bounds) = self.emptiable_abs_bounds() else {
+    fn time_containment_position(&self, positionable: P) -> Result<TimeContainmentPosition, Self::Error> {
+        let EmptiableRelativeBounds::Bound(bounds) = self else {
             return Ok(TimeContainmentPosition::Outside);
         };
 
-        Ok(time_containment_position_abs_bounds(&bounds, time))
+        Ok(time_containment_position_rel_bounds(bounds, positionable.into()))
+    }
+}
+
+impl<P> CanPositionTimeContainment<P> for RelativeInterval
+where
+    P: Into<Duration>,
+{
+    type Error = Infallible;
+
+    fn time_containment_position(&self, positionable: P) -> Result<TimeContainmentPosition, Self::Error> {
+        let EmptiableRelativeBounds::Bound(bounds) = self.emptiable_rel_bounds() else {
+            return Ok(TimeContainmentPosition::Outside);
+        };
+
+        Ok(time_containment_position_rel_bounds(&bounds, positionable.into()))
+    }
+}
+
+impl<P> CanPositionTimeContainment<P> for ClosedRelativeInterval
+where
+    P: Into<Duration>,
+{
+    type Error = Infallible;
+
+    fn time_containment_position(&self, positionable: P) -> Result<TimeContainmentPosition, Self::Error> {
+        Ok(time_containment_position_rel_bounds(
+            &self.rel_bounds(),
+            positionable.into(),
+        ))
+    }
+}
+
+impl<P> CanPositionTimeContainment<P> for HalfOpenRelativeInterval
+where
+    P: Into<Duration>,
+{
+    type Error = Infallible;
+
+    fn time_containment_position(&self, positionable: P) -> Result<TimeContainmentPosition, Self::Error> {
+        Ok(time_containment_position_rel_bounds(
+            &self.rel_bounds(),
+            positionable.into(),
+        ))
+    }
+}
+
+// TODO: Find a way to implement these for P: Into<DateTime<Utc>> and P: Into<chrono::Duration>
+impl CanPositionTimeContainment<DateTime<Utc>> for OpenInterval {
+    type Error = Infallible;
+
+    fn time_containment_position(&self, _positionable: DateTime<Utc>) -> Result<TimeContainmentPosition, Self::Error> {
+        Ok(TimeContainmentPosition::Inside)
+    }
+}
+
+impl CanPositionTimeContainment<Duration> for OpenInterval {
+    type Error = Infallible;
+
+    fn time_containment_position(&self, _positionable: Duration) -> Result<TimeContainmentPosition, Self::Error> {
+        Ok(TimeContainmentPosition::Inside)
+    }
+}
+
+// TODO: Find a way to implement these for P: Into<DateTime<Utc>> and P: Into<chrono::Duration>
+impl CanPositionTimeContainment<DateTime<Utc>> for EmptyInterval {
+    type Error = Infallible;
+
+    fn time_containment_position(&self, _positionable: DateTime<Utc>) -> Result<TimeContainmentPosition, Self::Error> {
+        Ok(TimeContainmentPosition::Outside)
+    }
+}
+
+impl CanPositionTimeContainment<Duration> for EmptyInterval {
+    type Error = Infallible;
+
+    fn time_containment_position(&self, _positionable: Duration) -> Result<TimeContainmentPosition, Self::Error> {
+        Ok(TimeContainmentPosition::Outside)
     }
 }
 
@@ -439,6 +552,37 @@ pub fn time_containment_position_abs_bounds(bounds: &AbsoluteBounds, time: DateT
         },
         (StartB::Finite(start_bound), EndB::Finite(end_bound)) => {
             match (time.cmp(&start_bound.time()), time.cmp(&end_bound.time())) {
+                (Ordering::Less, _) => ContPos::OutsideBefore,
+                (Ordering::Equal, _) => ContPos::OnStart(start_bound.inclusivity()),
+                (_, Ordering::Less) => ContPos::Inside,
+                (_, Ordering::Equal) => ContPos::OnEnd(end_bound.inclusivity()),
+                (_, Ordering::Greater) => ContPos::OutsideAfter,
+            }
+        },
+    }
+}
+
+/// Returns the [`TimeContainmentPosition`] of the given offset within the given [`RelativeBounds`]
+#[must_use]
+pub fn time_containment_position_rel_bounds(bounds: &RelativeBounds, offset: Duration) -> TimeContainmentPosition {
+    type StartB = RelativeStartBound;
+    type EndB = RelativeEndBound;
+    type ContPos = TimeContainmentPosition;
+
+    match (bounds.rel_start(), bounds.rel_end()) {
+        (StartB::InfinitePast, EndB::InfiniteFuture) => ContPos::Inside,
+        (StartB::InfinitePast, EndB::Finite(finite_bound)) => match offset.cmp(&finite_bound.offset()) {
+            Ordering::Less => ContPos::Inside,
+            Ordering::Equal => ContPos::OnEnd(finite_bound.inclusivity()),
+            Ordering::Greater => ContPos::OutsideAfter,
+        },
+        (StartB::Finite(finite_bound), EndB::InfiniteFuture) => match offset.cmp(&finite_bound.offset()) {
+            Ordering::Less => ContPos::OutsideBefore,
+            Ordering::Equal => ContPos::OnStart(finite_bound.inclusivity()),
+            Ordering::Greater => ContPos::Inside,
+        },
+        (StartB::Finite(start_bound), EndB::Finite(end_bound)) => {
+            match (offset.cmp(&start_bound.offset()), offset.cmp(&end_bound.offset())) {
                 (Ordering::Less, _) => ContPos::OutsideBefore,
                 (Ordering::Equal, _) => ContPos::OnStart(start_bound.inclusivity()),
                 (_, Ordering::Less) => ContPos::Inside,
