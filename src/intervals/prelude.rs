@@ -1,1 +1,1 @@
-pub use super::meta::{HasBoundInclusivity, HasDuration, HasOpenness, HasRelativity};
+pub use super::meta::{Emptiable, HasBoundInclusivity, HasDuration, HasOpenness, HasRelativity};

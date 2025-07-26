@@ -2,7 +2,7 @@
 
 use super::abridge::Abridgable;
 use super::extend::Extensible;
-use super::overlap_position::{CanPositionOverlap, DEFAULT_OVERLAP_RULES, OverlapRule, OverlapRuleSet};
+use super::overlap_position::CanPositionOverlap;
 use super::prelude::*;
 
 use crate::intervals::absolute::{AbsoluteBounds, AbsoluteInterval, EmptiableAbsoluteBounds, HalfOpenAbsoluteInterval};
@@ -912,15 +912,7 @@ pub trait SymmetricallyDifferentiable<Rhs = Self> {
     ///
     /// Simply uses the [`Differentiable`] trait on both Self with Rhs, and Rhs with Self.
     #[must_use]
-    fn symmetrically_differentiate(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
-        // let diff_self_with_rhs = self.differentiate(rhs);
-        // let diff_rhs_with_self = rhs.differentiate(self);
-
-        // match (diff_self_with_rhs, diff_rhs_with_self) {
-        //     (DifferenceResult::Shrunk(shrunk_diff_self_with_rhs))
-        // }
-        todo!()
-    }
+    fn symmetrically_differentiate(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output>;
 
     /// Returns the symmetrical difference between two sets of bounds using the given closure
     #[must_use]
@@ -929,6 +921,257 @@ pub trait SymmetricallyDifferentiable<Rhs = Self> {
         F: FnMut(&Self, &Rhs) -> SymmetricDifferenceResult<Self::Output>,
     {
         (f)(self, rhs)
+    }
+}
+
+impl<Rhs> SymmetricallyDifferentiable<Rhs> for AbsoluteBounds
+where
+    Rhs: HasEmptiableAbsoluteBounds,
+{
+    type Output = EmptiableAbsoluteBounds;
+
+    fn symmetrically_differentiate(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
+        symmetrically_differentiate_abs_bounds_with_emptiable_abs_bounds(self, &rhs.emptiable_abs_bounds())
+    }
+}
+
+impl<Rhs> SymmetricallyDifferentiable<Rhs> for EmptiableAbsoluteBounds
+where
+    Rhs: HasEmptiableAbsoluteBounds,
+{
+    type Output = Self;
+
+    fn symmetrically_differentiate(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
+        symmetrically_differentiate_emptiable_abs_bounds(self, &rhs.emptiable_abs_bounds())
+    }
+}
+
+impl<Rhs> SymmetricallyDifferentiable<Rhs> for AbsoluteInterval
+where
+    Rhs: HasEmptiableAbsoluteBounds,
+{
+    type Output = Self;
+
+    fn symmetrically_differentiate(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
+        symmetrically_differentiate_emptiable_abs_bounds(&self.emptiable_abs_bounds(), &rhs.emptiable_abs_bounds())
+            .map_symmetric_difference(AbsoluteInterval::from)
+    }
+}
+
+impl<Rhs> SymmetricallyDifferentiable<Rhs> for ClosedAbsoluteInterval
+where
+    Rhs: HasEmptiableAbsoluteBounds,
+{
+    type Output = AbsoluteInterval;
+
+    fn symmetrically_differentiate(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
+        symmetrically_differentiate_abs_bounds_with_emptiable_abs_bounds(
+            &self.abs_bounds(),
+            &rhs.emptiable_abs_bounds(),
+        )
+        .map_symmetric_difference(AbsoluteInterval::from)
+    }
+}
+
+impl<Rhs> SymmetricallyDifferentiable<Rhs> for HalfOpenAbsoluteInterval
+where
+    Rhs: HasEmptiableAbsoluteBounds,
+{
+    type Output = AbsoluteInterval;
+
+    fn symmetrically_differentiate(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
+        symmetrically_differentiate_abs_bounds_with_emptiable_abs_bounds(
+            &self.abs_bounds(),
+            &rhs.emptiable_abs_bounds(),
+        )
+        .map_symmetric_difference(AbsoluteInterval::from)
+    }
+}
+
+impl<Rhs> SymmetricallyDifferentiable<Rhs> for RelativeBounds
+where
+    Rhs: HasEmptiableRelativeBounds,
+{
+    type Output = EmptiableRelativeBounds;
+
+    fn symmetrically_differentiate(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
+        symmetrically_differentiate_rel_bounds_with_emptiable_rel_bounds(self, &rhs.emptiable_rel_bounds())
+    }
+}
+
+impl<Rhs> SymmetricallyDifferentiable<Rhs> for EmptiableRelativeBounds
+where
+    Rhs: HasEmptiableRelativeBounds,
+{
+    type Output = Self;
+
+    fn symmetrically_differentiate(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
+        symmetrically_differentiate_emptiable_rel_bounds(self, &rhs.emptiable_rel_bounds())
+    }
+}
+
+impl<Rhs> SymmetricallyDifferentiable<Rhs> for RelativeInterval
+where
+    Rhs: HasEmptiableRelativeBounds,
+{
+    type Output = Self;
+
+    fn symmetrically_differentiate(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
+        symmetrically_differentiate_emptiable_rel_bounds(&self.emptiable_rel_bounds(), &rhs.emptiable_rel_bounds())
+            .map_symmetric_difference(RelativeInterval::from)
+    }
+}
+
+impl<Rhs> SymmetricallyDifferentiable<Rhs> for ClosedRelativeInterval
+where
+    Rhs: HasEmptiableRelativeBounds,
+{
+    type Output = RelativeInterval;
+
+    fn symmetrically_differentiate(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
+        symmetrically_differentiate_rel_bounds_with_emptiable_rel_bounds(
+            &self.rel_bounds(),
+            &rhs.emptiable_rel_bounds(),
+        )
+        .map_symmetric_difference(RelativeInterval::from)
+    }
+}
+
+impl<Rhs> SymmetricallyDifferentiable<Rhs> for HalfOpenRelativeInterval
+where
+    Rhs: HasEmptiableRelativeBounds,
+{
+    type Output = RelativeInterval;
+
+    fn symmetrically_differentiate(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
+        symmetrically_differentiate_rel_bounds_with_emptiable_rel_bounds(
+            &self.rel_bounds(),
+            &rhs.emptiable_rel_bounds(),
+        )
+        .map_symmetric_difference(RelativeInterval::from)
+    }
+}
+
+impl SymmetricallyDifferentiable<AbsoluteBounds> for OpenInterval {
+    type Output = AbsoluteInterval;
+
+    fn symmetrically_differentiate(&self, rhs: &AbsoluteBounds) -> SymmetricDifferenceResult<Self::Output> {
+        symmetrically_differentiate_abs_bounds(&self.abs_bounds(), rhs).map_symmetric_difference(AbsoluteInterval::from)
+    }
+}
+
+impl SymmetricallyDifferentiable<EmptiableAbsoluteBounds> for OpenInterval {
+    type Output = AbsoluteInterval;
+
+    fn symmetrically_differentiate(&self, rhs: &EmptiableAbsoluteBounds) -> SymmetricDifferenceResult<Self::Output> {
+        symmetrically_differentiate_abs_bounds_with_emptiable_abs_bounds(&self.abs_bounds(), rhs)
+            .map_symmetric_difference(AbsoluteInterval::from)
+    }
+}
+
+impl SymmetricallyDifferentiable<AbsoluteInterval> for OpenInterval {
+    type Output = AbsoluteInterval;
+
+    fn symmetrically_differentiate(&self, rhs: &AbsoluteInterval) -> SymmetricDifferenceResult<Self::Output> {
+        symmetrically_differentiate_abs_bounds_with_emptiable_abs_bounds(
+            &self.abs_bounds(),
+            &rhs.emptiable_abs_bounds(),
+        )
+        .map_symmetric_difference(AbsoluteInterval::from)
+    }
+}
+
+impl SymmetricallyDifferentiable<ClosedAbsoluteInterval> for OpenInterval {
+    type Output = AbsoluteInterval;
+
+    fn symmetrically_differentiate(&self, rhs: &ClosedAbsoluteInterval) -> SymmetricDifferenceResult<Self::Output> {
+        symmetrically_differentiate_abs_bounds(&self.abs_bounds(), &rhs.abs_bounds())
+            .map_symmetric_difference(AbsoluteInterval::from)
+    }
+}
+
+impl SymmetricallyDifferentiable<HalfOpenAbsoluteInterval> for OpenInterval {
+    type Output = AbsoluteInterval;
+
+    fn symmetrically_differentiate(&self, rhs: &HalfOpenAbsoluteInterval) -> SymmetricDifferenceResult<Self::Output> {
+        symmetrically_differentiate_abs_bounds(&self.abs_bounds(), &rhs.abs_bounds())
+            .map_symmetric_difference(AbsoluteInterval::from)
+    }
+}
+
+impl SymmetricallyDifferentiable<RelativeBounds> for OpenInterval {
+    type Output = RelativeInterval;
+
+    fn symmetrically_differentiate(&self, rhs: &RelativeBounds) -> SymmetricDifferenceResult<Self::Output> {
+        symmetrically_differentiate_rel_bounds(&self.rel_bounds(), rhs).map_symmetric_difference(RelativeInterval::from)
+    }
+}
+
+impl SymmetricallyDifferentiable<EmptiableRelativeBounds> for OpenInterval {
+    type Output = RelativeInterval;
+
+    fn symmetrically_differentiate(&self, rhs: &EmptiableRelativeBounds) -> SymmetricDifferenceResult<Self::Output> {
+        symmetrically_differentiate_rel_bounds_with_emptiable_rel_bounds(&self.rel_bounds(), rhs)
+            .map_symmetric_difference(RelativeInterval::from)
+    }
+}
+
+impl SymmetricallyDifferentiable<RelativeInterval> for OpenInterval {
+    type Output = RelativeInterval;
+
+    fn symmetrically_differentiate(&self, rhs: &RelativeInterval) -> SymmetricDifferenceResult<Self::Output> {
+        symmetrically_differentiate_rel_bounds_with_emptiable_rel_bounds(
+            &self.rel_bounds(),
+            &rhs.emptiable_rel_bounds(),
+        )
+        .map_symmetric_difference(RelativeInterval::from)
+    }
+}
+
+impl SymmetricallyDifferentiable<ClosedRelativeInterval> for OpenInterval {
+    type Output = RelativeInterval;
+
+    fn symmetrically_differentiate(&self, rhs: &ClosedRelativeInterval) -> SymmetricDifferenceResult<Self::Output> {
+        symmetrically_differentiate_rel_bounds(&self.rel_bounds(), &rhs.rel_bounds())
+            .map_symmetric_difference(RelativeInterval::from)
+    }
+}
+
+impl SymmetricallyDifferentiable<HalfOpenRelativeInterval> for OpenInterval {
+    type Output = RelativeInterval;
+
+    fn symmetrically_differentiate(&self, rhs: &HalfOpenRelativeInterval) -> SymmetricDifferenceResult<Self::Output> {
+        symmetrically_differentiate_rel_bounds(&self.rel_bounds(), &rhs.rel_bounds())
+            .map_symmetric_difference(RelativeInterval::from)
+    }
+}
+
+impl SymmetricallyDifferentiable<OpenInterval> for OpenInterval {
+    type Output = EmptyInterval;
+
+    fn symmetrically_differentiate(&self, _rhs: &OpenInterval) -> SymmetricDifferenceResult<Self::Output> {
+        SymmetricDifferenceResult::Shrunk(EmptyInterval)
+    }
+}
+
+impl SymmetricallyDifferentiable<EmptyInterval> for OpenInterval {
+    type Output = ();
+
+    fn symmetrically_differentiate(&self, _rhs: &EmptyInterval) -> SymmetricDifferenceResult<Self::Output> {
+        // An empty interval is nowhere, and therefore cannot be differentiated with anything
+        SymmetricDifferenceResult::Separate
+    }
+}
+
+impl<Rhs> SymmetricallyDifferentiable<Rhs> for EmptyInterval
+where
+    Rhs: Interval,
+{
+    type Output = ();
+
+    fn symmetrically_differentiate(&self, _rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
+        // An empty interval is nowhere, and therefore cannot be differentiated with anything
+        SymmetricDifferenceResult::Separate
     }
 }
 
@@ -1001,4 +1244,75 @@ pub fn symmetrically_differentiate_emptiable_abs_bounds(
     };
 
     symmetrically_differentiate_abs_bounds_with_emptiable_abs_bounds(a, b)
+}
+
+/// Symmetrically differentiates two [`RelativeBounds`]
+pub fn symmetrically_differentiate_rel_bounds(
+    a: &RelativeBounds,
+    b: &RelativeBounds,
+) -> SymmetricDifferenceResult<EmptiableRelativeBounds> {
+    if !a.simple_overlaps(b) {
+        return SymmetricDifferenceResult::Separate;
+    }
+
+    let diff_a_with_b = match a.remove_overlap(b) {
+        Ok(a_removed_b) => a_removed_b,
+        Err(OverlapRemovalErr::NoOverlap) => unreachable!("Overlap check already happened earlier"),
+    };
+    let diff_b_with_a = match b.remove_overlap(a) {
+        Ok(b_removed_a) => b_removed_a,
+        Err(OverlapRemovalErr::NoOverlap) => unreachable!("Overlap check already happened earlier"),
+    };
+
+    match (diff_a_with_b, diff_b_with_a) {
+        (
+            OverlapRemovalResult::Single(EmptiableRelativeBounds::Empty),
+            OverlapRemovalResult::Single(EmptiableRelativeBounds::Empty),
+        ) => SymmetricDifferenceResult::Shrunk(EmptiableRelativeBounds::Empty),
+        (OverlapRemovalResult::Single(single_diff), OverlapRemovalResult::Single(EmptiableRelativeBounds::Empty))
+        | (OverlapRemovalResult::Single(EmptiableRelativeBounds::Empty), OverlapRemovalResult::Single(single_diff)) => {
+            SymmetricDifferenceResult::Shrunk(single_diff)
+        },
+        (OverlapRemovalResult::Single(first_single_diff), OverlapRemovalResult::Single(second_single_diff)) => {
+            SymmetricDifferenceResult::Split(first_single_diff, second_single_diff)
+        },
+        (OverlapRemovalResult::Split(split1, split2), OverlapRemovalResult::Single(EmptiableRelativeBounds::Empty))
+        | (OverlapRemovalResult::Single(EmptiableRelativeBounds::Empty), OverlapRemovalResult::Split(split1, split2)) => {
+            SymmetricDifferenceResult::Split(split1, split2)
+        },
+        (OverlapRemovalResult::Split(..), _) | (_, OverlapRemovalResult::Split(..)) => {
+            unreachable!(
+                "No possible interval configuration exist where A \\ B (A diff B) returns a `Split` result, \
+                but at the same time B \\ A (B diff A) returns anything other than an empty interval"
+            );
+        },
+    }
+}
+
+/// Symmetrically differentiates an [`RelativeBounds`] with an [`EmptiableRelativeBounds`]
+///
+/// Empty intervals are not positioned in time, and are always "outside", therefore cannot be differentiated
+pub fn symmetrically_differentiate_rel_bounds_with_emptiable_rel_bounds(
+    a: &RelativeBounds,
+    b: &EmptiableRelativeBounds,
+) -> SymmetricDifferenceResult<EmptiableRelativeBounds> {
+    let EmptiableRelativeBounds::Bound(b) = b else {
+        return SymmetricDifferenceResult::Separate;
+    };
+
+    symmetrically_differentiate_rel_bounds(a, b)
+}
+
+/// Symmetrically differentiates two [`EmptiableRelativeBounds`]
+///
+/// Empty intervals are not positioned in time, and are always "outside", therefore cannot be differentiated
+pub fn symmetrically_differentiate_emptiable_rel_bounds(
+    a: &EmptiableRelativeBounds,
+    b: &EmptiableRelativeBounds,
+) -> SymmetricDifferenceResult<EmptiableRelativeBounds> {
+    let EmptiableRelativeBounds::Bound(a) = a else {
+        return SymmetricDifferenceResult::Separate;
+    };
+
+    symmetrically_differentiate_rel_bounds_with_emptiable_rel_bounds(a, b)
 }

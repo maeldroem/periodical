@@ -8,10 +8,8 @@ use chrono::{DateTime, Utc};
 
 use crate::intervals::meta::Interval;
 
-use super::meta::{
-    BoundInclusivity, Duration as IntervalDuration, HasBoundInclusivity, HasDuration, HasOpenness, HasRelativity,
-    OpeningDirection, Openness, Relativity,
-};
+use super::meta::{BoundInclusivity, Duration as IntervalDuration, OpeningDirection, Openness, Relativity};
+use super::prelude::*;
 use super::special::{EmptyInterval, OpenInterval};
 
 /// An absolute finite bound
@@ -582,6 +580,12 @@ impl HasEmptiableAbsoluteBounds for EmptiableAbsoluteBounds {
     }
 }
 
+impl Emptiable for EmptiableAbsoluteBounds {
+    fn is_empty(&self) -> bool {
+        matches!(self, Self::Empty)
+    }
+}
+
 impl From<AbsoluteBounds> for EmptiableAbsoluteBounds {
     fn from(value: AbsoluteBounds) -> Self {
         EmptiableAbsoluteBounds::Bound(value)
@@ -1048,6 +1052,12 @@ impl HasEmptiableAbsoluteBounds for AbsoluteInterval {
             Self::Open(interval) => interval.partial_abs_end(),
             Self::Empty(interval) => interval.partial_abs_end(),
         }
+    }
+}
+
+impl Emptiable for AbsoluteInterval {
+    fn is_empty(&self) -> bool {
+        matches!(self, Self::Empty(_))
     }
 }
 

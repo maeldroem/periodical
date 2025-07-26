@@ -8,10 +8,8 @@ use chrono::Duration;
 
 use crate::intervals::meta::Interval;
 
-use super::meta::{
-    BoundInclusivity, Duration as IntervalDuration, HasBoundInclusivity, HasDuration, HasOpenness, HasRelativity,
-    OpeningDirection, Openness, Relativity,
-};
+use super::meta::{BoundInclusivity, Duration as IntervalDuration, OpeningDirection, Openness, Relativity};
+use super::prelude::*;
 use super::special::{EmptyInterval, OpenInterval};
 
 /// A relative finite bound
@@ -587,6 +585,12 @@ impl HasEmptiableRelativeBounds for EmptiableRelativeBounds {
     }
 }
 
+impl Emptiable for EmptiableRelativeBounds {
+    fn is_empty(&self) -> bool {
+        matches!(self, Self::Empty)
+    }
+}
+
 impl From<RelativeBounds> for EmptiableRelativeBounds {
     fn from(value: RelativeBounds) -> Self {
         EmptiableRelativeBounds::Bound(value)
@@ -995,6 +999,12 @@ impl HasEmptiableRelativeBounds for RelativeInterval {
             Self::Open(interval) => interval.partial_rel_end(),
             Self::Empty(interval) => interval.partial_rel_end(),
         }
+    }
+}
+
+impl Emptiable for RelativeInterval {
+    fn is_empty(&self) -> bool {
+        matches!(self, Self::Empty(_))
     }
 }
 

@@ -13,7 +13,8 @@ use super::absolute::{
     AbsoluteBounds, AbsoluteEndBound, AbsoluteInterval, AbsoluteStartBound, EmptiableAbsoluteBounds, HasAbsoluteBounds,
     HasEmptiableAbsoluteBounds,
 };
-use super::meta::{Duration as IntervalDuration, HasDuration, HasOpenness, HasRelativity, Openness, Relativity};
+use super::meta::{Duration as IntervalDuration, Openness, Relativity};
+use super::prelude::*;
 use super::relative::{
     EmptiableRelativeBounds, HasEmptiableRelativeBounds, HasRelativeBounds, RelativeBounds, RelativeEndBound,
     RelativeInterval, RelativeStartBound,
@@ -113,11 +114,15 @@ impl TryFrom<RelativeInterval> for OpenInterval {
 
 /// No interval
 ///
-/// Equivalent to the [empty set](https://en.wikipedia.org/wiki/Empty_set), this allows for still performing
-/// operations such as the complement of the interval without issues.
+/// Similar to the [empty set](https://en.wikipedia.org/wiki/Empty_set), this allows for still performing
+/// operations such as the complement of the interval without issues, but the difference between an empty set and
+/// and empty interval is that intervals are linked to time, therefore empty intervals are out of this time dimension.
 ///
-/// In regards to operations such as the overlap position, an empty interval has no defined place,
-/// it simply represents the _lack_ of a time interval, like the complement of an open interval
+/// This means that, contrary to an empty set, an empty interval is **not** a subset of any interval.
+/// It simply represents the _lack_ of a time interval, like the complement of an open interval.
+///
+/// In regards to operations such as the overlap position, or union, since an empty interval has no defined place
+/// in time, it is always _outside_, _separate_ from the compared.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct EmptyInterval;
 
@@ -166,6 +171,12 @@ impl HasEmptiableRelativeBounds for EmptyInterval {
 
     fn partial_rel_end(&self) -> Option<RelativeEndBound> {
         None
+    }
+}
+
+impl Emptiable for EmptyInterval {
+    fn is_empty(&self) -> bool {
+        return true;
     }
 }
 

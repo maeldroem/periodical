@@ -145,3 +145,9 @@ pub trait HasBoundInclusivity {
     #[must_use]
     fn inclusivity(&self) -> BoundInclusivity;
 }
+
+/// Capacity of an interval to be empty
+pub trait Emptiable {
+    /// Whether the interval is empty
+    fn is_empty(&self) -> bool;
+}
