@@ -59,6 +59,32 @@ pub mod prelude;
 pub mod relative;
 pub mod special;
 
-pub use absolute::{AbsoluteInterval, ClosedAbsoluteInterval};
-pub use meta::{HasBoundInclusivity, HasDuration, HasOpenness, HasRelativity};
-pub use relative::{ClosedRelativeInterval, RelativeInterval};
+pub use absolute::{
+    AbsoluteBounds, AbsoluteInterval, ClosedAbsoluteInterval, EmptiableAbsoluteBounds, HalfOpenAbsoluteInterval,
+    HasAbsoluteBounds, HasEmptiableAbsoluteBounds,
+};
+pub use meta::{Emptiable, HasBoundInclusivity, HasDuration, HasOpenness, HasRelativity};
+pub use ops::abridge::Abridgable;
+pub use ops::complement::Complementable;
+pub use ops::cut::{CutResult, CutType, Cuttable};
+pub use ops::extend::Extensible;
+pub use ops::fill_gap::GapFillable;
+pub use ops::grow::{GrowableEndBound, GrowableStartBound};
+pub use ops::overlap_position::{
+    CanPositionOverlap, DEFAULT_OVERLAP_RULES, DisambiguatedOverlapPosition, OverlapPosition, OverlapRule,
+    OverlapRuleSet,
+};
+pub use ops::precision::PreciseAbsoluteBounds;
+pub use ops::relativity_conversion::{ToAbsolute, ToRelative};
+pub use ops::remove_overlap::{OverlapRemovable, OverlapRemovalResult};
+pub use ops::remove_overlap_or_gap::{OverlapOrGapRemovalResult, RemovableOverlapOrGap};
+pub use ops::set_ops::{Differentiable, Intersectable, SymmetricallyDifferentiable, Unitable};
+pub use ops::shrink::{ShrinkableEndBound, ShrinkableStartBound};
+pub use ops::time_containment_position::{
+    CanPositionTimeContainment, DEFAULT_TIME_CONTAINMENT_RULES, DisambiguatedTimeContainmentPosition,
+    TimeContainmentPosition, TimeContainmentRule, TimeContainmentRuleSet,
+};
+pub use relative::{
+    ClosedRelativeInterval, EmptiableRelativeBounds, HalfOpenRelativeInterval, HasEmptiableRelativeBounds,
+    HasRelativeBounds, RelativeInterval,
+};
