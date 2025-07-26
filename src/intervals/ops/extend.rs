@@ -164,7 +164,7 @@ impl Extensible<AbsoluteBounds> for OpenInterval {
     type Output = AbsoluteInterval;
 
     fn extend(&self, _rhs: &AbsoluteBounds) -> Self::Output {
-        AbsoluteInterval::from(self.clone())
+        AbsoluteInterval::from(*self)
     }
 }
 
@@ -172,7 +172,7 @@ impl Extensible<EmptiableAbsoluteBounds> for OpenInterval {
     type Output = AbsoluteInterval;
 
     fn extend(&self, _rhs: &EmptiableAbsoluteBounds) -> Self::Output {
-        AbsoluteInterval::from(self.clone())
+        AbsoluteInterval::from(*self)
     }
 }
 
@@ -180,7 +180,7 @@ impl Extensible<AbsoluteInterval> for OpenInterval {
     type Output = AbsoluteInterval;
 
     fn extend(&self, _rhs: &AbsoluteInterval) -> Self::Output {
-        AbsoluteInterval::from(self.clone())
+        AbsoluteInterval::from(*self)
     }
 }
 
@@ -188,7 +188,7 @@ impl Extensible<ClosedAbsoluteInterval> for OpenInterval {
     type Output = AbsoluteInterval;
 
     fn extend(&self, _rhs: &ClosedAbsoluteInterval) -> Self::Output {
-        AbsoluteInterval::from(self.clone())
+        AbsoluteInterval::from(*self)
     }
 }
 
@@ -196,7 +196,7 @@ impl Extensible<HalfOpenAbsoluteInterval> for OpenInterval {
     type Output = AbsoluteInterval;
 
     fn extend(&self, _rhs: &HalfOpenAbsoluteInterval) -> Self::Output {
-        AbsoluteInterval::from(self.clone())
+        AbsoluteInterval::from(*self)
     }
 }
 
@@ -204,7 +204,7 @@ impl Extensible<RelativeBounds> for OpenInterval {
     type Output = RelativeInterval;
 
     fn extend(&self, _rhs: &RelativeBounds) -> Self::Output {
-        RelativeInterval::from(self.clone())
+        RelativeInterval::from(*self)
     }
 }
 
@@ -212,7 +212,7 @@ impl Extensible<EmptiableRelativeBounds> for OpenInterval {
     type Output = RelativeInterval;
 
     fn extend(&self, _rhs: &EmptiableRelativeBounds) -> Self::Output {
-        RelativeInterval::from(self.clone())
+        RelativeInterval::from(*self)
     }
 }
 
@@ -220,7 +220,7 @@ impl Extensible<RelativeInterval> for OpenInterval {
     type Output = RelativeInterval;
 
     fn extend(&self, _rhs: &RelativeInterval) -> Self::Output {
-        RelativeInterval::from(self.clone())
+        RelativeInterval::from(*self)
     }
 }
 
@@ -228,7 +228,7 @@ impl Extensible<ClosedRelativeInterval> for OpenInterval {
     type Output = RelativeInterval;
 
     fn extend(&self, _rhs: &ClosedRelativeInterval) -> Self::Output {
-        RelativeInterval::from(self.clone())
+        RelativeInterval::from(*self)
     }
 }
 
@@ -236,7 +236,7 @@ impl Extensible<HalfOpenRelativeInterval> for OpenInterval {
     type Output = RelativeInterval;
 
     fn extend(&self, _rhs: &HalfOpenRelativeInterval) -> Self::Output {
-        RelativeInterval::from(self.clone())
+        RelativeInterval::from(*self)
     }
 }
 
@@ -244,7 +244,7 @@ impl Extensible<OpenInterval> for OpenInterval {
     type Output = OpenInterval;
 
     fn extend(&self, _rhs: &OpenInterval) -> Self::Output {
-        self.clone()
+        *self
     }
 }
 
@@ -252,7 +252,7 @@ impl Extensible<EmptyInterval> for OpenInterval {
     type Output = OpenInterval;
 
     fn extend(&self, _rhs: &EmptyInterval) -> Self::Output {
-        self.clone()
+        *self
     }
 }
 
@@ -316,7 +316,7 @@ impl Extensible<RelativeInterval> for EmptyInterval {
     type Output = RelativeInterval;
 
     fn extend(&self, rhs: &RelativeInterval) -> Self::Output {
-        RelativeInterval::from(rhs.clone())
+        rhs.clone()
     }
 }
 
@@ -340,7 +340,7 @@ impl Extensible<OpenInterval> for EmptyInterval {
     type Output = OpenInterval;
 
     fn extend(&self, rhs: &OpenInterval) -> Self::Output {
-        rhs.clone()
+        *rhs
     }
 }
 
@@ -348,7 +348,7 @@ impl Extensible<EmptyInterval> for EmptyInterval {
     type Output = EmptyInterval;
 
     fn extend(&self, _rhs: &EmptyInterval) -> Self::Output {
-        self.clone()
+        *self
     }
 }
 

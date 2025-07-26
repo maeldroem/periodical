@@ -204,7 +204,7 @@ impl GrowableStartBound<AbsoluteStartBound> for OpenInterval {
     type Output = OpenInterval;
 
     fn grow_start(&self, _position: AbsoluteStartBound) -> Self::Output {
-        self.clone()
+        *self
     }
 }
 
@@ -212,7 +212,7 @@ impl GrowableEndBound<AbsoluteEndBound> for OpenInterval {
     type Output = OpenInterval;
 
     fn grow_end(&self, _position: AbsoluteEndBound) -> Self::Output {
-        self.clone()
+        *self
     }
 }
 
@@ -220,7 +220,7 @@ impl GrowableStartBound<RelativeStartBound> for OpenInterval {
     type Output = OpenInterval;
 
     fn grow_start(&self, _position: RelativeStartBound) -> Self::Output {
-        self.clone()
+        *self
     }
 }
 
@@ -228,7 +228,7 @@ impl GrowableEndBound<RelativeEndBound> for OpenInterval {
     type Output = OpenInterval;
 
     fn grow_end(&self, _position: RelativeEndBound) -> Self::Output {
-        self.clone()
+        *self
     }
 }
 
@@ -236,7 +236,7 @@ impl GrowableStartBound<AbsoluteStartBound> for EmptyInterval {
     type Output = EmptyInterval;
 
     fn grow_start(&self, _position: AbsoluteStartBound) -> Self::Output {
-        self.clone()
+        *self
     }
 }
 
@@ -244,7 +244,7 @@ impl GrowableEndBound<AbsoluteEndBound> for EmptyInterval {
     type Output = EmptyInterval;
 
     fn grow_end(&self, _position: AbsoluteEndBound) -> Self::Output {
-        self.clone()
+        *self
     }
 }
 
@@ -252,7 +252,7 @@ impl GrowableStartBound<RelativeStartBound> for EmptyInterval {
     type Output = EmptyInterval;
 
     fn grow_start(&self, _position: RelativeStartBound) -> Self::Output {
-        self.clone()
+        *self
     }
 }
 
@@ -260,7 +260,7 @@ impl GrowableEndBound<RelativeEndBound> for EmptyInterval {
     type Output = EmptyInterval;
 
     fn grow_end(&self, _position: RelativeEndBound) -> Self::Output {
-        self.clone()
+        *self
     }
 }
 

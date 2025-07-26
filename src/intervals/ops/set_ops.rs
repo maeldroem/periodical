@@ -155,7 +155,7 @@ where
     type Output = OpenInterval;
 
     fn unite(&self, _rhs: &Rhs) -> UnionResult<Self::Output> {
-        UnionResult::United(self.clone())
+        UnionResult::United(*self)
     }
 }
 
@@ -500,6 +500,7 @@ where
 }
 
 /// Intersects two [`AbsoluteBounds`]
+#[must_use]
 pub fn intersect_abs_bounds(a: &AbsoluteBounds, b: &AbsoluteBounds) -> IntersectionResult<AbsoluteBounds> {
     if !a.simple_overlaps(b) {
         return IntersectionResult::Separate;
@@ -511,6 +512,7 @@ pub fn intersect_abs_bounds(a: &AbsoluteBounds, b: &AbsoluteBounds) -> Intersect
 /// Intersects an [`AbsoluteBounds`] with an [`EmptiableAbsoluteBounds`]
 ///
 /// Empty intervals are not positioned in time, and are always "outside", therefore cannot be intersected
+#[must_use]
 pub fn intersect_abs_bounds_with_emptiable_abs_bounds(
     a: &AbsoluteBounds,
     b: &EmptiableAbsoluteBounds,
@@ -525,6 +527,7 @@ pub fn intersect_abs_bounds_with_emptiable_abs_bounds(
 /// Intersects two [`EmptiableAbsoluteBounds`]
 ///
 /// Empty intervals are not positioned in time, and are always "outside", therefore cannot be intersected
+#[must_use]
 pub fn intersect_emptiable_abs_bounds(
     a: &EmptiableAbsoluteBounds,
     b: &EmptiableAbsoluteBounds,
@@ -537,6 +540,7 @@ pub fn intersect_emptiable_abs_bounds(
 }
 
 /// Intersects two [`RelativeBounds`]
+#[must_use]
 pub fn intersect_rel_bounds(a: &RelativeBounds, b: &RelativeBounds) -> IntersectionResult<RelativeBounds> {
     if !a.simple_overlaps(b) {
         return IntersectionResult::Separate;
@@ -548,6 +552,7 @@ pub fn intersect_rel_bounds(a: &RelativeBounds, b: &RelativeBounds) -> Intersect
 /// Intersects an [`RelativeBounds`] with an [`EmptiableRelativeBounds`]
 ///
 /// Empty intervals are not positioned in time, and are always "outside", therefore cannot be intersected
+#[must_use]
 pub fn intersect_rel_bounds_with_emptiable_rel_bounds(
     a: &RelativeBounds,
     b: &EmptiableRelativeBounds,
@@ -562,6 +567,7 @@ pub fn intersect_rel_bounds_with_emptiable_rel_bounds(
 /// Intersects two [`EmptiableRelativeBounds`]
 ///
 /// Empty intervals are not positioned in time, and are always "outside", therefore cannot be intersected
+#[must_use]
 pub fn intersect_emptiable_rel_bounds(
     a: &EmptiableRelativeBounds,
     b: &EmptiableRelativeBounds,
@@ -1176,6 +1182,7 @@ where
 }
 
 /// Symmetrically differentiates two [`AbsoluteBounds`]
+#[must_use]
 pub fn symmetrically_differentiate_abs_bounds(
     a: &AbsoluteBounds,
     b: &AbsoluteBounds,
@@ -1221,6 +1228,7 @@ pub fn symmetrically_differentiate_abs_bounds(
 /// Symmetrically differentiates an [`AbsoluteBounds`] with an [`EmptiableAbsoluteBounds`]
 ///
 /// Empty intervals are not positioned in time, and are always "outside", therefore cannot be differentiated
+#[must_use]
 pub fn symmetrically_differentiate_abs_bounds_with_emptiable_abs_bounds(
     a: &AbsoluteBounds,
     b: &EmptiableAbsoluteBounds,
@@ -1235,6 +1243,7 @@ pub fn symmetrically_differentiate_abs_bounds_with_emptiable_abs_bounds(
 /// Symmetrically differentiates two [`EmptiableAbsoluteBounds`]
 ///
 /// Empty intervals are not positioned in time, and are always "outside", therefore cannot be differentiated
+#[must_use]
 pub fn symmetrically_differentiate_emptiable_abs_bounds(
     a: &EmptiableAbsoluteBounds,
     b: &EmptiableAbsoluteBounds,
@@ -1247,6 +1256,7 @@ pub fn symmetrically_differentiate_emptiable_abs_bounds(
 }
 
 /// Symmetrically differentiates two [`RelativeBounds`]
+#[must_use]
 pub fn symmetrically_differentiate_rel_bounds(
     a: &RelativeBounds,
     b: &RelativeBounds,
@@ -1292,6 +1302,7 @@ pub fn symmetrically_differentiate_rel_bounds(
 /// Symmetrically differentiates an [`RelativeBounds`] with an [`EmptiableRelativeBounds`]
 ///
 /// Empty intervals are not positioned in time, and are always "outside", therefore cannot be differentiated
+#[must_use]
 pub fn symmetrically_differentiate_rel_bounds_with_emptiable_rel_bounds(
     a: &RelativeBounds,
     b: &EmptiableRelativeBounds,
@@ -1306,6 +1317,7 @@ pub fn symmetrically_differentiate_rel_bounds_with_emptiable_rel_bounds(
 /// Symmetrically differentiates two [`EmptiableRelativeBounds`]
 ///
 /// Empty intervals are not positioned in time, and are always "outside", therefore cannot be differentiated
+#[must_use]
 pub fn symmetrically_differentiate_emptiable_rel_bounds(
     a: &EmptiableRelativeBounds,
     b: &EmptiableRelativeBounds,

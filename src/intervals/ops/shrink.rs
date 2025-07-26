@@ -262,7 +262,7 @@ impl ShrinkableStartBound<AbsoluteStartBound> for EmptyInterval {
     type Output = EmptyInterval;
 
     fn shrink_start(&self, _position: AbsoluteStartBound) -> Self::Output {
-        self.clone()
+        *self
     }
 }
 
@@ -270,7 +270,7 @@ impl ShrinkableEndBound<AbsoluteEndBound> for EmptyInterval {
     type Output = EmptyInterval;
 
     fn shrink_end(&self, _position: AbsoluteEndBound) -> Self::Output {
-        self.clone()
+        *self
     }
 }
 
@@ -278,7 +278,7 @@ impl ShrinkableStartBound<RelativeStartBound> for EmptyInterval {
     type Output = EmptyInterval;
 
     fn shrink_start(&self, _position: RelativeStartBound) -> Self::Output {
-        self.clone()
+        *self
     }
 }
 
@@ -286,7 +286,7 @@ impl ShrinkableEndBound<RelativeEndBound> for EmptyInterval {
     type Output = EmptyInterval;
 
     fn shrink_end(&self, _position: RelativeEndBound) -> Self::Output {
-        self.clone()
+        *self
     }
 }
 

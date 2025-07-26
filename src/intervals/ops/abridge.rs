@@ -245,7 +245,7 @@ impl Abridgable<OpenInterval> for OpenInterval {
     type Output = OpenInterval;
 
     fn abridge(&self, _rhs: &OpenInterval) -> Self::Output {
-        self.clone()
+        *self
     }
 }
 
@@ -253,7 +253,7 @@ impl Abridgable<EmptyInterval> for OpenInterval {
     type Output = EmptyInterval;
 
     fn abridge(&self, rhs: &EmptyInterval) -> Self::Output {
-        rhs.clone()
+        *rhs
     }
 }
 
@@ -341,7 +341,7 @@ impl Abridgable<OpenInterval> for EmptyInterval {
     type Output = EmptyInterval;
 
     fn abridge(&self, _rhs: &OpenInterval) -> Self::Output {
-        self.clone()
+        *self
     }
 }
 
@@ -349,7 +349,7 @@ impl Abridgable<EmptyInterval> for EmptyInterval {
     type Output = EmptyInterval;
 
     fn abridge(&self, _rhs: &EmptyInterval) -> Self::Output {
-        self.clone()
+        *self
     }
 }
 

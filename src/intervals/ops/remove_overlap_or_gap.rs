@@ -279,7 +279,7 @@ impl RemovableOverlapOrGap<EmptyInterval> for OpenInterval {
     type Output = OpenInterval;
 
     fn remove_overlap_or_gap(&self, _rhs: &EmptyInterval) -> OverlapOrGapRemovalResult<Self::Output> {
-        OverlapOrGapRemovalResult::Single(self.clone())
+        OverlapOrGapRemovalResult::Single(*self)
     }
 }
 
@@ -290,7 +290,7 @@ where
     type Output = EmptyInterval;
 
     fn remove_overlap_or_gap(&self, _rhs: &Rhs) -> OverlapOrGapRemovalResult<Self::Output> {
-        OverlapOrGapRemovalResult::Single(self.clone())
+        OverlapOrGapRemovalResult::Single(*self)
     }
 }
 

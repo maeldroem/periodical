@@ -305,7 +305,7 @@ impl OverlapRemovable<EmptyInterval> for OpenInterval {
     type Output = OpenInterval;
 
     fn remove_overlap(&self, _rhs: &EmptyInterval) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalErr> {
-        Ok(OverlapRemovalResult::Single(self.clone()))
+        Ok(OverlapRemovalResult::Single(*self))
     }
 }
 
@@ -316,7 +316,7 @@ where
     type Output = EmptyInterval;
 
     fn remove_overlap(&self, _rhs: &Rhs) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalErr> {
-        Ok(OverlapRemovalResult::Single(self.clone()))
+        Ok(OverlapRemovalResult::Single(*self))
     }
 }
 

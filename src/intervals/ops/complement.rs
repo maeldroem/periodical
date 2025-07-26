@@ -120,6 +120,7 @@ impl Complementable for EmptyInterval {
 }
 
 /// Returns the complement of an [`AbsoluteBounds`]
+#[must_use]
 pub fn complement_abs_bounds(bounds: &AbsoluteBounds) -> ComplementResult<EmptiableAbsoluteBounds> {
     type Sb = AbsoluteStartBound;
     type Eb = AbsoluteEndBound;
@@ -164,6 +165,7 @@ pub fn complement_abs_bounds(bounds: &AbsoluteBounds) -> ComplementResult<Emptia
 }
 
 /// Returns the complement of an [`EmptiableAbsoluteBounds`]
+#[must_use]
 pub fn complement_emptiable_abs_bounds(
     emptiable_bounds: &EmptiableAbsoluteBounds,
 ) -> ComplementResult<EmptiableAbsoluteBounds> {
@@ -175,6 +177,7 @@ pub fn complement_emptiable_abs_bounds(
 }
 
 /// Returns the complement of an [`RelativeBounds`]
+#[must_use]
 pub fn complement_rel_bounds(bounds: &RelativeBounds) -> ComplementResult<EmptiableRelativeBounds> {
     type Sb = RelativeStartBound;
     type Eb = RelativeEndBound;
@@ -219,6 +222,7 @@ pub fn complement_rel_bounds(bounds: &RelativeBounds) -> ComplementResult<Emptia
 }
 
 /// Returns the complement of an [`EmptiableRelativeBounds`]
+#[must_use]
 pub fn complement_emptiable_rel_bounds(
     emptiable_bounds: &EmptiableRelativeBounds,
 ) -> ComplementResult<EmptiableRelativeBounds> {

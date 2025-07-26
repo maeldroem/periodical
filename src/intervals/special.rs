@@ -176,7 +176,7 @@ impl HasEmptiableRelativeBounds for EmptyInterval {
 
 impl Emptiable for EmptyInterval {
     fn is_empty(&self) -> bool {
-        return true;
+        true
     }
 }
 

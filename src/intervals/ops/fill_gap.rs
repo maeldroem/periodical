@@ -266,7 +266,7 @@ impl GapFillable<AbsoluteInterval> for EmptyInterval {
     type Output = AbsoluteInterval;
 
     fn fill_gap(&self, rhs: &AbsoluteInterval) -> Result<Self::Output, GapFillError> {
-        Ok(AbsoluteInterval::from(rhs.clone()))
+        Ok(rhs.clone())
     }
 }
 
@@ -306,7 +306,7 @@ impl GapFillable<RelativeInterval> for EmptyInterval {
     type Output = RelativeInterval;
 
     fn fill_gap(&self, rhs: &RelativeInterval) -> Result<Self::Output, GapFillError> {
-        Ok(RelativeInterval::from(rhs.clone()))
+        Ok(rhs.clone())
     }
 }
 
@@ -330,7 +330,7 @@ impl GapFillable<OpenInterval> for EmptyInterval {
     type Output = OpenInterval;
 
     fn fill_gap(&self, rhs: &OpenInterval) -> Result<Self::Output, GapFillError> {
-        Ok(rhs.clone())
+        Ok(*rhs)
     }
 }
 
@@ -338,7 +338,7 @@ impl GapFillable<EmptyInterval> for EmptyInterval {
     type Output = EmptyInterval;
 
     fn fill_gap(&self, rhs: &EmptyInterval) -> Result<Self::Output, GapFillError> {
-        Ok(rhs.clone())
+        Ok(*rhs)
     }
 }
 
