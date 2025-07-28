@@ -11,6 +11,7 @@
 
 pub mod abridge;
 pub mod complement;
+pub mod continuation;
 pub mod cut;
 pub mod extend;
 pub mod fill_gap;

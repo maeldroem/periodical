@@ -10,7 +10,7 @@ use crate::intervals::meta::Interval;
 use crate::intervals::ops::remove_overlap::{OverlapRemovable, OverlapRemovalErr, OverlapRemovalResult};
 use crate::intervals::relative::{EmptiableRelativeBounds, HalfOpenRelativeInterval, RelativeBounds};
 use crate::intervals::special::{EmptyInterval, OpenInterval};
-use crate::intervals::{ClosedAbsoluteInterval, ClosedRelativeInterval, RelativeInterval};
+use crate::intervals::{ClosedAbsoluteInterval, ClosedRelativeInterval, OverlapRule, OverlapRuleSet, RelativeInterval};
 use crate::ops::{DifferenceResult, IntersectionResult, SymmetricDifferenceResult, UnionResult};
 
 /// Capacity to unite an interval with another
@@ -174,7 +174,8 @@ where
 /// Unites two [`AbsoluteBounds`]
 #[must_use]
 pub fn unite_abs_bounds(a: &AbsoluteBounds, b: &AbsoluteBounds) -> UnionResult<AbsoluteBounds> {
-    if !a.simple_overlaps(b) {
+    // We use the lenient rule set with allow adjacency rule so that "touching" intervals are united together
+    if !a.overlaps(b, OverlapRuleSet::Lenient, &[OverlapRule::AllowAdjacency]) {
         return UnionResult::Separate;
     }
 
@@ -189,7 +190,7 @@ pub fn unite_abs_bounds_with_emptiable_abs_bounds(
     a: &AbsoluteBounds,
     b: &EmptiableAbsoluteBounds,
 ) -> UnionResult<AbsoluteBounds> {
-    if !a.simple_overlaps(b) {
+    if !a.overlaps(b, OverlapRuleSet::Lenient, &[OverlapRule::AllowAdjacency]) {
         return UnionResult::Separate;
     }
 
@@ -204,7 +205,7 @@ pub fn unite_emptiable_abs_bounds(
     a: &EmptiableAbsoluteBounds,
     b: &EmptiableAbsoluteBounds,
 ) -> UnionResult<EmptiableAbsoluteBounds> {
-    if !a.simple_overlaps(b) {
+    if !a.overlaps(b, OverlapRuleSet::Lenient, &[OverlapRule::AllowAdjacency]) {
         return UnionResult::Separate;
     }
 
@@ -214,7 +215,7 @@ pub fn unite_emptiable_abs_bounds(
 /// Unites two [`RelativeBounds`]
 #[must_use]
 pub fn unite_rel_bounds(a: &RelativeBounds, b: &RelativeBounds) -> UnionResult<RelativeBounds> {
-    if !a.simple_overlaps(b) {
+    if !a.overlaps(b, OverlapRuleSet::Lenient, &[OverlapRule::AllowAdjacency]) {
         return UnionResult::Separate;
     }
 
@@ -229,7 +230,7 @@ pub fn unite_rel_bounds_with_emptiable_rel_bounds(
     a: &RelativeBounds,
     b: &EmptiableRelativeBounds,
 ) -> UnionResult<RelativeBounds> {
-    if !a.simple_overlaps(b) {
+    if !a.overlaps(b, OverlapRuleSet::Lenient, &[OverlapRule::AllowAdjacency]) {
         return UnionResult::Separate;
     }
 
@@ -244,7 +245,7 @@ pub fn unite_emptiable_rel_bounds(
     a: &EmptiableRelativeBounds,
     b: &EmptiableRelativeBounds,
 ) -> UnionResult<EmptiableRelativeBounds> {
-    if !a.simple_overlaps(b) {
+    if !a.overlaps(b, OverlapRuleSet::Lenient, &[OverlapRule::AllowAdjacency]) {
         return UnionResult::Separate;
     }
 

@@ -500,6 +500,24 @@ impl HasRelativeBounds for RelativeBounds {
     }
 }
 
+impl PartialOrd for RelativeBounds {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for RelativeBounds {
+    fn cmp(&self, other: &Self) -> Ordering {
+        match self.start.cmp(&other.start) {
+            Ordering::Less => Ordering::Less,
+            // We reverse the ordering so that the larger interval comes first,
+            // allowing better processing for overlap and other things
+            Ordering::Equal => self.end.cmp(&other.end).reverse(),
+            Ordering::Greater => Ordering::Greater,
+        }
+    }
+}
+
 impl Display for RelativeBounds {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut result = Ok(());

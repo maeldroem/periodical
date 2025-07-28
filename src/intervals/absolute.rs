@@ -491,7 +491,13 @@ impl PartialOrd for AbsoluteBounds {
 
 impl Ord for AbsoluteBounds {
     fn cmp(&self, other: &Self) -> Ordering {
-        self.start.cmp(&other.start)
+        match self.start.cmp(&other.start) {
+            Ordering::Less => Ordering::Less,
+            // We reverse the ordering so that the larger interval comes first,
+            // allowing better processing for overlap and other things
+            Ordering::Equal => self.end.cmp(&other.end).reverse(),
+            Ordering::Greater => Ordering::Greater,
+        }
     }
 }
 
