@@ -6,6 +6,157 @@ use crate::intervals::meta::Interval;
 use crate::intervals::prelude::*;
 use crate::ops::UnionResult;
 
+/// Dispatcher trait for accumulative union iterators
+pub trait AccumulativelyUnitableIteratorDispatcher: Iterator + Sized {
+    /// Accumulatively unites intervals of the iterator using the default overlap rules
+    fn acc_union(self) -> AccumulativeUnion<Peekable<Self>> {
+        AccumulativeUnion::new(self)
+    }
+
+    /// Accumulatively unites intervals of the iterator using the given closure
+    fn acc_union_with<F>(self, f: F) -> AccumulativeUnionWith<Peekable<Self>, F>
+    where
+        F: FnMut(&Self::Item, &Self::Item) -> UnionResult<Self::Item>,
+    {
+        AccumulativeUnionWith::new(self, f)
+    }
+}
+
+impl<I> AccumulativelyUnitableIteratorDispatcher for I
+where
+    I: Iterator,
+    I::Item: Unitable<Output = I::Item>,
+{
+}
+
+/// Accumulative union iterator using the predefined rules
+#[derive(Debug, Clone, Hash)]
+pub struct AccumulativeUnion<I> {
+    iter: I,
+    exhausted: bool,
+}
+
+impl<I> AccumulativeUnion<I>
+where
+    I: Iterator,
+{
+    pub fn new(iter: I) -> AccumulativeUnion<Peekable<I>> {
+        AccumulativeUnion {
+            iter: iter.peekable(),
+            exhausted: false,
+        }
+    }
+}
+
+impl<I> Iterator for AccumulativeUnion<Peekable<I>>
+where
+    I: Iterator,
+    I::Item: Unitable<Output = I::Item>,
+{
+    type Item = I::Item;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.exhausted {
+            return None;
+        }
+
+        let Some(mut united_so_far) = self.iter.next() else {
+            self.exhausted = true;
+            return None;
+        };
+
+        loop {
+            let Some(peeked) = self.iter.peek() else {
+                self.exhausted = true;
+                return Some(united_so_far);
+            };
+
+            match united_so_far.unite(peeked) {
+                UnionResult::United(united) => united_so_far = united,
+                UnionResult::Separate => return Some(united_so_far),
+            }
+
+            self.iter.next();
+        }
+    }
+}
+
+// TODO: If a reverse Peekable becomes standard or when we'll import a crate that does that,
+// implement DoubleEndedIterator for AccumulativeUnion
+
+impl<I> FusedIterator for AccumulativeUnion<Peekable<I>>
+where
+    I: Iterator,
+    I::Item: Unitable<Output = I::Item>,
+{
+}
+
+/// Accumulative union iterator using the given closure
+#[derive(Debug, Clone, Hash)]
+pub struct AccumulativeUnionWith<I, F> {
+    iter: I,
+    f: F,
+    exhausted: bool,
+}
+
+impl<I, F> AccumulativeUnionWith<I, F>
+where
+    I: Iterator,
+{
+    pub fn new(iter: I, f: F) -> AccumulativeUnionWith<Peekable<I>, F> {
+        AccumulativeUnionWith {
+            iter: iter.peekable(),
+            f,
+            exhausted: false,
+        }
+    }
+}
+
+impl<I, F> Iterator for AccumulativeUnionWith<Peekable<I>, F>
+where
+    I: Iterator,
+    I::Item: Unitable<Output = I::Item>,
+    F: FnMut(&I::Item, &I::Item) -> UnionResult<I::Item>,
+{
+    type Item = I::Item;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.exhausted {
+            return None;
+        }
+
+        let Some(mut united_so_far) = self.iter.next() else {
+            self.exhausted = true;
+            return None;
+        };
+
+        loop {
+            let Some(peeked) = self.iter.peek() else {
+                self.exhausted = true;
+                return Some(united_so_far);
+            };
+
+            match (self.f)(&united_so_far, peeked) {
+                UnionResult::United(united) => united_so_far = united,
+                UnionResult::Separate => return Some(united_so_far),
+            }
+
+            self.iter.next();
+        }
+    }
+}
+
+// TODO: If a reverse Peekable becomes standard or when we'll import a crate that does that,
+// implement DoubleEndedIterator for AccumulativeUnionWith
+
+impl<I, F> FusedIterator for AccumulativeUnionWith<Peekable<I>, F>
+where
+    I: Iterator,
+    I::Item: Unitable<Output = I::Item>,
+    F: FnMut(&I::Item, &I::Item) -> UnionResult<I::Item>,
+{
+}
+
 /// Dispatcher trait for peer union iterators
 pub trait PeerUnitableIteratorDispatcher: Iterator + Sized {
     /// Unites peer intervals of the iterator using the default overlap rules
