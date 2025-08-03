@@ -55,6 +55,24 @@ impl<R, D> RunningResult<R, D> {
         matches!(self, Self::Done(_))
     }
 
+    /// Converts the content of the [`Running`](RunningResult::Running) variant into an [`Option`]
+    #[must_use]
+    pub fn running(self) -> Option<R> {
+        match self {
+            Self::Running(r) => Some(r),
+            Self::Done(_) => None,
+        }
+    }
+
+    /// Converts the content of the [`Done`](RunningResult::Done) variant into an [`Option`]
+    #[must_use]
+    pub fn done(self) -> Option<D> {
+        match self {
+            Self::Running(_) => None,
+            Self::Done(d) => Some(d),
+        }
+    }
+
     /// Maps the contents of the [`Running`](RunningResult::Running) variant
     pub fn map_running<F, T>(self, f: F) -> RunningResult<T, D>
     where
@@ -98,6 +116,24 @@ impl<C> ComplementResult<C> {
         matches!(self, Self::Split(..))
     }
 
+    /// Converts the content of the [`Single`](ComplementResult::Single) variant into an [`Option`]
+    #[must_use]
+    pub fn single(self) -> Option<C> {
+        match self {
+            Self::Single(s) => Some(s),
+            Self::Split(..) => None,
+        }
+    }
+
+    /// Converts the content of the [`Split`](ComplementResult::Split) variant into an [`Option`]
+    #[must_use]
+    pub fn split(self) -> Option<(C, C)> {
+        match self {
+            Self::Single(_) => None,
+            Self::Split(s1, s2) => Some((s1, s2)),
+        }
+    }
+
     /// Maps the contents of the variants using the given transformation closure
     pub fn map<F, T>(self, mut f: F) -> ComplementResult<T>
     where
@@ -130,6 +166,15 @@ impl<U> UnionResult<U> {
         matches!(self, Self::Separate)
     }
 
+    /// Returns the contained [`United`](UnionResult::United) value
+    #[must_use]
+    pub fn unwrap(self) -> Option<U> {
+        match self {
+            Self::United(u) => Some(u),
+            Self::Separate => None,
+        }
+    }
+
     /// Maps the contents of the [`United`](UnionResult::United) variant
     pub fn map_united<F, T>(self, f: F) -> UnionResult<T>
     where
@@ -160,6 +205,15 @@ impl<I> IntersectionResult<I> {
     /// Whether the [`IntersectionResult`] is of the [`Separate`](IntersectionResult::Separate) variant
     pub fn is_separate(&self) -> bool {
         matches!(self, Self::Separate)
+    }
+
+    /// Returns the contained [`Intersected`](IntersectionResult::Intersected) value
+    #[must_use]
+    pub fn unwrap(self) -> Option<I> {
+        match self {
+            Self::Intersected(i) => Some(i),
+            Self::Separate => None,
+        }
     }
 
     /// Maps the contents of the [`Intersected`](IntersectionResult::Intersected) variant
@@ -205,6 +259,24 @@ impl<D> DifferenceResult<D> {
     /// Whether the [`DifferenceResult`] is of the [`Separate`](DifferenceResult::Separate) variant
     pub fn is_separate(&self) -> bool {
         matches!(self, Self::Separate)
+    }
+
+    /// Returns the content of the [`Shrunk`](DifferenceResult::Shrunk) variant
+    #[must_use]
+    pub fn shrunk(self) -> Option<D> {
+        match self {
+            Self::Shrunk(s) => Some(s),
+            Self::Split(..) | Self::Separate => None,
+        }
+    }
+
+    /// Returns the content of the [`Split`](DifferenceResult::Split) variant
+    #[must_use]
+    pub fn split(self) -> Option<(D, D)> {
+        match self {
+            Self::Split(s1, s2) => Some((s1, s2)),
+            Self::Shrunk(_) | Self::Separate => None,
+        }
     }
 
     /// Maps the contents of the [`Shrunk`](DifferenceResult::Shrunk) and [`Split`](DifferenceResult::Split) variants
@@ -253,6 +325,24 @@ impl<D> SymmetricDifferenceResult<D> {
     /// Whether the [`SymmetricDifferenceResult`] is of the [`Separate`](SymmetricDifferenceResult::Separate) variant
     pub fn is_separate(&self) -> bool {
         matches!(self, Self::Separate)
+    }
+
+    /// Returns the content of the [`Shrunk`](SymmetricDifferenceResult::Shrunk) variant
+    #[must_use]
+    pub fn shrunk(self) -> Option<D> {
+        match self {
+            Self::Shrunk(s) => Some(s),
+            Self::Split(..) | Self::Separate => None,
+        }
+    }
+
+    /// Returns the content of the [`Split`](SymmetricDifferenceResult::Split) variant
+    #[must_use]
+    pub fn split(self) -> Option<(D, D)> {
+        match self {
+            Self::Split(s1, s2) => Some((s1, s2)),
+            Self::Shrunk(_) | Self::Separate => None,
+        }
     }
 
     /// Maps the contents of the [`Shrunk`](SymmetricDifferenceResult::Shrunk)
