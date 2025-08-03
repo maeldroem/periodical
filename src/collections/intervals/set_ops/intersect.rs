@@ -1,6 +1,5 @@
 //! Interval iterators regarding interval intersection
 
-use std::borrow::Borrow;
 use std::iter::{FusedIterator, Peekable};
 
 use crate::intervals::meta::Interval;
@@ -32,7 +31,7 @@ pub trait PeerIntersectableIteratorDispatcher: Iterator + Sized {
 impl<'a, I, T> PeerIntersectableIteratorDispatcher for I
 where
     I: Iterator<Item = &'a T>,
-    T: 'a + Borrow<T> + Intersectable<Output = T> + Clone,
+    T: 'a + Intersectable<Output = T> + Clone,
 {
 }
 
@@ -58,7 +57,7 @@ where
 impl<'a, I, T> Iterator for PeerIntersection<Peekable<I>>
 where
     I: Iterator<Item = &'a T>,
-    T: 'a + Borrow<T> + Intersectable<Output = T> + Clone,
+    T: 'a + Intersectable<Output = T> + Clone,
 {
     type Item = T;
 
@@ -67,12 +66,12 @@ where
             return None;
         }
 
-        let Some(current) = self.iter.next().map(Borrow::<T>::borrow) else {
+        let Some(current) = self.iter.next() else {
             self.exhausted = true;
             return None;
         };
 
-        let Some(peeked) = self.iter.peek().map(Borrow::<T>::borrow) else {
+        let Some(peeked) = self.iter.peek() else {
             self.exhausted = true;
             return Some(current.clone());
         };
@@ -90,7 +89,7 @@ where
 impl<'a, I, T> FusedIterator for PeerIntersection<Peekable<I>>
 where
     I: Iterator<Item = &'a T>,
-    T: 'a + Borrow<T> + Intersectable<Output = T> + Clone,
+    T: 'a + Intersectable<Output = T> + Clone,
 {
 }
 
@@ -118,7 +117,7 @@ where
 impl<'a, I, T, F> Iterator for PeerIntersectionWith<Peekable<I>, F>
 where
     I: Iterator<Item = &'a T>,
-    T: 'a + Borrow<T> + Intersectable<Output = T> + Clone,
+    T: 'a + Intersectable<Output = T> + Clone,
     F: FnMut(&T, &T) -> IntersectionResult<T>,
 {
     type Item = T;
@@ -128,12 +127,12 @@ where
             return None;
         }
 
-        let Some(current) = self.iter.next().map(Borrow::<T>::borrow) else {
+        let Some(current) = self.iter.next() else {
             self.exhausted = true;
             return None;
         };
 
-        let Some(peeked) = self.iter.peek().map(Borrow::<T>::borrow) else {
+        let Some(peeked) = self.iter.peek() else {
             self.exhausted = true;
             return Some(current.clone());
         };
@@ -151,7 +150,7 @@ where
 impl<'a, I, T, F> FusedIterator for PeerIntersectionWith<Peekable<I>, F>
 where
     I: Iterator<Item = &'a T>,
-    T: 'a + Borrow<T> + Intersectable<Output = T> + Clone,
+    T: 'a + Intersectable<Output = T> + Clone,
     F: FnMut(&T, &T) -> IntersectionResult<T>,
 {
 }
@@ -211,9 +210,9 @@ impl<I, J> Intersection<I, J> {
 impl<'a, 'o, I, T, J, O> Iterator for Intersection<I, J>
 where
     I: Iterator<Item = &'a T>,
-    T: 'a + Borrow<T> + Intersectable<O, Output = T> + Clone,
+    T: 'a + Intersectable<O, Output = T> + Clone,
     J: IntoIterator<Item = &'o O> + Clone,
-    O: 'o + Borrow<O>,
+    O: 'o,
 {
     type Item = T;
 
@@ -222,7 +221,7 @@ where
             return None;
         }
 
-        let Some(current) = self.iter.next().map(Borrow::<T>::borrow).cloned() else {
+        let Some(current) = self.iter.next().cloned() else {
             self.exhausted = true;
             return None;
         };
@@ -231,7 +230,6 @@ where
             self.other_iter
                 .clone()
                 .into_iter()
-                .map(Borrow::<O>::borrow)
                 .fold(current, |intersected_so_far, other| {
                     match intersected_so_far.intersect(other) {
                         IntersectionResult::Intersected(intersected) => intersected,
@@ -245,16 +243,16 @@ where
 impl<'a, 'o, I, T, J, O> DoubleEndedIterator for Intersection<I, J>
 where
     I: DoubleEndedIterator<Item = &'a T>,
-    T: 'a + Borrow<T> + Intersectable<O, Output = T> + Clone,
+    T: 'a + Intersectable<O, Output = T> + Clone,
     J: IntoIterator<Item = &'o O> + Clone,
-    O: 'o + Borrow<O>,
+    O: 'o,
 {
     fn next_back(&mut self) -> Option<Self::Item> {
         if self.exhausted {
             return None;
         }
 
-        let Some(current) = self.iter.next_back().map(Borrow::<T>::borrow).cloned() else {
+        let Some(current) = self.iter.next_back().cloned() else {
             self.exhausted = true;
             return None;
         };
@@ -263,7 +261,6 @@ where
             self.other_iter
                 .clone()
                 .into_iter()
-                .map(Borrow::<O>::borrow)
                 .fold(current, |intersected_so_far, other| {
                     match intersected_so_far.intersect(other) {
                         IntersectionResult::Intersected(intersected) => intersected,
@@ -277,9 +274,9 @@ where
 impl<'a, 'o, I, T, J, O> FusedIterator for Intersection<I, J>
 where
     I: Iterator<Item = &'a T>,
-    T: 'a + Borrow<T> + Intersectable<O, Output = T> + Clone,
+    T: 'a + Intersectable<O, Output = T> + Clone,
     J: IntoIterator<Item = &'o O> + Clone,
-    O: 'o + Borrow<O>,
+    O: 'o,
 {
 }
 
@@ -306,9 +303,9 @@ impl<I, J, F> IntersectionWith<I, J, F> {
 impl<'a, 'o, I, T, J, O, F> Iterator for IntersectionWith<I, J, F>
 where
     I: Iterator<Item = &'a T>,
-    T: 'a + Borrow<T> + Intersectable<O, Output = T> + Clone,
+    T: 'a + Intersectable<O, Output = T> + Clone,
     J: IntoIterator<Item = &'o O> + Clone,
-    O: 'o + Borrow<O>,
+    O: 'o,
     F: FnMut(&T, &O) -> IntersectionResult<T>,
 {
     type Item = T;
@@ -318,7 +315,7 @@ where
             return None;
         }
 
-        let Some(current) = self.iter.next().map(Borrow::<T>::borrow).cloned() else {
+        let Some(current) = self.iter.next().cloned() else {
             self.exhausted = true;
             return None;
         };
@@ -327,7 +324,6 @@ where
             self.other_iter
                 .clone()
                 .into_iter()
-                .map(Borrow::<O>::borrow)
                 .fold(current, |intersected_so_far, other| {
                     match (self.f)(&intersected_so_far, other) {
                         IntersectionResult::Intersected(intersected) => intersected,
@@ -341,9 +337,9 @@ where
 impl<'a, 'o, I, T, J, O, F> DoubleEndedIterator for IntersectionWith<I, J, F>
 where
     I: DoubleEndedIterator<Item = &'a T>,
-    T: 'a + Borrow<T> + Intersectable<O, Output = T> + Clone,
+    T: 'a + Intersectable<O, Output = T> + Clone,
     J: IntoIterator<Item = &'o O> + Clone,
-    O: 'o + Borrow<O>,
+    O: 'o,
     F: FnMut(&T, &O) -> IntersectionResult<T>,
 {
     fn next_back(&mut self) -> Option<Self::Item> {
@@ -351,7 +347,7 @@ where
             return None;
         }
 
-        let Some(current) = self.iter.next_back().map(Borrow::<T>::borrow).cloned() else {
+        let Some(current) = self.iter.next_back().cloned() else {
             self.exhausted = true;
             return None;
         };
@@ -360,7 +356,6 @@ where
             self.other_iter
                 .clone()
                 .into_iter()
-                .map(Borrow::<O>::borrow)
                 .fold(current, |intersected_so_far, other| {
                     match (self.f)(&intersected_so_far, other) {
                         IntersectionResult::Intersected(intersected) => intersected,
@@ -374,9 +369,9 @@ where
 impl<'a, 'o, I, T, J, O, F> FusedIterator for IntersectionWith<I, J, F>
 where
     I: Iterator<Item = &'a T>,
-    T: 'a + Borrow<T> + Intersectable<O, Output = T> + Clone,
+    T: 'a + Intersectable<O, Output = T> + Clone,
     J: IntoIterator<Item = &'o O> + Clone,
-    O: 'o + Borrow<O>,
+    O: 'o,
     F: FnMut(&T, &O) -> IntersectionResult<T>,
 {
 }

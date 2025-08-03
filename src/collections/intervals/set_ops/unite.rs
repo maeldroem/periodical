@@ -1,6 +1,5 @@
 //! Interval iterators regarding interval union
 
-use std::borrow::Borrow;
 use std::iter::{FusedIterator, Peekable};
 
 use crate::intervals::meta::Interval;
@@ -26,7 +25,7 @@ pub trait AccumulativelyUnitableIteratorDispatcher: Iterator + Sized {
 impl<'a, I, T> AccumulativelyUnitableIteratorDispatcher for I
 where
     I: Iterator<Item = &'a T>,
-    T: 'a + Borrow<T> + Unitable<Output = T> + Clone,
+    T: 'a + Unitable<Output = T> + Clone,
 {
 }
 
@@ -52,7 +51,7 @@ where
 impl<'a, I, T> Iterator for AccumulativeUnion<Peekable<I>>
 where
     I: Iterator<Item = &'a T>,
-    T: 'a + Borrow<T> + Unitable<Output = T> + Clone,
+    T: 'a + Unitable<Output = T> + Clone,
 {
     type Item = T;
 
@@ -61,13 +60,13 @@ where
             return None;
         }
 
-        let Some(mut united_so_far) = self.iter.next().map(Borrow::<T>::borrow).cloned() else {
+        let Some(mut united_so_far) = self.iter.next().cloned() else {
             self.exhausted = true;
             return None;
         };
 
         loop {
-            let Some(peeked) = self.iter.peek().map(Borrow::<T>::borrow) else {
+            let Some(peeked) = self.iter.peek() else {
                 self.exhausted = true;
                 return Some(united_so_far);
             };
@@ -88,7 +87,7 @@ where
 impl<'a, I, T> FusedIterator for AccumulativeUnion<Peekable<I>>
 where
     I: Iterator<Item = &'a T>,
-    T: 'a + Borrow<T> + Unitable<Output = T> + Clone,
+    T: 'a + Unitable<Output = T> + Clone,
 {
 }
 
@@ -116,7 +115,7 @@ where
 impl<'a, I, T, F> Iterator for AccumulativeUnionWith<Peekable<I>, F>
 where
     I: Iterator<Item = &'a T>,
-    T: 'a + Borrow<T> + Unitable<Output = T> + Clone,
+    T: 'a + Unitable<Output = T> + Clone,
     F: FnMut(&T, &T) -> UnionResult<T>,
 {
     type Item = T;
@@ -126,13 +125,13 @@ where
             return None;
         }
 
-        let Some(mut united_so_far) = self.iter.next().map(Borrow::<T>::borrow).cloned() else {
+        let Some(mut united_so_far) = self.iter.next().cloned() else {
             self.exhausted = true;
             return None;
         };
 
         loop {
-            let Some(peeked) = self.iter.peek().map(Borrow::<T>::borrow) else {
+            let Some(peeked) = self.iter.peek() else {
                 self.exhausted = true;
                 return Some(united_so_far);
             };
@@ -153,7 +152,7 @@ where
 impl<'a, I, T, F> FusedIterator for AccumulativeUnionWith<Peekable<I>, F>
 where
     I: Iterator<Item = &'a T>,
-    T: 'a + Borrow<T> + Unitable<Output = T> + Clone,
+    T: 'a + Unitable<Output = T> + Clone,
     F: FnMut(&T, &T) -> UnionResult<T>,
 {
 }
@@ -183,7 +182,7 @@ pub trait PeerUnitableIteratorDispatcher: Iterator + Sized {
 impl<'a, I, T> PeerUnitableIteratorDispatcher for I
 where
     I: Iterator<Item = &'a T>,
-    T: 'a + Borrow<T> + Unitable<Output = T> + Clone,
+    T: 'a + Unitable<Output = T> + Clone,
 {
 }
 
@@ -209,7 +208,7 @@ where
 impl<'a, I, T> Iterator for PeerUnion<Peekable<I>>
 where
     I: Iterator<Item = &'a T>,
-    T: 'a + Borrow<T> + Unitable<Output = T> + Clone,
+    T: 'a + Unitable<Output = T> + Clone,
 {
     type Item = T;
 
@@ -218,12 +217,12 @@ where
             return None;
         }
 
-        let Some(current) = self.iter.next().map(Borrow::<T>::borrow) else {
+        let Some(current) = self.iter.next() else {
             self.exhausted = true;
             return None;
         };
 
-        let Some(peeked) = self.iter.peek().map(Borrow::<T>::borrow) else {
+        let Some(peeked) = self.iter.peek() else {
             self.exhausted = true;
             return Some(current.clone());
         };
@@ -241,7 +240,7 @@ where
 impl<'a, I, T> FusedIterator for PeerUnion<Peekable<I>>
 where
     I: Iterator<Item = &'a T>,
-    T: 'a + Borrow<T> + Unitable<Output = T> + Clone,
+    T: 'a + Unitable<Output = T> + Clone,
 {
 }
 
@@ -269,7 +268,7 @@ where
 impl<'a, I, T, F> Iterator for PeerUnionWith<Peekable<I>, F>
 where
     I: Iterator<Item = &'a T>,
-    T: 'a + Borrow<T> + Unitable<Output = T> + Clone,
+    T: 'a + Unitable<Output = T> + Clone,
     F: FnMut(&T, &T) -> UnionResult<T>,
 {
     type Item = T;
@@ -279,12 +278,12 @@ where
             return None;
         }
 
-        let Some(current) = self.iter.next().map(Borrow::<T>::borrow) else {
+        let Some(current) = self.iter.next() else {
             self.exhausted = true;
             return None;
         };
 
-        let Some(peeked) = self.iter.peek().map(Borrow::<T>::borrow) else {
+        let Some(peeked) = self.iter.peek() else {
             self.exhausted = true;
             return Some(current.clone());
         };
@@ -302,7 +301,7 @@ where
 impl<'a, I, T, F> FusedIterator for PeerUnionWith<Peekable<I>, F>
 where
     I: Iterator<Item = &'a T>,
-    T: 'a + Borrow<T> + Unitable<Output = T> + Clone,
+    T: 'a + Unitable<Output = T> + Clone,
     F: FnMut(&T, &T) -> UnionResult<T>,
 {
 }
@@ -361,9 +360,9 @@ impl<I, J> Union<I, J> {
 impl<'a, 'o, I, T, J, O> Iterator for Union<I, J>
 where
     I: Iterator<Item = &'a T>,
-    T: 'a + Borrow<T> + Unitable<O, Output = T> + Clone,
+    T: 'a + Unitable<O, Output = T> + Clone,
     J: IntoIterator<Item = &'o O> + Clone,
-    O: 'o + Borrow<O>,
+    O: 'o,
 {
     type Item = T;
 
@@ -372,60 +371,54 @@ where
             return None;
         }
 
-        let Some(current) = self.iter.next().map(Borrow::<T>::borrow).cloned() else {
+        let Some(current) = self.iter.next().cloned() else {
             self.exhausted = true;
             return None;
         };
 
-        Some(
-            self.other_iter
-                .clone()
-                .into_iter()
-                .map(Borrow::<O>::borrow)
-                .fold(current, |united_so_far, other| match united_so_far.unite(other) {
-                    UnionResult::United(united) => united,
-                    UnionResult::Separate => united_so_far,
-                }),
-        )
+        Some(self.other_iter.clone().into_iter().fold(
+            current,
+            |united_so_far, other| match united_so_far.unite(other) {
+                UnionResult::United(united) => united,
+                UnionResult::Separate => united_so_far,
+            },
+        ))
     }
 }
 
 impl<'a, 'o, I, T, J, O> DoubleEndedIterator for Union<I, J>
 where
     I: DoubleEndedIterator<Item = &'a T>,
-    T: 'a + Borrow<T> + Unitable<O, Output = T> + Clone,
+    T: 'a + Unitable<O, Output = T> + Clone,
     J: IntoIterator<Item = &'o O> + Clone,
-    O: 'o + Borrow<O>,
+    O: 'o,
 {
     fn next_back(&mut self) -> Option<Self::Item> {
         if self.exhausted {
             return None;
         }
 
-        let Some(current) = self.iter.next_back().map(Borrow::<T>::borrow).cloned() else {
+        let Some(current) = self.iter.next_back().cloned() else {
             self.exhausted = true;
             return None;
         };
 
-        Some(
-            self.other_iter
-                .clone()
-                .into_iter()
-                .map(Borrow::<O>::borrow)
-                .fold(current, |united_so_far, other| match united_so_far.unite(other) {
-                    UnionResult::United(united) => united,
-                    UnionResult::Separate => united_so_far,
-                }),
-        )
+        Some(self.other_iter.clone().into_iter().fold(
+            current,
+            |united_so_far, other| match united_so_far.unite(other) {
+                UnionResult::United(united) => united,
+                UnionResult::Separate => united_so_far,
+            },
+        ))
     }
 }
 
 impl<'a, 'o, I, T, J, O> FusedIterator for Union<I, J>
 where
     I: Iterator<Item = &'a T>,
-    T: 'a + Borrow<T> + Unitable<O, Output = T> + Clone,
+    T: 'a + Unitable<O, Output = T> + Clone,
     J: IntoIterator<Item = &'o O> + Clone,
-    O: 'o + Borrow<O>,
+    O: 'o,
 {
 }
 
@@ -452,9 +445,9 @@ impl<I, J, F> UnionWith<I, J, F> {
 impl<'a, 'o, I, T, J, O, F> Iterator for UnionWith<I, J, F>
 where
     I: Iterator<Item = &'a T>,
-    T: 'a + Borrow<T> + Unitable<O, Output = T> + Clone,
+    T: 'a + Unitable<O, Output = T> + Clone,
     J: IntoIterator<Item = &'o O> + Clone,
-    O: 'o + Borrow<O>,
+    O: 'o,
     F: FnMut(&T, &O) -> UnionResult<T>,
 {
     type Item = T;
@@ -464,7 +457,7 @@ where
             return None;
         }
 
-        let Some(current) = self.iter.next().map(Borrow::<T>::borrow).cloned() else {
+        let Some(current) = self.iter.next().cloned() else {
             self.exhausted = true;
             return None;
         };
@@ -473,7 +466,6 @@ where
             self.other_iter
                 .clone()
                 .into_iter()
-                .map(Borrow::<O>::borrow)
                 .fold(current, |united_so_far, other| match (self.f)(&united_so_far, other) {
                     UnionResult::United(united) => united,
                     UnionResult::Separate => united_so_far,
@@ -485,9 +477,9 @@ where
 impl<'a, 'o, I, T, J, O, F> DoubleEndedIterator for UnionWith<I, J, F>
 where
     I: DoubleEndedIterator<Item = &'a T>,
-    T: 'a + Borrow<T> + Unitable<O, Output = T> + Clone,
+    T: 'a + Unitable<O, Output = T> + Clone,
     J: IntoIterator<Item = &'o O> + Clone,
-    O: 'o + Borrow<O>,
+    O: 'o,
     F: FnMut(&T, &O) -> UnionResult<T>,
 {
     fn next_back(&mut self) -> Option<Self::Item> {
@@ -495,7 +487,7 @@ where
             return None;
         }
 
-        let Some(current) = self.iter.next_back().map(Borrow::<T>::borrow).cloned() else {
+        let Some(current) = self.iter.next_back().cloned() else {
             self.exhausted = true;
             return None;
         };
@@ -504,7 +496,6 @@ where
             self.other_iter
                 .clone()
                 .into_iter()
-                .map(Borrow::<O>::borrow)
                 .fold(current, |united_so_far, other| match (self.f)(&united_so_far, other) {
                     UnionResult::United(united) => united,
                     UnionResult::Separate => united_so_far,
@@ -516,9 +507,9 @@ where
 impl<'a, 'o, I, T, J, O, F> FusedIterator for UnionWith<I, J, F>
 where
     I: Iterator<Item = &'a T>,
-    T: 'a + Borrow<T> + Unitable<O, Output = T> + Clone,
+    T: 'a + Unitable<O, Output = T> + Clone,
     J: IntoIterator<Item = &'o O> + Clone,
-    O: 'o + Borrow<O>,
+    O: 'o,
     F: FnMut(&T, &O) -> UnionResult<T>,
 {
 }
