@@ -96,7 +96,7 @@ where
 {
 }
 
-/// Peer union iterator for intervals using the given closure
+/// Peer difference iterator for intervals using the given closure
 #[derive(Debug, Clone)]
 pub struct PeerDifferenceWith<I, F> {
     iter: I,
@@ -195,6 +195,7 @@ where
 {
 }
 
+/// Difference iterator for intervals using the predefined rules
 #[derive(Debug, Clone, Hash)]
 pub struct Difference<I, J> {
     iter: I,
@@ -313,6 +314,7 @@ where
 {
 }
 
+/// Difference iterator for intervals using the given closure
 #[derive(Debug, Clone)]
 pub struct DifferenceWith<I, J, F> {
     iter: I,

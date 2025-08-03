@@ -30,10 +30,10 @@ pub trait PeerSymmetricDifferenceIteratorDispatcher: Iterator + Sized {
     }
 }
 
-impl<I> PeerSymmetricDifferenceIteratorDispatcher for I
+impl<'a, I, T> PeerSymmetricDifferenceIteratorDispatcher for I
 where
-    I: Iterator,
-    I::Item: SymmetricallyDifferentiable<Output = I::Item>,
+    I: Iterator<Item = &'a T>,
+    T: 'a + SymmetricallyDifferentiable<Output = T> + Clone,
 {
 }
 
@@ -56,12 +56,12 @@ where
     }
 }
 
-impl<I> Iterator for PeerSymmetricDifference<Peekable<I>>
+impl<'a, I, T> Iterator for PeerSymmetricDifference<Peekable<I>>
 where
-    I: Iterator,
-    I::Item: SymmetricallyDifferentiable<Output = I::Item> + Clone,
+    I: Iterator<Item = &'a T>,
+    T: 'a + SymmetricallyDifferentiable<Output = T> + Clone,
 {
-    type Item = (I::Item, Option<I::Item>);
+    type Item = (T, Option<T>);
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.exhausted {
@@ -75,7 +75,7 @@ where
 
         let Some(peeked) = self.iter.peek() else {
             self.exhausted = true;
-            return Some((current, None));
+            return Some((current.clone(), None));
         };
 
         match current.symmetrically_differentiate(peeked) {
@@ -83,7 +83,7 @@ where
             SymmetricDifferenceResult::Split(split_first_part, split_second_part) => {
                 Some((split_first_part, Some(split_second_part)))
             },
-            SymmetricDifferenceResult::Separate => Some((current, Some(peeked.clone()))),
+            SymmetricDifferenceResult::Separate => Some((current.clone(), Some((*peeked).clone()))),
         }
     }
 }
@@ -91,14 +91,14 @@ where
 // TODO: If a reverse Peekable becomes standard or when we'll import a crate that does that,
 // implement DoubleEndedIterator for PeerSymmetricDifference
 
-impl<I> FusedIterator for PeerSymmetricDifference<Peekable<I>>
+impl<'a, I, T> FusedIterator for PeerSymmetricDifference<Peekable<I>>
 where
-    I: Iterator,
-    I::Item: SymmetricallyDifferentiable<Output = I::Item> + Clone,
+    I: Iterator<Item = &'a T>,
+    T: 'a + SymmetricallyDifferentiable<Output = T> + Clone,
 {
 }
 
-/// Peer union iterator for intervals using the given closure
+/// Peer symmetric difference iterator for intervals using the given closure
 #[derive(Debug, Clone)]
 pub struct PeerSymmetricDifferenceWith<I, F> {
     iter: I,
@@ -119,13 +119,13 @@ where
     }
 }
 
-impl<I, F> Iterator for PeerSymmetricDifferenceWith<Peekable<I>, F>
+impl<'a, I, T, F> Iterator for PeerSymmetricDifferenceWith<Peekable<I>, F>
 where
-    I: Iterator,
-    I::Item: SymmetricallyDifferentiable<Output = I::Item> + Clone,
-    F: FnMut(&I::Item, &I::Item) -> SymmetricDifferenceResult<I::Item>,
+    I: Iterator<Item = &'a T>,
+    T: 'a + SymmetricallyDifferentiable<Output = T> + Clone,
+    F: FnMut(&T, &T) -> SymmetricDifferenceResult<T>,
 {
-    type Item = (I::Item, Option<I::Item>);
+    type Item = (T, Option<T>);
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.exhausted {
@@ -139,15 +139,15 @@ where
 
         let Some(peeked) = self.iter.peek() else {
             self.exhausted = true;
-            return Some((current, None));
+            return Some((current.clone(), None));
         };
 
-        match (self.f)(&current, peeked) {
+        match (self.f)(current, peeked) {
             SymmetricDifferenceResult::Shrunk(shrunk) => Some((shrunk, None)),
             SymmetricDifferenceResult::Split(split_first_part, split_second_part) => {
                 Some((split_first_part, Some(split_second_part)))
             },
-            SymmetricDifferenceResult::Separate => Some((current, Some(peeked.clone()))),
+            SymmetricDifferenceResult::Separate => Some((current.clone(), Some((*peeked).clone()))),
         }
     }
 }
@@ -155,11 +155,11 @@ where
 // TODO: If a reverse Peekable becomes standard or when we'll import a crate that does that,
 // implement DoubleEndedIterator for PeerSymmetricDifferenceWith
 
-impl<I, F> FusedIterator for PeerSymmetricDifferenceWith<Peekable<I>, F>
+impl<'a, I, T, F> FusedIterator for PeerSymmetricDifferenceWith<Peekable<I>, F>
 where
-    I: Iterator,
-    I::Item: SymmetricallyDifferentiable<Output = I::Item> + Clone,
-    F: FnMut(&I::Item, &I::Item) -> SymmetricDifferenceResult<I::Item>,
+    I: Iterator<Item = &'a T>,
+    T: 'a + SymmetricallyDifferentiable<Output = T> + Clone,
+    F: FnMut(&T, &T) -> SymmetricDifferenceResult<T>,
 {
 }
 
@@ -198,6 +198,7 @@ where
 {
 }
 
+/// Symmetric difference iterator for intervals using the predefined rules
 #[derive(Debug, Clone, Hash)]
 pub struct SymmetricDifference<I, J> {
     iter: I,
@@ -215,21 +216,21 @@ impl<I, J> SymmetricDifference<I, J> {
     }
 }
 
-impl<'o, I, J, O> Iterator for SymmetricDifference<I, J>
+impl<'a, 'o, I, T, J, O> Iterator for SymmetricDifference<I, J>
 where
-    I: Iterator,
-    I::Item: SymmetricallyDifferentiable<O, Output = I::Item>,
+    I: Iterator<Item = &'a T>,
+    T: 'a + SymmetricallyDifferentiable<O, Output = T> + Clone,
     J: IntoIterator<Item = &'o O> + Clone,
     O: 'o,
 {
-    type Item = Vec<I::Item>;
+    type Item = Vec<T>;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.exhausted {
             return None;
         }
 
-        let Some(current) = self.iter.next() else {
+        let Some(current) = self.iter.next().cloned() else {
             self.exhausted = true;
             return None;
         };
@@ -262,10 +263,10 @@ where
     }
 }
 
-impl<'o, I, J, O> DoubleEndedIterator for SymmetricDifference<I, J>
+impl<'a, 'o, I, T, J, O> DoubleEndedIterator for SymmetricDifference<I, J>
 where
-    I: DoubleEndedIterator,
-    I::Item: SymmetricallyDifferentiable<O, Output = I::Item>,
+    I: DoubleEndedIterator<Item = &'a T>,
+    T: 'a + SymmetricallyDifferentiable<O, Output = T> + Clone,
     J: IntoIterator<Item = &'o O> + Clone,
     O: 'o,
 {
@@ -274,7 +275,7 @@ where
             return None;
         }
 
-        let Some(current) = self.iter.next_back() else {
+        let Some(current) = self.iter.next_back().cloned() else {
             self.exhausted = true;
             return None;
         };
@@ -307,15 +308,16 @@ where
     }
 }
 
-impl<'o, I, J, O> FusedIterator for SymmetricDifference<I, J>
+impl<'a, 'o, I, T, J, O> FusedIterator for SymmetricDifference<I, J>
 where
-    I: Iterator,
-    I::Item: SymmetricallyDifferentiable<O, Output = I::Item>,
+    I: Iterator<Item = &'a T>,
+    T: 'a + SymmetricallyDifferentiable<O, Output = T> + Clone,
     J: IntoIterator<Item = &'o O> + Clone,
     O: 'o,
 {
 }
 
+/// Symmetric difference iterator for intervals using the given closure
 #[derive(Debug, Clone)]
 pub struct SymmetricDifferenceWith<I, J, F> {
     iter: I,
@@ -335,22 +337,22 @@ impl<I, J, F> SymmetricDifferenceWith<I, J, F> {
     }
 }
 
-impl<'o, I, J, O, F> Iterator for SymmetricDifferenceWith<I, J, F>
+impl<'a, 'o, I, T, J, O, F> Iterator for SymmetricDifferenceWith<I, J, F>
 where
-    I: Iterator,
-    I::Item: SymmetricallyDifferentiable<O, Output = I::Item>,
+    I: Iterator<Item = &'a T>,
+    T: 'a + SymmetricallyDifferentiable<O, Output = T> + Clone,
     J: IntoIterator<Item = &'o O> + Clone,
     O: 'o,
-    F: FnMut(&I::Item, &'o O) -> SymmetricDifferenceResult<I::Item>,
+    F: FnMut(&T, &O) -> SymmetricDifferenceResult<T>,
 {
-    type Item = Vec<I::Item>;
+    type Item = Vec<T>;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.exhausted {
             return None;
         }
 
-        let Some(current) = self.iter.next() else {
+        let Some(current) = self.iter.next().cloned() else {
             self.exhausted = true;
             return None;
         };
@@ -359,7 +361,7 @@ where
             self.other_iter
                 .clone()
                 .into_iter()
-                .fold(vec![current], |differentiated_so_far: Vec<I::Item>, other| {
+                .fold(vec![current], |differentiated_so_far, other| {
                     differentiated_so_far
                         .iter()
                         .flat_map(|diff| {
@@ -383,20 +385,20 @@ where
     }
 }
 
-impl<'o, I, J, O, F> DoubleEndedIterator for SymmetricDifferenceWith<I, J, F>
+impl<'a, 'o, I, T, J, O, F> DoubleEndedIterator for SymmetricDifferenceWith<I, J, F>
 where
-    I: DoubleEndedIterator,
-    I::Item: SymmetricallyDifferentiable<O, Output = I::Item>,
+    I: DoubleEndedIterator<Item = &'a T>,
+    T: 'a + SymmetricallyDifferentiable<O, Output = T> + Clone,
     J: IntoIterator<Item = &'o O> + Clone,
     O: 'o,
-    F: FnMut(&I::Item, &'o O) -> SymmetricDifferenceResult<I::Item>,
+    F: FnMut(&T, &O) -> SymmetricDifferenceResult<T>,
 {
     fn next_back(&mut self) -> Option<Self::Item> {
         if self.exhausted {
             return None;
         }
 
-        let Some(current) = self.iter.next_back() else {
+        let Some(current) = self.iter.next_back().cloned() else {
             self.exhausted = true;
             return None;
         };
@@ -405,7 +407,7 @@ where
             self.other_iter
                 .clone()
                 .into_iter()
-                .fold(vec![current], |differentiated_so_far: Vec<I::Item>, other| {
+                .fold(vec![current], |differentiated_so_far, other| {
                     differentiated_so_far
                         .iter()
                         .flat_map(|diff| {
@@ -429,12 +431,12 @@ where
     }
 }
 
-impl<'o, I, J, O, F> FusedIterator for SymmetricDifferenceWith<I, J, F>
+impl<'a, 'o, I, T, J, O, F> FusedIterator for SymmetricDifferenceWith<I, J, F>
 where
-    I: DoubleEndedIterator,
-    I::Item: SymmetricallyDifferentiable<O, Output = I::Item>,
+    I: Iterator<Item = &'a T>,
+    T: 'a + SymmetricallyDifferentiable<O, Output = T> + Clone,
     J: IntoIterator<Item = &'o O> + Clone,
     O: 'o,
-    F: FnMut(&I::Item, &O) -> SymmetricDifferenceResult<I::Item>,
+    F: FnMut(&T, &O) -> SymmetricDifferenceResult<T>,
 {
 }
