@@ -28,10 +28,10 @@ pub trait PeerDifferenceIteratorDispatcher: Iterator + Sized {
     }
 }
 
-impl<I> PeerDifferenceIteratorDispatcher for I
+impl<'a, I, T> PeerDifferenceIteratorDispatcher for I
 where
-    I: Iterator,
-    I::Item: Differentiable<Output = I::Item>,
+    I: Iterator<Item = &'a T>,
+    T: 'a + Differentiable<Output = T> + Clone,
 {
 }
 
@@ -54,12 +54,12 @@ where
     }
 }
 
-impl<I> Iterator for PeerDifference<Peekable<I>>
+impl<'a, I, T> Iterator for PeerDifference<Peekable<I>>
 where
-    I: Iterator,
-    I::Item: Differentiable<Output = I::Item>,
+    I: Iterator<Item = &'a T>,
+    T: 'a + Differentiable<Output = T> + Clone,
 {
-    type Item = (I::Item, Option<I::Item>);
+    type Item = (T, Option<T>);
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.exhausted {
@@ -73,7 +73,7 @@ where
 
         let Some(peeked) = self.iter.peek() else {
             self.exhausted = true;
-            return Some((current, None));
+            return Some((current.clone(), None));
         };
 
         match current.differentiate(peeked) {
@@ -81,7 +81,7 @@ where
             DifferenceResult::Split(split_first_part, split_second_part) => {
                 Some((split_first_part, Some(split_second_part)))
             },
-            DifferenceResult::Separate => Some((current, None)),
+            DifferenceResult::Separate => Some((current.clone(), None)),
         }
     }
 }
@@ -89,10 +89,10 @@ where
 // TODO: If a reverse Peekable becomes standard or when we'll import a crate that does that,
 // implement DoubleEndedIterator for PeerDifference
 
-impl<I> FusedIterator for PeerDifference<Peekable<I>>
+impl<'a, I, T> FusedIterator for PeerDifference<Peekable<I>>
 where
-    I: Iterator,
-    I::Item: Differentiable<Output = I::Item>,
+    I: Iterator<Item = &'a T>,
+    T: 'a + Differentiable<Output = T> + Clone,
 {
 }
 
@@ -117,13 +117,13 @@ where
     }
 }
 
-impl<I, F> Iterator for PeerDifferenceWith<Peekable<I>, F>
+impl<'a, I, T, F> Iterator for PeerDifferenceWith<Peekable<I>, F>
 where
-    I: Iterator,
-    I::Item: Differentiable<Output = I::Item>,
-    F: FnMut(&I::Item, &I::Item) -> DifferenceResult<I::Item>,
+    I: Iterator<Item = &'a T>,
+    T: 'a + Differentiable<Output = T> + Clone,
+    F: FnMut(&T, &T) -> DifferenceResult<T>,
 {
-    type Item = (I::Item, Option<I::Item>);
+    type Item = (T, Option<T>);
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.exhausted {
@@ -137,15 +137,15 @@ where
 
         let Some(peeked) = self.iter.peek() else {
             self.exhausted = true;
-            return Some((current, None));
+            return Some((current.clone(), None));
         };
 
-        match (self.f)(&current, peeked) {
+        match (self.f)(current, peeked) {
             DifferenceResult::Shrunk(shrunk) => Some((shrunk, None)),
             DifferenceResult::Split(split_first_part, split_second_part) => {
                 Some((split_first_part, Some(split_second_part)))
             },
-            DifferenceResult::Separate => Some((current, None)),
+            DifferenceResult::Separate => Some((current.clone(), None)),
         }
     }
 }
@@ -153,11 +153,11 @@ where
 // TODO: If a reverse Peekable becomes standard or when we'll import a crate that does that,
 // implement DoubleEndedIterator for PeerDifferenceWith
 
-impl<I, F> FusedIterator for PeerDifferenceWith<Peekable<I>, F>
+impl<'a, I, T, F> FusedIterator for PeerDifferenceWith<Peekable<I>, F>
 where
-    I: Iterator,
-    I::Item: Differentiable<Output = I::Item>,
-    F: FnMut(&I::Item, &I::Item) -> DifferenceResult<I::Item>,
+    I: Iterator<Item = &'a T>,
+    T: 'a + Differentiable<Output = T> + Clone,
+    F: FnMut(&T, &T) -> DifferenceResult<T>,
 {
 }
 
@@ -212,21 +212,21 @@ impl<I, J> Difference<I, J> {
     }
 }
 
-impl<'o, I, J, O> Iterator for Difference<I, J>
+impl<'a, 'o, I, T, J, O> Iterator for Difference<I, J>
 where
-    I: Iterator,
-    I::Item: Differentiable<O, Output = I::Item>,
+    I: Iterator<Item = &'a T>,
+    T: 'a + Differentiable<O, Output = T> + Clone,
     J: IntoIterator<Item = &'o O> + Clone,
     O: 'o,
 {
-    type Item = Vec<I::Item>;
+    type Item = Vec<T>;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.exhausted {
             return None;
         }
 
-        let Some(current) = self.iter.next() else {
+        let Some(current) = self.iter.next().cloned() else {
             self.exhausted = true;
             return None;
         };
@@ -259,10 +259,10 @@ where
     }
 }
 
-impl<'o, I, J, O> DoubleEndedIterator for Difference<I, J>
+impl<'a, 'o, I, T, J, O> DoubleEndedIterator for Difference<I, J>
 where
-    I: DoubleEndedIterator,
-    I::Item: Differentiable<O, Output = I::Item>,
+    I: DoubleEndedIterator<Item = &'a T>,
+    T: 'a + Differentiable<O, Output = T> + Clone,
     J: IntoIterator<Item = &'o O> + Clone,
     O: 'o,
 {
@@ -271,7 +271,7 @@ where
             return None;
         }
 
-        let Some(current) = self.iter.next_back() else {
+        let Some(current) = self.iter.next_back().cloned() else {
             self.exhausted = true;
             return None;
         };
@@ -304,10 +304,10 @@ where
     }
 }
 
-impl<'o, I, J, O> FusedIterator for Difference<I, J>
+impl<'a, 'o, I, T, J, O> FusedIterator for Difference<I, J>
 where
-    I: Iterator,
-    I::Item: Differentiable<O, Output = I::Item>,
+    I: Iterator<Item = &'a T>,
+    T: 'a + Differentiable<O, Output = T> + Clone,
     J: IntoIterator<Item = &'o O> + Clone,
     O: 'o,
 {
@@ -332,22 +332,22 @@ impl<I, J, F> DifferenceWith<I, J, F> {
     }
 }
 
-impl<'o, I, J, O, F> Iterator for DifferenceWith<I, J, F>
+impl<'a, 'o, I, T, J, O, F> Iterator for DifferenceWith<I, J, F>
 where
-    I: Iterator,
-    I::Item: Differentiable<O, Output = I::Item>,
+    I: Iterator<Item = &'a T>,
+    T: 'a + Differentiable<O, Output = T> + Clone,
     J: IntoIterator<Item = &'o O> + Clone,
     O: 'o,
-    F: FnMut(&I::Item, &'o O) -> DifferenceResult<I::Item>,
+    F: FnMut(&T, &O) -> DifferenceResult<T>,
 {
-    type Item = Vec<I::Item>;
+    type Item = Vec<T>;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.exhausted {
             return None;
         }
 
-        let Some(current) = self.iter.next() else {
+        let Some(current) = self.iter.next().cloned() else {
             self.exhausted = true;
             return None;
         };
@@ -356,7 +356,7 @@ where
             self.other_iter
                 .clone()
                 .into_iter()
-                .fold(vec![current], |differentiated_so_far: Vec<I::Item>, other| {
+                .fold(vec![current], |differentiated_so_far, other| {
                     differentiated_so_far
                         .iter()
                         .flat_map(|diff| {
@@ -380,20 +380,20 @@ where
     }
 }
 
-impl<'o, I, J, O, F> DoubleEndedIterator for DifferenceWith<I, J, F>
+impl<'a, 'o, I, T, J, O, F> DoubleEndedIterator for DifferenceWith<I, J, F>
 where
-    I: DoubleEndedIterator,
-    I::Item: Differentiable<O, Output = I::Item>,
+    I: DoubleEndedIterator<Item = &'a T>,
+    T: 'a + Differentiable<O, Output = T> + Clone,
     J: IntoIterator<Item = &'o O> + Clone,
     O: 'o,
-    F: FnMut(&I::Item, &'o O) -> DifferenceResult<I::Item>,
+    F: FnMut(&T, &O) -> DifferenceResult<T>,
 {
     fn next_back(&mut self) -> Option<Self::Item> {
         if self.exhausted {
             return None;
         }
 
-        let Some(current) = self.iter.next_back() else {
+        let Some(current) = self.iter.next_back().cloned() else {
             self.exhausted = true;
             return None;
         };
@@ -402,7 +402,7 @@ where
             self.other_iter
                 .clone()
                 .into_iter()
-                .fold(vec![current], |differentiated_so_far: Vec<I::Item>, other| {
+                .fold(vec![current], |differentiated_so_far, other| {
                     differentiated_so_far
                         .iter()
                         .flat_map(|diff| {
@@ -426,12 +426,12 @@ where
     }
 }
 
-impl<'o, I, J, O, F> FusedIterator for DifferenceWith<I, J, F>
+impl<'a, 'o, I, T, J, O, F> FusedIterator for DifferenceWith<I, J, F>
 where
-    I: DoubleEndedIterator,
-    I::Item: Differentiable<O, Output = I::Item>,
+    I: Iterator<Item = &'a T>,
+    T: 'a + Differentiable<O, Output = T> + Clone,
     J: IntoIterator<Item = &'o O> + Clone,
     O: 'o,
-    F: FnMut(&I::Item, &O) -> DifferenceResult<I::Item>,
+    F: FnMut(&T, &O) -> DifferenceResult<T>,
 {
 }
