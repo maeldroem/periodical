@@ -166,9 +166,9 @@ impl<U> UnionResult<U> {
         matches!(self, Self::Separate)
     }
 
-    /// Returns the contained [`United`](UnionResult::United) value
+    /// Returns the content of the [`United`](UnionResult::United) variant
     #[must_use]
-    pub fn unwrap(self) -> Option<U> {
+    pub fn united(self) -> Option<U> {
         match self {
             Self::United(u) => Some(u),
             Self::Separate => None,
@@ -207,9 +207,9 @@ impl<I> IntersectionResult<I> {
         matches!(self, Self::Separate)
     }
 
-    /// Returns the contained [`Intersected`](IntersectionResult::Intersected) value
+    /// Returns the content of the [`Intersected`](IntersectionResult::Intersected) variant
     #[must_use]
-    pub fn unwrap(self) -> Option<I> {
+    pub fn intersected(self) -> Option<I> {
         match self {
             Self::Intersected(i) => Some(i),
             Self::Separate => None,
