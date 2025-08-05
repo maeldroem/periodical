@@ -120,7 +120,7 @@ impl OverlapPosition {
     ///
     /// **Careful!** This method discards data about bound inclusivity and cannot be recovered after conversion.
     #[must_use]
-    pub fn to_simple(self) -> DisambiguatedOverlapPosition {
+    pub fn disambiguate(self) -> DisambiguatedOverlapPosition {
         match self {
             OverlapPosition::OutsideBefore => DisambiguatedOverlapPosition::OutsideBefore,
             OverlapPosition::OutsideAfter => DisambiguatedOverlapPosition::OutsideAfter,
@@ -139,11 +139,11 @@ impl OverlapPosition {
         }
     }
 
-    /// Uses a rule set to transform the overlap position into a simple but opinionated one.
+    /// Uses a rule set to transform the overlap position into a disambiguated one.
     ///
     /// **Careful!** This method discards data about bound inclusivity and cannot be recovered after conversion.
     #[must_use]
-    pub fn to_simple_using_rule_set(self, rule_set: OverlapRuleSet) -> DisambiguatedOverlapPosition {
+    pub fn disambiguate_using_rule_set(self, rule_set: OverlapRuleSet) -> DisambiguatedOverlapPosition {
         rule_set.disambiguate(self)
     }
 }
@@ -446,7 +446,7 @@ pub fn lenient_overlap_rule_set_disambiguation(overlap_position: OverlapPosition
 /// Disambiguates an [`OverlapPosition`] using [the very lenient rule set](OverlapRuleSet::VeryLenient)
 #[must_use]
 pub fn very_lenient_overlap_rule_set_disambiguation(overlap_position: OverlapPosition) -> DisambiguatedOverlapPosition {
-    overlap_position.to_simple()
+    overlap_position.disambiguate()
 }
 
 /// Default overlap rules

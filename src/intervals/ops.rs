@@ -10,6 +10,8 @@
 //! as overlapping and what doesn't.
 
 pub mod abridge;
+pub mod bound_overlap_ambiguity;
+pub mod bound_position;
 pub mod complement;
 pub mod continuation;
 pub mod cut;

@@ -48,7 +48,7 @@ impl TimeContainmentPosition {
     ///
     /// **Careful!** This method discards data about bound inclusivity and cannot be recovered after conversion.
     #[must_use]
-    pub fn to_simple(self) -> DisambiguatedTimeContainmentPosition {
+    pub fn disambiguate(self) -> DisambiguatedTimeContainmentPosition {
         match self {
             Self::OutsideBefore => DisambiguatedTimeContainmentPosition::OutsideBefore,
             Self::OutsideAfter => DisambiguatedTimeContainmentPosition::OutsideAfter,
@@ -59,11 +59,11 @@ impl TimeContainmentPosition {
         }
     }
 
-    /// Uses a rule set to transform the containment position into a simple but opinionated one.
+    /// Uses a rule set to transform the containment position into a disambiguated one.
     ///
     /// **Careful!** This method discards data about bound inclusivity and cannot be recovered after conversion.
     #[must_use]
-    pub fn to_simple_using_rule_set(self, rule_set: TimeContainmentRuleSet) -> DisambiguatedTimeContainmentPosition {
+    pub fn disambiguate_using_rule_set(self, rule_set: TimeContainmentRuleSet) -> DisambiguatedTimeContainmentPosition {
         rule_set.disambiguate(self)
     }
 }
