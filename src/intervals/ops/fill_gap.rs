@@ -1,7 +1,7 @@
 //! Fill gaps between non-overlapping intervals
 
 use super::grow::{GrowableEndBound, GrowableStartBound};
-use super::overlap_position::{CanPositionOverlap, DisambiguatedOverlapPosition, OverlapRuleSet};
+use super::overlap::{CanPositionOverlap, DisambiguatedOverlapPosition, OverlapRuleSet};
 use super::prelude::*;
 
 use crate::intervals::absolute::{

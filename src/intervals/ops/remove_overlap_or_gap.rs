@@ -1,7 +1,7 @@
 //! Removal of overlaps and gaps between intervals
 
 use super::grow::{GrowableEndBound, GrowableStartBound};
-use super::overlap_position::{CanPositionOverlap, DisambiguatedOverlapPosition, OverlapRuleSet};
+use super::overlap::{CanPositionOverlap, DisambiguatedOverlapPosition, OverlapRuleSet};
 use super::prelude::*;
 use super::remove_overlap::{remove_end_overlap_abs, remove_start_overlap_abs};
 use super::shrink::{ShrinkableEndBound, ShrinkableStartBound};

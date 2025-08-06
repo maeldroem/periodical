@@ -1,7 +1,7 @@
 //! Removal of overlaps between overlapping intervals
 
 use super::cut::{CutResult, CutType, Cuttable};
-use super::overlap_position::{CanPositionOverlap, DisambiguatedOverlapPosition, OverlapRuleSet};
+use super::overlap::{CanPositionOverlap, DisambiguatedOverlapPosition, OverlapRuleSet};
 use super::prelude::*;
 
 use crate::intervals::absolute::{

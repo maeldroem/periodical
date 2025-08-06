@@ -11,7 +11,7 @@ pub use super::ops::cut::{CutResult, CutType, Cuttable};
 pub use super::ops::extend::Extensible;
 pub use super::ops::fill_gap::GapFillable;
 pub use super::ops::grow::{GrowableEndBound, GrowableStartBound};
-pub use super::ops::overlap_position::{
+pub use super::ops::overlap::{
     CanPositionOverlap, DEFAULT_OVERLAP_RULES, DisambiguatedOverlapPosition, OverlapPosition, OverlapRule,
     OverlapRuleSet,
 };
@@ -21,7 +21,7 @@ pub use super::ops::remove_overlap::{OverlapRemovable, OverlapRemovalResult};
 pub use super::ops::remove_overlap_or_gap::{OverlapOrGapRemovalResult, RemovableOverlapOrGap};
 pub use super::ops::set_ops::{Differentiable, Intersectable, SymmetricallyDifferentiable, Unitable};
 pub use super::ops::shrink::{ShrinkableEndBound, ShrinkableStartBound};
-pub use super::ops::time_containment_position::{
+pub use super::ops::time_containment::{
     CanPositionTimeContainment, DEFAULT_TIME_CONTAINMENT_RULES, DisambiguatedTimeContainmentPosition,
     TimeContainmentPosition, TimeContainmentRule, TimeContainmentRuleSet,
 };

@@ -70,7 +70,7 @@ pub use ops::cut::{CutResult, CutType, Cuttable};
 pub use ops::extend::Extensible;
 pub use ops::fill_gap::GapFillable;
 pub use ops::grow::{GrowableEndBound, GrowableStartBound};
-pub use ops::overlap_position::{
+pub use ops::overlap::{
     CanPositionOverlap, DEFAULT_OVERLAP_RULES, DisambiguatedOverlapPosition, OverlapPosition, OverlapRule,
     OverlapRuleSet,
 };
@@ -80,7 +80,7 @@ pub use ops::remove_overlap::{OverlapRemovable, OverlapRemovalResult};
 pub use ops::remove_overlap_or_gap::{OverlapOrGapRemovalResult, RemovableOverlapOrGap};
 pub use ops::set_ops::{Differentiable, Intersectable, SymmetricallyDifferentiable, Unitable};
 pub use ops::shrink::{ShrinkableEndBound, ShrinkableStartBound};
-pub use ops::time_containment_position::{
+pub use ops::time_containment::{
     CanPositionTimeContainment, DEFAULT_TIME_CONTAINMENT_RULES, DisambiguatedTimeContainmentPosition,
     TimeContainmentPosition, TimeContainmentRule, TimeContainmentRuleSet,
 };

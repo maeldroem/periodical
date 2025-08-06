@@ -3,7 +3,7 @@
 use chrono::{DateTime, Duration, Utc};
 
 use super::prelude::*;
-use super::time_containment_position::CanPositionTimeContainment;
+use super::time_containment::CanPositionTimeContainment;
 
 use crate::intervals::absolute::{
     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteInterval, AbsoluteStartBound,

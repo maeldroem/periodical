@@ -450,100 +450,129 @@ pub fn very_lenient_overlap_rule_set_disambiguation(overlap_position: OverlapPos
 }
 
 /// Default overlap rules
-pub const DEFAULT_OVERLAP_RULES: [OverlapRule; 1] = [OverlapRule::DenyAdjacency];
+pub const DEFAULT_OVERLAP_RULES: [OverlapRule; 1] = [OverlapRule::AllowAdjacency];
 
-/// All rules for overlapping by converting a [`DisambiguatedOverlapPosition`] into a [`bool`]
+/// All rules for determining what counts as overlapping
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum OverlapRule {
     /// Counts adjacent / "touching" intervals as overlapping
     AllowAdjacency,
-    /// Doesn't count adjacent / "touching" intervals as overlapping
-    DenyAdjacency,
     /// Counts interval as overlapping if it is adjacent only in the past compared to the reference interval
     AllowPastAdjacency,
-    /// Doesn't count interval as overlapping if it is adjacent only in the past compared to the reference interval
-    ///
-    /// Same as [`OverlapRule::AllowFutureAdjacency`]
-    DenyPastAdjacency,
     /// Counts interval as overlapping if it is adjacent only in the future compared to the reference interval
     AllowFutureAdjacency,
+    /// Doesn't count adjacent / "touching" intervals as overlapping
+    DenyAdjacency,
+    /// Doesn't count interval as overlapping if it is adjacent only in the past compared to the reference interval
+    DenyPastAdjacency,
     /// Doesn't count interval as overlapping if it is adjacent only in the future compared to the reference interval
-    ///
-    /// Same as [`OverlapRule::AllowPastAdjacency`]
     DenyFutureAdjacency,
 }
 
 impl OverlapRule {
-    /// Returns whether the given [`DisambiguatedOverlapPosition`] counts as overlap
+    /// Returns the next state of the running overlap decision, given the current one and
+    /// the disambiguated containment position
     #[must_use]
-    pub fn counts_as_overlap(&self, disambiguated_overlap_position: DisambiguatedOverlapPosition) -> bool {
+    pub fn counts_as_overlap(&self, running: bool, disambiguated_pos: DisambiguatedOverlapPosition) -> bool {
         match self {
-            Self::AllowAdjacency => allow_adjacency_overlap_rules_counts_as_overlap(disambiguated_overlap_position),
-            Self::DenyAdjacency => deny_adjacency_overlap_rules_counts_as_overlap(disambiguated_overlap_position),
-            Self::AllowPastAdjacency | Self::DenyFutureAdjacency => {
-                allow_past_adjacency_overlap_rules_counts_as_overlap(disambiguated_overlap_position)
+            Self::AllowAdjacency => allow_adjacency_overlap_rule_counts_as_overlap(running, disambiguated_pos),
+            Self::AllowPastAdjacency => allow_past_adjacency_overlap_rule_counts_as_overlap(running, disambiguated_pos),
+            Self::AllowFutureAdjacency => {
+                allow_future_adjacency_overlap_rule_counts_as_overlap(running, disambiguated_pos)
             },
-            Self::AllowFutureAdjacency | Self::DenyPastAdjacency => {
-                allow_future_adjacency_overlap_rules_counts_as_overlap(disambiguated_overlap_position)
+            Self::DenyAdjacency => deny_adjacency_overlap_rule_counts_as_overlap(running, disambiguated_pos),
+            Self::DenyPastAdjacency => deny_past_adjacency_overlap_rule_counts_as_overlap(running, disambiguated_pos),
+            Self::DenyFutureAdjacency => {
+                deny_future_adjacency_overlap_rule_counts_as_overlap(running, disambiguated_pos)
             },
         }
     }
 }
 
-/// Checks whether the given [`DisambiguatedOverlapPosition`] respects [the 'allow adjacency' rule](OverlapRule::AllowAdjacency)
+/// Checks all the given rules and returns the final boolean regarding overlap
 #[must_use]
-pub fn allow_adjacency_overlap_rules_counts_as_overlap(
-    disambiguated_overlap_position: DisambiguatedOverlapPosition,
-) -> bool {
-    !matches!(
+pub fn check_overlap_rules<'a, RI>(disambiguated_overlap_position: DisambiguatedOverlapPosition, rules: RI) -> bool
+where
+    RI: IntoIterator<Item = &'a OverlapRule>,
+{
+    let common = matches!(
         disambiguated_overlap_position,
-        DisambiguatedOverlapPosition::OutsideBefore
-            | DisambiguatedOverlapPosition::OutsideAfter
-            | DisambiguatedOverlapPosition::Outside
-    )
+        DisambiguatedOverlapPosition::CrossesStart
+            | DisambiguatedOverlapPosition::CrossesEnd
+            | DisambiguatedOverlapPosition::Inside
+            | DisambiguatedOverlapPosition::InsideAndSameStart
+            | DisambiguatedOverlapPosition::InsideAndSameEnd
+            | DisambiguatedOverlapPosition::Equal
+            | DisambiguatedOverlapPosition::ContainsAndSameStart
+            | DisambiguatedOverlapPosition::ContainsAndSameEnd
+            | DisambiguatedOverlapPosition::Contains,
+    );
+
+    rules.into_iter().fold(common, |is_overlapping, rule| {
+        rule.counts_as_overlap(is_overlapping, disambiguated_overlap_position)
+    })
 }
 
-/// Checks whether the given [`DisambiguatedOverlapPosition`] respects [the 'deny adjacency' rule](OverlapRule::DenyAdjacency)
+/// Checks whether the given [`DisambiguatedOverlapPosition`] respects [the 'allow adjacency' rule](OverlapRule::AllowAdjacency)
 #[must_use]
-pub fn deny_adjacency_overlap_rules_counts_as_overlap(
-    disambiguated_overlap_position: DisambiguatedOverlapPosition,
+pub fn allow_adjacency_overlap_rule_counts_as_overlap(
+    running: bool,
+    disambiguated_pos: DisambiguatedOverlapPosition,
 ) -> bool {
-    !matches!(
-        disambiguated_overlap_position,
-        DisambiguatedOverlapPosition::OutsideBefore
-            | DisambiguatedOverlapPosition::OutsideAfter
-            | DisambiguatedOverlapPosition::Outside
-            | DisambiguatedOverlapPosition::OnStart
-            | DisambiguatedOverlapPosition::OnEnd
-    )
+    running
+        || matches!(
+            disambiguated_pos,
+            DisambiguatedOverlapPosition::OnStart | DisambiguatedOverlapPosition::OnEnd
+        )
 }
 
 /// Checks whether the given [`DisambiguatedOverlapPosition`] respects [the 'allow past adjacency' rule](OverlapRule::AllowPastAdjacency)
 #[must_use]
-pub fn allow_past_adjacency_overlap_rules_counts_as_overlap(
-    disambiguated_overlap_position: DisambiguatedOverlapPosition,
+pub fn allow_past_adjacency_overlap_rule_counts_as_overlap(
+    running: bool,
+    disambiguated_pos: DisambiguatedOverlapPosition,
 ) -> bool {
-    !matches!(
-        disambiguated_overlap_position,
-        DisambiguatedOverlapPosition::OutsideBefore
-            | DisambiguatedOverlapPosition::OutsideAfter
-            | DisambiguatedOverlapPosition::Outside
-            | DisambiguatedOverlapPosition::OnEnd
-    )
+    running || matches!(disambiguated_pos, DisambiguatedOverlapPosition::OnStart)
 }
 
 /// Checks whether the given [`DisambiguatedOverlapPosition`] respects [the 'allow future adjacency' rule](OverlapRule::AllowFutureAdjacency)
 #[must_use]
-pub fn allow_future_adjacency_overlap_rules_counts_as_overlap(
-    disambiguated_overlap_position: DisambiguatedOverlapPosition,
+pub fn allow_future_adjacency_overlap_rule_counts_as_overlap(
+    running: bool,
+    disambiguated_pos: DisambiguatedOverlapPosition,
 ) -> bool {
-    !matches!(
-        disambiguated_overlap_position,
-        DisambiguatedOverlapPosition::OutsideBefore
-            | DisambiguatedOverlapPosition::OutsideAfter
-            | DisambiguatedOverlapPosition::Outside
-            | DisambiguatedOverlapPosition::OnStart
-    )
+    running || matches!(disambiguated_pos, DisambiguatedOverlapPosition::OnEnd)
+}
+
+/// Checks whether the given [`DisambiguatedOverlapPosition`] respects [the 'deny adjacency' rule](OverlapRule::DenyAdjacency)
+#[must_use]
+pub fn deny_adjacency_overlap_rule_counts_as_overlap(
+    running: bool,
+    disambiguated_pos: DisambiguatedOverlapPosition,
+) -> bool {
+    running
+        && !matches!(
+            disambiguated_pos,
+            DisambiguatedOverlapPosition::OnStart | DisambiguatedOverlapPosition::OnEnd,
+        )
+}
+
+/// Checks whether the given [`DisambiguatedOverlapPosition`] respects [the 'deny past adjacency' rule](OverlapRule::DenyPastAdjacency)
+#[must_use]
+pub fn deny_past_adjacency_overlap_rule_counts_as_overlap(
+    running: bool,
+    disambiguated_pos: DisambiguatedOverlapPosition,
+) -> bool {
+    running && !matches!(disambiguated_pos, DisambiguatedOverlapPosition::OnStart)
+}
+
+/// Checks whether the given [`DisambiguatedOverlapPosition`] respects [the 'deny future adjacency' rule](OverlapRule::DenyFutureAdjacency)
+#[must_use]
+pub fn deny_future_adjacency_overlap_rule_counts_as_overlap(
+    running: bool,
+    disambiguated_pos: DisambiguatedOverlapPosition,
+) -> bool {
+    running && !matches!(disambiguated_pos, DisambiguatedOverlapPosition::OnEnd)
 }
 
 /// Capacity to position an overlap from a given [`HasEmptiableAbsoluteBounds`] implementor
@@ -647,15 +676,11 @@ pub trait CanPositionOverlap<Rhs = Self> {
         RI: IntoIterator<Item = &'a OverlapRule>,
     {
         self.disambiguated_overlap_position(rhs, rule_set)
-            .map(|disambiguated_overlap_position| {
-                rules
-                    .into_iter()
-                    .all(|rule| rule.counts_as_overlap(disambiguated_overlap_position))
-            })
+            .map(|disambiguated_overlap_position| check_overlap_rules(disambiguated_overlap_position, rules))
             .unwrap_or(false)
     }
 
-    /// Returns whether the given other interval overlaps the current interval using a custom function
+    /// Returns whether the given other interval overlaps the current interval using the given closure
     ///
     /// This method uses [`CanPositionOverlap::overlap_position`]. If this aforementioned method returns an [`Err`],
     /// then this method returns false.
@@ -677,7 +702,8 @@ pub trait CanPositionOverlap<Rhs = Self> {
         self.overlap_position(rhs).map(f).unwrap_or(false)
     }
 
-    /// Returns whether the given other interval overlaps the current interval using a custom function
+    /// Returns whether the given other interval overlaps the current interval using the given closure
+    /// with a disambiguated position
     ///
     /// This method uses [`disambiguated_overlap_position`](CanPositionOverlap::disambiguated_overlap_position). If this aforementioned method returns an [`Err`],
     /// then this method returns false.
@@ -691,7 +717,7 @@ pub trait CanPositionOverlap<Rhs = Self> {
     ///
     /// If you are looking for predetermined decisions on what's considered as overlapping, see [`CanPositionOverlap::overlaps`].
     #[must_use]
-    fn overlaps_using_simple<F>(&self, rhs: &Rhs, rule_set: OverlapRuleSet, f: F) -> bool
+    fn overlaps_using_disambiguated<F>(&self, rhs: &Rhs, rule_set: OverlapRuleSet, f: F) -> bool
     where
         F: FnOnce(DisambiguatedOverlapPosition) -> bool,
     {

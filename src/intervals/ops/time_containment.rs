@@ -152,72 +152,117 @@ pub fn lenient_containment_rule_set_disambiguation(
 }
 
 /// Time containment rules used as the reference for the predefined decisions
-pub const DEFAULT_TIME_CONTAINMENT_RULES: [TimeContainmentRule; 0] = [];
+pub const DEFAULT_TIME_CONTAINMENT_RULES: [TimeContainmentRule; 1] = [TimeContainmentRule::AllowOnBounds];
 
-/// All rules for containment by converting a [`DisambiguatedTimeContainmentPosition`] into a [`bool`]
+/// All rules for determining what counts as containment
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum TimeContainmentRule {
+    /// Counts as contained when the time is on the start of the interval
+    AllowOnStart,
+    /// Counts as contained when the time is on the end of the interval
+    AllowOnEnd,
+    /// Equivalent to [`AllowOnStart`](TimeContainmentRule::AllowOnStart) and [`AllowOnEnd`](TimeContainmentRule::AllowOnEnd)
+    AllowOnBounds,
     /// Doesn't count as contained when the time is on the start of the interval
     DenyOnStart,
     /// Doesn't count as contained when the time is on the end of the interval
     DenyOnEnd,
-    /// Doesn't count as contained when the time is on either end of the interval
+    /// Equivalent to [`DenyOnStart`](TimeContainmentRule::DenyOnStart) and [`DenyOnEnd`](TimeContainmentRule::DenyOnEnd)
     DenyOnBounds,
 }
 
 impl TimeContainmentRule {
-    /// Returns whether the given [`SimpleContainmentPosition`] counts as contained
+    /// Returns the next state of the running containment decision, given the current one and
+    /// the disambiguated containment position
     #[must_use]
-    pub fn counts_as_contained(&self, simple_containment_position: DisambiguatedTimeContainmentPosition) -> bool {
+    pub fn counts_as_contained(&self, running: bool, disambiguated_pos: DisambiguatedTimeContainmentPosition) -> bool {
         match self {
-            Self::DenyOnStart => deny_on_start_containment_rule_counts_as_contained(simple_containment_position),
-            Self::DenyOnEnd => deny_on_end_containment_rule_counts_as_contained(simple_containment_position),
-            Self::DenyOnBounds => deny_on_bounds_containment_rule_counts_as_contained(simple_containment_position),
+            Self::AllowOnStart => allow_on_start_containment_rule_counts_as_contained(running, disambiguated_pos),
+            Self::AllowOnEnd => allow_on_end_containment_rule_counts_as_contained(running, disambiguated_pos),
+            Self::AllowOnBounds => allow_on_bounds_containment_rule_counts_as_contained(running, disambiguated_pos),
+            Self::DenyOnStart => deny_on_start_containment_rule_counts_as_contained(running, disambiguated_pos),
+            Self::DenyOnEnd => deny_on_end_containment_rule_counts_as_contained(running, disambiguated_pos),
+            Self::DenyOnBounds => deny_on_bounds_containment_rule_counts_as_contained(running, disambiguated_pos),
         }
     }
+}
+
+/// Checks all the given rules and returns the final boolean regarding containment
+#[must_use]
+pub fn check_time_containment_rules<'a, RI>(disambiguated_pos: DisambiguatedTimeContainmentPosition, rules: RI) -> bool
+where
+    RI: IntoIterator<Item = &'a TimeContainmentRule>,
+{
+    let common = matches!(disambiguated_pos, DisambiguatedTimeContainmentPosition::Inside,);
+
+    rules.into_iter().fold(common, |is_contained, rule| {
+        rule.counts_as_contained(is_contained, disambiguated_pos)
+    })
+}
+
+/// Checks whether the given [`DisambiguatedTimeContainmentPosition`] respects
+/// [the 'allow on start' rule](TimeContainmentRule::AllowOnStart)
+#[must_use]
+pub fn allow_on_start_containment_rule_counts_as_contained(
+    running: bool,
+    disambiguated_pos: DisambiguatedTimeContainmentPosition,
+) -> bool {
+    running || matches!(disambiguated_pos, DisambiguatedTimeContainmentPosition::OnStart)
+}
+
+/// Checks whether the given [`DisambiguatedTimeContainmentPosition`] respects
+/// [the 'allow on end' rule](TimeContainmentRule::AllowOnEnd)
+#[must_use]
+pub fn allow_on_end_containment_rule_counts_as_contained(
+    running: bool,
+    disambiguated_pos: DisambiguatedTimeContainmentPosition,
+) -> bool {
+    running || matches!(disambiguated_pos, DisambiguatedTimeContainmentPosition::OnEnd)
+}
+
+/// Checks whether the given [`DisambiguatedTimeContainmentPosition`] respects
+/// [the 'allow on bounds' rule](TimeContainmentRule::AllowOnBounds)
+#[must_use]
+pub fn allow_on_bounds_containment_rule_counts_as_contained(
+    running: bool,
+    disambiguated_pos: DisambiguatedTimeContainmentPosition,
+) -> bool {
+    running
+        || matches!(
+            disambiguated_pos,
+            DisambiguatedTimeContainmentPosition::OnStart | DisambiguatedTimeContainmentPosition::OnEnd
+        )
 }
 
 /// Checks whether the given [`DisambiguatedTimeContainmentPosition`] respects [the 'deny on start' rule](TimeContainmentRule::DenyOnStart)
 #[must_use]
 pub fn deny_on_start_containment_rule_counts_as_contained(
-    simple_containment_position: DisambiguatedTimeContainmentPosition,
+    running: bool,
+    disambiguated_pos: DisambiguatedTimeContainmentPosition,
 ) -> bool {
-    !matches!(
-        simple_containment_position,
-        DisambiguatedTimeContainmentPosition::OutsideBefore
-            | DisambiguatedTimeContainmentPosition::OutsideAfter
-            | DisambiguatedTimeContainmentPosition::Outside
-            | DisambiguatedTimeContainmentPosition::OnStart
-    )
+    running && !matches!(disambiguated_pos, DisambiguatedTimeContainmentPosition::OnStart)
 }
 
 /// Checks whether the given [`DisambiguatedTimeContainmentPosition`] respects [the 'deny on end' rule](TimeContainmentRule::DenyOnEnd)
 #[must_use]
 pub fn deny_on_end_containment_rule_counts_as_contained(
-    simple_containment_position: DisambiguatedTimeContainmentPosition,
+    running: bool,
+    disambiguated_pos: DisambiguatedTimeContainmentPosition,
 ) -> bool {
-    !matches!(
-        simple_containment_position,
-        DisambiguatedTimeContainmentPosition::OutsideBefore
-            | DisambiguatedTimeContainmentPosition::OutsideAfter
-            | DisambiguatedTimeContainmentPosition::Outside
-            | DisambiguatedTimeContainmentPosition::OnEnd
-    )
+    running && !matches!(disambiguated_pos, DisambiguatedTimeContainmentPosition::OnEnd)
 }
 
 /// Checks whether the given [`DisambiguatedTimeContainmentPosition`] respects [the 'deny on bounds' rule](TimeContainmentRule::DenyOnBounds)
 #[must_use]
 pub fn deny_on_bounds_containment_rule_counts_as_contained(
-    simple_containment_position: DisambiguatedTimeContainmentPosition,
+    running: bool,
+    disambiguated_pos: DisambiguatedTimeContainmentPosition,
 ) -> bool {
-    !matches!(
-        simple_containment_position,
-        DisambiguatedTimeContainmentPosition::OutsideBefore
-            | DisambiguatedTimeContainmentPosition::OutsideAfter
-            | DisambiguatedTimeContainmentPosition::Outside
-            | DisambiguatedTimeContainmentPosition::OnStart
-            | DisambiguatedTimeContainmentPosition::OnEnd
-    )
+    running
+        && !matches!(
+            disambiguated_pos,
+            DisambiguatedTimeContainmentPosition::OnStart | DisambiguatedTimeContainmentPosition::OnEnd,
+        )
 }
 
 /// Capacity to position where a given time is contained in an interval
@@ -283,7 +328,7 @@ pub trait CanPositionTimeContainment<P> {
         )
     }
 
-    /// Returns whether the given time is contained in the interval using the given [containment rules](`TimeContainmentRule`)
+    /// Returns whether the given time is contained in the interval using the given [containment rules](TimeContainmentRule)
     ///
     /// This method uses [`disambiguated_time_containment_position`](CanPositionTimeContainment::disambiguated_time_containment_position).
     /// If this aforementioned method returns an [`Err`], then this method returns false.
@@ -305,14 +350,12 @@ pub trait CanPositionTimeContainment<P> {
     {
         self.disambiguated_time_containment_position(positionable, rule_set)
             .map(|disambiguated_containment_position| {
-                rules
-                    .into_iter()
-                    .all(|rule| rule.counts_as_contained(disambiguated_containment_position))
+                check_time_containment_rules(disambiguated_containment_position, rules)
             })
             .unwrap_or(false)
     }
 
-    /// Returns whether the given time is contained in the interval using a custom function
+    /// Returns whether the given time is contained in the interval using the given closure
     ///
     /// This method uses [`time_containment_position`](CanPositionTimeContainment::time_containment_position).
     /// If this aforementioned method returns an [`Err`], then this method returns false.
@@ -335,7 +378,8 @@ pub trait CanPositionTimeContainment<P> {
         self.time_containment_position(positionable).map(f).unwrap_or(false)
     }
 
-    /// Returns whether the given time is contained in the interval using a custom function
+    /// Returns whether the given time is contained in the interval using the given closure
+    /// with a disambiguated position
     ///
     /// This method uses [`disambiguated_time_containment_position`](CanPositionTimeContainment::disambiguated_time_containment_position).
     /// If this aforementioned method returns an [`Err`], then this method returns false.
@@ -349,7 +393,7 @@ pub trait CanPositionTimeContainment<P> {
     ///
     /// If you are looking for predetermined decisions on what's considered as contained, see [`simple_contains`](CanPositionTimeContainment::simple_contains).
     #[must_use]
-    fn contains_using_simple<F>(&self, positionable: P, rule_set: TimeContainmentRuleSet, f: F) -> bool
+    fn contains_using_disambiguated<F>(&self, positionable: P, rule_set: TimeContainmentRuleSet, f: F) -> bool
     where
         F: FnOnce(DisambiguatedTimeContainmentPosition) -> bool,
     {

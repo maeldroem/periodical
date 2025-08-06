@@ -2,7 +2,7 @@
 
 use super::abridge::Abridgable;
 use super::extend::Extensible;
-use super::overlap_position::CanPositionOverlap;
+use super::overlap::CanPositionOverlap;
 use super::prelude::*;
 
 use crate::intervals::absolute::{AbsoluteBounds, AbsoluteInterval, EmptiableAbsoluteBounds, HalfOpenAbsoluteInterval};
