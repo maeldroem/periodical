@@ -188,10 +188,10 @@ pub trait DifferentiableIteratorDispatcher: Iterator + Sized {
     }
 }
 
-impl<I> DifferentiableIteratorDispatcher for I
+impl<'a, I, T> DifferentiableIteratorDispatcher for I
 where
-    I: Iterator,
-    I::Item: Interval, // Differentiable<O, Output = I::Item>,
+    I: Iterator<Item = &'a T>,
+    T: 'a + Interval + Clone, // Differentiable<O, Output = I::Item>,
 {
 }
 

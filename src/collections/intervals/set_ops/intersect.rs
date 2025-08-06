@@ -182,10 +182,10 @@ pub trait IntersectableIteratorDispatcher: Iterator + Sized {
     }
 }
 
-impl<I> IntersectableIteratorDispatcher for I
+impl<'a, I, T> IntersectableIteratorDispatcher for I
 where
-    I: Iterator,
-    I::Item: Interval, // Intersectable<O, Output = I::Item>,
+    I: Iterator<Item = &'a T>,
+    T: 'a + Interval + Clone, // Intersectable<O, Output = I::Item>,
 {
 }
 

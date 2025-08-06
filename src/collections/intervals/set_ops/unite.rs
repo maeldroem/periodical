@@ -332,10 +332,10 @@ pub trait UnitableIteratorDispatcher: Iterator + Sized {
     }
 }
 
-impl<I> UnitableIteratorDispatcher for I
+impl<'a, I, T> UnitableIteratorDispatcher for I
 where
-    I: Iterator,
-    I::Item: Interval, // Unitable<O, Output = I::Item>,
+    I: Iterator<Item = &'a T>,
+    T: 'a + Interval + Clone, // + Unitable<O, Output = T>
 {
 }
 

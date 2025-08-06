@@ -191,10 +191,10 @@ pub trait SymmetricallyDifferentiableIteratorDispatcher: Iterator + Sized {
     }
 }
 
-impl<I> SymmetricallyDifferentiableIteratorDispatcher for I
+impl<'a, I, T> SymmetricallyDifferentiableIteratorDispatcher for I
 where
-    I: Iterator,
-    I::Item: Interval, // SymmetricallyDifferentiable<O, Output = I::Item>,
+    I: Iterator<Item = &'a T>,
+    T: 'a + Interval + Clone, // SymmetricallyDifferentiable<O, Output = I::Item>,
 {
 }
 
