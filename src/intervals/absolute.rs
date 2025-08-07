@@ -564,6 +564,17 @@ pub enum EmptiableAbsoluteBounds {
     Bound(AbsoluteBounds),
 }
 
+impl EmptiableAbsoluteBounds {
+    /// Converts the content of the [`Bound`](EmptiableAbsoluteBounds::Bound) variant into an [`Option`]
+    #[must_use]
+    pub fn bound(self) -> Option<AbsoluteBounds> {
+        match self {
+            EmptiableAbsoluteBounds::Empty => None,
+            EmptiableAbsoluteBounds::Bound(bound) => Some(bound),
+        }
+    }
+}
+
 impl Interval for EmptiableAbsoluteBounds {}
 
 impl HasEmptiableAbsoluteBounds for EmptiableAbsoluteBounds {

@@ -581,6 +581,17 @@ pub enum EmptiableRelativeBounds {
     Bound(RelativeBounds),
 }
 
+impl EmptiableRelativeBounds {
+    /// Converts the content of the [`Bound`](EmptiableRelativeBounds::Bound) variant into an [`Option`]
+    #[must_use]
+    pub fn bound(self) -> Option<RelativeBounds> {
+        match self {
+            EmptiableRelativeBounds::Empty => None,
+            EmptiableRelativeBounds::Bound(bound) => Some(bound),
+        }
+    }
+}
+
 impl Interval for EmptiableRelativeBounds {}
 
 impl HasEmptiableRelativeBounds for EmptiableRelativeBounds {

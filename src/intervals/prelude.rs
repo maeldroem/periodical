@@ -4,7 +4,13 @@ pub use super::absolute::{
 };
 pub use super::meta::{Emptiable, HasBoundInclusivity, HasDuration, HasOpenness, HasRelativity};
 pub use super::ops::abridge::Abridgable;
-// pub use super::
+pub use super::ops::bound_containment::{
+    BoundContainmentRule, BoundContainmentRuleSet, BoundPosition, CanPositionBoundContainment,
+    DEFAULT_BOUND_CONTAINMENT_RULES, DisambiguatedBoundPosition,
+};
+pub use super::ops::bound_overlap_ambiguity::{
+    BoundOverlapAmbiguity, BoundOverlapDisambiguationRuleSet, DisambiguatedBoundOverlap,
+};
 pub use super::ops::complement::Complementable;
 pub use super::ops::continuation::Continuable;
 pub use super::ops::cut::{CutResult, CutType, Cuttable};
