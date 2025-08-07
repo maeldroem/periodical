@@ -1,9 +1,9 @@
-# `periodical` :clock4:
+# `periodical` :clock4: - :clock7:
 
 [![crates.io](https://img.shields.io/crates/v/periodical)](https://crates.io/crates/periodical)
-[![libs.rs](https://img.shields.io/badge/libs.rs-cargo--mutants-blue)](https://lib.rs/periodical)
+[![libs.rs](https://img.shields.io/badge/libs.rs-periodical-blue)](https://lib.rs/periodical)
 [![Periodical documentation](https://docs.rs/periodical/badge.svg)](https://docs.rs/periodical)
-[![build status](https://github.com/maeldroem/periodical/workflows/rust/badge.svg)](https://github.com/maeldroem/periodical/actions)
+[![build status](https://github.com/maeldroem/periodical/actions/workflows/rust.yml/badge.svg?branch=main)](https://github.com/maeldroem/periodical/actions)
 
 [![GitHub Sponsors](https://img.shields.io/badge/Sponsor-%E2%9D%A4-%23db61a2.svg?&logo=github&logoColor=white&labelColor=181717&style=flat-square)](https://github.com/sponsors/maeldroem)
 
