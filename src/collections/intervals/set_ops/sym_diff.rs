@@ -169,7 +169,8 @@ pub trait SymmetricallyDifferentiableIteratorDispatcher: Iterator + Sized {
     /// using the predefined overlap rules
     ///
     /// ⚠️⏱️ This is suboptimal. It checks every element of the given other iterator against each element of the current
-    /// iterator. It is only useful in _some_ cases. Use [`TODO TODO TODO`] instead.
+    /// iterator. It is only useful in _some_ cases.
+    /// Use [`*UnitedIntervalSet::sym_difference`](crate::collections::intervals::united_set::AbsoluteUnitedIntervalSet::sym_difference) instead.
     fn symmetric_difference<J>(self, other_iter: J) -> SymmetricDifference<Self, J>
     where
         J: IntoIterator + Clone,
@@ -181,7 +182,8 @@ pub trait SymmetricallyDifferentiableIteratorDispatcher: Iterator + Sized {
     /// using the given closure
     ///
     /// ⚠️⏱️ This is suboptimal. It checks every element of the given other iterator against each element of the current
-    /// iterator. It is only useful in _some_ cases. Use [`TODO TODO TODO`] instead.
+    /// iterator. It is only useful in _some_ cases.
+    /// Use [`*UnitedIntervalSet::sym_difference`](crate::collections::intervals::united_set::AbsoluteUnitedIntervalSet::sym_difference) instead.
     fn symmetric_difference_with<J, F>(self, other_iter: J, f: F) -> SymmetricDifferenceWith<Self, J, F>
     where
         J: IntoIterator + Clone,

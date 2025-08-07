@@ -311,7 +311,8 @@ pub trait UnitableIteratorDispatcher: Iterator + Sized {
     /// Unites each item with every overlapping element of the given other iterator using the predefined overlap rules
     ///
     /// ⚠️⏱️ This is suboptimal. It checks every element of the given other iterator against each element of the current
-    /// iterator. It is only useful in _some_ cases. Use [`TODO TODO TODO`] instead.
+    /// iterator. It is only useful in _some_ cases.
+    /// Use [`*UnitedIntervalSet`](crate::collections::intervals::united_set)s instead.
     fn union<J>(self, other_iter: J) -> Union<Self, J>
     where
         J: IntoIterator + Clone,
@@ -322,7 +323,8 @@ pub trait UnitableIteratorDispatcher: Iterator + Sized {
     /// Unites each item with every overlapping element of the given other iterator using the given closure
     ///
     /// ⚠️⏱️ This is suboptimal. It checks every element of the given other iterator against each element of the current
-    /// iterator. It is only useful in _some_ cases. Use [`TODO TODO TODO`] instead.
+    /// iterator. It is only useful in _some_ cases.
+    /// Use [`*UnitedIntervalSet`](crate::collections::intervals::united_set) instead.
     fn union_with<J, F>(self, other_iter: J, f: F) -> UnionWith<Self, J, F>
     where
         J: IntoIterator + Clone,

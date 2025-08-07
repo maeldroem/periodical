@@ -167,7 +167,8 @@ pub trait DifferentiableIteratorDispatcher: Iterator + Sized {
     /// using the predefined overlap rules
     ///
     /// ⚠️⏱️ This is suboptimal. It checks every element of the given other iterator against each element of the current
-    /// iterator. It is only useful in _some_ cases. Use [`TODO TODO TODO`] instead.
+    /// iterator. It is only useful in _some_ cases.
+    /// Use [`*UnitedIntervalSet::difference`](crate::collections::intervals::united_set::AbsoluteUnitedIntervalSet::difference) instead.
     fn difference<J>(self, other_iter: J) -> Difference<Self, J>
     where
         J: IntoIterator + Clone,
@@ -178,7 +179,8 @@ pub trait DifferentiableIteratorDispatcher: Iterator + Sized {
     /// Differentiates each item with every overlapping element of the given other iterator using the given closure
     ///
     /// ⚠️⏱️ This is suboptimal. It checks every element of the given other iterator against each element of the current
-    /// iterator. It is only useful in _some_ cases. Use [`TODO TODO TODO`] instead.
+    /// iterator. It is only useful in _some_ cases.
+    /// Use [`*UnitedIntervalSet::difference`](crate::collections::intervals::united_set::AbsoluteUnitedIntervalSet::difference) instead.
     fn difference_with<J, F>(self, other_iter: J, f: F) -> DifferenceWith<Self, J, F>
     where
         J: IntoIterator + Clone,

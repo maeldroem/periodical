@@ -161,7 +161,8 @@ pub trait IntersectableIteratorDispatcher: Iterator + Sized {
     /// using the predefined overlap rules
     ///
     /// ⚠️⏱️ This is suboptimal. It checks every element of the given other iterator against each element of the current
-    /// iterator. It is only useful in _some_ cases. Use [`TODO TODO TODO`] instead.
+    /// iterator. It is only useful in _some_ cases.
+    /// Use [`*UnitedIntervalSet::intersect`](crate::collections::intervals::united_set::AbsoluteUnitedIntervalSet::intersect) instead.
     fn intersection<J>(self, other_iter: J) -> Intersection<Self, J>
     where
         J: IntoIterator + Clone,
@@ -172,7 +173,8 @@ pub trait IntersectableIteratorDispatcher: Iterator + Sized {
     /// Intersects each item with every overlapping element of the given other iterator using the given closure
     ///
     /// ⚠️⏱️ This is suboptimal. It checks every element of the given other iterator against each element of the current
-    /// iterator. It is only useful in _some_ cases. Use [`TODO TODO TODO`] instead.
+    /// iterator. It is only useful in _some_ cases.
+    /// Use [`*UnitedIntervalSet::intersect`](crate::collections::intervals::united_set::AbsoluteUnitedIntervalSet::intersect) instead.
     fn intersection_with<J, F>(self, other_iter: J, f: F) -> IntersectionWith<Self, J, F>
     where
         J: IntoIterator + Clone,
