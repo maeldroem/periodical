@@ -4,8 +4,8 @@ pub mod complement;
 pub mod precision;
 pub mod relativity_conversion;
 pub mod remove_empty;
-pub mod set;
 pub mod set_ops;
+pub mod united_set;
 
 // TODO: This should contain overlap rules and a function etc. but those should be split into different kinds of Union
 // structures. Also, since by doing that they would become specialized for intervals, the module should be renamed
