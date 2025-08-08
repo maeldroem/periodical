@@ -14,7 +14,7 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  checks:
+  linting:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -22,10 +22,19 @@ jobs:
         run: cargo clippy --verbose
       - name: Cargo fmt check
         run: cargo fmt --check
+  building:
+    runs-on: ubuntu-latest
+    steps:
       - name: Build
         run: cargo build --verbose
+  testing:
+    runs-on: ubuntu-latest
+    steps:
       - name: Run tests
         run: cargo test --verbose -- --test-threads 4
+  code_coverage:
+    runs-on: ubuntu-latest
+    steps:
       - name: Install llvm-tools component
         run: rustup component add llvm-tools
       - name: Install grcov
