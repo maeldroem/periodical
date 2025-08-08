@@ -14,7 +14,7 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build_and_lint:
+  checks:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -26,3 +26,25 @@ jobs:
         run: cargo build --verbose
       - name: Run tests
         run: cargo test --verbose -- --test-threads 4
+      - name: Install llvm-tools component
+        run: rustup component add llvm-tools
+      - name: Compile & Test with code coverage # Thanks https://blog.rng0.io/how-to-do-code-coverage-in-rust/
+        env:
+          CARGO_INCREMENTAL: 0
+          RUSTFLAGS: -C instrument-coverage
+          LLVM_PROFILE_FILE: cargo-coverage-%m.profraw
+        run: cargo test --all-features
+      - name: Generate code coverage report
+        run: grcov . \
+              --binary-path ./target/debug/deps/ \
+              -s . \
+              -t html \
+              --branch \
+              --ignore-not-existing \
+              -o target/coverage/html
+      - name: Upload code coverage report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: code coverage report
+          path: target/coverage/html/
+          retention-days: 7
