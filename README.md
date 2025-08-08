@@ -24,7 +24,7 @@ periodical = "0.1.0"
 - [ ] Fuzzing
 - [ ] [Cargo mutants](https://lib.rs/crates/cargo-mutants)
 - [ ] Full-fledged documentation
-- [ ] Conversion methods to create `periodical`-specific types from standard types
+- [x] Conversion methods to create `periodical`-specific types from standard types
 
 ## 0.1.1
 

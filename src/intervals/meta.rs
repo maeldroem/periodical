@@ -50,8 +50,8 @@ pub enum Relativity {
     Relative,
     /// Bounds are set using specific timestamps
     Absolute,
-    /// Uses concepts rather than bounds, like [open](super::interval::OpenInterval)
-    /// and [empty](super::interval::EmptyInterval) intervals
+    /// Uses concepts rather than bounds, like [open](super::special::OpenInterval)
+    /// and [empty](super::special::EmptyInterval) intervals
     Any,
 }
 
@@ -86,6 +86,16 @@ impl Display for OpeningDirection {
     }
 }
 
+impl From<bool> for OpeningDirection {
+    fn from(goes_to_future: bool) -> Self {
+        if goes_to_future {
+            OpeningDirection::ToFuture
+        } else {
+            OpeningDirection::ToPast
+        }
+    }
+}
+
 /// Time interval duration
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Duration {
@@ -99,6 +109,12 @@ impl Display for Duration {
             Self::Finite(duration) => write!(f, "Finite duration: {duration}"),
             Self::Infinite => write!(f, "Infinite duration"),
         }
+    }
+}
+
+impl From<chrono::Duration> for Duration {
+    fn from(duration: chrono::Duration) -> Self {
+        Duration::Finite(duration)
     }
 }
 
@@ -135,6 +151,16 @@ impl Display for BoundInclusivity {
         match self {
             Self::Inclusive => write!(f, "Inclusive bound"),
             Self::Exclusive => write!(f, "Exclusive bound"),
+        }
+    }
+}
+
+impl From<bool> for BoundInclusivity {
+    fn from(is_inclusive: bool) -> Self {
+        if is_inclusive {
+            BoundInclusivity::Inclusive
+        } else {
+            BoundInclusivity::Exclusive
         }
     }
 }
