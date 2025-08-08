@@ -20,7 +20,7 @@ periodical = "0.1.0"
 ## 0.1.0
 
 - [ ] Tests
-- [ ] Test coverage
+- [x] Test coverage
 - [ ] Fuzzing
 - [ ] [Cargo mutants](https://lib.rs/crates/cargo-mutants)
 - [ ] Full-fledged documentation
