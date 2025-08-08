@@ -173,7 +173,7 @@ impl ToAbsolute for ClosedRelativeInterval {
     type AbsoluteType = ClosedAbsoluteInterval;
 
     fn to_absolute(&self, reference_time: DateTime<Utc>) -> Self::AbsoluteType {
-        ClosedAbsoluteInterval::unchecked_with_inclusivity(
+        ClosedAbsoluteInterval::unchecked_new_with_inclusivity(
             reference_time + self.offset,
             self.from_inclusivity,
             reference_time + self.offset + self.length,
@@ -186,7 +186,7 @@ impl ToAbsolute for HalfOpenRelativeInterval {
     type AbsoluteType = HalfOpenAbsoluteInterval;
 
     fn to_absolute(&self, reference_time: DateTime<Utc>) -> Self::AbsoluteType {
-        HalfOpenAbsoluteInterval::with_inclusivity(
+        HalfOpenAbsoluteInterval::new_with_inclusivity(
             reference_time + self.offset,
             self.reference_time_inclusivity,
             self.opening_direction,
@@ -301,7 +301,7 @@ impl ToRelative for ClosedAbsoluteInterval {
     type RelativeType = ClosedRelativeInterval;
 
     fn to_relative(&self, reference_time: DateTime<Utc>) -> Self::RelativeType {
-        ClosedRelativeInterval::with_inclusivity(
+        ClosedRelativeInterval::new_with_inclusivity(
             self.from - reference_time,
             self.from_inclusivity,
             self.to - self.from,
@@ -314,7 +314,7 @@ impl ToRelative for HalfOpenAbsoluteInterval {
     type RelativeType = HalfOpenRelativeInterval;
 
     fn to_relative(&self, reference_time: DateTime<Utc>) -> Self::RelativeType {
-        HalfOpenRelativeInterval::with_inclusivity(
+        HalfOpenRelativeInterval::new_with_inclusivity(
             self.reference_time - reference_time,
             self.reference_time_inclusivity,
             self.opening_direction,

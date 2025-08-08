@@ -3,6 +3,7 @@
 use std::cmp::Ordering;
 use std::error::Error;
 use std::fmt::Display;
+use std::ops::{Bound, Range, RangeBounds, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive};
 
 use chrono::Duration;
 
@@ -55,6 +56,18 @@ impl HasBoundInclusivity for RelativeFiniteBound {
     }
 }
 
+impl PartialOrd for RelativeFiniteBound {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for RelativeFiniteBound {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.offset.cmp(&other.offset)
+    }
+}
+
 impl Display for RelativeFiniteBound {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
@@ -62,6 +75,72 @@ impl Display for RelativeFiniteBound {
             "Relative finite bound with offset {} ({})",
             self.offset, self.inclusivity
         )
+    }
+}
+
+impl From<Duration> for RelativeFiniteBound {
+    fn from(value: Duration) -> Self {
+        RelativeFiniteBound::new(value)
+    }
+}
+
+impl From<(Duration, BoundInclusivity)> for RelativeFiniteBound {
+    fn from((offset, inclusivity): (Duration, BoundInclusivity)) -> Self {
+        RelativeFiniteBound::new_with_inclusivity(offset, inclusivity)
+    }
+}
+
+impl From<(Duration, bool)> for RelativeFiniteBound {
+    fn from((offset, is_inclusive): (Duration, bool)) -> Self {
+        RelativeFiniteBound::new_with_inclusivity(
+            offset,
+            if is_inclusive {
+                BoundInclusivity::Inclusive
+            } else {
+                BoundInclusivity::Exclusive
+            },
+        )
+    }
+}
+
+/// Errors that can occur when trying to convert a [`Bound<Duration>`] into an [`RelativeFiniteBound`]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum BoundToRelativeFiniteBoundConversionErr {
+    /// The given bound was of the [`Unbounded`](Bound::Unbounded) variant
+    IsUnbounded,
+}
+
+impl Display for BoundToRelativeFiniteBoundConversionErr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::IsUnbounded => {
+                write!(
+                    f,
+                    "The given bound was of the `Unbounded` variant, \
+                    and therefore could not be converted to an `RelativeFiniteBound`"
+                )
+            },
+        }
+    }
+}
+
+impl Error for BoundToRelativeFiniteBoundConversionErr {}
+
+impl TryFrom<Bound<Duration>> for RelativeFiniteBound {
+    type Error = BoundToRelativeFiniteBoundConversionErr;
+
+    fn try_from(value: Bound<Duration>) -> Result<Self, Self::Error> {
+        match value {
+            Bound::Included(offset) => Ok(RelativeFiniteBound::new_with_inclusivity(
+                offset,
+                BoundInclusivity::Inclusive,
+            )),
+            Bound::Excluded(offset) => Ok(RelativeFiniteBound::new_with_inclusivity(
+                offset,
+                BoundInclusivity::Exclusive,
+            )),
+            Bound::Unbounded => Err(BoundToRelativeFiniteBoundConversionErr::IsUnbounded),
+        }
     }
 }
 
@@ -207,6 +286,22 @@ impl From<RelativeFiniteBound> for RelativeStartBound {
     }
 }
 
+impl From<Bound<Duration>> for RelativeStartBound {
+    fn from(bound: Bound<Duration>) -> Self {
+        match bound {
+            Bound::Included(offset) => RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+                offset,
+                BoundInclusivity::Inclusive,
+            )),
+            Bound::Excluded(offset) => RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+                offset,
+                BoundInclusivity::Exclusive,
+            )),
+            Bound::Unbounded => RelativeStartBound::InfinitePast,
+        }
+    }
+}
+
 /// A relative end interval bound, including [inclusivity](BoundInclusivity)
 ///
 /// This contains an offset from the reference time to the end bound, not the length of the relative interval.
@@ -309,6 +404,22 @@ impl Display for RelativeEndBound {
 impl From<RelativeFiniteBound> for RelativeEndBound {
     fn from(value: RelativeFiniteBound) -> Self {
         Self::Finite(value)
+    }
+}
+
+impl From<Bound<Duration>> for RelativeEndBound {
+    fn from(bound: Bound<Duration>) -> Self {
+        match bound {
+            Bound::Included(offset) => RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+                offset,
+                BoundInclusivity::Inclusive,
+            )),
+            Bound::Excluded(offset) => RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+                offset,
+                BoundInclusivity::Exclusive,
+            )),
+            Bound::Unbounded => RelativeEndBound::InfiniteFuture,
+        }
     }
 }
 
@@ -548,6 +659,18 @@ impl Display for RelativeBounds {
     }
 }
 
+impl<R> From<R> for RelativeBounds
+where
+    R: RangeBounds<Duration>,
+{
+    fn from(range: R) -> Self {
+        RelativeBounds::new(
+            RelativeStartBound::from(range.start_bound().cloned()),
+            RelativeEndBound::from(range.end_bound().cloned()),
+        )
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum RelativeBoundsConversionErr {
     EmptyVariant,
@@ -620,18 +743,18 @@ impl Emptiable for EmptiableRelativeBounds {
     }
 }
 
-impl From<RelativeBounds> for EmptiableRelativeBounds {
-    fn from(value: RelativeBounds) -> Self {
-        EmptiableRelativeBounds::Bound(value)
-    }
-}
-
 impl Display for EmptiableRelativeBounds {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Empty => write!(f, "Empty relative interval bounds"),
             Self::Bound(bounds) => write!(f, "{bounds}"),
         }
+    }
+}
+
+impl From<RelativeBounds> for EmptiableRelativeBounds {
+    fn from(value: RelativeBounds) -> Self {
+        EmptiableRelativeBounds::Bound(value)
     }
 }
 
@@ -662,7 +785,7 @@ impl ClosedRelativeInterval {
     ///
     /// If the length is 0, then the inclusivities will be set to inclusive.
     #[must_use]
-    pub fn with_inclusivity(
+    pub fn new_with_inclusivity(
         offset: Duration,
         start_inclusivity: BoundInclusivity,
         length: Duration,
@@ -795,6 +918,61 @@ impl HasRelativeBounds for ClosedRelativeInterval {
     }
 }
 
+impl From<(Duration, Duration)> for ClosedRelativeInterval {
+    fn from((from, to): (Duration, Duration)) -> Self {
+        ClosedRelativeInterval::new(from, to)
+    }
+}
+
+impl From<((Duration, BoundInclusivity), (Duration, BoundInclusivity))> for ClosedRelativeInterval {
+    fn from(
+        ((from, from_inclusivity), (to, to_inclusivity)): ((Duration, BoundInclusivity), (Duration, BoundInclusivity)),
+    ) -> Self {
+        ClosedRelativeInterval::new_with_inclusivity(from, from_inclusivity, to, to_inclusivity)
+    }
+}
+
+impl From<((Duration, bool), (Duration, bool))> for ClosedRelativeInterval {
+    fn from(((from, is_from_inclusive), (to, is_to_inclusive)): ((Duration, bool), (Duration, bool))) -> Self {
+        ClosedRelativeInterval::new_with_inclusivity(
+            from,
+            if is_from_inclusive {
+                BoundInclusivity::Inclusive
+            } else {
+                BoundInclusivity::Exclusive
+            },
+            to,
+            if is_to_inclusive {
+                BoundInclusivity::Inclusive
+            } else {
+                BoundInclusivity::Exclusive
+            },
+        )
+    }
+}
+
+impl From<Range<Duration>> for ClosedRelativeInterval {
+    fn from(range: Range<Duration>) -> Self {
+        ClosedRelativeInterval::new_with_inclusivity(
+            range.start,
+            BoundInclusivity::Inclusive,
+            range.end,
+            BoundInclusivity::Exclusive,
+        )
+    }
+}
+
+impl From<RangeInclusive<Duration>> for ClosedRelativeInterval {
+    fn from(range: RangeInclusive<Duration>) -> Self {
+        ClosedRelativeInterval::new_with_inclusivity(
+            *range.start(),
+            BoundInclusivity::Inclusive,
+            *range.end(),
+            BoundInclusivity::Inclusive,
+        )
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum ClosedRelativeIntervalConversionErr {
     WrongVariant,
@@ -845,7 +1023,7 @@ impl HalfOpenRelativeInterval {
 
     /// Creates a new instance of a half-open relative interval with given inclusivity for the bound
     #[must_use]
-    pub fn with_inclusivity(
+    pub fn new_with_inclusivity(
         offset: Duration,
         reference_time_inclusivity: BoundInclusivity,
         opening_direction: OpeningDirection,
@@ -929,6 +1107,99 @@ impl HasRelativeBounds for HalfOpenRelativeInterval {
             )),
             OpeningDirection::ToFuture => RelativeEndBound::InfiniteFuture,
         }
+    }
+}
+
+impl From<(Duration, OpeningDirection)> for HalfOpenRelativeInterval {
+    fn from((offset, direction): (Duration, OpeningDirection)) -> Self {
+        HalfOpenRelativeInterval::new(offset, direction)
+    }
+}
+
+impl From<(Duration, bool)> for HalfOpenRelativeInterval {
+    fn from((offset, goes_to_future): (Duration, bool)) -> Self {
+        HalfOpenRelativeInterval::new(
+            offset,
+            if goes_to_future {
+                OpeningDirection::ToFuture
+            } else {
+                OpeningDirection::ToPast
+            },
+        )
+    }
+}
+
+impl From<((Duration, BoundInclusivity), OpeningDirection)> for HalfOpenRelativeInterval {
+    fn from(((offset, inclusivity), direction): ((Duration, BoundInclusivity), OpeningDirection)) -> Self {
+        HalfOpenRelativeInterval::new_with_inclusivity(offset, inclusivity, direction)
+    }
+}
+
+impl From<((Duration, BoundInclusivity), bool)> for HalfOpenRelativeInterval {
+    fn from(((offset, inclusivity), goes_to_future): ((Duration, BoundInclusivity), bool)) -> Self {
+        HalfOpenRelativeInterval::new_with_inclusivity(
+            offset,
+            inclusivity,
+            if goes_to_future {
+                OpeningDirection::ToFuture
+            } else {
+                OpeningDirection::ToPast
+            },
+        )
+    }
+}
+
+impl From<((Duration, bool), OpeningDirection)> for HalfOpenRelativeInterval {
+    fn from(((offset, is_inclusive), direction): ((Duration, bool), OpeningDirection)) -> Self {
+        HalfOpenRelativeInterval::new_with_inclusivity(
+            offset,
+            if is_inclusive {
+                BoundInclusivity::Inclusive
+            } else {
+                BoundInclusivity::Exclusive
+            },
+            direction,
+        )
+    }
+}
+
+impl From<((Duration, bool), bool)> for HalfOpenRelativeInterval {
+    fn from(((offset, is_inclusive), goes_to_future): ((Duration, bool), bool)) -> Self {
+        HalfOpenRelativeInterval::new_with_inclusivity(
+            offset,
+            if is_inclusive {
+                BoundInclusivity::Inclusive
+            } else {
+                BoundInclusivity::Exclusive
+            },
+            if goes_to_future {
+                OpeningDirection::ToFuture
+            } else {
+                OpeningDirection::ToPast
+            },
+        )
+    }
+}
+
+impl From<RangeFrom<Duration>> for HalfOpenRelativeInterval {
+    fn from(range: RangeFrom<Duration>) -> Self {
+        HalfOpenRelativeInterval::new_with_inclusivity(
+            range.start,
+            BoundInclusivity::Inclusive,
+            OpeningDirection::ToFuture,
+        )
+    }
+}
+
+impl From<RangeTo<Duration>> for HalfOpenRelativeInterval {
+    fn from(range: RangeTo<Duration>) -> Self {
+        HalfOpenRelativeInterval::new_with_inclusivity(range.end, BoundInclusivity::Exclusive, OpeningDirection::ToPast)
+    }
+}
+
+impl From<RangeToInclusive<Duration>> for HalfOpenRelativeInterval {
+    fn from(range: RangeToInclusive<Duration>) -> Self {
+        HalfOpenRelativeInterval::new_with_inclusivity(range.end, BoundInclusivity::Inclusive, OpeningDirection::ToPast)
     }
 }
 
@@ -1069,14 +1340,14 @@ impl From<RelativeBounds> for RelativeInterval {
         match (value.rel_start(), value.rel_end()) {
             (StartB::InfinitePast, EndB::InfiniteFuture) => RelativeInterval::Open(OpenInterval),
             (StartB::InfinitePast, EndB::Finite(RelativeFiniteBound { offset, inclusivity })) => {
-                RelativeInterval::HalfOpen(HalfOpenRelativeInterval::with_inclusivity(
+                RelativeInterval::HalfOpen(HalfOpenRelativeInterval::new_with_inclusivity(
                     offset,
                     inclusivity,
                     OpeningDirection::ToPast,
                 ))
             },
             (StartB::Finite(RelativeFiniteBound { offset, inclusivity }), EndB::InfiniteFuture) => {
-                RelativeInterval::HalfOpen(HalfOpenRelativeInterval::with_inclusivity(
+                RelativeInterval::HalfOpen(HalfOpenRelativeInterval::new_with_inclusivity(
                     offset,
                     inclusivity,
                     OpeningDirection::ToFuture,
@@ -1091,7 +1362,7 @@ impl From<RelativeBounds> for RelativeInterval {
                     offset: end_offset,
                     inclusivity: end_inclusivity,
                 }),
-            ) => RelativeInterval::Closed(ClosedRelativeInterval::with_inclusivity(
+            ) => RelativeInterval::Closed(ClosedRelativeInterval::new_with_inclusivity(
                 start_offset,
                 start_inclusivity,
                 end_offset - start_offset,
@@ -1110,14 +1381,14 @@ impl From<EmptiableRelativeBounds> for RelativeInterval {
             (None, _) | (_, None) => RelativeInterval::Empty(EmptyInterval),
             (Some(StartB::InfinitePast), Some(EndB::InfiniteFuture)) => RelativeInterval::Open(OpenInterval),
             (Some(StartB::InfinitePast), Some(EndB::Finite(RelativeFiniteBound { offset, inclusivity }))) => {
-                RelativeInterval::HalfOpen(HalfOpenRelativeInterval::with_inclusivity(
+                RelativeInterval::HalfOpen(HalfOpenRelativeInterval::new_with_inclusivity(
                     offset,
                     inclusivity,
                     OpeningDirection::ToPast,
                 ))
             },
             (Some(StartB::Finite(RelativeFiniteBound { offset, inclusivity })), Some(EndB::InfiniteFuture)) => {
-                RelativeInterval::HalfOpen(HalfOpenRelativeInterval::with_inclusivity(
+                RelativeInterval::HalfOpen(HalfOpenRelativeInterval::new_with_inclusivity(
                     offset,
                     inclusivity,
                     OpeningDirection::ToFuture,
@@ -1132,12 +1403,309 @@ impl From<EmptiableRelativeBounds> for RelativeInterval {
                     offset: end_offset,
                     inclusivity: end_inclusivity,
                 })),
-            ) => RelativeInterval::Closed(ClosedRelativeInterval::with_inclusivity(
+            ) => RelativeInterval::Closed(ClosedRelativeInterval::new_with_inclusivity(
                 start_offset,
                 start_inclusivity,
                 end_offset - start_offset,
                 end_inclusivity,
             )),
         }
+    }
+}
+
+impl From<(Option<Duration>, Option<Duration>)> for RelativeInterval {
+    fn from((from_opt, to_opt): (Option<Duration>, Option<Duration>)) -> Self {
+        match (from_opt, to_opt) {
+            (Some(from), Some(to)) => RelativeInterval::Closed(ClosedRelativeInterval::new(from, to)),
+            (Some(from), None) => {
+                RelativeInterval::HalfOpen(HalfOpenRelativeInterval::new(from, OpeningDirection::ToFuture))
+            },
+            (None, Some(to)) => RelativeInterval::HalfOpen(HalfOpenRelativeInterval::new(to, OpeningDirection::ToPast)),
+            (None, None) => RelativeInterval::Open(OpenInterval),
+        }
+    }
+}
+
+impl
+    From<(
+        Option<(Duration, BoundInclusivity)>,
+        Option<(Duration, BoundInclusivity)>,
+    )> for RelativeInterval
+{
+    fn from(
+        (from_opt, to_opt): (
+            Option<(Duration, BoundInclusivity)>,
+            Option<(Duration, BoundInclusivity)>,
+        ),
+    ) -> Self {
+        match (from_opt, to_opt) {
+            (Some((from, from_inclusivity)), Some((to, to_inclusivity))) => RelativeInterval::Closed(
+                ClosedRelativeInterval::new_with_inclusivity(from, from_inclusivity, to, to_inclusivity),
+            ),
+            (Some((from, from_inclusivity)), None) => RelativeInterval::HalfOpen(
+                HalfOpenRelativeInterval::new_with_inclusivity(from, from_inclusivity, OpeningDirection::ToFuture),
+            ),
+            (None, Some((to, to_inclusivity))) => RelativeInterval::HalfOpen(
+                HalfOpenRelativeInterval::new_with_inclusivity(to, to_inclusivity, OpeningDirection::ToPast),
+            ),
+            (None, None) => RelativeInterval::Open(OpenInterval),
+        }
+    }
+}
+
+impl From<(Option<(Duration, bool)>, Option<(Duration, bool)>)> for RelativeInterval {
+    fn from((from_opt, to_opt): (Option<(Duration, bool)>, Option<(Duration, bool)>)) -> Self {
+        match (from_opt, to_opt) {
+            (Some((from, is_from_inclusive)), Some((to, is_to_inclusive))) => {
+                RelativeInterval::Closed(ClosedRelativeInterval::new_with_inclusivity(
+                    from,
+                    if is_from_inclusive {
+                        BoundInclusivity::Inclusive
+                    } else {
+                        BoundInclusivity::Exclusive
+                    },
+                    to,
+                    if is_to_inclusive {
+                        BoundInclusivity::Inclusive
+                    } else {
+                        BoundInclusivity::Exclusive
+                    },
+                ))
+            },
+            (Some((from, is_from_inclusive)), None) => {
+                RelativeInterval::HalfOpen(HalfOpenRelativeInterval::new_with_inclusivity(
+                    from,
+                    if is_from_inclusive {
+                        BoundInclusivity::Inclusive
+                    } else {
+                        BoundInclusivity::Exclusive
+                    },
+                    OpeningDirection::ToFuture,
+                ))
+            },
+            (None, Some((to, is_to_inclusive))) => {
+                RelativeInterval::HalfOpen(HalfOpenRelativeInterval::new_with_inclusivity(
+                    to,
+                    if is_to_inclusive {
+                        BoundInclusivity::Inclusive
+                    } else {
+                        BoundInclusivity::Exclusive
+                    },
+                    OpeningDirection::ToPast,
+                ))
+            },
+            (None, None) => RelativeInterval::Open(OpenInterval),
+        }
+    }
+}
+
+impl From<(bool, Option<Duration>, Option<Duration>)> for RelativeInterval {
+    fn from((is_empty, from_opt, to_opt): (bool, Option<Duration>, Option<Duration>)) -> Self {
+        if is_empty {
+            return RelativeInterval::Empty(EmptyInterval);
+        }
+
+        match (from_opt, to_opt) {
+            (Some(from), Some(to)) => RelativeInterval::Closed(ClosedRelativeInterval::new(from, to)),
+            (Some(from), None) => {
+                RelativeInterval::HalfOpen(HalfOpenRelativeInterval::new(from, OpeningDirection::ToFuture))
+            },
+            (None, Some(to)) => RelativeInterval::HalfOpen(HalfOpenRelativeInterval::new(to, OpeningDirection::ToPast)),
+            (None, None) => RelativeInterval::Open(OpenInterval),
+        }
+    }
+}
+
+impl
+    From<(
+        bool,
+        Option<(Duration, BoundInclusivity)>,
+        Option<(Duration, BoundInclusivity)>,
+    )> for RelativeInterval
+{
+    fn from(
+        (is_empty, from_opt, to_opt): (
+            bool,
+            Option<(Duration, BoundInclusivity)>,
+            Option<(Duration, BoundInclusivity)>,
+        ),
+    ) -> Self {
+        if is_empty {
+            return RelativeInterval::Empty(EmptyInterval);
+        }
+
+        match (from_opt, to_opt) {
+            (Some((from, from_inclusivity)), Some((to, to_inclusivity))) => RelativeInterval::Closed(
+                ClosedRelativeInterval::new_with_inclusivity(from, from_inclusivity, to, to_inclusivity),
+            ),
+            (Some((from, from_inclusivity)), None) => RelativeInterval::HalfOpen(
+                HalfOpenRelativeInterval::new_with_inclusivity(from, from_inclusivity, OpeningDirection::ToFuture),
+            ),
+            (None, Some((to, to_inclusivity))) => RelativeInterval::HalfOpen(
+                HalfOpenRelativeInterval::new_with_inclusivity(to, to_inclusivity, OpeningDirection::ToPast),
+            ),
+            (None, None) => RelativeInterval::Open(OpenInterval),
+        }
+    }
+}
+
+impl From<(bool, Option<(Duration, bool)>, Option<(Duration, bool)>)> for RelativeInterval {
+    fn from((is_empty, from_opt, to_opt): (bool, Option<(Duration, bool)>, Option<(Duration, bool)>)) -> Self {
+        if is_empty {
+            return RelativeInterval::Empty(EmptyInterval);
+        }
+
+        match (from_opt, to_opt) {
+            (Some((from, is_from_inclusive)), Some((to, is_to_inclusive))) => {
+                RelativeInterval::Closed(ClosedRelativeInterval::new_with_inclusivity(
+                    from,
+                    if is_from_inclusive {
+                        BoundInclusivity::Inclusive
+                    } else {
+                        BoundInclusivity::Exclusive
+                    },
+                    to,
+                    if is_to_inclusive {
+                        BoundInclusivity::Inclusive
+                    } else {
+                        BoundInclusivity::Exclusive
+                    },
+                ))
+            },
+            (Some((from, is_from_inclusive)), None) => {
+                RelativeInterval::HalfOpen(HalfOpenRelativeInterval::new_with_inclusivity(
+                    from,
+                    if is_from_inclusive {
+                        BoundInclusivity::Inclusive
+                    } else {
+                        BoundInclusivity::Exclusive
+                    },
+                    OpeningDirection::ToFuture,
+                ))
+            },
+            (None, Some((to, is_to_inclusive))) => {
+                RelativeInterval::HalfOpen(HalfOpenRelativeInterval::new_with_inclusivity(
+                    to,
+                    if is_to_inclusive {
+                        BoundInclusivity::Inclusive
+                    } else {
+                        BoundInclusivity::Exclusive
+                    },
+                    OpeningDirection::ToPast,
+                ))
+            },
+            (None, None) => RelativeInterval::Open(OpenInterval),
+        }
+    }
+}
+
+// Unfortunately can't use impl<R: RangeBounds> From<R> as it's conflicting with the core implementation of From
+impl From<(Bound<Duration>, Bound<Duration>)> for RelativeInterval {
+    fn from((start_bound, end_bound): (Bound<Duration>, Bound<Duration>)) -> Self {
+        match (start_bound, end_bound) {
+            (Bound::Included(from), Bound::Included(to)) => {
+                RelativeInterval::Closed(ClosedRelativeInterval::new_with_inclusivity(
+                    from,
+                    BoundInclusivity::Inclusive,
+                    to,
+                    BoundInclusivity::Inclusive,
+                ))
+            },
+            (Bound::Included(from), Bound::Excluded(to)) => {
+                RelativeInterval::Closed(ClosedRelativeInterval::new_with_inclusivity(
+                    from,
+                    BoundInclusivity::Inclusive,
+                    to,
+                    BoundInclusivity::Exclusive,
+                ))
+            },
+            (Bound::Excluded(from), Bound::Included(to)) => {
+                RelativeInterval::Closed(ClosedRelativeInterval::new_with_inclusivity(
+                    from,
+                    BoundInclusivity::Exclusive,
+                    to,
+                    BoundInclusivity::Inclusive,
+                ))
+            },
+            (Bound::Excluded(from), Bound::Excluded(to)) => {
+                RelativeInterval::Closed(ClosedRelativeInterval::new_with_inclusivity(
+                    from,
+                    BoundInclusivity::Exclusive,
+                    to,
+                    BoundInclusivity::Exclusive,
+                ))
+            },
+            (Bound::Included(from), Bound::Unbounded) => {
+                RelativeInterval::HalfOpen(HalfOpenRelativeInterval::new_with_inclusivity(
+                    from,
+                    BoundInclusivity::Inclusive,
+                    OpeningDirection::ToFuture,
+                ))
+            },
+            (Bound::Excluded(from), Bound::Unbounded) => {
+                RelativeInterval::HalfOpen(HalfOpenRelativeInterval::new_with_inclusivity(
+                    from,
+                    BoundInclusivity::Exclusive,
+                    OpeningDirection::ToFuture,
+                ))
+            },
+            (Bound::Unbounded, Bound::Included(from)) => {
+                RelativeInterval::HalfOpen(HalfOpenRelativeInterval::new_with_inclusivity(
+                    from,
+                    BoundInclusivity::Inclusive,
+                    OpeningDirection::ToPast,
+                ))
+            },
+            (Bound::Unbounded, Bound::Excluded(from)) => {
+                RelativeInterval::HalfOpen(HalfOpenRelativeInterval::new_with_inclusivity(
+                    from,
+                    BoundInclusivity::Exclusive,
+                    OpeningDirection::ToPast,
+                ))
+            },
+            (Bound::Unbounded, Bound::Unbounded) => RelativeInterval::Open(OpenInterval),
+        }
+    }
+}
+
+impl From<Range<Duration>> for RelativeInterval {
+    fn from(value: Range<Duration>) -> Self {
+        RelativeInterval::Closed(ClosedRelativeInterval::from(value))
+    }
+}
+
+impl From<RangeInclusive<Duration>> for RelativeInterval {
+    fn from(value: RangeInclusive<Duration>) -> Self {
+        RelativeInterval::Closed(ClosedRelativeInterval::from(value))
+    }
+}
+
+impl From<RangeFrom<Duration>> for RelativeInterval {
+    fn from(value: RangeFrom<Duration>) -> Self {
+        RelativeInterval::HalfOpen(HalfOpenRelativeInterval::from(value))
+    }
+}
+
+impl From<RangeTo<Duration>> for RelativeInterval {
+    fn from(value: RangeTo<Duration>) -> Self {
+        RelativeInterval::HalfOpen(HalfOpenRelativeInterval::from(value))
+    }
+}
+
+impl From<RangeToInclusive<Duration>> for RelativeInterval {
+    fn from(value: RangeToInclusive<Duration>) -> Self {
+        RelativeInterval::HalfOpen(HalfOpenRelativeInterval::from(value))
+    }
+}
+
+impl From<RangeFull> for RelativeInterval {
+    fn from(_value: RangeFull) -> Self {
+        RelativeInterval::Open(OpenInterval)
+    }
+}
+
+impl From<()> for RelativeInterval {
+    fn from(_value: ()) -> Self {
+        RelativeInterval::Empty(EmptyInterval)
     }
 }
