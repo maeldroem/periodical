@@ -25,16 +25,19 @@ jobs:
   building:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - name: Build
         run: cargo build --verbose
   testing:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - name: Run tests
         run: cargo test --verbose -- --test-threads 4
   code_coverage:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - name: Install llvm-tools component
         run: rustup component add llvm-tools
       - name: Install grcov
