@@ -4,6 +4,7 @@
 
 use std::error::Error;
 use std::fmt::Display;
+use std::ops::RangeFull;
 
 use chrono::Duration;
 
@@ -72,6 +73,12 @@ impl HasRelativeBounds for OpenInterval {
 
     fn rel_end(&self) -> RelativeEndBound {
         RelativeEndBound::InfiniteFuture
+    }
+}
+
+impl From<RangeFull> for OpenInterval {
+    fn from(_value: RangeFull) -> Self {
+        OpenInterval
     }
 }
 
@@ -177,6 +184,12 @@ impl HasEmptiableRelativeBounds for EmptyInterval {
 impl Emptiable for EmptyInterval {
     fn is_empty(&self) -> bool {
         true
+    }
+}
+
+impl From<()> for EmptyInterval {
+    fn from(_value: ()) -> Self {
+        EmptyInterval
     }
 }
 
