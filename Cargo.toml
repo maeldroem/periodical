@@ -16,6 +16,10 @@ perf = "warn"
 style = "warn"
 pedantic = "warn"
 
+[workspace]
+resolver = "3"
+members = ["fuzz"]
+
 [features]
 serde = ["dep:serde", "chrono/serde"]
 arbitrary = ["dep:arbitrary", "chrono/arbitrary"]

@@ -25,5 +25,5 @@ pub use crate::intervals::ops::time_containment::{
 };
 pub use crate::intervals::relative::{
     ClosedRelativeInterval, EmptiableRelativeBounds, HalfOpenRelativeInterval, HasEmptiableRelativeBounds,
-    HasRelativeBounds, RelativeInterval,
+    HasRelativeBounds, RelativeBounds, RelativeInterval,
 };
