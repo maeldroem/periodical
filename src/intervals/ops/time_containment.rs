@@ -3,6 +3,7 @@
 use std::cmp::Ordering;
 use std::convert::Infallible;
 
+use arbitrary::Arbitrary;
 use chrono::{DateTime, Duration, Utc};
 
 use super::prelude::*;
@@ -20,6 +21,7 @@ use crate::intervals::{AbsoluteInterval, ClosedAbsoluteInterval, ClosedRelativeI
 
 /// Where the given time was found relative to a time interval
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum TimeContainmentPosition {
     /// The given time was found before the time interval's beginning
     OutsideBefore,
@@ -72,6 +74,7 @@ impl TimeContainmentPosition {
 ///
 /// Used for methods that resolve ambiguities caused by bound inclusivity.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum DisambiguatedTimeContainmentPosition {
     /// See [`OutsideBefore`](TimeContainmentPosition::OutsideBefore)
     OutsideBefore,
@@ -91,6 +94,7 @@ pub enum DisambiguatedTimeContainmentPosition {
 ///
 /// See [`contains`](CanPositionTimeContainment::contains) for more.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum TimeContainmentRuleSet {
     /// Strict rule set
     ///
@@ -156,6 +160,7 @@ pub const DEFAULT_TIME_CONTAINMENT_RULES: [TimeContainmentRule; 1] = [TimeContai
 
 /// All rules for determining what counts as containment
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum TimeContainmentRule {
     /// Counts as contained when the time is on the start of the interval
     AllowOnStart,

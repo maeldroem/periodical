@@ -4,6 +4,8 @@
 
 use std::fmt::Display;
 
+use arbitrary::Arbitrary;
+
 /// All intervals implement this trait
 ///
 /// This trait is used for restricting parameters to intervals when the parameter itself is not important, but want
@@ -16,6 +18,7 @@ pub trait Interval {}
 
 /// How open is the time interval
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum Openness {
     /// Defined start and end bounds
     Closed,
@@ -45,6 +48,7 @@ pub trait HasOpenness {
 
 /// Whether the time interval is bound to specific timestamps
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum Relativity {
     /// Bounds are set using offsets
     Relative,
@@ -72,6 +76,7 @@ pub trait HasRelativity {
 
 /// The direction in which a half-open time interval is open
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum OpeningDirection {
     ToFuture,
     ToPast,
@@ -98,6 +103,7 @@ impl From<bool> for OpeningDirection {
 
 /// Time interval duration
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum Duration {
     Finite(chrono::Duration),
     Infinite,
@@ -129,6 +135,7 @@ pub trait HasDuration {
 /// For example, if two intervals "touch" but one of them has an exclusive bound on this point, then
 /// they are counted as not overlapping.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Hash)]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum BoundInclusivity {
     #[default]
     Inclusive,

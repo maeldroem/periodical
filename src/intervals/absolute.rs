@@ -5,6 +5,7 @@ use std::error::Error;
 use std::fmt::Display;
 use std::ops::{Bound, Range, RangeBounds, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive};
 
+use arbitrary::Arbitrary;
 use chrono::{DateTime, Utc};
 
 use crate::intervals::meta::Interval;
@@ -15,6 +16,7 @@ use super::special::{EmptyInterval, OpenInterval};
 
 /// An absolute finite bound
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub struct AbsoluteFiniteBound {
     time: DateTime<Utc>,
     inclusivity: BoundInclusivity,
@@ -142,6 +144,7 @@ impl TryFrom<Bound<DateTime<Utc>>> for AbsoluteFiniteBound {
 
 /// An absolute start bound, including [inclusivity](BoundInclusivity)
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum AbsoluteStartBound {
     Finite(AbsoluteFiniteBound),
     InfinitePast,
@@ -278,6 +281,7 @@ impl From<Bound<DateTime<Utc>>> for AbsoluteStartBound {
 
 /// An absolute end bound, including [inclusivity](BoundInclusivity)
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum AbsoluteEndBound {
     Finite(AbsoluteFiniteBound),
     InfiniteFuture,
@@ -468,6 +472,7 @@ where
 
 /// Bounds of a non-empty absolute interval
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub struct AbsoluteBounds {
     start: AbsoluteStartBound,
     end: AbsoluteEndBound,
@@ -670,6 +675,7 @@ impl TryFrom<EmptiableAbsoluteBounds> for AbsoluteBounds {
 
 // Bounds of an absolute interval
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum EmptiableAbsoluteBounds {
     Empty,
     Bound(AbsoluteBounds),
@@ -733,6 +739,7 @@ impl From<AbsoluteBounds> for EmptiableAbsoluteBounds {
 ///
 /// Interval set with absolute time, with a defined start and end
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub struct ClosedAbsoluteInterval {
     pub(super) from: DateTime<Utc>,
     pub(super) to: DateTime<Utc>,
@@ -1038,6 +1045,7 @@ impl TryFrom<AbsoluteInterval> for ClosedAbsoluteInterval {
 /// An interval set with absolute time, has a defined reference time and an opening direction (only one defined bound).
 /// Infinite duration.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub struct HalfOpenAbsoluteInterval {
     pub(super) reference_time: DateTime<Utc>,
     pub(super) opening_direction: OpeningDirection,
@@ -1265,6 +1273,7 @@ impl TryFrom<AbsoluteInterval> for HalfOpenAbsoluteInterval {
 
 /// Represents any absolute interval, including empty and open intervals
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum AbsoluteInterval {
     Closed(ClosedAbsoluteInterval),
     HalfOpen(HalfOpenAbsoluteInterval),

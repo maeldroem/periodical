@@ -3,6 +3,8 @@
 use std::cmp::Ordering;
 use std::convert::Infallible;
 
+use arbitrary::Arbitrary;
+
 use super::prelude::*;
 
 use crate::intervals::absolute::{
@@ -21,6 +23,7 @@ use crate::intervals::{AbsoluteInterval, ClosedAbsoluteInterval, ClosedRelativeI
 ///
 /// See [`overlap_position`](CanPositionOverlap::overlap_position) for more information
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum OverlapPosition {
     /// The current time interval was found before the given other time interval
     OutsideBefore,
@@ -152,6 +155,7 @@ impl OverlapPosition {
 ///
 /// Used for methods that resolve ambiguities caused by bound inclusivity.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum DisambiguatedOverlapPosition {
     /// See [`OverlapPosition::OutsideBefore`]
     OutsideBefore,
@@ -187,6 +191,7 @@ pub enum DisambiguatedOverlapPosition {
 ///
 /// See [`Interval::overlaps_using_rule_set`] for more.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum OverlapRuleSet {
     /// Strict rule set
     ///
@@ -454,6 +459,7 @@ pub const DEFAULT_OVERLAP_RULES: [OverlapRule; 1] = [OverlapRule::AllowAdjacency
 
 /// All rules for determining what counts as overlapping
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum OverlapRule {
     /// Counts adjacent / "touching" intervals as overlapping
     AllowAdjacency,

@@ -3,6 +3,7 @@
 use std::collections::{BTreeSet, HashMap};
 use std::ops::Bound;
 
+use arbitrary::Arbitrary;
 use chrono::{DateTime, Utc};
 
 use super::set_ops::unite::AccumulativelyUnitableIteratorDispatcher;
@@ -21,6 +22,7 @@ use crate::ops::{DifferenceResult, SymmetricDifferenceResult};
 ///
 /// All intervals within the set must not be overlapping nor adjacent.
 #[derive(Debug, Clone, Default)]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub struct AbsoluteUnitedIntervalSet {
     intervals: BTreeSet<AbsoluteBounds>,
 }
@@ -356,6 +358,7 @@ where
 ///
 /// All intervals within the set must not be overlapping nor adjacent.
 #[derive(Debug, Clone, Default)]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub struct RelativeUnitedIntervalSet {
     intervals: BTreeSet<RelativeBounds>,
 }

@@ -5,6 +5,7 @@ use std::error::Error;
 use std::fmt::Display;
 use std::ops::{Bound, Range, RangeBounds, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive};
 
+use arbitrary::Arbitrary;
 use chrono::Duration;
 
 use crate::intervals::meta::Interval;
@@ -15,6 +16,7 @@ use super::special::{EmptyInterval, OpenInterval};
 
 /// A relative finite bound
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub struct RelativeFiniteBound {
     offset: Duration,
     inclusivity: BoundInclusivity,
@@ -146,6 +148,7 @@ impl TryFrom<Bound<Duration>> for RelativeFiniteBound {
 
 /// A relative start interval bound, including [inclusivity](BoundInclusivity)
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum RelativeStartBound {
     Finite(RelativeFiniteBound),
     InfinitePast,
@@ -306,6 +309,7 @@ impl From<Bound<Duration>> for RelativeStartBound {
 ///
 /// This contains an offset from the reference time to the end bound, not the length of the relative interval.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum RelativeEndBound {
     Finite(RelativeFiniteBound),
     InfiniteFuture,
@@ -496,6 +500,7 @@ where
 
 /// Bounds of a non-empty relative interval
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub struct RelativeBounds {
     start: RelativeStartBound,
     end: RelativeEndBound,
@@ -699,6 +704,7 @@ impl TryFrom<EmptiableRelativeBounds> for RelativeBounds {
 
 /// Bounds of a relative interval
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum EmptiableRelativeBounds {
     Empty,
     Bound(RelativeBounds),
@@ -762,6 +768,7 @@ impl From<RelativeBounds> for EmptiableRelativeBounds {
 ///
 /// An interval set with relative time, with a defined start and end
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub struct ClosedRelativeInterval {
     pub(super) offset: Duration,
     pub(super) length: Duration,
@@ -1004,6 +1011,7 @@ impl TryFrom<RelativeInterval> for ClosedRelativeInterval {
 /// An interval set with relative time, has a relative reference time (offset) and an opening direction.
 /// Infinite duration.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub struct HalfOpenRelativeInterval {
     pub(super) offset: Duration,
     pub(super) opening_direction: OpeningDirection,
@@ -1231,6 +1239,7 @@ impl TryFrom<RelativeInterval> for HalfOpenRelativeInterval {
 
 /// Represents any relative interval, including empty and open interval
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum RelativeInterval {
     Closed(ClosedRelativeInterval),
     HalfOpen(HalfOpenRelativeInterval),

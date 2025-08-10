@@ -2,6 +2,8 @@
 //!
 //! TODO: Make time containment positioning and overlap positioning use `Option<BoundOverlapAmbiguity>` for consistency.
 
+use arbitrary::Arbitrary;
+
 use crate::intervals::meta::BoundInclusivity;
 
 /// Ambiguity in bound overlap
@@ -24,6 +26,7 @@ use crate::intervals::meta::BoundInclusivity;
 ///
 /// That's what the bound overlap ambiguity is for.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum BoundOverlapAmbiguity {
     /// Inclusivities come from two start bounds
     BothStarts(BoundInclusivity, BoundInclusivity),
@@ -78,6 +81,7 @@ impl BoundOverlapAmbiguity {
 
 /// Rule sets to disambiguate a [`BoundOverlapAmbiguity`]
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum BoundOverlapDisambiguationRuleSet {
     /// Strict mathematical interpretation of bound inclusivities
     #[default]
@@ -215,6 +219,7 @@ pub fn continuous_to_past_bound_overlap_disambiguation(ambiguity: BoundOverlapAm
 
 /// Disambiguated [`BoundOverlapAmbiguity`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum DisambiguatedBoundOverlap {
     /// First bound was before the second bound
     Before,

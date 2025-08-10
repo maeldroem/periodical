@@ -1,5 +1,6 @@
 //! Interval cutting
 
+use arbitrary::Arbitrary;
 use chrono::{DateTime, Duration, Utc};
 
 use super::prelude::*;
@@ -19,6 +20,7 @@ use crate::intervals::{ClosedAbsoluteInterval, ClosedRelativeInterval, RelativeI
 
 /// Cut types, used by [`Cuttable`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum CutType {
     /// Where the cut was made, both bound inclusivities will be inclusive
     #[default]
