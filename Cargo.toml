@@ -18,7 +18,7 @@ pedantic = "warn"
 
 [features]
 serde = ["dep:serde", "chrono/serde"]
-arbitrary = ["dep:arbitrary"]
+arbitrary = ["dep:arbitrary", "chrono/arbitrary"]
 
 [dependencies]
 arbitrary = { version = "1.4.1", optional = true, features = ["derive"] }
