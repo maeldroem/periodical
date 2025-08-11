@@ -767,7 +767,6 @@ impl From<RelativeBounds> for EmptiableRelativeBounds {
 ///
 /// An interval set with relative time, with a defined start and end
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub struct ClosedRelativeInterval {
     pub(super) offset: Duration,
     pub(super) length: Duration,

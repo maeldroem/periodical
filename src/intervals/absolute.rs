@@ -738,7 +738,6 @@ impl From<AbsoluteBounds> for EmptiableAbsoluteBounds {
 ///
 /// Interval set with absolute time, with a defined start and end
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub struct ClosedAbsoluteInterval {
     pub(super) from: DateTime<Utc>,
     pub(super) to: DateTime<Utc>,
