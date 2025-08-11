@@ -21,5 +21,8 @@ fuzz_target!(|closed_interval: ClosedAbsoluteInterval| {
 
     let abridgment_2nd_degree_complements = left_2nd_degree_complement.abridge(&right_2nd_degree_complement);
 
-    assert_eq!(abridgment_2nd_degree_complements, AbsoluteInterval::from(closed_interval));
+    assert_eq!(
+        abridgment_2nd_degree_complements,
+        AbsoluteInterval::from(closed_interval)
+    );
 });

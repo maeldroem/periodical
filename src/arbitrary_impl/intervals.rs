@@ -21,7 +21,9 @@ impl<'a> Arbitrary<'a> for AbsoluteBounds {
 impl<'a> Arbitrary<'a> for ClosedAbsoluteInterval {
     fn arbitrary(u: &mut Unstructured<'a>) -> arbitrary::Result<Self> {
         let start_time = DateTime::<Utc>::arbitrary(u)?;
-        let end_time = start_time.checked_add_signed(Duration::arbitrary(u)?).unwrap_or(start_time);
+        let end_time = start_time
+            .checked_add_signed(Duration::arbitrary(u)?)
+            .unwrap_or(start_time);
 
         if start_time == end_time {
             Ok(ClosedAbsoluteInterval::new_with_inclusivity(

@@ -3,6 +3,7 @@
 use std::collections::{BTreeSet, HashMap};
 use std::ops::Bound;
 
+#[cfg(feature = "arbitrary")]
 use arbitrary::Arbitrary;
 use chrono::{DateTime, Utc};
 

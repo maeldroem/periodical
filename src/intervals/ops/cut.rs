@@ -1,5 +1,6 @@
 //! Interval cutting
 
+#[cfg(feature = "arbitrary")]
 use arbitrary::Arbitrary;
 use chrono::{DateTime, Duration, Utc};
 

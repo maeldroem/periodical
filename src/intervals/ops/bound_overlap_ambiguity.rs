@@ -2,6 +2,7 @@
 //!
 //! TODO: Make time containment positioning and overlap positioning use `Option<BoundOverlapAmbiguity>` for consistency.
 
+#[cfg(feature = "arbitrary")]
 use arbitrary::Arbitrary;
 
 use crate::intervals::meta::BoundInclusivity;

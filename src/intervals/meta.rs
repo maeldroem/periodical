@@ -4,6 +4,7 @@
 
 use std::fmt::Display;
 
+#[cfg(feature = "arbitrary")]
 use arbitrary::Arbitrary;
 
 /// All intervals implement this trait

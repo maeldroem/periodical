@@ -3,6 +3,7 @@
 use std::cmp::Ordering;
 use std::convert::Infallible;
 
+#[cfg(feature = "arbitrary")]
 use arbitrary::Arbitrary;
 
 use super::prelude::*;
@@ -236,7 +237,7 @@ pub enum OverlapRuleSet {
     /// StartsOnEnd      [----]      :
     /// EndsOnStart           :      [-----]
     /// OutsideBefore         :      (-----]
-    /// 
+    ///
     /// Reference:            (------]
     /// OutsideAfter     [----]      :
     /// OutsideAfter     [----)      :
@@ -254,7 +255,7 @@ pub enum OverlapRuleSet {
     ///
     /// ```txt
     /// [] = inclusive bounds, () = exclusive bounds
-    /// 
+    ///
     /// Reference:            (------]
     /// StartsOnEnd      [----]      :
     /// OutsideAfter     [----)      :

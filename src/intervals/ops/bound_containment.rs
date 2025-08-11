@@ -2,6 +2,7 @@
 
 use std::cmp::Ordering;
 
+#[cfg(feature = "arbitrary")]
 use arbitrary::Arbitrary;
 
 use super::prelude::*;

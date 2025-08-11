@@ -16,7 +16,11 @@ fuzz_target!(|data: (HalfOpenAbsoluteInterval, OverlapRuleSet)| {
         .disambiguated_overlap_position(&complement_half_open, rule_set)
         .expect("Somehow the overlap position produced an Err?");
 
-    match (source_half_open.opening_direction(), source_half_open.reference_time_inclusivity(), rule_set) {
+    match (
+        source_half_open.opening_direction(),
+        source_half_open.reference_time_inclusivity(),
+        rule_set,
+    ) {
         (
             OpeningDirection::ToFuture,
             BoundInclusivity::Exclusive,

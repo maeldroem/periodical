@@ -3,6 +3,7 @@
 use std::cmp::Ordering;
 use std::convert::Infallible;
 
+#[cfg(feature = "arbitrary")]
 use arbitrary::Arbitrary;
 use chrono::{DateTime, Duration, Utc};
 

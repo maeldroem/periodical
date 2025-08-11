@@ -5,6 +5,7 @@ use std::error::Error;
 use std::fmt::Display;
 use std::ops::{Bound, Range, RangeBounds, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive};
 
+#[cfg(feature = "arbitrary")]
 use arbitrary::Arbitrary;
 use chrono::Duration;
 
