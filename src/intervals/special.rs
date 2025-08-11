@@ -6,6 +6,8 @@ use std::error::Error;
 use std::fmt::Display;
 use std::ops::RangeFull;
 
+#[cfg(feature = "arbitrary")]
+use arbitrary::Arbitrary;
 use chrono::Duration;
 
 use crate::intervals::meta::Interval;
@@ -26,6 +28,7 @@ use super::relative::{
 /// Interval without relativity (not absolute nor relative) and without any bounds.
 /// Is equivalent to _time itself_ (all time), infinite duration.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub struct OpenInterval;
 
 impl Interval for OpenInterval {}
@@ -131,6 +134,7 @@ impl TryFrom<RelativeInterval> for OpenInterval {
 /// In regards to operations such as the overlap position, or union, since an empty interval has no defined place
 /// in time, it is always _outside_, _separate_ from the compared.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub struct EmptyInterval;
 
 impl Interval for EmptyInterval {}

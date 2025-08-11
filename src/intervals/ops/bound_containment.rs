@@ -2,6 +2,9 @@
 
 use std::cmp::Ordering;
 
+#[cfg(feature = "arbitrary")]
+use arbitrary::Arbitrary;
+
 use super::prelude::*;
 
 use crate::intervals::absolute::{AbsoluteEndBound, AbsoluteStartBound};
@@ -14,6 +17,7 @@ use crate::intervals::{AbsoluteBounds, EmptiableAbsoluteBounds, EmptiableRelativ
 
 /// Bound position relative to an interval
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum BoundPosition {
     /// The given bound was found before the interval's beginning
     OutsideBefore,
@@ -68,6 +72,7 @@ impl BoundPosition {
 
 /// Disambiguated [`BoundPosition`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum DisambiguatedBoundPosition {
     /// See [`OutsideBefore`](BoundPosition::OutsideBefore)
     OutsideBefore,
@@ -89,6 +94,7 @@ pub enum DisambiguatedBoundPosition {
 ///
 /// See [`contains`](CanPositionBound::contains) for more.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum BoundContainmentRuleSet {
     /// Strict rule set
     ///
@@ -178,6 +184,7 @@ pub const DEFAULT_BOUND_CONTAINMENT_RULES: [BoundContainmentRule; 1] = [BoundCon
 
 /// All rules for determining what counts as containment
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum BoundContainmentRule {
     /// Counts as contained when the bound is on the start of the interval
     AllowOnStart,

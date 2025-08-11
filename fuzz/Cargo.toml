@@ -1,0 +1,52 @@
+[package]
+name = "periodical-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2024"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+chrono = { workspace = true }
+libfuzzer-sys = "0.4"
+
+[dependencies.periodical]
+path = ".."
+features = ["arbitrary"]
+
+[[bin]]
+name = "creating_abs_bounds"
+path = "fuzz_targets/creating_abs_bounds.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "creating_rel_bounds"
+path = "fuzz_targets/creating_rel_bounds.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name ="abs_to_rel_conversions"
+path = "fuzz_targets/abs_to_rel_conversions.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "overlap_half_open_complement"
+path = "fuzz_targets/overlap_half_open_complement.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "abridge_2nd_degree_complement_of_closed_interval"
+path = "fuzz_targets/abridge_2nd_degree_complement_of_closed_interval.rs"
+test = false
+doc = false
+bench = false
+

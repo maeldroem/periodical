@@ -16,9 +16,18 @@ perf = "warn"
 style = "warn"
 pedantic = "warn"
 
+[workspace]
+resolver = "3"
+members = ["fuzz"]
+
+[workspace.dependencies]
+chrono = "0.4.41"
+
 [features]
 serde = ["dep:serde", "chrono/serde"]
+arbitrary = ["dep:arbitrary", "chrono/arbitrary"]
 
 [dependencies]
+arbitrary = { version = "1.4.1", optional = true, features = ["derive"] }
 chrono = "0.4.41"
 serde = { version = "1.0.219", optional = true }
