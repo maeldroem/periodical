@@ -21,7 +21,8 @@ periodical = "0.1.0"
 
 - [ ] Tests
 - [x] Test coverage
-- [ ] Fuzzing
+- [x] [`arbitrary`](https://lib.rs/arbitrary) support
+- [x] Some fuzzing
 - [ ] [Cargo mutants](https://lib.rs/crates/cargo-mutants)
 - [ ] Full-fledged documentation
 - [x] Conversion methods to create `periodical`-specific types from standard types
