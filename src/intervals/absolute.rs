@@ -472,7 +472,6 @@ where
 
 /// Bounds of a non-empty absolute interval
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub struct AbsoluteBounds {
     start: AbsoluteStartBound,
     end: AbsoluteEndBound,

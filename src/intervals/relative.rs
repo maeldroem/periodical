@@ -500,7 +500,6 @@ where
 
 /// Bounds of a non-empty relative interval
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub struct RelativeBounds {
     start: RelativeStartBound,
     end: RelativeEndBound,
