@@ -336,7 +336,7 @@ pub fn remove_overlap_or_gap_abs_bounds(
 
             OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBounds::from(a.grow_start(new_start_bound)))
         },
-        Dop::OnStart | Dop::OnEnd => {
+        Dop::EndsOnStart | Dop::StartsOnEnd => {
             // No gaps nor overlaps already
             OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBounds::from(a.clone()))
         },
@@ -454,7 +454,7 @@ pub fn remove_overlap_or_gap_rel_bounds(
 
             OverlapOrGapRemovalResult::Single(EmptiableRelativeBounds::from(a.grow_start(new_start_bound)))
         },
-        Dop::OnStart | Dop::OnEnd => {
+        Dop::EndsOnStart | Dop::StartsOnEnd => {
             // No gaps nor overlaps already
             OverlapOrGapRemovalResult::Single(EmptiableRelativeBounds::from(a.clone()))
         },

@@ -336,7 +336,7 @@ pub fn remove_overlap_abs_bounds(
     match disambiguated_overlap_position {
         Dop::Outside => unreachable!("Only empty intervals can produce `OverlapPosition::Outside`"),
         Dop::OutsideBefore | Dop::OutsideAfter => Err(OverlapRemovalErr::NoOverlap),
-        Dop::OnStart => {
+        Dop::EndsOnStart => {
             let AbsoluteEndBound::Finite(mut finite_bound) = a.abs_end() else {
                 unreachable!(
                     "If the end of the reference bounds is `InfiniteFuture`, \
@@ -352,7 +352,7 @@ pub fn remove_overlap_abs_bounds(
                 AbsoluteBounds::new(a.abs_start(), AbsoluteEndBound::from(finite_bound)),
             )))
         },
-        Dop::OnEnd => {
+        Dop::StartsOnEnd => {
             let AbsoluteStartBound::Finite(mut finite_bound) = a.abs_start() else {
                 unreachable!(
                     "If the start of the reference bounds is `InfinitePast`, \
@@ -528,7 +528,7 @@ pub fn remove_overlap_rel_bounds(
     match disambiguated_overlap_position {
         Dop::Outside => unreachable!("Only empty intervals can produce `OverlapPosition::Outside`"),
         Dop::OutsideBefore | Dop::OutsideAfter => Err(OverlapRemovalErr::NoOverlap),
-        Dop::OnStart => {
+        Dop::EndsOnStart => {
             let RelativeEndBound::Finite(mut finite_bound) = a.rel_end() else {
                 unreachable!(
                     "If the end of the reference bounds is `InfiniteFuture`, \
@@ -544,7 +544,7 @@ pub fn remove_overlap_rel_bounds(
                 RelativeBounds::new(a.rel_start(), RelativeEndBound::from(finite_bound)),
             )))
         },
-        Dop::OnEnd => {
+        Dop::StartsOnEnd => {
             let RelativeStartBound::Finite(mut finite_bound) = a.rel_start() else {
                 unreachable!(
                     "If the start of the reference bounds is `InfinitePast`, \
