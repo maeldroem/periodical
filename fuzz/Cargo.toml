@@ -37,8 +37,8 @@ doc = false
 bench = false
 
 [[bin]]
-name = "overlap_half_open"
-path = "fuzz_targets/overlap_half_open.rs"
+name = "overlap_half_open_complement"
+path = "fuzz_targets/overlap_half_open_complement.rs"
 test = false
 doc = false
 bench = false
