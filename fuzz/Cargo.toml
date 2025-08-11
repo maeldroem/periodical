@@ -8,14 +8,37 @@ edition = "2024"
 cargo-fuzz = true
 
 [dependencies]
+chrono = { workspace = true }
 libfuzzer-sys = "0.4"
 
 [dependencies.periodical]
 path = ".."
+features = ["arbitrary"]
 
 [[bin]]
-name = "fuzz_target_1"
-path = "fuzz_targets/fuzz_target_1.rs"
+name = "creating_abs_bounds"
+path = "fuzz_targets/creating_abs_bounds.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "creating_rel_bounds"
+path = "fuzz_targets/creating_rel_bounds.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name ="abs_to_rel_conversions"
+path = "fuzz_targets/abs_to_rel_conversions.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "overlap_half_open"
+path = "fuzz_targets/overlap_half_open.rs"
 test = false
 doc = false
 bench = false
