@@ -14,37 +14,138 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  linting:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Clippy
-        run: cargo clippy --verbose
-      - name: Cargo fmt check
-        run: cargo fmt --check
   building:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Build
-        run: cargo build --verbose
+        run: cargo build --verbose --all-features
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-deps-${{ hashFiles('Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-deps-
+  linting:
+    runs-on: ubuntu-latest
+    needs: [building]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-deps-${{ hashFiles('Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-deps-
+      - name: Clippy
+        run: cargo clippy --verbose
+      - name: Cargo fmt check
+        run: cargo fmt --check
   testing:
     runs-on: ubuntu-latest
+    needs: [building]
     steps:
       - uses: actions/checkout@v4
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-deps-${{ hashFiles('Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-deps-
       - name: Run tests
-        run: cargo test --verbose -- --test-threads 4
+        run: cargo test --verbose --all-features -- --test-threads 4
   code_coverage:
     runs-on: ubuntu-latest
+    needs: [building]
     steps:
       - uses: actions/checkout@v4
-      - name: Install llvm-tools component
+      - name: Store active toolchain
+        run: echo "ACTIVE_RUST_TOOLCHAIN=$(rustup show active-toolchain | sed 's/ .*$//')" >> $GITHUB_ENV
+      - name: Store active target
+        run: echo "ACTIVE_RUST_TARGET=$(echo "${{ env.ACTIVE_RUST_TOOLCHAIN }}" | sed 's/^[^-]\+-//')" >> $GITHUB_ENV
+      - name: Create .local/bin
+        run: mkdir -p "$HOME/.local/bin"
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-deps-${{ hashFiles('Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-deps-
+      - name: Cache llvm-tools component
+        uses: actions/cache@v4
+        id: cache-llvm-tools
+        env:
+          # Paths listed in ~/.rustup/toolchains/a-toolchain/lib/rustlib/manifest-llvm-tools-preview-your-target
+          RUSTUP_LLC_LOCATION: ~/.rustup/${{ env.ACTIVE_RUST_TOOLCHAIN }}/lib/rustlib/${{ env.ACTIVE_RUST_TARGET }}/bin/llc
+          RUSTUP_LLVM_AR_LOCATION: ~/.rustup/${{ env.ACTIVE_RUST_TOOLCHAIN }}/lib/rustlib/${{ env.ACTIVE_RUST_TARGET }}/bin/llvm-ar
+          RUSTUP_LLVM_AS_LOCATION: ~/.rustup/${{ env.ACTIVE_RUST_TOOLCHAIN }}/lib/rustlib/${{ env.ACTIVE_RUST_TARGET }}/bin/llvm-as
+          RUSTUP_LLVM_COV_LOCATION: ~/.rustup/${{ env.ACTIVE_RUST_TOOLCHAIN }}/lib/rustlib/${{ env.ACTIVE_RUST_TARGET }}/bin/llvm-cov
+          RUSTUP_LLVM_DIS_LOCATION: ~/.rustup/${{ env.ACTIVE_RUST_TOOLCHAIN }}/lib/rustlib/${{ env.ACTIVE_RUST_TARGET }}/bin/llvm-dis
+          RUSTUP_LLVM_LINK_LOCATION: ~/.rustup/${{ env.ACTIVE_RUST_TOOLCHAIN }}/lib/rustlib/${{ env.ACTIVE_RUST_TARGET }}/bin/llvm-link
+          RUSTUP_LLVM_NM_LOCATION: ~/.rustup/${{ env.ACTIVE_RUST_TOOLCHAIN }}/lib/rustlib/${{ env.ACTIVE_RUST_TARGET }}/bin/llvm-nm
+          RUSTUP_LLVM_OBJCOPY_LOCATION: ~/.rustup/${{ env.ACTIVE_RUST_TOOLCHAIN }}/lib/rustlib/${{ env.ACTIVE_RUST_TARGET }}/bin/llvm-objcopy
+          RUSTUP_LLVM_OBJDUMP_LOCATION: ~/.rustup/${{ env.ACTIVE_RUST_TOOLCHAIN }}/lib/rustlib/${{ env.ACTIVE_RUST_TARGET }}/bin/llvm-objdump
+          RUSTUP_LLVM_PROFDATA_LOCATION: ~/.rustup/${{ env.ACTIVE_RUST_TOOLCHAIN }}/lib/rustlib/${{ env.ACTIVE_RUST_TARGET }}/bin/llvm-profdata
+          RUSTUP_LLVM_READOBJ_LOCATION: ~/.rustup/${{ env.ACTIVE_RUST_TOOLCHAIN }}/lib/rustlib/${{ env.ACTIVE_RUST_TARGET }}/bin/llvm-readobj
+          RUSTUP_LLVM_SIZE_LOCATION: ~/.rustup/${{ env.ACTIVE_RUST_TOOLCHAIN }}/lib/rustlib/${{ env.ACTIVE_RUST_TARGET }}/bin/llvm-size
+          RUSTUP_LLVM_STRIP_LOCATION: ~/.rustup/${{ env.ACTIVE_RUST_TOOLCHAIN }}/lib/rustlib/${{ env.ACTIVE_RUST_TARGET }}/bin/llvm-strip
+          RUSTUP_OPT_LOCATION: ~/.rustup/${{ env.ACTIVE_RUST_TOOLCHAIN }}/lib/rustlib/${{ env.ACTIVE_RUST_TARGET }}/bin/opt
+          RUSTUP_LIBLLVM_LOCATION: ~/.rustup/${{ env.ACTIVE_RUST_TOOLCHAIN }}/lib/rustlib/${{ env.ACTIVE_RUST_TARGET }}/lib/libLLVM-*
+        with:
+          path: |
+            ${{ env.RUSTUP_LLC_LOCATION }}
+            ${{ env.RUSTUP_LLVM_AR_LOCATION }}
+            ${{ env.RUSTUP_LLVM_AS_LOCATION }}
+            ${{ env.RUSTUP_LLVM_COV_LOCATION }}
+            ${{ env.RUSTUP_LLVM_DIS_LOCATION }}
+            ${{ env.RUSTUP_LLVM_LINK_LOCATION }}
+            ${{ env.RUSTUP_LLVM_NM_LOCATION }}
+            ${{ env.RUSTUP_LLVM_OBJCOPY_LOCATION }}
+            ${{ env.RUSTUP_LLVM_OBJDUMP_LOCATION }}
+            ${{ env.RUSTUP_LLVM_PROFDATA_LOCATION }}
+            ${{ env.RUSTUP_LLVM_READOBJ_LOCATION }}
+            ${{ env.RUSTUP_LLVM_SIZE_LOCATION }}
+            ${{ env.RUSTUP_LLVM_STRIP_LOCATION }}
+            ${{ env.RUSTUP_OPT_LOCATION }}
+            ${{ env.RUSTUP_LIBLLVM_LOCATION }}
+          key: >-
+            ${{ runner.os }}-cache-llvm-tools-${{ hashFiles(
+              env.RUSTUP_LLC_LOCATION,
+              env.RUSTUP_LLVM_AR_LOCATION,
+              env.RUSTUP_LLVM_AS_LOCATION,
+              env.RUSTUP_LLVM_COV_LOCATION,
+              env.RUSTUP_LLVM_DIS_LOCATION,
+              env.RUSTUP_LLVM_LINK_LOCATION,
+              env.RUSTUP_LLVM_NM_LOCATION,
+              env.RUSTUP_LLVM_OBJCOPY_LOCATION,
+              env.RUSTUP_LLVM_OBJDUMP_LOCATION,
+              env.RUSTUP_LLVM_PROFDATA_LOCATION,
+              env.RUSTUP_LLVM_READOBJ_LOCATION,
+              env.RUSTUP_LLVM_SIZE_LOCATION,
+              env.RUSTUP_LLVM_STRIP_LOCATION,
+              env.RUSTUP_OPT_LOCATION,
+              env.RUSTUP_LIBLLVM_LOCATION
+            ) }}
+          restore-keys: ${{ runner.os }}-cache-llvm-tools-
+      - if: ${{ steps.cache-llvm-tools.outputs.cache-hit != 'true' }}
+        name: Install llvm-tools component
         run: rustup component add llvm-tools
-      - name: Install grcov
+      - name: Cache grcov
+        uses: actions/cache@v4
+        id: cache-grcov
+        with:
+          path: $HOME/.local/bin/grcov-*
+          key: ${{ runner.os }}-cache-grcov-${{ hashFiles('${{ env.HOME }}/.local/bin/grcov-*') }}
+          restore-keys: ${{ runner.os }}-cache-grcov-
+      - if: ${{ steps.cache-grcov.outputs.cache-hit != 'true' }}
+        name: Install grcov
         run: |
-          mkdir -p "${HOME}/.local/bin"
           curl -sL https://github.com/mozilla/grcov/releases/latest/download/grcov-x86_64-unknown-linux-gnu.tar.bz2 \
-          | tar jxf - -C "${HOME}/.local/bin"
+          | tar jxf - -C "$HOME/.local/bin"
           echo "$HOME/.local/bin" >> $GITHUB_PATH
       - name: Compile & Test with code coverage # Thanks https://blog.rng0.io/how-to-do-code-coverage-in-rust/
         env:
