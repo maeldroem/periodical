@@ -60,6 +60,8 @@ pub mod relative;
 pub mod special;
 
 #[cfg(test)]
+mod absolute_tests;
+#[cfg(test)]
 mod meta_tests;
 #[cfg(test)]
 mod special_tests;

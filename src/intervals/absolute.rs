@@ -93,11 +93,7 @@ impl From<(DateTime<Utc>, bool)> for AbsoluteFiniteBound {
     fn from((time, is_inclusive): (DateTime<Utc>, bool)) -> Self {
         AbsoluteFiniteBound::new_with_inclusivity(
             time,
-            if is_inclusive {
-                BoundInclusivity::Inclusive
-            } else {
-                BoundInclusivity::Exclusive
-            },
+            BoundInclusivity::from(is_inclusive),
         )
     }
 }
@@ -184,8 +180,9 @@ impl PartialOrd for AbsoluteStartBound {
 impl Ord for AbsoluteStartBound {
     fn cmp(&self, other: &Self) -> Ordering {
         match (self, other) {
-            (AbsoluteStartBound::InfinitePast, _) => Ordering::Less,
-            (_, AbsoluteStartBound::InfinitePast) => Ordering::Greater,
+            (AbsoluteStartBound::InfinitePast, AbsoluteStartBound::InfinitePast) => Ordering::Equal,
+            (AbsoluteStartBound::InfinitePast, AbsoluteStartBound::Finite(_)) => Ordering::Less,
+            (AbsoluteStartBound::Finite(_), AbsoluteStartBound::InfinitePast) => Ordering::Greater,
             (
                 AbsoluteStartBound::Finite(AbsoluteFiniteBound {
                     time: time_og,
@@ -319,8 +316,9 @@ impl PartialOrd for AbsoluteEndBound {
 impl Ord for AbsoluteEndBound {
     fn cmp(&self, other: &Self) -> Ordering {
         match (self, other) {
-            (AbsoluteEndBound::InfiniteFuture, _) => Ordering::Greater,
-            (_, AbsoluteEndBound::InfiniteFuture) => Ordering::Less,
+            (AbsoluteEndBound::InfiniteFuture, AbsoluteEndBound::InfiniteFuture) => Ordering::Equal,
+            (AbsoluteEndBound::InfiniteFuture, AbsoluteEndBound::Finite(_)) => Ordering::Greater,
+            (AbsoluteEndBound::Finite(_), AbsoluteEndBound::InfiniteFuture) => Ordering::Less,
             (
                 AbsoluteEndBound::Finite(AbsoluteFiniteBound {
                     time: time_og,
