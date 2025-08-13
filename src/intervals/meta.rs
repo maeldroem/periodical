@@ -110,6 +110,23 @@ pub enum Duration {
     Infinite,
 }
 
+impl Duration {
+    /// Returns whether the interval duration is finite
+    #[must_use]
+    pub fn is_finite(&self) -> bool {
+        matches!(self, Duration::Finite(_))
+    }
+
+    /// Returns the contents of the [`Finite`](Duration::Finite) variant
+    #[must_use]
+    pub fn finite(self) -> Option<chrono::Duration> {
+        match self {
+            Self::Finite(duration) => Some(duration),
+            Self::Infinite => None,
+        }
+    }
+}
+
 impl Display for Duration {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
