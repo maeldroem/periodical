@@ -11,4 +11,6 @@ mod arbitrary_impl;
 mod serde_impl;
 
 #[cfg(test)]
+mod ops_tests;
+#[cfg(test)]
 mod test_utils;
