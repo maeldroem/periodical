@@ -87,21 +87,21 @@ impl Precision {
         time: DateTime<Utc>,
         base: DateTime<Utc>,
     ) -> Result<DateTime<Utc>, PrecisionError> {
-        let unix_epoch_base_diff = dbg!(base.signed_duration_since(DateTime::UNIX_EPOCH));
-        let rebased_time = dbg!(time
+        let unix_epoch_base_diff = base.signed_duration_since(DateTime::UNIX_EPOCH);
+        let rebased_time = time
             .checked_sub_signed(unix_epoch_base_diff)
-            .ok_or(PrecisionError::OutOfRangeDate))?;
+            .ok_or(PrecisionError::OutOfRangeDate)?;
 
-        let precised_rebased_time = dbg!(match self {
+        let precised_rebased_time = match self {
             Self::ToNearest(duration) => rebased_time.duration_round(*duration),
             Self::ToFuture(duration) => rebased_time.duration_round_up(*duration),
             Self::ToPast(duration) => rebased_time.duration_trunc(*duration),
-        });
+        };
 
         let precised_rebased_time = precised_rebased_time.map_err(PrecisionError::RoundingError)?;
 
-        dbg!(precised_rebased_time
-            .checked_add_signed(unix_epoch_base_diff))
+        precised_rebased_time
+            .checked_add_signed(unix_epoch_base_diff)
             .ok_or(PrecisionError::OutOfRangeDate)
     }
 }
@@ -109,6 +109,7 @@ impl Precision {
 /// Represents a running result
 ///
 /// This enum is mostly used for iterators doing fold-like operations.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum RunningResult<R, D = R> {
     Running(R),
     Done(D),
