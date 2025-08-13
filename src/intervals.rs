@@ -59,6 +59,9 @@ pub mod prelude;
 pub mod relative;
 pub mod special;
 
+#[cfg(test)]
+mod special_tests;
+
 pub use absolute::{
     AbsoluteBounds, AbsoluteInterval, ClosedAbsoluteInterval, EmptiableAbsoluteBounds, HalfOpenAbsoluteInterval,
     HasAbsoluteBounds, HasEmptiableAbsoluteBounds,
