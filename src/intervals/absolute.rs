@@ -844,17 +844,16 @@ impl ClosedAbsoluteInterval {
     /// we set them to [`Inclusive`](BoundInclusivity::Inclusive).
     #[must_use]
     pub fn new_with_inclusivity(
-        mut from: DateTime<Utc>,
+        from: DateTime<Utc>,
         from_inclusivity: BoundInclusivity,
-        mut to: DateTime<Utc>,
+        to: DateTime<Utc>,
         to_inclusivity: BoundInclusivity,
     ) -> Self {
         match from.cmp(&to) {
             Ordering::Less => Self::unchecked_new_with_inclusivity(from, from_inclusivity, to, to_inclusivity),
             Ordering::Equal => Self::unchecked_new(from, to),
             Ordering::Greater => {
-                std::mem::swap(&mut from, &mut to);
-                Self::unchecked_new_with_inclusivity(from, from_inclusivity, to, to_inclusivity)
+                Self::unchecked_new_with_inclusivity(to, to_inclusivity, from, from_inclusivity)
             },
         }
     }
@@ -1028,17 +1027,9 @@ impl From<((DateTime<Utc>, bool), (DateTime<Utc>, bool))> for ClosedAbsoluteInte
     ) -> Self {
         ClosedAbsoluteInterval::new_with_inclusivity(
             from,
-            if is_from_inclusive {
-                BoundInclusivity::Inclusive
-            } else {
-                BoundInclusivity::Exclusive
-            },
+            BoundInclusivity::from(is_from_inclusive),
             to,
-            if is_to_inclusive {
-                BoundInclusivity::Inclusive
-            } else {
-                BoundInclusivity::Exclusive
-            },
+            BoundInclusivity::from(is_to_inclusive),
         )
     }
 }
@@ -1066,11 +1057,44 @@ impl From<RangeInclusive<DateTime<Utc>>> for ClosedAbsoluteInterval {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum ClosedAbsoluteIntervalConversionErr {
+pub enum ClosedAbsoluteIntervalFromAbsoluteBoundsErr {
+    NotClosedInterval,
+}
+
+impl Display for ClosedAbsoluteIntervalFromAbsoluteBoundsErr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::NotClosedInterval => write!(f, "Not a closed interval"),
+        }
+    }
+}
+
+impl Error for ClosedAbsoluteIntervalFromAbsoluteBoundsErr {}
+
+impl TryFrom<AbsoluteBounds> for ClosedAbsoluteInterval {
+    type Error = ClosedAbsoluteIntervalFromAbsoluteBoundsErr;
+
+    fn try_from(value: AbsoluteBounds) -> Result<Self, Self::Error> {
+        match (value.start(), value.end()) {
+            (AbsoluteStartBound::Finite(finite_start), AbsoluteEndBound::Finite(finite_end)) => {
+                Ok(ClosedAbsoluteInterval::new_with_inclusivity(
+                    finite_start.time(),
+                    finite_start.inclusivity(),
+                    finite_end.time(),
+                    finite_end.inclusivity(),
+                ))
+            },
+            _ => Err(Self::Error::NotClosedInterval),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum ClosedAbsoluteIntervalFromAbsoluteIntervalErr {
     WrongVariant,
 }
 
-impl Display for ClosedAbsoluteIntervalConversionErr {
+impl Display for ClosedAbsoluteIntervalFromAbsoluteIntervalErr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::WrongVariant => write!(f, "Wrong variant"),
@@ -1078,10 +1102,10 @@ impl Display for ClosedAbsoluteIntervalConversionErr {
     }
 }
 
-impl Error for ClosedAbsoluteIntervalConversionErr {}
+impl Error for ClosedAbsoluteIntervalFromAbsoluteIntervalErr {}
 
 impl TryFrom<AbsoluteInterval> for ClosedAbsoluteInterval {
-    type Error = ClosedAbsoluteIntervalConversionErr;
+    type Error = ClosedAbsoluteIntervalFromAbsoluteIntervalErr;
 
     fn try_from(value: AbsoluteInterval) -> Result<Self, Self::Error> {
         match value {
@@ -1155,6 +1179,11 @@ impl HalfOpenAbsoluteInterval {
     pub fn set_reference_time_inclusivity(&mut self, new_inclusivity: BoundInclusivity) {
         self.reference_time_inclusivity = new_inclusivity;
     }
+
+    /// Sets the opening direction of the interval
+    pub fn set_opening_direction(&mut self, new_opening_direction: OpeningDirection) {
+        self.opening_direction = new_opening_direction;
+    }
 }
 
 impl Interval for HalfOpenAbsoluteInterval {}
@@ -1213,11 +1242,7 @@ impl From<(DateTime<Utc>, bool)> for HalfOpenAbsoluteInterval {
     fn from((time, goes_to_future): (DateTime<Utc>, bool)) -> Self {
         HalfOpenAbsoluteInterval::new(
             time,
-            if goes_to_future {
-                OpeningDirection::ToFuture
-            } else {
-                OpeningDirection::ToPast
-            },
+            OpeningDirection::from(goes_to_future),
         )
     }
 }
@@ -1233,11 +1258,7 @@ impl From<((DateTime<Utc>, BoundInclusivity), bool)> for HalfOpenAbsoluteInterva
         HalfOpenAbsoluteInterval::new_with_inclusivity(
             time,
             inclusivity,
-            if goes_to_future {
-                OpeningDirection::ToFuture
-            } else {
-                OpeningDirection::ToPast
-            },
+            OpeningDirection::from(goes_to_future),
         )
     }
 }
@@ -1246,11 +1267,7 @@ impl From<((DateTime<Utc>, bool), OpeningDirection)> for HalfOpenAbsoluteInterva
     fn from(((time, is_inclusive), direction): ((DateTime<Utc>, bool), OpeningDirection)) -> Self {
         HalfOpenAbsoluteInterval::new_with_inclusivity(
             time,
-            if is_inclusive {
-                BoundInclusivity::Inclusive
-            } else {
-                BoundInclusivity::Exclusive
-            },
+            BoundInclusivity::from(is_inclusive),
             direction,
         )
     }
@@ -1260,16 +1277,8 @@ impl From<((DateTime<Utc>, bool), bool)> for HalfOpenAbsoluteInterval {
     fn from(((time, is_inclusive), goes_to_future): ((DateTime<Utc>, bool), bool)) -> Self {
         HalfOpenAbsoluteInterval::new_with_inclusivity(
             time,
-            if is_inclusive {
-                BoundInclusivity::Inclusive
-            } else {
-                BoundInclusivity::Exclusive
-            },
-            if goes_to_future {
-                OpeningDirection::ToFuture
-            } else {
-                OpeningDirection::ToPast
-            },
+            BoundInclusivity::from(is_inclusive),
+            OpeningDirection::from(goes_to_future),
         )
     }
 }
@@ -1297,11 +1306,50 @@ impl From<RangeToInclusive<DateTime<Utc>>> for HalfOpenAbsoluteInterval {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum HalfOpenAbsoluteIntervalConversionErr {
+pub enum HalfOpenAbsoluteIntervalFromAbsoluteBoundsErr {
+    NotHalfOpenInterval,
+}
+
+impl Display for HalfOpenAbsoluteIntervalFromAbsoluteBoundsErr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::NotHalfOpenInterval => write!(f, "Not a half-open interval"),
+        }
+    }
+}
+
+impl Error for HalfOpenAbsoluteIntervalFromAbsoluteBoundsErr {}
+
+impl TryFrom<AbsoluteBounds> for HalfOpenAbsoluteInterval {
+    type Error = HalfOpenAbsoluteIntervalFromAbsoluteBoundsErr;
+
+    fn try_from(value: AbsoluteBounds) -> Result<Self, Self::Error> {
+        match (value.start(), value.end()) {
+            (AbsoluteStartBound::InfinitePast, AbsoluteEndBound::Finite(finite_end)) => {
+                Ok(HalfOpenAbsoluteInterval::new_with_inclusivity(
+                    finite_end.time(),
+                    finite_end.inclusivity(),
+                    OpeningDirection::ToPast,
+                ))
+            },
+            (AbsoluteStartBound::Finite(finite_start), AbsoluteEndBound::InfiniteFuture) => {
+                Ok(HalfOpenAbsoluteInterval::new_with_inclusivity(
+                    finite_start.time(),
+                    finite_start.inclusivity(),
+                    OpeningDirection::ToFuture,
+                ))
+            },
+            _ => Err(Self::Error::NotHalfOpenInterval),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum HalfOpenAbsoluteIntervalFromAbsoluteIntervalErr {
     WrongVariant,
 }
 
-impl Display for HalfOpenAbsoluteIntervalConversionErr {
+impl Display for HalfOpenAbsoluteIntervalFromAbsoluteIntervalErr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::WrongVariant => write!(f, "Wrong variant"),
@@ -1309,10 +1357,10 @@ impl Display for HalfOpenAbsoluteIntervalConversionErr {
     }
 }
 
-impl Error for HalfOpenAbsoluteIntervalConversionErr {}
+impl Error for HalfOpenAbsoluteIntervalFromAbsoluteIntervalErr {}
 
 impl TryFrom<AbsoluteInterval> for HalfOpenAbsoluteInterval {
-    type Error = HalfOpenAbsoluteIntervalConversionErr;
+    type Error = HalfOpenAbsoluteIntervalFromAbsoluteIntervalErr;
 
     fn try_from(value: AbsoluteInterval) -> Result<Self, Self::Error> {
         match value {

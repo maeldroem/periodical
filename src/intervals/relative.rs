@@ -1128,6 +1128,11 @@ impl HalfOpenRelativeInterval {
     pub fn set_reference_time_inclusivity(&mut self, new_inclusivity: BoundInclusivity) {
         self.reference_time_inclusivity = new_inclusivity;
     }
+
+    /// Sets the opening direction of the interval
+    pub fn set_opening_direction(&mut self, new_opening_direction: OpeningDirection) {
+        self.opening_direction = new_opening_direction;
+    }
 }
 
 impl Interval for HalfOpenRelativeInterval {}
