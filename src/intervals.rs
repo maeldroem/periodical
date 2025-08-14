@@ -64,6 +64,8 @@ mod absolute_tests;
 #[cfg(test)]
 mod meta_tests;
 #[cfg(test)]
+mod relative_tests;
+#[cfg(test)]
 mod special_tests;
 
 pub use absolute::{

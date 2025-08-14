@@ -144,7 +144,7 @@ fn absolute_finite_bound_try_from_exclusive_bound() {
 fn absolute_finite_bound_try_from_unbounded_bound() {
     assert_eq!(
         AbsoluteFiniteBound::try_from(Bound::Unbounded),
-        Err(BoundToAbsoluteFiniteBoundConversionErr::IsUnbounded),
+        Err(AbsoluteFiniteBoundFromBoundError::IsUnbounded),
     );
 }
 
@@ -1375,7 +1375,7 @@ fn absolute_bounds_try_from_emptiable_absolute_bounds_correct_variant() {
 fn absolute_bounds_try_from_emptiable_absolute_bounds_wrong_variant() {
     assert_eq!(
         AbsoluteBounds::try_from(EmptiableAbsoluteBounds::Empty),
-        Err(AbsoluteBoundsConversionErr::EmptyVariant),
+        Err(AbsoluteBoundsFromEmptiableAbsoluteBoundsError::EmptyVariant),
     );
 }
 
@@ -1650,21 +1650,21 @@ fn closed_absolute_interval_try_from_absolute_bounds_wrong() {
             AbsoluteStartBound::InfinitePast,
             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
         )),
-        Err(ClosedAbsoluteIntervalFromAbsoluteBoundsErr::NotClosedInterval),
+        Err(ClosedAbsoluteIntervalFromAbsoluteBoundsError::NotClosedInterval),
     );
     assert_eq!(
         ClosedAbsoluteInterval::try_from(AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
             AbsoluteEndBound::InfiniteFuture,
         )),
-        Err(ClosedAbsoluteIntervalFromAbsoluteBoundsErr::NotClosedInterval),
+        Err(ClosedAbsoluteIntervalFromAbsoluteBoundsError::NotClosedInterval),
     );
     assert_eq!(
         ClosedAbsoluteInterval::try_from(AbsoluteBounds::new(
             AbsoluteStartBound::InfinitePast,
             AbsoluteEndBound::InfiniteFuture,
         )),
-        Err(ClosedAbsoluteIntervalFromAbsoluteBoundsErr::NotClosedInterval),
+        Err(ClosedAbsoluteIntervalFromAbsoluteBoundsError::NotClosedInterval),
     );
 }
 
@@ -1686,18 +1686,18 @@ fn closed_absolute_interval_try_from_absolute_interval_correct() {
 fn closed_absolute_interval_try_from_absolute_interval_wrong() {
     assert_eq!(
         ClosedAbsoluteInterval::try_from(AbsoluteInterval::Empty(EmptyInterval)),
-        Err(ClosedAbsoluteIntervalFromAbsoluteIntervalErr::WrongVariant),
+        Err(ClosedAbsoluteIntervalFromAbsoluteIntervalError::WrongVariant),
     );
     assert_eq!(
         ClosedAbsoluteInterval::try_from(AbsoluteInterval::Open(OpenInterval)),
-        Err(ClosedAbsoluteIntervalFromAbsoluteIntervalErr::WrongVariant),
+        Err(ClosedAbsoluteIntervalFromAbsoluteIntervalError::WrongVariant),
     );
     assert_eq!(
         ClosedAbsoluteInterval::try_from(AbsoluteInterval::HalfOpen(HalfOpenAbsoluteInterval::new(
             date(&Utc, 2025, 1, 1),
             OpeningDirection::ToFuture,
         ))),
-        Err(ClosedAbsoluteIntervalFromAbsoluteIntervalErr::WrongVariant),
+        Err(ClosedAbsoluteIntervalFromAbsoluteIntervalError::WrongVariant),
     );
 }
 
@@ -1899,14 +1899,14 @@ fn half_open_absolute_interval_try_from_absolute_bounds_wrong() {
             AbsoluteStartBound::InfinitePast,
             AbsoluteEndBound::InfiniteFuture,
         )),
-        Err(HalfOpenAbsoluteIntervalFromAbsoluteBoundsErr::NotHalfOpenInterval),
+        Err(HalfOpenAbsoluteIntervalFromAbsoluteBoundsError::NotHalfOpenInterval),
     );
     assert_eq!(
         HalfOpenAbsoluteInterval::try_from(AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2))),
         )),
-        Err(HalfOpenAbsoluteIntervalFromAbsoluteBoundsErr::NotHalfOpenInterval),
+        Err(HalfOpenAbsoluteIntervalFromAbsoluteBoundsError::NotHalfOpenInterval),
     );
 }
 
@@ -1930,18 +1930,18 @@ fn half_open_absolute_interval_try_from_absolute_interval_correct() {
 fn half_open_absolute_interval_try_from_absolute_interval_wrong() {
     assert_eq!(
         HalfOpenAbsoluteInterval::try_from(AbsoluteInterval::Empty(EmptyInterval)),
-        Err(HalfOpenAbsoluteIntervalFromAbsoluteIntervalErr::WrongVariant),
+        Err(HalfOpenAbsoluteIntervalFromAbsoluteIntervalError::WrongVariant),
     );
     assert_eq!(
         HalfOpenAbsoluteInterval::try_from(AbsoluteInterval::Open(OpenInterval)),
-        Err(HalfOpenAbsoluteIntervalFromAbsoluteIntervalErr::WrongVariant),
+        Err(HalfOpenAbsoluteIntervalFromAbsoluteIntervalError::WrongVariant),
     );
     assert_eq!(
         HalfOpenAbsoluteInterval::try_from(AbsoluteInterval::Closed(ClosedAbsoluteInterval::new(
             date(&Utc, 2025, 1, 1),
             date(&Utc, 2025, 1, 2),
         ))),
-        Err(HalfOpenAbsoluteIntervalFromAbsoluteIntervalErr::WrongVariant),
+        Err(HalfOpenAbsoluteIntervalFromAbsoluteIntervalError::WrongVariant),
     );
 }
 

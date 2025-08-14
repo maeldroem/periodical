@@ -108,12 +108,12 @@ impl From<(Duration, bool)> for RelativeFiniteBound {
 
 /// Errors that can occur when trying to convert a [`Bound<Duration>`] into an [`RelativeFiniteBound`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum BoundToRelativeFiniteBoundConversionErr {
+pub enum RelativeFiniteBoundFromBoundError {
     /// The given bound was of the [`Unbounded`](Bound::Unbounded) variant
     IsUnbounded,
 }
 
-impl Display for BoundToRelativeFiniteBoundConversionErr {
+impl Display for RelativeFiniteBoundFromBoundError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::IsUnbounded => {
@@ -127,10 +127,10 @@ impl Display for BoundToRelativeFiniteBoundConversionErr {
     }
 }
 
-impl Error for BoundToRelativeFiniteBoundConversionErr {}
+impl Error for RelativeFiniteBoundFromBoundError {}
 
 impl TryFrom<Bound<Duration>> for RelativeFiniteBound {
-    type Error = BoundToRelativeFiniteBoundConversionErr;
+    type Error = RelativeFiniteBoundFromBoundError;
 
     fn try_from(value: Bound<Duration>) -> Result<Self, Self::Error> {
         match value {
@@ -142,7 +142,7 @@ impl TryFrom<Bound<Duration>> for RelativeFiniteBound {
                 offset,
                 BoundInclusivity::Exclusive,
             )),
-            Bound::Unbounded => Err(BoundToRelativeFiniteBoundConversionErr::IsUnbounded),
+            Bound::Unbounded => Err(RelativeFiniteBoundFromBoundError::IsUnbounded),
         }
     }
 }
@@ -210,8 +210,9 @@ impl PartialOrd for RelativeStartBound {
 impl Ord for RelativeStartBound {
     fn cmp(&self, other: &Self) -> Ordering {
         match (self, other) {
-            (RelativeStartBound::InfinitePast, _) => Ordering::Less,
-            (_, RelativeStartBound::InfinitePast) => Ordering::Greater,
+            (RelativeStartBound::InfinitePast, RelativeStartBound::InfinitePast) => Ordering::Equal,
+            (RelativeStartBound::InfinitePast, RelativeStartBound::Finite(_)) => Ordering::Less,
+            (RelativeStartBound::Finite(_), RelativeStartBound::InfinitePast) => Ordering::Greater,
             (
                 RelativeStartBound::Finite(RelativeFiniteBound {
                     offset: offset_og,
@@ -347,8 +348,9 @@ impl PartialOrd for RelativeEndBound {
 impl Ord for RelativeEndBound {
     fn cmp(&self, other: &Self) -> Ordering {
         match (self, other) {
-            (RelativeEndBound::InfiniteFuture, _) => Ordering::Greater,
-            (_, RelativeEndBound::InfiniteFuture) => Ordering::Less,
+            (RelativeEndBound::InfiniteFuture, RelativeEndBound::InfiniteFuture) => Ordering::Equal,
+            (RelativeEndBound::InfiniteFuture, RelativeEndBound::Finite(_)) => Ordering::Greater,
+            (RelativeEndBound::Finite(_), RelativeEndBound::InfiniteFuture) => Ordering::Less,
             (
                 RelativeEndBound::Finite(RelativeFiniteBound {
                     offset: offset_og,
@@ -591,7 +593,7 @@ impl RelativeBounds {
     /// Returns whether the change was successful: the new end must be in chronological order and if it is equal
     /// to the start bound, both bounds must be inclusive.
     pub fn set_end(&mut self, end: RelativeEndBound) -> bool {
-        if self.start().partial_cmp(self.end()).is_none_or(Ordering::is_gt) {
+        if self.start().partial_cmp(&end).is_none_or(Ordering::is_gt) {
             return false;
         }
 
@@ -712,11 +714,11 @@ where
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum RelativeBoundsConversionErr {
+pub enum RelativeBoundsFromEmptiableRelativeBoundsError {
     EmptyVariant,
 }
 
-impl Display for RelativeBoundsConversionErr {
+impl Display for RelativeBoundsFromEmptiableRelativeBoundsError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::EmptyVariant => write!(f, "Provided EmptiableRelativeBounds was empty"),
@@ -724,14 +726,14 @@ impl Display for RelativeBoundsConversionErr {
     }
 }
 
-impl Error for RelativeBoundsConversionErr {}
+impl Error for RelativeBoundsFromEmptiableRelativeBoundsError {}
 
 impl TryFrom<EmptiableRelativeBounds> for RelativeBounds {
-    type Error = RelativeBoundsConversionErr;
+    type Error = RelativeBoundsFromEmptiableRelativeBoundsError;
 
     fn try_from(value: EmptiableRelativeBounds) -> Result<Self, Self::Error> {
         match value {
-            EmptiableRelativeBounds::Empty => Err(RelativeBoundsConversionErr::EmptyVariant),
+            EmptiableRelativeBounds::Empty => Err(RelativeBoundsFromEmptiableRelativeBoundsError::EmptyVariant),
             EmptiableRelativeBounds::Bound(bounds) => Ok(bounds),
         }
     }
@@ -1039,11 +1041,44 @@ impl From<RangeInclusive<Duration>> for ClosedRelativeInterval {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum ClosedRelativeIntervalConversionErr {
+pub enum ClosedRelativeIntervalFromRelativeBoundsError {
+    NotClosedInterval,
+}
+
+impl Display for ClosedRelativeIntervalFromRelativeBoundsError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::NotClosedInterval => write!(f, "Not a closed interval"),
+        }
+    }
+}
+
+impl Error for ClosedRelativeIntervalFromRelativeBoundsError {}
+
+impl TryFrom<RelativeBounds> for ClosedRelativeInterval {
+    type Error = ClosedRelativeIntervalFromRelativeBoundsError;
+
+    fn try_from(value: RelativeBounds) -> Result<Self, Self::Error> {
+        match (value.start(), value.end()) {
+            (RelativeStartBound::Finite(finite_start), RelativeEndBound::Finite(finite_end)) => {
+                Ok(ClosedRelativeInterval::new_with_inclusivity(
+                    finite_start.offset(),
+                    finite_start.inclusivity(),
+                    finite_end.offset(),
+                    finite_end.inclusivity(),
+                ))
+            },
+            _ => Err(Self::Error::NotClosedInterval),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum ClosedRelativeIntervalFromRelativeIntervalError {
     WrongVariant,
 }
 
-impl Display for ClosedRelativeIntervalConversionErr {
+impl Display for ClosedRelativeIntervalFromRelativeIntervalError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::WrongVariant => write!(f, "Wrong variant"),
@@ -1051,10 +1086,10 @@ impl Display for ClosedRelativeIntervalConversionErr {
     }
 }
 
-impl Error for ClosedRelativeIntervalConversionErr {}
+impl Error for ClosedRelativeIntervalFromRelativeIntervalError {}
 
 impl TryFrom<RelativeInterval> for ClosedRelativeInterval {
-    type Error = ClosedRelativeIntervalConversionErr;
+    type Error = ClosedRelativeIntervalFromRelativeIntervalError;
 
     fn try_from(value: RelativeInterval) -> Result<Self, Self::Error> {
         match value {
@@ -1275,11 +1310,50 @@ impl From<RangeToInclusive<Duration>> for HalfOpenRelativeInterval {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum HalfOpenRelativeIntervalConversionErr {
+pub enum HalfOpenRelativeIntervalFromRelativeBoundsError {
+    NotHalfOpenInterval,
+}
+
+impl Display for HalfOpenRelativeIntervalFromRelativeBoundsError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::NotHalfOpenInterval => write!(f, "Not a half-open interval"),
+        }
+    }
+}
+
+impl Error for HalfOpenRelativeIntervalFromRelativeBoundsError {}
+
+impl TryFrom<RelativeBounds> for HalfOpenRelativeInterval {
+    type Error = HalfOpenRelativeIntervalFromRelativeBoundsError;
+
+    fn try_from(value: RelativeBounds) -> Result<Self, Self::Error> {
+        match (value.start(), value.end()) {
+            (RelativeStartBound::InfinitePast, RelativeEndBound::Finite(finite_end)) => {
+                Ok(HalfOpenRelativeInterval::new_with_inclusivity(
+                    finite_end.offset(),
+                    finite_end.inclusivity(),
+                    OpeningDirection::ToPast,
+                ))
+            },
+            (RelativeStartBound::Finite(finite_start), RelativeEndBound::InfiniteFuture) => {
+                Ok(HalfOpenRelativeInterval::new_with_inclusivity(
+                    finite_start.offset(),
+                    finite_start.inclusivity(),
+                    OpeningDirection::ToFuture,
+                ))
+            },
+            _ => Err(Self::Error::NotHalfOpenInterval),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum HalfOpenRelativeIntervalFromRelativeIntervalError {
     WrongVariant,
 }
 
-impl Display for HalfOpenRelativeIntervalConversionErr {
+impl Display for HalfOpenRelativeIntervalFromRelativeIntervalError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::WrongVariant => write!(f, "Wrong variant"),
@@ -1287,10 +1361,10 @@ impl Display for HalfOpenRelativeIntervalConversionErr {
     }
 }
 
-impl Error for HalfOpenRelativeIntervalConversionErr {}
+impl Error for HalfOpenRelativeIntervalFromRelativeIntervalError {}
 
 impl TryFrom<RelativeInterval> for HalfOpenRelativeInterval {
-    type Error = HalfOpenRelativeIntervalConversionErr;
+    type Error = HalfOpenRelativeIntervalFromRelativeIntervalError;
 
     fn try_from(value: RelativeInterval) -> Result<Self, Self::Error> {
         match value {

@@ -100,12 +100,12 @@ impl From<(DateTime<Utc>, bool)> for AbsoluteFiniteBound {
 
 /// Errors that can occur when trying to convert a [`Bound<DateTime<Utc>>`] into an [`AbsoluteFiniteBound`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum BoundToAbsoluteFiniteBoundConversionErr {
+pub enum AbsoluteFiniteBoundFromBoundError {
     /// The given bound was of the [`Unbounded`](Bound::Unbounded) variant
     IsUnbounded,
 }
 
-impl Display for BoundToAbsoluteFiniteBoundConversionErr {
+impl Display for AbsoluteFiniteBoundFromBoundError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::IsUnbounded => {
@@ -119,10 +119,10 @@ impl Display for BoundToAbsoluteFiniteBoundConversionErr {
     }
 }
 
-impl Error for BoundToAbsoluteFiniteBoundConversionErr {}
+impl Error for AbsoluteFiniteBoundFromBoundError {}
 
 impl TryFrom<Bound<DateTime<Utc>>> for AbsoluteFiniteBound {
-    type Error = BoundToAbsoluteFiniteBoundConversionErr;
+    type Error = AbsoluteFiniteBoundFromBoundError;
 
     fn try_from(value: Bound<DateTime<Utc>>) -> Result<Self, Self::Error> {
         match value {
@@ -134,7 +134,7 @@ impl TryFrom<Bound<DateTime<Utc>>> for AbsoluteFiniteBound {
                 time,
                 BoundInclusivity::Exclusive,
             )),
-            Bound::Unbounded => Err(BoundToAbsoluteFiniteBoundConversionErr::IsUnbounded),
+            Bound::Unbounded => Err(AbsoluteFiniteBoundFromBoundError::IsUnbounded),
         }
     }
 }
@@ -676,11 +676,11 @@ where
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub enum AbsoluteBoundsConversionErr {
+pub enum AbsoluteBoundsFromEmptiableAbsoluteBoundsError {
     EmptyVariant,
 }
 
-impl Display for AbsoluteBoundsConversionErr {
+impl Display for AbsoluteBoundsFromEmptiableAbsoluteBoundsError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::EmptyVariant => write!(f, "Provided EmptiableAbsoluteBounds was empty"),
@@ -688,14 +688,14 @@ impl Display for AbsoluteBoundsConversionErr {
     }
 }
 
-impl Error for AbsoluteBoundsConversionErr {}
+impl Error for AbsoluteBoundsFromEmptiableAbsoluteBoundsError {}
 
 impl TryFrom<EmptiableAbsoluteBounds> for AbsoluteBounds {
-    type Error = AbsoluteBoundsConversionErr;
+    type Error = AbsoluteBoundsFromEmptiableAbsoluteBoundsError;
 
     fn try_from(value: EmptiableAbsoluteBounds) -> Result<Self, Self::Error> {
         match value {
-            EmptiableAbsoluteBounds::Empty => Err(AbsoluteBoundsConversionErr::EmptyVariant),
+            EmptiableAbsoluteBounds::Empty => Err(AbsoluteBoundsFromEmptiableAbsoluteBoundsError::EmptyVariant),
             EmptiableAbsoluteBounds::Bound(bounds) => Ok(bounds),
         }
     }
@@ -1057,11 +1057,11 @@ impl From<RangeInclusive<DateTime<Utc>>> for ClosedAbsoluteInterval {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum ClosedAbsoluteIntervalFromAbsoluteBoundsErr {
+pub enum ClosedAbsoluteIntervalFromAbsoluteBoundsError {
     NotClosedInterval,
 }
 
-impl Display for ClosedAbsoluteIntervalFromAbsoluteBoundsErr {
+impl Display for ClosedAbsoluteIntervalFromAbsoluteBoundsError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::NotClosedInterval => write!(f, "Not a closed interval"),
@@ -1069,10 +1069,10 @@ impl Display for ClosedAbsoluteIntervalFromAbsoluteBoundsErr {
     }
 }
 
-impl Error for ClosedAbsoluteIntervalFromAbsoluteBoundsErr {}
+impl Error for ClosedAbsoluteIntervalFromAbsoluteBoundsError {}
 
 impl TryFrom<AbsoluteBounds> for ClosedAbsoluteInterval {
-    type Error = ClosedAbsoluteIntervalFromAbsoluteBoundsErr;
+    type Error = ClosedAbsoluteIntervalFromAbsoluteBoundsError;
 
     fn try_from(value: AbsoluteBounds) -> Result<Self, Self::Error> {
         match (value.start(), value.end()) {
@@ -1090,11 +1090,11 @@ impl TryFrom<AbsoluteBounds> for ClosedAbsoluteInterval {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum ClosedAbsoluteIntervalFromAbsoluteIntervalErr {
+pub enum ClosedAbsoluteIntervalFromAbsoluteIntervalError {
     WrongVariant,
 }
 
-impl Display for ClosedAbsoluteIntervalFromAbsoluteIntervalErr {
+impl Display for ClosedAbsoluteIntervalFromAbsoluteIntervalError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::WrongVariant => write!(f, "Wrong variant"),
@@ -1102,10 +1102,10 @@ impl Display for ClosedAbsoluteIntervalFromAbsoluteIntervalErr {
     }
 }
 
-impl Error for ClosedAbsoluteIntervalFromAbsoluteIntervalErr {}
+impl Error for ClosedAbsoluteIntervalFromAbsoluteIntervalError {}
 
 impl TryFrom<AbsoluteInterval> for ClosedAbsoluteInterval {
-    type Error = ClosedAbsoluteIntervalFromAbsoluteIntervalErr;
+    type Error = ClosedAbsoluteIntervalFromAbsoluteIntervalError;
 
     fn try_from(value: AbsoluteInterval) -> Result<Self, Self::Error> {
         match value {
@@ -1306,11 +1306,11 @@ impl From<RangeToInclusive<DateTime<Utc>>> for HalfOpenAbsoluteInterval {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum HalfOpenAbsoluteIntervalFromAbsoluteBoundsErr {
+pub enum HalfOpenAbsoluteIntervalFromAbsoluteBoundsError {
     NotHalfOpenInterval,
 }
 
-impl Display for HalfOpenAbsoluteIntervalFromAbsoluteBoundsErr {
+impl Display for HalfOpenAbsoluteIntervalFromAbsoluteBoundsError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::NotHalfOpenInterval => write!(f, "Not a half-open interval"),
@@ -1318,10 +1318,10 @@ impl Display for HalfOpenAbsoluteIntervalFromAbsoluteBoundsErr {
     }
 }
 
-impl Error for HalfOpenAbsoluteIntervalFromAbsoluteBoundsErr {}
+impl Error for HalfOpenAbsoluteIntervalFromAbsoluteBoundsError {}
 
 impl TryFrom<AbsoluteBounds> for HalfOpenAbsoluteInterval {
-    type Error = HalfOpenAbsoluteIntervalFromAbsoluteBoundsErr;
+    type Error = HalfOpenAbsoluteIntervalFromAbsoluteBoundsError;
 
     fn try_from(value: AbsoluteBounds) -> Result<Self, Self::Error> {
         match (value.start(), value.end()) {
@@ -1345,11 +1345,11 @@ impl TryFrom<AbsoluteBounds> for HalfOpenAbsoluteInterval {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum HalfOpenAbsoluteIntervalFromAbsoluteIntervalErr {
+pub enum HalfOpenAbsoluteIntervalFromAbsoluteIntervalError {
     WrongVariant,
 }
 
-impl Display for HalfOpenAbsoluteIntervalFromAbsoluteIntervalErr {
+impl Display for HalfOpenAbsoluteIntervalFromAbsoluteIntervalError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::WrongVariant => write!(f, "Wrong variant"),
@@ -1357,10 +1357,10 @@ impl Display for HalfOpenAbsoluteIntervalFromAbsoluteIntervalErr {
     }
 }
 
-impl Error for HalfOpenAbsoluteIntervalFromAbsoluteIntervalErr {}
+impl Error for HalfOpenAbsoluteIntervalFromAbsoluteIntervalError {}
 
 impl TryFrom<AbsoluteInterval> for HalfOpenAbsoluteInterval {
-    type Error = HalfOpenAbsoluteIntervalFromAbsoluteIntervalErr;
+    type Error = HalfOpenAbsoluteIntervalFromAbsoluteIntervalError;
 
     fn try_from(value: AbsoluteInterval) -> Result<Self, Self::Error> {
         match value {
