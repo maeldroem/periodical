@@ -616,6 +616,41 @@ impl HasRelativeBounds for RelativeBounds {
     }
 }
 
+impl HasDuration for RelativeBounds {
+    fn duration(&self) -> IntervalDuration {
+        match (self.start(), self.end()) {
+            (RelativeStartBound::InfinitePast, _) | (_, RelativeEndBound::InfiniteFuture) => {
+                IntervalDuration::Infinite
+            },
+            (RelativeStartBound::Finite(finite_start), RelativeEndBound::Finite(finite_end)) => {
+                IntervalDuration::Finite(
+                    finite_end
+                        .offset()
+                        .checked_sub(&finite_start.offset())
+                        .unwrap_or(Duration::zero())
+                )
+            }
+        }
+    }
+}
+
+impl HasOpenness for RelativeBounds {
+    fn openness(&self) -> Openness {
+        match (self.start(), self.end()) {
+            (RelativeStartBound::InfinitePast, RelativeEndBound::InfiniteFuture) => Openness::Open,
+            (RelativeStartBound::InfinitePast, RelativeEndBound::Finite(_))
+            | (RelativeStartBound::Finite(_), RelativeEndBound::InfiniteFuture) => Openness::HalfOpen,
+            (RelativeStartBound::Finite(_), RelativeEndBound::Finite(_)) => Openness::Closed,
+        }
+    }
+}
+
+impl HasRelativity for RelativeBounds {
+    fn relativity(&self) -> Relativity {
+        Relativity::Relative
+    }
+}
+
 impl PartialOrd for RelativeBounds {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
@@ -746,6 +781,30 @@ impl HasEmptiableRelativeBounds for EmptiableRelativeBounds {
 impl Emptiable for EmptiableRelativeBounds {
     fn is_empty(&self) -> bool {
         matches!(self, Self::Empty)
+    }
+}
+
+impl HasDuration for EmptiableRelativeBounds {
+    fn duration(&self) -> IntervalDuration {
+        match self {
+            Self::Bound(bound) => bound.duration(),
+            Self::Empty => IntervalDuration::Finite(Duration::zero()),
+        }
+    }
+}
+
+impl HasOpenness for EmptiableRelativeBounds {
+    fn openness(&self) -> Openness {
+        match self {
+            Self::Bound(bound) => bound.openness(),
+            Self::Empty => Openness::Empty,
+        }
+    }
+}
+
+impl HasRelativity for EmptiableRelativeBounds {
+    fn relativity(&self) -> Relativity {
+        Relativity::Relative
     }
 }
 

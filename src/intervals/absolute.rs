@@ -7,7 +7,7 @@ use std::ops::{Bound, Range, RangeBounds, RangeFrom, RangeFull, RangeInclusive, 
 
 #[cfg(feature = "arbitrary")]
 use arbitrary::Arbitrary;
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Duration, Utc};
 
 use crate::intervals::meta::Interval;
 
@@ -585,6 +585,36 @@ impl HasAbsoluteBounds for AbsoluteBounds {
     }
 }
 
+impl HasDuration for AbsoluteBounds {
+    fn duration(&self) -> IntervalDuration {
+        match (self.start(), self.end()) {
+            (AbsoluteStartBound::InfinitePast, _) | (_, AbsoluteEndBound::InfiniteFuture) => {
+                IntervalDuration::Infinite
+            },
+            (AbsoluteStartBound::Finite(finite_start), AbsoluteEndBound::Finite(finite_end)) => {
+                IntervalDuration::Finite(finite_end.time().signed_duration_since(finite_start.time()))
+            }
+        }
+    }
+}
+
+impl HasOpenness for AbsoluteBounds {
+    fn openness(&self) -> Openness {
+        match (self.start(), self.end()) {
+            (AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture) => Openness::Open,
+            (AbsoluteStartBound::InfinitePast, AbsoluteEndBound::Finite(_))
+            | (AbsoluteStartBound::Finite(_), AbsoluteEndBound::InfiniteFuture) => Openness::HalfOpen,
+            (AbsoluteStartBound::Finite(_), AbsoluteEndBound::Finite(_)) => Openness::Closed,
+        }
+    }
+}
+
+impl HasRelativity for AbsoluteBounds {
+    fn relativity(&self) -> Relativity {
+        Relativity::Absolute
+    }
+}
+
 impl PartialOrd for AbsoluteBounds {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
@@ -715,6 +745,30 @@ impl HasEmptiableAbsoluteBounds for EmptiableAbsoluteBounds {
 impl Emptiable for EmptiableAbsoluteBounds {
     fn is_empty(&self) -> bool {
         matches!(self, Self::Empty)
+    }
+}
+
+impl HasDuration for EmptiableAbsoluteBounds {
+    fn duration(&self) -> IntervalDuration {
+        match self {
+            Self::Bound(bound) => bound.duration(),
+            Self::Empty => IntervalDuration::Finite(Duration::zero()),
+        }
+    }
+}
+
+impl HasOpenness for EmptiableAbsoluteBounds {
+    fn openness(&self) -> Openness {
+        match self {
+            Self::Bound(bound) => bound.openness(),
+            Self::Empty => Openness::Empty,
+        }
+    }
+}
+
+impl HasRelativity for EmptiableAbsoluteBounds {
+    fn relativity(&self) -> Relativity {
+        Relativity::Absolute
     }
 }
 
