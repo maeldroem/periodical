@@ -27,3 +27,6 @@ pub mod remove_overlap_or_gap;
 pub mod set_ops;
 pub mod shrink;
 pub mod time_containment;
+
+#[cfg(test)]
+mod bound_overlap_ambiguity_tests;
