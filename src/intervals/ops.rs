@@ -29,6 +29,10 @@ pub mod shrink;
 pub mod time_containment;
 
 #[cfg(test)]
+mod abridge_tests;
+#[cfg(test)]
 mod bound_containment_tests;
 #[cfg(test)]
 mod bound_overlap_ambiguity_tests;
+#[cfg(test)]
+mod extend_tests;
