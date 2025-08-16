@@ -20,37 +20,41 @@ use crate::intervals::special::{EmptyInterval, OpenInterval};
 use crate::intervals::{ClosedAbsoluteInterval, ClosedRelativeInterval, RelativeInterval};
 
 /// Cut types, used by [`Cuttable`]
+/// 
+/// The contained bound inclusivities represent the start and end inclusivities for where the cut will be made.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
-pub enum CutType {
-    /// Where the cut was made, both bound inclusivities will be inclusive
-    #[default]
-    InclusiveBoth,
-    /// Where the cut was made, the future bound inclusivity will be exclusive, while the past one will be inclusive
-    ExclusiveFuture,
-    /// Where the cut was made, the past bound inclusivity will be exclusive, while the future one will be inclusive
-    ExclusivePast,
-    /// Where the cut was made, both bound inclusivities will be exclusive
-    ExclusiveBoth,
-}
+pub struct CutType(BoundInclusivity, BoundInclusivity);
 
 impl CutType {
+    /// Creates a new instance of [`CutType`]
+    #[must_use]
+    pub fn new(past_inclusivity: BoundInclusivity, future_inclusivity: BoundInclusivity) -> Self {
+        CutType(past_inclusivity, future_inclusivity)
+    }
+
     /// Returns the bound inclusivity for the past side after the cut was made
     #[must_use]
     pub fn past_bound_inclusivity(&self) -> BoundInclusivity {
-        match self {
-            Self::InclusiveBoth | Self::ExclusiveFuture => BoundInclusivity::Inclusive,
-            Self::ExclusivePast | Self::ExclusiveBoth => BoundInclusivity::Exclusive,
-        }
+        self.0
     }
 
     /// Returns the bound inclusivity for the future side after the cut was made
     #[must_use]
     pub fn future_bound_inclusivity(&self) -> BoundInclusivity {
-        match self {
-            Self::InclusiveBoth | Self::ExclusivePast => BoundInclusivity::Inclusive,
-            Self::ExclusiveBoth | Self::ExclusiveFuture => BoundInclusivity::Exclusive,
-        }
+        self.1
+    }
+
+    /// Returns a copy of the current instance with opposite inclusivities
+    #[must_use]
+    pub fn opposite(&self) -> Self {
+        CutType::new(self.0.opposite(), self.1.opposite())
+    }
+}
+
+impl From<(BoundInclusivity, BoundInclusivity)> for CutType {
+    fn from((past_inclusivity, future_inclusivity): (BoundInclusivity, BoundInclusivity)) -> Self {
+        CutType::new(past_inclusivity, future_inclusivity)
     }
 }
 
@@ -67,16 +71,28 @@ pub enum CutResult<T> {
 
 impl<T> CutResult<T> {
     /// Whether the [`CutResult`] is of the [`Uncut`](CutResult::Uncut) variant
+    #[must_use]
     pub fn is_uncut(&self) -> bool {
         matches!(self, CutResult::Uncut)
     }
 
     /// Whether the [`CutResult`] is of the [`Cut`](CutResult::Cut) variant
+    #[must_use]
     pub fn is_cut(&self) -> bool {
         matches!(self, CutResult::Cut(..))
     }
 
+    /// Returns the content of the [`Cut`](CutResult::Cut) variant
+    #[must_use]
+    pub fn cut(self) -> Option<(T, T)> {
+        match self {
+            Self::Uncut => None,
+            Self::Cut(a, b) => Some((a, b)),
+        }
+    }
+
     /// Maps the contents of the [`Cut`](CutResult::Cut) variant
+    #[must_use]
     pub fn map_cut<F, U>(self, mut f: F) -> CutResult<U>
     where
         F: FnMut(T, T) -> (U, U),
@@ -263,6 +279,20 @@ pub fn cut_abs_bounds(bounds: &AbsoluteBounds, at: DateTime<Utc>, cut_type: CutT
         return CutResult::Uncut;
     }
 
+    let past_cut_end = AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+        at,
+        cut_type.past_bound_inclusivity(),
+    ));
+    let future_cut_start = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+        at,
+        cut_type.future_bound_inclusivity(),
+    ));
+
+    // If those comparisons return None, it signifies that we can't create a cut in the given bounds
+    if bounds.start().partial_cmp(&past_cut_end).is_none() || bounds.end().partial_cmp(&future_cut_start).is_none() {
+        return CutResult::Uncut;
+    }
+
     let mut past_split = bounds.clone();
     let mut future_split = bounds.clone();
 
@@ -299,6 +329,20 @@ pub fn cut_emptiable_abs_bounds(
 #[must_use]
 pub fn cut_rel_bounds(bounds: &RelativeBounds, at: Duration, cut_type: CutType) -> CutResult<RelativeBounds> {
     if !bounds.simple_contains(at) {
+        return CutResult::Uncut;
+    }
+
+    let past_cut_end = RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+        at,
+        cut_type.past_bound_inclusivity(),
+    ));
+    let future_cut_start = RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+        at,
+        cut_type.future_bound_inclusivity(),
+    ));
+
+    // If those comparisons return None, it signifies that we can't create a cut in the given bounds
+    if bounds.start().partial_cmp(&past_cut_end).is_none() || bounds.end().partial_cmp(&future_cut_start).is_none() {
         return CutResult::Uncut;
     }
 

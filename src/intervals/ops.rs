@@ -39,4 +39,6 @@ mod complement_tests;
 #[cfg(test)]
 mod continuation_tests;
 #[cfg(test)]
+mod cut_tests;
+#[cfg(test)]
 mod extend_tests;

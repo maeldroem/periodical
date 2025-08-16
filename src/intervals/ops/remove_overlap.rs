@@ -430,8 +430,8 @@ pub fn remove_start_overlap_abs(a: &AbsoluteBounds, b: &AbsoluteBounds) -> Absol
     };
 
     let cut_type = match finite_bound.inclusivity().opposite() {
-        BoundInclusivity::Inclusive => CutType::InclusiveBoth,
-        BoundInclusivity::Exclusive => CutType::ExclusiveBoth,
+        BoundInclusivity::Inclusive => CutType::new(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive),
+        BoundInclusivity::Exclusive => CutType::new(BoundInclusivity::Exclusive, BoundInclusivity::Exclusive),
     };
 
     match a.cut_at(finite_bound.time(), cut_type) {
@@ -461,8 +461,8 @@ pub fn remove_end_overlap_abs(a: &AbsoluteBounds, b: &AbsoluteBounds) -> Absolut
     };
 
     let cut_type = match finite_bound.inclusivity().opposite() {
-        BoundInclusivity::Inclusive => CutType::InclusiveBoth,
-        BoundInclusivity::Exclusive => CutType::ExclusiveBoth,
+        BoundInclusivity::Inclusive => CutType::new(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive),
+        BoundInclusivity::Exclusive => CutType::new(BoundInclusivity::Exclusive, BoundInclusivity::Exclusive),
     };
 
     match a.cut_at(finite_bound.time(), cut_type) {
@@ -622,8 +622,8 @@ pub fn remove_start_overlap_rel(a: &RelativeBounds, b: &RelativeBounds) -> Relat
     };
 
     let cut_type = match finite_bound.inclusivity().opposite() {
-        BoundInclusivity::Inclusive => CutType::InclusiveBoth,
-        BoundInclusivity::Exclusive => CutType::ExclusiveBoth,
+        BoundInclusivity::Inclusive => CutType::new(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive),
+        BoundInclusivity::Exclusive => CutType::new(BoundInclusivity::Exclusive, BoundInclusivity::Exclusive),
     };
 
     match a.cut_at(finite_bound.offset(), cut_type) {
@@ -653,8 +653,8 @@ pub fn remove_end_overlap_rel(a: &RelativeBounds, b: &RelativeBounds) -> Relativ
     };
 
     let cut_type = match finite_bound.inclusivity().opposite() {
-        BoundInclusivity::Inclusive => CutType::InclusiveBoth,
-        BoundInclusivity::Exclusive => CutType::ExclusiveBoth,
+        BoundInclusivity::Inclusive => CutType::new(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive),
+        BoundInclusivity::Exclusive => CutType::new(BoundInclusivity::Exclusive, BoundInclusivity::Exclusive),
     };
 
     match a.cut_at(finite_bound.offset(), cut_type) {
