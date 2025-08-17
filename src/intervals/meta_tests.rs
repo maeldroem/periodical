@@ -8,7 +8,10 @@ fn opening_direction_from_bool() {
 
 #[test]
 fn interval_duration_from_duration() {
-    assert_eq!(Duration::from(chrono::Duration::zero()), Duration::Finite(chrono::Duration::zero()));
+    assert_eq!(
+        Duration::from(chrono::Duration::zero()),
+        Duration::Finite(chrono::Duration::zero())
+    );
 }
 
 #[test]

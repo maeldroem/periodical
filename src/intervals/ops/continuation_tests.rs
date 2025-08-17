@@ -1,7 +1,8 @@
 use chrono::Utc;
 
 use crate::intervals::absolute::{
-    AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteInterval, AbsoluteStartBound, ClosedAbsoluteInterval, EmptiableAbsoluteBounds, HalfOpenAbsoluteInterval
+    AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteInterval, AbsoluteStartBound,
+    ClosedAbsoluteInterval, EmptiableAbsoluteBounds, HalfOpenAbsoluteInterval,
 };
 use crate::intervals::meta::{BoundInclusivity, OpeningDirection};
 use crate::intervals::special::{EmptyInterval, OpenInterval};
@@ -11,34 +12,22 @@ use super::continuation::*;
 
 #[test]
 fn past_continuation_open_interval() {
-    assert_eq!(
-        OpenInterval.past_continuation(),
-        EmptyInterval,
-    );
+    assert_eq!(OpenInterval.past_continuation(), EmptyInterval,);
 }
 
 #[test]
 fn future_continuation_open_interval() {
-    assert_eq!(
-        OpenInterval.future_continuation(),
-        EmptyInterval,
-    );
+    assert_eq!(OpenInterval.future_continuation(), EmptyInterval,);
 }
 
 #[test]
 fn past_continuation_empty_interval() {
-    assert_eq!(
-        EmptyInterval.past_continuation(),
-        EmptyInterval,
-    );
+    assert_eq!(EmptyInterval.past_continuation(), EmptyInterval,);
 }
 
 #[test]
 fn future_continuation_empty_interval() {
-    assert_eq!(
-        EmptyInterval.future_continuation(),
-        EmptyInterval,
-    );
+    assert_eq!(EmptyInterval.future_continuation(), EmptyInterval,);
 }
 
 #[test]
@@ -48,7 +37,8 @@ fn past_continuation_half_open_to_past_interval() {
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             OpeningDirection::ToPast,
-        ).past_continuation(),
+        )
+        .past_continuation(),
         AbsoluteInterval::Empty(EmptyInterval),
     );
 }
@@ -60,7 +50,8 @@ fn future_continuation_half_open_to_past_interval() {
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             OpeningDirection::ToPast,
-        ).future_continuation(),
+        )
+        .future_continuation(),
         AbsoluteInterval::HalfOpen(HalfOpenAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
@@ -72,10 +63,7 @@ fn future_continuation_half_open_to_past_interval() {
 #[test]
 fn past_continuation_half_open_to_future_interval() {
     assert_eq!(
-        HalfOpenAbsoluteInterval::new(
-            date(&Utc, 2025, 1, 1),
-            OpeningDirection::ToFuture,
-        ).past_continuation(),
+        HalfOpenAbsoluteInterval::new(date(&Utc, 2025, 1, 1), OpeningDirection::ToFuture,).past_continuation(),
         AbsoluteInterval::HalfOpen(HalfOpenAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
@@ -87,10 +75,7 @@ fn past_continuation_half_open_to_future_interval() {
 #[test]
 fn future_continuation_half_open_to_future_interval() {
     assert_eq!(
-        HalfOpenAbsoluteInterval::new(
-            date(&Utc, 2025, 1, 1),
-            OpeningDirection::ToFuture,
-        ).future_continuation(),
+        HalfOpenAbsoluteInterval::new(date(&Utc, 2025, 1, 1), OpeningDirection::ToFuture,).future_continuation(),
         AbsoluteInterval::Empty(EmptyInterval),
     );
 }
@@ -141,7 +126,8 @@ fn past_continuation_abs_bounds_closed() {
         AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2))),
-        ).past_continuation(),
+        )
+        .past_continuation(),
         EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
             AbsoluteStartBound::InfinitePast,
             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
@@ -158,7 +144,8 @@ fn future_continuation_abs_bounds_closed() {
         AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2))),
-        ).future_continuation(),
+        )
+        .future_continuation(),
         EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
                 date(&Utc, 2025, 1, 2),

@@ -26,7 +26,7 @@ use crate::intervals::meta::BoundInclusivity;
 /// are uniting those two intervals, then yes (as they leave no gap in between).
 ///
 /// That's what the bound overlap ambiguity is for.
-/// 
+///
 /// The first contained [`BoundInclusivity`] should always be the reference, the second should always be the compared.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]

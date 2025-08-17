@@ -149,7 +149,10 @@ fn empty_interval_is_empty() {
 
 #[test]
 fn empty_interval_try_from_abs_interval_correct_variant() {
-    assert_eq!(EmptyInterval::try_from(AbsoluteInterval::Empty(EmptyInterval)), Ok(EmptyInterval));
+    assert_eq!(
+        EmptyInterval::try_from(AbsoluteInterval::Empty(EmptyInterval)),
+        Ok(EmptyInterval)
+    );
 }
 
 #[test]
@@ -165,7 +168,10 @@ fn empty_interval_try_from_abs_interval_wrong_variant() {
 
 #[test]
 fn empty_interval_try_from_rel_interval_correct_variant() {
-    assert_eq!(EmptyInterval::try_from(RelativeInterval::Empty(EmptyInterval)), Ok(EmptyInterval));
+    assert_eq!(
+        EmptyInterval::try_from(RelativeInterval::Empty(EmptyInterval)),
+        Ok(EmptyInterval)
+    );
 }
 
 #[test]

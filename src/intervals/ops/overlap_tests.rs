@@ -12,56 +12,90 @@ use crate::test_utils::date;
 
 #[test]
 fn strip_overlap_position() {
-    assert_eq!(OverlapPosition::OutsideBefore.strip(), DisambiguatedOverlapPosition::OutsideBefore);
-    assert_eq!(OverlapPosition::OutsideAfter.strip(), DisambiguatedOverlapPosition::OutsideAfter);
+    assert_eq!(
+        OverlapPosition::OutsideBefore.strip(),
+        DisambiguatedOverlapPosition::OutsideBefore
+    );
+    assert_eq!(
+        OverlapPosition::OutsideAfter.strip(),
+        DisambiguatedOverlapPosition::OutsideAfter
+    );
     assert_eq!(OverlapPosition::Outside.strip(), DisambiguatedOverlapPosition::Outside);
     assert_eq!(
-        OverlapPosition::EndsOnStart(
-            BoundOverlapAmbiguity::BothStarts(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive)
-        ).strip(),
+        OverlapPosition::EndsOnStart(BoundOverlapAmbiguity::BothStarts(
+            BoundInclusivity::Inclusive,
+            BoundInclusivity::Inclusive
+        ))
+        .strip(),
         DisambiguatedOverlapPosition::EndsOnStart,
     );
     assert_eq!(
-        OverlapPosition::StartsOnEnd(
-            BoundOverlapAmbiguity::BothStarts(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive)
-        ).strip(),
+        OverlapPosition::StartsOnEnd(BoundOverlapAmbiguity::BothStarts(
+            BoundInclusivity::Inclusive,
+            BoundInclusivity::Inclusive
+        ))
+        .strip(),
         DisambiguatedOverlapPosition::StartsOnEnd,
     );
-    assert_eq!(OverlapPosition::CrossesStart.strip(), DisambiguatedOverlapPosition::CrossesStart);
-    assert_eq!(OverlapPosition::CrossesEnd.strip(), DisambiguatedOverlapPosition::CrossesEnd);
+    assert_eq!(
+        OverlapPosition::CrossesStart.strip(),
+        DisambiguatedOverlapPosition::CrossesStart
+    );
+    assert_eq!(
+        OverlapPosition::CrossesEnd.strip(),
+        DisambiguatedOverlapPosition::CrossesEnd
+    );
     assert_eq!(OverlapPosition::Inside.strip(), DisambiguatedOverlapPosition::Inside);
     assert_eq!(
-        OverlapPosition::InsideAndSameStart(
-            Some(BoundOverlapAmbiguity::BothStarts(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive))
-        ).strip(),
+        OverlapPosition::InsideAndSameStart(Some(BoundOverlapAmbiguity::BothStarts(
+            BoundInclusivity::Inclusive,
+            BoundInclusivity::Inclusive
+        )))
+        .strip(),
         DisambiguatedOverlapPosition::InsideAndSameStart,
     );
     assert_eq!(
-        OverlapPosition::InsideAndSameEnd(
-            Some(BoundOverlapAmbiguity::BothStarts(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive))
-        ).strip(),
+        OverlapPosition::InsideAndSameEnd(Some(BoundOverlapAmbiguity::BothStarts(
+            BoundInclusivity::Inclusive,
+            BoundInclusivity::Inclusive
+        )))
+        .strip(),
         DisambiguatedOverlapPosition::InsideAndSameEnd,
     );
     assert_eq!(
         OverlapPosition::Equal(
-            Some(BoundOverlapAmbiguity::BothStarts(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive)),
-            Some(BoundOverlapAmbiguity::BothEnds(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive)),
-        ).strip(),
+            Some(BoundOverlapAmbiguity::BothStarts(
+                BoundInclusivity::Inclusive,
+                BoundInclusivity::Inclusive
+            )),
+            Some(BoundOverlapAmbiguity::BothEnds(
+                BoundInclusivity::Inclusive,
+                BoundInclusivity::Inclusive
+            )),
+        )
+        .strip(),
         DisambiguatedOverlapPosition::Equal,
     );
     assert_eq!(
-        OverlapPosition::ContainsAndSameStart(
-            Some(BoundOverlapAmbiguity::BothStarts(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive))
-        ).strip(),
+        OverlapPosition::ContainsAndSameStart(Some(BoundOverlapAmbiguity::BothStarts(
+            BoundInclusivity::Inclusive,
+            BoundInclusivity::Inclusive
+        )))
+        .strip(),
         DisambiguatedOverlapPosition::ContainsAndSameStart,
     );
     assert_eq!(
-        OverlapPosition::ContainsAndSameEnd(
-            Some(BoundOverlapAmbiguity::BothStarts(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive))
-        ).strip(),
+        OverlapPosition::ContainsAndSameEnd(Some(BoundOverlapAmbiguity::BothStarts(
+            BoundInclusivity::Inclusive,
+            BoundInclusivity::Inclusive
+        )))
+        .strip(),
         DisambiguatedOverlapPosition::ContainsAndSameEnd,
     );
-    assert_eq!(OverlapPosition::Contains.strip(), DisambiguatedOverlapPosition::Contains);
+    assert_eq!(
+        OverlapPosition::Contains.strip(),
+        DisambiguatedOverlapPosition::Contains
+    );
 }
 
 #[test]
@@ -75,8 +109,10 @@ fn overlap_position_empty_empty() {
 #[test]
 fn overlap_position_empty_open() {
     assert_eq!(
-        EmptiableAbsoluteBounds::Empty
-            .overlap_position(&AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture)),
+        EmptiableAbsoluteBounds::Empty.overlap_position(&AbsoluteBounds::new(
+            AbsoluteStartBound::InfinitePast,
+            AbsoluteEndBound::InfiniteFuture
+        )),
         Ok(OverlapPosition::Outside),
     );
 }
@@ -93,10 +129,14 @@ fn overlap_position_open_empty() {
 #[test]
 fn overlap_position_half_open_equal() {
     assert_eq!(
-        HalfOpenAbsoluteInterval::new(date(&Utc, 2025, 1, 1), OpeningDirection::ToFuture)
-            .overlap_position(&HalfOpenAbsoluteInterval::new(date(&Utc, 2025, 1, 1), OpeningDirection::ToFuture)),
+        HalfOpenAbsoluteInterval::new(date(&Utc, 2025, 1, 1), OpeningDirection::ToFuture).overlap_position(
+            &HalfOpenAbsoluteInterval::new(date(&Utc, 2025, 1, 1), OpeningDirection::ToFuture)
+        ),
         Ok(OverlapPosition::Equal(
-            Some(BoundOverlapAmbiguity::BothStarts(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive)),
+            Some(BoundOverlapAmbiguity::BothStarts(
+                BoundInclusivity::Inclusive,
+                BoundInclusivity::Inclusive
+            )),
             None,
         )),
     );
@@ -110,13 +150,16 @@ fn overlap_position_half_open_exclusive_inclusive() {
             BoundInclusivity::Exclusive,
             OpeningDirection::ToFuture,
         )
-            .overlap_position(&HalfOpenAbsoluteInterval::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Inclusive,
-                OpeningDirection::ToFuture,
-            )),
+        .overlap_position(&HalfOpenAbsoluteInterval::new_with_inclusivity(
+            date(&Utc, 2025, 1, 1),
+            BoundInclusivity::Inclusive,
+            OpeningDirection::ToFuture,
+        )),
         Ok(OverlapPosition::Equal(
-            Some(BoundOverlapAmbiguity::BothStarts(BoundInclusivity::Exclusive, BoundInclusivity::Inclusive)),
+            Some(BoundOverlapAmbiguity::BothStarts(
+                BoundInclusivity::Exclusive,
+                BoundInclusivity::Inclusive
+            )),
             None,
         )),
     );
@@ -131,15 +174,21 @@ fn overlap_position_closed_equal_various_bound_inclusivities() {
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .overlap_position(&ClosedAbsoluteInterval::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Inclusive,
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Exclusive,
-            )),
+        .overlap_position(&ClosedAbsoluteInterval::new_with_inclusivity(
+            date(&Utc, 2025, 1, 1),
+            BoundInclusivity::Inclusive,
+            date(&Utc, 2025, 1, 2),
+            BoundInclusivity::Exclusive,
+        )),
         Ok(OverlapPosition::Equal(
-            Some(BoundOverlapAmbiguity::BothStarts(BoundInclusivity::Exclusive, BoundInclusivity::Inclusive)),
-            Some(BoundOverlapAmbiguity::BothEnds(BoundInclusivity::Inclusive, BoundInclusivity::Exclusive)),
+            Some(BoundOverlapAmbiguity::BothStarts(
+                BoundInclusivity::Exclusive,
+                BoundInclusivity::Inclusive
+            )),
+            Some(BoundOverlapAmbiguity::BothEnds(
+                BoundInclusivity::Inclusive,
+                BoundInclusivity::Exclusive
+            )),
         )),
     );
 }
@@ -147,14 +196,10 @@ fn overlap_position_closed_equal_various_bound_inclusivities() {
 #[test]
 fn disambiguated_overlap_position_strict_closed_time_gap_before_other() {
     assert_eq!(
-        ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), date(&Utc, 2025, 1, 2))
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new(
-                    date(&Utc, 2025, 1, 3),
-                    date(&Utc, 2025, 1, 4),
-                ),
-                OverlapRuleSet::Strict,
-            ),
+        ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), date(&Utc, 2025, 1, 2)).disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 3), date(&Utc, 2025, 1, 4),),
+            OverlapRuleSet::Strict,
+        ),
         Ok(DisambiguatedOverlapPosition::OutsideBefore),
     );
 }
@@ -168,15 +213,15 @@ fn disambiguated_overlap_position_strict_closed_inclusive_inclusive_adjacency_be
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Strict,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Strict,
+        ),
         Ok(DisambiguatedOverlapPosition::EndsOnStart),
     );
 }
@@ -190,15 +235,15 @@ fn disambiguated_overlap_position_strict_closed_inclusive_exclusive_adjacency_be
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Strict,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Strict,
+        ),
         Ok(DisambiguatedOverlapPosition::OutsideBefore),
     );
 }
@@ -212,15 +257,15 @@ fn disambiguated_overlap_position_strict_closed_exclusive_inclusive_adjacency_be
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Strict,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Strict,
+        ),
         Ok(DisambiguatedOverlapPosition::OutsideBefore),
     );
 }
@@ -234,15 +279,15 @@ fn disambiguated_overlap_position_strict_closed_exclusive_exclusive_adjacency_be
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Strict,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Strict,
+        ),
         Ok(DisambiguatedOverlapPosition::OutsideBefore),
     );
 }
@@ -250,11 +295,10 @@ fn disambiguated_overlap_position_strict_closed_exclusive_exclusive_adjacency_be
 #[test]
 fn disambiguated_overlap_position_strict_closed_time_gap_after_other() {
     assert_eq!(
-        ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 3), date(&Utc, 2025, 1, 4))
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), date(&Utc, 2025, 1, 2)),
-                OverlapRuleSet::Strict,
-            ),
+        ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 3), date(&Utc, 2025, 1, 4)).disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), date(&Utc, 2025, 1, 2)),
+            OverlapRuleSet::Strict,
+        ),
         Ok(DisambiguatedOverlapPosition::OutsideAfter),
     );
 }
@@ -268,15 +312,15 @@ fn disambiguated_overlap_position_strict_closed_inclusive_inclusive_adjacency_af
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Strict,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Strict,
+        ),
         Ok(DisambiguatedOverlapPosition::StartsOnEnd),
     );
 }
@@ -290,15 +334,15 @@ fn disambiguated_overlap_position_strict_closed_inclusive_exclusive_adjacency_af
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::Strict,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::Strict,
+        ),
         Ok(DisambiguatedOverlapPosition::OutsideAfter),
     );
 }
@@ -312,15 +356,15 @@ fn disambiguated_overlap_position_strict_closed_exclusive_inclusive_adjacency_af
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Strict,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Strict,
+        ),
         Ok(DisambiguatedOverlapPosition::OutsideAfter),
     );
 }
@@ -334,15 +378,15 @@ fn disambiguated_overlap_position_strict_closed_exclusive_exclusive_adjacency_af
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::Strict,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::Strict,
+        ),
         Ok(DisambiguatedOverlapPosition::OutsideAfter),
     );
 }
@@ -356,15 +400,15 @@ fn disambiguated_overlap_position_strict_closed_crosses_start() {
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 4),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Strict,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 4),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Strict,
+        ),
         Ok(DisambiguatedOverlapPosition::CrossesStart),
     );
 }
@@ -378,15 +422,15 @@ fn disambiguated_overlap_position_strict_closed_crosses_end() {
             date(&Utc, 2025, 1, 4),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Strict,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Strict,
+        ),
         Ok(DisambiguatedOverlapPosition::CrossesEnd),
     );
 }
@@ -400,15 +444,15 @@ fn disambiguated_overlap_position_strict_closed_inside() {
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 4),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Strict,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 4),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Strict,
+        ),
         Ok(DisambiguatedOverlapPosition::Inside),
     );
 }
@@ -422,15 +466,15 @@ fn disambiguated_overlap_position_strict_closed_time_gap_inside_and_same_start()
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Strict,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Strict,
+        ),
         Ok(DisambiguatedOverlapPosition::InsideAndSameStart),
     );
 }
@@ -444,15 +488,15 @@ fn disambiguated_overlap_position_strict_closed_inside_and_same_start_inclusive_
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Strict,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Strict,
+        ),
         Ok(DisambiguatedOverlapPosition::InsideAndSameStart),
     );
 }
@@ -466,15 +510,15 @@ fn disambiguated_overlap_position_strict_closed_inside_and_same_start_inclusive_
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Strict,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Strict,
+        ),
         Ok(DisambiguatedOverlapPosition::CrossesStart),
     );
 }
@@ -488,15 +532,15 @@ fn disambiguated_overlap_position_strict_closed_inside_and_same_start_exclusive_
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Strict,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Strict,
+        ),
         Ok(DisambiguatedOverlapPosition::Inside),
     );
 }
@@ -510,15 +554,15 @@ fn disambiguated_overlap_position_strict_closed_inside_and_same_start_exclusive_
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Strict,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Strict,
+        ),
         Ok(DisambiguatedOverlapPosition::InsideAndSameStart),
     );
 }
@@ -532,15 +576,15 @@ fn disambiguated_overlap_position_strict_closed_time_gap_inside_and_same_end() {
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Strict,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Strict,
+        ),
         Ok(DisambiguatedOverlapPosition::InsideAndSameEnd),
     );
 }
@@ -554,15 +598,15 @@ fn disambiguated_overlap_position_strict_closed_inside_and_same_end_inclusive_in
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Strict,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Strict,
+        ),
         Ok(DisambiguatedOverlapPosition::InsideAndSameEnd),
     );
 }
@@ -576,15 +620,15 @@ fn disambiguated_overlap_position_strict_closed_inside_and_same_end_inclusive_ex
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::Strict,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::Strict,
+        ),
         Ok(DisambiguatedOverlapPosition::CrossesEnd),
     );
 }
@@ -598,15 +642,15 @@ fn disambiguated_overlap_position_strict_closed_inside_and_same_end_exclusive_in
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Strict,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Strict,
+        ),
         Ok(DisambiguatedOverlapPosition::Inside),
     );
 }
@@ -620,15 +664,15 @@ fn disambiguated_overlap_position_strict_closed_inside_and_same_end_exclusive_ex
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::Strict,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::Strict,
+        ),
         Ok(DisambiguatedOverlapPosition::InsideAndSameEnd),
     );
 }
@@ -642,15 +686,15 @@ fn disambiguated_overlap_position_strict_closed_equal_start_inclusive_inclusive_
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Strict,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Strict,
+        ),
         Ok(DisambiguatedOverlapPosition::Equal),
     );
 }
@@ -664,15 +708,15 @@ fn disambiguated_overlap_position_strict_closed_equal_start_inclusive_inclusive_
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::Strict,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::Strict,
+        ),
         Ok(DisambiguatedOverlapPosition::ContainsAndSameStart),
     );
 }
@@ -686,15 +730,15 @@ fn disambiguated_overlap_position_strict_closed_equal_start_inclusive_inclusive_
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Strict,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Strict,
+        ),
         Ok(DisambiguatedOverlapPosition::InsideAndSameStart),
     );
 }
@@ -708,15 +752,15 @@ fn disambiguated_overlap_position_strict_closed_equal_start_inclusive_inclusive_
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::Strict,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::Strict,
+        ),
         Ok(DisambiguatedOverlapPosition::Equal),
     );
 }
@@ -730,15 +774,15 @@ fn disambiguated_overlap_position_strict_closed_equal_start_inclusive_exclusive_
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Strict,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Strict,
+        ),
         Ok(DisambiguatedOverlapPosition::ContainsAndSameEnd),
     );
 }
@@ -752,15 +796,15 @@ fn disambiguated_overlap_position_strict_closed_equal_start_inclusive_exclusive_
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::Strict,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::Strict,
+        ),
         Ok(DisambiguatedOverlapPosition::Contains),
     );
 }
@@ -774,15 +818,15 @@ fn disambiguated_overlap_position_strict_closed_equal_start_inclusive_exclusive_
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Strict,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Strict,
+        ),
         Ok(DisambiguatedOverlapPosition::CrossesStart),
     );
 }
@@ -796,15 +840,15 @@ fn disambiguated_overlap_position_strict_closed_equal_start_inclusive_exclusive_
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::Strict,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::Strict,
+        ),
         Ok(DisambiguatedOverlapPosition::ContainsAndSameEnd),
     );
 }
@@ -818,15 +862,15 @@ fn disambiguated_overlap_position_strict_closed_equal_start_exclusive_inclusive_
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Strict,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Strict,
+        ),
         Ok(DisambiguatedOverlapPosition::InsideAndSameEnd),
     );
 }
@@ -840,15 +884,15 @@ fn disambiguated_overlap_position_strict_closed_equal_start_exclusive_inclusive_
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::Strict,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::Strict,
+        ),
         Ok(DisambiguatedOverlapPosition::CrossesEnd),
     );
 }
@@ -862,15 +906,15 @@ fn disambiguated_overlap_position_strict_closed_equal_start_exclusive_inclusive_
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Strict,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Strict,
+        ),
         Ok(DisambiguatedOverlapPosition::Inside),
     );
 }
@@ -884,15 +928,15 @@ fn disambiguated_overlap_position_strict_closed_equal_start_exclusive_inclusive_
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::Strict,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::Strict,
+        ),
         Ok(DisambiguatedOverlapPosition::InsideAndSameEnd),
     );
 }
@@ -906,15 +950,15 @@ fn disambiguated_overlap_position_strict_closed_equal_start_exclusive_exclusive_
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Strict,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Strict,
+        ),
         Ok(DisambiguatedOverlapPosition::Equal),
     );
 }
@@ -928,15 +972,15 @@ fn disambiguated_overlap_position_strict_closed_equal_start_exclusive_exclusive_
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::Strict,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::Strict,
+        ),
         Ok(DisambiguatedOverlapPosition::ContainsAndSameStart),
     );
 }
@@ -950,15 +994,15 @@ fn disambiguated_overlap_position_strict_closed_equal_start_exclusive_exclusive_
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Strict,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Strict,
+        ),
         Ok(DisambiguatedOverlapPosition::InsideAndSameStart),
     );
 }
@@ -972,15 +1016,15 @@ fn disambiguated_overlap_position_strict_closed_equal_start_exclusive_exclusive_
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::Strict,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::Strict,
+        ),
         Ok(DisambiguatedOverlapPosition::Equal),
     );
 }
@@ -994,15 +1038,15 @@ fn disambiguated_overlap_position_strict_closed_contains_and_same_start_inclusiv
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Strict,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Strict,
+        ),
         Ok(DisambiguatedOverlapPosition::ContainsAndSameStart),
     );
 }
@@ -1016,15 +1060,15 @@ fn disambiguated_overlap_position_strict_closed_contains_and_same_start_inclusiv
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Strict,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Strict,
+        ),
         Ok(DisambiguatedOverlapPosition::Contains),
     );
 }
@@ -1038,15 +1082,15 @@ fn disambiguated_overlap_position_strict_closed_contains_and_same_start_exclusiv
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Strict,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Strict,
+        ),
         Ok(DisambiguatedOverlapPosition::CrossesEnd),
     );
 }
@@ -1060,15 +1104,15 @@ fn disambiguated_overlap_position_strict_closed_contains_and_same_start_exclusiv
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Strict,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Strict,
+        ),
         Ok(DisambiguatedOverlapPosition::ContainsAndSameStart),
     );
 }
@@ -1082,15 +1126,15 @@ fn disambiguated_overlap_position_strict_closed_contains_and_same_end_inclusive_
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Strict,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Strict,
+        ),
         Ok(DisambiguatedOverlapPosition::ContainsAndSameEnd),
     );
 }
@@ -1104,15 +1148,15 @@ fn disambiguated_overlap_position_strict_closed_contains_and_same_end_inclusive_
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::Strict,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::Strict,
+        ),
         Ok(DisambiguatedOverlapPosition::Contains),
     );
 }
@@ -1126,15 +1170,15 @@ fn disambiguated_overlap_position_strict_closed_contains_and_same_end_exclusive_
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Strict,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Strict,
+        ),
         Ok(DisambiguatedOverlapPosition::CrossesStart),
     );
 }
@@ -1148,15 +1192,15 @@ fn disambiguated_overlap_position_strict_closed_contains_and_same_end_exclusive_
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::Strict,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::Strict,
+        ),
         Ok(DisambiguatedOverlapPosition::ContainsAndSameEnd),
     );
 }
@@ -1170,15 +1214,15 @@ fn disambiguated_overlap_position_strict_closed_contains() {
             date(&Utc, 2025, 1, 4),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Strict,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Strict,
+        ),
         Ok(DisambiguatedOverlapPosition::Contains),
     );
 }
@@ -1186,14 +1230,10 @@ fn disambiguated_overlap_position_strict_closed_contains() {
 #[test]
 fn disambiguated_overlap_position_lenient_closed_time_gap_before_other() {
     assert_eq!(
-        ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), date(&Utc, 2025, 1, 2))
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new(
-                    date(&Utc, 2025, 1, 3),
-                    date(&Utc, 2025, 1, 4),
-                ),
-                OverlapRuleSet::Lenient,
-            ),
+        ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), date(&Utc, 2025, 1, 2)).disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 3), date(&Utc, 2025, 1, 4),),
+            OverlapRuleSet::Lenient,
+        ),
         Ok(DisambiguatedOverlapPosition::OutsideBefore),
     );
 }
@@ -1207,15 +1247,15 @@ fn disambiguated_overlap_position_lenient_closed_inclusive_inclusive_adjacency_b
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Lenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Lenient,
+        ),
         Ok(DisambiguatedOverlapPosition::EndsOnStart),
     );
 }
@@ -1229,15 +1269,15 @@ fn disambiguated_overlap_position_lenient_closed_inclusive_exclusive_adjacency_b
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Lenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Lenient,
+        ),
         Ok(DisambiguatedOverlapPosition::EndsOnStart),
     );
 }
@@ -1251,15 +1291,15 @@ fn disambiguated_overlap_position_lenient_closed_exclusive_inclusive_adjacency_b
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Lenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Lenient,
+        ),
         Ok(DisambiguatedOverlapPosition::EndsOnStart),
     );
 }
@@ -1273,15 +1313,15 @@ fn disambiguated_overlap_position_lenient_closed_exclusive_exclusive_adjacency_b
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Lenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Lenient,
+        ),
         Ok(DisambiguatedOverlapPosition::OutsideBefore),
     );
 }
@@ -1289,11 +1329,10 @@ fn disambiguated_overlap_position_lenient_closed_exclusive_exclusive_adjacency_b
 #[test]
 fn disambiguated_overlap_position_lenient_closed_time_gap_after_other() {
     assert_eq!(
-        ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 3), date(&Utc, 2025, 1, 4))
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), date(&Utc, 2025, 1, 2)),
-                OverlapRuleSet::Lenient,
-            ),
+        ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 3), date(&Utc, 2025, 1, 4)).disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), date(&Utc, 2025, 1, 2)),
+            OverlapRuleSet::Lenient,
+        ),
         Ok(DisambiguatedOverlapPosition::OutsideAfter),
     );
 }
@@ -1307,15 +1346,15 @@ fn disambiguated_overlap_position_lenient_closed_inclusive_inclusive_adjacency_a
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Lenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Lenient,
+        ),
         Ok(DisambiguatedOverlapPosition::StartsOnEnd),
     );
 }
@@ -1329,15 +1368,15 @@ fn disambiguated_overlap_position_lenient_closed_inclusive_exclusive_adjacency_a
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::Lenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::Lenient,
+        ),
         Ok(DisambiguatedOverlapPosition::StartsOnEnd),
     );
 }
@@ -1351,15 +1390,15 @@ fn disambiguated_overlap_position_lenient_closed_exclusive_inclusive_adjacency_a
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Lenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Lenient,
+        ),
         Ok(DisambiguatedOverlapPosition::StartsOnEnd),
     );
 }
@@ -1373,15 +1412,15 @@ fn disambiguated_overlap_position_lenient_closed_exclusive_exclusive_adjacency_a
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::Lenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::Lenient,
+        ),
         Ok(DisambiguatedOverlapPosition::OutsideAfter),
     );
 }
@@ -1395,15 +1434,15 @@ fn disambiguated_overlap_position_lenient_closed_crosses_start() {
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 4),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Lenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 4),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Lenient,
+        ),
         Ok(DisambiguatedOverlapPosition::CrossesStart),
     );
 }
@@ -1417,15 +1456,15 @@ fn disambiguated_overlap_position_lenient_closed_crosses_end() {
             date(&Utc, 2025, 1, 4),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Lenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Lenient,
+        ),
         Ok(DisambiguatedOverlapPosition::CrossesEnd),
     );
 }
@@ -1439,15 +1478,15 @@ fn disambiguated_overlap_position_lenient_closed_inside() {
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 4),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Lenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 4),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Lenient,
+        ),
         Ok(DisambiguatedOverlapPosition::Inside),
     );
 }
@@ -1461,15 +1500,15 @@ fn disambiguated_overlap_position_lenient_closed_time_gap_inside_and_same_start(
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Lenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Lenient,
+        ),
         Ok(DisambiguatedOverlapPosition::InsideAndSameStart),
     );
 }
@@ -1483,15 +1522,15 @@ fn disambiguated_overlap_position_lenient_closed_inside_and_same_start_inclusive
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Lenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Lenient,
+        ),
         Ok(DisambiguatedOverlapPosition::InsideAndSameStart),
     );
 }
@@ -1505,15 +1544,15 @@ fn disambiguated_overlap_position_lenient_closed_inside_and_same_start_inclusive
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Lenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Lenient,
+        ),
         Ok(DisambiguatedOverlapPosition::InsideAndSameStart),
     );
 }
@@ -1527,15 +1566,15 @@ fn disambiguated_overlap_position_lenient_closed_inside_and_same_start_exclusive
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Lenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Lenient,
+        ),
         Ok(DisambiguatedOverlapPosition::InsideAndSameStart),
     );
 }
@@ -1549,15 +1588,15 @@ fn disambiguated_overlap_position_lenient_closed_inside_and_same_start_exclusive
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Lenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Lenient,
+        ),
         Ok(DisambiguatedOverlapPosition::InsideAndSameStart),
     );
 }
@@ -1571,15 +1610,15 @@ fn disambiguated_overlap_position_lenient_closed_time_gap_inside_and_same_end() 
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Lenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Lenient,
+        ),
         Ok(DisambiguatedOverlapPosition::InsideAndSameEnd),
     );
 }
@@ -1593,15 +1632,15 @@ fn disambiguated_overlap_position_lenient_closed_inside_and_same_end_inclusive_i
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Lenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Lenient,
+        ),
         Ok(DisambiguatedOverlapPosition::InsideAndSameEnd),
     );
 }
@@ -1615,15 +1654,15 @@ fn disambiguated_overlap_position_lenient_closed_inside_and_same_end_inclusive_e
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::Lenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::Lenient,
+        ),
         Ok(DisambiguatedOverlapPosition::InsideAndSameEnd),
     );
 }
@@ -1637,15 +1676,15 @@ fn disambiguated_overlap_position_lenient_closed_inside_and_same_end_exclusive_i
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Lenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Lenient,
+        ),
         Ok(DisambiguatedOverlapPosition::InsideAndSameEnd),
     );
 }
@@ -1659,15 +1698,15 @@ fn disambiguated_overlap_position_lenient_closed_inside_and_same_end_exclusive_e
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::Lenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::Lenient,
+        ),
         Ok(DisambiguatedOverlapPosition::InsideAndSameEnd),
     );
 }
@@ -1681,15 +1720,15 @@ fn disambiguated_overlap_position_lenient_closed_equal_start_inclusive_inclusive
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Lenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Lenient,
+        ),
         Ok(DisambiguatedOverlapPosition::Equal),
     );
 }
@@ -1703,15 +1742,15 @@ fn disambiguated_overlap_position_lenient_closed_equal_start_inclusive_inclusive
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::Lenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::Lenient,
+        ),
         Ok(DisambiguatedOverlapPosition::Equal),
     );
 }
@@ -1725,15 +1764,15 @@ fn disambiguated_overlap_position_lenient_closed_equal_start_inclusive_inclusive
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Lenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Lenient,
+        ),
         Ok(DisambiguatedOverlapPosition::Equal),
     );
 }
@@ -1747,15 +1786,15 @@ fn disambiguated_overlap_position_lenient_closed_equal_start_inclusive_inclusive
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::Lenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::Lenient,
+        ),
         Ok(DisambiguatedOverlapPosition::Equal),
     );
 }
@@ -1769,15 +1808,15 @@ fn disambiguated_overlap_position_lenient_closed_equal_start_inclusive_exclusive
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Lenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Lenient,
+        ),
         Ok(DisambiguatedOverlapPosition::Equal),
     );
 }
@@ -1791,15 +1830,15 @@ fn disambiguated_overlap_position_lenient_closed_equal_start_inclusive_exclusive
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::Lenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::Lenient,
+        ),
         Ok(DisambiguatedOverlapPosition::Equal),
     );
 }
@@ -1813,15 +1852,15 @@ fn disambiguated_overlap_position_lenient_closed_equal_start_inclusive_exclusive
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Lenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Lenient,
+        ),
         Ok(DisambiguatedOverlapPosition::Equal),
     );
 }
@@ -1835,15 +1874,15 @@ fn disambiguated_overlap_position_lenient_closed_equal_start_inclusive_exclusive
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::Lenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::Lenient,
+        ),
         Ok(DisambiguatedOverlapPosition::Equal),
     );
 }
@@ -1857,15 +1896,15 @@ fn disambiguated_overlap_position_lenient_closed_equal_start_exclusive_inclusive
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Lenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Lenient,
+        ),
         Ok(DisambiguatedOverlapPosition::Equal),
     );
 }
@@ -1879,15 +1918,15 @@ fn disambiguated_overlap_position_lenient_closed_equal_start_exclusive_inclusive
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::Lenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::Lenient,
+        ),
         Ok(DisambiguatedOverlapPosition::Equal),
     );
 }
@@ -1901,15 +1940,15 @@ fn disambiguated_overlap_position_lenient_closed_equal_start_exclusive_inclusive
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Lenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Lenient,
+        ),
         Ok(DisambiguatedOverlapPosition::Equal),
     );
 }
@@ -1923,15 +1962,15 @@ fn disambiguated_overlap_position_lenient_closed_equal_start_exclusive_inclusive
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::Lenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::Lenient,
+        ),
         Ok(DisambiguatedOverlapPosition::Equal),
     );
 }
@@ -1945,15 +1984,15 @@ fn disambiguated_overlap_position_lenient_closed_equal_start_exclusive_exclusive
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Lenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Lenient,
+        ),
         Ok(DisambiguatedOverlapPosition::Equal),
     );
 }
@@ -1967,15 +2006,15 @@ fn disambiguated_overlap_position_lenient_closed_equal_start_exclusive_exclusive
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::Lenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::Lenient,
+        ),
         Ok(DisambiguatedOverlapPosition::Equal),
     );
 }
@@ -1989,15 +2028,15 @@ fn disambiguated_overlap_position_lenient_closed_equal_start_exclusive_exclusive
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Lenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Lenient,
+        ),
         Ok(DisambiguatedOverlapPosition::Equal),
     );
 }
@@ -2011,15 +2050,15 @@ fn disambiguated_overlap_position_lenient_closed_equal_start_exclusive_exclusive
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::Lenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::Lenient,
+        ),
         Ok(DisambiguatedOverlapPosition::Equal),
     );
 }
@@ -2033,15 +2072,15 @@ fn disambiguated_overlap_position_lenient_closed_contains_and_same_start_inclusi
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Lenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Lenient,
+        ),
         Ok(DisambiguatedOverlapPosition::ContainsAndSameStart),
     );
 }
@@ -2055,15 +2094,15 @@ fn disambiguated_overlap_position_lenient_closed_contains_and_same_start_inclusi
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Lenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Lenient,
+        ),
         Ok(DisambiguatedOverlapPosition::ContainsAndSameStart),
     );
 }
@@ -2077,15 +2116,15 @@ fn disambiguated_overlap_position_lenient_closed_contains_and_same_start_exclusi
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Lenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Lenient,
+        ),
         Ok(DisambiguatedOverlapPosition::ContainsAndSameStart),
     );
 }
@@ -2099,15 +2138,15 @@ fn disambiguated_overlap_position_lenient_closed_contains_and_same_start_exclusi
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Lenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Lenient,
+        ),
         Ok(DisambiguatedOverlapPosition::ContainsAndSameStart),
     );
 }
@@ -2121,15 +2160,15 @@ fn disambiguated_overlap_position_lenient_closed_contains_and_same_end_inclusive
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Lenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Lenient,
+        ),
         Ok(DisambiguatedOverlapPosition::ContainsAndSameEnd),
     );
 }
@@ -2143,15 +2182,15 @@ fn disambiguated_overlap_position_lenient_closed_contains_and_same_end_inclusive
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::Lenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::Lenient,
+        ),
         Ok(DisambiguatedOverlapPosition::ContainsAndSameEnd),
     );
 }
@@ -2165,15 +2204,15 @@ fn disambiguated_overlap_position_lenient_closed_contains_and_same_end_exclusive
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Lenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Lenient,
+        ),
         Ok(DisambiguatedOverlapPosition::ContainsAndSameEnd),
     );
 }
@@ -2187,15 +2226,15 @@ fn disambiguated_overlap_position_lenient_closed_contains_and_same_end_exclusive
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::Lenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::Lenient,
+        ),
         Ok(DisambiguatedOverlapPosition::ContainsAndSameEnd),
     );
 }
@@ -2209,15 +2248,15 @@ fn disambiguated_overlap_position_lenient_closed_contains() {
             date(&Utc, 2025, 1, 4),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::Lenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::Lenient,
+        ),
         Ok(DisambiguatedOverlapPosition::Contains),
     );
 }
@@ -2225,14 +2264,10 @@ fn disambiguated_overlap_position_lenient_closed_contains() {
 #[test]
 fn disambiguated_overlap_position_very_lenient_closed_time_gap_before_other() {
     assert_eq!(
-        ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), date(&Utc, 2025, 1, 2))
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new(
-                    date(&Utc, 2025, 1, 3),
-                    date(&Utc, 2025, 1, 4),
-                ),
-                OverlapRuleSet::VeryLenient,
-            ),
+        ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), date(&Utc, 2025, 1, 2)).disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 3), date(&Utc, 2025, 1, 4),),
+            OverlapRuleSet::VeryLenient,
+        ),
         Ok(DisambiguatedOverlapPosition::OutsideBefore),
     );
 }
@@ -2246,15 +2281,15 @@ fn disambiguated_overlap_position_very_lenient_closed_inclusive_inclusive_adjace
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::VeryLenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::VeryLenient,
+        ),
         Ok(DisambiguatedOverlapPosition::EndsOnStart),
     );
 }
@@ -2268,15 +2303,15 @@ fn disambiguated_overlap_position_very_lenient_closed_inclusive_exclusive_adjace
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::VeryLenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::VeryLenient,
+        ),
         Ok(DisambiguatedOverlapPosition::EndsOnStart),
     );
 }
@@ -2290,15 +2325,15 @@ fn disambiguated_overlap_position_very_lenient_closed_exclusive_inclusive_adjace
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::VeryLenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::VeryLenient,
+        ),
         Ok(DisambiguatedOverlapPosition::EndsOnStart),
     );
 }
@@ -2312,15 +2347,15 @@ fn disambiguated_overlap_position_very_lenient_closed_exclusive_exclusive_adjace
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::VeryLenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::VeryLenient,
+        ),
         Ok(DisambiguatedOverlapPosition::EndsOnStart),
     );
 }
@@ -2328,11 +2363,10 @@ fn disambiguated_overlap_position_very_lenient_closed_exclusive_exclusive_adjace
 #[test]
 fn disambiguated_overlap_position_very_lenient_closed_time_gap_after_other() {
     assert_eq!(
-        ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 3), date(&Utc, 2025, 1, 4))
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), date(&Utc, 2025, 1, 2)),
-                OverlapRuleSet::VeryLenient,
-            ),
+        ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 3), date(&Utc, 2025, 1, 4)).disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), date(&Utc, 2025, 1, 2)),
+            OverlapRuleSet::VeryLenient,
+        ),
         Ok(DisambiguatedOverlapPosition::OutsideAfter),
     );
 }
@@ -2346,15 +2380,15 @@ fn disambiguated_overlap_position_very_lenient_closed_inclusive_inclusive_adjace
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::VeryLenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::VeryLenient,
+        ),
         Ok(DisambiguatedOverlapPosition::StartsOnEnd),
     );
 }
@@ -2368,15 +2402,15 @@ fn disambiguated_overlap_position_very_lenient_closed_inclusive_exclusive_adjace
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::VeryLenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::VeryLenient,
+        ),
         Ok(DisambiguatedOverlapPosition::StartsOnEnd),
     );
 }
@@ -2390,15 +2424,15 @@ fn disambiguated_overlap_position_very_lenient_closed_exclusive_inclusive_adjace
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::VeryLenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::VeryLenient,
+        ),
         Ok(DisambiguatedOverlapPosition::StartsOnEnd),
     );
 }
@@ -2412,15 +2446,15 @@ fn disambiguated_overlap_position_very_lenient_closed_exclusive_exclusive_adjace
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::VeryLenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::VeryLenient,
+        ),
         Ok(DisambiguatedOverlapPosition::StartsOnEnd),
     );
 }
@@ -2434,15 +2468,15 @@ fn disambiguated_overlap_position_very_lenient_closed_crosses_start() {
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 4),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::VeryLenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 4),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::VeryLenient,
+        ),
         Ok(DisambiguatedOverlapPosition::CrossesStart),
     );
 }
@@ -2456,15 +2490,15 @@ fn disambiguated_overlap_position_very_lenient_closed_crosses_end() {
             date(&Utc, 2025, 1, 4),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::VeryLenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::VeryLenient,
+        ),
         Ok(DisambiguatedOverlapPosition::CrossesEnd),
     );
 }
@@ -2478,15 +2512,15 @@ fn disambiguated_overlap_position_very_lenient_closed_inside() {
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 4),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::VeryLenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 4),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::VeryLenient,
+        ),
         Ok(DisambiguatedOverlapPosition::Inside),
     );
 }
@@ -2500,15 +2534,15 @@ fn disambiguated_overlap_position_very_lenient_closed_time_gap_inside_and_same_s
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::VeryLenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::VeryLenient,
+        ),
         Ok(DisambiguatedOverlapPosition::InsideAndSameStart),
     );
 }
@@ -2522,15 +2556,15 @@ fn disambiguated_overlap_position_very_lenient_closed_inside_and_same_start_incl
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::VeryLenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::VeryLenient,
+        ),
         Ok(DisambiguatedOverlapPosition::InsideAndSameStart),
     );
 }
@@ -2544,15 +2578,15 @@ fn disambiguated_overlap_position_very_lenient_closed_inside_and_same_start_incl
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::VeryLenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::VeryLenient,
+        ),
         Ok(DisambiguatedOverlapPosition::InsideAndSameStart),
     );
 }
@@ -2566,15 +2600,15 @@ fn disambiguated_overlap_position_very_lenient_closed_inside_and_same_start_excl
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::VeryLenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::VeryLenient,
+        ),
         Ok(DisambiguatedOverlapPosition::InsideAndSameStart),
     );
 }
@@ -2588,15 +2622,15 @@ fn disambiguated_overlap_position_very_lenient_closed_inside_and_same_start_excl
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::VeryLenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::VeryLenient,
+        ),
         Ok(DisambiguatedOverlapPosition::InsideAndSameStart),
     );
 }
@@ -2610,15 +2644,15 @@ fn disambiguated_overlap_position_very_lenient_closed_time_gap_inside_and_same_e
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::VeryLenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::VeryLenient,
+        ),
         Ok(DisambiguatedOverlapPosition::InsideAndSameEnd),
     );
 }
@@ -2632,15 +2666,15 @@ fn disambiguated_overlap_position_very_lenient_closed_inside_and_same_end_inclus
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::VeryLenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::VeryLenient,
+        ),
         Ok(DisambiguatedOverlapPosition::InsideAndSameEnd),
     );
 }
@@ -2654,15 +2688,15 @@ fn disambiguated_overlap_position_very_lenient_closed_inside_and_same_end_inclus
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::VeryLenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::VeryLenient,
+        ),
         Ok(DisambiguatedOverlapPosition::InsideAndSameEnd),
     );
 }
@@ -2676,15 +2710,15 @@ fn disambiguated_overlap_position_very_lenient_closed_inside_and_same_end_exclus
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::VeryLenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::VeryLenient,
+        ),
         Ok(DisambiguatedOverlapPosition::InsideAndSameEnd),
     );
 }
@@ -2698,15 +2732,15 @@ fn disambiguated_overlap_position_very_lenient_closed_inside_and_same_end_exclus
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::VeryLenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::VeryLenient,
+        ),
         Ok(DisambiguatedOverlapPosition::InsideAndSameEnd),
     );
 }
@@ -2720,15 +2754,15 @@ fn disambiguated_overlap_position_very_lenient_closed_equal_start_inclusive_incl
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::VeryLenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::VeryLenient,
+        ),
         Ok(DisambiguatedOverlapPosition::Equal),
     );
 }
@@ -2742,15 +2776,15 @@ fn disambiguated_overlap_position_very_lenient_closed_equal_start_inclusive_incl
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::VeryLenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::VeryLenient,
+        ),
         Ok(DisambiguatedOverlapPosition::Equal),
     );
 }
@@ -2764,15 +2798,15 @@ fn disambiguated_overlap_position_very_lenient_closed_equal_start_inclusive_incl
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::VeryLenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::VeryLenient,
+        ),
         Ok(DisambiguatedOverlapPosition::Equal),
     );
 }
@@ -2786,15 +2820,15 @@ fn disambiguated_overlap_position_very_lenient_closed_equal_start_inclusive_incl
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::VeryLenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::VeryLenient,
+        ),
         Ok(DisambiguatedOverlapPosition::Equal),
     );
 }
@@ -2808,15 +2842,15 @@ fn disambiguated_overlap_position_very_lenient_closed_equal_start_inclusive_excl
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::VeryLenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::VeryLenient,
+        ),
         Ok(DisambiguatedOverlapPosition::Equal),
     );
 }
@@ -2830,15 +2864,15 @@ fn disambiguated_overlap_position_very_lenient_closed_equal_start_inclusive_excl
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::VeryLenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::VeryLenient,
+        ),
         Ok(DisambiguatedOverlapPosition::Equal),
     );
 }
@@ -2852,15 +2886,15 @@ fn disambiguated_overlap_position_very_lenient_closed_equal_start_inclusive_excl
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::VeryLenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::VeryLenient,
+        ),
         Ok(DisambiguatedOverlapPosition::Equal),
     );
 }
@@ -2874,15 +2908,15 @@ fn disambiguated_overlap_position_very_lenient_closed_equal_start_inclusive_excl
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::VeryLenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::VeryLenient,
+        ),
         Ok(DisambiguatedOverlapPosition::Equal),
     );
 }
@@ -2896,15 +2930,15 @@ fn disambiguated_overlap_position_very_lenient_closed_equal_start_exclusive_incl
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::VeryLenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::VeryLenient,
+        ),
         Ok(DisambiguatedOverlapPosition::Equal),
     );
 }
@@ -2918,15 +2952,15 @@ fn disambiguated_overlap_position_very_lenient_closed_equal_start_exclusive_incl
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::VeryLenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::VeryLenient,
+        ),
         Ok(DisambiguatedOverlapPosition::Equal),
     );
 }
@@ -2940,15 +2974,15 @@ fn disambiguated_overlap_position_very_lenient_closed_equal_start_exclusive_incl
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::VeryLenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::VeryLenient,
+        ),
         Ok(DisambiguatedOverlapPosition::Equal),
     );
 }
@@ -2962,15 +2996,15 @@ fn disambiguated_overlap_position_very_lenient_closed_equal_start_exclusive_incl
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::VeryLenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::VeryLenient,
+        ),
         Ok(DisambiguatedOverlapPosition::Equal),
     );
 }
@@ -2984,15 +3018,15 @@ fn disambiguated_overlap_position_very_lenient_closed_equal_start_exclusive_excl
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::VeryLenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::VeryLenient,
+        ),
         Ok(DisambiguatedOverlapPosition::Equal),
     );
 }
@@ -3006,15 +3040,15 @@ fn disambiguated_overlap_position_very_lenient_closed_equal_start_exclusive_excl
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::VeryLenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::VeryLenient,
+        ),
         Ok(DisambiguatedOverlapPosition::Equal),
     );
 }
@@ -3028,15 +3062,15 @@ fn disambiguated_overlap_position_very_lenient_closed_equal_start_exclusive_excl
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::VeryLenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::VeryLenient,
+        ),
         Ok(DisambiguatedOverlapPosition::Equal),
     );
 }
@@ -3050,15 +3084,15 @@ fn disambiguated_overlap_position_very_lenient_closed_equal_start_exclusive_excl
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::VeryLenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::VeryLenient,
+        ),
         Ok(DisambiguatedOverlapPosition::Equal),
     );
 }
@@ -3072,15 +3106,15 @@ fn disambiguated_overlap_position_very_lenient_closed_contains_and_same_start_in
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::VeryLenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::VeryLenient,
+        ),
         Ok(DisambiguatedOverlapPosition::ContainsAndSameStart),
     );
 }
@@ -3094,15 +3128,15 @@ fn disambiguated_overlap_position_very_lenient_closed_contains_and_same_start_in
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::VeryLenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::VeryLenient,
+        ),
         Ok(DisambiguatedOverlapPosition::ContainsAndSameStart),
     );
 }
@@ -3116,15 +3150,15 @@ fn disambiguated_overlap_position_very_lenient_closed_contains_and_same_start_ex
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::VeryLenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::VeryLenient,
+        ),
         Ok(DisambiguatedOverlapPosition::ContainsAndSameStart),
     );
 }
@@ -3138,15 +3172,15 @@ fn disambiguated_overlap_position_very_lenient_closed_contains_and_same_start_ex
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::VeryLenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::VeryLenient,
+        ),
         Ok(DisambiguatedOverlapPosition::ContainsAndSameStart),
     );
 }
@@ -3160,15 +3194,15 @@ fn disambiguated_overlap_position_very_lenient_closed_contains_and_same_end_incl
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::VeryLenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::VeryLenient,
+        ),
         Ok(DisambiguatedOverlapPosition::ContainsAndSameEnd),
     );
 }
@@ -3182,15 +3216,15 @@ fn disambiguated_overlap_position_very_lenient_closed_contains_and_same_end_incl
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::VeryLenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::VeryLenient,
+        ),
         Ok(DisambiguatedOverlapPosition::ContainsAndSameEnd),
     );
 }
@@ -3204,15 +3238,15 @@ fn disambiguated_overlap_position_very_lenient_closed_contains_and_same_end_excl
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::VeryLenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::VeryLenient,
+        ),
         Ok(DisambiguatedOverlapPosition::ContainsAndSameEnd),
     );
 }
@@ -3226,15 +3260,15 @@ fn disambiguated_overlap_position_very_lenient_closed_contains_and_same_end_excl
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::VeryLenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::VeryLenient,
+        ),
         Ok(DisambiguatedOverlapPosition::ContainsAndSameEnd),
     );
 }
@@ -3248,15 +3282,15 @@ fn disambiguated_overlap_position_very_lenient_closed_contains() {
             date(&Utc, 2025, 1, 4),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::VeryLenient,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::VeryLenient,
+        ),
         Ok(DisambiguatedOverlapPosition::Contains),
     );
 }
@@ -3264,14 +3298,10 @@ fn disambiguated_overlap_position_very_lenient_closed_contains() {
 #[test]
 fn disambiguated_overlap_position_continuous_to_future_closed_time_gap_before_other() {
     assert_eq!(
-        ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), date(&Utc, 2025, 1, 2))
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new(
-                    date(&Utc, 2025, 1, 3),
-                    date(&Utc, 2025, 1, 4),
-                ),
-                OverlapRuleSet::ContinuousToFuture,
-            ),
+        ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), date(&Utc, 2025, 1, 2)).disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 3), date(&Utc, 2025, 1, 4),),
+            OverlapRuleSet::ContinuousToFuture,
+        ),
         Ok(DisambiguatedOverlapPosition::OutsideBefore),
     );
 }
@@ -3285,15 +3315,15 @@ fn disambiguated_overlap_position_continuous_to_future_closed_inclusive_inclusiv
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToFuture,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToFuture,
+        ),
         Ok(DisambiguatedOverlapPosition::EndsOnStart),
     );
 }
@@ -3307,15 +3337,15 @@ fn disambiguated_overlap_position_continuous_to_future_closed_inclusive_exclusiv
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToFuture,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToFuture,
+        ),
         Ok(DisambiguatedOverlapPosition::OutsideBefore),
     );
 }
@@ -3329,15 +3359,15 @@ fn disambiguated_overlap_position_continuous_to_future_closed_exclusive_inclusiv
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToFuture,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToFuture,
+        ),
         Ok(DisambiguatedOverlapPosition::EndsOnStart),
     );
 }
@@ -3351,15 +3381,15 @@ fn disambiguated_overlap_position_continuous_to_future_closed_exclusive_exclusiv
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToFuture,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToFuture,
+        ),
         Ok(DisambiguatedOverlapPosition::OutsideBefore),
     );
 }
@@ -3367,11 +3397,10 @@ fn disambiguated_overlap_position_continuous_to_future_closed_exclusive_exclusiv
 #[test]
 fn disambiguated_overlap_position_continuous_to_future_closed_time_gap_after_other() {
     assert_eq!(
-        ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 3), date(&Utc, 2025, 1, 4))
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), date(&Utc, 2025, 1, 2)),
-                OverlapRuleSet::ContinuousToFuture,
-            ),
+        ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 3), date(&Utc, 2025, 1, 4)).disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), date(&Utc, 2025, 1, 2)),
+            OverlapRuleSet::ContinuousToFuture,
+        ),
         Ok(DisambiguatedOverlapPosition::OutsideAfter),
     );
 }
@@ -3385,15 +3414,15 @@ fn disambiguated_overlap_position_continuous_to_future_closed_inclusive_inclusiv
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToFuture,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToFuture,
+        ),
         Ok(DisambiguatedOverlapPosition::StartsOnEnd),
     );
 }
@@ -3407,15 +3436,15 @@ fn disambiguated_overlap_position_continuous_to_future_closed_inclusive_exclusiv
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::ContinuousToFuture,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::ContinuousToFuture,
+        ),
         Ok(DisambiguatedOverlapPosition::StartsOnEnd),
     );
 }
@@ -3429,15 +3458,15 @@ fn disambiguated_overlap_position_continuous_to_future_closed_exclusive_inclusiv
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToFuture,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToFuture,
+        ),
         Ok(DisambiguatedOverlapPosition::OutsideAfter),
     );
 }
@@ -3451,15 +3480,15 @@ fn disambiguated_overlap_position_continuous_to_future_closed_exclusive_exclusiv
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::ContinuousToFuture,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::ContinuousToFuture,
+        ),
         Ok(DisambiguatedOverlapPosition::OutsideAfter),
     );
 }
@@ -3473,15 +3502,15 @@ fn disambiguated_overlap_position_continuous_to_future_closed_crosses_start() {
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 4),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToFuture,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 4),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToFuture,
+        ),
         Ok(DisambiguatedOverlapPosition::CrossesStart),
     );
 }
@@ -3495,15 +3524,15 @@ fn disambiguated_overlap_position_continuous_to_future_closed_crosses_end() {
             date(&Utc, 2025, 1, 4),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToFuture,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToFuture,
+        ),
         Ok(DisambiguatedOverlapPosition::CrossesEnd),
     );
 }
@@ -3517,15 +3546,15 @@ fn disambiguated_overlap_position_continuous_to_future_closed_inside() {
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 4),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToFuture,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 4),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToFuture,
+        ),
         Ok(DisambiguatedOverlapPosition::Inside),
     );
 }
@@ -3539,15 +3568,15 @@ fn disambiguated_overlap_position_continuous_to_future_closed_time_gap_inside_an
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToFuture,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToFuture,
+        ),
         Ok(DisambiguatedOverlapPosition::InsideAndSameStart),
     );
 }
@@ -3561,15 +3590,15 @@ fn disambiguated_overlap_position_continuous_to_future_closed_inside_and_same_st
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToFuture,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToFuture,
+        ),
         Ok(DisambiguatedOverlapPosition::InsideAndSameStart),
     );
 }
@@ -3583,15 +3612,15 @@ fn disambiguated_overlap_position_continuous_to_future_closed_inside_and_same_st
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToFuture,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToFuture,
+        ),
         Ok(DisambiguatedOverlapPosition::CrossesStart),
     );
 }
@@ -3605,15 +3634,15 @@ fn disambiguated_overlap_position_continuous_to_future_closed_inside_and_same_st
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToFuture,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToFuture,
+        ),
         Ok(DisambiguatedOverlapPosition::Inside),
     );
 }
@@ -3627,15 +3656,15 @@ fn disambiguated_overlap_position_continuous_to_future_closed_inside_and_same_st
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToFuture,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToFuture,
+        ),
         Ok(DisambiguatedOverlapPosition::InsideAndSameStart),
     );
 }
@@ -3649,15 +3678,15 @@ fn disambiguated_overlap_position_continuous_to_future_closed_time_gap_inside_an
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToFuture,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToFuture,
+        ),
         Ok(DisambiguatedOverlapPosition::InsideAndSameEnd),
     );
 }
@@ -3671,15 +3700,15 @@ fn disambiguated_overlap_position_continuous_to_future_closed_inside_and_same_en
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToFuture,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToFuture,
+        ),
         Ok(DisambiguatedOverlapPosition::InsideAndSameEnd),
     );
 }
@@ -3693,15 +3722,15 @@ fn disambiguated_overlap_position_continuous_to_future_closed_inside_and_same_en
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::ContinuousToFuture,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::ContinuousToFuture,
+        ),
         Ok(DisambiguatedOverlapPosition::CrossesEnd),
     );
 }
@@ -3715,15 +3744,15 @@ fn disambiguated_overlap_position_continuous_to_future_closed_inside_and_same_en
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToFuture,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToFuture,
+        ),
         Ok(DisambiguatedOverlapPosition::Inside),
     );
 }
@@ -3737,21 +3766,22 @@ fn disambiguated_overlap_position_continuous_to_future_closed_inside_and_same_en
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::ContinuousToFuture,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::ContinuousToFuture,
+        ),
         Ok(DisambiguatedOverlapPosition::InsideAndSameEnd),
     );
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_inclusive_inclusive_end_inclusive_inclusive() {
+fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_inclusive_inclusive_end_inclusive_inclusive()
+{
     assert_eq!(
         ClosedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
@@ -3759,21 +3789,22 @@ fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_inclus
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToFuture,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToFuture,
+        ),
         Ok(DisambiguatedOverlapPosition::Equal),
     );
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_inclusive_inclusive_end_inclusive_exclusive() {
+fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_inclusive_inclusive_end_inclusive_exclusive()
+{
     assert_eq!(
         ClosedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
@@ -3781,21 +3812,22 @@ fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_inclus
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::ContinuousToFuture,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::ContinuousToFuture,
+        ),
         Ok(DisambiguatedOverlapPosition::ContainsAndSameStart),
     );
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_inclusive_inclusive_end_exclusive_inclusive() {
+fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_inclusive_inclusive_end_exclusive_inclusive()
+{
     assert_eq!(
         ClosedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
@@ -3803,21 +3835,22 @@ fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_inclus
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToFuture,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToFuture,
+        ),
         Ok(DisambiguatedOverlapPosition::InsideAndSameStart),
     );
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_inclusive_inclusive_end_exclusive_exclusive() {
+fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_inclusive_inclusive_end_exclusive_exclusive()
+{
     assert_eq!(
         ClosedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
@@ -3825,21 +3858,22 @@ fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_inclus
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::ContinuousToFuture,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::ContinuousToFuture,
+        ),
         Ok(DisambiguatedOverlapPosition::Equal),
     );
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_inclusive_exclusive_end_inclusive_inclusive() {
+fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_inclusive_exclusive_end_inclusive_inclusive()
+{
     assert_eq!(
         ClosedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
@@ -3847,21 +3881,22 @@ fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_inclus
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToFuture,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToFuture,
+        ),
         Ok(DisambiguatedOverlapPosition::ContainsAndSameEnd),
     );
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_inclusive_exclusive_end_inclusive_exclusive() {
+fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_inclusive_exclusive_end_inclusive_exclusive()
+{
     assert_eq!(
         ClosedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
@@ -3869,21 +3904,22 @@ fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_inclus
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::ContinuousToFuture,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::ContinuousToFuture,
+        ),
         Ok(DisambiguatedOverlapPosition::Contains),
     );
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_inclusive_exclusive_end_exclusive_inclusive() {
+fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_inclusive_exclusive_end_exclusive_inclusive()
+{
     assert_eq!(
         ClosedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
@@ -3891,21 +3927,22 @@ fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_inclus
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToFuture,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToFuture,
+        ),
         Ok(DisambiguatedOverlapPosition::CrossesStart),
     );
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_inclusive_exclusive_end_exclusive_exclusive() {
+fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_inclusive_exclusive_end_exclusive_exclusive()
+{
     assert_eq!(
         ClosedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
@@ -3913,21 +3950,22 @@ fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_inclus
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::ContinuousToFuture,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::ContinuousToFuture,
+        ),
         Ok(DisambiguatedOverlapPosition::ContainsAndSameEnd),
     );
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_exclusive_inclusive_end_inclusive_inclusive() {
+fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_exclusive_inclusive_end_inclusive_inclusive()
+{
     assert_eq!(
         ClosedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
@@ -3935,21 +3973,22 @@ fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_exclus
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToFuture,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToFuture,
+        ),
         Ok(DisambiguatedOverlapPosition::InsideAndSameEnd),
     );
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_exclusive_inclusive_end_inclusive_exclusive() {
+fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_exclusive_inclusive_end_inclusive_exclusive()
+{
     assert_eq!(
         ClosedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
@@ -3957,21 +3996,22 @@ fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_exclus
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::ContinuousToFuture,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::ContinuousToFuture,
+        ),
         Ok(DisambiguatedOverlapPosition::CrossesEnd),
     );
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_exclusive_inclusive_end_exclusive_inclusive() {
+fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_exclusive_inclusive_end_exclusive_inclusive()
+{
     assert_eq!(
         ClosedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
@@ -3979,21 +4019,22 @@ fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_exclus
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToFuture,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToFuture,
+        ),
         Ok(DisambiguatedOverlapPosition::Inside),
     );
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_exclusive_inclusive_end_exclusive_exclusive() {
+fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_exclusive_inclusive_end_exclusive_exclusive()
+{
     assert_eq!(
         ClosedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
@@ -4001,21 +4042,22 @@ fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_exclus
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::ContinuousToFuture,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::ContinuousToFuture,
+        ),
         Ok(DisambiguatedOverlapPosition::InsideAndSameEnd),
     );
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_exclusive_exclusive_end_inclusive_inclusive() {
+fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_exclusive_exclusive_end_inclusive_inclusive()
+{
     assert_eq!(
         ClosedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
@@ -4023,21 +4065,22 @@ fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_exclus
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToFuture,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToFuture,
+        ),
         Ok(DisambiguatedOverlapPosition::Equal),
     );
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_exclusive_exclusive_end_inclusive_exclusive() {
+fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_exclusive_exclusive_end_inclusive_exclusive()
+{
     assert_eq!(
         ClosedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
@@ -4045,21 +4088,22 @@ fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_exclus
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::ContinuousToFuture,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::ContinuousToFuture,
+        ),
         Ok(DisambiguatedOverlapPosition::ContainsAndSameStart),
     );
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_exclusive_exclusive_end_exclusive_inclusive() {
+fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_exclusive_exclusive_end_exclusive_inclusive()
+{
     assert_eq!(
         ClosedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
@@ -4067,21 +4111,22 @@ fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_exclus
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToFuture,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToFuture,
+        ),
         Ok(DisambiguatedOverlapPosition::InsideAndSameStart),
     );
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_exclusive_exclusive_end_exclusive_exclusive() {
+fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_exclusive_exclusive_end_exclusive_exclusive()
+{
     assert_eq!(
         ClosedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
@@ -4089,15 +4134,15 @@ fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_exclus
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::ContinuousToFuture,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::ContinuousToFuture,
+        ),
         Ok(DisambiguatedOverlapPosition::Equal),
     );
 }
@@ -4111,15 +4156,15 @@ fn disambiguated_overlap_position_continuous_to_future_closed_contains_and_same_
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToFuture,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToFuture,
+        ),
         Ok(DisambiguatedOverlapPosition::ContainsAndSameStart),
     );
 }
@@ -4133,15 +4178,15 @@ fn disambiguated_overlap_position_continuous_to_future_closed_contains_and_same_
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToFuture,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToFuture,
+        ),
         Ok(DisambiguatedOverlapPosition::Contains),
     );
 }
@@ -4155,15 +4200,15 @@ fn disambiguated_overlap_position_continuous_to_future_closed_contains_and_same_
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToFuture,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToFuture,
+        ),
         Ok(DisambiguatedOverlapPosition::CrossesEnd),
     );
 }
@@ -4177,15 +4222,15 @@ fn disambiguated_overlap_position_continuous_to_future_closed_contains_and_same_
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToFuture,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToFuture,
+        ),
         Ok(DisambiguatedOverlapPosition::ContainsAndSameStart),
     );
 }
@@ -4199,15 +4244,15 @@ fn disambiguated_overlap_position_continuous_to_future_closed_contains_and_same_
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToFuture,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToFuture,
+        ),
         Ok(DisambiguatedOverlapPosition::ContainsAndSameEnd),
     );
 }
@@ -4221,15 +4266,15 @@ fn disambiguated_overlap_position_continuous_to_future_closed_contains_and_same_
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::ContinuousToFuture,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::ContinuousToFuture,
+        ),
         Ok(DisambiguatedOverlapPosition::Contains),
     );
 }
@@ -4243,15 +4288,15 @@ fn disambiguated_overlap_position_continuous_to_future_closed_contains_and_same_
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToFuture,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToFuture,
+        ),
         Ok(DisambiguatedOverlapPosition::CrossesStart),
     );
 }
@@ -4265,15 +4310,15 @@ fn disambiguated_overlap_position_continuous_to_future_closed_contains_and_same_
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::ContinuousToFuture,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::ContinuousToFuture,
+        ),
         Ok(DisambiguatedOverlapPosition::ContainsAndSameEnd),
     );
 }
@@ -4287,15 +4332,15 @@ fn disambiguated_overlap_position_continuous_to_future_closed_contains() {
             date(&Utc, 2025, 1, 4),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToFuture,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToFuture,
+        ),
         Ok(DisambiguatedOverlapPosition::Contains),
     );
 }
@@ -4303,14 +4348,10 @@ fn disambiguated_overlap_position_continuous_to_future_closed_contains() {
 #[test]
 fn disambiguated_overlap_position_continuous_to_past_closed_time_gap_before_other() {
     assert_eq!(
-        ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), date(&Utc, 2025, 1, 2))
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new(
-                    date(&Utc, 2025, 1, 3),
-                    date(&Utc, 2025, 1, 4),
-                ),
-                OverlapRuleSet::ContinuousToPast,
-            ),
+        ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), date(&Utc, 2025, 1, 2)).disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 3), date(&Utc, 2025, 1, 4),),
+            OverlapRuleSet::ContinuousToPast,
+        ),
         Ok(DisambiguatedOverlapPosition::OutsideBefore),
     );
 }
@@ -4324,15 +4365,15 @@ fn disambiguated_overlap_position_continuous_to_past_closed_inclusive_inclusive_
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToPast,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToPast,
+        ),
         Ok(DisambiguatedOverlapPosition::EndsOnStart),
     );
 }
@@ -4346,15 +4387,15 @@ fn disambiguated_overlap_position_continuous_to_past_closed_inclusive_exclusive_
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToPast,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToPast,
+        ),
         Ok(DisambiguatedOverlapPosition::EndsOnStart),
     );
 }
@@ -4368,15 +4409,15 @@ fn disambiguated_overlap_position_continuous_to_past_closed_exclusive_inclusive_
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToPast,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToPast,
+        ),
         Ok(DisambiguatedOverlapPosition::OutsideBefore),
     );
 }
@@ -4390,15 +4431,15 @@ fn disambiguated_overlap_position_continuous_to_past_closed_exclusive_exclusive_
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToPast,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToPast,
+        ),
         Ok(DisambiguatedOverlapPosition::OutsideBefore),
     );
 }
@@ -4406,11 +4447,10 @@ fn disambiguated_overlap_position_continuous_to_past_closed_exclusive_exclusive_
 #[test]
 fn disambiguated_overlap_position_continuous_to_past_closed_time_gap_after_other() {
     assert_eq!(
-        ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 3), date(&Utc, 2025, 1, 4))
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), date(&Utc, 2025, 1, 2)),
-                OverlapRuleSet::ContinuousToPast,
-            ),
+        ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 3), date(&Utc, 2025, 1, 4)).disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), date(&Utc, 2025, 1, 2)),
+            OverlapRuleSet::ContinuousToPast,
+        ),
         Ok(DisambiguatedOverlapPosition::OutsideAfter),
     );
 }
@@ -4424,15 +4464,15 @@ fn disambiguated_overlap_position_continuous_to_past_closed_inclusive_inclusive_
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToPast,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToPast,
+        ),
         Ok(DisambiguatedOverlapPosition::StartsOnEnd),
     );
 }
@@ -4446,15 +4486,15 @@ fn disambiguated_overlap_position_continuous_to_past_closed_inclusive_exclusive_
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::ContinuousToPast,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::ContinuousToPast,
+        ),
         Ok(DisambiguatedOverlapPosition::OutsideAfter),
     );
 }
@@ -4468,15 +4508,15 @@ fn disambiguated_overlap_position_continuous_to_past_closed_exclusive_inclusive_
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToPast,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToPast,
+        ),
         Ok(DisambiguatedOverlapPosition::StartsOnEnd),
     );
 }
@@ -4490,15 +4530,15 @@ fn disambiguated_overlap_position_continuous_to_past_closed_exclusive_exclusive_
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::ContinuousToPast,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::ContinuousToPast,
+        ),
         Ok(DisambiguatedOverlapPosition::OutsideAfter),
     );
 }
@@ -4512,15 +4552,15 @@ fn disambiguated_overlap_position_continuous_to_past_closed_crosses_start() {
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 4),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToPast,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 4),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToPast,
+        ),
         Ok(DisambiguatedOverlapPosition::CrossesStart),
     );
 }
@@ -4534,15 +4574,15 @@ fn disambiguated_overlap_position_continuous_to_past_closed_crosses_end() {
             date(&Utc, 2025, 1, 4),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToPast,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToPast,
+        ),
         Ok(DisambiguatedOverlapPosition::CrossesEnd),
     );
 }
@@ -4556,15 +4596,15 @@ fn disambiguated_overlap_position_continuous_to_past_closed_inside() {
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 4),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToPast,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 4),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToPast,
+        ),
         Ok(DisambiguatedOverlapPosition::Inside),
     );
 }
@@ -4578,15 +4618,15 @@ fn disambiguated_overlap_position_continuous_to_past_closed_time_gap_inside_and_
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToPast,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToPast,
+        ),
         Ok(DisambiguatedOverlapPosition::InsideAndSameStart),
     );
 }
@@ -4600,15 +4640,15 @@ fn disambiguated_overlap_position_continuous_to_past_closed_inside_and_same_star
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToPast,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToPast,
+        ),
         Ok(DisambiguatedOverlapPosition::InsideAndSameStart),
     );
 }
@@ -4622,15 +4662,15 @@ fn disambiguated_overlap_position_continuous_to_past_closed_inside_and_same_star
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToPast,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToPast,
+        ),
         Ok(DisambiguatedOverlapPosition::CrossesStart),
     );
 }
@@ -4644,15 +4684,15 @@ fn disambiguated_overlap_position_continuous_to_past_closed_inside_and_same_star
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToPast,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToPast,
+        ),
         Ok(DisambiguatedOverlapPosition::Inside),
     );
 }
@@ -4666,15 +4706,15 @@ fn disambiguated_overlap_position_continuous_to_past_closed_inside_and_same_star
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToPast,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToPast,
+        ),
         Ok(DisambiguatedOverlapPosition::InsideAndSameStart),
     );
 }
@@ -4688,15 +4728,15 @@ fn disambiguated_overlap_position_continuous_to_past_closed_time_gap_inside_and_
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToPast,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToPast,
+        ),
         Ok(DisambiguatedOverlapPosition::InsideAndSameEnd),
     );
 }
@@ -4710,15 +4750,15 @@ fn disambiguated_overlap_position_continuous_to_past_closed_inside_and_same_end_
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToPast,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToPast,
+        ),
         Ok(DisambiguatedOverlapPosition::InsideAndSameEnd),
     );
 }
@@ -4732,15 +4772,15 @@ fn disambiguated_overlap_position_continuous_to_past_closed_inside_and_same_end_
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::ContinuousToPast,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::ContinuousToPast,
+        ),
         Ok(DisambiguatedOverlapPosition::CrossesEnd),
     );
 }
@@ -4754,15 +4794,15 @@ fn disambiguated_overlap_position_continuous_to_past_closed_inside_and_same_end_
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToPast,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToPast,
+        ),
         Ok(DisambiguatedOverlapPosition::Inside),
     );
 }
@@ -4776,15 +4816,15 @@ fn disambiguated_overlap_position_continuous_to_past_closed_inside_and_same_end_
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::ContinuousToPast,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::ContinuousToPast,
+        ),
         Ok(DisambiguatedOverlapPosition::InsideAndSameEnd),
     );
 }
@@ -4798,15 +4838,15 @@ fn disambiguated_overlap_position_continuous_to_past_closed_equal_start_inclusiv
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToPast,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToPast,
+        ),
         Ok(DisambiguatedOverlapPosition::Equal),
     );
 }
@@ -4820,15 +4860,15 @@ fn disambiguated_overlap_position_continuous_to_past_closed_equal_start_inclusiv
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::ContinuousToPast,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::ContinuousToPast,
+        ),
         Ok(DisambiguatedOverlapPosition::ContainsAndSameStart),
     );
 }
@@ -4842,15 +4882,15 @@ fn disambiguated_overlap_position_continuous_to_past_closed_equal_start_inclusiv
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToPast,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToPast,
+        ),
         Ok(DisambiguatedOverlapPosition::InsideAndSameStart),
     );
 }
@@ -4864,15 +4904,15 @@ fn disambiguated_overlap_position_continuous_to_past_closed_equal_start_inclusiv
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::ContinuousToPast,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::ContinuousToPast,
+        ),
         Ok(DisambiguatedOverlapPosition::Equal),
     );
 }
@@ -4886,15 +4926,15 @@ fn disambiguated_overlap_position_continuous_to_past_closed_equal_start_inclusiv
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToPast,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToPast,
+        ),
         Ok(DisambiguatedOverlapPosition::ContainsAndSameEnd),
     );
 }
@@ -4908,15 +4948,15 @@ fn disambiguated_overlap_position_continuous_to_past_closed_equal_start_inclusiv
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::ContinuousToPast,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::ContinuousToPast,
+        ),
         Ok(DisambiguatedOverlapPosition::Contains),
     );
 }
@@ -4930,15 +4970,15 @@ fn disambiguated_overlap_position_continuous_to_past_closed_equal_start_inclusiv
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToPast,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToPast,
+        ),
         Ok(DisambiguatedOverlapPosition::CrossesStart),
     );
 }
@@ -4952,15 +4992,15 @@ fn disambiguated_overlap_position_continuous_to_past_closed_equal_start_inclusiv
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::ContinuousToPast,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::ContinuousToPast,
+        ),
         Ok(DisambiguatedOverlapPosition::ContainsAndSameEnd),
     );
 }
@@ -4974,15 +5014,15 @@ fn disambiguated_overlap_position_continuous_to_past_closed_equal_start_exclusiv
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToPast,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToPast,
+        ),
         Ok(DisambiguatedOverlapPosition::InsideAndSameEnd),
     );
 }
@@ -4996,15 +5036,15 @@ fn disambiguated_overlap_position_continuous_to_past_closed_equal_start_exclusiv
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::ContinuousToPast,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::ContinuousToPast,
+        ),
         Ok(DisambiguatedOverlapPosition::CrossesEnd),
     );
 }
@@ -5018,15 +5058,15 @@ fn disambiguated_overlap_position_continuous_to_past_closed_equal_start_exclusiv
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToPast,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToPast,
+        ),
         Ok(DisambiguatedOverlapPosition::Inside),
     );
 }
@@ -5040,15 +5080,15 @@ fn disambiguated_overlap_position_continuous_to_past_closed_equal_start_exclusiv
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::ContinuousToPast,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::ContinuousToPast,
+        ),
         Ok(DisambiguatedOverlapPosition::InsideAndSameEnd),
     );
 }
@@ -5062,15 +5102,15 @@ fn disambiguated_overlap_position_continuous_to_past_closed_equal_start_exclusiv
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToPast,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToPast,
+        ),
         Ok(DisambiguatedOverlapPosition::Equal),
     );
 }
@@ -5084,15 +5124,15 @@ fn disambiguated_overlap_position_continuous_to_past_closed_equal_start_exclusiv
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::ContinuousToPast,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::ContinuousToPast,
+        ),
         Ok(DisambiguatedOverlapPosition::ContainsAndSameStart),
     );
 }
@@ -5106,15 +5146,15 @@ fn disambiguated_overlap_position_continuous_to_past_closed_equal_start_exclusiv
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToPast,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToPast,
+        ),
         Ok(DisambiguatedOverlapPosition::InsideAndSameStart),
     );
 }
@@ -5128,15 +5168,15 @@ fn disambiguated_overlap_position_continuous_to_past_closed_equal_start_exclusiv
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::ContinuousToPast,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::ContinuousToPast,
+        ),
         Ok(DisambiguatedOverlapPosition::Equal),
     );
 }
@@ -5150,15 +5190,15 @@ fn disambiguated_overlap_position_continuous_to_past_closed_contains_and_same_st
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToPast,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToPast,
+        ),
         Ok(DisambiguatedOverlapPosition::ContainsAndSameStart),
     );
 }
@@ -5172,15 +5212,15 @@ fn disambiguated_overlap_position_continuous_to_past_closed_contains_and_same_st
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToPast,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToPast,
+        ),
         Ok(DisambiguatedOverlapPosition::Contains),
     );
 }
@@ -5194,15 +5234,15 @@ fn disambiguated_overlap_position_continuous_to_past_closed_contains_and_same_st
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToPast,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToPast,
+        ),
         Ok(DisambiguatedOverlapPosition::CrossesEnd),
     );
 }
@@ -5216,15 +5256,15 @@ fn disambiguated_overlap_position_continuous_to_past_closed_contains_and_same_st
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToPast,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToPast,
+        ),
         Ok(DisambiguatedOverlapPosition::ContainsAndSameStart),
     );
 }
@@ -5238,15 +5278,15 @@ fn disambiguated_overlap_position_continuous_to_past_closed_contains_and_same_en
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToPast,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToPast,
+        ),
         Ok(DisambiguatedOverlapPosition::ContainsAndSameEnd),
     );
 }
@@ -5260,15 +5300,15 @@ fn disambiguated_overlap_position_continuous_to_past_closed_contains_and_same_en
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::ContinuousToPast,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::ContinuousToPast,
+        ),
         Ok(DisambiguatedOverlapPosition::Contains),
     );
 }
@@ -5282,15 +5322,15 @@ fn disambiguated_overlap_position_continuous_to_past_closed_contains_and_same_en
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToPast,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToPast,
+        ),
         Ok(DisambiguatedOverlapPosition::CrossesStart),
     );
 }
@@ -5304,15 +5344,15 @@ fn disambiguated_overlap_position_continuous_to_past_closed_contains_and_same_en
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Exclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Exclusive,
-                ),
-                OverlapRuleSet::ContinuousToPast,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Exclusive,
             ),
+            OverlapRuleSet::ContinuousToPast,
+        ),
         Ok(DisambiguatedOverlapPosition::ContainsAndSameEnd),
     );
 }
@@ -5326,15 +5366,15 @@ fn disambiguated_overlap_position_continuous_to_past_closed_contains() {
             date(&Utc, 2025, 1, 4),
             BoundInclusivity::Inclusive,
         )
-            .disambiguated_overlap_position(
-                &ClosedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                ),
-                OverlapRuleSet::ContinuousToPast,
+        .disambiguated_overlap_position(
+            &ClosedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
             ),
+            OverlapRuleSet::ContinuousToPast,
+        ),
         Ok(DisambiguatedOverlapPosition::Contains),
     );
 }

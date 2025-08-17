@@ -91,10 +91,7 @@ impl From<(DateTime<Utc>, BoundInclusivity)> for AbsoluteFiniteBound {
 
 impl From<(DateTime<Utc>, bool)> for AbsoluteFiniteBound {
     fn from((time, is_inclusive): (DateTime<Utc>, bool)) -> Self {
-        AbsoluteFiniteBound::new_with_inclusivity(
-            time,
-            BoundInclusivity::from(is_inclusive),
-        )
+        AbsoluteFiniteBound::new_with_inclusivity(time, BoundInclusivity::from(is_inclusive))
     }
 }
 
@@ -588,12 +585,10 @@ impl HasAbsoluteBounds for AbsoluteBounds {
 impl HasDuration for AbsoluteBounds {
     fn duration(&self) -> IntervalDuration {
         match (self.start(), self.end()) {
-            (AbsoluteStartBound::InfinitePast, _) | (_, AbsoluteEndBound::InfiniteFuture) => {
-                IntervalDuration::Infinite
-            },
+            (AbsoluteStartBound::InfinitePast, _) | (_, AbsoluteEndBound::InfiniteFuture) => IntervalDuration::Infinite,
             (AbsoluteStartBound::Finite(finite_start), AbsoluteEndBound::Finite(finite_end)) => {
                 IntervalDuration::Finite(finite_end.time().signed_duration_since(finite_start.time()))
-            }
+            },
         }
     }
 }
@@ -852,9 +847,7 @@ impl ClosedAbsoluteInterval {
         match from.cmp(&to) {
             Ordering::Less => Self::unchecked_new_with_inclusivity(from, from_inclusivity, to, to_inclusivity),
             Ordering::Equal => Self::unchecked_new(from, to),
-            Ordering::Greater => {
-                Self::unchecked_new_with_inclusivity(to, to_inclusivity, from, from_inclusivity)
-            },
+            Ordering::Greater => Self::unchecked_new_with_inclusivity(to, to_inclusivity, from, from_inclusivity),
         }
     }
 
@@ -1240,10 +1233,7 @@ impl From<(DateTime<Utc>, OpeningDirection)> for HalfOpenAbsoluteInterval {
 
 impl From<(DateTime<Utc>, bool)> for HalfOpenAbsoluteInterval {
     fn from((time, goes_to_future): (DateTime<Utc>, bool)) -> Self {
-        HalfOpenAbsoluteInterval::new(
-            time,
-            OpeningDirection::from(goes_to_future),
-        )
+        HalfOpenAbsoluteInterval::new(time, OpeningDirection::from(goes_to_future))
     }
 }
 
@@ -1255,21 +1245,13 @@ impl From<((DateTime<Utc>, BoundInclusivity), OpeningDirection)> for HalfOpenAbs
 
 impl From<((DateTime<Utc>, BoundInclusivity), bool)> for HalfOpenAbsoluteInterval {
     fn from(((time, inclusivity), goes_to_future): ((DateTime<Utc>, BoundInclusivity), bool)) -> Self {
-        HalfOpenAbsoluteInterval::new_with_inclusivity(
-            time,
-            inclusivity,
-            OpeningDirection::from(goes_to_future),
-        )
+        HalfOpenAbsoluteInterval::new_with_inclusivity(time, inclusivity, OpeningDirection::from(goes_to_future))
     }
 }
 
 impl From<((DateTime<Utc>, bool), OpeningDirection)> for HalfOpenAbsoluteInterval {
     fn from(((time, is_inclusive), direction): ((DateTime<Utc>, bool), OpeningDirection)) -> Self {
-        HalfOpenAbsoluteInterval::new_with_inclusivity(
-            time,
-            BoundInclusivity::from(is_inclusive),
-            direction,
-        )
+        HalfOpenAbsoluteInterval::new_with_inclusivity(time, BoundInclusivity::from(is_inclusive), direction)
     }
 }
 

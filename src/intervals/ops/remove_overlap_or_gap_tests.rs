@@ -36,8 +36,14 @@ fn overlap_or_gap_removal_result_split_opt() {
 
 #[test]
 fn overlap_or_gap_removal_result_map() {
-    assert_eq!(OverlapOrGapRemovalResult::Single(10).map(|x| x + 10), OverlapOrGapRemovalResult::Single(20));
-    assert_eq!(OverlapOrGapRemovalResult::Split(10, 20).map(|x| x + 10), OverlapOrGapRemovalResult::Split(20, 30));
+    assert_eq!(
+        OverlapOrGapRemovalResult::Single(10).map(|x| x + 10),
+        OverlapOrGapRemovalResult::Single(20)
+    );
+    assert_eq!(
+        OverlapOrGapRemovalResult::Split(10, 20).map(|x| x + 10),
+        OverlapOrGapRemovalResult::Split(20, 30)
+    );
 }
 
 #[test]
@@ -51,11 +57,10 @@ fn remove_overlap_or_gap_empty_empty() {
 #[test]
 fn remove_overlap_or_gap_empty_open() {
     assert_eq!(
-        EmptiableAbsoluteBounds::Empty
-            .remove_overlap_or_gap(&AbsoluteBounds::new(
-                AbsoluteStartBound::InfinitePast,
-                AbsoluteEndBound::InfiniteFuture,
-            )),
+        EmptiableAbsoluteBounds::Empty.remove_overlap_or_gap(&AbsoluteBounds::new(
+            AbsoluteStartBound::InfinitePast,
+            AbsoluteEndBound::InfiniteFuture,
+        )),
         OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBounds::Empty),
     );
 }
@@ -65,20 +70,19 @@ fn remove_overlap_or_gap_open_empty() {
     assert_eq!(
         AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture)
             .remove_overlap_or_gap(&EmptiableAbsoluteBounds::Empty),
-        OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBounds::Bound(
-            AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture)
-        )),
+        OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
+            AbsoluteStartBound::InfinitePast,
+            AbsoluteEndBound::InfiniteFuture
+        ))),
     );
 }
 
 #[test]
 fn remove_overlap_or_gap_open_open() {
     assert_eq!(
-        AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture)
-            .remove_overlap_or_gap(&AbsoluteBounds::new(
-                AbsoluteStartBound::InfinitePast,
-                AbsoluteEndBound::InfiniteFuture,
-            )),
+        AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture).remove_overlap_or_gap(
+            &AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture,)
+        ),
         OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBounds::Empty),
     );
 }
@@ -90,10 +94,10 @@ fn remove_overlap_or_gap_gap_between_closed() {
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2))),
         )
-            .remove_overlap_or_gap(&AbsoluteBounds::new(
-                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 3))),
-                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 4))),
-            )),
+        .remove_overlap_or_gap(&AbsoluteBounds::new(
+            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 3))),
+            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 4))),
+        )),
         OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
@@ -111,10 +115,10 @@ fn remove_overlap_or_gap_overlap_between_closed() {
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 3))),
         )
-            .remove_overlap_or_gap(&AbsoluteBounds::new(
-                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2))),
-                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 4))),
-            )),
+        .remove_overlap_or_gap(&AbsoluteBounds::new(
+            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2))),
+            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 4))),
+        )),
         OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
@@ -138,16 +142,16 @@ fn remove_overlap_or_gap_closed_adjacent_inclusive_inclusive() {
                 BoundInclusivity::Inclusive,
             )),
         )
-            .remove_overlap_or_gap(&AbsoluteBounds::new(
-                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                )),
-                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                )),
+        .remove_overlap_or_gap(&AbsoluteBounds::new(
+            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             )),
+            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
+            )),
+        )),
         OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
@@ -174,16 +178,16 @@ fn remove_overlap_or_gap_closed_adjacent_inclusive_exclusive() {
                 BoundInclusivity::Inclusive,
             )),
         )
-            .remove_overlap_or_gap(&AbsoluteBounds::new(
-                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                )),
-                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                )),
+        .remove_overlap_or_gap(&AbsoluteBounds::new(
+            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
             )),
+            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
+            )),
+        )),
         OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
@@ -210,16 +214,16 @@ fn remove_overlap_or_gap_closed_adjacent_exclusive_inclusive() {
                 BoundInclusivity::Exclusive,
             )),
         )
-            .remove_overlap_or_gap(&AbsoluteBounds::new(
-                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                )),
-                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                )),
+        .remove_overlap_or_gap(&AbsoluteBounds::new(
+            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
             )),
+            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
+            )),
+        )),
         OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
@@ -246,16 +250,16 @@ fn remove_overlap_or_gap_closed_adjacent_exclusive_exclusive() {
                 BoundInclusivity::Exclusive,
             )),
         )
-            .remove_overlap_or_gap(&AbsoluteBounds::new(
-                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                )),
-                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Inclusive,
-                )),
+        .remove_overlap_or_gap(&AbsoluteBounds::new(
+            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
             )),
+            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
+            )),
+        )),
         OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
@@ -282,7 +286,7 @@ fn remove_overlap_or_gap_closed_on_open() {
                 BoundInclusivity::Inclusive,
             )),
         )
-            .remove_overlap_or_gap(&OpenInterval),
+        .remove_overlap_or_gap(&OpenInterval),
         OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBounds::Empty),
     );
 }
@@ -290,17 +294,16 @@ fn remove_overlap_or_gap_closed_on_open() {
 #[test]
 fn remove_overlap_or_gap_open_on_closed() {
     assert_eq!(
-        OpenInterval
-            .remove_overlap_or_gap(&AbsoluteBounds::new(
-                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                )),
-                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Inclusive,
-                )),
+        OpenInterval.remove_overlap_or_gap(&AbsoluteBounds::new(
+            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
             )),
+            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
+            )),
+        )),
         OverlapOrGapRemovalResult::Split(
             AbsoluteInterval::HalfOpen(HalfOpenAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),

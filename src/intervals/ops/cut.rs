@@ -20,7 +20,7 @@ use crate::intervals::special::{EmptyInterval, OpenInterval};
 use crate::intervals::{ClosedAbsoluteInterval, ClosedRelativeInterval, RelativeInterval};
 
 /// Cut types, used by [`Cuttable`]
-/// 
+///
 /// The contained bound inclusivities represent the start and end inclusivities for where the cut will be made.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]

@@ -1,11 +1,12 @@
 use chrono::Utc;
 
+use crate::intervals::absolute::{
+    AbsoluteBounds, AbsoluteEndBound, AbsoluteInterval, AbsoluteStartBound, ClosedAbsoluteInterval,
+    EmptiableAbsoluteBounds, HalfOpenAbsoluteInterval,
+};
 use crate::intervals::meta::{BoundInclusivity, OpeningDirection};
 use crate::intervals::special::{EmptyInterval, OpenInterval};
 use crate::ops::ComplementResult;
-use crate::intervals::absolute::{
-    AbsoluteBounds, AbsoluteEndBound, AbsoluteInterval, AbsoluteStartBound, ClosedAbsoluteInterval, EmptiableAbsoluteBounds, HalfOpenAbsoluteInterval
-};
 use crate::test_utils::date;
 
 use super::complement::*;
@@ -24,11 +25,13 @@ fn complement_of_empty_interval() {
 fn complement_of_half_open_interval() {
     assert_eq!(
         HalfOpenAbsoluteInterval::new(date(&Utc, 2025, 1, 1), OpeningDirection::ToFuture).complement(),
-        ComplementResult::Single(AbsoluteInterval::HalfOpen(HalfOpenAbsoluteInterval::new_with_inclusivity(
-            date(&Utc, 2025, 1, 1),
-            BoundInclusivity::Exclusive,
-            OpeningDirection::ToPast,
-        ))),
+        ComplementResult::Single(AbsoluteInterval::HalfOpen(
+            HalfOpenAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                OpeningDirection::ToPast,
+            )
+        )),
     );
 }
 
@@ -85,12 +88,15 @@ fn complement_of_abs_interval_half_open() {
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             OpeningDirection::ToPast,
-        )).complement(),
-        ComplementResult::Single(AbsoluteInterval::HalfOpen(HalfOpenAbsoluteInterval::new_with_inclusivity(
-            date(&Utc, 2025, 1, 1),
-            BoundInclusivity::Inclusive,
-            OpeningDirection::ToFuture,
-        ))),
+        ))
+        .complement(),
+        ComplementResult::Single(AbsoluteInterval::HalfOpen(
+            HalfOpenAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                OpeningDirection::ToFuture,
+            )
+        )),
     );
 }
 
@@ -102,7 +108,8 @@ fn complement_of_abs_interval_closed() {
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
-        )).complement(),
+        ))
+        .complement(),
         ComplementResult::Split(
             AbsoluteInterval::HalfOpen(HalfOpenAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),

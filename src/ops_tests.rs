@@ -166,17 +166,23 @@ fn precision_with_base_time_round_to_nearest_uncommon() {
     */
 
     assert_eq!(
-        precision.precise_time_with_base_time(datetime(&Utc, 2025, 1, 1, 5, 30, 0), base).unwrap(),
+        precision
+            .precise_time_with_base_time(datetime(&Utc, 2025, 1, 1, 5, 30, 0), base)
+            .unwrap(),
         datetime(&Utc, 2025, 1, 1, 5, 19, 0),
         "To nearest - Rounding down",
     );
     assert_eq!(
-        precision.precise_time_with_base_time(datetime(&Utc, 2025, 1, 1, 5, 57, 30), base).unwrap(),
+        precision
+            .precise_time_with_base_time(datetime(&Utc, 2025, 1, 1, 5, 57, 30), base)
+            .unwrap(),
         datetime(&Utc, 2025, 1, 1, 6, 36, 0),
         "To nearest - Rounding up when perfectly in the middle",
     );
     assert_eq!(
-        precision.precise_time_with_base_time(datetime(&Utc, 2025, 1, 1, 6, 0, 0), base).unwrap(),
+        precision
+            .precise_time_with_base_time(datetime(&Utc, 2025, 1, 1, 6, 0, 0), base)
+            .unwrap(),
         datetime(&Utc, 2025, 1, 1, 6, 36, 0),
         "To nearest - Rounding up",
     );
@@ -188,7 +194,9 @@ fn precision_with_base_time_round_to_future_classic() {
     let base = datetime(&Utc, 2025, 1, 1, 0, 0, 0);
 
     assert_eq!(
-        precision.precise_time_with_base_time(datetime(&Utc, 2025, 1, 1, 4, 5, 0), base).unwrap(),
+        precision
+            .precise_time_with_base_time(datetime(&Utc, 2025, 1, 1, 4, 5, 0), base)
+            .unwrap(),
         datetime(&Utc, 2025, 1, 1, 4, 30, 0),
     );
 }
@@ -211,7 +219,9 @@ fn precision_with_base_time_round_to_future_uncommon() {
     */
 
     assert_eq!(
-        precision.precise_time_with_base_time(datetime(&Utc, 2025, 1, 1, 2, 10, 0), base).unwrap(),
+        precision
+            .precise_time_with_base_time(datetime(&Utc, 2025, 1, 1, 2, 10, 0), base)
+            .unwrap(),
         datetime(&Utc, 2025, 1, 1, 2, 30, 0),
     );
 }
@@ -222,7 +232,9 @@ fn precision_with_base_time_round_to_past_classic() {
     let base = datetime(&Utc, 2025, 1, 1, 0, 0, 0);
 
     assert_eq!(
-        precision.precise_time_with_base_time(datetime(&Utc, 2025, 1, 1, 5, 59, 0), base).unwrap(),
+        precision
+            .precise_time_with_base_time(datetime(&Utc, 2025, 1, 1, 5, 59, 0), base)
+            .unwrap(),
         datetime(&Utc, 2025, 1, 1, 5, 40, 0),
     );
 }
@@ -245,7 +257,9 @@ fn precision_with_base_time_round_to_past_uncommon() {
     */
 
     assert_eq!(
-        precision.precise_time_with_base_time(datetime(&Utc, 2025, 1, 1, 3, 17, 0), base).unwrap(),
+        precision
+            .precise_time_with_base_time(datetime(&Utc, 2025, 1, 1, 3, 17, 0), base)
+            .unwrap(),
         datetime(&Utc, 2025, 1, 1, 2, 55, 0),
     );
 }
@@ -276,12 +290,18 @@ fn running_result_done_opt() {
 
 #[test]
 fn running_result_map_running() {
-    assert_eq!(RunningResult::<u8>::Running(10).map_running(|x| x + 10), RunningResult::<u8>::Running(20));
+    assert_eq!(
+        RunningResult::<u8>::Running(10).map_running(|x| x + 10),
+        RunningResult::<u8>::Running(20)
+    );
 }
 
 #[test]
 fn running_result_map_done() {
-    assert_eq!(RunningResult::<u8>::Done(10).map_done(|x| x + 10), RunningResult::<u8>::Done(20));
+    assert_eq!(
+        RunningResult::<u8>::Done(10).map_done(|x| x + 10),
+        RunningResult::<u8>::Done(20)
+    );
 }
 
 #[test]
@@ -310,8 +330,14 @@ fn complement_result_split_opt() {
 
 #[test]
 fn complement_result_map() {
-    assert_eq!(ComplementResult::<u8>::Single(10).map(|x| x + 10), ComplementResult::<u8>::Single(20));
-    assert_eq!(ComplementResult::<u8>::Split(10, 20).map(|x| x + 10), ComplementResult::<u8>::Split(20, 30));
+    assert_eq!(
+        ComplementResult::<u8>::Single(10).map(|x| x + 10),
+        ComplementResult::<u8>::Single(20)
+    );
+    assert_eq!(
+        ComplementResult::<u8>::Split(10, 20).map(|x| x + 10),
+        ComplementResult::<u8>::Split(20, 30)
+    );
 }
 
 #[test]
@@ -334,7 +360,10 @@ fn union_result_united_opt() {
 
 #[test]
 fn union_result_map_united() {
-    assert_eq!(UnionResult::<u8>::United(10).map_united(|x| x + 10), UnionResult::United(20));
+    assert_eq!(
+        UnionResult::<u8>::United(10).map_united(|x| x + 10),
+        UnionResult::United(20)
+    );
 }
 
 #[test]

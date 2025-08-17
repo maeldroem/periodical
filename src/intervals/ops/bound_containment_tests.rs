@@ -5,21 +5,34 @@ use super::bound_containment::*;
 
 #[test]
 fn strip_bound_position() {
-    assert_eq!(BoundPosition::OutsideBefore.strip(), DisambiguatedBoundPosition::OutsideBefore);
-    assert_eq!(BoundPosition::OutsideAfter.strip(), DisambiguatedBoundPosition::OutsideAfter);
-    assert_eq!(BoundPosition::Outside.strip(), DisambiguatedBoundPosition::Outside);
-    assert_eq!(BoundPosition::OnStart(None).strip(), DisambiguatedBoundPosition::OnStart);
     assert_eq!(
-        BoundPosition::OnStart(
-            Some(BoundOverlapAmbiguity::BothStarts(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive))
-        ).strip(),
+        BoundPosition::OutsideBefore.strip(),
+        DisambiguatedBoundPosition::OutsideBefore
+    );
+    assert_eq!(
+        BoundPosition::OutsideAfter.strip(),
+        DisambiguatedBoundPosition::OutsideAfter
+    );
+    assert_eq!(BoundPosition::Outside.strip(), DisambiguatedBoundPosition::Outside);
+    assert_eq!(
+        BoundPosition::OnStart(None).strip(),
+        DisambiguatedBoundPosition::OnStart
+    );
+    assert_eq!(
+        BoundPosition::OnStart(Some(BoundOverlapAmbiguity::BothStarts(
+            BoundInclusivity::Inclusive,
+            BoundInclusivity::Inclusive
+        )))
+        .strip(),
         DisambiguatedBoundPosition::OnStart,
     );
     assert_eq!(BoundPosition::OnEnd(None).strip(), DisambiguatedBoundPosition::OnEnd);
     assert_eq!(
-        BoundPosition::OnEnd(
-            Some(BoundOverlapAmbiguity::BothStarts(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive))
-        ).strip(),
+        BoundPosition::OnEnd(Some(BoundOverlapAmbiguity::BothStarts(
+            BoundInclusivity::Inclusive,
+            BoundInclusivity::Inclusive
+        )))
+        .strip(),
         DisambiguatedBoundPosition::OnEnd,
     );
     assert_eq!(BoundPosition::Equal.strip(), DisambiguatedBoundPosition::Equal);
@@ -37,9 +50,11 @@ fn disambiguate_position_on_start_no_ambiguity() {
 #[test]
 fn disambiguate_position_on_start_bound_before() {
     assert_eq!(
-        BoundPosition::OnStart(
-            Some(BoundOverlapAmbiguity::BothStarts(BoundInclusivity::Exclusive, BoundInclusivity::Inclusive))
-        ).disambiguate_using_rule_set(BoundContainmentRuleSet::Strict),
+        BoundPosition::OnStart(Some(BoundOverlapAmbiguity::BothStarts(
+            BoundInclusivity::Exclusive,
+            BoundInclusivity::Inclusive
+        )))
+        .disambiguate_using_rule_set(BoundContainmentRuleSet::Strict),
         DisambiguatedBoundPosition::OutsideBefore,
     );
 }
@@ -47,9 +62,11 @@ fn disambiguate_position_on_start_bound_before() {
 #[test]
 fn disambiguate_position_on_start_bound_equal() {
     assert_eq!(
-        BoundPosition::OnStart(
-            Some(BoundOverlapAmbiguity::BothStarts(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive)),
-        ).disambiguate_using_rule_set(BoundContainmentRuleSet::Strict),
+        BoundPosition::OnStart(Some(BoundOverlapAmbiguity::BothStarts(
+            BoundInclusivity::Inclusive,
+            BoundInclusivity::Inclusive
+        )),)
+        .disambiguate_using_rule_set(BoundContainmentRuleSet::Strict),
         DisambiguatedBoundPosition::OnStart,
     );
 }
@@ -57,9 +74,11 @@ fn disambiguate_position_on_start_bound_equal() {
 #[test]
 fn disambiguate_position_on_start_bound_after() {
     assert_eq!(
-        BoundPosition::OnStart(
-            Some(BoundOverlapAmbiguity::BothStarts(BoundInclusivity::Inclusive, BoundInclusivity::Exclusive)),
-        ).disambiguate_using_rule_set(BoundContainmentRuleSet::Strict),
+        BoundPosition::OnStart(Some(BoundOverlapAmbiguity::BothStarts(
+            BoundInclusivity::Inclusive,
+            BoundInclusivity::Exclusive
+        )),)
+        .disambiguate_using_rule_set(BoundContainmentRuleSet::Strict),
         DisambiguatedBoundPosition::Inside,
     );
 }
@@ -75,9 +94,11 @@ fn disambiguate_position_on_end_no_ambiguity() {
 #[test]
 fn disambiguate_position_on_end_bound_before() {
     assert_eq!(
-        BoundPosition::OnEnd(
-            Some(BoundOverlapAmbiguity::BothStarts(BoundInclusivity::Exclusive, BoundInclusivity::Inclusive))
-        ).disambiguate_using_rule_set(BoundContainmentRuleSet::Strict),
+        BoundPosition::OnEnd(Some(BoundOverlapAmbiguity::BothStarts(
+            BoundInclusivity::Exclusive,
+            BoundInclusivity::Inclusive
+        )))
+        .disambiguate_using_rule_set(BoundContainmentRuleSet::Strict),
         DisambiguatedBoundPosition::Inside,
     );
 }
@@ -85,9 +106,11 @@ fn disambiguate_position_on_end_bound_before() {
 #[test]
 fn disambiguate_position_on_end_bound_equal() {
     assert_eq!(
-        BoundPosition::OnEnd(
-            Some(BoundOverlapAmbiguity::BothStarts(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive))
-        ).disambiguate_using_rule_set(BoundContainmentRuleSet::Strict),
+        BoundPosition::OnEnd(Some(BoundOverlapAmbiguity::BothStarts(
+            BoundInclusivity::Inclusive,
+            BoundInclusivity::Inclusive
+        )))
+        .disambiguate_using_rule_set(BoundContainmentRuleSet::Strict),
         DisambiguatedBoundPosition::OnEnd,
     );
 }
@@ -95,9 +118,11 @@ fn disambiguate_position_on_end_bound_equal() {
 #[test]
 fn disambiguate_position_on_end_bound_after() {
     assert_eq!(
-        BoundPosition::OnEnd(
-            Some(BoundOverlapAmbiguity::BothStarts(BoundInclusivity::Inclusive, BoundInclusivity::Exclusive))
-        ).disambiguate_using_rule_set(BoundContainmentRuleSet::Strict),
+        BoundPosition::OnEnd(Some(BoundOverlapAmbiguity::BothStarts(
+            BoundInclusivity::Inclusive,
+            BoundInclusivity::Exclusive
+        )))
+        .disambiguate_using_rule_set(BoundContainmentRuleSet::Strict),
         DisambiguatedBoundPosition::OutsideAfter,
     );
 }

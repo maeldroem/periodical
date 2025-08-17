@@ -43,13 +43,13 @@ impl Error for PrecisionError {}
 
 impl Precision {
     /// Uses the given precision to precise the given time
-    /// 
+    ///
     /// # Pitfalls
-    /// 
+    ///
     /// If the precision is not a divisor of 24 hours, the rounded times will differ from one day to another, as
     /// the rounding is based on the [Unix time](https://en.wikipedia.org/w/index.php?title=Unix_time&useskin=vector),
     /// which begins on 1970-01-01.
-    /// 
+    ///
     /// If you instead want to use your own base time,
     /// use [`precise_time_with_base_time`](Precision::precise_time_with_base_time).
     ///
@@ -68,19 +68,19 @@ impl Precision {
     }
 
     /// Uses the given precision to precise the given time using the given base
-    /// 
+    ///
     /// Bases the given time on the given base time before precising the time, that way you can use [`Duration`]s
     /// within your [`Precision`] that are not divisor of 24 hours without unexpected results.
-    /// 
+    ///
     /// # Errors
-    /// 
+    ///
     /// Rebasing times can lead to out-of-range dates, so if this method produces an out-of-range date, it will return
     /// the error [`OutOfRangeDate`](PrecisionError::OutOfRangeDate).
-    /// 
+    ///
     /// Otherwise, precising/rounding a time can also lead to errors, for example if the given duration is negative
     /// or simply too large, so it will produce [`RoundingError`](PrecisionError::RoundingError) containing chrono's
     /// [`RoundingError`] within for more details.
-    /// 
+    ///
     /// For more details, check [`chrono`'s limitations on the `DurationRound` trait](https://docs.rs/chrono/latest/chrono/round/trait.DurationRound.html#limitations).
     pub fn precise_time_with_base_time(
         &self,

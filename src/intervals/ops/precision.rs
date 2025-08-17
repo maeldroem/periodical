@@ -57,12 +57,7 @@ pub trait PreciseAbsoluteBounds {
     /// Precises the start and end bound with the given precision and base time
     #[must_use]
     fn precise_bounds_with_base_time(&self, precision: Precision, base: DateTime<Utc>) -> Self::PrecisedBoundsOutput {
-        self.precise_bounds_with_different_precisions_with_base_time(
-            precision,
-            base,
-            precision,
-            base,
-        )
+        self.precise_bounds_with_different_precisions_with_base_time(precision, base, precision, base)
     }
 
     /// Precises the start bound with the given precision and base time
@@ -126,7 +121,7 @@ impl PreciseAbsoluteBounds for AbsoluteBounds {
         precision: Precision,
         base: DateTime<Utc>,
     ) -> Self::PrecisedEndBoundOutput {
-        precise_abs_end_bound_with_base_time(self.end(), precision, base)    
+        precise_abs_end_bound_with_base_time(self.end(), precision, base)
     }
 }
 
@@ -185,7 +180,6 @@ impl PreciseAbsoluteBounds for EmptiableAbsoluteBounds {
         }
 
         Ok(EmptiableAbsoluteBounds::Empty)
-        
     }
 
     fn precise_start_bound_with_base_time(
@@ -194,7 +188,11 @@ impl PreciseAbsoluteBounds for EmptiableAbsoluteBounds {
         base: DateTime<Utc>,
     ) -> Self::PrecisedStartBoundOutput {
         if let EmptiableAbsoluteBounds::Bound(abs_bounds) = self {
-            return Ok(Some(precise_abs_start_bound_with_base_time(abs_bounds.start(), precision, base)?));
+            return Ok(Some(precise_abs_start_bound_with_base_time(
+                abs_bounds.start(),
+                precision,
+                base,
+            )?));
         }
 
         Ok(None)
@@ -206,7 +204,11 @@ impl PreciseAbsoluteBounds for EmptiableAbsoluteBounds {
         base: DateTime<Utc>,
     ) -> Self::PrecisedEndBoundOutput {
         if let EmptiableAbsoluteBounds::Bound(abs_bounds) = self {
-            return Ok(Some(precise_abs_end_bound_with_base_time(abs_bounds.end(), precision, base)?));
+            return Ok(Some(precise_abs_end_bound_with_base_time(
+                abs_bounds.end(),
+                precision,
+                base,
+            )?));
         }
 
         Ok(None)
@@ -276,7 +278,11 @@ impl PreciseAbsoluteBounds for AbsoluteInterval {
         base: DateTime<Utc>,
     ) -> Self::PrecisedStartBoundOutput {
         if let EmptiableAbsoluteBounds::Bound(abs_bounds) = self.emptiable_abs_bounds() {
-            return Ok(Some(precise_abs_start_bound_with_base_time(abs_bounds.start(), precision, base)?));
+            return Ok(Some(precise_abs_start_bound_with_base_time(
+                abs_bounds.start(),
+                precision,
+                base,
+            )?));
         }
 
         Ok(None)
@@ -288,7 +294,11 @@ impl PreciseAbsoluteBounds for AbsoluteInterval {
         base: DateTime<Utc>,
     ) -> Self::PrecisedEndBoundOutput {
         if let EmptiableAbsoluteBounds::Bound(abs_bounds) = self.emptiable_abs_bounds() {
-            return Ok(Some(precise_abs_end_bound_with_base_time(abs_bounds.end(), precision, base)?));
+            return Ok(Some(precise_abs_end_bound_with_base_time(
+                abs_bounds.end(),
+                precision,
+                base,
+            )?));
         }
 
         Ok(None)

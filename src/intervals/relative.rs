@@ -621,17 +621,15 @@ impl HasRelativeBounds for RelativeBounds {
 impl HasDuration for RelativeBounds {
     fn duration(&self) -> IntervalDuration {
         match (self.start(), self.end()) {
-            (RelativeStartBound::InfinitePast, _) | (_, RelativeEndBound::InfiniteFuture) => {
-                IntervalDuration::Infinite
-            },
+            (RelativeStartBound::InfinitePast, _) | (_, RelativeEndBound::InfiniteFuture) => IntervalDuration::Infinite,
             (RelativeStartBound::Finite(finite_start), RelativeEndBound::Finite(finite_end)) => {
                 IntervalDuration::Finite(
                     finite_end
                         .offset()
                         .checked_sub(&finite_start.offset())
-                        .unwrap_or(Duration::zero())
+                        .unwrap_or(Duration::zero()),
                 )
-            }
+            },
         }
     }
 }

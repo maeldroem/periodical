@@ -20,10 +20,8 @@ fn absolute_finite_bound_new() {
 
 #[test]
 fn absolute_finite_bound_new_with_inclusivity() {
-    let abs_finite_bound = AbsoluteFiniteBound::new_with_inclusivity(
-        date(&Utc, 2025, 1, 1),
-        BoundInclusivity::Exclusive,
-    );
+    let abs_finite_bound =
+        AbsoluteFiniteBound::new_with_inclusivity(date(&Utc, 2025, 1, 1), BoundInclusivity::Exclusive);
 
     assert_eq!(abs_finite_bound.time(), date(&Utc, 2025, 1, 1));
     assert_eq!(abs_finite_bound.inclusivity(), BoundInclusivity::Exclusive);
@@ -40,10 +38,8 @@ fn absolute_finite_bound_set_time() {
 
 #[test]
 fn absolute_finite_bound_set_inclusivity() {
-    let mut abs_finite_bound = AbsoluteFiniteBound::new_with_inclusivity(
-        date(&Utc, 2025, 1, 1),
-        BoundInclusivity::Exclusive,
-    );
+    let mut abs_finite_bound =
+        AbsoluteFiniteBound::new_with_inclusivity(date(&Utc, 2025, 1, 1), BoundInclusivity::Exclusive);
 
     abs_finite_bound.set_inclusivity(BoundInclusivity::Inclusive);
 
@@ -52,10 +48,8 @@ fn absolute_finite_bound_set_inclusivity() {
 
 #[test]
 fn absolute_finite_bound_inclusivity() {
-    let abs_finite_bound = AbsoluteFiniteBound::new_with_inclusivity(
-        date(&Utc, 2025, 1, 1),
-        BoundInclusivity::Exclusive,
-    );
+    let abs_finite_bound =
+        AbsoluteFiniteBound::new_with_inclusivity(date(&Utc, 2025, 1, 1), BoundInclusivity::Exclusive);
 
     assert_eq!(abs_finite_bound.inclusivity(), BoundInclusivity::Exclusive);
 }
@@ -128,7 +122,10 @@ fn absolute_finite_bound_from_datetime_bool_pair() {
 fn absolute_finite_bound_try_from_inclusive_bound() {
     assert_eq!(
         AbsoluteFiniteBound::try_from(Bound::Included(date(&Utc, 2025, 1, 1))),
-        Ok(AbsoluteFiniteBound::new_with_inclusivity(date(&Utc, 2025, 1, 1), BoundInclusivity::Inclusive)),
+        Ok(AbsoluteFiniteBound::new_with_inclusivity(
+            date(&Utc, 2025, 1, 1),
+            BoundInclusivity::Inclusive
+        )),
     );
 }
 
@@ -136,7 +133,10 @@ fn absolute_finite_bound_try_from_inclusive_bound() {
 fn absolute_finite_bound_try_from_exclusive_bound() {
     assert_eq!(
         AbsoluteFiniteBound::try_from(Bound::Excluded(date(&Utc, 2025, 1, 1))),
-        Ok(AbsoluteFiniteBound::new_with_inclusivity(date(&Utc, 2025, 1, 1), BoundInclusivity::Exclusive)),
+        Ok(AbsoluteFiniteBound::new_with_inclusivity(
+            date(&Utc, 2025, 1, 1),
+            BoundInclusivity::Exclusive
+        )),
     );
 }
 
@@ -156,8 +156,9 @@ fn absolute_start_bound_inf_absolute_end_bound_inf_eq() {
 #[test]
 fn absolute_start_bound_inf_absolute_end_bound_finite_eq() {
     assert!(
-        !AbsoluteStartBound::InfinitePast
-            .eq(&AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))))
+        !AbsoluteStartBound::InfinitePast.eq(&AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(
+            &Utc, 2025, 1, 1
+        ))))
     );
 }
 
@@ -172,8 +173,9 @@ fn absolute_start_bound_finite_absolute_end_bound_inf_eq() {
 #[test]
 fn absolute_start_bound_finite_absolute_end_bound_finite_different_times_eq() {
     assert!(
-        !AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1)))
-            .eq(&AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2)))),
+        !AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))).eq(&AbsoluteEndBound::Finite(
+            AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2))
+        )),
     );
 }
 
@@ -184,10 +186,10 @@ fn absolute_start_bound_finite_absolute_end_bound_finite_equal_times_exclusive_b
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
         ))
-            .eq(&AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Exclusive,
-            )))
+        .eq(&AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            date(&Utc, 2025, 1, 1),
+            BoundInclusivity::Exclusive,
+        )))
     );
 }
 
@@ -198,10 +200,10 @@ fn absolute_start_bound_finite_absolute_end_bound_finite_equal_times_exclusive_i
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
         ))
-            .eq(&AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Inclusive,
-            )))
+        .eq(&AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            date(&Utc, 2025, 1, 1),
+            BoundInclusivity::Inclusive,
+        )))
     );
 }
 
@@ -212,10 +214,10 @@ fn absolute_start_bound_finite_absolute_end_bound_finite_equal_times_inclusive_e
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
         ))
-            .eq(&AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Exclusive,
-            )))
+        .eq(&AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            date(&Utc, 2025, 1, 1),
+            BoundInclusivity::Exclusive,
+        )))
     );
 }
 
@@ -226,23 +228,27 @@ fn absolute_start_bound_finite_absolute_end_bound_finite_equal_times_inclusive_b
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
         ))
-            .eq(&AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Inclusive,
-            )))
+        .eq(&AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            date(&Utc, 2025, 1, 1),
+            BoundInclusivity::Inclusive,
+        )))
     );
 }
 
 #[test]
 fn absolute_start_bound_inf_absolute_start_bound_inf_cmp() {
-    assert_eq!(AbsoluteStartBound::InfinitePast.cmp(&AbsoluteStartBound::InfinitePast), Ordering::Equal);
+    assert_eq!(
+        AbsoluteStartBound::InfinitePast.cmp(&AbsoluteStartBound::InfinitePast),
+        Ordering::Equal
+    );
 }
 
 #[test]
 fn absolute_start_bound_inf_absolute_start_bound_finite_cmp() {
     assert_eq!(
-        AbsoluteStartBound::InfinitePast
-            .cmp(&AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1)))),
+        AbsoluteStartBound::InfinitePast.cmp(&AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(
+            &Utc, 2025, 1, 1
+        )))),
         Ordering::Less,
     );
 }
@@ -259,8 +265,9 @@ fn absolute_start_bound_finite_absolute_start_bound_inf_cmp() {
 #[test]
 fn absolute_start_bound_different_times_cmp_greater() {
     assert_eq!(
-        AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2)))
-            .cmp(&AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1)))),
+        AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2))).cmp(&AbsoluteStartBound::Finite(
+            AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))
+        )),
         Ordering::Greater,
     );
 }
@@ -268,8 +275,9 @@ fn absolute_start_bound_different_times_cmp_greater() {
 #[test]
 fn absolute_start_bound_different_times_cmp_less() {
     assert_eq!(
-        AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1)))
-            .cmp(&AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2)))),
+        AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))).cmp(&AbsoluteStartBound::Finite(
+            AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2))
+        )),
         Ordering::Less,
     );
 }
@@ -281,10 +289,10 @@ fn absolute_start_bound_same_times_exclusive_bounds_cmp() {
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
         ))
-            .cmp(&AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Exclusive,
-            ))),
+        .cmp(&AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            date(&Utc, 2025, 1, 1),
+            BoundInclusivity::Exclusive,
+        ))),
         Ordering::Equal,
     );
 }
@@ -296,10 +304,10 @@ fn absolute_start_bound_same_times_exclusive_inclusive_bounds_cmp() {
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
         ))
-            .cmp(&AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Inclusive,
-            ))),
+        .cmp(&AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            date(&Utc, 2025, 1, 1),
+            BoundInclusivity::Inclusive,
+        ))),
         Ordering::Greater,
     );
 }
@@ -311,10 +319,10 @@ fn absolute_start_bound_same_times_inclusive_exclusive_bounds_cmp() {
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
         ))
-            .cmp(&AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Exclusive,
-            ))),
+        .cmp(&AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            date(&Utc, 2025, 1, 1),
+            BoundInclusivity::Exclusive,
+        ))),
         Ordering::Less,
     );
 }
@@ -326,10 +334,10 @@ fn absolute_start_bound_same_times_inclusive_bounds_cmp() {
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
         ))
-            .cmp(&AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Inclusive,
-            ))),
+        .cmp(&AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            date(&Utc, 2025, 1, 1),
+            BoundInclusivity::Inclusive,
+        ))),
         Ordering::Equal,
     );
 }
@@ -345,8 +353,9 @@ fn absolute_start_bound_inf_absolute_end_bound_inf_partial_cmp() {
 #[test]
 fn absolute_start_bound_inf_absolute_end_bound_finite_partial_cmp() {
     assert_eq!(
-        AbsoluteStartBound::InfinitePast
-            .partial_cmp(&AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1)))),
+        AbsoluteStartBound::InfinitePast.partial_cmp(&AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(
+            &Utc, 2025, 1, 1
+        )))),
         Some(Ordering::Less),
     );
 }
@@ -363,8 +372,9 @@ fn absolute_start_bound_finite_absolute_end_bound_inf_partial_cmp() {
 #[test]
 fn absolute_start_bound_absolute_end_bound_different_times_partial_cmp_greater() {
     assert_eq!(
-        AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2)))
-            .partial_cmp(&AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1)))),
+        AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2))).partial_cmp(
+            &AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1)))
+        ),
         Some(Ordering::Greater),
     );
 }
@@ -372,8 +382,9 @@ fn absolute_start_bound_absolute_end_bound_different_times_partial_cmp_greater()
 #[test]
 fn absolute_start_bound_absolute_end_bound_different_times_partial_cmp_less() {
     assert_eq!(
-        AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1)))
-            .partial_cmp(&AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2)))),
+        AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))).partial_cmp(
+            &AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2)))
+        ),
         Some(Ordering::Less),
     );
 }
@@ -385,10 +396,10 @@ fn absolute_start_bound_absolute_end_bound_same_times_exclusive_bounds_partial_c
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
         ))
-            .partial_cmp(&AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Exclusive,
-            ))),
+        .partial_cmp(&AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            date(&Utc, 2025, 1, 1),
+            BoundInclusivity::Exclusive,
+        ))),
         None,
     );
 }
@@ -400,10 +411,10 @@ fn absolute_start_bound_absolute_end_bound_same_times_exclusive_inclusive_bounds
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
         ))
-            .partial_cmp(&AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Inclusive,
-            ))),
+        .partial_cmp(&AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            date(&Utc, 2025, 1, 1),
+            BoundInclusivity::Inclusive,
+        ))),
         None,
     );
 }
@@ -415,10 +426,10 @@ fn absolute_start_bound_absolute_end_bound_same_times_inclusive_exclusive_bounds
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
         ))
-            .partial_cmp(&AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Exclusive,
-            ))),
+        .partial_cmp(&AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            date(&Utc, 2025, 1, 1),
+            BoundInclusivity::Exclusive,
+        ))),
         None,
     );
 }
@@ -430,10 +441,10 @@ fn absolute_start_bound_absolute_end_bound_same_times_inclusive_bounds_partial_c
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
         ))
-            .partial_cmp(&AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Inclusive,
-            ))),
+        .partial_cmp(&AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            date(&Utc, 2025, 1, 1),
+            BoundInclusivity::Inclusive,
+        ))),
         Some(Ordering::Equal),
     );
 }
@@ -476,7 +487,10 @@ fn absolute_start_bound_from_exclusive_bound() {
 
 #[test]
 fn absolute_start_bound_from_unbounded_bound() {
-    assert_eq!(AbsoluteStartBound::from(Bound::Unbounded), AbsoluteStartBound::InfinitePast);
+    assert_eq!(
+        AbsoluteStartBound::from(Bound::Unbounded),
+        AbsoluteStartBound::InfinitePast
+    );
 }
 
 #[test]
@@ -487,8 +501,9 @@ fn absolute_end_bound_inf_absolute_start_bound_inf_eq() {
 #[test]
 fn absolute_end_bound_inf_absolute_start_bound_finite_eq() {
     assert!(
-        !AbsoluteEndBound::InfiniteFuture
-            .eq(&AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))))
+        !AbsoluteEndBound::InfiniteFuture.eq(&AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(
+            &Utc, 2025, 1, 1
+        ))))
     );
 }
 
@@ -503,8 +518,9 @@ fn absolute_end_bound_finite_absolute_start_bound_inf_eq() {
 #[test]
 fn absolute_end_bound_finite_absolute_start_bound_finite_different_times_eq() {
     assert!(
-        !AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1)))
-            .eq(&AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2)))),
+        !AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))).eq(&AbsoluteStartBound::Finite(
+            AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2))
+        )),
     );
 }
 
@@ -515,10 +531,10 @@ fn absolute_end_bound_finite_absolute_start_bound_finite_equal_times_exclusive_b
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
         ))
-            .eq(&AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Exclusive,
-            )))
+        .eq(&AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            date(&Utc, 2025, 1, 1),
+            BoundInclusivity::Exclusive,
+        )))
     );
 }
 
@@ -529,10 +545,10 @@ fn absolute_end_bound_finite_absolute_start_bound_finite_equal_times_exclusive_i
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
         ))
-            .eq(&AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Inclusive,
-            )))
+        .eq(&AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            date(&Utc, 2025, 1, 1),
+            BoundInclusivity::Inclusive,
+        )))
     );
 }
 
@@ -543,10 +559,10 @@ fn absolute_end_bound_finite_absolute_start_bound_finite_equal_times_inclusive_e
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
         ))
-            .eq(&AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Exclusive,
-            )))
+        .eq(&AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            date(&Utc, 2025, 1, 1),
+            BoundInclusivity::Exclusive,
+        )))
     );
 }
 
@@ -557,23 +573,27 @@ fn absolute_end_bound_finite_absolute_start_bound_finite_equal_times_inclusive_b
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
         ))
-            .eq(&AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Inclusive,
-            )))
+        .eq(&AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            date(&Utc, 2025, 1, 1),
+            BoundInclusivity::Inclusive,
+        )))
     );
 }
 
 #[test]
 fn absolute_end_bound_inf_absolute_end_bound_inf_cmp() {
-    assert_eq!(AbsoluteEndBound::InfiniteFuture.cmp(&AbsoluteEndBound::InfiniteFuture), Ordering::Equal);
+    assert_eq!(
+        AbsoluteEndBound::InfiniteFuture.cmp(&AbsoluteEndBound::InfiniteFuture),
+        Ordering::Equal
+    );
 }
 
 #[test]
 fn absolute_end_bound_inf_absolute_end_bound_finite_cmp() {
     assert_eq!(
-        AbsoluteEndBound::InfiniteFuture
-            .cmp(&AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1)))),
+        AbsoluteEndBound::InfiniteFuture.cmp(&AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(
+            &Utc, 2025, 1, 1
+        )))),
         Ordering::Greater,
     );
 }
@@ -590,8 +610,9 @@ fn absolute_end_bound_finite_absolute_end_bound_inf_cmp() {
 #[test]
 fn absolute_end_bound_different_times_cmp_greater() {
     assert_eq!(
-        AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2)))
-            .cmp(&AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1)))),
+        AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2))).cmp(&AbsoluteEndBound::Finite(
+            AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))
+        )),
         Ordering::Greater,
     );
 }
@@ -599,8 +620,9 @@ fn absolute_end_bound_different_times_cmp_greater() {
 #[test]
 fn absolute_end_bound_different_times_cmp_less() {
     assert_eq!(
-        AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1)))
-            .cmp(&AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2)))),
+        AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))).cmp(&AbsoluteEndBound::Finite(
+            AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2))
+        )),
         Ordering::Less,
     );
 }
@@ -612,10 +634,10 @@ fn absolute_end_bound_same_times_exclusive_bounds_cmp() {
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
         ))
-            .cmp(&AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Exclusive,
-            ))),
+        .cmp(&AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            date(&Utc, 2025, 1, 1),
+            BoundInclusivity::Exclusive,
+        ))),
         Ordering::Equal,
     );
 }
@@ -627,10 +649,10 @@ fn absolute_end_bound_same_times_exclusive_inclusive_bounds_cmp() {
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
         ))
-            .cmp(&AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Inclusive,
-            ))),
+        .cmp(&AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            date(&Utc, 2025, 1, 1),
+            BoundInclusivity::Inclusive,
+        ))),
         Ordering::Less,
     );
 }
@@ -642,10 +664,10 @@ fn absolute_end_bound_same_times_inclusive_exclusive_bounds_cmp() {
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
         ))
-            .cmp(&AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Exclusive,
-            ))),
+        .cmp(&AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            date(&Utc, 2025, 1, 1),
+            BoundInclusivity::Exclusive,
+        ))),
         Ordering::Greater,
     );
 }
@@ -657,10 +679,10 @@ fn absolute_end_bound_same_times_inclusive_bounds_cmp() {
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
         ))
-            .cmp(&AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Inclusive,
-            ))),
+        .cmp(&AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            date(&Utc, 2025, 1, 1),
+            BoundInclusivity::Inclusive,
+        ))),
         Ordering::Equal,
     );
 }
@@ -676,8 +698,9 @@ fn absolute_end_bound_inf_absolute_start_bound_inf_partial_cmp() {
 #[test]
 fn absolute_end_bound_inf_absolute_start_bound_finite_partial_cmp() {
     assert_eq!(
-        AbsoluteEndBound::InfiniteFuture
-            .partial_cmp(&AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1)))),
+        AbsoluteEndBound::InfiniteFuture.partial_cmp(&AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(
+            &Utc, 2025, 1, 1
+        )))),
         Some(Ordering::Greater),
     );
 }
@@ -694,8 +717,9 @@ fn absolute_end_bound_finite_absolute_start_bound_inf_partial_cmp() {
 #[test]
 fn absolute_end_bound_absolute_start_bound_different_times_partial_cmp_greater() {
     assert_eq!(
-        AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2)))
-            .partial_cmp(&AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1)))),
+        AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2))).partial_cmp(
+            &AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1)))
+        ),
         Some(Ordering::Greater),
     );
 }
@@ -703,8 +727,9 @@ fn absolute_end_bound_absolute_start_bound_different_times_partial_cmp_greater()
 #[test]
 fn absolute_end_bound_absolute_start_bound_different_times_partial_cmp_less() {
     assert_eq!(
-        AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1)))
-            .partial_cmp(&AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2)))),
+        AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))).partial_cmp(
+            &AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2)))
+        ),
         Some(Ordering::Less),
     );
 }
@@ -716,10 +741,10 @@ fn absolute_end_bound_absolute_start_bound_same_times_exclusive_bounds_partial_c
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
         ))
-            .partial_cmp(&AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Exclusive,
-            ))),
+        .partial_cmp(&AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            date(&Utc, 2025, 1, 1),
+            BoundInclusivity::Exclusive,
+        ))),
         None,
     );
 }
@@ -731,10 +756,10 @@ fn absolute_end_bound_absolute_start_bound_same_times_exclusive_inclusive_bounds
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
         ))
-            .partial_cmp(&AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Inclusive,
-            ))),
+        .partial_cmp(&AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            date(&Utc, 2025, 1, 1),
+            BoundInclusivity::Inclusive,
+        ))),
         None,
     );
 }
@@ -746,10 +771,10 @@ fn absolute_end_bound_absolute_start_bound_same_times_inclusive_exclusive_bounds
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
         ))
-            .partial_cmp(&AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Exclusive,
-            ))),
+        .partial_cmp(&AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            date(&Utc, 2025, 1, 1),
+            BoundInclusivity::Exclusive,
+        ))),
         None,
     );
 }
@@ -761,10 +786,10 @@ fn absolute_end_bound_absolute_start_bound_same_times_inclusive_bounds_partial_c
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
         ))
-            .partial_cmp(&AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Inclusive,
-            ))),
+        .partial_cmp(&AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            date(&Utc, 2025, 1, 1),
+            BoundInclusivity::Inclusive,
+        ))),
         Some(Ordering::Equal),
     );
 }
@@ -807,7 +832,10 @@ fn absolute_end_bound_from_exclusive_bound() {
 
 #[test]
 fn absolute_end_bound_from_unbounded_bound() {
-    assert_eq!(AbsoluteEndBound::from(Bound::Unbounded), AbsoluteEndBound::InfiniteFuture);
+    assert_eq!(
+        AbsoluteEndBound::from(Bound::Unbounded),
+        AbsoluteEndBound::InfiniteFuture
+    );
 }
 
 #[test]
@@ -831,10 +859,13 @@ fn absolute_start_bound_inf_absolute_end_bound_finite_swap() {
 
     swap_absolute_bounds(&mut start, &mut end);
 
-    assert_eq!(start, AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-        date(&Utc, 2025, 1, 1),
-        BoundInclusivity::Exclusive,
-    )));
+    assert_eq!(
+        start,
+        AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            date(&Utc, 2025, 1, 1),
+            BoundInclusivity::Exclusive,
+        ))
+    );
     assert_eq!(end, AbsoluteEndBound::InfiniteFuture);
 }
 
@@ -849,10 +880,13 @@ fn absolute_start_bound_finite_absolute_end_bound_inf_swap() {
     swap_absolute_bounds(&mut start, &mut end);
 
     assert_eq!(start, AbsoluteStartBound::InfinitePast);
-    assert_eq!(end, AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-        date(&Utc, 2025, 1, 1),
-        BoundInclusivity::Exclusive,
-    )));
+    assert_eq!(
+        end,
+        AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            date(&Utc, 2025, 1, 1),
+            BoundInclusivity::Exclusive,
+        ))
+    );
 }
 
 #[test]
@@ -868,14 +902,20 @@ fn absolute_start_bound_finite_absolute_end_bound_finite_swap() {
 
     swap_absolute_bounds(&mut start, &mut end);
 
-    assert_eq!(start, AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-        date(&Utc, 2025, 1, 2),
-        BoundInclusivity::Inclusive,
-    )));
-    assert_eq!(end, AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-        date(&Utc, 2025, 1, 1),
-        BoundInclusivity::Exclusive,
-    )));
+    assert_eq!(
+        start,
+        AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            date(&Utc, 2025, 1, 2),
+            BoundInclusivity::Inclusive,
+        ))
+    );
+    assert_eq!(
+        end,
+        AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            date(&Utc, 2025, 1, 1),
+            BoundInclusivity::Exclusive,
+        ))
+    );
 }
 
 #[test]
@@ -896,8 +936,14 @@ fn absolute_bounds_new_should_swap() {
 
     let abs_bounds = AbsoluteBounds::new(start, end);
 
-    assert_eq!(abs_bounds.abs_start(), AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))));
-    assert_eq!(abs_bounds.abs_end(), AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2))));
+    assert_eq!(
+        abs_bounds.abs_start(),
+        AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1)))
+    );
+    assert_eq!(
+        abs_bounds.abs_end(),
+        AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2)))
+    );
 }
 
 #[test]
@@ -913,14 +959,20 @@ fn absolute_bounds_new_from_same_times_exclusive_bounds() {
 
     let abs_bounds = AbsoluteBounds::new(start, end);
 
-    assert_eq!(abs_bounds.abs_start(), AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-        date(&Utc, 2025, 1, 1),
-        BoundInclusivity::Inclusive,
-    )));
-    assert_eq!(abs_bounds.abs_end(), AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-        date(&Utc, 2025, 1, 1),
-        BoundInclusivity::Inclusive,
-    )));
+    assert_eq!(
+        abs_bounds.abs_start(),
+        AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            date(&Utc, 2025, 1, 1),
+            BoundInclusivity::Inclusive,
+        ))
+    );
+    assert_eq!(
+        abs_bounds.abs_end(),
+        AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            date(&Utc, 2025, 1, 1),
+            BoundInclusivity::Inclusive,
+        ))
+    );
 }
 
 #[test]
@@ -936,14 +988,20 @@ fn absolute_bounds_new_from_same_times_inclusive_exclusive_bounds() {
 
     let abs_bounds = AbsoluteBounds::new(start, end);
 
-    assert_eq!(abs_bounds.abs_start(), AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-        date(&Utc, 2025, 1, 1),
-        BoundInclusivity::Inclusive,
-    )));
-    assert_eq!(abs_bounds.abs_end(), AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-        date(&Utc, 2025, 1, 1),
-        BoundInclusivity::Inclusive,
-    )));
+    assert_eq!(
+        abs_bounds.abs_start(),
+        AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            date(&Utc, 2025, 1, 1),
+            BoundInclusivity::Inclusive,
+        ))
+    );
+    assert_eq!(
+        abs_bounds.abs_end(),
+        AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            date(&Utc, 2025, 1, 1),
+            BoundInclusivity::Inclusive,
+        ))
+    );
 }
 
 #[test]
@@ -959,14 +1017,20 @@ fn absolute_bounds_new_from_same_times_exclusive_inclusive_bounds() {
 
     let abs_bounds = AbsoluteBounds::new(start, end);
 
-    assert_eq!(abs_bounds.abs_start(), AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-        date(&Utc, 2025, 1, 1),
-        BoundInclusivity::Inclusive,
-    )));
-    assert_eq!(abs_bounds.abs_end(), AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-        date(&Utc, 2025, 1, 1),
-        BoundInclusivity::Inclusive,
-    )));
+    assert_eq!(
+        abs_bounds.abs_start(),
+        AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            date(&Utc, 2025, 1, 1),
+            BoundInclusivity::Inclusive,
+        ))
+    );
+    assert_eq!(
+        abs_bounds.abs_end(),
+        AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            date(&Utc, 2025, 1, 1),
+            BoundInclusivity::Inclusive,
+        ))
+    );
 }
 
 #[test]
@@ -982,14 +1046,20 @@ fn absolute_bounds_new_from_same_times_inclusive_bounds() {
 
     let abs_bounds = AbsoluteBounds::new(start, end);
 
-    assert_eq!(abs_bounds.abs_start(), AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-        date(&Utc, 2025, 1, 1),
-        BoundInclusivity::Inclusive,
-    )));
-    assert_eq!(abs_bounds.abs_end(), AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-        date(&Utc, 2025, 1, 1),
-        BoundInclusivity::Inclusive,
-    )));
+    assert_eq!(
+        abs_bounds.abs_start(),
+        AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            date(&Utc, 2025, 1, 1),
+            BoundInclusivity::Inclusive,
+        ))
+    );
+    assert_eq!(
+        abs_bounds.abs_end(),
+        AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            date(&Utc, 2025, 1, 1),
+            BoundInclusivity::Inclusive,
+        ))
+    );
 }
 
 #[test]
@@ -1026,7 +1096,11 @@ fn absolute_bounds_set_start() {
     let end = AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2)));
     let mut bounds = AbsoluteBounds::new(start, end);
 
-    assert!(!bounds.set_start(AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 3)))));
+    assert!(
+        !bounds.set_start(AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(
+            &Utc, 2025, 1, 3
+        ))))
+    );
 
     // Bounds should remain unchanged
     assert_eq!(bounds.abs_start(), start);
@@ -1039,7 +1113,9 @@ fn absolute_bounds_set_end() {
     let end = AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 3)));
     let mut bounds = AbsoluteBounds::new(start, end);
 
-    assert!(!bounds.set_end(AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1)))));
+    assert!(!bounds.set_end(AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(
+        &Utc, 2025, 1, 1
+    )))));
 
     // Bounds should remain unchanged
     assert_eq!(bounds.abs_start(), start);
@@ -1396,7 +1472,7 @@ fn emptiable_absolute_bounds_from_absolute_bounds() {
 #[test]
 fn closed_absolute_interval_unchecked_new() {
     let interval = ClosedAbsoluteInterval::unchecked_new(date(&Utc, 2025, 1, 1), date(&Utc, 2025, 1, 2));
-    
+
     assert_eq!(interval.from_time(), date(&Utc, 2025, 1, 1));
     assert_eq!(interval.to_time(), date(&Utc, 2025, 1, 2));
     assert_eq!(interval.from_inclusivity(), BoundInclusivity::Inclusive);
@@ -1406,7 +1482,7 @@ fn closed_absolute_interval_unchecked_new() {
 #[test]
 fn closed_absolute_interval_new_no_swap() {
     let interval = ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), date(&Utc, 2025, 1, 2));
-    
+
     assert_eq!(interval.from_time(), date(&Utc, 2025, 1, 1));
     assert_eq!(interval.to_time(), date(&Utc, 2025, 1, 2));
     assert_eq!(interval.from_inclusivity(), BoundInclusivity::Inclusive);
@@ -1416,7 +1492,7 @@ fn closed_absolute_interval_new_no_swap() {
 #[test]
 fn closed_absolute_interval_new_swap() {
     let interval = ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 2), date(&Utc, 2025, 1, 1));
-    
+
     assert_eq!(interval.from_time(), date(&Utc, 2025, 1, 1));
     assert_eq!(interval.to_time(), date(&Utc, 2025, 1, 2));
     assert_eq!(interval.from_inclusivity(), BoundInclusivity::Inclusive);
@@ -1431,7 +1507,7 @@ fn closed_absolute_interval_new_with_inclusivity_no_swap() {
         date(&Utc, 2025, 1, 2),
         BoundInclusivity::Inclusive,
     );
-    
+
     assert_eq!(interval.from_time(), date(&Utc, 2025, 1, 1));
     assert_eq!(interval.to_time(), date(&Utc, 2025, 1, 2));
     assert_eq!(interval.from_inclusivity(), BoundInclusivity::Exclusive);
@@ -1446,7 +1522,7 @@ fn closed_absolute_interval_new_with_inclusivity_swap() {
         date(&Utc, 2025, 1, 1),
         BoundInclusivity::Inclusive,
     );
-    
+
     assert_eq!(interval.from_time(), date(&Utc, 2025, 1, 1));
     assert_eq!(interval.to_time(), date(&Utc, 2025, 1, 2));
     assert_eq!(interval.from_inclusivity(), BoundInclusivity::Inclusive);
@@ -1587,10 +1663,7 @@ fn closed_absolute_interval_from_pair_of_datetime_inclusivity_pairs_swap() {
 #[test]
 fn closed_absolute_interval_from_pair_of_datetime_bool_pairs_swap() {
     assert_eq!(
-        ClosedAbsoluteInterval::from((
-            (date(&Utc, 2025, 1, 2), false),
-            (date(&Utc, 2025, 1, 1), true),
-        )),
+        ClosedAbsoluteInterval::from(((date(&Utc, 2025, 1, 2), false), (date(&Utc, 2025, 1, 1), true),)),
         ClosedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
@@ -1733,11 +1806,14 @@ fn half_open_absolute_interval_set_reference_time() {
 
     interval.set_reference_time(date(&Utc, 2025, 1, 2));
 
-    assert_eq!(interval, HalfOpenAbsoluteInterval::new_with_inclusivity(
-        date(&Utc, 2025, 1, 2),
-        BoundInclusivity::Exclusive,
-        OpeningDirection::ToFuture,
-    ));
+    assert_eq!(
+        interval,
+        HalfOpenAbsoluteInterval::new_with_inclusivity(
+            date(&Utc, 2025, 1, 2),
+            BoundInclusivity::Exclusive,
+            OpeningDirection::ToFuture,
+        )
+    );
 }
 
 #[test]
@@ -1750,11 +1826,14 @@ fn half_open_absolute_interval_set_reference_time_inclusivity() {
 
     interval.set_reference_time_inclusivity(BoundInclusivity::Inclusive);
 
-    assert_eq!(interval, HalfOpenAbsoluteInterval::new_with_inclusivity(
-        date(&Utc, 2025, 1, 1),
-        BoundInclusivity::Inclusive,
-        OpeningDirection::ToFuture,
-    ));
+    assert_eq!(
+        interval,
+        HalfOpenAbsoluteInterval::new_with_inclusivity(
+            date(&Utc, 2025, 1, 1),
+            BoundInclusivity::Inclusive,
+            OpeningDirection::ToFuture,
+        )
+    );
 }
 
 #[test]
@@ -1767,11 +1846,14 @@ fn half_open_absolute_interval_set_opening_direction() {
 
     interval.set_opening_direction(OpeningDirection::ToPast);
 
-    assert_eq!(interval, HalfOpenAbsoluteInterval::new_with_inclusivity(
-        date(&Utc, 2025, 1, 1),
-        BoundInclusivity::Exclusive,
-        OpeningDirection::ToPast,
-    ));
+    assert_eq!(
+        interval,
+        HalfOpenAbsoluteInterval::new_with_inclusivity(
+            date(&Utc, 2025, 1, 1),
+            BoundInclusivity::Exclusive,
+            OpeningDirection::ToPast,
+        )
+    );
 }
 
 #[test]
@@ -1793,9 +1875,10 @@ fn half_open_absolute_interval_from_datetime_bool_pair() {
 #[test]
 fn half_open_absolute_interval_from_pair_of_datetime_bound_inclusivity_pair_and_opening_direction() {
     assert_eq!(
-        HalfOpenAbsoluteInterval::from(
-            ((date(&Utc, 2025, 1, 1), BoundInclusivity::Exclusive), OpeningDirection::ToPast)
-        ),
+        HalfOpenAbsoluteInterval::from((
+            (date(&Utc, 2025, 1, 1), BoundInclusivity::Exclusive),
+            OpeningDirection::ToPast
+        )),
         HalfOpenAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
@@ -1807,9 +1890,7 @@ fn half_open_absolute_interval_from_pair_of_datetime_bound_inclusivity_pair_and_
 #[test]
 fn half_open_absolute_interval_from_pair_of_datetime_bool_pair_and_opening_direction() {
     assert_eq!(
-        HalfOpenAbsoluteInterval::from(
-            ((date(&Utc, 2025, 1, 1), false), OpeningDirection::ToPast)
-        ),
+        HalfOpenAbsoluteInterval::from(((date(&Utc, 2025, 1, 1), false), OpeningDirection::ToPast)),
         HalfOpenAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
@@ -1821,9 +1902,7 @@ fn half_open_absolute_interval_from_pair_of_datetime_bool_pair_and_opening_direc
 #[test]
 fn half_open_absolute_interval_from_pair_of_datetime_bool_pair_and_bool() {
     assert_eq!(
-        HalfOpenAbsoluteInterval::from(
-            ((date(&Utc, 2025, 1, 1), false), false)
-        ),
+        HalfOpenAbsoluteInterval::from(((date(&Utc, 2025, 1, 1), false), false)),
         HalfOpenAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
@@ -1913,11 +1992,13 @@ fn half_open_absolute_interval_try_from_absolute_bounds_wrong() {
 #[test]
 fn half_open_absolute_interval_try_from_absolute_interval_correct() {
     assert_eq!(
-        HalfOpenAbsoluteInterval::try_from(AbsoluteInterval::HalfOpen(HalfOpenAbsoluteInterval::new_with_inclusivity(
-            date(&Utc, 2025, 1, 1),
-            BoundInclusivity::Exclusive,
-            OpeningDirection::ToPast,
-        ))),
+        HalfOpenAbsoluteInterval::try_from(AbsoluteInterval::HalfOpen(
+            HalfOpenAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                OpeningDirection::ToPast,
+            )
+        )),
         Ok(HalfOpenAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
@@ -2035,11 +2116,7 @@ fn absolute_interval_from_opt_datetime_bool_pairs() {
 #[test]
 fn absolute_interval_from_bool_and_two_opt_datetime_empty() {
     assert_eq!(
-        <AbsoluteInterval as From<(bool, Option<DateTime<Utc>>, Option<DateTime<Utc>>)>>::from((
-            true,
-            None,
-            None,
-        )),
+        <AbsoluteInterval as From<(bool, Option<DateTime<Utc>>, Option<DateTime<Utc>>)>>::from((true, None, None,)),
         AbsoluteInterval::Empty(EmptyInterval),
     );
 }
@@ -2047,12 +2124,11 @@ fn absolute_interval_from_bool_and_two_opt_datetime_empty() {
 #[test]
 fn absolute_interval_from_bool_and_two_opt_datetime() {
     assert_eq!(
-        AbsoluteInterval::from((
-            false,
-            Some(date(&Utc, 2025, 1, 1)),
-            Some(date(&Utc, 2025, 1, 2)),
+        AbsoluteInterval::from((false, Some(date(&Utc, 2025, 1, 1)), Some(date(&Utc, 2025, 1, 2)),)),
+        AbsoluteInterval::Closed(ClosedAbsoluteInterval::new(
+            date(&Utc, 2025, 1, 1),
+            date(&Utc, 2025, 1, 2)
         )),
-        AbsoluteInterval::Closed(ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), date(&Utc, 2025, 1, 2))),
     );
 }
 
@@ -2062,12 +2138,8 @@ fn absolute_interval_from_bool_and_two_opt_datetime_bound_inclusivity_empty() {
         <AbsoluteInterval as From<(
             bool,
             Option<(DateTime<Utc>, BoundInclusivity)>,
-            Option<(DateTime<Utc>, BoundInclusivity)
-        >)>>::from((
-            true,
-            None,
-            None,
-        )),
+            Option<(DateTime<Utc>, BoundInclusivity)>
+        )>>::from((true, None, None,)),
         AbsoluteInterval::Empty(EmptyInterval),
     );
 }
@@ -2092,14 +2164,8 @@ fn absolute_interval_from_bool_and_two_opt_datetime_bound_inclusivity() {
 #[test]
 fn absolute_interval_from_bool_and_two_opt_datetime_bool_empty() {
     assert_eq!(
-        <AbsoluteInterval as From<(
-            bool,
-            Option<(DateTime<Utc>, bool)>,
-            Option<(DateTime<Utc>, bool)
-        >)>>::from((
-            true,
-            None,
-            None,
+        <AbsoluteInterval as From<(bool, Option<(DateTime<Utc>, bool)>, Option<(DateTime<Utc>, bool)>)>>::from((
+            true, None, None,
         )),
         AbsoluteInterval::Empty(EmptyInterval),
     );

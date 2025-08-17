@@ -5,81 +5,47 @@ use super::bound_overlap_ambiguity::*;
 #[test]
 fn ambiguity_is_both_starts() {
     assert!(
-        BoundOverlapAmbiguity::BothStarts(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive)
-            .is_both_starts()
+        BoundOverlapAmbiguity::BothStarts(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive).is_both_starts()
     );
     assert!(
-        !BoundOverlapAmbiguity::BothEnds(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive)
-            .is_both_starts()
+        !BoundOverlapAmbiguity::BothEnds(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive).is_both_starts()
     );
     assert!(
-        !BoundOverlapAmbiguity::StartEnd(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive)
-            .is_both_starts()
+        !BoundOverlapAmbiguity::StartEnd(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive).is_both_starts()
     );
     assert!(
-        !BoundOverlapAmbiguity::EndStart(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive)
-            .is_both_starts()
+        !BoundOverlapAmbiguity::EndStart(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive).is_both_starts()
     );
 }
 
 #[test]
 fn ambiguity_is_both_ends() {
     assert!(
-        !BoundOverlapAmbiguity::BothStarts(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive)
-            .is_both_ends()
+        !BoundOverlapAmbiguity::BothStarts(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive).is_both_ends()
     );
-    assert!(
-        BoundOverlapAmbiguity::BothEnds(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive)
-            .is_both_ends()
-    );
-    assert!(
-        !BoundOverlapAmbiguity::StartEnd(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive)
-            .is_both_ends()
-    );
-    assert!(
-        !BoundOverlapAmbiguity::EndStart(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive)
-            .is_both_ends()
-    );
+    assert!(BoundOverlapAmbiguity::BothEnds(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive).is_both_ends());
+    assert!(!BoundOverlapAmbiguity::StartEnd(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive).is_both_ends());
+    assert!(!BoundOverlapAmbiguity::EndStart(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive).is_both_ends());
 }
 
 #[test]
 fn ambiguity_is_start_end() {
     assert!(
-        !BoundOverlapAmbiguity::BothStarts(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive)
-            .is_start_end()
+        !BoundOverlapAmbiguity::BothStarts(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive).is_start_end()
     );
-    assert!(
-        !BoundOverlapAmbiguity::BothEnds(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive)
-            .is_start_end()
-    );
-    assert!(
-        BoundOverlapAmbiguity::StartEnd(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive)
-            .is_start_end()
-    );
-    assert!(
-        !BoundOverlapAmbiguity::EndStart(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive)
-            .is_start_end()
-    );
+    assert!(!BoundOverlapAmbiguity::BothEnds(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive).is_start_end());
+    assert!(BoundOverlapAmbiguity::StartEnd(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive).is_start_end());
+    assert!(!BoundOverlapAmbiguity::EndStart(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive).is_start_end());
 }
 
 #[test]
 fn ambiguity_is_end_start() {
     assert!(
-        !BoundOverlapAmbiguity::BothStarts(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive)
-            .is_end_start()
+        !BoundOverlapAmbiguity::BothStarts(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive).is_end_start()
     );
-    assert!(
-        !BoundOverlapAmbiguity::BothEnds(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive)
-            .is_end_start()
-    );
-    assert!(
-        !BoundOverlapAmbiguity::StartEnd(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive)
-            .is_end_start()
-    );
-    assert!(
-        BoundOverlapAmbiguity::EndStart(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive)
-            .is_end_start()
-    );
+    assert!(!BoundOverlapAmbiguity::BothEnds(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive).is_end_start());
+    assert!(!BoundOverlapAmbiguity::StartEnd(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive).is_end_start());
+    assert!(BoundOverlapAmbiguity::EndStart(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive).is_end_start());
 }
 
 #[test]

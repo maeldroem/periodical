@@ -19,10 +19,7 @@ fn relative_finite_bound_new() {
 
 #[test]
 fn relative_finite_bound_new_with_inclusivity() {
-    let rel_finite_bound = RelativeFiniteBound::new_with_inclusivity(
-        Duration::hours(1),
-        BoundInclusivity::Exclusive,
-    );
+    let rel_finite_bound = RelativeFiniteBound::new_with_inclusivity(Duration::hours(1), BoundInclusivity::Exclusive);
 
     assert_eq!(rel_finite_bound.offset(), Duration::hours(1));
     assert_eq!(rel_finite_bound.inclusivity(), BoundInclusivity::Exclusive);
@@ -39,10 +36,8 @@ fn relative_finite_bound_set_offset() {
 
 #[test]
 fn relative_finite_bound_set_inclusivity() {
-    let mut rel_finite_bound = RelativeFiniteBound::new_with_inclusivity(
-        Duration::hours(1),
-        BoundInclusivity::Exclusive,
-    );
+    let mut rel_finite_bound =
+        RelativeFiniteBound::new_with_inclusivity(Duration::hours(1), BoundInclusivity::Exclusive);
 
     rel_finite_bound.set_inclusivity(BoundInclusivity::Inclusive);
 
@@ -51,10 +46,7 @@ fn relative_finite_bound_set_inclusivity() {
 
 #[test]
 fn relative_finite_bound_inclusivity() {
-    let rel_finite_bound = RelativeFiniteBound::new_with_inclusivity(
-        Duration::hours(1),
-        BoundInclusivity::Exclusive,
-    );
+    let rel_finite_bound = RelativeFiniteBound::new_with_inclusivity(Duration::hours(1), BoundInclusivity::Exclusive);
 
     assert_eq!(rel_finite_bound.inclusivity(), BoundInclusivity::Exclusive);
 }
@@ -127,7 +119,10 @@ fn relative_finite_bound_from_datetime_bool_pair() {
 fn relative_finite_bound_try_from_inclusive_bound() {
     assert_eq!(
         RelativeFiniteBound::try_from(Bound::Included(Duration::hours(1))),
-        Ok(RelativeFiniteBound::new_with_inclusivity(Duration::hours(1), BoundInclusivity::Inclusive)),
+        Ok(RelativeFiniteBound::new_with_inclusivity(
+            Duration::hours(1),
+            BoundInclusivity::Inclusive
+        )),
     );
 }
 
@@ -135,7 +130,10 @@ fn relative_finite_bound_try_from_inclusive_bound() {
 fn relative_finite_bound_try_from_exclusive_bound() {
     assert_eq!(
         RelativeFiniteBound::try_from(Bound::Excluded(Duration::hours(1))),
-        Ok(RelativeFiniteBound::new_with_inclusivity(Duration::hours(1), BoundInclusivity::Exclusive)),
+        Ok(RelativeFiniteBound::new_with_inclusivity(
+            Duration::hours(1),
+            BoundInclusivity::Exclusive
+        )),
     );
 }
 
@@ -155,16 +153,14 @@ fn relative_start_bound_inf_relative_end_bound_inf_eq() {
 #[test]
 fn relative_start_bound_inf_relative_end_bound_finite_eq() {
     assert!(
-        !RelativeStartBound::InfinitePast
-            .eq(&RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(1))))
+        !RelativeStartBound::InfinitePast.eq(&RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(1))))
     );
 }
 
 #[test]
 fn relative_start_bound_finite_relative_end_bound_inf_eq() {
     assert!(
-        !RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(1)))
-            .eq(&RelativeEndBound::InfiniteFuture)
+        !RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(1))).eq(&RelativeEndBound::InfiniteFuture)
     );
 }
 
@@ -183,10 +179,10 @@ fn relative_start_bound_finite_relative_end_bound_finite_equal_times_exclusive_b
             Duration::hours(1),
             BoundInclusivity::Exclusive,
         ))
-            .eq(&RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                Duration::hours(1),
-                BoundInclusivity::Exclusive,
-            )))
+        .eq(&RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+            Duration::hours(1),
+            BoundInclusivity::Exclusive,
+        )))
     );
 }
 
@@ -197,10 +193,10 @@ fn relative_start_bound_finite_relative_end_bound_finite_equal_times_exclusive_i
             Duration::hours(1),
             BoundInclusivity::Exclusive,
         ))
-            .eq(&RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                Duration::hours(1),
-                BoundInclusivity::Inclusive,
-            )))
+        .eq(&RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+            Duration::hours(1),
+            BoundInclusivity::Inclusive,
+        )))
     );
 }
 
@@ -211,10 +207,10 @@ fn relative_start_bound_finite_relative_end_bound_finite_equal_times_inclusive_e
             Duration::hours(1),
             BoundInclusivity::Inclusive,
         ))
-            .eq(&RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                Duration::hours(1),
-                BoundInclusivity::Exclusive,
-            )))
+        .eq(&RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+            Duration::hours(1),
+            BoundInclusivity::Exclusive,
+        )))
     );
 }
 
@@ -225,23 +221,27 @@ fn relative_start_bound_finite_relative_end_bound_finite_equal_times_inclusive_b
             Duration::hours(1),
             BoundInclusivity::Inclusive,
         ))
-            .eq(&RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                Duration::hours(1),
-                BoundInclusivity::Inclusive,
-            )))
+        .eq(&RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+            Duration::hours(1),
+            BoundInclusivity::Inclusive,
+        )))
     );
 }
 
 #[test]
 fn relative_start_bound_inf_relative_start_bound_inf_cmp() {
-    assert_eq!(RelativeStartBound::InfinitePast.cmp(&RelativeStartBound::InfinitePast), Ordering::Equal);
+    assert_eq!(
+        RelativeStartBound::InfinitePast.cmp(&RelativeStartBound::InfinitePast),
+        Ordering::Equal
+    );
 }
 
 #[test]
 fn relative_start_bound_inf_relative_start_bound_finite_cmp() {
     assert_eq!(
-        RelativeStartBound::InfinitePast
-            .cmp(&RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(1)))),
+        RelativeStartBound::InfinitePast.cmp(&RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(
+            1
+        )))),
         Ordering::Less,
     );
 }
@@ -249,8 +249,7 @@ fn relative_start_bound_inf_relative_start_bound_finite_cmp() {
 #[test]
 fn relative_start_bound_finite_relative_start_bound_inf_cmp() {
     assert_eq!(
-        RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(1)))
-            .cmp(&RelativeStartBound::InfinitePast),
+        RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(1))).cmp(&RelativeStartBound::InfinitePast),
         Ordering::Greater,
     );
 }
@@ -258,8 +257,9 @@ fn relative_start_bound_finite_relative_start_bound_inf_cmp() {
 #[test]
 fn relative_start_bound_different_times_cmp_greater() {
     assert_eq!(
-        RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(2)))
-            .cmp(&RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(1)))),
+        RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(2))).cmp(&RelativeStartBound::Finite(
+            RelativeFiniteBound::new(Duration::hours(1))
+        )),
         Ordering::Greater,
     );
 }
@@ -267,8 +267,9 @@ fn relative_start_bound_different_times_cmp_greater() {
 #[test]
 fn relative_start_bound_different_times_cmp_less() {
     assert_eq!(
-        RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(1)))
-            .cmp(&RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(2)))),
+        RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(1))).cmp(&RelativeStartBound::Finite(
+            RelativeFiniteBound::new(Duration::hours(2))
+        )),
         Ordering::Less,
     );
 }
@@ -280,10 +281,10 @@ fn relative_start_bound_same_times_exclusive_bounds_cmp() {
             Duration::hours(1),
             BoundInclusivity::Exclusive,
         ))
-            .cmp(&RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                Duration::hours(1),
-                BoundInclusivity::Exclusive,
-            ))),
+        .cmp(&RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+            Duration::hours(1),
+            BoundInclusivity::Exclusive,
+        ))),
         Ordering::Equal,
     );
 }
@@ -295,10 +296,10 @@ fn relative_start_bound_same_times_exclusive_inclusive_bounds_cmp() {
             Duration::hours(1),
             BoundInclusivity::Exclusive,
         ))
-            .cmp(&RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                Duration::hours(1),
-                BoundInclusivity::Inclusive,
-            ))),
+        .cmp(&RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+            Duration::hours(1),
+            BoundInclusivity::Inclusive,
+        ))),
         Ordering::Greater,
     );
 }
@@ -310,10 +311,10 @@ fn relative_start_bound_same_times_inclusive_exclusive_bounds_cmp() {
             Duration::hours(1),
             BoundInclusivity::Inclusive,
         ))
-            .cmp(&RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                Duration::hours(1),
-                BoundInclusivity::Exclusive,
-            ))),
+        .cmp(&RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+            Duration::hours(1),
+            BoundInclusivity::Exclusive,
+        ))),
         Ordering::Less,
     );
 }
@@ -325,10 +326,10 @@ fn relative_start_bound_same_times_inclusive_bounds_cmp() {
             Duration::hours(1),
             BoundInclusivity::Inclusive,
         ))
-            .cmp(&RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                Duration::hours(1),
-                BoundInclusivity::Inclusive,
-            ))),
+        .cmp(&RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+            Duration::hours(1),
+            BoundInclusivity::Inclusive,
+        ))),
         Ordering::Equal,
     );
 }
@@ -384,10 +385,10 @@ fn relative_start_bound_relative_end_bound_same_times_exclusive_bounds_partial_c
             Duration::hours(1),
             BoundInclusivity::Exclusive,
         ))
-            .partial_cmp(&RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                Duration::hours(1),
-                BoundInclusivity::Exclusive,
-            ))),
+        .partial_cmp(&RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+            Duration::hours(1),
+            BoundInclusivity::Exclusive,
+        ))),
         None,
     );
 }
@@ -399,10 +400,10 @@ fn relative_start_bound_relative_end_bound_same_times_exclusive_inclusive_bounds
             Duration::hours(1),
             BoundInclusivity::Exclusive,
         ))
-            .partial_cmp(&RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                Duration::hours(1),
-                BoundInclusivity::Inclusive,
-            ))),
+        .partial_cmp(&RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+            Duration::hours(1),
+            BoundInclusivity::Inclusive,
+        ))),
         None,
     );
 }
@@ -414,10 +415,10 @@ fn relative_start_bound_relative_end_bound_same_times_inclusive_exclusive_bounds
             Duration::hours(1),
             BoundInclusivity::Inclusive,
         ))
-            .partial_cmp(&RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                Duration::hours(1),
-                BoundInclusivity::Exclusive,
-            ))),
+        .partial_cmp(&RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+            Duration::hours(1),
+            BoundInclusivity::Exclusive,
+        ))),
         None,
     );
 }
@@ -429,10 +430,10 @@ fn relative_start_bound_relative_end_bound_same_times_inclusive_bounds_partial_c
             Duration::hours(1),
             BoundInclusivity::Inclusive,
         ))
-            .partial_cmp(&RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                Duration::hours(1),
-                BoundInclusivity::Inclusive,
-            ))),
+        .partial_cmp(&RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+            Duration::hours(1),
+            BoundInclusivity::Inclusive,
+        ))),
         Some(Ordering::Equal),
     );
 }
@@ -475,7 +476,10 @@ fn relative_start_bound_from_exclusive_bound() {
 
 #[test]
 fn relative_start_bound_from_unbounded_bound() {
-    assert_eq!(RelativeStartBound::from(Bound::Unbounded), RelativeStartBound::InfinitePast);
+    assert_eq!(
+        RelativeStartBound::from(Bound::Unbounded),
+        RelativeStartBound::InfinitePast
+    );
 }
 
 #[test]
@@ -486,24 +490,25 @@ fn relative_end_bound_inf_relative_start_bound_inf_eq() {
 #[test]
 fn relative_end_bound_inf_relative_start_bound_finite_eq() {
     assert!(
-        !RelativeEndBound::InfiniteFuture
-            .eq(&RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(1))))
+        !RelativeEndBound::InfiniteFuture.eq(&RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(
+            1
+        ))))
     );
 }
 
 #[test]
 fn relative_end_bound_finite_relative_start_bound_inf_eq() {
     assert!(
-        !RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(1)))
-            .eq(&RelativeStartBound::InfinitePast)
+        !RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(1))).eq(&RelativeStartBound::InfinitePast)
     );
 }
 
 #[test]
 fn relative_end_bound_finite_relative_start_bound_finite_different_times_eq() {
     assert!(
-        !RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(1)))
-            .eq(&RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(2)))),
+        !RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(1))).eq(&RelativeStartBound::Finite(
+            RelativeFiniteBound::new(Duration::hours(2))
+        )),
     );
 }
 
@@ -514,10 +519,10 @@ fn relative_end_bound_finite_relative_start_bound_finite_equal_times_exclusive_b
             Duration::hours(1),
             BoundInclusivity::Exclusive,
         ))
-            .eq(&RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                Duration::hours(1),
-                BoundInclusivity::Exclusive,
-            )))
+        .eq(&RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+            Duration::hours(1),
+            BoundInclusivity::Exclusive,
+        )))
     );
 }
 
@@ -528,10 +533,10 @@ fn relative_end_bound_finite_relative_start_bound_finite_equal_times_exclusive_i
             Duration::hours(1),
             BoundInclusivity::Exclusive,
         ))
-            .eq(&RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                Duration::hours(1),
-                BoundInclusivity::Inclusive,
-            )))
+        .eq(&RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+            Duration::hours(1),
+            BoundInclusivity::Inclusive,
+        )))
     );
 }
 
@@ -542,10 +547,10 @@ fn relative_end_bound_finite_relative_start_bound_finite_equal_times_inclusive_e
             Duration::hours(1),
             BoundInclusivity::Inclusive,
         ))
-            .eq(&RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                Duration::hours(1),
-                BoundInclusivity::Exclusive,
-            )))
+        .eq(&RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+            Duration::hours(1),
+            BoundInclusivity::Exclusive,
+        )))
     );
 }
 
@@ -556,23 +561,25 @@ fn relative_end_bound_finite_relative_start_bound_finite_equal_times_inclusive_b
             Duration::hours(1),
             BoundInclusivity::Inclusive,
         ))
-            .eq(&RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                Duration::hours(1),
-                BoundInclusivity::Inclusive,
-            )))
+        .eq(&RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+            Duration::hours(1),
+            BoundInclusivity::Inclusive,
+        )))
     );
 }
 
 #[test]
 fn relative_end_bound_inf_relative_end_bound_inf_cmp() {
-    assert_eq!(RelativeEndBound::InfiniteFuture.cmp(&RelativeEndBound::InfiniteFuture), Ordering::Equal);
+    assert_eq!(
+        RelativeEndBound::InfiniteFuture.cmp(&RelativeEndBound::InfiniteFuture),
+        Ordering::Equal
+    );
 }
 
 #[test]
 fn relative_end_bound_inf_relative_end_bound_finite_cmp() {
     assert_eq!(
-        RelativeEndBound::InfiniteFuture
-            .cmp(&RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(1)))),
+        RelativeEndBound::InfiniteFuture.cmp(&RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(1)))),
         Ordering::Greater,
     );
 }
@@ -580,8 +587,7 @@ fn relative_end_bound_inf_relative_end_bound_finite_cmp() {
 #[test]
 fn relative_end_bound_finite_relative_end_bound_inf_cmp() {
     assert_eq!(
-        RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(1)))
-            .cmp(&RelativeEndBound::InfiniteFuture),
+        RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(1))).cmp(&RelativeEndBound::InfiniteFuture),
         Ordering::Less,
     );
 }
@@ -611,10 +617,10 @@ fn relative_end_bound_same_times_exclusive_bounds_cmp() {
             Duration::hours(1),
             BoundInclusivity::Exclusive,
         ))
-            .cmp(&RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                Duration::hours(1),
-                BoundInclusivity::Exclusive,
-            ))),
+        .cmp(&RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+            Duration::hours(1),
+            BoundInclusivity::Exclusive,
+        ))),
         Ordering::Equal,
     );
 }
@@ -626,10 +632,10 @@ fn relative_end_bound_same_times_exclusive_inclusive_bounds_cmp() {
             Duration::hours(1),
             BoundInclusivity::Exclusive,
         ))
-            .cmp(&RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                Duration::hours(1),
-                BoundInclusivity::Inclusive,
-            ))),
+        .cmp(&RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+            Duration::hours(1),
+            BoundInclusivity::Inclusive,
+        ))),
         Ordering::Less,
     );
 }
@@ -641,10 +647,10 @@ fn relative_end_bound_same_times_inclusive_exclusive_bounds_cmp() {
             Duration::hours(1),
             BoundInclusivity::Inclusive,
         ))
-            .cmp(&RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                Duration::hours(1),
-                BoundInclusivity::Exclusive,
-            ))),
+        .cmp(&RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+            Duration::hours(1),
+            BoundInclusivity::Exclusive,
+        ))),
         Ordering::Greater,
     );
 }
@@ -656,10 +662,10 @@ fn relative_end_bound_same_times_inclusive_bounds_cmp() {
             Duration::hours(1),
             BoundInclusivity::Inclusive,
         ))
-            .cmp(&RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                Duration::hours(1),
-                BoundInclusivity::Inclusive,
-            ))),
+        .cmp(&RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+            Duration::hours(1),
+            BoundInclusivity::Inclusive,
+        ))),
         Ordering::Equal,
     );
 }
@@ -675,8 +681,9 @@ fn relative_end_bound_inf_relative_start_bound_inf_partial_cmp() {
 #[test]
 fn relative_end_bound_inf_relative_start_bound_finite_partial_cmp() {
     assert_eq!(
-        RelativeEndBound::InfiniteFuture
-            .partial_cmp(&RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(1)))),
+        RelativeEndBound::InfiniteFuture.partial_cmp(&RelativeStartBound::Finite(RelativeFiniteBound::new(
+            Duration::hours(1)
+        ))),
         Some(Ordering::Greater),
     );
 }
@@ -693,8 +700,9 @@ fn relative_end_bound_finite_relative_start_bound_inf_partial_cmp() {
 #[test]
 fn relative_end_bound_relative_start_bound_different_times_partial_cmp_greater() {
     assert_eq!(
-        RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(2)))
-            .partial_cmp(&RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(1)))),
+        RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(2))).partial_cmp(
+            &RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(1)))
+        ),
         Some(Ordering::Greater),
     );
 }
@@ -702,8 +710,9 @@ fn relative_end_bound_relative_start_bound_different_times_partial_cmp_greater()
 #[test]
 fn relative_end_bound_relative_start_bound_different_times_partial_cmp_less() {
     assert_eq!(
-        RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(1)))
-            .partial_cmp(&RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(2)))),
+        RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(1))).partial_cmp(
+            &RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(2)))
+        ),
         Some(Ordering::Less),
     );
 }
@@ -715,10 +724,10 @@ fn relative_end_bound_relative_start_bound_same_times_exclusive_bounds_partial_c
             Duration::hours(1),
             BoundInclusivity::Exclusive,
         ))
-            .partial_cmp(&RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                Duration::hours(1),
-                BoundInclusivity::Exclusive,
-            ))),
+        .partial_cmp(&RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+            Duration::hours(1),
+            BoundInclusivity::Exclusive,
+        ))),
         None,
     );
 }
@@ -730,10 +739,10 @@ fn relative_end_bound_relative_start_bound_same_times_exclusive_inclusive_bounds
             Duration::hours(1),
             BoundInclusivity::Exclusive,
         ))
-            .partial_cmp(&RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                Duration::hours(1),
-                BoundInclusivity::Inclusive,
-            ))),
+        .partial_cmp(&RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+            Duration::hours(1),
+            BoundInclusivity::Inclusive,
+        ))),
         None,
     );
 }
@@ -745,10 +754,10 @@ fn relative_end_bound_relative_start_bound_same_times_inclusive_exclusive_bounds
             Duration::hours(1),
             BoundInclusivity::Inclusive,
         ))
-            .partial_cmp(&RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                Duration::hours(1),
-                BoundInclusivity::Exclusive,
-            ))),
+        .partial_cmp(&RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+            Duration::hours(1),
+            BoundInclusivity::Exclusive,
+        ))),
         None,
     );
 }
@@ -760,10 +769,10 @@ fn relative_end_bound_relative_start_bound_same_times_inclusive_bounds_partial_c
             Duration::hours(1),
             BoundInclusivity::Inclusive,
         ))
-            .partial_cmp(&RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                Duration::hours(1),
-                BoundInclusivity::Inclusive,
-            ))),
+        .partial_cmp(&RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+            Duration::hours(1),
+            BoundInclusivity::Inclusive,
+        ))),
         Some(Ordering::Equal),
     );
 }
@@ -806,7 +815,10 @@ fn relative_end_bound_from_exclusive_bound() {
 
 #[test]
 fn relative_end_bound_from_unbounded_bound() {
-    assert_eq!(RelativeEndBound::from(Bound::Unbounded), RelativeEndBound::InfiniteFuture);
+    assert_eq!(
+        RelativeEndBound::from(Bound::Unbounded),
+        RelativeEndBound::InfiniteFuture
+    );
 }
 
 #[test]
@@ -830,10 +842,13 @@ fn relative_start_bound_inf_relative_end_bound_finite_swap() {
 
     swap_relative_bounds(&mut start, &mut end);
 
-    assert_eq!(start, RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-        Duration::hours(1),
-        BoundInclusivity::Exclusive,
-    )));
+    assert_eq!(
+        start,
+        RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+            Duration::hours(1),
+            BoundInclusivity::Exclusive,
+        ))
+    );
     assert_eq!(end, RelativeEndBound::InfiniteFuture);
 }
 
@@ -848,10 +863,13 @@ fn relative_start_bound_finite_relative_end_bound_inf_swap() {
     swap_relative_bounds(&mut start, &mut end);
 
     assert_eq!(start, RelativeStartBound::InfinitePast);
-    assert_eq!(end, RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-        Duration::hours(1),
-        BoundInclusivity::Exclusive,
-    )));
+    assert_eq!(
+        end,
+        RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+            Duration::hours(1),
+            BoundInclusivity::Exclusive,
+        ))
+    );
 }
 
 #[test]
@@ -867,14 +885,20 @@ fn relative_start_bound_finite_relative_end_bound_finite_swap() {
 
     swap_relative_bounds(&mut start, &mut end);
 
-    assert_eq!(start, RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-        Duration::hours(2),
-        BoundInclusivity::Inclusive,
-    )));
-    assert_eq!(end, RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-        Duration::hours(1),
-        BoundInclusivity::Exclusive,
-    )));
+    assert_eq!(
+        start,
+        RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+            Duration::hours(2),
+            BoundInclusivity::Inclusive,
+        ))
+    );
+    assert_eq!(
+        end,
+        RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+            Duration::hours(1),
+            BoundInclusivity::Exclusive,
+        ))
+    );
 }
 
 #[test]
@@ -895,8 +919,14 @@ fn relative_bounds_new_should_swap() {
 
     let rel_bounds = RelativeBounds::new(start, end);
 
-    assert_eq!(rel_bounds.rel_start(), RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(1))));
-    assert_eq!(rel_bounds.rel_end(), RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(2))));
+    assert_eq!(
+        rel_bounds.rel_start(),
+        RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(1)))
+    );
+    assert_eq!(
+        rel_bounds.rel_end(),
+        RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(2)))
+    );
 }
 
 #[test]
@@ -912,14 +942,20 @@ fn relative_bounds_new_from_same_times_exclusive_bounds() {
 
     let rel_bounds = RelativeBounds::new(start, end);
 
-    assert_eq!(rel_bounds.rel_start(), RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-        Duration::hours(1),
-        BoundInclusivity::Inclusive,
-    )));
-    assert_eq!(rel_bounds.rel_end(), RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-        Duration::hours(1),
-        BoundInclusivity::Inclusive,
-    )));
+    assert_eq!(
+        rel_bounds.rel_start(),
+        RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+            Duration::hours(1),
+            BoundInclusivity::Inclusive,
+        ))
+    );
+    assert_eq!(
+        rel_bounds.rel_end(),
+        RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+            Duration::hours(1),
+            BoundInclusivity::Inclusive,
+        ))
+    );
 }
 
 #[test]
@@ -935,14 +971,20 @@ fn relative_bounds_new_from_same_times_inclusive_exclusive_bounds() {
 
     let rel_bounds = RelativeBounds::new(start, end);
 
-    assert_eq!(rel_bounds.rel_start(), RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-        Duration::hours(1),
-        BoundInclusivity::Inclusive,
-    )));
-    assert_eq!(rel_bounds.rel_end(), RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-        Duration::hours(1),
-        BoundInclusivity::Inclusive,
-    )));
+    assert_eq!(
+        rel_bounds.rel_start(),
+        RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+            Duration::hours(1),
+            BoundInclusivity::Inclusive,
+        ))
+    );
+    assert_eq!(
+        rel_bounds.rel_end(),
+        RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+            Duration::hours(1),
+            BoundInclusivity::Inclusive,
+        ))
+    );
 }
 
 #[test]
@@ -958,14 +1000,20 @@ fn relative_bounds_new_from_same_times_exclusive_inclusive_bounds() {
 
     let rel_bounds = RelativeBounds::new(start, end);
 
-    assert_eq!(rel_bounds.rel_start(), RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-        Duration::hours(1),
-        BoundInclusivity::Inclusive,
-    )));
-    assert_eq!(rel_bounds.rel_end(), RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-        Duration::hours(1),
-        BoundInclusivity::Inclusive,
-    )));
+    assert_eq!(
+        rel_bounds.rel_start(),
+        RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+            Duration::hours(1),
+            BoundInclusivity::Inclusive,
+        ))
+    );
+    assert_eq!(
+        rel_bounds.rel_end(),
+        RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+            Duration::hours(1),
+            BoundInclusivity::Inclusive,
+        ))
+    );
 }
 
 #[test]
@@ -981,14 +1029,20 @@ fn relative_bounds_new_from_same_times_inclusive_bounds() {
 
     let rel_bounds = RelativeBounds::new(start, end);
 
-    assert_eq!(rel_bounds.rel_start(), RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-        Duration::hours(1),
-        BoundInclusivity::Inclusive,
-    )));
-    assert_eq!(rel_bounds.rel_end(), RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-        Duration::hours(1),
-        BoundInclusivity::Inclusive,
-    )));
+    assert_eq!(
+        rel_bounds.rel_start(),
+        RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+            Duration::hours(1),
+            BoundInclusivity::Inclusive,
+        ))
+    );
+    assert_eq!(
+        rel_bounds.rel_end(),
+        RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+            Duration::hours(1),
+            BoundInclusivity::Inclusive,
+        ))
+    );
 }
 
 #[test]
@@ -1395,7 +1449,7 @@ fn emptiable_relative_bounds_from_relative_bounds() {
 #[test]
 fn closed_relative_interval_new() {
     let interval = ClosedRelativeInterval::new(Duration::hours(1), Duration::hours(2));
-    
+
     assert_eq!(interval.offset(), Duration::hours(1));
     assert_eq!(interval.length(), Duration::hours(2));
     assert_eq!(interval.from_inclusivity(), BoundInclusivity::Inclusive);
@@ -1410,7 +1464,7 @@ fn closed_relative_interval_new_with_inclusivity() {
         Duration::hours(2),
         BoundInclusivity::Inclusive,
     );
-    
+
     assert_eq!(interval.offset(), Duration::hours(1));
     assert_eq!(interval.length(), Duration::hours(2));
     assert_eq!(interval.from_inclusivity(), BoundInclusivity::Exclusive);
@@ -1517,10 +1571,7 @@ fn closed_relative_interval_from_pair_of_datetime_inclusivity_pairs() {
 #[test]
 fn closed_relative_interval_from_pair_of_datetime_bool_pairs() {
     assert_eq!(
-        ClosedRelativeInterval::from((
-            (Duration::hours(2), false),
-            (Duration::hours(1), true),
-        )),
+        ClosedRelativeInterval::from(((Duration::hours(2), false), (Duration::hours(1), true),)),
         ClosedRelativeInterval::new_with_inclusivity(
             Duration::hours(2),
             BoundInclusivity::Exclusive,
@@ -1605,10 +1656,7 @@ fn closed_relative_interval_try_from_relative_interval_correct() {
             Duration::hours(1),
             Duration::hours(2),
         ))),
-        Ok(ClosedRelativeInterval::new(
-            Duration::hours(1),
-            Duration::hours(2),
-        )),
+        Ok(ClosedRelativeInterval::new(Duration::hours(1), Duration::hours(2),)),
     );
 }
 
@@ -1663,11 +1711,14 @@ fn half_open_relative_interval_set_reference_time() {
 
     interval.set_offset(Duration::hours(2));
 
-    assert_eq!(interval, HalfOpenRelativeInterval::new_with_inclusivity(
-        Duration::hours(2),
-        BoundInclusivity::Exclusive,
-        OpeningDirection::ToFuture,
-    ));
+    assert_eq!(
+        interval,
+        HalfOpenRelativeInterval::new_with_inclusivity(
+            Duration::hours(2),
+            BoundInclusivity::Exclusive,
+            OpeningDirection::ToFuture,
+        )
+    );
 }
 
 #[test]
@@ -1680,11 +1731,14 @@ fn half_open_relative_interval_set_reference_time_inclusivity() {
 
     interval.set_reference_time_inclusivity(BoundInclusivity::Inclusive);
 
-    assert_eq!(interval, HalfOpenRelativeInterval::new_with_inclusivity(
-        Duration::hours(1),
-        BoundInclusivity::Inclusive,
-        OpeningDirection::ToFuture,
-    ));
+    assert_eq!(
+        interval,
+        HalfOpenRelativeInterval::new_with_inclusivity(
+            Duration::hours(1),
+            BoundInclusivity::Inclusive,
+            OpeningDirection::ToFuture,
+        )
+    );
 }
 
 #[test]
@@ -1697,11 +1751,14 @@ fn half_open_relative_interval_set_opening_direction() {
 
     interval.set_opening_direction(OpeningDirection::ToPast);
 
-    assert_eq!(interval, HalfOpenRelativeInterval::new_with_inclusivity(
-        Duration::hours(1),
-        BoundInclusivity::Exclusive,
-        OpeningDirection::ToPast,
-    ));
+    assert_eq!(
+        interval,
+        HalfOpenRelativeInterval::new_with_inclusivity(
+            Duration::hours(1),
+            BoundInclusivity::Exclusive,
+            OpeningDirection::ToPast,
+        )
+    );
 }
 
 #[test]
@@ -1723,9 +1780,10 @@ fn half_open_relative_interval_from_datetime_bool_pair() {
 #[test]
 fn half_open_relative_interval_from_pair_of_datetime_bound_inclusivity_pair_and_opening_direction() {
     assert_eq!(
-        HalfOpenRelativeInterval::from(
-            ((Duration::hours(1), BoundInclusivity::Exclusive), OpeningDirection::ToPast)
-        ),
+        HalfOpenRelativeInterval::from((
+            (Duration::hours(1), BoundInclusivity::Exclusive),
+            OpeningDirection::ToPast
+        )),
         HalfOpenRelativeInterval::new_with_inclusivity(
             Duration::hours(1),
             BoundInclusivity::Exclusive,
@@ -1737,9 +1795,7 @@ fn half_open_relative_interval_from_pair_of_datetime_bound_inclusivity_pair_and_
 #[test]
 fn half_open_relative_interval_from_pair_of_datetime_bool_pair_and_opening_direction() {
     assert_eq!(
-        HalfOpenRelativeInterval::from(
-            ((Duration::hours(1), false), OpeningDirection::ToPast)
-        ),
+        HalfOpenRelativeInterval::from(((Duration::hours(1), false), OpeningDirection::ToPast)),
         HalfOpenRelativeInterval::new_with_inclusivity(
             Duration::hours(1),
             BoundInclusivity::Exclusive,
@@ -1751,9 +1807,7 @@ fn half_open_relative_interval_from_pair_of_datetime_bool_pair_and_opening_direc
 #[test]
 fn half_open_relative_interval_from_pair_of_datetime_bool_pair_and_bool() {
     assert_eq!(
-        HalfOpenRelativeInterval::from(
-            ((Duration::hours(1), false), false)
-        ),
+        HalfOpenRelativeInterval::from(((Duration::hours(1), false), false)),
         HalfOpenRelativeInterval::new_with_inclusivity(
             Duration::hours(1),
             BoundInclusivity::Exclusive,
@@ -1843,11 +1897,13 @@ fn half_open_relative_interval_try_from_relative_bounds_wrong() {
 #[test]
 fn half_open_relative_interval_try_from_relative_interval_correct() {
     assert_eq!(
-        HalfOpenRelativeInterval::try_from(RelativeInterval::HalfOpen(HalfOpenRelativeInterval::new_with_inclusivity(
-            Duration::hours(1),
-            BoundInclusivity::Exclusive,
-            OpeningDirection::ToPast,
-        ))),
+        HalfOpenRelativeInterval::try_from(RelativeInterval::HalfOpen(
+            HalfOpenRelativeInterval::new_with_inclusivity(
+                Duration::hours(1),
+                BoundInclusivity::Exclusive,
+                OpeningDirection::ToPast,
+            )
+        )),
         Ok(HalfOpenRelativeInterval::new_with_inclusivity(
             Duration::hours(1),
             BoundInclusivity::Exclusive,
@@ -1949,10 +2005,7 @@ fn relative_interval_from_opt_datetime_bound_inclusivity_pairs() {
 #[test]
 fn relative_interval_from_opt_datetime_bool_pairs() {
     assert_eq!(
-        RelativeInterval::from((
-            Some((Duration::hours(1), true)),
-            Some((Duration::hours(2), false)),
-        )),
+        RelativeInterval::from((Some((Duration::hours(1), true)), Some((Duration::hours(2), false)),)),
         RelativeInterval::Closed(ClosedRelativeInterval::new_with_inclusivity(
             Duration::hours(1),
             BoundInclusivity::Inclusive,
@@ -1965,11 +2018,7 @@ fn relative_interval_from_opt_datetime_bool_pairs() {
 #[test]
 fn relative_interval_from_bool_and_two_opt_datetime_empty() {
     assert_eq!(
-        <RelativeInterval as From<(bool, Option<Duration>, Option<Duration>)>>::from((
-            true,
-            None,
-            None,
-        )),
+        <RelativeInterval as From<(bool, Option<Duration>, Option<Duration>)>>::from((true, None, None,)),
         RelativeInterval::Empty(EmptyInterval),
     );
 }
@@ -1977,11 +2026,7 @@ fn relative_interval_from_bool_and_two_opt_datetime_empty() {
 #[test]
 fn relative_interval_from_bool_and_two_opt_datetime() {
     assert_eq!(
-        RelativeInterval::from((
-            false,
-            Some(Duration::hours(1)),
-            Some(Duration::hours(2)),
-        )),
+        RelativeInterval::from((false, Some(Duration::hours(1)), Some(Duration::hours(2)),)),
         RelativeInterval::Closed(ClosedRelativeInterval::new(Duration::hours(1), Duration::hours(2))),
     );
 }
@@ -1992,12 +2037,8 @@ fn relative_interval_from_bool_and_two_opt_datetime_bound_inclusivity_empty() {
         <RelativeInterval as From<(
             bool,
             Option<(Duration, BoundInclusivity)>,
-            Option<(Duration, BoundInclusivity)
-        >)>>::from((
-            true,
-            None,
-            None,
-        )),
+            Option<(Duration, BoundInclusivity)>
+        )>>::from((true, None, None,)),
         RelativeInterval::Empty(EmptyInterval),
     );
 }
@@ -2022,14 +2063,8 @@ fn relative_interval_from_bool_and_two_opt_datetime_bound_inclusivity() {
 #[test]
 fn relative_interval_from_bool_and_two_opt_datetime_bool_empty() {
     assert_eq!(
-        <RelativeInterval as From<(
-            bool,
-            Option<(Duration, bool)>,
-            Option<(Duration, bool)
-        >)>>::from((
-            true,
-            None,
-            None,
+        <RelativeInterval as From<(bool, Option<(Duration, bool)>, Option<(Duration, bool)>)>>::from((
+            true, None, None,
         )),
         RelativeInterval::Empty(EmptyInterval),
     );
