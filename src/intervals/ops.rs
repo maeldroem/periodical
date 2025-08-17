@@ -48,3 +48,5 @@ mod fill_gap_tests;
 mod grow_tests;
 #[cfg(test)]
 mod overlap_tests;
+#[cfg(test)]
+mod precision_tests;
