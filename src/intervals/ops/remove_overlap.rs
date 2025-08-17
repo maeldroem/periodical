@@ -36,6 +36,24 @@ impl<T> OverlapRemovalResult<T> {
         matches!(self, Self::Split(..))
     }
 
+    /// Returns the content of the [`Single`](OverlapRemovalResult::Single) variant
+    #[must_use]
+    pub fn single(self) -> Option<T> {
+        match self {
+            Self::Single(s) => Some(s),
+            Self::Split(..) => None,
+        }
+    }
+
+    /// Returns the content of the [`Split`](OverlapRemovalResult::Split) variant
+    #[must_use]
+    pub fn split(self) -> Option<(T, T)> {
+        match self {
+            Self::Single(_) => None,
+            Self::Split(s1, s2) => Some((s1, s2)),
+        }
+    }
+
     /// Maps the contents of the variants
     ///
     /// Uses a closure that describes the transformation from `T` to `U`, used for each element in the enum.
