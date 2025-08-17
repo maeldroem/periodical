@@ -51,7 +51,7 @@ impl TimeContainmentPosition {
     ///
     /// **Careful!** This method discards data about bound inclusivity and cannot be recovered after conversion.
     #[must_use]
-    pub fn disambiguate(self) -> DisambiguatedTimeContainmentPosition {
+    pub fn strip(self) -> DisambiguatedTimeContainmentPosition {
         match self {
             Self::OutsideBefore => DisambiguatedTimeContainmentPosition::OutsideBefore,
             Self::OutsideAfter => DisambiguatedTimeContainmentPosition::OutsideAfter,

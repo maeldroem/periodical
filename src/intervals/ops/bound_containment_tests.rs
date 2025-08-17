@@ -4,26 +4,26 @@ use crate::intervals::ops::bound_overlap_ambiguity::BoundOverlapAmbiguity;
 use super::bound_containment::*;
 
 #[test]
-fn disambiguate_bound_position() {
-    assert_eq!(BoundPosition::OutsideBefore.disambiguate(), DisambiguatedBoundPosition::OutsideBefore);
-    assert_eq!(BoundPosition::OutsideAfter.disambiguate(), DisambiguatedBoundPosition::OutsideAfter);
-    assert_eq!(BoundPosition::Outside.disambiguate(), DisambiguatedBoundPosition::Outside);
-    assert_eq!(BoundPosition::OnStart(None).disambiguate(), DisambiguatedBoundPosition::OnStart);
+fn strip_bound_position() {
+    assert_eq!(BoundPosition::OutsideBefore.strip(), DisambiguatedBoundPosition::OutsideBefore);
+    assert_eq!(BoundPosition::OutsideAfter.strip(), DisambiguatedBoundPosition::OutsideAfter);
+    assert_eq!(BoundPosition::Outside.strip(), DisambiguatedBoundPosition::Outside);
+    assert_eq!(BoundPosition::OnStart(None).strip(), DisambiguatedBoundPosition::OnStart);
     assert_eq!(
         BoundPosition::OnStart(
             Some(BoundOverlapAmbiguity::BothStarts(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive))
-        ).disambiguate(),
+        ).strip(),
         DisambiguatedBoundPosition::OnStart,
     );
-    assert_eq!(BoundPosition::OnEnd(None).disambiguate(), DisambiguatedBoundPosition::OnEnd);
+    assert_eq!(BoundPosition::OnEnd(None).strip(), DisambiguatedBoundPosition::OnEnd);
     assert_eq!(
         BoundPosition::OnEnd(
             Some(BoundOverlapAmbiguity::BothStarts(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive))
-        ).disambiguate(),
+        ).strip(),
         DisambiguatedBoundPosition::OnEnd,
     );
-    assert_eq!(BoundPosition::Equal.disambiguate(), DisambiguatedBoundPosition::Equal);
-    assert_eq!(BoundPosition::Inside.disambiguate(), DisambiguatedBoundPosition::Inside);
+    assert_eq!(BoundPosition::Equal.strip(), DisambiguatedBoundPosition::Equal);
+    assert_eq!(BoundPosition::Inside.strip(), DisambiguatedBoundPosition::Inside);
 }
 
 #[test]

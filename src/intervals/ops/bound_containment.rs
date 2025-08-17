@@ -49,7 +49,7 @@ impl BoundPosition {
     ///
     /// **Careful!** This method discards data about bound inclusivity and cannot be recovered after conversion.
     #[must_use]
-    pub fn disambiguate(self) -> DisambiguatedBoundPosition {
+    pub fn strip(self) -> DisambiguatedBoundPosition {
         match self {
             Self::OutsideBefore => DisambiguatedBoundPosition::OutsideBefore,
             Self::OutsideAfter => DisambiguatedBoundPosition::OutsideAfter,

@@ -124,7 +124,7 @@ impl OverlapPosition {
     ///
     /// **Careful!** This method discards data about bound inclusivity and cannot be recovered after conversion.
     #[must_use]
-    pub fn disambiguate(self) -> DisambiguatedOverlapPosition {
+    pub fn strip(self) -> DisambiguatedOverlapPosition {
         match self {
             OverlapPosition::OutsideBefore => DisambiguatedOverlapPosition::OutsideBefore,
             OverlapPosition::OutsideAfter => DisambiguatedOverlapPosition::OutsideAfter,
