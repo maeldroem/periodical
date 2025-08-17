@@ -41,6 +41,24 @@ impl<T> OverlapOrGapRemovalResult<T> {
         matches!(self, Self::Split(..))
     }
 
+    /// Returns the content of the [`Single`](OverlapOrGapRemovalResult::Single) variant
+    #[must_use]
+    pub fn single(self) -> Option<T> {
+        match self {
+            Self::Single(s) => Some(s),
+            Self::Split(..) => None,
+        }
+    }
+
+    /// Returns the content of the [`Split`](OverlapOrGapRemovalResult::Split) variant
+    #[must_use]
+    pub fn split(self) -> Option<(T, T)> {
+        match self {
+            Self::Single(_) => None,
+            Self::Split(s1, s2) => Some((s1, s2)),
+        }
+    }
+
     /// Maps the contents of the [`Single`](OverlapOrGapRemovalResult::Single)
     /// and [`Split`](OverlapOrGapRemovalResult::Split) variants
     ///
@@ -336,9 +354,35 @@ pub fn remove_overlap_or_gap_abs_bounds(
 
             OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBounds::from(a.grow_start(new_start_bound)))
         },
-        Dop::EndsOnStart | Dop::StartsOnEnd => {
-            // No gaps nor overlaps already
-            OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBounds::from(a.clone()))
+        Dop::EndsOnStart => {
+            let AbsoluteStartBound::Finite(finite_bound) = b.abs_start() else {
+                unreachable!(
+                    "If the start of the compared bounds is `InfinitePast`, \
+                    then it is impossible that the overlap was `EndsOnStart`"
+                );
+            };
+
+            let new_end_bound = AbsoluteEndBound::from(AbsoluteFiniteBound::new_with_inclusivity(
+                finite_bound.time(),
+                finite_bound.inclusivity().opposite(), // So that it fully closes the gap
+            ));
+
+            OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBounds::Bound(a.shrink_end(new_end_bound)))
+        },
+        Dop::StartsOnEnd => {
+            let AbsoluteEndBound::Finite(finite_bound) = b.abs_end() else {
+                unreachable!(
+                    "If the end of the compared bounds is `InfiniteFuture`, \
+                    then it is impossible that the overlap was `StartsOnEnd`"
+                );
+            };
+
+            let new_start_bound = AbsoluteStartBound::from(AbsoluteFiniteBound::new_with_inclusivity(
+                finite_bound.time(),
+                finite_bound.inclusivity().opposite(), // So that it fully closes the gap
+            ));
+
+            OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBounds::Bound(a.shrink_start(new_start_bound)))
         },
         Dop::CrossesStart => {
             let AbsoluteStartBound::Finite(finite_bound) = b.abs_start() else {
@@ -454,9 +498,35 @@ pub fn remove_overlap_or_gap_rel_bounds(
 
             OverlapOrGapRemovalResult::Single(EmptiableRelativeBounds::from(a.grow_start(new_start_bound)))
         },
-        Dop::EndsOnStart | Dop::StartsOnEnd => {
-            // No gaps nor overlaps already
-            OverlapOrGapRemovalResult::Single(EmptiableRelativeBounds::from(a.clone()))
+        Dop::EndsOnStart => {
+            let RelativeStartBound::Finite(finite_bound) = b.rel_start() else {
+                unreachable!(
+                    "If the start of the compared bounds is `InfinitePast`, \
+                    then it is impossible that the overlap was `EndsOnStart`"
+                );
+            };
+
+            let new_end_bound = RelativeEndBound::from(RelativeFiniteBound::new_with_inclusivity(
+                finite_bound.offset(),
+                finite_bound.inclusivity().opposite(), // So that it fully closes the gap
+            ));
+
+            OverlapOrGapRemovalResult::Single(EmptiableRelativeBounds::Bound(a.shrink_end(new_end_bound)))
+        },
+        Dop::StartsOnEnd => {
+            let RelativeEndBound::Finite(finite_bound) = b.rel_end() else {
+                unreachable!(
+                    "If the end of the compared bounds is `InfiniteFuture`, \
+                    then it is impossible that the overlap was `StartsOnEnd`"
+                );
+            };
+
+            let new_start_bound = RelativeStartBound::from(RelativeFiniteBound::new_with_inclusivity(
+                finite_bound.offset(),
+                finite_bound.inclusivity().opposite(), // So that it fully closes the gap
+            ));
+
+            OverlapOrGapRemovalResult::Single(EmptiableRelativeBounds::Bound(a.shrink_start(new_start_bound)))
         },
         Dop::CrossesStart => {
             let RelativeStartBound::Finite(finite_bound) = b.rel_start() else {
