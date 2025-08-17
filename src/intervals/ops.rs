@@ -54,3 +54,5 @@ mod precision_tests;
 mod remove_overlap_or_gap_tests;
 #[cfg(test)]
 mod remove_overlap_tests;
+#[cfg(test)]
+mod set_ops_tests;

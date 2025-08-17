@@ -1,8 +1,9 @@
 use chrono::Utc;
 
-use crate::intervals::absolute::{AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound};
+use crate::intervals::absolute::{
+    AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, EmptiableAbsoluteBounds,
+};
 use crate::intervals::meta::BoundInclusivity;
-use crate::prelude::{AbsoluteBounds, EmptiableAbsoluteBounds};
 use crate::test_utils::date;
 
 use super::remove_overlap::*;
