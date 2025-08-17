@@ -44,3 +44,5 @@ mod cut_tests;
 mod extend_tests;
 #[cfg(test)]
 mod fill_gap_tests;
+#[cfg(test)]
+mod grow_tests;
