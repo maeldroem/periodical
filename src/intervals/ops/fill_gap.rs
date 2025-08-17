@@ -18,6 +18,7 @@ use crate::intervals::{ClosedAbsoluteInterval, ClosedRelativeInterval, RelativeI
 /// Errors that can be produced when using [`GapFillable`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum GapFillError {
+    /// The two given intervals were overlapping
     Overlap,
 }
 
@@ -350,7 +351,7 @@ impl GapFillable<EmptyInterval> for EmptyInterval {
 pub fn fill_gap_abs_bounds(a: &AbsoluteBounds, b: &AbsoluteBounds) -> Result<AbsoluteBounds, GapFillError> {
     type Dop = DisambiguatedOverlapPosition;
 
-    let Ok(overlap_position) = a.disambiguated_overlap_position(b, OverlapRuleSet::default());
+    let Ok(overlap_position) = a.disambiguated_overlap_position(b, OverlapRuleSet::Strict);
 
     match overlap_position {
         Dop::Outside => unreachable!("Only empty intervals can produce `OverlapPosition::Outside`"),
@@ -414,7 +415,7 @@ pub fn fill_gap_emptiable_abs_bounds(
     b: &EmptiableAbsoluteBounds,
 ) -> Result<EmptiableAbsoluteBounds, GapFillError> {
     let EmptiableAbsoluteBounds::Bound(a_abs_bounds) = a else {
-        return Ok(a.clone());
+        return Ok(b.clone());
     };
 
     fill_gap_abs_bounds_with_emptiable_abs_bounds(a_abs_bounds, b).map(EmptiableAbsoluteBounds::from)
@@ -428,7 +429,7 @@ pub fn fill_gap_emptiable_abs_bounds(
 pub fn fill_gap_rel_bounds(a: &RelativeBounds, b: &RelativeBounds) -> Result<RelativeBounds, GapFillError> {
     type Dop = DisambiguatedOverlapPosition;
 
-    let Ok(overlap_position) = a.disambiguated_overlap_position(b, OverlapRuleSet::default());
+    let Ok(overlap_position) = a.disambiguated_overlap_position(b, OverlapRuleSet::Strict);
 
     match overlap_position {
         Dop::Outside => unreachable!("Only empty intervals can produce `OverlapPosition::Outside`"),
@@ -492,7 +493,7 @@ pub fn fill_gap_emptiable_rel_bounds(
     b: &EmptiableRelativeBounds,
 ) -> Result<EmptiableRelativeBounds, GapFillError> {
     let EmptiableRelativeBounds::Bound(a_rel_bounds) = a else {
-        return Ok(a.clone());
+        return Ok(b.clone());
     };
 
     fill_gap_rel_bounds_with_emptiable_rel_bounds(a_rel_bounds, b).map(EmptiableRelativeBounds::from)

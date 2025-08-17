@@ -341,17 +341,17 @@ pub fn overlap_position_disambiguation(
         Op::OutsideBefore => Dop::OutsideBefore,
         Op::OutsideAfter => Dop::OutsideAfter,
         Op::EndsOnStart(ambiguity) => {
-            match ambiguity.disambiguate_using_rule_set(bound_overlap_disambiguation_rule_set) {
-                Dbo::Before => Dop::OutsideBefore,
+            match dbg!(ambiguity.disambiguate_using_rule_set(bound_overlap_disambiguation_rule_set)) {
+                Dbo::Before => Dop::CrossesStart,
                 Dbo::Equal => Dop::EndsOnStart,
-                Dbo::After => Dop::CrossesStart,
+                Dbo::After => Dop::OutsideBefore,
             }
         },
         Op::StartsOnEnd(ambiguity) => {
             match ambiguity.disambiguate_using_rule_set(bound_overlap_disambiguation_rule_set) {
-                Dbo::Before => Dop::CrossesEnd,
+                Dbo::Before => Dop::OutsideAfter,
                 Dbo::Equal => Dop::StartsOnEnd,
-                Dbo::After => Dop::OutsideAfter,
+                Dbo::After => Dop::CrossesEnd,
             }
         },
         Op::CrossesStart => Dop::CrossesStart,
@@ -407,7 +407,7 @@ pub fn overlap_position_disambiguation(
                 Dbo::Equal => Dop::ContainsAndSameEnd,
                 Dbo::After => Dop::CrossesStart,
             }
-        }
+        },
         Op::Contains => Dop::Contains,
     }
 }
