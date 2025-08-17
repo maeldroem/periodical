@@ -341,7 +341,7 @@ pub fn overlap_position_disambiguation(
         Op::OutsideBefore => Dop::OutsideBefore,
         Op::OutsideAfter => Dop::OutsideAfter,
         Op::EndsOnStart(ambiguity) => {
-            match dbg!(ambiguity.disambiguate_using_rule_set(bound_overlap_disambiguation_rule_set)) {
+            match ambiguity.disambiguate_using_rule_set(bound_overlap_disambiguation_rule_set) {
                 Dbo::Before => Dop::CrossesStart,
                 Dbo::Equal => Dop::EndsOnStart,
                 Dbo::After => Dop::OutsideBefore,
