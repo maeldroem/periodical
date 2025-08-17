@@ -221,6 +221,43 @@ pub enum OverlapRuleSet {
     /// ```
     #[default]
     Strict,
+    /// Lenient rule set
+    ///
+    /// Allows interactions that would count as not overlapping (or not overlapping _as much_) under the strict rule set
+    /// but doesn't allow cases where two exclusive bounds of opposite source (start/end) meet. Here's a table to
+    /// illustrate it:
+    ///
+    /// ```txt
+    /// [] = inclusive bounds, () = exclusive bounds
+    ///
+    /// Reference:                [------]
+    /// StartsOnEnd         [-----)      :
+    /// EndsOnStart               :      (-----]
+    /// Equal                     (------]
+    /// Equal                     [------)
+    /// Equal                     (------)
+    /// ContainsAndSameStart      (---]  :
+    /// ContainsAndSameEnd        :  [---)
+    /// InsideAndSameStart        (----------]
+    /// InsideAndSameEnd      [----------)
+    ///
+    /// Reference:                (------)
+    /// StartsOnEnd         [-----]      :
+    /// EndsOnStart               :      [-----]
+    /// Equal                     [------]
+    /// Equal                     (------]
+    /// Equal                     [------)
+    /// ContainsAndSameStart      [---]  :
+    /// ContainsAndSameEnd        :  [---]
+    /// InsideAndSameStart        [---------]
+    /// InsideAndSameEnd       [---------]
+    /// ```
+    Lenient,
+    /// Very lenient rule set
+    ///
+    /// Same as the [lenient rule set](OverlapRuleSet::Lenient), but allows cases where two exclusive bounds of
+    /// opposite source (start/end) meet.
+    VeryLenient,
     /// Continuous to future rule set
     ///
     /// Like the [strict rule set](OverlapRuleSet::Strict), but counts as [`StartsOnEnd`](OverlapPosition::StartsOnEnd)
@@ -269,43 +306,6 @@ pub enum OverlapRuleSet {
     /// OutsideBefore         :      (-----]
     /// ```
     ContinuousToPast,
-    /// Lenient rule set
-    ///
-    /// Allows interactions that would count as not overlapping (or not overlapping _as much_) under the strict rule set
-    /// but doesn't allow cases where two exclusive bounds of opposite source (start/end) meet. Here's a table to
-    /// illustrate it:
-    ///
-    /// ```txt
-    /// [] = inclusive bounds, () = exclusive bounds
-    ///
-    /// Reference:                [------]
-    /// StartsOnEnd         [-----)      :
-    /// EndsOnStart               :      (-----]
-    /// Equal                     (------]
-    /// Equal                     [------)
-    /// Equal                     (------)
-    /// ContainsAndSameStart      (---]  :
-    /// ContainsAndSameEnd        :  [---)
-    /// InsideAndSameStart        (----------]
-    /// InsideAndSameEnd      [----------)
-    ///
-    /// Reference:                (------)
-    /// StartsOnEnd         [-----]      :
-    /// EndsOnStart               :      [-----]
-    /// Equal                     [------]
-    /// Equal                     (------]
-    /// Equal                     [------)
-    /// ContainsAndSameStart      [---]  :
-    /// ContainsAndSameEnd        :  [---]
-    /// InsideAndSameStart        [---------]
-    /// InsideAndSameEnd       [---------]
-    /// ```
-    Lenient,
-    /// Very lenient rule set
-    ///
-    /// Same as the [lenient rule set](OverlapRuleSet::Lenient), but allows cases where two exclusive bounds of
-    /// opposite source (start/end) meet.
-    VeryLenient,
 }
 
 impl OverlapRuleSet {

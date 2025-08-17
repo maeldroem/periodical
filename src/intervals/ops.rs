@@ -46,3 +46,5 @@ mod extend_tests;
 mod fill_gap_tests;
 #[cfg(test)]
 mod grow_tests;
+#[cfg(test)]
+mod overlap_tests;
