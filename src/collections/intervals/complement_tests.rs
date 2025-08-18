@@ -1,9 +1,9 @@
 use chrono::Utc;
 
+use crate::intervals::absolute::{AbsoluteInterval, ClosedAbsoluteInterval, HalfOpenAbsoluteInterval};
 use crate::intervals::meta::{BoundInclusivity, OpeningDirection};
 use crate::intervals::special::{EmptyInterval, OpenInterval};
 use crate::ops::ComplementResult;
-use crate::prelude::{AbsoluteInterval, ClosedAbsoluteInterval, HalfOpenAbsoluteInterval};
 use crate::test_utils::date;
 
 use super::complement::*;

@@ -9,6 +9,8 @@ pub mod united_set;
 
 #[cfg(test)]
 mod complement_tests;
+#[cfg(test)]
+mod precision_tests;
 
 // NOTE: Most of the operations in this file can be MAJORLY IMPROVED in terms of performance
 // Suggestions for improvement:
