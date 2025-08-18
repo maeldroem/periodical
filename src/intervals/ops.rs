@@ -58,3 +58,5 @@ mod remove_overlap_tests;
 mod set_ops_tests;
 #[cfg(test)]
 mod shrink_tests;
+#[cfg(test)]
+mod time_containment_tests;

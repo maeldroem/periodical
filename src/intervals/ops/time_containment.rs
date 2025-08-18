@@ -34,13 +34,13 @@ pub enum TimeContainmentPosition {
     ///
     /// The contained bound inclusivity indicates the bound inclusivity of the start bound.
     ///
-    /// See [`Interval::containment_position`] for more details.
+    /// See [`time_containment_position`](CanPositionTimeContainment::time_containment_position) for more details.
     OnStart(BoundInclusivity),
     /// The given time was found exactly on the end of the time interval
     ///
     /// The contained bound inclusivity indicates the bound inclusivity of the end bound.
     ///
-    /// See [`Interval::containment_position`] for more details.
+    /// See [`time_containment_position`](CanPositionTimeContainment::time_containment_position) for more details.
     OnEnd(BoundInclusivity),
     /// The given time was found within the time interval
     Inside,
