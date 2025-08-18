@@ -5,16 +5,16 @@ use chrono::{DateTime, Utc};
 use crate::intervals::prelude::*;
 
 /// Dispatcher trait for the [`ToAbsoluteIter`] conversion iterator
-pub trait ToAbsoluteIteratorDispatcher: Iterator + Sized {
+pub trait ToAbsoluteIteratorDispatcher: IntoIterator + Sized {
     /// Converts [`RelativeInterval`]s to [`AbsoluteInterval`]s
-    fn to_absolute(self, reference_time: DateTime<Utc>) -> ToAbsoluteIter<Self> {
-        ToAbsoluteIter::new(self, reference_time)
+    fn to_absolute(self, reference_time: DateTime<Utc>) -> ToAbsoluteIter<Self::IntoIter> {
+        ToAbsoluteIter::new(self.into_iter(), reference_time)
     }
 }
 
 impl<I> ToAbsoluteIteratorDispatcher for I
 where
-    I: Iterator,
+    I: IntoIterator,
     I::Item: ToAbsolute,
 {
 }
@@ -54,16 +54,16 @@ where
 }
 
 /// Dispatcher trait for the [`ToRelativeIter`] conversion iterator
-pub trait ToRelativeIteratorDispatcher: Iterator + Sized {
+pub trait ToRelativeIteratorDispatcher: IntoIterator + Sized {
     /// Converts [`AbsoluteInterval`]s to [`RelativeInterval`]s
-    fn to_relative(self, reference_time: DateTime<Utc>) -> ToRelativeIter<Self> {
-        ToRelativeIter::new(self, reference_time)
+    fn to_relative(self, reference_time: DateTime<Utc>) -> ToRelativeIter<Self::IntoIter> {
+        ToRelativeIter::new(self.into_iter(), reference_time)
     }
 }
 
 impl<I> ToRelativeIteratorDispatcher for I
 where
-    I: Iterator,
+    I: IntoIterator,
     I::Item: ToRelative,
 {
 }

@@ -4,15 +4,15 @@ use crate::intervals::prelude::*;
 use crate::ops::ComplementResult;
 
 /// Dispatcher trait for the [`ComplementIter`] iterator
-pub trait ComplementIteratorDispatcher: Iterator + Sized {
-    fn complement(self) -> ComplementIter<Self> {
-        ComplementIter::new(self)
+pub trait ComplementIteratorDispatcher: IntoIterator + Sized {
+    fn complement(self) -> ComplementIter<Self::IntoIter> {
+        ComplementIter::new(self.into_iter())
     }
 }
 
 impl<I> ComplementIteratorDispatcher for I
 where
-    I: Iterator,
+    I: IntoIterator,
     I::Item: Complementable,
 {
 }

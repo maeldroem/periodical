@@ -7,14 +7,14 @@ use crate::intervals::prelude::*;
 use crate::ops::SymmetricDifferenceResult;
 
 /// Dispatcher trait for peer symmetrical difference iterators
-pub trait PeerSymmetricDifferenceIteratorDispatcher: Iterator + Sized {
+pub trait PeerSymmetricDifferenceIteratorDispatcher: IntoIterator + Sized {
     /// Symmetrically differentiates peer intervals of the iterator using the default overlap rules
     ///
     /// Processes elements pair by pair and returns the result of the symmetric difference.
     /// If the symmetric difference is successful, it returns all the parts of the differentiated intervals.
     /// If it is unsuccessful, it returns the pair of inspected elements.
-    fn peer_symmetric_difference(self) -> PeerSymmetricDifference<Peekable<Self>> {
-        PeerSymmetricDifference::new(self)
+    fn peer_symmetric_difference(self) -> PeerSymmetricDifference<Peekable<Self::IntoIter>> {
+        PeerSymmetricDifference::new(self.into_iter())
     }
 
     /// Symmetrically differentiates peer intervals of the iterator using the given closure
@@ -22,17 +22,17 @@ pub trait PeerSymmetricDifferenceIteratorDispatcher: Iterator + Sized {
     /// Processes elements pair by pair and returns the result of the symmetric difference.
     /// If the symmetric difference is successful, it returns all the parts of the differentiated intervals.
     /// If it is unsuccessful, it returns the pair of inspected elements.
-    fn peer_symmetric_difference_with<F>(self, f: F) -> PeerSymmetricDifferenceWith<Peekable<Self>, F>
+    fn peer_symmetric_difference_with<F>(self, f: F) -> PeerSymmetricDifferenceWith<Peekable<Self::IntoIter>, F>
     where
         F: FnMut(&Self::Item, &Self::Item) -> SymmetricDifferenceResult<Self::Item>,
     {
-        PeerSymmetricDifferenceWith::new(self, f)
+        PeerSymmetricDifferenceWith::new(self.into_iter(), f)
     }
 }
 
 impl<'a, I, T> PeerSymmetricDifferenceIteratorDispatcher for I
 where
-    I: Iterator<Item = &'a T>,
+    I: IntoIterator<Item = &'a T>,
     T: 'a + SymmetricallyDifferentiable<Output = T> + Clone,
 {
 }
@@ -164,18 +164,18 @@ where
 }
 
 /// Dispatcher trait for difference iterators
-pub trait SymmetricallyDifferentiableIteratorDispatcher: Iterator + Sized {
+pub trait SymmetricallyDifferentiableIteratorDispatcher: IntoIterator + Sized {
     /// Symmetrically differentiates each item with every overlapping element of the given other iterator
     /// using the predefined overlap rules
     ///
     /// ⚠️⏱️ This is suboptimal. It checks every element of the given other iterator against each element of the current
     /// iterator. It is only useful in _some_ cases.
     /// Use [`*UnitedIntervalSet::sym_difference`](crate::collections::intervals::united_set::AbsoluteUnitedIntervalSet::sym_difference) instead.
-    fn symmetric_difference<J>(self, other_iter: J) -> SymmetricDifference<Self, J>
+    fn symmetric_difference<J>(self, other_iter: J) -> SymmetricDifference<Self::IntoIter, J>
     where
         J: IntoIterator + Clone,
     {
-        SymmetricDifference::new(self, other_iter)
+        SymmetricDifference::new(self.into_iter(), other_iter)
     }
 
     /// Symmetrically differentiates each item with every overlapping element of the given other iterator
@@ -184,18 +184,18 @@ pub trait SymmetricallyDifferentiableIteratorDispatcher: Iterator + Sized {
     /// ⚠️⏱️ This is suboptimal. It checks every element of the given other iterator against each element of the current
     /// iterator. It is only useful in _some_ cases.
     /// Use [`*UnitedIntervalSet::sym_difference`](crate::collections::intervals::united_set::AbsoluteUnitedIntervalSet::sym_difference) instead.
-    fn symmetric_difference_with<J, F>(self, other_iter: J, f: F) -> SymmetricDifferenceWith<Self, J, F>
+    fn symmetric_difference_with<J, F>(self, other_iter: J, f: F) -> SymmetricDifferenceWith<Self::IntoIter, J, F>
     where
         J: IntoIterator + Clone,
         F: FnMut(&Self::Item, J::Item) -> SymmetricDifferenceResult<Self::Item>,
     {
-        SymmetricDifferenceWith::new(self, other_iter, f)
+        SymmetricDifferenceWith::new(self.into_iter(), other_iter, f)
     }
 }
 
 impl<'a, I, T> SymmetricallyDifferentiableIteratorDispatcher for I
 where
-    I: Iterator<Item = &'a T>,
+    I: IntoIterator<Item = &'a T>,
     T: 'a + Interval + Clone, // SymmetricallyDifferentiable<O, Output = I::Item>,
 {
 }

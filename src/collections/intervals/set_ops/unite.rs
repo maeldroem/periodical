@@ -7,24 +7,24 @@ use crate::intervals::prelude::*;
 use crate::ops::UnionResult;
 
 /// Dispatcher trait for accumulative union iterators
-pub trait AccumulativelyUnitableIteratorDispatcher: Iterator + Sized {
+pub trait AccumulativelyUnitableIteratorDispatcher: IntoIterator + Sized {
     /// Accumulatively unites intervals of the iterator using the default overlap rules
-    fn acc_union(self) -> AccumulativeUnion<Peekable<Self>> {
-        AccumulativeUnion::new(self)
+    fn acc_union(self) -> AccumulativeUnion<Peekable<Self::IntoIter>> {
+        AccumulativeUnion::new(self.into_iter())
     }
 
     /// Accumulatively unites intervals of the iterator using the given closure
-    fn acc_union_with<F>(self, f: F) -> AccumulativeUnionWith<Peekable<Self>, F>
+    fn acc_union_with<F>(self, f: F) -> AccumulativeUnionWith<Peekable<Self::IntoIter>, F>
     where
         F: FnMut(&Self::Item, &Self::Item) -> UnionResult<Self::Item>,
     {
-        AccumulativeUnionWith::new(self, f)
+        AccumulativeUnionWith::new(self.into_iter(), f)
     }
 }
 
 impl<'a, I, T> AccumulativelyUnitableIteratorDispatcher for I
 where
-    I: Iterator<Item = &'a T>,
+    I: IntoIterator<Item = &'a T>,
     T: 'a + Unitable<Output = T> + Clone,
 {
 }
@@ -158,30 +158,30 @@ where
 }
 
 /// Dispatcher trait for peer union iterators
-pub trait PeerUnitableIteratorDispatcher: Iterator + Sized {
+pub trait PeerUnitableIteratorDispatcher: IntoIterator + Sized {
     /// Unites peer intervals of the iterator using the default overlap rules
     ///
     /// Processes elements pair by pair and returns the result of the union. If the union is successful,
     /// it returns the united interval. If it is unsuccessful, it returns the current element.
-    fn peer_union(self) -> PeerUnion<Peekable<Self>> {
-        PeerUnion::new(self)
+    fn peer_union(self) -> PeerUnion<Peekable<Self::IntoIter>> {
+        PeerUnion::new(self.into_iter())
     }
 
     /// Unites peer intervals of the iterator using the given closure
     ///
     /// Processes elements pair by pair and returns the result of the union. If the union is successful,
     /// it returns the united interval. If it is unsuccessful, it returns the current element.
-    fn peer_union_with<F>(self, f: F) -> PeerUnionWith<Peekable<Self>, F>
+    fn peer_union_with<F>(self, f: F) -> PeerUnionWith<Peekable<Self::IntoIter>, F>
     where
         F: FnMut(&Self::Item, &Self::Item) -> UnionResult<Self::Item>,
     {
-        PeerUnionWith::new(self, f)
+        PeerUnionWith::new(self.into_iter(), f)
     }
 }
 
 impl<'a, I, T> PeerUnitableIteratorDispatcher for I
 where
-    I: Iterator<Item = &'a T>,
+    I: IntoIterator<Item = &'a T>,
     T: 'a + Unitable<Output = T> + Clone,
 {
 }
@@ -307,17 +307,17 @@ where
 }
 
 /// Dispatcher trait for union iterators
-pub trait UnitableIteratorDispatcher: Iterator + Sized {
+pub trait UnitableIteratorDispatcher: IntoIterator + Sized {
     /// Unites each item with every overlapping element of the given other iterator using the predefined overlap rules
     ///
     /// ⚠️⏱️ This is suboptimal. It checks every element of the given other iterator against each element of the current
     /// iterator. It is only useful in _some_ cases.
     /// Use [`*UnitedIntervalSet`](crate::collections::intervals::united_set)s instead.
-    fn union<J>(self, other_iter: J) -> Union<Self, J>
+    fn union<J>(self, other_iter: J) -> Union<Self::IntoIter, J>
     where
         J: IntoIterator + Clone,
     {
-        Union::new(self, other_iter)
+        Union::new(self.into_iter(), other_iter)
     }
 
     /// Unites each item with every overlapping element of the given other iterator using the given closure
@@ -325,18 +325,18 @@ pub trait UnitableIteratorDispatcher: Iterator + Sized {
     /// ⚠️⏱️ This is suboptimal. It checks every element of the given other iterator against each element of the current
     /// iterator. It is only useful in _some_ cases.
     /// Use [`*UnitedIntervalSet`](crate::collections::intervals::united_set) instead.
-    fn union_with<J, F>(self, other_iter: J, f: F) -> UnionWith<Self, J, F>
+    fn union_with<J, F>(self, other_iter: J, f: F) -> UnionWith<Self::IntoIter, J, F>
     where
         J: IntoIterator + Clone,
         F: FnMut(&Self::Item, J::Item) -> UnionResult<Self::Item>,
     {
-        UnionWith::new(self, other_iter, f)
+        UnionWith::new(self.into_iter(), other_iter, f)
     }
 }
 
 impl<'a, I, T> UnitableIteratorDispatcher for I
 where
-    I: Iterator<Item = &'a T>,
+    I: IntoIterator<Item = &'a T>,
     T: 'a + Interval + Clone, // + Unitable<O, Output = T>
 {
 }

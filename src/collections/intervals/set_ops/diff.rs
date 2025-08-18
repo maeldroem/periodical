@@ -7,30 +7,30 @@ use crate::intervals::prelude::*;
 use crate::ops::DifferenceResult;
 
 /// Dispatcher trait for peer difference iterators
-pub trait PeerDifferenceIteratorDispatcher: Iterator + Sized {
+pub trait PeerDifferenceIteratorDispatcher: IntoIterator + Sized {
     /// Differentiates peer intervals of the iterator using the default overlap rules
     ///
     /// Processes elements pair by pair and returns the result of the difference. If the difference is successful,
     /// it returns the differentiated interval. If it is unsuccessful, it returns the current element.
-    fn peer_difference(self) -> PeerDifference<Peekable<Self>> {
-        PeerDifference::new(self)
+    fn peer_difference(self) -> PeerDifference<Peekable<Self::IntoIter>> {
+        PeerDifference::new(self.into_iter())
     }
 
     /// Differentiates peer intervals of the iterator using the given closure
     ///
     /// Processes elements pair by pair and returns the result of the difference. If the difference is successful,
     /// it returns the differentiated interval. If it is unsuccessful, it returns the current element.
-    fn peer_difference_with<F>(self, f: F) -> PeerDifferenceWith<Peekable<Self>, F>
+    fn peer_difference_with<F>(self, f: F) -> PeerDifferenceWith<Peekable<Self::IntoIter>, F>
     where
         F: FnMut(&Self::Item, &Self::Item) -> DifferenceResult<Self::Item>,
     {
-        PeerDifferenceWith::new(self, f)
+        PeerDifferenceWith::new(self.into_iter(), f)
     }
 }
 
 impl<'a, I, T> PeerDifferenceIteratorDispatcher for I
 where
-    I: Iterator<Item = &'a T>,
+    I: IntoIterator<Item = &'a T>,
     T: 'a + Differentiable<Output = T> + Clone,
 {
 }
@@ -162,18 +162,18 @@ where
 }
 
 /// Dispatcher trait for difference iterators
-pub trait DifferentiableIteratorDispatcher: Iterator + Sized {
+pub trait DifferentiableIteratorDispatcher: IntoIterator + Sized {
     /// Differentiates each item with every overlapping element of the given other iterator
     /// using the predefined overlap rules
     ///
     /// ⚠️⏱️ This is suboptimal. It checks every element of the given other iterator against each element of the current
     /// iterator. It is only useful in _some_ cases.
     /// Use [`*UnitedIntervalSet::difference`](crate::collections::intervals::united_set::AbsoluteUnitedIntervalSet::difference) instead.
-    fn difference<J>(self, other_iter: J) -> Difference<Self, J>
+    fn difference<J>(self, other_iter: J) -> Difference<Self::IntoIter, J>
     where
         J: IntoIterator + Clone,
     {
-        Difference::new(self, other_iter)
+        Difference::new(self.into_iter(), other_iter)
     }
 
     /// Differentiates each item with every overlapping element of the given other iterator using the given closure
@@ -181,18 +181,18 @@ pub trait DifferentiableIteratorDispatcher: Iterator + Sized {
     /// ⚠️⏱️ This is suboptimal. It checks every element of the given other iterator against each element of the current
     /// iterator. It is only useful in _some_ cases.
     /// Use [`*UnitedIntervalSet::difference`](crate::collections::intervals::united_set::AbsoluteUnitedIntervalSet::difference) instead.
-    fn difference_with<J, F>(self, other_iter: J, f: F) -> DifferenceWith<Self, J, F>
+    fn difference_with<J, F>(self, other_iter: J, f: F) -> DifferenceWith<Self::IntoIter, J, F>
     where
         J: IntoIterator + Clone,
         F: FnMut(&Self::Item, J::Item) -> DifferenceResult<Self::Item>,
     {
-        DifferenceWith::new(self, other_iter, f)
+        DifferenceWith::new(self.into_iter(), other_iter, f)
     }
 }
 
 impl<'a, I, T> DifferentiableIteratorDispatcher for I
 where
-    I: Iterator<Item = &'a T>,
+    I: IntoIterator<Item = &'a T>,
     T: 'a + Interval + Clone, // Differentiable<O, Output = I::Item>,
 {
 }

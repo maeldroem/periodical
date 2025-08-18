@@ -7,30 +7,30 @@ use crate::intervals::prelude::*;
 use crate::ops::IntersectionResult;
 
 /// Dispatcher trait for peer intersection iterators
-pub trait PeerIntersectableIteratorDispatcher: Iterator + Sized {
+pub trait PeerIntersectableIteratorDispatcher: IntoIterator + Sized {
     /// Intersects peer intervals of the iterator using the default overlap rules
     ///
     /// Processes elements pair by pair and returns the result of the intersection. If the intersection is successful,
     /// it returns the intersected interval. If it is unsuccessful, it returns the current element.
-    fn peer_intersection(self) -> PeerIntersection<Peekable<Self>> {
-        PeerIntersection::new(self)
+    fn peer_intersection(self) -> PeerIntersection<Peekable<Self::IntoIter>> {
+        PeerIntersection::new(self.into_iter())
     }
 
     /// Intersects peer intervals of the iterator using the given closure
     ///
     /// Processes elements pair by pair and returns the result of the intersection. If the intersection is successful,
     /// it returns the intersected interval. If it is unsuccessful, it returns the current element.
-    fn peer_intersection_with<F>(self, f: F) -> PeerIntersectionWith<Peekable<Self>, F>
+    fn peer_intersection_with<F>(self, f: F) -> PeerIntersectionWith<Peekable<Self::IntoIter>, F>
     where
         F: FnMut(&Self::Item, &Self::Item) -> IntersectionResult<Self::Item>,
     {
-        PeerIntersectionWith::new(self, f)
+        PeerIntersectionWith::new(self.into_iter(), f)
     }
 }
 
 impl<'a, I, T> PeerIntersectableIteratorDispatcher for I
 where
-    I: Iterator<Item = &'a T>,
+    I: IntoIterator<Item = &'a T>,
     T: 'a + Intersectable<Output = T> + Clone,
 {
 }
@@ -156,18 +156,18 @@ where
 }
 
 /// Dispatcher trait for intersection iterators
-pub trait IntersectableIteratorDispatcher: Iterator + Sized {
+pub trait IntersectableIteratorDispatcher: IntoIterator + Sized {
     /// Intersects each item with every overlapping element of the given other iterator
     /// using the predefined overlap rules
     ///
     /// ⚠️⏱️ This is suboptimal. It checks every element of the given other iterator against each element of the current
     /// iterator. It is only useful in _some_ cases.
     /// Use [`*UnitedIntervalSet::intersect`](crate::collections::intervals::united_set::AbsoluteUnitedIntervalSet::intersect) instead.
-    fn intersection<J>(self, other_iter: J) -> Intersection<Self, J>
+    fn intersection<J>(self, other_iter: J) -> Intersection<Self::IntoIter, J>
     where
         J: IntoIterator + Clone,
     {
-        Intersection::new(self, other_iter)
+        Intersection::new(self.into_iter(), other_iter)
     }
 
     /// Intersects each item with every overlapping element of the given other iterator using the given closure
@@ -175,18 +175,18 @@ pub trait IntersectableIteratorDispatcher: Iterator + Sized {
     /// ⚠️⏱️ This is suboptimal. It checks every element of the given other iterator against each element of the current
     /// iterator. It is only useful in _some_ cases.
     /// Use [`*UnitedIntervalSet::intersect`](crate::collections::intervals::united_set::AbsoluteUnitedIntervalSet::intersect) instead.
-    fn intersection_with<J, F>(self, other_iter: J, f: F) -> IntersectionWith<Self, J, F>
+    fn intersection_with<J, F>(self, other_iter: J, f: F) -> IntersectionWith<Self::IntoIter, J, F>
     where
         J: IntoIterator + Clone,
         F: FnMut(&Self::Item, J::Item) -> IntersectionResult<Self::Item>,
     {
-        IntersectionWith::new(self, other_iter, f)
+        IntersectionWith::new(self.into_iter(), other_iter, f)
     }
 }
 
 impl<'a, I, T> IntersectableIteratorDispatcher for I
 where
-    I: Iterator<Item = &'a T>,
+    I: IntoIterator<Item = &'a T>,
     T: 'a + Interval + Clone, // Intersectable<O, Output = I::Item>,
 {
 }
