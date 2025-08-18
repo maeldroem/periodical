@@ -6,7 +6,6 @@ use crate::intervals::absolute::{
     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, EmptiableAbsoluteBounds,
 };
 use crate::intervals::meta::BoundInclusivity;
-use crate::intervals::prelude::BoundOverlapAmbiguity;
 use crate::test_utils::date;
 
 #[test]
@@ -372,5 +371,139 @@ fn time_containment_rule_counts_as_contained_deny_on_bounds_false_on_end() {
 fn time_containment_rule_counts_as_contained_deny_on_bounds_false_outside() {
     assert!(
         !TimeContainmentRule::DenyOnBounds.counts_as_contained(false, DisambiguatedTimeContainmentPosition::Outside)
+    );
+}
+
+#[test]
+fn time_containment_time_outside_before() {
+    assert_eq!(
+        AbsoluteBounds::new(
+            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
+            )),
+            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
+            )),
+        )
+        .time_containment_position(date(&Utc, 2025, 1, 1)),
+        Ok(TimeContainmentPosition::OutsideBefore),
+    );
+}
+
+#[test]
+fn time_containment_time_outside_after() {
+    assert_eq!(
+        AbsoluteBounds::new(
+            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
+            )),
+            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
+            )),
+        )
+        .time_containment_position(date(&Utc, 2025, 1, 4)),
+        Ok(TimeContainmentPosition::OutsideAfter),
+    );
+}
+
+#[test]
+fn time_containment_time_outside() {
+    assert_eq!(
+        EmptiableAbsoluteBounds::Empty.time_containment_position(date(&Utc, 2025, 1, 1)),
+        Ok(TimeContainmentPosition::Outside),
+    );
+}
+
+#[test]
+fn time_containment_time_on_start_inclusive() {
+    assert_eq!(
+        AbsoluteBounds::new(
+            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
+            )),
+            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
+            )),
+        )
+        .time_containment_position(date(&Utc, 2025, 1, 2)),
+        Ok(TimeContainmentPosition::OnStart(BoundInclusivity::Inclusive)),
+    );
+}
+
+#[test]
+fn time_containment_time_on_start_exclusive() {
+    assert_eq!(
+        AbsoluteBounds::new(
+            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
+            )),
+            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
+            )),
+        )
+        .time_containment_position(date(&Utc, 2025, 1, 2)),
+        Ok(TimeContainmentPosition::OnStart(BoundInclusivity::Exclusive)),
+    );
+}
+
+#[test]
+fn time_containment_time_on_end_inclusive() {
+    assert_eq!(
+        AbsoluteBounds::new(
+            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
+            )),
+            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
+            )),
+        )
+        .time_containment_position(date(&Utc, 2025, 1, 3)),
+        Ok(TimeContainmentPosition::OnEnd(BoundInclusivity::Inclusive)),
+    );
+}
+
+#[test]
+fn time_containment_time_on_end_exclusive() {
+    assert_eq!(
+        AbsoluteBounds::new(
+            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
+            )),
+            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Exclusive,
+            )),
+        )
+        .time_containment_position(date(&Utc, 2025, 1, 3)),
+        Ok(TimeContainmentPosition::OnEnd(BoundInclusivity::Exclusive)),
+    );
+}
+
+#[test]
+fn time_containment_time_inside() {
+    assert_eq!(
+        AbsoluteBounds::new(
+            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+            )),
+            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
+            )),
+        )
+        .time_containment_position(date(&Utc, 2025, 1, 2)),
+        Ok(TimeContainmentPosition::Inside),
     );
 }
