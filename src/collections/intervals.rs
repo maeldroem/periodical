@@ -7,25 +7,8 @@ pub mod remove_empty;
 pub mod set_ops;
 pub mod united_set;
 
-// TODO: This should contain overlap rules and a function etc. but those should be split into different kinds of Union
-// structures. Also, since by doing that they would become specialized for intervals, the module should be renamed
-// to "interval_set_ops.rs".
-// Moreover, intervals::set_ops_impl should have methods like those in the comparison module to allow simpler and
-// more granular methods for lazy set operations.
-// List draft:
-// - SimpleUnion - would use predetermined rules like the one for simple_overlaps in the comparison mod
-// - Union - would use given rule set and rules to do the uniting
-// - UnionWith - would use a custom function to unite the intervals
-// - SimpleUnionToOne - would use predetermined rules to try and unite the intervals into a single one (if there
-//   are non-overlapping intervals later on, they are ignored and the iterator ends)
-// - UnionToOne - same as above but with given rule set and rules to do the uniting
-// - UnionToOneWith - same principle, but with custom function
-// - Inverse - returns a list of the inverse of the intervals (all the time not covered by the intervals)
-// Do other iterators like those
-// Since that would make them specialized, I think the set operations traits defined in set_ops.rs are not needed
-// or should be rethought. Current opinion: those set operations should be implemented for intervals, schedules, etc.
-// but since they are simple enough, we should just remove them for now, implement the specialized iterators,
-// continue developing the lib until we can rule whether such traits are needed
+#[cfg(test)]
+mod complement_tests;
 
 // NOTE: Most of the operations in this file can be MAJORLY IMPROVED in terms of performance
 // Suggestions for improvement:
