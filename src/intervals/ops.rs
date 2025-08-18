@@ -56,3 +56,5 @@ mod remove_overlap_or_gap_tests;
 mod remove_overlap_tests;
 #[cfg(test)]
 mod set_ops_tests;
+#[cfg(test)]
+mod shrink_tests;
