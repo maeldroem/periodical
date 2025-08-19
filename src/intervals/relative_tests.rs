@@ -3,9 +3,8 @@ use std::ops::Bound;
 
 use chrono::Duration;
 
-use crate::intervals::meta::{BoundInclusivity, OpeningDirection};
+use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity, OpeningDirection};
 use crate::intervals::special::{EmptyInterval, OpenInterval};
-use crate::prelude::HasBoundInclusivity;
 
 use super::relative::*;
 

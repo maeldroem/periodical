@@ -1,9 +1,16 @@
 use chrono::{Duration, Utc};
 
-use crate::intervals::absolute::{AbsoluteEndBound, AbsoluteStartBound};
-use crate::intervals::meta::{Duration as IntervalDuration, Openness, Relativity};
-use crate::intervals::relative::{RelativeEndBound, RelativeStartBound};
-use crate::prelude::*;
+use crate::intervals::absolute::{
+    AbsoluteBounds, AbsoluteEndBound, AbsoluteInterval, AbsoluteStartBound, ClosedAbsoluteInterval,
+    EmptiableAbsoluteBounds, HasAbsoluteBounds, HasEmptiableAbsoluteBounds,
+};
+use crate::intervals::meta::{
+    Duration as IntervalDuration, Emptiable, HasDuration, HasOpenness, HasRelativity, Openness, Relativity,
+};
+use crate::intervals::relative::{
+    ClosedRelativeInterval, EmptiableRelativeBounds, HasEmptiableRelativeBounds, HasRelativeBounds, RelativeBounds,
+    RelativeEndBound, RelativeInterval, RelativeStartBound,
+};
 use crate::test_utils::date;
 
 use super::special::*;

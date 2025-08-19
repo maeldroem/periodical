@@ -1,7 +1,8 @@
 use chrono::{Duration, Utc};
 
+use crate::intervals::absolute::ClosedAbsoluteInterval;
 use crate::intervals::meta::BoundInclusivity;
-use crate::prelude::{ClosedAbsoluteInterval, ClosedRelativeInterval};
+use crate::intervals::relative::ClosedRelativeInterval;
 use crate::test_utils::date;
 
 use super::relativity_conversion::*;
