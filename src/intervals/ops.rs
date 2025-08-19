@@ -51,6 +51,8 @@ mod overlap_tests;
 #[cfg(test)]
 mod precision_tests;
 #[cfg(test)]
+mod relativity_conversion_tests;
+#[cfg(test)]
 mod remove_overlap_or_gap_tests;
 #[cfg(test)]
 mod remove_overlap_tests;

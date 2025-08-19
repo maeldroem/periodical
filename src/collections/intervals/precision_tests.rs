@@ -55,7 +55,9 @@ fn precision_change_iter_from_change_precision_run() {
     ];
 
     assert_eq!(
-        intervals.change_precision(Precision::ToNearest(Duration::minutes(5))).collect::<Vec<_>>(),
+        intervals
+            .change_precision(Precision::ToNearest(Duration::minutes(5)))
+            .collect::<Vec<_>>(),
         vec![
             Ok(AbsoluteInterval::Closed(ClosedAbsoluteInterval::new(
                 datetime(&Utc, 2025, 1, 1, 8, 25, 0),
@@ -83,7 +85,10 @@ fn precision_change_iter_from_change_precision_run_reverse() {
     ];
 
     assert_eq!(
-        intervals.change_precision(Precision::ToNearest(Duration::minutes(5))).rev().collect::<Vec<_>>(),
+        intervals
+            .change_precision(Precision::ToNearest(Duration::minutes(5)))
+            .rev()
+            .collect::<Vec<_>>(),
         vec![
             Ok(AbsoluteInterval::Closed(ClosedAbsoluteInterval::new(
                 datetime(&Utc, 2025, 1, 2, 8, 25, 0),
@@ -111,10 +116,12 @@ fn precision_change_iter_from_change_start_end_precision_run() {
     ];
 
     assert_eq!(
-        intervals.change_start_end_precision(
-            Precision::ToNearest(Duration::minutes(5)),
-            Precision::ToFuture(Duration::minutes(10)),
-        ).collect::<Vec<_>>(),
+        intervals
+            .change_start_end_precision(
+                Precision::ToNearest(Duration::minutes(5)),
+                Precision::ToFuture(Duration::minutes(10)),
+            )
+            .collect::<Vec<_>>(),
         vec![
             Ok(AbsoluteInterval::Closed(ClosedAbsoluteInterval::new(
                 datetime(&Utc, 2025, 1, 1, 8, 25, 0),
@@ -142,10 +149,13 @@ fn precision_change_iter_from_change_start_end_precision_run_reverse() {
     ];
 
     assert_eq!(
-        intervals.change_start_end_precision(
-            Precision::ToNearest(Duration::minutes(5)),
-            Precision::ToFuture(Duration::minutes(10)),
-        ).rev().collect::<Vec<_>>(),
+        intervals
+            .change_start_end_precision(
+                Precision::ToNearest(Duration::minutes(5)),
+                Precision::ToFuture(Duration::minutes(10)),
+            )
+            .rev()
+            .collect::<Vec<_>>(),
         vec![
             Ok(AbsoluteInterval::Closed(ClosedAbsoluteInterval::new(
                 datetime(&Utc, 2025, 1, 2, 8, 25, 0),
