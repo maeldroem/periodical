@@ -13,6 +13,8 @@ mod complement_tests;
 mod precision_tests;
 #[cfg(test)]
 mod relativity_conversion_tests;
+#[cfg(test)]
+mod remove_empty_tests;
 
 // NOTE: Most of the operations in this file can be MAJORLY IMPROVED in terms of performance
 // Suggestions for improvement:

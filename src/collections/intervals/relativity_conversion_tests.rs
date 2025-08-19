@@ -1,8 +1,7 @@
 use chrono::{Duration, Utc};
 
-use crate::intervals::absolute::{AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound};
-use crate::intervals::relative::{RelativeEndBound, RelativeFiniteBound, RelativeStartBound};
-use crate::prelude::{AbsoluteBounds, RelativeBounds};
+use crate::intervals::absolute::{AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound};
+use crate::intervals::relative::{RelativeBounds, RelativeEndBound, RelativeFiniteBound, RelativeStartBound};
 use crate::test_utils::date;
 
 use super::relativity_conversion::*;
