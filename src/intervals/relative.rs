@@ -600,6 +600,21 @@ impl RelativeBounds {
         self.unchecked_set_end(end);
         true
     }
+
+    /// Compares two [`RelativeBounds`], but if they have the same start, order by decreasing length
+    /// 
+    /// Don't rely on this method for checking for equality of start, as it will produce other [`Ordering`]s if their
+    /// length don't match too.
+    #[must_use]
+    pub fn ord_by_start_and_inv_length(&self, other: &Self) -> Ordering {
+        match self.cmp(other) {
+            Ordering::Less => Ordering::Less,
+            Ordering::Equal => {
+                self.end.cmp(&other.end).reverse()
+            },
+            Ordering::Greater => Ordering::Greater,
+        }
+    }
 }
 
 impl Interval for RelativeBounds {}
@@ -659,13 +674,10 @@ impl PartialOrd for RelativeBounds {
 
 impl Ord for RelativeBounds {
     fn cmp(&self, other: &Self) -> Ordering {
-        match self.start.cmp(&other.start) {
-            Ordering::Less => Ordering::Less,
-            // We reverse the ordering so that the larger interval comes first,
-            // allowing better processing for overlap and other things
-            Ordering::Equal => self.end.cmp(&other.end).reverse(),
-            Ordering::Greater => Ordering::Greater,
-        }
+        // using the comparison of self.end and other.end as a way to disambiguate when the two starts are equal
+        // leads to side-effects, like when we store absolute bounds inside a BTreeSet, then if we use `range()`,
+        // one can be considered out of the range when it shouldn't.
+        self.start.cmp(&other.start)
     }
 }
 
@@ -754,6 +766,20 @@ impl EmptiableRelativeBounds {
             EmptiableRelativeBounds::Bound(bound) => Some(bound),
         }
     }
+
+    /// Compares two [`EmptiableRelativeBounds`], but if they have the same start, order by decreasing length
+    /// 
+    /// Don't rely on this method for checking for equality of start, as it will produce other [`Ordering`]s if their
+    /// length don't match too.
+    #[must_use]
+    pub fn ord_by_start_and_inv_length(&self, other: &Self) -> Ordering {
+        match (self, other) {
+            (EmptiableRelativeBounds::Bound(og_rel_bounds), EmptiableRelativeBounds::Bound(other_rel_bounds)) => {
+                og_rel_bounds.ord_by_start_and_inv_length(other_rel_bounds)
+            },
+            _ => self.cmp(other),
+        }
+    }
 }
 
 impl Interval for EmptiableRelativeBounds {}
@@ -805,6 +831,25 @@ impl HasOpenness for EmptiableRelativeBounds {
 impl HasRelativity for EmptiableRelativeBounds {
     fn relativity(&self) -> Relativity {
         Relativity::Relative
+    }
+}
+
+impl PartialOrd for EmptiableRelativeBounds {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for EmptiableRelativeBounds {
+    fn cmp(&self, other: &Self) -> Ordering {
+        match (self, other) {
+            (EmptiableRelativeBounds::Empty, EmptiableRelativeBounds::Empty) => Ordering::Equal,
+            (EmptiableRelativeBounds::Empty, EmptiableRelativeBounds::Bound(_)) => Ordering::Less,
+            (EmptiableRelativeBounds::Bound(_), EmptiableRelativeBounds::Empty) => Ordering::Greater,
+            (EmptiableRelativeBounds::Bound(og_rel_bounds), EmptiableRelativeBounds::Bound(other_rel_bounds)) => {
+                og_rel_bounds.cmp(other_rel_bounds)
+            }
+        }
     }
 }
 
@@ -1382,6 +1427,17 @@ pub enum RelativeInterval {
     Empty(EmptyInterval),
 }
 
+impl RelativeInterval {
+    /// Compares two [`RelativeInterval`]s, but if they have the same start, order by decreasing length
+    /// 
+    /// Don't rely on this method for checking for equality of start, as it will produce other [`Ordering`]s if their
+    /// length don't match too.
+    #[must_use]
+    pub fn ord_by_start_and_inv_length(&self, other: &Self) -> Ordering {
+        self.emptiable_rel_bounds().ord_by_start_and_inv_length(&other.emptiable_rel_bounds())
+    }
+}
+
 impl Interval for RelativeInterval {}
 
 impl HasDuration for RelativeInterval {
@@ -1449,6 +1505,18 @@ impl HasEmptiableRelativeBounds for RelativeInterval {
 impl Emptiable for RelativeInterval {
     fn is_empty(&self) -> bool {
         matches!(self, Self::Empty(_))
+    }
+}
+
+impl PartialOrd for RelativeInterval {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for RelativeInterval {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.emptiable_rel_bounds().cmp(&other.emptiable_rel_bounds())
     }
 }
 

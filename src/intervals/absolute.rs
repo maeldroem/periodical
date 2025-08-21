@@ -564,6 +564,21 @@ impl AbsoluteBounds {
         self.unchecked_set_end(new_end);
         true
     }
+
+    /// Compares two [`AbsoluteBounds`], but if they have the same start, order by decreasing length
+    /// 
+    /// Don't rely on this method for checking for equality of start, as it will produce other [`Ordering`]s if their
+    /// length don't match too.
+    #[must_use]
+    pub fn ord_by_start_and_inv_length(&self, other: &Self) -> Ordering {
+        match self.cmp(other) {
+            Ordering::Less => Ordering::Less,
+            Ordering::Equal => {
+                self.end.cmp(&other.end).reverse()
+            },
+            Ordering::Greater => Ordering::Greater,
+        }
+    }
 }
 
 impl Interval for AbsoluteBounds {}
@@ -618,13 +633,10 @@ impl PartialOrd for AbsoluteBounds {
 
 impl Ord for AbsoluteBounds {
     fn cmp(&self, other: &Self) -> Ordering {
-        match self.start.cmp(&other.start) {
-            Ordering::Less => Ordering::Less,
-            // We reverse the ordering so that the larger interval comes first,
-            // allowing better processing for overlap and other things
-            Ordering::Equal => self.end.cmp(&other.end).reverse(),
-            Ordering::Greater => Ordering::Greater,
-        }
+        // using the comparison of self.end and other.end as a way to disambiguate when the two starts are equal
+        // leads to side-effects, like when we store absolute bounds inside a BTreeSet, then if we use `range()`,
+        // one can be considered out of the range when it shouldn't.
+        self.start.cmp(&other.start)
     }
 }
 
@@ -713,6 +725,20 @@ impl EmptiableAbsoluteBounds {
             EmptiableAbsoluteBounds::Bound(bound) => Some(bound),
         }
     }
+
+    /// Compares two [`EmptiableAbsoluteBounds`], but if they have the same start, order by decreasing length
+    /// 
+    /// Don't rely on this method for checking for equality of start, as it will produce other [`Ordering`]s if their
+    /// length don't match too.
+    #[must_use]
+    pub fn ord_by_start_and_inv_length(&self, other: &Self) -> Ordering {
+        match (self, other) {
+            (EmptiableAbsoluteBounds::Bound(og_abs_bounds), EmptiableAbsoluteBounds::Bound(other_abs_bounds)) => {
+                og_abs_bounds.ord_by_start_and_inv_length(other_abs_bounds)
+            },
+            _ => self.cmp(other),
+        }
+    }
 }
 
 impl Interval for EmptiableAbsoluteBounds {}
@@ -764,6 +790,25 @@ impl HasOpenness for EmptiableAbsoluteBounds {
 impl HasRelativity for EmptiableAbsoluteBounds {
     fn relativity(&self) -> Relativity {
         Relativity::Absolute
+    }
+}
+
+impl PartialOrd for EmptiableAbsoluteBounds {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for EmptiableAbsoluteBounds {
+    fn cmp(&self, other: &Self) -> Ordering {
+        match (self, other) {
+            (EmptiableAbsoluteBounds::Empty, EmptiableAbsoluteBounds::Empty) => Ordering::Equal,
+            (EmptiableAbsoluteBounds::Empty, EmptiableAbsoluteBounds::Bound(_)) => Ordering::Less,
+            (EmptiableAbsoluteBounds::Bound(_), EmptiableAbsoluteBounds::Empty) => Ordering::Greater,
+            (EmptiableAbsoluteBounds::Bound(og_abs_bounds), EmptiableAbsoluteBounds::Bound(other_abs_bounds)) => {
+                og_abs_bounds.cmp(other_abs_bounds)
+            }
+        }
     }
 }
 
@@ -1362,6 +1407,17 @@ pub enum AbsoluteInterval {
     Empty(EmptyInterval),
 }
 
+impl AbsoluteInterval {
+    /// Compares two [`AbsoluteInterval`]s, but if they have the same start, order by decreasing length
+    /// 
+    /// Don't rely on this method for checking for equality of start, as it will produce other [`Ordering`]s if their
+    /// length don't match too.
+    #[must_use]
+    pub fn ord_by_start_and_inv_length(&self, other: &Self) -> Ordering {
+        self.emptiable_abs_bounds().ord_by_start_and_inv_length(&other.emptiable_abs_bounds())
+    }
+}
+
 impl Interval for AbsoluteInterval {}
 
 impl HasDuration for AbsoluteInterval {
@@ -1429,6 +1485,18 @@ impl HasEmptiableAbsoluteBounds for AbsoluteInterval {
 impl Emptiable for AbsoluteInterval {
     fn is_empty(&self) -> bool {
         matches!(self, Self::Empty(_))
+    }
+}
+
+impl PartialOrd for AbsoluteInterval {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for AbsoluteInterval {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.emptiable_abs_bounds().cmp(&other.emptiable_abs_bounds())
     }
 }
 
