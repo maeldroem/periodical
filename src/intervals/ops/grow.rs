@@ -4,13 +4,13 @@ use super::prelude::*;
 
 use crate::intervals::absolute::{
     AbsoluteBounds, AbsoluteEndBound, AbsoluteInterval, AbsoluteStartBound, EmptiableAbsoluteBounds,
-    HalfOpenAbsoluteInterval, HasAbsoluteBounds, HasEmptiableAbsoluteBounds,
+    HalfBoundedAbsoluteInterval, HasAbsoluteBounds, HasEmptiableAbsoluteBounds,
 };
 use crate::intervals::relative::{
-    EmptiableRelativeBounds, HalfOpenRelativeInterval, RelativeBounds, RelativeEndBound, RelativeStartBound,
+    EmptiableRelativeBounds, HalfBoundedRelativeInterval, RelativeBounds, RelativeEndBound, RelativeStartBound,
 };
-use crate::intervals::special::{EmptyInterval, OpenInterval};
-use crate::intervals::{ClosedAbsoluteInterval, ClosedRelativeInterval, RelativeInterval};
+use crate::intervals::special::{EmptyInterval, UnboundedInterval};
+use crate::intervals::{BoundedAbsoluteInterval, BoundedRelativeInterval, RelativeInterval};
 
 /// Capacity to grow an interval's start bound up to a given new start bound
 ///
@@ -88,7 +88,7 @@ impl GrowableEndBound<AbsoluteEndBound> for AbsoluteInterval {
     }
 }
 
-impl GrowableStartBound<AbsoluteStartBound> for ClosedAbsoluteInterval {
+impl GrowableStartBound<AbsoluteStartBound> for BoundedAbsoluteInterval {
     type Output = AbsoluteInterval;
 
     fn grow_start(&self, position: AbsoluteStartBound) -> Self::Output {
@@ -96,7 +96,7 @@ impl GrowableStartBound<AbsoluteStartBound> for ClosedAbsoluteInterval {
     }
 }
 
-impl GrowableEndBound<AbsoluteEndBound> for ClosedAbsoluteInterval {
+impl GrowableEndBound<AbsoluteEndBound> for BoundedAbsoluteInterval {
     type Output = AbsoluteInterval;
 
     fn grow_end(&self, position: AbsoluteEndBound) -> Self::Output {
@@ -104,7 +104,7 @@ impl GrowableEndBound<AbsoluteEndBound> for ClosedAbsoluteInterval {
     }
 }
 
-impl GrowableStartBound<AbsoluteStartBound> for HalfOpenAbsoluteInterval {
+impl GrowableStartBound<AbsoluteStartBound> for HalfBoundedAbsoluteInterval {
     type Output = AbsoluteInterval;
 
     fn grow_start(&self, position: AbsoluteStartBound) -> Self::Output {
@@ -112,7 +112,7 @@ impl GrowableStartBound<AbsoluteStartBound> for HalfOpenAbsoluteInterval {
     }
 }
 
-impl GrowableEndBound<AbsoluteEndBound> for HalfOpenAbsoluteInterval {
+impl GrowableEndBound<AbsoluteEndBound> for HalfBoundedAbsoluteInterval {
     type Output = AbsoluteInterval;
 
     fn grow_end(&self, position: AbsoluteEndBound) -> Self::Output {
@@ -168,7 +168,7 @@ impl GrowableEndBound<RelativeEndBound> for RelativeInterval {
     }
 }
 
-impl GrowableStartBound<RelativeStartBound> for ClosedRelativeInterval {
+impl GrowableStartBound<RelativeStartBound> for BoundedRelativeInterval {
     type Output = RelativeInterval;
 
     fn grow_start(&self, position: RelativeStartBound) -> Self::Output {
@@ -176,7 +176,7 @@ impl GrowableStartBound<RelativeStartBound> for ClosedRelativeInterval {
     }
 }
 
-impl GrowableEndBound<RelativeEndBound> for ClosedRelativeInterval {
+impl GrowableEndBound<RelativeEndBound> for BoundedRelativeInterval {
     type Output = RelativeInterval;
 
     fn grow_end(&self, position: RelativeEndBound) -> Self::Output {
@@ -184,7 +184,7 @@ impl GrowableEndBound<RelativeEndBound> for ClosedRelativeInterval {
     }
 }
 
-impl GrowableStartBound<RelativeStartBound> for HalfOpenRelativeInterval {
+impl GrowableStartBound<RelativeStartBound> for HalfBoundedRelativeInterval {
     type Output = RelativeInterval;
 
     fn grow_start(&self, position: RelativeStartBound) -> Self::Output {
@@ -192,7 +192,7 @@ impl GrowableStartBound<RelativeStartBound> for HalfOpenRelativeInterval {
     }
 }
 
-impl GrowableEndBound<RelativeEndBound> for HalfOpenRelativeInterval {
+impl GrowableEndBound<RelativeEndBound> for HalfBoundedRelativeInterval {
     type Output = RelativeInterval;
 
     fn grow_end(&self, position: RelativeEndBound) -> Self::Output {
@@ -200,32 +200,32 @@ impl GrowableEndBound<RelativeEndBound> for HalfOpenRelativeInterval {
     }
 }
 
-impl GrowableStartBound<AbsoluteStartBound> for OpenInterval {
-    type Output = OpenInterval;
+impl GrowableStartBound<AbsoluteStartBound> for UnboundedInterval {
+    type Output = UnboundedInterval;
 
     fn grow_start(&self, _position: AbsoluteStartBound) -> Self::Output {
         *self
     }
 }
 
-impl GrowableEndBound<AbsoluteEndBound> for OpenInterval {
-    type Output = OpenInterval;
+impl GrowableEndBound<AbsoluteEndBound> for UnboundedInterval {
+    type Output = UnboundedInterval;
 
     fn grow_end(&self, _position: AbsoluteEndBound) -> Self::Output {
         *self
     }
 }
 
-impl GrowableStartBound<RelativeStartBound> for OpenInterval {
-    type Output = OpenInterval;
+impl GrowableStartBound<RelativeStartBound> for UnboundedInterval {
+    type Output = UnboundedInterval;
 
     fn grow_start(&self, _position: RelativeStartBound) -> Self::Output {
         *self
     }
 }
 
-impl GrowableEndBound<RelativeEndBound> for OpenInterval {
-    type Output = OpenInterval;
+impl GrowableEndBound<RelativeEndBound> for UnboundedInterval {
+    type Output = UnboundedInterval;
 
     fn grow_end(&self, _position: RelativeEndBound) -> Self::Output {
         *self

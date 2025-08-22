@@ -4,7 +4,7 @@ use std::ops::Bound;
 use chrono::Duration;
 
 use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity, OpeningDirection};
-use crate::intervals::special::{EmptyInterval, OpenInterval};
+use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 
 use super::relative::*;
 
@@ -1099,7 +1099,7 @@ fn relative_bounds_set_end() {
 }
 
 #[test]
-fn relative_bounds_open_relative_bounds_open_cmp() {
+fn relative_bounds_unbounded_relative_bounds_unbounded_cmp() {
     let a = RelativeBounds::new(RelativeStartBound::InfinitePast, RelativeEndBound::InfiniteFuture);
     let b = RelativeBounds::new(RelativeStartBound::InfinitePast, RelativeEndBound::InfiniteFuture);
 
@@ -1107,7 +1107,7 @@ fn relative_bounds_open_relative_bounds_open_cmp() {
 }
 
 #[test]
-fn relative_bounds_open_relative_bounds_half_open_to_future_cmp() {
+fn relative_bounds_unbounded_relative_bounds_half_bounded_to_future_cmp() {
     let a = RelativeBounds::new(RelativeStartBound::InfinitePast, RelativeEndBound::InfiniteFuture);
     let b = RelativeBounds::new(
         RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(1))),
@@ -1118,19 +1118,18 @@ fn relative_bounds_open_relative_bounds_half_open_to_future_cmp() {
 }
 
 #[test]
-fn relative_bounds_open_relative_bounds_half_open_to_past_cmp() {
+fn relative_bounds_unbounded_relative_bounds_half_bounded_to_past_cmp() {
     let a = RelativeBounds::new(RelativeStartBound::InfinitePast, RelativeEndBound::InfiniteFuture);
     let b = RelativeBounds::new(
         RelativeStartBound::InfinitePast,
         RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(1))),
     );
 
-    // When starting on same point, the larger interval should come first
-    assert_eq!(a.cmp(&b), Ordering::Less);
+    assert_eq!(a.cmp(&b), Ordering::Equal);
 }
 
 #[test]
-fn relative_bounds_open_relative_bounds_closed_cmp() {
+fn relative_bounds_unbounded_relative_bounds_bounded_cmp() {
     let a = RelativeBounds::new(RelativeStartBound::InfinitePast, RelativeEndBound::InfiniteFuture);
     let b = RelativeBounds::new(
         RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(1))),
@@ -1141,7 +1140,7 @@ fn relative_bounds_open_relative_bounds_closed_cmp() {
 }
 
 #[test]
-fn relative_bounds_half_open_to_future_relative_bounds_open_cmp() {
+fn relative_bounds_half_bounded_to_future_relative_bounds_unbounded_cmp() {
     let a = RelativeBounds::new(
         RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(1))),
         RelativeEndBound::InfiniteFuture,
@@ -1152,7 +1151,7 @@ fn relative_bounds_half_open_to_future_relative_bounds_open_cmp() {
 }
 
 #[test]
-fn relative_bounds_half_open_to_future_relative_bounds_to_future_after_first_cmp() {
+fn relative_bounds_half_bounded_to_future_relative_bounds_to_future_after_first_cmp() {
     let a = RelativeBounds::new(
         RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(1))),
         RelativeEndBound::InfiniteFuture,
@@ -1166,7 +1165,7 @@ fn relative_bounds_half_open_to_future_relative_bounds_to_future_after_first_cmp
 }
 
 #[test]
-fn relative_bounds_half_open_to_future_relative_bounds_to_future_before_first_cmp() {
+fn relative_bounds_half_bounded_to_future_relative_bounds_to_future_before_first_cmp() {
     let a = RelativeBounds::new(
         RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(2))),
         RelativeEndBound::InfiniteFuture,
@@ -1180,7 +1179,7 @@ fn relative_bounds_half_open_to_future_relative_bounds_to_future_before_first_cm
 }
 
 #[test]
-fn relative_bounds_half_open_to_future_relative_bounds_to_future_same_time_exclusive_bounds_cmp() {
+fn relative_bounds_half_bounded_to_future_relative_bounds_to_future_same_time_exclusive_bounds_cmp() {
     let a = RelativeBounds::new(
         RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
             Duration::hours(1),
@@ -1200,7 +1199,7 @@ fn relative_bounds_half_open_to_future_relative_bounds_to_future_same_time_exclu
 }
 
 #[test]
-fn relative_bounds_half_open_to_future_relative_bounds_to_future_same_time_exclusive_inclusive_bounds_cmp() {
+fn relative_bounds_half_bounded_to_future_relative_bounds_to_future_same_time_exclusive_inclusive_bounds_cmp() {
     let a = RelativeBounds::new(
         RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
             Duration::hours(1),
@@ -1220,7 +1219,7 @@ fn relative_bounds_half_open_to_future_relative_bounds_to_future_same_time_exclu
 }
 
 #[test]
-fn relative_bounds_half_open_to_future_relative_bounds_to_future_same_time_inclusive_exclusive_bounds_cmp() {
+fn relative_bounds_half_bounded_to_future_relative_bounds_to_future_same_time_inclusive_exclusive_bounds_cmp() {
     let a = RelativeBounds::new(
         RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
             Duration::hours(1),
@@ -1240,7 +1239,7 @@ fn relative_bounds_half_open_to_future_relative_bounds_to_future_same_time_inclu
 }
 
 #[test]
-fn relative_bounds_half_open_to_future_relative_bounds_to_future_same_time_inclusive_bounds_cmp() {
+fn relative_bounds_half_bounded_to_future_relative_bounds_to_future_same_time_inclusive_bounds_cmp() {
     let a = RelativeBounds::new(
         RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
             Duration::hours(1),
@@ -1260,7 +1259,7 @@ fn relative_bounds_half_open_to_future_relative_bounds_to_future_same_time_inclu
 }
 
 #[test]
-fn relative_bounds_half_open_to_future_relative_bounds_to_past_before_first_cmp() {
+fn relative_bounds_half_bounded_to_future_relative_bounds_to_past_before_first_cmp() {
     let a = RelativeBounds::new(
         RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(2))),
         RelativeEndBound::InfiniteFuture,
@@ -1274,7 +1273,7 @@ fn relative_bounds_half_open_to_future_relative_bounds_to_past_before_first_cmp(
 }
 
 #[test]
-fn relative_bounds_half_open_to_future_relative_bounds_to_past_after_first_cmp() {
+fn relative_bounds_half_bounded_to_future_relative_bounds_to_past_after_first_cmp() {
     let a = RelativeBounds::new(
         RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(1))),
         RelativeEndBound::InfiniteFuture,
@@ -1288,7 +1287,7 @@ fn relative_bounds_half_open_to_future_relative_bounds_to_past_after_first_cmp()
 }
 
 #[test]
-fn relative_bounds_half_open_to_future_relative_bounds_to_past_same_time_exclusive_bounds_cmp() {
+fn relative_bounds_half_bounded_to_future_relative_bounds_to_past_same_time_exclusive_bounds_cmp() {
     let a = RelativeBounds::new(
         RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
             Duration::hours(1),
@@ -1308,7 +1307,7 @@ fn relative_bounds_half_open_to_future_relative_bounds_to_past_same_time_exclusi
 }
 
 #[test]
-fn relative_bounds_half_open_to_future_relative_bounds_to_past_same_time_exclusive_inclusive_bounds_cmp() {
+fn relative_bounds_half_bounded_to_future_relative_bounds_to_past_same_time_exclusive_inclusive_bounds_cmp() {
     let a = RelativeBounds::new(
         RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
             Duration::hours(1),
@@ -1328,7 +1327,7 @@ fn relative_bounds_half_open_to_future_relative_bounds_to_past_same_time_exclusi
 }
 
 #[test]
-fn relative_bounds_half_open_to_future_relative_bounds_to_past_same_time_inclusive_exclusive_bounds_cmp() {
+fn relative_bounds_half_bounded_to_future_relative_bounds_to_past_same_time_inclusive_exclusive_bounds_cmp() {
     let a = RelativeBounds::new(
         RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
             Duration::hours(1),
@@ -1348,7 +1347,7 @@ fn relative_bounds_half_open_to_future_relative_bounds_to_past_same_time_inclusi
 }
 
 #[test]
-fn relative_bounds_half_open_to_future_relative_bounds_to_past_same_time_inclusive_bounds_cmp() {
+fn relative_bounds_half_bounded_to_future_relative_bounds_to_past_same_time_inclusive_bounds_cmp() {
     let a = RelativeBounds::new(
         RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
             Duration::hours(1),
@@ -1368,7 +1367,7 @@ fn relative_bounds_half_open_to_future_relative_bounds_to_past_same_time_inclusi
 }
 
 #[test]
-fn relative_bounds_half_open_to_future_relative_bounds_closed_starts_before_first_cmp() {
+fn relative_bounds_half_bounded_to_future_relative_bounds_bounded_starts_before_first_cmp() {
     let a = RelativeBounds::new(
         RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(2))),
         RelativeEndBound::InfiniteFuture,
@@ -1382,7 +1381,7 @@ fn relative_bounds_half_open_to_future_relative_bounds_closed_starts_before_firs
 }
 
 #[test]
-fn relative_bounds_half_open_to_future_relative_bounds_closed_starts_after_first_cmp() {
+fn relative_bounds_half_bounded_to_future_relative_bounds_bounded_starts_after_first_cmp() {
     let a = RelativeBounds::new(
         RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(2))),
         RelativeEndBound::InfiniteFuture,
@@ -1446,8 +1445,8 @@ fn emptiable_relative_bounds_from_relative_bounds() {
 }
 
 #[test]
-fn closed_relative_interval_new() {
-    let interval = ClosedRelativeInterval::new(Duration::hours(1), Duration::hours(2));
+fn bounded_relative_interval_new() {
+    let interval = BoundedRelativeInterval::new(Duration::hours(1), Duration::hours(2));
 
     assert_eq!(interval.offset(), Duration::hours(1));
     assert_eq!(interval.length(), Duration::hours(2));
@@ -1456,8 +1455,8 @@ fn closed_relative_interval_new() {
 }
 
 #[test]
-fn closed_relative_interval_new_with_inclusivity() {
-    let interval = ClosedRelativeInterval::new_with_inclusivity(
+fn bounded_relative_interval_new_with_inclusivity() {
+    let interval = BoundedRelativeInterval::new_with_inclusivity(
         Duration::hours(1),
         BoundInclusivity::Exclusive,
         Duration::hours(2),
@@ -1471,8 +1470,8 @@ fn closed_relative_interval_new_with_inclusivity() {
 }
 
 #[test]
-fn closed_relative_set_offset() {
-    let mut interval = ClosedRelativeInterval::new_with_inclusivity(
+fn bounded_relative_set_offset() {
+    let mut interval = BoundedRelativeInterval::new_with_inclusivity(
         Duration::hours(1),
         BoundInclusivity::Exclusive,
         Duration::hours(2),
@@ -1488,8 +1487,8 @@ fn closed_relative_set_offset() {
 }
 
 #[test]
-fn closed_relative_set_length() {
-    let mut interval = ClosedRelativeInterval::new_with_inclusivity(
+fn bounded_relative_set_length() {
+    let mut interval = BoundedRelativeInterval::new_with_inclusivity(
         Duration::hours(2),
         BoundInclusivity::Exclusive,
         Duration::hours(3),
@@ -1505,8 +1504,8 @@ fn closed_relative_set_length() {
 }
 
 #[test]
-fn closed_relative_set_from_inclusivity() {
-    let mut interval = ClosedRelativeInterval::new_with_inclusivity(
+fn bounded_relative_set_from_inclusivity() {
+    let mut interval = BoundedRelativeInterval::new_with_inclusivity(
         Duration::hours(1),
         BoundInclusivity::Exclusive,
         Duration::hours(2),
@@ -1522,8 +1521,8 @@ fn closed_relative_set_from_inclusivity() {
 }
 
 #[test]
-fn closed_relative_set_to_inclusivity() {
-    let mut interval = ClosedRelativeInterval::new_with_inclusivity(
+fn bounded_relative_set_to_inclusivity() {
+    let mut interval = BoundedRelativeInterval::new_with_inclusivity(
         Duration::hours(2),
         BoundInclusivity::Exclusive,
         Duration::hours(3),
@@ -1539,10 +1538,10 @@ fn closed_relative_set_to_inclusivity() {
 }
 
 #[test]
-fn closed_relative_interval_from_datetime_pair() {
+fn bounded_relative_interval_from_datetime_pair() {
     assert_eq!(
-        ClosedRelativeInterval::from((Duration::hours(2), Duration::hours(1))),
-        ClosedRelativeInterval::new_with_inclusivity(
+        BoundedRelativeInterval::from((Duration::hours(2), Duration::hours(1))),
+        BoundedRelativeInterval::new_with_inclusivity(
             Duration::hours(2),
             BoundInclusivity::Inclusive,
             Duration::hours(1),
@@ -1552,13 +1551,13 @@ fn closed_relative_interval_from_datetime_pair() {
 }
 
 #[test]
-fn closed_relative_interval_from_pair_of_datetime_inclusivity_pairs() {
+fn bounded_relative_interval_from_pair_of_datetime_inclusivity_pairs() {
     assert_eq!(
-        ClosedRelativeInterval::from((
+        BoundedRelativeInterval::from((
             (Duration::hours(2), BoundInclusivity::Exclusive),
             (Duration::hours(1), BoundInclusivity::Inclusive),
         )),
-        ClosedRelativeInterval::new_with_inclusivity(
+        BoundedRelativeInterval::new_with_inclusivity(
             Duration::hours(2),
             BoundInclusivity::Exclusive,
             Duration::hours(1),
@@ -1568,10 +1567,10 @@ fn closed_relative_interval_from_pair_of_datetime_inclusivity_pairs() {
 }
 
 #[test]
-fn closed_relative_interval_from_pair_of_datetime_bool_pairs() {
+fn bounded_relative_interval_from_pair_of_datetime_bool_pairs() {
     assert_eq!(
-        ClosedRelativeInterval::from(((Duration::hours(2), false), (Duration::hours(1), true),)),
-        ClosedRelativeInterval::new_with_inclusivity(
+        BoundedRelativeInterval::from(((Duration::hours(2), false), (Duration::hours(1), true),)),
+        BoundedRelativeInterval::new_with_inclusivity(
             Duration::hours(2),
             BoundInclusivity::Exclusive,
             Duration::hours(1),
@@ -1581,10 +1580,10 @@ fn closed_relative_interval_from_pair_of_datetime_bool_pairs() {
 }
 
 #[test]
-fn closed_relative_interval_from_range() {
+fn bounded_relative_interval_from_range() {
     assert_eq!(
-        ClosedRelativeInterval::from(Duration::hours(1)..Duration::hours(2)),
-        ClosedRelativeInterval::new_with_inclusivity(
+        BoundedRelativeInterval::from(Duration::hours(1)..Duration::hours(2)),
+        BoundedRelativeInterval::new_with_inclusivity(
             Duration::hours(1),
             BoundInclusivity::Inclusive,
             Duration::hours(2),
@@ -1594,17 +1593,17 @@ fn closed_relative_interval_from_range() {
 }
 
 #[test]
-fn closed_relative_interval_from_range_inclusive() {
+fn bounded_relative_interval_from_range_inclusive() {
     assert_eq!(
-        ClosedRelativeInterval::from(Duration::hours(1)..=Duration::hours(2)),
-        ClosedRelativeInterval::new(Duration::hours(1), Duration::hours(2)),
+        BoundedRelativeInterval::from(Duration::hours(1)..=Duration::hours(2)),
+        BoundedRelativeInterval::new(Duration::hours(1), Duration::hours(2)),
     );
 }
 
 #[test]
-fn closed_relative_interval_try_from_relative_bounds_correct() {
+fn bounded_relative_interval_try_from_relative_bounds_correct() {
     assert_eq!(
-        ClosedRelativeInterval::try_from(RelativeBounds::new(
+        BoundedRelativeInterval::try_from(RelativeBounds::new(
             RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
                 Duration::hours(1),
                 BoundInclusivity::Exclusive,
@@ -1614,7 +1613,7 @@ fn closed_relative_interval_try_from_relative_bounds_correct() {
                 BoundInclusivity::Inclusive,
             )),
         )),
-        Ok(ClosedRelativeInterval::new_with_inclusivity(
+        Ok(BoundedRelativeInterval::new_with_inclusivity(
             Duration::hours(1),
             BoundInclusivity::Exclusive,
             Duration::hours(2),
@@ -1624,63 +1623,63 @@ fn closed_relative_interval_try_from_relative_bounds_correct() {
 }
 
 #[test]
-fn closed_relative_interval_try_from_relative_bounds_wrong() {
+fn bounded_relative_interval_try_from_relative_bounds_wrong() {
     assert_eq!(
-        ClosedRelativeInterval::try_from(RelativeBounds::new(
+        BoundedRelativeInterval::try_from(RelativeBounds::new(
             RelativeStartBound::InfinitePast,
             RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(1))),
         )),
-        Err(ClosedRelativeIntervalFromRelativeBoundsError::NotClosedInterval),
+        Err(BoundedRelativeIntervalFromRelativeBoundsError::NotBoundedInterval),
     );
     assert_eq!(
-        ClosedRelativeInterval::try_from(RelativeBounds::new(
+        BoundedRelativeInterval::try_from(RelativeBounds::new(
             RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(1))),
             RelativeEndBound::InfiniteFuture,
         )),
-        Err(ClosedRelativeIntervalFromRelativeBoundsError::NotClosedInterval),
+        Err(BoundedRelativeIntervalFromRelativeBoundsError::NotBoundedInterval),
     );
     assert_eq!(
-        ClosedRelativeInterval::try_from(RelativeBounds::new(
+        BoundedRelativeInterval::try_from(RelativeBounds::new(
             RelativeStartBound::InfinitePast,
             RelativeEndBound::InfiniteFuture,
         )),
-        Err(ClosedRelativeIntervalFromRelativeBoundsError::NotClosedInterval),
+        Err(BoundedRelativeIntervalFromRelativeBoundsError::NotBoundedInterval),
     );
 }
 
 #[test]
-fn closed_relative_interval_try_from_relative_interval_correct() {
+fn bounded_relative_interval_try_from_relative_interval_correct() {
     assert_eq!(
-        ClosedRelativeInterval::try_from(RelativeInterval::Closed(ClosedRelativeInterval::new(
+        BoundedRelativeInterval::try_from(RelativeInterval::Bounded(BoundedRelativeInterval::new(
             Duration::hours(1),
             Duration::hours(2),
         ))),
-        Ok(ClosedRelativeInterval::new(Duration::hours(1), Duration::hours(2),)),
+        Ok(BoundedRelativeInterval::new(Duration::hours(1), Duration::hours(2),)),
     );
 }
 
 #[test]
-fn closed_relative_interval_try_from_relative_interval_wrong() {
+fn bounded_relative_interval_try_from_relative_interval_wrong() {
     assert_eq!(
-        ClosedRelativeInterval::try_from(RelativeInterval::Empty(EmptyInterval)),
-        Err(ClosedRelativeIntervalFromRelativeIntervalError::WrongVariant),
+        BoundedRelativeInterval::try_from(RelativeInterval::Empty(EmptyInterval)),
+        Err(BoundedRelativeIntervalFromRelativeIntervalError::WrongVariant),
     );
     assert_eq!(
-        ClosedRelativeInterval::try_from(RelativeInterval::Open(OpenInterval)),
-        Err(ClosedRelativeIntervalFromRelativeIntervalError::WrongVariant),
+        BoundedRelativeInterval::try_from(RelativeInterval::Unbounded(UnboundedInterval)),
+        Err(BoundedRelativeIntervalFromRelativeIntervalError::WrongVariant),
     );
     assert_eq!(
-        ClosedRelativeInterval::try_from(RelativeInterval::HalfOpen(HalfOpenRelativeInterval::new(
+        BoundedRelativeInterval::try_from(RelativeInterval::HalfBounded(HalfBoundedRelativeInterval::new(
             Duration::hours(1),
             OpeningDirection::ToFuture,
         ))),
-        Err(ClosedRelativeIntervalFromRelativeIntervalError::WrongVariant),
+        Err(BoundedRelativeIntervalFromRelativeIntervalError::WrongVariant),
     );
 }
 
 #[test]
-fn half_open_relative_interval_new() {
-    let interval = HalfOpenRelativeInterval::new(Duration::hours(1), OpeningDirection::ToFuture);
+fn half_bounded_relative_interval_new() {
+    let interval = HalfBoundedRelativeInterval::new(Duration::hours(1), OpeningDirection::ToFuture);
 
     assert_eq!(interval.offset(), Duration::hours(1));
     assert_eq!(interval.opening_direction(), OpeningDirection::ToFuture);
@@ -1688,8 +1687,8 @@ fn half_open_relative_interval_new() {
 }
 
 #[test]
-fn half_open_relative_interval_new_with_inclusivity() {
-    let interval = HalfOpenRelativeInterval::new_with_inclusivity(
+fn half_bounded_relative_interval_new_with_inclusivity() {
+    let interval = HalfBoundedRelativeInterval::new_with_inclusivity(
         Duration::hours(1),
         BoundInclusivity::Exclusive,
         OpeningDirection::ToPast,
@@ -1701,8 +1700,8 @@ fn half_open_relative_interval_new_with_inclusivity() {
 }
 
 #[test]
-fn half_open_relative_interval_set_reference_time() {
-    let mut interval = HalfOpenRelativeInterval::new_with_inclusivity(
+fn half_bounded_relative_interval_set_reference_time() {
+    let mut interval = HalfBoundedRelativeInterval::new_with_inclusivity(
         Duration::hours(1),
         BoundInclusivity::Exclusive,
         OpeningDirection::ToFuture,
@@ -1712,7 +1711,7 @@ fn half_open_relative_interval_set_reference_time() {
 
     assert_eq!(
         interval,
-        HalfOpenRelativeInterval::new_with_inclusivity(
+        HalfBoundedRelativeInterval::new_with_inclusivity(
             Duration::hours(2),
             BoundInclusivity::Exclusive,
             OpeningDirection::ToFuture,
@@ -1721,8 +1720,8 @@ fn half_open_relative_interval_set_reference_time() {
 }
 
 #[test]
-fn half_open_relative_interval_set_reference_time_inclusivity() {
-    let mut interval = HalfOpenRelativeInterval::new_with_inclusivity(
+fn half_bounded_relative_interval_set_reference_time_inclusivity() {
+    let mut interval = HalfBoundedRelativeInterval::new_with_inclusivity(
         Duration::hours(1),
         BoundInclusivity::Exclusive,
         OpeningDirection::ToFuture,
@@ -1732,7 +1731,7 @@ fn half_open_relative_interval_set_reference_time_inclusivity() {
 
     assert_eq!(
         interval,
-        HalfOpenRelativeInterval::new_with_inclusivity(
+        HalfBoundedRelativeInterval::new_with_inclusivity(
             Duration::hours(1),
             BoundInclusivity::Inclusive,
             OpeningDirection::ToFuture,
@@ -1741,8 +1740,8 @@ fn half_open_relative_interval_set_reference_time_inclusivity() {
 }
 
 #[test]
-fn half_open_relative_interval_set_opening_direction() {
-    let mut interval = HalfOpenRelativeInterval::new_with_inclusivity(
+fn half_bounded_relative_interval_set_opening_direction() {
+    let mut interval = HalfBoundedRelativeInterval::new_with_inclusivity(
         Duration::hours(1),
         BoundInclusivity::Exclusive,
         OpeningDirection::ToFuture,
@@ -1752,7 +1751,7 @@ fn half_open_relative_interval_set_opening_direction() {
 
     assert_eq!(
         interval,
-        HalfOpenRelativeInterval::new_with_inclusivity(
+        HalfBoundedRelativeInterval::new_with_inclusivity(
             Duration::hours(1),
             BoundInclusivity::Exclusive,
             OpeningDirection::ToPast,
@@ -1761,29 +1760,29 @@ fn half_open_relative_interval_set_opening_direction() {
 }
 
 #[test]
-fn half_open_relative_interval_from_datetime_opening_direction_pair() {
+fn half_bounded_relative_interval_from_datetime_opening_direction_pair() {
     assert_eq!(
-        HalfOpenRelativeInterval::from((Duration::hours(1), OpeningDirection::ToFuture)),
-        HalfOpenRelativeInterval::new(Duration::hours(1), OpeningDirection::ToFuture),
+        HalfBoundedRelativeInterval::from((Duration::hours(1), OpeningDirection::ToFuture)),
+        HalfBoundedRelativeInterval::new(Duration::hours(1), OpeningDirection::ToFuture),
     );
 }
 
 #[test]
-fn half_open_relative_interval_from_datetime_bool_pair() {
+fn half_bounded_relative_interval_from_datetime_bool_pair() {
     assert_eq!(
-        HalfOpenRelativeInterval::from((Duration::hours(1), false)),
-        HalfOpenRelativeInterval::new(Duration::hours(1), OpeningDirection::ToPast),
+        HalfBoundedRelativeInterval::from((Duration::hours(1), false)),
+        HalfBoundedRelativeInterval::new(Duration::hours(1), OpeningDirection::ToPast),
     );
 }
 
 #[test]
-fn half_open_relative_interval_from_pair_of_datetime_bound_inclusivity_pair_and_opening_direction() {
+fn half_bounded_relative_interval_from_pair_of_datetime_bound_inclusivity_pair_and_opening_direction() {
     assert_eq!(
-        HalfOpenRelativeInterval::from((
+        HalfBoundedRelativeInterval::from((
             (Duration::hours(1), BoundInclusivity::Exclusive),
             OpeningDirection::ToPast
         )),
-        HalfOpenRelativeInterval::new_with_inclusivity(
+        HalfBoundedRelativeInterval::new_with_inclusivity(
             Duration::hours(1),
             BoundInclusivity::Exclusive,
             OpeningDirection::ToPast,
@@ -1792,10 +1791,10 @@ fn half_open_relative_interval_from_pair_of_datetime_bound_inclusivity_pair_and_
 }
 
 #[test]
-fn half_open_relative_interval_from_pair_of_datetime_bool_pair_and_opening_direction() {
+fn half_bounded_relative_interval_from_pair_of_datetime_bool_pair_and_opening_direction() {
     assert_eq!(
-        HalfOpenRelativeInterval::from(((Duration::hours(1), false), OpeningDirection::ToPast)),
-        HalfOpenRelativeInterval::new_with_inclusivity(
+        HalfBoundedRelativeInterval::from(((Duration::hours(1), false), OpeningDirection::ToPast)),
+        HalfBoundedRelativeInterval::new_with_inclusivity(
             Duration::hours(1),
             BoundInclusivity::Exclusive,
             OpeningDirection::ToPast,
@@ -1804,10 +1803,10 @@ fn half_open_relative_interval_from_pair_of_datetime_bool_pair_and_opening_direc
 }
 
 #[test]
-fn half_open_relative_interval_from_pair_of_datetime_bool_pair_and_bool() {
+fn half_bounded_relative_interval_from_pair_of_datetime_bool_pair_and_bool() {
     assert_eq!(
-        HalfOpenRelativeInterval::from(((Duration::hours(1), false), false)),
-        HalfOpenRelativeInterval::new_with_inclusivity(
+        HalfBoundedRelativeInterval::from(((Duration::hours(1), false), false)),
+        HalfBoundedRelativeInterval::new_with_inclusivity(
             Duration::hours(1),
             BoundInclusivity::Exclusive,
             OpeningDirection::ToPast,
@@ -1816,18 +1815,18 @@ fn half_open_relative_interval_from_pair_of_datetime_bool_pair_and_bool() {
 }
 
 #[test]
-fn half_open_relative_interval_from_range_from() {
+fn half_bounded_relative_interval_from_range_from() {
     assert_eq!(
-        HalfOpenRelativeInterval::from(Duration::hours(1)..),
-        HalfOpenRelativeInterval::new(Duration::hours(1), OpeningDirection::ToFuture),
+        HalfBoundedRelativeInterval::from(Duration::hours(1)..),
+        HalfBoundedRelativeInterval::new(Duration::hours(1), OpeningDirection::ToFuture),
     );
 }
 
 #[test]
-fn half_open_relative_interval_from_range_to() {
+fn half_bounded_relative_interval_from_range_to() {
     assert_eq!(
-        HalfOpenRelativeInterval::from(..Duration::hours(1)),
-        HalfOpenRelativeInterval::new_with_inclusivity(
+        HalfBoundedRelativeInterval::from(..Duration::hours(1)),
+        HalfBoundedRelativeInterval::new_with_inclusivity(
             Duration::hours(1),
             BoundInclusivity::Exclusive,
             OpeningDirection::ToPast,
@@ -1836,38 +1835,38 @@ fn half_open_relative_interval_from_range_to() {
 }
 
 #[test]
-fn half_open_relative_interval_from_range_to_inclusive() {
+fn half_bounded_relative_interval_from_range_to_inclusive() {
     assert_eq!(
-        HalfOpenRelativeInterval::from(..=Duration::hours(1)),
-        HalfOpenRelativeInterval::new(Duration::hours(1), OpeningDirection::ToPast),
+        HalfBoundedRelativeInterval::from(..=Duration::hours(1)),
+        HalfBoundedRelativeInterval::new(Duration::hours(1), OpeningDirection::ToPast),
     );
 }
 
 #[test]
-fn half_open_relative_interval_try_from_relative_bounds_correct() {
+fn half_bounded_relative_interval_try_from_relative_bounds_correct() {
     assert_eq!(
-        HalfOpenRelativeInterval::try_from(RelativeBounds::new(
+        HalfBoundedRelativeInterval::try_from(RelativeBounds::new(
             RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
                 Duration::hours(1),
                 BoundInclusivity::Exclusive,
             )),
             RelativeEndBound::InfiniteFuture,
         )),
-        Ok(HalfOpenRelativeInterval::new_with_inclusivity(
+        Ok(HalfBoundedRelativeInterval::new_with_inclusivity(
             Duration::hours(1),
             BoundInclusivity::Exclusive,
             OpeningDirection::ToFuture,
         )),
     );
     assert_eq!(
-        HalfOpenRelativeInterval::try_from(RelativeBounds::new(
+        HalfBoundedRelativeInterval::try_from(RelativeBounds::new(
             RelativeStartBound::InfinitePast,
             RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
                 Duration::hours(1),
                 BoundInclusivity::Exclusive,
             )),
         )),
-        Ok(HalfOpenRelativeInterval::new_with_inclusivity(
+        Ok(HalfBoundedRelativeInterval::new_with_inclusivity(
             Duration::hours(1),
             BoundInclusivity::Exclusive,
             OpeningDirection::ToPast,
@@ -1876,34 +1875,34 @@ fn half_open_relative_interval_try_from_relative_bounds_correct() {
 }
 
 #[test]
-fn half_open_relative_interval_try_from_relative_bounds_wrong() {
+fn half_bounded_relative_interval_try_from_relative_bounds_wrong() {
     assert_eq!(
-        HalfOpenRelativeInterval::try_from(RelativeBounds::new(
+        HalfBoundedRelativeInterval::try_from(RelativeBounds::new(
             RelativeStartBound::InfinitePast,
             RelativeEndBound::InfiniteFuture,
         )),
-        Err(HalfOpenRelativeIntervalFromRelativeBoundsError::NotHalfOpenInterval),
+        Err(HalfBoundedRelativeIntervalFromRelativeBoundsError::NotHalfBoundedInterval),
     );
     assert_eq!(
-        HalfOpenRelativeInterval::try_from(RelativeBounds::new(
+        HalfBoundedRelativeInterval::try_from(RelativeBounds::new(
             RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(1))),
             RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(2))),
         )),
-        Err(HalfOpenRelativeIntervalFromRelativeBoundsError::NotHalfOpenInterval),
+        Err(HalfBoundedRelativeIntervalFromRelativeBoundsError::NotHalfBoundedInterval),
     );
 }
 
 #[test]
-fn half_open_relative_interval_try_from_relative_interval_correct() {
+fn half_bounded_relative_interval_try_from_relative_interval_correct() {
     assert_eq!(
-        HalfOpenRelativeInterval::try_from(RelativeInterval::HalfOpen(
-            HalfOpenRelativeInterval::new_with_inclusivity(
+        HalfBoundedRelativeInterval::try_from(RelativeInterval::HalfBounded(
+            HalfBoundedRelativeInterval::new_with_inclusivity(
                 Duration::hours(1),
                 BoundInclusivity::Exclusive,
                 OpeningDirection::ToPast,
             )
         )),
-        Ok(HalfOpenRelativeInterval::new_with_inclusivity(
+        Ok(HalfBoundedRelativeInterval::new_with_inclusivity(
             Duration::hours(1),
             BoundInclusivity::Exclusive,
             OpeningDirection::ToPast,
@@ -1912,21 +1911,21 @@ fn half_open_relative_interval_try_from_relative_interval_correct() {
 }
 
 #[test]
-fn half_open_relative_interval_try_from_relative_interval_wrong() {
+fn half_bounded_relative_interval_try_from_relative_interval_wrong() {
     assert_eq!(
-        HalfOpenRelativeInterval::try_from(RelativeInterval::Empty(EmptyInterval)),
-        Err(HalfOpenRelativeIntervalFromRelativeIntervalError::WrongVariant),
+        HalfBoundedRelativeInterval::try_from(RelativeInterval::Empty(EmptyInterval)),
+        Err(HalfBoundedRelativeIntervalFromRelativeIntervalError::WrongVariant),
     );
     assert_eq!(
-        HalfOpenRelativeInterval::try_from(RelativeInterval::Open(OpenInterval)),
-        Err(HalfOpenRelativeIntervalFromRelativeIntervalError::WrongVariant),
+        HalfBoundedRelativeInterval::try_from(RelativeInterval::Unbounded(UnboundedInterval)),
+        Err(HalfBoundedRelativeIntervalFromRelativeIntervalError::WrongVariant),
     );
     assert_eq!(
-        HalfOpenRelativeInterval::try_from(RelativeInterval::Closed(ClosedRelativeInterval::new(
+        HalfBoundedRelativeInterval::try_from(RelativeInterval::Bounded(BoundedRelativeInterval::new(
             Duration::hours(1),
             Duration::hours(2),
         ))),
-        Err(HalfOpenRelativeIntervalFromRelativeIntervalError::WrongVariant),
+        Err(HalfBoundedRelativeIntervalFromRelativeIntervalError::WrongVariant),
     );
 }
 
@@ -1940,7 +1939,7 @@ fn relative_interval_from_relative_bounds() {
             )),
             RelativeEndBound::InfiniteFuture,
         )),
-        RelativeInterval::HalfOpen(HalfOpenRelativeInterval::new_with_inclusivity(
+        RelativeInterval::HalfBounded(HalfBoundedRelativeInterval::new_with_inclusivity(
             Duration::hours(1),
             BoundInclusivity::Exclusive,
             OpeningDirection::ToFuture,
@@ -1958,7 +1957,7 @@ fn relative_interval_from_emptiable_relative_bounds() {
             )),
             RelativeEndBound::InfiniteFuture,
         ))),
-        RelativeInterval::HalfOpen(HalfOpenRelativeInterval::new_with_inclusivity(
+        RelativeInterval::HalfBounded(HalfBoundedRelativeInterval::new_with_inclusivity(
             Duration::hours(1),
             BoundInclusivity::Exclusive,
             OpeningDirection::ToFuture,
@@ -1967,18 +1966,18 @@ fn relative_interval_from_emptiable_relative_bounds() {
 }
 
 #[test]
-fn relative_interval_from_opt_datetime_pair_open() {
+fn relative_interval_from_opt_datetime_pair_unbounded() {
     assert_eq!(
         <RelativeInterval as From<(Option<Duration>, Option<Duration>)>>::from((None, None)),
-        RelativeInterval::Open(OpenInterval),
+        RelativeInterval::Unbounded(UnboundedInterval),
     );
 }
 
 #[test]
-fn relative_interval_from_opt_datetime_pair_half_open() {
+fn relative_interval_from_opt_datetime_pair_half_bounded() {
     assert_eq!(
         RelativeInterval::from((None, Some(Duration::hours(1)))),
-        RelativeInterval::HalfOpen(HalfOpenRelativeInterval::new(
+        RelativeInterval::HalfBounded(HalfBoundedRelativeInterval::new(
             Duration::hours(1),
             OpeningDirection::ToPast,
         )),
@@ -1992,7 +1991,7 @@ fn relative_interval_from_opt_datetime_bound_inclusivity_pairs() {
             Some((Duration::hours(1), BoundInclusivity::Exclusive)),
             Some((Duration::hours(2), BoundInclusivity::Exclusive)),
         )),
-        RelativeInterval::Closed(ClosedRelativeInterval::new_with_inclusivity(
+        RelativeInterval::Bounded(BoundedRelativeInterval::new_with_inclusivity(
             Duration::hours(1),
             BoundInclusivity::Exclusive,
             Duration::hours(2),
@@ -2005,7 +2004,7 @@ fn relative_interval_from_opt_datetime_bound_inclusivity_pairs() {
 fn relative_interval_from_opt_datetime_bool_pairs() {
     assert_eq!(
         RelativeInterval::from((Some((Duration::hours(1), true)), Some((Duration::hours(2), false)),)),
-        RelativeInterval::Closed(ClosedRelativeInterval::new_with_inclusivity(
+        RelativeInterval::Bounded(BoundedRelativeInterval::new_with_inclusivity(
             Duration::hours(1),
             BoundInclusivity::Inclusive,
             Duration::hours(2),
@@ -2026,7 +2025,7 @@ fn relative_interval_from_bool_and_two_opt_datetime_empty() {
 fn relative_interval_from_bool_and_two_opt_datetime() {
     assert_eq!(
         RelativeInterval::from((false, Some(Duration::hours(1)), Some(Duration::hours(2)),)),
-        RelativeInterval::Closed(ClosedRelativeInterval::new(Duration::hours(1), Duration::hours(2))),
+        RelativeInterval::Bounded(BoundedRelativeInterval::new(Duration::hours(1), Duration::hours(2))),
     );
 }
 
@@ -2050,7 +2049,7 @@ fn relative_interval_from_bool_and_two_opt_datetime_bound_inclusivity() {
             Some((Duration::hours(1), BoundInclusivity::Exclusive)),
             Some((Duration::hours(2), BoundInclusivity::Exclusive)),
         )),
-        RelativeInterval::Closed(ClosedRelativeInterval::new_with_inclusivity(
+        RelativeInterval::Bounded(BoundedRelativeInterval::new_with_inclusivity(
             Duration::hours(1),
             BoundInclusivity::Exclusive,
             Duration::hours(2),
@@ -2077,7 +2076,7 @@ fn relative_interval_from_bool_and_two_opt_datetime_bool() {
             Some((Duration::hours(1), false)),
             Some((Duration::hours(2), false)),
         )),
-        RelativeInterval::Closed(ClosedRelativeInterval::new_with_inclusivity(
+        RelativeInterval::Bounded(BoundedRelativeInterval::new_with_inclusivity(
             Duration::hours(1),
             BoundInclusivity::Exclusive,
             Duration::hours(2),
@@ -2090,7 +2089,7 @@ fn relative_interval_from_bool_and_two_opt_datetime_bool() {
 fn relative_interval_from_bound_pair() {
     assert_eq!(
         RelativeInterval::from((Bound::Unbounded, Bound::Excluded(Duration::hours(1)))),
-        RelativeInterval::HalfOpen(HalfOpenRelativeInterval::new_with_inclusivity(
+        RelativeInterval::HalfBounded(HalfBoundedRelativeInterval::new_with_inclusivity(
             Duration::hours(1),
             BoundInclusivity::Exclusive,
             OpeningDirection::ToPast,

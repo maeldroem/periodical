@@ -1,5 +1,5 @@
 pub use super::absolute::{
-    AbsoluteBounds, AbsoluteInterval, ClosedAbsoluteInterval, EmptiableAbsoluteBounds, HalfOpenAbsoluteInterval,
+    AbsoluteBounds, AbsoluteInterval, BoundedAbsoluteInterval, EmptiableAbsoluteBounds, HalfBoundedAbsoluteInterval,
     HasAbsoluteBounds, HasEmptiableAbsoluteBounds,
 };
 pub use super::meta::{Emptiable, HasBoundInclusivity, HasDuration, HasOpenness, HasRelativity};
@@ -32,6 +32,6 @@ pub use super::ops::time_containment::{
     TimeContainmentPosition, TimeContainmentRule, TimeContainmentRuleSet,
 };
 pub use super::relative::{
-    ClosedRelativeInterval, EmptiableRelativeBounds, HalfOpenRelativeInterval, HasEmptiableRelativeBounds,
+    BoundedRelativeInterval, EmptiableRelativeBounds, HalfBoundedRelativeInterval, HasEmptiableRelativeBounds,
     HasRelativeBounds, RelativeInterval,
 };

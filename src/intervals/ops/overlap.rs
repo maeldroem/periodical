@@ -10,18 +10,18 @@ use super::prelude::*;
 
 use crate::intervals::absolute::{
     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, EmptiableAbsoluteBounds,
-    HalfOpenAbsoluteInterval, HasEmptiableAbsoluteBounds,
+    HalfBoundedAbsoluteInterval, HasEmptiableAbsoluteBounds,
 };
 use crate::intervals::meta::Interval;
 use crate::intervals::ops::bound_overlap_ambiguity::{
     BoundOverlapAmbiguity, BoundOverlapDisambiguationRuleSet, DisambiguatedBoundOverlap,
 };
 use crate::intervals::relative::{
-    EmptiableRelativeBounds, HalfOpenRelativeInterval, HasEmptiableRelativeBounds, RelativeBounds, RelativeEndBound,
+    EmptiableRelativeBounds, HalfBoundedRelativeInterval, HasEmptiableRelativeBounds, RelativeBounds, RelativeEndBound,
     RelativeFiniteBound, RelativeStartBound,
 };
-use crate::intervals::special::{EmptyInterval, OpenInterval};
-use crate::intervals::{AbsoluteInterval, ClosedAbsoluteInterval, ClosedRelativeInterval, RelativeInterval};
+use crate::intervals::special::{EmptyInterval, UnboundedInterval};
+use crate::intervals::{AbsoluteInterval, BoundedAbsoluteInterval, BoundedRelativeInterval, RelativeInterval};
 
 /// Where the current time interval was found relative to the other time interval
 ///
@@ -61,7 +61,7 @@ pub enum OverlapPosition {
     /// Since two bounds are overlapping, this creates an ambiguity, hence the contained [`BoundOverlapAmbiguity`].
     /// The first contained bound is the reference, the second is the compared one.
     ///
-    /// Since when comparing an open interval with a half-open one can result in such an overlap position but no
+    /// Since when comparing an unbounded interval with a half-bounded one can result in such an overlap position but no
     /// defined bound is involved (i.e. the bound is infinity), hence the [`BoundOverlapAmbiguity`]
     /// wrapped in an [`Option`].
     ///
@@ -73,7 +73,7 @@ pub enum OverlapPosition {
     /// Since two bounds are overlapping, this creates an ambiguity, hence the contained [`BoundOverlapAmbiguity`].
     /// The first contained bound is the reference, the second is the compared one.
     ///
-    /// Since when comparing an open interval with a half-open one can result in such an overlap position but no
+    /// Since when comparing an unbounded interval with a half-bounded one can result in such an overlap position but no
     /// defined bound is involved (i.e. the bound is infinity), hence the [`BoundOverlapAmbiguity`]
     /// wrapped in an [`Option`].
     ///
@@ -84,8 +84,8 @@ pub enum OverlapPosition {
     /// Since two pairs of bounds are overlapping, this creates an ambiguity, hence the contained [`BoundOverlapAmbiguity`].
     /// The first contained bound of each pair is the reference, the second of each pair is the compared one.
     ///
-    /// Since half-open intervals only have a single defined bound, the second element is an [`Option`].
-    /// Also, when you compare two open intervals, they don't have defined bounds but still are equal, so all elements
+    /// Since half-bounded intervals only have a single defined bound, the second element is an [`Option`].
+    /// Also, when you compare two unbounded intervals, they don't have defined bounds but still are equal, so all elements
     /// are [`Option`]s in the end.
     ///
     /// See [`overlap_position`](CanPositionOverlap::overlap_position) for more details.
@@ -96,7 +96,7 @@ pub enum OverlapPosition {
     /// Since two bounds are overlapping, this creates an ambiguity, hence the contained [`BoundOverlapAmbiguity`].
     /// The first contained bound is the reference, the second is the compared one.
     ///
-    /// Since when comparing an half-open interval with an open one can result in such an overlap position but no
+    /// Since when comparing a half-bounded interval with an unbounded one can result in such an overlap position but no
     /// defined bound is involved (i.e. the bound is infinity), the [`BoundOverlapAmbiguity`] is wrapped
     /// in an [`Option`].
     ///
@@ -108,7 +108,7 @@ pub enum OverlapPosition {
     /// Since two bounds are overlapping, this creates an ambiguity, hence the contained [`BoundOverlapAmbiguity`].
     /// The first contained bound is the reference, the second is the compared one.
     ///
-    /// Since when comparing an half-open interval with an open one can result in such an overlap position but no
+    /// Since when comparing a half-bounded interval with an unbounded one can result in such an overlap position but no
     /// defined bound is involved (i.e. the bound is infinity), the [`BoundOverlapAmbiguity`] is wrapped
     /// in an [`Option`].
     ///
@@ -366,19 +366,19 @@ pub fn overlap_position_disambiguation(
             }
         },
         Op::Equal(None, None) => Dop::Equal,
-        Op::Equal(Some(ambiguity), None) => overlap_position_bound_ambiguity_disambiguation_equal_half_open(
+        Op::Equal(Some(ambiguity), None) => overlap_position_bound_ambiguity_disambiguation_equal_half_bounded(
             ambiguity,
             bound_overlap_disambiguation_rule_set,
         ),
         Op::Equal(None, Some(_)) => {
             unreachable!(
-                "When there is a bound ambiguity for an equal position for comparing two half-open intervals, \
+                "When there is a bound ambiguity for an equal position for comparing two half-bounded intervals, \
                 which produces a single bound ambiguity, the bound ambiguity is never stored in the second element \
                 of the `OverlapPosition::Equal` variant"
             );
         },
         Op::Equal(Some(start_ambiguity), Some(end_ambiguity)) => {
-            overlap_position_bound_ambiguity_disambiguation_equal_closed(
+            overlap_position_bound_ambiguity_disambiguation_equal_bounded(
                 start_ambiguity,
                 end_ambiguity,
                 bound_overlap_disambiguation_rule_set,
@@ -413,9 +413,9 @@ pub fn overlap_position_disambiguation(
 }
 
 /// Disambiguates a [`BoundOverlapAmbiguity`] for the [`Equal`](OverlapPosition::Equal) position
-/// of two half-open intervals
+/// of two half-bounded intervals
 #[must_use]
-pub fn overlap_position_bound_ambiguity_disambiguation_equal_half_open(
+pub fn overlap_position_bound_ambiguity_disambiguation_equal_half_bounded(
     ambiguity: BoundOverlapAmbiguity,
     bound_overlap_disambiguation_rule_set: BoundOverlapDisambiguationRuleSet,
 ) -> DisambiguatedOverlapPosition {
@@ -439,7 +439,7 @@ pub fn overlap_position_bound_ambiguity_disambiguation_equal_half_open(
         },
         BoundOverlapAmbiguity::StartEnd(..) | BoundOverlapAmbiguity::EndStart(..) => {
             unreachable!(
-                "When there is a bound ambiguity for an equal position for comparing two half-open intervals, \
+                "When there is a bound ambiguity for an equal position for comparing two half-bounded intervals, \
                 which produces a single bound ambiguity, the bound ambiguity is always either BothStarts or \
                 BothEnds, but never StartEnd nor EndStart"
             );
@@ -448,9 +448,9 @@ pub fn overlap_position_bound_ambiguity_disambiguation_equal_half_open(
 }
 
 /// Disambiguates two [`BoundOverlapAmbiguity`] for the [`Equal`](OverlapPosition::Equal) position
-/// of two closed intervals
+/// of two bounded intervals
 #[must_use]
-pub fn overlap_position_bound_ambiguity_disambiguation_equal_closed(
+pub fn overlap_position_bound_ambiguity_disambiguation_equal_bounded(
     start_ambiguity: BoundOverlapAmbiguity,
     end_ambiguity: BoundOverlapAmbiguity,
     bound_overlap_disambiguation_rule_set: BoundOverlapDisambiguationRuleSet,
@@ -609,10 +609,10 @@ pub trait CanPositionOverlap<Rhs = Self> {
     /// Returns the overlap position of the given interval
     ///
     /// The current interval is compared to the other interval, that means that if you, for example, compare
-    /// a closed absolute interval (instance) with an open interval (given interval), you will get
-    /// [`OverlapPosition::Inside`] as the closed absolute interval _is contained_ by an open interval.
+    /// a bounded absolute interval (instance) with an unbounded interval (given interval), you will get
+    /// [`OverlapPosition::Inside`] as the bounded absolute interval _is contained_ by an unbounded interval.
     ///
-    /// An empty interval is always outside, even if compared against an open interval, as an empty interval is a
+    /// An empty interval is always outside, even if compared against an unbounded interval, as an empty interval is a
     /// concept-value (like infinity) rather than an actual value.
     ///
     /// # Bound inclusivity
@@ -632,14 +632,14 @@ pub trait CanPositionOverlap<Rhs = Self> {
     /// The only exception to that is [`OverlapPosition::Equal`], where its first tuple is the bound inclusivities for
     /// the reference interval, and its second tuple is the bound inclusivities for the compared interval.
     ///
-    /// Since half-open and open intervals are also subject to the overlap position check, most ambiguous overlap
+    /// Since half-bounded and unbounded intervals are also subject to the overlap position check, most ambiguous overlap
     /// positions have one or all of their elements as [`Option`]s. Those elements are set to [`None`] only when
     /// there is no bound to speak of. The order of the elements remains the same though: first the reference, then
     /// the compared.
     ///
-    /// In the case of a pair of half-open intervals being compared, since they only have one bound, the second element
+    /// In the case of a pair of half-bounded intervals being compared, since they only have one bound, the second element
     /// of each tuple will be [`None`].
-    /// In the case of a pair of open intervals being compared, since they have no bounds but still are equal, all
+    /// In the case of a pair of unbounded intervals being compared, since they have no bounds but still are equal, all
     /// elements will be [`None`].
     ///
     /// # Errors
@@ -789,7 +789,7 @@ where
     }
 }
 
-impl<Rhs> CanPositionOverlap<Rhs> for ClosedAbsoluteInterval
+impl<Rhs> CanPositionOverlap<Rhs> for BoundedAbsoluteInterval
 where
     Rhs: HasEmptiableAbsoluteBounds,
 {
@@ -800,7 +800,7 @@ where
     }
 }
 
-impl<Rhs> CanPositionOverlap<Rhs> for HalfOpenAbsoluteInterval
+impl<Rhs> CanPositionOverlap<Rhs> for HalfBoundedAbsoluteInterval
 where
     Rhs: HasEmptiableAbsoluteBounds,
 {
@@ -844,7 +844,7 @@ where
     }
 }
 
-impl<Rhs> CanPositionOverlap<Rhs> for ClosedRelativeInterval
+impl<Rhs> CanPositionOverlap<Rhs> for BoundedRelativeInterval
 where
     Rhs: HasEmptiableRelativeBounds,
 {
@@ -855,7 +855,7 @@ where
     }
 }
 
-impl<Rhs> CanPositionOverlap<Rhs> for HalfOpenRelativeInterval
+impl<Rhs> CanPositionOverlap<Rhs> for HalfBoundedRelativeInterval
 where
     Rhs: HasEmptiableRelativeBounds,
 {
@@ -866,7 +866,7 @@ where
     }
 }
 
-impl CanPositionOverlap<AbsoluteBounds> for OpenInterval {
+impl CanPositionOverlap<AbsoluteBounds> for UnboundedInterval {
     type Error = Infallible;
 
     fn overlap_position(&self, rhs: &AbsoluteBounds) -> Result<OverlapPosition, Self::Error> {
@@ -874,7 +874,7 @@ impl CanPositionOverlap<AbsoluteBounds> for OpenInterval {
     }
 }
 
-impl CanPositionOverlap<EmptiableAbsoluteBounds> for OpenInterval {
+impl CanPositionOverlap<EmptiableAbsoluteBounds> for UnboundedInterval {
     type Error = Infallible;
 
     fn overlap_position(&self, rhs: &EmptiableAbsoluteBounds) -> Result<OverlapPosition, Self::Error> {
@@ -882,7 +882,7 @@ impl CanPositionOverlap<EmptiableAbsoluteBounds> for OpenInterval {
     }
 }
 
-impl CanPositionOverlap<AbsoluteInterval> for OpenInterval {
+impl CanPositionOverlap<AbsoluteInterval> for UnboundedInterval {
     type Error = Infallible;
 
     fn overlap_position(&self, rhs: &AbsoluteInterval) -> Result<OverlapPosition, Self::Error> {
@@ -890,31 +890,31 @@ impl CanPositionOverlap<AbsoluteInterval> for OpenInterval {
     }
 }
 
-impl CanPositionOverlap<ClosedAbsoluteInterval> for OpenInterval {
+impl CanPositionOverlap<BoundedAbsoluteInterval> for UnboundedInterval {
     type Error = Infallible;
 
-    fn overlap_position(&self, rhs: &ClosedAbsoluteInterval) -> Result<OverlapPosition, Self::Error> {
+    fn overlap_position(&self, rhs: &BoundedAbsoluteInterval) -> Result<OverlapPosition, Self::Error> {
         Ok(overlap_position_emptiable_abs_bounds(self, rhs))
     }
 }
 
-impl CanPositionOverlap<HalfOpenAbsoluteInterval> for OpenInterval {
+impl CanPositionOverlap<HalfBoundedAbsoluteInterval> for UnboundedInterval {
     type Error = Infallible;
 
-    fn overlap_position(&self, rhs: &HalfOpenAbsoluteInterval) -> Result<OverlapPosition, Self::Error> {
+    fn overlap_position(&self, rhs: &HalfBoundedAbsoluteInterval) -> Result<OverlapPosition, Self::Error> {
         Ok(overlap_position_emptiable_abs_bounds(self, rhs))
     }
 }
 
-impl CanPositionOverlap<OpenInterval> for OpenInterval {
+impl CanPositionOverlap<UnboundedInterval> for UnboundedInterval {
     type Error = Infallible;
 
-    fn overlap_position(&self, _rhs: &OpenInterval) -> Result<OverlapPosition, Self::Error> {
+    fn overlap_position(&self, _rhs: &UnboundedInterval) -> Result<OverlapPosition, Self::Error> {
         Ok(OverlapPosition::Equal(None, None))
     }
 }
 
-impl CanPositionOverlap<EmptyInterval> for OpenInterval {
+impl CanPositionOverlap<EmptyInterval> for UnboundedInterval {
     type Error = Infallible;
 
     fn overlap_position(&self, _rhs: &EmptyInterval) -> Result<OverlapPosition, Self::Error> {
@@ -995,26 +995,26 @@ pub fn overlap_position_abs_bounds(og: &AbsoluteBounds, other: &AbsoluteBounds) 
             }
         },
         ((Sb::InfinitePast, Eb::Finite(ref_bound)), (Sb::Finite(other_start), Eb::Finite(other_end))) => {
-            overlap_position_abs_half_open_past_closed(ref_bound, other_start, other_end)
+            overlap_position_abs_half_bounded_past_bounded(ref_bound, other_start, other_end)
         },
         ((Sb::Finite(ref_bound), Eb::InfiniteFuture), (Sb::Finite(other_start), Eb::Finite(other_end))) => {
-            overlap_position_abs_half_open_future_closed(ref_bound, other_start, other_end)
+            overlap_position_abs_half_bounded_future_bounded(ref_bound, other_start, other_end)
         },
         ((Sb::Finite(og_start), Eb::Finite(og_end)), (Sb::InfinitePast, Eb::Finite(ref_bound))) => {
-            overlap_position_abs_closed_half_open_past(og_start, og_end, ref_bound)
+            overlap_position_abs_bounded_half_bounded_past(og_start, og_end, ref_bound)
         },
         ((Sb::Finite(og_start), Eb::Finite(og_end)), (Sb::Finite(ref_bound), Eb::InfiniteFuture)) => {
-            overlap_position_abs_closed_half_open_future(og_start, og_end, ref_bound)
+            overlap_position_abs_bounded_half_bounded_future(og_start, og_end, ref_bound)
         },
         ((Sb::Finite(og_start), Eb::Finite(og_end)), (Sb::Finite(other_start), Eb::Finite(other_end))) => {
-            overlap_position_abs_closed_pair(og_start, og_end, other_start, other_end)
+            overlap_position_abs_bounded_pair(og_start, og_end, other_start, other_end)
         },
     }
 }
 
-/// Positions the overlap between a half-open interval going to the past and a closed interval
+/// Positions the overlap between a half-bounded interval going to the past and a bounded interval
 #[must_use]
-pub fn overlap_position_abs_half_open_past_closed(
+pub fn overlap_position_abs_half_bounded_past_bounded(
     ref_bound: &AbsoluteFiniteBound,
     other_start: &AbsoluteFiniteBound,
     other_end: &AbsoluteFiniteBound,
@@ -1037,9 +1037,9 @@ pub fn overlap_position_abs_half_open_past_closed(
     }
 }
 
-/// Positions the overlap between a half-open interval going to the future and a closed interval
+/// Positions the overlap between a half-bounded interval going to the future and a bounded interval
 #[must_use]
-pub fn overlap_position_abs_half_open_future_closed(
+pub fn overlap_position_abs_half_bounded_future_bounded(
     ref_bound: &AbsoluteFiniteBound,
     other_start: &AbsoluteFiniteBound,
     other_end: &AbsoluteFiniteBound,
@@ -1062,9 +1062,9 @@ pub fn overlap_position_abs_half_open_future_closed(
     }
 }
 
-/// Positions the overlap between a closed interval and a half-open interval going to the past
+/// Positions the overlap between a bounded interval and a half-bounded interval going to the past
 #[must_use]
-pub fn overlap_position_abs_closed_half_open_past(
+pub fn overlap_position_abs_bounded_half_bounded_past(
     og_start: &AbsoluteFiniteBound,
     og_end: &AbsoluteFiniteBound,
     ref_bound: &AbsoluteFiniteBound,
@@ -1087,9 +1087,9 @@ pub fn overlap_position_abs_closed_half_open_past(
     }
 }
 
-/// Positions the overlap between a closed interval and a half-open interval going to the future
+/// Positions the overlap between a bounded interval and a half-bounded interval going to the future
 #[must_use]
-pub fn overlap_position_abs_closed_half_open_future(
+pub fn overlap_position_abs_bounded_half_bounded_future(
     og_start: &AbsoluteFiniteBound,
     og_end: &AbsoluteFiniteBound,
     ref_bound: &AbsoluteFiniteBound,
@@ -1112,9 +1112,9 @@ pub fn overlap_position_abs_closed_half_open_future(
     }
 }
 
-/// Positions the overlap between two closed intervals
+/// Positions the overlap between two bounded intervals
 #[must_use]
-pub fn overlap_position_abs_closed_pair(
+pub fn overlap_position_abs_bounded_pair(
     og_start: &AbsoluteFiniteBound,
     og_end: &AbsoluteFiniteBound,
     other_start: &AbsoluteFiniteBound,
@@ -1246,26 +1246,26 @@ pub fn overlap_position_rel_bounds(og: &RelativeBounds, other: &RelativeBounds) 
             }
         },
         ((Sb::InfinitePast, Eb::Finite(ref_bound)), (Sb::Finite(other_start), Eb::Finite(other_end))) => {
-            overlap_position_rel_half_open_past_closed(ref_bound, other_start, other_end)
+            overlap_position_rel_half_bounded_past_bounded(ref_bound, other_start, other_end)
         },
         ((Sb::Finite(ref_bound), Eb::InfiniteFuture), (Sb::Finite(other_start), Eb::Finite(other_end))) => {
-            overlap_position_rel_half_open_future_closed(ref_bound, other_start, other_end)
+            overlap_position_rel_half_bounded_future_bounded(ref_bound, other_start, other_end)
         },
         ((Sb::Finite(og_start), Eb::Finite(og_end)), (Sb::InfinitePast, Eb::Finite(ref_bound))) => {
-            overlap_position_rel_closed_half_open_past(og_start, og_end, ref_bound)
+            overlap_position_rel_bounded_half_bounded_past(og_start, og_end, ref_bound)
         },
         ((Sb::Finite(og_start), Eb::Finite(og_end)), (Sb::Finite(ref_bound), Eb::InfiniteFuture)) => {
-            overlap_position_rel_closed_half_open_future(og_start, og_end, ref_bound)
+            overlap_position_rel_bounded_half_bounded_future(og_start, og_end, ref_bound)
         },
         ((Sb::Finite(og_start), Eb::Finite(og_end)), (Sb::Finite(other_start), Eb::Finite(other_end))) => {
-            overlap_position_rel_closed_pair(og_start, og_end, other_start, other_end)
+            overlap_position_rel_bounded_pair(og_start, og_end, other_start, other_end)
         },
     }
 }
 
-/// Positions the overlap between a half-open interval going to the past and a closed interval
+/// Positions the overlap between a half-bounded interval going to the past and a bounded interval
 #[must_use]
-pub fn overlap_position_rel_half_open_past_closed(
+pub fn overlap_position_rel_half_bounded_past_bounded(
     ref_bound: &RelativeFiniteBound,
     other_start: &RelativeFiniteBound,
     other_end: &RelativeFiniteBound,
@@ -1288,9 +1288,9 @@ pub fn overlap_position_rel_half_open_past_closed(
     }
 }
 
-/// Positions the overlap between a half-open interval going to the future and a closed interval
+/// Positions the overlap between a half-bounded interval going to the future and a bounded interval
 #[must_use]
-pub fn overlap_position_rel_half_open_future_closed(
+pub fn overlap_position_rel_half_bounded_future_bounded(
     ref_bound: &RelativeFiniteBound,
     other_start: &RelativeFiniteBound,
     other_end: &RelativeFiniteBound,
@@ -1313,9 +1313,9 @@ pub fn overlap_position_rel_half_open_future_closed(
     }
 }
 
-/// Positions the overlap between a closed interval and a half-open interval going to the past
+/// Positions the overlap between a bounded interval and a half-bounded interval going to the past
 #[must_use]
-pub fn overlap_position_rel_closed_half_open_past(
+pub fn overlap_position_rel_bounded_half_bounded_past(
     og_start: &RelativeFiniteBound,
     og_end: &RelativeFiniteBound,
     ref_bound: &RelativeFiniteBound,
@@ -1338,9 +1338,9 @@ pub fn overlap_position_rel_closed_half_open_past(
     }
 }
 
-/// Positions the overlap between a closed interval and a half-open interval going to the future
+/// Positions the overlap between a bounded interval and a half-bounded interval going to the future
 #[must_use]
-pub fn overlap_position_rel_closed_half_open_future(
+pub fn overlap_position_rel_bounded_half_bounded_future(
     og_start: &RelativeFiniteBound,
     og_end: &RelativeFiniteBound,
     ref_bound: &RelativeFiniteBound,
@@ -1363,9 +1363,9 @@ pub fn overlap_position_rel_closed_half_open_future(
     }
 }
 
-/// Positions the overlap between two closed intervals
+/// Positions the overlap between two bounded intervals
 #[must_use]
-pub fn overlap_position_rel_closed_pair(
+pub fn overlap_position_rel_bounded_pair(
     og_start: &RelativeFiniteBound,
     og_end: &RelativeFiniteBound,
     other_start: &RelativeFiniteBound,

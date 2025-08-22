@@ -9,7 +9,7 @@ use crate::test_utils::date;
 use super::abridge::*;
 
 #[test]
-fn abridge_abs_bounds_two_open() {
+fn abridge_abs_bounds_two_unbounded() {
     assert_eq!(
         AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture).abridge(
             &AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture)
@@ -19,7 +19,7 @@ fn abridge_abs_bounds_two_open() {
 }
 
 #[test]
-fn abridge_abs_bounds_open_half_open() {
+fn abridge_abs_bounds_unbounded_half_bounded() {
     assert_eq!(
         AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture).abridge(
             &AbsoluteBounds::new(
@@ -35,7 +35,7 @@ fn abridge_abs_bounds_open_half_open() {
 }
 
 #[test]
-fn abridge_abs_bounds_open_closed() {
+fn abridge_abs_bounds_unbounded_bounded() {
     assert_eq!(
         AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture).abridge(
             &AbsoluteBounds::new(
@@ -51,7 +51,7 @@ fn abridge_abs_bounds_open_closed() {
 }
 
 #[test]
-fn abridge_abs_bounds_half_open_open() {
+fn abridge_abs_bounds_half_bounded_unbounded() {
     assert_eq!(
         AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
@@ -69,7 +69,7 @@ fn abridge_abs_bounds_half_open_open() {
 }
 
 #[test]
-fn abridge_abs_bounds_two_equal_half_open() {
+fn abridge_abs_bounds_two_equal_half_bounded() {
     assert_eq!(
         AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
@@ -87,7 +87,7 @@ fn abridge_abs_bounds_two_equal_half_open() {
 }
 
 #[test]
-fn abridge_abs_bounds_two_half_open_same_ref_time() {
+fn abridge_abs_bounds_two_half_bounded_same_ref_time() {
     assert_eq!(
         AbsoluteBounds::new(
             AbsoluteStartBound::InfinitePast,
@@ -105,7 +105,7 @@ fn abridge_abs_bounds_two_half_open_same_ref_time() {
 }
 
 #[test]
-fn abridge_abs_bounds_two_half_open_with_gap() {
+fn abridge_abs_bounds_two_half_bounded_with_gap() {
     assert_eq!(
         AbsoluteBounds::new(
             AbsoluteStartBound::InfinitePast,
@@ -129,7 +129,7 @@ fn abridge_abs_bounds_two_half_open_with_gap() {
 }
 
 #[test]
-fn abridge_abs_bounds_two_half_open_same_direction_different_times() {
+fn abridge_abs_bounds_two_half_bounded_same_direction_different_times() {
     assert_eq!(
         AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2))),
@@ -147,7 +147,7 @@ fn abridge_abs_bounds_two_half_open_same_direction_different_times() {
 }
 
 #[test]
-fn abridge_abs_bounds_closed_half_open_with_gap() {
+fn abridge_abs_bounds_bounded_half_bounded_with_gap() {
     assert_eq!(
         AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
@@ -171,7 +171,7 @@ fn abridge_abs_bounds_closed_half_open_with_gap() {
 }
 
 #[test]
-fn abridge_abs_bounds_two_closed_with_gap() {
+fn abridge_abs_bounds_two_bounded_with_gap() {
     assert_eq!(
         AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
@@ -195,7 +195,7 @@ fn abridge_abs_bounds_two_closed_with_gap() {
 }
 
 #[test]
-fn abridge_abs_bounds_two_closed_overlapping() {
+fn abridge_abs_bounds_two_bounded_overlapping() {
     assert_eq!(
         AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),

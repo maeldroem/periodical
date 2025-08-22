@@ -3,8 +3,8 @@ use chrono::Utc;
 use super::overlap::*;
 
 use crate::intervals::absolute::{
-    AbsoluteBounds, AbsoluteEndBound, AbsoluteStartBound, ClosedAbsoluteInterval, EmptiableAbsoluteBounds,
-    HalfOpenAbsoluteInterval,
+    AbsoluteBounds, AbsoluteEndBound, AbsoluteStartBound, BoundedAbsoluteInterval, EmptiableAbsoluteBounds,
+    HalfBoundedAbsoluteInterval,
 };
 use crate::intervals::meta::{BoundInclusivity, OpeningDirection};
 use crate::intervals::ops::bound_overlap_ambiguity::BoundOverlapAmbiguity;
@@ -107,7 +107,7 @@ fn overlap_position_empty_empty() {
 }
 
 #[test]
-fn overlap_position_empty_open() {
+fn overlap_position_empty_unbounded() {
     assert_eq!(
         EmptiableAbsoluteBounds::Empty.overlap_position(&AbsoluteBounds::new(
             AbsoluteStartBound::InfinitePast,
@@ -118,7 +118,7 @@ fn overlap_position_empty_open() {
 }
 
 #[test]
-fn overlap_position_open_empty() {
+fn overlap_position_unbounded_empty() {
     assert_eq!(
         AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture)
             .overlap_position(&EmptiableAbsoluteBounds::Empty),
@@ -127,10 +127,10 @@ fn overlap_position_open_empty() {
 }
 
 #[test]
-fn overlap_position_half_open_equal() {
+fn overlap_position_half_bounded_equal() {
     assert_eq!(
-        HalfOpenAbsoluteInterval::new(date(&Utc, 2025, 1, 1), OpeningDirection::ToFuture).overlap_position(
-            &HalfOpenAbsoluteInterval::new(date(&Utc, 2025, 1, 1), OpeningDirection::ToFuture)
+        HalfBoundedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), OpeningDirection::ToFuture).overlap_position(
+            &HalfBoundedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), OpeningDirection::ToFuture)
         ),
         Ok(OverlapPosition::Equal(
             Some(BoundOverlapAmbiguity::BothStarts(
@@ -143,14 +143,14 @@ fn overlap_position_half_open_equal() {
 }
 
 #[test]
-fn overlap_position_half_open_exclusive_inclusive() {
+fn overlap_position_half_bounded_exclusive_inclusive() {
     assert_eq!(
-        HalfOpenAbsoluteInterval::new_with_inclusivity(
+        HalfBoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             OpeningDirection::ToFuture,
         )
-        .overlap_position(&HalfOpenAbsoluteInterval::new_with_inclusivity(
+        .overlap_position(&HalfBoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             OpeningDirection::ToFuture,
@@ -166,15 +166,15 @@ fn overlap_position_half_open_exclusive_inclusive() {
 }
 
 #[test]
-fn overlap_position_closed_equal_various_bound_inclusivities() {
+fn overlap_position_bounded_equal_various_bound_inclusivities() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
-        .overlap_position(&ClosedAbsoluteInterval::new_with_inclusivity(
+        .overlap_position(&BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
@@ -194,10 +194,10 @@ fn overlap_position_closed_equal_various_bound_inclusivities() {
 }
 
 #[test]
-fn disambiguated_overlap_position_strict_closed_time_gap_before_other() {
+fn disambiguated_overlap_position_strict_bounded_time_gap_before_other() {
     assert_eq!(
-        ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), date(&Utc, 2025, 1, 2)).disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 3), date(&Utc, 2025, 1, 4),),
+        BoundedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), date(&Utc, 2025, 1, 2)).disambiguated_overlap_position(
+            &BoundedAbsoluteInterval::new(date(&Utc, 2025, 1, 3), date(&Utc, 2025, 1, 4),),
             OverlapRuleSet::Strict,
         ),
         Ok(DisambiguatedOverlapPosition::OutsideBefore),
@@ -205,16 +205,16 @@ fn disambiguated_overlap_position_strict_closed_time_gap_before_other() {
 }
 
 #[test]
-fn disambiguated_overlap_position_strict_closed_inclusive_inclusive_adjacency_before_other() {
+fn disambiguated_overlap_position_strict_bounded_inclusive_inclusive_adjacency_before_other() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 2),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -227,16 +227,16 @@ fn disambiguated_overlap_position_strict_closed_inclusive_inclusive_adjacency_be
 }
 
 #[test]
-fn disambiguated_overlap_position_strict_closed_inclusive_exclusive_adjacency_before_other() {
+fn disambiguated_overlap_position_strict_bounded_inclusive_exclusive_adjacency_before_other() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 2),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 3),
@@ -249,16 +249,16 @@ fn disambiguated_overlap_position_strict_closed_inclusive_exclusive_adjacency_be
 }
 
 #[test]
-fn disambiguated_overlap_position_strict_closed_exclusive_inclusive_adjacency_before_other() {
+fn disambiguated_overlap_position_strict_bounded_exclusive_inclusive_adjacency_before_other() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 2),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -271,16 +271,16 @@ fn disambiguated_overlap_position_strict_closed_exclusive_inclusive_adjacency_be
 }
 
 #[test]
-fn disambiguated_overlap_position_strict_closed_exclusive_exclusive_adjacency_before_other() {
+fn disambiguated_overlap_position_strict_bounded_exclusive_exclusive_adjacency_before_other() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 2),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 3),
@@ -293,10 +293,10 @@ fn disambiguated_overlap_position_strict_closed_exclusive_exclusive_adjacency_be
 }
 
 #[test]
-fn disambiguated_overlap_position_strict_closed_time_gap_after_other() {
+fn disambiguated_overlap_position_strict_bounded_time_gap_after_other() {
     assert_eq!(
-        ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 3), date(&Utc, 2025, 1, 4)).disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), date(&Utc, 2025, 1, 2)),
+        BoundedAbsoluteInterval::new(date(&Utc, 2025, 1, 3), date(&Utc, 2025, 1, 4)).disambiguated_overlap_position(
+            &BoundedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), date(&Utc, 2025, 1, 2)),
             OverlapRuleSet::Strict,
         ),
         Ok(DisambiguatedOverlapPosition::OutsideAfter),
@@ -304,16 +304,16 @@ fn disambiguated_overlap_position_strict_closed_time_gap_after_other() {
 }
 
 #[test]
-fn disambiguated_overlap_position_strict_closed_inclusive_inclusive_adjacency_after_other() {
+fn disambiguated_overlap_position_strict_bounded_inclusive_inclusive_adjacency_after_other() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -326,16 +326,16 @@ fn disambiguated_overlap_position_strict_closed_inclusive_inclusive_adjacency_af
 }
 
 #[test]
-fn disambiguated_overlap_position_strict_closed_inclusive_exclusive_adjacency_after_other() {
+fn disambiguated_overlap_position_strict_bounded_inclusive_exclusive_adjacency_after_other() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -348,16 +348,16 @@ fn disambiguated_overlap_position_strict_closed_inclusive_exclusive_adjacency_af
 }
 
 #[test]
-fn disambiguated_overlap_position_strict_closed_exclusive_inclusive_adjacency_after_other() {
+fn disambiguated_overlap_position_strict_bounded_exclusive_inclusive_adjacency_after_other() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -370,16 +370,16 @@ fn disambiguated_overlap_position_strict_closed_exclusive_inclusive_adjacency_af
 }
 
 #[test]
-fn disambiguated_overlap_position_strict_closed_exclusive_exclusive_adjacency_after_other() {
+fn disambiguated_overlap_position_strict_bounded_exclusive_exclusive_adjacency_after_other() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -392,16 +392,16 @@ fn disambiguated_overlap_position_strict_closed_exclusive_exclusive_adjacency_af
 }
 
 #[test]
-fn disambiguated_overlap_position_strict_closed_crosses_start() {
+fn disambiguated_overlap_position_strict_bounded_crosses_start() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 2),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 4),
@@ -414,16 +414,16 @@ fn disambiguated_overlap_position_strict_closed_crosses_start() {
 }
 
 #[test]
-fn disambiguated_overlap_position_strict_closed_crosses_end() {
+fn disambiguated_overlap_position_strict_bounded_crosses_end() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 4),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -436,16 +436,16 @@ fn disambiguated_overlap_position_strict_closed_crosses_end() {
 }
 
 #[test]
-fn disambiguated_overlap_position_strict_closed_inside() {
+fn disambiguated_overlap_position_strict_bounded_inside() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 4),
@@ -458,16 +458,16 @@ fn disambiguated_overlap_position_strict_closed_inside() {
 }
 
 #[test]
-fn disambiguated_overlap_position_strict_closed_time_gap_inside_and_same_start() {
+fn disambiguated_overlap_position_strict_bounded_time_gap_inside_and_same_start() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -480,16 +480,16 @@ fn disambiguated_overlap_position_strict_closed_time_gap_inside_and_same_start()
 }
 
 #[test]
-fn disambiguated_overlap_position_strict_closed_inside_and_same_start_inclusive_inclusive() {
+fn disambiguated_overlap_position_strict_bounded_inside_and_same_start_inclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -502,16 +502,16 @@ fn disambiguated_overlap_position_strict_closed_inside_and_same_start_inclusive_
 }
 
 #[test]
-fn disambiguated_overlap_position_strict_closed_inside_and_same_start_inclusive_exclusive() {
+fn disambiguated_overlap_position_strict_bounded_inside_and_same_start_inclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 3),
@@ -524,16 +524,16 @@ fn disambiguated_overlap_position_strict_closed_inside_and_same_start_inclusive_
 }
 
 #[test]
-fn disambiguated_overlap_position_strict_closed_inside_and_same_start_exclusive_inclusive() {
+fn disambiguated_overlap_position_strict_bounded_inside_and_same_start_exclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -546,16 +546,16 @@ fn disambiguated_overlap_position_strict_closed_inside_and_same_start_exclusive_
 }
 
 #[test]
-fn disambiguated_overlap_position_strict_closed_inside_and_same_start_exclusive_exclusive() {
+fn disambiguated_overlap_position_strict_bounded_inside_and_same_start_exclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 3),
@@ -568,16 +568,16 @@ fn disambiguated_overlap_position_strict_closed_inside_and_same_start_exclusive_
 }
 
 #[test]
-fn disambiguated_overlap_position_strict_closed_time_gap_inside_and_same_end() {
+fn disambiguated_overlap_position_strict_bounded_time_gap_inside_and_same_end() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -590,16 +590,16 @@ fn disambiguated_overlap_position_strict_closed_time_gap_inside_and_same_end() {
 }
 
 #[test]
-fn disambiguated_overlap_position_strict_closed_inside_and_same_end_inclusive_inclusive() {
+fn disambiguated_overlap_position_strict_bounded_inside_and_same_end_inclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -612,16 +612,16 @@ fn disambiguated_overlap_position_strict_closed_inside_and_same_end_inclusive_in
 }
 
 #[test]
-fn disambiguated_overlap_position_strict_closed_inside_and_same_end_inclusive_exclusive() {
+fn disambiguated_overlap_position_strict_bounded_inside_and_same_end_inclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -634,16 +634,16 @@ fn disambiguated_overlap_position_strict_closed_inside_and_same_end_inclusive_ex
 }
 
 #[test]
-fn disambiguated_overlap_position_strict_closed_inside_and_same_end_exclusive_inclusive() {
+fn disambiguated_overlap_position_strict_bounded_inside_and_same_end_exclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Exclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -656,16 +656,16 @@ fn disambiguated_overlap_position_strict_closed_inside_and_same_end_exclusive_in
 }
 
 #[test]
-fn disambiguated_overlap_position_strict_closed_inside_and_same_end_exclusive_exclusive() {
+fn disambiguated_overlap_position_strict_bounded_inside_and_same_end_exclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Exclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -678,16 +678,16 @@ fn disambiguated_overlap_position_strict_closed_inside_and_same_end_exclusive_ex
 }
 
 #[test]
-fn disambiguated_overlap_position_strict_closed_equal_start_inclusive_inclusive_end_inclusive_inclusive() {
+fn disambiguated_overlap_position_strict_bounded_equal_start_inclusive_inclusive_end_inclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -700,16 +700,16 @@ fn disambiguated_overlap_position_strict_closed_equal_start_inclusive_inclusive_
 }
 
 #[test]
-fn disambiguated_overlap_position_strict_closed_equal_start_inclusive_inclusive_end_inclusive_exclusive() {
+fn disambiguated_overlap_position_strict_bounded_equal_start_inclusive_inclusive_end_inclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -722,16 +722,16 @@ fn disambiguated_overlap_position_strict_closed_equal_start_inclusive_inclusive_
 }
 
 #[test]
-fn disambiguated_overlap_position_strict_closed_equal_start_inclusive_inclusive_end_exclusive_inclusive() {
+fn disambiguated_overlap_position_strict_bounded_equal_start_inclusive_inclusive_end_exclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -744,16 +744,16 @@ fn disambiguated_overlap_position_strict_closed_equal_start_inclusive_inclusive_
 }
 
 #[test]
-fn disambiguated_overlap_position_strict_closed_equal_start_inclusive_inclusive_end_exclusive_exclusive() {
+fn disambiguated_overlap_position_strict_bounded_equal_start_inclusive_inclusive_end_exclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -766,16 +766,16 @@ fn disambiguated_overlap_position_strict_closed_equal_start_inclusive_inclusive_
 }
 
 #[test]
-fn disambiguated_overlap_position_strict_closed_equal_start_inclusive_exclusive_end_inclusive_inclusive() {
+fn disambiguated_overlap_position_strict_bounded_equal_start_inclusive_exclusive_end_inclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 2),
@@ -788,16 +788,16 @@ fn disambiguated_overlap_position_strict_closed_equal_start_inclusive_exclusive_
 }
 
 #[test]
-fn disambiguated_overlap_position_strict_closed_equal_start_inclusive_exclusive_end_inclusive_exclusive() {
+fn disambiguated_overlap_position_strict_bounded_equal_start_inclusive_exclusive_end_inclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 2),
@@ -810,16 +810,16 @@ fn disambiguated_overlap_position_strict_closed_equal_start_inclusive_exclusive_
 }
 
 #[test]
-fn disambiguated_overlap_position_strict_closed_equal_start_inclusive_exclusive_end_exclusive_inclusive() {
+fn disambiguated_overlap_position_strict_bounded_equal_start_inclusive_exclusive_end_exclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 2),
@@ -832,16 +832,16 @@ fn disambiguated_overlap_position_strict_closed_equal_start_inclusive_exclusive_
 }
 
 #[test]
-fn disambiguated_overlap_position_strict_closed_equal_start_inclusive_exclusive_end_exclusive_exclusive() {
+fn disambiguated_overlap_position_strict_bounded_equal_start_inclusive_exclusive_end_exclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 2),
@@ -854,16 +854,16 @@ fn disambiguated_overlap_position_strict_closed_equal_start_inclusive_exclusive_
 }
 
 #[test]
-fn disambiguated_overlap_position_strict_closed_equal_start_exclusive_inclusive_end_inclusive_inclusive() {
+fn disambiguated_overlap_position_strict_bounded_equal_start_exclusive_inclusive_end_inclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -876,16 +876,16 @@ fn disambiguated_overlap_position_strict_closed_equal_start_exclusive_inclusive_
 }
 
 #[test]
-fn disambiguated_overlap_position_strict_closed_equal_start_exclusive_inclusive_end_inclusive_exclusive() {
+fn disambiguated_overlap_position_strict_bounded_equal_start_exclusive_inclusive_end_inclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -898,16 +898,16 @@ fn disambiguated_overlap_position_strict_closed_equal_start_exclusive_inclusive_
 }
 
 #[test]
-fn disambiguated_overlap_position_strict_closed_equal_start_exclusive_inclusive_end_exclusive_inclusive() {
+fn disambiguated_overlap_position_strict_bounded_equal_start_exclusive_inclusive_end_exclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -920,16 +920,16 @@ fn disambiguated_overlap_position_strict_closed_equal_start_exclusive_inclusive_
 }
 
 #[test]
-fn disambiguated_overlap_position_strict_closed_equal_start_exclusive_inclusive_end_exclusive_exclusive() {
+fn disambiguated_overlap_position_strict_bounded_equal_start_exclusive_inclusive_end_exclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -942,16 +942,16 @@ fn disambiguated_overlap_position_strict_closed_equal_start_exclusive_inclusive_
 }
 
 #[test]
-fn disambiguated_overlap_position_strict_closed_equal_start_exclusive_exclusive_end_inclusive_inclusive() {
+fn disambiguated_overlap_position_strict_bounded_equal_start_exclusive_exclusive_end_inclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 2),
@@ -964,16 +964,16 @@ fn disambiguated_overlap_position_strict_closed_equal_start_exclusive_exclusive_
 }
 
 #[test]
-fn disambiguated_overlap_position_strict_closed_equal_start_exclusive_exclusive_end_inclusive_exclusive() {
+fn disambiguated_overlap_position_strict_bounded_equal_start_exclusive_exclusive_end_inclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 2),
@@ -986,16 +986,16 @@ fn disambiguated_overlap_position_strict_closed_equal_start_exclusive_exclusive_
 }
 
 #[test]
-fn disambiguated_overlap_position_strict_closed_equal_start_exclusive_exclusive_end_exclusive_inclusive() {
+fn disambiguated_overlap_position_strict_bounded_equal_start_exclusive_exclusive_end_exclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 2),
@@ -1008,16 +1008,16 @@ fn disambiguated_overlap_position_strict_closed_equal_start_exclusive_exclusive_
 }
 
 #[test]
-fn disambiguated_overlap_position_strict_closed_equal_start_exclusive_exclusive_end_exclusive_exclusive() {
+fn disambiguated_overlap_position_strict_bounded_equal_start_exclusive_exclusive_end_exclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 2),
@@ -1030,16 +1030,16 @@ fn disambiguated_overlap_position_strict_closed_equal_start_exclusive_exclusive_
 }
 
 #[test]
-fn disambiguated_overlap_position_strict_closed_contains_and_same_start_inclusive_inclusive() {
+fn disambiguated_overlap_position_strict_bounded_contains_and_same_start_inclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -1052,16 +1052,16 @@ fn disambiguated_overlap_position_strict_closed_contains_and_same_start_inclusiv
 }
 
 #[test]
-fn disambiguated_overlap_position_strict_closed_contains_and_same_start_inclusive_exclusive() {
+fn disambiguated_overlap_position_strict_bounded_contains_and_same_start_inclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 2),
@@ -1074,16 +1074,16 @@ fn disambiguated_overlap_position_strict_closed_contains_and_same_start_inclusiv
 }
 
 #[test]
-fn disambiguated_overlap_position_strict_closed_contains_and_same_start_exclusive_inclusive() {
+fn disambiguated_overlap_position_strict_bounded_contains_and_same_start_exclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -1096,16 +1096,16 @@ fn disambiguated_overlap_position_strict_closed_contains_and_same_start_exclusiv
 }
 
 #[test]
-fn disambiguated_overlap_position_strict_closed_contains_and_same_start_exclusive_exclusive() {
+fn disambiguated_overlap_position_strict_bounded_contains_and_same_start_exclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 2),
@@ -1118,16 +1118,16 @@ fn disambiguated_overlap_position_strict_closed_contains_and_same_start_exclusiv
 }
 
 #[test]
-fn disambiguated_overlap_position_strict_closed_contains_and_same_end_inclusive_inclusive() {
+fn disambiguated_overlap_position_strict_bounded_contains_and_same_end_inclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 2),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -1140,16 +1140,16 @@ fn disambiguated_overlap_position_strict_closed_contains_and_same_end_inclusive_
 }
 
 #[test]
-fn disambiguated_overlap_position_strict_closed_contains_and_same_end_inclusive_exclusive() {
+fn disambiguated_overlap_position_strict_bounded_contains_and_same_end_inclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 2),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -1162,16 +1162,16 @@ fn disambiguated_overlap_position_strict_closed_contains_and_same_end_inclusive_
 }
 
 #[test]
-fn disambiguated_overlap_position_strict_closed_contains_and_same_end_exclusive_inclusive() {
+fn disambiguated_overlap_position_strict_bounded_contains_and_same_end_exclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Exclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 2),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -1184,16 +1184,16 @@ fn disambiguated_overlap_position_strict_closed_contains_and_same_end_exclusive_
 }
 
 #[test]
-fn disambiguated_overlap_position_strict_closed_contains_and_same_end_exclusive_exclusive() {
+fn disambiguated_overlap_position_strict_bounded_contains_and_same_end_exclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Exclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 2),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -1206,16 +1206,16 @@ fn disambiguated_overlap_position_strict_closed_contains_and_same_end_exclusive_
 }
 
 #[test]
-fn disambiguated_overlap_position_strict_closed_contains() {
+fn disambiguated_overlap_position_strict_bounded_contains() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 4),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 2),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -1228,10 +1228,10 @@ fn disambiguated_overlap_position_strict_closed_contains() {
 }
 
 #[test]
-fn disambiguated_overlap_position_lenient_closed_time_gap_before_other() {
+fn disambiguated_overlap_position_lenient_bounded_time_gap_before_other() {
     assert_eq!(
-        ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), date(&Utc, 2025, 1, 2)).disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 3), date(&Utc, 2025, 1, 4),),
+        BoundedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), date(&Utc, 2025, 1, 2)).disambiguated_overlap_position(
+            &BoundedAbsoluteInterval::new(date(&Utc, 2025, 1, 3), date(&Utc, 2025, 1, 4),),
             OverlapRuleSet::Lenient,
         ),
         Ok(DisambiguatedOverlapPosition::OutsideBefore),
@@ -1239,16 +1239,16 @@ fn disambiguated_overlap_position_lenient_closed_time_gap_before_other() {
 }
 
 #[test]
-fn disambiguated_overlap_position_lenient_closed_inclusive_inclusive_adjacency_before_other() {
+fn disambiguated_overlap_position_lenient_bounded_inclusive_inclusive_adjacency_before_other() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 2),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -1261,16 +1261,16 @@ fn disambiguated_overlap_position_lenient_closed_inclusive_inclusive_adjacency_b
 }
 
 #[test]
-fn disambiguated_overlap_position_lenient_closed_inclusive_exclusive_adjacency_before_other() {
+fn disambiguated_overlap_position_lenient_bounded_inclusive_exclusive_adjacency_before_other() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 2),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 3),
@@ -1283,16 +1283,16 @@ fn disambiguated_overlap_position_lenient_closed_inclusive_exclusive_adjacency_b
 }
 
 #[test]
-fn disambiguated_overlap_position_lenient_closed_exclusive_inclusive_adjacency_before_other() {
+fn disambiguated_overlap_position_lenient_bounded_exclusive_inclusive_adjacency_before_other() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 2),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -1305,16 +1305,16 @@ fn disambiguated_overlap_position_lenient_closed_exclusive_inclusive_adjacency_b
 }
 
 #[test]
-fn disambiguated_overlap_position_lenient_closed_exclusive_exclusive_adjacency_before_other() {
+fn disambiguated_overlap_position_lenient_bounded_exclusive_exclusive_adjacency_before_other() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 2),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 3),
@@ -1327,10 +1327,10 @@ fn disambiguated_overlap_position_lenient_closed_exclusive_exclusive_adjacency_b
 }
 
 #[test]
-fn disambiguated_overlap_position_lenient_closed_time_gap_after_other() {
+fn disambiguated_overlap_position_lenient_bounded_time_gap_after_other() {
     assert_eq!(
-        ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 3), date(&Utc, 2025, 1, 4)).disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), date(&Utc, 2025, 1, 2)),
+        BoundedAbsoluteInterval::new(date(&Utc, 2025, 1, 3), date(&Utc, 2025, 1, 4)).disambiguated_overlap_position(
+            &BoundedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), date(&Utc, 2025, 1, 2)),
             OverlapRuleSet::Lenient,
         ),
         Ok(DisambiguatedOverlapPosition::OutsideAfter),
@@ -1338,16 +1338,16 @@ fn disambiguated_overlap_position_lenient_closed_time_gap_after_other() {
 }
 
 #[test]
-fn disambiguated_overlap_position_lenient_closed_inclusive_inclusive_adjacency_after_other() {
+fn disambiguated_overlap_position_lenient_bounded_inclusive_inclusive_adjacency_after_other() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -1360,16 +1360,16 @@ fn disambiguated_overlap_position_lenient_closed_inclusive_inclusive_adjacency_a
 }
 
 #[test]
-fn disambiguated_overlap_position_lenient_closed_inclusive_exclusive_adjacency_after_other() {
+fn disambiguated_overlap_position_lenient_bounded_inclusive_exclusive_adjacency_after_other() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -1382,16 +1382,16 @@ fn disambiguated_overlap_position_lenient_closed_inclusive_exclusive_adjacency_a
 }
 
 #[test]
-fn disambiguated_overlap_position_lenient_closed_exclusive_inclusive_adjacency_after_other() {
+fn disambiguated_overlap_position_lenient_bounded_exclusive_inclusive_adjacency_after_other() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -1404,16 +1404,16 @@ fn disambiguated_overlap_position_lenient_closed_exclusive_inclusive_adjacency_a
 }
 
 #[test]
-fn disambiguated_overlap_position_lenient_closed_exclusive_exclusive_adjacency_after_other() {
+fn disambiguated_overlap_position_lenient_bounded_exclusive_exclusive_adjacency_after_other() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -1426,16 +1426,16 @@ fn disambiguated_overlap_position_lenient_closed_exclusive_exclusive_adjacency_a
 }
 
 #[test]
-fn disambiguated_overlap_position_lenient_closed_crosses_start() {
+fn disambiguated_overlap_position_lenient_bounded_crosses_start() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 2),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 4),
@@ -1448,16 +1448,16 @@ fn disambiguated_overlap_position_lenient_closed_crosses_start() {
 }
 
 #[test]
-fn disambiguated_overlap_position_lenient_closed_crosses_end() {
+fn disambiguated_overlap_position_lenient_bounded_crosses_end() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 4),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -1470,16 +1470,16 @@ fn disambiguated_overlap_position_lenient_closed_crosses_end() {
 }
 
 #[test]
-fn disambiguated_overlap_position_lenient_closed_inside() {
+fn disambiguated_overlap_position_lenient_bounded_inside() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 4),
@@ -1492,16 +1492,16 @@ fn disambiguated_overlap_position_lenient_closed_inside() {
 }
 
 #[test]
-fn disambiguated_overlap_position_lenient_closed_time_gap_inside_and_same_start() {
+fn disambiguated_overlap_position_lenient_bounded_time_gap_inside_and_same_start() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -1514,16 +1514,16 @@ fn disambiguated_overlap_position_lenient_closed_time_gap_inside_and_same_start(
 }
 
 #[test]
-fn disambiguated_overlap_position_lenient_closed_inside_and_same_start_inclusive_inclusive() {
+fn disambiguated_overlap_position_lenient_bounded_inside_and_same_start_inclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -1536,16 +1536,16 @@ fn disambiguated_overlap_position_lenient_closed_inside_and_same_start_inclusive
 }
 
 #[test]
-fn disambiguated_overlap_position_lenient_closed_inside_and_same_start_inclusive_exclusive() {
+fn disambiguated_overlap_position_lenient_bounded_inside_and_same_start_inclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 3),
@@ -1558,16 +1558,16 @@ fn disambiguated_overlap_position_lenient_closed_inside_and_same_start_inclusive
 }
 
 #[test]
-fn disambiguated_overlap_position_lenient_closed_inside_and_same_start_exclusive_inclusive() {
+fn disambiguated_overlap_position_lenient_bounded_inside_and_same_start_exclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -1580,16 +1580,16 @@ fn disambiguated_overlap_position_lenient_closed_inside_and_same_start_exclusive
 }
 
 #[test]
-fn disambiguated_overlap_position_lenient_closed_inside_and_same_start_exclusive_exclusive() {
+fn disambiguated_overlap_position_lenient_bounded_inside_and_same_start_exclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 3),
@@ -1602,16 +1602,16 @@ fn disambiguated_overlap_position_lenient_closed_inside_and_same_start_exclusive
 }
 
 #[test]
-fn disambiguated_overlap_position_lenient_closed_time_gap_inside_and_same_end() {
+fn disambiguated_overlap_position_lenient_bounded_time_gap_inside_and_same_end() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -1624,16 +1624,16 @@ fn disambiguated_overlap_position_lenient_closed_time_gap_inside_and_same_end() 
 }
 
 #[test]
-fn disambiguated_overlap_position_lenient_closed_inside_and_same_end_inclusive_inclusive() {
+fn disambiguated_overlap_position_lenient_bounded_inside_and_same_end_inclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -1646,16 +1646,16 @@ fn disambiguated_overlap_position_lenient_closed_inside_and_same_end_inclusive_i
 }
 
 #[test]
-fn disambiguated_overlap_position_lenient_closed_inside_and_same_end_inclusive_exclusive() {
+fn disambiguated_overlap_position_lenient_bounded_inside_and_same_end_inclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -1668,16 +1668,16 @@ fn disambiguated_overlap_position_lenient_closed_inside_and_same_end_inclusive_e
 }
 
 #[test]
-fn disambiguated_overlap_position_lenient_closed_inside_and_same_end_exclusive_inclusive() {
+fn disambiguated_overlap_position_lenient_bounded_inside_and_same_end_exclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Exclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -1690,16 +1690,16 @@ fn disambiguated_overlap_position_lenient_closed_inside_and_same_end_exclusive_i
 }
 
 #[test]
-fn disambiguated_overlap_position_lenient_closed_inside_and_same_end_exclusive_exclusive() {
+fn disambiguated_overlap_position_lenient_bounded_inside_and_same_end_exclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Exclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -1712,16 +1712,16 @@ fn disambiguated_overlap_position_lenient_closed_inside_and_same_end_exclusive_e
 }
 
 #[test]
-fn disambiguated_overlap_position_lenient_closed_equal_start_inclusive_inclusive_end_inclusive_inclusive() {
+fn disambiguated_overlap_position_lenient_bounded_equal_start_inclusive_inclusive_end_inclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -1734,16 +1734,16 @@ fn disambiguated_overlap_position_lenient_closed_equal_start_inclusive_inclusive
 }
 
 #[test]
-fn disambiguated_overlap_position_lenient_closed_equal_start_inclusive_inclusive_end_inclusive_exclusive() {
+fn disambiguated_overlap_position_lenient_bounded_equal_start_inclusive_inclusive_end_inclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -1756,16 +1756,16 @@ fn disambiguated_overlap_position_lenient_closed_equal_start_inclusive_inclusive
 }
 
 #[test]
-fn disambiguated_overlap_position_lenient_closed_equal_start_inclusive_inclusive_end_exclusive_inclusive() {
+fn disambiguated_overlap_position_lenient_bounded_equal_start_inclusive_inclusive_end_exclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -1778,16 +1778,16 @@ fn disambiguated_overlap_position_lenient_closed_equal_start_inclusive_inclusive
 }
 
 #[test]
-fn disambiguated_overlap_position_lenient_closed_equal_start_inclusive_inclusive_end_exclusive_exclusive() {
+fn disambiguated_overlap_position_lenient_bounded_equal_start_inclusive_inclusive_end_exclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -1800,16 +1800,16 @@ fn disambiguated_overlap_position_lenient_closed_equal_start_inclusive_inclusive
 }
 
 #[test]
-fn disambiguated_overlap_position_lenient_closed_equal_start_inclusive_exclusive_end_inclusive_inclusive() {
+fn disambiguated_overlap_position_lenient_bounded_equal_start_inclusive_exclusive_end_inclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 2),
@@ -1822,16 +1822,16 @@ fn disambiguated_overlap_position_lenient_closed_equal_start_inclusive_exclusive
 }
 
 #[test]
-fn disambiguated_overlap_position_lenient_closed_equal_start_inclusive_exclusive_end_inclusive_exclusive() {
+fn disambiguated_overlap_position_lenient_bounded_equal_start_inclusive_exclusive_end_inclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 2),
@@ -1844,16 +1844,16 @@ fn disambiguated_overlap_position_lenient_closed_equal_start_inclusive_exclusive
 }
 
 #[test]
-fn disambiguated_overlap_position_lenient_closed_equal_start_inclusive_exclusive_end_exclusive_inclusive() {
+fn disambiguated_overlap_position_lenient_bounded_equal_start_inclusive_exclusive_end_exclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 2),
@@ -1866,16 +1866,16 @@ fn disambiguated_overlap_position_lenient_closed_equal_start_inclusive_exclusive
 }
 
 #[test]
-fn disambiguated_overlap_position_lenient_closed_equal_start_inclusive_exclusive_end_exclusive_exclusive() {
+fn disambiguated_overlap_position_lenient_bounded_equal_start_inclusive_exclusive_end_exclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 2),
@@ -1888,16 +1888,16 @@ fn disambiguated_overlap_position_lenient_closed_equal_start_inclusive_exclusive
 }
 
 #[test]
-fn disambiguated_overlap_position_lenient_closed_equal_start_exclusive_inclusive_end_inclusive_inclusive() {
+fn disambiguated_overlap_position_lenient_bounded_equal_start_exclusive_inclusive_end_inclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -1910,16 +1910,16 @@ fn disambiguated_overlap_position_lenient_closed_equal_start_exclusive_inclusive
 }
 
 #[test]
-fn disambiguated_overlap_position_lenient_closed_equal_start_exclusive_inclusive_end_inclusive_exclusive() {
+fn disambiguated_overlap_position_lenient_bounded_equal_start_exclusive_inclusive_end_inclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -1932,16 +1932,16 @@ fn disambiguated_overlap_position_lenient_closed_equal_start_exclusive_inclusive
 }
 
 #[test]
-fn disambiguated_overlap_position_lenient_closed_equal_start_exclusive_inclusive_end_exclusive_inclusive() {
+fn disambiguated_overlap_position_lenient_bounded_equal_start_exclusive_inclusive_end_exclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -1954,16 +1954,16 @@ fn disambiguated_overlap_position_lenient_closed_equal_start_exclusive_inclusive
 }
 
 #[test]
-fn disambiguated_overlap_position_lenient_closed_equal_start_exclusive_inclusive_end_exclusive_exclusive() {
+fn disambiguated_overlap_position_lenient_bounded_equal_start_exclusive_inclusive_end_exclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -1976,60 +1976,16 @@ fn disambiguated_overlap_position_lenient_closed_equal_start_exclusive_inclusive
 }
 
 #[test]
-fn disambiguated_overlap_position_lenient_closed_equal_start_exclusive_exclusive_end_inclusive_inclusive() {
+fn disambiguated_overlap_position_lenient_bounded_equal_start_exclusive_exclusive_end_inclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
-            date(&Utc, 2025, 1, 1),
-            BoundInclusivity::Exclusive,
-            date(&Utc, 2025, 1, 2),
-            BoundInclusivity::Inclusive,
-        )
-        .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Exclusive,
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Inclusive,
-            ),
-            OverlapRuleSet::Lenient,
-        ),
-        Ok(DisambiguatedOverlapPosition::Equal),
-    );
-}
-
-#[test]
-fn disambiguated_overlap_position_lenient_closed_equal_start_exclusive_exclusive_end_inclusive_exclusive() {
-    assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Exclusive,
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Exclusive,
-            ),
-            OverlapRuleSet::Lenient,
-        ),
-        Ok(DisambiguatedOverlapPosition::Equal),
-    );
-}
-
-#[test]
-fn disambiguated_overlap_position_lenient_closed_equal_start_exclusive_exclusive_end_exclusive_inclusive() {
-    assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
-            date(&Utc, 2025, 1, 1),
-            BoundInclusivity::Exclusive,
-            date(&Utc, 2025, 1, 2),
-            BoundInclusivity::Exclusive,
-        )
-        .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 2),
@@ -2042,16 +1998,16 @@ fn disambiguated_overlap_position_lenient_closed_equal_start_exclusive_exclusive
 }
 
 #[test]
-fn disambiguated_overlap_position_lenient_closed_equal_start_exclusive_exclusive_end_exclusive_exclusive() {
+fn disambiguated_overlap_position_lenient_bounded_equal_start_exclusive_exclusive_end_inclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 2),
-            BoundInclusivity::Exclusive,
+            BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 2),
@@ -2064,16 +2020,60 @@ fn disambiguated_overlap_position_lenient_closed_equal_start_exclusive_exclusive
 }
 
 #[test]
-fn disambiguated_overlap_position_lenient_closed_contains_and_same_start_inclusive_inclusive() {
+fn disambiguated_overlap_position_lenient_bounded_equal_start_exclusive_exclusive_end_exclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
+            date(&Utc, 2025, 1, 1),
+            BoundInclusivity::Exclusive,
+            date(&Utc, 2025, 1, 2),
+            BoundInclusivity::Exclusive,
+        )
+        .disambiguated_overlap_position(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
+            ),
+            OverlapRuleSet::Lenient,
+        ),
+        Ok(DisambiguatedOverlapPosition::Equal),
+    );
+}
+
+#[test]
+fn disambiguated_overlap_position_lenient_bounded_equal_start_exclusive_exclusive_end_exclusive_exclusive() {
+    assert_eq!(
+        BoundedAbsoluteInterval::new_with_inclusivity(
+            date(&Utc, 2025, 1, 1),
+            BoundInclusivity::Exclusive,
+            date(&Utc, 2025, 1, 2),
+            BoundInclusivity::Exclusive,
+        )
+        .disambiguated_overlap_position(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
+            ),
+            OverlapRuleSet::Lenient,
+        ),
+        Ok(DisambiguatedOverlapPosition::Equal),
+    );
+}
+
+#[test]
+fn disambiguated_overlap_position_lenient_bounded_contains_and_same_start_inclusive_inclusive() {
+    assert_eq!(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -2086,16 +2086,16 @@ fn disambiguated_overlap_position_lenient_closed_contains_and_same_start_inclusi
 }
 
 #[test]
-fn disambiguated_overlap_position_lenient_closed_contains_and_same_start_inclusive_exclusive() {
+fn disambiguated_overlap_position_lenient_bounded_contains_and_same_start_inclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 2),
@@ -2108,16 +2108,16 @@ fn disambiguated_overlap_position_lenient_closed_contains_and_same_start_inclusi
 }
 
 #[test]
-fn disambiguated_overlap_position_lenient_closed_contains_and_same_start_exclusive_inclusive() {
+fn disambiguated_overlap_position_lenient_bounded_contains_and_same_start_exclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -2130,16 +2130,16 @@ fn disambiguated_overlap_position_lenient_closed_contains_and_same_start_exclusi
 }
 
 #[test]
-fn disambiguated_overlap_position_lenient_closed_contains_and_same_start_exclusive_exclusive() {
+fn disambiguated_overlap_position_lenient_bounded_contains_and_same_start_exclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 2),
@@ -2152,16 +2152,16 @@ fn disambiguated_overlap_position_lenient_closed_contains_and_same_start_exclusi
 }
 
 #[test]
-fn disambiguated_overlap_position_lenient_closed_contains_and_same_end_inclusive_inclusive() {
+fn disambiguated_overlap_position_lenient_bounded_contains_and_same_end_inclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 2),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -2174,60 +2174,16 @@ fn disambiguated_overlap_position_lenient_closed_contains_and_same_end_inclusive
 }
 
 #[test]
-fn disambiguated_overlap_position_lenient_closed_contains_and_same_end_inclusive_exclusive() {
+fn disambiguated_overlap_position_lenient_bounded_contains_and_same_end_inclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Inclusive,
-                date(&Utc, 2025, 1, 3),
-                BoundInclusivity::Exclusive,
-            ),
-            OverlapRuleSet::Lenient,
-        ),
-        Ok(DisambiguatedOverlapPosition::ContainsAndSameEnd),
-    );
-}
-
-#[test]
-fn disambiguated_overlap_position_lenient_closed_contains_and_same_end_exclusive_inclusive() {
-    assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
-            date(&Utc, 2025, 1, 1),
-            BoundInclusivity::Inclusive,
-            date(&Utc, 2025, 1, 3),
-            BoundInclusivity::Exclusive,
-        )
-        .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Inclusive,
-                date(&Utc, 2025, 1, 3),
-                BoundInclusivity::Inclusive,
-            ),
-            OverlapRuleSet::Lenient,
-        ),
-        Ok(DisambiguatedOverlapPosition::ContainsAndSameEnd),
-    );
-}
-
-#[test]
-fn disambiguated_overlap_position_lenient_closed_contains_and_same_end_exclusive_exclusive() {
-    assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
-            date(&Utc, 2025, 1, 1),
-            BoundInclusivity::Inclusive,
-            date(&Utc, 2025, 1, 3),
-            BoundInclusivity::Exclusive,
-        )
-        .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 2),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -2240,16 +2196,60 @@ fn disambiguated_overlap_position_lenient_closed_contains_and_same_end_exclusive
 }
 
 #[test]
-fn disambiguated_overlap_position_lenient_closed_contains() {
+fn disambiguated_overlap_position_lenient_bounded_contains_and_same_end_exclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
+            date(&Utc, 2025, 1, 1),
+            BoundInclusivity::Inclusive,
+            date(&Utc, 2025, 1, 3),
+            BoundInclusivity::Exclusive,
+        )
+        .disambiguated_overlap_position(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
+            ),
+            OverlapRuleSet::Lenient,
+        ),
+        Ok(DisambiguatedOverlapPosition::ContainsAndSameEnd),
+    );
+}
+
+#[test]
+fn disambiguated_overlap_position_lenient_bounded_contains_and_same_end_exclusive_exclusive() {
+    assert_eq!(
+        BoundedAbsoluteInterval::new_with_inclusivity(
+            date(&Utc, 2025, 1, 1),
+            BoundInclusivity::Inclusive,
+            date(&Utc, 2025, 1, 3),
+            BoundInclusivity::Exclusive,
+        )
+        .disambiguated_overlap_position(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Exclusive,
+            ),
+            OverlapRuleSet::Lenient,
+        ),
+        Ok(DisambiguatedOverlapPosition::ContainsAndSameEnd),
+    );
+}
+
+#[test]
+fn disambiguated_overlap_position_lenient_bounded_contains() {
+    assert_eq!(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 4),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 2),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -2262,10 +2262,10 @@ fn disambiguated_overlap_position_lenient_closed_contains() {
 }
 
 #[test]
-fn disambiguated_overlap_position_very_lenient_closed_time_gap_before_other() {
+fn disambiguated_overlap_position_very_lenient_bounded_time_gap_before_other() {
     assert_eq!(
-        ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), date(&Utc, 2025, 1, 2)).disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 3), date(&Utc, 2025, 1, 4),),
+        BoundedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), date(&Utc, 2025, 1, 2)).disambiguated_overlap_position(
+            &BoundedAbsoluteInterval::new(date(&Utc, 2025, 1, 3), date(&Utc, 2025, 1, 4),),
             OverlapRuleSet::VeryLenient,
         ),
         Ok(DisambiguatedOverlapPosition::OutsideBefore),
@@ -2273,16 +2273,16 @@ fn disambiguated_overlap_position_very_lenient_closed_time_gap_before_other() {
 }
 
 #[test]
-fn disambiguated_overlap_position_very_lenient_closed_inclusive_inclusive_adjacency_before_other() {
+fn disambiguated_overlap_position_very_lenient_bounded_inclusive_inclusive_adjacency_before_other() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 2),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -2295,60 +2295,16 @@ fn disambiguated_overlap_position_very_lenient_closed_inclusive_inclusive_adjace
 }
 
 #[test]
-fn disambiguated_overlap_position_very_lenient_closed_inclusive_exclusive_adjacency_before_other() {
+fn disambiguated_overlap_position_very_lenient_bounded_inclusive_exclusive_adjacency_before_other() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Exclusive,
-                date(&Utc, 2025, 1, 3),
-                BoundInclusivity::Inclusive,
-            ),
-            OverlapRuleSet::VeryLenient,
-        ),
-        Ok(DisambiguatedOverlapPosition::EndsOnStart),
-    );
-}
-
-#[test]
-fn disambiguated_overlap_position_very_lenient_closed_exclusive_inclusive_adjacency_before_other() {
-    assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
-            date(&Utc, 2025, 1, 1),
-            BoundInclusivity::Inclusive,
-            date(&Utc, 2025, 1, 2),
-            BoundInclusivity::Exclusive,
-        )
-        .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Inclusive,
-                date(&Utc, 2025, 1, 3),
-                BoundInclusivity::Inclusive,
-            ),
-            OverlapRuleSet::VeryLenient,
-        ),
-        Ok(DisambiguatedOverlapPosition::EndsOnStart),
-    );
-}
-
-#[test]
-fn disambiguated_overlap_position_very_lenient_closed_exclusive_exclusive_adjacency_before_other() {
-    assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
-            date(&Utc, 2025, 1, 1),
-            BoundInclusivity::Inclusive,
-            date(&Utc, 2025, 1, 2),
-            BoundInclusivity::Exclusive,
-        )
-        .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 2),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 3),
@@ -2361,10 +2317,54 @@ fn disambiguated_overlap_position_very_lenient_closed_exclusive_exclusive_adjace
 }
 
 #[test]
-fn disambiguated_overlap_position_very_lenient_closed_time_gap_after_other() {
+fn disambiguated_overlap_position_very_lenient_bounded_exclusive_inclusive_adjacency_before_other() {
     assert_eq!(
-        ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 3), date(&Utc, 2025, 1, 4)).disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), date(&Utc, 2025, 1, 2)),
+        BoundedAbsoluteInterval::new_with_inclusivity(
+            date(&Utc, 2025, 1, 1),
+            BoundInclusivity::Inclusive,
+            date(&Utc, 2025, 1, 2),
+            BoundInclusivity::Exclusive,
+        )
+        .disambiguated_overlap_position(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
+            ),
+            OverlapRuleSet::VeryLenient,
+        ),
+        Ok(DisambiguatedOverlapPosition::EndsOnStart),
+    );
+}
+
+#[test]
+fn disambiguated_overlap_position_very_lenient_bounded_exclusive_exclusive_adjacency_before_other() {
+    assert_eq!(
+        BoundedAbsoluteInterval::new_with_inclusivity(
+            date(&Utc, 2025, 1, 1),
+            BoundInclusivity::Inclusive,
+            date(&Utc, 2025, 1, 2),
+            BoundInclusivity::Exclusive,
+        )
+        .disambiguated_overlap_position(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
+            ),
+            OverlapRuleSet::VeryLenient,
+        ),
+        Ok(DisambiguatedOverlapPosition::EndsOnStart),
+    );
+}
+
+#[test]
+fn disambiguated_overlap_position_very_lenient_bounded_time_gap_after_other() {
+    assert_eq!(
+        BoundedAbsoluteInterval::new(date(&Utc, 2025, 1, 3), date(&Utc, 2025, 1, 4)).disambiguated_overlap_position(
+            &BoundedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), date(&Utc, 2025, 1, 2)),
             OverlapRuleSet::VeryLenient,
         ),
         Ok(DisambiguatedOverlapPosition::OutsideAfter),
@@ -2372,16 +2372,16 @@ fn disambiguated_overlap_position_very_lenient_closed_time_gap_after_other() {
 }
 
 #[test]
-fn disambiguated_overlap_position_very_lenient_closed_inclusive_inclusive_adjacency_after_other() {
+fn disambiguated_overlap_position_very_lenient_bounded_inclusive_inclusive_adjacency_after_other() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -2394,60 +2394,16 @@ fn disambiguated_overlap_position_very_lenient_closed_inclusive_inclusive_adjace
 }
 
 #[test]
-fn disambiguated_overlap_position_very_lenient_closed_inclusive_exclusive_adjacency_after_other() {
+fn disambiguated_overlap_position_very_lenient_bounded_inclusive_exclusive_adjacency_after_other() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Inclusive,
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Exclusive,
-            ),
-            OverlapRuleSet::VeryLenient,
-        ),
-        Ok(DisambiguatedOverlapPosition::StartsOnEnd),
-    );
-}
-
-#[test]
-fn disambiguated_overlap_position_very_lenient_closed_exclusive_inclusive_adjacency_after_other() {
-    assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
-            date(&Utc, 2025, 1, 2),
-            BoundInclusivity::Exclusive,
-            date(&Utc, 2025, 1, 3),
-            BoundInclusivity::Inclusive,
-        )
-        .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Inclusive,
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Inclusive,
-            ),
-            OverlapRuleSet::VeryLenient,
-        ),
-        Ok(DisambiguatedOverlapPosition::StartsOnEnd),
-    );
-}
-
-#[test]
-fn disambiguated_overlap_position_very_lenient_closed_exclusive_exclusive_adjacency_after_other() {
-    assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
-            date(&Utc, 2025, 1, 2),
-            BoundInclusivity::Exclusive,
-            date(&Utc, 2025, 1, 3),
-            BoundInclusivity::Inclusive,
-        )
-        .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -2460,16 +2416,60 @@ fn disambiguated_overlap_position_very_lenient_closed_exclusive_exclusive_adjace
 }
 
 #[test]
-fn disambiguated_overlap_position_very_lenient_closed_crosses_start() {
+fn disambiguated_overlap_position_very_lenient_bounded_exclusive_inclusive_adjacency_after_other() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
+            date(&Utc, 2025, 1, 2),
+            BoundInclusivity::Exclusive,
+            date(&Utc, 2025, 1, 3),
+            BoundInclusivity::Inclusive,
+        )
+        .disambiguated_overlap_position(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
+            ),
+            OverlapRuleSet::VeryLenient,
+        ),
+        Ok(DisambiguatedOverlapPosition::StartsOnEnd),
+    );
+}
+
+#[test]
+fn disambiguated_overlap_position_very_lenient_bounded_exclusive_exclusive_adjacency_after_other() {
+    assert_eq!(
+        BoundedAbsoluteInterval::new_with_inclusivity(
+            date(&Utc, 2025, 1, 2),
+            BoundInclusivity::Exclusive,
+            date(&Utc, 2025, 1, 3),
+            BoundInclusivity::Inclusive,
+        )
+        .disambiguated_overlap_position(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
+            ),
+            OverlapRuleSet::VeryLenient,
+        ),
+        Ok(DisambiguatedOverlapPosition::StartsOnEnd),
+    );
+}
+
+#[test]
+fn disambiguated_overlap_position_very_lenient_bounded_crosses_start() {
+    assert_eq!(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 2),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 4),
@@ -2482,16 +2482,16 @@ fn disambiguated_overlap_position_very_lenient_closed_crosses_start() {
 }
 
 #[test]
-fn disambiguated_overlap_position_very_lenient_closed_crosses_end() {
+fn disambiguated_overlap_position_very_lenient_bounded_crosses_end() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 4),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -2504,16 +2504,16 @@ fn disambiguated_overlap_position_very_lenient_closed_crosses_end() {
 }
 
 #[test]
-fn disambiguated_overlap_position_very_lenient_closed_inside() {
+fn disambiguated_overlap_position_very_lenient_bounded_inside() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 4),
@@ -2526,16 +2526,16 @@ fn disambiguated_overlap_position_very_lenient_closed_inside() {
 }
 
 #[test]
-fn disambiguated_overlap_position_very_lenient_closed_time_gap_inside_and_same_start() {
+fn disambiguated_overlap_position_very_lenient_bounded_time_gap_inside_and_same_start() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -2548,16 +2548,16 @@ fn disambiguated_overlap_position_very_lenient_closed_time_gap_inside_and_same_s
 }
 
 #[test]
-fn disambiguated_overlap_position_very_lenient_closed_inside_and_same_start_inclusive_inclusive() {
+fn disambiguated_overlap_position_very_lenient_bounded_inside_and_same_start_inclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -2570,16 +2570,16 @@ fn disambiguated_overlap_position_very_lenient_closed_inside_and_same_start_incl
 }
 
 #[test]
-fn disambiguated_overlap_position_very_lenient_closed_inside_and_same_start_inclusive_exclusive() {
+fn disambiguated_overlap_position_very_lenient_bounded_inside_and_same_start_inclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 3),
@@ -2592,16 +2592,16 @@ fn disambiguated_overlap_position_very_lenient_closed_inside_and_same_start_incl
 }
 
 #[test]
-fn disambiguated_overlap_position_very_lenient_closed_inside_and_same_start_exclusive_inclusive() {
+fn disambiguated_overlap_position_very_lenient_bounded_inside_and_same_start_exclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -2614,16 +2614,16 @@ fn disambiguated_overlap_position_very_lenient_closed_inside_and_same_start_excl
 }
 
 #[test]
-fn disambiguated_overlap_position_very_lenient_closed_inside_and_same_start_exclusive_exclusive() {
+fn disambiguated_overlap_position_very_lenient_bounded_inside_and_same_start_exclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 3),
@@ -2636,16 +2636,16 @@ fn disambiguated_overlap_position_very_lenient_closed_inside_and_same_start_excl
 }
 
 #[test]
-fn disambiguated_overlap_position_very_lenient_closed_time_gap_inside_and_same_end() {
+fn disambiguated_overlap_position_very_lenient_bounded_time_gap_inside_and_same_end() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -2658,16 +2658,16 @@ fn disambiguated_overlap_position_very_lenient_closed_time_gap_inside_and_same_e
 }
 
 #[test]
-fn disambiguated_overlap_position_very_lenient_closed_inside_and_same_end_inclusive_inclusive() {
+fn disambiguated_overlap_position_very_lenient_bounded_inside_and_same_end_inclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -2680,16 +2680,16 @@ fn disambiguated_overlap_position_very_lenient_closed_inside_and_same_end_inclus
 }
 
 #[test]
-fn disambiguated_overlap_position_very_lenient_closed_inside_and_same_end_inclusive_exclusive() {
+fn disambiguated_overlap_position_very_lenient_bounded_inside_and_same_end_inclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -2702,16 +2702,16 @@ fn disambiguated_overlap_position_very_lenient_closed_inside_and_same_end_inclus
 }
 
 #[test]
-fn disambiguated_overlap_position_very_lenient_closed_inside_and_same_end_exclusive_inclusive() {
+fn disambiguated_overlap_position_very_lenient_bounded_inside_and_same_end_exclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Exclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -2724,16 +2724,16 @@ fn disambiguated_overlap_position_very_lenient_closed_inside_and_same_end_exclus
 }
 
 #[test]
-fn disambiguated_overlap_position_very_lenient_closed_inside_and_same_end_exclusive_exclusive() {
+fn disambiguated_overlap_position_very_lenient_bounded_inside_and_same_end_exclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Exclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -2746,16 +2746,16 @@ fn disambiguated_overlap_position_very_lenient_closed_inside_and_same_end_exclus
 }
 
 #[test]
-fn disambiguated_overlap_position_very_lenient_closed_equal_start_inclusive_inclusive_end_inclusive_inclusive() {
+fn disambiguated_overlap_position_very_lenient_bounded_equal_start_inclusive_inclusive_end_inclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -2768,16 +2768,16 @@ fn disambiguated_overlap_position_very_lenient_closed_equal_start_inclusive_incl
 }
 
 #[test]
-fn disambiguated_overlap_position_very_lenient_closed_equal_start_inclusive_inclusive_end_inclusive_exclusive() {
+fn disambiguated_overlap_position_very_lenient_bounded_equal_start_inclusive_inclusive_end_inclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -2790,16 +2790,16 @@ fn disambiguated_overlap_position_very_lenient_closed_equal_start_inclusive_incl
 }
 
 #[test]
-fn disambiguated_overlap_position_very_lenient_closed_equal_start_inclusive_inclusive_end_exclusive_inclusive() {
+fn disambiguated_overlap_position_very_lenient_bounded_equal_start_inclusive_inclusive_end_exclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -2812,16 +2812,16 @@ fn disambiguated_overlap_position_very_lenient_closed_equal_start_inclusive_incl
 }
 
 #[test]
-fn disambiguated_overlap_position_very_lenient_closed_equal_start_inclusive_inclusive_end_exclusive_exclusive() {
+fn disambiguated_overlap_position_very_lenient_bounded_equal_start_inclusive_inclusive_end_exclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -2834,16 +2834,16 @@ fn disambiguated_overlap_position_very_lenient_closed_equal_start_inclusive_incl
 }
 
 #[test]
-fn disambiguated_overlap_position_very_lenient_closed_equal_start_inclusive_exclusive_end_inclusive_inclusive() {
+fn disambiguated_overlap_position_very_lenient_bounded_equal_start_inclusive_exclusive_end_inclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 2),
@@ -2856,16 +2856,16 @@ fn disambiguated_overlap_position_very_lenient_closed_equal_start_inclusive_excl
 }
 
 #[test]
-fn disambiguated_overlap_position_very_lenient_closed_equal_start_inclusive_exclusive_end_inclusive_exclusive() {
+fn disambiguated_overlap_position_very_lenient_bounded_equal_start_inclusive_exclusive_end_inclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 2),
@@ -2878,16 +2878,16 @@ fn disambiguated_overlap_position_very_lenient_closed_equal_start_inclusive_excl
 }
 
 #[test]
-fn disambiguated_overlap_position_very_lenient_closed_equal_start_inclusive_exclusive_end_exclusive_inclusive() {
+fn disambiguated_overlap_position_very_lenient_bounded_equal_start_inclusive_exclusive_end_exclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 2),
@@ -2900,16 +2900,16 @@ fn disambiguated_overlap_position_very_lenient_closed_equal_start_inclusive_excl
 }
 
 #[test]
-fn disambiguated_overlap_position_very_lenient_closed_equal_start_inclusive_exclusive_end_exclusive_exclusive() {
+fn disambiguated_overlap_position_very_lenient_bounded_equal_start_inclusive_exclusive_end_exclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 2),
@@ -2922,16 +2922,16 @@ fn disambiguated_overlap_position_very_lenient_closed_equal_start_inclusive_excl
 }
 
 #[test]
-fn disambiguated_overlap_position_very_lenient_closed_equal_start_exclusive_inclusive_end_inclusive_inclusive() {
+fn disambiguated_overlap_position_very_lenient_bounded_equal_start_exclusive_inclusive_end_inclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -2944,16 +2944,16 @@ fn disambiguated_overlap_position_very_lenient_closed_equal_start_exclusive_incl
 }
 
 #[test]
-fn disambiguated_overlap_position_very_lenient_closed_equal_start_exclusive_inclusive_end_inclusive_exclusive() {
+fn disambiguated_overlap_position_very_lenient_bounded_equal_start_exclusive_inclusive_end_inclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -2966,16 +2966,16 @@ fn disambiguated_overlap_position_very_lenient_closed_equal_start_exclusive_incl
 }
 
 #[test]
-fn disambiguated_overlap_position_very_lenient_closed_equal_start_exclusive_inclusive_end_exclusive_inclusive() {
+fn disambiguated_overlap_position_very_lenient_bounded_equal_start_exclusive_inclusive_end_exclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -2988,16 +2988,16 @@ fn disambiguated_overlap_position_very_lenient_closed_equal_start_exclusive_incl
 }
 
 #[test]
-fn disambiguated_overlap_position_very_lenient_closed_equal_start_exclusive_inclusive_end_exclusive_exclusive() {
+fn disambiguated_overlap_position_very_lenient_bounded_equal_start_exclusive_inclusive_end_exclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -3010,60 +3010,16 @@ fn disambiguated_overlap_position_very_lenient_closed_equal_start_exclusive_incl
 }
 
 #[test]
-fn disambiguated_overlap_position_very_lenient_closed_equal_start_exclusive_exclusive_end_inclusive_inclusive() {
+fn disambiguated_overlap_position_very_lenient_bounded_equal_start_exclusive_exclusive_end_inclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
-            date(&Utc, 2025, 1, 1),
-            BoundInclusivity::Exclusive,
-            date(&Utc, 2025, 1, 2),
-            BoundInclusivity::Inclusive,
-        )
-        .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Exclusive,
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Inclusive,
-            ),
-            OverlapRuleSet::VeryLenient,
-        ),
-        Ok(DisambiguatedOverlapPosition::Equal),
-    );
-}
-
-#[test]
-fn disambiguated_overlap_position_very_lenient_closed_equal_start_exclusive_exclusive_end_inclusive_exclusive() {
-    assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Exclusive,
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Exclusive,
-            ),
-            OverlapRuleSet::VeryLenient,
-        ),
-        Ok(DisambiguatedOverlapPosition::Equal),
-    );
-}
-
-#[test]
-fn disambiguated_overlap_position_very_lenient_closed_equal_start_exclusive_exclusive_end_exclusive_inclusive() {
-    assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
-            date(&Utc, 2025, 1, 1),
-            BoundInclusivity::Exclusive,
-            date(&Utc, 2025, 1, 2),
-            BoundInclusivity::Exclusive,
-        )
-        .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 2),
@@ -3076,16 +3032,16 @@ fn disambiguated_overlap_position_very_lenient_closed_equal_start_exclusive_excl
 }
 
 #[test]
-fn disambiguated_overlap_position_very_lenient_closed_equal_start_exclusive_exclusive_end_exclusive_exclusive() {
+fn disambiguated_overlap_position_very_lenient_bounded_equal_start_exclusive_exclusive_end_inclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 2),
-            BoundInclusivity::Exclusive,
+            BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 2),
@@ -3098,16 +3054,60 @@ fn disambiguated_overlap_position_very_lenient_closed_equal_start_exclusive_excl
 }
 
 #[test]
-fn disambiguated_overlap_position_very_lenient_closed_contains_and_same_start_inclusive_inclusive() {
+fn disambiguated_overlap_position_very_lenient_bounded_equal_start_exclusive_exclusive_end_exclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
+            date(&Utc, 2025, 1, 1),
+            BoundInclusivity::Exclusive,
+            date(&Utc, 2025, 1, 2),
+            BoundInclusivity::Exclusive,
+        )
+        .disambiguated_overlap_position(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
+            ),
+            OverlapRuleSet::VeryLenient,
+        ),
+        Ok(DisambiguatedOverlapPosition::Equal),
+    );
+}
+
+#[test]
+fn disambiguated_overlap_position_very_lenient_bounded_equal_start_exclusive_exclusive_end_exclusive_exclusive() {
+    assert_eq!(
+        BoundedAbsoluteInterval::new_with_inclusivity(
+            date(&Utc, 2025, 1, 1),
+            BoundInclusivity::Exclusive,
+            date(&Utc, 2025, 1, 2),
+            BoundInclusivity::Exclusive,
+        )
+        .disambiguated_overlap_position(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Exclusive,
+            ),
+            OverlapRuleSet::VeryLenient,
+        ),
+        Ok(DisambiguatedOverlapPosition::Equal),
+    );
+}
+
+#[test]
+fn disambiguated_overlap_position_very_lenient_bounded_contains_and_same_start_inclusive_inclusive() {
+    assert_eq!(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -3120,16 +3120,16 @@ fn disambiguated_overlap_position_very_lenient_closed_contains_and_same_start_in
 }
 
 #[test]
-fn disambiguated_overlap_position_very_lenient_closed_contains_and_same_start_inclusive_exclusive() {
+fn disambiguated_overlap_position_very_lenient_bounded_contains_and_same_start_inclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 2),
@@ -3142,16 +3142,16 @@ fn disambiguated_overlap_position_very_lenient_closed_contains_and_same_start_in
 }
 
 #[test]
-fn disambiguated_overlap_position_very_lenient_closed_contains_and_same_start_exclusive_inclusive() {
+fn disambiguated_overlap_position_very_lenient_bounded_contains_and_same_start_exclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -3164,16 +3164,16 @@ fn disambiguated_overlap_position_very_lenient_closed_contains_and_same_start_ex
 }
 
 #[test]
-fn disambiguated_overlap_position_very_lenient_closed_contains_and_same_start_exclusive_exclusive() {
+fn disambiguated_overlap_position_very_lenient_bounded_contains_and_same_start_exclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 2),
@@ -3186,16 +3186,16 @@ fn disambiguated_overlap_position_very_lenient_closed_contains_and_same_start_ex
 }
 
 #[test]
-fn disambiguated_overlap_position_very_lenient_closed_contains_and_same_end_inclusive_inclusive() {
+fn disambiguated_overlap_position_very_lenient_bounded_contains_and_same_end_inclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 2),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -3208,60 +3208,16 @@ fn disambiguated_overlap_position_very_lenient_closed_contains_and_same_end_incl
 }
 
 #[test]
-fn disambiguated_overlap_position_very_lenient_closed_contains_and_same_end_inclusive_exclusive() {
+fn disambiguated_overlap_position_very_lenient_bounded_contains_and_same_end_inclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Inclusive,
-                date(&Utc, 2025, 1, 3),
-                BoundInclusivity::Exclusive,
-            ),
-            OverlapRuleSet::VeryLenient,
-        ),
-        Ok(DisambiguatedOverlapPosition::ContainsAndSameEnd),
-    );
-}
-
-#[test]
-fn disambiguated_overlap_position_very_lenient_closed_contains_and_same_end_exclusive_inclusive() {
-    assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
-            date(&Utc, 2025, 1, 1),
-            BoundInclusivity::Inclusive,
-            date(&Utc, 2025, 1, 3),
-            BoundInclusivity::Exclusive,
-        )
-        .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Inclusive,
-                date(&Utc, 2025, 1, 3),
-                BoundInclusivity::Inclusive,
-            ),
-            OverlapRuleSet::VeryLenient,
-        ),
-        Ok(DisambiguatedOverlapPosition::ContainsAndSameEnd),
-    );
-}
-
-#[test]
-fn disambiguated_overlap_position_very_lenient_closed_contains_and_same_end_exclusive_exclusive() {
-    assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
-            date(&Utc, 2025, 1, 1),
-            BoundInclusivity::Inclusive,
-            date(&Utc, 2025, 1, 3),
-            BoundInclusivity::Exclusive,
-        )
-        .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 2),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -3274,16 +3230,60 @@ fn disambiguated_overlap_position_very_lenient_closed_contains_and_same_end_excl
 }
 
 #[test]
-fn disambiguated_overlap_position_very_lenient_closed_contains() {
+fn disambiguated_overlap_position_very_lenient_bounded_contains_and_same_end_exclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
+            date(&Utc, 2025, 1, 1),
+            BoundInclusivity::Inclusive,
+            date(&Utc, 2025, 1, 3),
+            BoundInclusivity::Exclusive,
+        )
+        .disambiguated_overlap_position(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Inclusive,
+            ),
+            OverlapRuleSet::VeryLenient,
+        ),
+        Ok(DisambiguatedOverlapPosition::ContainsAndSameEnd),
+    );
+}
+
+#[test]
+fn disambiguated_overlap_position_very_lenient_bounded_contains_and_same_end_exclusive_exclusive() {
+    assert_eq!(
+        BoundedAbsoluteInterval::new_with_inclusivity(
+            date(&Utc, 2025, 1, 1),
+            BoundInclusivity::Inclusive,
+            date(&Utc, 2025, 1, 3),
+            BoundInclusivity::Exclusive,
+        )
+        .disambiguated_overlap_position(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
+                date(&Utc, 2025, 1, 2),
+                BoundInclusivity::Inclusive,
+                date(&Utc, 2025, 1, 3),
+                BoundInclusivity::Exclusive,
+            ),
+            OverlapRuleSet::VeryLenient,
+        ),
+        Ok(DisambiguatedOverlapPosition::ContainsAndSameEnd),
+    );
+}
+
+#[test]
+fn disambiguated_overlap_position_very_lenient_bounded_contains() {
+    assert_eq!(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 4),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 2),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -3296,10 +3296,10 @@ fn disambiguated_overlap_position_very_lenient_closed_contains() {
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_time_gap_before_other() {
+fn disambiguated_overlap_position_continuous_to_future_bounded_time_gap_before_other() {
     assert_eq!(
-        ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), date(&Utc, 2025, 1, 2)).disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 3), date(&Utc, 2025, 1, 4),),
+        BoundedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), date(&Utc, 2025, 1, 2)).disambiguated_overlap_position(
+            &BoundedAbsoluteInterval::new(date(&Utc, 2025, 1, 3), date(&Utc, 2025, 1, 4),),
             OverlapRuleSet::ContinuousToFuture,
         ),
         Ok(DisambiguatedOverlapPosition::OutsideBefore),
@@ -3307,16 +3307,16 @@ fn disambiguated_overlap_position_continuous_to_future_closed_time_gap_before_ot
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_inclusive_inclusive_adjacency_before_other() {
+fn disambiguated_overlap_position_continuous_to_future_bounded_inclusive_inclusive_adjacency_before_other() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 2),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -3329,16 +3329,16 @@ fn disambiguated_overlap_position_continuous_to_future_closed_inclusive_inclusiv
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_inclusive_exclusive_adjacency_before_other() {
+fn disambiguated_overlap_position_continuous_to_future_bounded_inclusive_exclusive_adjacency_before_other() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 2),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 3),
@@ -3351,16 +3351,16 @@ fn disambiguated_overlap_position_continuous_to_future_closed_inclusive_exclusiv
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_exclusive_inclusive_adjacency_before_other() {
+fn disambiguated_overlap_position_continuous_to_future_bounded_exclusive_inclusive_adjacency_before_other() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 2),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -3373,16 +3373,16 @@ fn disambiguated_overlap_position_continuous_to_future_closed_exclusive_inclusiv
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_exclusive_exclusive_adjacency_before_other() {
+fn disambiguated_overlap_position_continuous_to_future_bounded_exclusive_exclusive_adjacency_before_other() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 2),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 3),
@@ -3395,10 +3395,10 @@ fn disambiguated_overlap_position_continuous_to_future_closed_exclusive_exclusiv
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_time_gap_after_other() {
+fn disambiguated_overlap_position_continuous_to_future_bounded_time_gap_after_other() {
     assert_eq!(
-        ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 3), date(&Utc, 2025, 1, 4)).disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), date(&Utc, 2025, 1, 2)),
+        BoundedAbsoluteInterval::new(date(&Utc, 2025, 1, 3), date(&Utc, 2025, 1, 4)).disambiguated_overlap_position(
+            &BoundedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), date(&Utc, 2025, 1, 2)),
             OverlapRuleSet::ContinuousToFuture,
         ),
         Ok(DisambiguatedOverlapPosition::OutsideAfter),
@@ -3406,16 +3406,16 @@ fn disambiguated_overlap_position_continuous_to_future_closed_time_gap_after_oth
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_inclusive_inclusive_adjacency_after_other() {
+fn disambiguated_overlap_position_continuous_to_future_bounded_inclusive_inclusive_adjacency_after_other() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -3428,16 +3428,16 @@ fn disambiguated_overlap_position_continuous_to_future_closed_inclusive_inclusiv
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_inclusive_exclusive_adjacency_after_other() {
+fn disambiguated_overlap_position_continuous_to_future_bounded_inclusive_exclusive_adjacency_after_other() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -3450,16 +3450,16 @@ fn disambiguated_overlap_position_continuous_to_future_closed_inclusive_exclusiv
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_exclusive_inclusive_adjacency_after_other() {
+fn disambiguated_overlap_position_continuous_to_future_bounded_exclusive_inclusive_adjacency_after_other() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -3472,16 +3472,16 @@ fn disambiguated_overlap_position_continuous_to_future_closed_exclusive_inclusiv
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_exclusive_exclusive_adjacency_after_other() {
+fn disambiguated_overlap_position_continuous_to_future_bounded_exclusive_exclusive_adjacency_after_other() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -3494,16 +3494,16 @@ fn disambiguated_overlap_position_continuous_to_future_closed_exclusive_exclusiv
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_crosses_start() {
+fn disambiguated_overlap_position_continuous_to_future_bounded_crosses_start() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 2),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 4),
@@ -3516,16 +3516,16 @@ fn disambiguated_overlap_position_continuous_to_future_closed_crosses_start() {
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_crosses_end() {
+fn disambiguated_overlap_position_continuous_to_future_bounded_crosses_end() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 4),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -3538,16 +3538,16 @@ fn disambiguated_overlap_position_continuous_to_future_closed_crosses_end() {
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_inside() {
+fn disambiguated_overlap_position_continuous_to_future_bounded_inside() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 4),
@@ -3560,16 +3560,16 @@ fn disambiguated_overlap_position_continuous_to_future_closed_inside() {
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_time_gap_inside_and_same_start() {
+fn disambiguated_overlap_position_continuous_to_future_bounded_time_gap_inside_and_same_start() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -3582,16 +3582,16 @@ fn disambiguated_overlap_position_continuous_to_future_closed_time_gap_inside_an
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_inside_and_same_start_inclusive_inclusive() {
+fn disambiguated_overlap_position_continuous_to_future_bounded_inside_and_same_start_inclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -3604,16 +3604,16 @@ fn disambiguated_overlap_position_continuous_to_future_closed_inside_and_same_st
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_inside_and_same_start_inclusive_exclusive() {
+fn disambiguated_overlap_position_continuous_to_future_bounded_inside_and_same_start_inclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 3),
@@ -3626,16 +3626,16 @@ fn disambiguated_overlap_position_continuous_to_future_closed_inside_and_same_st
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_inside_and_same_start_exclusive_inclusive() {
+fn disambiguated_overlap_position_continuous_to_future_bounded_inside_and_same_start_exclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -3648,16 +3648,16 @@ fn disambiguated_overlap_position_continuous_to_future_closed_inside_and_same_st
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_inside_and_same_start_exclusive_exclusive() {
+fn disambiguated_overlap_position_continuous_to_future_bounded_inside_and_same_start_exclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 3),
@@ -3670,16 +3670,16 @@ fn disambiguated_overlap_position_continuous_to_future_closed_inside_and_same_st
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_time_gap_inside_and_same_end() {
+fn disambiguated_overlap_position_continuous_to_future_bounded_time_gap_inside_and_same_end() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -3692,16 +3692,16 @@ fn disambiguated_overlap_position_continuous_to_future_closed_time_gap_inside_an
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_inside_and_same_end_inclusive_inclusive() {
+fn disambiguated_overlap_position_continuous_to_future_bounded_inside_and_same_end_inclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -3714,16 +3714,16 @@ fn disambiguated_overlap_position_continuous_to_future_closed_inside_and_same_en
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_inside_and_same_end_inclusive_exclusive() {
+fn disambiguated_overlap_position_continuous_to_future_bounded_inside_and_same_end_inclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -3736,16 +3736,16 @@ fn disambiguated_overlap_position_continuous_to_future_closed_inside_and_same_en
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_inside_and_same_end_exclusive_inclusive() {
+fn disambiguated_overlap_position_continuous_to_future_bounded_inside_and_same_end_exclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Exclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -3758,16 +3758,16 @@ fn disambiguated_overlap_position_continuous_to_future_closed_inside_and_same_en
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_inside_and_same_end_exclusive_exclusive() {
+fn disambiguated_overlap_position_continuous_to_future_bounded_inside_and_same_end_exclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Exclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -3780,17 +3780,17 @@ fn disambiguated_overlap_position_continuous_to_future_closed_inside_and_same_en
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_inclusive_inclusive_end_inclusive_inclusive()
+fn disambiguated_overlap_position_continuous_to_future_bounded_equal_start_inclusive_inclusive_end_inclusive_inclusive()
 {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -3803,17 +3803,17 @@ fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_inclus
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_inclusive_inclusive_end_inclusive_exclusive()
+fn disambiguated_overlap_position_continuous_to_future_bounded_equal_start_inclusive_inclusive_end_inclusive_exclusive()
 {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -3826,17 +3826,17 @@ fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_inclus
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_inclusive_inclusive_end_exclusive_inclusive()
+fn disambiguated_overlap_position_continuous_to_future_bounded_equal_start_inclusive_inclusive_end_exclusive_inclusive()
 {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -3849,17 +3849,17 @@ fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_inclus
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_inclusive_inclusive_end_exclusive_exclusive()
+fn disambiguated_overlap_position_continuous_to_future_bounded_equal_start_inclusive_inclusive_end_exclusive_exclusive()
 {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -3872,17 +3872,17 @@ fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_inclus
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_inclusive_exclusive_end_inclusive_inclusive()
+fn disambiguated_overlap_position_continuous_to_future_bounded_equal_start_inclusive_exclusive_end_inclusive_inclusive()
 {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 2),
@@ -3895,17 +3895,17 @@ fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_inclus
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_inclusive_exclusive_end_inclusive_exclusive()
+fn disambiguated_overlap_position_continuous_to_future_bounded_equal_start_inclusive_exclusive_end_inclusive_exclusive()
 {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 2),
@@ -3918,17 +3918,17 @@ fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_inclus
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_inclusive_exclusive_end_exclusive_inclusive()
+fn disambiguated_overlap_position_continuous_to_future_bounded_equal_start_inclusive_exclusive_end_exclusive_inclusive()
 {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 2),
@@ -3941,17 +3941,17 @@ fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_inclus
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_inclusive_exclusive_end_exclusive_exclusive()
+fn disambiguated_overlap_position_continuous_to_future_bounded_equal_start_inclusive_exclusive_end_exclusive_exclusive()
 {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 2),
@@ -3964,17 +3964,17 @@ fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_inclus
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_exclusive_inclusive_end_inclusive_inclusive()
+fn disambiguated_overlap_position_continuous_to_future_bounded_equal_start_exclusive_inclusive_end_inclusive_inclusive()
 {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -3987,17 +3987,17 @@ fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_exclus
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_exclusive_inclusive_end_inclusive_exclusive()
+fn disambiguated_overlap_position_continuous_to_future_bounded_equal_start_exclusive_inclusive_end_inclusive_exclusive()
 {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -4010,17 +4010,17 @@ fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_exclus
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_exclusive_inclusive_end_exclusive_inclusive()
+fn disambiguated_overlap_position_continuous_to_future_bounded_equal_start_exclusive_inclusive_end_exclusive_inclusive()
 {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -4033,17 +4033,17 @@ fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_exclus
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_exclusive_inclusive_end_exclusive_exclusive()
+fn disambiguated_overlap_position_continuous_to_future_bounded_equal_start_exclusive_inclusive_end_exclusive_exclusive()
 {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -4056,17 +4056,17 @@ fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_exclus
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_exclusive_exclusive_end_inclusive_inclusive()
+fn disambiguated_overlap_position_continuous_to_future_bounded_equal_start_exclusive_exclusive_end_inclusive_inclusive()
 {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 2),
@@ -4079,17 +4079,17 @@ fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_exclus
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_exclusive_exclusive_end_inclusive_exclusive()
+fn disambiguated_overlap_position_continuous_to_future_bounded_equal_start_exclusive_exclusive_end_inclusive_exclusive()
 {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 2),
@@ -4102,17 +4102,17 @@ fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_exclus
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_exclusive_exclusive_end_exclusive_inclusive()
+fn disambiguated_overlap_position_continuous_to_future_bounded_equal_start_exclusive_exclusive_end_exclusive_inclusive()
 {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 2),
@@ -4125,17 +4125,17 @@ fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_exclus
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_exclusive_exclusive_end_exclusive_exclusive()
+fn disambiguated_overlap_position_continuous_to_future_bounded_equal_start_exclusive_exclusive_end_exclusive_exclusive()
 {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 2),
@@ -4148,16 +4148,16 @@ fn disambiguated_overlap_position_continuous_to_future_closed_equal_start_exclus
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_contains_and_same_start_inclusive_inclusive() {
+fn disambiguated_overlap_position_continuous_to_future_bounded_contains_and_same_start_inclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -4170,16 +4170,16 @@ fn disambiguated_overlap_position_continuous_to_future_closed_contains_and_same_
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_contains_and_same_start_inclusive_exclusive() {
+fn disambiguated_overlap_position_continuous_to_future_bounded_contains_and_same_start_inclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 2),
@@ -4192,16 +4192,16 @@ fn disambiguated_overlap_position_continuous_to_future_closed_contains_and_same_
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_contains_and_same_start_exclusive_inclusive() {
+fn disambiguated_overlap_position_continuous_to_future_bounded_contains_and_same_start_exclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -4214,16 +4214,16 @@ fn disambiguated_overlap_position_continuous_to_future_closed_contains_and_same_
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_contains_and_same_start_exclusive_exclusive() {
+fn disambiguated_overlap_position_continuous_to_future_bounded_contains_and_same_start_exclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 2),
@@ -4236,16 +4236,16 @@ fn disambiguated_overlap_position_continuous_to_future_closed_contains_and_same_
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_contains_and_same_end_inclusive_inclusive() {
+fn disambiguated_overlap_position_continuous_to_future_bounded_contains_and_same_end_inclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 2),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -4258,16 +4258,16 @@ fn disambiguated_overlap_position_continuous_to_future_closed_contains_and_same_
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_contains_and_same_end_inclusive_exclusive() {
+fn disambiguated_overlap_position_continuous_to_future_bounded_contains_and_same_end_inclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 2),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -4280,16 +4280,16 @@ fn disambiguated_overlap_position_continuous_to_future_closed_contains_and_same_
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_contains_and_same_end_exclusive_inclusive() {
+fn disambiguated_overlap_position_continuous_to_future_bounded_contains_and_same_end_exclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Exclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 2),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -4302,16 +4302,16 @@ fn disambiguated_overlap_position_continuous_to_future_closed_contains_and_same_
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_contains_and_same_end_exclusive_exclusive() {
+fn disambiguated_overlap_position_continuous_to_future_bounded_contains_and_same_end_exclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Exclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 2),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -4324,16 +4324,16 @@ fn disambiguated_overlap_position_continuous_to_future_closed_contains_and_same_
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_future_closed_contains() {
+fn disambiguated_overlap_position_continuous_to_future_bounded_contains() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 4),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 2),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -4346,10 +4346,10 @@ fn disambiguated_overlap_position_continuous_to_future_closed_contains() {
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_past_closed_time_gap_before_other() {
+fn disambiguated_overlap_position_continuous_to_past_bounded_time_gap_before_other() {
     assert_eq!(
-        ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), date(&Utc, 2025, 1, 2)).disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 3), date(&Utc, 2025, 1, 4),),
+        BoundedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), date(&Utc, 2025, 1, 2)).disambiguated_overlap_position(
+            &BoundedAbsoluteInterval::new(date(&Utc, 2025, 1, 3), date(&Utc, 2025, 1, 4),),
             OverlapRuleSet::ContinuousToPast,
         ),
         Ok(DisambiguatedOverlapPosition::OutsideBefore),
@@ -4357,16 +4357,16 @@ fn disambiguated_overlap_position_continuous_to_past_closed_time_gap_before_othe
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_past_closed_inclusive_inclusive_adjacency_before_other() {
+fn disambiguated_overlap_position_continuous_to_past_bounded_inclusive_inclusive_adjacency_before_other() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 2),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -4379,16 +4379,16 @@ fn disambiguated_overlap_position_continuous_to_past_closed_inclusive_inclusive_
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_past_closed_inclusive_exclusive_adjacency_before_other() {
+fn disambiguated_overlap_position_continuous_to_past_bounded_inclusive_exclusive_adjacency_before_other() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 2),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 3),
@@ -4401,16 +4401,16 @@ fn disambiguated_overlap_position_continuous_to_past_closed_inclusive_exclusive_
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_past_closed_exclusive_inclusive_adjacency_before_other() {
+fn disambiguated_overlap_position_continuous_to_past_bounded_exclusive_inclusive_adjacency_before_other() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 2),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -4423,16 +4423,16 @@ fn disambiguated_overlap_position_continuous_to_past_closed_exclusive_inclusive_
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_past_closed_exclusive_exclusive_adjacency_before_other() {
+fn disambiguated_overlap_position_continuous_to_past_bounded_exclusive_exclusive_adjacency_before_other() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 2),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 3),
@@ -4445,10 +4445,10 @@ fn disambiguated_overlap_position_continuous_to_past_closed_exclusive_exclusive_
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_past_closed_time_gap_after_other() {
+fn disambiguated_overlap_position_continuous_to_past_bounded_time_gap_after_other() {
     assert_eq!(
-        ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 3), date(&Utc, 2025, 1, 4)).disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), date(&Utc, 2025, 1, 2)),
+        BoundedAbsoluteInterval::new(date(&Utc, 2025, 1, 3), date(&Utc, 2025, 1, 4)).disambiguated_overlap_position(
+            &BoundedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), date(&Utc, 2025, 1, 2)),
             OverlapRuleSet::ContinuousToPast,
         ),
         Ok(DisambiguatedOverlapPosition::OutsideAfter),
@@ -4456,16 +4456,16 @@ fn disambiguated_overlap_position_continuous_to_past_closed_time_gap_after_other
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_past_closed_inclusive_inclusive_adjacency_after_other() {
+fn disambiguated_overlap_position_continuous_to_past_bounded_inclusive_inclusive_adjacency_after_other() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -4478,16 +4478,16 @@ fn disambiguated_overlap_position_continuous_to_past_closed_inclusive_inclusive_
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_past_closed_inclusive_exclusive_adjacency_after_other() {
+fn disambiguated_overlap_position_continuous_to_past_bounded_inclusive_exclusive_adjacency_after_other() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -4500,16 +4500,16 @@ fn disambiguated_overlap_position_continuous_to_past_closed_inclusive_exclusive_
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_past_closed_exclusive_inclusive_adjacency_after_other() {
+fn disambiguated_overlap_position_continuous_to_past_bounded_exclusive_inclusive_adjacency_after_other() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -4522,16 +4522,16 @@ fn disambiguated_overlap_position_continuous_to_past_closed_exclusive_inclusive_
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_past_closed_exclusive_exclusive_adjacency_after_other() {
+fn disambiguated_overlap_position_continuous_to_past_bounded_exclusive_exclusive_adjacency_after_other() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -4544,16 +4544,16 @@ fn disambiguated_overlap_position_continuous_to_past_closed_exclusive_exclusive_
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_past_closed_crosses_start() {
+fn disambiguated_overlap_position_continuous_to_past_bounded_crosses_start() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 2),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 4),
@@ -4566,16 +4566,16 @@ fn disambiguated_overlap_position_continuous_to_past_closed_crosses_start() {
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_past_closed_crosses_end() {
+fn disambiguated_overlap_position_continuous_to_past_bounded_crosses_end() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 4),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -4588,16 +4588,16 @@ fn disambiguated_overlap_position_continuous_to_past_closed_crosses_end() {
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_past_closed_inside() {
+fn disambiguated_overlap_position_continuous_to_past_bounded_inside() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 4),
@@ -4610,16 +4610,16 @@ fn disambiguated_overlap_position_continuous_to_past_closed_inside() {
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_past_closed_time_gap_inside_and_same_start() {
+fn disambiguated_overlap_position_continuous_to_past_bounded_time_gap_inside_and_same_start() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -4632,16 +4632,16 @@ fn disambiguated_overlap_position_continuous_to_past_closed_time_gap_inside_and_
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_past_closed_inside_and_same_start_inclusive_inclusive() {
+fn disambiguated_overlap_position_continuous_to_past_bounded_inside_and_same_start_inclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -4654,16 +4654,16 @@ fn disambiguated_overlap_position_continuous_to_past_closed_inside_and_same_star
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_past_closed_inside_and_same_start_inclusive_exclusive() {
+fn disambiguated_overlap_position_continuous_to_past_bounded_inside_and_same_start_inclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 3),
@@ -4676,16 +4676,16 @@ fn disambiguated_overlap_position_continuous_to_past_closed_inside_and_same_star
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_past_closed_inside_and_same_start_exclusive_inclusive() {
+fn disambiguated_overlap_position_continuous_to_past_bounded_inside_and_same_start_exclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -4698,16 +4698,16 @@ fn disambiguated_overlap_position_continuous_to_past_closed_inside_and_same_star
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_past_closed_inside_and_same_start_exclusive_exclusive() {
+fn disambiguated_overlap_position_continuous_to_past_bounded_inside_and_same_start_exclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 3),
@@ -4720,16 +4720,16 @@ fn disambiguated_overlap_position_continuous_to_past_closed_inside_and_same_star
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_past_closed_time_gap_inside_and_same_end() {
+fn disambiguated_overlap_position_continuous_to_past_bounded_time_gap_inside_and_same_end() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -4742,16 +4742,16 @@ fn disambiguated_overlap_position_continuous_to_past_closed_time_gap_inside_and_
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_past_closed_inside_and_same_end_inclusive_inclusive() {
+fn disambiguated_overlap_position_continuous_to_past_bounded_inside_and_same_end_inclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -4764,16 +4764,16 @@ fn disambiguated_overlap_position_continuous_to_past_closed_inside_and_same_end_
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_past_closed_inside_and_same_end_inclusive_exclusive() {
+fn disambiguated_overlap_position_continuous_to_past_bounded_inside_and_same_end_inclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -4786,16 +4786,16 @@ fn disambiguated_overlap_position_continuous_to_past_closed_inside_and_same_end_
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_past_closed_inside_and_same_end_exclusive_inclusive() {
+fn disambiguated_overlap_position_continuous_to_past_bounded_inside_and_same_end_exclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Exclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -4808,16 +4808,16 @@ fn disambiguated_overlap_position_continuous_to_past_closed_inside_and_same_end_
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_past_closed_inside_and_same_end_exclusive_exclusive() {
+fn disambiguated_overlap_position_continuous_to_past_bounded_inside_and_same_end_exclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Exclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -4830,16 +4830,16 @@ fn disambiguated_overlap_position_continuous_to_past_closed_inside_and_same_end_
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_past_closed_equal_start_inclusive_inclusive_end_inclusive_inclusive() {
+fn disambiguated_overlap_position_continuous_to_past_bounded_equal_start_inclusive_inclusive_end_inclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -4852,16 +4852,16 @@ fn disambiguated_overlap_position_continuous_to_past_closed_equal_start_inclusiv
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_past_closed_equal_start_inclusive_inclusive_end_inclusive_exclusive() {
+fn disambiguated_overlap_position_continuous_to_past_bounded_equal_start_inclusive_inclusive_end_inclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -4874,16 +4874,16 @@ fn disambiguated_overlap_position_continuous_to_past_closed_equal_start_inclusiv
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_past_closed_equal_start_inclusive_inclusive_end_exclusive_inclusive() {
+fn disambiguated_overlap_position_continuous_to_past_bounded_equal_start_inclusive_inclusive_end_exclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -4896,16 +4896,16 @@ fn disambiguated_overlap_position_continuous_to_past_closed_equal_start_inclusiv
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_past_closed_equal_start_inclusive_inclusive_end_exclusive_exclusive() {
+fn disambiguated_overlap_position_continuous_to_past_bounded_equal_start_inclusive_inclusive_end_exclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -4918,16 +4918,16 @@ fn disambiguated_overlap_position_continuous_to_past_closed_equal_start_inclusiv
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_past_closed_equal_start_inclusive_exclusive_end_inclusive_inclusive() {
+fn disambiguated_overlap_position_continuous_to_past_bounded_equal_start_inclusive_exclusive_end_inclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 2),
@@ -4940,16 +4940,16 @@ fn disambiguated_overlap_position_continuous_to_past_closed_equal_start_inclusiv
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_past_closed_equal_start_inclusive_exclusive_end_inclusive_exclusive() {
+fn disambiguated_overlap_position_continuous_to_past_bounded_equal_start_inclusive_exclusive_end_inclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 2),
@@ -4962,16 +4962,16 @@ fn disambiguated_overlap_position_continuous_to_past_closed_equal_start_inclusiv
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_past_closed_equal_start_inclusive_exclusive_end_exclusive_inclusive() {
+fn disambiguated_overlap_position_continuous_to_past_bounded_equal_start_inclusive_exclusive_end_exclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 2),
@@ -4984,16 +4984,16 @@ fn disambiguated_overlap_position_continuous_to_past_closed_equal_start_inclusiv
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_past_closed_equal_start_inclusive_exclusive_end_exclusive_exclusive() {
+fn disambiguated_overlap_position_continuous_to_past_bounded_equal_start_inclusive_exclusive_end_exclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 2),
@@ -5006,16 +5006,16 @@ fn disambiguated_overlap_position_continuous_to_past_closed_equal_start_inclusiv
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_past_closed_equal_start_exclusive_inclusive_end_inclusive_inclusive() {
+fn disambiguated_overlap_position_continuous_to_past_bounded_equal_start_exclusive_inclusive_end_inclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -5028,16 +5028,16 @@ fn disambiguated_overlap_position_continuous_to_past_closed_equal_start_exclusiv
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_past_closed_equal_start_exclusive_inclusive_end_inclusive_exclusive() {
+fn disambiguated_overlap_position_continuous_to_past_bounded_equal_start_exclusive_inclusive_end_inclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -5050,16 +5050,16 @@ fn disambiguated_overlap_position_continuous_to_past_closed_equal_start_exclusiv
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_past_closed_equal_start_exclusive_inclusive_end_exclusive_inclusive() {
+fn disambiguated_overlap_position_continuous_to_past_bounded_equal_start_exclusive_inclusive_end_exclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -5072,16 +5072,16 @@ fn disambiguated_overlap_position_continuous_to_past_closed_equal_start_exclusiv
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_past_closed_equal_start_exclusive_inclusive_end_exclusive_exclusive() {
+fn disambiguated_overlap_position_continuous_to_past_bounded_equal_start_exclusive_inclusive_end_exclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -5094,16 +5094,16 @@ fn disambiguated_overlap_position_continuous_to_past_closed_equal_start_exclusiv
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_past_closed_equal_start_exclusive_exclusive_end_inclusive_inclusive() {
+fn disambiguated_overlap_position_continuous_to_past_bounded_equal_start_exclusive_exclusive_end_inclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 2),
@@ -5116,16 +5116,16 @@ fn disambiguated_overlap_position_continuous_to_past_closed_equal_start_exclusiv
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_past_closed_equal_start_exclusive_exclusive_end_inclusive_exclusive() {
+fn disambiguated_overlap_position_continuous_to_past_bounded_equal_start_exclusive_exclusive_end_inclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 2),
@@ -5138,16 +5138,16 @@ fn disambiguated_overlap_position_continuous_to_past_closed_equal_start_exclusiv
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_past_closed_equal_start_exclusive_exclusive_end_exclusive_inclusive() {
+fn disambiguated_overlap_position_continuous_to_past_bounded_equal_start_exclusive_exclusive_end_exclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 2),
@@ -5160,16 +5160,16 @@ fn disambiguated_overlap_position_continuous_to_past_closed_equal_start_exclusiv
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_past_closed_equal_start_exclusive_exclusive_end_exclusive_exclusive() {
+fn disambiguated_overlap_position_continuous_to_past_bounded_equal_start_exclusive_exclusive_end_exclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 2),
@@ -5182,16 +5182,16 @@ fn disambiguated_overlap_position_continuous_to_past_closed_equal_start_exclusiv
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_past_closed_contains_and_same_start_inclusive_inclusive() {
+fn disambiguated_overlap_position_continuous_to_past_bounded_contains_and_same_start_inclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -5204,16 +5204,16 @@ fn disambiguated_overlap_position_continuous_to_past_closed_contains_and_same_st
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_past_closed_contains_and_same_start_inclusive_exclusive() {
+fn disambiguated_overlap_position_continuous_to_past_bounded_contains_and_same_start_inclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 2),
@@ -5226,16 +5226,16 @@ fn disambiguated_overlap_position_continuous_to_past_closed_contains_and_same_st
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_past_closed_contains_and_same_start_exclusive_inclusive() {
+fn disambiguated_overlap_position_continuous_to_past_bounded_contains_and_same_start_exclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
@@ -5248,16 +5248,16 @@ fn disambiguated_overlap_position_continuous_to_past_closed_contains_and_same_st
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_past_closed_contains_and_same_start_exclusive_exclusive() {
+fn disambiguated_overlap_position_continuous_to_past_bounded_contains_and_same_start_exclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 2),
@@ -5270,16 +5270,16 @@ fn disambiguated_overlap_position_continuous_to_past_closed_contains_and_same_st
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_past_closed_contains_and_same_end_inclusive_inclusive() {
+fn disambiguated_overlap_position_continuous_to_past_bounded_contains_and_same_end_inclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 2),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -5292,16 +5292,16 @@ fn disambiguated_overlap_position_continuous_to_past_closed_contains_and_same_en
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_past_closed_contains_and_same_end_inclusive_exclusive() {
+fn disambiguated_overlap_position_continuous_to_past_bounded_contains_and_same_end_inclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 2),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -5314,16 +5314,16 @@ fn disambiguated_overlap_position_continuous_to_past_closed_contains_and_same_en
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_past_closed_contains_and_same_end_exclusive_inclusive() {
+fn disambiguated_overlap_position_continuous_to_past_bounded_contains_and_same_end_exclusive_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Exclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 2),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -5336,16 +5336,16 @@ fn disambiguated_overlap_position_continuous_to_past_closed_contains_and_same_en
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_past_closed_contains_and_same_end_exclusive_exclusive() {
+fn disambiguated_overlap_position_continuous_to_past_bounded_contains_and_same_end_exclusive_exclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 3),
             BoundInclusivity::Exclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 2),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),
@@ -5358,16 +5358,16 @@ fn disambiguated_overlap_position_continuous_to_past_closed_contains_and_same_en
 }
 
 #[test]
-fn disambiguated_overlap_position_continuous_to_past_closed_contains() {
+fn disambiguated_overlap_position_continuous_to_past_bounded_contains() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 4),
             BoundInclusivity::Inclusive,
         )
         .disambiguated_overlap_position(
-            &ClosedAbsoluteInterval::new_with_inclusivity(
+            &BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 2),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 3),

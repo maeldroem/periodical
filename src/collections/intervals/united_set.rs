@@ -1,5 +1,6 @@
 //! Interval set structure for efficient processing of interval sets
 
+use std::collections::btree_set::{IntoIter, Iter};
 use std::collections::{BTreeSet, HashMap};
 use std::ops::Bound;
 
@@ -35,10 +36,9 @@ impl AbsoluteUnitedIntervalSet {
         AbsoluteUnitedIntervalSet::default()
     }
 
-    /// Returns a vector of clones of the inner non-overlapping intervals
-    #[must_use]
-    pub fn intervals(&self) -> Vec<AbsoluteBounds> {
-        self.intervals.iter().cloned().collect()
+    /// Returns an iterator that visits the united intervals of the set
+    pub fn iter(&self) -> Iter<'_, AbsoluteBounds> {
+        self.intervals.iter()
     }
 
     /*
@@ -74,6 +74,11 @@ impl AbsoluteUnitedIntervalSet {
             })
             .unzip();
 
+        // We remove intervals first as the BTreeSet relies on the implementation of `Ord` for checking equality
+        for interval_to_remove in intervals_to_remove {
+            self.intervals.remove(&interval_to_remove);
+        }
+
         let mut united_intervals = intervals_to_unite.iter().acc_union();
 
         // Only one united interval should be created. If more are created, it is a bug.
@@ -87,11 +92,8 @@ impl AbsoluteUnitedIntervalSet {
         }
 
         // Check for if there's a second united interval
-        debug_assert!(united_intervals.next().is_some());
-
-        for interval_to_remove in intervals_to_remove {
-            self.intervals.remove(&interval_to_remove);
-        }
+        // (Assert fails if `next()` is `Some`)
+        debug_assert!(united_intervals.next().is_none());
     }
 
     /// Removes an interval from the set
@@ -151,11 +153,19 @@ impl AbsoluteUnitedIntervalSet {
             .range((Bound::Unbounded, upper_bound))
             .filter(move |interval| {
                 matches!(
-                    bounds.disambiguated_bound_position(interval.end(), rule_set),
+                    bounds.disambiguated_bound_position(interval.start(), rule_set),
                     DisambiguatedBoundPosition::OnStart
+                        | DisambiguatedBoundPosition::OnEnd
                         | DisambiguatedBoundPosition::Equal
                         | DisambiguatedBoundPosition::Inside
+                        | DisambiguatedBoundPosition::OutsideBefore,
+                )
+                && matches!(
+                    bounds.disambiguated_bound_position(interval.end(), rule_set),
+                    DisambiguatedBoundPosition::OnStart
                         | DisambiguatedBoundPosition::OnEnd
+                        | DisambiguatedBoundPosition::Equal
+                        | DisambiguatedBoundPosition::Inside
                         | DisambiguatedBoundPosition::OutsideAfter,
                 )
             })
@@ -311,6 +321,24 @@ impl AbsoluteUnitedIntervalSet {
     }
 }
 
+impl<'a> IntoIterator for &'a AbsoluteUnitedIntervalSet {
+    type Item = &'a AbsoluteBounds;
+    type IntoIter = Iter<'a, AbsoluteBounds>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
+}
+
+impl IntoIterator for AbsoluteUnitedIntervalSet {
+    type Item = AbsoluteBounds;
+    type IntoIter = IntoIter<AbsoluteBounds>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.intervals.into_iter()
+    }
+}
+
 impl<A> Extend<A> for AbsoluteUnitedIntervalSet
 where
     A: HasEmptiableAbsoluteBounds,
@@ -371,10 +399,9 @@ impl RelativeUnitedIntervalSet {
         RelativeUnitedIntervalSet::default()
     }
 
-    /// Returns a vector of clones of the inner non-overlapping intervals
-    #[must_use]
-    pub fn intervals(&self) -> Vec<RelativeBounds> {
-        self.intervals.iter().cloned().collect()
+    /// Returns an iterator that visits the united intervals of the set
+    pub fn iter(&self) -> Iter<'_, RelativeBounds> {
+        self.intervals.iter()
     }
 
     /*
@@ -410,6 +437,11 @@ impl RelativeUnitedIntervalSet {
             })
             .unzip();
 
+        // We remove intervals first as the BTreeSet relies on the implementation of `Ord` for checking equality
+        for interval_to_remove in intervals_to_remove {
+            self.intervals.remove(&interval_to_remove);
+        }
+
         let mut united_intervals = intervals_to_unite.iter().acc_union();
 
         // Only one united interval should be created. If more are created, it is a bug.
@@ -423,11 +455,8 @@ impl RelativeUnitedIntervalSet {
         }
 
         // Check for if there's a second united interval
-        debug_assert!(united_intervals.next().is_some());
-
-        for interval_to_remove in intervals_to_remove {
-            self.intervals.remove(&interval_to_remove);
-        }
+        // (Assert fails if `next()` is `Some`)
+        debug_assert!(united_intervals.next().is_none());
     }
 
     /// Removes an interval from the set
@@ -487,11 +516,19 @@ impl RelativeUnitedIntervalSet {
             .range((Bound::Unbounded, upper_bound))
             .filter(move |interval| {
                 matches!(
-                    bounds.disambiguated_bound_position(interval.end(), rule_set),
+                    bounds.disambiguated_bound_position(interval.start(), rule_set),
                     DisambiguatedBoundPosition::OnStart
+                        | DisambiguatedBoundPosition::OnEnd
                         | DisambiguatedBoundPosition::Equal
                         | DisambiguatedBoundPosition::Inside
+                        | DisambiguatedBoundPosition::OutsideBefore,
+                )
+                && matches!(
+                    bounds.disambiguated_bound_position(interval.end(), rule_set),
+                    DisambiguatedBoundPosition::OnStart
                         | DisambiguatedBoundPosition::OnEnd
+                        | DisambiguatedBoundPosition::Equal
+                        | DisambiguatedBoundPosition::Inside
                         | DisambiguatedBoundPosition::OutsideAfter,
                 )
             })
@@ -644,6 +681,24 @@ impl RelativeUnitedIntervalSet {
             .into_iter()
             .map(|interval| interval.to_absolute(reference_time))
             .collect::<AbsoluteUnitedIntervalSet>()
+    }
+}
+
+impl<'a> IntoIterator for &'a RelativeUnitedIntervalSet {
+    type Item = &'a RelativeBounds;
+    type IntoIter = Iter<'a, RelativeBounds>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
+}
+
+impl IntoIterator for RelativeUnitedIntervalSet {
+    type Item = RelativeBounds;
+    type IntoIter = IntoIter<RelativeBounds>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.intervals.into_iter()
     }
 }
 

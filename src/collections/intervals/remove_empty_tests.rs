@@ -1,8 +1,8 @@
 use chrono::Utc;
 
-use crate::intervals::absolute::{AbsoluteInterval, ClosedAbsoluteInterval, HalfOpenAbsoluteInterval};
+use crate::intervals::absolute::{AbsoluteInterval, BoundedAbsoluteInterval, HalfBoundedAbsoluteInterval};
 use crate::intervals::meta::OpeningDirection;
-use crate::intervals::special::{EmptyInterval, OpenInterval};
+use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 use crate::test_utils::date;
 
 use super::remove_empty::*;
@@ -10,13 +10,13 @@ use super::remove_empty::*;
 #[test]
 fn create_remove_empty_intervals_iter() {
     let intervals = [
-        AbsoluteInterval::Open(OpenInterval),
-        AbsoluteInterval::Closed(ClosedAbsoluteInterval::new(
+        AbsoluteInterval::Unbounded(UnboundedInterval),
+        AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
             date(&Utc, 2025, 1, 1),
             date(&Utc, 2025, 1, 2),
         )),
         AbsoluteInterval::Empty(EmptyInterval),
-        AbsoluteInterval::HalfOpen(HalfOpenAbsoluteInterval::new(
+        AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new(
             date(&Utc, 2025, 1, 1),
             OpeningDirection::ToPast,
         )),
@@ -28,14 +28,14 @@ fn create_remove_empty_intervals_iter() {
 #[test]
 fn remove_empty_intervals_iter_run() {
     let intervals = [
-        AbsoluteInterval::Open(OpenInterval),
-        AbsoluteInterval::Closed(ClosedAbsoluteInterval::new(
+        AbsoluteInterval::Unbounded(UnboundedInterval),
+        AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
             date(&Utc, 2025, 1, 1),
             date(&Utc, 2025, 1, 2),
         )),
         AbsoluteInterval::Empty(EmptyInterval),
         AbsoluteInterval::Empty(EmptyInterval),
-        AbsoluteInterval::HalfOpen(HalfOpenAbsoluteInterval::new(
+        AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new(
             date(&Utc, 2025, 1, 1),
             OpeningDirection::ToPast,
         )),
@@ -45,12 +45,12 @@ fn remove_empty_intervals_iter_run() {
     assert_eq!(
         intervals.remove_empty_intervals().collect::<Vec<_>>(),
         vec![
-            AbsoluteInterval::Open(OpenInterval),
-            AbsoluteInterval::Closed(ClosedAbsoluteInterval::new(
+            AbsoluteInterval::Unbounded(UnboundedInterval),
+            AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
                 date(&Utc, 2025, 1, 1),
                 date(&Utc, 2025, 1, 2)
             )),
-            AbsoluteInterval::HalfOpen(HalfOpenAbsoluteInterval::new(
+            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new(
                 date(&Utc, 2025, 1, 1),
                 OpeningDirection::ToPast
             )),
@@ -61,14 +61,14 @@ fn remove_empty_intervals_iter_run() {
 #[test]
 fn remove_empty_intervals_iter_run_reverse() {
     let intervals = [
-        AbsoluteInterval::Open(OpenInterval),
-        AbsoluteInterval::Closed(ClosedAbsoluteInterval::new(
+        AbsoluteInterval::Unbounded(UnboundedInterval),
+        AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
             date(&Utc, 2025, 1, 1),
             date(&Utc, 2025, 1, 2),
         )),
         AbsoluteInterval::Empty(EmptyInterval),
         AbsoluteInterval::Empty(EmptyInterval),
-        AbsoluteInterval::HalfOpen(HalfOpenAbsoluteInterval::new(
+        AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new(
             date(&Utc, 2025, 1, 1),
             OpeningDirection::ToPast,
         )),
@@ -78,15 +78,15 @@ fn remove_empty_intervals_iter_run_reverse() {
     assert_eq!(
         intervals.remove_empty_intervals().rev().collect::<Vec<_>>(),
         vec![
-            AbsoluteInterval::HalfOpen(HalfOpenAbsoluteInterval::new(
+            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new(
                 date(&Utc, 2025, 1, 1),
                 OpeningDirection::ToPast
             )),
-            AbsoluteInterval::Closed(ClosedAbsoluteInterval::new(
+            AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
                 date(&Utc, 2025, 1, 1),
                 date(&Utc, 2025, 1, 2)
             )),
-            AbsoluteInterval::Open(OpenInterval),
+            AbsoluteInterval::Unbounded(UnboundedInterval),
         ],
     );
 }

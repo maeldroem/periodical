@@ -4,10 +4,10 @@
 //!
 //! Interval refers to an interval, a range, like in mathematics. But if we are talking strictly about this crate,
 //! then an interval, such as [`AbsoluteInterval`](absolute::AbsoluteInterval) and [`RelativeInterval`](relative::RelativeInterval) are enumerators over specific intervals,
-//! like [`ClosedAbsoluteInterval`] or [`HalfOpenRelativeInterval`].
+//! like [`BoundedAbsoluteInterval`] or [`HalfBoundedRelativeInterval`].
 //!
-//! Those specific intervals must conserve their invariants. A closed interval must remain closed, a half-open interval
-//! must remain half-open.
+//! Those specific intervals must conserve their invariants. A bounded interval must remain bounded, a half-bounded interval
+//! must remain half-bounded.
 //!
 //! All such intervals are composed of bounds (e.g. [`AbsoluteBounds`], [`RelativeBounds`]).
 //! They may also come in _emptiable_ variants (e.g. [`EmptiableAbsoluteBounds`], [`EmptiableRelativeBounds`]).
@@ -50,7 +50,7 @@
 //!
 //! The reason why empty intervals exist is to provide a way to represent _no duration_ without having to use [`Option`]
 //! to represent it. This also makes it compatible with other interval operations, for example you can still get the
-//! complement of an empty interval, which results in an [open interval](`OpenInterval`).
+//! complement of an empty interval, which results in an [unbounded interval](`UnboundedInterval`).
 
 pub mod absolute;
 pub mod meta;
@@ -69,7 +69,7 @@ mod relative_tests;
 mod special_tests;
 
 pub use absolute::{
-    AbsoluteBounds, AbsoluteInterval, ClosedAbsoluteInterval, EmptiableAbsoluteBounds, HalfOpenAbsoluteInterval,
+    AbsoluteBounds, AbsoluteInterval, BoundedAbsoluteInterval, EmptiableAbsoluteBounds, HalfBoundedAbsoluteInterval,
     HasAbsoluteBounds, HasEmptiableAbsoluteBounds,
 };
 pub use meta::{Emptiable, HasBoundInclusivity, HasDuration, HasOpenness, HasRelativity};
@@ -94,6 +94,6 @@ pub use ops::time_containment::{
     TimeContainmentPosition, TimeContainmentRule, TimeContainmentRuleSet,
 };
 pub use relative::{
-    ClosedRelativeInterval, EmptiableRelativeBounds, HalfOpenRelativeInterval, HasEmptiableRelativeBounds,
+    BoundedRelativeInterval, EmptiableRelativeBounds, HalfBoundedRelativeInterval, HasEmptiableRelativeBounds,
     HasRelativeBounds, RelativeInterval,
 };

@@ -9,15 +9,15 @@ use super::time_containment::CanPositionTimeContainment;
 
 use crate::intervals::absolute::{
     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteInterval, AbsoluteStartBound,
-    EmptiableAbsoluteBounds, HalfOpenAbsoluteInterval, HasEmptiableAbsoluteBounds,
+    EmptiableAbsoluteBounds, HalfBoundedAbsoluteInterval, HasEmptiableAbsoluteBounds,
 };
 use crate::intervals::meta::BoundInclusivity;
 use crate::intervals::relative::{
-    EmptiableRelativeBounds, HalfOpenRelativeInterval, RelativeBounds, RelativeEndBound, RelativeFiniteBound,
+    EmptiableRelativeBounds, HalfBoundedRelativeInterval, RelativeBounds, RelativeEndBound, RelativeFiniteBound,
     RelativeStartBound,
 };
-use crate::intervals::special::{EmptyInterval, OpenInterval};
-use crate::intervals::{ClosedAbsoluteInterval, ClosedRelativeInterval, RelativeInterval};
+use crate::intervals::special::{EmptyInterval, UnboundedInterval};
+use crate::intervals::{BoundedAbsoluteInterval, BoundedRelativeInterval, RelativeInterval};
 
 /// Cut types, used by [`Cuttable`]
 ///
@@ -154,7 +154,7 @@ where
     }
 }
 
-impl<P> Cuttable<P> for ClosedAbsoluteInterval
+impl<P> Cuttable<P> for BoundedAbsoluteInterval
 where
     P: Into<DateTime<Utc>>,
 {
@@ -166,7 +166,7 @@ where
     }
 }
 
-impl<P> Cuttable<P> for HalfOpenAbsoluteInterval
+impl<P> Cuttable<P> for HalfBoundedAbsoluteInterval
 where
     P: Into<DateTime<Utc>>,
 {
@@ -212,7 +212,7 @@ where
     }
 }
 
-impl<P> Cuttable<P> for ClosedRelativeInterval
+impl<P> Cuttable<P> for BoundedRelativeInterval
 where
     P: Into<Duration>,
 {
@@ -224,7 +224,7 @@ where
     }
 }
 
-impl<P> Cuttable<P> for HalfOpenRelativeInterval
+impl<P> Cuttable<P> for HalfBoundedRelativeInterval
 where
     P: Into<Duration>,
 {
@@ -237,7 +237,7 @@ where
 }
 
 // TODO: Find a way to implement these for P: Into<DateTime<Utc>> and P: Into<chrono::Duration>
-impl Cuttable<DateTime<Utc>> for OpenInterval {
+impl Cuttable<DateTime<Utc>> for UnboundedInterval {
     type Output = AbsoluteInterval;
 
     fn cut_at(&self, position: DateTime<Utc>, cut_type: CutType) -> CutResult<Self::Output> {
@@ -246,7 +246,7 @@ impl Cuttable<DateTime<Utc>> for OpenInterval {
     }
 }
 
-impl Cuttable<Duration> for OpenInterval {
+impl Cuttable<Duration> for UnboundedInterval {
     type Output = RelativeInterval;
 
     fn cut_at(&self, position: Duration, cut_type: CutType) -> CutResult<Self::Output> {

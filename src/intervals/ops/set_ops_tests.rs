@@ -18,7 +18,7 @@ fn unite_empty_empty() {
 }
 
 #[test]
-fn unite_empty_open() {
+fn unite_empty_unbounded() {
     assert_eq!(
         EmptiableAbsoluteBounds::Empty.unite(&AbsoluteBounds::new(
             AbsoluteStartBound::InfinitePast,
@@ -29,7 +29,7 @@ fn unite_empty_open() {
 }
 
 #[test]
-fn unite_open_empty() {
+fn unite_unbounded_empty() {
     assert_eq!(
         AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture,)
             .unite(&EmptiableAbsoluteBounds::Empty),
@@ -38,7 +38,7 @@ fn unite_open_empty() {
 }
 
 #[test]
-fn unite_open_open() {
+fn unite_unbounded_unbounded() {
     assert_eq!(
         AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture,).unite(
             &AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture,)
@@ -51,7 +51,7 @@ fn unite_open_open() {
 }
 
 #[test]
-fn unite_closed_no_overlap() {
+fn unite_bounded_no_overlap() {
     assert_eq!(
         AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
@@ -66,7 +66,7 @@ fn unite_closed_no_overlap() {
 }
 
 #[test]
-fn unite_closed_adjacent_inclusive_inclusive() {
+fn unite_bounded_adjacent_inclusive_inclusive() {
     assert_eq!(
         AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
@@ -102,7 +102,7 @@ fn unite_closed_adjacent_inclusive_inclusive() {
 }
 
 #[test]
-fn unite_closed_adjacent_inclusive_exclusive() {
+fn unite_bounded_adjacent_inclusive_exclusive() {
     assert_eq!(
         AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
@@ -138,7 +138,7 @@ fn unite_closed_adjacent_inclusive_exclusive() {
 }
 
 #[test]
-fn unite_closed_adjacent_exclusive_inclusive() {
+fn unite_bounded_adjacent_exclusive_inclusive() {
     assert_eq!(
         AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
@@ -174,7 +174,7 @@ fn unite_closed_adjacent_exclusive_inclusive() {
 }
 
 #[test]
-fn unite_closed_adjacent_exclusive_exclusive() {
+fn unite_bounded_adjacent_exclusive_exclusive() {
     assert_eq!(
         AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
@@ -201,7 +201,7 @@ fn unite_closed_adjacent_exclusive_exclusive() {
 }
 
 #[test]
-fn unite_closed_clear_overlap() {
+fn unite_bounded_clear_overlap() {
     assert_eq!(
         AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
@@ -219,7 +219,7 @@ fn unite_closed_clear_overlap() {
 }
 
 #[test]
-fn unite_closed_on_open() {
+fn unite_bounded_on_unbounded() {
     assert_eq!(
         AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
@@ -237,7 +237,7 @@ fn unite_closed_on_open() {
 }
 
 #[test]
-fn unite_open_on_closed() {
+fn unite_unbounded_on_bounded() {
     assert_eq!(
         AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture,).unite(
             &AbsoluteBounds::new(
@@ -261,7 +261,7 @@ fn intersect_empty_empty() {
 }
 
 #[test]
-fn intersect_empty_open() {
+fn intersect_empty_unbounded() {
     assert_eq!(
         EmptiableAbsoluteBounds::Empty.intersect(&AbsoluteBounds::new(
             AbsoluteStartBound::InfinitePast,
@@ -272,7 +272,7 @@ fn intersect_empty_open() {
 }
 
 #[test]
-fn intersect_open_empty() {
+fn intersect_unbounded_empty() {
     assert_eq!(
         AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture,)
             .intersect(&EmptiableAbsoluteBounds::Empty),
@@ -281,7 +281,7 @@ fn intersect_open_empty() {
 }
 
 #[test]
-fn intersect_open_open() {
+fn intersect_unbounded_unbounded() {
     assert_eq!(
         AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture,).intersect(
             &AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture,)
@@ -294,7 +294,7 @@ fn intersect_open_open() {
 }
 
 #[test]
-fn intersect_closed_no_overlap() {
+fn intersect_bounded_no_overlap() {
     assert_eq!(
         AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
@@ -309,7 +309,7 @@ fn intersect_closed_no_overlap() {
 }
 
 #[test]
-fn intersect_closed_adjacent_inclusive_inclusive() {
+fn intersect_bounded_adjacent_inclusive_inclusive() {
     assert_eq!(
         AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
@@ -345,7 +345,7 @@ fn intersect_closed_adjacent_inclusive_inclusive() {
 }
 
 #[test]
-fn intersect_closed_adjacent_inclusive_exclusive() {
+fn intersect_bounded_adjacent_inclusive_exclusive() {
     assert_eq!(
         AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
@@ -372,7 +372,7 @@ fn intersect_closed_adjacent_inclusive_exclusive() {
 }
 
 #[test]
-fn intersect_closed_adjacent_exclusive_inclusive() {
+fn intersect_bounded_adjacent_exclusive_inclusive() {
     assert_eq!(
         AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
@@ -399,7 +399,7 @@ fn intersect_closed_adjacent_exclusive_inclusive() {
 }
 
 #[test]
-fn intersect_closed_adjacent_exclusive_exclusive() {
+fn intersect_bounded_adjacent_exclusive_exclusive() {
     assert_eq!(
         AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
@@ -426,7 +426,7 @@ fn intersect_closed_adjacent_exclusive_exclusive() {
 }
 
 #[test]
-fn intersect_closed_clear_overlap() {
+fn intersect_bounded_clear_overlap() {
     assert_eq!(
         AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
@@ -444,7 +444,7 @@ fn intersect_closed_clear_overlap() {
 }
 
 #[test]
-fn intersect_closed_on_open() {
+fn intersect_bounded_on_unbounded() {
     assert_eq!(
         AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
@@ -462,7 +462,7 @@ fn intersect_closed_on_open() {
 }
 
 #[test]
-fn intersect_open_on_closed() {
+fn intersect_unbounded_on_bounded() {
     assert_eq!(
         AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture,).intersect(
             &AbsoluteBounds::new(
@@ -486,7 +486,7 @@ fn difference_empty_empty() {
 }
 
 #[test]
-fn difference_empty_open() {
+fn difference_empty_unbounded() {
     assert_eq!(
         EmptiableAbsoluteBounds::Empty.differentiate(&AbsoluteBounds::new(
             AbsoluteStartBound::InfinitePast,
@@ -497,7 +497,7 @@ fn difference_empty_open() {
 }
 
 #[test]
-fn difference_open_empty() {
+fn difference_unbounded_empty() {
     assert_eq!(
         AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture,)
             .differentiate(&EmptiableAbsoluteBounds::Empty),
@@ -506,7 +506,7 @@ fn difference_open_empty() {
 }
 
 #[test]
-fn difference_open_open() {
+fn difference_unbounded_unbounded() {
     assert_eq!(
         AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture,).differentiate(
             &AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture,)
@@ -516,7 +516,7 @@ fn difference_open_open() {
 }
 
 #[test]
-fn difference_closed_no_overlap() {
+fn difference_bounded_no_overlap() {
     assert_eq!(
         AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
@@ -531,7 +531,7 @@ fn difference_closed_no_overlap() {
 }
 
 #[test]
-fn difference_closed_adjacent_inclusive_inclusive() {
+fn difference_bounded_adjacent_inclusive_inclusive() {
     assert_eq!(
         AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
@@ -567,7 +567,7 @@ fn difference_closed_adjacent_inclusive_inclusive() {
 }
 
 #[test]
-fn difference_closed_adjacent_inclusive_exclusive() {
+fn difference_bounded_adjacent_inclusive_exclusive() {
     assert_eq!(
         AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
@@ -594,7 +594,7 @@ fn difference_closed_adjacent_inclusive_exclusive() {
 }
 
 #[test]
-fn difference_closed_adjacent_exclusive_inclusive() {
+fn difference_bounded_adjacent_exclusive_inclusive() {
     assert_eq!(
         AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
@@ -621,7 +621,7 @@ fn difference_closed_adjacent_exclusive_inclusive() {
 }
 
 #[test]
-fn difference_closed_adjacent_exclusive_exclusive() {
+fn difference_bounded_adjacent_exclusive_exclusive() {
     assert_eq!(
         AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
@@ -648,7 +648,7 @@ fn difference_closed_adjacent_exclusive_exclusive() {
 }
 
 #[test]
-fn difference_closed_clear_overlap() {
+fn difference_bounded_clear_overlap() {
     assert_eq!(
         AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
@@ -669,7 +669,7 @@ fn difference_closed_clear_overlap() {
 }
 
 #[test]
-fn difference_closed_on_open() {
+fn difference_bounded_on_unbounded() {
     assert_eq!(
         AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
@@ -684,7 +684,7 @@ fn difference_closed_on_open() {
 }
 
 #[test]
-fn difference_open_on_closed() {
+fn difference_unbounded_on_bounded() {
     assert_eq!(
         AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture,).differentiate(
             &AbsoluteBounds::new(
@@ -720,7 +720,7 @@ fn sym_difference_empty_empty() {
 }
 
 #[test]
-fn sym_difference_empty_open() {
+fn sym_difference_empty_unbounded() {
     assert_eq!(
         EmptiableAbsoluteBounds::Empty.symmetrically_differentiate(&AbsoluteBounds::new(
             AbsoluteStartBound::InfinitePast,
@@ -731,7 +731,7 @@ fn sym_difference_empty_open() {
 }
 
 #[test]
-fn sym_difference_open_empty() {
+fn sym_difference_unbounded_empty() {
     assert_eq!(
         AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture,)
             .symmetrically_differentiate(&EmptiableAbsoluteBounds::Empty),
@@ -740,7 +740,7 @@ fn sym_difference_open_empty() {
 }
 
 #[test]
-fn sym_difference_open_open() {
+fn sym_difference_unbounded_unbounded() {
     assert_eq!(
         AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture,)
             .symmetrically_differentiate(&AbsoluteBounds::new(
@@ -752,7 +752,7 @@ fn sym_difference_open_open() {
 }
 
 #[test]
-fn sym_difference_closed_no_overlap() {
+fn sym_difference_bounded_no_overlap() {
     assert_eq!(
         AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
@@ -767,7 +767,7 @@ fn sym_difference_closed_no_overlap() {
 }
 
 #[test]
-fn sym_difference_closed_adjacent_inclusive_inclusive() {
+fn sym_difference_bounded_adjacent_inclusive_inclusive() {
     assert_eq!(
         AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
@@ -815,7 +815,7 @@ fn sym_difference_closed_adjacent_inclusive_inclusive() {
 }
 
 #[test]
-fn sym_difference_closed_adjacent_inclusive_exclusive() {
+fn sym_difference_bounded_adjacent_inclusive_exclusive() {
     assert_eq!(
         AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
@@ -842,7 +842,7 @@ fn sym_difference_closed_adjacent_inclusive_exclusive() {
 }
 
 #[test]
-fn sym_difference_closed_adjacent_exclusive_inclusive() {
+fn sym_difference_bounded_adjacent_exclusive_inclusive() {
     assert_eq!(
         AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
@@ -869,7 +869,7 @@ fn sym_difference_closed_adjacent_exclusive_inclusive() {
 }
 
 #[test]
-fn sym_difference_closed_adjacent_exclusive_exclusive() {
+fn sym_difference_bounded_adjacent_exclusive_exclusive() {
     assert_eq!(
         AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
@@ -896,7 +896,7 @@ fn sym_difference_closed_adjacent_exclusive_exclusive() {
 }
 
 #[test]
-fn sym_difference_closed_clear_overlap() {
+fn sym_difference_bounded_clear_overlap() {
     assert_eq!(
         AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
@@ -932,7 +932,7 @@ fn sym_difference_closed_clear_overlap() {
 }
 
 #[test]
-fn sym_difference_closed_on_open() {
+fn sym_difference_bounded_on_unbounded() {
     assert_eq!(
         AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
@@ -962,7 +962,7 @@ fn sym_difference_closed_on_open() {
 }
 
 #[test]
-fn sym_difference_open_on_closed() {
+fn sym_difference_unbounded_on_bounded() {
     assert_eq!(
         AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture,)
             .symmetrically_differentiate(&AbsoluteBounds::new(

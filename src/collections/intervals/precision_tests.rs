@@ -1,6 +1,6 @@
 use chrono::{Duration, Utc};
 
-use crate::intervals::absolute::{AbsoluteInterval, ClosedAbsoluteInterval};
+use crate::intervals::absolute::{AbsoluteInterval, BoundedAbsoluteInterval};
 use crate::ops::Precision;
 use crate::test_utils::datetime;
 
@@ -9,11 +9,11 @@ use super::precision::*;
 #[test]
 fn create_precision_change_iter_from_change_precision() {
     let intervals = [
-        AbsoluteInterval::Closed(ClosedAbsoluteInterval::new(
+        AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
             datetime(&Utc, 2025, 1, 1, 8, 59, 1),
             datetime(&Utc, 2025, 1, 1, 10, 23, 12),
         )),
-        AbsoluteInterval::Closed(ClosedAbsoluteInterval::new(
+        AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
             datetime(&Utc, 2025, 1, 2, 8, 59, 1),
             datetime(&Utc, 2025, 1, 2, 10, 23, 12),
         )),
@@ -25,11 +25,11 @@ fn create_precision_change_iter_from_change_precision() {
 #[test]
 fn create_precision_change_iter_from_change_start_end_precision() {
     let intervals = [
-        AbsoluteInterval::Closed(ClosedAbsoluteInterval::new(
+        AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
             datetime(&Utc, 2025, 1, 1, 8, 59, 1),
             datetime(&Utc, 2025, 1, 1, 10, 23, 12),
         )),
-        AbsoluteInterval::Closed(ClosedAbsoluteInterval::new(
+        AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
             datetime(&Utc, 2025, 1, 2, 8, 59, 1),
             datetime(&Utc, 2025, 1, 2, 10, 23, 12),
         )),
@@ -44,11 +44,11 @@ fn create_precision_change_iter_from_change_start_end_precision() {
 #[test]
 fn precision_change_iter_from_change_precision_run() {
     let intervals = [
-        AbsoluteInterval::Closed(ClosedAbsoluteInterval::new(
+        AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
             datetime(&Utc, 2025, 1, 1, 8, 23, 12),
             datetime(&Utc, 2025, 1, 1, 10, 50, 1),
         )),
-        AbsoluteInterval::Closed(ClosedAbsoluteInterval::new(
+        AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
             datetime(&Utc, 2025, 1, 2, 8, 23, 12),
             datetime(&Utc, 2025, 1, 2, 10, 50, 1),
         )),
@@ -59,11 +59,11 @@ fn precision_change_iter_from_change_precision_run() {
             .change_precision(Precision::ToNearest(Duration::minutes(5)))
             .collect::<Vec<_>>(),
         vec![
-            Ok(AbsoluteInterval::Closed(ClosedAbsoluteInterval::new(
+            Ok(AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
                 datetime(&Utc, 2025, 1, 1, 8, 25, 0),
                 datetime(&Utc, 2025, 1, 1, 10, 50, 0),
             ))),
-            Ok(AbsoluteInterval::Closed(ClosedAbsoluteInterval::new(
+            Ok(AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
                 datetime(&Utc, 2025, 1, 2, 8, 25, 0),
                 datetime(&Utc, 2025, 1, 2, 10, 50, 0),
             ))),
@@ -74,11 +74,11 @@ fn precision_change_iter_from_change_precision_run() {
 #[test]
 fn precision_change_iter_from_change_precision_run_reverse() {
     let intervals = [
-        AbsoluteInterval::Closed(ClosedAbsoluteInterval::new(
+        AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
             datetime(&Utc, 2025, 1, 1, 8, 23, 12),
             datetime(&Utc, 2025, 1, 1, 10, 50, 1),
         )),
-        AbsoluteInterval::Closed(ClosedAbsoluteInterval::new(
+        AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
             datetime(&Utc, 2025, 1, 2, 8, 23, 12),
             datetime(&Utc, 2025, 1, 2, 10, 50, 1),
         )),
@@ -90,11 +90,11 @@ fn precision_change_iter_from_change_precision_run_reverse() {
             .rev()
             .collect::<Vec<_>>(),
         vec![
-            Ok(AbsoluteInterval::Closed(ClosedAbsoluteInterval::new(
+            Ok(AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
                 datetime(&Utc, 2025, 1, 2, 8, 25, 0),
                 datetime(&Utc, 2025, 1, 2, 10, 50, 0),
             ))),
-            Ok(AbsoluteInterval::Closed(ClosedAbsoluteInterval::new(
+            Ok(AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
                 datetime(&Utc, 2025, 1, 1, 8, 25, 0),
                 datetime(&Utc, 2025, 1, 1, 10, 50, 0),
             ))),
@@ -105,11 +105,11 @@ fn precision_change_iter_from_change_precision_run_reverse() {
 #[test]
 fn precision_change_iter_from_change_start_end_precision_run() {
     let intervals = [
-        AbsoluteInterval::Closed(ClosedAbsoluteInterval::new(
+        AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
             datetime(&Utc, 2025, 1, 1, 8, 23, 12),
             datetime(&Utc, 2025, 1, 1, 10, 50, 1),
         )),
-        AbsoluteInterval::Closed(ClosedAbsoluteInterval::new(
+        AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
             datetime(&Utc, 2025, 1, 2, 8, 23, 12),
             datetime(&Utc, 2025, 1, 2, 10, 50, 1),
         )),
@@ -123,11 +123,11 @@ fn precision_change_iter_from_change_start_end_precision_run() {
             )
             .collect::<Vec<_>>(),
         vec![
-            Ok(AbsoluteInterval::Closed(ClosedAbsoluteInterval::new(
+            Ok(AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
                 datetime(&Utc, 2025, 1, 1, 8, 25, 0),
                 datetime(&Utc, 2025, 1, 1, 11, 0, 0),
             ))),
-            Ok(AbsoluteInterval::Closed(ClosedAbsoluteInterval::new(
+            Ok(AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
                 datetime(&Utc, 2025, 1, 2, 8, 25, 0),
                 datetime(&Utc, 2025, 1, 2, 11, 0, 0),
             ))),
@@ -138,11 +138,11 @@ fn precision_change_iter_from_change_start_end_precision_run() {
 #[test]
 fn precision_change_iter_from_change_start_end_precision_run_reverse() {
     let intervals = [
-        AbsoluteInterval::Closed(ClosedAbsoluteInterval::new(
+        AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
             datetime(&Utc, 2025, 1, 1, 8, 23, 12),
             datetime(&Utc, 2025, 1, 1, 10, 50, 1),
         )),
-        AbsoluteInterval::Closed(ClosedAbsoluteInterval::new(
+        AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
             datetime(&Utc, 2025, 1, 2, 8, 23, 12),
             datetime(&Utc, 2025, 1, 2, 10, 50, 1),
         )),
@@ -157,11 +157,11 @@ fn precision_change_iter_from_change_start_end_precision_run_reverse() {
             .rev()
             .collect::<Vec<_>>(),
         vec![
-            Ok(AbsoluteInterval::Closed(ClosedAbsoluteInterval::new(
+            Ok(AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
                 datetime(&Utc, 2025, 1, 2, 8, 25, 0),
                 datetime(&Utc, 2025, 1, 2, 11, 0, 0),
             ))),
-            Ok(AbsoluteInterval::Closed(ClosedAbsoluteInterval::new(
+            Ok(AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
                 datetime(&Utc, 2025, 1, 1, 8, 25, 0),
                 datetime(&Utc, 2025, 1, 1, 11, 0, 0),
             ))),

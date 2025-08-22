@@ -1,10 +1,10 @@
 use chrono::{DateTime, Utc};
 
 use crate::intervals::absolute::{
-    AbsoluteInterval, ClosedAbsoluteInterval, EmptiableAbsoluteBounds, HalfOpenAbsoluteInterval,
+    AbsoluteInterval, BoundedAbsoluteInterval, EmptiableAbsoluteBounds, HalfBoundedAbsoluteInterval,
 };
 use crate::intervals::meta::{BoundInclusivity, OpeningDirection};
-use crate::intervals::special::{EmptyInterval, OpenInterval};
+use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 use crate::test_utils::date;
 
 use super::cut::*;
@@ -99,19 +99,19 @@ fn cut_at_emptiable_abs_bounds_empty() {
 }
 
 #[test]
-fn cut_at_open_interval_inclusive_inclusive_cut() {
+fn cut_at_unbounded_interval_inclusive_inclusive_cut() {
     assert_eq!(
-        OpenInterval.cut_at(
+        UnboundedInterval.cut_at(
             date(&Utc, 2025, 1, 1),
             CutType::new(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive)
         ),
         CutResult::Cut(
-            AbsoluteInterval::HalfOpen(HalfOpenAbsoluteInterval::new_with_inclusivity(
+            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 OpeningDirection::ToPast,
             )),
-            AbsoluteInterval::HalfOpen(HalfOpenAbsoluteInterval::new_with_inclusivity(
+            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 OpeningDirection::ToFuture,
@@ -121,19 +121,19 @@ fn cut_at_open_interval_inclusive_inclusive_cut() {
 }
 
 #[test]
-fn cut_at_open_interval_inclusive_exclusive_cut() {
+fn cut_at_unbounded_interval_inclusive_exclusive_cut() {
     assert_eq!(
-        OpenInterval.cut_at(
+        UnboundedInterval.cut_at(
             date(&Utc, 2025, 1, 1),
             CutType::new(BoundInclusivity::Inclusive, BoundInclusivity::Exclusive)
         ),
         CutResult::Cut(
-            AbsoluteInterval::HalfOpen(HalfOpenAbsoluteInterval::new_with_inclusivity(
+            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 OpeningDirection::ToPast,
             )),
-            AbsoluteInterval::HalfOpen(HalfOpenAbsoluteInterval::new_with_inclusivity(
+            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 OpeningDirection::ToFuture,
@@ -143,19 +143,19 @@ fn cut_at_open_interval_inclusive_exclusive_cut() {
 }
 
 #[test]
-fn cut_at_open_interval_exclusive_inclusive_cut() {
+fn cut_at_unbounded_interval_exclusive_inclusive_cut() {
     assert_eq!(
-        OpenInterval.cut_at(
+        UnboundedInterval.cut_at(
             date(&Utc, 2025, 1, 1),
             CutType::new(BoundInclusivity::Exclusive, BoundInclusivity::Inclusive)
         ),
         CutResult::Cut(
-            AbsoluteInterval::HalfOpen(HalfOpenAbsoluteInterval::new_with_inclusivity(
+            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 OpeningDirection::ToPast,
             )),
-            AbsoluteInterval::HalfOpen(HalfOpenAbsoluteInterval::new_with_inclusivity(
+            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 OpeningDirection::ToFuture,
@@ -165,19 +165,19 @@ fn cut_at_open_interval_exclusive_inclusive_cut() {
 }
 
 #[test]
-fn cut_at_open_interval_exclusive_exclusive_cut() {
+fn cut_at_unbounded_interval_exclusive_exclusive_cut() {
     assert_eq!(
-        OpenInterval.cut_at(
+        UnboundedInterval.cut_at(
             date(&Utc, 2025, 1, 1),
             CutType::new(BoundInclusivity::Exclusive, BoundInclusivity::Exclusive)
         ),
         CutResult::Cut(
-            AbsoluteInterval::HalfOpen(HalfOpenAbsoluteInterval::new_with_inclusivity(
+            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 OpeningDirection::ToPast,
             )),
-            AbsoluteInterval::HalfOpen(HalfOpenAbsoluteInterval::new_with_inclusivity(
+            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 OpeningDirection::ToFuture,
@@ -187,20 +187,20 @@ fn cut_at_open_interval_exclusive_exclusive_cut() {
 }
 
 #[test]
-fn cut_at_half_open_interval() {
+fn cut_at_half_unbounded_interval() {
     assert_eq!(
-        HalfOpenAbsoluteInterval::new(date(&Utc, 2025, 1, 1), OpeningDirection::ToFuture).cut_at(
+        HalfBoundedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), OpeningDirection::ToFuture).cut_at(
             date(&Utc, 2025, 1, 2),
             CutType::new(BoundInclusivity::Inclusive, BoundInclusivity::Exclusive)
         ),
         CutResult::Cut(
-            AbsoluteInterval::Closed(ClosedAbsoluteInterval::new_with_inclusivity(
+            AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
                 BoundInclusivity::Inclusive,
             )),
-            AbsoluteInterval::HalfOpen(HalfOpenAbsoluteInterval::new_with_inclusivity(
+            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 2),
                 BoundInclusivity::Exclusive,
                 OpeningDirection::ToFuture,
@@ -210,9 +210,9 @@ fn cut_at_half_open_interval() {
 }
 
 #[test]
-fn cut_at_outside_before_closed_interval() {
+fn cut_at_outside_before_bounded_interval() {
     assert_eq!(
-        ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 2), date(&Utc, 2025, 1, 3)).cut_at(
+        BoundedAbsoluteInterval::new(date(&Utc, 2025, 1, 2), date(&Utc, 2025, 1, 3)).cut_at(
             date(&Utc, 2025, 1, 1),
             CutType::new(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive)
         ),
@@ -221,9 +221,9 @@ fn cut_at_outside_before_closed_interval() {
 }
 
 #[test]
-fn cut_at_outside_after_closed_interval() {
+fn cut_at_outside_after_bounded_interval() {
     assert_eq!(
-        ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 2), date(&Utc, 2025, 1, 3)).cut_at(
+        BoundedAbsoluteInterval::new(date(&Utc, 2025, 1, 2), date(&Utc, 2025, 1, 3)).cut_at(
             date(&Utc, 2025, 1, 4),
             CutType::new(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive)
         ),
@@ -232,20 +232,20 @@ fn cut_at_outside_after_closed_interval() {
 }
 
 #[test]
-fn cut_at_inside_closed_interval() {
+fn cut_at_inside_bounded_interval() {
     assert_eq!(
-        ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), date(&Utc, 2025, 1, 3)).cut_at(
+        BoundedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), date(&Utc, 2025, 1, 3)).cut_at(
             date(&Utc, 2025, 1, 2),
             CutType::new(BoundInclusivity::Exclusive, BoundInclusivity::Exclusive)
         ),
         CutResult::Cut(
-            AbsoluteInterval::Closed(ClosedAbsoluteInterval::new_with_inclusivity(
+            AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 2),
                 BoundInclusivity::Exclusive,
             )),
-            AbsoluteInterval::Closed(ClosedAbsoluteInterval::new_with_inclusivity(
+            AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 2),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 3),
@@ -256,20 +256,20 @@ fn cut_at_inside_closed_interval() {
 }
 
 #[test]
-fn cut_at_inclusive_edge_closed_interval() {
+fn cut_at_inclusive_edge_bounded_interval() {
     assert_eq!(
-        ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), date(&Utc, 2025, 1, 2)).cut_at(
+        BoundedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), date(&Utc, 2025, 1, 2)).cut_at(
             date(&Utc, 2025, 1, 1),
             CutType::new(BoundInclusivity::Inclusive, BoundInclusivity::Exclusive)
         ),
         CutResult::Cut(
-            AbsoluteInterval::Closed(ClosedAbsoluteInterval::new_with_inclusivity(
+            AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
             )),
-            AbsoluteInterval::Closed(ClosedAbsoluteInterval::new_with_inclusivity(
+            AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 date(&Utc, 2025, 1, 2),
@@ -280,9 +280,9 @@ fn cut_at_inclusive_edge_closed_interval() {
 }
 
 #[test]
-fn cut_at_inclusive_edge_closed_interval_would_create_illegal_interval() {
+fn cut_at_inclusive_edge_bounded_interval_would_create_illegal_interval() {
     assert_eq!(
-        ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), date(&Utc, 2025, 1, 2)).cut_at(
+        BoundedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), date(&Utc, 2025, 1, 2)).cut_at(
             date(&Utc, 2025, 1, 1),
             CutType::new(BoundInclusivity::Exclusive, BoundInclusivity::Exclusive)
         ),
@@ -291,9 +291,9 @@ fn cut_at_inclusive_edge_closed_interval_would_create_illegal_interval() {
 }
 
 #[test]
-fn cut_at_exclusive_edge_closed_interval() {
+fn cut_at_exclusive_edge_bounded_interval() {
     assert_eq!(
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 2),

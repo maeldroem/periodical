@@ -6,13 +6,13 @@ use super::prelude::*;
 
 use crate::intervals::absolute::{
     AbsoluteBounds, AbsoluteEndBound, AbsoluteInterval, AbsoluteStartBound, EmptiableAbsoluteBounds,
-    HalfOpenAbsoluteInterval, HasAbsoluteBounds, HasEmptiableAbsoluteBounds,
+    HalfBoundedAbsoluteInterval, HasAbsoluteBounds, HasEmptiableAbsoluteBounds,
 };
 use crate::intervals::relative::{
-    EmptiableRelativeBounds, HalfOpenRelativeInterval, RelativeBounds, RelativeEndBound, RelativeStartBound,
+    EmptiableRelativeBounds, HalfBoundedRelativeInterval, RelativeBounds, RelativeEndBound, RelativeStartBound,
 };
-use crate::intervals::special::{EmptyInterval, OpenInterval};
-use crate::intervals::{ClosedAbsoluteInterval, ClosedRelativeInterval, RelativeInterval};
+use crate::intervals::special::{EmptyInterval, UnboundedInterval};
+use crate::intervals::{BoundedAbsoluteInterval, BoundedRelativeInterval, RelativeInterval};
 
 /// Capacity to shrink an interval up to a given time
 ///
@@ -93,7 +93,7 @@ impl ShrinkableEndBound<AbsoluteEndBound> for AbsoluteInterval {
     }
 }
 
-impl ShrinkableStartBound<AbsoluteStartBound> for ClosedAbsoluteInterval {
+impl ShrinkableStartBound<AbsoluteStartBound> for BoundedAbsoluteInterval {
     type Output = AbsoluteInterval;
 
     fn shrink_start(&self, position: AbsoluteStartBound) -> Self::Output {
@@ -104,7 +104,7 @@ impl ShrinkableStartBound<AbsoluteStartBound> for ClosedAbsoluteInterval {
     }
 }
 
-impl ShrinkableEndBound<AbsoluteEndBound> for ClosedAbsoluteInterval {
+impl ShrinkableEndBound<AbsoluteEndBound> for BoundedAbsoluteInterval {
     type Output = AbsoluteInterval;
 
     fn shrink_end(&self, position: AbsoluteEndBound) -> Self::Output {
@@ -112,7 +112,7 @@ impl ShrinkableEndBound<AbsoluteEndBound> for ClosedAbsoluteInterval {
     }
 }
 
-impl ShrinkableStartBound<AbsoluteStartBound> for HalfOpenAbsoluteInterval {
+impl ShrinkableStartBound<AbsoluteStartBound> for HalfBoundedAbsoluteInterval {
     type Output = AbsoluteInterval;
 
     fn shrink_start(&self, position: AbsoluteStartBound) -> Self::Output {
@@ -123,7 +123,7 @@ impl ShrinkableStartBound<AbsoluteStartBound> for HalfOpenAbsoluteInterval {
     }
 }
 
-impl ShrinkableEndBound<AbsoluteEndBound> for HalfOpenAbsoluteInterval {
+impl ShrinkableEndBound<AbsoluteEndBound> for HalfBoundedAbsoluteInterval {
     type Output = AbsoluteInterval;
 
     fn shrink_end(&self, position: AbsoluteEndBound) -> Self::Output {
@@ -182,7 +182,7 @@ impl ShrinkableEndBound<RelativeEndBound> for RelativeInterval {
     }
 }
 
-impl ShrinkableStartBound<RelativeStartBound> for ClosedRelativeInterval {
+impl ShrinkableStartBound<RelativeStartBound> for BoundedRelativeInterval {
     type Output = RelativeInterval;
 
     fn shrink_start(&self, position: RelativeStartBound) -> Self::Output {
@@ -193,7 +193,7 @@ impl ShrinkableStartBound<RelativeStartBound> for ClosedRelativeInterval {
     }
 }
 
-impl ShrinkableEndBound<RelativeEndBound> for ClosedRelativeInterval {
+impl ShrinkableEndBound<RelativeEndBound> for BoundedRelativeInterval {
     type Output = RelativeInterval;
 
     fn shrink_end(&self, position: RelativeEndBound) -> Self::Output {
@@ -201,7 +201,7 @@ impl ShrinkableEndBound<RelativeEndBound> for ClosedRelativeInterval {
     }
 }
 
-impl ShrinkableStartBound<RelativeStartBound> for HalfOpenRelativeInterval {
+impl ShrinkableStartBound<RelativeStartBound> for HalfBoundedRelativeInterval {
     type Output = RelativeInterval;
 
     fn shrink_start(&self, position: RelativeStartBound) -> Self::Output {
@@ -212,7 +212,7 @@ impl ShrinkableStartBound<RelativeStartBound> for HalfOpenRelativeInterval {
     }
 }
 
-impl ShrinkableEndBound<RelativeEndBound> for HalfOpenRelativeInterval {
+impl ShrinkableEndBound<RelativeEndBound> for HalfBoundedRelativeInterval {
     type Output = RelativeInterval;
 
     fn shrink_end(&self, position: RelativeEndBound) -> Self::Output {
@@ -220,7 +220,7 @@ impl ShrinkableEndBound<RelativeEndBound> for HalfOpenRelativeInterval {
     }
 }
 
-impl ShrinkableStartBound<AbsoluteStartBound> for OpenInterval {
+impl ShrinkableStartBound<AbsoluteStartBound> for UnboundedInterval {
     type Output = AbsoluteInterval;
 
     fn shrink_start(&self, position: AbsoluteStartBound) -> Self::Output {
@@ -231,7 +231,7 @@ impl ShrinkableStartBound<AbsoluteStartBound> for OpenInterval {
     }
 }
 
-impl ShrinkableEndBound<AbsoluteEndBound> for OpenInterval {
+impl ShrinkableEndBound<AbsoluteEndBound> for UnboundedInterval {
     type Output = AbsoluteInterval;
 
     fn shrink_end(&self, position: AbsoluteEndBound) -> Self::Output {
@@ -239,7 +239,7 @@ impl ShrinkableEndBound<AbsoluteEndBound> for OpenInterval {
     }
 }
 
-impl ShrinkableStartBound<RelativeStartBound> for OpenInterval {
+impl ShrinkableStartBound<RelativeStartBound> for UnboundedInterval {
     type Output = RelativeInterval;
 
     fn shrink_start(&self, position: RelativeStartBound) -> Self::Output {
@@ -250,7 +250,7 @@ impl ShrinkableStartBound<RelativeStartBound> for OpenInterval {
     }
 }
 
-impl ShrinkableEndBound<RelativeEndBound> for OpenInterval {
+impl ShrinkableEndBound<RelativeEndBound> for UnboundedInterval {
     type Output = RelativeInterval;
 
     fn shrink_end(&self, position: RelativeEndBound) -> Self::Output {

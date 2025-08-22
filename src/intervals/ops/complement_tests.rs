@@ -1,32 +1,32 @@
 use chrono::Utc;
 
 use crate::intervals::absolute::{
-    AbsoluteBounds, AbsoluteEndBound, AbsoluteInterval, AbsoluteStartBound, ClosedAbsoluteInterval,
-    EmptiableAbsoluteBounds, HalfOpenAbsoluteInterval,
+    AbsoluteBounds, AbsoluteEndBound, AbsoluteInterval, AbsoluteStartBound, BoundedAbsoluteInterval,
+    EmptiableAbsoluteBounds, HalfBoundedAbsoluteInterval,
 };
 use crate::intervals::meta::{BoundInclusivity, OpeningDirection};
-use crate::intervals::special::{EmptyInterval, OpenInterval};
+use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 use crate::ops::ComplementResult;
 use crate::test_utils::date;
 
 use super::complement::*;
 
 #[test]
-fn complement_of_open_interval() {
-    assert_eq!(OpenInterval.complement(), ComplementResult::Single(EmptyInterval));
+fn complement_of_unbounded_interval() {
+    assert_eq!(UnboundedInterval.complement(), ComplementResult::Single(EmptyInterval));
 }
 
 #[test]
 fn complement_of_empty_interval() {
-    assert_eq!(EmptyInterval.complement(), ComplementResult::Single(OpenInterval));
+    assert_eq!(EmptyInterval.complement(), ComplementResult::Single(UnboundedInterval));
 }
 
 #[test]
-fn complement_of_half_open_interval() {
+fn complement_of_half_unbounded_interval() {
     assert_eq!(
-        HalfOpenAbsoluteInterval::new(date(&Utc, 2025, 1, 1), OpeningDirection::ToFuture).complement(),
-        ComplementResult::Single(AbsoluteInterval::HalfOpen(
-            HalfOpenAbsoluteInterval::new_with_inclusivity(
+        HalfBoundedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), OpeningDirection::ToFuture).complement(),
+        ComplementResult::Single(AbsoluteInterval::HalfBounded(
+            HalfBoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 OpeningDirection::ToPast,
@@ -36,16 +36,16 @@ fn complement_of_half_open_interval() {
 }
 
 #[test]
-fn complement_of_closed_interval() {
+fn complement_of_bounded_interval() {
     assert_eq!(
-        ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), date(&Utc, 2025, 1, 2)).complement(),
+        BoundedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), date(&Utc, 2025, 1, 2)).complement(),
         ComplementResult::Split(
-            AbsoluteInterval::HalfOpen(HalfOpenAbsoluteInterval::new_with_inclusivity(
+            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 OpeningDirection::ToPast,
             )),
-            AbsoluteInterval::HalfOpen(HalfOpenAbsoluteInterval::new_with_inclusivity(
+            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 2),
                 BoundInclusivity::Exclusive,
                 OpeningDirection::ToFuture,
@@ -66,7 +66,7 @@ fn complement_of_emptiable_abs_bounds_empty() {
 }
 
 #[test]
-fn complement_of_abs_bounds_open() {
+fn complement_of_abs_bounds_unbounded() {
     assert_eq!(
         AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture).complement(),
         ComplementResult::Single(EmptiableAbsoluteBounds::Empty),
@@ -74,24 +74,24 @@ fn complement_of_abs_bounds_open() {
 }
 
 #[test]
-fn complement_of_abs_interval_open() {
+fn complement_of_abs_interval_unbounded() {
     assert_eq!(
-        AbsoluteInterval::Open(OpenInterval).complement(),
+        AbsoluteInterval::Unbounded(UnboundedInterval).complement(),
         ComplementResult::Single(AbsoluteInterval::Empty(EmptyInterval)),
     );
 }
 
 #[test]
-fn complement_of_abs_interval_half_open() {
+fn complement_of_abs_interval_half_bounded() {
     assert_eq!(
-        AbsoluteInterval::HalfOpen(HalfOpenAbsoluteInterval::new_with_inclusivity(
+        AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             OpeningDirection::ToPast,
         ))
         .complement(),
-        ComplementResult::Single(AbsoluteInterval::HalfOpen(
-            HalfOpenAbsoluteInterval::new_with_inclusivity(
+        ComplementResult::Single(AbsoluteInterval::HalfBounded(
+            HalfBoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 OpeningDirection::ToFuture,
@@ -101,9 +101,9 @@ fn complement_of_abs_interval_half_open() {
 }
 
 #[test]
-fn complement_of_abs_interval_closed() {
+fn complement_of_abs_interval_bounded() {
     assert_eq!(
-        AbsoluteInterval::Closed(ClosedAbsoluteInterval::new_with_inclusivity(
+        AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 2),
@@ -111,12 +111,12 @@ fn complement_of_abs_interval_closed() {
         ))
         .complement(),
         ComplementResult::Split(
-            AbsoluteInterval::HalfOpen(HalfOpenAbsoluteInterval::new_with_inclusivity(
+            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 OpeningDirection::ToPast,
             )),
-            AbsoluteInterval::HalfOpen(HalfOpenAbsoluteInterval::new_with_inclusivity(
+            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 2),
                 BoundInclusivity::Inclusive,
                 OpeningDirection::ToFuture,
@@ -129,6 +129,6 @@ fn complement_of_abs_interval_closed() {
 fn complement_of_abs_interval_empty() {
     assert_eq!(
         AbsoluteInterval::Empty(EmptyInterval).complement(),
-        ComplementResult::Single(AbsoluteInterval::Open(OpenInterval)),
+        ComplementResult::Single(AbsoluteInterval::Unbounded(UnboundedInterval)),
     );
 }

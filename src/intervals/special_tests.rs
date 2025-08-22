@@ -1,14 +1,14 @@
 use chrono::{Duration, Utc};
 
 use crate::intervals::absolute::{
-    AbsoluteBounds, AbsoluteEndBound, AbsoluteInterval, AbsoluteStartBound, ClosedAbsoluteInterval,
+    AbsoluteBounds, AbsoluteEndBound, AbsoluteInterval, AbsoluteStartBound, BoundedAbsoluteInterval,
     EmptiableAbsoluteBounds, HasAbsoluteBounds, HasEmptiableAbsoluteBounds,
 };
 use crate::intervals::meta::{
     Duration as IntervalDuration, Emptiable, HasDuration, HasOpenness, HasRelativity, Openness, Relativity,
 };
 use crate::intervals::relative::{
-    ClosedRelativeInterval, EmptiableRelativeBounds, HasEmptiableRelativeBounds, HasRelativeBounds, RelativeBounds,
+    BoundedRelativeInterval, EmptiableRelativeBounds, HasEmptiableRelativeBounds, HasRelativeBounds, RelativeBounds,
     RelativeEndBound, RelativeInterval, RelativeStartBound,
 };
 use crate::test_utils::date;
@@ -16,91 +16,91 @@ use crate::test_utils::date;
 use super::special::*;
 
 #[test]
-fn open_interval_openness() {
-    assert_eq!(OpenInterval.openness(), Openness::Open);
+fn unbounded_interval_openness() {
+    assert_eq!(UnboundedInterval.openness(), Openness::Unbounded);
 }
 
 #[test]
-fn open_interval_relativity() {
-    assert_eq!(OpenInterval.relativity(), Relativity::Any);
+fn unbounded_interval_relativity() {
+    assert_eq!(UnboundedInterval.relativity(), Relativity::Any);
 }
 
 #[test]
-fn open_interval_duration() {
-    assert_eq!(OpenInterval.duration(), IntervalDuration::Infinite);
+fn unbounded_interval_duration() {
+    assert_eq!(UnboundedInterval.duration(), IntervalDuration::Infinite);
 }
 
 #[test]
-fn open_interval_abs_bounds() {
+fn unbounded_interval_abs_bounds() {
     assert_eq!(
-        OpenInterval.abs_bounds(),
+        UnboundedInterval.abs_bounds(),
         AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture),
     );
 }
 
 #[test]
-fn open_interval_abs_start() {
-    assert_eq!(OpenInterval.abs_start(), AbsoluteStartBound::InfinitePast);
+fn unbounded_interval_abs_start() {
+    assert_eq!(UnboundedInterval.abs_start(), AbsoluteStartBound::InfinitePast);
 }
 
 #[test]
-fn open_interval_abs_end() {
-    assert_eq!(OpenInterval.abs_end(), AbsoluteEndBound::InfiniteFuture);
+fn unbounded_interval_abs_end() {
+    assert_eq!(UnboundedInterval.abs_end(), AbsoluteEndBound::InfiniteFuture);
 }
 
 #[test]
-fn open_interval_rel_bounds() {
+fn unbounded_interval_rel_bounds() {
     assert_eq!(
-        OpenInterval.rel_bounds(),
+        UnboundedInterval.rel_bounds(),
         RelativeBounds::new(RelativeStartBound::InfinitePast, RelativeEndBound::InfiniteFuture),
     );
 }
 
 #[test]
-fn open_interval_rel_start() {
-    assert_eq!(OpenInterval.rel_start(), RelativeStartBound::InfinitePast);
+fn unbounded_interval_rel_start() {
+    assert_eq!(UnboundedInterval.rel_start(), RelativeStartBound::InfinitePast);
 }
 
 #[test]
-fn open_interval_rel_end() {
-    assert_eq!(OpenInterval.rel_end(), RelativeEndBound::InfiniteFuture);
+fn unbounded_interval_rel_end() {
+    assert_eq!(UnboundedInterval.rel_end(), RelativeEndBound::InfiniteFuture);
 }
 
 #[test]
-fn open_interval_try_from_abs_interval_correct_variant() {
+fn unbounded_interval_try_from_abs_interval_correct_variant() {
     assert_eq!(
-        OpenInterval::try_from(AbsoluteInterval::Open(OpenInterval)),
-        Ok(OpenInterval),
+        UnboundedInterval::try_from(AbsoluteInterval::Unbounded(UnboundedInterval)),
+        Ok(UnboundedInterval),
     );
 }
 
 #[test]
-fn open_interval_try_from_abs_interval_wrong_variant() {
+fn unbounded_interval_try_from_abs_interval_wrong_variant() {
     assert_eq!(
-        OpenInterval::try_from(AbsoluteInterval::Closed(ClosedAbsoluteInterval::new(
+        UnboundedInterval::try_from(AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
             date(&Utc, 2025, 1, 1),
             date(&Utc, 2025, 1, 2),
         ))),
-        Err(OpenIntervalConversionErr::WrongVariant),
+        Err(UnboundedIntervalConversionErr::WrongVariant),
     );
 }
 
 #[test]
-fn open_interval_try_from_rel_interval_correct_variant() {
+fn unbounded_interval_try_from_rel_interval_correct_variant() {
     assert_eq!(
-        OpenInterval::try_from(RelativeInterval::Open(OpenInterval)),
-        Ok(OpenInterval),
+        UnboundedInterval::try_from(RelativeInterval::Unbounded(UnboundedInterval)),
+        Ok(UnboundedInterval),
     );
 }
 
 #[test]
-fn open_interval_try_from_rel_interval_wrong_variant() {
+fn unbounded_interval_try_from_rel_interval_wrong_variant() {
     assert_eq!(
-        OpenInterval::try_from(RelativeInterval::Closed(ClosedRelativeInterval::new(
+        UnboundedInterval::try_from(RelativeInterval::Bounded(BoundedRelativeInterval::new(
             Duration::hours(1),
             Duration::hours(5),
         ))),
-        Err(OpenIntervalConversionErr::WrongVariant),
+        Err(UnboundedIntervalConversionErr::WrongVariant),
     );
 }
 
@@ -165,7 +165,7 @@ fn empty_interval_try_from_abs_interval_correct_variant() {
 #[test]
 fn empty_interval_try_from_abs_interval_wrong_variant() {
     assert_eq!(
-        EmptyInterval::try_from(AbsoluteInterval::Closed(ClosedAbsoluteInterval::new(
+        EmptyInterval::try_from(AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
             date(&Utc, 2025, 1, 1),
             date(&Utc, 2025, 1, 2),
         ))),
@@ -184,7 +184,7 @@ fn empty_interval_try_from_rel_interval_correct_variant() {
 #[test]
 fn empty_interval_try_from_rel_interval_wrong_variant() {
     assert_eq!(
-        EmptyInterval::try_from(RelativeInterval::Closed(ClosedRelativeInterval::new(
+        EmptyInterval::try_from(RelativeInterval::Bounded(BoundedRelativeInterval::new(
             Duration::hours(1),
             Duration::hours(5),
         ))),

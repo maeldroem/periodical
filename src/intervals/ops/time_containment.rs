@@ -10,15 +10,15 @@ use chrono::{DateTime, Duration, Utc};
 use super::prelude::*;
 
 use crate::intervals::absolute::{
-    AbsoluteBounds, AbsoluteEndBound, AbsoluteStartBound, EmptiableAbsoluteBounds, HalfOpenAbsoluteInterval,
+    AbsoluteBounds, AbsoluteEndBound, AbsoluteStartBound, EmptiableAbsoluteBounds, HalfBoundedAbsoluteInterval,
     HasAbsoluteBounds, HasEmptiableAbsoluteBounds,
 };
 use crate::intervals::meta::BoundInclusivity;
 use crate::intervals::relative::{
-    EmptiableRelativeBounds, HalfOpenRelativeInterval, RelativeBounds, RelativeEndBound, RelativeStartBound,
+    EmptiableRelativeBounds, HalfBoundedRelativeInterval, RelativeBounds, RelativeEndBound, RelativeStartBound,
 };
-use crate::intervals::special::{EmptyInterval, OpenInterval};
-use crate::intervals::{AbsoluteInterval, ClosedAbsoluteInterval, ClosedRelativeInterval, RelativeInterval};
+use crate::intervals::special::{EmptyInterval, UnboundedInterval};
+use crate::intervals::{AbsoluteInterval, BoundedAbsoluteInterval, BoundedRelativeInterval, RelativeInterval};
 
 /// Where the given time was found relative to a time interval
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -450,7 +450,7 @@ where
     }
 }
 
-impl<P> CanPositionTimeContainment<P> for ClosedAbsoluteInterval
+impl<P> CanPositionTimeContainment<P> for BoundedAbsoluteInterval
 where
     P: Into<DateTime<Utc>>,
 {
@@ -464,7 +464,7 @@ where
     }
 }
 
-impl<P> CanPositionTimeContainment<P> for HalfOpenAbsoluteInterval
+impl<P> CanPositionTimeContainment<P> for HalfBoundedAbsoluteInterval
 where
     P: Into<DateTime<Utc>>,
 {
@@ -519,7 +519,7 @@ where
     }
 }
 
-impl<P> CanPositionTimeContainment<P> for ClosedRelativeInterval
+impl<P> CanPositionTimeContainment<P> for BoundedRelativeInterval
 where
     P: Into<Duration>,
 {
@@ -533,7 +533,7 @@ where
     }
 }
 
-impl<P> CanPositionTimeContainment<P> for HalfOpenRelativeInterval
+impl<P> CanPositionTimeContainment<P> for HalfBoundedRelativeInterval
 where
     P: Into<Duration>,
 {
@@ -548,7 +548,7 @@ where
 }
 
 // TODO: Find a way to implement these for P: Into<DateTime<Utc>> and P: Into<chrono::Duration>
-impl CanPositionTimeContainment<DateTime<Utc>> for OpenInterval {
+impl CanPositionTimeContainment<DateTime<Utc>> for UnboundedInterval {
     type Error = Infallible;
 
     fn time_containment_position(&self, _positionable: DateTime<Utc>) -> Result<TimeContainmentPosition, Self::Error> {
@@ -556,7 +556,7 @@ impl CanPositionTimeContainment<DateTime<Utc>> for OpenInterval {
     }
 }
 
-impl CanPositionTimeContainment<Duration> for OpenInterval {
+impl CanPositionTimeContainment<Duration> for UnboundedInterval {
     type Error = Infallible;
 
     fn time_containment_position(&self, _positionable: Duration) -> Result<TimeContainmentPosition, Self::Error> {

@@ -1,6 +1,6 @@
 //! Special intervals
 //!
-//! Open and empty intervals
+//! Unbounded and empty intervals
 
 use std::error::Error;
 use std::fmt::Display;
@@ -23,35 +23,35 @@ use super::relative::{
     RelativeInterval, RelativeStartBound,
 };
 
-/// An open interval
+/// An unbounded interval
 ///
 /// Interval without relativity (not absolute nor relative) and without any bounds.
 /// Is equivalent to _time itself_ (all time), infinite duration.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
-pub struct OpenInterval;
+pub struct UnboundedInterval;
 
-impl Interval for OpenInterval {}
+impl Interval for UnboundedInterval {}
 
-impl HasOpenness for OpenInterval {
+impl HasOpenness for UnboundedInterval {
     fn openness(&self) -> Openness {
-        Openness::Open
+        Openness::Unbounded
     }
 }
 
-impl HasRelativity for OpenInterval {
+impl HasRelativity for UnboundedInterval {
     fn relativity(&self) -> Relativity {
         Relativity::Any
     }
 }
 
-impl HasDuration for OpenInterval {
+impl HasDuration for UnboundedInterval {
     fn duration(&self) -> IntervalDuration {
         IntervalDuration::Infinite
     }
 }
 
-impl HasAbsoluteBounds for OpenInterval {
+impl HasAbsoluteBounds for UnboundedInterval {
     fn abs_bounds(&self) -> AbsoluteBounds {
         AbsoluteBounds::new(self.abs_start(), self.abs_end())
     }
@@ -65,7 +65,7 @@ impl HasAbsoluteBounds for OpenInterval {
     }
 }
 
-impl HasRelativeBounds for OpenInterval {
+impl HasRelativeBounds for UnboundedInterval {
     fn rel_bounds(&self) -> RelativeBounds {
         RelativeBounds::new(self.rel_start(), self.rel_end())
     }
@@ -79,18 +79,18 @@ impl HasRelativeBounds for OpenInterval {
     }
 }
 
-impl From<RangeFull> for OpenInterval {
+impl From<RangeFull> for UnboundedInterval {
     fn from(_value: RangeFull) -> Self {
-        OpenInterval
+        UnboundedInterval
     }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum OpenIntervalConversionErr {
+pub enum UnboundedIntervalConversionErr {
     WrongVariant,
 }
 
-impl Display for OpenIntervalConversionErr {
+impl Display for UnboundedIntervalConversionErr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::WrongVariant => write!(f, "Wrong variant"),
@@ -98,25 +98,25 @@ impl Display for OpenIntervalConversionErr {
     }
 }
 
-impl Error for OpenIntervalConversionErr {}
+impl Error for UnboundedIntervalConversionErr {}
 
-impl TryFrom<AbsoluteInterval> for OpenInterval {
-    type Error = OpenIntervalConversionErr;
+impl TryFrom<AbsoluteInterval> for UnboundedInterval {
+    type Error = UnboundedIntervalConversionErr;
 
     fn try_from(value: AbsoluteInterval) -> Result<Self, Self::Error> {
         match value {
-            AbsoluteInterval::Open(interval) => Ok(interval),
+            AbsoluteInterval::Unbounded(interval) => Ok(interval),
             _ => Err(Self::Error::WrongVariant),
         }
     }
 }
 
-impl TryFrom<RelativeInterval> for OpenInterval {
-    type Error = OpenIntervalConversionErr;
+impl TryFrom<RelativeInterval> for UnboundedInterval {
+    type Error = UnboundedIntervalConversionErr;
 
     fn try_from(value: RelativeInterval) -> Result<Self, Self::Error> {
         match value {
-            RelativeInterval::Open(interval) => Ok(interval),
+            RelativeInterval::Unbounded(interval) => Ok(interval),
             _ => Err(Self::Error::WrongVariant),
         }
     }
@@ -129,7 +129,7 @@ impl TryFrom<RelativeInterval> for OpenInterval {
 /// and empty interval is that intervals are linked to time, therefore empty intervals are out of this time dimension.
 ///
 /// This means that, contrary to an empty set, an empty interval is **not** a subset of any interval.
-/// It simply represents the _lack_ of a time interval, like the complement of an open interval.
+/// It simply represents the _lack_ of a time interval, like the complement of an unbounded interval.
 ///
 /// In regards to operations such as the overlap position, or union, since an empty interval has no defined place
 /// in time, it is always _outside_, _separate_ from the compared.

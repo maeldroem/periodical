@@ -4,10 +4,10 @@ use super::prelude::*;
 
 use crate::intervals::absolute::{AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound};
 use crate::intervals::relative::{RelativeBounds, RelativeEndBound, RelativeFiniteBound, RelativeStartBound};
-use crate::intervals::special::{EmptyInterval, OpenInterval};
+use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 use crate::intervals::{
-    AbsoluteBounds, AbsoluteInterval, ClosedAbsoluteInterval, ClosedRelativeInterval, EmptiableAbsoluteBounds,
-    EmptiableRelativeBounds, HalfOpenAbsoluteInterval, HalfOpenRelativeInterval, RelativeInterval,
+    AbsoluteBounds, AbsoluteInterval, BoundedAbsoluteInterval, BoundedRelativeInterval, EmptiableAbsoluteBounds,
+    EmptiableRelativeBounds, HalfBoundedAbsoluteInterval, HalfBoundedRelativeInterval, RelativeInterval,
 };
 
 /// Capacity to get the past and future continuation of an interval
@@ -60,7 +60,7 @@ impl Continuable for AbsoluteInterval {
     }
 }
 
-impl Continuable for ClosedAbsoluteInterval {
+impl Continuable for BoundedAbsoluteInterval {
     type Output = AbsoluteInterval;
 
     fn past_continuation(&self) -> Self::Output {
@@ -72,7 +72,7 @@ impl Continuable for ClosedAbsoluteInterval {
     }
 }
 
-impl Continuable for HalfOpenAbsoluteInterval {
+impl Continuable for HalfBoundedAbsoluteInterval {
     type Output = AbsoluteInterval;
 
     fn past_continuation(&self) -> Self::Output {
@@ -120,7 +120,7 @@ impl Continuable for RelativeInterval {
     }
 }
 
-impl Continuable for ClosedRelativeInterval {
+impl Continuable for BoundedRelativeInterval {
     type Output = RelativeInterval;
 
     fn past_continuation(&self) -> Self::Output {
@@ -132,7 +132,7 @@ impl Continuable for ClosedRelativeInterval {
     }
 }
 
-impl Continuable for HalfOpenRelativeInterval {
+impl Continuable for HalfBoundedRelativeInterval {
     type Output = RelativeInterval;
 
     fn past_continuation(&self) -> Self::Output {
@@ -144,7 +144,7 @@ impl Continuable for HalfOpenRelativeInterval {
     }
 }
 
-impl Continuable for OpenInterval {
+impl Continuable for UnboundedInterval {
     type Output = EmptyInterval;
 
     fn past_continuation(&self) -> Self::Output {

@@ -2,7 +2,7 @@ use chrono::Utc;
 
 use crate::intervals::absolute::{
     AbsoluteBounds, AbsoluteEndBound, AbsoluteInterval, AbsoluteStartBound, EmptiableAbsoluteBounds,
-    HalfOpenAbsoluteInterval,
+    HalfBoundedAbsoluteInterval,
 };
 use crate::intervals::meta::{BoundInclusivity, OpeningDirection};
 use crate::test_utils::date;
@@ -10,7 +10,7 @@ use crate::test_utils::date;
 use super::fill_gap::*;
 
 #[test]
-fn fill_gap_emptiable_abs_bounds_empty_abs_bounds_open() {
+fn fill_gap_emptiable_abs_bounds_empty_abs_bounds_unbounded() {
     assert_eq!(
         EmptiableAbsoluteBounds::Empty.fill_gap(&AbsoluteBounds::new(
             AbsoluteStartBound::InfinitePast,
@@ -24,7 +24,7 @@ fn fill_gap_emptiable_abs_bounds_empty_abs_bounds_open() {
 }
 
 #[test]
-fn fill_gap_abs_bounds_open_emptiable_abs_bounds_empty() {
+fn fill_gap_abs_bounds_unbounded_emptiable_abs_bounds_empty() {
     assert_eq!(
         AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture)
             .fill_gap(&EmptiableAbsoluteBounds::Empty),
@@ -44,23 +44,23 @@ fn fill_gap_emptiable_abs_bounds_empty_emptiable_abs_bounds_empty() {
 }
 
 #[test]
-fn fill_gap_two_overlapping_half_open() {
+fn fill_gap_two_overlapping_half_bounded() {
     assert_eq!(
-        HalfOpenAbsoluteInterval::new(date(&Utc, 2025, 1, 2), OpeningDirection::ToPast).fill_gap(
-            &HalfOpenAbsoluteInterval::new(date(&Utc, 2025, 1, 1), OpeningDirection::ToFuture)
+        HalfBoundedAbsoluteInterval::new(date(&Utc, 2025, 1, 2), OpeningDirection::ToPast).fill_gap(
+            &HalfBoundedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), OpeningDirection::ToFuture)
         ),
         Err(GapFillError::Overlap),
     );
 }
 
 #[test]
-fn fill_gap_two_non_overlapping_half_open() {
+fn fill_gap_two_non_overlapping_half_bounded() {
     assert_eq!(
-        HalfOpenAbsoluteInterval::new(date(&Utc, 2025, 1, 1), OpeningDirection::ToPast).fill_gap(
-            &HalfOpenAbsoluteInterval::new(date(&Utc, 2025, 1, 2), OpeningDirection::ToFuture)
+        HalfBoundedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), OpeningDirection::ToPast).fill_gap(
+            &HalfBoundedAbsoluteInterval::new(date(&Utc, 2025, 1, 2), OpeningDirection::ToFuture)
         ),
-        Ok(AbsoluteInterval::HalfOpen(
-            HalfOpenAbsoluteInterval::new_with_inclusivity(
+        Ok(AbsoluteInterval::HalfBounded(
+            HalfBoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 2),
                 BoundInclusivity::Exclusive,
                 OpeningDirection::ToPast,
@@ -70,29 +70,29 @@ fn fill_gap_two_non_overlapping_half_open() {
 }
 
 #[test]
-fn fill_gap_two_strictly_adjacent_half_open() {
+fn fill_gap_two_strictly_adjacent_half_bounded() {
     assert_eq!(
-        HalfOpenAbsoluteInterval::new(date(&Utc, 2025, 1, 1), OpeningDirection::ToPast).fill_gap(
-            &HalfOpenAbsoluteInterval::new(date(&Utc, 2025, 1, 1), OpeningDirection::ToFuture)
+        HalfBoundedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), OpeningDirection::ToPast).fill_gap(
+            &HalfBoundedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), OpeningDirection::ToFuture)
         ),
         Err(GapFillError::Overlap),
     );
 }
 
 #[test]
-fn fill_gap_two_leniently_adjacent_half_open() {
+fn fill_gap_two_leniently_adjacent_half_bounded() {
     assert_eq!(
-        HalfOpenAbsoluteInterval::new_with_inclusivity(
+        HalfBoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             OpeningDirection::ToPast,
         )
-        .fill_gap(&HalfOpenAbsoluteInterval::new(
+        .fill_gap(&HalfBoundedAbsoluteInterval::new(
             date(&Utc, 2025, 1, 1),
             OpeningDirection::ToFuture
         )),
-        Ok(AbsoluteInterval::HalfOpen(
-            HalfOpenAbsoluteInterval::new_with_inclusivity(
+        Ok(AbsoluteInterval::HalfBounded(
+            HalfBoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 OpeningDirection::ToPast,
@@ -102,20 +102,20 @@ fn fill_gap_two_leniently_adjacent_half_open() {
 }
 
 #[test]
-fn fill_gap_two_very_leniently_adjacent_half_open() {
+fn fill_gap_two_very_leniently_adjacent_half_bounded() {
     assert_eq!(
-        HalfOpenAbsoluteInterval::new_with_inclusivity(
+        HalfBoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             OpeningDirection::ToPast,
         )
-        .fill_gap(&HalfOpenAbsoluteInterval::new_with_inclusivity(
+        .fill_gap(&HalfBoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             OpeningDirection::ToFuture,
         )),
-        Ok(AbsoluteInterval::HalfOpen(
-            HalfOpenAbsoluteInterval::new_with_inclusivity(
+        Ok(AbsoluteInterval::HalfBounded(
+            HalfBoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
                 OpeningDirection::ToPast,

@@ -37,15 +37,15 @@ doc = false
 bench = false
 
 [[bin]]
-name = "overlap_half_open_complement"
-path = "fuzz_targets/overlap_half_open_complement.rs"
+name = "overlap_half_bounded_complement"
+path = "fuzz_targets/overlap_half_bounded_complement.rs"
 test = false
 doc = false
 bench = false
 
 [[bin]]
-name = "abridge_2nd_degree_complement_of_closed_interval"
-path = "fuzz_targets/abridge_2nd_degree_complement_of_closed_interval.rs"
+name = "abridge_2nd_degree_complement_of_bounded_interval"
+path = "fuzz_targets/abridge_2nd_degree_complement_of_bounded_interval.rs"
 test = false
 doc = false
 bench = false

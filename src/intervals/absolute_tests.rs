@@ -4,7 +4,7 @@ use std::ops::Bound;
 use chrono::{DateTime, Utc};
 
 use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity, OpeningDirection};
-use crate::intervals::special::{EmptyInterval, OpenInterval};
+use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 use crate::test_utils::date;
 
 use super::absolute::*;
@@ -1122,7 +1122,7 @@ fn absolute_bounds_set_end() {
 }
 
 #[test]
-fn absolute_bounds_open_absolute_bounds_open_cmp() {
+fn absolute_bounds_unbounded_absolute_bounds_unbounded_cmp() {
     let a = AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture);
     let b = AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture);
 
@@ -1130,7 +1130,7 @@ fn absolute_bounds_open_absolute_bounds_open_cmp() {
 }
 
 #[test]
-fn absolute_bounds_open_absolute_bounds_half_open_to_future_cmp() {
+fn absolute_bounds_unbounded_absolute_bounds_half_bounded_to_future_cmp() {
     let a = AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture);
     let b = AbsoluteBounds::new(
         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
@@ -1141,19 +1141,18 @@ fn absolute_bounds_open_absolute_bounds_half_open_to_future_cmp() {
 }
 
 #[test]
-fn absolute_bounds_open_absolute_bounds_half_open_to_past_cmp() {
+fn absolute_bounds_unbounded_absolute_bounds_half_bounded_to_past_cmp() {
     let a = AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture);
     let b = AbsoluteBounds::new(
         AbsoluteStartBound::InfinitePast,
         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
     );
 
-    // When starting on same point, the larger interval should come first
-    assert_eq!(a.cmp(&b), Ordering::Less);
+    assert_eq!(a.cmp(&b), Ordering::Equal);
 }
 
 #[test]
-fn absolute_bounds_open_absolute_bounds_closed_cmp() {
+fn absolute_bounds_unbounded_absolute_bounds_bounded_cmp() {
     let a = AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture);
     let b = AbsoluteBounds::new(
         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
@@ -1164,7 +1163,7 @@ fn absolute_bounds_open_absolute_bounds_closed_cmp() {
 }
 
 #[test]
-fn absolute_bounds_half_open_to_future_absolute_bounds_open_cmp() {
+fn absolute_bounds_half_bounded_to_future_absolute_bounds_unbounded_cmp() {
     let a = AbsoluteBounds::new(
         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
         AbsoluteEndBound::InfiniteFuture,
@@ -1175,7 +1174,7 @@ fn absolute_bounds_half_open_to_future_absolute_bounds_open_cmp() {
 }
 
 #[test]
-fn absolute_bounds_half_open_to_future_absolute_bounds_to_future_after_first_cmp() {
+fn absolute_bounds_half_bounded_to_future_absolute_bounds_to_future_after_first_cmp() {
     let a = AbsoluteBounds::new(
         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
         AbsoluteEndBound::InfiniteFuture,
@@ -1189,7 +1188,7 @@ fn absolute_bounds_half_open_to_future_absolute_bounds_to_future_after_first_cmp
 }
 
 #[test]
-fn absolute_bounds_half_open_to_future_absolute_bounds_to_future_before_first_cmp() {
+fn absolute_bounds_half_bounded_to_future_absolute_bounds_to_future_before_first_cmp() {
     let a = AbsoluteBounds::new(
         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2))),
         AbsoluteEndBound::InfiniteFuture,
@@ -1203,7 +1202,7 @@ fn absolute_bounds_half_open_to_future_absolute_bounds_to_future_before_first_cm
 }
 
 #[test]
-fn absolute_bounds_half_open_to_future_absolute_bounds_to_future_same_time_exclusive_bounds_cmp() {
+fn absolute_bounds_half_bounded_to_future_absolute_bounds_to_future_same_time_exclusive_bounds_cmp() {
     let a = AbsoluteBounds::new(
         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
@@ -1223,7 +1222,7 @@ fn absolute_bounds_half_open_to_future_absolute_bounds_to_future_same_time_exclu
 }
 
 #[test]
-fn absolute_bounds_half_open_to_future_absolute_bounds_to_future_same_time_exclusive_inclusive_bounds_cmp() {
+fn absolute_bounds_half_bounded_to_future_absolute_bounds_to_future_same_time_exclusive_inclusive_bounds_cmp() {
     let a = AbsoluteBounds::new(
         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
@@ -1243,7 +1242,7 @@ fn absolute_bounds_half_open_to_future_absolute_bounds_to_future_same_time_exclu
 }
 
 #[test]
-fn absolute_bounds_half_open_to_future_absolute_bounds_to_future_same_time_inclusive_exclusive_bounds_cmp() {
+fn absolute_bounds_half_bounded_to_future_absolute_bounds_to_future_same_time_inclusive_exclusive_bounds_cmp() {
     let a = AbsoluteBounds::new(
         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
@@ -1263,7 +1262,7 @@ fn absolute_bounds_half_open_to_future_absolute_bounds_to_future_same_time_inclu
 }
 
 #[test]
-fn absolute_bounds_half_open_to_future_absolute_bounds_to_future_same_time_inclusive_bounds_cmp() {
+fn absolute_bounds_half_bounded_to_future_absolute_bounds_to_future_same_time_inclusive_bounds_cmp() {
     let a = AbsoluteBounds::new(
         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
@@ -1283,7 +1282,7 @@ fn absolute_bounds_half_open_to_future_absolute_bounds_to_future_same_time_inclu
 }
 
 #[test]
-fn absolute_bounds_half_open_to_future_absolute_bounds_to_past_before_first_cmp() {
+fn absolute_bounds_half_bounded_to_future_absolute_bounds_to_past_before_first_cmp() {
     let a = AbsoluteBounds::new(
         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2))),
         AbsoluteEndBound::InfiniteFuture,
@@ -1297,7 +1296,7 @@ fn absolute_bounds_half_open_to_future_absolute_bounds_to_past_before_first_cmp(
 }
 
 #[test]
-fn absolute_bounds_half_open_to_future_absolute_bounds_to_past_after_first_cmp() {
+fn absolute_bounds_half_bounded_to_future_absolute_bounds_to_past_after_first_cmp() {
     let a = AbsoluteBounds::new(
         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
         AbsoluteEndBound::InfiniteFuture,
@@ -1311,7 +1310,7 @@ fn absolute_bounds_half_open_to_future_absolute_bounds_to_past_after_first_cmp()
 }
 
 #[test]
-fn absolute_bounds_half_open_to_future_absolute_bounds_to_past_same_time_exclusive_bounds_cmp() {
+fn absolute_bounds_half_bounded_to_future_absolute_bounds_to_past_same_time_exclusive_bounds_cmp() {
     let a = AbsoluteBounds::new(
         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
@@ -1331,7 +1330,7 @@ fn absolute_bounds_half_open_to_future_absolute_bounds_to_past_same_time_exclusi
 }
 
 #[test]
-fn absolute_bounds_half_open_to_future_absolute_bounds_to_past_same_time_exclusive_inclusive_bounds_cmp() {
+fn absolute_bounds_half_bounded_to_future_absolute_bounds_to_past_same_time_exclusive_inclusive_bounds_cmp() {
     let a = AbsoluteBounds::new(
         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
@@ -1351,7 +1350,7 @@ fn absolute_bounds_half_open_to_future_absolute_bounds_to_past_same_time_exclusi
 }
 
 #[test]
-fn absolute_bounds_half_open_to_future_absolute_bounds_to_past_same_time_inclusive_exclusive_bounds_cmp() {
+fn absolute_bounds_half_bounded_to_future_absolute_bounds_to_past_same_time_inclusive_exclusive_bounds_cmp() {
     let a = AbsoluteBounds::new(
         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
@@ -1371,7 +1370,7 @@ fn absolute_bounds_half_open_to_future_absolute_bounds_to_past_same_time_inclusi
 }
 
 #[test]
-fn absolute_bounds_half_open_to_future_absolute_bounds_to_past_same_time_inclusive_bounds_cmp() {
+fn absolute_bounds_half_bounded_to_future_absolute_bounds_to_past_same_time_inclusive_bounds_cmp() {
     let a = AbsoluteBounds::new(
         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
@@ -1391,7 +1390,7 @@ fn absolute_bounds_half_open_to_future_absolute_bounds_to_past_same_time_inclusi
 }
 
 #[test]
-fn absolute_bounds_half_open_to_future_absolute_bounds_closed_starts_before_first_cmp() {
+fn absolute_bounds_half_bounded_to_future_absolute_bounds_bounded_starts_before_first_cmp() {
     let a = AbsoluteBounds::new(
         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2))),
         AbsoluteEndBound::InfiniteFuture,
@@ -1405,7 +1404,7 @@ fn absolute_bounds_half_open_to_future_absolute_bounds_closed_starts_before_firs
 }
 
 #[test]
-fn absolute_bounds_half_open_to_future_absolute_bounds_closed_starts_after_first_cmp() {
+fn absolute_bounds_half_bounded_to_future_absolute_bounds_bounded_starts_after_first_cmp() {
     let a = AbsoluteBounds::new(
         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2))),
         AbsoluteEndBound::InfiniteFuture,
@@ -1469,8 +1468,8 @@ fn emptiable_absolute_bounds_from_absolute_bounds() {
 }
 
 #[test]
-fn closed_absolute_interval_unchecked_new() {
-    let interval = ClosedAbsoluteInterval::unchecked_new(date(&Utc, 2025, 1, 1), date(&Utc, 2025, 1, 2));
+fn bounded_absolute_interval_unchecked_new() {
+    let interval = BoundedAbsoluteInterval::unchecked_new(date(&Utc, 2025, 1, 1), date(&Utc, 2025, 1, 2));
 
     assert_eq!(interval.from_time(), date(&Utc, 2025, 1, 1));
     assert_eq!(interval.to_time(), date(&Utc, 2025, 1, 2));
@@ -1479,8 +1478,8 @@ fn closed_absolute_interval_unchecked_new() {
 }
 
 #[test]
-fn closed_absolute_interval_new_no_swap() {
-    let interval = ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), date(&Utc, 2025, 1, 2));
+fn bounded_absolute_interval_new_no_swap() {
+    let interval = BoundedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), date(&Utc, 2025, 1, 2));
 
     assert_eq!(interval.from_time(), date(&Utc, 2025, 1, 1));
     assert_eq!(interval.to_time(), date(&Utc, 2025, 1, 2));
@@ -1489,8 +1488,8 @@ fn closed_absolute_interval_new_no_swap() {
 }
 
 #[test]
-fn closed_absolute_interval_new_swap() {
-    let interval = ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 2), date(&Utc, 2025, 1, 1));
+fn bounded_absolute_interval_new_swap() {
+    let interval = BoundedAbsoluteInterval::new(date(&Utc, 2025, 1, 2), date(&Utc, 2025, 1, 1));
 
     assert_eq!(interval.from_time(), date(&Utc, 2025, 1, 1));
     assert_eq!(interval.to_time(), date(&Utc, 2025, 1, 2));
@@ -1499,8 +1498,8 @@ fn closed_absolute_interval_new_swap() {
 }
 
 #[test]
-fn closed_absolute_interval_new_with_inclusivity_no_swap() {
-    let interval = ClosedAbsoluteInterval::new_with_inclusivity(
+fn bounded_absolute_interval_new_with_inclusivity_no_swap() {
+    let interval = BoundedAbsoluteInterval::new_with_inclusivity(
         date(&Utc, 2025, 1, 1),
         BoundInclusivity::Exclusive,
         date(&Utc, 2025, 1, 2),
@@ -1514,8 +1513,8 @@ fn closed_absolute_interval_new_with_inclusivity_no_swap() {
 }
 
 #[test]
-fn closed_absolute_interval_new_with_inclusivity_swap() {
-    let interval = ClosedAbsoluteInterval::new_with_inclusivity(
+fn bounded_absolute_interval_new_with_inclusivity_swap() {
+    let interval = BoundedAbsoluteInterval::new_with_inclusivity(
         date(&Utc, 2025, 1, 2),
         BoundInclusivity::Exclusive,
         date(&Utc, 2025, 1, 1),
@@ -1529,8 +1528,8 @@ fn closed_absolute_interval_new_with_inclusivity_swap() {
 }
 
 #[test]
-fn closed_absolute_unchecked_set_from() {
-    let mut interval = ClosedAbsoluteInterval::new_with_inclusivity(
+fn bounded_absolute_unchecked_set_from() {
+    let mut interval = BoundedAbsoluteInterval::new_with_inclusivity(
         date(&Utc, 2025, 1, 1),
         BoundInclusivity::Exclusive,
         date(&Utc, 2025, 1, 2),
@@ -1546,8 +1545,8 @@ fn closed_absolute_unchecked_set_from() {
 }
 
 #[test]
-fn closed_absolute_unchecked_set_to() {
-    let mut interval = ClosedAbsoluteInterval::new_with_inclusivity(
+fn bounded_absolute_unchecked_set_to() {
+    let mut interval = BoundedAbsoluteInterval::new_with_inclusivity(
         date(&Utc, 2025, 1, 2),
         BoundInclusivity::Exclusive,
         date(&Utc, 2025, 1, 3),
@@ -1563,8 +1562,8 @@ fn closed_absolute_unchecked_set_to() {
 }
 
 #[test]
-fn closed_absolute_set_from() {
-    let mut interval = ClosedAbsoluteInterval::new_with_inclusivity(
+fn bounded_absolute_set_from() {
+    let mut interval = BoundedAbsoluteInterval::new_with_inclusivity(
         date(&Utc, 2025, 1, 1),
         BoundInclusivity::Exclusive,
         date(&Utc, 2025, 1, 2),
@@ -1580,8 +1579,8 @@ fn closed_absolute_set_from() {
 }
 
 #[test]
-fn closed_absolute_set_to() {
-    let mut interval = ClosedAbsoluteInterval::new_with_inclusivity(
+fn bounded_absolute_set_to() {
+    let mut interval = BoundedAbsoluteInterval::new_with_inclusivity(
         date(&Utc, 2025, 1, 2),
         BoundInclusivity::Exclusive,
         date(&Utc, 2025, 1, 3),
@@ -1597,8 +1596,8 @@ fn closed_absolute_set_to() {
 }
 
 #[test]
-fn closed_absolute_set_from_inclusivity() {
-    let mut interval = ClosedAbsoluteInterval::new_with_inclusivity(
+fn bounded_absolute_set_from_inclusivity() {
+    let mut interval = BoundedAbsoluteInterval::new_with_inclusivity(
         date(&Utc, 2025, 1, 1),
         BoundInclusivity::Exclusive,
         date(&Utc, 2025, 1, 2),
@@ -1614,8 +1613,8 @@ fn closed_absolute_set_from_inclusivity() {
 }
 
 #[test]
-fn closed_absolute_set_to_inclusivity() {
-    let mut interval = ClosedAbsoluteInterval::new_with_inclusivity(
+fn bounded_absolute_set_to_inclusivity() {
+    let mut interval = BoundedAbsoluteInterval::new_with_inclusivity(
         date(&Utc, 2025, 1, 2),
         BoundInclusivity::Exclusive,
         date(&Utc, 2025, 1, 3),
@@ -1631,10 +1630,10 @@ fn closed_absolute_set_to_inclusivity() {
 }
 
 #[test]
-fn closed_absolute_interval_from_datetime_pair_swap() {
+fn bounded_absolute_interval_from_datetime_pair_swap() {
     assert_eq!(
-        ClosedAbsoluteInterval::from((date(&Utc, 2025, 1, 2), date(&Utc, 2025, 1, 1))),
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::from((date(&Utc, 2025, 1, 2), date(&Utc, 2025, 1, 1))),
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
@@ -1644,13 +1643,13 @@ fn closed_absolute_interval_from_datetime_pair_swap() {
 }
 
 #[test]
-fn closed_absolute_interval_from_pair_of_datetime_inclusivity_pairs_swap() {
+fn bounded_absolute_interval_from_pair_of_datetime_inclusivity_pairs_swap() {
     assert_eq!(
-        ClosedAbsoluteInterval::from((
+        BoundedAbsoluteInterval::from((
             (date(&Utc, 2025, 1, 2), BoundInclusivity::Exclusive),
             (date(&Utc, 2025, 1, 1), BoundInclusivity::Inclusive),
         )),
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
@@ -1660,10 +1659,10 @@ fn closed_absolute_interval_from_pair_of_datetime_inclusivity_pairs_swap() {
 }
 
 #[test]
-fn closed_absolute_interval_from_pair_of_datetime_bool_pairs_swap() {
+fn bounded_absolute_interval_from_pair_of_datetime_bool_pairs_swap() {
     assert_eq!(
-        ClosedAbsoluteInterval::from(((date(&Utc, 2025, 1, 2), false), (date(&Utc, 2025, 1, 1), true),)),
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::from(((date(&Utc, 2025, 1, 2), false), (date(&Utc, 2025, 1, 1), true),)),
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
@@ -1673,10 +1672,10 @@ fn closed_absolute_interval_from_pair_of_datetime_bool_pairs_swap() {
 }
 
 #[test]
-fn closed_absolute_interval_from_range() {
+fn bounded_absolute_interval_from_range() {
     assert_eq!(
-        ClosedAbsoluteInterval::from(date(&Utc, 2025, 1, 1)..date(&Utc, 2025, 1, 2)),
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::from(date(&Utc, 2025, 1, 1)..date(&Utc, 2025, 1, 2)),
+        BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
@@ -1686,17 +1685,17 @@ fn closed_absolute_interval_from_range() {
 }
 
 #[test]
-fn closed_absolute_interval_from_range_inclusive() {
+fn bounded_absolute_interval_from_range_inclusive() {
     assert_eq!(
-        ClosedAbsoluteInterval::from(date(&Utc, 2025, 1, 1)..=date(&Utc, 2025, 1, 2)),
-        ClosedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), date(&Utc, 2025, 1, 2)),
+        BoundedAbsoluteInterval::from(date(&Utc, 2025, 1, 1)..=date(&Utc, 2025, 1, 2)),
+        BoundedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), date(&Utc, 2025, 1, 2)),
     );
 }
 
 #[test]
-fn closed_absolute_interval_try_from_absolute_bounds_correct() {
+fn bounded_absolute_interval_try_from_absolute_bounds_correct() {
     assert_eq!(
-        ClosedAbsoluteInterval::try_from(AbsoluteBounds::new(
+        BoundedAbsoluteInterval::try_from(AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
@@ -1706,7 +1705,7 @@ fn closed_absolute_interval_try_from_absolute_bounds_correct() {
                 BoundInclusivity::Inclusive,
             )),
         )),
-        Ok(ClosedAbsoluteInterval::new_with_inclusivity(
+        Ok(BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 2),
@@ -1716,38 +1715,38 @@ fn closed_absolute_interval_try_from_absolute_bounds_correct() {
 }
 
 #[test]
-fn closed_absolute_interval_try_from_absolute_bounds_wrong() {
+fn bounded_absolute_interval_try_from_absolute_bounds_wrong() {
     assert_eq!(
-        ClosedAbsoluteInterval::try_from(AbsoluteBounds::new(
+        BoundedAbsoluteInterval::try_from(AbsoluteBounds::new(
             AbsoluteStartBound::InfinitePast,
             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
         )),
-        Err(ClosedAbsoluteIntervalFromAbsoluteBoundsError::NotClosedInterval),
+        Err(BoundedAbsoluteIntervalFromAbsoluteBoundsError::NotBoundedInterval),
     );
     assert_eq!(
-        ClosedAbsoluteInterval::try_from(AbsoluteBounds::new(
+        BoundedAbsoluteInterval::try_from(AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
             AbsoluteEndBound::InfiniteFuture,
         )),
-        Err(ClosedAbsoluteIntervalFromAbsoluteBoundsError::NotClosedInterval),
+        Err(BoundedAbsoluteIntervalFromAbsoluteBoundsError::NotBoundedInterval),
     );
     assert_eq!(
-        ClosedAbsoluteInterval::try_from(AbsoluteBounds::new(
+        BoundedAbsoluteInterval::try_from(AbsoluteBounds::new(
             AbsoluteStartBound::InfinitePast,
             AbsoluteEndBound::InfiniteFuture,
         )),
-        Err(ClosedAbsoluteIntervalFromAbsoluteBoundsError::NotClosedInterval),
+        Err(BoundedAbsoluteIntervalFromAbsoluteBoundsError::NotBoundedInterval),
     );
 }
 
 #[test]
-fn closed_absolute_interval_try_from_absolute_interval_correct() {
+fn bounded_absolute_interval_try_from_absolute_interval_correct() {
     assert_eq!(
-        ClosedAbsoluteInterval::try_from(AbsoluteInterval::Closed(ClosedAbsoluteInterval::new(
+        BoundedAbsoluteInterval::try_from(AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
             date(&Utc, 2025, 1, 1),
             date(&Utc, 2025, 1, 2),
         ))),
-        Ok(ClosedAbsoluteInterval::new(
+        Ok(BoundedAbsoluteInterval::new(
             date(&Utc, 2025, 1, 1),
             date(&Utc, 2025, 1, 2),
         )),
@@ -1755,27 +1754,27 @@ fn closed_absolute_interval_try_from_absolute_interval_correct() {
 }
 
 #[test]
-fn closed_absolute_interval_try_from_absolute_interval_wrong() {
+fn bounded_absolute_interval_try_from_absolute_interval_wrong() {
     assert_eq!(
-        ClosedAbsoluteInterval::try_from(AbsoluteInterval::Empty(EmptyInterval)),
-        Err(ClosedAbsoluteIntervalFromAbsoluteIntervalError::WrongVariant),
+        BoundedAbsoluteInterval::try_from(AbsoluteInterval::Empty(EmptyInterval)),
+        Err(BoundedAbsoluteIntervalFromAbsoluteIntervalError::WrongVariant),
     );
     assert_eq!(
-        ClosedAbsoluteInterval::try_from(AbsoluteInterval::Open(OpenInterval)),
-        Err(ClosedAbsoluteIntervalFromAbsoluteIntervalError::WrongVariant),
+        BoundedAbsoluteInterval::try_from(AbsoluteInterval::Unbounded(UnboundedInterval)),
+        Err(BoundedAbsoluteIntervalFromAbsoluteIntervalError::WrongVariant),
     );
     assert_eq!(
-        ClosedAbsoluteInterval::try_from(AbsoluteInterval::HalfOpen(HalfOpenAbsoluteInterval::new(
+        BoundedAbsoluteInterval::try_from(AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new(
             date(&Utc, 2025, 1, 1),
             OpeningDirection::ToFuture,
         ))),
-        Err(ClosedAbsoluteIntervalFromAbsoluteIntervalError::WrongVariant),
+        Err(BoundedAbsoluteIntervalFromAbsoluteIntervalError::WrongVariant),
     );
 }
 
 #[test]
-fn half_open_absolute_interval_new() {
-    let interval = HalfOpenAbsoluteInterval::new(date(&Utc, 2025, 1, 1), OpeningDirection::ToFuture);
+fn half_bounded_absolute_interval_new() {
+    let interval = HalfBoundedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), OpeningDirection::ToFuture);
 
     assert_eq!(interval.reference_time(), date(&Utc, 2025, 1, 1));
     assert_eq!(interval.opening_direction(), OpeningDirection::ToFuture);
@@ -1783,8 +1782,8 @@ fn half_open_absolute_interval_new() {
 }
 
 #[test]
-fn half_open_absolute_interval_new_with_inclusivity() {
-    let interval = HalfOpenAbsoluteInterval::new_with_inclusivity(
+fn half_bounded_absolute_interval_new_with_inclusivity() {
+    let interval = HalfBoundedAbsoluteInterval::new_with_inclusivity(
         date(&Utc, 2025, 1, 1),
         BoundInclusivity::Exclusive,
         OpeningDirection::ToPast,
@@ -1796,8 +1795,8 @@ fn half_open_absolute_interval_new_with_inclusivity() {
 }
 
 #[test]
-fn half_open_absolute_interval_set_reference_time() {
-    let mut interval = HalfOpenAbsoluteInterval::new_with_inclusivity(
+fn half_bounded_absolute_interval_set_reference_time() {
+    let mut interval = HalfBoundedAbsoluteInterval::new_with_inclusivity(
         date(&Utc, 2025, 1, 1),
         BoundInclusivity::Exclusive,
         OpeningDirection::ToFuture,
@@ -1807,7 +1806,7 @@ fn half_open_absolute_interval_set_reference_time() {
 
     assert_eq!(
         interval,
-        HalfOpenAbsoluteInterval::new_with_inclusivity(
+        HalfBoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 2),
             BoundInclusivity::Exclusive,
             OpeningDirection::ToFuture,
@@ -1816,8 +1815,8 @@ fn half_open_absolute_interval_set_reference_time() {
 }
 
 #[test]
-fn half_open_absolute_interval_set_reference_time_inclusivity() {
-    let mut interval = HalfOpenAbsoluteInterval::new_with_inclusivity(
+fn half_bounded_absolute_interval_set_reference_time_inclusivity() {
+    let mut interval = HalfBoundedAbsoluteInterval::new_with_inclusivity(
         date(&Utc, 2025, 1, 1),
         BoundInclusivity::Exclusive,
         OpeningDirection::ToFuture,
@@ -1827,7 +1826,7 @@ fn half_open_absolute_interval_set_reference_time_inclusivity() {
 
     assert_eq!(
         interval,
-        HalfOpenAbsoluteInterval::new_with_inclusivity(
+        HalfBoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             OpeningDirection::ToFuture,
@@ -1836,8 +1835,8 @@ fn half_open_absolute_interval_set_reference_time_inclusivity() {
 }
 
 #[test]
-fn half_open_absolute_interval_set_opening_direction() {
-    let mut interval = HalfOpenAbsoluteInterval::new_with_inclusivity(
+fn half_bounded_absolute_interval_set_opening_direction() {
+    let mut interval = HalfBoundedAbsoluteInterval::new_with_inclusivity(
         date(&Utc, 2025, 1, 1),
         BoundInclusivity::Exclusive,
         OpeningDirection::ToFuture,
@@ -1847,7 +1846,7 @@ fn half_open_absolute_interval_set_opening_direction() {
 
     assert_eq!(
         interval,
-        HalfOpenAbsoluteInterval::new_with_inclusivity(
+        HalfBoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             OpeningDirection::ToPast,
@@ -1856,29 +1855,29 @@ fn half_open_absolute_interval_set_opening_direction() {
 }
 
 #[test]
-fn half_open_absolute_interval_from_datetime_opening_direction_pair() {
+fn half_bounded_absolute_interval_from_datetime_opening_direction_pair() {
     assert_eq!(
-        HalfOpenAbsoluteInterval::from((date(&Utc, 2025, 1, 1), OpeningDirection::ToFuture)),
-        HalfOpenAbsoluteInterval::new(date(&Utc, 2025, 1, 1), OpeningDirection::ToFuture),
+        HalfBoundedAbsoluteInterval::from((date(&Utc, 2025, 1, 1), OpeningDirection::ToFuture)),
+        HalfBoundedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), OpeningDirection::ToFuture),
     );
 }
 
 #[test]
-fn half_open_absolute_interval_from_datetime_bool_pair() {
+fn half_bounded_absolute_interval_from_datetime_bool_pair() {
     assert_eq!(
-        HalfOpenAbsoluteInterval::from((date(&Utc, 2025, 1, 1), false)),
-        HalfOpenAbsoluteInterval::new(date(&Utc, 2025, 1, 1), OpeningDirection::ToPast),
+        HalfBoundedAbsoluteInterval::from((date(&Utc, 2025, 1, 1), false)),
+        HalfBoundedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), OpeningDirection::ToPast),
     );
 }
 
 #[test]
-fn half_open_absolute_interval_from_pair_of_datetime_bound_inclusivity_pair_and_opening_direction() {
+fn half_bounded_absolute_interval_from_pair_of_datetime_bound_inclusivity_pair_and_opening_direction() {
     assert_eq!(
-        HalfOpenAbsoluteInterval::from((
+        HalfBoundedAbsoluteInterval::from((
             (date(&Utc, 2025, 1, 1), BoundInclusivity::Exclusive),
             OpeningDirection::ToPast
         )),
-        HalfOpenAbsoluteInterval::new_with_inclusivity(
+        HalfBoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             OpeningDirection::ToPast,
@@ -1887,10 +1886,10 @@ fn half_open_absolute_interval_from_pair_of_datetime_bound_inclusivity_pair_and_
 }
 
 #[test]
-fn half_open_absolute_interval_from_pair_of_datetime_bool_pair_and_opening_direction() {
+fn half_bounded_absolute_interval_from_pair_of_datetime_bool_pair_and_opening_direction() {
     assert_eq!(
-        HalfOpenAbsoluteInterval::from(((date(&Utc, 2025, 1, 1), false), OpeningDirection::ToPast)),
-        HalfOpenAbsoluteInterval::new_with_inclusivity(
+        HalfBoundedAbsoluteInterval::from(((date(&Utc, 2025, 1, 1), false), OpeningDirection::ToPast)),
+        HalfBoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             OpeningDirection::ToPast,
@@ -1899,10 +1898,10 @@ fn half_open_absolute_interval_from_pair_of_datetime_bool_pair_and_opening_direc
 }
 
 #[test]
-fn half_open_absolute_interval_from_pair_of_datetime_bool_pair_and_bool() {
+fn half_bounded_absolute_interval_from_pair_of_datetime_bool_pair_and_bool() {
     assert_eq!(
-        HalfOpenAbsoluteInterval::from(((date(&Utc, 2025, 1, 1), false), false)),
-        HalfOpenAbsoluteInterval::new_with_inclusivity(
+        HalfBoundedAbsoluteInterval::from(((date(&Utc, 2025, 1, 1), false), false)),
+        HalfBoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             OpeningDirection::ToPast,
@@ -1911,18 +1910,18 @@ fn half_open_absolute_interval_from_pair_of_datetime_bool_pair_and_bool() {
 }
 
 #[test]
-fn half_open_absolute_interval_from_range_from() {
+fn half_bounded_absolute_interval_from_range_from() {
     assert_eq!(
-        HalfOpenAbsoluteInterval::from(date(&Utc, 2025, 1, 1)..),
-        HalfOpenAbsoluteInterval::new(date(&Utc, 2025, 1, 1), OpeningDirection::ToFuture),
+        HalfBoundedAbsoluteInterval::from(date(&Utc, 2025, 1, 1)..),
+        HalfBoundedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), OpeningDirection::ToFuture),
     );
 }
 
 #[test]
-fn half_open_absolute_interval_from_range_to() {
+fn half_bounded_absolute_interval_from_range_to() {
     assert_eq!(
-        HalfOpenAbsoluteInterval::from(..date(&Utc, 2025, 1, 1)),
-        HalfOpenAbsoluteInterval::new_with_inclusivity(
+        HalfBoundedAbsoluteInterval::from(..date(&Utc, 2025, 1, 1)),
+        HalfBoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             OpeningDirection::ToPast,
@@ -1931,38 +1930,38 @@ fn half_open_absolute_interval_from_range_to() {
 }
 
 #[test]
-fn half_open_absolute_interval_from_range_to_inclusive() {
+fn half_bounded_absolute_interval_from_range_to_inclusive() {
     assert_eq!(
-        HalfOpenAbsoluteInterval::from(..=date(&Utc, 2025, 1, 1)),
-        HalfOpenAbsoluteInterval::new(date(&Utc, 2025, 1, 1), OpeningDirection::ToPast),
+        HalfBoundedAbsoluteInterval::from(..=date(&Utc, 2025, 1, 1)),
+        HalfBoundedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), OpeningDirection::ToPast),
     );
 }
 
 #[test]
-fn half_open_absolute_interval_try_from_absolute_bounds_correct() {
+fn half_bounded_absolute_interval_try_from_absolute_bounds_correct() {
     assert_eq!(
-        HalfOpenAbsoluteInterval::try_from(AbsoluteBounds::new(
+        HalfBoundedAbsoluteInterval::try_from(AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
             )),
             AbsoluteEndBound::InfiniteFuture,
         )),
-        Ok(HalfOpenAbsoluteInterval::new_with_inclusivity(
+        Ok(HalfBoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             OpeningDirection::ToFuture,
         )),
     );
     assert_eq!(
-        HalfOpenAbsoluteInterval::try_from(AbsoluteBounds::new(
+        HalfBoundedAbsoluteInterval::try_from(AbsoluteBounds::new(
             AbsoluteStartBound::InfinitePast,
             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
             )),
         )),
-        Ok(HalfOpenAbsoluteInterval::new_with_inclusivity(
+        Ok(HalfBoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             OpeningDirection::ToPast,
@@ -1971,34 +1970,34 @@ fn half_open_absolute_interval_try_from_absolute_bounds_correct() {
 }
 
 #[test]
-fn half_open_absolute_interval_try_from_absolute_bounds_wrong() {
+fn half_bounded_absolute_interval_try_from_absolute_bounds_wrong() {
     assert_eq!(
-        HalfOpenAbsoluteInterval::try_from(AbsoluteBounds::new(
+        HalfBoundedAbsoluteInterval::try_from(AbsoluteBounds::new(
             AbsoluteStartBound::InfinitePast,
             AbsoluteEndBound::InfiniteFuture,
         )),
-        Err(HalfOpenAbsoluteIntervalFromAbsoluteBoundsError::NotHalfOpenInterval),
+        Err(HalfBoundedAbsoluteIntervalFromAbsoluteBoundsError::NotHalfBoundedInterval),
     );
     assert_eq!(
-        HalfOpenAbsoluteInterval::try_from(AbsoluteBounds::new(
+        HalfBoundedAbsoluteInterval::try_from(AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2))),
         )),
-        Err(HalfOpenAbsoluteIntervalFromAbsoluteBoundsError::NotHalfOpenInterval),
+        Err(HalfBoundedAbsoluteIntervalFromAbsoluteBoundsError::NotHalfBoundedInterval),
     );
 }
 
 #[test]
-fn half_open_absolute_interval_try_from_absolute_interval_correct() {
+fn half_bounded_absolute_interval_try_from_absolute_interval_correct() {
     assert_eq!(
-        HalfOpenAbsoluteInterval::try_from(AbsoluteInterval::HalfOpen(
-            HalfOpenAbsoluteInterval::new_with_inclusivity(
+        HalfBoundedAbsoluteInterval::try_from(AbsoluteInterval::HalfBounded(
+            HalfBoundedAbsoluteInterval::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
                 OpeningDirection::ToPast,
             )
         )),
-        Ok(HalfOpenAbsoluteInterval::new_with_inclusivity(
+        Ok(HalfBoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             OpeningDirection::ToPast,
@@ -2007,21 +2006,21 @@ fn half_open_absolute_interval_try_from_absolute_interval_correct() {
 }
 
 #[test]
-fn half_open_absolute_interval_try_from_absolute_interval_wrong() {
+fn half_bounded_absolute_interval_try_from_absolute_interval_wrong() {
     assert_eq!(
-        HalfOpenAbsoluteInterval::try_from(AbsoluteInterval::Empty(EmptyInterval)),
-        Err(HalfOpenAbsoluteIntervalFromAbsoluteIntervalError::WrongVariant),
+        HalfBoundedAbsoluteInterval::try_from(AbsoluteInterval::Empty(EmptyInterval)),
+        Err(HalfBoundedAbsoluteIntervalFromAbsoluteIntervalError::WrongVariant),
     );
     assert_eq!(
-        HalfOpenAbsoluteInterval::try_from(AbsoluteInterval::Open(OpenInterval)),
-        Err(HalfOpenAbsoluteIntervalFromAbsoluteIntervalError::WrongVariant),
+        HalfBoundedAbsoluteInterval::try_from(AbsoluteInterval::Unbounded(UnboundedInterval)),
+        Err(HalfBoundedAbsoluteIntervalFromAbsoluteIntervalError::WrongVariant),
     );
     assert_eq!(
-        HalfOpenAbsoluteInterval::try_from(AbsoluteInterval::Closed(ClosedAbsoluteInterval::new(
+        HalfBoundedAbsoluteInterval::try_from(AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
             date(&Utc, 2025, 1, 1),
             date(&Utc, 2025, 1, 2),
         ))),
-        Err(HalfOpenAbsoluteIntervalFromAbsoluteIntervalError::WrongVariant),
+        Err(HalfBoundedAbsoluteIntervalFromAbsoluteIntervalError::WrongVariant),
     );
 }
 
@@ -2035,7 +2034,7 @@ fn absolute_interval_from_absolute_bounds() {
             )),
             AbsoluteEndBound::InfiniteFuture,
         )),
-        AbsoluteInterval::HalfOpen(HalfOpenAbsoluteInterval::new_with_inclusivity(
+        AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             OpeningDirection::ToFuture,
@@ -2053,7 +2052,7 @@ fn absolute_interval_from_emptiable_absolute_bounds() {
             )),
             AbsoluteEndBound::InfiniteFuture,
         ))),
-        AbsoluteInterval::HalfOpen(HalfOpenAbsoluteInterval::new_with_inclusivity(
+        AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             OpeningDirection::ToFuture,
@@ -2062,18 +2061,18 @@ fn absolute_interval_from_emptiable_absolute_bounds() {
 }
 
 #[test]
-fn absolute_interval_from_opt_datetime_pair_open() {
+fn absolute_interval_from_opt_datetime_pair_unbounded() {
     assert_eq!(
         <AbsoluteInterval as From<(Option<DateTime<Utc>>, Option<DateTime<Utc>>)>>::from((None, None)),
-        AbsoluteInterval::Open(OpenInterval),
+        AbsoluteInterval::Unbounded(UnboundedInterval),
     );
 }
 
 #[test]
-fn absolute_interval_from_opt_datetime_pair_half_open() {
+fn absolute_interval_from_opt_datetime_pair_half_bounded() {
     assert_eq!(
         AbsoluteInterval::from((None, Some(date(&Utc, 2025, 1, 1)))),
-        AbsoluteInterval::HalfOpen(HalfOpenAbsoluteInterval::new(
+        AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new(
             date(&Utc, 2025, 1, 1),
             OpeningDirection::ToPast,
         )),
@@ -2087,7 +2086,7 @@ fn absolute_interval_from_opt_datetime_bound_inclusivity_pairs() {
             Some((date(&Utc, 2025, 1, 1), BoundInclusivity::Exclusive)),
             Some((date(&Utc, 2025, 1, 2), BoundInclusivity::Exclusive)),
         )),
-        AbsoluteInterval::Closed(ClosedAbsoluteInterval::new_with_inclusivity(
+        AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 2),
@@ -2103,7 +2102,7 @@ fn absolute_interval_from_opt_datetime_bool_pairs() {
             Some((date(&Utc, 2025, 1, 1), true)),
             Some((date(&Utc, 2025, 1, 2), false)),
         )),
-        AbsoluteInterval::Closed(ClosedAbsoluteInterval::new_with_inclusivity(
+        AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
             date(&Utc, 2025, 1, 2),
@@ -2124,7 +2123,7 @@ fn absolute_interval_from_bool_and_two_opt_datetime_empty() {
 fn absolute_interval_from_bool_and_two_opt_datetime() {
     assert_eq!(
         AbsoluteInterval::from((false, Some(date(&Utc, 2025, 1, 1)), Some(date(&Utc, 2025, 1, 2)),)),
-        AbsoluteInterval::Closed(ClosedAbsoluteInterval::new(
+        AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
             date(&Utc, 2025, 1, 1),
             date(&Utc, 2025, 1, 2)
         )),
@@ -2151,7 +2150,7 @@ fn absolute_interval_from_bool_and_two_opt_datetime_bound_inclusivity() {
             Some((date(&Utc, 2025, 1, 1), BoundInclusivity::Exclusive)),
             Some((date(&Utc, 2025, 1, 2), BoundInclusivity::Exclusive)),
         )),
-        AbsoluteInterval::Closed(ClosedAbsoluteInterval::new_with_inclusivity(
+        AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 2),
@@ -2178,7 +2177,7 @@ fn absolute_interval_from_bool_and_two_opt_datetime_bool() {
             Some((date(&Utc, 2025, 1, 1), false)),
             Some((date(&Utc, 2025, 1, 2), false)),
         )),
-        AbsoluteInterval::Closed(ClosedAbsoluteInterval::new_with_inclusivity(
+        AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             date(&Utc, 2025, 1, 2),
@@ -2191,7 +2190,7 @@ fn absolute_interval_from_bool_and_two_opt_datetime_bool() {
 fn absolute_interval_from_bound_pair() {
     assert_eq!(
         AbsoluteInterval::from((Bound::Unbounded, Bound::Excluded(date(&Utc, 2025, 1, 1)))),
-        AbsoluteInterval::HalfOpen(HalfOpenAbsoluteInterval::new_with_inclusivity(
+        AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
             OpeningDirection::ToPast,

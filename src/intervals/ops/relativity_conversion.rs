@@ -6,14 +6,14 @@ use chrono::{DateTime, Utc};
 
 use crate::intervals::absolute::{
     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteInterval, AbsoluteStartBound,
-    ClosedAbsoluteInterval, EmptiableAbsoluteBounds, HalfOpenAbsoluteInterval, HasAbsoluteBounds,
+    BoundedAbsoluteInterval, EmptiableAbsoluteBounds, HalfBoundedAbsoluteInterval, HasAbsoluteBounds,
 };
 use crate::intervals::meta::HasBoundInclusivity;
 use crate::intervals::relative::{
-    ClosedRelativeInterval, EmptiableRelativeBounds, HalfOpenRelativeInterval, HasRelativeBounds, RelativeBounds,
+    BoundedRelativeInterval, EmptiableRelativeBounds, HalfBoundedRelativeInterval, HasRelativeBounds, RelativeBounds,
     RelativeEndBound, RelativeFiniteBound, RelativeInterval, RelativeStartBound,
 };
-use crate::intervals::special::{EmptyInterval, OpenInterval};
+use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 
 /// Conversion trait for every interval that can be converted into an absolute interval
 pub trait ToAbsolute {
@@ -27,8 +27,8 @@ pub trait ToAbsolute {
     fn to_absolute(&self, reference_time: DateTime<Utc>) -> Self::AbsoluteType;
 }
 
-impl ToAbsolute for OpenInterval {
-    type AbsoluteType = OpenInterval;
+impl ToAbsolute for UnboundedInterval {
+    type AbsoluteType = UnboundedInterval;
 
     fn to_absolute(&self, _reference_time: DateTime<Utc>) -> Self::AbsoluteType {
         *self
@@ -83,16 +83,16 @@ impl ToAbsolute for EmptiableAbsoluteBounds {
     }
 }
 
-impl ToAbsolute for ClosedAbsoluteInterval {
-    type AbsoluteType = ClosedAbsoluteInterval;
+impl ToAbsolute for BoundedAbsoluteInterval {
+    type AbsoluteType = BoundedAbsoluteInterval;
 
     fn to_absolute(&self, _reference_time: DateTime<Utc>) -> Self::AbsoluteType {
         self.clone()
     }
 }
 
-impl ToAbsolute for HalfOpenAbsoluteInterval {
-    type AbsoluteType = HalfOpenAbsoluteInterval;
+impl ToAbsolute for HalfBoundedAbsoluteInterval {
+    type AbsoluteType = HalfBoundedAbsoluteInterval;
 
     fn to_absolute(&self, _reference_time: DateTime<Utc>) -> Self::AbsoluteType {
         self.clone()
@@ -169,27 +169,27 @@ impl ToAbsolute for EmptiableRelativeBounds {
     }
 }
 
-impl ToAbsolute for ClosedRelativeInterval {
-    type AbsoluteType = ClosedAbsoluteInterval;
+impl ToAbsolute for BoundedRelativeInterval {
+    type AbsoluteType = BoundedAbsoluteInterval;
 
     fn to_absolute(&self, reference_time: DateTime<Utc>) -> Self::AbsoluteType {
-        ClosedAbsoluteInterval::unchecked_new_with_inclusivity(
-            reference_time + self.offset,
-            self.from_inclusivity,
-            reference_time + self.offset + self.length,
-            self.to_inclusivity,
+        BoundedAbsoluteInterval::unchecked_new_with_inclusivity(
+            reference_time + self.offset(),
+            self.from_inclusivity(),
+            reference_time + self.offset() + self.length(),
+            self.to_inclusivity(),
         )
     }
 }
 
-impl ToAbsolute for HalfOpenRelativeInterval {
-    type AbsoluteType = HalfOpenAbsoluteInterval;
+impl ToAbsolute for HalfBoundedRelativeInterval {
+    type AbsoluteType = HalfBoundedAbsoluteInterval;
 
     fn to_absolute(&self, reference_time: DateTime<Utc>) -> Self::AbsoluteType {
-        HalfOpenAbsoluteInterval::new_with_inclusivity(
-            reference_time + self.offset,
-            self.reference_time_inclusivity,
-            self.opening_direction,
+        HalfBoundedAbsoluteInterval::new_with_inclusivity(
+            reference_time + self.offset(),
+            self.reference_time_inclusivity(),
+            self.opening_direction(),
         )
     }
 }
@@ -199,9 +199,9 @@ impl ToAbsolute for RelativeInterval {
 
     fn to_absolute(&self, reference_time: DateTime<Utc>) -> Self::AbsoluteType {
         match self {
-            Self::Closed(closed) => AbsoluteInterval::Closed(closed.to_absolute(reference_time)),
-            Self::HalfOpen(half_open) => AbsoluteInterval::HalfOpen(half_open.to_absolute(reference_time)),
-            Self::Open(open) => AbsoluteInterval::Open(open.to_absolute(reference_time)),
+            Self::Bounded(bounded) => AbsoluteInterval::Bounded(bounded.to_absolute(reference_time)),
+            Self::HalfBounded(half_bounded) => AbsoluteInterval::HalfBounded(half_bounded.to_absolute(reference_time)),
+            Self::Unbounded(unbounded) => AbsoluteInterval::Unbounded(unbounded.to_absolute(reference_time)),
             Self::Empty(empty) => AbsoluteInterval::Empty(empty.to_absolute(reference_time)),
         }
     }
@@ -219,8 +219,8 @@ pub trait ToRelative {
     fn to_relative(&self, reference_time: DateTime<Utc>) -> Self::RelativeType;
 }
 
-impl ToRelative for OpenInterval {
-    type RelativeType = OpenInterval;
+impl ToRelative for UnboundedInterval {
+    type RelativeType = UnboundedInterval;
 
     fn to_relative(&self, _reference_time: DateTime<Utc>) -> Self::RelativeType {
         *self
@@ -297,27 +297,27 @@ impl ToRelative for EmptiableAbsoluteBounds {
     }
 }
 
-impl ToRelative for ClosedAbsoluteInterval {
-    type RelativeType = ClosedRelativeInterval;
+impl ToRelative for BoundedAbsoluteInterval {
+    type RelativeType = BoundedRelativeInterval;
 
     fn to_relative(&self, reference_time: DateTime<Utc>) -> Self::RelativeType {
-        ClosedRelativeInterval::new_with_inclusivity(
-            self.from - reference_time,
-            self.from_inclusivity,
-            self.to - self.from,
-            self.to_inclusivity,
+        BoundedRelativeInterval::new_with_inclusivity(
+            self.from_time() - reference_time,
+            self.from_inclusivity(),
+            self.to_time() - self.from_time(),
+            self.to_inclusivity(),
         )
     }
 }
 
-impl ToRelative for HalfOpenAbsoluteInterval {
-    type RelativeType = HalfOpenRelativeInterval;
+impl ToRelative for HalfBoundedAbsoluteInterval {
+    type RelativeType = HalfBoundedRelativeInterval;
 
     fn to_relative(&self, reference_time: DateTime<Utc>) -> Self::RelativeType {
-        HalfOpenRelativeInterval::new_with_inclusivity(
-            self.reference_time - reference_time,
-            self.reference_time_inclusivity,
-            self.opening_direction,
+        HalfBoundedRelativeInterval::new_with_inclusivity(
+            self.reference_time() - reference_time,
+            self.reference_time_inclusivity(),
+            self.opening_direction(),
         )
     }
 }
@@ -327,9 +327,9 @@ impl ToRelative for AbsoluteInterval {
 
     fn to_relative(&self, reference_time: DateTime<Utc>) -> Self::RelativeType {
         match self {
-            Self::Closed(closed) => RelativeInterval::Closed(closed.to_relative(reference_time)),
-            Self::HalfOpen(half_open) => RelativeInterval::HalfOpen(half_open.to_relative(reference_time)),
-            Self::Open(open) => RelativeInterval::Open(open.to_relative(reference_time)),
+            Self::Bounded(bounded) => RelativeInterval::Bounded(bounded.to_relative(reference_time)),
+            Self::HalfBounded(half_bounded) => RelativeInterval::HalfBounded(half_bounded.to_relative(reference_time)),
+            Self::Unbounded(unbounded) => RelativeInterval::Unbounded(unbounded.to_relative(reference_time)),
             Self::Empty(empty) => RelativeInterval::Empty(empty.to_relative(reference_time)),
         }
     }
@@ -375,16 +375,16 @@ impl ToRelative for EmptiableRelativeBounds {
     }
 }
 
-impl ToRelative for ClosedRelativeInterval {
-    type RelativeType = ClosedRelativeInterval;
+impl ToRelative for BoundedRelativeInterval {
+    type RelativeType = BoundedRelativeInterval;
 
     fn to_relative(&self, _reference_time: DateTime<Utc>) -> Self::RelativeType {
         self.clone()
     }
 }
 
-impl ToRelative for HalfOpenRelativeInterval {
-    type RelativeType = HalfOpenRelativeInterval;
+impl ToRelative for HalfBoundedRelativeInterval {
+    type RelativeType = HalfBoundedRelativeInterval;
 
     fn to_relative(&self, _reference_time: DateTime<Utc>) -> Self::RelativeType {
         self.clone()

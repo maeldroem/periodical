@@ -24,7 +24,7 @@ fn grow_end_emptiable_abs_bounds_empty() {
 }
 
 #[test]
-fn grow_start_to_finite_open_interval() {
+fn grow_start_to_finite_unbounded_interval() {
     assert_eq!(
         AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture).grow_start(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1)))
@@ -34,7 +34,7 @@ fn grow_start_to_finite_open_interval() {
 }
 
 #[test]
-fn grow_end_to_finite_open_interval() {
+fn grow_end_to_finite_unbounded_interval() {
     assert_eq!(
         AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture).grow_end(
             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1)))
@@ -44,7 +44,7 @@ fn grow_end_to_finite_open_interval() {
 }
 
 #[test]
-fn grow_start_to_inside_abs_bounds_closed() {
+fn grow_start_to_inside_abs_bounds_bounded() {
     assert_eq!(
         AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
@@ -61,7 +61,7 @@ fn grow_start_to_inside_abs_bounds_closed() {
 }
 
 #[test]
-fn grow_end_to_inside_abs_bounds_closed() {
+fn grow_end_to_inside_abs_bounds_bounded() {
     assert_eq!(
         AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
@@ -78,7 +78,7 @@ fn grow_end_to_inside_abs_bounds_closed() {
 }
 
 #[test]
-fn grow_start_to_outside_abs_bounds_closed() {
+fn grow_start_to_outside_abs_bounds_bounded() {
     assert_eq!(
         AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2))),
@@ -95,7 +95,7 @@ fn grow_start_to_outside_abs_bounds_closed() {
 }
 
 #[test]
-fn grow_end_to_outside_abs_bounds_closed() {
+fn grow_end_to_outside_abs_bounds_bounded() {
     assert_eq!(
         AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),

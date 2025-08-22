@@ -24,7 +24,7 @@ fn shrink_end_emptiable_abs_bounds_empty() {
 }
 
 #[test]
-fn shrink_start_to_finite_open_interval() {
+fn shrink_start_to_finite_unbounded_interval() {
     assert_eq!(
         AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture).shrink_start(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1)))
@@ -37,7 +37,7 @@ fn shrink_start_to_finite_open_interval() {
 }
 
 #[test]
-fn shrink_end_to_finite_open_interval() {
+fn shrink_end_to_finite_unbounded_interval() {
     assert_eq!(
         AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture).shrink_end(
             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1)))
@@ -50,7 +50,7 @@ fn shrink_end_to_finite_open_interval() {
 }
 
 #[test]
-fn shrink_start_to_inside_abs_bounds_closed() {
+fn shrink_start_to_inside_abs_bounds_bounded() {
     assert_eq!(
         AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
@@ -67,7 +67,7 @@ fn shrink_start_to_inside_abs_bounds_closed() {
 }
 
 #[test]
-fn shrink_end_to_inside_abs_bounds_closed() {
+fn shrink_end_to_inside_abs_bounds_bounded() {
     assert_eq!(
         AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
@@ -84,7 +84,7 @@ fn shrink_end_to_inside_abs_bounds_closed() {
 }
 
 #[test]
-fn shrink_start_to_outside_abs_bounds_closed() {
+fn shrink_start_to_outside_abs_bounds_bounded() {
     assert_eq!(
         AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2))),
@@ -101,7 +101,7 @@ fn shrink_start_to_outside_abs_bounds_closed() {
 }
 
 #[test]
-fn shrink_end_to_outside_abs_bounds_closed() {
+fn shrink_end_to_outside_abs_bounds_bounded() {
     assert_eq!(
         AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
