@@ -393,9 +393,9 @@ pub fn bound_position_abs_start_bound_on_abs_bounds(
             match finite_bound.time().cmp(&finite_end.time()) {
                 Ordering::Less => BoundPosition::Inside,
                 Ordering::Greater => BoundPosition::OutsideAfter,
-                Ordering::Equal => BoundPosition::OnEnd(Some(BoundOverlapAmbiguity::StartEnd(
-                    finite_bound.inclusivity(),
+                Ordering::Equal => BoundPosition::OnEnd(Some(BoundOverlapAmbiguity::EndStart(
                     finite_end.inclusivity(),
+                    finite_bound.inclusivity(),
                 ))),
             }
         },
@@ -405,8 +405,8 @@ pub fn bound_position_abs_start_bound_on_abs_bounds(
                 Ordering::Less => BoundPosition::Inside,
                 Ordering::Greater => BoundPosition::OutsideAfter,
                 Ordering::Equal => BoundPosition::OnStart(Some(BoundOverlapAmbiguity::BothStarts(
-                    finite_bound.inclusivity(),
                     finite_start.inclusivity(),
+                    finite_bound.inclusivity(),
                 ))),
             }
         },
@@ -422,12 +422,12 @@ pub fn bound_position_abs_start_bound_on_abs_bounds(
                     BoundInclusivity::Exclusive => BoundPosition::OutsideBefore,
                 },
                 (Ordering::Equal, Ordering::Less) => BoundPosition::OnStart(Some(BoundOverlapAmbiguity::BothStarts(
-                    finite_bound.inclusivity(),
                     finite_start.inclusivity(),
-                ))),
-                (Ordering::Greater, Ordering::Equal) => BoundPosition::OnEnd(Some(BoundOverlapAmbiguity::StartEnd(
                     finite_bound.inclusivity(),
+                ))),
+                (Ordering::Greater, Ordering::Equal) => BoundPosition::OnEnd(Some(BoundOverlapAmbiguity::EndStart(
                     finite_end.inclusivity(),
+                    finite_bound.inclusivity(),
                 ))),
                 (Ordering::Greater, Ordering::Less) => BoundPosition::Inside,
             }
@@ -474,8 +474,8 @@ pub fn bound_position_abs_end_bound_on_abs_bounds(
                 Ordering::Less => BoundPosition::Inside,
                 Ordering::Greater => BoundPosition::OutsideAfter,
                 Ordering::Equal => BoundPosition::OnEnd(Some(BoundOverlapAmbiguity::BothEnds(
-                    finite_bound.inclusivity(),
                     finite_end.inclusivity(),
+                    finite_bound.inclusivity(),
                 ))),
             }
         },
@@ -484,9 +484,9 @@ pub fn bound_position_abs_end_bound_on_abs_bounds(
             match finite_bound.time().cmp(&finite_start.time()) {
                 Ordering::Less => BoundPosition::Inside,
                 Ordering::Greater => BoundPosition::OutsideAfter,
-                Ordering::Equal => BoundPosition::OnStart(Some(BoundOverlapAmbiguity::EndStart(
-                    finite_bound.inclusivity(),
+                Ordering::Equal => BoundPosition::OnStart(Some(BoundOverlapAmbiguity::StartEnd(
                     finite_start.inclusivity(),
+                    finite_bound.inclusivity(),
                 ))),
             }
         },
@@ -501,13 +501,13 @@ pub fn bound_position_abs_end_bound_on_abs_bounds(
                     BoundInclusivity::Inclusive => BoundPosition::Equal,
                     BoundInclusivity::Exclusive => BoundPosition::OutsideAfter,
                 },
-                (Ordering::Equal, Ordering::Less) => BoundPosition::OnStart(Some(BoundOverlapAmbiguity::EndStart(
-                    finite_bound.inclusivity(),
+                (Ordering::Equal, Ordering::Less) => BoundPosition::OnStart(Some(BoundOverlapAmbiguity::StartEnd(
                     finite_start.inclusivity(),
+                    finite_bound.inclusivity(),
                 ))),
                 (Ordering::Greater, Ordering::Equal) => BoundPosition::OnEnd(Some(BoundOverlapAmbiguity::BothEnds(
-                    finite_bound.inclusivity(),
                     finite_end.inclusivity(),
+                    finite_bound.inclusivity(),
                 ))),
                 (Ordering::Greater, Ordering::Less) => BoundPosition::Inside,
             }
@@ -553,9 +553,9 @@ pub fn bound_position_rel_start_bound_on_rel_bounds(
             match finite_bound.offset().cmp(&finite_end.offset()) {
                 Ordering::Less => BoundPosition::Inside,
                 Ordering::Greater => BoundPosition::OutsideAfter,
-                Ordering::Equal => BoundPosition::OnEnd(Some(BoundOverlapAmbiguity::StartEnd(
-                    finite_bound.inclusivity(),
+                Ordering::Equal => BoundPosition::OnEnd(Some(BoundOverlapAmbiguity::EndStart(
                     finite_end.inclusivity(),
+                    finite_bound.inclusivity(),
                 ))),
             }
         },
@@ -565,8 +565,8 @@ pub fn bound_position_rel_start_bound_on_rel_bounds(
                 Ordering::Less => BoundPosition::Inside,
                 Ordering::Greater => BoundPosition::OutsideAfter,
                 Ordering::Equal => BoundPosition::OnStart(Some(BoundOverlapAmbiguity::BothStarts(
-                    finite_bound.inclusivity(),
                     finite_start.inclusivity(),
+                    finite_bound.inclusivity(),
                 ))),
             }
         },
@@ -582,12 +582,12 @@ pub fn bound_position_rel_start_bound_on_rel_bounds(
                     BoundInclusivity::Exclusive => BoundPosition::OutsideBefore,
                 },
                 (Ordering::Equal, Ordering::Less) => BoundPosition::OnStart(Some(BoundOverlapAmbiguity::BothStarts(
-                    finite_bound.inclusivity(),
                     finite_start.inclusivity(),
-                ))),
-                (Ordering::Greater, Ordering::Equal) => BoundPosition::OnEnd(Some(BoundOverlapAmbiguity::StartEnd(
                     finite_bound.inclusivity(),
+                ))),
+                (Ordering::Greater, Ordering::Equal) => BoundPosition::OnEnd(Some(BoundOverlapAmbiguity::EndStart(
                     finite_end.inclusivity(),
+                    finite_bound.inclusivity(),
                 ))),
                 (Ordering::Greater, Ordering::Less) => BoundPosition::Inside,
             }
@@ -634,8 +634,8 @@ pub fn bound_position_rel_end_bound_on_rel_bounds(
                 Ordering::Less => BoundPosition::Inside,
                 Ordering::Greater => BoundPosition::OutsideAfter,
                 Ordering::Equal => BoundPosition::OnEnd(Some(BoundOverlapAmbiguity::BothEnds(
-                    finite_bound.inclusivity(),
                     finite_end.inclusivity(),
+                    finite_bound.inclusivity(),
                 ))),
             }
         },
@@ -644,9 +644,9 @@ pub fn bound_position_rel_end_bound_on_rel_bounds(
             match finite_bound.offset().cmp(&finite_start.offset()) {
                 Ordering::Less => BoundPosition::Inside,
                 Ordering::Greater => BoundPosition::OutsideAfter,
-                Ordering::Equal => BoundPosition::OnStart(Some(BoundOverlapAmbiguity::EndStart(
-                    finite_bound.inclusivity(),
+                Ordering::Equal => BoundPosition::OnStart(Some(BoundOverlapAmbiguity::StartEnd(
                     finite_start.inclusivity(),
+                    finite_bound.inclusivity(),
                 ))),
             }
         },
@@ -661,13 +661,13 @@ pub fn bound_position_rel_end_bound_on_rel_bounds(
                     BoundInclusivity::Inclusive => BoundPosition::Equal,
                     BoundInclusivity::Exclusive => BoundPosition::OutsideAfter,
                 },
-                (Ordering::Equal, Ordering::Less) => BoundPosition::OnStart(Some(BoundOverlapAmbiguity::EndStart(
-                    finite_bound.inclusivity(),
+                (Ordering::Equal, Ordering::Less) => BoundPosition::OnStart(Some(BoundOverlapAmbiguity::StartEnd(
                     finite_start.inclusivity(),
+                    finite_bound.inclusivity(),
                 ))),
                 (Ordering::Greater, Ordering::Equal) => BoundPosition::OnEnd(Some(BoundOverlapAmbiguity::BothEnds(
-                    finite_bound.inclusivity(),
                     finite_end.inclusivity(),
+                    finite_bound.inclusivity(),
                 ))),
                 (Ordering::Greater, Ordering::Less) => BoundPosition::Inside,
             }
