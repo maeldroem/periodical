@@ -454,6 +454,47 @@ pub fn swap_relative_bounds(start: &mut RelativeStartBound, end: &mut RelativeEn
     }
 }
 
+/// Enum for relative start and end bounds
+/// 
+/// TODO: Implement `PartialEq`, `Eq`, `PartialOrd`, and `Ord`
+#[derive(Debug, Clone, Copy, Hash)]
+pub enum RelativeBound {
+    Start(RelativeStartBound),
+    End(RelativeEndBound),
+}
+
+impl RelativeBound {
+    /// Returns whether [`RelativeBound`] is of the [`Start`](RelativeBound::Start) variant
+    #[must_use]
+    pub fn is_start(&self) -> bool {
+        matches!(self, Self::Start(_))
+    }
+
+    /// Returns whether [`RelativeBound`] is of the [`End`](RelativeBound::End) variant
+    #[must_use]
+    pub fn is_end(&self) -> bool {
+        matches!(self, Self::End(_))
+    }
+
+    /// Returns the content of the [`Start`](RelativeBound::Start) variant
+    #[must_use]
+    pub fn start(self) -> Option<RelativeStartBound> {
+        match self {
+            Self::Start(start) => Some(start),
+            Self::End(_) => None,
+        }
+    }
+
+    /// Returns the content of the [`End`](RelativeBound::End) variant
+    #[must_use]
+    pub fn end(self) -> Option<RelativeEndBound> {
+        match self {
+            Self::Start(_) => None,
+            Self::End(end) => Some(end),
+        }
+    }
+}
+
 /// Represents something that has **non-empty** relative bounds
 pub trait HasRelativeBounds {
     /// Returns the relative bounds

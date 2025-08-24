@@ -1,5 +1,6 @@
 //! Interval iterators
 
+pub mod bounds;
 pub mod complement;
 pub mod precision;
 pub mod relativity_conversion;

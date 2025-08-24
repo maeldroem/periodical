@@ -441,6 +441,47 @@ pub fn swap_absolute_bounds(start: &mut AbsoluteStartBound, end: &mut AbsoluteEn
     }
 }
 
+/// Enum for absolute start and end bounds
+/// 
+/// TODO: Implement `PartialEq`, `Eq`, `PartialOrd`, and `Ord`
+#[derive(Debug, Clone, Copy, Hash)]
+pub enum AbsoluteBound {
+    Start(AbsoluteStartBound),
+    End(AbsoluteEndBound),
+}
+
+impl AbsoluteBound {
+    /// Returns whether [`AbsoluteBound`] is of the [`Start`](AbsoluteBound::Start) variant
+    #[must_use]
+    pub fn is_start(&self) -> bool {
+        matches!(self, Self::Start(_))
+    }
+
+    /// Returns whether [`AbsoluteBound`] is of the [`End`](AbsoluteBound::End) variant
+    #[must_use]
+    pub fn is_end(&self) -> bool {
+        matches!(self, Self::End(_))
+    }
+
+    /// Returns the content of the [`Start`](AbsoluteBound::Start) variant
+    #[must_use]
+    pub fn start(self) -> Option<AbsoluteStartBound> {
+        match self {
+            Self::Start(start) => Some(start),
+            Self::End(_) => None,
+        }
+    }
+
+    /// Returns the content of the [`End`](AbsoluteBound::End) variant
+    #[must_use]
+    pub fn end(self) -> Option<AbsoluteEndBound> {
+        match self {
+            Self::Start(_) => None,
+            Self::End(end) => Some(end),
+        }
+    }
+}
+
 /// Represents something that has **non-empty** absolute bounds
 pub trait HasAbsoluteBounds {
     /// Returns the absolute bounds
