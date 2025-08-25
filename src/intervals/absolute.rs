@@ -442,7 +442,7 @@ pub fn swap_absolute_bounds(start: &mut AbsoluteStartBound, end: &mut AbsoluteEn
 }
 
 /// Enum for absolute start and end bounds
-/// 
+///
 /// TODO: Implement `PartialEq`, `Eq`, `PartialOrd`, and `Ord`
 #[derive(Debug, Clone, Copy, Hash)]
 pub enum AbsoluteBound {
@@ -631,16 +631,14 @@ impl AbsoluteBounds {
     }
 
     /// Compares two [`AbsoluteBounds`], but if they have the same start, order by decreasing length
-    /// 
+    ///
     /// Don't rely on this method for checking for equality of start, as it will produce other [`Ordering`]s if their
     /// length don't match too.
     #[must_use]
     pub fn ord_by_start_and_inv_length(&self, other: &Self) -> Ordering {
         match self.cmp(other) {
             Ordering::Less => Ordering::Less,
-            Ordering::Equal => {
-                self.end.cmp(&other.end).reverse()
-            },
+            Ordering::Equal => self.end.cmp(&other.end).reverse(),
             Ordering::Greater => Ordering::Greater,
         }
     }
@@ -792,7 +790,7 @@ impl EmptiableAbsoluteBounds {
     }
 
     /// Compares two [`EmptiableAbsoluteBounds`], but if they have the same start, order by decreasing length
-    /// 
+    ///
     /// Don't rely on this method for checking for equality of start, as it will produce other [`Ordering`]s if their
     /// length don't match too.
     #[must_use]
@@ -872,7 +870,7 @@ impl Ord for EmptiableAbsoluteBounds {
             (EmptiableAbsoluteBounds::Bound(_), EmptiableAbsoluteBounds::Empty) => Ordering::Greater,
             (EmptiableAbsoluteBounds::Bound(og_abs_bounds), EmptiableAbsoluteBounds::Bound(other_abs_bounds)) => {
                 og_abs_bounds.cmp(other_abs_bounds)
-            }
+            },
         }
     }
 }
@@ -1387,13 +1385,21 @@ impl From<RangeFrom<DateTime<Utc>>> for HalfBoundedAbsoluteInterval {
 
 impl From<RangeTo<DateTime<Utc>>> for HalfBoundedAbsoluteInterval {
     fn from(range: RangeTo<DateTime<Utc>>) -> Self {
-        HalfBoundedAbsoluteInterval::new_with_inclusivity(range.end, BoundInclusivity::Exclusive, OpeningDirection::ToPast)
+        HalfBoundedAbsoluteInterval::new_with_inclusivity(
+            range.end,
+            BoundInclusivity::Exclusive,
+            OpeningDirection::ToPast,
+        )
     }
 }
 
 impl From<RangeToInclusive<DateTime<Utc>>> for HalfBoundedAbsoluteInterval {
     fn from(range: RangeToInclusive<DateTime<Utc>>) -> Self {
-        HalfBoundedAbsoluteInterval::new_with_inclusivity(range.end, BoundInclusivity::Inclusive, OpeningDirection::ToPast)
+        HalfBoundedAbsoluteInterval::new_with_inclusivity(
+            range.end,
+            BoundInclusivity::Inclusive,
+            OpeningDirection::ToPast,
+        )
     }
 }
 
@@ -1474,12 +1480,13 @@ pub enum AbsoluteInterval {
 
 impl AbsoluteInterval {
     /// Compares two [`AbsoluteInterval`]s, but if they have the same start, order by decreasing length
-    /// 
+    ///
     /// Don't rely on this method for checking for equality of start, as it will produce other [`Ordering`]s if their
     /// length don't match too.
     #[must_use]
     pub fn ord_by_start_and_inv_length(&self, other: &Self) -> Ordering {
-        self.emptiable_abs_bounds().ord_by_start_and_inv_length(&other.emptiable_abs_bounds())
+        self.emptiable_abs_bounds()
+            .ord_by_start_and_inv_length(&other.emptiable_abs_bounds())
     }
 }
 
@@ -1677,7 +1684,9 @@ impl From<(Option<DateTime<Utc>>, Option<DateTime<Utc>>)> for AbsoluteInterval {
             (Some(from), None) => {
                 AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new(from, OpeningDirection::ToFuture))
             },
-            (None, Some(to)) => AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new(to, OpeningDirection::ToPast)),
+            (None, Some(to)) => {
+                AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new(to, OpeningDirection::ToPast))
+            },
             (None, None) => AbsoluteInterval::Unbounded(UnboundedInterval),
         }
     }
@@ -1767,7 +1776,9 @@ impl From<(bool, Option<DateTime<Utc>>, Option<DateTime<Utc>>)> for AbsoluteInte
             (Some(from), None) => {
                 AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new(from, OpeningDirection::ToFuture))
             },
-            (None, Some(to)) => AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new(to, OpeningDirection::ToPast)),
+            (None, Some(to)) => {
+                AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new(to, OpeningDirection::ToPast))
+            },
             (None, None) => AbsoluteInterval::Unbounded(UnboundedInterval),
         }
     }

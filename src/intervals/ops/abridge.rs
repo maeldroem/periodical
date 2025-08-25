@@ -7,8 +7,8 @@ use crate::intervals::absolute::{
     HalfBoundedAbsoluteInterval, HasAbsoluteBounds, HasEmptiableAbsoluteBounds, swap_absolute_bounds,
 };
 use crate::intervals::relative::{
-    EmptiableRelativeBounds, HalfBoundedRelativeInterval, HasEmptiableRelativeBounds, HasRelativeBounds, RelativeBounds,
-    RelativeEndBound, RelativeStartBound, swap_relative_bounds,
+    EmptiableRelativeBounds, HalfBoundedRelativeInterval, HasEmptiableRelativeBounds, HasRelativeBounds,
+    RelativeBounds, RelativeEndBound, RelativeStartBound, swap_relative_bounds,
 };
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 use crate::intervals::{BoundedAbsoluteInterval, BoundedRelativeInterval, RelativeInterval};

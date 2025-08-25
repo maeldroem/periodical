@@ -5,8 +5,8 @@ pub use super::absolute::{
 pub use super::meta::{Emptiable, HasBoundInclusivity, HasDuration, HasOpenness, HasRelativity};
 pub use super::ops::abridge::Abridgable;
 pub use super::ops::bound_containment::{
-    BoundContainmentRule, BoundContainmentRuleSet, BoundPosition, CanPositionBoundContainment,
-    DEFAULT_BOUND_CONTAINMENT_RULES, DisambiguatedBoundPosition,
+    BoundContainmentPosition, BoundContainmentRule, BoundContainmentRuleSet, CanPositionBoundContainment,
+    DEFAULT_BOUND_CONTAINMENT_RULES, DisambiguatedBoundContainmentPosition,
 };
 pub use super::ops::bound_overlap_ambiguity::{
     BoundOverlapAmbiguity, BoundOverlapDisambiguationRuleSet, DisambiguatedBoundOverlap,

@@ -5,12 +5,16 @@ use super::extend::Extensible;
 use super::overlap::CanPositionOverlap;
 use super::prelude::*;
 
-use crate::intervals::absolute::{AbsoluteBounds, AbsoluteInterval, EmptiableAbsoluteBounds, HalfBoundedAbsoluteInterval};
+use crate::intervals::absolute::{
+    AbsoluteBounds, AbsoluteInterval, EmptiableAbsoluteBounds, HalfBoundedAbsoluteInterval,
+};
 use crate::intervals::meta::Interval;
 use crate::intervals::ops::remove_overlap::{OverlapRemovable, OverlapRemovalErr, OverlapRemovalResult};
 use crate::intervals::relative::{EmptiableRelativeBounds, HalfBoundedRelativeInterval, RelativeBounds};
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
-use crate::intervals::{BoundedAbsoluteInterval, BoundedRelativeInterval, OverlapRule, OverlapRuleSet, RelativeInterval};
+use crate::intervals::{
+    BoundedAbsoluteInterval, BoundedRelativeInterval, OverlapRule, OverlapRuleSet, RelativeInterval,
+};
 use crate::ops::{DifferenceResult, IntersectionResult, SymmetricDifferenceResult, UnionResult};
 
 /// Capacity to unite an interval with another
@@ -1100,7 +1104,10 @@ impl SymmetricallyDifferentiable<BoundedAbsoluteInterval> for UnboundedInterval 
 impl SymmetricallyDifferentiable<HalfBoundedAbsoluteInterval> for UnboundedInterval {
     type Output = AbsoluteInterval;
 
-    fn symmetrically_differentiate(&self, rhs: &HalfBoundedAbsoluteInterval) -> SymmetricDifferenceResult<Self::Output> {
+    fn symmetrically_differentiate(
+        &self,
+        rhs: &HalfBoundedAbsoluteInterval,
+    ) -> SymmetricDifferenceResult<Self::Output> {
         symmetrically_differentiate_abs_bounds(&self.abs_bounds(), &rhs.abs_bounds())
             .map_symmetric_difference(AbsoluteInterval::from)
     }
@@ -1147,7 +1154,10 @@ impl SymmetricallyDifferentiable<BoundedRelativeInterval> for UnboundedInterval 
 impl SymmetricallyDifferentiable<HalfBoundedRelativeInterval> for UnboundedInterval {
     type Output = RelativeInterval;
 
-    fn symmetrically_differentiate(&self, rhs: &HalfBoundedRelativeInterval) -> SymmetricDifferenceResult<Self::Output> {
+    fn symmetrically_differentiate(
+        &self,
+        rhs: &HalfBoundedRelativeInterval,
+    ) -> SymmetricDifferenceResult<Self::Output> {
         symmetrically_differentiate_rel_bounds(&self.rel_bounds(), &rhs.rel_bounds())
             .map_symmetric_difference(RelativeInterval::from)
     }

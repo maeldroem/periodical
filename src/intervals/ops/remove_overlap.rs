@@ -314,7 +314,10 @@ impl OverlapRemovable<HalfBoundedRelativeInterval> for UnboundedInterval {
 impl OverlapRemovable<UnboundedInterval> for UnboundedInterval {
     type Output = EmptyInterval;
 
-    fn remove_overlap(&self, _rhs: &UnboundedInterval) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalErr> {
+    fn remove_overlap(
+        &self,
+        _rhs: &UnboundedInterval,
+    ) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalErr> {
         Ok(OverlapRemovalResult::Single(EmptyInterval))
     }
 }

@@ -455,7 +455,7 @@ pub fn swap_relative_bounds(start: &mut RelativeStartBound, end: &mut RelativeEn
 }
 
 /// Enum for relative start and end bounds
-/// 
+///
 /// TODO: Implement `PartialEq`, `Eq`, `PartialOrd`, and `Ord`
 #[derive(Debug, Clone, Copy, Hash)]
 pub enum RelativeBound {
@@ -645,16 +645,14 @@ impl RelativeBounds {
     }
 
     /// Compares two [`RelativeBounds`], but if they have the same start, order by decreasing length
-    /// 
+    ///
     /// Don't rely on this method for checking for equality of start, as it will produce other [`Ordering`]s if their
     /// length don't match too.
     #[must_use]
     pub fn ord_by_start_and_inv_length(&self, other: &Self) -> Ordering {
         match self.cmp(other) {
             Ordering::Less => Ordering::Less,
-            Ordering::Equal => {
-                self.end.cmp(&other.end).reverse()
-            },
+            Ordering::Equal => self.end.cmp(&other.end).reverse(),
             Ordering::Greater => Ordering::Greater,
         }
     }
@@ -811,7 +809,7 @@ impl EmptiableRelativeBounds {
     }
 
     /// Compares two [`EmptiableRelativeBounds`], but if they have the same start, order by decreasing length
-    /// 
+    ///
     /// Don't rely on this method for checking for equality of start, as it will produce other [`Ordering`]s if their
     /// length don't match too.
     #[must_use]
@@ -891,7 +889,7 @@ impl Ord for EmptiableRelativeBounds {
             (EmptiableRelativeBounds::Bound(_), EmptiableRelativeBounds::Empty) => Ordering::Greater,
             (EmptiableRelativeBounds::Bound(og_rel_bounds), EmptiableRelativeBounds::Bound(other_rel_bounds)) => {
                 og_rel_bounds.cmp(other_rel_bounds)
-            }
+            },
         }
     }
 }
@@ -1385,13 +1383,21 @@ impl From<RangeFrom<Duration>> for HalfBoundedRelativeInterval {
 
 impl From<RangeTo<Duration>> for HalfBoundedRelativeInterval {
     fn from(range: RangeTo<Duration>) -> Self {
-        HalfBoundedRelativeInterval::new_with_inclusivity(range.end, BoundInclusivity::Exclusive, OpeningDirection::ToPast)
+        HalfBoundedRelativeInterval::new_with_inclusivity(
+            range.end,
+            BoundInclusivity::Exclusive,
+            OpeningDirection::ToPast,
+        )
     }
 }
 
 impl From<RangeToInclusive<Duration>> for HalfBoundedRelativeInterval {
     fn from(range: RangeToInclusive<Duration>) -> Self {
-        HalfBoundedRelativeInterval::new_with_inclusivity(range.end, BoundInclusivity::Inclusive, OpeningDirection::ToPast)
+        HalfBoundedRelativeInterval::new_with_inclusivity(
+            range.end,
+            BoundInclusivity::Inclusive,
+            OpeningDirection::ToPast,
+        )
     }
 }
 
@@ -1472,12 +1478,13 @@ pub enum RelativeInterval {
 
 impl RelativeInterval {
     /// Compares two [`RelativeInterval`]s, but if they have the same start, order by decreasing length
-    /// 
+    ///
     /// Don't rely on this method for checking for equality of start, as it will produce other [`Ordering`]s if their
     /// length don't match too.
     #[must_use]
     pub fn ord_by_start_and_inv_length(&self, other: &Self) -> Ordering {
-        self.emptiable_rel_bounds().ord_by_start_and_inv_length(&other.emptiable_rel_bounds())
+        self.emptiable_rel_bounds()
+            .ord_by_start_and_inv_length(&other.emptiable_rel_bounds())
     }
 }
 
@@ -1675,7 +1682,9 @@ impl From<(Option<Duration>, Option<Duration>)> for RelativeInterval {
             (Some(from), None) => {
                 RelativeInterval::HalfBounded(HalfBoundedRelativeInterval::new(from, OpeningDirection::ToFuture))
             },
-            (None, Some(to)) => RelativeInterval::HalfBounded(HalfBoundedRelativeInterval::new(to, OpeningDirection::ToPast)),
+            (None, Some(to)) => {
+                RelativeInterval::HalfBounded(HalfBoundedRelativeInterval::new(to, OpeningDirection::ToPast))
+            },
             (None, None) => RelativeInterval::Unbounded(UnboundedInterval),
         }
     }
@@ -1765,7 +1774,9 @@ impl From<(bool, Option<Duration>, Option<Duration>)> for RelativeInterval {
             (Some(from), None) => {
                 RelativeInterval::HalfBounded(HalfBoundedRelativeInterval::new(from, OpeningDirection::ToFuture))
             },
-            (None, Some(to)) => RelativeInterval::HalfBounded(HalfBoundedRelativeInterval::new(to, OpeningDirection::ToPast)),
+            (None, Some(to)) => {
+                RelativeInterval::HalfBounded(HalfBoundedRelativeInterval::new(to, OpeningDirection::ToPast))
+            },
             (None, None) => RelativeInterval::Unbounded(UnboundedInterval),
         }
     }

@@ -53,6 +53,7 @@
 //! complement of an empty interval, which results in an [unbounded interval](`UnboundedInterval`).
 
 pub mod absolute;
+pub mod bound_position;
 pub mod meta;
 pub mod ops;
 pub mod prelude;
