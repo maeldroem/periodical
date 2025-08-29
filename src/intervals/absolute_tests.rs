@@ -148,6 +148,43 @@ fn absolute_finite_bound_try_from_unbounded_bound() {
 }
 
 #[test]
+fn absolute_start_bound_is_finite() {
+    assert!(AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))).is_finite());
+    assert!(!AbsoluteStartBound::InfinitePast.is_finite());
+}
+
+#[test]
+fn absolute_start_bound_is_infinite_past() {
+    assert!(!AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))).is_infinite_past());
+    assert!(AbsoluteStartBound::InfinitePast.is_infinite_past());
+}
+
+#[test]
+fn absolute_start_bound_finite() {
+    assert_eq!(
+        AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))).finite(),
+        Some(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
+    );
+    assert_eq!(AbsoluteStartBound::InfinitePast.finite(), None,);
+}
+
+#[test]
+fn absolute_start_bound_opposite_finite() {
+    assert_eq!(
+        AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))).opposite(),
+        Some(AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            date(&Utc, 2025, 1, 1),
+            BoundInclusivity::Exclusive,
+        ))),
+    );
+}
+
+#[test]
+fn absolute_start_bound_opposite_infinite_past() {
+    assert_eq!(AbsoluteStartBound::InfinitePast.opposite(), None,);
+}
+
+#[test]
 fn absolute_start_bound_inf_absolute_end_bound_inf_eq() {
     assert!(!AbsoluteStartBound::InfinitePast.eq(&AbsoluteEndBound::InfiniteFuture));
 }
@@ -490,6 +527,43 @@ fn absolute_start_bound_from_unbounded_bound() {
         AbsoluteStartBound::from(Bound::Unbounded),
         AbsoluteStartBound::InfinitePast
     );
+}
+
+#[test]
+fn absolute_end_bound_is_finite() {
+    assert!(AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))).is_finite());
+    assert!(!AbsoluteEndBound::InfiniteFuture.is_finite());
+}
+
+#[test]
+fn absolute_end_bound_is_infinite_past() {
+    assert!(!AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))).is_infinite_past());
+    assert!(AbsoluteEndBound::InfiniteFuture.is_infinite_past());
+}
+
+#[test]
+fn absolute_end_bound_finite() {
+    assert_eq!(
+        AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))).finite(),
+        Some(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
+    );
+    assert_eq!(AbsoluteEndBound::InfiniteFuture.finite(), None,);
+}
+
+#[test]
+fn absolute_end_bound_opposite_finite() {
+    assert_eq!(
+        AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))).opposite(),
+        Some(AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            date(&Utc, 2025, 1, 1),
+            BoundInclusivity::Exclusive,
+        ))),
+    );
+}
+
+#[test]
+fn absolute_end_bound_opposite_infinite_past() {
+    assert_eq!(AbsoluteEndBound::InfiniteFuture.opposite(), None,);
 }
 
 #[test]
@@ -914,6 +988,118 @@ fn absolute_start_bound_finite_absolute_end_bound_finite_swap() {
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
         ))
+    );
+}
+
+#[test]
+fn absolute_bound_is_start() {
+    assert!(AbsoluteBound::Start(AbsoluteStartBound::InfinitePast).is_start());
+    assert!(!AbsoluteBound::End(AbsoluteEndBound::InfiniteFuture).is_start());
+}
+
+#[test]
+fn absolute_bound_is_end() {
+    assert!(!AbsoluteBound::Start(AbsoluteStartBound::InfinitePast).is_end());
+    assert!(AbsoluteBound::End(AbsoluteEndBound::InfiniteFuture).is_end());
+}
+
+#[test]
+fn absolute_bound_start() {
+    assert_eq!(
+        AbsoluteBound::Start(AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(
+            &Utc, 2025, 1, 1
+        ))))
+        .start(),
+        Some(AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(
+            &Utc, 2025, 1, 1
+        )))),
+    );
+    assert_eq!(
+        AbsoluteBound::End(AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(
+            &Utc, 2025, 1, 1
+        ))))
+        .start(),
+        None,
+    );
+}
+
+#[test]
+fn absolute_bound_end() {
+    assert_eq!(
+        AbsoluteBound::Start(AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(
+            &Utc, 2025, 1, 1
+        ))))
+        .end(),
+        None,
+    );
+    assert_eq!(
+        AbsoluteBound::End(AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(
+            &Utc, 2025, 1, 1
+        ))))
+        .end(),
+        Some(AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(
+            &Utc, 2025, 1, 1
+        )))),
+    );
+}
+
+#[test]
+fn absolute_bound_start_inf_past_opposite() {
+    assert_eq!(AbsoluteBound::Start(AbsoluteStartBound::InfinitePast).opposite(), None,);
+}
+
+#[test]
+fn absolute_bound_start_finite_opposite() {
+    assert_eq!(
+        AbsoluteBound::Start(AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(
+            &Utc, 2025, 1, 1
+        ))))
+        .opposite(),
+        Some(AbsoluteBound::End(AbsoluteEndBound::Finite(
+            AbsoluteFiniteBound::new_with_inclusivity(date(&Utc, 2025, 1, 1), BoundInclusivity::Exclusive,)
+        ))),
+    );
+}
+
+#[test]
+fn absolute_bound_end_inf_future_opposite() {
+    assert_eq!(AbsoluteBound::End(AbsoluteEndBound::InfiniteFuture).opposite(), None,);
+}
+
+#[test]
+fn absolute_bound_end_finite_opposite() {
+    assert_eq!(
+        AbsoluteBound::End(AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(
+            &Utc, 2025, 1, 1
+        ))))
+        .opposite(),
+        Some(AbsoluteBound::Start(AbsoluteStartBound::Finite(
+            AbsoluteFiniteBound::new_with_inclusivity(date(&Utc, 2025, 1, 1), BoundInclusivity::Exclusive,)
+        ))),
+    );
+}
+
+#[test]
+fn absolute_bound_from_absolute_start_bound() {
+    assert_eq!(
+        AbsoluteBound::from(AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(
+            &Utc, 2025, 1, 1
+        )))),
+        AbsoluteBound::Start(AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(
+            &Utc, 2025, 1, 1
+        )))),
+    );
+}
+
+#[test]
+fn absolute_bound_from_absolute_end_bound() {
+    assert_eq!(
+        AbsoluteBound::from(AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(
+            &Utc, 2025, 1, 1
+        )))),
+        AbsoluteBound::End(AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(
+            &Utc, 2025, 1, 1
+        )))),
     );
 }
 

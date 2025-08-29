@@ -145,6 +145,43 @@ fn relative_finite_bound_try_from_unbounded_bound() {
 }
 
 #[test]
+fn relative_start_bound_is_finite() {
+    assert!(RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(1))).is_finite());
+    assert!(!RelativeStartBound::InfinitePast.is_finite());
+}
+
+#[test]
+fn relative_start_bound_is_infinite_past() {
+    assert!(!RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(1))).is_infinite_past());
+    assert!(RelativeStartBound::InfinitePast.is_infinite_past());
+}
+
+#[test]
+fn relative_start_bound_finite() {
+    assert_eq!(
+        RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(1))).finite(),
+        Some(RelativeFiniteBound::new(Duration::hours(1))),
+    );
+    assert_eq!(RelativeStartBound::InfinitePast.finite(), None,);
+}
+
+#[test]
+fn relative_start_bound_opposite_finite() {
+    assert_eq!(
+        RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(1))).opposite(),
+        Some(RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+            Duration::hours(1),
+            BoundInclusivity::Exclusive,
+        ))),
+    );
+}
+
+#[test]
+fn relative_start_bound_opposite_infinite_past() {
+    assert_eq!(RelativeStartBound::InfinitePast.opposite(), None,);
+}
+
+#[test]
 fn relative_start_bound_inf_relative_end_bound_inf_eq() {
     assert!(!RelativeStartBound::InfinitePast.eq(&RelativeEndBound::InfiniteFuture));
 }
@@ -479,6 +516,43 @@ fn relative_start_bound_from_unbounded_bound() {
         RelativeStartBound::from(Bound::Unbounded),
         RelativeStartBound::InfinitePast
     );
+}
+
+#[test]
+fn relative_end_bound_is_finite() {
+    assert!(RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(1))).is_finite());
+    assert!(!RelativeEndBound::InfiniteFuture.is_finite());
+}
+
+#[test]
+fn relative_end_bound_is_infinite_past() {
+    assert!(!RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(1))).is_infinite_past());
+    assert!(RelativeEndBound::InfiniteFuture.is_infinite_past());
+}
+
+#[test]
+fn relative_end_bound_finite() {
+    assert_eq!(
+        RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(1))).finite(),
+        Some(RelativeFiniteBound::new(Duration::hours(1))),
+    );
+    assert_eq!(RelativeEndBound::InfiniteFuture.finite(), None,);
+}
+
+#[test]
+fn relative_end_bound_opposite_finite() {
+    assert_eq!(
+        RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(1))).opposite(),
+        Some(RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+            Duration::hours(1),
+            BoundInclusivity::Exclusive,
+        ))),
+    );
+}
+
+#[test]
+fn relative_end_bound_opposite_infinite_past() {
+    assert_eq!(RelativeEndBound::InfiniteFuture.opposite(), None,);
 }
 
 #[test]
@@ -897,6 +971,88 @@ fn relative_start_bound_finite_relative_end_bound_finite_swap() {
             Duration::hours(1),
             BoundInclusivity::Exclusive,
         ))
+    );
+}
+
+#[test]
+fn relative_bound_is_start() {
+    assert!(RelativeBound::Start(RelativeStartBound::InfinitePast).is_start());
+    assert!(!RelativeBound::End(RelativeEndBound::InfiniteFuture).is_start());
+}
+
+#[test]
+fn relative_bound_is_end() {
+    assert!(!RelativeBound::Start(RelativeStartBound::InfinitePast).is_end());
+    assert!(RelativeBound::End(RelativeEndBound::InfiniteFuture).is_end());
+}
+
+#[test]
+fn relative_bound_start() {
+    assert_eq!(
+        RelativeBound::Start(RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(1)))).start(),
+        Some(RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(1)))),
+    );
+    assert_eq!(
+        RelativeBound::End(RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(1)))).start(),
+        None,
+    );
+}
+
+#[test]
+fn relative_bound_end() {
+    assert_eq!(
+        RelativeBound::Start(RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(1)))).end(),
+        None,
+    );
+    assert_eq!(
+        RelativeBound::End(RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(1)))).end(),
+        Some(RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(1)))),
+    );
+}
+
+#[test]
+fn relative_bound_start_inf_past_opposite() {
+    assert_eq!(RelativeBound::Start(RelativeStartBound::InfinitePast).opposite(), None,);
+}
+
+#[test]
+fn relative_bound_start_finite_opposite() {
+    assert_eq!(
+        RelativeBound::Start(RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(1)))).opposite(),
+        Some(RelativeBound::End(RelativeEndBound::Finite(
+            RelativeFiniteBound::new_with_inclusivity(Duration::hours(1), BoundInclusivity::Exclusive,)
+        ))),
+    );
+}
+
+#[test]
+fn relative_bound_end_inf_future_opposite() {
+    assert_eq!(RelativeBound::End(RelativeEndBound::InfiniteFuture).opposite(), None,);
+}
+
+#[test]
+fn relative_bound_end_finite_opposite() {
+    assert_eq!(
+        RelativeBound::End(RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(1)))).opposite(),
+        Some(RelativeBound::Start(RelativeStartBound::Finite(
+            RelativeFiniteBound::new_with_inclusivity(Duration::hours(1), BoundInclusivity::Exclusive,)
+        ))),
+    );
+}
+
+#[test]
+fn relative_bound_from_relative_start_bound() {
+    assert_eq!(
+        RelativeBound::from(RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(1)))),
+        RelativeBound::Start(RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(1)))),
+    );
+}
+
+#[test]
+fn relative_bound_from_relative_end_bound() {
+    assert_eq!(
+        RelativeBound::from(RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(1)))),
+        RelativeBound::End(RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(1)))),
     );
 }
 
