@@ -1,7 +1,7 @@
 //! Structure to position a bound within a slice
 
-use crate::intervals::absolute::{AbsoluteBound, AbsoluteBounds, HasAbsoluteBounds};
-use crate::intervals::relative::{HasRelativeBounds, RelativeBound, RelativeBounds};
+use crate::intervals::absolute::{AbsoluteBound, HasAbsoluteBounds};
+use crate::intervals::relative::{HasRelativeBounds, RelativeBound};
 
 /// Type and index of the positioned bound
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -21,23 +21,39 @@ impl BoundPosition {
 
     /// Returns the [`AbsoluteBound`] corresponding to the bound position
     #[must_use]
-    pub fn get_abs_bound(&self, abs_bounds: &[&AbsoluteBounds]) -> Option<AbsoluteBound> {
+    pub fn get_abs_bound<'j, I, J>(&self, abs_bounds: I) -> Option<AbsoluteBound>
+    where
+        I: IntoIterator<Item = &'j J>,
+        J: 'j + HasAbsoluteBounds,
+    {
         match self {
             Self::Start(i) => abs_bounds
-                .get(*i)
+                .into_iter()
+                .nth(*i)
                 .map(|bounds| AbsoluteBound::Start(bounds.abs_start())),
-            Self::End(i) => abs_bounds.get(*i).map(|bounds| AbsoluteBound::End(bounds.abs_end())),
+            Self::End(i) => abs_bounds
+                .into_iter()
+                .nth(*i)
+                .map(|bounds| AbsoluteBound::End(bounds.abs_end())),
         }
     }
 
     /// Returns the [`RelativeBound`] corresponding to the bound position
     #[must_use]
-    pub fn get_rel_bound(&self, rel_bounds: &[&RelativeBounds]) -> Option<RelativeBound> {
+    pub fn get_rel_bound<'j, I, J>(&self, rel_bounds: I) -> Option<RelativeBound>
+    where
+        I: IntoIterator<Item = &'j J>,
+        J: 'j + HasRelativeBounds,
+    {
         match self {
             Self::Start(i) => rel_bounds
-                .get(*i)
+                .into_iter()
+                .nth(*i)
                 .map(|bounds| RelativeBound::Start(bounds.rel_start())),
-            Self::End(i) => rel_bounds.get(*i).map(|bounds| RelativeBound::End(bounds.rel_end())),
+            Self::End(i) => rel_bounds
+                .into_iter()
+                .nth(*i)
+                .map(|bounds| RelativeBound::End(bounds.rel_end())),
         }
     }
 
@@ -201,5 +217,11 @@ impl BoundPosition {
     /// Returns whether the position has hit its minimum
     pub fn next_back_bound(&mut self) -> bool {
         self.advance_back_by(1)
+    }
+}
+
+impl Default for BoundPosition {
+    fn default() -> Self {
+        BoundPosition::Start(0)
     }
 }

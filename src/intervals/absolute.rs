@@ -3,6 +3,7 @@
 use std::cmp::Ordering;
 use std::error::Error;
 use std::fmt::Display;
+use std::hash::{Hash, Hasher};
 use std::ops::{Bound, Range, RangeBounds, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive};
 
 #[cfg(feature = "arbitrary")]
@@ -165,6 +166,21 @@ impl AbsoluteStartBound {
             Self::InfinitePast => None,
         }
     }
+
+    /// Returns the opposite [`AbsoluteEndBound`]
+    ///
+    /// Returns [`None`] if the [`AbsoluteStartBound`] is of the [`InfinitePast`](AbsoluteStartBound::InfinitePast)
+    /// variant.
+    #[must_use]
+    pub fn opposite(&self) -> Option<AbsoluteEndBound> {
+        match self {
+            Self::Finite(finite) => Some(AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                finite.time(),
+                finite.inclusivity().opposite(),
+            ))),
+            Self::InfinitePast => None,
+        }
+    }
 }
 
 impl PartialEq<AbsoluteEndBound> for AbsoluteStartBound {
@@ -243,15 +259,20 @@ impl PartialOrd<AbsoluteEndBound> for AbsoluteStartBound {
                     time: end_time,
                     inclusivity: end_inclusivity,
                 }),
-            ) => {
-                match start_time.cmp(end_time) {
-                    Ordering::Less => Some(Ordering::Less),
-                    Ordering::Greater => Some(Ordering::Greater),
-                    Ordering::Equal => match (start_inclusivity, end_inclusivity) {
-                        (BoundInclusivity::Inclusive, BoundInclusivity::Inclusive) => Some(Ordering::Equal),
-                        _ => None, // If the times are equal, anything other than double inclusive bounds is invalid
-                    },
-                }
+            ) => match start_time.cmp(end_time) {
+                Ordering::Less => Some(Ordering::Less),
+                Ordering::Equal => {
+                    let disambiguated_bound_overlap =
+                        BoundOverlapAmbiguity::StartEnd(*start_inclusivity, *end_inclusivity)
+                            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Strict);
+
+                    match disambiguated_bound_overlap {
+                        DisambiguatedBoundOverlap::Before => Some(Ordering::Less),
+                        DisambiguatedBoundOverlap::Equal => Some(Ordering::Equal),
+                        DisambiguatedBoundOverlap::After => Some(Ordering::Greater),
+                    }
+                },
+                Ordering::Greater => Some(Ordering::Greater),
             },
         }
     }
@@ -326,6 +347,21 @@ impl AbsoluteEndBound {
             Self::InfiniteFuture => None,
         }
     }
+
+    /// Returns the opposite [`AbsoluteStartBound`]
+    ///
+    /// Returns [`None`] if the [`AbsoluteEndBound`] is of the [`InfiniteFuture`](AbsoluteEndBound::InfiniteFuture)
+    /// variant.
+    #[must_use]
+    pub fn opposite(&self) -> Option<AbsoluteStartBound> {
+        match self {
+            Self::Finite(finite) => Some(AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                finite.time(),
+                finite.inclusivity().opposite(),
+            ))),
+            Self::InfiniteFuture => None,
+        }
+    }
 }
 
 impl PartialOrd for AbsoluteEndBound {
@@ -375,7 +411,33 @@ impl PartialEq<AbsoluteStartBound> for AbsoluteEndBound {
 
 impl PartialOrd<AbsoluteStartBound> for AbsoluteEndBound {
     fn partial_cmp(&self, other: &AbsoluteStartBound) -> Option<Ordering> {
-        other.partial_cmp(self).map(Ordering::reverse)
+        match (self, other) {
+            (AbsoluteEndBound::InfiniteFuture, _) | (_, AbsoluteStartBound::InfinitePast) => Some(Ordering::Greater),
+            (
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound {
+                    time: end_time,
+                    inclusivity: end_inclusivity,
+                }),
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound {
+                    time: start_time,
+                    inclusivity: start_inclusivity,
+                }),
+            ) => match end_time.cmp(start_time) {
+                Ordering::Less => Some(Ordering::Less),
+                Ordering::Equal => {
+                    let disambiguated_bound_overlap =
+                        BoundOverlapAmbiguity::EndStart(*end_inclusivity, *start_inclusivity)
+                            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Strict);
+
+                    match disambiguated_bound_overlap {
+                        DisambiguatedBoundOverlap::Before => Some(Ordering::Less),
+                        DisambiguatedBoundOverlap::Equal => Some(Ordering::Equal),
+                        DisambiguatedBoundOverlap::After => Some(Ordering::Greater),
+                    }
+                },
+                Ordering::Greater => Some(Ordering::Greater),
+            },
+        }
     }
 }
 
@@ -442,9 +504,7 @@ pub fn swap_absolute_bounds(start: &mut AbsoluteStartBound, end: &mut AbsoluteEn
 }
 
 /// Enum for absolute start and end bounds
-///
-/// TODO: Implement `PartialEq`, `Eq`, `PartialOrd`, and `Ord`
-#[derive(Debug, Clone, Copy, Hash)]
+#[derive(Debug, Clone, Copy)]
 pub enum AbsoluteBound {
     Start(AbsoluteStartBound),
     End(AbsoluteEndBound),
@@ -478,6 +538,59 @@ impl AbsoluteBound {
         match self {
             Self::Start(_) => None,
             Self::End(end) => Some(end),
+        }
+    }
+
+    /// Returns the opposite bound type with the opposite inclusivity
+    ///
+    /// Returns [`None`] if the bound is infinite.
+    #[must_use]
+    pub fn opposite(&self) -> Option<Self> {
+        match self {
+            Self::Start(start) => start.opposite().map(Self::End),
+            Self::End(end) => end.opposite().map(Self::Start),
+        }
+    }
+}
+
+impl PartialEq for AbsoluteBound {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (AbsoluteBound::Start(og_start), AbsoluteBound::Start(other_start)) => og_start.eq(other_start),
+            (AbsoluteBound::End(og_end), AbsoluteBound::End(other_end)) => og_end.eq(other_end),
+            (AbsoluteBound::Start(start), AbsoluteBound::End(end))
+            | (AbsoluteBound::End(end), AbsoluteBound::Start(start)) => start.eq(end),
+        }
+    }
+}
+
+impl Eq for AbsoluteBound {}
+
+impl PartialOrd for AbsoluteBound {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for AbsoluteBound {
+    fn cmp(&self, other: &Self) -> Ordering {
+        match (self, other) {
+            (AbsoluteBound::Start(og_start), AbsoluteBound::Start(other_start)) => og_start.cmp(other_start),
+            (AbsoluteBound::End(og_end), AbsoluteBound::End(other_end)) => og_end.cmp(other_end),
+            (AbsoluteBound::Start(og_start), AbsoluteBound::End(other_end)) => og_start.partial_cmp(other_end).unwrap(),
+            (AbsoluteBound::End(og_end), AbsoluteBound::Start(other_start)) => og_end.partial_cmp(other_start).unwrap(),
+        }
+    }
+}
+
+impl Hash for AbsoluteBound {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        match self {
+            Self::Start(AbsoluteStartBound::InfinitePast) => AbsoluteStartBound::InfinitePast.hash(state),
+            Self::Start(AbsoluteStartBound::Finite(finite)) | Self::End(AbsoluteEndBound::Finite(finite)) => {
+                finite.hash(state)
+            },
+            Self::End(AbsoluteEndBound::InfiniteFuture) => AbsoluteEndBound::InfiniteFuture.hash(state),
         }
     }
 }
