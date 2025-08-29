@@ -1,6 +1,6 @@
 pub use crate::intervals::absolute::{
-    AbsoluteBounds, AbsoluteInterval, BoundedAbsoluteInterval, EmptiableAbsoluteBounds, HalfBoundedAbsoluteInterval,
-    HasAbsoluteBounds, HasEmptiableAbsoluteBounds,
+    AbsoluteBounds, AbsoluteBound, AbsoluteInterval, BoundedAbsoluteInterval, EmptiableAbsoluteBounds,
+    HalfBoundedAbsoluteInterval, HasAbsoluteBounds, HasEmptiableAbsoluteBounds,
 };
 pub use crate::intervals::meta::{Emptiable, HasBoundInclusivity, HasDuration, HasOpenness, HasRelativity};
 pub use crate::intervals::ops::abridge::Abridgable;
@@ -25,5 +25,6 @@ pub use crate::intervals::ops::time_containment::{
 };
 pub use crate::intervals::relative::{
     BoundedRelativeInterval, EmptiableRelativeBounds, HalfBoundedRelativeInterval, HasEmptiableRelativeBounds,
-    HasRelativeBounds, RelativeBounds, RelativeInterval,
+    HasRelativeBounds, RelativeBounds, RelativeBound, RelativeInterval,
 };
+pub use super::intervals::special::{EmptyInterval, UnboundedInterval};

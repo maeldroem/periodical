@@ -1,6 +1,6 @@
 pub use super::absolute::{
-    AbsoluteBounds, AbsoluteInterval, BoundedAbsoluteInterval, EmptiableAbsoluteBounds, HalfBoundedAbsoluteInterval,
-    HasAbsoluteBounds, HasEmptiableAbsoluteBounds,
+    AbsoluteBound, AbsoluteBounds, AbsoluteInterval, BoundedAbsoluteInterval, EmptiableAbsoluteBounds,
+    HalfBoundedAbsoluteInterval, HasAbsoluteBounds, HasEmptiableAbsoluteBounds,
 };
 pub use super::meta::{Emptiable, HasBoundInclusivity, HasDuration, HasOpenness, HasRelativity};
 pub use super::ops::abridge::Abridgable;
@@ -33,5 +33,6 @@ pub use super::ops::time_containment::{
 };
 pub use super::relative::{
     BoundedRelativeInterval, EmptiableRelativeBounds, HalfBoundedRelativeInterval, HasEmptiableRelativeBounds,
-    HasRelativeBounds, RelativeInterval,
+    HasRelativeBounds, RelativeBounds, RelativeBound, RelativeInterval,
 };
+pub use super::special::{EmptyInterval, UnboundedInterval};
