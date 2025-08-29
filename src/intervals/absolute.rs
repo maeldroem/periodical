@@ -586,12 +586,28 @@ impl Ord for AbsoluteBound {
 impl Hash for AbsoluteBound {
     fn hash<H: Hasher>(&self, state: &mut H) {
         match self {
-            Self::Start(AbsoluteStartBound::InfinitePast) => AbsoluteStartBound::InfinitePast.hash(state),
-            Self::Start(AbsoluteStartBound::Finite(finite)) | Self::End(AbsoluteEndBound::Finite(finite)) => {
-                finite.hash(state)
+            Self::Start(AbsoluteStartBound::InfinitePast) => {
+                AbsoluteStartBound::InfinitePast.hash(state);
             },
-            Self::End(AbsoluteEndBound::InfiniteFuture) => AbsoluteEndBound::InfiniteFuture.hash(state),
+            Self::Start(AbsoluteStartBound::Finite(finite)) | Self::End(AbsoluteEndBound::Finite(finite)) => {
+                finite.hash(state);
+            },
+            Self::End(AbsoluteEndBound::InfiniteFuture) => {
+                AbsoluteEndBound::InfiniteFuture.hash(state);
+            },
         }
+    }
+}
+
+impl From<AbsoluteStartBound> for AbsoluteBound {
+    fn from(value: AbsoluteStartBound) -> Self {
+        AbsoluteBound::Start(value)
+    }
+}
+
+impl From<AbsoluteEndBound> for AbsoluteBound {
+    fn from(value: AbsoluteEndBound) -> Self {
+        AbsoluteBound::End(value)
     }
 }
 

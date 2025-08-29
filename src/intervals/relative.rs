@@ -599,12 +599,28 @@ impl Ord for RelativeBound {
 impl Hash for RelativeBound {
     fn hash<H: Hasher>(&self, state: &mut H) {
         match self {
-            Self::Start(RelativeStartBound::InfinitePast) => RelativeStartBound::InfinitePast.hash(state),
-            Self::Start(RelativeStartBound::Finite(finite)) | Self::End(RelativeEndBound::Finite(finite)) => {
-                finite.hash(state)
+            Self::Start(RelativeStartBound::InfinitePast) => {
+                RelativeStartBound::InfinitePast.hash(state);
             },
-            Self::End(RelativeEndBound::InfiniteFuture) => RelativeEndBound::InfiniteFuture.hash(state),
+            Self::Start(RelativeStartBound::Finite(finite)) | Self::End(RelativeEndBound::Finite(finite)) => {
+                finite.hash(state);
+            },
+            Self::End(RelativeEndBound::InfiniteFuture) => {
+                RelativeEndBound::InfiniteFuture.hash(state);
+            },
         }
+    }
+}
+
+impl From<RelativeStartBound> for RelativeBound {
+    fn from(value: RelativeStartBound) -> Self {
+        RelativeBound::Start(value)
+    }
+}
+
+impl From<RelativeEndBound> for RelativeBound {
+    fn from(value: RelativeEndBound) -> Self {
+        RelativeBound::End(value)
     }
 }
 
