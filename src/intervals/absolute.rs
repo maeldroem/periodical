@@ -267,9 +267,9 @@ impl PartialOrd<AbsoluteEndBound> for AbsoluteStartBound {
                             .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Strict);
 
                     match disambiguated_bound_overlap {
-                        DisambiguatedBoundOverlap::Before => Some(Ordering::Less),
+                        DisambiguatedBoundOverlap::Before => Some(Ordering::Greater),
                         DisambiguatedBoundOverlap::Equal => Some(Ordering::Equal),
-                        DisambiguatedBoundOverlap::After => Some(Ordering::Greater),
+                        DisambiguatedBoundOverlap::After => Some(Ordering::Less),
                     }
                 },
                 Ordering::Greater => Some(Ordering::Greater),
@@ -430,9 +430,9 @@ impl PartialOrd<AbsoluteStartBound> for AbsoluteEndBound {
                             .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Strict);
 
                     match disambiguated_bound_overlap {
-                        DisambiguatedBoundOverlap::Before => Some(Ordering::Less),
+                        DisambiguatedBoundOverlap::Before => Some(Ordering::Greater),
                         DisambiguatedBoundOverlap::Equal => Some(Ordering::Equal),
-                        DisambiguatedBoundOverlap::After => Some(Ordering::Greater),
+                        DisambiguatedBoundOverlap::After => Some(Ordering::Less),
                     }
                 },
                 Ordering::Greater => Some(Ordering::Greater),

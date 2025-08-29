@@ -436,7 +436,7 @@ fn absolute_start_bound_absolute_end_bound_same_times_exclusive_bounds_partial_c
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
         ))),
-        None,
+        Some(Ordering::Greater),
     );
 }
 
@@ -451,7 +451,7 @@ fn absolute_start_bound_absolute_end_bound_same_times_exclusive_inclusive_bounds
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
         ))),
-        None,
+        Some(Ordering::Greater),
     );
 }
 
@@ -466,7 +466,7 @@ fn absolute_start_bound_absolute_end_bound_same_times_inclusive_exclusive_bounds
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
         ))),
-        None,
+        Some(Ordering::Greater),
     );
 }
 
@@ -818,7 +818,7 @@ fn absolute_end_bound_absolute_start_bound_same_times_exclusive_bounds_partial_c
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
         ))),
-        None,
+        Some(Ordering::Less),
     );
 }
 
@@ -833,7 +833,7 @@ fn absolute_end_bound_absolute_start_bound_same_times_exclusive_inclusive_bounds
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Inclusive,
         ))),
-        None,
+        Some(Ordering::Less),
     );
 }
 
@@ -848,7 +848,7 @@ fn absolute_end_bound_absolute_start_bound_same_times_inclusive_exclusive_bounds
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
         ))),
-        None,
+        Some(Ordering::Less),
     );
 }
 

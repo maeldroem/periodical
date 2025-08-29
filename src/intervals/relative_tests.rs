@@ -425,7 +425,7 @@ fn relative_start_bound_relative_end_bound_same_times_exclusive_bounds_partial_c
             Duration::hours(1),
             BoundInclusivity::Exclusive,
         ))),
-        None,
+        Some(Ordering::Greater),
     );
 }
 
@@ -440,7 +440,7 @@ fn relative_start_bound_relative_end_bound_same_times_exclusive_inclusive_bounds
             Duration::hours(1),
             BoundInclusivity::Inclusive,
         ))),
-        None,
+        Some(Ordering::Greater),
     );
 }
 
@@ -455,7 +455,7 @@ fn relative_start_bound_relative_end_bound_same_times_inclusive_exclusive_bounds
             Duration::hours(1),
             BoundInclusivity::Exclusive,
         ))),
-        None,
+        Some(Ordering::Greater),
     );
 }
 
@@ -801,7 +801,7 @@ fn relative_end_bound_relative_start_bound_same_times_exclusive_bounds_partial_c
             Duration::hours(1),
             BoundInclusivity::Exclusive,
         ))),
-        None,
+        Some(Ordering::Less),
     );
 }
 
@@ -816,7 +816,7 @@ fn relative_end_bound_relative_start_bound_same_times_exclusive_inclusive_bounds
             Duration::hours(1),
             BoundInclusivity::Inclusive,
         ))),
-        None,
+        Some(Ordering::Less),
     );
 }
 
@@ -831,7 +831,7 @@ fn relative_end_bound_relative_start_bound_same_times_inclusive_exclusive_bounds
             Duration::hours(1),
             BoundInclusivity::Exclusive,
         ))),
-        None,
+        Some(Ordering::Less),
     );
 }
 
