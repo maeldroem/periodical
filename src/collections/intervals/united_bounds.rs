@@ -7,9 +7,11 @@ use std::iter::{FusedIterator, Peekable};
 
 use crate::collections::intervals::bounds::{AbsoluteBoundsIter, RelativeBoundsIter};
 use crate::intervals::absolute::{AbsoluteBound, AbsoluteEndBound, AbsoluteStartBound};
-use crate::intervals::prelude::{BoundOverlapAmbiguity, BoundOverlapDisambiguationRuleSet, DisambiguatedBoundOverlap};
+use crate::intervals::meta::HasBoundInclusivity;
+use crate::intervals::ops::bound_overlap_ambiguity::{
+    BoundOverlapAmbiguity, BoundOverlapDisambiguationRuleSet, DisambiguatedBoundOverlap,
+};
 use crate::intervals::relative::{RelativeBound, RelativeEndBound, RelativeStartBound};
-use crate::prelude::HasBoundInclusivity;
 
 /// Iterator uniting the bounds of [`AbsoluteBoundsIter`]
 pub struct AbsoluteUnitedBoundsIter {
