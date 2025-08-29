@@ -10,11 +10,12 @@ use super::time_containment::CanPositionTimeContainment;
 use crate::intervals::absolute::{
     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteInterval, AbsoluteStartBound,
     EmptiableAbsoluteBounds, HalfBoundedAbsoluteInterval, HasEmptiableAbsoluteBounds,
+    check_absolute_bounds_for_interval_creation,
 };
 use crate::intervals::meta::BoundInclusivity;
 use crate::intervals::relative::{
     EmptiableRelativeBounds, HalfBoundedRelativeInterval, RelativeBounds, RelativeEndBound, RelativeFiniteBound,
-    RelativeStartBound,
+    RelativeStartBound, check_relative_bounds_for_interval_creation,
 };
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 use crate::intervals::{BoundedAbsoluteInterval, BoundedRelativeInterval, RelativeInterval};
@@ -288,8 +289,9 @@ pub fn cut_abs_bounds(bounds: &AbsoluteBounds, at: DateTime<Utc>, cut_type: CutT
         cut_type.future_bound_inclusivity(),
     ));
 
-    // If those comparisons return None, it signifies that we can't create a cut in the given bounds
-    if bounds.start().partial_cmp(&past_cut_end).is_none() || bounds.end().partial_cmp(&future_cut_start).is_none() {
+    if check_absolute_bounds_for_interval_creation(bounds.start(), &past_cut_end).is_err()
+        || check_absolute_bounds_for_interval_creation(&future_cut_start, bounds.end()).is_err()
+    {
         return CutResult::Uncut;
     }
 
@@ -341,8 +343,9 @@ pub fn cut_rel_bounds(bounds: &RelativeBounds, at: Duration, cut_type: CutType) 
         cut_type.future_bound_inclusivity(),
     ));
 
-    // If those comparisons return None, it signifies that we can't create a cut in the given bounds
-    if bounds.start().partial_cmp(&past_cut_end).is_none() || bounds.end().partial_cmp(&future_cut_start).is_none() {
+    if check_relative_bounds_for_interval_creation(bounds.start(), &past_cut_end).is_err()
+        || check_relative_bounds_for_interval_creation(&future_cut_start, bounds.end()).is_err()
+    {
         return CutResult::Uncut;
     }
 
