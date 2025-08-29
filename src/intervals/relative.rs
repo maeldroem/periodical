@@ -516,6 +516,87 @@ pub fn swap_relative_bounds(start: &mut RelativeStartBound, end: &mut RelativeEn
     }
 }
 
+/// Possible problems that can prevent creating an interval from the given start and end bounds
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum RelativeBoundsCheckForIntervalCreationError {
+    /// Start bound is past the end bound
+    StartPastEnd,
+    /// Both bounds are on the same offset but don't have only inclusive bound inclusivities
+    SameOffsetButNotDoublyInclusive,
+}
+
+impl Display for RelativeBoundsCheckForIntervalCreationError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::StartPastEnd => write!(f, "Start bound is past the end bound"),
+            Self::SameOffsetButNotDoublyInclusive => write!(
+                f,
+                "Both bounds are on the same offset but don't have only inclusive bound inclusivities"
+            ),
+        }
+    }
+}
+
+impl Error for RelativeBoundsCheckForIntervalCreationError {}
+
+/// Checks if the given start and end bound are ready for creating an interval
+///
+/// # Errors
+///
+/// If the start bound is past the end bound,
+/// it returns [`StartPastEnd`](RelativeBoundsCheckForIntervalCreationError::StartPastEnd).
+///
+/// If both bounds are at the same time, but one of them has an exclusive bound inclusivity, it returns
+/// [`SameOffsetButNotDoublyInclusive`](RelativeBoundsCheckForIntervalCreationError::SameOffsetButNotDoublyInclusive).
+pub fn check_relative_bounds_for_interval_creation(
+    start: &RelativeStartBound,
+    end: &RelativeEndBound,
+) -> Result<(), RelativeBoundsCheckForIntervalCreationError> {
+    match (start, end) {
+        (RelativeStartBound::InfinitePast, _) | (_, RelativeEndBound::InfiniteFuture) => Ok(()),
+        (RelativeStartBound::Finite(finite_start), RelativeEndBound::Finite(finite_end)) => {
+            match finite_start.offset().cmp(&finite_end.offset()) {
+                Ordering::Less => Ok(()),
+                Ordering::Equal => {
+                    if finite_start.inclusivity() == BoundInclusivity::Inclusive
+                        && finite_end.inclusivity() == BoundInclusivity::Inclusive
+                    {
+                        Ok(())
+                    } else {
+                        Err(RelativeBoundsCheckForIntervalCreationError::SameOffsetButNotDoublyInclusive)
+                    }
+                },
+                Ordering::Greater => Err(RelativeBoundsCheckForIntervalCreationError::StartPastEnd),
+            }
+        },
+    }
+}
+
+/// Prepares a start and end bound for being used for creating an interval
+///
+/// If some problems are present, see [`check_relative_bounds_for_interval_creation`], it resolves them automatically
+/// by modifying the passed mutable references for the start and end bound.
+pub fn prepare_relative_bounds_for_interval_creation(
+    start_mut: &mut RelativeStartBound,
+    end_mut: &mut RelativeEndBound,
+) {
+    match check_relative_bounds_for_interval_creation(start_mut, end_mut) {
+        Ok(()) => {},
+        Err(RelativeBoundsCheckForIntervalCreationError::StartPastEnd) => {
+            swap_relative_bounds(start_mut, end_mut);
+        },
+        Err(RelativeBoundsCheckForIntervalCreationError::SameOffsetButNotDoublyInclusive) => {
+            if let RelativeStartBound::Finite(finite_start_mut) = start_mut {
+                finite_start_mut.set_inclusivity(BoundInclusivity::Inclusive);
+            }
+
+            if let RelativeEndBound::Finite(finite_end_mut) = end_mut {
+                finite_end_mut.set_inclusivity(BoundInclusivity::Inclusive);
+            }
+        },
+    }
+}
+
 /// Enum for relative start and end bounds
 #[derive(Debug, Clone, Copy)]
 pub enum RelativeBound {
@@ -689,40 +770,11 @@ impl RelativeBounds {
 
     /// Creates a new instance of relative bounds
     ///
-    /// If the given bounds are not in chronological order, they are swapped.
-    /// If their [partial comparison](PartialOrd) resulted in [`None`], meaning they had the same offsets
-    /// but inclusivities other than inclusive for both,
-    /// we set their inclusivities to [`Inclusive`](BoundInclusivity::Inclusive).
+    /// Uses [`prepare_relative_bounds_for_interval_creation`] under the hood for making the bounds safe to use.
     #[must_use]
     pub fn new(mut start: RelativeStartBound, mut end: RelativeEndBound) -> Self {
-        match start.partial_cmp(&end) {
-            None => {
-                if let RelativeStartBound::Finite(ref mut finite_start) = start {
-                    finite_start.set_inclusivity(BoundInclusivity::default());
-                }
-
-                if let RelativeEndBound::Finite(ref mut finite_end) = end {
-                    finite_end.set_inclusivity(BoundInclusivity::default());
-                }
-
-                match start.partial_cmp(&end) {
-                    Some(Ordering::Equal | Ordering::Less) => Self::unchecked_new(start, end),
-                    Some(Ordering::Greater) => {
-                        swap_relative_bounds(&mut start, &mut end);
-                        Self::unchecked_new(start, end)
-                    },
-                    None => unimplemented!(
-                        "Something went wrong when instantiating `RelativeBounds` with bounds that partially compared to `None`"
-                    ),
-                }
-            },
-            Some(Ordering::Equal | Ordering::Less) => Self::unchecked_new(start, end),
-            Some(Ordering::Greater) => {
-                // If the start time is after the end time, swap the two to preserve order
-                swap_relative_bounds(&mut start, &mut end);
-                Self::unchecked_new(start, end)
-            },
-        }
+        prepare_relative_bounds_for_interval_creation(&mut start, &mut end);
+        Self::unchecked_new(start, end)
     }
 
     /// Returns the relative start bound

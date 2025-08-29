@@ -2252,3 +2252,193 @@ fn relative_interval_from_bound_pair() {
         )),
     );
 }
+
+#[test]
+fn check_relative_bounds_for_interval_creation_inf_past_inf_future() {
+    assert_eq!(
+        check_relative_bounds_for_interval_creation(
+            &RelativeStartBound::InfinitePast,
+            &RelativeEndBound::InfiniteFuture,
+        ),
+        Ok(()),
+    );
+}
+
+#[test]
+fn check_relative_bounds_for_interval_creation_inf_past_finite() {
+    assert_eq!(
+        check_relative_bounds_for_interval_creation(
+            &RelativeStartBound::InfinitePast,
+            &RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(1))),
+        ),
+        Ok(()),
+    );
+}
+
+#[test]
+fn check_relative_bounds_for_interval_creation_finite_inf_future() {
+    assert_eq!(
+        check_relative_bounds_for_interval_creation(
+            &RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(1))),
+            &RelativeEndBound::InfiniteFuture,
+        ),
+        Ok(()),
+    );
+}
+
+#[test]
+fn check_relative_bounds_for_interval_creation_finite_finite_different_offsets_correct_order() {
+    assert_eq!(
+        check_relative_bounds_for_interval_creation(
+            &RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(1))),
+            &RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(2))),
+        ),
+        Ok(()),
+    );
+}
+
+#[test]
+fn check_relative_bounds_for_interval_creation_finite_finite_different_offsets_wrong_order() {
+    assert_eq!(
+        check_relative_bounds_for_interval_creation(
+            &RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(2))),
+            &RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(1))),
+        ),
+        Err(RelativeBoundsCheckForIntervalCreationError::StartPastEnd),
+    );
+}
+
+#[test]
+fn check_relative_bounds_for_interval_creation_finite_finite_same_offset_inclusive_inclusive() {
+    assert_eq!(
+        check_relative_bounds_for_interval_creation(
+            &RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(1))),
+            &RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(1))),
+        ),
+        Ok(()),
+    );
+}
+
+#[test]
+fn check_relative_bounds_for_interval_creation_finite_finite_same_offset_inclusive_exclusive() {
+    assert_eq!(
+        check_relative_bounds_for_interval_creation(
+            &RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(1))),
+            &RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+                Duration::hours(1),
+                BoundInclusivity::Exclusive,
+            )),
+        ),
+        Err(RelativeBoundsCheckForIntervalCreationError::SameOffsetButNotDoublyInclusive),
+    );
+}
+
+#[test]
+fn prepare_relative_bounds_for_interval_creation_inf_past_inf_future() {
+    let mut start = RelativeStartBound::InfinitePast;
+    let mut end = RelativeEndBound::InfiniteFuture;
+
+    prepare_relative_bounds_for_interval_creation(&mut start, &mut end);
+
+    assert_eq!(start, RelativeStartBound::InfinitePast);
+    assert_eq!(end, RelativeEndBound::InfiniteFuture);
+}
+
+#[test]
+fn prepare_relative_bounds_for_interval_creation_inf_past_finite() {
+    let mut start = RelativeStartBound::InfinitePast;
+    let mut end = RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(1)));
+
+    prepare_relative_bounds_for_interval_creation(&mut start, &mut end);
+
+    assert_eq!(start, RelativeStartBound::InfinitePast);
+    assert_eq!(
+        end,
+        RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(1)))
+    );
+}
+
+#[test]
+fn prepare_relative_bounds_for_interval_creation_finite_inf_future() {
+    let mut start = RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(1)));
+    let mut end = RelativeEndBound::InfiniteFuture;
+
+    prepare_relative_bounds_for_interval_creation(&mut start, &mut end);
+
+    assert_eq!(
+        start,
+        RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(1)))
+    );
+    assert_eq!(end, RelativeEndBound::InfiniteFuture);
+}
+
+#[test]
+fn prepare_relative_bounds_for_interval_creation_finite_finite_different_offsets_correct_order() {
+    let mut start = RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(1)));
+    let mut end = RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(2)));
+
+    prepare_relative_bounds_for_interval_creation(&mut start, &mut end);
+
+    assert_eq!(
+        start,
+        RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(1)))
+    );
+    assert_eq!(
+        end,
+        RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(2)))
+    );
+}
+
+#[test]
+fn prepare_relative_bounds_for_interval_creation_finite_finite_different_offsets_wrong_order() {
+    let mut start = RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(2)));
+    let mut end = RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(1)));
+
+    prepare_relative_bounds_for_interval_creation(&mut start, &mut end);
+
+    assert_eq!(
+        start,
+        RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(1)))
+    );
+    assert_eq!(
+        end,
+        RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(2)))
+    );
+}
+
+#[test]
+fn prepare_relative_bounds_for_interval_creation_finite_finite_same_offset_inclusive_inclusive() {
+    let mut start = RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(1)));
+    let mut end = RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(1)));
+
+    prepare_relative_bounds_for_interval_creation(&mut start, &mut end);
+
+    assert_eq!(
+        start,
+        RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(1)))
+    );
+    assert_eq!(
+        end,
+        RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(1)))
+    );
+}
+
+#[test]
+fn prepare_relative_bounds_for_interval_creation_finite_finite_same_offset_inclusive_exclusive() {
+    let mut start = RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(1)));
+    let mut end = RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+        Duration::hours(1),
+        BoundInclusivity::Exclusive,
+    ));
+
+    prepare_relative_bounds_for_interval_creation(&mut start, &mut end);
+
+    assert_eq!(
+        start,
+        RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(1)))
+    );
+    assert_eq!(
+        end,
+        RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(1)))
+    );
+}

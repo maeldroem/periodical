@@ -503,6 +503,87 @@ pub fn swap_absolute_bounds(start: &mut AbsoluteStartBound, end: &mut AbsoluteEn
     }
 }
 
+/// Possible problems that can prevent creating an interval from the given start and end bounds
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum AbsoluteBoundsCheckForIntervalCreationError {
+    /// Start bound is past the end bound
+    StartPastEnd,
+    /// Both bounds are on the same time but don't have only inclusive bound inclusivities
+    SameTimeButNotDoublyInclusive,
+}
+
+impl Display for AbsoluteBoundsCheckForIntervalCreationError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::StartPastEnd => write!(f, "Start bound is past the end bound"),
+            Self::SameTimeButNotDoublyInclusive => write!(
+                f,
+                "Both bounds are on the same time but don't have only inclusive bound inclusivities"
+            ),
+        }
+    }
+}
+
+impl Error for AbsoluteBoundsCheckForIntervalCreationError {}
+
+/// Checks if the given start and end bound are ready for creating an interval
+///
+/// # Errors
+///
+/// If the start bound is past the end bound,
+/// it returns [`StartPastEnd`](AbsoluteBoundsCheckForIntervalCreationError::StartPastEnd).
+///
+/// If both bounds are at the same time, but one of them has an exclusive bound inclusivity, it returns
+/// [`SameTimeButNotDoublyInclusive`](AbsoluteBoundsCheckForIntervalCreationError::SameTimeButNotDoublyInclusive).
+pub fn check_absolute_bounds_for_interval_creation(
+    start: &AbsoluteStartBound,
+    end: &AbsoluteEndBound,
+) -> Result<(), AbsoluteBoundsCheckForIntervalCreationError> {
+    match (start, end) {
+        (AbsoluteStartBound::InfinitePast, _) | (_, AbsoluteEndBound::InfiniteFuture) => Ok(()),
+        (AbsoluteStartBound::Finite(finite_start), AbsoluteEndBound::Finite(finite_end)) => {
+            match finite_start.time().cmp(&finite_end.time()) {
+                Ordering::Less => Ok(()),
+                Ordering::Equal => {
+                    if finite_start.inclusivity() == BoundInclusivity::Inclusive
+                        && finite_end.inclusivity() == BoundInclusivity::Inclusive
+                    {
+                        Ok(())
+                    } else {
+                        Err(AbsoluteBoundsCheckForIntervalCreationError::SameTimeButNotDoublyInclusive)
+                    }
+                },
+                Ordering::Greater => Err(AbsoluteBoundsCheckForIntervalCreationError::StartPastEnd),
+            }
+        },
+    }
+}
+
+/// Prepares a start and end bound for being used for creating an interval
+///
+/// If some problems are present, see [`check_absolute_bounds_for_interval_creation`], it resolves them automatically
+/// by modifying the passed mutable references for the start and end bound.
+pub fn prepare_absolute_bounds_for_interval_creation(
+    start_mut: &mut AbsoluteStartBound,
+    end_mut: &mut AbsoluteEndBound,
+) {
+    match check_absolute_bounds_for_interval_creation(start_mut, end_mut) {
+        Ok(()) => {},
+        Err(AbsoluteBoundsCheckForIntervalCreationError::StartPastEnd) => {
+            swap_absolute_bounds(start_mut, end_mut);
+        },
+        Err(AbsoluteBoundsCheckForIntervalCreationError::SameTimeButNotDoublyInclusive) => {
+            if let AbsoluteStartBound::Finite(finite_start_mut) = start_mut {
+                finite_start_mut.set_inclusivity(BoundInclusivity::Inclusive);
+            }
+
+            if let AbsoluteEndBound::Finite(finite_end_mut) = end_mut {
+                finite_end_mut.set_inclusivity(BoundInclusivity::Inclusive);
+            }
+        },
+    }
+}
+
 /// Enum for absolute start and end bounds
 #[derive(Debug, Clone, Copy)]
 pub enum AbsoluteBound {
@@ -676,39 +757,11 @@ impl AbsoluteBounds {
 
     /// Creates a new instance of absolute bounds
     ///
-    /// If the given bounds are not in chronological order, they are swapped.
-    /// If their [partial comparison](PartialOrd) resulted in [`None`], meaning they had the same time but inclusivities
-    /// other than inclusive for both, we set their inclusivities to [`Inclusive`](BoundInclusivity::Inclusive).
+    /// Uses [`prepare_absolute_bounds_for_interval_creation`] under the hood for making the bounds safe to use.
     #[must_use]
     pub fn new(mut start: AbsoluteStartBound, mut end: AbsoluteEndBound) -> Self {
-        match start.partial_cmp(&end) {
-            None => {
-                if let AbsoluteStartBound::Finite(ref mut finite_start) = start {
-                    finite_start.set_inclusivity(BoundInclusivity::default());
-                }
-
-                if let AbsoluteEndBound::Finite(ref mut finite_end) = end {
-                    finite_end.set_inclusivity(BoundInclusivity::default());
-                }
-
-                match start.partial_cmp(&end) {
-                    Some(Ordering::Equal | Ordering::Less) => Self::unchecked_new(start, end),
-                    Some(Ordering::Greater) => {
-                        swap_absolute_bounds(&mut start, &mut end);
-                        Self::unchecked_new(start, end)
-                    },
-                    None => unimplemented!(
-                        "Something went wrong when instantiating `AbsoluteBounds` with bounds that partially compared to `None`"
-                    ),
-                }
-            },
-            Some(Ordering::Equal | Ordering::Less) => Self::unchecked_new(start, end),
-            Some(Ordering::Greater) => {
-                // If the start time is after the end time, swap the two to preserve order
-                swap_absolute_bounds(&mut start, &mut end);
-                Self::unchecked_new(start, end)
-            },
-        }
+        prepare_absolute_bounds_for_interval_creation(&mut start, &mut end);
+        Self::unchecked_new(start, end)
     }
 
     /// Returns the absolute start bound

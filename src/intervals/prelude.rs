@@ -33,6 +33,6 @@ pub use super::ops::time_containment::{
 };
 pub use super::relative::{
     BoundedRelativeInterval, EmptiableRelativeBounds, HalfBoundedRelativeInterval, HasEmptiableRelativeBounds,
-    HasRelativeBounds, RelativeBounds, RelativeBound, RelativeInterval,
+    HasRelativeBounds, RelativeBound, RelativeBounds, RelativeInterval,
 };
 pub use super::special::{EmptyInterval, UnboundedInterval};
