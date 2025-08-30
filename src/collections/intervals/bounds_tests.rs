@@ -3,8 +3,9 @@ use chrono::{Duration, Utc};
 use crate::intervals::absolute::{
     AbsoluteBound, AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
 };
-use crate::intervals::relative::{RelativeEndBound, RelativeFiniteBound, RelativeStartBound};
-use crate::prelude::{RelativeBound, RelativeBounds};
+use crate::intervals::relative::{
+    RelativeBound, RelativeBounds, RelativeEndBound, RelativeFiniteBound, RelativeStartBound,
+};
 use crate::test_utils::date;
 
 use super::bounds::*;
