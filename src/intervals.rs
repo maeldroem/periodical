@@ -63,6 +63,8 @@ pub mod special;
 #[cfg(test)]
 mod absolute_tests;
 #[cfg(test)]
+mod bound_position_tests;
+#[cfg(test)]
 mod meta_tests;
 #[cfg(test)]
 mod relative_tests;

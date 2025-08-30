@@ -11,6 +11,12 @@ pub enum BoundPosition {
 }
 
 impl BoundPosition {
+    /// Minimum bound position
+    pub const MIN: Self = BoundPosition::Start(usize::MIN);
+
+    /// Maximum bound position
+    pub const MAX: Self = BoundPosition::End(usize::MAX);
+
     /// Returns the index of the bound position
     #[must_use]
     pub fn index(&self) -> usize {
@@ -68,7 +74,7 @@ impl BoundPosition {
                     *i = new_i;
                     false
                 } else {
-                    *i = usize::MAX;
+                    *self = Self::MAX;
                     true
                 }
             },
@@ -86,7 +92,7 @@ impl BoundPosition {
                     *i = new_i;
                     false
                 } else {
-                    *i = usize::MIN;
+                    *self = Self::MIN;
                     true
                 }
             },
@@ -118,7 +124,7 @@ impl BoundPosition {
                         *self = Self::Start(new_i);
                         false
                     } else {
-                        *self = Self::Start(usize::MAX);
+                        *self = Self::MAX;
                         true
                     }
                 },
@@ -127,7 +133,7 @@ impl BoundPosition {
                         *self = Self::End(new_i);
                         false
                     } else {
-                        *self = Self::End(usize::MAX);
+                        *self = Self::MAX;
                         true
                     }
                 },
@@ -139,7 +145,7 @@ impl BoundPosition {
                         *self = Self::End(new_i);
                         false
                     } else {
-                        *self = Self::End(usize::MAX);
+                        *self = Self::MAX;
                         true
                     }
                 },
@@ -148,7 +154,7 @@ impl BoundPosition {
                         *self = Self::Start(new_i);
                         false
                     } else {
-                        *self = Self::Start(usize::MAX);
+                        *self = Self::MAX;
                         true
                     }
                 },
@@ -167,7 +173,7 @@ impl BoundPosition {
                         *self = Self::Start(new_i);
                         false
                     } else {
-                        *self = Self::Start(usize::MIN);
+                        *self = Self::MIN;
                         true
                     }
                 },
@@ -176,7 +182,7 @@ impl BoundPosition {
                         *self = Self::End(new_i);
                         false
                     } else {
-                        *self = Self::End(usize::MIN);
+                        *self = Self::MIN;
                         true
                     }
                 },
@@ -188,7 +194,7 @@ impl BoundPosition {
                         *self = Self::End(new_i);
                         false
                     } else {
-                        *self = Self::End(usize::MIN);
+                        *self = Self::MIN;
                         true
                     }
                 },
@@ -197,7 +203,7 @@ impl BoundPosition {
                         *self = Self::Start(new_i);
                         false
                     } else {
-                        *self = Self::Start(usize::MIN);
+                        *self = Self::MIN;
                         true
                     }
                 },
@@ -222,6 +228,6 @@ impl BoundPosition {
 
 impl Default for BoundPosition {
     fn default() -> Self {
-        BoundPosition::Start(0)
+        BoundPosition::MIN
     }
 }
