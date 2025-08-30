@@ -12,6 +12,7 @@ use crate::intervals::relative::{RelativeBound, RelativeBounds};
 pub struct AbsoluteBoundsIter {
     bounds: Vec<AbsoluteBounds>,
     position: BoundPosition,
+    initd: bool, // whether the iterator was just initialized
     exhausted: bool,
 }
 
@@ -24,6 +25,7 @@ impl AbsoluteBoundsIter {
         AbsoluteBoundsIter {
             bounds: iter.collect::<Vec<_>>(),
             position: BoundPosition::default(),
+            initd: true,
             exhausted: false,
         }
     }
@@ -43,24 +45,13 @@ impl Iterator for AbsoluteBoundsIter {
             return None;
         }
 
-        if self.position.next_bound() {
+        if !self.initd && self.position.next_bound() {
             self.exhausted = true;
             return None;
         }
 
-        self.position.get_abs_bound(&self.bounds)
-    }
-}
-
-impl DoubleEndedIterator for AbsoluteBoundsIter {
-    fn next_back(&mut self) -> Option<Self::Item> {
-        if self.exhausted {
-            return None;
-        }
-
-        if self.position.next_back_bound() {
-            self.exhausted = true;
-            return None;
+        if self.initd {
+            self.initd = false;
         }
 
         self.position.get_abs_bound(&self.bounds)
@@ -83,6 +74,7 @@ impl<I> AbsoluteBoundsIterDispatcher for I where I: IntoIterator<Item = Absolute
 pub struct RelativeBoundsIter {
     bounds: Vec<RelativeBounds>,
     position: BoundPosition,
+    initd: bool, // whether the iterator was just initialized
     exhausted: bool,
 }
 
@@ -95,6 +87,7 @@ impl RelativeBoundsIter {
         RelativeBoundsIter {
             bounds: iter.collect::<Vec<_>>(),
             position: BoundPosition::default(),
+            initd: true,
             exhausted: false,
         }
     }
@@ -114,24 +107,13 @@ impl Iterator for RelativeBoundsIter {
             return None;
         }
 
-        if self.position.next_bound() {
+        if !self.initd && self.position.next_bound() {
             self.exhausted = true;
             return None;
         }
 
-        self.position.get_rel_bound(&self.bounds)
-    }
-}
-
-impl DoubleEndedIterator for RelativeBoundsIter {
-    fn next_back(&mut self) -> Option<Self::Item> {
-        if self.exhausted {
-            return None;
-        }
-
-        if self.position.next_back_bound() {
-            self.exhausted = true;
-            return None;
+        if self.initd {
+            self.initd = false;
         }
 
         self.position.get_rel_bound(&self.bounds)

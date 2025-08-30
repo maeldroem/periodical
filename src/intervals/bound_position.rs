@@ -57,10 +57,10 @@ impl BoundPosition {
         }
     }
 
-    /// Advances the bound position by increasing the bound index by the given count
+    /// Adds an amount to the bound position by increasing the bound index by the given count
     ///
     /// Returns whether the position has hit its maximum
-    pub fn advance_bounds_index_by(&mut self, count: usize) -> bool {
+    pub fn add_bounds_index(&mut self, count: usize) -> bool {
         // ACK: Yes, we are using saturating operations so that it doesn't panic if usize overflows
         match self {
             Self::Start(i) | Self::End(i) => {
@@ -75,10 +75,10 @@ impl BoundPosition {
         }
     }
 
-    /// Advances back the bound position by decreasing the bound index by the given count
+    /// Subtracts an amount to the bound position by increasing the bound index by the given count
     ///
     /// Returns whether the position has hit its minimum
-    pub fn advance_back_bounds_index_by(&mut self, count: usize) -> bool {
+    pub fn sub_bounds_index(&mut self, count: usize) -> bool {
         // ACK: Yes, we are using strict operations so that it doesn't panic if usize underflows
         match self {
             Self::Start(i) | Self::End(i) => {
@@ -96,15 +96,15 @@ impl BoundPosition {
     /// Increments the bound index
     ///
     /// Returns whether the position has hit its maximum
-    pub fn next_by_bounds_index(&mut self) -> bool {
-        self.advance_bounds_index_by(1)
+    pub fn increment_bounds_index(&mut self) -> bool {
+        self.add_bounds_index(1)
     }
 
     /// Decrements the bound index
     ///
     /// Returns whether the position has hits its minimum
-    pub fn next_back_by_bounds_index(&mut self) -> bool {
-        self.advance_back_bounds_index_by(1)
+    pub fn decrement_bounds_index(&mut self) -> bool {
+        self.sub_bounds_index(1)
     }
 
     /// Advances the bound position by the given count of bounds to advance by
@@ -144,7 +144,7 @@ impl BoundPosition {
                     }
                 },
                 Self::End(i) => {
-                    if let Some(new_i) = i.checked_add(count.saturating_div(2)) {
+                    if let Some(new_i) = i.checked_add(count.saturating_div(2).saturating_add(1)) {
                         *self = Self::Start(new_i);
                         false
                     } else {
@@ -184,7 +184,7 @@ impl BoundPosition {
         } else {
             match self {
                 Self::Start(i) => {
-                    if let Some(new_i) = i.checked_sub(count.saturating_div(2)) {
+                    if let Some(new_i) = i.checked_sub(count.saturating_div(2).saturating_add(1)) {
                         *self = Self::End(new_i);
                         false
                     } else {
@@ -215,7 +215,7 @@ impl BoundPosition {
     /// Decrements the bound position
     ///
     /// Returns whether the position has hit its minimum
-    pub fn next_back_bound(&mut self) -> bool {
+    pub fn prev_bound(&mut self) -> bool {
         self.advance_back_by(1)
     }
 }

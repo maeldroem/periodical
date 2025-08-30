@@ -11,6 +11,8 @@ pub mod united_bounds;
 pub mod united_set;
 
 #[cfg(test)]
+mod bounds_tests;
+#[cfg(test)]
 mod complement_tests;
 #[cfg(test)]
 mod precision_tests;
