@@ -4,10 +4,8 @@ use std::cmp::Ordering;
 use std::iter::{FusedIterator, Peekable};
 use std::ops::{Add, Sub};
 
-use crate::collections::intervals::bounds::{AbsoluteBoundsIter, RelativeBoundsIter};
-use crate::collections::intervals::united_bounds::{AbsoluteUnitedBoundsIter, RelativeUnitedBoundsIter};
-use crate::intervals::absolute::{AbsoluteBound, AbsoluteBounds, AbsoluteEndBound, AbsoluteStartBound};
-use crate::intervals::relative::{RelativeBound, RelativeBounds, RelativeEndBound, RelativeStartBound};
+use crate::intervals::absolute::{AbsoluteBound, AbsoluteEndBound, AbsoluteStartBound};
+use crate::intervals::relative::{RelativeBound, RelativeEndBound, RelativeStartBound};
 
 /// State of a layered bounds iterator, indicating which layer(s) are active
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Hash)]
@@ -153,29 +151,18 @@ impl LayeredBoundsStateChangeAtRelativeBound {
     }
 }
 
-/// Iterator running over the bounds of two [`AbsoluteUnitedBoundsIter`], tracking which layers are active,
-/// bound by bound
-pub struct LayeredAbsoluteBounds {
-    first_layer: Peekable<AbsoluteUnitedBoundsIter>,
-    second_layer: Peekable<AbsoluteUnitedBoundsIter>,
+/// Iterator tracking which layers of absolute bounds are active
+///
+/// This iterator runs over the bounds of two [`AbsoluteUnitedBoundsIter`], tracking which layers are active,
+/// bound by bound.
+pub struct LayeredAbsoluteBounds<I1, I2> {
+    first_layer: I1,
+    second_layer: I2,
     state: LayeredBoundsState,
     exhausted: bool,
 }
 
-impl LayeredAbsoluteBounds {
-    pub fn new<I1, I2>(first_layer_iter: I1, second_layer_iter: I2) -> Self
-    where
-        I1: Iterator<Item = AbsoluteBounds>,
-        I2: Iterator<Item = AbsoluteBounds>,
-    {
-        LayeredAbsoluteBounds {
-            first_layer: AbsoluteBoundsIter::new(first_layer_iter).united().peekable(),
-            second_layer: AbsoluteBoundsIter::new(second_layer_iter).united().peekable(),
-            state: LayeredBoundsState::default(),
-            exhausted: false,
-        }
-    }
-
+impl<I1, I2> LayeredAbsoluteBounds<I1, I2> {
     /// Returns the current [state](LayeredBoundsState) of the [`LayeredAbsoluteBounds`]
     #[must_use]
     pub fn state(&self) -> LayeredBoundsState {
@@ -183,7 +170,26 @@ impl LayeredAbsoluteBounds {
     }
 }
 
-impl Iterator for LayeredAbsoluteBounds {
+impl<I1, I2> LayeredAbsoluteBounds<I1, I2>
+where
+    I1: Iterator,
+    I2: Iterator,
+{
+    pub fn new(first_layer_iter: I1, second_layer_iter: I2) -> LayeredAbsoluteBounds<Peekable<I1>, Peekable<I2>> {
+        LayeredAbsoluteBounds {
+            first_layer: first_layer_iter.peekable(),
+            second_layer: second_layer_iter.peekable(),
+            state: LayeredBoundsState::default(),
+            exhausted: false,
+        }
+    }
+}
+
+impl<I1, I2> Iterator for LayeredAbsoluteBounds<Peekable<I1>, Peekable<I2>>
+where
+    I1: Iterator<Item = AbsoluteBound>,
+    I2: Iterator<Item = AbsoluteBound>,
+{
     type Item = LayeredBoundsStateChangeAtAbsoluteBound;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -267,7 +273,12 @@ impl Iterator for LayeredAbsoluteBounds {
     }
 }
 
-impl FusedIterator for LayeredAbsoluteBounds {}
+impl<I1, I2> FusedIterator for LayeredAbsoluteBounds<Peekable<I1>, Peekable<I2>>
+where
+    I1: Iterator<Item = AbsoluteBound>,
+    I2: Iterator<Item = AbsoluteBound>,
+{
+}
 
 /// Creates the [`LayeredBoundsStateChangeAtAbsoluteBound`] for when only the first layer had a peeked value and was
 /// a start bound
@@ -281,7 +292,7 @@ impl FusedIterator for LayeredAbsoluteBounds {}
 #[must_use]
 pub fn layered_abs_bounds_change_start_first_layer(
     old_state: LayeredBoundsState,
-    first_layer: &mut Peekable<AbsoluteUnitedBoundsIter>,
+    first_layer: &mut Peekable<impl Iterator<Item = AbsoluteBound>>,
     state_mut: &mut LayeredBoundsState,
 ) -> LayeredBoundsStateChangeAtAbsoluteBound {
     type Change = LayeredBoundsStateChangeAtAbsoluteBound;
@@ -314,7 +325,7 @@ pub fn layered_abs_bounds_change_start_first_layer(
 #[must_use]
 pub fn layered_abs_bounds_change_end_first_layer(
     old_state: LayeredBoundsState,
-    first_layer: &mut Peekable<AbsoluteUnitedBoundsIter>,
+    first_layer: &mut Peekable<impl Iterator<Item = AbsoluteBound>>,
     state_mut: &mut LayeredBoundsState,
 ) -> LayeredBoundsStateChangeAtAbsoluteBound {
     type Change = LayeredBoundsStateChangeAtAbsoluteBound;
@@ -342,7 +353,7 @@ pub fn layered_abs_bounds_change_end_first_layer(
 #[must_use]
 pub fn layered_abs_bounds_change_start_second_layer(
     old_state: LayeredBoundsState,
-    second_layer: &mut Peekable<AbsoluteUnitedBoundsIter>,
+    second_layer: &mut Peekable<impl Iterator<Item = AbsoluteBound>>,
     state_mut: &mut LayeredBoundsState,
 ) -> LayeredBoundsStateChangeAtAbsoluteBound {
     type Change = LayeredBoundsStateChangeAtAbsoluteBound;
@@ -375,7 +386,7 @@ pub fn layered_abs_bounds_change_start_second_layer(
 #[must_use]
 pub fn layered_abs_bounds_change_end_second_layer(
     old_state: LayeredBoundsState,
-    second_layer: &mut Peekable<AbsoluteUnitedBoundsIter>,
+    second_layer: &mut Peekable<impl Iterator<Item = AbsoluteBound>>,
     state_mut: &mut LayeredBoundsState,
 ) -> LayeredBoundsStateChangeAtAbsoluteBound {
     type Change = LayeredBoundsStateChangeAtAbsoluteBound;
@@ -410,8 +421,8 @@ pub fn layered_abs_bounds_change_end_second_layer(
 pub fn layered_abs_bounds_change_start_start(
     old_state: LayeredBoundsState,
     start_start_cmp: Ordering,
-    first_layer: &mut Peekable<AbsoluteUnitedBoundsIter>,
-    second_layer: &mut Peekable<AbsoluteUnitedBoundsIter>,
+    first_layer: &mut Peekable<impl Iterator<Item = AbsoluteBound>>,
+    second_layer: &mut Peekable<impl Iterator<Item = AbsoluteBound>>,
     state_mut: &mut LayeredBoundsState,
 ) -> LayeredBoundsStateChangeAtAbsoluteBound {
     type Change = LayeredBoundsStateChangeAtAbsoluteBound;
@@ -483,8 +494,8 @@ pub fn layered_abs_bounds_change_start_start(
 pub fn layered_abs_bounds_change_start_end(
     old_state: LayeredBoundsState,
     start_end_cmp: Ordering,
-    first_layer: &mut Peekable<AbsoluteUnitedBoundsIter>,
-    second_layer: &mut Peekable<AbsoluteUnitedBoundsIter>,
+    first_layer: &mut Peekable<impl Iterator<Item = AbsoluteBound>>,
+    second_layer: &mut Peekable<impl Iterator<Item = AbsoluteBound>>,
     state_mut: &mut LayeredBoundsState,
 ) -> LayeredBoundsStateChangeAtAbsoluteBound {
     type Change = LayeredBoundsStateChangeAtAbsoluteBound;
@@ -558,8 +569,8 @@ pub fn layered_abs_bounds_change_start_end(
 pub fn layered_abs_bounds_change_end_start(
     old_state: LayeredBoundsState,
     end_start_cmp: Ordering,
-    first_layer: &mut Peekable<AbsoluteUnitedBoundsIter>,
-    second_layer: &mut Peekable<AbsoluteUnitedBoundsIter>,
+    first_layer: &mut Peekable<impl Iterator<Item = AbsoluteBound>>,
+    second_layer: &mut Peekable<impl Iterator<Item = AbsoluteBound>>,
     state_mut: &mut LayeredBoundsState,
 ) -> LayeredBoundsStateChangeAtAbsoluteBound {
     type Change = LayeredBoundsStateChangeAtAbsoluteBound;
@@ -623,8 +634,8 @@ pub fn layered_abs_bounds_change_end_start(
 pub fn layered_abs_bounds_change_end_end(
     old_state: LayeredBoundsState,
     end_end_cmp: Ordering,
-    first_layer: &mut Peekable<AbsoluteUnitedBoundsIter>,
-    second_layer: &mut Peekable<AbsoluteUnitedBoundsIter>,
+    first_layer: &mut Peekable<impl Iterator<Item = AbsoluteBound>>,
+    second_layer: &mut Peekable<impl Iterator<Item = AbsoluteBound>>,
     state_mut: &mut LayeredBoundsState,
 ) -> LayeredBoundsStateChangeAtAbsoluteBound {
     type Change = LayeredBoundsStateChangeAtAbsoluteBound;
@@ -671,29 +682,18 @@ pub fn layered_abs_bounds_change_end_end(
     }
 }
 
-/// Iterator running over the bounds of two [`RelativeUnitedBoundsIter`], tracking which layers are active,
-/// bound by bound
-pub struct LayeredRelativeBounds {
-    first_layer: Peekable<RelativeUnitedBoundsIter>,
-    second_layer: Peekable<RelativeUnitedBoundsIter>,
+/// Iterator tracking which layers of relative bounds are active
+///
+/// This iterator runs over the bounds of two [`RelativeUnitedBoundsIter`], tracking which layers are active,
+/// bound by bound.
+pub struct LayeredRelativeBounds<I1, I2> {
+    first_layer: I1,
+    second_layer: I2,
     state: LayeredBoundsState,
     exhausted: bool,
 }
 
-impl LayeredRelativeBounds {
-    pub fn new<I1, I2>(first_layer_iter: I1, second_layer_iter: I2) -> Self
-    where
-        I1: Iterator<Item = RelativeBounds>,
-        I2: Iterator<Item = RelativeBounds>,
-    {
-        LayeredRelativeBounds {
-            first_layer: RelativeBoundsIter::new(first_layer_iter).united().peekable(),
-            second_layer: RelativeBoundsIter::new(second_layer_iter).united().peekable(),
-            state: LayeredBoundsState::default(),
-            exhausted: false,
-        }
-    }
-
+impl<I1, I2> LayeredRelativeBounds<I1, I2> {
     /// Returns the current [state](LayeredBoundsState) of the [`LayeredRelativeBounds`]
     #[must_use]
     pub fn state(&self) -> LayeredBoundsState {
@@ -701,7 +701,26 @@ impl LayeredRelativeBounds {
     }
 }
 
-impl Iterator for LayeredRelativeBounds {
+impl<I1, I2> LayeredRelativeBounds<I1, I2>
+where
+    I1: Iterator,
+    I2: Iterator,
+{
+    pub fn new(first_layer_iter: I1, second_layer_iter: I2) -> LayeredRelativeBounds<Peekable<I1>, Peekable<I2>> {
+        LayeredRelativeBounds {
+            first_layer: first_layer_iter.peekable(),
+            second_layer: second_layer_iter.peekable(),
+            state: LayeredBoundsState::default(),
+            exhausted: false,
+        }
+    }
+}
+
+impl<I1, I2> Iterator for LayeredRelativeBounds<Peekable<I1>, Peekable<I2>>
+where
+    I1: Iterator<Item = RelativeBound>,
+    I2: Iterator<Item = RelativeBound>,
+{
     type Item = LayeredBoundsStateChangeAtRelativeBound;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -785,7 +804,12 @@ impl Iterator for LayeredRelativeBounds {
     }
 }
 
-impl FusedIterator for LayeredRelativeBounds {}
+impl<I1, I2> FusedIterator for LayeredRelativeBounds<Peekable<I1>, Peekable<I2>>
+where
+    I1: Iterator<Item = RelativeBound>,
+    I2: Iterator<Item = RelativeBound>,
+{
+}
 
 /// Creates the [`LayeredBoundsStateChangeAtRelativeBound`] for when only the first layer had a peeked value and was
 /// a start bound
@@ -799,7 +823,7 @@ impl FusedIterator for LayeredRelativeBounds {}
 #[must_use]
 pub fn layered_rel_bounds_change_start_first_layer(
     old_state: LayeredBoundsState,
-    first_layer: &mut Peekable<RelativeUnitedBoundsIter>,
+    first_layer: &mut Peekable<impl Iterator<Item = RelativeBound>>,
     state_mut: &mut LayeredBoundsState,
 ) -> LayeredBoundsStateChangeAtRelativeBound {
     type Change = LayeredBoundsStateChangeAtRelativeBound;
@@ -832,7 +856,7 @@ pub fn layered_rel_bounds_change_start_first_layer(
 #[must_use]
 pub fn layered_rel_bounds_change_end_first_layer(
     old_state: LayeredBoundsState,
-    first_layer: &mut Peekable<RelativeUnitedBoundsIter>,
+    first_layer: &mut Peekable<impl Iterator<Item = RelativeBound>>,
     state_mut: &mut LayeredBoundsState,
 ) -> LayeredBoundsStateChangeAtRelativeBound {
     type Change = LayeredBoundsStateChangeAtRelativeBound;
@@ -860,7 +884,7 @@ pub fn layered_rel_bounds_change_end_first_layer(
 #[must_use]
 pub fn layered_rel_bounds_change_start_second_layer(
     old_state: LayeredBoundsState,
-    second_layer: &mut Peekable<RelativeUnitedBoundsIter>,
+    second_layer: &mut Peekable<impl Iterator<Item = RelativeBound>>,
     state_mut: &mut LayeredBoundsState,
 ) -> LayeredBoundsStateChangeAtRelativeBound {
     type Change = LayeredBoundsStateChangeAtRelativeBound;
@@ -893,7 +917,7 @@ pub fn layered_rel_bounds_change_start_second_layer(
 #[must_use]
 pub fn layered_rel_bounds_change_end_second_layer(
     old_state: LayeredBoundsState,
-    second_layer: &mut Peekable<RelativeUnitedBoundsIter>,
+    second_layer: &mut Peekable<impl Iterator<Item = RelativeBound>>,
     state_mut: &mut LayeredBoundsState,
 ) -> LayeredBoundsStateChangeAtRelativeBound {
     type Change = LayeredBoundsStateChangeAtRelativeBound;
@@ -928,8 +952,8 @@ pub fn layered_rel_bounds_change_end_second_layer(
 pub fn layered_rel_bounds_change_start_start(
     old_state: LayeredBoundsState,
     start_start_cmp: Ordering,
-    first_layer: &mut Peekable<RelativeUnitedBoundsIter>,
-    second_layer: &mut Peekable<RelativeUnitedBoundsIter>,
+    first_layer: &mut Peekable<impl Iterator<Item = RelativeBound>>,
+    second_layer: &mut Peekable<impl Iterator<Item = RelativeBound>>,
     state_mut: &mut LayeredBoundsState,
 ) -> LayeredBoundsStateChangeAtRelativeBound {
     type Change = LayeredBoundsStateChangeAtRelativeBound;
@@ -1001,8 +1025,8 @@ pub fn layered_rel_bounds_change_start_start(
 pub fn layered_rel_bounds_change_start_end(
     old_state: LayeredBoundsState,
     start_end_cmp: Ordering,
-    first_layer: &mut Peekable<RelativeUnitedBoundsIter>,
-    second_layer: &mut Peekable<RelativeUnitedBoundsIter>,
+    first_layer: &mut Peekable<impl Iterator<Item = RelativeBound>>,
+    second_layer: &mut Peekable<impl Iterator<Item = RelativeBound>>,
     state_mut: &mut LayeredBoundsState,
 ) -> LayeredBoundsStateChangeAtRelativeBound {
     type Change = LayeredBoundsStateChangeAtRelativeBound;
@@ -1076,8 +1100,8 @@ pub fn layered_rel_bounds_change_start_end(
 pub fn layered_rel_bounds_change_end_start(
     old_state: LayeredBoundsState,
     end_start_cmp: Ordering,
-    first_layer: &mut Peekable<RelativeUnitedBoundsIter>,
-    second_layer: &mut Peekable<RelativeUnitedBoundsIter>,
+    first_layer: &mut Peekable<impl Iterator<Item = RelativeBound>>,
+    second_layer: &mut Peekable<impl Iterator<Item = RelativeBound>>,
     state_mut: &mut LayeredBoundsState,
 ) -> LayeredBoundsStateChangeAtRelativeBound {
     type Change = LayeredBoundsStateChangeAtRelativeBound;
@@ -1141,8 +1165,8 @@ pub fn layered_rel_bounds_change_end_start(
 pub fn layered_rel_bounds_change_end_end(
     old_state: LayeredBoundsState,
     end_end_cmp: Ordering,
-    first_layer: &mut Peekable<RelativeUnitedBoundsIter>,
-    second_layer: &mut Peekable<RelativeUnitedBoundsIter>,
+    first_layer: &mut Peekable<impl Iterator<Item = RelativeBound>>,
+    second_layer: &mut Peekable<impl Iterator<Item = RelativeBound>>,
     state_mut: &mut LayeredBoundsState,
 ) -> LayeredBoundsStateChangeAtRelativeBound {
     type Change = LayeredBoundsStateChangeAtRelativeBound;

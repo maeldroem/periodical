@@ -1,6 +1,6 @@
 //! Iterator over bounds of a unite interval set
 
-use std::iter::FusedIterator;
+use std::iter::{FusedIterator, Peekable};
 
 use crate::collections::intervals::united_bounds::{AbsoluteUnitedBoundsIter, RelativeUnitedBoundsIter};
 use crate::intervals::absolute::{AbsoluteBound, AbsoluteBounds};
@@ -30,10 +30,13 @@ impl AbsoluteBoundsIter {
         }
     }
 
-    /// Unites the bounds of the iterator
+    /// Collects the bounds, sorts them and creates an [`AbsoluteUnitedBoundsIter`] from them
     #[must_use]
-    pub fn united(self) -> AbsoluteUnitedBoundsIter {
-        AbsoluteUnitedBoundsIter::new(self)
+    pub fn united(self) -> AbsoluteUnitedBoundsIter<Peekable<impl Iterator<Item = AbsoluteBound>>> {
+        let mut bounds = self.collect::<Vec<_>>();
+        bounds.sort();
+
+        AbsoluteUnitedBoundsIter::new(bounds.into_iter())
     }
 }
 
@@ -92,10 +95,13 @@ impl RelativeBoundsIter {
         }
     }
 
-    /// Unites the bounds of the iterator
+    /// Collects the bounds, sorts them and creates an [`RelativeUnitedBoundsIter`] from them
     #[must_use]
-    pub fn united(self) -> RelativeUnitedBoundsIter {
-        RelativeUnitedBoundsIter::new(self)
+    pub fn united(self) -> RelativeUnitedBoundsIter<Peekable<impl Iterator<Item = RelativeBound>>> {
+        let mut bounds = self.collect::<Vec<_>>();
+        bounds.sort();
+
+        RelativeUnitedBoundsIter::new(bounds.into_iter())
     }
 }
 
