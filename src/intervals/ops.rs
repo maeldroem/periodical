@@ -11,6 +11,7 @@
 
 pub mod abridge;
 pub mod bound_containment;
+pub mod bound_ord;
 pub mod bound_overlap_ambiguity;
 pub mod complement;
 pub mod continuation;
