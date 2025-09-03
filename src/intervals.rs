@@ -77,6 +77,11 @@ pub use absolute::{
 };
 pub use meta::{Emptiable, HasBoundInclusivity, HasDuration, HasOpenness, HasRelativity};
 pub use ops::abridge::Abridgable;
+pub use ops::bound_containment::{
+    BoundContainmentPosition, BoundContainmentRule, BoundContainmentRuleSet, CanPositionBoundContainment,
+    DEFAULT_BOUND_CONTAINMENT_RULES, DisambiguatedBoundContainmentPosition,
+};
+pub use ops::bound_ord::{BoundOrdering, PartialBoundOrd};
 pub use ops::complement::Complementable;
 pub use ops::cut::{CutResult, CutType, Cuttable};
 pub use ops::extend::Extensible;

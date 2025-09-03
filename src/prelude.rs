@@ -5,6 +5,8 @@ pub use crate::intervals::absolute::{
 };
 pub use crate::intervals::meta::{Emptiable, HasBoundInclusivity, HasDuration, HasOpenness, HasRelativity};
 pub use crate::intervals::ops::abridge::Abridgable;
+pub use crate::intervals::ops::bound_containment::CanPositionBoundContainment;
+pub use crate::intervals::ops::bound_ord::PartialBoundOrd;
 pub use crate::intervals::ops::complement::Complementable;
 pub use crate::intervals::ops::cut::{CutResult, CutType, Cuttable};
 pub use crate::intervals::ops::extend::Extensible;
