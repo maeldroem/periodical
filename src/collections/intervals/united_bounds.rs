@@ -1,14 +1,13 @@
 //! United bounds iterators
 
+use std::cmp::Ordering;
 use std::iter::{FusedIterator, Peekable};
 
 use crate::collections::intervals::layered_bounds::{LayeredAbsoluteBounds, LayeredRelativeBounds};
-use crate::intervals::absolute::{AbsoluteBound, AbsoluteEndBound, AbsoluteStartBound};
-use crate::intervals::meta::HasBoundInclusivity;
-use crate::intervals::ops::bound_overlap_ambiguity::{
-    BoundOverlapAmbiguity, BoundOverlapDisambiguationRuleSet, DisambiguatedBoundOverlap,
-};
-use crate::intervals::relative::{RelativeBound, RelativeEndBound, RelativeStartBound};
+use crate::intervals::absolute::{AbsoluteBound, AbsoluteEndBound};
+use crate::intervals::ops::bound_ord::PartialBoundOrd;
+use crate::intervals::ops::bound_overlap_ambiguity::BoundOverlapDisambiguationRuleSet;
+use crate::intervals::relative::{RelativeBound, RelativeEndBound};
 
 /// Iterator for uniting an iterator of sorted and paired [`AbsoluteBound`]s
 pub struct AbsoluteUnitedBoundsIter<I> {
@@ -29,11 +28,11 @@ where
     /// The bounds given to the iterator **must be sorted chronologically** in order for the uniting process to work.
     /// The responsibility of sorting the input is left to the caller in order to prevent double-sorting.
     ///
-    /// The bounds given to the iterator **must be pairs**, that means there should be an equal amount of
+    /// The bounds given to the iterator **must be paired**, that means there should be an equal amount of
     /// [`Start`](AbsoluteBound::Start)s and [`End`](AbsoluteBound::End)s.
-    /// This is automatically guaranteed if you have obtained those bounds from
+    /// This is automatically guaranteed if they are obtained from
     /// [intervals](crate::intervals::absolute::AbsoluteInterval)
-    /// or from [paired bounds](crate::intervals::absolute::AbsoluteBounds)
+    /// or from [paired bounds](crate::intervals::absolute::AbsoluteBounds).
     #[must_use]
     pub fn new(iter: I) -> AbsoluteUnitedBoundsIter<Peekable<I>> {
         // Add debug assertion on iter being sorted
@@ -137,18 +136,15 @@ where
 impl<I> FusedIterator for AbsoluteUnitedBoundsIter<Peekable<I>> where I: Iterator<Item = AbsoluteBound> {}
 
 fn is_abs_end_bound_adjacent_to_abs_peeked(end: &AbsoluteEndBound, peeked: &AbsoluteBound) -> bool {
-    if let AbsoluteBound::Start(AbsoluteStartBound::Finite(finite_peeked_start)) = peeked
-        && let AbsoluteEndBound::Finite(finite_end) = end
-        && finite_end.time() == finite_peeked_start.time()
-    {
-        let disambiguated_bound_overlap =
-            BoundOverlapAmbiguity::EndStart(finite_end.inclusivity(), finite_peeked_start.inclusivity())
-                .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Lenient);
+    let AbsoluteBound::Start(peeked_start) = peeked else {
+        return false;
+    };
 
-        return matches!(disambiguated_bound_overlap, DisambiguatedBoundOverlap::Equal);
-    }
-
-    false
+    matches!(
+        end.bound_cmp(peeked_start)
+            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Lenient),
+        Ordering::Equal,
+    )
 }
 
 /// Iterator for uniting an iterator of sorted and paired [`AbsoluteBound`]s
@@ -170,11 +166,11 @@ where
     /// The bounds given to the iterator **must be sorted chronologically** in order for the uniting process to work.
     /// The responsibility of sorting the input is left to the caller in order to prevent double-sorting.
     ///
-    /// The bounds given to the iterator **must be pairs**, that means there should be an equal amount of
+    /// The bounds given to the iterator **must be paired**, that means there should be an equal amount of
     /// [`Start`](RelativeBound::Start)s and [`End`](RelativeBound::End)s.
-    /// This is automatically guaranteed if you have obtained those bounds from
+    /// This is automatically guaranteed if they are obtained from
     /// [intervals](crate::intervals::relative::RelativeInterval)
-    /// or from [paired bounds](crate::intervals::relative::RelativeBounds)
+    /// or from [paired bounds](crate::intervals::relative::RelativeBounds).
     #[must_use]
     pub fn new(iter: I) -> RelativeUnitedBoundsIter<Peekable<I>> {
         // Add debug assertion on iter being sorted
@@ -278,16 +274,13 @@ where
 impl<I> FusedIterator for RelativeUnitedBoundsIter<Peekable<I>> where I: Iterator<Item = RelativeBound> {}
 
 fn is_rel_end_bound_adjacent_to_rel_peeked(end: &RelativeEndBound, peeked: &RelativeBound) -> bool {
-    if let RelativeBound::Start(RelativeStartBound::Finite(finite_peeked_start)) = peeked
-        && let RelativeEndBound::Finite(finite_end) = end
-        && finite_end.offset() == finite_peeked_start.offset()
-    {
-        let disambiguated_bound_overlap =
-            BoundOverlapAmbiguity::EndStart(finite_end.inclusivity(), finite_peeked_start.inclusivity())
-                .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Lenient);
+    let RelativeBound::Start(peeked_start) = peeked else {
+        return false;
+    };
 
-        return matches!(disambiguated_bound_overlap, DisambiguatedBoundOverlap::Equal);
-    }
-
-    false
+    matches!(
+        end.bound_cmp(peeked_start)
+            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Lenient),
+        Ordering::Equal,
+    )
 }
