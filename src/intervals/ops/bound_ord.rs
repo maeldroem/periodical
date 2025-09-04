@@ -184,15 +184,15 @@ impl PartialBoundOrd for AbsoluteEndBound {
             (AbsoluteEndBound::Finite(finite_og), AbsoluteEndBound::Finite(finite_other)) => {
                 match finite_og.time().cmp(&finite_other.time()) {
                     Ordering::Less => BoundOrdering::Less,
-                    Ordering::Equal => BoundOrdering::Equal(Some(BoundOverlapAmbiguity::BothStarts(
+                    Ordering::Equal => BoundOrdering::Equal(Some(BoundOverlapAmbiguity::BothEnds(
                         finite_og.inclusivity(),
                         finite_other.inclusivity(),
                     ))),
                     Ordering::Greater => BoundOrdering::Greater,
                 }
             },
-            (AbsoluteEndBound::Finite(_), AbsoluteEndBound::InfiniteFuture) => BoundOrdering::Greater,
-            (AbsoluteEndBound::InfiniteFuture, AbsoluteEndBound::Finite(_)) => BoundOrdering::Less,
+            (AbsoluteEndBound::Finite(_), AbsoluteEndBound::InfiniteFuture) => BoundOrdering::Less,
+            (AbsoluteEndBound::InfiniteFuture, AbsoluteEndBound::Finite(_)) => BoundOrdering::Greater,
             (AbsoluteEndBound::InfiniteFuture, AbsoluteEndBound::InfiniteFuture) => BoundOrdering::Equal(None),
         }
     }
@@ -307,15 +307,15 @@ impl PartialBoundOrd for RelativeEndBound {
             (RelativeEndBound::Finite(finite_og), RelativeEndBound::Finite(finite_other)) => {
                 match finite_og.offset().cmp(&finite_other.offset()) {
                     Ordering::Less => BoundOrdering::Less,
-                    Ordering::Equal => BoundOrdering::Equal(Some(BoundOverlapAmbiguity::BothStarts(
+                    Ordering::Equal => BoundOrdering::Equal(Some(BoundOverlapAmbiguity::BothEnds(
                         finite_og.inclusivity(),
                         finite_other.inclusivity(),
                     ))),
                     Ordering::Greater => BoundOrdering::Greater,
                 }
             },
-            (RelativeEndBound::Finite(_), RelativeEndBound::InfiniteFuture) => BoundOrdering::Greater,
-            (RelativeEndBound::InfiniteFuture, RelativeEndBound::Finite(_)) => BoundOrdering::Less,
+            (RelativeEndBound::Finite(_), RelativeEndBound::InfiniteFuture) => BoundOrdering::Less,
+            (RelativeEndBound::InfiniteFuture, RelativeEndBound::Finite(_)) => BoundOrdering::Greater,
             (RelativeEndBound::InfiniteFuture, RelativeEndBound::InfiniteFuture) => BoundOrdering::Equal(None),
         }
     }
