@@ -1,6 +1,6 @@
 //! Intersection of a [layered bounds iterator](crate::collections::intervals::layered_bounds)
 
-use std::iter::{FusedIterator, Peekable};
+use std::iter::FusedIterator;
 
 use crate::collections::intervals::layered_bounds::{
     LayeredBoundsState, LayeredBoundsStateChangeAtAbsoluteBound, LayeredBoundsStateChangeAtRelativeBound,
@@ -10,6 +10,7 @@ use crate::intervals::relative::RelativeBounds;
 
 /// Intersection iterator
 /// for [`LayeredAbsoluteBounds`](crate::collections::intervals::layered_bounds::LayeredAbsoluteBounds)
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct LayeredAbsoluteBoundsIntersection<I> {
     iter: I,
     exhausted: bool,
@@ -33,15 +34,12 @@ where
     ///
     /// All of that is automatically guaranteed if the state changes are obtained from
     /// [`LayeredAbsoluteBounds`](crate::collections::intervals::layered_bounds::LayeredAbsoluteBounds).
-    pub fn new(iter: I) -> LayeredAbsoluteBoundsIntersection<Peekable<I>> {
-        LayeredAbsoluteBoundsIntersection {
-            iter: iter.peekable(),
-            exhausted: false,
-        }
+    pub fn new(iter: I) -> LayeredAbsoluteBoundsIntersection<I> {
+        LayeredAbsoluteBoundsIntersection { iter, exhausted: false }
     }
 }
 
-impl<I> Iterator for LayeredAbsoluteBoundsIntersection<Peekable<I>>
+impl<I> Iterator for LayeredAbsoluteBoundsIntersection<I>
 where
     I: Iterator<Item = LayeredBoundsStateChangeAtAbsoluteBound>,
 {
@@ -86,13 +84,14 @@ where
     }
 }
 
-impl<I> FusedIterator for LayeredAbsoluteBoundsIntersection<Peekable<I>> where
+impl<I> FusedIterator for LayeredAbsoluteBoundsIntersection<I> where
     I: Iterator<Item = LayeredBoundsStateChangeAtAbsoluteBound>
 {
 }
 
 /// Intersection iterator
 /// for [`LayeredRelativeBounds`](crate::collections::intervals::layered_bounds::LayeredRelativeBounds)
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct LayeredRelativeBoundsIntersection<I> {
     iter: I,
     exhausted: bool,
@@ -116,15 +115,12 @@ where
     ///
     /// All of that is automatically guaranteed if the state changes are obtained from
     /// [`LayeredRelativeBounds`](crate::collections::intervals::layered_bounds::LayeredRelativeBounds).
-    pub fn new(iter: I) -> LayeredRelativeBoundsIntersection<Peekable<I>> {
-        LayeredRelativeBoundsIntersection {
-            iter: iter.peekable(),
-            exhausted: false,
-        }
+    pub fn new(iter: I) -> LayeredRelativeBoundsIntersection<I> {
+        LayeredRelativeBoundsIntersection { iter, exhausted: false }
     }
 }
 
-impl<I> Iterator for LayeredRelativeBoundsIntersection<Peekable<I>>
+impl<I> Iterator for LayeredRelativeBoundsIntersection<I>
 where
     I: Iterator<Item = LayeredBoundsStateChangeAtRelativeBound>,
 {
@@ -169,7 +165,7 @@ where
     }
 }
 
-impl<I> FusedIterator for LayeredRelativeBoundsIntersection<Peekable<I>> where
+impl<I> FusedIterator for LayeredRelativeBoundsIntersection<I> where
     I: Iterator<Item = LayeredBoundsStateChangeAtRelativeBound>
 {
 }

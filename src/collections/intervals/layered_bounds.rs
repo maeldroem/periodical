@@ -227,7 +227,7 @@ where
     I2: Iterator<Item = AbsoluteBound>,
 {
     /// Creates an [`LayeredAbsoluteBoundsIntersection`] from the iterator
-    pub fn intersect(self) -> LayeredAbsoluteBoundsIntersection<Peekable<Self>> {
+    pub fn intersect(self) -> LayeredAbsoluteBoundsIntersection<Self> {
         LayeredAbsoluteBoundsIntersection::new(self)
     }
 }
@@ -884,7 +884,7 @@ where
     I2: Iterator<Item = RelativeBound>,
 {
     /// Creates an [`LayeredRelativeBoundsIntersection`] from the iterator
-    pub fn intersect(self) -> LayeredRelativeBoundsIntersection<Peekable<Self>> {
+    pub fn intersect(self) -> LayeredRelativeBoundsIntersection<Self> {
         LayeredRelativeBoundsIntersection::new(self)
     }
 }
