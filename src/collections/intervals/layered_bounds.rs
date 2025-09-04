@@ -4,8 +4,12 @@ use std::cmp::Ordering;
 use std::iter::{FusedIterator, Peekable};
 use std::ops::{Add, Sub};
 
+use crate::intervals::BoundOrdering;
 use crate::intervals::absolute::{AbsoluteBound, AbsoluteEndBound, AbsoluteStartBound};
+use crate::intervals::meta::BoundInclusivity;
+use crate::intervals::prelude::BoundOverlapDisambiguationRuleSet;
 use crate::intervals::relative::{RelativeBound, RelativeEndBound, RelativeStartBound};
+use crate::prelude::PartialBoundOrd;
 
 /// State of a layered bounds iterator, indicating which layer(s) are active
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Hash)]
@@ -15,6 +19,20 @@ pub enum LayeredBoundsState {
     FirstLayer,
     SecondLayer,
     BothLayers,
+}
+
+impl LayeredBoundsState {
+    /// Returns whether the first layer is active in this state
+    #[must_use]
+    pub fn is_first_layer_active(&self) -> bool {
+        matches!(self, Self::FirstLayer | Self::BothLayers)
+    }
+
+    /// Returns whether the second layer is active in this state
+    #[must_use]
+    pub fn is_second_layer_active(&self) -> bool {
+        matches!(self, Self::SecondLayer | Self::BothLayers)
+    }
 }
 
 impl Add for LayeredBoundsState {
@@ -48,7 +66,7 @@ impl Sub for LayeredBoundsState {
 }
 
 /// State change of a [`LayeredAbsoluteBounds`]
-#[derive(Debug, Clone, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct LayeredBoundsStateChangeAtAbsoluteBound {
     old_state: LayeredBoundsState,
     new_state: LayeredBoundsState,
@@ -100,7 +118,7 @@ impl LayeredBoundsStateChangeAtAbsoluteBound {
 }
 
 /// State change of a [`LayeredRelativeBounds`]
-#[derive(Debug, Clone, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct LayeredBoundsStateChangeAtRelativeBound {
     old_state: LayeredBoundsState,
     new_state: LayeredBoundsState,
@@ -152,13 +170,12 @@ impl LayeredBoundsStateChangeAtRelativeBound {
 }
 
 /// Iterator tracking which layers of absolute bounds are active
-///
-/// This iterator runs over the bounds of two [`AbsoluteUnitedBoundsIter`], tracking which layers are active,
-/// bound by bound.
 pub struct LayeredAbsoluteBounds<I1, I2> {
     first_layer: I1,
     second_layer: I2,
     state: LayeredBoundsState,
+    // In some cases, the iterator needs to return two results at once
+    queued_result: Option<LayeredBoundsStateChangeAtAbsoluteBound>,
     exhausted: bool,
 }
 
@@ -175,11 +192,27 @@ where
     I1: Iterator,
     I2: Iterator,
 {
+    /// Creates a new instance of [`LayeredAbsoluteBounds`]
+    ///
+    /// # Input requirements
+    ///
+    /// The bounds in the layer iterators **must be sorted chronologically** in order for the uniting process to work.
+    /// The responsibility of sorting the input is left to the caller in order to prevent double-sorting.
+    /// This requirement is automatically guaranteed if they are obtained from
+    /// [`AbsoluteUnitedBoundsIter`](crate::collections::intervals::united_bounds::AbsoluteUnitedBoundsIter).
+    ///
+    /// The bounds in the layer iterators **must be paired**, that means there should be an equal amount of
+    /// [`Start`](AbsoluteBound::Start)s and [`End`](AbsoluteBound::End)s.
+    /// This is automatically guaranteed if they are obtained from
+    /// [intervals](crate::intervals::absolute::AbsoluteInterval)
+    /// or from [paired bounds](crate::intervals::absolute::AbsoluteBounds).
+    #[must_use]
     pub fn new(first_layer_iter: I1, second_layer_iter: I2) -> LayeredAbsoluteBounds<Peekable<I1>, Peekable<I2>> {
         LayeredAbsoluteBounds {
             first_layer: first_layer_iter.peekable(),
             second_layer: second_layer_iter.peekable(),
             state: LayeredBoundsState::default(),
+            queued_result: None,
             exhausted: false,
         }
     }
@@ -195,6 +228,11 @@ where
     fn next(&mut self) -> Option<Self::Item> {
         if self.exhausted {
             return None;
+        }
+
+        // Empties the queued result before continuing
+        if let Some(queued_result) = self.queued_result.take() {
+            return Some(queued_result);
         }
 
         let old_state = self.state();
@@ -245,20 +283,22 @@ where
                 Some(AbsoluteBound::End(second_layer_peeked_end)),
             ) => Some(layered_abs_bounds_change_start_end(
                 old_state,
-                first_layer_peeked_start.partial_cmp(second_layer_peeked_end).unwrap(),
+                first_layer_peeked_start.bound_cmp(second_layer_peeked_end),
                 &mut self.first_layer,
                 &mut self.second_layer,
                 &mut self.state,
+                &mut self.queued_result,
             )),
             (
                 Some(AbsoluteBound::End(first_layer_peeked_end)),
                 Some(AbsoluteBound::Start(second_layer_peeked_start)),
             ) => Some(layered_abs_bounds_change_end_start(
                 old_state,
-                first_layer_peeked_end.partial_cmp(second_layer_peeked_start).unwrap(),
+                first_layer_peeked_end.bound_cmp(second_layer_peeked_start),
                 &mut self.first_layer,
                 &mut self.second_layer,
                 &mut self.state,
+                &mut self.queued_result,
             )),
             (Some(AbsoluteBound::End(first_layer_peeked_end)), Some(AbsoluteBound::End(second_layer_peeked_end))) => {
                 Some(layered_abs_bounds_change_end_end(
@@ -451,6 +491,9 @@ pub fn layered_abs_bounds_change_start_start(
                 .start()
                 .expect("Matched for `AbsoluteBound::Start(_)`, destructured to something else");
 
+            // Advance the second layer's iterator since both layers' bounds are equal
+            second_layer.next();
+
             *state_mut = (*state_mut).add(LayeredBoundsState::BothLayers);
 
             // We use the first layer's bound but that doesn't matter as bounds from both layers are equal
@@ -490,17 +533,19 @@ pub fn layered_abs_bounds_change_start_start(
 ///
 /// 1. The peeked value of a layer wasn't equal to the value returned by calling `next()` on that layer
 /// 2. The value returned by `next()` on the layer wasn't of the expected variant
+/// 3. The comparison between [`AbsoluteStartBound`] and [`AbsoluteEndBound`] returned [`None`]
 #[must_use]
 pub fn layered_abs_bounds_change_start_end(
     old_state: LayeredBoundsState,
-    start_end_cmp: Ordering,
+    start_end_cmp: BoundOrdering,
     first_layer: &mut Peekable<impl Iterator<Item = AbsoluteBound>>,
     second_layer: &mut Peekable<impl Iterator<Item = AbsoluteBound>>,
     state_mut: &mut LayeredBoundsState,
+    queued_result_mut: &mut Option<LayeredBoundsStateChangeAtAbsoluteBound>,
 ) -> LayeredBoundsStateChangeAtAbsoluteBound {
     type Change = LayeredBoundsStateChangeAtAbsoluteBound;
 
-    match start_end_cmp {
+    match start_end_cmp.disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Lenient) {
         Ordering::Less => {
             let first_layer_start = first_layer
                 .next()
@@ -518,23 +563,62 @@ pub fn layered_abs_bounds_change_start_end(
             )
         },
         Ordering::Equal => {
-            let first_layer_start = first_layer
+            let finite_first_layer_start = first_layer
                 .next()
                 .expect("Peeked `Some`, got `None` after calling `next()`")
                 .start()
-                .expect("Matched for `AbsoluteBound::Start(_)`, destructured to something else");
+                .expect("Matched for `AbsoluteBound::Start(_)`, destructured to something else")
+                .finite()
+                .expect("An AbsoluteStartBound and an AbsoluteEndBound can only be equal if they are finite");
 
-            *state_mut = (*state_mut)
-                .add(LayeredBoundsState::FirstLayer)
-                .sub(LayeredBoundsState::SecondLayer);
+            let finite_second_layer_end = second_layer
+                .next()
+                .expect("Peeked `Some`, got `None` after calling `next()`")
+                .end()
+                .expect("Matched for `AbsoluteBound::End(_)`, destructured to something else")
+                .finite()
+                .expect("An AbsoluteStartBound and an AbsoluteEndBound can only be equal if they are finite");
 
-            // We use the first layer's bound but that doesn't matter as bounds from both layers are equal
-            Change::new(
-                old_state,
-                *state_mut,
-                first_layer_start.opposite(),
-                Some(first_layer_start),
-            )
+            if finite_first_layer_start == finite_second_layer_end {
+                let mut end_of_second_layer = finite_second_layer_end; // Copy
+                end_of_second_layer.set_inclusivity(BoundInclusivity::Exclusive);
+
+                let change_to_return = Change::new(
+                    old_state,
+                    LayeredBoundsState::BothLayers,
+                    Some(AbsoluteEndBound::Finite(end_of_second_layer)),
+                    // We use `finite_first_layer_start` here because it overlaps with the second layer's end
+                    // for a single instant
+                    Some(AbsoluteStartBound::Finite(finite_first_layer_start)),
+                );
+
+                let mut start_of_first_layer = finite_first_layer_start; // Copy
+                start_of_first_layer.set_inclusivity(BoundInclusivity::Exclusive);
+
+                // Since the queued result will always be emptied before any of this logic is run again,
+                // we can safely modify `state_mut` here.
+                *state_mut = LayeredBoundsState::FirstLayer;
+
+                *queued_result_mut = Some(Change::new(
+                    LayeredBoundsState::BothLayers,
+                    *state_mut,
+                    Some(AbsoluteEndBound::Finite(finite_first_layer_start)),
+                    Some(AbsoluteStartBound::Finite(start_of_first_layer)),
+                ));
+
+                change_to_return
+            } else {
+                *state_mut = (*state_mut)
+                    .add(LayeredBoundsState::FirstLayer)
+                    .sub(LayeredBoundsState::SecondLayer);
+
+                Change::new(
+                    old_state,
+                    *state_mut,
+                    Some(AbsoluteEndBound::Finite(finite_second_layer_end)),
+                    Some(AbsoluteStartBound::Finite(finite_first_layer_start)),
+                )
+            }
         },
         Ordering::Greater => {
             let second_layer_end = second_layer
@@ -565,17 +649,19 @@ pub fn layered_abs_bounds_change_start_end(
 ///
 /// 1. The peeked value of a layer wasn't equal to the value returned by calling `next()` on that layer
 /// 2. The value returned by `next()` on the layer wasn't of the expected variant
+/// 3. The comparison between [`AbsoluteEndBound`] and [`AbsoluteStartBound`] returned [`None`]
 #[must_use]
 pub fn layered_abs_bounds_change_end_start(
     old_state: LayeredBoundsState,
-    end_start_cmp: Ordering,
+    end_start_cmp: BoundOrdering,
     first_layer: &mut Peekable<impl Iterator<Item = AbsoluteBound>>,
     second_layer: &mut Peekable<impl Iterator<Item = AbsoluteBound>>,
     state_mut: &mut LayeredBoundsState,
+    queued_result_mut: &mut Option<LayeredBoundsStateChangeAtAbsoluteBound>,
 ) -> LayeredBoundsStateChangeAtAbsoluteBound {
     type Change = LayeredBoundsStateChangeAtAbsoluteBound;
 
-    match end_start_cmp {
+    match end_start_cmp.disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Lenient) {
         Ordering::Less => {
             let first_layer_end = first_layer
                 .next()
@@ -588,18 +674,62 @@ pub fn layered_abs_bounds_change_end_start(
             Change::new(old_state, *state_mut, Some(first_layer_end), first_layer_end.opposite())
         },
         Ordering::Equal => {
-            let first_layer_end = first_layer
+            let finite_first_layer_end = first_layer
                 .next()
                 .expect("Peeked `Some`, got `None` after calling `next()`")
                 .end()
-                .expect("Matched for `AbsoluteBound::End(_)`, destructured to something else");
+                .expect("Matched for `AbsoluteBound::End(_)`, destructured to something else")
+                .finite()
+                .expect("An AbsoluteStartBound and an AbsoluteEndBound can only be equal if they are finite");
 
-            *state_mut = (*state_mut)
-                .sub(LayeredBoundsState::FirstLayer)
-                .add(LayeredBoundsState::SecondLayer);
+            let finite_second_layer_start = second_layer
+                .next()
+                .expect("Peeked `Some`, got `None` after calling `next()`")
+                .start()
+                .expect("Matched for `AbsoluteBound::Start(_)`, destructured to something else")
+                .finite()
+                .expect("An AbsoluteStartBound and an AbsoluteEndBound can only be equal if they are finite");
 
-            // We use the first layer's bound but that doesn't matter as bounds from both layers are equal
-            Change::new(old_state, *state_mut, Some(first_layer_end), first_layer_end.opposite())
+            if finite_first_layer_end == finite_second_layer_start {
+                let mut end_of_first_layer = finite_first_layer_end; // Copy
+                end_of_first_layer.set_inclusivity(BoundInclusivity::Exclusive);
+
+                let change_to_return = Change::new(
+                    old_state,
+                    LayeredBoundsState::BothLayers,
+                    Some(AbsoluteEndBound::Finite(end_of_first_layer)),
+                    // We use `finite_second_layer_start` here because it overlaps with the first layer's end
+                    // for a single instant
+                    Some(AbsoluteStartBound::Finite(finite_second_layer_start)),
+                );
+
+                let mut start_of_second_layer = finite_second_layer_start; // Copy
+                start_of_second_layer.set_inclusivity(BoundInclusivity::Exclusive);
+
+                // Since the queued result will always be emptied before any of this logic is run again,
+                // we can safely modify `state_mut` here.
+                *state_mut = LayeredBoundsState::SecondLayer;
+
+                *queued_result_mut = Some(Change::new(
+                    LayeredBoundsState::BothLayers,
+                    *state_mut,
+                    Some(AbsoluteEndBound::Finite(finite_second_layer_start)),
+                    Some(AbsoluteStartBound::Finite(start_of_second_layer)),
+                ));
+
+                change_to_return
+            } else {
+                *state_mut = (*state_mut)
+                    .sub(LayeredBoundsState::FirstLayer)
+                    .add(LayeredBoundsState::SecondLayer);
+
+                Change::new(
+                    old_state,
+                    *state_mut,
+                    Some(AbsoluteEndBound::Finite(finite_first_layer_end)),
+                    Some(AbsoluteStartBound::Finite(finite_second_layer_start)),
+                )
+            }
         },
         Ordering::Greater => {
             let second_layer_start = second_layer
@@ -659,6 +789,9 @@ pub fn layered_abs_bounds_change_end_end(
                 .end()
                 .expect("Matched for `AbsoluteBound::End(_)`, destructured to something else");
 
+            // Advance the second layer's iterator since both layers' bounds are equal
+            second_layer.next();
+
             *state_mut = (*state_mut).sub(LayeredBoundsState::BothLayers);
 
             Change::new(old_state, *state_mut, Some(first_layer_end), first_layer_end.opposite())
@@ -683,13 +816,12 @@ pub fn layered_abs_bounds_change_end_end(
 }
 
 /// Iterator tracking which layers of relative bounds are active
-///
-/// This iterator runs over the bounds of two [`RelativeUnitedBoundsIter`], tracking which layers are active,
-/// bound by bound.
 pub struct LayeredRelativeBounds<I1, I2> {
     first_layer: I1,
     second_layer: I2,
     state: LayeredBoundsState,
+    // In some cases, the iterator needs to return two results at once
+    queued_result: Option<LayeredBoundsStateChangeAtRelativeBound>,
     exhausted: bool,
 }
 
@@ -706,11 +838,27 @@ where
     I1: Iterator,
     I2: Iterator,
 {
+    /// Creates a new instance of [`LayeredRelativeBounds`]
+    ///
+    /// # Input requirements
+    ///
+    /// The bounds in the layer iterators **must be sorted chronologically** in order for the uniting process to work.
+    /// The responsibility of sorting the input is left to the caller in order to prevent double-sorting.
+    /// This requirement is automatically guaranteed if they are obtained from
+    /// [`RelativeUnitedBoundsIter`](crate::collections::intervals::united_bounds::RelativeUnitedBoundsIter).
+    ///
+    /// The bounds in the layer iterators **must be paired**, that means there should be an equal amount of
+    /// [`Start`](RelativeBound::Start)s and [`End`](RelativeBound::End)s.
+    /// This is automatically guaranteed if they are obtained from
+    /// [intervals](crate::intervals::relative::RelativeInterval)
+    /// or from [paired bounds](crate::intervals::relative::RelativeBounds).
+    #[must_use]
     pub fn new(first_layer_iter: I1, second_layer_iter: I2) -> LayeredRelativeBounds<Peekable<I1>, Peekable<I2>> {
         LayeredRelativeBounds {
             first_layer: first_layer_iter.peekable(),
             second_layer: second_layer_iter.peekable(),
             state: LayeredBoundsState::default(),
+            queued_result: None,
             exhausted: false,
         }
     }
@@ -726,6 +874,11 @@ where
     fn next(&mut self) -> Option<Self::Item> {
         if self.exhausted {
             return None;
+        }
+
+        // Empties the queued result before continuing
+        if let Some(queued_result) = self.queued_result.take() {
+            return Some(queued_result);
         }
 
         let old_state = self.state();
@@ -776,20 +929,22 @@ where
                 Some(RelativeBound::End(second_layer_peeked_end)),
             ) => Some(layered_rel_bounds_change_start_end(
                 old_state,
-                first_layer_peeked_start.partial_cmp(second_layer_peeked_end).unwrap(),
+                first_layer_peeked_start.bound_cmp(second_layer_peeked_end),
                 &mut self.first_layer,
                 &mut self.second_layer,
                 &mut self.state,
+                &mut self.queued_result,
             )),
             (
                 Some(RelativeBound::End(first_layer_peeked_end)),
                 Some(RelativeBound::Start(second_layer_peeked_start)),
             ) => Some(layered_rel_bounds_change_end_start(
                 old_state,
-                first_layer_peeked_end.partial_cmp(second_layer_peeked_start).unwrap(),
+                first_layer_peeked_end.bound_cmp(second_layer_peeked_start),
                 &mut self.first_layer,
                 &mut self.second_layer,
                 &mut self.state,
+                &mut self.queued_result,
             )),
             (Some(RelativeBound::End(first_layer_peeked_end)), Some(RelativeBound::End(second_layer_peeked_end))) => {
                 Some(layered_rel_bounds_change_end_end(
@@ -982,6 +1137,9 @@ pub fn layered_rel_bounds_change_start_start(
                 .start()
                 .expect("Matched for `RelativeBound::Start(_)`, destructured to something else");
 
+            // Advance the second layer's iterator since both layers' bounds are equal
+            second_layer.next();
+
             *state_mut = (*state_mut).add(LayeredBoundsState::BothLayers);
 
             // We use the first layer's bound but that doesn't matter as bounds from both layers are equal
@@ -1021,17 +1179,19 @@ pub fn layered_rel_bounds_change_start_start(
 ///
 /// 1. The peeked value of a layer wasn't equal to the value returned by calling `next()` on that layer
 /// 2. The value returned by `next()` on the layer wasn't of the expected variant
+/// 3. The comparison between [`RelativeStartBound`] and [`RelativeEndBound`] returned [`None`]
 #[must_use]
 pub fn layered_rel_bounds_change_start_end(
     old_state: LayeredBoundsState,
-    start_end_cmp: Ordering,
+    start_end_cmp: BoundOrdering,
     first_layer: &mut Peekable<impl Iterator<Item = RelativeBound>>,
     second_layer: &mut Peekable<impl Iterator<Item = RelativeBound>>,
     state_mut: &mut LayeredBoundsState,
+    queued_result_mut: &mut Option<LayeredBoundsStateChangeAtRelativeBound>,
 ) -> LayeredBoundsStateChangeAtRelativeBound {
     type Change = LayeredBoundsStateChangeAtRelativeBound;
 
-    match start_end_cmp {
+    match start_end_cmp.disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Lenient) {
         Ordering::Less => {
             let first_layer_start = first_layer
                 .next()
@@ -1049,23 +1209,62 @@ pub fn layered_rel_bounds_change_start_end(
             )
         },
         Ordering::Equal => {
-            let first_layer_start = first_layer
+            let finite_first_layer_start = first_layer
                 .next()
                 .expect("Peeked `Some`, got `None` after calling `next()`")
                 .start()
-                .expect("Matched for `RelativeBound::Start(_)`, destructured to something else");
+                .expect("Matched for `RelativeBound::Start(_)`, destructured to something else")
+                .finite()
+                .expect("An RelativeStartBound and an RelativeEndBound can only be equal if they are finite");
 
-            *state_mut = (*state_mut)
-                .add(LayeredBoundsState::FirstLayer)
-                .sub(LayeredBoundsState::SecondLayer);
+            let finite_second_layer_end = second_layer
+                .next()
+                .expect("Peeked `Some`, got `None` after calling `next()`")
+                .end()
+                .expect("Matched for `RelativeBound::End(_)`, destructured to something else")
+                .finite()
+                .expect("An RelativeStartBound and an RelativeEndBound can only be equal if they are finite");
 
-            // We use the first layer's bound but that doesn't matter as bounds from both layers are equal
-            Change::new(
-                old_state,
-                *state_mut,
-                first_layer_start.opposite(),
-                Some(first_layer_start),
-            )
+            if finite_first_layer_start == finite_second_layer_end {
+                let mut end_of_second_layer = finite_second_layer_end; // Copy
+                end_of_second_layer.set_inclusivity(BoundInclusivity::Exclusive);
+
+                let change_to_return = Change::new(
+                    old_state,
+                    LayeredBoundsState::BothLayers,
+                    Some(RelativeEndBound::Finite(end_of_second_layer)),
+                    // We use `finite_first_layer_start` here because it overlaps with the second layer's end
+                    // for a single instant
+                    Some(RelativeStartBound::Finite(finite_first_layer_start)),
+                );
+
+                let mut start_of_first_layer = finite_first_layer_start; // Copy
+                start_of_first_layer.set_inclusivity(BoundInclusivity::Exclusive);
+
+                // Since the queued result will always be emptied before any of this logic is run again,
+                // we can safely modify `state_mut` here.
+                *state_mut = LayeredBoundsState::FirstLayer;
+
+                *queued_result_mut = Some(Change::new(
+                    LayeredBoundsState::BothLayers,
+                    *state_mut,
+                    Some(RelativeEndBound::Finite(finite_first_layer_start)),
+                    Some(RelativeStartBound::Finite(start_of_first_layer)),
+                ));
+
+                change_to_return
+            } else {
+                *state_mut = (*state_mut)
+                    .add(LayeredBoundsState::FirstLayer)
+                    .sub(LayeredBoundsState::SecondLayer);
+
+                Change::new(
+                    old_state,
+                    *state_mut,
+                    Some(RelativeEndBound::Finite(finite_second_layer_end)),
+                    Some(RelativeStartBound::Finite(finite_first_layer_start)),
+                )
+            }
         },
         Ordering::Greater => {
             let second_layer_end = second_layer
@@ -1096,17 +1295,19 @@ pub fn layered_rel_bounds_change_start_end(
 ///
 /// 1. The peeked value of a layer wasn't equal to the value returned by calling `next()` on that layer
 /// 2. The value returned by `next()` on the layer wasn't of the expected variant
+/// 3. The comparison between [`RelativeEndBound`] and [`RelativeStartBound`] returned [`None`]
 #[must_use]
 pub fn layered_rel_bounds_change_end_start(
     old_state: LayeredBoundsState,
-    end_start_cmp: Ordering,
+    end_start_cmp: BoundOrdering,
     first_layer: &mut Peekable<impl Iterator<Item = RelativeBound>>,
     second_layer: &mut Peekable<impl Iterator<Item = RelativeBound>>,
     state_mut: &mut LayeredBoundsState,
+    queued_result_mut: &mut Option<LayeredBoundsStateChangeAtRelativeBound>,
 ) -> LayeredBoundsStateChangeAtRelativeBound {
     type Change = LayeredBoundsStateChangeAtRelativeBound;
 
-    match end_start_cmp {
+    match end_start_cmp.disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Lenient) {
         Ordering::Less => {
             let first_layer_end = first_layer
                 .next()
@@ -1119,18 +1320,62 @@ pub fn layered_rel_bounds_change_end_start(
             Change::new(old_state, *state_mut, Some(first_layer_end), first_layer_end.opposite())
         },
         Ordering::Equal => {
-            let first_layer_end = first_layer
+            let finite_first_layer_end = first_layer
                 .next()
                 .expect("Peeked `Some`, got `None` after calling `next()`")
                 .end()
-                .expect("Matched for `RelativeBound::End(_)`, destructured to something else");
+                .expect("Matched for `RelativeBound::End(_)`, destructured to something else")
+                .finite()
+                .expect("An RelativeStartBound and an RelativeEndBound can only be equal if they are finite");
 
-            *state_mut = (*state_mut)
-                .sub(LayeredBoundsState::FirstLayer)
-                .add(LayeredBoundsState::SecondLayer);
+            let finite_second_layer_start = second_layer
+                .next()
+                .expect("Peeked `Some`, got `None` after calling `next()`")
+                .start()
+                .expect("Matched for `RelativeBound::Start(_)`, destructured to something else")
+                .finite()
+                .expect("An RelativeStartBound and an RelativeEndBound can only be equal if they are finite");
 
-            // We use the first layer's bound but that doesn't matter as bounds from both layers are equal
-            Change::new(old_state, *state_mut, Some(first_layer_end), first_layer_end.opposite())
+            if finite_first_layer_end == finite_second_layer_start {
+                let mut end_of_first_layer = finite_first_layer_end; // Copy
+                end_of_first_layer.set_inclusivity(BoundInclusivity::Exclusive);
+
+                let change_to_return = Change::new(
+                    old_state,
+                    LayeredBoundsState::BothLayers,
+                    Some(RelativeEndBound::Finite(end_of_first_layer)),
+                    // We use `finite_second_layer_start` here because it overlaps with the first layer's end
+                    // for a single instant
+                    Some(RelativeStartBound::Finite(finite_second_layer_start)),
+                );
+
+                let mut start_of_second_layer = finite_second_layer_start; // Copy
+                start_of_second_layer.set_inclusivity(BoundInclusivity::Exclusive);
+
+                // Since the queued result will always be emptied before any of this logic is run again,
+                // we can safely modify `state_mut` here.
+                *state_mut = LayeredBoundsState::SecondLayer;
+
+                *queued_result_mut = Some(Change::new(
+                    LayeredBoundsState::BothLayers,
+                    *state_mut,
+                    Some(RelativeEndBound::Finite(finite_second_layer_start)),
+                    Some(RelativeStartBound::Finite(start_of_second_layer)),
+                ));
+
+                change_to_return
+            } else {
+                *state_mut = (*state_mut)
+                    .sub(LayeredBoundsState::FirstLayer)
+                    .add(LayeredBoundsState::SecondLayer);
+
+                Change::new(
+                    old_state,
+                    *state_mut,
+                    Some(RelativeEndBound::Finite(finite_first_layer_end)),
+                    Some(RelativeStartBound::Finite(finite_second_layer_start)),
+                )
+            }
         },
         Ordering::Greater => {
             let second_layer_start = second_layer
@@ -1189,6 +1434,9 @@ pub fn layered_rel_bounds_change_end_end(
                 .expect("Peeked `Some`, got `None` after calling `next()`")
                 .end()
                 .expect("Matched for `RelativeBound::End(_)`, destructured to something else");
+
+            // Advance the second layer's iterator since both layers' bounds are equal
+            second_layer.next();
 
             *state_mut = (*state_mut).sub(LayeredBoundsState::BothLayers);
 
