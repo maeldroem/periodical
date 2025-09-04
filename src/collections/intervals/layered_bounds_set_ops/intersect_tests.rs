@@ -4,10 +4,9 @@ use crate::collections::intervals::bounds::{AbsoluteBoundsIterDispatcher, Relati
 use crate::collections::intervals::layered_bounds::{
     LayeredBoundsState, LayeredBoundsStateChangeAtAbsoluteBound, LayeredBoundsStateChangeAtRelativeBound,
 };
-use crate::intervals::absolute::{AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound};
+use crate::intervals::absolute::{AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound};
 use crate::intervals::meta::BoundInclusivity;
-use crate::intervals::relative::{RelativeEndBound, RelativeFiniteBound, RelativeStartBound};
-use crate::prelude::{AbsoluteBounds, RelativeBounds};
+use crate::intervals::relative::{RelativeBounds, RelativeEndBound, RelativeFiniteBound, RelativeStartBound};
 use crate::test_utils::date;
 
 use super::intersect::*;

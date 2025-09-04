@@ -10,9 +10,9 @@ use crate::collections::intervals::layered_bounds_set_ops::intersect::{
 use crate::intervals::BoundOrdering;
 use crate::intervals::absolute::{AbsoluteBound, AbsoluteEndBound, AbsoluteStartBound};
 use crate::intervals::meta::BoundInclusivity;
-use crate::intervals::prelude::BoundOverlapDisambiguationRuleSet;
+use crate::intervals::ops::bound_ord::PartialBoundOrd;
+use crate::intervals::ops::bound_overlap_ambiguity::BoundOverlapDisambiguationRuleSet;
 use crate::intervals::relative::{RelativeBound, RelativeEndBound, RelativeStartBound};
-use crate::prelude::PartialBoundOrd;
 
 /// State of a layered bounds iterator, indicating which layer(s) are active
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Hash)]
