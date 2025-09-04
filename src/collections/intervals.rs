@@ -3,12 +3,12 @@
 pub mod bounds;
 pub mod complement;
 pub mod layered_bounds;
+pub mod layered_bounds_set_ops;
 pub mod precision;
 pub mod relativity_conversion;
 pub mod remove_empty;
 pub mod set_ops;
 pub mod united_bounds;
-pub mod united_set;
 
 #[cfg(test)]
 mod bounds_tests;
