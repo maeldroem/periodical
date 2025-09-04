@@ -4,7 +4,9 @@ use std::cmp::Ordering;
 use std::iter::{FusedIterator, Peekable};
 use std::ops::{Add, Sub};
 
-use crate::collections::intervals::layered_bounds_set_ops::intersect::LayeredAbsoluteBoundsIntersection;
+use crate::collections::intervals::layered_bounds_set_ops::intersect::{
+    LayeredAbsoluteBoundsIntersection, LayeredRelativeBoundsIntersection,
+};
 use crate::intervals::BoundOrdering;
 use crate::intervals::absolute::{AbsoluteBound, AbsoluteEndBound, AbsoluteStartBound};
 use crate::intervals::meta::BoundInclusivity;
@@ -224,7 +226,7 @@ where
     I1: Iterator<Item = AbsoluteBound>,
     I2: Iterator<Item = AbsoluteBound>,
 {
-    // Creates an [`LayeredAbsoluteBoundsIntersection`] from the iterator
+    /// Creates an [`LayeredAbsoluteBoundsIntersection`] from the iterator
     pub fn intersect(self) -> LayeredAbsoluteBoundsIntersection<Peekable<Self>> {
         LayeredAbsoluteBoundsIntersection::new(self)
     }
@@ -873,6 +875,17 @@ where
             queued_result: None,
             exhausted: false,
         }
+    }
+}
+
+impl<I1, I2> LayeredRelativeBounds<Peekable<I1>, Peekable<I2>>
+where
+    I1: Iterator<Item = RelativeBound>,
+    I2: Iterator<Item = RelativeBound>,
+{
+    /// Creates an [`LayeredRelativeBoundsIntersection`] from the iterator
+    pub fn intersect(self) -> LayeredRelativeBoundsIntersection<Peekable<Self>> {
+        LayeredRelativeBoundsIntersection::new(self)
     }
 }
 
