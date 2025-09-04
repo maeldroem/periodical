@@ -7,6 +7,9 @@ use std::ops::{Add, Sub};
 use crate::collections::intervals::layered_bounds_set_ops::intersect::{
     LayeredAbsoluteBoundsIntersection, LayeredRelativeBoundsIntersection,
 };
+use crate::collections::intervals::layered_bounds_set_ops::unite::{
+    LayeredAbsoluteBoundsUnion, LayeredRelativeBoundsUnion,
+};
 use crate::intervals::BoundOrdering;
 use crate::intervals::absolute::{AbsoluteBound, AbsoluteEndBound, AbsoluteStartBound};
 use crate::intervals::meta::BoundInclusivity;
@@ -226,7 +229,14 @@ where
     I1: Iterator<Item = AbsoluteBound>,
     I2: Iterator<Item = AbsoluteBound>,
 {
+    /// Creates a [`LayeredAbsoluteBoundsUnion`] from the iterator
+    #[must_use]
+    pub fn unite(self) -> LayeredAbsoluteBoundsUnion<Self> {
+        LayeredAbsoluteBoundsUnion::new(self)
+    }
+
     /// Creates an [`LayeredAbsoluteBoundsIntersection`] from the iterator
+    #[must_use]
     pub fn intersect(self) -> LayeredAbsoluteBoundsIntersection<Self> {
         LayeredAbsoluteBoundsIntersection::new(self)
     }
@@ -883,7 +893,14 @@ where
     I1: Iterator<Item = RelativeBound>,
     I2: Iterator<Item = RelativeBound>,
 {
-    /// Creates an [`LayeredRelativeBoundsIntersection`] from the iterator
+    /// Creates a [`LayeredRelativeBoundsUnion`] from the iterator
+    #[must_use]
+    pub fn unite(self) -> LayeredRelativeBoundsUnion<Self> {
+        LayeredRelativeBoundsUnion::new(self)
+    }
+
+    /// Creates a [`LayeredRelativeBoundsIntersection`] from the iterator
+    #[must_use]
     pub fn intersect(self) -> LayeredRelativeBoundsIntersection<Self> {
         LayeredRelativeBoundsIntersection::new(self)
     }
