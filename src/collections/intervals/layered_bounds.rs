@@ -10,6 +10,9 @@ use crate::collections::intervals::layered_bounds_set_ops::diff::{
 use crate::collections::intervals::layered_bounds_set_ops::intersect::{
     LayeredAbsoluteBoundsIntersection, LayeredRelativeBoundsIntersection,
 };
+use crate::collections::intervals::layered_bounds_set_ops::sym_diff::{
+    LayeredAbsoluteBoundsSymmetricDifference, LayeredRelativeBoundsSymmetricDifference,
+};
 use crate::collections::intervals::layered_bounds_set_ops::unite::{
     LayeredAbsoluteBoundsUnion, LayeredRelativeBoundsUnion,
 };
@@ -260,6 +263,12 @@ where
     #[must_use]
     pub fn difference(self) -> LayeredAbsoluteBoundsDifference<Self> {
         LayeredAbsoluteBoundsDifference::new(self)
+    }
+
+    /// Creates a [`LayeredAbsoluteBoundsSymmetricDifference`] from the iterator
+    #[must_use]
+    pub fn symmetric_difference(self) -> LayeredAbsoluteBoundsSymmetricDifference<Self> {
+        LayeredAbsoluteBoundsSymmetricDifference::new(self)
     }
 }
 
@@ -938,10 +947,16 @@ where
         LayeredRelativeBoundsIntersection::new(self)
     }
 
-    /// Creates an [`LayeredRelativeBoundsDifference`] from the iterator
+    /// Creates a [`LayeredRelativeBoundsDifference`] from the iterator
     #[must_use]
     pub fn difference(self) -> LayeredRelativeBoundsDifference<Self> {
         LayeredRelativeBoundsDifference::new(self)
+    }
+
+    /// Creates a [`LayeredRelativeBoundsSymmetricDifference`] from the iterator
+    #[must_use]
+    pub fn symmetric_difference(self) -> LayeredRelativeBoundsSymmetricDifference<Self> {
+        LayeredRelativeBoundsSymmetricDifference::new(self)
     }
 }
 

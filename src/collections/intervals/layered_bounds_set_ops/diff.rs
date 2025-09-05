@@ -5,7 +5,8 @@ use std::iter::FusedIterator;
 use crate::collections::intervals::layered_bounds::{
     LayeredBoundsState, LayeredBoundsStateChangeAtAbsoluteBound, LayeredBoundsStateChangeAtRelativeBound,
 };
-use crate::prelude::{AbsoluteBounds, RelativeBounds};
+use crate::intervals::absolute::AbsoluteBounds;
+use crate::intervals::relative::RelativeBounds;
 
 /// Difference iterator
 /// for [`LayeredAbsoluteBounds`](crate::collections::intervals::layered_bounds::LayeredAbsoluteBounds)

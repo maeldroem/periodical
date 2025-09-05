@@ -48,7 +48,7 @@ fn create_layered_abs_bounds_diff() {
 }
 
 #[test]
-fn layered_abs_bounds_diff() {
+fn layered_abs_bounds_diff_run() {
     // first layer:     [------2------]     [--6--] [8]
     // second layer: [-1-] (-3-)  [-4-) [-5-]     [--7--]
     let first_layer_data = [
@@ -181,7 +181,7 @@ fn create_layered_rel_bounds_diff() {
 }
 
 #[test]
-fn layered_rel_bounds_diff() {
+fn layered_rel_bounds_diff_run() {
     // first layer:     [------2------]     [--6--] [8]
     // second layer: [-1-] (-3-)  [-4-) [-5-]     [--7--]
     let first_layer_data = [
