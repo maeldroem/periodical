@@ -1,9 +1,10 @@
 use chrono::Utc;
 
-use crate::intervals::absolute::{AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound};
+use crate::intervals::absolute::{AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound};
 use crate::intervals::meta::BoundInclusivity;
+use crate::intervals::ops::extend::Extensible;
+use crate::intervals::ops::overlap::{CanPositionOverlap, DEFAULT_OVERLAP_RULES, OverlapRuleSet};
 use crate::ops::UnionResult;
-use crate::prelude::{AbsoluteBounds, CanPositionOverlap, DEFAULT_OVERLAP_RULES, Extensible, OverlapRuleSet};
 use crate::test_utils::date;
 
 use super::unite::*;
