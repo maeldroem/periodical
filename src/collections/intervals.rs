@@ -25,20 +25,7 @@ mod remove_empty_tests;
 #[cfg(test)]
 mod united_bounds_tests;
 
-// NOTE: Most of the operations in this file can be MAJORLY IMPROVED in terms of performance
-// Suggestions for improvement:
-// - Most operations can be done in parallel, but that would require them to be eagerly-evaluated, therefore it would
-//   put into question whether we still need those methods as iterators. Or perhaps we can keep the iterators but
-//   create methods that explicitly allow this eager evaluation?
-// - Operations that "merges" two iterators may benefit from a point system: we merge all interval points into one list
-//   and read from this list, therefore when we encounter a point that comes from the second iterator, we can apply
-//   the operation and continue from there instead of checking for overlap of all elements of the first iter upon
-//   each element of the second iter. This strategy is applicable to iterators but requires both sets of intervals
-//   to be sorted chronologically.
-// Current opinion: Such eager and constrained methods should be implemented on the IntervalIterator trait,
-// that way, the caller can choose which one fits his needs: if they want to unite elements progressively of a list
-// that is unsorted or sorted non-chronologically, they can choose to use the Union iterator. But if they need
-// a fast way of uniting a list of intervals that is sorted chronologically, then they can call such methods.
+// NOTE: collections can be improved by making them parallel with the rayon crate
 
 /*
 If we want to implement an operation "dispatcher" for multiple types, since we can easily run in the problem that
