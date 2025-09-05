@@ -171,7 +171,9 @@ fn create_layered_rel_bounds_diff() {
                 Duration::hours(501),
                 BoundInclusivity::Exclusive,
             ))),
-            Some(RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(501)))),
+            Some(RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(
+                501,
+            )))),
         ),
     ];
 

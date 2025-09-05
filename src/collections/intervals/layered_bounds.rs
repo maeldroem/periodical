@@ -4,7 +4,9 @@ use std::cmp::Ordering;
 use std::iter::{FusedIterator, Peekable};
 use std::ops::{Add, Sub};
 
-use crate::collections::intervals::layered_bounds_set_ops::diff::{LayeredAbsoluteBoundsDifference, LayeredRelativeBoundsDifference};
+use crate::collections::intervals::layered_bounds_set_ops::diff::{
+    LayeredAbsoluteBoundsDifference, LayeredRelativeBoundsDifference,
+};
 use crate::collections::intervals::layered_bounds_set_ops::intersect::{
     LayeredAbsoluteBoundsIntersection, LayeredRelativeBoundsIntersection,
 };
@@ -221,6 +223,18 @@ where
             state: LayeredBoundsState::default(),
             queued_result: None,
             exhausted: false,
+        }
+    }
+
+    /// Swaps the two layers while conserving the current state
+    #[must_use]
+    pub fn swap_layers(self) -> LayeredAbsoluteBounds<I2, I1> {
+        LayeredAbsoluteBounds {
+            first_layer: self.second_layer,
+            second_layer: self.first_layer,
+            state: self.state,
+            queued_result: self.queued_result,
+            exhausted: self.exhausted,
         }
     }
 }
@@ -891,6 +905,18 @@ where
             state: LayeredBoundsState::default(),
             queued_result: None,
             exhausted: false,
+        }
+    }
+
+    /// Swaps the two layers while conserving the current state
+    #[must_use]
+    pub fn swap_layers(self) -> LayeredRelativeBounds<I2, I1> {
+        LayeredRelativeBounds {
+            first_layer: self.second_layer,
+            second_layer: self.first_layer,
+            state: self.state,
+            queued_result: self.queued_result,
+            exhausted: self.exhausted,
         }
     }
 }

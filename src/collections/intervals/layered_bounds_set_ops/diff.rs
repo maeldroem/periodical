@@ -2,12 +2,14 @@
 
 use std::iter::FusedIterator;
 
-use crate::collections::intervals::layered_bounds::{LayeredBoundsState, LayeredBoundsStateChangeAtAbsoluteBound, LayeredBoundsStateChangeAtRelativeBound};
+use crate::collections::intervals::layered_bounds::{
+    LayeredBoundsState, LayeredBoundsStateChangeAtAbsoluteBound, LayeredBoundsStateChangeAtRelativeBound,
+};
 use crate::prelude::{AbsoluteBounds, RelativeBounds};
 
 /// Difference iterator
 /// for [`LayeredAbsoluteBounds`](crate::collections::intervals::layered_bounds::LayeredAbsoluteBounds)
-/// 
+///
 /// The second layer acts as the _removers_.
 pub struct LayeredAbsoluteBoundsDifference<I> {
     iter: I,
@@ -82,14 +84,14 @@ where
     }
 }
 
-impl<I> FusedIterator for LayeredAbsoluteBoundsDifference<I>
-where
-    I: Iterator<Item = LayeredBoundsStateChangeAtAbsoluteBound>,
-{}
+impl<I> FusedIterator for LayeredAbsoluteBoundsDifference<I> where
+    I: Iterator<Item = LayeredBoundsStateChangeAtAbsoluteBound>
+{
+}
 
 /// Difference iterator
 /// for [`LayeredRelativeBounds`](crate::collections::intervals::layered_bounds::LayeredRelativeBounds)
-/// 
+///
 /// The second layer acts as the _removers_.
 pub struct LayeredRelativeBoundsDifference<I> {
     iter: I,
@@ -164,7 +166,7 @@ where
     }
 }
 
-impl<I> FusedIterator for LayeredRelativeBoundsDifference<I>
-where
-    I: Iterator<Item = LayeredBoundsStateChangeAtRelativeBound>,
-{}
+impl<I> FusedIterator for LayeredRelativeBoundsDifference<I> where
+    I: Iterator<Item = LayeredBoundsStateChangeAtRelativeBound>
+{
+}
