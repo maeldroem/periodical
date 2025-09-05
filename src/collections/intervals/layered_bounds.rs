@@ -4,6 +4,7 @@ use std::cmp::Ordering;
 use std::iter::{FusedIterator, Peekable};
 use std::ops::{Add, Sub};
 
+use crate::collections::intervals::layered_bounds_set_ops::diff::{LayeredAbsoluteBoundsDifference, LayeredRelativeBoundsDifference};
 use crate::collections::intervals::layered_bounds_set_ops::intersect::{
     LayeredAbsoluteBoundsIntersection, LayeredRelativeBoundsIntersection,
 };
@@ -239,6 +240,12 @@ where
     #[must_use]
     pub fn intersect(self) -> LayeredAbsoluteBoundsIntersection<Self> {
         LayeredAbsoluteBoundsIntersection::new(self)
+    }
+
+    /// Creates an [`LayeredAbsoluteBoundsDifference`] from the iterator
+    #[must_use]
+    pub fn difference(self) -> LayeredAbsoluteBoundsDifference<Self> {
+        LayeredAbsoluteBoundsDifference::new(self)
     }
 }
 
@@ -903,6 +910,12 @@ where
     #[must_use]
     pub fn intersect(self) -> LayeredRelativeBoundsIntersection<Self> {
         LayeredRelativeBoundsIntersection::new(self)
+    }
+
+    /// Creates an [`LayeredRelativeBoundsDifference`] from the iterator
+    #[must_use]
+    pub fn difference(self) -> LayeredRelativeBoundsDifference<Self> {
+        LayeredRelativeBoundsDifference::new(self)
     }
 }
 
