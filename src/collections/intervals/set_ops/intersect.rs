@@ -19,9 +19,11 @@ pub trait PeerIntersectableIteratorDispatcher: IntoIterator + Sized {
     ///
     /// Processes elements pair by pair and returns the result of the intersection. If the intersection is successful,
     /// it returns the intersected interval. If it is unsuccessful, it returns the current element.
-    fn peer_intersection_with<F>(self, f: F) -> PeerIntersectionWith<Peekable<Self::IntoIter>, F>
+    fn peer_intersection_with<'a, T, F>(self, f: F) -> PeerIntersectionWith<Peekable<Self::IntoIter>, F>
     where
-        F: FnMut(&Self::Item, &Self::Item) -> IntersectionResult<Self::Item>,
+        Self::IntoIter: Iterator<Item = &'a T>,
+        T: 'a + Intersectable<Output = T> + Clone,
+        F: FnMut(&T, &T) -> IntersectionResult<T>,
     {
         PeerIntersectionWith::new(self.into_iter(), f)
     }
