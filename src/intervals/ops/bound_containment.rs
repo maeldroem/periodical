@@ -18,7 +18,7 @@ use crate::intervals::{AbsoluteBounds, EmptiableAbsoluteBounds, EmptiableRelativ
 /// Bound position relative to an interval
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
-pub enum BoundPosition {
+pub enum BoundContainmentPosition {
     /// The given bound was found before the interval's beginning
     OutsideBefore,
     /// The given bound was found after the interval's end
@@ -44,20 +44,20 @@ pub enum BoundPosition {
     Inside,
 }
 
-impl BoundPosition {
+impl BoundContainmentPosition {
     /// Discards the information about bound inclusivity but conserves the variant
     ///
     /// **Careful!** This method discards data about bound inclusivity and cannot be recovered after conversion.
     #[must_use]
-    pub fn disambiguate(self) -> DisambiguatedBoundPosition {
+    pub fn strip(self) -> DisambiguatedBoundContainmentPosition {
         match self {
-            Self::OutsideBefore => DisambiguatedBoundPosition::OutsideBefore,
-            Self::OutsideAfter => DisambiguatedBoundPosition::OutsideAfter,
-            Self::Outside => DisambiguatedBoundPosition::Outside,
-            Self::OnStart(..) => DisambiguatedBoundPosition::OnStart,
-            Self::OnEnd(..) => DisambiguatedBoundPosition::OnEnd,
-            Self::Equal => DisambiguatedBoundPosition::Equal,
-            Self::Inside => DisambiguatedBoundPosition::Inside,
+            Self::OutsideBefore => DisambiguatedBoundContainmentPosition::OutsideBefore,
+            Self::OutsideAfter => DisambiguatedBoundContainmentPosition::OutsideAfter,
+            Self::Outside => DisambiguatedBoundContainmentPosition::Outside,
+            Self::OnStart(..) => DisambiguatedBoundContainmentPosition::OnStart,
+            Self::OnEnd(..) => DisambiguatedBoundContainmentPosition::OnEnd,
+            Self::Equal => DisambiguatedBoundContainmentPosition::Equal,
+            Self::Inside => DisambiguatedBoundContainmentPosition::Inside,
         }
     }
 
@@ -65,7 +65,10 @@ impl BoundPosition {
     ///
     /// **Careful!** This method discards data about bound inclusivity and cannot be recovered after conversion.
     #[must_use]
-    pub fn disambiguate_using_rule_set(self, rule_set: BoundContainmentRuleSet) -> DisambiguatedBoundPosition {
+    pub fn disambiguate_using_rule_set(
+        self,
+        rule_set: BoundContainmentRuleSet,
+    ) -> DisambiguatedBoundContainmentPosition {
         rule_set.disambiguate(self)
     }
 }
@@ -73,7 +76,7 @@ impl BoundPosition {
 /// Disambiguated [`BoundPosition`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
-pub enum DisambiguatedBoundPosition {
+pub enum DisambiguatedBoundContainmentPosition {
     /// See [`OutsideBefore`](BoundPosition::OutsideBefore)
     OutsideBefore,
     /// See [`OutsideAfter`](BoundPosition::OutsideAfter)
@@ -125,7 +128,7 @@ pub enum BoundContainmentRuleSet {
 impl BoundContainmentRuleSet {
     /// Disambiguates a bound position according to the rule set
     #[must_use]
-    pub fn disambiguate(&self, bound_position: BoundPosition) -> DisambiguatedBoundPosition {
+    pub fn disambiguate(&self, bound_position: BoundContainmentPosition) -> DisambiguatedBoundContainmentPosition {
         match self {
             Self::Strict => {
                 bound_position_rule_set_disambiguation(bound_position, BoundOverlapDisambiguationRuleSet::Strict)
@@ -151,31 +154,31 @@ impl BoundContainmentRuleSet {
 /// Disambiguates a [`BoundPosition`] using the given [`BoundOverlapDisambiguationRuleSet`]
 #[must_use]
 pub fn bound_position_rule_set_disambiguation(
-    bound_position: BoundPosition,
+    bound_position: BoundContainmentPosition,
     bound_overlap_disambiguation_rule_set: BoundOverlapDisambiguationRuleSet,
-) -> DisambiguatedBoundPosition {
+) -> DisambiguatedBoundContainmentPosition {
     match bound_position {
-        BoundPosition::Outside => DisambiguatedBoundPosition::Outside,
-        BoundPosition::OutsideBefore => DisambiguatedBoundPosition::OutsideBefore,
-        BoundPosition::OutsideAfter => DisambiguatedBoundPosition::OutsideAfter,
-        BoundPosition::OnStart(None) => DisambiguatedBoundPosition::OnStart,
-        BoundPosition::OnStart(Some(ambiguity)) => {
+        BoundContainmentPosition::Outside => DisambiguatedBoundContainmentPosition::Outside,
+        BoundContainmentPosition::OutsideBefore => DisambiguatedBoundContainmentPosition::OutsideBefore,
+        BoundContainmentPosition::OutsideAfter => DisambiguatedBoundContainmentPosition::OutsideAfter,
+        BoundContainmentPosition::OnStart(None) => DisambiguatedBoundContainmentPosition::OnStart,
+        BoundContainmentPosition::OnStart(Some(ambiguity)) => {
             match ambiguity.disambiguate_using_rule_set(bound_overlap_disambiguation_rule_set) {
-                DisambiguatedBoundOverlap::Before => DisambiguatedBoundPosition::OutsideBefore,
-                DisambiguatedBoundOverlap::Equal => DisambiguatedBoundPosition::OnStart,
-                DisambiguatedBoundOverlap::After => DisambiguatedBoundPosition::Inside,
+                DisambiguatedBoundOverlap::Before => DisambiguatedBoundContainmentPosition::OutsideBefore,
+                DisambiguatedBoundOverlap::Equal => DisambiguatedBoundContainmentPosition::OnStart,
+                DisambiguatedBoundOverlap::After => DisambiguatedBoundContainmentPosition::Inside,
             }
         },
-        BoundPosition::OnEnd(None) => DisambiguatedBoundPosition::OnEnd,
-        BoundPosition::OnEnd(Some(ambiguity)) => {
+        BoundContainmentPosition::OnEnd(None) => DisambiguatedBoundContainmentPosition::OnEnd,
+        BoundContainmentPosition::OnEnd(Some(ambiguity)) => {
             match ambiguity.disambiguate_using_rule_set(bound_overlap_disambiguation_rule_set) {
-                DisambiguatedBoundOverlap::Before => DisambiguatedBoundPosition::Inside,
-                DisambiguatedBoundOverlap::Equal => DisambiguatedBoundPosition::OnEnd,
-                DisambiguatedBoundOverlap::After => DisambiguatedBoundPosition::OutsideAfter,
+                DisambiguatedBoundOverlap::Before => DisambiguatedBoundContainmentPosition::Inside,
+                DisambiguatedBoundOverlap::Equal => DisambiguatedBoundContainmentPosition::OnEnd,
+                DisambiguatedBoundOverlap::After => DisambiguatedBoundContainmentPosition::OutsideAfter,
             }
         },
-        BoundPosition::Equal => DisambiguatedBoundPosition::Equal,
-        BoundPosition::Inside => DisambiguatedBoundPosition::Inside,
+        BoundContainmentPosition::Equal => DisambiguatedBoundContainmentPosition::Equal,
+        BoundContainmentPosition::Inside => DisambiguatedBoundContainmentPosition::Inside,
     }
 }
 
@@ -204,7 +207,7 @@ impl BoundContainmentRule {
     /// Returns the next state of the running containment decision, given the current one and the disambiguated
     /// bound position
     #[must_use]
-    pub fn counts_as_contained(&self, running: bool, disambiguated_pos: DisambiguatedBoundPosition) -> bool {
+    pub fn counts_as_contained(&self, running: bool, disambiguated_pos: DisambiguatedBoundContainmentPosition) -> bool {
         match self {
             Self::AllowOnStart => allow_on_start_containment_rule_counts_as_contained(running, disambiguated_pos),
             Self::AllowOnEnd => allow_on_end_containment_rule_counts_as_contained(running, disambiguated_pos),
@@ -218,13 +221,16 @@ impl BoundContainmentRule {
 
 /// Checks all the given rules and returns the final boolean regarding bound containment
 #[must_use]
-pub fn check_bound_containment_rules<'a, RI>(disambiguated_pos: DisambiguatedBoundPosition, rules: RI) -> bool
+pub fn check_bound_containment_rules<'a, RI>(
+    disambiguated_pos: DisambiguatedBoundContainmentPosition,
+    rules: RI,
+) -> bool
 where
     RI: IntoIterator<Item = &'a BoundContainmentRule>,
 {
     let common = matches!(
         disambiguated_pos,
-        DisambiguatedBoundPosition::Equal | DisambiguatedBoundPosition::Inside,
+        DisambiguatedBoundContainmentPosition::Equal | DisambiguatedBoundContainmentPosition::Inside,
     );
 
     rules.into_iter().fold(common, |is_contained, rule| {
@@ -237,9 +243,9 @@ where
 #[must_use]
 pub fn allow_on_start_containment_rule_counts_as_contained(
     running: bool,
-    disambiguated_pos: DisambiguatedBoundPosition,
+    disambiguated_pos: DisambiguatedBoundContainmentPosition,
 ) -> bool {
-    running || matches!(disambiguated_pos, DisambiguatedBoundPosition::OnStart)
+    running || matches!(disambiguated_pos, DisambiguatedBoundContainmentPosition::OnStart)
 }
 
 /// Checks whether the given [`DisambiguatedBoundPosition`] respects
@@ -247,9 +253,9 @@ pub fn allow_on_start_containment_rule_counts_as_contained(
 #[must_use]
 pub fn allow_on_end_containment_rule_counts_as_contained(
     running: bool,
-    disambiguated_pos: DisambiguatedBoundPosition,
+    disambiguated_pos: DisambiguatedBoundContainmentPosition,
 ) -> bool {
-    running || matches!(disambiguated_pos, DisambiguatedBoundPosition::OnEnd)
+    running || matches!(disambiguated_pos, DisambiguatedBoundContainmentPosition::OnEnd)
 }
 
 /// Checks whether the given [`DisambiguatedBoundPosition`] respects
@@ -257,12 +263,12 @@ pub fn allow_on_end_containment_rule_counts_as_contained(
 #[must_use]
 pub fn allow_on_bounds_containment_rule_counts_as_contained(
     running: bool,
-    disambiguated_pos: DisambiguatedBoundPosition,
+    disambiguated_pos: DisambiguatedBoundContainmentPosition,
 ) -> bool {
     running
         || matches!(
             disambiguated_pos,
-            DisambiguatedBoundPosition::OnStart | DisambiguatedBoundPosition::OnEnd,
+            DisambiguatedBoundContainmentPosition::OnStart | DisambiguatedBoundContainmentPosition::OnEnd,
         )
 }
 
@@ -271,9 +277,9 @@ pub fn allow_on_bounds_containment_rule_counts_as_contained(
 #[must_use]
 pub fn deny_on_start_containment_rule_counts_as_contained(
     running: bool,
-    disambiguated_pos: DisambiguatedBoundPosition,
+    disambiguated_pos: DisambiguatedBoundContainmentPosition,
 ) -> bool {
-    running && !matches!(disambiguated_pos, DisambiguatedBoundPosition::OnStart)
+    running && !matches!(disambiguated_pos, DisambiguatedBoundContainmentPosition::OnStart)
 }
 
 /// Checks whether the given [`DisambiguatedBoundPosition`] respects
@@ -281,9 +287,9 @@ pub fn deny_on_start_containment_rule_counts_as_contained(
 #[must_use]
 pub fn deny_on_end_containment_rule_counts_as_contained(
     running: bool,
-    disambiguated_pos: DisambiguatedBoundPosition,
+    disambiguated_pos: DisambiguatedBoundContainmentPosition,
 ) -> bool {
-    running && !matches!(disambiguated_pos, DisambiguatedBoundPosition::OnEnd)
+    running && !matches!(disambiguated_pos, DisambiguatedBoundContainmentPosition::OnEnd)
 }
 
 /// Checks whether the given [`DisambiguatedBoundPosition`] respects
@@ -291,12 +297,12 @@ pub fn deny_on_end_containment_rule_counts_as_contained(
 #[must_use]
 pub fn deny_on_bounds_containment_rule_counts_as_contained(
     running: bool,
-    disambiguated_pos: DisambiguatedBoundPosition,
+    disambiguated_pos: DisambiguatedBoundContainmentPosition,
 ) -> bool {
     running
         && !matches!(
             disambiguated_pos,
-            DisambiguatedBoundPosition::OnStart | DisambiguatedBoundPosition::OnEnd,
+            DisambiguatedBoundContainmentPosition::OnStart | DisambiguatedBoundContainmentPosition::OnEnd,
         )
 }
 
@@ -306,11 +312,15 @@ pub fn deny_on_bounds_containment_rule_counts_as_contained(
 pub trait CanPositionBoundContainment<B> {
     /// Returns the bound position of the given bound
     #[must_use]
-    fn bound_position(&self, bound: &B) -> BoundPosition;
+    fn bound_position(&self, bound: &B) -> BoundContainmentPosition;
 
     /// Returns the disambiguated bound position of the given bound using the given rule set
     #[must_use]
-    fn disambiguated_bound_position(&self, bound: &B, rule_set: BoundContainmentRuleSet) -> DisambiguatedBoundPosition {
+    fn disambiguated_bound_position(
+        &self,
+        bound: &B,
+        rule_set: BoundContainmentRuleSet,
+    ) -> DisambiguatedBoundContainmentPosition {
         self.bound_position(bound).disambiguate_using_rule_set(rule_set)
     }
 
@@ -339,7 +349,7 @@ pub trait CanPositionBoundContainment<B> {
     #[must_use]
     fn contains_using<F>(&self, bound: &B, f: F) -> bool
     where
-        F: FnOnce(BoundPosition) -> bool,
+        F: FnOnce(BoundContainmentPosition) -> bool,
     {
         (f)(self.bound_position(bound))
     }
@@ -349,7 +359,7 @@ pub trait CanPositionBoundContainment<B> {
     #[must_use]
     fn contains_using_simple<F>(&self, bound: &B, rule_set: BoundContainmentRuleSet, f: F) -> bool
     where
-        F: FnOnce(DisambiguatedBoundPosition) -> bool,
+        F: FnOnce(DisambiguatedBoundContainmentPosition) -> bool,
     {
         (f)(self.disambiguated_bound_position(bound, rule_set))
     }
@@ -359,7 +369,7 @@ impl<T> CanPositionBoundContainment<AbsoluteStartBound> for T
 where
     T: HasEmptiableAbsoluteBounds,
 {
-    fn bound_position(&self, bound: &AbsoluteStartBound) -> BoundPosition {
+    fn bound_position(&self, bound: &AbsoluteStartBound) -> BoundContainmentPosition {
         bound_position_abs_start_bound_on_emptiable_abs_bounds(&self.emptiable_abs_bounds(), bound)
     }
 }
@@ -369,9 +379,9 @@ where
 pub fn bound_position_abs_start_bound_on_emptiable_abs_bounds(
     emptiable_abs_bounds: &EmptiableAbsoluteBounds,
     abs_start_bound: &AbsoluteStartBound,
-) -> BoundPosition {
+) -> BoundContainmentPosition {
     let EmptiableAbsoluteBounds::Bound(abs_bounds) = emptiable_abs_bounds else {
-        return BoundPosition::Outside;
+        return BoundContainmentPosition::Outside;
     };
 
     bound_position_abs_start_bound_on_abs_bounds(abs_bounds, abs_start_bound)
@@ -382,31 +392,31 @@ pub fn bound_position_abs_start_bound_on_emptiable_abs_bounds(
 pub fn bound_position_abs_start_bound_on_abs_bounds(
     abs_bounds: &AbsoluteBounds,
     abs_start_bound: &AbsoluteStartBound,
-) -> BoundPosition {
+) -> BoundContainmentPosition {
     type StartB = AbsoluteStartBound;
     type EndB = AbsoluteEndBound;
 
     match (abs_bounds.start(), abs_bounds.end(), abs_start_bound) {
-        (StartB::InfinitePast, _, StartB::InfinitePast) => BoundPosition::OnStart(None),
-        (StartB::InfinitePast, EndB::InfiniteFuture, StartB::Finite(_)) => BoundPosition::Inside,
+        (StartB::InfinitePast, _, StartB::InfinitePast) => BoundContainmentPosition::OnStart(None),
+        (StartB::InfinitePast, EndB::InfiniteFuture, StartB::Finite(_)) => BoundContainmentPosition::Inside,
         (StartB::InfinitePast, EndB::Finite(finite_end), StartB::Finite(finite_bound)) => {
             match finite_bound.time().cmp(&finite_end.time()) {
-                Ordering::Less => BoundPosition::Inside,
-                Ordering::Greater => BoundPosition::OutsideAfter,
-                Ordering::Equal => BoundPosition::OnEnd(Some(BoundOverlapAmbiguity::StartEnd(
-                    finite_bound.inclusivity(),
+                Ordering::Less => BoundContainmentPosition::Inside,
+                Ordering::Greater => BoundContainmentPosition::OutsideAfter,
+                Ordering::Equal => BoundContainmentPosition::OnEnd(Some(BoundOverlapAmbiguity::EndStart(
                     finite_end.inclusivity(),
+                    finite_bound.inclusivity(),
                 ))),
             }
         },
-        (StartB::Finite(_), _, StartB::InfinitePast) => BoundPosition::OutsideBefore,
+        (StartB::Finite(_), _, StartB::InfinitePast) => BoundContainmentPosition::OutsideBefore,
         (StartB::Finite(finite_start), EndB::InfiniteFuture, StartB::Finite(finite_bound)) => {
             match finite_bound.time().cmp(&finite_start.time()) {
-                Ordering::Less => BoundPosition::Inside,
-                Ordering::Greater => BoundPosition::OutsideAfter,
-                Ordering::Equal => BoundPosition::OnStart(Some(BoundOverlapAmbiguity::BothStarts(
-                    finite_bound.inclusivity(),
+                Ordering::Less => BoundContainmentPosition::Inside,
+                Ordering::Greater => BoundContainmentPosition::OutsideAfter,
+                Ordering::Equal => BoundContainmentPosition::OnStart(Some(BoundOverlapAmbiguity::BothStarts(
                     finite_start.inclusivity(),
+                    finite_bound.inclusivity(),
                 ))),
             }
         },
@@ -415,21 +425,19 @@ pub fn bound_position_abs_start_bound_on_abs_bounds(
                 finite_bound.time().cmp(&finite_start.time()),
                 finite_bound.time().cmp(&finite_end.time()),
             ) {
-                (Ordering::Less, _) => BoundPosition::OutsideBefore,
-                (_, Ordering::Greater) => BoundPosition::OutsideAfter,
+                (Ordering::Less, _) => BoundContainmentPosition::OutsideBefore,
+                (_, Ordering::Greater) => BoundContainmentPosition::OutsideAfter,
                 (Ordering::Equal, Ordering::Equal) => match finite_bound.inclusivity() {
-                    BoundInclusivity::Inclusive => BoundPosition::Equal,
-                    BoundInclusivity::Exclusive => BoundPosition::OutsideBefore,
+                    BoundInclusivity::Inclusive => BoundContainmentPosition::Equal,
+                    BoundInclusivity::Exclusive => BoundContainmentPosition::OutsideBefore,
                 },
-                (Ordering::Equal, Ordering::Less) => BoundPosition::OnStart(Some(BoundOverlapAmbiguity::BothStarts(
-                    finite_bound.inclusivity(),
-                    finite_start.inclusivity(),
-                ))),
-                (Ordering::Greater, Ordering::Equal) => BoundPosition::OnEnd(Some(BoundOverlapAmbiguity::StartEnd(
-                    finite_bound.inclusivity(),
-                    finite_end.inclusivity(),
-                ))),
-                (Ordering::Greater, Ordering::Less) => BoundPosition::Inside,
+                (Ordering::Equal, Ordering::Less) => BoundContainmentPosition::OnStart(Some(
+                    BoundOverlapAmbiguity::BothStarts(finite_start.inclusivity(), finite_bound.inclusivity()),
+                )),
+                (Ordering::Greater, Ordering::Equal) => BoundContainmentPosition::OnEnd(Some(
+                    BoundOverlapAmbiguity::EndStart(finite_end.inclusivity(), finite_bound.inclusivity()),
+                )),
+                (Ordering::Greater, Ordering::Less) => BoundContainmentPosition::Inside,
             }
         },
     }
@@ -439,7 +447,7 @@ impl<T> CanPositionBoundContainment<AbsoluteEndBound> for T
 where
     T: HasEmptiableAbsoluteBounds,
 {
-    fn bound_position(&self, bound: &AbsoluteEndBound) -> BoundPosition {
+    fn bound_position(&self, bound: &AbsoluteEndBound) -> BoundContainmentPosition {
         bound_position_abs_end_bound_on_emptiable_abs_bounds(&self.emptiable_abs_bounds(), bound)
     }
 }
@@ -449,9 +457,9 @@ where
 pub fn bound_position_abs_end_bound_on_emptiable_abs_bounds(
     emptiable_abs_bounds: &EmptiableAbsoluteBounds,
     abs_end_bound: &AbsoluteEndBound,
-) -> BoundPosition {
+) -> BoundContainmentPosition {
     let EmptiableAbsoluteBounds::Bound(abs_bounds) = emptiable_abs_bounds else {
-        return BoundPosition::Outside;
+        return BoundContainmentPosition::Outside;
     };
 
     bound_position_abs_end_bound_on_abs_bounds(abs_bounds, abs_end_bound)
@@ -462,31 +470,31 @@ pub fn bound_position_abs_end_bound_on_emptiable_abs_bounds(
 pub fn bound_position_abs_end_bound_on_abs_bounds(
     abs_bounds: &AbsoluteBounds,
     abs_end_bound: &AbsoluteEndBound,
-) -> BoundPosition {
+) -> BoundContainmentPosition {
     type StartB = AbsoluteStartBound;
     type EndB = AbsoluteEndBound;
 
     match (abs_bounds.start(), abs_bounds.end(), abs_end_bound) {
-        (_, EndB::InfiniteFuture, EndB::InfiniteFuture) => BoundPosition::OnEnd(None),
-        (StartB::InfinitePast, EndB::InfiniteFuture, EndB::Finite(_)) => BoundPosition::Inside,
+        (_, EndB::InfiniteFuture, EndB::InfiniteFuture) => BoundContainmentPosition::OnEnd(None),
+        (StartB::InfinitePast, EndB::InfiniteFuture, EndB::Finite(_)) => BoundContainmentPosition::Inside,
         (StartB::InfinitePast, EndB::Finite(finite_end), EndB::Finite(finite_bound)) => {
             match finite_bound.time().cmp(&finite_end.time()) {
-                Ordering::Less => BoundPosition::Inside,
-                Ordering::Greater => BoundPosition::OutsideAfter,
-                Ordering::Equal => BoundPosition::OnEnd(Some(BoundOverlapAmbiguity::BothEnds(
-                    finite_bound.inclusivity(),
+                Ordering::Less => BoundContainmentPosition::Inside,
+                Ordering::Greater => BoundContainmentPosition::OutsideAfter,
+                Ordering::Equal => BoundContainmentPosition::OnEnd(Some(BoundOverlapAmbiguity::BothEnds(
                     finite_end.inclusivity(),
+                    finite_bound.inclusivity(),
                 ))),
             }
         },
-        (_, EndB::Finite(_), EndB::InfiniteFuture) => BoundPosition::OutsideBefore,
+        (_, EndB::Finite(_), EndB::InfiniteFuture) => BoundContainmentPosition::OutsideBefore,
         (StartB::Finite(finite_start), EndB::InfiniteFuture, EndB::Finite(finite_bound)) => {
             match finite_bound.time().cmp(&finite_start.time()) {
-                Ordering::Less => BoundPosition::Inside,
-                Ordering::Greater => BoundPosition::OutsideAfter,
-                Ordering::Equal => BoundPosition::OnStart(Some(BoundOverlapAmbiguity::EndStart(
-                    finite_bound.inclusivity(),
+                Ordering::Less => BoundContainmentPosition::Inside,
+                Ordering::Greater => BoundContainmentPosition::OutsideAfter,
+                Ordering::Equal => BoundContainmentPosition::OnStart(Some(BoundOverlapAmbiguity::StartEnd(
                     finite_start.inclusivity(),
+                    finite_bound.inclusivity(),
                 ))),
             }
         },
@@ -495,21 +503,19 @@ pub fn bound_position_abs_end_bound_on_abs_bounds(
                 finite_bound.time().cmp(&finite_start.time()),
                 finite_bound.time().cmp(&finite_end.time()),
             ) {
-                (Ordering::Less, _) => BoundPosition::OutsideBefore,
-                (_, Ordering::Greater) => BoundPosition::OutsideAfter,
+                (Ordering::Less, _) => BoundContainmentPosition::OutsideBefore,
+                (_, Ordering::Greater) => BoundContainmentPosition::OutsideAfter,
                 (Ordering::Equal, Ordering::Equal) => match finite_bound.inclusivity() {
-                    BoundInclusivity::Inclusive => BoundPosition::Equal,
-                    BoundInclusivity::Exclusive => BoundPosition::OutsideAfter,
+                    BoundInclusivity::Inclusive => BoundContainmentPosition::Equal,
+                    BoundInclusivity::Exclusive => BoundContainmentPosition::OutsideAfter,
                 },
-                (Ordering::Equal, Ordering::Less) => BoundPosition::OnStart(Some(BoundOverlapAmbiguity::EndStart(
-                    finite_bound.inclusivity(),
-                    finite_start.inclusivity(),
-                ))),
-                (Ordering::Greater, Ordering::Equal) => BoundPosition::OnEnd(Some(BoundOverlapAmbiguity::BothEnds(
-                    finite_bound.inclusivity(),
-                    finite_end.inclusivity(),
-                ))),
-                (Ordering::Greater, Ordering::Less) => BoundPosition::Inside,
+                (Ordering::Equal, Ordering::Less) => BoundContainmentPosition::OnStart(Some(
+                    BoundOverlapAmbiguity::StartEnd(finite_start.inclusivity(), finite_bound.inclusivity()),
+                )),
+                (Ordering::Greater, Ordering::Equal) => BoundContainmentPosition::OnEnd(Some(
+                    BoundOverlapAmbiguity::BothEnds(finite_end.inclusivity(), finite_bound.inclusivity()),
+                )),
+                (Ordering::Greater, Ordering::Less) => BoundContainmentPosition::Inside,
             }
         },
     }
@@ -519,7 +525,7 @@ impl<T> CanPositionBoundContainment<RelativeStartBound> for T
 where
     T: HasEmptiableRelativeBounds,
 {
-    fn bound_position(&self, bound: &RelativeStartBound) -> BoundPosition {
+    fn bound_position(&self, bound: &RelativeStartBound) -> BoundContainmentPosition {
         bound_position_rel_start_bound_on_emptiable_rel_bounds(&self.emptiable_rel_bounds(), bound)
     }
 }
@@ -529,9 +535,9 @@ where
 pub fn bound_position_rel_start_bound_on_emptiable_rel_bounds(
     emptiable_rel_bounds: &EmptiableRelativeBounds,
     rel_start_bound: &RelativeStartBound,
-) -> BoundPosition {
+) -> BoundContainmentPosition {
     let EmptiableRelativeBounds::Bound(rel_bounds) = emptiable_rel_bounds else {
-        return BoundPosition::Outside;
+        return BoundContainmentPosition::Outside;
     };
 
     bound_position_rel_start_bound_on_rel_bounds(rel_bounds, rel_start_bound)
@@ -542,31 +548,31 @@ pub fn bound_position_rel_start_bound_on_emptiable_rel_bounds(
 pub fn bound_position_rel_start_bound_on_rel_bounds(
     rel_bounds: &RelativeBounds,
     rel_start_bound: &RelativeStartBound,
-) -> BoundPosition {
+) -> BoundContainmentPosition {
     type StartB = RelativeStartBound;
     type EndB = RelativeEndBound;
 
     match (rel_bounds.start(), rel_bounds.end(), rel_start_bound) {
-        (StartB::InfinitePast, _, StartB::InfinitePast) => BoundPosition::OnStart(None),
-        (StartB::InfinitePast, EndB::InfiniteFuture, StartB::Finite(_)) => BoundPosition::Inside,
+        (StartB::InfinitePast, _, StartB::InfinitePast) => BoundContainmentPosition::OnStart(None),
+        (StartB::InfinitePast, EndB::InfiniteFuture, StartB::Finite(_)) => BoundContainmentPosition::Inside,
         (StartB::InfinitePast, EndB::Finite(finite_end), StartB::Finite(finite_bound)) => {
             match finite_bound.offset().cmp(&finite_end.offset()) {
-                Ordering::Less => BoundPosition::Inside,
-                Ordering::Greater => BoundPosition::OutsideAfter,
-                Ordering::Equal => BoundPosition::OnEnd(Some(BoundOverlapAmbiguity::StartEnd(
-                    finite_bound.inclusivity(),
+                Ordering::Less => BoundContainmentPosition::Inside,
+                Ordering::Greater => BoundContainmentPosition::OutsideAfter,
+                Ordering::Equal => BoundContainmentPosition::OnEnd(Some(BoundOverlapAmbiguity::EndStart(
                     finite_end.inclusivity(),
+                    finite_bound.inclusivity(),
                 ))),
             }
         },
-        (StartB::Finite(_), _, StartB::InfinitePast) => BoundPosition::OutsideBefore,
+        (StartB::Finite(_), _, StartB::InfinitePast) => BoundContainmentPosition::OutsideBefore,
         (StartB::Finite(finite_start), EndB::InfiniteFuture, StartB::Finite(finite_bound)) => {
             match finite_bound.offset().cmp(&finite_start.offset()) {
-                Ordering::Less => BoundPosition::Inside,
-                Ordering::Greater => BoundPosition::OutsideAfter,
-                Ordering::Equal => BoundPosition::OnStart(Some(BoundOverlapAmbiguity::BothStarts(
-                    finite_bound.inclusivity(),
+                Ordering::Less => BoundContainmentPosition::Inside,
+                Ordering::Greater => BoundContainmentPosition::OutsideAfter,
+                Ordering::Equal => BoundContainmentPosition::OnStart(Some(BoundOverlapAmbiguity::BothStarts(
                     finite_start.inclusivity(),
+                    finite_bound.inclusivity(),
                 ))),
             }
         },
@@ -575,21 +581,19 @@ pub fn bound_position_rel_start_bound_on_rel_bounds(
                 finite_bound.offset().cmp(&finite_start.offset()),
                 finite_bound.offset().cmp(&finite_end.offset()),
             ) {
-                (Ordering::Less, _) => BoundPosition::OutsideBefore,
-                (_, Ordering::Greater) => BoundPosition::OutsideAfter,
+                (Ordering::Less, _) => BoundContainmentPosition::OutsideBefore,
+                (_, Ordering::Greater) => BoundContainmentPosition::OutsideAfter,
                 (Ordering::Equal, Ordering::Equal) => match finite_bound.inclusivity() {
-                    BoundInclusivity::Inclusive => BoundPosition::Equal,
-                    BoundInclusivity::Exclusive => BoundPosition::OutsideBefore,
+                    BoundInclusivity::Inclusive => BoundContainmentPosition::Equal,
+                    BoundInclusivity::Exclusive => BoundContainmentPosition::OutsideBefore,
                 },
-                (Ordering::Equal, Ordering::Less) => BoundPosition::OnStart(Some(BoundOverlapAmbiguity::BothStarts(
-                    finite_bound.inclusivity(),
-                    finite_start.inclusivity(),
-                ))),
-                (Ordering::Greater, Ordering::Equal) => BoundPosition::OnEnd(Some(BoundOverlapAmbiguity::StartEnd(
-                    finite_bound.inclusivity(),
-                    finite_end.inclusivity(),
-                ))),
-                (Ordering::Greater, Ordering::Less) => BoundPosition::Inside,
+                (Ordering::Equal, Ordering::Less) => BoundContainmentPosition::OnStart(Some(
+                    BoundOverlapAmbiguity::BothStarts(finite_start.inclusivity(), finite_bound.inclusivity()),
+                )),
+                (Ordering::Greater, Ordering::Equal) => BoundContainmentPosition::OnEnd(Some(
+                    BoundOverlapAmbiguity::EndStart(finite_end.inclusivity(), finite_bound.inclusivity()),
+                )),
+                (Ordering::Greater, Ordering::Less) => BoundContainmentPosition::Inside,
             }
         },
     }
@@ -599,7 +603,7 @@ impl<T> CanPositionBoundContainment<RelativeEndBound> for T
 where
     T: HasEmptiableRelativeBounds,
 {
-    fn bound_position(&self, bound: &RelativeEndBound) -> BoundPosition {
+    fn bound_position(&self, bound: &RelativeEndBound) -> BoundContainmentPosition {
         bound_position_rel_end_bound_on_emptiable_rel_bounds(&self.emptiable_rel_bounds(), bound)
     }
 }
@@ -609,9 +613,9 @@ where
 pub fn bound_position_rel_end_bound_on_emptiable_rel_bounds(
     emptiable_rel_bounds: &EmptiableRelativeBounds,
     rel_end_bound: &RelativeEndBound,
-) -> BoundPosition {
+) -> BoundContainmentPosition {
     let EmptiableRelativeBounds::Bound(rel_bounds) = emptiable_rel_bounds else {
-        return BoundPosition::Outside;
+        return BoundContainmentPosition::Outside;
     };
 
     bound_position_rel_end_bound_on_rel_bounds(rel_bounds, rel_end_bound)
@@ -622,31 +626,31 @@ pub fn bound_position_rel_end_bound_on_emptiable_rel_bounds(
 pub fn bound_position_rel_end_bound_on_rel_bounds(
     rel_bounds: &RelativeBounds,
     rel_end_bound: &RelativeEndBound,
-) -> BoundPosition {
+) -> BoundContainmentPosition {
     type StartB = RelativeStartBound;
     type EndB = RelativeEndBound;
 
     match (rel_bounds.start(), rel_bounds.end(), rel_end_bound) {
-        (_, EndB::InfiniteFuture, EndB::InfiniteFuture) => BoundPosition::OnEnd(None),
-        (StartB::InfinitePast, EndB::InfiniteFuture, EndB::Finite(_)) => BoundPosition::Inside,
+        (_, EndB::InfiniteFuture, EndB::InfiniteFuture) => BoundContainmentPosition::OnEnd(None),
+        (StartB::InfinitePast, EndB::InfiniteFuture, EndB::Finite(_)) => BoundContainmentPosition::Inside,
         (StartB::InfinitePast, EndB::Finite(finite_end), EndB::Finite(finite_bound)) => {
             match finite_bound.offset().cmp(&finite_end.offset()) {
-                Ordering::Less => BoundPosition::Inside,
-                Ordering::Greater => BoundPosition::OutsideAfter,
-                Ordering::Equal => BoundPosition::OnEnd(Some(BoundOverlapAmbiguity::BothEnds(
-                    finite_bound.inclusivity(),
+                Ordering::Less => BoundContainmentPosition::Inside,
+                Ordering::Greater => BoundContainmentPosition::OutsideAfter,
+                Ordering::Equal => BoundContainmentPosition::OnEnd(Some(BoundOverlapAmbiguity::BothEnds(
                     finite_end.inclusivity(),
+                    finite_bound.inclusivity(),
                 ))),
             }
         },
-        (_, EndB::Finite(_), EndB::InfiniteFuture) => BoundPosition::OutsideBefore,
+        (_, EndB::Finite(_), EndB::InfiniteFuture) => BoundContainmentPosition::OutsideBefore,
         (StartB::Finite(finite_start), EndB::InfiniteFuture, EndB::Finite(finite_bound)) => {
             match finite_bound.offset().cmp(&finite_start.offset()) {
-                Ordering::Less => BoundPosition::Inside,
-                Ordering::Greater => BoundPosition::OutsideAfter,
-                Ordering::Equal => BoundPosition::OnStart(Some(BoundOverlapAmbiguity::EndStart(
-                    finite_bound.inclusivity(),
+                Ordering::Less => BoundContainmentPosition::Inside,
+                Ordering::Greater => BoundContainmentPosition::OutsideAfter,
+                Ordering::Equal => BoundContainmentPosition::OnStart(Some(BoundOverlapAmbiguity::StartEnd(
                     finite_start.inclusivity(),
+                    finite_bound.inclusivity(),
                 ))),
             }
         },
@@ -655,21 +659,19 @@ pub fn bound_position_rel_end_bound_on_rel_bounds(
                 finite_bound.offset().cmp(&finite_start.offset()),
                 finite_bound.offset().cmp(&finite_end.offset()),
             ) {
-                (Ordering::Less, _) => BoundPosition::OutsideBefore,
-                (_, Ordering::Greater) => BoundPosition::OutsideAfter,
+                (Ordering::Less, _) => BoundContainmentPosition::OutsideBefore,
+                (_, Ordering::Greater) => BoundContainmentPosition::OutsideAfter,
                 (Ordering::Equal, Ordering::Equal) => match finite_bound.inclusivity() {
-                    BoundInclusivity::Inclusive => BoundPosition::Equal,
-                    BoundInclusivity::Exclusive => BoundPosition::OutsideAfter,
+                    BoundInclusivity::Inclusive => BoundContainmentPosition::Equal,
+                    BoundInclusivity::Exclusive => BoundContainmentPosition::OutsideAfter,
                 },
-                (Ordering::Equal, Ordering::Less) => BoundPosition::OnStart(Some(BoundOverlapAmbiguity::EndStart(
-                    finite_bound.inclusivity(),
-                    finite_start.inclusivity(),
-                ))),
-                (Ordering::Greater, Ordering::Equal) => BoundPosition::OnEnd(Some(BoundOverlapAmbiguity::BothEnds(
-                    finite_bound.inclusivity(),
-                    finite_end.inclusivity(),
-                ))),
-                (Ordering::Greater, Ordering::Less) => BoundPosition::Inside,
+                (Ordering::Equal, Ordering::Less) => BoundContainmentPosition::OnStart(Some(
+                    BoundOverlapAmbiguity::StartEnd(finite_start.inclusivity(), finite_bound.inclusivity()),
+                )),
+                (Ordering::Greater, Ordering::Equal) => BoundContainmentPosition::OnEnd(Some(
+                    BoundOverlapAmbiguity::BothEnds(finite_end.inclusivity(), finite_bound.inclusivity()),
+                )),
+                (Ordering::Greater, Ordering::Less) => BoundContainmentPosition::Inside,
             }
         },
     }

@@ -1,46 +1,31 @@
 //! Interval iterators
 
+pub mod bounds;
 pub mod complement;
+pub mod layered_bounds;
+pub mod layered_bounds_set_ops;
 pub mod precision;
 pub mod relativity_conversion;
 pub mod remove_empty;
 pub mod set_ops;
-pub mod united_set;
+pub mod united_bounds;
 
-// TODO: This should contain overlap rules and a function etc. but those should be split into different kinds of Union
-// structures. Also, since by doing that they would become specialized for intervals, the module should be renamed
-// to "interval_set_ops.rs".
-// Moreover, intervals::set_ops_impl should have methods like those in the comparison module to allow simpler and
-// more granular methods for lazy set operations.
-// List draft:
-// - SimpleUnion - would use predetermined rules like the one for simple_overlaps in the comparison mod
-// - Union - would use given rule set and rules to do the uniting
-// - UnionWith - would use a custom function to unite the intervals
-// - SimpleUnionToOne - would use predetermined rules to try and unite the intervals into a single one (if there
-//   are non-overlapping intervals later on, they are ignored and the iterator ends)
-// - UnionToOne - same as above but with given rule set and rules to do the uniting
-// - UnionToOneWith - same principle, but with custom function
-// - Inverse - returns a list of the inverse of the intervals (all the time not covered by the intervals)
-// Do other iterators like those
-// Since that would make them specialized, I think the set operations traits defined in set_ops.rs are not needed
-// or should be rethought. Current opinion: those set operations should be implemented for intervals, schedules, etc.
-// but since they are simple enough, we should just remove them for now, implement the specialized iterators,
-// continue developing the lib until we can rule whether such traits are needed
+#[cfg(test)]
+mod bounds_tests;
+#[cfg(test)]
+mod complement_tests;
+#[cfg(test)]
+mod layered_bounds_tests;
+#[cfg(test)]
+mod precision_tests;
+#[cfg(test)]
+mod relativity_conversion_tests;
+#[cfg(test)]
+mod remove_empty_tests;
+#[cfg(test)]
+mod united_bounds_tests;
 
-// NOTE: Most of the operations in this file can be MAJORLY IMPROVED in terms of performance
-// Suggestions for improvement:
-// - Most operations can be done in parallel, but that would require them to be eagerly-evaluated, therefore it would
-//   put into question whether we still need those methods as iterators. Or perhaps we can keep the iterators but
-//   create methods that explicitly allow this eager evaluation?
-// - Operations that "merges" two iterators may benefit from a point system: we merge all interval points into one list
-//   and read from this list, therefore when we encounter a point that comes from the second iterator, we can apply
-//   the operation and continue from there instead of checking for overlap of all elements of the first iter upon
-//   each element of the second iter. This strategy is applicable to iterators but requires both sets of intervals
-//   to be sorted chronologically.
-// Current opinion: Such eager and constrained methods should be implemented on the IntervalIterator trait,
-// that way, the caller can choose which one fits his needs: if they want to unite elements progressively of a list
-// that is unsorted or sorted non-chronologically, they can choose to use the Union iterator. But if they need
-// a fast way of uniting a list of intervals that is sorted chronologically, then they can call such methods.
+// NOTE: collections can be improved by making them parallel with the rayon crate
 
 /*
 If we want to implement an operation "dispatcher" for multiple types, since we can easily run in the problem that

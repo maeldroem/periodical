@@ -4,10 +4,10 @@
 //!
 //! Interval refers to an interval, a range, like in mathematics. But if we are talking strictly about this crate,
 //! then an interval, such as [`AbsoluteInterval`](absolute::AbsoluteInterval) and [`RelativeInterval`](relative::RelativeInterval) are enumerators over specific intervals,
-//! like [`ClosedAbsoluteInterval`] or [`HalfOpenRelativeInterval`].
+//! like [`BoundedAbsoluteInterval`] or [`HalfBoundedRelativeInterval`].
 //!
-//! Those specific intervals must conserve their invariants. A closed interval must remain closed, a half-open interval
-//! must remain half-open.
+//! Those specific intervals must conserve their invariants. A bounded interval must remain bounded, a half-bounded interval
+//! must remain half-bounded.
 //!
 //! All such intervals are composed of bounds (e.g. [`AbsoluteBounds`], [`RelativeBounds`]).
 //! They may also come in _emptiable_ variants (e.g. [`EmptiableAbsoluteBounds`], [`EmptiableRelativeBounds`]).
@@ -50,21 +50,38 @@
 //!
 //! The reason why empty intervals exist is to provide a way to represent _no duration_ without having to use [`Option`]
 //! to represent it. This also makes it compatible with other interval operations, for example you can still get the
-//! complement of an empty interval, which results in an [open interval](`OpenInterval`).
+//! complement of an empty interval, which results in an [unbounded interval](`UnboundedInterval`).
 
 pub mod absolute;
+pub mod bound_position;
 pub mod meta;
 pub mod ops;
 pub mod prelude;
 pub mod relative;
 pub mod special;
 
+#[cfg(test)]
+mod absolute_tests;
+#[cfg(test)]
+mod bound_position_tests;
+#[cfg(test)]
+mod meta_tests;
+#[cfg(test)]
+mod relative_tests;
+#[cfg(test)]
+mod special_tests;
+
 pub use absolute::{
-    AbsoluteBounds, AbsoluteInterval, ClosedAbsoluteInterval, EmptiableAbsoluteBounds, HalfOpenAbsoluteInterval,
+    AbsoluteBounds, AbsoluteInterval, BoundedAbsoluteInterval, EmptiableAbsoluteBounds, HalfBoundedAbsoluteInterval,
     HasAbsoluteBounds, HasEmptiableAbsoluteBounds,
 };
 pub use meta::{Emptiable, HasBoundInclusivity, HasDuration, HasOpenness, HasRelativity};
 pub use ops::abridge::Abridgable;
+pub use ops::bound_containment::{
+    BoundContainmentPosition, BoundContainmentRule, BoundContainmentRuleSet, CanPositionBoundContainment,
+    DEFAULT_BOUND_CONTAINMENT_RULES, DisambiguatedBoundContainmentPosition,
+};
+pub use ops::bound_ord::{BoundOrdering, PartialBoundOrd};
 pub use ops::complement::Complementable;
 pub use ops::cut::{CutResult, CutType, Cuttable};
 pub use ops::extend::Extensible;
@@ -85,6 +102,6 @@ pub use ops::time_containment::{
     TimeContainmentPosition, TimeContainmentRule, TimeContainmentRuleSet,
 };
 pub use relative::{
-    ClosedRelativeInterval, EmptiableRelativeBounds, HalfOpenRelativeInterval, HasEmptiableRelativeBounds,
+    BoundedRelativeInterval, EmptiableRelativeBounds, HalfBoundedRelativeInterval, HasEmptiableRelativeBounds,
     HasRelativeBounds, RelativeInterval,
 };

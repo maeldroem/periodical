@@ -5,12 +5,16 @@ use super::extend::Extensible;
 use super::overlap::CanPositionOverlap;
 use super::prelude::*;
 
-use crate::intervals::absolute::{AbsoluteBounds, AbsoluteInterval, EmptiableAbsoluteBounds, HalfOpenAbsoluteInterval};
+use crate::intervals::absolute::{
+    AbsoluteBounds, AbsoluteInterval, EmptiableAbsoluteBounds, HalfBoundedAbsoluteInterval,
+};
 use crate::intervals::meta::Interval;
 use crate::intervals::ops::remove_overlap::{OverlapRemovable, OverlapRemovalErr, OverlapRemovalResult};
-use crate::intervals::relative::{EmptiableRelativeBounds, HalfOpenRelativeInterval, RelativeBounds};
-use crate::intervals::special::{EmptyInterval, OpenInterval};
-use crate::intervals::{ClosedAbsoluteInterval, ClosedRelativeInterval, OverlapRule, OverlapRuleSet, RelativeInterval};
+use crate::intervals::relative::{EmptiableRelativeBounds, HalfBoundedRelativeInterval, RelativeBounds};
+use crate::intervals::special::{EmptyInterval, UnboundedInterval};
+use crate::intervals::{
+    BoundedAbsoluteInterval, BoundedRelativeInterval, OverlapRule, OverlapRuleSet, RelativeInterval,
+};
 use crate::ops::{DifferenceResult, IntersectionResult, SymmetricDifferenceResult, UnionResult};
 
 /// Capacity to unite an interval with another
@@ -66,7 +70,7 @@ where
     }
 }
 
-impl<Rhs> Unitable<Rhs> for ClosedAbsoluteInterval
+impl<Rhs> Unitable<Rhs> for BoundedAbsoluteInterval
 where
     Rhs: HasEmptiableAbsoluteBounds,
 {
@@ -78,7 +82,7 @@ where
     }
 }
 
-impl<Rhs> Unitable<Rhs> for HalfOpenAbsoluteInterval
+impl<Rhs> Unitable<Rhs> for HalfBoundedAbsoluteInterval
 where
     Rhs: HasEmptiableAbsoluteBounds,
 {
@@ -124,7 +128,7 @@ where
     }
 }
 
-impl<Rhs> Unitable<Rhs> for ClosedRelativeInterval
+impl<Rhs> Unitable<Rhs> for BoundedRelativeInterval
 where
     Rhs: HasEmptiableRelativeBounds,
 {
@@ -136,7 +140,7 @@ where
     }
 }
 
-impl<Rhs> Unitable<Rhs> for HalfOpenRelativeInterval
+impl<Rhs> Unitable<Rhs> for HalfBoundedRelativeInterval
 where
     Rhs: HasEmptiableRelativeBounds,
 {
@@ -148,11 +152,11 @@ where
     }
 }
 
-impl<Rhs> Unitable<Rhs> for OpenInterval
+impl<Rhs> Unitable<Rhs> for UnboundedInterval
 where
     Rhs: Interval,
 {
-    type Output = OpenInterval;
+    type Output = UnboundedInterval;
 
     fn unite(&self, _rhs: &Rhs) -> UnionResult<Self::Output> {
         UnionResult::United(*self)
@@ -305,7 +309,7 @@ where
     }
 }
 
-impl<Rhs> Intersectable<Rhs> for ClosedAbsoluteInterval
+impl<Rhs> Intersectable<Rhs> for BoundedAbsoluteInterval
 where
     Rhs: HasEmptiableAbsoluteBounds,
 {
@@ -317,7 +321,7 @@ where
     }
 }
 
-impl<Rhs> Intersectable<Rhs> for HalfOpenAbsoluteInterval
+impl<Rhs> Intersectable<Rhs> for HalfBoundedAbsoluteInterval
 where
     Rhs: HasEmptiableAbsoluteBounds,
 {
@@ -363,7 +367,7 @@ where
     }
 }
 
-impl<Rhs> Intersectable<Rhs> for ClosedRelativeInterval
+impl<Rhs> Intersectable<Rhs> for BoundedRelativeInterval
 where
     Rhs: HasEmptiableRelativeBounds,
 {
@@ -375,7 +379,7 @@ where
     }
 }
 
-impl<Rhs> Intersectable<Rhs> for HalfOpenRelativeInterval
+impl<Rhs> Intersectable<Rhs> for HalfBoundedRelativeInterval
 where
     Rhs: HasEmptiableRelativeBounds,
 {
@@ -387,7 +391,7 @@ where
     }
 }
 
-impl Intersectable<AbsoluteBounds> for OpenInterval {
+impl Intersectable<AbsoluteBounds> for UnboundedInterval {
     type Output = AbsoluteInterval;
 
     fn intersect(&self, rhs: &AbsoluteBounds) -> IntersectionResult<Self::Output> {
@@ -395,7 +399,7 @@ impl Intersectable<AbsoluteBounds> for OpenInterval {
     }
 }
 
-impl Intersectable<EmptiableAbsoluteBounds> for OpenInterval {
+impl Intersectable<EmptiableAbsoluteBounds> for UnboundedInterval {
     type Output = AbsoluteInterval;
 
     fn intersect(&self, rhs: &EmptiableAbsoluteBounds) -> IntersectionResult<Self::Output> {
@@ -404,7 +408,7 @@ impl Intersectable<EmptiableAbsoluteBounds> for OpenInterval {
     }
 }
 
-impl Intersectable<AbsoluteInterval> for OpenInterval {
+impl Intersectable<AbsoluteInterval> for UnboundedInterval {
     type Output = AbsoluteInterval;
 
     fn intersect(&self, rhs: &AbsoluteInterval) -> IntersectionResult<Self::Output> {
@@ -413,23 +417,23 @@ impl Intersectable<AbsoluteInterval> for OpenInterval {
     }
 }
 
-impl Intersectable<ClosedAbsoluteInterval> for OpenInterval {
+impl Intersectable<BoundedAbsoluteInterval> for UnboundedInterval {
     type Output = AbsoluteInterval;
 
-    fn intersect(&self, rhs: &ClosedAbsoluteInterval) -> IntersectionResult<Self::Output> {
+    fn intersect(&self, rhs: &BoundedAbsoluteInterval) -> IntersectionResult<Self::Output> {
         intersect_abs_bounds(&self.abs_bounds(), &rhs.abs_bounds()).map_intersected(AbsoluteInterval::from)
     }
 }
 
-impl Intersectable<HalfOpenAbsoluteInterval> for OpenInterval {
+impl Intersectable<HalfBoundedAbsoluteInterval> for UnboundedInterval {
     type Output = AbsoluteInterval;
 
-    fn intersect(&self, rhs: &HalfOpenAbsoluteInterval) -> IntersectionResult<Self::Output> {
+    fn intersect(&self, rhs: &HalfBoundedAbsoluteInterval) -> IntersectionResult<Self::Output> {
         intersect_abs_bounds(&self.abs_bounds(), &rhs.abs_bounds()).map_intersected(AbsoluteInterval::from)
     }
 }
 
-impl Intersectable<RelativeBounds> for OpenInterval {
+impl Intersectable<RelativeBounds> for UnboundedInterval {
     type Output = RelativeInterval;
 
     fn intersect(&self, rhs: &RelativeBounds) -> IntersectionResult<Self::Output> {
@@ -437,7 +441,7 @@ impl Intersectable<RelativeBounds> for OpenInterval {
     }
 }
 
-impl Intersectable<EmptiableRelativeBounds> for OpenInterval {
+impl Intersectable<EmptiableRelativeBounds> for UnboundedInterval {
     type Output = RelativeInterval;
 
     fn intersect(&self, rhs: &EmptiableRelativeBounds) -> IntersectionResult<Self::Output> {
@@ -446,7 +450,7 @@ impl Intersectable<EmptiableRelativeBounds> for OpenInterval {
     }
 }
 
-impl Intersectable<RelativeInterval> for OpenInterval {
+impl Intersectable<RelativeInterval> for UnboundedInterval {
     type Output = RelativeInterval;
 
     fn intersect(&self, rhs: &RelativeInterval) -> IntersectionResult<Self::Output> {
@@ -455,31 +459,31 @@ impl Intersectable<RelativeInterval> for OpenInterval {
     }
 }
 
-impl Intersectable<ClosedRelativeInterval> for OpenInterval {
+impl Intersectable<BoundedRelativeInterval> for UnboundedInterval {
     type Output = RelativeInterval;
 
-    fn intersect(&self, rhs: &ClosedRelativeInterval) -> IntersectionResult<Self::Output> {
+    fn intersect(&self, rhs: &BoundedRelativeInterval) -> IntersectionResult<Self::Output> {
         intersect_rel_bounds(&self.rel_bounds(), &rhs.rel_bounds()).map_intersected(RelativeInterval::from)
     }
 }
 
-impl Intersectable<HalfOpenRelativeInterval> for OpenInterval {
+impl Intersectable<HalfBoundedRelativeInterval> for UnboundedInterval {
     type Output = RelativeInterval;
 
-    fn intersect(&self, rhs: &HalfOpenRelativeInterval) -> IntersectionResult<Self::Output> {
+    fn intersect(&self, rhs: &HalfBoundedRelativeInterval) -> IntersectionResult<Self::Output> {
         intersect_rel_bounds(&self.rel_bounds(), &rhs.rel_bounds()).map_intersected(RelativeInterval::from)
     }
 }
 
-impl Intersectable<OpenInterval> for OpenInterval {
+impl Intersectable<UnboundedInterval> for UnboundedInterval {
     type Output = EmptyInterval;
 
-    fn intersect(&self, _rhs: &OpenInterval) -> IntersectionResult<Self::Output> {
+    fn intersect(&self, _rhs: &UnboundedInterval) -> IntersectionResult<Self::Output> {
         IntersectionResult::Intersected(EmptyInterval)
     }
 }
 
-impl Intersectable<EmptyInterval> for OpenInterval {
+impl Intersectable<EmptyInterval> for UnboundedInterval {
     type Output = ();
 
     fn intersect(&self, _rhs: &EmptyInterval) -> IntersectionResult<Self::Output> {
@@ -636,7 +640,7 @@ where
     }
 }
 
-impl<Rhs> Differentiable<Rhs> for ClosedAbsoluteInterval
+impl<Rhs> Differentiable<Rhs> for BoundedAbsoluteInterval
 where
     Rhs: HasEmptiableAbsoluteBounds,
 {
@@ -648,7 +652,7 @@ where
     }
 }
 
-impl<Rhs> Differentiable<Rhs> for HalfOpenAbsoluteInterval
+impl<Rhs> Differentiable<Rhs> for HalfBoundedAbsoluteInterval
 where
     Rhs: HasEmptiableAbsoluteBounds,
 {
@@ -694,7 +698,7 @@ where
     }
 }
 
-impl<Rhs> Differentiable<Rhs> for ClosedRelativeInterval
+impl<Rhs> Differentiable<Rhs> for BoundedRelativeInterval
 where
     Rhs: HasEmptiableRelativeBounds,
 {
@@ -706,7 +710,7 @@ where
     }
 }
 
-impl<Rhs> Differentiable<Rhs> for HalfOpenRelativeInterval
+impl<Rhs> Differentiable<Rhs> for HalfBoundedRelativeInterval
 where
     Rhs: HasEmptiableRelativeBounds,
 {
@@ -718,7 +722,7 @@ where
     }
 }
 
-impl Differentiable<AbsoluteBounds> for OpenInterval {
+impl Differentiable<AbsoluteBounds> for UnboundedInterval {
     type Output = AbsoluteInterval;
 
     fn differentiate(&self, rhs: &AbsoluteBounds) -> DifferenceResult<Self::Output> {
@@ -726,7 +730,7 @@ impl Differentiable<AbsoluteBounds> for OpenInterval {
     }
 }
 
-impl Differentiable<EmptiableAbsoluteBounds> for OpenInterval {
+impl Differentiable<EmptiableAbsoluteBounds> for UnboundedInterval {
     type Output = AbsoluteInterval;
 
     fn differentiate(&self, rhs: &EmptiableAbsoluteBounds) -> DifferenceResult<Self::Output> {
@@ -735,23 +739,23 @@ impl Differentiable<EmptiableAbsoluteBounds> for OpenInterval {
     }
 }
 
-impl Differentiable<ClosedAbsoluteInterval> for OpenInterval {
+impl Differentiable<BoundedAbsoluteInterval> for UnboundedInterval {
     type Output = AbsoluteInterval;
 
-    fn differentiate(&self, rhs: &ClosedAbsoluteInterval) -> DifferenceResult<Self::Output> {
+    fn differentiate(&self, rhs: &BoundedAbsoluteInterval) -> DifferenceResult<Self::Output> {
         differentiate_abs_bounds(&self.abs_bounds(), &rhs.abs_bounds()).map_difference(AbsoluteInterval::from)
     }
 }
 
-impl Differentiable<HalfOpenAbsoluteInterval> for OpenInterval {
+impl Differentiable<HalfBoundedAbsoluteInterval> for UnboundedInterval {
     type Output = AbsoluteInterval;
 
-    fn differentiate(&self, rhs: &HalfOpenAbsoluteInterval) -> DifferenceResult<Self::Output> {
+    fn differentiate(&self, rhs: &HalfBoundedAbsoluteInterval) -> DifferenceResult<Self::Output> {
         differentiate_abs_bounds(&self.abs_bounds(), &rhs.abs_bounds()).map_difference(AbsoluteInterval::from)
     }
 }
 
-impl Differentiable<RelativeBounds> for OpenInterval {
+impl Differentiable<RelativeBounds> for UnboundedInterval {
     type Output = RelativeInterval;
 
     fn differentiate(&self, rhs: &RelativeBounds) -> DifferenceResult<Self::Output> {
@@ -759,7 +763,7 @@ impl Differentiable<RelativeBounds> for OpenInterval {
     }
 }
 
-impl Differentiable<EmptiableRelativeBounds> for OpenInterval {
+impl Differentiable<EmptiableRelativeBounds> for UnboundedInterval {
     type Output = RelativeInterval;
 
     fn differentiate(&self, rhs: &EmptiableRelativeBounds) -> DifferenceResult<Self::Output> {
@@ -768,35 +772,35 @@ impl Differentiable<EmptiableRelativeBounds> for OpenInterval {
     }
 }
 
-impl Differentiable<ClosedRelativeInterval> for OpenInterval {
+impl Differentiable<BoundedRelativeInterval> for UnboundedInterval {
     type Output = RelativeInterval;
 
-    fn differentiate(&self, rhs: &ClosedRelativeInterval) -> DifferenceResult<Self::Output> {
+    fn differentiate(&self, rhs: &BoundedRelativeInterval) -> DifferenceResult<Self::Output> {
         differentiate_rel_bounds(&self.rel_bounds(), &rhs.rel_bounds()).map_difference(RelativeInterval::from)
     }
 }
 
-impl Differentiable<HalfOpenRelativeInterval> for OpenInterval {
+impl Differentiable<HalfBoundedRelativeInterval> for UnboundedInterval {
     type Output = RelativeInterval;
 
-    fn differentiate(&self, rhs: &HalfOpenRelativeInterval) -> DifferenceResult<Self::Output> {
+    fn differentiate(&self, rhs: &HalfBoundedRelativeInterval) -> DifferenceResult<Self::Output> {
         differentiate_rel_bounds(&self.rel_bounds(), &rhs.rel_bounds()).map_difference(RelativeInterval::from)
     }
 }
 
-impl Differentiable<OpenInterval> for OpenInterval {
+impl Differentiable<UnboundedInterval> for UnboundedInterval {
     type Output = EmptyInterval;
 
-    fn differentiate(&self, _rhs: &OpenInterval) -> DifferenceResult<Self::Output> {
+    fn differentiate(&self, _rhs: &UnboundedInterval) -> DifferenceResult<Self::Output> {
         DifferenceResult::Shrunk(EmptyInterval)
     }
 }
 
-impl Differentiable<EmptyInterval> for OpenInterval {
-    type Output = OpenInterval;
+impl Differentiable<EmptyInterval> for UnboundedInterval {
+    type Output = UnboundedInterval;
 
     fn differentiate(&self, _rhs: &EmptyInterval) -> DifferenceResult<Self::Output> {
-        DifferenceResult::Shrunk(OpenInterval)
+        DifferenceResult::Shrunk(UnboundedInterval)
     }
 }
 
@@ -965,7 +969,7 @@ where
     }
 }
 
-impl<Rhs> SymmetricallyDifferentiable<Rhs> for ClosedAbsoluteInterval
+impl<Rhs> SymmetricallyDifferentiable<Rhs> for BoundedAbsoluteInterval
 where
     Rhs: HasEmptiableAbsoluteBounds,
 {
@@ -980,7 +984,7 @@ where
     }
 }
 
-impl<Rhs> SymmetricallyDifferentiable<Rhs> for HalfOpenAbsoluteInterval
+impl<Rhs> SymmetricallyDifferentiable<Rhs> for HalfBoundedAbsoluteInterval
 where
     Rhs: HasEmptiableAbsoluteBounds,
 {
@@ -1029,7 +1033,7 @@ where
     }
 }
 
-impl<Rhs> SymmetricallyDifferentiable<Rhs> for ClosedRelativeInterval
+impl<Rhs> SymmetricallyDifferentiable<Rhs> for BoundedRelativeInterval
 where
     Rhs: HasEmptiableRelativeBounds,
 {
@@ -1044,7 +1048,7 @@ where
     }
 }
 
-impl<Rhs> SymmetricallyDifferentiable<Rhs> for HalfOpenRelativeInterval
+impl<Rhs> SymmetricallyDifferentiable<Rhs> for HalfBoundedRelativeInterval
 where
     Rhs: HasEmptiableRelativeBounds,
 {
@@ -1059,7 +1063,7 @@ where
     }
 }
 
-impl SymmetricallyDifferentiable<AbsoluteBounds> for OpenInterval {
+impl SymmetricallyDifferentiable<AbsoluteBounds> for UnboundedInterval {
     type Output = AbsoluteInterval;
 
     fn symmetrically_differentiate(&self, rhs: &AbsoluteBounds) -> SymmetricDifferenceResult<Self::Output> {
@@ -1067,7 +1071,7 @@ impl SymmetricallyDifferentiable<AbsoluteBounds> for OpenInterval {
     }
 }
 
-impl SymmetricallyDifferentiable<EmptiableAbsoluteBounds> for OpenInterval {
+impl SymmetricallyDifferentiable<EmptiableAbsoluteBounds> for UnboundedInterval {
     type Output = AbsoluteInterval;
 
     fn symmetrically_differentiate(&self, rhs: &EmptiableAbsoluteBounds) -> SymmetricDifferenceResult<Self::Output> {
@@ -1076,7 +1080,7 @@ impl SymmetricallyDifferentiable<EmptiableAbsoluteBounds> for OpenInterval {
     }
 }
 
-impl SymmetricallyDifferentiable<AbsoluteInterval> for OpenInterval {
+impl SymmetricallyDifferentiable<AbsoluteInterval> for UnboundedInterval {
     type Output = AbsoluteInterval;
 
     fn symmetrically_differentiate(&self, rhs: &AbsoluteInterval) -> SymmetricDifferenceResult<Self::Output> {
@@ -1088,25 +1092,28 @@ impl SymmetricallyDifferentiable<AbsoluteInterval> for OpenInterval {
     }
 }
 
-impl SymmetricallyDifferentiable<ClosedAbsoluteInterval> for OpenInterval {
+impl SymmetricallyDifferentiable<BoundedAbsoluteInterval> for UnboundedInterval {
     type Output = AbsoluteInterval;
 
-    fn symmetrically_differentiate(&self, rhs: &ClosedAbsoluteInterval) -> SymmetricDifferenceResult<Self::Output> {
+    fn symmetrically_differentiate(&self, rhs: &BoundedAbsoluteInterval) -> SymmetricDifferenceResult<Self::Output> {
         symmetrically_differentiate_abs_bounds(&self.abs_bounds(), &rhs.abs_bounds())
             .map_symmetric_difference(AbsoluteInterval::from)
     }
 }
 
-impl SymmetricallyDifferentiable<HalfOpenAbsoluteInterval> for OpenInterval {
+impl SymmetricallyDifferentiable<HalfBoundedAbsoluteInterval> for UnboundedInterval {
     type Output = AbsoluteInterval;
 
-    fn symmetrically_differentiate(&self, rhs: &HalfOpenAbsoluteInterval) -> SymmetricDifferenceResult<Self::Output> {
+    fn symmetrically_differentiate(
+        &self,
+        rhs: &HalfBoundedAbsoluteInterval,
+    ) -> SymmetricDifferenceResult<Self::Output> {
         symmetrically_differentiate_abs_bounds(&self.abs_bounds(), &rhs.abs_bounds())
             .map_symmetric_difference(AbsoluteInterval::from)
     }
 }
 
-impl SymmetricallyDifferentiable<RelativeBounds> for OpenInterval {
+impl SymmetricallyDifferentiable<RelativeBounds> for UnboundedInterval {
     type Output = RelativeInterval;
 
     fn symmetrically_differentiate(&self, rhs: &RelativeBounds) -> SymmetricDifferenceResult<Self::Output> {
@@ -1114,7 +1121,7 @@ impl SymmetricallyDifferentiable<RelativeBounds> for OpenInterval {
     }
 }
 
-impl SymmetricallyDifferentiable<EmptiableRelativeBounds> for OpenInterval {
+impl SymmetricallyDifferentiable<EmptiableRelativeBounds> for UnboundedInterval {
     type Output = RelativeInterval;
 
     fn symmetrically_differentiate(&self, rhs: &EmptiableRelativeBounds) -> SymmetricDifferenceResult<Self::Output> {
@@ -1123,7 +1130,7 @@ impl SymmetricallyDifferentiable<EmptiableRelativeBounds> for OpenInterval {
     }
 }
 
-impl SymmetricallyDifferentiable<RelativeInterval> for OpenInterval {
+impl SymmetricallyDifferentiable<RelativeInterval> for UnboundedInterval {
     type Output = RelativeInterval;
 
     fn symmetrically_differentiate(&self, rhs: &RelativeInterval) -> SymmetricDifferenceResult<Self::Output> {
@@ -1135,33 +1142,36 @@ impl SymmetricallyDifferentiable<RelativeInterval> for OpenInterval {
     }
 }
 
-impl SymmetricallyDifferentiable<ClosedRelativeInterval> for OpenInterval {
+impl SymmetricallyDifferentiable<BoundedRelativeInterval> for UnboundedInterval {
     type Output = RelativeInterval;
 
-    fn symmetrically_differentiate(&self, rhs: &ClosedRelativeInterval) -> SymmetricDifferenceResult<Self::Output> {
+    fn symmetrically_differentiate(&self, rhs: &BoundedRelativeInterval) -> SymmetricDifferenceResult<Self::Output> {
         symmetrically_differentiate_rel_bounds(&self.rel_bounds(), &rhs.rel_bounds())
             .map_symmetric_difference(RelativeInterval::from)
     }
 }
 
-impl SymmetricallyDifferentiable<HalfOpenRelativeInterval> for OpenInterval {
+impl SymmetricallyDifferentiable<HalfBoundedRelativeInterval> for UnboundedInterval {
     type Output = RelativeInterval;
 
-    fn symmetrically_differentiate(&self, rhs: &HalfOpenRelativeInterval) -> SymmetricDifferenceResult<Self::Output> {
+    fn symmetrically_differentiate(
+        &self,
+        rhs: &HalfBoundedRelativeInterval,
+    ) -> SymmetricDifferenceResult<Self::Output> {
         symmetrically_differentiate_rel_bounds(&self.rel_bounds(), &rhs.rel_bounds())
             .map_symmetric_difference(RelativeInterval::from)
     }
 }
 
-impl SymmetricallyDifferentiable<OpenInterval> for OpenInterval {
+impl SymmetricallyDifferentiable<UnboundedInterval> for UnboundedInterval {
     type Output = EmptyInterval;
 
-    fn symmetrically_differentiate(&self, _rhs: &OpenInterval) -> SymmetricDifferenceResult<Self::Output> {
+    fn symmetrically_differentiate(&self, _rhs: &UnboundedInterval) -> SymmetricDifferenceResult<Self::Output> {
         SymmetricDifferenceResult::Shrunk(EmptyInterval)
     }
 }
 
-impl SymmetricallyDifferentiable<EmptyInterval> for OpenInterval {
+impl SymmetricallyDifferentiable<EmptyInterval> for UnboundedInterval {
     type Output = ();
 
     fn symmetrically_differentiate(&self, _rhs: &EmptyInterval) -> SymmetricDifferenceResult<Self::Output> {

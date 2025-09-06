@@ -1,12 +1,12 @@
 pub use super::absolute::{
-    AbsoluteBounds, AbsoluteInterval, ClosedAbsoluteInterval, EmptiableAbsoluteBounds, HalfOpenAbsoluteInterval,
-    HasAbsoluteBounds, HasEmptiableAbsoluteBounds,
+    AbsoluteBound, AbsoluteBounds, AbsoluteInterval, BoundedAbsoluteInterval, EmptiableAbsoluteBounds,
+    HalfBoundedAbsoluteInterval, HasAbsoluteBounds, HasEmptiableAbsoluteBounds,
 };
 pub use super::meta::{Emptiable, HasBoundInclusivity, HasDuration, HasOpenness, HasRelativity};
 pub use super::ops::abridge::Abridgable;
 pub use super::ops::bound_containment::{
-    BoundContainmentRule, BoundContainmentRuleSet, BoundPosition, CanPositionBoundContainment,
-    DEFAULT_BOUND_CONTAINMENT_RULES, DisambiguatedBoundPosition,
+    BoundContainmentPosition, BoundContainmentRule, BoundContainmentRuleSet, CanPositionBoundContainment,
+    DEFAULT_BOUND_CONTAINMENT_RULES, DisambiguatedBoundContainmentPosition,
 };
 pub use super::ops::bound_overlap_ambiguity::{
     BoundOverlapAmbiguity, BoundOverlapDisambiguationRuleSet, DisambiguatedBoundOverlap,
@@ -32,6 +32,7 @@ pub use super::ops::time_containment::{
     TimeContainmentPosition, TimeContainmentRule, TimeContainmentRuleSet,
 };
 pub use super::relative::{
-    ClosedRelativeInterval, EmptiableRelativeBounds, HalfOpenRelativeInterval, HasEmptiableRelativeBounds,
-    HasRelativeBounds, RelativeInterval,
+    BoundedRelativeInterval, EmptiableRelativeBounds, HalfBoundedRelativeInterval, HasEmptiableRelativeBounds,
+    HasRelativeBounds, RelativeBound, RelativeBounds, RelativeInterval,
 };
+pub use super::special::{EmptyInterval, UnboundedInterval};

@@ -6,18 +6,19 @@ use super::prelude::*;
 
 use crate::intervals::absolute::{
     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteInterval, AbsoluteStartBound,
-    EmptiableAbsoluteBounds, HalfOpenAbsoluteInterval, HasAbsoluteBounds, HasEmptiableAbsoluteBounds,
+    EmptiableAbsoluteBounds, HalfBoundedAbsoluteInterval, HasAbsoluteBounds, HasEmptiableAbsoluteBounds,
 };
 use crate::intervals::relative::{
-    EmptiableRelativeBounds, HalfOpenRelativeInterval, RelativeBounds, RelativeEndBound, RelativeFiniteBound,
+    EmptiableRelativeBounds, HalfBoundedRelativeInterval, RelativeBounds, RelativeEndBound, RelativeFiniteBound,
     RelativeStartBound,
 };
-use crate::intervals::special::{EmptyInterval, OpenInterval};
-use crate::intervals::{ClosedAbsoluteInterval, ClosedRelativeInterval, RelativeInterval};
+use crate::intervals::special::{EmptyInterval, UnboundedInterval};
+use crate::intervals::{BoundedAbsoluteInterval, BoundedRelativeInterval, RelativeInterval};
 
 /// Errors that can be produced when using [`GapFillable`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum GapFillError {
+    /// The two given intervals were overlapping
     Overlap,
 }
 
@@ -68,7 +69,7 @@ where
     }
 }
 
-impl<Rhs> GapFillable<Rhs> for ClosedAbsoluteInterval
+impl<Rhs> GapFillable<Rhs> for BoundedAbsoluteInterval
 where
     Rhs: HasEmptiableAbsoluteBounds,
 {
@@ -80,7 +81,7 @@ where
     }
 }
 
-impl<Rhs> GapFillable<Rhs> for HalfOpenAbsoluteInterval
+impl<Rhs> GapFillable<Rhs> for HalfBoundedAbsoluteInterval
 where
     Rhs: HasEmptiableAbsoluteBounds,
 {
@@ -126,7 +127,7 @@ where
     }
 }
 
-impl<Rhs> GapFillable<Rhs> for ClosedRelativeInterval
+impl<Rhs> GapFillable<Rhs> for BoundedRelativeInterval
 where
     Rhs: HasEmptiableRelativeBounds,
 {
@@ -138,7 +139,7 @@ where
     }
 }
 
-impl<Rhs> GapFillable<Rhs> for HalfOpenRelativeInterval
+impl<Rhs> GapFillable<Rhs> for HalfBoundedRelativeInterval
 where
     Rhs: HasEmptiableRelativeBounds,
 {
@@ -150,7 +151,7 @@ where
     }
 }
 
-impl GapFillable<AbsoluteBounds> for OpenInterval {
+impl GapFillable<AbsoluteBounds> for UnboundedInterval {
     type Output = AbsoluteInterval;
 
     fn fill_gap(&self, _rhs: &AbsoluteBounds) -> Result<Self::Output, GapFillError> {
@@ -158,7 +159,7 @@ impl GapFillable<AbsoluteBounds> for OpenInterval {
     }
 }
 
-impl GapFillable<EmptiableAbsoluteBounds> for OpenInterval {
+impl GapFillable<EmptiableAbsoluteBounds> for UnboundedInterval {
     type Output = AbsoluteInterval;
 
     fn fill_gap(&self, _rhs: &EmptiableAbsoluteBounds) -> Result<Self::Output, GapFillError> {
@@ -166,7 +167,7 @@ impl GapFillable<EmptiableAbsoluteBounds> for OpenInterval {
     }
 }
 
-impl GapFillable<AbsoluteInterval> for OpenInterval {
+impl GapFillable<AbsoluteInterval> for UnboundedInterval {
     type Output = AbsoluteInterval;
 
     fn fill_gap(&self, _rhs: &AbsoluteInterval) -> Result<Self::Output, GapFillError> {
@@ -174,23 +175,23 @@ impl GapFillable<AbsoluteInterval> for OpenInterval {
     }
 }
 
-impl GapFillable<ClosedAbsoluteInterval> for OpenInterval {
+impl GapFillable<BoundedAbsoluteInterval> for UnboundedInterval {
     type Output = AbsoluteInterval;
 
-    fn fill_gap(&self, _rhs: &ClosedAbsoluteInterval) -> Result<Self::Output, GapFillError> {
+    fn fill_gap(&self, _rhs: &BoundedAbsoluteInterval) -> Result<Self::Output, GapFillError> {
         Err(GapFillError::Overlap)
     }
 }
 
-impl GapFillable<HalfOpenAbsoluteInterval> for OpenInterval {
+impl GapFillable<HalfBoundedAbsoluteInterval> for UnboundedInterval {
     type Output = AbsoluteInterval;
 
-    fn fill_gap(&self, _rhs: &HalfOpenAbsoluteInterval) -> Result<Self::Output, GapFillError> {
+    fn fill_gap(&self, _rhs: &HalfBoundedAbsoluteInterval) -> Result<Self::Output, GapFillError> {
         Err(GapFillError::Overlap)
     }
 }
 
-impl GapFillable<RelativeBounds> for OpenInterval {
+impl GapFillable<RelativeBounds> for UnboundedInterval {
     type Output = RelativeInterval;
 
     fn fill_gap(&self, _rhs: &RelativeBounds) -> Result<Self::Output, GapFillError> {
@@ -198,7 +199,7 @@ impl GapFillable<RelativeBounds> for OpenInterval {
     }
 }
 
-impl GapFillable<EmptiableRelativeBounds> for OpenInterval {
+impl GapFillable<EmptiableRelativeBounds> for UnboundedInterval {
     type Output = RelativeInterval;
 
     fn fill_gap(&self, _rhs: &EmptiableRelativeBounds) -> Result<Self::Output, GapFillError> {
@@ -206,7 +207,7 @@ impl GapFillable<EmptiableRelativeBounds> for OpenInterval {
     }
 }
 
-impl GapFillable<RelativeInterval> for OpenInterval {
+impl GapFillable<RelativeInterval> for UnboundedInterval {
     type Output = RelativeInterval;
 
     fn fill_gap(&self, _rhs: &RelativeInterval) -> Result<Self::Output, GapFillError> {
@@ -214,31 +215,31 @@ impl GapFillable<RelativeInterval> for OpenInterval {
     }
 }
 
-impl GapFillable<ClosedRelativeInterval> for OpenInterval {
+impl GapFillable<BoundedRelativeInterval> for UnboundedInterval {
     type Output = RelativeInterval;
 
-    fn fill_gap(&self, _rhs: &ClosedRelativeInterval) -> Result<Self::Output, GapFillError> {
+    fn fill_gap(&self, _rhs: &BoundedRelativeInterval) -> Result<Self::Output, GapFillError> {
         Err(GapFillError::Overlap)
     }
 }
 
-impl GapFillable<HalfOpenRelativeInterval> for OpenInterval {
+impl GapFillable<HalfBoundedRelativeInterval> for UnboundedInterval {
     type Output = RelativeInterval;
 
-    fn fill_gap(&self, _rhs: &HalfOpenRelativeInterval) -> Result<Self::Output, GapFillError> {
+    fn fill_gap(&self, _rhs: &HalfBoundedRelativeInterval) -> Result<Self::Output, GapFillError> {
         Err(GapFillError::Overlap)
     }
 }
 
-impl GapFillable<OpenInterval> for OpenInterval {
-    type Output = OpenInterval;
+impl GapFillable<UnboundedInterval> for UnboundedInterval {
+    type Output = UnboundedInterval;
 
-    fn fill_gap(&self, _rhs: &OpenInterval) -> Result<Self::Output, GapFillError> {
+    fn fill_gap(&self, _rhs: &UnboundedInterval) -> Result<Self::Output, GapFillError> {
         Err(GapFillError::Overlap)
     }
 }
 
-impl GapFillable<EmptyInterval> for OpenInterval {
+impl GapFillable<EmptyInterval> for UnboundedInterval {
     type Output = EmptyInterval;
 
     fn fill_gap(&self, _rhs: &EmptyInterval) -> Result<Self::Output, GapFillError> {
@@ -270,18 +271,18 @@ impl GapFillable<AbsoluteInterval> for EmptyInterval {
     }
 }
 
-impl GapFillable<ClosedAbsoluteInterval> for EmptyInterval {
+impl GapFillable<BoundedAbsoluteInterval> for EmptyInterval {
     type Output = AbsoluteInterval;
 
-    fn fill_gap(&self, rhs: &ClosedAbsoluteInterval) -> Result<Self::Output, GapFillError> {
+    fn fill_gap(&self, rhs: &BoundedAbsoluteInterval) -> Result<Self::Output, GapFillError> {
         Ok(AbsoluteInterval::from(rhs.clone()))
     }
 }
 
-impl GapFillable<HalfOpenAbsoluteInterval> for EmptyInterval {
+impl GapFillable<HalfBoundedAbsoluteInterval> for EmptyInterval {
     type Output = AbsoluteInterval;
 
-    fn fill_gap(&self, rhs: &HalfOpenAbsoluteInterval) -> Result<Self::Output, GapFillError> {
+    fn fill_gap(&self, rhs: &HalfBoundedAbsoluteInterval) -> Result<Self::Output, GapFillError> {
         Ok(AbsoluteInterval::from(rhs.clone()))
     }
 }
@@ -310,26 +311,26 @@ impl GapFillable<RelativeInterval> for EmptyInterval {
     }
 }
 
-impl GapFillable<ClosedRelativeInterval> for EmptyInterval {
+impl GapFillable<BoundedRelativeInterval> for EmptyInterval {
     type Output = RelativeInterval;
 
-    fn fill_gap(&self, rhs: &ClosedRelativeInterval) -> Result<Self::Output, GapFillError> {
+    fn fill_gap(&self, rhs: &BoundedRelativeInterval) -> Result<Self::Output, GapFillError> {
         Ok(RelativeInterval::from(rhs.clone()))
     }
 }
 
-impl GapFillable<HalfOpenRelativeInterval> for EmptyInterval {
+impl GapFillable<HalfBoundedRelativeInterval> for EmptyInterval {
     type Output = RelativeInterval;
 
-    fn fill_gap(&self, rhs: &HalfOpenRelativeInterval) -> Result<Self::Output, GapFillError> {
+    fn fill_gap(&self, rhs: &HalfBoundedRelativeInterval) -> Result<Self::Output, GapFillError> {
         Ok(RelativeInterval::from(rhs.clone()))
     }
 }
 
-impl GapFillable<OpenInterval> for EmptyInterval {
-    type Output = OpenInterval;
+impl GapFillable<UnboundedInterval> for EmptyInterval {
+    type Output = UnboundedInterval;
 
-    fn fill_gap(&self, rhs: &OpenInterval) -> Result<Self::Output, GapFillError> {
+    fn fill_gap(&self, rhs: &UnboundedInterval) -> Result<Self::Output, GapFillError> {
         Ok(*rhs)
     }
 }
@@ -350,7 +351,7 @@ impl GapFillable<EmptyInterval> for EmptyInterval {
 pub fn fill_gap_abs_bounds(a: &AbsoluteBounds, b: &AbsoluteBounds) -> Result<AbsoluteBounds, GapFillError> {
     type Dop = DisambiguatedOverlapPosition;
 
-    let Ok(overlap_position) = a.disambiguated_overlap_position(b, OverlapRuleSet::default());
+    let Ok(overlap_position) = a.disambiguated_overlap_position(b, OverlapRuleSet::Strict);
 
     match overlap_position {
         Dop::Outside => unreachable!("Only empty intervals can produce `OverlapPosition::Outside`"),
@@ -414,7 +415,7 @@ pub fn fill_gap_emptiable_abs_bounds(
     b: &EmptiableAbsoluteBounds,
 ) -> Result<EmptiableAbsoluteBounds, GapFillError> {
     let EmptiableAbsoluteBounds::Bound(a_abs_bounds) = a else {
-        return Ok(a.clone());
+        return Ok(b.clone());
     };
 
     fill_gap_abs_bounds_with_emptiable_abs_bounds(a_abs_bounds, b).map(EmptiableAbsoluteBounds::from)
@@ -428,7 +429,7 @@ pub fn fill_gap_emptiable_abs_bounds(
 pub fn fill_gap_rel_bounds(a: &RelativeBounds, b: &RelativeBounds) -> Result<RelativeBounds, GapFillError> {
     type Dop = DisambiguatedOverlapPosition;
 
-    let Ok(overlap_position) = a.disambiguated_overlap_position(b, OverlapRuleSet::default());
+    let Ok(overlap_position) = a.disambiguated_overlap_position(b, OverlapRuleSet::Strict);
 
     match overlap_position {
         Dop::Outside => unreachable!("Only empty intervals can produce `OverlapPosition::Outside`"),
@@ -492,7 +493,7 @@ pub fn fill_gap_emptiable_rel_bounds(
     b: &EmptiableRelativeBounds,
 ) -> Result<EmptiableRelativeBounds, GapFillError> {
     let EmptiableRelativeBounds::Bound(a_rel_bounds) = a else {
-        return Ok(a.clone());
+        return Ok(b.clone());
     };
 
     fill_gap_rel_bounds_with_emptiable_rel_bounds(a_rel_bounds, b).map(EmptiableRelativeBounds::from)

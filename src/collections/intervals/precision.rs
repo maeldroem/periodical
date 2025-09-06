@@ -4,21 +4,25 @@ use crate::intervals::PreciseAbsoluteBounds;
 use crate::ops::Precision;
 
 /// Dispatcher trait for the [`PrecisionChange`] iterator
-pub trait PrecisionChangeIteratorDispatcher: Iterator + Sized {
+pub trait PrecisionChangeIteratorDispatcher: IntoIterator + Sized {
     /// Changes the precision of the interval with the given [`Precision`]
-    fn change_precision(self, precision: Precision) -> PrecisionChange<Self> {
-        PrecisionChange::new(self, precision, precision)
+    fn change_precision(self, precision: Precision) -> PrecisionChange<Self::IntoIter> {
+        PrecisionChange::new(self.into_iter(), precision, precision)
     }
 
     /// Changes the precision of start and end bounds with the given [`Precision`]s
-    fn change_start_end_precision(self, start_precision: Precision, end_precision: Precision) -> PrecisionChange<Self> {
-        PrecisionChange::new(self, start_precision, end_precision)
+    fn change_start_end_precision(
+        self,
+        start_precision: Precision,
+        end_precision: Precision,
+    ) -> PrecisionChange<Self::IntoIter> {
+        PrecisionChange::new(self.into_iter(), start_precision, end_precision)
     }
 }
 
 impl<I> PrecisionChangeIteratorDispatcher for I
 where
-    I: Iterator,
+    I: IntoIterator,
     I::Item: PreciseAbsoluteBounds,
 {
 }

@@ -1,9 +1,12 @@
+pub use super::intervals::special::{EmptyInterval, UnboundedInterval};
 pub use crate::intervals::absolute::{
-    AbsoluteBounds, AbsoluteInterval, ClosedAbsoluteInterval, EmptiableAbsoluteBounds, HalfOpenAbsoluteInterval,
-    HasAbsoluteBounds, HasEmptiableAbsoluteBounds,
+    AbsoluteBound, AbsoluteBounds, AbsoluteInterval, BoundedAbsoluteInterval, EmptiableAbsoluteBounds,
+    HalfBoundedAbsoluteInterval, HasAbsoluteBounds, HasEmptiableAbsoluteBounds,
 };
 pub use crate::intervals::meta::{Emptiable, HasBoundInclusivity, HasDuration, HasOpenness, HasRelativity};
 pub use crate::intervals::ops::abridge::Abridgable;
+pub use crate::intervals::ops::bound_containment::CanPositionBoundContainment;
+pub use crate::intervals::ops::bound_ord::PartialBoundOrd;
 pub use crate::intervals::ops::complement::Complementable;
 pub use crate::intervals::ops::cut::{CutResult, CutType, Cuttable};
 pub use crate::intervals::ops::extend::Extensible;
@@ -24,6 +27,6 @@ pub use crate::intervals::ops::time_containment::{
     TimeContainmentPosition, TimeContainmentRule, TimeContainmentRuleSet,
 };
 pub use crate::intervals::relative::{
-    ClosedRelativeInterval, EmptiableRelativeBounds, HalfOpenRelativeInterval, HasEmptiableRelativeBounds,
-    HasRelativeBounds, RelativeBounds, RelativeInterval,
+    BoundedRelativeInterval, EmptiableRelativeBounds, HalfBoundedRelativeInterval, HasEmptiableRelativeBounds,
+    HasRelativeBounds, RelativeBound, RelativeBounds, RelativeInterval,
 };

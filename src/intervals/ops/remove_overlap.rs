@@ -6,15 +6,15 @@ use super::prelude::*;
 
 use crate::intervals::absolute::{
     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteInterval, AbsoluteStartBound,
-    EmptiableAbsoluteBounds, HalfOpenAbsoluteInterval, HasAbsoluteBounds, HasEmptiableAbsoluteBounds,
+    EmptiableAbsoluteBounds, HalfBoundedAbsoluteInterval, HasAbsoluteBounds, HasEmptiableAbsoluteBounds,
 };
 use crate::intervals::meta::{BoundInclusivity, Interval};
 use crate::intervals::relative::{
-    EmptiableRelativeBounds, HalfOpenRelativeInterval, RelativeBounds, RelativeEndBound, RelativeFiniteBound,
+    EmptiableRelativeBounds, HalfBoundedRelativeInterval, RelativeBounds, RelativeEndBound, RelativeFiniteBound,
     RelativeStartBound,
 };
-use crate::intervals::special::{EmptyInterval, OpenInterval};
-use crate::intervals::{ClosedAbsoluteInterval, ClosedRelativeInterval, RelativeInterval};
+use crate::intervals::special::{EmptyInterval, UnboundedInterval};
+use crate::intervals::{BoundedAbsoluteInterval, BoundedRelativeInterval, RelativeInterval};
 
 /// Result of an overlap removal
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -34,6 +34,24 @@ impl<T> OverlapRemovalResult<T> {
     #[must_use]
     pub fn is_split(&self) -> bool {
         matches!(self, Self::Split(..))
+    }
+
+    /// Returns the content of the [`Single`](OverlapRemovalResult::Single) variant
+    #[must_use]
+    pub fn single(self) -> Option<T> {
+        match self {
+            Self::Single(s) => Some(s),
+            Self::Split(..) => None,
+        }
+    }
+
+    /// Returns the content of the [`Split`](OverlapRemovalResult::Split) variant
+    #[must_use]
+    pub fn split(self) -> Option<(T, T)> {
+        match self {
+            Self::Single(_) => None,
+            Self::Split(s1, s2) => Some((s1, s2)),
+        }
     }
 
     /// Maps the contents of the variants
@@ -103,7 +121,7 @@ where
     }
 }
 
-impl<Rhs> OverlapRemovable<Rhs> for ClosedAbsoluteInterval
+impl<Rhs> OverlapRemovable<Rhs> for BoundedAbsoluteInterval
 where
     Rhs: HasEmptiableAbsoluteBounds,
 {
@@ -115,7 +133,7 @@ where
     }
 }
 
-impl<Rhs> OverlapRemovable<Rhs> for HalfOpenAbsoluteInterval
+impl<Rhs> OverlapRemovable<Rhs> for HalfBoundedAbsoluteInterval
 where
     Rhs: HasEmptiableAbsoluteBounds,
 {
@@ -161,7 +179,7 @@ where
     }
 }
 
-impl<Rhs> OverlapRemovable<Rhs> for ClosedRelativeInterval
+impl<Rhs> OverlapRemovable<Rhs> for BoundedRelativeInterval
 where
     Rhs: HasEmptiableRelativeBounds,
 {
@@ -173,7 +191,7 @@ where
     }
 }
 
-impl<Rhs> OverlapRemovable<Rhs> for HalfOpenRelativeInterval
+impl<Rhs> OverlapRemovable<Rhs> for HalfBoundedRelativeInterval
 where
     Rhs: HasEmptiableRelativeBounds,
 {
@@ -185,7 +203,7 @@ where
     }
 }
 
-impl OverlapRemovable<AbsoluteBounds> for OpenInterval {
+impl OverlapRemovable<AbsoluteBounds> for UnboundedInterval {
     type Output = AbsoluteInterval;
 
     fn remove_overlap(&self, rhs: &AbsoluteBounds) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalErr> {
@@ -194,7 +212,7 @@ impl OverlapRemovable<AbsoluteBounds> for OpenInterval {
     }
 }
 
-impl OverlapRemovable<EmptiableAbsoluteBounds> for OpenInterval {
+impl OverlapRemovable<EmptiableAbsoluteBounds> for UnboundedInterval {
     type Output = AbsoluteInterval;
 
     fn remove_overlap(
@@ -206,7 +224,7 @@ impl OverlapRemovable<EmptiableAbsoluteBounds> for OpenInterval {
     }
 }
 
-impl OverlapRemovable<AbsoluteInterval> for OpenInterval {
+impl OverlapRemovable<AbsoluteInterval> for UnboundedInterval {
     type Output = AbsoluteInterval;
 
     fn remove_overlap(&self, rhs: &AbsoluteInterval) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalErr> {
@@ -215,31 +233,31 @@ impl OverlapRemovable<AbsoluteInterval> for OpenInterval {
     }
 }
 
-impl OverlapRemovable<ClosedAbsoluteInterval> for OpenInterval {
+impl OverlapRemovable<BoundedAbsoluteInterval> for UnboundedInterval {
     type Output = AbsoluteInterval;
 
     fn remove_overlap(
         &self,
-        rhs: &ClosedAbsoluteInterval,
+        rhs: &BoundedAbsoluteInterval,
     ) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalErr> {
         remove_overlap_abs_bounds(&self.abs_bounds(), &rhs.abs_bounds())
             .map(|overlap_removal_res| overlap_removal_res.map(AbsoluteInterval::from))
     }
 }
 
-impl OverlapRemovable<HalfOpenAbsoluteInterval> for OpenInterval {
+impl OverlapRemovable<HalfBoundedAbsoluteInterval> for UnboundedInterval {
     type Output = AbsoluteInterval;
 
     fn remove_overlap(
         &self,
-        rhs: &HalfOpenAbsoluteInterval,
+        rhs: &HalfBoundedAbsoluteInterval,
     ) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalErr> {
         remove_overlap_abs_bounds(&self.abs_bounds(), &rhs.abs_bounds())
             .map(|overlap_removal_res| overlap_removal_res.map(AbsoluteInterval::from))
     }
 }
 
-impl OverlapRemovable<RelativeBounds> for OpenInterval {
+impl OverlapRemovable<RelativeBounds> for UnboundedInterval {
     type Output = RelativeInterval;
 
     fn remove_overlap(&self, rhs: &RelativeBounds) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalErr> {
@@ -248,7 +266,7 @@ impl OverlapRemovable<RelativeBounds> for OpenInterval {
     }
 }
 
-impl OverlapRemovable<EmptiableRelativeBounds> for OpenInterval {
+impl OverlapRemovable<EmptiableRelativeBounds> for UnboundedInterval {
     type Output = RelativeInterval;
 
     fn remove_overlap(
@@ -260,7 +278,7 @@ impl OverlapRemovable<EmptiableRelativeBounds> for OpenInterval {
     }
 }
 
-impl OverlapRemovable<RelativeInterval> for OpenInterval {
+impl OverlapRemovable<RelativeInterval> for UnboundedInterval {
     type Output = RelativeInterval;
 
     fn remove_overlap(&self, rhs: &RelativeInterval) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalErr> {
@@ -269,40 +287,43 @@ impl OverlapRemovable<RelativeInterval> for OpenInterval {
     }
 }
 
-impl OverlapRemovable<ClosedRelativeInterval> for OpenInterval {
+impl OverlapRemovable<BoundedRelativeInterval> for UnboundedInterval {
     type Output = RelativeInterval;
 
     fn remove_overlap(
         &self,
-        rhs: &ClosedRelativeInterval,
+        rhs: &BoundedRelativeInterval,
     ) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalErr> {
         remove_overlap_rel_bounds(&self.rel_bounds(), &rhs.rel_bounds())
             .map(|overlap_removal_res| overlap_removal_res.map(RelativeInterval::from))
     }
 }
 
-impl OverlapRemovable<HalfOpenRelativeInterval> for OpenInterval {
+impl OverlapRemovable<HalfBoundedRelativeInterval> for UnboundedInterval {
     type Output = RelativeInterval;
 
     fn remove_overlap(
         &self,
-        rhs: &HalfOpenRelativeInterval,
+        rhs: &HalfBoundedRelativeInterval,
     ) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalErr> {
         remove_overlap_rel_bounds(&self.rel_bounds(), &rhs.rel_bounds())
             .map(|overlap_removal_res| overlap_removal_res.map(RelativeInterval::from))
     }
 }
 
-impl OverlapRemovable<OpenInterval> for OpenInterval {
+impl OverlapRemovable<UnboundedInterval> for UnboundedInterval {
     type Output = EmptyInterval;
 
-    fn remove_overlap(&self, _rhs: &OpenInterval) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalErr> {
+    fn remove_overlap(
+        &self,
+        _rhs: &UnboundedInterval,
+    ) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalErr> {
         Ok(OverlapRemovalResult::Single(EmptyInterval))
     }
 }
 
-impl OverlapRemovable<EmptyInterval> for OpenInterval {
-    type Output = OpenInterval;
+impl OverlapRemovable<EmptyInterval> for UnboundedInterval {
+    type Output = UnboundedInterval;
 
     fn remove_overlap(&self, _rhs: &EmptyInterval) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalErr> {
         Ok(OverlapRemovalResult::Single(*self))
@@ -430,8 +451,8 @@ pub fn remove_start_overlap_abs(a: &AbsoluteBounds, b: &AbsoluteBounds) -> Absol
     };
 
     let cut_type = match finite_bound.inclusivity().opposite() {
-        BoundInclusivity::Inclusive => CutType::InclusiveBoth,
-        BoundInclusivity::Exclusive => CutType::ExclusiveBoth,
+        BoundInclusivity::Inclusive => CutType::new(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive),
+        BoundInclusivity::Exclusive => CutType::new(BoundInclusivity::Exclusive, BoundInclusivity::Exclusive),
     };
 
     match a.cut_at(finite_bound.time(), cut_type) {
@@ -461,8 +482,8 @@ pub fn remove_end_overlap_abs(a: &AbsoluteBounds, b: &AbsoluteBounds) -> Absolut
     };
 
     let cut_type = match finite_bound.inclusivity().opposite() {
-        BoundInclusivity::Inclusive => CutType::InclusiveBoth,
-        BoundInclusivity::Exclusive => CutType::ExclusiveBoth,
+        BoundInclusivity::Inclusive => CutType::new(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive),
+        BoundInclusivity::Exclusive => CutType::new(BoundInclusivity::Exclusive, BoundInclusivity::Exclusive),
     };
 
     match a.cut_at(finite_bound.time(), cut_type) {
@@ -622,8 +643,8 @@ pub fn remove_start_overlap_rel(a: &RelativeBounds, b: &RelativeBounds) -> Relat
     };
 
     let cut_type = match finite_bound.inclusivity().opposite() {
-        BoundInclusivity::Inclusive => CutType::InclusiveBoth,
-        BoundInclusivity::Exclusive => CutType::ExclusiveBoth,
+        BoundInclusivity::Inclusive => CutType::new(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive),
+        BoundInclusivity::Exclusive => CutType::new(BoundInclusivity::Exclusive, BoundInclusivity::Exclusive),
     };
 
     match a.cut_at(finite_bound.offset(), cut_type) {
@@ -653,8 +674,8 @@ pub fn remove_end_overlap_rel(a: &RelativeBounds, b: &RelativeBounds) -> Relativ
     };
 
     let cut_type = match finite_bound.inclusivity().opposite() {
-        BoundInclusivity::Inclusive => CutType::InclusiveBoth,
-        BoundInclusivity::Exclusive => CutType::ExclusiveBoth,
+        BoundInclusivity::Inclusive => CutType::new(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive),
+        BoundInclusivity::Exclusive => CutType::new(BoundInclusivity::Exclusive, BoundInclusivity::Exclusive),
     };
 
     match a.cut_at(finite_bound.offset(), cut_type) {

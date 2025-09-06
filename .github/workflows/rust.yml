@@ -56,7 +56,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-deps-
       - name: Run tests
-        run: cargo test --verbose --all-features -- --test-threads 4
+        run: cargo test --verbose --all-features --jobs 6
   code_coverage:
     runs-on: ubuntu-latest
     needs: [building]

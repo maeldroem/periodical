@@ -4,14 +4,14 @@ use super::prelude::*;
 
 use crate::intervals::absolute::{
     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, EmptiableAbsoluteBounds,
-    HalfOpenAbsoluteInterval, HasEmptiableAbsoluteBounds,
+    HalfBoundedAbsoluteInterval, HasEmptiableAbsoluteBounds,
 };
 use crate::intervals::relative::{
-    EmptiableRelativeBounds, HalfOpenRelativeInterval, RelativeBounds, RelativeEndBound, RelativeFiniteBound,
+    EmptiableRelativeBounds, HalfBoundedRelativeInterval, RelativeBounds, RelativeEndBound, RelativeFiniteBound,
     RelativeStartBound,
 };
-use crate::intervals::special::{EmptyInterval, OpenInterval};
-use crate::intervals::{AbsoluteInterval, ClosedAbsoluteInterval, ClosedRelativeInterval, RelativeInterval};
+use crate::intervals::special::{EmptyInterval, UnboundedInterval};
+use crate::intervals::{AbsoluteInterval, BoundedAbsoluteInterval, BoundedRelativeInterval, RelativeInterval};
 use crate::ops::ComplementResult;
 
 /// Capacity to get the complement of an interval
@@ -47,7 +47,7 @@ impl Complementable for AbsoluteInterval {
     }
 }
 
-impl Complementable for ClosedAbsoluteInterval {
+impl Complementable for BoundedAbsoluteInterval {
     type Output = AbsoluteInterval;
 
     fn complement(&self) -> ComplementResult<Self::Output> {
@@ -55,7 +55,7 @@ impl Complementable for ClosedAbsoluteInterval {
     }
 }
 
-impl Complementable for HalfOpenAbsoluteInterval {
+impl Complementable for HalfBoundedAbsoluteInterval {
     type Output = AbsoluteInterval;
 
     fn complement(&self) -> ComplementResult<Self::Output> {
@@ -87,7 +87,7 @@ impl Complementable for RelativeInterval {
     }
 }
 
-impl Complementable for ClosedRelativeInterval {
+impl Complementable for BoundedRelativeInterval {
     type Output = RelativeInterval;
 
     fn complement(&self) -> ComplementResult<Self::Output> {
@@ -95,7 +95,7 @@ impl Complementable for ClosedRelativeInterval {
     }
 }
 
-impl Complementable for HalfOpenRelativeInterval {
+impl Complementable for HalfBoundedRelativeInterval {
     type Output = RelativeInterval;
 
     fn complement(&self) -> ComplementResult<Self::Output> {
@@ -103,7 +103,7 @@ impl Complementable for HalfOpenRelativeInterval {
     }
 }
 
-impl Complementable for OpenInterval {
+impl Complementable for UnboundedInterval {
     type Output = EmptyInterval;
 
     fn complement(&self) -> ComplementResult<Self::Output> {
@@ -112,10 +112,10 @@ impl Complementable for OpenInterval {
 }
 
 impl Complementable for EmptyInterval {
-    type Output = OpenInterval;
+    type Output = UnboundedInterval;
 
     fn complement(&self) -> ComplementResult<Self::Output> {
-        ComplementResult::Single(OpenInterval)
+        ComplementResult::Single(UnboundedInterval)
     }
 }
 
@@ -170,7 +170,7 @@ pub fn complement_emptiable_abs_bounds(
     emptiable_bounds: &EmptiableAbsoluteBounds,
 ) -> ComplementResult<EmptiableAbsoluteBounds> {
     let EmptiableAbsoluteBounds::Bound(bounds) = emptiable_bounds else {
-        return ComplementResult::Single(OpenInterval.emptiable_abs_bounds());
+        return ComplementResult::Single(UnboundedInterval.emptiable_abs_bounds());
     };
 
     complement_abs_bounds(bounds)
@@ -227,7 +227,7 @@ pub fn complement_emptiable_rel_bounds(
     emptiable_bounds: &EmptiableRelativeBounds,
 ) -> ComplementResult<EmptiableRelativeBounds> {
     let EmptiableRelativeBounds::Bound(bounds) = emptiable_bounds else {
-        return ComplementResult::Single(OpenInterval.emptiable_rel_bounds());
+        return ComplementResult::Single(UnboundedInterval.emptiable_rel_bounds());
     };
 
     complement_rel_bounds(bounds)

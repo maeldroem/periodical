@@ -3,9 +3,9 @@
 use arbitrary::{Arbitrary, Unstructured};
 use chrono::{DateTime, Duration, Utc};
 
-use crate::intervals::absolute::{AbsoluteBounds, AbsoluteEndBound, AbsoluteStartBound, ClosedAbsoluteInterval};
+use crate::intervals::absolute::{AbsoluteBounds, AbsoluteEndBound, AbsoluteStartBound, BoundedAbsoluteInterval};
 use crate::intervals::meta::BoundInclusivity;
-use crate::intervals::relative::{ClosedRelativeInterval, RelativeBounds, RelativeEndBound, RelativeStartBound};
+use crate::intervals::relative::{BoundedRelativeInterval, RelativeBounds, RelativeEndBound, RelativeStartBound};
 
 impl<'a> Arbitrary<'a> for AbsoluteBounds {
     fn arbitrary(u: &mut Unstructured<'a>) -> arbitrary::Result<Self> {
@@ -18,7 +18,7 @@ impl<'a> Arbitrary<'a> for AbsoluteBounds {
     }
 }
 
-impl<'a> Arbitrary<'a> for ClosedAbsoluteInterval {
+impl<'a> Arbitrary<'a> for BoundedAbsoluteInterval {
     fn arbitrary(u: &mut Unstructured<'a>) -> arbitrary::Result<Self> {
         let start_time = DateTime::<Utc>::arbitrary(u)?;
         let end_time = start_time
@@ -26,14 +26,14 @@ impl<'a> Arbitrary<'a> for ClosedAbsoluteInterval {
             .unwrap_or(start_time);
 
         if start_time == end_time {
-            Ok(ClosedAbsoluteInterval::new_with_inclusivity(
+            Ok(BoundedAbsoluteInterval::new_with_inclusivity(
                 start_time,
                 BoundInclusivity::Inclusive,
                 end_time,
                 BoundInclusivity::Inclusive,
             ))
         } else {
-            Ok(ClosedAbsoluteInterval::new_with_inclusivity(
+            Ok(BoundedAbsoluteInterval::new_with_inclusivity(
                 start_time,
                 BoundInclusivity::arbitrary(u)?,
                 end_time,
@@ -54,20 +54,20 @@ impl<'a> Arbitrary<'a> for RelativeBounds {
     }
 }
 
-impl<'a> Arbitrary<'a> for ClosedRelativeInterval {
+impl<'a> Arbitrary<'a> for BoundedRelativeInterval {
     fn arbitrary(u: &mut Unstructured<'a>) -> arbitrary::Result<Self> {
         let start_offset = Duration::arbitrary(u)?;
         let length = Duration::arbitrary(u)?;
 
         if length.is_zero() {
-            Ok(ClosedRelativeInterval::new_with_inclusivity(
+            Ok(BoundedRelativeInterval::new_with_inclusivity(
                 start_offset,
                 BoundInclusivity::Inclusive,
                 length,
                 BoundInclusivity::Inclusive,
             ))
         } else {
-            Ok(ClosedRelativeInterval::new_with_inclusivity(
+            Ok(BoundedRelativeInterval::new_with_inclusivity(
                 start_offset,
                 BoundInclusivity::arbitrary(u)?,
                 length,

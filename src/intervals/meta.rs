@@ -12,9 +12,9 @@ use arbitrary::Arbitrary;
 /// This trait is used for restricting parameters to intervals when the parameter itself is not important, but want
 /// to avoid implementing the method on non-interval types.
 ///
-/// For example, extending an [`OpenInterval`](crate::intervals::special::OpenInterval) with any other interval will
-/// produce an [`OpenInterval`](crate::intervals::special::OpenInterval) anyways, but we don't want to allow calls
-/// like `open_interval.extend(3)`, so this trait is used to restrict this parameter to interval types only.
+/// For example, extending an [`UnboundedInterval`](crate::intervals::special::UnboundedInterval) with any other interval will
+/// produce an [`UnboundedInterval`](crate::intervals::special::UnboundedInterval) anyways, but we don't want to allow calls
+/// like `unbounded_interval.extend(3)`, so this trait is used to restrict this parameter to interval types only.
 pub trait Interval {}
 
 /// How open is the time interval
@@ -22,11 +22,11 @@ pub trait Interval {}
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum Openness {
     /// Defined start and end bounds
-    Closed,
+    Bounded,
     /// One of the bounds is known, but the interval continues to infinity in one direction
-    HalfOpen,
+    HalfBounded,
     /// Covers the entire time
-    Open,
+    Unbounded,
     /// Is technically bounded in time, but nowhere precise, used for [empty intervals](super::interval::EmptyInterval)
     Empty,
 }
@@ -34,9 +34,9 @@ pub enum Openness {
 impl Display for Openness {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Closed => write!(f, "Closed"),
-            Self::HalfOpen => write!(f, "Half-open"),
-            Self::Open => write!(f, "Open"),
+            Self::Bounded => write!(f, "Bounded"),
+            Self::HalfBounded => write!(f, "Half-bounded"),
+            Self::Unbounded => write!(f, "Unbounded"),
             Self::Empty => write!(f, "Empty"),
         }
     }
@@ -55,7 +55,7 @@ pub enum Relativity {
     Relative,
     /// Bounds are set using specific timestamps
     Absolute,
-    /// Uses concepts rather than bounds, like [open](super::special::OpenInterval)
+    /// Uses concepts rather than bounds, like [unbounded](super::special::UnboundedInterval)
     /// and [empty](super::special::EmptyInterval) intervals
     Any,
 }
@@ -75,7 +75,7 @@ pub trait HasRelativity {
     fn relativity(&self) -> Relativity;
 }
 
-/// The direction in which a half-open time interval is open
+/// The direction in which a half-bounded time interval is open
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum OpeningDirection {
@@ -108,6 +108,23 @@ impl From<bool> for OpeningDirection {
 pub enum Duration {
     Finite(chrono::Duration),
     Infinite,
+}
+
+impl Duration {
+    /// Returns whether the interval duration is finite
+    #[must_use]
+    pub fn is_finite(&self) -> bool {
+        matches!(self, Duration::Finite(_))
+    }
+
+    /// Returns the contents of the [`Finite`](Duration::Finite) variant
+    #[must_use]
+    pub fn finite(self) -> Option<chrono::Duration> {
+        match self {
+            Self::Finite(duration) => Some(duration),
+            Self::Infinite => None,
+        }
+    }
 }
 
 impl Display for Duration {

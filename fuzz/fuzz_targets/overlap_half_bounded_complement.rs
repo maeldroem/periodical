@@ -4,21 +4,21 @@ use libfuzzer_sys::fuzz_target;
 use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
 use periodical::prelude::*;
 
-fuzz_target!(|data: (HalfOpenAbsoluteInterval, OverlapRuleSet)| {
-    let (source_half_open, rule_set) = data;
+fuzz_target!(|data: (HalfBoundedAbsoluteInterval, OverlapRuleSet)| {
+    let (source_half_bounded, rule_set) = data;
 
-    let complement_half_open = source_half_open
+    let complement_half_bounded = source_half_bounded
         .complement()
         .single()
-        .expect("A half-open interval always produces a single complement");
+        .expect("A half-bounded interval always produces a single complement");
 
-    let overlap_position = source_half_open
-        .disambiguated_overlap_position(&complement_half_open, rule_set)
+    let overlap_position = source_half_bounded
+        .disambiguated_overlap_position(&complement_half_bounded, rule_set)
         .expect("Somehow the overlap position produced an Err?");
 
     match (
-        source_half_open.opening_direction(),
-        source_half_open.reference_time_inclusivity(),
+        source_half_bounded.opening_direction(),
+        source_half_bounded.reference_time_inclusivity(),
         rule_set,
     ) {
         (
@@ -35,7 +35,7 @@ fuzz_target!(|data: (HalfOpenAbsoluteInterval, OverlapRuleSet)| {
                 overlap_position,
                 DisambiguatedOverlapPosition::OutsideAfter,
                 "Overlap position was different than expected. Complement is {:#?}",
-                &complement_half_open,
+                &complement_half_bounded,
             );
         },
         (OpeningDirection::ToFuture, ..) => {
@@ -43,7 +43,7 @@ fuzz_target!(|data: (HalfOpenAbsoluteInterval, OverlapRuleSet)| {
                 overlap_position,
                 DisambiguatedOverlapPosition::StartsOnEnd,
                 "Overlap position was different than expected. Complement is {:#?}",
-                &complement_half_open,
+                &complement_half_bounded,
             );
         },
         (
@@ -60,7 +60,7 @@ fuzz_target!(|data: (HalfOpenAbsoluteInterval, OverlapRuleSet)| {
                 overlap_position,
                 DisambiguatedOverlapPosition::OutsideBefore,
                 "Overlap position was different than expected. Complement is {:#?}",
-                &complement_half_open,
+                &complement_half_bounded,
             );
         },
         (OpeningDirection::ToPast, ..) => {
@@ -68,7 +68,7 @@ fuzz_target!(|data: (HalfOpenAbsoluteInterval, OverlapRuleSet)| {
                 overlap_position,
                 DisambiguatedOverlapPosition::EndsOnStart,
                 "Overlap position was different than expected. Complement is {:#?}",
-                &complement_half_open,
+                &complement_half_bounded,
             );
         },
     }

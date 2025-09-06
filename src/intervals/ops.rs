@@ -11,6 +11,7 @@
 
 pub mod abridge;
 pub mod bound_containment;
+pub mod bound_ord;
 pub mod bound_overlap_ambiguity;
 pub mod complement;
 pub mod continuation;
@@ -27,3 +28,40 @@ pub mod remove_overlap_or_gap;
 pub mod set_ops;
 pub mod shrink;
 pub mod time_containment;
+
+#[cfg(test)]
+mod abridge_tests;
+#[cfg(test)]
+mod bound_containment_tests;
+#[cfg(test)]
+mod bound_ord_tests;
+#[cfg(test)]
+mod bound_overlap_ambiguity_tests;
+#[cfg(test)]
+mod complement_tests;
+#[cfg(test)]
+mod continuation_tests;
+#[cfg(test)]
+mod cut_tests;
+#[cfg(test)]
+mod extend_tests;
+#[cfg(test)]
+mod fill_gap_tests;
+#[cfg(test)]
+mod grow_tests;
+#[cfg(test)]
+mod overlap_tests;
+#[cfg(test)]
+mod precision_tests;
+#[cfg(test)]
+mod relativity_conversion_tests;
+#[cfg(test)]
+mod remove_overlap_or_gap_tests;
+#[cfg(test)]
+mod remove_overlap_tests;
+#[cfg(test)]
+mod set_ops_tests;
+#[cfg(test)]
+mod shrink_tests;
+#[cfg(test)]
+mod time_containment_tests;

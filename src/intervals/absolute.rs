@@ -3,17 +3,18 @@
 use std::cmp::Ordering;
 use std::error::Error;
 use std::fmt::Display;
+use std::hash::{Hash, Hasher};
 use std::ops::{Bound, Range, RangeBounds, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive};
 
 #[cfg(feature = "arbitrary")]
 use arbitrary::Arbitrary;
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Duration, Utc};
 
 use crate::intervals::meta::Interval;
 
 use super::meta::{BoundInclusivity, Duration as IntervalDuration, OpeningDirection, Openness, Relativity};
 use super::prelude::*;
-use super::special::{EmptyInterval, OpenInterval};
+use super::special::{EmptyInterval, UnboundedInterval};
 
 /// An absolute finite bound
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -91,25 +92,18 @@ impl From<(DateTime<Utc>, BoundInclusivity)> for AbsoluteFiniteBound {
 
 impl From<(DateTime<Utc>, bool)> for AbsoluteFiniteBound {
     fn from((time, is_inclusive): (DateTime<Utc>, bool)) -> Self {
-        AbsoluteFiniteBound::new_with_inclusivity(
-            time,
-            if is_inclusive {
-                BoundInclusivity::Inclusive
-            } else {
-                BoundInclusivity::Exclusive
-            },
-        )
+        AbsoluteFiniteBound::new_with_inclusivity(time, BoundInclusivity::from(is_inclusive))
     }
 }
 
 /// Errors that can occur when trying to convert a [`Bound<DateTime<Utc>>`] into an [`AbsoluteFiniteBound`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum BoundToAbsoluteFiniteBoundConversionErr {
+pub enum AbsoluteFiniteBoundFromBoundError {
     /// The given bound was of the [`Unbounded`](Bound::Unbounded) variant
     IsUnbounded,
 }
 
-impl Display for BoundToAbsoluteFiniteBoundConversionErr {
+impl Display for AbsoluteFiniteBoundFromBoundError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::IsUnbounded => {
@@ -123,10 +117,10 @@ impl Display for BoundToAbsoluteFiniteBoundConversionErr {
     }
 }
 
-impl Error for BoundToAbsoluteFiniteBoundConversionErr {}
+impl Error for AbsoluteFiniteBoundFromBoundError {}
 
 impl TryFrom<Bound<DateTime<Utc>>> for AbsoluteFiniteBound {
-    type Error = BoundToAbsoluteFiniteBoundConversionErr;
+    type Error = AbsoluteFiniteBoundFromBoundError;
 
     fn try_from(value: Bound<DateTime<Utc>>) -> Result<Self, Self::Error> {
         match value {
@@ -138,7 +132,7 @@ impl TryFrom<Bound<DateTime<Utc>>> for AbsoluteFiniteBound {
                 time,
                 BoundInclusivity::Exclusive,
             )),
-            Bound::Unbounded => Err(BoundToAbsoluteFiniteBoundConversionErr::IsUnbounded),
+            Bound::Unbounded => Err(AbsoluteFiniteBoundFromBoundError::IsUnbounded),
         }
     }
 }
@@ -149,6 +143,44 @@ impl TryFrom<Bound<DateTime<Utc>>> for AbsoluteFiniteBound {
 pub enum AbsoluteStartBound {
     Finite(AbsoluteFiniteBound),
     InfinitePast,
+}
+
+impl AbsoluteStartBound {
+    /// Returns whether the [`AbsoluteStartBound`] is of the [`Finite`](AbsoluteStartBound::Finite) variant
+    #[must_use]
+    pub fn is_finite(&self) -> bool {
+        matches!(self, Self::Finite(_))
+    }
+
+    /// Returns whether the [`AbsoluteStartBound`] is of the [`InfinitePast`](AbsoluteStartBound::InfinitePast) variant
+    #[must_use]
+    pub fn is_infinite_past(&self) -> bool {
+        matches!(self, Self::InfinitePast)
+    }
+
+    /// Returns the content of the [`Finite`](AbsoluteStartBound::Finite) variant
+    #[must_use]
+    pub fn finite(self) -> Option<AbsoluteFiniteBound> {
+        match self {
+            Self::Finite(finite) => Some(finite),
+            Self::InfinitePast => None,
+        }
+    }
+
+    /// Returns the opposite [`AbsoluteEndBound`]
+    ///
+    /// Returns [`None`] if the [`AbsoluteStartBound`] is of the [`InfinitePast`](AbsoluteStartBound::InfinitePast)
+    /// variant.
+    #[must_use]
+    pub fn opposite(&self) -> Option<AbsoluteEndBound> {
+        match self {
+            Self::Finite(finite) => Some(AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                finite.time(),
+                finite.inclusivity().opposite(),
+            ))),
+            Self::InfinitePast => None,
+        }
+    }
 }
 
 impl PartialEq<AbsoluteEndBound> for AbsoluteStartBound {
@@ -184,8 +216,9 @@ impl PartialOrd for AbsoluteStartBound {
 impl Ord for AbsoluteStartBound {
     fn cmp(&self, other: &Self) -> Ordering {
         match (self, other) {
-            (AbsoluteStartBound::InfinitePast, _) => Ordering::Less,
-            (_, AbsoluteStartBound::InfinitePast) => Ordering::Greater,
+            (AbsoluteStartBound::InfinitePast, AbsoluteStartBound::InfinitePast) => Ordering::Equal,
+            (AbsoluteStartBound::InfinitePast, AbsoluteStartBound::Finite(_)) => Ordering::Less,
+            (AbsoluteStartBound::Finite(_), AbsoluteStartBound::InfinitePast) => Ordering::Greater,
             (
                 AbsoluteStartBound::Finite(AbsoluteFiniteBound {
                     time: time_og,
@@ -226,15 +259,20 @@ impl PartialOrd<AbsoluteEndBound> for AbsoluteStartBound {
                     time: end_time,
                     inclusivity: end_inclusivity,
                 }),
-            ) => {
-                match start_time.cmp(end_time) {
-                    Ordering::Less => Some(Ordering::Less),
-                    Ordering::Greater => Some(Ordering::Greater),
-                    Ordering::Equal => match (start_inclusivity, end_inclusivity) {
-                        (BoundInclusivity::Inclusive, BoundInclusivity::Inclusive) => Some(Ordering::Equal),
-                        _ => None, // If the times are equal, anything other than double inclusive bounds is invalid
-                    },
-                }
+            ) => match start_time.cmp(end_time) {
+                Ordering::Less => Some(Ordering::Less),
+                Ordering::Equal => {
+                    let disambiguated_bound_overlap =
+                        BoundOverlapAmbiguity::StartEnd(*start_inclusivity, *end_inclusivity)
+                            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Strict);
+
+                    match disambiguated_bound_overlap {
+                        DisambiguatedBoundOverlap::Before => Some(Ordering::Greater),
+                        DisambiguatedBoundOverlap::Equal => Some(Ordering::Equal),
+                        DisambiguatedBoundOverlap::After => Some(Ordering::Less),
+                    }
+                },
+                Ordering::Greater => Some(Ordering::Greater),
             },
         }
     }
@@ -289,24 +327,40 @@ pub enum AbsoluteEndBound {
 }
 
 impl AbsoluteEndBound {
-    /// Returns the time of the bound, if finite
+    /// Returns whether the [`AbsoluteEndBound`] is of the [`Finite`](AbsoluteEndBound::Finite) variant
     #[must_use]
-    pub fn time(&self) -> Option<DateTime<Utc>> {
-        if let Self::Finite(AbsoluteFiniteBound { time, .. }) = self {
-            return Some(*time);
-        }
-
-        None
+    pub fn is_finite(&self) -> bool {
+        matches!(self, Self::Finite(_))
     }
 
-    /// Returns the inclusivity of the bound, if finite
+    /// Returns whether the [`AbsoluteEndBound`] is of the [`InfiniteFuture`](AbsoluteEndBound::InfiniteFuture) variant
     #[must_use]
-    pub fn inclusivity(&self) -> Option<BoundInclusivity> {
-        if let Self::Finite(AbsoluteFiniteBound { inclusivity, .. }) = self {
-            return Some(*inclusivity);
-        }
+    pub fn is_infinite_past(&self) -> bool {
+        matches!(self, Self::InfiniteFuture)
+    }
 
-        None
+    /// Returns the content of the [`Finite`](AbsoluteEndBound::Finite) variant
+    #[must_use]
+    pub fn finite(self) -> Option<AbsoluteFiniteBound> {
+        match self {
+            Self::Finite(finite) => Some(finite),
+            Self::InfiniteFuture => None,
+        }
+    }
+
+    /// Returns the opposite [`AbsoluteStartBound`]
+    ///
+    /// Returns [`None`] if the [`AbsoluteEndBound`] is of the [`InfiniteFuture`](AbsoluteEndBound::InfiniteFuture)
+    /// variant.
+    #[must_use]
+    pub fn opposite(&self) -> Option<AbsoluteStartBound> {
+        match self {
+            Self::Finite(finite) => Some(AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                finite.time(),
+                finite.inclusivity().opposite(),
+            ))),
+            Self::InfiniteFuture => None,
+        }
     }
 }
 
@@ -319,8 +373,9 @@ impl PartialOrd for AbsoluteEndBound {
 impl Ord for AbsoluteEndBound {
     fn cmp(&self, other: &Self) -> Ordering {
         match (self, other) {
-            (AbsoluteEndBound::InfiniteFuture, _) => Ordering::Greater,
-            (_, AbsoluteEndBound::InfiniteFuture) => Ordering::Less,
+            (AbsoluteEndBound::InfiniteFuture, AbsoluteEndBound::InfiniteFuture) => Ordering::Equal,
+            (AbsoluteEndBound::InfiniteFuture, AbsoluteEndBound::Finite(_)) => Ordering::Greater,
+            (AbsoluteEndBound::Finite(_), AbsoluteEndBound::InfiniteFuture) => Ordering::Less,
             (
                 AbsoluteEndBound::Finite(AbsoluteFiniteBound {
                     time: time_og,
@@ -356,7 +411,33 @@ impl PartialEq<AbsoluteStartBound> for AbsoluteEndBound {
 
 impl PartialOrd<AbsoluteStartBound> for AbsoluteEndBound {
     fn partial_cmp(&self, other: &AbsoluteStartBound) -> Option<Ordering> {
-        other.partial_cmp(self).map(Ordering::reverse)
+        match (self, other) {
+            (AbsoluteEndBound::InfiniteFuture, _) | (_, AbsoluteStartBound::InfinitePast) => Some(Ordering::Greater),
+            (
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound {
+                    time: end_time,
+                    inclusivity: end_inclusivity,
+                }),
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound {
+                    time: start_time,
+                    inclusivity: start_inclusivity,
+                }),
+            ) => match end_time.cmp(start_time) {
+                Ordering::Less => Some(Ordering::Less),
+                Ordering::Equal => {
+                    let disambiguated_bound_overlap =
+                        BoundOverlapAmbiguity::EndStart(*end_inclusivity, *start_inclusivity)
+                            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Strict);
+
+                    match disambiguated_bound_overlap {
+                        DisambiguatedBoundOverlap::Before => Some(Ordering::Greater),
+                        DisambiguatedBoundOverlap::Equal => Some(Ordering::Equal),
+                        DisambiguatedBoundOverlap::After => Some(Ordering::Less),
+                    }
+                },
+                Ordering::Greater => Some(Ordering::Greater),
+            },
+        }
     }
 }
 
@@ -419,6 +500,195 @@ pub fn swap_absolute_bounds(start: &mut AbsoluteStartBound, end: &mut AbsoluteEn
         (AbsoluteStartBound::Finite(finite_start), AbsoluteEndBound::Finite(finite_end)) => {
             std::mem::swap(finite_start, finite_end);
         },
+    }
+}
+
+/// Possible problems that can prevent creating an interval from the given start and end bounds
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum AbsoluteBoundsCheckForIntervalCreationError {
+    /// Start bound is past the end bound
+    StartPastEnd,
+    /// Both bounds are on the same time but don't have only inclusive bound inclusivities
+    SameTimeButNotDoublyInclusive,
+}
+
+impl Display for AbsoluteBoundsCheckForIntervalCreationError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::StartPastEnd => write!(f, "Start bound is past the end bound"),
+            Self::SameTimeButNotDoublyInclusive => write!(
+                f,
+                "Both bounds are on the same time but don't have only inclusive bound inclusivities"
+            ),
+        }
+    }
+}
+
+impl Error for AbsoluteBoundsCheckForIntervalCreationError {}
+
+/// Checks if the given start and end bound are ready for creating an interval
+///
+/// # Errors
+///
+/// If the start bound is past the end bound,
+/// it returns [`StartPastEnd`](AbsoluteBoundsCheckForIntervalCreationError::StartPastEnd).
+///
+/// If both bounds are at the same time, but one of them has an exclusive bound inclusivity, it returns
+/// [`SameTimeButNotDoublyInclusive`](AbsoluteBoundsCheckForIntervalCreationError::SameTimeButNotDoublyInclusive).
+pub fn check_absolute_bounds_for_interval_creation(
+    start: &AbsoluteStartBound,
+    end: &AbsoluteEndBound,
+) -> Result<(), AbsoluteBoundsCheckForIntervalCreationError> {
+    match (start, end) {
+        (AbsoluteStartBound::InfinitePast, _) | (_, AbsoluteEndBound::InfiniteFuture) => Ok(()),
+        (AbsoluteStartBound::Finite(finite_start), AbsoluteEndBound::Finite(finite_end)) => {
+            match finite_start.time().cmp(&finite_end.time()) {
+                Ordering::Less => Ok(()),
+                Ordering::Equal => {
+                    if finite_start.inclusivity() == BoundInclusivity::Inclusive
+                        && finite_end.inclusivity() == BoundInclusivity::Inclusive
+                    {
+                        Ok(())
+                    } else {
+                        Err(AbsoluteBoundsCheckForIntervalCreationError::SameTimeButNotDoublyInclusive)
+                    }
+                },
+                Ordering::Greater => Err(AbsoluteBoundsCheckForIntervalCreationError::StartPastEnd),
+            }
+        },
+    }
+}
+
+/// Prepares a start and end bound for being used for creating an interval
+///
+/// If some problems are present, see [`check_absolute_bounds_for_interval_creation`], it resolves them automatically
+/// by modifying the passed mutable references for the start and end bound.
+pub fn prepare_absolute_bounds_for_interval_creation(
+    start_mut: &mut AbsoluteStartBound,
+    end_mut: &mut AbsoluteEndBound,
+) {
+    match check_absolute_bounds_for_interval_creation(start_mut, end_mut) {
+        Ok(()) => {},
+        Err(AbsoluteBoundsCheckForIntervalCreationError::StartPastEnd) => {
+            swap_absolute_bounds(start_mut, end_mut);
+        },
+        Err(AbsoluteBoundsCheckForIntervalCreationError::SameTimeButNotDoublyInclusive) => {
+            if let AbsoluteStartBound::Finite(finite_start_mut) = start_mut {
+                finite_start_mut.set_inclusivity(BoundInclusivity::Inclusive);
+            }
+
+            if let AbsoluteEndBound::Finite(finite_end_mut) = end_mut {
+                finite_end_mut.set_inclusivity(BoundInclusivity::Inclusive);
+            }
+        },
+    }
+}
+
+/// Enum for absolute start and end bounds
+#[derive(Debug, Clone, Copy)]
+pub enum AbsoluteBound {
+    Start(AbsoluteStartBound),
+    End(AbsoluteEndBound),
+}
+
+impl AbsoluteBound {
+    /// Returns whether [`AbsoluteBound`] is of the [`Start`](AbsoluteBound::Start) variant
+    #[must_use]
+    pub fn is_start(&self) -> bool {
+        matches!(self, Self::Start(_))
+    }
+
+    /// Returns whether [`AbsoluteBound`] is of the [`End`](AbsoluteBound::End) variant
+    #[must_use]
+    pub fn is_end(&self) -> bool {
+        matches!(self, Self::End(_))
+    }
+
+    /// Returns the content of the [`Start`](AbsoluteBound::Start) variant
+    #[must_use]
+    pub fn start(self) -> Option<AbsoluteStartBound> {
+        match self {
+            Self::Start(start) => Some(start),
+            Self::End(_) => None,
+        }
+    }
+
+    /// Returns the content of the [`End`](AbsoluteBound::End) variant
+    #[must_use]
+    pub fn end(self) -> Option<AbsoluteEndBound> {
+        match self {
+            Self::Start(_) => None,
+            Self::End(end) => Some(end),
+        }
+    }
+
+    /// Returns the opposite bound type with the opposite inclusivity
+    ///
+    /// Returns [`None`] if the bound is infinite.
+    #[must_use]
+    pub fn opposite(&self) -> Option<Self> {
+        match self {
+            Self::Start(start) => start.opposite().map(Self::End),
+            Self::End(end) => end.opposite().map(Self::Start),
+        }
+    }
+}
+
+impl PartialEq for AbsoluteBound {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (AbsoluteBound::Start(og_start), AbsoluteBound::Start(other_start)) => og_start.eq(other_start),
+            (AbsoluteBound::End(og_end), AbsoluteBound::End(other_end)) => og_end.eq(other_end),
+            (AbsoluteBound::Start(start), AbsoluteBound::End(end))
+            | (AbsoluteBound::End(end), AbsoluteBound::Start(start)) => start.eq(end),
+        }
+    }
+}
+
+impl Eq for AbsoluteBound {}
+
+impl PartialOrd for AbsoluteBound {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for AbsoluteBound {
+    fn cmp(&self, other: &Self) -> Ordering {
+        match (self, other) {
+            (AbsoluteBound::Start(og_start), AbsoluteBound::Start(other_start)) => og_start.cmp(other_start),
+            (AbsoluteBound::End(og_end), AbsoluteBound::End(other_end)) => og_end.cmp(other_end),
+            (AbsoluteBound::Start(og_start), AbsoluteBound::End(other_end)) => og_start.partial_cmp(other_end).unwrap(),
+            (AbsoluteBound::End(og_end), AbsoluteBound::Start(other_start)) => og_end.partial_cmp(other_start).unwrap(),
+        }
+    }
+}
+
+impl Hash for AbsoluteBound {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        match self {
+            Self::Start(AbsoluteStartBound::InfinitePast) => {
+                AbsoluteStartBound::InfinitePast.hash(state);
+            },
+            Self::Start(AbsoluteStartBound::Finite(finite)) | Self::End(AbsoluteEndBound::Finite(finite)) => {
+                finite.hash(state);
+            },
+            Self::End(AbsoluteEndBound::InfiniteFuture) => {
+                AbsoluteEndBound::InfiniteFuture.hash(state);
+            },
+        }
+    }
+}
+
+impl From<AbsoluteStartBound> for AbsoluteBound {
+    fn from(value: AbsoluteStartBound) -> Self {
+        AbsoluteBound::Start(value)
+    }
+}
+
+impl From<AbsoluteEndBound> for AbsoluteBound {
+    fn from(value: AbsoluteEndBound) -> Self {
+        AbsoluteBound::End(value)
     }
 }
 
@@ -487,39 +757,11 @@ impl AbsoluteBounds {
 
     /// Creates a new instance of absolute bounds
     ///
-    /// If the given bounds are not in chronological order, they are swapped.
-    /// If their [partial comparison](PartialOrd) resulted in [`None`], meaning they had the same time but inclusivities
-    /// other than inclusive for both, we set their inclusivities to [`Inclusive`](BoundInclusivity::Inclusive).
+    /// Uses [`prepare_absolute_bounds_for_interval_creation`] under the hood for making the bounds safe to use.
     #[must_use]
     pub fn new(mut start: AbsoluteStartBound, mut end: AbsoluteEndBound) -> Self {
-        match start.partial_cmp(&end) {
-            None => {
-                if let AbsoluteStartBound::Finite(ref mut finite_start) = start {
-                    finite_start.set_inclusivity(BoundInclusivity::default());
-                }
-
-                if let AbsoluteEndBound::Finite(ref mut finite_end) = end {
-                    finite_end.set_inclusivity(BoundInclusivity::default());
-                }
-
-                match start.partial_cmp(&end) {
-                    Some(Ordering::Equal | Ordering::Less) => Self::unchecked_new(start, end),
-                    Some(Ordering::Greater) => {
-                        swap_absolute_bounds(&mut start, &mut end);
-                        Self::unchecked_new(start, end)
-                    },
-                    None => unimplemented!(
-                        "Something went wrong when instantiating `AbsoluteBounds` with bounds that partially compared to `None`"
-                    ),
-                }
-            },
-            Some(Ordering::Equal | Ordering::Less) => Self::unchecked_new(start, end),
-            Some(Ordering::Greater) => {
-                // If the start time is after the end time, swap the two to preserve order
-                swap_absolute_bounds(&mut start, &mut end);
-                Self::unchecked_new(start, end)
-            },
-        }
+        prepare_absolute_bounds_for_interval_creation(&mut start, &mut end);
+        Self::unchecked_new(start, end)
     }
 
     /// Returns the absolute start bound
@@ -569,6 +811,19 @@ impl AbsoluteBounds {
         self.unchecked_set_end(new_end);
         true
     }
+
+    /// Compares two [`AbsoluteBounds`], but if they have the same start, order by decreasing length
+    ///
+    /// Don't rely on this method for checking for equality of start, as it will produce other [`Ordering`]s if their
+    /// length don't match too.
+    #[must_use]
+    pub fn ord_by_start_and_inv_length(&self, other: &Self) -> Ordering {
+        match self.cmp(other) {
+            Ordering::Less => Ordering::Less,
+            Ordering::Equal => self.end.cmp(&other.end).reverse(),
+            Ordering::Greater => Ordering::Greater,
+        }
+    }
 }
 
 impl Interval for AbsoluteBounds {}
@@ -587,6 +842,34 @@ impl HasAbsoluteBounds for AbsoluteBounds {
     }
 }
 
+impl HasDuration for AbsoluteBounds {
+    fn duration(&self) -> IntervalDuration {
+        match (self.start(), self.end()) {
+            (AbsoluteStartBound::InfinitePast, _) | (_, AbsoluteEndBound::InfiniteFuture) => IntervalDuration::Infinite,
+            (AbsoluteStartBound::Finite(finite_start), AbsoluteEndBound::Finite(finite_end)) => {
+                IntervalDuration::Finite(finite_end.time().signed_duration_since(finite_start.time()))
+            },
+        }
+    }
+}
+
+impl HasOpenness for AbsoluteBounds {
+    fn openness(&self) -> Openness {
+        match (self.start(), self.end()) {
+            (AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture) => Openness::Unbounded,
+            (AbsoluteStartBound::InfinitePast, AbsoluteEndBound::Finite(_))
+            | (AbsoluteStartBound::Finite(_), AbsoluteEndBound::InfiniteFuture) => Openness::HalfBounded,
+            (AbsoluteStartBound::Finite(_), AbsoluteEndBound::Finite(_)) => Openness::Bounded,
+        }
+    }
+}
+
+impl HasRelativity for AbsoluteBounds {
+    fn relativity(&self) -> Relativity {
+        Relativity::Absolute
+    }
+}
+
 impl PartialOrd for AbsoluteBounds {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
@@ -595,13 +878,10 @@ impl PartialOrd for AbsoluteBounds {
 
 impl Ord for AbsoluteBounds {
     fn cmp(&self, other: &Self) -> Ordering {
-        match self.start.cmp(&other.start) {
-            Ordering::Less => Ordering::Less,
-            // We reverse the ordering so that the larger interval comes first,
-            // allowing better processing for overlap and other things
-            Ordering::Equal => self.end.cmp(&other.end).reverse(),
-            Ordering::Greater => Ordering::Greater,
-        }
+        // using the comparison of self.end and other.end as a way to disambiguate when the two starts are equal
+        // leads to side-effects, like when we store absolute bounds inside a BTreeSet, then if we use `range()`,
+        // one can be considered out of the range when it shouldn't.
+        self.start.cmp(&other.start)
     }
 }
 
@@ -648,11 +928,11 @@ where
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub enum AbsoluteBoundsConversionErr {
+pub enum AbsoluteBoundsFromEmptiableAbsoluteBoundsError {
     EmptyVariant,
 }
 
-impl Display for AbsoluteBoundsConversionErr {
+impl Display for AbsoluteBoundsFromEmptiableAbsoluteBoundsError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::EmptyVariant => write!(f, "Provided EmptiableAbsoluteBounds was empty"),
@@ -660,14 +940,14 @@ impl Display for AbsoluteBoundsConversionErr {
     }
 }
 
-impl Error for AbsoluteBoundsConversionErr {}
+impl Error for AbsoluteBoundsFromEmptiableAbsoluteBoundsError {}
 
 impl TryFrom<EmptiableAbsoluteBounds> for AbsoluteBounds {
-    type Error = AbsoluteBoundsConversionErr;
+    type Error = AbsoluteBoundsFromEmptiableAbsoluteBoundsError;
 
     fn try_from(value: EmptiableAbsoluteBounds) -> Result<Self, Self::Error> {
         match value {
-            EmptiableAbsoluteBounds::Empty => Err(AbsoluteBoundsConversionErr::EmptyVariant),
+            EmptiableAbsoluteBounds::Empty => Err(AbsoluteBoundsFromEmptiableAbsoluteBoundsError::EmptyVariant),
             EmptiableAbsoluteBounds::Bound(bounds) => Ok(bounds),
         }
     }
@@ -688,6 +968,20 @@ impl EmptiableAbsoluteBounds {
         match self {
             EmptiableAbsoluteBounds::Empty => None,
             EmptiableAbsoluteBounds::Bound(bound) => Some(bound),
+        }
+    }
+
+    /// Compares two [`EmptiableAbsoluteBounds`], but if they have the same start, order by decreasing length
+    ///
+    /// Don't rely on this method for checking for equality of start, as it will produce other [`Ordering`]s if their
+    /// length don't match too.
+    #[must_use]
+    pub fn ord_by_start_and_inv_length(&self, other: &Self) -> Ordering {
+        match (self, other) {
+            (EmptiableAbsoluteBounds::Bound(og_abs_bounds), EmptiableAbsoluteBounds::Bound(other_abs_bounds)) => {
+                og_abs_bounds.ord_by_start_and_inv_length(other_abs_bounds)
+            },
+            _ => self.cmp(other),
         }
     }
 }
@@ -720,6 +1014,49 @@ impl Emptiable for EmptiableAbsoluteBounds {
     }
 }
 
+impl HasDuration for EmptiableAbsoluteBounds {
+    fn duration(&self) -> IntervalDuration {
+        match self {
+            Self::Bound(bound) => bound.duration(),
+            Self::Empty => IntervalDuration::Finite(Duration::zero()),
+        }
+    }
+}
+
+impl HasOpenness for EmptiableAbsoluteBounds {
+    fn openness(&self) -> Openness {
+        match self {
+            Self::Bound(bound) => bound.openness(),
+            Self::Empty => Openness::Empty,
+        }
+    }
+}
+
+impl HasRelativity for EmptiableAbsoluteBounds {
+    fn relativity(&self) -> Relativity {
+        Relativity::Absolute
+    }
+}
+
+impl PartialOrd for EmptiableAbsoluteBounds {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for EmptiableAbsoluteBounds {
+    fn cmp(&self, other: &Self) -> Ordering {
+        match (self, other) {
+            (EmptiableAbsoluteBounds::Empty, EmptiableAbsoluteBounds::Empty) => Ordering::Equal,
+            (EmptiableAbsoluteBounds::Empty, EmptiableAbsoluteBounds::Bound(_)) => Ordering::Less,
+            (EmptiableAbsoluteBounds::Bound(_), EmptiableAbsoluteBounds::Empty) => Ordering::Greater,
+            (EmptiableAbsoluteBounds::Bound(og_abs_bounds), EmptiableAbsoluteBounds::Bound(other_abs_bounds)) => {
+                og_abs_bounds.cmp(other_abs_bounds)
+            },
+        }
+    }
+}
+
 impl Display for EmptiableAbsoluteBounds {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -735,22 +1072,22 @@ impl From<AbsoluteBounds> for EmptiableAbsoluteBounds {
     }
 }
 
-/// A closed absolute interval
+/// A bounded absolute interval
 ///
 /// Interval set with absolute time, with a defined start and end
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct ClosedAbsoluteInterval {
-    pub(super) from: DateTime<Utc>,
-    pub(super) to: DateTime<Utc>,
-    pub(super) from_inclusivity: BoundInclusivity,
-    pub(super) to_inclusivity: BoundInclusivity,
+pub struct BoundedAbsoluteInterval {
+    from: DateTime<Utc>,
+    to: DateTime<Utc>,
+    from_inclusivity: BoundInclusivity,
+    to_inclusivity: BoundInclusivity,
 }
 
-impl ClosedAbsoluteInterval {
-    /// Creates a new instance of a closed absolute interval without checking if from is greater than to
+impl BoundedAbsoluteInterval {
+    /// Creates a new instance of a bounded absolute interval without checking if from is greater than to
     #[must_use]
     pub fn unchecked_new(from: DateTime<Utc>, to: DateTime<Utc>) -> Self {
-        ClosedAbsoluteInterval {
+        BoundedAbsoluteInterval {
             from,
             to,
             from_inclusivity: BoundInclusivity::default(),
@@ -758,7 +1095,7 @@ impl ClosedAbsoluteInterval {
         }
     }
 
-    /// Creates a new instance of a closed absolute interval
+    /// Creates a new instance of a bounded absolute interval
     #[must_use]
     pub fn new(mut from: DateTime<Utc>, mut to: DateTime<Utc>) -> Self {
         if from > to {
@@ -768,7 +1105,7 @@ impl ClosedAbsoluteInterval {
         Self::unchecked_new(from, to)
     }
 
-    /// Creates a new instance of a closed absolute interval with given inclusivity for the bounds without checking
+    /// Creates a new instance of a bounded absolute interval with given inclusivity for the bounds without checking
     /// if from is greater than to
     #[must_use]
     pub fn unchecked_new_with_inclusivity(
@@ -777,7 +1114,7 @@ impl ClosedAbsoluteInterval {
         to: DateTime<Utc>,
         to_inclusivity: BoundInclusivity,
     ) -> Self {
-        ClosedAbsoluteInterval {
+        BoundedAbsoluteInterval {
             from,
             to,
             from_inclusivity,
@@ -785,25 +1122,22 @@ impl ClosedAbsoluteInterval {
         }
     }
 
-    /// Creates a new instance of a closed absolute interval with given inclusivity for the bounds
+    /// Creates a new instance of a bounded absolute interval with given inclusivity for the bounds
     ///
     /// If the given times are not in chronological order, we swap them so they are in chronological order.
     /// If the given times are equal but have bound inclusivities other than inclusive,
     /// we set them to [`Inclusive`](BoundInclusivity::Inclusive).
     #[must_use]
     pub fn new_with_inclusivity(
-        mut from: DateTime<Utc>,
+        from: DateTime<Utc>,
         from_inclusivity: BoundInclusivity,
-        mut to: DateTime<Utc>,
+        to: DateTime<Utc>,
         to_inclusivity: BoundInclusivity,
     ) -> Self {
         match from.cmp(&to) {
             Ordering::Less => Self::unchecked_new_with_inclusivity(from, from_inclusivity, to, to_inclusivity),
             Ordering::Equal => Self::unchecked_new(from, to),
-            Ordering::Greater => {
-                std::mem::swap(&mut from, &mut to);
-                Self::unchecked_new_with_inclusivity(from, from_inclusivity, to, to_inclusivity)
-            },
+            Ordering::Greater => Self::unchecked_new_with_inclusivity(to, to_inclusivity, from, from_inclusivity),
         }
     }
 
@@ -916,27 +1250,27 @@ impl ClosedAbsoluteInterval {
     }
 }
 
-impl Interval for ClosedAbsoluteInterval {}
+impl Interval for BoundedAbsoluteInterval {}
 
-impl HasOpenness for ClosedAbsoluteInterval {
+impl HasOpenness for BoundedAbsoluteInterval {
     fn openness(&self) -> Openness {
-        Openness::Closed
+        Openness::Bounded
     }
 }
 
-impl HasRelativity for ClosedAbsoluteInterval {
+impl HasRelativity for BoundedAbsoluteInterval {
     fn relativity(&self) -> Relativity {
         Relativity::Absolute
     }
 }
 
-impl HasDuration for ClosedAbsoluteInterval {
+impl HasDuration for BoundedAbsoluteInterval {
     fn duration(&self) -> IntervalDuration {
         IntervalDuration::Finite(self.to - self.from)
     }
 }
 
-impl HasAbsoluteBounds for ClosedAbsoluteInterval {
+impl HasAbsoluteBounds for BoundedAbsoluteInterval {
     fn abs_bounds(&self) -> AbsoluteBounds {
         AbsoluteBounds::unchecked_new(self.abs_start(), self.abs_end())
     }
@@ -953,47 +1287,39 @@ impl HasAbsoluteBounds for ClosedAbsoluteInterval {
     }
 }
 
-impl From<(DateTime<Utc>, DateTime<Utc>)> for ClosedAbsoluteInterval {
+impl From<(DateTime<Utc>, DateTime<Utc>)> for BoundedAbsoluteInterval {
     fn from((from, to): (DateTime<Utc>, DateTime<Utc>)) -> Self {
-        ClosedAbsoluteInterval::new(from, to)
+        BoundedAbsoluteInterval::new(from, to)
     }
 }
 
-impl From<((DateTime<Utc>, BoundInclusivity), (DateTime<Utc>, BoundInclusivity))> for ClosedAbsoluteInterval {
+impl From<((DateTime<Utc>, BoundInclusivity), (DateTime<Utc>, BoundInclusivity))> for BoundedAbsoluteInterval {
     fn from(
         ((from, from_inclusivity), (to, to_inclusivity)): (
             (DateTime<Utc>, BoundInclusivity),
             (DateTime<Utc>, BoundInclusivity),
         ),
     ) -> Self {
-        ClosedAbsoluteInterval::new_with_inclusivity(from, from_inclusivity, to, to_inclusivity)
+        BoundedAbsoluteInterval::new_with_inclusivity(from, from_inclusivity, to, to_inclusivity)
     }
 }
 
-impl From<((DateTime<Utc>, bool), (DateTime<Utc>, bool))> for ClosedAbsoluteInterval {
+impl From<((DateTime<Utc>, bool), (DateTime<Utc>, bool))> for BoundedAbsoluteInterval {
     fn from(
         ((from, is_from_inclusive), (to, is_to_inclusive)): ((DateTime<Utc>, bool), (DateTime<Utc>, bool)),
     ) -> Self {
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             from,
-            if is_from_inclusive {
-                BoundInclusivity::Inclusive
-            } else {
-                BoundInclusivity::Exclusive
-            },
+            BoundInclusivity::from(is_from_inclusive),
             to,
-            if is_to_inclusive {
-                BoundInclusivity::Inclusive
-            } else {
-                BoundInclusivity::Exclusive
-            },
+            BoundInclusivity::from(is_to_inclusive),
         )
     }
 }
 
-impl From<Range<DateTime<Utc>>> for ClosedAbsoluteInterval {
+impl From<Range<DateTime<Utc>>> for BoundedAbsoluteInterval {
     fn from(range: Range<DateTime<Utc>>) -> Self {
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             range.start,
             BoundInclusivity::Inclusive,
             range.end,
@@ -1002,9 +1328,9 @@ impl From<Range<DateTime<Utc>>> for ClosedAbsoluteInterval {
     }
 }
 
-impl From<RangeInclusive<DateTime<Utc>>> for ClosedAbsoluteInterval {
+impl From<RangeInclusive<DateTime<Utc>>> for BoundedAbsoluteInterval {
     fn from(range: RangeInclusive<DateTime<Utc>>) -> Self {
-        ClosedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_with_inclusivity(
             *range.start(),
             BoundInclusivity::Inclusive,
             *range.end(),
@@ -1014,11 +1340,44 @@ impl From<RangeInclusive<DateTime<Utc>>> for ClosedAbsoluteInterval {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum ClosedAbsoluteIntervalConversionErr {
+pub enum BoundedAbsoluteIntervalFromAbsoluteBoundsError {
+    NotBoundedInterval,
+}
+
+impl Display for BoundedAbsoluteIntervalFromAbsoluteBoundsError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::NotBoundedInterval => write!(f, "Not a bounded interval"),
+        }
+    }
+}
+
+impl Error for BoundedAbsoluteIntervalFromAbsoluteBoundsError {}
+
+impl TryFrom<AbsoluteBounds> for BoundedAbsoluteInterval {
+    type Error = BoundedAbsoluteIntervalFromAbsoluteBoundsError;
+
+    fn try_from(value: AbsoluteBounds) -> Result<Self, Self::Error> {
+        match (value.start(), value.end()) {
+            (AbsoluteStartBound::Finite(finite_start), AbsoluteEndBound::Finite(finite_end)) => {
+                Ok(BoundedAbsoluteInterval::new_with_inclusivity(
+                    finite_start.time(),
+                    finite_start.inclusivity(),
+                    finite_end.time(),
+                    finite_end.inclusivity(),
+                ))
+            },
+            _ => Err(Self::Error::NotBoundedInterval),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum BoundedAbsoluteIntervalFromAbsoluteIntervalError {
     WrongVariant,
 }
 
-impl Display for ClosedAbsoluteIntervalConversionErr {
+impl Display for BoundedAbsoluteIntervalFromAbsoluteIntervalError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::WrongVariant => write!(f, "Wrong variant"),
@@ -1026,50 +1385,50 @@ impl Display for ClosedAbsoluteIntervalConversionErr {
     }
 }
 
-impl Error for ClosedAbsoluteIntervalConversionErr {}
+impl Error for BoundedAbsoluteIntervalFromAbsoluteIntervalError {}
 
-impl TryFrom<AbsoluteInterval> for ClosedAbsoluteInterval {
-    type Error = ClosedAbsoluteIntervalConversionErr;
+impl TryFrom<AbsoluteInterval> for BoundedAbsoluteInterval {
+    type Error = BoundedAbsoluteIntervalFromAbsoluteIntervalError;
 
     fn try_from(value: AbsoluteInterval) -> Result<Self, Self::Error> {
         match value {
-            AbsoluteInterval::Closed(interval) => Ok(interval),
+            AbsoluteInterval::Bounded(interval) => Ok(interval),
             _ => Err(Self::Error::WrongVariant),
         }
     }
 }
 
-/// A half-open absolute interval
+/// A half-bounded absolute interval
 ///
 /// An interval set with absolute time, has a defined reference time and an opening direction (only one defined bound).
 /// Infinite duration.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
-pub struct HalfOpenAbsoluteInterval {
-    pub(super) reference_time: DateTime<Utc>,
-    pub(super) opening_direction: OpeningDirection,
-    pub(super) reference_time_inclusivity: BoundInclusivity,
+pub struct HalfBoundedAbsoluteInterval {
+    reference_time: DateTime<Utc>,
+    opening_direction: OpeningDirection,
+    reference_time_inclusivity: BoundInclusivity,
 }
 
-impl HalfOpenAbsoluteInterval {
-    /// Creates a new instance of a half-open absolute interval
+impl HalfBoundedAbsoluteInterval {
+    /// Creates a new instance of a half-bounded absolute interval
     #[must_use]
     pub fn new(reference_time: DateTime<Utc>, opening_direction: OpeningDirection) -> Self {
-        HalfOpenAbsoluteInterval {
+        HalfBoundedAbsoluteInterval {
             reference_time,
             opening_direction,
             reference_time_inclusivity: BoundInclusivity::default(),
         }
     }
 
-    /// Creates a new instance of a half-open absolute interval with given inclusivity for the bound
+    /// Creates a new instance of a half-bounded absolute interval with given inclusivity for the bound
     #[must_use]
     pub fn new_with_inclusivity(
         reference_time: DateTime<Utc>,
         reference_time_inclusivity: BoundInclusivity,
         opening_direction: OpeningDirection,
     ) -> Self {
-        HalfOpenAbsoluteInterval {
+        HalfBoundedAbsoluteInterval {
             reference_time,
             opening_direction,
             reference_time_inclusivity,
@@ -1103,29 +1462,34 @@ impl HalfOpenAbsoluteInterval {
     pub fn set_reference_time_inclusivity(&mut self, new_inclusivity: BoundInclusivity) {
         self.reference_time_inclusivity = new_inclusivity;
     }
-}
 
-impl Interval for HalfOpenAbsoluteInterval {}
-
-impl HasOpenness for HalfOpenAbsoluteInterval {
-    fn openness(&self) -> Openness {
-        Openness::HalfOpen
+    /// Sets the opening direction of the interval
+    pub fn set_opening_direction(&mut self, new_opening_direction: OpeningDirection) {
+        self.opening_direction = new_opening_direction;
     }
 }
 
-impl HasRelativity for HalfOpenAbsoluteInterval {
+impl Interval for HalfBoundedAbsoluteInterval {}
+
+impl HasOpenness for HalfBoundedAbsoluteInterval {
+    fn openness(&self) -> Openness {
+        Openness::HalfBounded
+    }
+}
+
+impl HasRelativity for HalfBoundedAbsoluteInterval {
     fn relativity(&self) -> Relativity {
         Relativity::Absolute
     }
 }
 
-impl HasDuration for HalfOpenAbsoluteInterval {
+impl HasDuration for HalfBoundedAbsoluteInterval {
     fn duration(&self) -> IntervalDuration {
         IntervalDuration::Infinite
     }
 }
 
-impl HasAbsoluteBounds for HalfOpenAbsoluteInterval {
+impl HasAbsoluteBounds for HalfBoundedAbsoluteInterval {
     fn abs_bounds(&self) -> AbsoluteBounds {
         AbsoluteBounds::new(self.abs_start(), self.abs_end())
     }
@@ -1151,80 +1515,49 @@ impl HasAbsoluteBounds for HalfOpenAbsoluteInterval {
     }
 }
 
-impl From<(DateTime<Utc>, OpeningDirection)> for HalfOpenAbsoluteInterval {
+impl From<(DateTime<Utc>, OpeningDirection)> for HalfBoundedAbsoluteInterval {
     fn from((time, direction): (DateTime<Utc>, OpeningDirection)) -> Self {
-        HalfOpenAbsoluteInterval::new(time, direction)
+        HalfBoundedAbsoluteInterval::new(time, direction)
     }
 }
 
-impl From<(DateTime<Utc>, bool)> for HalfOpenAbsoluteInterval {
+impl From<(DateTime<Utc>, bool)> for HalfBoundedAbsoluteInterval {
     fn from((time, goes_to_future): (DateTime<Utc>, bool)) -> Self {
-        HalfOpenAbsoluteInterval::new(
-            time,
-            if goes_to_future {
-                OpeningDirection::ToFuture
-            } else {
-                OpeningDirection::ToPast
-            },
-        )
+        HalfBoundedAbsoluteInterval::new(time, OpeningDirection::from(goes_to_future))
     }
 }
 
-impl From<((DateTime<Utc>, BoundInclusivity), OpeningDirection)> for HalfOpenAbsoluteInterval {
+impl From<((DateTime<Utc>, BoundInclusivity), OpeningDirection)> for HalfBoundedAbsoluteInterval {
     fn from(((time, inclusivity), direction): ((DateTime<Utc>, BoundInclusivity), OpeningDirection)) -> Self {
-        HalfOpenAbsoluteInterval::new_with_inclusivity(time, inclusivity, direction)
+        HalfBoundedAbsoluteInterval::new_with_inclusivity(time, inclusivity, direction)
     }
 }
 
-impl From<((DateTime<Utc>, BoundInclusivity), bool)> for HalfOpenAbsoluteInterval {
+impl From<((DateTime<Utc>, BoundInclusivity), bool)> for HalfBoundedAbsoluteInterval {
     fn from(((time, inclusivity), goes_to_future): ((DateTime<Utc>, BoundInclusivity), bool)) -> Self {
-        HalfOpenAbsoluteInterval::new_with_inclusivity(
-            time,
-            inclusivity,
-            if goes_to_future {
-                OpeningDirection::ToFuture
-            } else {
-                OpeningDirection::ToPast
-            },
-        )
+        HalfBoundedAbsoluteInterval::new_with_inclusivity(time, inclusivity, OpeningDirection::from(goes_to_future))
     }
 }
 
-impl From<((DateTime<Utc>, bool), OpeningDirection)> for HalfOpenAbsoluteInterval {
+impl From<((DateTime<Utc>, bool), OpeningDirection)> for HalfBoundedAbsoluteInterval {
     fn from(((time, is_inclusive), direction): ((DateTime<Utc>, bool), OpeningDirection)) -> Self {
-        HalfOpenAbsoluteInterval::new_with_inclusivity(
-            time,
-            if is_inclusive {
-                BoundInclusivity::Inclusive
-            } else {
-                BoundInclusivity::Exclusive
-            },
-            direction,
-        )
+        HalfBoundedAbsoluteInterval::new_with_inclusivity(time, BoundInclusivity::from(is_inclusive), direction)
     }
 }
 
-impl From<((DateTime<Utc>, bool), bool)> for HalfOpenAbsoluteInterval {
+impl From<((DateTime<Utc>, bool), bool)> for HalfBoundedAbsoluteInterval {
     fn from(((time, is_inclusive), goes_to_future): ((DateTime<Utc>, bool), bool)) -> Self {
-        HalfOpenAbsoluteInterval::new_with_inclusivity(
+        HalfBoundedAbsoluteInterval::new_with_inclusivity(
             time,
-            if is_inclusive {
-                BoundInclusivity::Inclusive
-            } else {
-                BoundInclusivity::Exclusive
-            },
-            if goes_to_future {
-                OpeningDirection::ToFuture
-            } else {
-                OpeningDirection::ToPast
-            },
+            BoundInclusivity::from(is_inclusive),
+            OpeningDirection::from(goes_to_future),
         )
     }
 }
 
-impl From<RangeFrom<DateTime<Utc>>> for HalfOpenAbsoluteInterval {
+impl From<RangeFrom<DateTime<Utc>>> for HalfBoundedAbsoluteInterval {
     fn from(range: RangeFrom<DateTime<Utc>>) -> Self {
-        HalfOpenAbsoluteInterval::new_with_inclusivity(
+        HalfBoundedAbsoluteInterval::new_with_inclusivity(
             range.start,
             BoundInclusivity::Inclusive,
             OpeningDirection::ToFuture,
@@ -1232,24 +1565,71 @@ impl From<RangeFrom<DateTime<Utc>>> for HalfOpenAbsoluteInterval {
     }
 }
 
-impl From<RangeTo<DateTime<Utc>>> for HalfOpenAbsoluteInterval {
+impl From<RangeTo<DateTime<Utc>>> for HalfBoundedAbsoluteInterval {
     fn from(range: RangeTo<DateTime<Utc>>) -> Self {
-        HalfOpenAbsoluteInterval::new_with_inclusivity(range.end, BoundInclusivity::Exclusive, OpeningDirection::ToPast)
+        HalfBoundedAbsoluteInterval::new_with_inclusivity(
+            range.end,
+            BoundInclusivity::Exclusive,
+            OpeningDirection::ToPast,
+        )
     }
 }
 
-impl From<RangeToInclusive<DateTime<Utc>>> for HalfOpenAbsoluteInterval {
+impl From<RangeToInclusive<DateTime<Utc>>> for HalfBoundedAbsoluteInterval {
     fn from(range: RangeToInclusive<DateTime<Utc>>) -> Self {
-        HalfOpenAbsoluteInterval::new_with_inclusivity(range.end, BoundInclusivity::Inclusive, OpeningDirection::ToPast)
+        HalfBoundedAbsoluteInterval::new_with_inclusivity(
+            range.end,
+            BoundInclusivity::Inclusive,
+            OpeningDirection::ToPast,
+        )
     }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum HalfOpenAbsoluteIntervalConversionErr {
+pub enum HalfBoundedAbsoluteIntervalFromAbsoluteBoundsError {
+    NotHalfBoundedInterval,
+}
+
+impl Display for HalfBoundedAbsoluteIntervalFromAbsoluteBoundsError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::NotHalfBoundedInterval => write!(f, "Not a half-bounded interval"),
+        }
+    }
+}
+
+impl Error for HalfBoundedAbsoluteIntervalFromAbsoluteBoundsError {}
+
+impl TryFrom<AbsoluteBounds> for HalfBoundedAbsoluteInterval {
+    type Error = HalfBoundedAbsoluteIntervalFromAbsoluteBoundsError;
+
+    fn try_from(value: AbsoluteBounds) -> Result<Self, Self::Error> {
+        match (value.start(), value.end()) {
+            (AbsoluteStartBound::InfinitePast, AbsoluteEndBound::Finite(finite_end)) => {
+                Ok(HalfBoundedAbsoluteInterval::new_with_inclusivity(
+                    finite_end.time(),
+                    finite_end.inclusivity(),
+                    OpeningDirection::ToPast,
+                ))
+            },
+            (AbsoluteStartBound::Finite(finite_start), AbsoluteEndBound::InfiniteFuture) => {
+                Ok(HalfBoundedAbsoluteInterval::new_with_inclusivity(
+                    finite_start.time(),
+                    finite_start.inclusivity(),
+                    OpeningDirection::ToFuture,
+                ))
+            },
+            _ => Err(Self::Error::NotHalfBoundedInterval),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum HalfBoundedAbsoluteIntervalFromAbsoluteIntervalError {
     WrongVariant,
 }
 
-impl Display for HalfOpenAbsoluteIntervalConversionErr {
+impl Display for HalfBoundedAbsoluteIntervalFromAbsoluteIntervalError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::WrongVariant => write!(f, "Wrong variant"),
@@ -1257,27 +1637,39 @@ impl Display for HalfOpenAbsoluteIntervalConversionErr {
     }
 }
 
-impl Error for HalfOpenAbsoluteIntervalConversionErr {}
+impl Error for HalfBoundedAbsoluteIntervalFromAbsoluteIntervalError {}
 
-impl TryFrom<AbsoluteInterval> for HalfOpenAbsoluteInterval {
-    type Error = HalfOpenAbsoluteIntervalConversionErr;
+impl TryFrom<AbsoluteInterval> for HalfBoundedAbsoluteInterval {
+    type Error = HalfBoundedAbsoluteIntervalFromAbsoluteIntervalError;
 
     fn try_from(value: AbsoluteInterval) -> Result<Self, Self::Error> {
         match value {
-            AbsoluteInterval::HalfOpen(interval) => Ok(interval),
+            AbsoluteInterval::HalfBounded(interval) => Ok(interval),
             _ => Err(Self::Error::WrongVariant),
         }
     }
 }
 
-/// Represents any absolute interval, including empty and open intervals
+/// Represents any absolute interval, including empty and unbounded intervals
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum AbsoluteInterval {
-    Closed(ClosedAbsoluteInterval),
-    HalfOpen(HalfOpenAbsoluteInterval),
-    Open(OpenInterval),
+    Bounded(BoundedAbsoluteInterval),
+    HalfBounded(HalfBoundedAbsoluteInterval),
+    Unbounded(UnboundedInterval),
     Empty(EmptyInterval),
+}
+
+impl AbsoluteInterval {
+    /// Compares two [`AbsoluteInterval`]s, but if they have the same start, order by decreasing length
+    ///
+    /// Don't rely on this method for checking for equality of start, as it will produce other [`Ordering`]s if their
+    /// length don't match too.
+    #[must_use]
+    pub fn ord_by_start_and_inv_length(&self, other: &Self) -> Ordering {
+        self.emptiable_abs_bounds()
+            .ord_by_start_and_inv_length(&other.emptiable_abs_bounds())
+    }
 }
 
 impl Interval for AbsoluteInterval {}
@@ -1285,9 +1677,9 @@ impl Interval for AbsoluteInterval {}
 impl HasDuration for AbsoluteInterval {
     fn duration(&self) -> IntervalDuration {
         match self {
-            Self::Closed(interval) => interval.duration(),
-            Self::HalfOpen(interval) => interval.duration(),
-            Self::Open(interval) => interval.duration(),
+            Self::Bounded(interval) => interval.duration(),
+            Self::HalfBounded(interval) => interval.duration(),
+            Self::Unbounded(interval) => interval.duration(),
             Self::Empty(interval) => interval.duration(),
         }
     }
@@ -1296,9 +1688,9 @@ impl HasDuration for AbsoluteInterval {
 impl HasRelativity for AbsoluteInterval {
     fn relativity(&self) -> Relativity {
         match self {
-            Self::Closed(interval) => interval.relativity(),
-            Self::HalfOpen(interval) => interval.relativity(),
-            Self::Open(interval) => interval.relativity(),
+            Self::Bounded(interval) => interval.relativity(),
+            Self::HalfBounded(interval) => interval.relativity(),
+            Self::Unbounded(interval) => interval.relativity(),
             Self::Empty(interval) => interval.relativity(),
         }
     }
@@ -1307,9 +1699,9 @@ impl HasRelativity for AbsoluteInterval {
 impl HasOpenness for AbsoluteInterval {
     fn openness(&self) -> Openness {
         match self {
-            Self::Closed(interval) => interval.openness(),
-            Self::HalfOpen(interval) => interval.openness(),
-            Self::Open(interval) => interval.openness(),
+            Self::Bounded(interval) => interval.openness(),
+            Self::HalfBounded(interval) => interval.openness(),
+            Self::Unbounded(interval) => interval.openness(),
             Self::Empty(interval) => interval.openness(),
         }
     }
@@ -1318,27 +1710,27 @@ impl HasOpenness for AbsoluteInterval {
 impl HasEmptiableAbsoluteBounds for AbsoluteInterval {
     fn emptiable_abs_bounds(&self) -> EmptiableAbsoluteBounds {
         match self {
-            Self::Closed(interval) => EmptiableAbsoluteBounds::from(interval.abs_bounds()),
-            Self::HalfOpen(interval) => EmptiableAbsoluteBounds::from(interval.abs_bounds()),
-            Self::Open(interval) => EmptiableAbsoluteBounds::from(interval.abs_bounds()),
+            Self::Bounded(interval) => EmptiableAbsoluteBounds::from(interval.abs_bounds()),
+            Self::HalfBounded(interval) => EmptiableAbsoluteBounds::from(interval.abs_bounds()),
+            Self::Unbounded(interval) => EmptiableAbsoluteBounds::from(interval.abs_bounds()),
             Self::Empty(interval) => interval.emptiable_abs_bounds(),
         }
     }
 
     fn partial_abs_start(&self) -> Option<AbsoluteStartBound> {
         match self {
-            Self::Closed(interval) => interval.partial_abs_start(),
-            Self::HalfOpen(interval) => interval.partial_abs_start(),
-            Self::Open(interval) => interval.partial_abs_start(),
+            Self::Bounded(interval) => interval.partial_abs_start(),
+            Self::HalfBounded(interval) => interval.partial_abs_start(),
+            Self::Unbounded(interval) => interval.partial_abs_start(),
             Self::Empty(interval) => interval.partial_abs_start(),
         }
     }
 
     fn partial_abs_end(&self) -> Option<AbsoluteEndBound> {
         match self {
-            Self::Closed(interval) => interval.partial_abs_end(),
-            Self::HalfOpen(interval) => interval.partial_abs_end(),
-            Self::Open(interval) => interval.partial_abs_end(),
+            Self::Bounded(interval) => interval.partial_abs_end(),
+            Self::HalfBounded(interval) => interval.partial_abs_end(),
+            Self::Unbounded(interval) => interval.partial_abs_end(),
             Self::Empty(interval) => interval.partial_abs_end(),
         }
     }
@@ -1350,21 +1742,33 @@ impl Emptiable for AbsoluteInterval {
     }
 }
 
-impl From<ClosedAbsoluteInterval> for AbsoluteInterval {
-    fn from(value: ClosedAbsoluteInterval) -> Self {
-        AbsoluteInterval::Closed(value)
+impl PartialOrd for AbsoluteInterval {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
     }
 }
 
-impl From<HalfOpenAbsoluteInterval> for AbsoluteInterval {
-    fn from(value: HalfOpenAbsoluteInterval) -> Self {
-        AbsoluteInterval::HalfOpen(value)
+impl Ord for AbsoluteInterval {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.emptiable_abs_bounds().cmp(&other.emptiable_abs_bounds())
     }
 }
 
-impl From<OpenInterval> for AbsoluteInterval {
-    fn from(value: OpenInterval) -> Self {
-        AbsoluteInterval::Open(value)
+impl From<BoundedAbsoluteInterval> for AbsoluteInterval {
+    fn from(value: BoundedAbsoluteInterval) -> Self {
+        AbsoluteInterval::Bounded(value)
+    }
+}
+
+impl From<HalfBoundedAbsoluteInterval> for AbsoluteInterval {
+    fn from(value: HalfBoundedAbsoluteInterval) -> Self {
+        AbsoluteInterval::HalfBounded(value)
+    }
+}
+
+impl From<UnboundedInterval> for AbsoluteInterval {
+    fn from(value: UnboundedInterval) -> Self {
+        AbsoluteInterval::Unbounded(value)
     }
 }
 
@@ -1380,16 +1784,16 @@ impl From<AbsoluteBounds> for AbsoluteInterval {
         type EndB = AbsoluteEndBound;
 
         match (value.abs_start(), value.abs_end()) {
-            (StartB::InfinitePast, EndB::InfiniteFuture) => AbsoluteInterval::Open(OpenInterval),
+            (StartB::InfinitePast, EndB::InfiniteFuture) => AbsoluteInterval::Unbounded(UnboundedInterval),
             (StartB::InfinitePast, EndB::Finite(AbsoluteFiniteBound { time, inclusivity })) => {
-                AbsoluteInterval::HalfOpen(HalfOpenAbsoluteInterval::new_with_inclusivity(
+                AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
                     time,
                     inclusivity,
                     OpeningDirection::ToPast,
                 ))
             },
             (StartB::Finite(AbsoluteFiniteBound { time, inclusivity }), EndB::InfiniteFuture) => {
-                AbsoluteInterval::HalfOpen(HalfOpenAbsoluteInterval::new_with_inclusivity(
+                AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
                     time,
                     inclusivity,
                     OpeningDirection::ToFuture,
@@ -1404,7 +1808,7 @@ impl From<AbsoluteBounds> for AbsoluteInterval {
                     time: end_time,
                     inclusivity: end_inclusivity,
                 }),
-            ) => AbsoluteInterval::Closed(ClosedAbsoluteInterval::unchecked_new_with_inclusivity(
+            ) => AbsoluteInterval::Bounded(BoundedAbsoluteInterval::unchecked_new_with_inclusivity(
                 start_time,
                 start_inclusivity,
                 end_time,
@@ -1421,16 +1825,16 @@ impl From<EmptiableAbsoluteBounds> for AbsoluteInterval {
 
         match (value.partial_abs_start(), value.partial_abs_end()) {
             (None, _) | (_, None) => AbsoluteInterval::Empty(EmptyInterval),
-            (Some(StartB::InfinitePast), Some(EndB::InfiniteFuture)) => AbsoluteInterval::Open(OpenInterval),
+            (Some(StartB::InfinitePast), Some(EndB::InfiniteFuture)) => AbsoluteInterval::Unbounded(UnboundedInterval),
             (Some(StartB::InfinitePast), Some(EndB::Finite(AbsoluteFiniteBound { time, inclusivity }))) => {
-                AbsoluteInterval::HalfOpen(HalfOpenAbsoluteInterval::new_with_inclusivity(
+                AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
                     time,
                     inclusivity,
                     OpeningDirection::ToPast,
                 ))
             },
             (Some(StartB::Finite(AbsoluteFiniteBound { time, inclusivity })), Some(EndB::InfiniteFuture)) => {
-                AbsoluteInterval::HalfOpen(HalfOpenAbsoluteInterval::new_with_inclusivity(
+                AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
                     time,
                     inclusivity,
                     OpeningDirection::ToFuture,
@@ -1445,7 +1849,7 @@ impl From<EmptiableAbsoluteBounds> for AbsoluteInterval {
                     time: end_time,
                     inclusivity: end_inclusivity,
                 })),
-            ) => AbsoluteInterval::Closed(ClosedAbsoluteInterval::unchecked_new_with_inclusivity(
+            ) => AbsoluteInterval::Bounded(BoundedAbsoluteInterval::unchecked_new_with_inclusivity(
                 start_time,
                 start_inclusivity,
                 end_time,
@@ -1458,12 +1862,14 @@ impl From<EmptiableAbsoluteBounds> for AbsoluteInterval {
 impl From<(Option<DateTime<Utc>>, Option<DateTime<Utc>>)> for AbsoluteInterval {
     fn from((from_opt, to_opt): (Option<DateTime<Utc>>, Option<DateTime<Utc>>)) -> Self {
         match (from_opt, to_opt) {
-            (Some(from), Some(to)) => AbsoluteInterval::Closed(ClosedAbsoluteInterval::new(from, to)),
+            (Some(from), Some(to)) => AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(from, to)),
             (Some(from), None) => {
-                AbsoluteInterval::HalfOpen(HalfOpenAbsoluteInterval::new(from, OpeningDirection::ToFuture))
+                AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new(from, OpeningDirection::ToFuture))
             },
-            (None, Some(to)) => AbsoluteInterval::HalfOpen(HalfOpenAbsoluteInterval::new(to, OpeningDirection::ToPast)),
-            (None, None) => AbsoluteInterval::Open(OpenInterval),
+            (None, Some(to)) => {
+                AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new(to, OpeningDirection::ToPast))
+            },
+            (None, None) => AbsoluteInterval::Unbounded(UnboundedInterval),
         }
     }
 }
@@ -1481,16 +1887,16 @@ impl
         ),
     ) -> Self {
         match (from_opt, to_opt) {
-            (Some((from, from_inclusivity)), Some((to, to_inclusivity))) => AbsoluteInterval::Closed(
-                ClosedAbsoluteInterval::new_with_inclusivity(from, from_inclusivity, to, to_inclusivity),
+            (Some((from, from_inclusivity)), Some((to, to_inclusivity))) => AbsoluteInterval::Bounded(
+                BoundedAbsoluteInterval::new_with_inclusivity(from, from_inclusivity, to, to_inclusivity),
             ),
-            (Some((from, from_inclusivity)), None) => AbsoluteInterval::HalfOpen(
-                HalfOpenAbsoluteInterval::new_with_inclusivity(from, from_inclusivity, OpeningDirection::ToFuture),
+            (Some((from, from_inclusivity)), None) => AbsoluteInterval::HalfBounded(
+                HalfBoundedAbsoluteInterval::new_with_inclusivity(from, from_inclusivity, OpeningDirection::ToFuture),
             ),
-            (None, Some((to, to_inclusivity))) => AbsoluteInterval::HalfOpen(
-                HalfOpenAbsoluteInterval::new_with_inclusivity(to, to_inclusivity, OpeningDirection::ToPast),
+            (None, Some((to, to_inclusivity))) => AbsoluteInterval::HalfBounded(
+                HalfBoundedAbsoluteInterval::new_with_inclusivity(to, to_inclusivity, OpeningDirection::ToPast),
             ),
-            (None, None) => AbsoluteInterval::Open(OpenInterval),
+            (None, None) => AbsoluteInterval::Unbounded(UnboundedInterval),
         }
     }
 }
@@ -1499,7 +1905,7 @@ impl From<(Option<(DateTime<Utc>, bool)>, Option<(DateTime<Utc>, bool)>)> for Ab
     fn from((from_opt, to_opt): (Option<(DateTime<Utc>, bool)>, Option<(DateTime<Utc>, bool)>)) -> Self {
         match (from_opt, to_opt) {
             (Some((from, is_from_inclusive)), Some((to, is_to_inclusive))) => {
-                AbsoluteInterval::Closed(ClosedAbsoluteInterval::new_with_inclusivity(
+                AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new_with_inclusivity(
                     from,
                     if is_from_inclusive {
                         BoundInclusivity::Inclusive
@@ -1515,7 +1921,7 @@ impl From<(Option<(DateTime<Utc>, bool)>, Option<(DateTime<Utc>, bool)>)> for Ab
                 ))
             },
             (Some((from, is_from_inclusive)), None) => {
-                AbsoluteInterval::HalfOpen(HalfOpenAbsoluteInterval::new_with_inclusivity(
+                AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
                     from,
                     if is_from_inclusive {
                         BoundInclusivity::Inclusive
@@ -1526,7 +1932,7 @@ impl From<(Option<(DateTime<Utc>, bool)>, Option<(DateTime<Utc>, bool)>)> for Ab
                 ))
             },
             (None, Some((to, is_to_inclusive))) => {
-                AbsoluteInterval::HalfOpen(HalfOpenAbsoluteInterval::new_with_inclusivity(
+                AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
                     to,
                     if is_to_inclusive {
                         BoundInclusivity::Inclusive
@@ -1536,7 +1942,7 @@ impl From<(Option<(DateTime<Utc>, bool)>, Option<(DateTime<Utc>, bool)>)> for Ab
                     OpeningDirection::ToPast,
                 ))
             },
-            (None, None) => AbsoluteInterval::Open(OpenInterval),
+            (None, None) => AbsoluteInterval::Unbounded(UnboundedInterval),
         }
     }
 }
@@ -1548,12 +1954,14 @@ impl From<(bool, Option<DateTime<Utc>>, Option<DateTime<Utc>>)> for AbsoluteInte
         }
 
         match (from_opt, to_opt) {
-            (Some(from), Some(to)) => AbsoluteInterval::Closed(ClosedAbsoluteInterval::new(from, to)),
+            (Some(from), Some(to)) => AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(from, to)),
             (Some(from), None) => {
-                AbsoluteInterval::HalfOpen(HalfOpenAbsoluteInterval::new(from, OpeningDirection::ToFuture))
+                AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new(from, OpeningDirection::ToFuture))
             },
-            (None, Some(to)) => AbsoluteInterval::HalfOpen(HalfOpenAbsoluteInterval::new(to, OpeningDirection::ToPast)),
-            (None, None) => AbsoluteInterval::Open(OpenInterval),
+            (None, Some(to)) => {
+                AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new(to, OpeningDirection::ToPast))
+            },
+            (None, None) => AbsoluteInterval::Unbounded(UnboundedInterval),
         }
     }
 }
@@ -1577,16 +1985,16 @@ impl
         }
 
         match (from_opt, to_opt) {
-            (Some((from, from_inclusivity)), Some((to, to_inclusivity))) => AbsoluteInterval::Closed(
-                ClosedAbsoluteInterval::new_with_inclusivity(from, from_inclusivity, to, to_inclusivity),
+            (Some((from, from_inclusivity)), Some((to, to_inclusivity))) => AbsoluteInterval::Bounded(
+                BoundedAbsoluteInterval::new_with_inclusivity(from, from_inclusivity, to, to_inclusivity),
             ),
-            (Some((from, from_inclusivity)), None) => AbsoluteInterval::HalfOpen(
-                HalfOpenAbsoluteInterval::new_with_inclusivity(from, from_inclusivity, OpeningDirection::ToFuture),
+            (Some((from, from_inclusivity)), None) => AbsoluteInterval::HalfBounded(
+                HalfBoundedAbsoluteInterval::new_with_inclusivity(from, from_inclusivity, OpeningDirection::ToFuture),
             ),
-            (None, Some((to, to_inclusivity))) => AbsoluteInterval::HalfOpen(
-                HalfOpenAbsoluteInterval::new_with_inclusivity(to, to_inclusivity, OpeningDirection::ToPast),
+            (None, Some((to, to_inclusivity))) => AbsoluteInterval::HalfBounded(
+                HalfBoundedAbsoluteInterval::new_with_inclusivity(to, to_inclusivity, OpeningDirection::ToPast),
             ),
-            (None, None) => AbsoluteInterval::Open(OpenInterval),
+            (None, None) => AbsoluteInterval::Unbounded(UnboundedInterval),
         }
     }
 }
@@ -1601,7 +2009,7 @@ impl From<(bool, Option<(DateTime<Utc>, bool)>, Option<(DateTime<Utc>, bool)>)> 
 
         match (from_opt, to_opt) {
             (Some((from, is_from_inclusive)), Some((to, is_to_inclusive))) => {
-                AbsoluteInterval::Closed(ClosedAbsoluteInterval::new_with_inclusivity(
+                AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new_with_inclusivity(
                     from,
                     if is_from_inclusive {
                         BoundInclusivity::Inclusive
@@ -1617,7 +2025,7 @@ impl From<(bool, Option<(DateTime<Utc>, bool)>, Option<(DateTime<Utc>, bool)>)> 
                 ))
             },
             (Some((from, is_from_inclusive)), None) => {
-                AbsoluteInterval::HalfOpen(HalfOpenAbsoluteInterval::new_with_inclusivity(
+                AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
                     from,
                     if is_from_inclusive {
                         BoundInclusivity::Inclusive
@@ -1628,7 +2036,7 @@ impl From<(bool, Option<(DateTime<Utc>, bool)>, Option<(DateTime<Utc>, bool)>)> 
                 ))
             },
             (None, Some((to, is_to_inclusive))) => {
-                AbsoluteInterval::HalfOpen(HalfOpenAbsoluteInterval::new_with_inclusivity(
+                AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
                     to,
                     if is_to_inclusive {
                         BoundInclusivity::Inclusive
@@ -1638,7 +2046,7 @@ impl From<(bool, Option<(DateTime<Utc>, bool)>, Option<(DateTime<Utc>, bool)>)> 
                     OpeningDirection::ToPast,
                 ))
             },
-            (None, None) => AbsoluteInterval::Open(OpenInterval),
+            (None, None) => AbsoluteInterval::Unbounded(UnboundedInterval),
         }
     }
 }
@@ -1648,7 +2056,7 @@ impl From<(Bound<DateTime<Utc>>, Bound<DateTime<Utc>>)> for AbsoluteInterval {
     fn from((start_bound, end_bound): (Bound<DateTime<Utc>>, Bound<DateTime<Utc>>)) -> Self {
         match (start_bound, end_bound) {
             (Bound::Included(from), Bound::Included(to)) => {
-                AbsoluteInterval::Closed(ClosedAbsoluteInterval::new_with_inclusivity(
+                AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new_with_inclusivity(
                     from,
                     BoundInclusivity::Inclusive,
                     to,
@@ -1656,7 +2064,7 @@ impl From<(Bound<DateTime<Utc>>, Bound<DateTime<Utc>>)> for AbsoluteInterval {
                 ))
             },
             (Bound::Included(from), Bound::Excluded(to)) => {
-                AbsoluteInterval::Closed(ClosedAbsoluteInterval::new_with_inclusivity(
+                AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new_with_inclusivity(
                     from,
                     BoundInclusivity::Inclusive,
                     to,
@@ -1664,7 +2072,7 @@ impl From<(Bound<DateTime<Utc>>, Bound<DateTime<Utc>>)> for AbsoluteInterval {
                 ))
             },
             (Bound::Excluded(from), Bound::Included(to)) => {
-                AbsoluteInterval::Closed(ClosedAbsoluteInterval::new_with_inclusivity(
+                AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new_with_inclusivity(
                     from,
                     BoundInclusivity::Exclusive,
                     to,
@@ -1672,7 +2080,7 @@ impl From<(Bound<DateTime<Utc>>, Bound<DateTime<Utc>>)> for AbsoluteInterval {
                 ))
             },
             (Bound::Excluded(from), Bound::Excluded(to)) => {
-                AbsoluteInterval::Closed(ClosedAbsoluteInterval::new_with_inclusivity(
+                AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new_with_inclusivity(
                     from,
                     BoundInclusivity::Exclusive,
                     to,
@@ -1680,71 +2088,71 @@ impl From<(Bound<DateTime<Utc>>, Bound<DateTime<Utc>>)> for AbsoluteInterval {
                 ))
             },
             (Bound::Included(from), Bound::Unbounded) => {
-                AbsoluteInterval::HalfOpen(HalfOpenAbsoluteInterval::new_with_inclusivity(
+                AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
                     from,
                     BoundInclusivity::Inclusive,
                     OpeningDirection::ToFuture,
                 ))
             },
             (Bound::Excluded(from), Bound::Unbounded) => {
-                AbsoluteInterval::HalfOpen(HalfOpenAbsoluteInterval::new_with_inclusivity(
+                AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
                     from,
                     BoundInclusivity::Exclusive,
                     OpeningDirection::ToFuture,
                 ))
             },
             (Bound::Unbounded, Bound::Included(from)) => {
-                AbsoluteInterval::HalfOpen(HalfOpenAbsoluteInterval::new_with_inclusivity(
+                AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
                     from,
                     BoundInclusivity::Inclusive,
                     OpeningDirection::ToPast,
                 ))
             },
             (Bound::Unbounded, Bound::Excluded(from)) => {
-                AbsoluteInterval::HalfOpen(HalfOpenAbsoluteInterval::new_with_inclusivity(
+                AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
                     from,
                     BoundInclusivity::Exclusive,
                     OpeningDirection::ToPast,
                 ))
             },
-            (Bound::Unbounded, Bound::Unbounded) => AbsoluteInterval::Open(OpenInterval),
+            (Bound::Unbounded, Bound::Unbounded) => AbsoluteInterval::Unbounded(UnboundedInterval),
         }
     }
 }
 
 impl From<Range<DateTime<Utc>>> for AbsoluteInterval {
     fn from(value: Range<DateTime<Utc>>) -> Self {
-        AbsoluteInterval::Closed(ClosedAbsoluteInterval::from(value))
+        AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from(value))
     }
 }
 
 impl From<RangeInclusive<DateTime<Utc>>> for AbsoluteInterval {
     fn from(value: RangeInclusive<DateTime<Utc>>) -> Self {
-        AbsoluteInterval::Closed(ClosedAbsoluteInterval::from(value))
+        AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from(value))
     }
 }
 
 impl From<RangeFrom<DateTime<Utc>>> for AbsoluteInterval {
     fn from(value: RangeFrom<DateTime<Utc>>) -> Self {
-        AbsoluteInterval::HalfOpen(HalfOpenAbsoluteInterval::from(value))
+        AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::from(value))
     }
 }
 
 impl From<RangeTo<DateTime<Utc>>> for AbsoluteInterval {
     fn from(value: RangeTo<DateTime<Utc>>) -> Self {
-        AbsoluteInterval::HalfOpen(HalfOpenAbsoluteInterval::from(value))
+        AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::from(value))
     }
 }
 
 impl From<RangeToInclusive<DateTime<Utc>>> for AbsoluteInterval {
     fn from(value: RangeToInclusive<DateTime<Utc>>) -> Self {
-        AbsoluteInterval::HalfOpen(HalfOpenAbsoluteInterval::from(value))
+        AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::from(value))
     }
 }
 
 impl From<RangeFull> for AbsoluteInterval {
     fn from(_value: RangeFull) -> Self {
-        AbsoluteInterval::Open(OpenInterval)
+        AbsoluteInterval::Unbounded(UnboundedInterval)
     }
 }
 

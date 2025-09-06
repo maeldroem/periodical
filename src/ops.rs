@@ -5,6 +5,9 @@
 //! from [`intervals::ops`](crate::intervals::ops), which is for operations specialized in handling intervals and
 //! can't be used (or can't be used as efficiently) for other structures.
 
+use std::error::Error;
+use std::fmt::Display;
+
 use chrono::{DateTime, Duration, DurationRound, RoundingError, Utc};
 
 /// Time precision used for comparisons
@@ -12,14 +15,43 @@ use chrono::{DateTime, Duration, DurationRound, RoundingError, Utc};
 pub enum Precision {
     /// Rounds the compared times to the given duration (e.g. if the duration is 1 second, the times will be rounded to the nearest second)
     ToNearest(Duration),
-    /// Floors the compared times to the given duration (e.g. if the duration is 5 minutes, the times will be floored to the 5-minutes part they are in)
-    ToPast(Duration),
     /// Ceils the compared times to the given duration
     ToFuture(Duration),
+    /// Floors the compared times to the given duration (e.g. if the duration is 5 minutes, the times will be floored to the 5-minutes part they are in)
+    ToPast(Duration),
 }
+
+/// Errors that can be produced when using [`Precision`]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PrecisionError {
+    /// A rounding error happened, see `chrono`'s [`RoundingError`]
+    RoundingError(RoundingError),
+    /// An operation produced an out-of-range date
+    OutOfRangeDate,
+}
+
+impl Display for PrecisionError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::RoundingError(rounding_err) => write!(f, "{rounding_err}"),
+            Self::OutOfRangeDate => write!(f, "Operation produced an out-of-range date"),
+        }
+    }
+}
+
+impl Error for PrecisionError {}
 
 impl Precision {
     /// Uses the given precision to precise the given time
+    ///
+    /// # Pitfalls
+    ///
+    /// If the precision is not a divisor of 24 hours, the rounded times will differ from one day to another, as
+    /// the rounding is based on the [Unix time](https://en.wikipedia.org/w/index.php?title=Unix_time&useskin=vector),
+    /// which begins on 1970-01-01.
+    ///
+    /// If you instead want to use your own base time,
+    /// use [`precise_time_with_base_time`](Precision::precise_time_with_base_time).
     ///
     /// # Errors
     ///
@@ -27,18 +59,57 @@ impl Precision {
     /// if the given duration used is too big, negative or zero, etc.
     ///
     /// For more details, check [`chrono`'s limitations on the `DurationRound` trait](https://docs.rs/chrono/latest/chrono/round/trait.DurationRound.html#limitations).
-    pub fn precise_time(&self, time: DateTime<Utc>) -> Result<DateTime<Utc>, RoundingError> {
+    pub fn precise_time(&self, time: DateTime<Utc>) -> Result<DateTime<Utc>, PrecisionError> {
         match self {
-            Self::ToNearest(duration) => time.duration_round(*duration),
-            Self::ToPast(duration) => time.duration_trunc(*duration),
-            Self::ToFuture(duration) => time.duration_round_up(*duration),
+            Self::ToNearest(duration) => time.duration_round(*duration).map_err(PrecisionError::RoundingError),
+            Self::ToFuture(duration) => time.duration_round_up(*duration).map_err(PrecisionError::RoundingError),
+            Self::ToPast(duration) => time.duration_trunc(*duration).map_err(PrecisionError::RoundingError),
         }
+    }
+
+    /// Uses the given precision to precise the given time using the given base
+    ///
+    /// Bases the given time on the given base time before precising the time, that way you can use [`Duration`]s
+    /// within your [`Precision`] that are not divisor of 24 hours without unexpected results.
+    ///
+    /// # Errors
+    ///
+    /// Rebasing times can lead to out-of-range dates, so if this method produces an out-of-range date, it will return
+    /// the error [`OutOfRangeDate`](PrecisionError::OutOfRangeDate).
+    ///
+    /// Otherwise, precising/rounding a time can also lead to errors, for example if the given duration is negative
+    /// or simply too large, so it will produce [`RoundingError`](PrecisionError::RoundingError) containing chrono's
+    /// [`RoundingError`] within for more details.
+    ///
+    /// For more details, check [`chrono`'s limitations on the `DurationRound` trait](https://docs.rs/chrono/latest/chrono/round/trait.DurationRound.html#limitations).
+    pub fn precise_time_with_base_time(
+        &self,
+        time: DateTime<Utc>,
+        base: DateTime<Utc>,
+    ) -> Result<DateTime<Utc>, PrecisionError> {
+        let unix_epoch_base_diff = base.signed_duration_since(DateTime::UNIX_EPOCH);
+        let rebased_time = time
+            .checked_sub_signed(unix_epoch_base_diff)
+            .ok_or(PrecisionError::OutOfRangeDate)?;
+
+        let precised_rebased_time = match self {
+            Self::ToNearest(duration) => rebased_time.duration_round(*duration),
+            Self::ToFuture(duration) => rebased_time.duration_round_up(*duration),
+            Self::ToPast(duration) => rebased_time.duration_trunc(*duration),
+        };
+
+        let precised_rebased_time = precised_rebased_time.map_err(PrecisionError::RoundingError)?;
+
+        precised_rebased_time
+            .checked_add_signed(unix_epoch_base_diff)
+            .ok_or(PrecisionError::OutOfRangeDate)
     }
 }
 
 /// Represents a running result
 ///
 /// This enum is mostly used for iterators doing fold-like operations.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum RunningResult<R, D = R> {
     Running(R),
     Done(D),
