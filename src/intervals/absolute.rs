@@ -586,6 +586,7 @@ pub fn prepare_absolute_bounds_for_interval_creation(
 
 /// Enum for absolute start and end bounds
 #[derive(Debug, Clone, Copy)]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum AbsoluteBound {
     Start(AbsoluteStartBound),
     End(AbsoluteEndBound),

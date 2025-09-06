@@ -4,6 +4,9 @@ use std::cmp::Ordering;
 use std::iter::{FusedIterator, Peekable};
 use std::ops::{Add, Sub};
 
+#[cfg(feature = "arbitrary")]
+use arbitrary::Arbitrary;
+
 use crate::collections::intervals::layered_bounds_set_ops::diff::{
     LayeredAbsoluteBoundsDifference, LayeredRelativeBoundsDifference,
 };
@@ -25,6 +28,7 @@ use crate::intervals::relative::{RelativeBound, RelativeEndBound, RelativeStartB
 
 /// State of a layered bounds iterator, indicating which layer(s) are active
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Hash)]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum LayeredBoundsState {
     #[default]
     NoLayers,
