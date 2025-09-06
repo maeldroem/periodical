@@ -3,6 +3,9 @@
 
 use std::cmp::Ordering;
 
+#[cfg(feature = "arbitrary")]
+use arbitrary::Arbitrary;
+
 use crate::intervals::absolute::{AbsoluteBound, AbsoluteEndBound, AbsoluteStartBound};
 use crate::intervals::ops::bound_overlap_ambiguity::{
     BoundOverlapAmbiguity, BoundOverlapDisambiguationRuleSet, DisambiguatedBoundOverlap,
@@ -13,6 +16,7 @@ use super::prelude::*;
 
 /// [`Ordering`] for bounds, with [`BoundOverlapAmbiguity`] provided when equal in time/offset
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum BoundOrdering {
     Less,
     Equal(Option<BoundOverlapAmbiguity>),

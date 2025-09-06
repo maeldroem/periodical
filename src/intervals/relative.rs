@@ -599,6 +599,7 @@ pub fn prepare_relative_bounds_for_interval_creation(
 
 /// Enum for relative start and end bounds
 #[derive(Debug, Clone, Copy)]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum RelativeBound {
     Start(RelativeStartBound),
     End(RelativeEndBound),
