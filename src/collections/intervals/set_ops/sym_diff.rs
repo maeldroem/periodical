@@ -21,18 +21,23 @@ pub trait PeerSymmetricDifferenceIteratorDispatcher: IntoIterator + Sized {
     /// Processes elements pair by pair and returns the result of the symmetric difference.
     /// If the symmetric difference is successful, it returns all the parts of the differentiated intervals.
     /// If it is unsuccessful, it returns the pair of inspected elements.
-    fn peer_symmetric_difference_with<F>(self, f: F) -> PeerSymmetricDifferenceWith<Peekable<Self::IntoIter>, F>
+    fn peer_symmetric_difference_with<'a, T, U, F>(
+        self,
+        f: F,
+    ) -> PeerSymmetricDifferenceWith<Peekable<Self::IntoIter>, F>
     where
-        F: FnMut(&Self::Item, &Self::Item) -> SymmetricDifferenceResult<Self::Item>,
+        Self::IntoIter: Iterator<Item = &'a T>,
+        T: 'a + Into<U> + Clone,
+        F: FnMut(&T, &T) -> SymmetricDifferenceResult<U>,
     {
         PeerSymmetricDifferenceWith::new(self.into_iter(), f)
     }
 }
 
-impl<'a, I, T> PeerSymmetricDifferenceIteratorDispatcher for I
+impl<'a, I, T, U> PeerSymmetricDifferenceIteratorDispatcher for I
 where
     I: IntoIterator<Item = &'a T>,
-    T: 'a + SymmetricallyDifferentiable<Output = T> + Clone,
+    T: 'a + SymmetricallyDifferentiable<Output = U> + Clone,
 {
 }
 
@@ -55,12 +60,12 @@ where
     }
 }
 
-impl<'a, I, T> Iterator for PeerSymmetricDifference<Peekable<I>>
+impl<'a, I, T, U> Iterator for PeerSymmetricDifference<Peekable<I>>
 where
     I: Iterator<Item = &'a T>,
-    T: 'a + SymmetricallyDifferentiable<Output = T> + Clone,
+    T: 'a + SymmetricallyDifferentiable<Output = U> + Into<U> + Clone,
 {
-    type Item = (T, Option<T>);
+    type Item = (U, Option<U>);
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.exhausted {
@@ -74,7 +79,7 @@ where
 
         let Some(peeked) = self.iter.peek() else {
             self.exhausted = true;
-            return Some((current.clone(), None));
+            return Some((current.clone().into(), None));
         };
 
         match current.symmetrically_differentiate(peeked) {
@@ -82,7 +87,7 @@ where
             SymmetricDifferenceResult::Split(split_first_part, split_second_part) => {
                 Some((split_first_part, Some(split_second_part)))
             },
-            SymmetricDifferenceResult::Separate => Some((current.clone(), Some((*peeked).clone()))),
+            SymmetricDifferenceResult::Separate => Some((current.clone().into(), Some((*peeked).clone().into()))),
         }
     }
 }
@@ -90,10 +95,10 @@ where
 // TODO: If a reverse Peekable becomes standard or when we'll import a crate that does that,
 // implement DoubleEndedIterator for PeerSymmetricDifference
 
-impl<'a, I, T> FusedIterator for PeerSymmetricDifference<Peekable<I>>
+impl<'a, I, T, U> FusedIterator for PeerSymmetricDifference<Peekable<I>>
 where
     I: Iterator<Item = &'a T>,
-    T: 'a + SymmetricallyDifferentiable<Output = T> + Clone,
+    T: 'a + SymmetricallyDifferentiable<Output = U> + Into<U> + Clone,
 {
 }
 
@@ -118,13 +123,13 @@ where
     }
 }
 
-impl<'a, I, T, F> Iterator for PeerSymmetricDifferenceWith<Peekable<I>, F>
+impl<'a, I, T, U, F> Iterator for PeerSymmetricDifferenceWith<Peekable<I>, F>
 where
     I: Iterator<Item = &'a T>,
-    T: 'a + SymmetricallyDifferentiable<Output = T> + Clone,
-    F: FnMut(&T, &T) -> SymmetricDifferenceResult<T>,
+    T: 'a + Into<U> + Clone,
+    F: FnMut(&T, &T) -> SymmetricDifferenceResult<U>,
 {
-    type Item = (T, Option<T>);
+    type Item = (U, Option<U>);
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.exhausted {
@@ -138,7 +143,7 @@ where
 
         let Some(peeked) = self.iter.peek() else {
             self.exhausted = true;
-            return Some((current.clone(), None));
+            return Some((current.clone().into(), None));
         };
 
         match (self.f)(current, peeked) {
@@ -146,7 +151,7 @@ where
             SymmetricDifferenceResult::Split(split_first_part, split_second_part) => {
                 Some((split_first_part, Some(split_second_part)))
             },
-            SymmetricDifferenceResult::Separate => Some((current.clone(), Some((*peeked).clone()))),
+            SymmetricDifferenceResult::Separate => Some((current.clone().into(), Some((*peeked).clone().into()))),
         }
     }
 }
@@ -154,10 +159,10 @@ where
 // TODO: If a reverse Peekable becomes standard or when we'll import a crate that does that,
 // implement DoubleEndedIterator for PeerSymmetricDifferenceWith
 
-impl<'a, I, T, F> FusedIterator for PeerSymmetricDifferenceWith<Peekable<I>, F>
+impl<'a, I, T, U, F> FusedIterator for PeerSymmetricDifferenceWith<Peekable<I>, F>
 where
     I: Iterator<Item = &'a T>,
-    T: 'a + SymmetricallyDifferentiable<Output = T> + Clone,
-    F: FnMut(&T, &T) -> SymmetricDifferenceResult<T>,
+    T: 'a + Into<U> + Clone,
+    F: FnMut(&T, &T) -> SymmetricDifferenceResult<U>,
 {
 }
