@@ -19,18 +19,20 @@ pub trait PeerDifferenceIteratorDispatcher: IntoIterator + Sized {
     ///
     /// Processes elements pair by pair and returns the result of the difference. If the difference is successful,
     /// it returns the differentiated interval. If it is unsuccessful, it returns the current element.
-    fn peer_difference_with<F>(self, f: F) -> PeerDifferenceWith<Peekable<Self::IntoIter>, F>
+    fn peer_difference_with<'a, T, U, F>(self, f: F) -> PeerDifferenceWith<Peekable<Self::IntoIter>, F>
     where
-        F: FnMut(&Self::Item, &Self::Item) -> DifferenceResult<Self::Item>,
+        Self::IntoIter: Iterator<Item = &'a T>,
+        T: 'a + Clone,
+        F: FnMut(&T, &T) -> DifferenceResult<U>,
     {
         PeerDifferenceWith::new(self.into_iter(), f)
     }
 }
 
-impl<'a, I, T> PeerDifferenceIteratorDispatcher for I
+impl<'a, I, T, U> PeerDifferenceIteratorDispatcher for I
 where
     I: IntoIterator<Item = &'a T>,
-    T: 'a + Differentiable<Output = T> + Clone,
+    T: 'a + Differentiable<Output = U> + Clone,
 {
 }
 
@@ -53,12 +55,12 @@ where
     }
 }
 
-impl<'a, I, T> Iterator for PeerDifference<Peekable<I>>
+impl<'a, I, T, U> Iterator for PeerDifference<Peekable<I>>
 where
     I: Iterator<Item = &'a T>,
-    T: 'a + Differentiable<Output = T> + Clone,
+    T: 'a + Differentiable<Output = U> + Into<U> + Clone,
 {
-    type Item = (T, Option<T>);
+    type Item = (U, Option<U>);
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.exhausted {
@@ -72,7 +74,7 @@ where
 
         let Some(peeked) = self.iter.peek() else {
             self.exhausted = true;
-            return Some((current.clone(), None));
+            return Some((current.clone().into(), None));
         };
 
         match current.differentiate(peeked) {
@@ -80,7 +82,7 @@ where
             DifferenceResult::Split(split_first_part, split_second_part) => {
                 Some((split_first_part, Some(split_second_part)))
             },
-            DifferenceResult::Separate => Some((current.clone(), None)),
+            DifferenceResult::Separate => Some((current.clone().into(), None)),
         }
     }
 }
@@ -88,10 +90,10 @@ where
 // TODO: If a reverse Peekable becomes standard or when we'll import a crate that does that,
 // implement DoubleEndedIterator for PeerDifference
 
-impl<'a, I, T> FusedIterator for PeerDifference<Peekable<I>>
+impl<'a, I, T, U> FusedIterator for PeerDifference<Peekable<I>>
 where
     I: Iterator<Item = &'a T>,
-    T: 'a + Differentiable<Output = T> + Clone,
+    T: 'a + Differentiable<Output = U> + Into<U> + Clone,
 {
 }
 
@@ -116,13 +118,13 @@ where
     }
 }
 
-impl<'a, I, T, F> Iterator for PeerDifferenceWith<Peekable<I>, F>
+impl<'a, I, T, U, F> Iterator for PeerDifferenceWith<Peekable<I>, F>
 where
     I: Iterator<Item = &'a T>,
-    T: 'a + Differentiable<Output = T> + Clone,
-    F: FnMut(&T, &T) -> DifferenceResult<T>,
+    T: 'a + Into<U> + Clone,
+    F: FnMut(&T, &T) -> DifferenceResult<U>,
 {
-    type Item = (T, Option<T>);
+    type Item = (U, Option<U>);
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.exhausted {
@@ -136,7 +138,7 @@ where
 
         let Some(peeked) = self.iter.peek() else {
             self.exhausted = true;
-            return Some((current.clone(), None));
+            return Some((current.clone().into(), None));
         };
 
         match (self.f)(current, peeked) {
@@ -144,7 +146,7 @@ where
             DifferenceResult::Split(split_first_part, split_second_part) => {
                 Some((split_first_part, Some(split_second_part)))
             },
-            DifferenceResult::Separate => Some((current.clone(), None)),
+            DifferenceResult::Separate => Some((current.clone().into(), None)),
         }
     }
 }
@@ -152,10 +154,10 @@ where
 // TODO: If a reverse Peekable becomes standard or when we'll import a crate that does that,
 // implement DoubleEndedIterator for PeerDifferenceWith
 
-impl<'a, I, T, F> FusedIterator for PeerDifferenceWith<Peekable<I>, F>
+impl<'a, I, T, U, F> FusedIterator for PeerDifferenceWith<Peekable<I>, F>
 where
     I: Iterator<Item = &'a T>,
-    T: 'a + Differentiable<Output = T> + Clone,
-    F: FnMut(&T, &T) -> DifferenceResult<T>,
+    T: 'a + Into<U> + Clone,
+    F: FnMut(&T, &T) -> DifferenceResult<U>,
 {
 }

@@ -174,7 +174,7 @@ fn peer_intersection_with_run() {
         ),
     ];
 
-    let custom_union_f = |a: &AbsoluteBounds, b: &AbsoluteBounds| -> IntersectionResult<AbsoluteBounds> {
+    let custom_intersection_f = |a: &AbsoluteBounds, b: &AbsoluteBounds| -> IntersectionResult<AbsoluteBounds> {
         if a.overlaps(b, OverlapRuleSet::VeryLenient, &DEFAULT_OVERLAP_RULES) {
             IntersectionResult::Intersected(a.abridge(b))
         } else {
@@ -183,7 +183,7 @@ fn peer_intersection_with_run() {
     };
 
     assert_eq!(
-        bounds.peer_intersection_with(custom_union_f).collect::<Vec<_>>(),
+        bounds.peer_intersection_with(custom_intersection_f).collect::<Vec<_>>(),
         vec![
             // 1, 2
             AbsoluteBounds::new(
