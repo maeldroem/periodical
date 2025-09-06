@@ -1,10 +1,12 @@
 use chrono::Utc;
 
-use crate::intervals::absolute::{AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound};
+use crate::intervals::absolute::{
+    AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, EmptiableAbsoluteBounds,
+};
 use crate::intervals::meta::BoundInclusivity;
 use crate::intervals::ops::overlap::{CanPositionOverlap, DEFAULT_OVERLAP_RULES, OverlapRuleSet};
+use crate::intervals::ops::remove_overlap_or_gap::{OverlapOrGapRemovalResult, RemovableOverlapOrGap};
 use crate::ops::DifferenceResult;
-use crate::prelude::{EmptiableAbsoluteBounds, OverlapOrGapRemovalResult, RemovableOverlapOrGap};
 use crate::test_utils::date;
 
 use super::diff::*;
