@@ -18,7 +18,7 @@ where
 
 impl<I> ToAbsoluteIteratorDispatcher for I
 where
-    I: IntoIterator,
+    I: IntoIterator + Sized,
     I::Item: ToAbsolute,
 {
 }
@@ -79,7 +79,7 @@ where
 
 impl<I> ToRelativeIteratorDispatcher for I
 where
-    I: IntoIterator,
+    I: IntoIterator + Sized,
     I::Item: ToRelative,
 {
 }

@@ -16,7 +16,7 @@ where
 
 impl<I> ComplementIteratorDispatcher for I
 where
-    I: IntoIterator,
+    I: IntoIterator + Sized,
     I::Item: Complementable,
 {
 }

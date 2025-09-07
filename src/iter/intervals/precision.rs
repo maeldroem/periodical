@@ -26,7 +26,7 @@ where
 
 impl<I> PrecisionChangeIteratorDispatcher for I
 where
-    I: IntoIterator,
+    I: IntoIterator + Sized,
     I::Item: PreciseAbsoluteBounds,
 {
 }

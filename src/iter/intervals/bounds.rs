@@ -96,7 +96,7 @@ pub trait AbsoluteBoundsIterDispatcher: IntoIterator<Item = AbsoluteBounds> + Si
     }
 }
 
-impl<I> AbsoluteBoundsIterDispatcher for I where I: IntoIterator<Item = AbsoluteBounds> {}
+impl<I> AbsoluteBoundsIterDispatcher for I where I: IntoIterator<Item = AbsoluteBounds> + Sized {}
 
 /// Iterator for bounds of [`RelativeBounds`]
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -187,4 +187,4 @@ pub trait RelativeBoundsIterDispatcher: IntoIterator<Item = RelativeBounds> + Si
     }
 }
 
-impl<I> RelativeBoundsIterDispatcher for I where I: IntoIterator<Item = RelativeBounds> {}
+impl<I> RelativeBoundsIterDispatcher for I where I: IntoIterator<Item = RelativeBounds> + Sized {}
