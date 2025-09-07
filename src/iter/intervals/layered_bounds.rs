@@ -7,6 +7,12 @@ use std::ops::{Add, Sub};
 #[cfg(feature = "arbitrary")]
 use arbitrary::Arbitrary;
 
+use crate::intervals::BoundOrdering;
+use crate::intervals::absolute::{AbsoluteBound, AbsoluteEndBound, AbsoluteStartBound};
+use crate::intervals::meta::BoundInclusivity;
+use crate::intervals::ops::bound_ord::PartialBoundOrd;
+use crate::intervals::ops::bound_overlap_ambiguity::BoundOverlapDisambiguationRuleSet;
+use crate::intervals::relative::{RelativeBound, RelativeEndBound, RelativeStartBound};
 use crate::iter::intervals::layered_bounds_set_ops::diff::{
     LayeredAbsoluteBoundsDifference, LayeredRelativeBoundsDifference,
 };
@@ -16,15 +22,7 @@ use crate::iter::intervals::layered_bounds_set_ops::intersect::{
 use crate::iter::intervals::layered_bounds_set_ops::sym_diff::{
     LayeredAbsoluteBoundsSymmetricDifference, LayeredRelativeBoundsSymmetricDifference,
 };
-use crate::iter::intervals::layered_bounds_set_ops::unite::{
-    LayeredAbsoluteBoundsUnion, LayeredRelativeBoundsUnion,
-};
-use crate::intervals::BoundOrdering;
-use crate::intervals::absolute::{AbsoluteBound, AbsoluteEndBound, AbsoluteStartBound};
-use crate::intervals::meta::BoundInclusivity;
-use crate::intervals::ops::bound_ord::PartialBoundOrd;
-use crate::intervals::ops::bound_overlap_ambiguity::BoundOverlapDisambiguationRuleSet;
-use crate::intervals::relative::{RelativeBound, RelativeEndBound, RelativeStartBound};
+use crate::iter::intervals::layered_bounds_set_ops::unite::{LayeredAbsoluteBoundsUnion, LayeredRelativeBoundsUnion};
 
 /// State of a layered bounds iterator, indicating which layer(s) are active
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Hash)]

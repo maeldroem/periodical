@@ -1,6 +1,5 @@
 use chrono::{Duration, Utc};
 
-use crate::iter::intervals::bounds::{AbsoluteBoundsIterDispatcher, RelativeBoundsIterDispatcher};
 use crate::intervals::absolute::{
     AbsoluteBound, AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
 };
@@ -8,6 +7,7 @@ use crate::intervals::meta::BoundInclusivity;
 use crate::intervals::relative::{
     RelativeBound, RelativeBounds, RelativeEndBound, RelativeFiniteBound, RelativeStartBound,
 };
+use crate::iter::intervals::bounds::{AbsoluteBoundsIterDispatcher, RelativeBoundsIterDispatcher};
 use crate::test_utils::date;
 
 use super::layered_bounds::*;

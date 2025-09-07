@@ -1,12 +1,12 @@
 use chrono::{Duration, Utc};
 
+use crate::intervals::absolute::{AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound};
+use crate::intervals::meta::BoundInclusivity;
+use crate::intervals::relative::{RelativeBounds, RelativeEndBound, RelativeFiniteBound, RelativeStartBound};
 use crate::iter::intervals::bounds::{AbsoluteBoundsIterDispatcher, RelativeBoundsIterDispatcher};
 use crate::iter::intervals::layered_bounds::{
     LayeredBoundsState, LayeredBoundsStateChangeAtAbsoluteBound, LayeredBoundsStateChangeAtRelativeBound,
 };
-use crate::intervals::absolute::{AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound};
-use crate::intervals::meta::BoundInclusivity;
-use crate::intervals::relative::{RelativeBounds, RelativeEndBound, RelativeFiniteBound, RelativeStartBound};
 use crate::test_utils::date;
 
 use super::diff::*;

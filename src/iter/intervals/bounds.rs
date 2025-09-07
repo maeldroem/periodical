@@ -2,10 +2,10 @@
 
 use std::iter::{FusedIterator, Peekable};
 
-use crate::iter::intervals::united_bounds::{AbsoluteUnitedBoundsIter, RelativeUnitedBoundsIter};
 use crate::intervals::absolute::{AbsoluteBound, AbsoluteBounds};
 use crate::intervals::bound_position::BoundPosition;
 use crate::intervals::relative::{RelativeBound, RelativeBounds};
+use crate::iter::intervals::united_bounds::{AbsoluteUnitedBoundsIter, RelativeUnitedBoundsIter};
 
 /// Iterator for bounds of [`AbsoluteBounds`]
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]

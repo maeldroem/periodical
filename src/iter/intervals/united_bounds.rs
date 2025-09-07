@@ -3,11 +3,11 @@
 use std::cmp::Ordering;
 use std::iter::{FusedIterator, Peekable};
 
-use crate::iter::intervals::layered_bounds::{LayeredAbsoluteBounds, LayeredRelativeBounds};
 use crate::intervals::absolute::{AbsoluteBound, AbsoluteEndBound};
 use crate::intervals::ops::bound_ord::PartialBoundOrd;
 use crate::intervals::ops::bound_overlap_ambiguity::BoundOverlapDisambiguationRuleSet;
 use crate::intervals::relative::{RelativeBound, RelativeEndBound};
+use crate::iter::intervals::layered_bounds::{LayeredAbsoluteBounds, LayeredRelativeBounds};
 
 /// Iterator for uniting an iterator of sorted and paired [`AbsoluteBound`]s
 pub struct AbsoluteUnitedBoundsIter<I> {

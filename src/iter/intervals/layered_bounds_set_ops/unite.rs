@@ -2,11 +2,11 @@
 
 use std::iter::FusedIterator;
 
+use crate::intervals::absolute::AbsoluteBounds;
+use crate::intervals::relative::RelativeBounds;
 use crate::iter::intervals::layered_bounds::{
     LayeredBoundsState, LayeredBoundsStateChangeAtAbsoluteBound, LayeredBoundsStateChangeAtRelativeBound,
 };
-use crate::intervals::absolute::AbsoluteBounds;
-use crate::intervals::relative::RelativeBounds;
 
 /// Union iterator
 /// for [`LayeredAbsoluteBounds`](crate::iter::intervals::layered_bounds::LayeredAbsoluteBounds)
