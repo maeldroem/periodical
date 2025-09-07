@@ -29,7 +29,7 @@ fn create_abs_united_bounds_iter() {
         ),
     ];
 
-    let _ = AbsoluteUnitedBoundsIter::new(data.into_iter());
+    let _ = AbsoluteUnitedBoundsIter::new(data.abs_bounds_iter());
 }
 
 #[test]
@@ -225,7 +225,7 @@ fn create_rel_united_bounds_iter() {
         ),
     ];
 
-    let _ = RelativeUnitedBoundsIter::new(data.into_iter());
+    let _ = RelativeUnitedBoundsIter::new(data.rel_bounds_iter());
 }
 
 #[test]
