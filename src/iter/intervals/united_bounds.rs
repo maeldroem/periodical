@@ -136,7 +136,7 @@ where
         let inner_size_hint = self.iter.size_hint();
         (
             inner_size_hint.0.saturating_mul(2),
-            inner_size_hint.1.map(|x| x.saturating_mul(2)),
+            inner_size_hint.1.and_then(|x| x.checked_mul(2)),
         )
     }
 }
@@ -282,7 +282,7 @@ where
         let inner_size_hint = self.iter.size_hint();
         (
             inner_size_hint.0.saturating_mul(2),
-            inner_size_hint.1.map(|x| x.saturating_mul(2)),
+            inner_size_hint.1.and_then(|x| x.checked_mul(2)),
         )
     }
 }

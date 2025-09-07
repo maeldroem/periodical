@@ -184,6 +184,7 @@ impl LayeredBoundsStateChangeAtRelativeBound {
 }
 
 /// Iterator tracking which layers of absolute bounds are active
+#[derive(Debug, Clone, Hash)]
 pub struct LayeredAbsoluteBounds<I1, I2> {
     first_layer: I1,
     second_layer: I2,
@@ -203,8 +204,8 @@ impl<I1, I2> LayeredAbsoluteBounds<I1, I2> {
 
 impl<I1, I2> LayeredAbsoluteBounds<I1, I2>
 where
-    I1: Iterator,
-    I2: Iterator,
+    I1: Iterator<Item = AbsoluteBound>,
+    I2: Iterator<Item = AbsoluteBound>,
 {
     /// Creates a new instance of [`LayeredAbsoluteBounds`]
     ///
@@ -366,6 +367,20 @@ where
                 ))
             },
         }
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let first_layer_size_hint = self.first_layer.size_hint();
+        let second_layer_size_hint = self.second_layer.size_hint();
+
+        (
+            first_layer_size_hint.0.max(second_layer_size_hint.0),
+            first_layer_size_hint.1.and_then(|first_layer_upper_bound| {
+                second_layer_size_hint
+                    .1
+                    .and_then(|second_layer_upper_bound| first_layer_upper_bound.checked_add(second_layer_upper_bound))
+            }),
+        )
     }
 }
 
@@ -872,6 +887,7 @@ pub fn layered_abs_bounds_change_end_end(
 }
 
 /// Iterator tracking which layers of relative bounds are active
+#[derive(Debug, Clone, Hash)]
 pub struct LayeredRelativeBounds<I1, I2> {
     first_layer: I1,
     second_layer: I2,
@@ -891,8 +907,8 @@ impl<I1, I2> LayeredRelativeBounds<I1, I2> {
 
 impl<I1, I2> LayeredRelativeBounds<I1, I2>
 where
-    I1: Iterator,
-    I2: Iterator,
+    I1: Iterator<Item = RelativeBound>,
+    I2: Iterator<Item = RelativeBound>,
 {
     /// Creates a new instance of [`LayeredRelativeBounds`]
     ///
@@ -1054,6 +1070,20 @@ where
                 ))
             },
         }
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let first_layer_size_hint = self.first_layer.size_hint();
+        let second_layer_size_hint = self.second_layer.size_hint();
+
+        (
+            first_layer_size_hint.0.max(second_layer_size_hint.0),
+            first_layer_size_hint.1.and_then(|first_layer_upper_bound| {
+                second_layer_size_hint
+                    .1
+                    .and_then(|second_layer_upper_bound| first_layer_upper_bound.checked_add(second_layer_upper_bound))
+            }),
+        )
     }
 }
 
