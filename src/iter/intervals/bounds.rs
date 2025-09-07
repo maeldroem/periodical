@@ -59,9 +59,35 @@ impl Iterator for AbsoluteBoundsIter {
 
         self.position.get_abs_bound(&self.bounds)
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let bounds_amount = self.bounds.len().checked_mul(2);
+
+        (bounds_amount.unwrap_or(usize::MAX), bounds_amount)
+    }
 }
 
 impl FusedIterator for AbsoluteBoundsIter {}
+
+impl ExactSizeIterator for AbsoluteBoundsIter {}
+
+impl FromIterator<AbsoluteBounds> for AbsoluteBoundsIter {
+    fn from_iter<I>(iter: I) -> Self
+    where
+        I: IntoIterator<Item = AbsoluteBounds>,
+    {
+        AbsoluteBoundsIter::new(iter.into_iter())
+    }
+}
+
+impl Extend<AbsoluteBounds> for AbsoluteBoundsIter {
+    fn extend<I>(&mut self, iter: I)
+    where
+        I: IntoIterator<Item = AbsoluteBounds>,
+    {
+        self.bounds.extend(iter);
+    }
+}
 
 /// Iterator dispatcher trait for [`AbsoluteBoundsIter`]
 pub trait AbsoluteBoundsIterDispatcher: IntoIterator<Item = AbsoluteBounds> + Sized {
@@ -124,9 +150,35 @@ impl Iterator for RelativeBoundsIter {
 
         self.position.get_rel_bound(&self.bounds)
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let bounds_amount = self.bounds.len().checked_mul(2);
+
+        (bounds_amount.unwrap_or(usize::MAX), bounds_amount)
+    }
 }
 
 impl FusedIterator for RelativeBoundsIter {}
+
+impl ExactSizeIterator for RelativeBoundsIter {}
+
+impl FromIterator<RelativeBounds> for RelativeBoundsIter {
+    fn from_iter<I>(iter: I) -> Self
+    where
+        I: IntoIterator<Item = RelativeBounds>,
+    {
+        RelativeBoundsIter::new(iter.into_iter())
+    }
+}
+
+impl Extend<RelativeBounds> for RelativeBoundsIter {
+    fn extend<I>(&mut self, iter: I)
+    where
+        I: IntoIterator<Item = RelativeBounds>,
+    {
+        self.bounds.extend(iter);
+    }
+}
 
 /// Iterator dispatcher trait for [`RelativeBoundsIter`]
 pub trait RelativeBoundsIterDispatcher: IntoIterator<Item = RelativeBounds> + Sized {
