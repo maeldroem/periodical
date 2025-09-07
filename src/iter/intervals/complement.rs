@@ -22,6 +22,7 @@ where
 }
 
 /// Returns the interval complement of each element
+#[derive(Debug, Clone, Hash)]
 pub struct ComplementIter<I> {
     iter: I,
 }
