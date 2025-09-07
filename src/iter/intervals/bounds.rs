@@ -2,7 +2,7 @@
 
 use std::iter::{FusedIterator, Peekable};
 
-use crate::collections::intervals::united_bounds::{AbsoluteUnitedBoundsIter, RelativeUnitedBoundsIter};
+use crate::iter::intervals::united_bounds::{AbsoluteUnitedBoundsIter, RelativeUnitedBoundsIter};
 use crate::intervals::absolute::{AbsoluteBound, AbsoluteBounds};
 use crate::intervals::bound_position::BoundPosition;
 use crate::intervals::relative::{RelativeBound, RelativeBounds};

@@ -7,16 +7,16 @@ use std::ops::{Add, Sub};
 #[cfg(feature = "arbitrary")]
 use arbitrary::Arbitrary;
 
-use crate::collections::intervals::layered_bounds_set_ops::diff::{
+use crate::iter::intervals::layered_bounds_set_ops::diff::{
     LayeredAbsoluteBoundsDifference, LayeredRelativeBoundsDifference,
 };
-use crate::collections::intervals::layered_bounds_set_ops::intersect::{
+use crate::iter::intervals::layered_bounds_set_ops::intersect::{
     LayeredAbsoluteBoundsIntersection, LayeredRelativeBoundsIntersection,
 };
-use crate::collections::intervals::layered_bounds_set_ops::sym_diff::{
+use crate::iter::intervals::layered_bounds_set_ops::sym_diff::{
     LayeredAbsoluteBoundsSymmetricDifference, LayeredRelativeBoundsSymmetricDifference,
 };
-use crate::collections::intervals::layered_bounds_set_ops::unite::{
+use crate::iter::intervals::layered_bounds_set_ops::unite::{
     LayeredAbsoluteBoundsUnion, LayeredRelativeBoundsUnion,
 };
 use crate::intervals::BoundOrdering;
@@ -215,7 +215,7 @@ where
     /// The bounds in the layer iterators **must be sorted chronologically** in order for the uniting process to work.
     /// The responsibility of sorting the input is left to the caller in order to prevent double-sorting.
     /// This requirement is automatically guaranteed if they are obtained from
-    /// [`AbsoluteUnitedBoundsIter`](crate::collections::intervals::united_bounds::AbsoluteUnitedBoundsIter).
+    /// [`AbsoluteUnitedBoundsIter`](crate::iter::intervals::united_bounds::AbsoluteUnitedBoundsIter).
     ///
     /// The bounds in the layer iterators **must be paired**, that means there should be an equal amount of
     /// [`Start`](AbsoluteBound::Start)s and [`End`](AbsoluteBound::End)s.
@@ -903,7 +903,7 @@ where
     /// The bounds in the layer iterators **must be sorted chronologically** in order for the uniting process to work.
     /// The responsibility of sorting the input is left to the caller in order to prevent double-sorting.
     /// This requirement is automatically guaranteed if they are obtained from
-    /// [`RelativeUnitedBoundsIter`](crate::collections::intervals::united_bounds::RelativeUnitedBoundsIter).
+    /// [`RelativeUnitedBoundsIter`](crate::iter::intervals::united_bounds::RelativeUnitedBoundsIter).
     ///
     /// The bounds in the layer iterators **must be paired**, that means there should be an equal amount of
     /// [`Start`](RelativeBound::Start)s and [`End`](RelativeBound::End)s.

@@ -1,25 +1,25 @@
-//! Symmetric difference of a [layered bounds iterator](crate::collections::intervals::layered_bounds)
+//! Union of a [layered bounds iterator](crate::iter::intervals::layered_bounds)
 
 use std::iter::FusedIterator;
 
-use crate::collections::intervals::layered_bounds::{
+use crate::iter::intervals::layered_bounds::{
     LayeredBoundsState, LayeredBoundsStateChangeAtAbsoluteBound, LayeredBoundsStateChangeAtRelativeBound,
 };
 use crate::intervals::absolute::AbsoluteBounds;
 use crate::intervals::relative::RelativeBounds;
 
-/// Symmetric difference iterator
-/// for [`LayeredAbsoluteBounds`](crate::collections::intervals::layered_bounds::LayeredAbsoluteBounds)
-pub struct LayeredAbsoluteBoundsSymmetricDifference<I> {
+/// Union iterator
+/// for [`LayeredAbsoluteBounds`](crate::iter::intervals::layered_bounds::LayeredAbsoluteBounds)
+pub struct LayeredAbsoluteBoundsUnion<I> {
     iter: I,
     exhausted: bool,
 }
 
-impl<I> LayeredAbsoluteBoundsSymmetricDifference<I>
+impl<I> LayeredAbsoluteBoundsUnion<I>
 where
     I: Iterator<Item = LayeredBoundsStateChangeAtAbsoluteBound>,
 {
-    /// Creates an instance of [`LayeredAbsoluteBoundsSymmetricDifference`]
+    /// Creates an instance of [`LayeredAbsoluteBoundsUnion`]
     ///
     /// # Input requirements
     ///
@@ -32,13 +32,13 @@ where
     /// change's new state: state B.
     ///
     /// All of that is automatically guaranteed if the state changes are obtained from
-    /// [`LayeredAbsoluteBounds`](crate::collections::intervals::layered_bounds::LayeredAbsoluteBounds).
-    pub fn new(iter: I) -> LayeredAbsoluteBoundsSymmetricDifference<I> {
-        LayeredAbsoluteBoundsSymmetricDifference { iter, exhausted: false }
+    /// [`LayeredAbsoluteBounds`](crate::iter::intervals::layered_bounds::LayeredAbsoluteBounds).
+    pub fn new(iter: I) -> LayeredAbsoluteBoundsUnion<I> {
+        LayeredAbsoluteBoundsUnion { iter, exhausted: false }
     }
 }
 
-impl<I> Iterator for LayeredAbsoluteBoundsSymmetricDifference<I>
+impl<I> Iterator for LayeredAbsoluteBoundsUnion<I>
 where
     I: Iterator<Item = LayeredBoundsStateChangeAtAbsoluteBound>,
 {
@@ -55,10 +55,7 @@ where
                 return None;
             };
 
-            if matches!(
-                current.new_state(),
-                LayeredBoundsState::NoLayers | LayeredBoundsState::BothLayers
-            ) {
+            if matches!(current.new_state(), LayeredBoundsState::NoLayers) {
                 continue;
             }
 
@@ -69,26 +66,21 @@ where
             loop {
                 let Some(next) = self.iter.next() else {
                     unreachable!(
-                        "The input requirements guarantee that the given iterator \
-                        cannot end on an active state such as `FirstLayer` or `SecondLayer`"
+                        "Since the input requirements state that the state changes need to be continuous, \
+                        and since we already stopped at a state that is not `NoLayers`, we can expect \
+                        the next elements to exist until a state change that transitions to `NoLayers` is returned"
                     );
                 };
 
-                // State can transition from FirstLayer to SecondLayer, but in a symmetric difference,
-                // those should be united
-                if matches!(
-                    next.new_state(),
-                    LayeredBoundsState::FirstLayer | LayeredBoundsState::SecondLayer
-                ) {
+                if !matches!(next.new_state(), LayeredBoundsState::NoLayers) {
                     continue;
                 }
 
                 let Some(end) = next.old_state_end() else {
                     unreachable!(
-                        "We can infer the guarantee that the state change following one that transitions \
-                        to `FirstLayer` or `SecondLayer` must contain an end to the old state, \
-                        given that the input requirements guarantee that the given iterator cannot end \
-                        on an active state such as `FirstLayer` or `SecondLayer`"
+                        "Since the input requirements state that the state changes need to be continuous, \
+                        we can expect the next state change which transitions to `NoLayers` to contain \
+                        the change's old state's end"
                     );
                 };
 
@@ -98,23 +90,21 @@ where
     }
 }
 
-impl<I> FusedIterator for LayeredAbsoluteBoundsSymmetricDifference<I> where
-    I: Iterator<Item = LayeredBoundsStateChangeAtAbsoluteBound>
-{
-}
+impl<I> FusedIterator for LayeredAbsoluteBoundsUnion<I> where I: Iterator<Item = LayeredBoundsStateChangeAtAbsoluteBound>
+{}
 
-/// Symmetric difference iterator
-/// for [`LayeredRelativeBounds`](crate::collections::intervals::layered_bounds::LayeredRelativeBounds)
-pub struct LayeredRelativeBoundsSymmetricDifference<I> {
+/// Union iterator
+/// for [`LayeredRelativeBounds`](crate::iter::intervals::layered_bounds::LayeredRelativeBounds)
+pub struct LayeredRelativeBoundsUnion<I> {
     iter: I,
     exhausted: bool,
 }
 
-impl<I> LayeredRelativeBoundsSymmetricDifference<I>
+impl<I> LayeredRelativeBoundsUnion<I>
 where
     I: Iterator<Item = LayeredBoundsStateChangeAtRelativeBound>,
 {
-    /// Creates an instance of [`LayeredRelativeBoundsSymmetricDifference`]
+    /// Creates an instance of [`LayeredRelativeBoundsUnion`]
     ///
     /// # Input requirements
     ///
@@ -127,13 +117,13 @@ where
     /// change's new state: state B.
     ///
     /// All of that is automatically guaranteed if the state changes are obtained from
-    /// [`LayeredRelativeBounds`](crate::collections::intervals::layered_bounds::LayeredRelativeBounds).
-    pub fn new(iter: I) -> LayeredRelativeBoundsSymmetricDifference<I> {
-        LayeredRelativeBoundsSymmetricDifference { iter, exhausted: false }
+    /// [`LayeredRelativeBounds`](crate::iter::intervals::layered_bounds::LayeredRelativeBounds).
+    pub fn new(iter: I) -> LayeredRelativeBoundsUnion<I> {
+        LayeredRelativeBoundsUnion { iter, exhausted: false }
     }
 }
 
-impl<I> Iterator for LayeredRelativeBoundsSymmetricDifference<I>
+impl<I> Iterator for LayeredRelativeBoundsUnion<I>
 where
     I: Iterator<Item = LayeredBoundsStateChangeAtRelativeBound>,
 {
@@ -150,10 +140,7 @@ where
                 return None;
             };
 
-            if matches!(
-                current.new_state(),
-                LayeredBoundsState::NoLayers | LayeredBoundsState::BothLayers
-            ) {
+            if matches!(current.new_state(), LayeredBoundsState::NoLayers) {
                 continue;
             }
 
@@ -164,26 +151,21 @@ where
             loop {
                 let Some(next) = self.iter.next() else {
                     unreachable!(
-                        "The input requirements guarantee that the given iterator \
-                        cannot end on an active state such as `FirstLayer` or `SecondLayer`"
+                        "Since the input requirements state that the state changes need to be continuous, \
+                        and since we already stopped at a state that is not `NoLayers`, we can expect \
+                        the next elements to exist until a state change that transitions to `NoLayers` is returned"
                     );
                 };
 
-                // State can transition from FirstLayer to SecondLayer, but in a symmetric difference,
-                // those should be united
-                if matches!(
-                    next.new_state(),
-                    LayeredBoundsState::FirstLayer | LayeredBoundsState::SecondLayer
-                ) {
+                if !matches!(next.new_state(), LayeredBoundsState::NoLayers) {
                     continue;
                 }
 
                 let Some(end) = next.old_state_end() else {
                     unreachable!(
-                        "We can infer the guarantee that the state change following one that transitions \
-                        to `FirstLayer` or `SecondLayer` must contain an end to the old state, \
-                        given that the input requirements guarantee that the given iterator cannot end \
-                        on an active state such as `FirstLayer` or `SecondLayer`"
+                        "Since the input requirements state that the state changes need to be continuous, \
+                        we can expect the next state change which transitions to `NoLayers` to contain \
+                        the change's old state's end"
                     );
                 };
 
@@ -193,7 +175,5 @@ where
     }
 }
 
-impl<I> FusedIterator for LayeredRelativeBoundsSymmetricDifference<I> where
-    I: Iterator<Item = LayeredBoundsStateChangeAtRelativeBound>
-{
-}
+impl<I> FusedIterator for LayeredRelativeBoundsUnion<I> where I: Iterator<Item = LayeredBoundsStateChangeAtRelativeBound>
+{}

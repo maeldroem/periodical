@@ -1,26 +1,27 @@
-//! Intersection of a [layered bounds iterator](crate::collections::intervals::layered_bounds)
+//! Difference of a [layered bounds iterator](crate::iter::intervals::layered_bounds)
 
 use std::iter::FusedIterator;
 
-use crate::collections::intervals::layered_bounds::{
+use crate::iter::intervals::layered_bounds::{
     LayeredBoundsState, LayeredBoundsStateChangeAtAbsoluteBound, LayeredBoundsStateChangeAtRelativeBound,
 };
 use crate::intervals::absolute::AbsoluteBounds;
 use crate::intervals::relative::RelativeBounds;
 
-/// Intersection iterator
-/// for [`LayeredAbsoluteBounds`](crate::collections::intervals::layered_bounds::LayeredAbsoluteBounds)
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct LayeredAbsoluteBoundsIntersection<I> {
+/// Difference iterator
+/// for [`LayeredAbsoluteBounds`](crate::iter::intervals::layered_bounds::LayeredAbsoluteBounds)
+///
+/// The second layer acts as the _removers_.
+pub struct LayeredAbsoluteBoundsDifference<I> {
     iter: I,
     exhausted: bool,
 }
 
-impl<I> LayeredAbsoluteBoundsIntersection<I>
+impl<I> LayeredAbsoluteBoundsDifference<I>
 where
     I: Iterator<Item = LayeredBoundsStateChangeAtAbsoluteBound>,
 {
-    /// Creates an instance of [`LayeredAbsoluteBoundsIntersection`]
+    /// Creates an instance of [`LayeredAbsoluteBoundsDifference`]
     ///
     /// # Input requirements
     ///
@@ -33,13 +34,13 @@ where
     /// change's new state: state B.
     ///
     /// All of that is automatically guaranteed if the state changes are obtained from
-    /// [`LayeredAbsoluteBounds`](crate::collections::intervals::layered_bounds::LayeredAbsoluteBounds).
-    pub fn new(iter: I) -> LayeredAbsoluteBoundsIntersection<I> {
-        LayeredAbsoluteBoundsIntersection { iter, exhausted: false }
+    /// [`LayeredAbsoluteBounds`](crate::iter::intervals::layered_bounds::LayeredAbsoluteBounds).
+    pub fn new(iter: I) -> LayeredAbsoluteBoundsDifference<I> {
+        LayeredAbsoluteBoundsDifference { iter, exhausted: false }
     }
 }
 
-impl<I> Iterator for LayeredAbsoluteBoundsIntersection<I>
+impl<I> Iterator for LayeredAbsoluteBoundsDifference<I>
 where
     I: Iterator<Item = LayeredBoundsStateChangeAtAbsoluteBound>,
 {
@@ -56,7 +57,7 @@ where
                 return None;
             };
 
-            if !matches!(current.new_state(), LayeredBoundsState::BothLayers) {
+            if !matches!(current.new_state(), LayeredBoundsState::FirstLayer) {
                 continue;
             }
 
@@ -67,15 +68,15 @@ where
             let Some(next) = self.iter.next() else {
                 unreachable!(
                     "The input requirements guarantee that the given iterator \
-                    cannot end on an active state such as `BothLayers`"
+                    cannot end on an active state such as `FirstLayer`"
                 );
             };
 
             let Some(end) = next.old_state_end() else {
                 unreachable!(
-                    "We can infer the guarantee that the state change following one that transitions to `BothLayers` \
+                    "We can infer the guarantee that the state change following one that transitions to `FirstLayer` \
                     must contain an end to the old state, given that the input requirements guarantee \
-                    that the given iterator cannot end on an active state such as `BothLayers`"
+                    that the given iterator cannot end on an active state such as `FirstLayer`"
                 );
             };
 
@@ -84,24 +85,25 @@ where
     }
 }
 
-impl<I> FusedIterator for LayeredAbsoluteBoundsIntersection<I> where
+impl<I> FusedIterator for LayeredAbsoluteBoundsDifference<I> where
     I: Iterator<Item = LayeredBoundsStateChangeAtAbsoluteBound>
 {
 }
 
-/// Intersection iterator
-/// for [`LayeredRelativeBounds`](crate::collections::intervals::layered_bounds::LayeredRelativeBounds)
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct LayeredRelativeBoundsIntersection<I> {
+/// Difference iterator
+/// for [`LayeredRelativeBounds`](crate::iter::intervals::layered_bounds::LayeredRelativeBounds)
+///
+/// The second layer acts as the _removers_.
+pub struct LayeredRelativeBoundsDifference<I> {
     iter: I,
     exhausted: bool,
 }
 
-impl<I> LayeredRelativeBoundsIntersection<I>
+impl<I> LayeredRelativeBoundsDifference<I>
 where
     I: Iterator<Item = LayeredBoundsStateChangeAtRelativeBound>,
 {
-    /// Creates an instance of [`LayeredRelativeBoundsIntersection`]
+    /// Creates an instance of [`LayeredRelativeBoundsDifference`]
     ///
     /// # Input requirements
     ///
@@ -114,13 +116,13 @@ where
     /// change's new state: state B.
     ///
     /// All of that is automatically guaranteed if the state changes are obtained from
-    /// [`LayeredRelativeBounds`](crate::collections::intervals::layered_bounds::LayeredRelativeBounds).
-    pub fn new(iter: I) -> LayeredRelativeBoundsIntersection<I> {
-        LayeredRelativeBoundsIntersection { iter, exhausted: false }
+    /// [`LayeredRelativeBounds`](crate::iter::intervals::layered_bounds::LayeredRelativeBounds).
+    pub fn new(iter: I) -> LayeredRelativeBoundsDifference<I> {
+        LayeredRelativeBoundsDifference { iter, exhausted: false }
     }
 }
 
-impl<I> Iterator for LayeredRelativeBoundsIntersection<I>
+impl<I> Iterator for LayeredRelativeBoundsDifference<I>
 where
     I: Iterator<Item = LayeredBoundsStateChangeAtRelativeBound>,
 {
@@ -137,7 +139,7 @@ where
                 return None;
             };
 
-            if !matches!(current.new_state(), LayeredBoundsState::BothLayers) {
+            if !matches!(current.new_state(), LayeredBoundsState::FirstLayer) {
                 continue;
             }
 
@@ -148,15 +150,15 @@ where
             let Some(next) = self.iter.next() else {
                 unreachable!(
                     "The input requirements guarantee that the given iterator \
-                    cannot end on an active state such as `BothLayers`"
+                    cannot end on an active state such as `FirstLayer`"
                 );
             };
 
             let Some(end) = next.old_state_end() else {
                 unreachable!(
-                    "We can infer the guarantee that the state change following one that transitions to `BothLayers` \
+                    "We can infer the guarantee that the state change following one that transitions to `FirstLayer` \
                     must contain an end to the old state, given that the input requirements guarantee \
-                    that the given iterator cannot end on an active state such as `BothLayers`"
+                    that the given iterator cannot end on an active state such as `FirstLayer`"
                 );
             };
 
@@ -165,7 +167,7 @@ where
     }
 }
 
-impl<I> FusedIterator for LayeredRelativeBoundsIntersection<I> where
+impl<I> FusedIterator for LayeredRelativeBoundsDifference<I> where
     I: Iterator<Item = LayeredBoundsStateChangeAtRelativeBound>
 {
 }

@@ -3,7 +3,7 @@
 use std::cmp::Ordering;
 use std::iter::{FusedIterator, Peekable};
 
-use crate::collections::intervals::layered_bounds::{LayeredAbsoluteBounds, LayeredRelativeBounds};
+use crate::iter::intervals::layered_bounds::{LayeredAbsoluteBounds, LayeredRelativeBounds};
 use crate::intervals::absolute::{AbsoluteBound, AbsoluteEndBound};
 use crate::intervals::ops::bound_ord::PartialBoundOrd;
 use crate::intervals::ops::bound_overlap_ambiguity::BoundOverlapDisambiguationRuleSet;
