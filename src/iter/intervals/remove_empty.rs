@@ -3,7 +3,11 @@
 use crate::intervals::Emptiable;
 
 /// Dispatcher trait for empty interval removal
-pub trait RemoveEmptyIntervalsIteratorDispatcher: IntoIterator + Sized {
+pub trait RemoveEmptyIntervalsIteratorDispatcher
+where
+    Self: IntoIterator + Sized,
+    Self::Item: Emptiable,
+{
     /// Remove empty intervals
     fn remove_empty_intervals(self) -> RemoveEmptyIntervals<Self::IntoIter> {
         RemoveEmptyIntervals::new(self.into_iter())
@@ -26,6 +30,7 @@ pub struct RemoveEmptyIntervals<I> {
 impl<I> RemoveEmptyIntervals<I>
 where
     I: Iterator,
+    I::Item: Emptiable,
 {
     pub fn new(iter: I) -> Self {
         RemoveEmptyIntervals { iter }
@@ -46,6 +51,11 @@ where
                 return Some(current);
             }
         }
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        // All items could be empty, so reset lower bound at 0
+        (0, self.iter.size_hint().1)
     }
 }
 
