@@ -7,7 +7,7 @@ use crate::intervals::meta::BoundInclusivity;
 use crate::intervals::relative::{
     RelativeBound, RelativeBounds, RelativeEndBound, RelativeFiniteBound, RelativeStartBound,
 };
-use crate::iter::intervals::bounds::{AbsoluteBoundsIterDispatcher, RelativeBoundsIterDispatcher};
+use crate::iter::intervals::bounds::{AbsoluteBoundsIteratorDispatcher, RelativeBoundsIteratorDispatcher};
 use crate::test_utils::date;
 
 use super::united_bounds::*;

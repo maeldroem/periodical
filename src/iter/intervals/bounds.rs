@@ -90,13 +90,13 @@ impl Extend<AbsoluteBounds> for AbsoluteBoundsIter {
 }
 
 /// Iterator dispatcher trait for [`AbsoluteBoundsIter`]
-pub trait AbsoluteBoundsIterDispatcher: IntoIterator<Item = AbsoluteBounds> + Sized {
+pub trait AbsoluteBoundsIteratorDispatcher: IntoIterator<Item = AbsoluteBounds> + Sized {
     fn abs_bounds_iter(self) -> AbsoluteBoundsIter {
         AbsoluteBoundsIter::new(self.into_iter())
     }
 }
 
-impl<I> AbsoluteBoundsIterDispatcher for I where I: IntoIterator<Item = AbsoluteBounds> + Sized {}
+impl<I> AbsoluteBoundsIteratorDispatcher for I where I: IntoIterator<Item = AbsoluteBounds> + Sized {}
 
 /// Iterator for bounds of [`RelativeBounds`]
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -181,10 +181,10 @@ impl Extend<RelativeBounds> for RelativeBoundsIter {
 }
 
 /// Iterator dispatcher trait for [`RelativeBoundsIter`]
-pub trait RelativeBoundsIterDispatcher: IntoIterator<Item = RelativeBounds> + Sized {
+pub trait RelativeBoundsIteratorDispatcher: IntoIterator<Item = RelativeBounds> + Sized {
     fn rel_bounds_iter(self) -> RelativeBoundsIter {
         RelativeBoundsIter::new(self.into_iter())
     }
 }
 
-impl<I> RelativeBoundsIterDispatcher for I where I: IntoIterator<Item = RelativeBounds> + Sized {}
+impl<I> RelativeBoundsIteratorDispatcher for I where I: IntoIterator<Item = RelativeBounds> + Sized {}
