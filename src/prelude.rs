@@ -1,4 +1,3 @@
-pub use super::intervals::special::{EmptyInterval, UnboundedInterval};
 pub use crate::intervals::absolute::{
     AbsoluteBound, AbsoluteBounds, AbsoluteInterval, BoundedAbsoluteInterval, EmptiableAbsoluteBounds,
     HalfBoundedAbsoluteInterval, HasAbsoluteBounds, HasEmptiableAbsoluteBounds,
@@ -30,3 +29,4 @@ pub use crate::intervals::relative::{
     BoundedRelativeInterval, EmptiableRelativeBounds, HalfBoundedRelativeInterval, HasEmptiableRelativeBounds,
     HasRelativeBounds, RelativeBound, RelativeBounds, RelativeInterval,
 };
+pub use crate::intervals::special::{EmptyInterval, UnboundedInterval};
