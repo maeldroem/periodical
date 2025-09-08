@@ -1,15 +1,16 @@
-//! Symmetric difference of a [layered bounds iterator](crate::collections::intervals::layered_bounds)
+//! Symmetric difference of a [layered bounds iterator](crate::iter::intervals::layered_bounds)
 
 use std::iter::FusedIterator;
 
-use crate::collections::intervals::layered_bounds::{
-    LayeredBoundsState, LayeredBoundsStateChangeAtAbsoluteBound, LayeredBoundsStateChangeAtRelativeBound,
-};
 use crate::intervals::absolute::AbsoluteBounds;
 use crate::intervals::relative::RelativeBounds;
+use crate::iter::intervals::layered_bounds::{
+    LayeredBoundsState, LayeredBoundsStateChangeAtAbsoluteBound, LayeredBoundsStateChangeAtRelativeBound,
+};
 
 /// Symmetric difference iterator
-/// for [`LayeredAbsoluteBounds`](crate::collections::intervals::layered_bounds::LayeredAbsoluteBounds)
+/// for [`LayeredAbsoluteBounds`](crate::iter::intervals::layered_bounds::LayeredAbsoluteBounds)
+#[derive(Debug, Clone, Hash)]
 pub struct LayeredAbsoluteBoundsSymmetricDifference<I> {
     iter: I,
     exhausted: bool,
@@ -32,7 +33,7 @@ where
     /// change's new state: state B.
     ///
     /// All of that is automatically guaranteed if the state changes are obtained from
-    /// [`LayeredAbsoluteBounds`](crate::collections::intervals::layered_bounds::LayeredAbsoluteBounds).
+    /// [`LayeredAbsoluteBounds`](crate::iter::intervals::layered_bounds::LayeredAbsoluteBounds).
     pub fn new(iter: I) -> LayeredAbsoluteBoundsSymmetricDifference<I> {
         LayeredAbsoluteBoundsSymmetricDifference { iter, exhausted: false }
     }
@@ -96,6 +97,10 @@ where
             }
         }
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (0, self.iter.size_hint().1.map(|upper_bound| upper_bound.div_ceil(2)))
+    }
 }
 
 impl<I> FusedIterator for LayeredAbsoluteBoundsSymmetricDifference<I> where
@@ -103,8 +108,25 @@ impl<I> FusedIterator for LayeredAbsoluteBoundsSymmetricDifference<I> where
 {
 }
 
+/// Iterator dispatcher trait for [`LayeredAbsoluteBoundsSymmetricDifference`]
+pub trait LayeredAbsoluteBoundsSymmetricDifferenceIteratorDispatcher
+where
+    Self: IntoIterator<Item = LayeredBoundsStateChangeAtAbsoluteBound> + Sized,
+{
+    /// Creates a [`LayeredAbsoluteBoundsSymmetricDifference`]
+    fn abs_symmetric_difference_layered(self) -> LayeredAbsoluteBoundsSymmetricDifference<Self::IntoIter> {
+        LayeredAbsoluteBoundsSymmetricDifference::new(self.into_iter())
+    }
+}
+
+impl<I> LayeredAbsoluteBoundsSymmetricDifferenceIteratorDispatcher for I where
+    I: IntoIterator<Item = LayeredBoundsStateChangeAtAbsoluteBound> + Sized
+{
+}
+
 /// Symmetric difference iterator
-/// for [`LayeredRelativeBounds`](crate::collections::intervals::layered_bounds::LayeredRelativeBounds)
+/// for [`LayeredRelativeBounds`](crate::iter::intervals::layered_bounds::LayeredRelativeBounds)
+#[derive(Debug, Clone, Hash)]
 pub struct LayeredRelativeBoundsSymmetricDifference<I> {
     iter: I,
     exhausted: bool,
@@ -127,7 +149,7 @@ where
     /// change's new state: state B.
     ///
     /// All of that is automatically guaranteed if the state changes are obtained from
-    /// [`LayeredRelativeBounds`](crate::collections::intervals::layered_bounds::LayeredRelativeBounds).
+    /// [`LayeredRelativeBounds`](crate::iter::intervals::layered_bounds::LayeredRelativeBounds).
     pub fn new(iter: I) -> LayeredRelativeBoundsSymmetricDifference<I> {
         LayeredRelativeBoundsSymmetricDifference { iter, exhausted: false }
     }
@@ -191,9 +213,29 @@ where
             }
         }
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (0, self.iter.size_hint().1.map(|upper_bound| upper_bound.div_ceil(2)))
+    }
 }
 
 impl<I> FusedIterator for LayeredRelativeBoundsSymmetricDifference<I> where
     I: Iterator<Item = LayeredBoundsStateChangeAtRelativeBound>
+{
+}
+
+/// Iterator dispatcher trait for [`LayeredRelativeBoundsSymmetricDifference`]
+pub trait LayeredRelativeBoundsSymmetricDifferenceIteratorDispatcher
+where
+    Self: IntoIterator<Item = LayeredBoundsStateChangeAtRelativeBound> + Sized,
+{
+    /// Creates a [`LayeredRelativeBoundsSymmetricDifference`]
+    fn rel_symmetric_difference_layered(self) -> LayeredRelativeBoundsSymmetricDifference<Self::IntoIter> {
+        LayeredRelativeBoundsSymmetricDifference::new(self.into_iter())
+    }
+}
+
+impl<I> LayeredRelativeBoundsSymmetricDifferenceIteratorDispatcher for I where
+    I: IntoIterator<Item = LayeredBoundsStateChangeAtRelativeBound> + Sized
 {
 }

@@ -7,18 +7,6 @@ use std::ops::{Add, Sub};
 #[cfg(feature = "arbitrary")]
 use arbitrary::Arbitrary;
 
-use crate::collections::intervals::layered_bounds_set_ops::diff::{
-    LayeredAbsoluteBoundsDifference, LayeredRelativeBoundsDifference,
-};
-use crate::collections::intervals::layered_bounds_set_ops::intersect::{
-    LayeredAbsoluteBoundsIntersection, LayeredRelativeBoundsIntersection,
-};
-use crate::collections::intervals::layered_bounds_set_ops::sym_diff::{
-    LayeredAbsoluteBoundsSymmetricDifference, LayeredRelativeBoundsSymmetricDifference,
-};
-use crate::collections::intervals::layered_bounds_set_ops::unite::{
-    LayeredAbsoluteBoundsUnion, LayeredRelativeBoundsUnion,
-};
 use crate::intervals::BoundOrdering;
 use crate::intervals::absolute::{AbsoluteBound, AbsoluteEndBound, AbsoluteStartBound};
 use crate::intervals::meta::BoundInclusivity;
@@ -186,6 +174,7 @@ impl LayeredBoundsStateChangeAtRelativeBound {
 }
 
 /// Iterator tracking which layers of absolute bounds are active
+#[derive(Debug, Clone, Hash)]
 pub struct LayeredAbsoluteBounds<I1, I2> {
     first_layer: I1,
     second_layer: I2,
@@ -205,8 +194,8 @@ impl<I1, I2> LayeredAbsoluteBounds<I1, I2> {
 
 impl<I1, I2> LayeredAbsoluteBounds<I1, I2>
 where
-    I1: Iterator,
-    I2: Iterator,
+    I1: Iterator<Item = AbsoluteBound>,
+    I2: Iterator<Item = AbsoluteBound>,
 {
     /// Creates a new instance of [`LayeredAbsoluteBounds`]
     ///
@@ -215,7 +204,7 @@ where
     /// The bounds in the layer iterators **must be sorted chronologically** in order for the uniting process to work.
     /// The responsibility of sorting the input is left to the caller in order to prevent double-sorting.
     /// This requirement is automatically guaranteed if they are obtained from
-    /// [`AbsoluteUnitedBoundsIter`](crate::collections::intervals::united_bounds::AbsoluteUnitedBoundsIter).
+    /// [`AbsoluteUnitedBoundsIter`](crate::iter::intervals::united_bounds::AbsoluteUnitedBoundsIter).
     ///
     /// The bounds in the layer iterators **must be paired**, that means there should be an equal amount of
     /// [`Start`](AbsoluteBound::Start)s and [`End`](AbsoluteBound::End)s.
@@ -243,36 +232,6 @@ where
             queued_result: self.queued_result,
             exhausted: self.exhausted,
         }
-    }
-}
-
-impl<I1, I2> LayeredAbsoluteBounds<Peekable<I1>, Peekable<I2>>
-where
-    I1: Iterator<Item = AbsoluteBound>,
-    I2: Iterator<Item = AbsoluteBound>,
-{
-    /// Creates a [`LayeredAbsoluteBoundsUnion`] from the iterator
-    #[must_use]
-    pub fn unite(self) -> LayeredAbsoluteBoundsUnion<Self> {
-        LayeredAbsoluteBoundsUnion::new(self)
-    }
-
-    /// Creates an [`LayeredAbsoluteBoundsIntersection`] from the iterator
-    #[must_use]
-    pub fn intersect(self) -> LayeredAbsoluteBoundsIntersection<Self> {
-        LayeredAbsoluteBoundsIntersection::new(self)
-    }
-
-    /// Creates an [`LayeredAbsoluteBoundsDifference`] from the iterator
-    #[must_use]
-    pub fn difference(self) -> LayeredAbsoluteBoundsDifference<Self> {
-        LayeredAbsoluteBoundsDifference::new(self)
-    }
-
-    /// Creates a [`LayeredAbsoluteBoundsSymmetricDifference`] from the iterator
-    #[must_use]
-    pub fn symmetric_difference(self) -> LayeredAbsoluteBoundsSymmetricDifference<Self> {
-        LayeredAbsoluteBoundsSymmetricDifference::new(self)
     }
 }
 
@@ -368,6 +327,20 @@ where
                 ))
             },
         }
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let first_layer_size_hint = self.first_layer.size_hint();
+        let second_layer_size_hint = self.second_layer.size_hint();
+
+        (
+            first_layer_size_hint.0.max(second_layer_size_hint.0),
+            first_layer_size_hint.1.and_then(|first_layer_upper_bound| {
+                second_layer_size_hint
+                    .1
+                    .and_then(|second_layer_upper_bound| first_layer_upper_bound.checked_add(second_layer_upper_bound))
+            }),
+        )
     }
 }
 
@@ -874,6 +847,7 @@ pub fn layered_abs_bounds_change_end_end(
 }
 
 /// Iterator tracking which layers of relative bounds are active
+#[derive(Debug, Clone, Hash)]
 pub struct LayeredRelativeBounds<I1, I2> {
     first_layer: I1,
     second_layer: I2,
@@ -893,8 +867,8 @@ impl<I1, I2> LayeredRelativeBounds<I1, I2> {
 
 impl<I1, I2> LayeredRelativeBounds<I1, I2>
 where
-    I1: Iterator,
-    I2: Iterator,
+    I1: Iterator<Item = RelativeBound>,
+    I2: Iterator<Item = RelativeBound>,
 {
     /// Creates a new instance of [`LayeredRelativeBounds`]
     ///
@@ -903,7 +877,7 @@ where
     /// The bounds in the layer iterators **must be sorted chronologically** in order for the uniting process to work.
     /// The responsibility of sorting the input is left to the caller in order to prevent double-sorting.
     /// This requirement is automatically guaranteed if they are obtained from
-    /// [`RelativeUnitedBoundsIter`](crate::collections::intervals::united_bounds::RelativeUnitedBoundsIter).
+    /// [`RelativeUnitedBoundsIter`](crate::iter::intervals::united_bounds::RelativeUnitedBoundsIter).
     ///
     /// The bounds in the layer iterators **must be paired**, that means there should be an equal amount of
     /// [`Start`](RelativeBound::Start)s and [`End`](RelativeBound::End)s.
@@ -931,36 +905,6 @@ where
             queued_result: self.queued_result,
             exhausted: self.exhausted,
         }
-    }
-}
-
-impl<I1, I2> LayeredRelativeBounds<Peekable<I1>, Peekable<I2>>
-where
-    I1: Iterator<Item = RelativeBound>,
-    I2: Iterator<Item = RelativeBound>,
-{
-    /// Creates a [`LayeredRelativeBoundsUnion`] from the iterator
-    #[must_use]
-    pub fn unite(self) -> LayeredRelativeBoundsUnion<Self> {
-        LayeredRelativeBoundsUnion::new(self)
-    }
-
-    /// Creates a [`LayeredRelativeBoundsIntersection`] from the iterator
-    #[must_use]
-    pub fn intersect(self) -> LayeredRelativeBoundsIntersection<Self> {
-        LayeredRelativeBoundsIntersection::new(self)
-    }
-
-    /// Creates a [`LayeredRelativeBoundsDifference`] from the iterator
-    #[must_use]
-    pub fn difference(self) -> LayeredRelativeBoundsDifference<Self> {
-        LayeredRelativeBoundsDifference::new(self)
-    }
-
-    /// Creates a [`LayeredRelativeBoundsSymmetricDifference`] from the iterator
-    #[must_use]
-    pub fn symmetric_difference(self) -> LayeredRelativeBoundsSymmetricDifference<Self> {
-        LayeredRelativeBoundsSymmetricDifference::new(self)
     }
 }
 
@@ -1056,6 +1000,20 @@ where
                 ))
             },
         }
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let first_layer_size_hint = self.first_layer.size_hint();
+        let second_layer_size_hint = self.second_layer.size_hint();
+
+        (
+            first_layer_size_hint.0.max(second_layer_size_hint.0),
+            first_layer_size_hint.1.and_then(|first_layer_upper_bound| {
+                second_layer_size_hint
+                    .1
+                    .and_then(|second_layer_upper_bound| first_layer_upper_bound.checked_add(second_layer_upper_bound))
+            }),
+        )
     }
 }
 

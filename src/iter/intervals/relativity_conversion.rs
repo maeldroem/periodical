@@ -5,7 +5,11 @@ use chrono::{DateTime, Utc};
 use crate::intervals::prelude::*;
 
 /// Dispatcher trait for the [`ToAbsoluteIter`] conversion iterator
-pub trait ToAbsoluteIteratorDispatcher: IntoIterator + Sized {
+pub trait ToAbsoluteIteratorDispatcher
+where
+    Self: IntoIterator + Sized,
+    Self::Item: ToAbsolute,
+{
     /// Converts [`RelativeInterval`]s to [`AbsoluteInterval`]s
     fn to_absolute(self, reference_time: DateTime<Utc>) -> ToAbsoluteIter<Self::IntoIter> {
         ToAbsoluteIter::new(self.into_iter(), reference_time)
@@ -14,7 +18,7 @@ pub trait ToAbsoluteIteratorDispatcher: IntoIterator + Sized {
 
 impl<I> ToAbsoluteIteratorDispatcher for I
 where
-    I: IntoIterator,
+    I: IntoIterator + Sized,
     I::Item: ToAbsolute,
 {
 }
@@ -25,7 +29,11 @@ pub struct ToAbsoluteIter<I> {
     reference_time: DateTime<Utc>,
 }
 
-impl<I> ToAbsoluteIter<I> {
+impl<I> ToAbsoluteIter<I>
+where
+    I: Iterator,
+    I::Item: ToAbsolute,
+{
     pub fn new(iter: I, reference_time: DateTime<Utc>) -> Self {
         ToAbsoluteIter { iter, reference_time }
     }
@@ -41,6 +49,10 @@ where
     fn next(&mut self) -> Option<Self::Item> {
         Some(self.iter.next()?.to_absolute(self.reference_time))
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.iter.size_hint()
+    }
 }
 
 impl<I> DoubleEndedIterator for ToAbsoluteIter<I>
@@ -54,7 +66,11 @@ where
 }
 
 /// Dispatcher trait for the [`ToRelativeIter`] conversion iterator
-pub trait ToRelativeIteratorDispatcher: IntoIterator + Sized {
+pub trait ToRelativeIteratorDispatcher
+where
+    Self: IntoIterator + Sized,
+    Self::Item: ToRelative,
+{
     /// Converts [`AbsoluteInterval`]s to [`RelativeInterval`]s
     fn to_relative(self, reference_time: DateTime<Utc>) -> ToRelativeIter<Self::IntoIter> {
         ToRelativeIter::new(self.into_iter(), reference_time)
@@ -63,7 +79,7 @@ pub trait ToRelativeIteratorDispatcher: IntoIterator + Sized {
 
 impl<I> ToRelativeIteratorDispatcher for I
 where
-    I: IntoIterator,
+    I: IntoIterator + Sized,
     I::Item: ToRelative,
 {
 }
@@ -74,7 +90,11 @@ pub struct ToRelativeIter<I> {
     reference_time: DateTime<Utc>,
 }
 
-impl<I> ToRelativeIter<I> {
+impl<I> ToRelativeIter<I>
+where
+    I: Iterator,
+    I::Item: ToRelative,
+{
     pub fn new(iter: I, reference_time: DateTime<Utc>) -> Self {
         ToRelativeIter { iter, reference_time }
     }
@@ -89,6 +109,10 @@ where
 
     fn next(&mut self) -> Option<Self::Item> {
         Some(self.iter.next()?.to_relative(self.reference_time))
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.iter.size_hint()
     }
 }
 

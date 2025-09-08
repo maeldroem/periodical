@@ -4,7 +4,11 @@ use crate::intervals::prelude::*;
 use crate::ops::ComplementResult;
 
 /// Dispatcher trait for the [`ComplementIter`] iterator
-pub trait ComplementIteratorDispatcher: IntoIterator + Sized {
+pub trait ComplementIteratorDispatcher
+where
+    Self: IntoIterator + Sized,
+    Self::Item: Complementable,
+{
     fn complement(self) -> ComplementIter<Self::IntoIter> {
         ComplementIter::new(self.into_iter())
     }
@@ -12,17 +16,22 @@ pub trait ComplementIteratorDispatcher: IntoIterator + Sized {
 
 impl<I> ComplementIteratorDispatcher for I
 where
-    I: IntoIterator,
+    I: IntoIterator + Sized,
     I::Item: Complementable,
 {
 }
 
 /// Returns the interval complement of each element
+#[derive(Debug, Clone, Hash)]
 pub struct ComplementIter<I> {
     iter: I,
 }
 
-impl<I> ComplementIter<I> {
+impl<I> ComplementIter<I>
+where
+    I: Iterator,
+    I::Item: Complementable,
+{
     pub fn new(iter: I) -> Self {
         ComplementIter { iter }
     }
@@ -37,6 +46,10 @@ where
 
     fn next(&mut self) -> Option<Self::Item> {
         Some(self.iter.next()?.complement())
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.iter.size_hint()
     }
 }
 

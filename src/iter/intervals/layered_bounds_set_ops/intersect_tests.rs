@@ -1,12 +1,12 @@
 use chrono::{Duration, Utc};
 
-use crate::collections::intervals::bounds::{AbsoluteBoundsIterDispatcher, RelativeBoundsIterDispatcher};
-use crate::collections::intervals::layered_bounds::{
-    LayeredBoundsState, LayeredBoundsStateChangeAtAbsoluteBound, LayeredBoundsStateChangeAtRelativeBound,
-};
 use crate::intervals::absolute::{AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound};
 use crate::intervals::meta::BoundInclusivity;
 use crate::intervals::relative::{RelativeBounds, RelativeEndBound, RelativeFiniteBound, RelativeStartBound};
+use crate::iter::intervals::bounds::{AbsoluteBoundsIteratorDispatcher, RelativeBoundsIteratorDispatcher};
+use crate::iter::intervals::layered_bounds::{
+    LayeredBoundsState, LayeredBoundsStateChangeAtAbsoluteBound, LayeredBoundsStateChangeAtRelativeBound,
+};
 use crate::test_utils::date;
 
 use super::intersect::*;
@@ -98,7 +98,7 @@ fn create_layered_abs_bounds_intersection_run() {
             .abs_bounds_iter()
             .united()
             .layer(second_layer_data.abs_bounds_iter().united())
-            .intersect()
+            .abs_intersect_layered()
             .collect::<Vec<_>>(),
         vec![
             AbsoluteBounds::new(
@@ -208,7 +208,7 @@ fn create_layered_rel_bounds_intersection_run() {
             .rel_bounds_iter()
             .united()
             .layer(second_layer_data.rel_bounds_iter().united())
-            .intersect()
+            .rel_intersect_layered()
             .collect::<Vec<_>>(),
         vec![
             RelativeBounds::new(

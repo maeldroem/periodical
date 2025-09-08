@@ -1,4 +1,4 @@
-//! Set operations iterators created from [layered bounds iterators](crate::collections::intervals::layered_bounds)
+//! Set operations iterators created from [layered bounds iterators](crate::iter::intervals::layered_bounds)
 
 pub mod diff;
 pub mod intersect;

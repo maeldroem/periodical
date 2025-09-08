@@ -1,12 +1,12 @@
 use chrono::{Duration, Utc};
 
-use crate::collections::intervals::bounds::{AbsoluteBoundsIterDispatcher, RelativeBoundsIterDispatcher};
-use crate::collections::intervals::layered_bounds::{
-    LayeredBoundsState, LayeredBoundsStateChangeAtAbsoluteBound, LayeredBoundsStateChangeAtRelativeBound,
-};
 use crate::intervals::absolute::{AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound};
 use crate::intervals::meta::BoundInclusivity;
 use crate::intervals::relative::{RelativeBounds, RelativeEndBound, RelativeFiniteBound, RelativeStartBound};
+use crate::iter::intervals::bounds::{AbsoluteBoundsIteratorDispatcher, RelativeBoundsIteratorDispatcher};
+use crate::iter::intervals::layered_bounds::{
+    LayeredBoundsState, LayeredBoundsStateChangeAtAbsoluteBound, LayeredBoundsStateChangeAtRelativeBound,
+};
 use crate::test_utils::date;
 
 use super::diff::*;
@@ -111,7 +111,7 @@ fn layered_abs_bounds_diff_run() {
             .abs_bounds_iter()
             .united()
             .layer(second_layer_data.abs_bounds_iter().united())
-            .difference()
+            .abs_difference_layered()
             .collect::<Vec<_>>(),
         vec![
             AbsoluteBounds::new(
@@ -244,7 +244,7 @@ fn layered_rel_bounds_diff_run() {
             .rel_bounds_iter()
             .united()
             .layer(second_layer_data.rel_bounds_iter().united())
-            .difference()
+            .rel_difference_layered()
             .collect::<Vec<_>>(),
         vec![
             RelativeBounds::new(

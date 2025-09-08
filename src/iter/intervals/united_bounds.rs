@@ -3,11 +3,11 @@
 use std::cmp::Ordering;
 use std::iter::{FusedIterator, Peekable};
 
-use crate::collections::intervals::layered_bounds::{LayeredAbsoluteBounds, LayeredRelativeBounds};
 use crate::intervals::absolute::{AbsoluteBound, AbsoluteEndBound};
 use crate::intervals::ops::bound_ord::PartialBoundOrd;
 use crate::intervals::ops::bound_overlap_ambiguity::BoundOverlapDisambiguationRuleSet;
 use crate::intervals::relative::{RelativeBound, RelativeEndBound};
+use crate::iter::intervals::layered_bounds::{LayeredAbsoluteBounds, LayeredRelativeBounds};
 
 /// Iterator for uniting an iterator of sorted and paired [`AbsoluteBound`]s
 pub struct AbsoluteUnitedBoundsIter<I> {
@@ -19,7 +19,7 @@ pub struct AbsoluteUnitedBoundsIter<I> {
 
 impl<I> AbsoluteUnitedBoundsIter<I>
 where
-    I: Iterator,
+    I: Iterator<Item = AbsoluteBound>,
 {
     /// Creates a new [`AbsoluteUnitedBoundsIter`]
     ///
@@ -131,6 +131,14 @@ where
             return Some(next);
         }
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let inner_size_hint = self.iter.size_hint();
+        (
+            inner_size_hint.0.saturating_mul(2),
+            inner_size_hint.1.and_then(|x| x.checked_mul(2)),
+        )
+    }
 }
 
 impl<I> FusedIterator for AbsoluteUnitedBoundsIter<Peekable<I>> where I: Iterator<Item = AbsoluteBound> {}
@@ -157,7 +165,7 @@ pub struct RelativeUnitedBoundsIter<I> {
 
 impl<I> RelativeUnitedBoundsIter<I>
 where
-    I: Iterator,
+    I: Iterator<Item = RelativeBound>,
 {
     /// Creates a new [`RelativeUnitedBoundsIter`]
     ///
@@ -268,6 +276,14 @@ where
 
             return Some(next);
         }
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let inner_size_hint = self.iter.size_hint();
+        (
+            inner_size_hint.0.saturating_mul(2),
+            inner_size_hint.1.and_then(|x| x.checked_mul(2)),
+        )
     }
 }
 

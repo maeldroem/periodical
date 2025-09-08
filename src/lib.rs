@@ -1,5 +1,5 @@
-pub mod collections;
 pub mod intervals;
+pub mod iter;
 pub mod ops;
 pub mod prelude;
 

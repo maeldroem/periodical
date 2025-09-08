@@ -1,6 +1,5 @@
 use chrono::{Duration, Utc};
 
-use crate::collections::intervals::bounds::{AbsoluteBoundsIterDispatcher, RelativeBoundsIterDispatcher};
 use crate::intervals::absolute::{
     AbsoluteBound, AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
 };
@@ -8,6 +7,7 @@ use crate::intervals::meta::BoundInclusivity;
 use crate::intervals::relative::{
     RelativeBound, RelativeBounds, RelativeEndBound, RelativeFiniteBound, RelativeStartBound,
 };
+use crate::iter::intervals::bounds::{AbsoluteBoundsIteratorDispatcher, RelativeBoundsIteratorDispatcher};
 use crate::test_utils::date;
 
 use super::layered_bounds::*;
@@ -462,7 +462,7 @@ fn layered_abs_bounds_create() {
         AbsoluteBound::End(AbsoluteEndBound::InfiniteFuture),
     ];
 
-    let _ = LayeredAbsoluteBounds::new(first_layer_data.iter(), second_layer_data.iter());
+    let _ = LayeredAbsoluteBounds::new(first_layer_data.into_iter(), second_layer_data.into_iter());
 }
 
 #[allow(clippy::too_many_lines)]
@@ -866,7 +866,7 @@ fn layered_rel_bounds_create() {
         RelativeBound::End(RelativeEndBound::InfiniteFuture),
     ];
 
-    let _ = LayeredRelativeBounds::new(first_layer_data.iter(), second_layer_data.iter());
+    let _ = LayeredRelativeBounds::new(first_layer_data.into_iter(), second_layer_data.into_iter());
 }
 
 #[allow(clippy::too_many_lines)]

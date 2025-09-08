@@ -1,6 +1,5 @@
 use chrono::{Duration, Utc};
 
-use crate::collections::intervals::bounds::{AbsoluteBoundsIterDispatcher, RelativeBoundsIterDispatcher};
 use crate::intervals::absolute::{
     AbsoluteBound, AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
 };
@@ -8,6 +7,7 @@ use crate::intervals::meta::BoundInclusivity;
 use crate::intervals::relative::{
     RelativeBound, RelativeBounds, RelativeEndBound, RelativeFiniteBound, RelativeStartBound,
 };
+use crate::iter::intervals::bounds::{AbsoluteBoundsIteratorDispatcher, RelativeBoundsIteratorDispatcher};
 use crate::test_utils::date;
 
 use super::united_bounds::*;
@@ -29,7 +29,7 @@ fn create_abs_united_bounds_iter() {
         ),
     ];
 
-    let _ = AbsoluteUnitedBoundsIter::new(data.into_iter());
+    let _ = AbsoluteUnitedBoundsIter::new(data.abs_bounds_iter());
 }
 
 #[test]
@@ -225,7 +225,7 @@ fn create_rel_united_bounds_iter() {
         ),
     ];
 
-    let _ = RelativeUnitedBoundsIter::new(data.into_iter());
+    let _ = RelativeUnitedBoundsIter::new(data.rel_bounds_iter());
 }
 
 #[test]

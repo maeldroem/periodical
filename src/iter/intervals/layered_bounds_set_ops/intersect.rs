@@ -1,15 +1,15 @@
-//! Intersection of a [layered bounds iterator](crate::collections::intervals::layered_bounds)
+//! Intersection of a [layered bounds iterator](crate::iter::intervals::layered_bounds)
 
 use std::iter::FusedIterator;
 
-use crate::collections::intervals::layered_bounds::{
-    LayeredBoundsState, LayeredBoundsStateChangeAtAbsoluteBound, LayeredBoundsStateChangeAtRelativeBound,
-};
 use crate::intervals::absolute::AbsoluteBounds;
 use crate::intervals::relative::RelativeBounds;
+use crate::iter::intervals::layered_bounds::{
+    LayeredBoundsState, LayeredBoundsStateChangeAtAbsoluteBound, LayeredBoundsStateChangeAtRelativeBound,
+};
 
 /// Intersection iterator
-/// for [`LayeredAbsoluteBounds`](crate::collections::intervals::layered_bounds::LayeredAbsoluteBounds)
+/// for [`LayeredAbsoluteBounds`](crate::iter::intervals::layered_bounds::LayeredAbsoluteBounds)
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct LayeredAbsoluteBoundsIntersection<I> {
     iter: I,
@@ -33,7 +33,7 @@ where
     /// change's new state: state B.
     ///
     /// All of that is automatically guaranteed if the state changes are obtained from
-    /// [`LayeredAbsoluteBounds`](crate::collections::intervals::layered_bounds::LayeredAbsoluteBounds).
+    /// [`LayeredAbsoluteBounds`](crate::iter::intervals::layered_bounds::LayeredAbsoluteBounds).
     pub fn new(iter: I) -> LayeredAbsoluteBoundsIntersection<I> {
         LayeredAbsoluteBoundsIntersection { iter, exhausted: false }
     }
@@ -82,6 +82,10 @@ where
             return Some(AbsoluteBounds::new(start, end));
         }
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (0, self.iter.size_hint().1.map(|upper_bound| upper_bound.div_ceil(2)))
+    }
 }
 
 impl<I> FusedIterator for LayeredAbsoluteBoundsIntersection<I> where
@@ -89,8 +93,24 @@ impl<I> FusedIterator for LayeredAbsoluteBoundsIntersection<I> where
 {
 }
 
+/// Iterator dispatcher trait for [`LayeredAbsoluteBoundsIntersection`]
+pub trait LayeredAbsoluteBoundsIntersectionIteratorDispatcher
+where
+    Self: IntoIterator<Item = LayeredBoundsStateChangeAtAbsoluteBound> + Sized,
+{
+    /// Creates a [`LayeredAbsoluteBoundsIntersection`]
+    fn abs_intersect_layered(self) -> LayeredAbsoluteBoundsIntersection<Self::IntoIter> {
+        LayeredAbsoluteBoundsIntersection::new(self.into_iter())
+    }
+}
+
+impl<I> LayeredAbsoluteBoundsIntersectionIteratorDispatcher for I where
+    I: IntoIterator<Item = LayeredBoundsStateChangeAtAbsoluteBound> + Sized
+{
+}
+
 /// Intersection iterator
-/// for [`LayeredRelativeBounds`](crate::collections::intervals::layered_bounds::LayeredRelativeBounds)
+/// for [`LayeredRelativeBounds`](crate::iter::intervals::layered_bounds::LayeredRelativeBounds)
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct LayeredRelativeBoundsIntersection<I> {
     iter: I,
@@ -114,7 +134,7 @@ where
     /// change's new state: state B.
     ///
     /// All of that is automatically guaranteed if the state changes are obtained from
-    /// [`LayeredRelativeBounds`](crate::collections::intervals::layered_bounds::LayeredRelativeBounds).
+    /// [`LayeredRelativeBounds`](crate::iter::intervals::layered_bounds::LayeredRelativeBounds).
     pub fn new(iter: I) -> LayeredRelativeBoundsIntersection<I> {
         LayeredRelativeBoundsIntersection { iter, exhausted: false }
     }
@@ -163,9 +183,29 @@ where
             return Some(RelativeBounds::new(start, end));
         }
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (0, self.iter.size_hint().1.map(|upper_bound| upper_bound.div_ceil(2)))
+    }
 }
 
 impl<I> FusedIterator for LayeredRelativeBoundsIntersection<I> where
     I: Iterator<Item = LayeredBoundsStateChangeAtRelativeBound>
+{
+}
+
+/// Iterator dispatcher trait for [`LayeredRelativeBoundsIntersection`]
+pub trait LayeredRelativeBoundsIntersectionIteratorDispatcher
+where
+    Self: IntoIterator<Item = LayeredBoundsStateChangeAtRelativeBound> + Sized,
+{
+    /// Creates a [`LayeredRelativeBoundsIntersection`]
+    fn rel_intersect_layered(self) -> LayeredRelativeBoundsIntersection<Self::IntoIter> {
+        LayeredRelativeBoundsIntersection::new(self.into_iter())
+    }
+}
+
+impl<I> LayeredRelativeBoundsIntersectionIteratorDispatcher for I where
+    I: IntoIterator<Item = LayeredBoundsStateChangeAtRelativeBound> + Sized
 {
 }
