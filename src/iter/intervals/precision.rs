@@ -1,6 +1,6 @@
 //! Precision change iterators
 
-use crate::intervals::PreciseAbsoluteBounds;
+use crate::intervals::ops::precision::PreciseAbsoluteBounds;
 use crate::ops::Precision;
 
 /// Dispatcher trait for the [`PrecisionChange`] iterator
