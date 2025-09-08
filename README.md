@@ -20,18 +20,19 @@ Just add the following in your `Cargo.toml` to start using `periodical` in your 
 periodical = "0.1"
 ```
 
-# About
+# About :book:
 
-Time intervals are very important in many fields and applications, this is why this crate was made.
+:watch: Time intervals are very important in many fields and applications, this is why this crate was made.
 
 It manages time intervals precisely. It takes care of bound inclusivities and supports half-bounded and unbounded
 intervals.
 
-It also provides precise ways to not only check for overlap between two intervals, but also find what kind of overlap
+:dart: It also provides precise ways to not only check for overlap between two intervals, but also find what kind of overlap
 exists!
 
 Since bound inclusivities can introduce ambiguity for what we consider and overlap or containment, the crate provides
-many ways to disambiguate those cases in the way way __you__ want.
+many ways to disambiguate those cases in the way way <ins>you</ins> want.
+
 This allows for treating a day as it really is: From midnight, included, to the next midnight, excluded.
 And still receive precise data about its duration and if it's adjacent to another day's interval.
 
@@ -45,7 +46,7 @@ Most of the things you can think of doing with time intervals, you can do it wit
 
 And if it doesn't, feel absolutely free to [contribute](CONTRIBUTING.md) or [suggest a change](CONTRIBUTING.md) :smile:
 
-# Roadmap
+# Roadmap :soon:
 
 ## 0.1.0
 
