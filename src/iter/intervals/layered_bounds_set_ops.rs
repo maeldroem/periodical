@@ -13,3 +13,20 @@ mod intersect_tests;
 mod sym_diff_tests;
 #[cfg(test)]
 mod unite_tests;
+
+pub use diff::{
+    LayeredAbsoluteBoundsDifference, LayeredAbsoluteBoundsDifferenceIteratorDispatcher,
+    LayeredRelativeBoundsDifference, LayeredRelativeBoundsDifferenceIteratorDispatcher,
+};
+pub use intersect::{
+    LayeredAbsoluteBoundsIntersection, LayeredAbsoluteBoundsIntersectionIteratorDispatcher,
+    LayeredRelativeBoundsIntersection, LayeredRelativeBoundsIntersectionIteratorDispatcher,
+};
+pub use sym_diff::{
+    LayeredAbsoluteBoundsSymmetricDifference, LayeredAbsoluteBoundsSymmetricDifferenceIteratorDispatcher,
+    LayeredRelativeBoundsSymmetricDifference, LayeredRelativeBoundsSymmetricDifferenceIteratorDispatcher,
+};
+pub use unite::{
+    LayeredAbsoluteBoundsUnion, LayeredAbsoluteBoundsUnionIteratorDispatcher, LayeredRelativeBoundsUnion,
+    LayeredRelativeBoundsUnionIteratorDispatcher,
+};
