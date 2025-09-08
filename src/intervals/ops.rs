@@ -65,3 +65,29 @@ mod set_ops_tests;
 mod shrink_tests;
 #[cfg(test)]
 mod time_containment_tests;
+
+pub use abridge::Abridgable;
+pub use bound_containment::{
+    BoundContainmentPosition, BoundContainmentRule, BoundContainmentRuleSet, CanPositionBoundContainment,
+    DEFAULT_BOUND_CONTAINMENT_RULES, DisambiguatedBoundContainmentPosition,
+};
+pub use bound_ord::{BoundOrdering, PartialBoundOrd};
+pub use complement::Complementable;
+pub use cut::{CutResult, CutType, Cuttable};
+pub use extend::Extensible;
+pub use fill_gap::GapFillable;
+pub use grow::{GrowableEndBound, GrowableStartBound};
+pub use overlap::{
+    CanPositionOverlap, DEFAULT_OVERLAP_RULES, DisambiguatedOverlapPosition, OverlapPosition, OverlapRule,
+    OverlapRuleSet,
+};
+pub use precision::PreciseAbsoluteBounds;
+pub use relativity_conversion::{ToAbsolute, ToRelative};
+pub use remove_overlap::{OverlapRemovable, OverlapRemovalResult};
+pub use remove_overlap_or_gap::{OverlapOrGapRemovalResult, RemovableOverlapOrGap};
+pub use set_ops::{Differentiable, Intersectable, SymmetricallyDifferentiable, Unitable};
+pub use shrink::{ShrinkableEndBound, ShrinkableStartBound};
+pub use time_containment::{
+    CanPositionTimeContainment, DEFAULT_TIME_CONTAINMENT_RULES, DisambiguatedTimeContainmentPosition,
+    TimeContainmentPosition, TimeContainmentRule, TimeContainmentRuleSet,
+};

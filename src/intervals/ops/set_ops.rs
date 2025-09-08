@@ -9,12 +9,11 @@ use crate::intervals::absolute::{
     AbsoluteBounds, AbsoluteInterval, EmptiableAbsoluteBounds, HalfBoundedAbsoluteInterval,
 };
 use crate::intervals::meta::Interval;
+use crate::intervals::ops::overlap::{OverlapRule, OverlapRuleSet};
 use crate::intervals::ops::remove_overlap::{OverlapRemovable, OverlapRemovalErr, OverlapRemovalResult};
 use crate::intervals::relative::{EmptiableRelativeBounds, HalfBoundedRelativeInterval, RelativeBounds};
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
-use crate::intervals::{
-    BoundedAbsoluteInterval, BoundedRelativeInterval, OverlapRule, OverlapRuleSet, RelativeInterval,
-};
+use crate::intervals::{BoundedAbsoluteInterval, BoundedRelativeInterval, RelativeInterval};
 use crate::ops::{DifferenceResult, IntersectionResult, SymmetricDifferenceResult, UnionResult};
 
 /// Capacity to unite an interval with another

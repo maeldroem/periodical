@@ -7,10 +7,9 @@ use std::ops::{Add, Sub};
 #[cfg(feature = "arbitrary")]
 use arbitrary::Arbitrary;
 
-use crate::intervals::BoundOrdering;
 use crate::intervals::absolute::{AbsoluteBound, AbsoluteEndBound, AbsoluteStartBound};
 use crate::intervals::meta::BoundInclusivity;
-use crate::intervals::ops::bound_ord::PartialBoundOrd;
+use crate::intervals::ops::bound_ord::{BoundOrdering, PartialBoundOrd};
 use crate::intervals::ops::bound_overlap_ambiguity::BoundOverlapDisambiguationRuleSet;
 use crate::intervals::relative::{RelativeBound, RelativeEndBound, RelativeStartBound};
 
