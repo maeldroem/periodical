@@ -98,7 +98,7 @@ fn create_layered_abs_bounds_intersection_run() {
             .abs_bounds_iter()
             .united()
             .layer(second_layer_data.abs_bounds_iter().united())
-            .intersect()
+            .abs_intersect_layered()
             .collect::<Vec<_>>(),
         vec![
             AbsoluteBounds::new(
@@ -208,7 +208,7 @@ fn create_layered_rel_bounds_intersection_run() {
             .rel_bounds_iter()
             .united()
             .layer(second_layer_data.rel_bounds_iter().united())
-            .intersect()
+            .rel_intersect_layered()
             .collect::<Vec<_>>(),
         vec![
             RelativeBounds::new(

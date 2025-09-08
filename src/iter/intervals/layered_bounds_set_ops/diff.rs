@@ -12,6 +12,7 @@ use crate::iter::intervals::layered_bounds::{
 /// for [`LayeredAbsoluteBounds`](crate::iter::intervals::layered_bounds::LayeredAbsoluteBounds)
 ///
 /// The second layer acts as the _removers_.
+#[derive(Debug, Clone, Hash)]
 pub struct LayeredAbsoluteBoundsDifference<I> {
     iter: I,
     exhausted: bool,
@@ -83,6 +84,10 @@ where
             return Some(AbsoluteBounds::new(start, end));
         }
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (0, self.iter.size_hint().1.map(|upper_bound| upper_bound.div_ceil(2)))
+    }
 }
 
 impl<I> FusedIterator for LayeredAbsoluteBoundsDifference<I> where
@@ -90,10 +95,27 @@ impl<I> FusedIterator for LayeredAbsoluteBoundsDifference<I> where
 {
 }
 
+/// Iterator dispatcher trait for [`LayeredAbsoluteBoundsDifference`]
+pub trait LayeredAbsoluteBoundsDifferenceIteratorDispatcher
+where
+    Self: IntoIterator<Item = LayeredBoundsStateChangeAtAbsoluteBound> + Sized,
+{
+    /// Creates a [`LayeredAbsoluteBoundsDifference`]
+    fn abs_difference_layered(self) -> LayeredAbsoluteBoundsDifference<Self::IntoIter> {
+        LayeredAbsoluteBoundsDifference::new(self.into_iter())
+    }
+}
+
+impl<I> LayeredAbsoluteBoundsDifferenceIteratorDispatcher for I where
+    I: IntoIterator<Item = LayeredBoundsStateChangeAtAbsoluteBound> + Sized
+{
+}
+
 /// Difference iterator
 /// for [`LayeredRelativeBounds`](crate::iter::intervals::layered_bounds::LayeredRelativeBounds)
 ///
 /// The second layer acts as the _removers_.
+#[derive(Debug, Clone, Hash)]
 pub struct LayeredRelativeBoundsDifference<I> {
     iter: I,
     exhausted: bool,
@@ -165,9 +187,29 @@ where
             return Some(RelativeBounds::new(start, end));
         }
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (0, self.iter.size_hint().1.map(|upper_bound| upper_bound.div_ceil(2)))
+    }
 }
 
 impl<I> FusedIterator for LayeredRelativeBoundsDifference<I> where
     I: Iterator<Item = LayeredBoundsStateChangeAtRelativeBound>
+{
+}
+
+/// Iterator dispatcher trait for [`LayeredRelativeBoundsDifference`]
+pub trait LayeredRelativeBoundsDifferenceIteratorDispatcher
+where
+    Self: IntoIterator<Item = LayeredBoundsStateChangeAtRelativeBound> + Sized,
+{
+    /// Creates a [`LayeredRelativeBoundsDifference`]
+    fn rel_difference_layered(self) -> LayeredRelativeBoundsDifference<Self::IntoIter> {
+        LayeredRelativeBoundsDifference::new(self.into_iter())
+    }
+}
+
+impl<I> LayeredRelativeBoundsDifferenceIteratorDispatcher for I where
+    I: IntoIterator<Item = LayeredBoundsStateChangeAtRelativeBound> + Sized
 {
 }

@@ -13,16 +13,6 @@ use crate::intervals::meta::BoundInclusivity;
 use crate::intervals::ops::bound_ord::PartialBoundOrd;
 use crate::intervals::ops::bound_overlap_ambiguity::BoundOverlapDisambiguationRuleSet;
 use crate::intervals::relative::{RelativeBound, RelativeEndBound, RelativeStartBound};
-use crate::iter::intervals::layered_bounds_set_ops::diff::{
-    LayeredAbsoluteBoundsDifference, LayeredRelativeBoundsDifference,
-};
-use crate::iter::intervals::layered_bounds_set_ops::intersect::{
-    LayeredAbsoluteBoundsIntersection, LayeredRelativeBoundsIntersection,
-};
-use crate::iter::intervals::layered_bounds_set_ops::sym_diff::{
-    LayeredAbsoluteBoundsSymmetricDifference, LayeredRelativeBoundsSymmetricDifference,
-};
-use crate::iter::intervals::layered_bounds_set_ops::unite::{LayeredAbsoluteBoundsUnion, LayeredRelativeBoundsUnion};
 
 /// State of a layered bounds iterator, indicating which layer(s) are active
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Hash)]
@@ -242,36 +232,6 @@ where
             queued_result: self.queued_result,
             exhausted: self.exhausted,
         }
-    }
-}
-
-impl<I1, I2> LayeredAbsoluteBounds<Peekable<I1>, Peekable<I2>>
-where
-    I1: Iterator<Item = AbsoluteBound>,
-    I2: Iterator<Item = AbsoluteBound>,
-{
-    /// Creates a [`LayeredAbsoluteBoundsUnion`] from the iterator
-    #[must_use]
-    pub fn unite(self) -> LayeredAbsoluteBoundsUnion<Self> {
-        LayeredAbsoluteBoundsUnion::new(self)
-    }
-
-    /// Creates an [`LayeredAbsoluteBoundsIntersection`] from the iterator
-    #[must_use]
-    pub fn intersect(self) -> LayeredAbsoluteBoundsIntersection<Self> {
-        LayeredAbsoluteBoundsIntersection::new(self)
-    }
-
-    /// Creates an [`LayeredAbsoluteBoundsDifference`] from the iterator
-    #[must_use]
-    pub fn difference(self) -> LayeredAbsoluteBoundsDifference<Self> {
-        LayeredAbsoluteBoundsDifference::new(self)
-    }
-
-    /// Creates a [`LayeredAbsoluteBoundsSymmetricDifference`] from the iterator
-    #[must_use]
-    pub fn symmetric_difference(self) -> LayeredAbsoluteBoundsSymmetricDifference<Self> {
-        LayeredAbsoluteBoundsSymmetricDifference::new(self)
     }
 }
 
@@ -945,36 +905,6 @@ where
             queued_result: self.queued_result,
             exhausted: self.exhausted,
         }
-    }
-}
-
-impl<I1, I2> LayeredRelativeBounds<Peekable<I1>, Peekable<I2>>
-where
-    I1: Iterator<Item = RelativeBound>,
-    I2: Iterator<Item = RelativeBound>,
-{
-    /// Creates a [`LayeredRelativeBoundsUnion`] from the iterator
-    #[must_use]
-    pub fn unite(self) -> LayeredRelativeBoundsUnion<Self> {
-        LayeredRelativeBoundsUnion::new(self)
-    }
-
-    /// Creates a [`LayeredRelativeBoundsIntersection`] from the iterator
-    #[must_use]
-    pub fn intersect(self) -> LayeredRelativeBoundsIntersection<Self> {
-        LayeredRelativeBoundsIntersection::new(self)
-    }
-
-    /// Creates a [`LayeredRelativeBoundsDifference`] from the iterator
-    #[must_use]
-    pub fn difference(self) -> LayeredRelativeBoundsDifference<Self> {
-        LayeredRelativeBoundsDifference::new(self)
-    }
-
-    /// Creates a [`LayeredRelativeBoundsSymmetricDifference`] from the iterator
-    #[must_use]
-    pub fn symmetric_difference(self) -> LayeredRelativeBoundsSymmetricDifference<Self> {
-        LayeredRelativeBoundsSymmetricDifference::new(self)
     }
 }
 

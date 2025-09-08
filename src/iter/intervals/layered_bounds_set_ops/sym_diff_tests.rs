@@ -123,7 +123,7 @@ fn layered_abs_bounds_sym_diff_run() {
             .abs_bounds_iter()
             .united()
             .layer(second_layer_data.abs_bounds_iter().united())
-            .symmetric_difference()
+            .abs_symmetric_difference_layered()
             .collect::<Vec<_>>(),
         vec![
             // A
@@ -307,7 +307,7 @@ fn layered_rel_bounds_sym_diff_run() {
             .rel_bounds_iter()
             .united()
             .layer(second_layer_data.rel_bounds_iter().united())
-            .symmetric_difference()
+            .rel_symmetric_difference_layered()
             .collect::<Vec<_>>(),
         vec![
             // A

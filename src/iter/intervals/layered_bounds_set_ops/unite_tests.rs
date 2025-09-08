@@ -104,7 +104,7 @@ fn layered_abs_bounds_union_run() {
             .abs_bounds_iter()
             .united()
             .layer(second_layer_data.abs_bounds_iter().united())
-            .unite()
+            .abs_unite_layered()
             .collect::<Vec<_>>(),
         vec![
             AbsoluteBounds::new(
@@ -220,7 +220,7 @@ fn layered_rel_bounds_union_run() {
             .rel_bounds_iter()
             .united()
             .layer(second_layer_data.rel_bounds_iter().united())
-            .unite()
+            .rel_unite_layered()
             .collect::<Vec<_>>(),
         vec![
             RelativeBounds::new(

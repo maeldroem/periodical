@@ -82,10 +82,30 @@ where
             return Some(AbsoluteBounds::new(start, end));
         }
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (0, self.iter.size_hint().1.map(|upper_bound| upper_bound.div_ceil(2)))
+    }
 }
 
 impl<I> FusedIterator for LayeredAbsoluteBoundsIntersection<I> where
     I: Iterator<Item = LayeredBoundsStateChangeAtAbsoluteBound>
+{
+}
+
+/// Iterator dispatcher trait for [`LayeredAbsoluteBoundsIntersection`]
+pub trait LayeredAbsoluteBoundsIntersectionIteratorDispatcher
+where
+    Self: IntoIterator<Item = LayeredBoundsStateChangeAtAbsoluteBound> + Sized,
+{
+    /// Creates a [`LayeredAbsoluteBoundsIntersection`]
+    fn abs_intersect_layered(self) -> LayeredAbsoluteBoundsIntersection<Self::IntoIter> {
+        LayeredAbsoluteBoundsIntersection::new(self.into_iter())
+    }
+}
+
+impl<I> LayeredAbsoluteBoundsIntersectionIteratorDispatcher for I where
+    I: IntoIterator<Item = LayeredBoundsStateChangeAtAbsoluteBound> + Sized
 {
 }
 
@@ -163,9 +183,29 @@ where
             return Some(RelativeBounds::new(start, end));
         }
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (0, self.iter.size_hint().1.map(|upper_bound| upper_bound.div_ceil(2)))
+    }
 }
 
 impl<I> FusedIterator for LayeredRelativeBoundsIntersection<I> where
     I: Iterator<Item = LayeredBoundsStateChangeAtRelativeBound>
+{
+}
+
+/// Iterator dispatcher trait for [`LayeredRelativeBoundsIntersection`]
+pub trait LayeredRelativeBoundsIntersectionIteratorDispatcher
+where
+    Self: IntoIterator<Item = LayeredBoundsStateChangeAtRelativeBound> + Sized,
+{
+    /// Creates a [`LayeredRelativeBoundsIntersection`]
+    fn rel_intersect_layered(self) -> LayeredRelativeBoundsIntersection<Self::IntoIter> {
+        LayeredRelativeBoundsIntersection::new(self.into_iter())
+    }
+}
+
+impl<I> LayeredRelativeBoundsIntersectionIteratorDispatcher for I where
+    I: IntoIterator<Item = LayeredBoundsStateChangeAtRelativeBound> + Sized
 {
 }

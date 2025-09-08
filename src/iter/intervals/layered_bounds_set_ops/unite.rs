@@ -10,6 +10,7 @@ use crate::iter::intervals::layered_bounds::{
 
 /// Union iterator
 /// for [`LayeredAbsoluteBounds`](crate::iter::intervals::layered_bounds::LayeredAbsoluteBounds)
+#[derive(Debug, Clone, Hash)]
 pub struct LayeredAbsoluteBoundsUnion<I> {
     iter: I,
     exhausted: bool,
@@ -88,13 +89,39 @@ where
             }
         }
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let inner_size_hint = self.iter.size_hint();
+
+        (
+            inner_size_hint.0.min(1),
+            inner_size_hint.1.map(|upper_bound| upper_bound.div_ceil(2)),
+        )
+    }
 }
 
 impl<I> FusedIterator for LayeredAbsoluteBoundsUnion<I> where I: Iterator<Item = LayeredBoundsStateChangeAtAbsoluteBound>
 {}
 
+/// Iterator dispatcher trait for [`LayeredAbsoluteBoundsUnion`]
+pub trait LayeredAbsoluteBoundsUnionIteratorDispatcher
+where
+    Self: IntoIterator<Item = LayeredBoundsStateChangeAtAbsoluteBound> + Sized,
+{
+    /// Creates a [`LayeredAbsoluteBoundsUnion`]
+    fn abs_unite_layered(self) -> LayeredAbsoluteBoundsUnion<Self::IntoIter> {
+        LayeredAbsoluteBoundsUnion::new(self.into_iter())
+    }
+}
+
+impl<I> LayeredAbsoluteBoundsUnionIteratorDispatcher for I where
+    I: IntoIterator<Item = LayeredBoundsStateChangeAtAbsoluteBound> + Sized
+{
+}
+
 /// Union iterator
 /// for [`LayeredRelativeBounds`](crate::iter::intervals::layered_bounds::LayeredRelativeBounds)
+#[derive(Debug, Clone, Hash)]
 pub struct LayeredRelativeBoundsUnion<I> {
     iter: I,
     exhausted: bool,
@@ -173,7 +200,32 @@ where
             }
         }
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let inner_size_hint = self.iter.size_hint();
+
+        (
+            inner_size_hint.0.min(1),
+            inner_size_hint.1.map(|upper_bound| upper_bound.div_ceil(2)),
+        )
+    }
 }
 
 impl<I> FusedIterator for LayeredRelativeBoundsUnion<I> where I: Iterator<Item = LayeredBoundsStateChangeAtRelativeBound>
 {}
+
+/// Iterator dispatcher trait for [`LayeredRelativeBoundsUnion`]
+pub trait LayeredRelativeBoundsUnionIteratorDispatcher
+where
+    Self: IntoIterator<Item = LayeredBoundsStateChangeAtRelativeBound> + Sized,
+{
+    /// Creates a [`LayeredRelativeBoundsUnion`]
+    fn rel_unite_layered(self) -> LayeredRelativeBoundsUnion<Self::IntoIter> {
+        LayeredRelativeBoundsUnion::new(self.into_iter())
+    }
+}
+
+impl<I> LayeredRelativeBoundsUnionIteratorDispatcher for I where
+    I: IntoIterator<Item = LayeredBoundsStateChangeAtRelativeBound> + Sized
+{
+}
