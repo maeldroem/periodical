@@ -5,42 +5,6 @@ use std::iter::{FusedIterator, Peekable};
 use crate::intervals::prelude::*;
 use crate::ops::SymmetricDifferenceResult;
 
-/// Dispatcher trait for peer symmetrical difference iterators
-pub trait PeerSymmetricDifferenceIteratorDispatcher: IntoIterator + Sized {
-    /// Symmetrically differentiates peer intervals of the iterator using the default overlap rules
-    ///
-    /// Processes elements pair by pair and returns the result of the symmetric difference.
-    /// If the symmetric difference is successful, it returns all the parts of the differentiated intervals.
-    /// If it is unsuccessful, it returns the pair of inspected elements.
-    fn peer_symmetric_difference(self) -> PeerSymmetricDifference<Peekable<Self::IntoIter>> {
-        PeerSymmetricDifference::new(self.into_iter())
-    }
-
-    /// Symmetrically differentiates peer intervals of the iterator using the given closure
-    ///
-    /// Processes elements pair by pair and returns the result of the symmetric difference.
-    /// If the symmetric difference is successful, it returns all the parts of the differentiated intervals.
-    /// If it is unsuccessful, it returns the pair of inspected elements.
-    fn peer_symmetric_difference_with<'a, T, U, F>(
-        self,
-        f: F,
-    ) -> PeerSymmetricDifferenceWith<Peekable<Self::IntoIter>, F>
-    where
-        Self::IntoIter: Iterator<Item = &'a T>,
-        T: 'a + Into<U> + Clone,
-        F: FnMut(&T, &T) -> SymmetricDifferenceResult<U>,
-    {
-        PeerSymmetricDifferenceWith::new(self.into_iter(), f)
-    }
-}
-
-impl<'a, I, T, U> PeerSymmetricDifferenceIteratorDispatcher for I
-where
-    I: IntoIterator<Item = &'a T>,
-    T: 'a + SymmetricallyDifferentiable<Output = U> + Clone,
-{
-}
-
 /// Peer symmetric difference iterator for intervals using predefined rules
 #[derive(Debug, Clone, Hash)]
 pub struct PeerSymmetricDifference<I> {
@@ -48,9 +12,10 @@ pub struct PeerSymmetricDifference<I> {
     exhausted: bool,
 }
 
-impl<I> PeerSymmetricDifference<I>
+impl<'a, I, T, U> PeerSymmetricDifference<I>
 where
-    I: Iterator,
+    I: Iterator<Item = &'a T>,
+    T: 'a + SymmetricallyDifferentiable<Output = U> + Into<U> + Clone,
 {
     pub fn new(iter: I) -> PeerSymmetricDifference<Peekable<I>> {
         PeerSymmetricDifference {
@@ -90,6 +55,10 @@ where
             SymmetricDifferenceResult::Separate => Some((current.clone().into(), Some((*peeked).clone().into()))),
         }
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.iter.size_hint()
+    }
 }
 
 // TODO: If a reverse Peekable becomes standard or when we'll import a crate that does that,
@@ -102,6 +71,31 @@ where
 {
 }
 
+/// Iterator dispatcher trait for [`PeerSymmetricDifference`]
+pub trait PeerSymmetricDifferenceIteratorDispatcher<'a, T, U>
+where
+    Self: IntoIterator + Sized,
+    Self::IntoIter: Iterator<Item = &'a T>,
+    T: 'a + SymmetricallyDifferentiable<Output = U> + Into<U> + Clone,
+{
+    /// Symmetrically differentiates peer intervals of the iterator using the default overlap rules
+    ///
+    /// Processes elements pair by pair and returns the result of the symmetric difference.
+    /// If the symmetric difference is successful, it returns all the parts of the differentiated intervals.
+    /// If it is unsuccessful, it returns the pair of inspected elements.
+    fn peer_symmetric_difference(self) -> PeerSymmetricDifference<Peekable<Self::IntoIter>> {
+        PeerSymmetricDifference::new(self.into_iter())
+    }
+}
+
+impl<'a, I, T, U> PeerSymmetricDifferenceIteratorDispatcher<'a, T, U> for I
+where
+    I: IntoIterator + Sized,
+    I::IntoIter: Iterator<Item = &'a T>,
+    T: 'a + SymmetricallyDifferentiable<Output = U> + Into<U> + Clone,
+{
+}
+
 /// Peer symmetric difference iterator for intervals using the given closure
 #[derive(Debug, Clone)]
 pub struct PeerSymmetricDifferenceWith<I, F> {
@@ -110,9 +104,11 @@ pub struct PeerSymmetricDifferenceWith<I, F> {
     exhausted: bool,
 }
 
-impl<I, F> PeerSymmetricDifferenceWith<I, F>
+impl<'a, I, T, U, F> PeerSymmetricDifferenceWith<I, F>
 where
-    I: Iterator,
+    I: Iterator<Item = &'a T>,
+    T: 'a + Into<U> + Clone,
+    F: FnMut(&T, &T) -> SymmetricDifferenceResult<U>,
 {
     pub fn new(iter: I, f: F) -> PeerSymmetricDifferenceWith<Peekable<I>, F> {
         PeerSymmetricDifferenceWith {
@@ -154,6 +150,10 @@ where
             SymmetricDifferenceResult::Separate => Some((current.clone().into(), Some((*peeked).clone().into()))),
         }
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.iter.size_hint()
+    }
 }
 
 // TODO: If a reverse Peekable becomes standard or when we'll import a crate that does that,
@@ -162,6 +162,33 @@ where
 impl<'a, I, T, U, F> FusedIterator for PeerSymmetricDifferenceWith<Peekable<I>, F>
 where
     I: Iterator<Item = &'a T>,
+    T: 'a + Into<U> + Clone,
+    F: FnMut(&T, &T) -> SymmetricDifferenceResult<U>,
+{
+}
+
+/// Iterator dispatcher trait for [`PeerSymmetricDifferenceWith`]
+pub trait PeerSymmetricDifferenceWithIteratorDispatcher<'a, T, U, F>
+where
+    Self: IntoIterator + Sized,
+    Self::IntoIter: Iterator<Item = &'a T>,
+    T: 'a + Into<U> + Clone,
+    F: FnMut(&T, &T) -> SymmetricDifferenceResult<U>,
+{
+    /// Symmetrically differentiates peer intervals of the iterator using the given closure
+    ///
+    /// Processes elements pair by pair and returns the result of the symmetric difference.
+    /// If the symmetric difference is successful, it returns all the parts of the differentiated intervals.
+    /// If it is unsuccessful, it returns the pair of inspected elements.
+    fn peer_symmetric_difference_with(self, f: F) -> PeerSymmetricDifferenceWith<Peekable<Self::IntoIter>, F> {
+        PeerSymmetricDifferenceWith::new(self.into_iter(), f)
+    }
+}
+
+impl<'a, I, T, U, F> PeerSymmetricDifferenceWithIteratorDispatcher<'a, T, U, F> for I
+where
+    I: IntoIterator + Sized,
+    I::IntoIter: Iterator<Item = &'a T>,
     T: 'a + Into<U> + Clone,
     F: FnMut(&T, &T) -> SymmetricDifferenceResult<U>,
 {
