@@ -3,7 +3,7 @@
 Thank you for your interest in contributing to `periodical`! There are many ways to contribute and we appreciate
 all of them.
 
-The best way to get started is by asking for help in `PUT DEDICATED CHANNEL HERE`.
+<!-- The best way to get started is by asking for help in `PUT DEDICATED CHANNEL HERE`. -->
 
 You can also get started on your own by creating a Pull Request (PR) or reporting a bug!
 Use the [crate's documentation](https://docs.rs/periodical) at your advantage.
