@@ -72,11 +72,11 @@ mod relative_tests;
 mod special_tests;
 
 pub use absolute::{
-    AbsoluteBounds, AbsoluteInterval, BoundedAbsoluteInterval, EmptiableAbsoluteBounds, HalfBoundedAbsoluteInterval,
-    HasAbsoluteBounds, HasEmptiableAbsoluteBounds,
+    AbsoluteBound, AbsoluteBounds, AbsoluteInterval, BoundedAbsoluteInterval, EmptiableAbsoluteBounds,
+    HalfBoundedAbsoluteInterval, HasAbsoluteBounds, HasEmptiableAbsoluteBounds,
 };
 pub use meta::{Emptiable, HasBoundInclusivity, HasDuration, HasOpenness, HasRelativity};
 pub use relative::{
     BoundedRelativeInterval, EmptiableRelativeBounds, HalfBoundedRelativeInterval, HasEmptiableRelativeBounds,
-    HasRelativeBounds, RelativeInterval,
+    HasRelativeBounds, RelativeBound, RelativeBounds, RelativeInterval,
 };
