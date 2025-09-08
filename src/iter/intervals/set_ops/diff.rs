@@ -5,37 +5,6 @@ use std::iter::{FusedIterator, Peekable};
 use crate::intervals::prelude::*;
 use crate::ops::DifferenceResult;
 
-/// Dispatcher trait for peer difference iterators
-pub trait PeerDifferenceIteratorDispatcher: IntoIterator + Sized {
-    /// Differentiates peer intervals of the iterator using the default overlap rules
-    ///
-    /// Processes elements pair by pair and returns the result of the difference. If the difference is successful,
-    /// it returns the differentiated interval. If it is unsuccessful, it returns the current element.
-    fn peer_difference(self) -> PeerDifference<Peekable<Self::IntoIter>> {
-        PeerDifference::new(self.into_iter())
-    }
-
-    /// Differentiates peer intervals of the iterator using the given closure
-    ///
-    /// Processes elements pair by pair and returns the result of the difference. If the difference is successful,
-    /// it returns the differentiated interval. If it is unsuccessful, it returns the current element.
-    fn peer_difference_with<'a, T, U, F>(self, f: F) -> PeerDifferenceWith<Peekable<Self::IntoIter>, F>
-    where
-        Self::IntoIter: Iterator<Item = &'a T>,
-        T: 'a + Clone,
-        F: FnMut(&T, &T) -> DifferenceResult<U>,
-    {
-        PeerDifferenceWith::new(self.into_iter(), f)
-    }
-}
-
-impl<'a, I, T, U> PeerDifferenceIteratorDispatcher for I
-where
-    I: IntoIterator<Item = &'a T>,
-    T: 'a + Differentiable<Output = U> + Clone,
-{
-}
-
 /// Peer difference iterator for intervals using predefined rules
 #[derive(Debug, Clone, Hash)]
 pub struct PeerDifference<I> {
@@ -43,9 +12,10 @@ pub struct PeerDifference<I> {
     exhausted: bool,
 }
 
-impl<I> PeerDifference<I>
+impl<'a, I, T, U> PeerDifference<I>
 where
-    I: Iterator,
+    I: Iterator<Item = &'a T>,
+    T: 'a + Differentiable<Output = U> + Into<U> + Clone,
 {
     pub fn new(iter: I) -> PeerDifference<Peekable<I>> {
         PeerDifference {
@@ -85,6 +55,10 @@ where
             DifferenceResult::Separate => Some((current.clone().into(), None)),
         }
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.iter.size_hint()
+    }
 }
 
 // TODO: If a reverse Peekable becomes standard or when we'll import a crate that does that,
@@ -93,6 +67,30 @@ where
 impl<'a, I, T, U> FusedIterator for PeerDifference<Peekable<I>>
 where
     I: Iterator<Item = &'a T>,
+    T: 'a + Differentiable<Output = U> + Into<U> + Clone,
+{
+}
+
+/// Iterator dispatcher trait for [`PeerDifference`]
+pub trait PeerDifferenceIteratorDispatcher<'a, T, U>
+where
+    Self: IntoIterator + Sized,
+    Self::IntoIter: Iterator<Item = &'a T>,
+    T: 'a + Differentiable<Output = U> + Into<U> + Clone,
+{
+    /// Differentiates peer intervals of the iterator using the default overlap rules
+    ///
+    /// Processes elements pair by pair and returns the result of the difference. If the difference is successful,
+    /// it returns the differentiated interval. If it is unsuccessful, it returns the current element.
+    fn peer_difference(self) -> PeerDifference<Peekable<Self::IntoIter>> {
+        PeerDifference::new(self.into_iter())
+    }
+}
+
+impl<'a, I, T, U> PeerDifferenceIteratorDispatcher<'a, T, U> for I
+where
+    I: IntoIterator + Sized,
+    I::IntoIter: Iterator<Item = &'a T>,
     T: 'a + Differentiable<Output = U> + Into<U> + Clone,
 {
 }
@@ -149,6 +147,10 @@ where
             DifferenceResult::Separate => Some((current.clone().into(), None)),
         }
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.iter.size_hint()
+    }
 }
 
 // TODO: If a reverse Peekable becomes standard or when we'll import a crate that does that,
@@ -157,6 +159,32 @@ where
 impl<'a, I, T, U, F> FusedIterator for PeerDifferenceWith<Peekable<I>, F>
 where
     I: Iterator<Item = &'a T>,
+    T: 'a + Into<U> + Clone,
+    F: FnMut(&T, &T) -> DifferenceResult<U>,
+{
+}
+
+/// Iterator dispatcher trait for [`PeerDifferenceWith`]
+pub trait PeerDifferenceWithIteratorDispatcher<'a, T, U, F>
+where
+    Self: IntoIterator + Sized,
+    Self::IntoIter: Iterator<Item = &'a T>,
+    T: 'a + Into<U> + Clone,
+    F: FnMut(&T, &T) -> DifferenceResult<U>,
+{
+    /// Differentiates peer intervals of the iterator using the given closure
+    ///
+    /// Processes elements pair by pair and returns the result of the difference. If the difference is successful,
+    /// it returns the differentiated interval. If it is unsuccessful, it returns the current element.
+    fn peer_difference_with(self, f: F) -> PeerDifferenceWith<Peekable<Self::IntoIter>, F> {
+        PeerDifferenceWith::new(self.into_iter(), f)
+    }
+}
+
+impl<'a, I, T, U, F> PeerDifferenceWithIteratorDispatcher<'a, T, U, F> for I
+where
+    I: IntoIterator + Sized,
+    I::IntoIter: Iterator<Item = &'a T>,
     T: 'a + Into<U> + Clone,
     F: FnMut(&T, &T) -> DifferenceResult<U>,
 {
