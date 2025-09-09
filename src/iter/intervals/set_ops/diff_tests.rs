@@ -205,7 +205,7 @@ fn peer_difference_with_run() {
     let custom_difference_f = |a: &AbsoluteBounds, b: &AbsoluteBounds| -> DifferenceResult<EmptiableAbsoluteBounds> {
         if a.overlaps(b, OverlapRuleSet::VeryLenient, &DEFAULT_OVERLAP_RULES) {
             match a.remove_overlap_or_gap(b) {
-                OverlapOrGapRemovalResult::Single(x) => DifferenceResult::Shrunk(x),
+                OverlapOrGapRemovalResult::Single(x) => DifferenceResult::Single(x),
                 OverlapOrGapRemovalResult::Split(x, y) => DifferenceResult::Split(x, y),
             }
         } else {

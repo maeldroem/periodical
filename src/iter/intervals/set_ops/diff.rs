@@ -48,7 +48,7 @@ where
         };
 
         match current.differentiate(peeked) {
-            DifferenceResult::Shrunk(shrunk) => Some((shrunk, None)),
+            DifferenceResult::Single(shrunk) => Some((shrunk, None)),
             DifferenceResult::Split(split_first_part, split_second_part) => {
                 Some((split_first_part, Some(split_second_part)))
             },
@@ -140,7 +140,7 @@ where
         };
 
         match (self.f)(current, peeked) {
-            DifferenceResult::Shrunk(shrunk) => Some((shrunk, None)),
+            DifferenceResult::Single(shrunk) => Some((shrunk, None)),
             DifferenceResult::Split(split_first_part, split_second_part) => {
                 Some((split_first_part, Some(split_second_part)))
             },

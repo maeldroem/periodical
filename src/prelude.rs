@@ -1,5 +1,5 @@
 //! Global prelude
-//! 
+//!
 //! Import it with a wildcard, i.e. `use periodical::prelude::*;`, in order to bring common traits into scope
 //! and import common structures.
 

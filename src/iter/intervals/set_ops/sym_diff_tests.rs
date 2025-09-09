@@ -224,7 +224,7 @@ fn peer_symmetric_difference_with_run() {
                     (
                         OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBounds::Empty),
                         OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBounds::Empty),
-                    ) => SymmetricDifferenceResult::Shrunk(EmptiableAbsoluteBounds::Empty),
+                    ) => SymmetricDifferenceResult::Single(EmptiableAbsoluteBounds::Empty),
                     (
                         OverlapOrGapRemovalResult::Single(single_diff),
                         OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBounds::Empty),
@@ -232,7 +232,7 @@ fn peer_symmetric_difference_with_run() {
                     | (
                         OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBounds::Empty),
                         OverlapOrGapRemovalResult::Single(single_diff),
-                    ) => SymmetricDifferenceResult::Shrunk(single_diff),
+                    ) => SymmetricDifferenceResult::Single(single_diff),
                     (OverlapOrGapRemovalResult::Single(first), OverlapOrGapRemovalResult::Single(second)) => {
                         SymmetricDifferenceResult::Split(first, second)
                     },

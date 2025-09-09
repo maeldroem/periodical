@@ -265,6 +265,26 @@ fn precision_with_base_time_round_to_past_uncommon() {
 }
 
 #[test]
+fn precision_round_to_future_time_on_rounding_instant_must_not_change() {
+    let precision = Precision::ToFuture(Duration::minutes(5));
+
+    assert_eq!(
+        precision.precise_time(datetime(&Utc, 2025, 1, 1, 8, 5, 0)).unwrap(),
+        datetime(&Utc, 2025, 1, 1, 8, 5, 0),
+    );
+}
+
+#[test]
+fn precise_round_to_past_time_on_rounding_instance_must_not_change() {
+    let precision = Precision::ToPast(Duration::minutes(5));
+
+    assert_eq!(
+        precision.precise_time(datetime(&Utc, 2025, 1, 1, 8, 5, 0)).unwrap(),
+        datetime(&Utc, 2025, 1, 1, 8, 5, 0),
+    );
+}
+
+#[test]
 fn running_result_is_running() {
     assert!(RunningResult::<()>::Running(()).is_running());
     assert!(!RunningResult::<()>::Done(()).is_running());
@@ -394,35 +414,35 @@ fn intersection_result_map_intersected() {
 
 #[test]
 fn difference_result_is_shrunk() {
-    assert!(DifferenceResult::<()>::Shrunk(()).is_difference_shrunk());
-    assert!(!DifferenceResult::<()>::Split((), ()).is_difference_shrunk());
-    assert!(!DifferenceResult::<()>::Separate.is_difference_shrunk());
+    assert!(DifferenceResult::<()>::Single(()).is_difference_single());
+    assert!(!DifferenceResult::<()>::Split((), ()).is_difference_single());
+    assert!(!DifferenceResult::<()>::Separate.is_difference_single());
 }
 
 #[test]
 fn difference_result_is_split() {
-    assert!(!DifferenceResult::<()>::Shrunk(()).is_difference_split());
+    assert!(!DifferenceResult::<()>::Single(()).is_difference_split());
     assert!(DifferenceResult::<()>::Split((), ()).is_difference_split());
     assert!(!DifferenceResult::<()>::Separate.is_difference_split());
 }
 
 #[test]
 fn difference_result_is_separate() {
-    assert!(!DifferenceResult::<()>::Shrunk(()).is_separate());
+    assert!(!DifferenceResult::<()>::Single(()).is_separate());
     assert!(!DifferenceResult::<()>::Split((), ()).is_separate());
     assert!(DifferenceResult::<()>::Separate.is_separate());
 }
 
 #[test]
 fn difference_result_shrunk_opt() {
-    assert_eq!(DifferenceResult::<u8>::Shrunk(10).shrunk(), Some(10));
-    assert_eq!(DifferenceResult::<u8>::Split(10, 20).shrunk(), None);
-    assert_eq!(DifferenceResult::<u8>::Separate.shrunk(), None);
+    assert_eq!(DifferenceResult::<u8>::Single(10).single(), Some(10));
+    assert_eq!(DifferenceResult::<u8>::Split(10, 20).single(), None);
+    assert_eq!(DifferenceResult::<u8>::Separate.single(), None);
 }
 
 #[test]
 fn difference_result_split_opt() {
-    assert_eq!(DifferenceResult::<u8>::Shrunk(10).split(), None);
+    assert_eq!(DifferenceResult::<u8>::Single(10).split(), None);
     assert_eq!(DifferenceResult::<u8>::Split(10, 20).split(), Some((10, 20)));
     assert_eq!(DifferenceResult::<u8>::Separate.split(), None);
 }
@@ -430,8 +450,8 @@ fn difference_result_split_opt() {
 #[test]
 fn difference_result_map_difference() {
     assert_eq!(
-        DifferenceResult::<u8>::Shrunk(10).map_difference(|x| x + 10),
-        DifferenceResult::<u8>::Shrunk(20),
+        DifferenceResult::<u8>::Single(10).map_difference(|x| x + 10),
+        DifferenceResult::<u8>::Single(20),
     );
     assert_eq!(
         DifferenceResult::<u8>::Split(10, 20).map_difference(|x| x + 10),
@@ -441,42 +461,42 @@ fn difference_result_map_difference() {
 
 #[test]
 fn sym_difference_result_has_symmetric_difference() {
-    assert!(SymmetricDifferenceResult::<()>::Shrunk(()).has_symmetric_difference());
-    assert!(SymmetricDifferenceResult::<()>::Split((), ()).has_symmetric_difference());
-    assert!(!SymmetricDifferenceResult::<()>::Separate.has_symmetric_difference());
+    assert!(SymmetricDifferenceResult::<()>::Single(()).is_symmetric_difference());
+    assert!(SymmetricDifferenceResult::<()>::Split((), ()).is_symmetric_difference());
+    assert!(!SymmetricDifferenceResult::<()>::Separate.is_symmetric_difference());
 }
 
 #[test]
 fn sym_difference_result_is_shrunk() {
-    assert!(SymmetricDifferenceResult::<()>::Shrunk(()).is_shrunk());
-    assert!(!SymmetricDifferenceResult::<()>::Split((), ()).is_shrunk());
-    assert!(!SymmetricDifferenceResult::<()>::Separate.is_shrunk());
+    assert!(SymmetricDifferenceResult::<()>::Single(()).is_single());
+    assert!(!SymmetricDifferenceResult::<()>::Split((), ()).is_single());
+    assert!(!SymmetricDifferenceResult::<()>::Separate.is_single());
 }
 
 #[test]
 fn sym_difference_result_is_split() {
-    assert!(!SymmetricDifferenceResult::<()>::Shrunk(()).is_split());
+    assert!(!SymmetricDifferenceResult::<()>::Single(()).is_split());
     assert!(SymmetricDifferenceResult::<()>::Split((), ()).is_split());
     assert!(!SymmetricDifferenceResult::<()>::Separate.is_split());
 }
 
 #[test]
 fn sym_difference_result_is_separate() {
-    assert!(!SymmetricDifferenceResult::<()>::Shrunk(()).is_separate());
+    assert!(!SymmetricDifferenceResult::<()>::Single(()).is_separate());
     assert!(!SymmetricDifferenceResult::<()>::Split((), ()).is_separate());
     assert!(SymmetricDifferenceResult::<()>::Separate.is_separate());
 }
 
 #[test]
 fn sym_difference_result_shrunk_opt() {
-    assert_eq!(SymmetricDifferenceResult::<u8>::Shrunk(10).shrunk(), Some(10));
-    assert_eq!(SymmetricDifferenceResult::<u8>::Split(10, 20).shrunk(), None);
-    assert_eq!(SymmetricDifferenceResult::<u8>::Separate.shrunk(), None);
+    assert_eq!(SymmetricDifferenceResult::<u8>::Single(10).single(), Some(10));
+    assert_eq!(SymmetricDifferenceResult::<u8>::Split(10, 20).single(), None);
+    assert_eq!(SymmetricDifferenceResult::<u8>::Separate.single(), None);
 }
 
 #[test]
 fn sym_difference_result_split_opt() {
-    assert_eq!(SymmetricDifferenceResult::<u8>::Shrunk(10).split(), None);
+    assert_eq!(SymmetricDifferenceResult::<u8>::Single(10).split(), None);
     assert_eq!(SymmetricDifferenceResult::<u8>::Split(10, 20).split(), Some((10, 20)));
     assert_eq!(SymmetricDifferenceResult::<u8>::Separate.split(), None);
 }
@@ -484,8 +504,8 @@ fn sym_difference_result_split_opt() {
 #[test]
 fn sym_difference_result_map_symmetric_difference() {
     assert_eq!(
-        SymmetricDifferenceResult::<u8>::Shrunk(10).map_symmetric_difference(|x| x + 10),
-        SymmetricDifferenceResult::<u8>::Shrunk(20),
+        SymmetricDifferenceResult::<u8>::Single(10).map_symmetric_difference(|x| x + 10),
+        SymmetricDifferenceResult::<u8>::Single(20),
     );
     assert_eq!(
         SymmetricDifferenceResult::<u8>::Split(10, 20).map_symmetric_difference(|x| x + 10),

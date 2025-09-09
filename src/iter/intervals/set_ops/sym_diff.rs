@@ -48,7 +48,7 @@ where
         };
 
         match current.symmetrically_differentiate(peeked) {
-            SymmetricDifferenceResult::Shrunk(shrunk) => Some((shrunk, None)),
+            SymmetricDifferenceResult::Single(shrunk) => Some((shrunk, None)),
             SymmetricDifferenceResult::Split(split_first_part, split_second_part) => {
                 Some((split_first_part, Some(split_second_part)))
             },
@@ -143,7 +143,7 @@ where
         };
 
         match (self.f)(current, peeked) {
-            SymmetricDifferenceResult::Shrunk(shrunk) => Some((shrunk, None)),
+            SymmetricDifferenceResult::Single(shrunk) => Some((shrunk, None)),
             SymmetricDifferenceResult::Split(split_first_part, split_second_part) => {
                 Some((split_first_part, Some(split_second_part)))
             },

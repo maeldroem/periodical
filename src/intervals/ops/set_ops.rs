@@ -791,7 +791,7 @@ impl Differentiable<UnboundedInterval> for UnboundedInterval {
     type Output = EmptyInterval;
 
     fn differentiate(&self, _rhs: &UnboundedInterval) -> DifferenceResult<Self::Output> {
-        DifferenceResult::Shrunk(EmptyInterval)
+        DifferenceResult::Single(EmptyInterval)
     }
 }
 
@@ -799,7 +799,7 @@ impl Differentiable<EmptyInterval> for UnboundedInterval {
     type Output = UnboundedInterval;
 
     fn differentiate(&self, _rhs: &EmptyInterval) -> DifferenceResult<Self::Output> {
-        DifferenceResult::Shrunk(UnboundedInterval)
+        DifferenceResult::Single(UnboundedInterval)
     }
 }
 
@@ -827,7 +827,7 @@ pub fn differentiate_abs_bounds(
 
     match og_bounds.remove_overlap(other_bounds) {
         Ok(overlap_removal_res) => match overlap_removal_res {
-            OverlapRemovalResult::Single(single) => DifferenceResult::Shrunk(single),
+            OverlapRemovalResult::Single(single) => DifferenceResult::Single(single),
             OverlapRemovalResult::Split(s1, s2) => DifferenceResult::Split(s1, s2),
         },
         Err(OverlapRemovalErr::NoOverlap) => unreachable!("Overlap check already happened earlier"),
@@ -876,7 +876,7 @@ pub fn differentiate_rel_bounds(
 
     match og_bounds.remove_overlap(other_bounds) {
         Ok(overlap_removal_res) => match overlap_removal_res {
-            OverlapRemovalResult::Single(single) => DifferenceResult::Shrunk(single),
+            OverlapRemovalResult::Single(single) => DifferenceResult::Single(single),
             OverlapRemovalResult::Split(s1, s2) => DifferenceResult::Split(s1, s2),
         },
         Err(OverlapRemovalErr::NoOverlap) => unreachable!("Overlap check already happened earlier"),
@@ -1166,7 +1166,7 @@ impl SymmetricallyDifferentiable<UnboundedInterval> for UnboundedInterval {
     type Output = EmptyInterval;
 
     fn symmetrically_differentiate(&self, _rhs: &UnboundedInterval) -> SymmetricDifferenceResult<Self::Output> {
-        SymmetricDifferenceResult::Shrunk(EmptyInterval)
+        SymmetricDifferenceResult::Single(EmptyInterval)
     }
 }
 
@@ -1214,10 +1214,10 @@ pub fn symmetrically_differentiate_abs_bounds(
         (
             OverlapRemovalResult::Single(EmptiableAbsoluteBounds::Empty),
             OverlapRemovalResult::Single(EmptiableAbsoluteBounds::Empty),
-        ) => SymmetricDifferenceResult::Shrunk(EmptiableAbsoluteBounds::Empty),
+        ) => SymmetricDifferenceResult::Single(EmptiableAbsoluteBounds::Empty),
         (OverlapRemovalResult::Single(single_diff), OverlapRemovalResult::Single(EmptiableAbsoluteBounds::Empty))
         | (OverlapRemovalResult::Single(EmptiableAbsoluteBounds::Empty), OverlapRemovalResult::Single(single_diff)) => {
-            SymmetricDifferenceResult::Shrunk(single_diff)
+            SymmetricDifferenceResult::Single(single_diff)
         },
         (OverlapRemovalResult::Single(first_single_diff), OverlapRemovalResult::Single(second_single_diff)) => {
             SymmetricDifferenceResult::Split(first_single_diff, second_single_diff)
@@ -1288,10 +1288,10 @@ pub fn symmetrically_differentiate_rel_bounds(
         (
             OverlapRemovalResult::Single(EmptiableRelativeBounds::Empty),
             OverlapRemovalResult::Single(EmptiableRelativeBounds::Empty),
-        ) => SymmetricDifferenceResult::Shrunk(EmptiableRelativeBounds::Empty),
+        ) => SymmetricDifferenceResult::Single(EmptiableRelativeBounds::Empty),
         (OverlapRemovalResult::Single(single_diff), OverlapRemovalResult::Single(EmptiableRelativeBounds::Empty))
         | (OverlapRemovalResult::Single(EmptiableRelativeBounds::Empty), OverlapRemovalResult::Single(single_diff)) => {
-            SymmetricDifferenceResult::Shrunk(single_diff)
+            SymmetricDifferenceResult::Single(single_diff)
         },
         (OverlapRemovalResult::Single(first_single_diff), OverlapRemovalResult::Single(second_single_diff)) => {
             SymmetricDifferenceResult::Split(first_single_diff, second_single_diff)
