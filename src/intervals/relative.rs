@@ -1,4 +1,6 @@
 //! Relative intervals
+//!
+//! Relative intervals contain an offset duration and a length instead of being fixed in time.
 
 use std::cmp::Ordering;
 use std::error::Error;
@@ -17,6 +19,34 @@ use super::prelude::*;
 use super::special::{EmptyInterval, UnboundedInterval};
 
 /// A relative finite bound
+///
+/// Contains an offset [`Duration`] and an ambiguous [`BoundInclusivity`]:
+/// if it is [`Exclusive`](BoundInclusivity::Exclusive), then we additionally need the _source_
+/// (whether it acts as the start or end of an interval) in order to know what this bound truly encompasses.
+///
+/// This is why when comparing finite bounds, only its position (for relative bounds, its offset) is used.
+///
+/// # Examples
+///
+/// ## Basic use
+///
+/// ```
+/// # use chrono::Duration;
+/// # use periodical::intervals::relative::RelativeFiniteBound;
+/// let finite_bound = RelativeFiniteBound::new(Duration::hours(21));
+/// ```
+///
+/// ## Creating an [`AbsoluteFiniteBound`] with an explicit [`BoundInclusivity`]
+///
+/// ```
+/// # use chrono::Duration;
+/// # use periodical::intervals::relative::RelativeFiniteBound;
+/// # use periodical::intervals::meta::BoundInclusivity;
+/// let finite_bound = RelativeFiniteBound::new_with_inclusivity(
+///     Duration::hours(21),
+///     BoundInclusivity::Exclusive,
+/// );
+/// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub struct RelativeFiniteBound {
@@ -25,30 +55,66 @@ pub struct RelativeFiniteBound {
 }
 
 impl RelativeFiniteBound {
-    /// Creates a new relative finite bound using just the offset
+    /// Creates a new [`RelativeFiniteBound`] using the given offset
+    ///
+    /// This creates a finite bound using the [default `BoundInclusivity`](BoundInclusivity::default)
     #[must_use]
     pub fn new(offset: Duration) -> Self {
         Self::new_with_inclusivity(offset, BoundInclusivity::default())
     }
 
-    /// Creates a new relative finite bound using the given offset and inclusivity
+    /// Creates a new [`RelativeFiniteBound`] using the given offset and [`BoundInclusivity`]
     #[must_use]
     pub fn new_with_inclusivity(offset: Duration, inclusivity: BoundInclusivity) -> Self {
         RelativeFiniteBound { offset, inclusivity }
     }
 
     /// Returns the offset
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::Duration;
+    /// # use periodical::intervals::relative::RelativeFiniteBound;
+    /// let finite_bound = RelativeFiniteBound::new(Duration::hours(12));
+    ///
+    /// assert_eq!(finite_bound.offset(), Duration::hours(12));
+    /// ```
     #[must_use]
     pub fn offset(&self) -> Duration {
         self.offset
     }
 
-    /// Sets the offset of the relative finite bound
+    /// Sets the offset
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::Duration;
+    /// # use periodical::intervals::relative::RelativeFiniteBound;
+    /// let mut finite_bound = RelativeFiniteBound::new(Duration::hours(1));
+    /// finite_bound.set_offset(Duration::hours(32));
+    ///
+    /// assert_eq!(finite_bound.offset(), Duration::hours(32));
+    /// ```
     pub fn set_offset(&mut self, offset: Duration) {
         self.offset = offset;
     }
 
-    /// Sets the inclusivity of the relative finite bound
+    /// Sets the inclusivity
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::Duration;
+    /// # use periodical::intervals::relative::RelativeFiniteBound;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// # use periodical::prelude::*;
+    /// let mut finite_bound = RelativeFiniteBound::new(Duration::hours(1));
+    /// finite_bound.set_inclusivity(BoundInclusivity::Exclusive);
+    ///
+    /// assert_eq!(finite_bound.inclusivity(), BoundInclusivity::Exclusive);
+    /// ```
     pub fn set_inclusivity(&mut self, inclusivity: BoundInclusivity) {
         self.inclusivity = inclusivity;
     }
@@ -94,6 +160,9 @@ impl From<(Duration, BoundInclusivity)> for RelativeFiniteBound {
     }
 }
 
+/// Conversion from the tuple `(Duration, bool)` to [`RelativeFiniteBound`]
+///
+/// Interprets the boolean as _is it inclusive?_
 impl From<(Duration, bool)> for RelativeFiniteBound {
     fn from((offset, is_inclusive): (Duration, bool)) -> Self {
         RelativeFiniteBound::new_with_inclusivity(

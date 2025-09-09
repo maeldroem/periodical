@@ -1,4 +1,6 @@
 //! Absolute intervals
+//!
+//! Absolute intervals are pinned to time, that is to say they have a start datetime and an end datetime.
 
 use std::cmp::Ordering;
 use std::error::Error;
@@ -17,6 +19,36 @@ use super::prelude::*;
 use super::special::{EmptyInterval, UnboundedInterval};
 
 /// An absolute finite bound
+///
+/// Contains a time and an ambiguous [`BoundInclusivity`]: if it is [`Exclusive`](BoundInclusivity::Exclusive),
+/// then we additionally need the _source_ (whether it acts as the start or end of an interval) in order to know
+/// what this bound truly encompasses.
+///
+/// This is why when comparing finite bounds, only its position (for absolute bounds, its time) is used.
+///
+/// # Examples
+///
+/// ## Basic use
+///
+/// ```
+/// # use chrono::{DateTime, Utc};
+/// # use periodical::intervals::absolute::AbsoluteFiniteBound;
+/// let finite_bound = AbsoluteFiniteBound::new("2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?);
+/// # Ok::<(), chrono::format::ParseError>(())
+/// ```
+///
+/// ## Creating an [`AbsoluteFiniteBound`] with an explicit [`BoundInclusivity`]
+///
+/// ```
+/// # use chrono::{DateTime, Utc};
+/// # use periodical::intervals::absolute::AbsoluteFiniteBound;
+/// # use periodical::intervals::meta::BoundInclusivity;
+/// let finite_bound = AbsoluteFiniteBound::new_with_inclusivity(
+///     "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+///     BoundInclusivity::Exclusive,
+/// );
+/// # Ok::<(), chrono::format::ParseError>(())
+/// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub struct AbsoluteFiniteBound {
@@ -25,30 +57,75 @@ pub struct AbsoluteFiniteBound {
 }
 
 impl AbsoluteFiniteBound {
-    /// Creates a new instance of an absolute finite bound using just a given time
+    /// Creates a new [`AbsoluteFiniteBound`] using the given time
+    ///
+    /// This creates a finite bound using the [default `BoundInclusivity`](BoundInclusivity::default).
     #[must_use]
     pub fn new(time: DateTime<Utc>) -> Self {
         Self::new_with_inclusivity(time, BoundInclusivity::default())
     }
 
-    /// Creates a new instance of an absolute finite bound using the given time and bound inclusivity
+    /// Creates a new [`AbsoluteFiniteBound`] using the given time and [`BoundInclusivity`]
     #[must_use]
     pub fn new_with_inclusivity(time: DateTime<Utc>, inclusivity: BoundInclusivity) -> Self {
         AbsoluteFiniteBound { time, inclusivity }
     }
 
-    /// Returns the time of the absolute finite bound
+    /// Returns the time
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::AbsoluteFiniteBound;
+    /// let time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let finite_bound = AbsoluteFiniteBound::new(time);
+    ///
+    /// assert_eq!(finite_bound.time(), time);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     pub fn time(&self) -> DateTime<Utc> {
         self.time
     }
 
-    /// Sets the time of the absolute finite bound
+    /// Sets the time
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::AbsoluteFiniteBound;
+    /// let time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let new_time = "2025-01-02 16:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let mut finite_bound = AbsoluteFiniteBound::new(time);
+    /// finite_bound.set_time(new_time);
+    ///
+    /// assert_eq!(finite_bound.time(), new_time);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     pub fn set_time(&mut self, new_time: DateTime<Utc>) {
         self.time = new_time;
     }
 
-    /// Sets the bound inclusivity of the absolute finite bound
+    /// Sets the bound inclusivity
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::AbsoluteFiniteBound;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// # use periodical::prelude::*;
+    /// let time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let mut finite_bound = AbsoluteFiniteBound::new(time);
+    /// finite_bound.set_inclusivity(BoundInclusivity::Exclusive);
+    ///
+    /// assert_eq!(finite_bound.inclusivity(), BoundInclusivity::Exclusive);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     pub fn set_inclusivity(&mut self, new_inclusivity: BoundInclusivity) {
         self.inclusivity = new_inclusivity;
     }
@@ -90,6 +167,9 @@ impl From<(DateTime<Utc>, BoundInclusivity)> for AbsoluteFiniteBound {
     }
 }
 
+/// Conversion from the tuple `(DateTime<Utc>, bool)` to [`AbsoluteFiniteBound`]
+///
+/// Interprets the boolean as _is it inclusive?_
 impl From<(DateTime<Utc>, bool)> for AbsoluteFiniteBound {
     fn from((time, is_inclusive): (DateTime<Utc>, bool)) -> Self {
         AbsoluteFiniteBound::new_with_inclusivity(time, BoundInclusivity::from(is_inclusive))
