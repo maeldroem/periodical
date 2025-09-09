@@ -16,8 +16,8 @@
 //! Most of the time, you will want to import the global prelude by using `use periodical::prelude::*;`.
 //!
 //! The global prelude brings common traits into scope, making the methods described by the traits available.
-//! It also imports common structures, like [`AbsoluteInterval`](crate::intervals::absolute::AbsoluteInterval)
-//! and [`RelativeInterval`](crate::intervals::relative::RelativeInterval).
+//! It also imports common structures, like [`AbsoluteInterval`](intervals::absolute::AbsoluteInterval)
+//! and [`RelativeInterval`](intervals::relative::RelativeInterval).
 
 pub mod intervals;
 pub mod iter;
