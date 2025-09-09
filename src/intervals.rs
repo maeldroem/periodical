@@ -65,14 +65,15 @@
 //!
 //! ```
 //! # use chrono::{DateTime, Utc};
-//! # use periodical::absolute::{
-//! #     AbsoluteBounds, AbsoluteEndBound, AbsoluteInterval, AbsoluteStartBound, BoundedInterval,
+//! # use periodical::intervals::absolute::{
+//! #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteInterval, AbsoluteStartBound,
+//! #     BoundedAbsoluteInterval,
 //! # };
 //! let from = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
 //! let to = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
 //!
 //! // Creating an interval from a specific interval type
-//! let first_interval = AbsoluteInterval::Bounded(BoundedInterval::new(from, to));
+//! let first_interval = AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(from, to));
 //!
 //! // Creating a pair of bounds..
 //! let bounds_for_second_interval = AbsoluteBounds::new(
@@ -82,6 +83,7 @@
 //!
 //! // ..For creating an interval
 //! let second_interval = AbsoluteInterval::from(bounds_for_second_interval);
+//! # Ok::<(), chrono::format::ParseError>(())
 //! ```
 
 pub mod absolute;
