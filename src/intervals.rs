@@ -60,6 +60,29 @@
 //! without the use of an [`Option`] to represent it.
 //! This also makes it compatible with other interval operations, for example you can still get the
 //! complement of an empty interval, which results in an [unbounded interval](`UnboundedInterval`).
+//!
+//! # Examples
+//!
+//! ```
+//! # use chrono::{DateTime, Utc};
+//! # use periodical::absolute::{
+//! #     AbsoluteBounds, AbsoluteEndBound, AbsoluteInterval, AbsoluteStartBound, BoundedInterval,
+//! # };
+//! let from = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+//! let to = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+//!
+//! // Creating an interval from a specific interval type
+//! let first_interval = AbsoluteInterval::Bounded(BoundedInterval::new(from, to));
+//!
+//! // Creating a pair of bounds..
+//! let bounds_for_second_interval = AbsoluteBounds::new(
+//!     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(from)),
+//!     AbsoluteEndBound::InfiniteFuture,
+//! );
+//!
+//! // ..For creating an interval
+//! let second_interval = AbsoluteInterval::from(bounds_for_second_interval);
+//! ```
 
 pub mod absolute;
 pub mod bound_position;
