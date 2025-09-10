@@ -700,6 +700,34 @@ impl From<Bound<DateTime<Utc>>> for AbsoluteEndBound {
 }
 
 /// Swaps an absolute start bound with an absolute end bound
+///
+/// This method is primarily used in the case where a start bound and an end bound are not in chronological order.
+///
+/// # Examples
+///
+/// ```
+/// # use chrono::{DateTime, Utc};
+/// # use periodical::intervals::absolute::{
+/// #     AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, swap_absolute_bounds,
+/// # };
+/// let start_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+/// let end_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+///
+/// let mut start = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(start_time));
+/// let mut end = AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(end_time));
+///
+/// swap_absolute_bounds(&mut start, &mut end);
+///
+/// assert_eq!(
+///     start,
+///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(end_time)),
+/// );
+/// assert_eq!(
+///     end,
+///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(start_time)),
+/// );
+/// # Ok::<(), chrono::format::ParseError>(())
+/// ```
 pub fn swap_absolute_bounds(start: &mut AbsoluteStartBound, end: &mut AbsoluteEndBound) {
     // We temporarily reborrow start and end for the match arms so that when a pattern matches, they move out of their
     // temporary scope and we can use the original mutable references without guard patterns shenanigans.
@@ -746,13 +774,42 @@ impl Error for AbsoluteBoundsCheckForIntervalCreationError {}
 
 /// Checks if the given start and end bound are ready for creating an interval
 ///
+/// This method is used as part of [`prepare_absolute_bounds_for_interval_creation`], which is used by
+/// [`AbsoluteBounds::new`], but also in other places where we want to make sure that a start and end bound
+/// are ready to be used as part of the interval without using methods like [`AbsoluteBounds::new`] that
+/// already go through this process.
+///
 /// # Errors
 ///
 /// If the start bound is past the end bound,
 /// it returns [`StartPastEnd`](AbsoluteBoundsCheckForIntervalCreationError::StartPastEnd).
 ///
-/// If both bounds are at the same time, but one of them has an exclusive bound inclusivity, it returns
+/// If both bounds have the same time, but at least one of them has an exclusive bound inclusivity, it returns
 /// [`SameTimeButNotDoublyInclusive`](AbsoluteBoundsCheckForIntervalCreationError::SameTimeButNotDoublyInclusive).
+///
+/// # Examples
+///
+/// ```
+/// # use periodical::intervals::absolute::{
+/// #     AbsoluteBoundsCheckForIntervalCreationError, AbsoluteEndBound, AbsoluteStartBound,
+/// #     check_absolute_bounds_for_interval_creation,
+/// # };
+/// fn validate_bounds_from_user(
+///     start: &AbsoluteStartBound,
+///     end: &AbsoluteEndBound,
+/// ) -> Result<(), String> {
+///     type IntervalCreaErr = AbsoluteBoundsCheckForIntervalCreationError;
+///     match check_absolute_bounds_for_interval_creation(start, end) {
+///         Ok(()) => Ok(()),
+///         Err(IntervalCreaErr::StartPastEnd) => Err(
+///             "Start and end must be in chronological order!".to_string()
+///         ),
+///         Err(IntervalCreaErr::SameTimeButNotDoublyInclusive) => Err(
+///             "To represent a single point in time, both inclusivities must be inclusive!".to_string()
+///         ),
+///     }
+/// }
+/// ```
 pub fn check_absolute_bounds_for_interval_creation(
     start: &AbsoluteStartBound,
     end: &AbsoluteEndBound,
@@ -777,18 +834,43 @@ pub fn check_absolute_bounds_for_interval_creation(
     }
 }
 
-/// Prepares a start and end bound for being used for creating an interval
+/// Prepares a start and end bound for being used as part of an interval
 ///
 /// If some problems are present, see [`check_absolute_bounds_for_interval_creation`], it resolves them automatically
 /// by modifying the passed mutable references for the start and end bound.
+///
+/// The returned boolean indicates whether a change was operated in order to fix the given bounds.
+///
+/// # Examples
+///
+/// ```
+/// # use chrono::{DateTime, Utc};
+/// # use periodical::intervals::absolute::{
+/// #     AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, prepare_absolute_bounds_for_interval_creation,
+/// # };
+/// let start_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+/// let end_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+///
+/// // Warning: not in chronological order!
+/// let mut start = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(start_time));
+/// let mut end = AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(end_time));
+///
+/// let was_changed = prepare_absolute_bounds_for_interval_creation(&mut start, &mut end);
+///
+/// if was_changed {
+///     // Prompt the user for confirmation regarding the fixed bounds
+/// }
+/// # Ok::<(), chrono::format::ParseError>(())
+/// ```
 pub fn prepare_absolute_bounds_for_interval_creation(
     start_mut: &mut AbsoluteStartBound,
     end_mut: &mut AbsoluteEndBound,
-) {
+) -> bool {
     match check_absolute_bounds_for_interval_creation(start_mut, end_mut) {
-        Ok(()) => {},
+        Ok(()) => false,
         Err(AbsoluteBoundsCheckForIntervalCreationError::StartPastEnd) => {
             swap_absolute_bounds(start_mut, end_mut);
+            true
         },
         Err(AbsoluteBoundsCheckForIntervalCreationError::SameTimeButNotDoublyInclusive) => {
             if let AbsoluteStartBound::Finite(finite_start_mut) = start_mut {
@@ -798,6 +880,8 @@ pub fn prepare_absolute_bounds_for_interval_creation(
             if let AbsoluteEndBound::Finite(finite_end_mut) = end_mut {
                 finite_end_mut.set_inclusivity(BoundInclusivity::Inclusive);
             }
+
+            true
         },
     }
 }

@@ -692,6 +692,33 @@ impl From<Bound<Duration>> for RelativeEndBound {
 }
 
 /// Swaps a relative start bound with a relative end bound
+///
+/// This method is primarily used in the case where a start bound and an end bound are not in chronological order.
+///
+/// # Examples
+///
+/// ```
+/// # use chrono::Duration;
+/// # use periodical::intervals::relative::{
+/// #     RelativeEndBound, RelativeFiniteBound, RelativeStartBound, swap_relative_bounds,
+/// # };
+/// let start_offset = Duration::hours(16);
+/// let end_offset = Duration::hours(8);
+///
+/// let mut start = RelativeStartBound::Finite(RelativeFiniteBound::new(start_offset));
+/// let mut end = RelativeEndBound::Finite(RelativeFiniteBound::new(end_offset));
+///
+/// swap_relative_bounds(&mut start, &mut end);
+///
+/// assert_eq!(
+///     start,
+///     RelativeStartBound::Finite(RelativeFiniteBound::new(end_offset)),
+/// );
+/// assert_eq!(
+///     end,
+///     RelativeEndBound::Finite(RelativeFiniteBound::new(start_offset)),
+/// );
+/// ```
 pub fn swap_relative_bounds(start: &mut RelativeStartBound, end: &mut RelativeEndBound) {
     // We temporarily reborrow start and end for the match arms so that when a pattern matches, they move out of their
     // temporary scope and we can use the original mutable references without guard patterns shenanigans.
@@ -738,13 +765,42 @@ impl Error for RelativeBoundsCheckForIntervalCreationError {}
 
 /// Checks if the given start and end bound are ready for creating an interval
 ///
+/// This method is used as part of [`prepare_relative_bounds_for_interval_creation`], which is used by
+/// [`RelativeBounds::new`], but also in other places where we want to make sure that a start and end bound
+/// are ready to be used as part of the interval without using methods like [`RelativeBounds::new`] that
+/// already go through this process.
+///
 /// # Errors
 ///
 /// If the start bound is past the end bound,
 /// it returns [`StartPastEnd`](RelativeBoundsCheckForIntervalCreationError::StartPastEnd).
 ///
-/// If both bounds are at the same time, but one of them has an exclusive bound inclusivity, it returns
+/// If both bounds have the same offset, but at least one of them has an exclusive bound inclusivity, it returns
 /// [`SameOffsetButNotDoublyInclusive`](RelativeBoundsCheckForIntervalCreationError::SameOffsetButNotDoublyInclusive).
+///
+/// # Examples
+///
+/// ```
+/// # use periodical::intervals::relative::{
+/// #     RelativeBoundsCheckForIntervalCreationError, RelativeEndBound, RelativeStartBound,
+/// #     check_relative_bounds_for_interval_creation,
+/// # };
+/// fn validate_bounds_from_user(
+///     start: &RelativeStartBound,
+///     end: &RelativeEndBound,
+/// ) -> Result<(), String> {
+///     type IntervalCreaErr = RelativeBoundsCheckForIntervalCreationError;
+///     match check_relative_bounds_for_interval_creation(start, end) {
+///         Ok(()) => Ok(()),
+///         Err(IntervalCreaErr::StartPastEnd) => Err(
+///             "Start and end must be in chronological order!".to_string()
+///         ),
+///         Err(IntervalCreaErr::SameOffsetButNotDoublyInclusive) => Err(
+///             "To represent a single point in relative time, both inclusivities must be inclusive!".to_string()
+///         ),
+///     }
+/// }
+/// ```
 pub fn check_relative_bounds_for_interval_creation(
     start: &RelativeStartBound,
     end: &RelativeEndBound,
@@ -769,18 +825,42 @@ pub fn check_relative_bounds_for_interval_creation(
     }
 }
 
-/// Prepares a start and end bound for being used for creating an interval
+/// Prepares a start and end bound for being used as part of an interval
 ///
 /// If some problems are present, see [`check_relative_bounds_for_interval_creation`], it resolves them automatically
 /// by modifying the passed mutable references for the start and end bound.
+///
+/// The returned boolean indicates whether a change was operated in order to fix the given bounds.
+///
+/// # Examples
+///
+/// ```
+/// # use chrono::Duration;
+/// # use periodical::intervals::relative::{
+/// #     RelativeEndBound, RelativeFiniteBound, RelativeStartBound, prepare_relative_bounds_for_interval_creation,
+/// # };
+/// let start_offset = Duration::hours(16);
+/// let end_offset = Duration::hours(8);
+///
+/// // Warning: not in chronological order!
+/// let mut start = RelativeStartBound::Finite(RelativeFiniteBound::new(start_offset));
+/// let mut end = RelativeEndBound::Finite(RelativeFiniteBound::new(end_offset));
+///
+/// let was_changed = prepare_relative_bounds_for_interval_creation(&mut start, &mut end);
+///
+/// if was_changed {
+///     // Prompt the user for confirmation regarding the fixed bounds
+/// }
+/// ```
 pub fn prepare_relative_bounds_for_interval_creation(
     start_mut: &mut RelativeStartBound,
     end_mut: &mut RelativeEndBound,
-) {
+) -> bool {
     match check_relative_bounds_for_interval_creation(start_mut, end_mut) {
-        Ok(()) => {},
+        Ok(()) => false,
         Err(RelativeBoundsCheckForIntervalCreationError::StartPastEnd) => {
             swap_relative_bounds(start_mut, end_mut);
+            true
         },
         Err(RelativeBoundsCheckForIntervalCreationError::SameOffsetButNotDoublyInclusive) => {
             if let RelativeStartBound::Finite(finite_start_mut) = start_mut {
@@ -790,6 +870,8 @@ pub fn prepare_relative_bounds_for_interval_creation(
             if let RelativeEndBound::Finite(finite_end_mut) = end_mut {
                 finite_end_mut.set_inclusivity(BoundInclusivity::Inclusive);
             }
+
+            true
         },
     }
 }
