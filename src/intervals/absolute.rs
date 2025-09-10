@@ -217,7 +217,10 @@ impl TryFrom<Bound<DateTime<Utc>>> for AbsoluteFiniteBound {
     }
 }
 
-/// An absolute start bound, including [inclusivity](BoundInclusivity)
+/// An absolute start bound
+///
+/// Represents the start bound of an interval, may it be infinitely in the past or at a precise point in time,
+/// in which case it contains an [`AbsoluteFiniteBound`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum AbsoluteStartBound {
@@ -226,19 +229,68 @@ pub enum AbsoluteStartBound {
 }
 
 impl AbsoluteStartBound {
-    /// Returns whether the [`AbsoluteStartBound`] is of the [`Finite`](AbsoluteStartBound::Finite) variant
+    /// Returns whether it is of the [`Finite`](AbsoluteStartBound::Finite) variant
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::{AbsoluteFiniteBound, AbsoluteStartBound};
+    /// let infinite_start_bound = AbsoluteStartBound::InfinitePast;
+    ///
+    /// let time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let finite_start_bound = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(time));
+    ///
+    /// assert!(finite_start_bound.is_finite());
+    /// assert!(!infinite_start_bound.is_finite());
+    ///
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     pub fn is_finite(&self) -> bool {
         matches!(self, Self::Finite(_))
     }
 
-    /// Returns whether the [`AbsoluteStartBound`] is of the [`InfinitePast`](AbsoluteStartBound::InfinitePast) variant
+    /// Returns whether it is of the [`InfinitePast`](AbsoluteStartBound::InfinitePast) variant
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::{AbsoluteFiniteBound, AbsoluteStartBound};
+    /// let infinite_start_bound = AbsoluteStartBound::InfinitePast;
+    ///
+    /// let time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let finite_start_bound = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(time));
+    ///
+    /// assert!(infinite_start_bound.is_infinite_past());
+    /// assert!(!finite_start_bound.is_infinite_past());
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     pub fn is_infinite_past(&self) -> bool {
         matches!(self, Self::InfinitePast)
     }
 
     /// Returns the content of the [`Finite`](AbsoluteStartBound::Finite) variant
+    ///
+    /// Consumes `self` and puts the content of the [`Finite`](AbsoluteStartBound::Finite) variant
+    /// in an [`Option`]. If instead `self` is another variant, the method returns [`None`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::{AbsoluteFiniteBound, AbsoluteStartBound};
+    /// let infinite_start_bound = AbsoluteStartBound::InfinitePast;
+    ///
+    /// let time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let finite_start_bound = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(time));
+    ///
+    /// assert_eq!(finite_start_bound.finite(), Some(AbsoluteFiniteBound::new(time)));
+    /// assert_eq!(infinite_start_bound.finite(), None);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     pub fn finite(self) -> Option<AbsoluteFiniteBound> {
         match self {
@@ -249,8 +301,26 @@ impl AbsoluteStartBound {
 
     /// Returns the opposite [`AbsoluteEndBound`]
     ///
-    /// Returns [`None`] if the [`AbsoluteStartBound`] is of the [`InfinitePast`](AbsoluteStartBound::InfinitePast)
-    /// variant.
+    /// If the [`AbsoluteStartBound`] is of the [`InfinitePast`](AbsoluteStartBound::InfinitePast) variant,
+    /// then the method returns [`None`].
+    /// Otherwise, if the [`AbsoluteStartBound`] is finite, then an [`AbsoluteEndBound`] is created
+    /// with the same time, but the opposite [`BoundInclusivity`].
+    ///
+    /// This is used for example for determining the last point in time before this bound begins.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::{AbsoluteFiniteBound, AbsoluteStartBound};
+    /// let time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let start_second_part_my_shift = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(time));
+    /// let break_end_before_shift = start_second_part_my_shift
+    ///     .opposite()
+    ///     .expect("provided a finite bound");
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     pub fn opposite(&self) -> Option<AbsoluteEndBound> {
         match self {

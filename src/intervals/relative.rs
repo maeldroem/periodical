@@ -36,7 +36,7 @@ use super::special::{EmptyInterval, UnboundedInterval};
 /// let finite_bound = RelativeFiniteBound::new(Duration::hours(21));
 /// ```
 ///
-/// ## Creating an [`AbsoluteFiniteBound`] with an explicit [`BoundInclusivity`]
+/// ## Creating an [`RelativeFiniteBound`] with an explicit [`BoundInclusivity`]
 ///
 /// ```
 /// # use chrono::Duration;
@@ -217,7 +217,10 @@ impl TryFrom<Bound<Duration>> for RelativeFiniteBound {
     }
 }
 
-/// A relative start interval bound, including [inclusivity](BoundInclusivity)
+/// A relative start bound
+///
+/// Represents the start bound of an interval, may it be infinitely in the past or at a precise offset,
+/// in which case it contains an [`RelativeFiniteBound`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum RelativeStartBound {
@@ -226,19 +229,64 @@ pub enum RelativeStartBound {
 }
 
 impl RelativeStartBound {
-    /// Returns whether the [`RelativeStartBound`] is of the [`Finite`](RelativeStartBound::Finite) variant
+    /// Returns whether it is of the [`Finite`](RelativeStartBound::Finite) variant
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::Duration;
+    /// # use periodical::intervals::relative::{RelativeFiniteBound, RelativeStartBound};
+    /// let infinite_start_bound = RelativeStartBound::InfinitePast;
+    /// let finite_start_bound = RelativeStartBound::Finite(
+    ///     RelativeFiniteBound::new(Duration::hours(1))
+    /// );
+    ///
+    /// assert!(finite_start_bound.is_finite());
+    /// assert!(!infinite_start_bound.is_finite());
+    /// ```
     #[must_use]
     pub fn is_finite(&self) -> bool {
         matches!(self, Self::Finite(_))
     }
 
-    /// Returns whether the [`RelativeStartBound`] is of the [`InfinitePast`](RelativeStartBound::InfinitePast) variant
+    /// Returns whether it is of the [`InfinitePast`](RelativeStartBound::InfinitePast) variant
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::Duration;
+    /// # use periodical::intervals::relative::{RelativeFiniteBound, RelativeStartBound};
+    /// let infinite_start_bound = RelativeStartBound::InfinitePast;
+    /// let finite_start_bound = RelativeStartBound::Finite(
+    ///     RelativeFiniteBound::new(Duration::hours(1))
+    /// );
+    ///
+    /// assert!(infinite_start_bound.is_infinite_past());
+    /// assert!(!finite_start_bound.is_infinite_past());
+    /// ```
     #[must_use]
     pub fn is_infinite_past(&self) -> bool {
         matches!(self, Self::InfinitePast)
     }
 
     /// Returns the content of the [`Finite`](RelativeStartBound::Finite) variant
+    ///
+    /// Consumes `self` and puts the content of the [`Finite`](RelativeStartBound::Finite) variant
+    /// in an [`Option`]. If instead `self` is another variant, the method returns [`None`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::Duration;
+    /// # use periodical::intervals::relative::{RelativeFiniteBound, RelativeStartBound};
+    /// let infinite_start_bound = RelativeStartBound::InfinitePast;
+    /// let finite_start_bound = RelativeStartBound::Finite(
+    ///     RelativeFiniteBound::new(Duration::hours(1))
+    /// );
+    ///
+    /// assert_eq!(finite_start_bound.finite(), Some(RelativeFiniteBound::new(Duration::hours(1))));
+    /// assert_eq!(infinite_start_bound.finite(), None);
+    /// ```
     #[must_use]
     pub fn finite(self) -> Option<RelativeFiniteBound> {
         match self {
@@ -249,8 +297,25 @@ impl RelativeStartBound {
 
     /// Returns the opposite [`RelativeEndBound`]
     ///
-    /// Returns [`None`] if the [`RelativeStartBound`] is of the [`InfinitePast`](RelativeStartBound::InfinitePast)
-    /// variant.
+    /// If the [`RelativeStartBound`] is of the [`InfinitePast`](RelativeStartBound::InfinitePast) variant,
+    /// then the method returns [`None`].
+    /// Otherwise, if the [`RelativeStartBound`] is finite, then an [`RelativeEndBound`] is created
+    /// with the same time, but the opposite [`BoundInclusivity`].
+    ///
+    /// This is used for example for determining the last point in time before this bound begins.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::Duration;
+    /// # use periodical::intervals::relative::{RelativeFiniteBound, RelativeStartBound};
+    /// let start_second_part_my_shift = RelativeStartBound::Finite(
+    ///     RelativeFiniteBound::new(Duration::hours(3))
+    /// );
+    /// let break_end_before_shift = start_second_part_my_shift
+    ///     .opposite()
+    ///     .expect("provided a finite bound");
+    /// ```
     #[must_use]
     pub fn opposite(&self) -> Option<RelativeEndBound> {
         match self {
