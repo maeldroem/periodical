@@ -1117,32 +1117,32 @@ impl From<RelativeEndBound> for RelativeBound {
     }
 }
 
-/// Represents something that has **non-empty** relative bounds
+/// Possession of non-empty relative bounds
 pub trait HasRelativeBounds {
-    /// Returns the relative bounds
+    /// Returns the relative bounds of the object
     #[must_use]
     fn rel_bounds(&self) -> RelativeBounds;
 
-    /// Returns the relative start bound
+    /// Returns the relative start bound of the object
     #[must_use]
     fn rel_start(&self) -> RelativeStartBound;
 
-    /// Returns the relative end bound
+    /// Returns the relative end bound of the object
     #[must_use]
     fn rel_end(&self) -> RelativeEndBound;
 }
 
-/// Represents something that has possibly empty relative bounds
+/// Possession of possibly empty relative bounds
 pub trait HasEmptiableRelativeBounds {
-    /// Returns the [`EmptiableRelativeBounds`] of self
+    /// Returns the [`EmptiableRelativeBounds`] of the object
     #[must_use]
     fn emptiable_rel_bounds(&self) -> EmptiableRelativeBounds;
 
-    /// Returns an [`Option`] of [the relative start bound](RelativeStartBound)
+    /// Returns an [`Option`] of [the relative start bound](RelativeStartBound) of the object
     #[must_use]
     fn partial_rel_start(&self) -> Option<RelativeStartBound>;
 
-    /// Returns an [`Option`] of [the relative end bound](RelativeEndBound)
+    /// Returns an [`Option`] of [the relative end bound](RelativeEndBound) of the object
     #[must_use]
     fn partial_rel_end(&self) -> Option<RelativeEndBound>;
 }

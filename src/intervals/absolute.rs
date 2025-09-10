@@ -1125,32 +1125,32 @@ impl From<AbsoluteEndBound> for AbsoluteBound {
     }
 }
 
-/// Represents something that has **non-empty** absolute bounds
+/// Possession of **non-empty** absolute bounds
 pub trait HasAbsoluteBounds {
-    /// Returns the absolute bounds
+    /// Returns the absolute bounds of the object
     #[must_use]
     fn abs_bounds(&self) -> AbsoluteBounds;
 
-    /// Returns the absolute start bound
+    /// Returns the absolute start bound of the object
     #[must_use]
     fn abs_start(&self) -> AbsoluteStartBound;
 
-    /// Returns the absolute end bound
+    /// Returns the absolute end bound of the object
     #[must_use]
     fn abs_end(&self) -> AbsoluteEndBound;
 }
 
-/// Represents something that has possibly empty absolute bounds
+/// Possession of possibly empty absolute bounds
 pub trait HasEmptiableAbsoluteBounds {
-    /// Returns the [`EmptiableAbsoluteBounds`] of self
+    /// Returns the [`EmptiableAbsoluteBounds`] of the object
     #[must_use]
     fn emptiable_abs_bounds(&self) -> EmptiableAbsoluteBounds;
 
-    /// Returns an [`Option`] of [the absolute start bound](AbsoluteStartBound)
+    /// Returns an [`Option`] of [the absolute start bound](AbsoluteStartBound) of the object
     #[must_use]
     fn partial_abs_start(&self) -> Option<AbsoluteStartBound>;
 
-    /// Returns an [`Option`] of [the absolute end bound](AbsoluteEndBound)
+    /// Returns an [`Option`] of [the absolute end bound](AbsoluteEndBound) of the object
     #[must_use]
     fn partial_abs_end(&self) -> Option<AbsoluteEndBound>;
 }
