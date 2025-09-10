@@ -887,6 +887,8 @@ pub fn prepare_absolute_bounds_for_interval_creation(
 }
 
 /// Enum for absolute start and end bounds
+///
+/// This enumerator is useful for storing both start and end bounds, usually for processing bounds individually.
 #[derive(Debug, Clone, Copy)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum AbsoluteBound {
@@ -895,19 +897,94 @@ pub enum AbsoluteBound {
 }
 
 impl AbsoluteBound {
-    /// Returns whether [`AbsoluteBound`] is of the [`Start`](AbsoluteBound::Start) variant
+    /// Returns whether it is of the [`Start`](AbsoluteBound::Start) variant
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::{
+    /// #     AbsoluteBound, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+    /// # };
+    /// let start_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let end_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let start = AbsoluteBound::Start(
+    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(start_time))
+    /// );
+    /// let end = AbsoluteBound::End(
+    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(end_time))
+    /// );
+    ///
+    /// assert!(start.is_start());
+    /// assert!(!end.is_start());
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     pub fn is_start(&self) -> bool {
         matches!(self, Self::Start(_))
     }
 
-    /// Returns whether [`AbsoluteBound`] is of the [`End`](AbsoluteBound::End) variant
+    /// Returns whether it is of the [`End`](AbsoluteBound::End) variant
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::{
+    /// #     AbsoluteBound, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+    /// # };
+    /// let start_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let end_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let start = AbsoluteBound::Start(
+    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(start_time))
+    /// );
+    /// let end = AbsoluteBound::End(
+    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(end_time))
+    /// );
+    ///
+    /// assert!(end.is_end());
+    /// assert!(!start.is_end());
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     pub fn is_end(&self) -> bool {
         matches!(self, Self::End(_))
     }
 
     /// Returns the content of the [`Start`](AbsoluteBound::Start) variant
+    ///
+    /// Consumes `self` and puts the content of the [`Start`](AbsoluteBound::Start) variant
+    /// in an [`Option`]. If instead `self` is another variant, the method returns [`None`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::{
+    /// #     AbsoluteBound, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+    /// # };
+    /// let start_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let end_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let start = AbsoluteBound::Start(
+    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(start_time))
+    /// );
+    /// let end = AbsoluteBound::End(
+    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(end_time))
+    /// );
+    ///
+    /// assert_eq!(
+    ///     start.start(),
+    ///     Some(AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(start_time))),
+    /// );
+    /// assert_eq!(
+    ///     end.start(),
+    ///     None,
+    /// );
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     pub fn start(self) -> Option<AbsoluteStartBound> {
         match self {
@@ -917,6 +994,37 @@ impl AbsoluteBound {
     }
 
     /// Returns the content of the [`End`](AbsoluteBound::End) variant
+    ///
+    /// Consumes `self` and puts the content of the [`End`](AbsoluteBound::End) variant
+    /// in an [`Option`]. If instead `self` is another variant, the method returns [`None`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::{
+    /// #     AbsoluteBound, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+    /// # };
+    /// let start_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let end_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let start = AbsoluteBound::Start(
+    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(start_time))
+    /// );
+    /// let end = AbsoluteBound::End(
+    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(end_time))
+    /// );
+    ///
+    /// assert_eq!(
+    ///     end.end(),
+    ///     Some(AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(end_time))),
+    /// );
+    /// assert_eq!(
+    ///     start.end(),
+    ///     None,
+    /// );
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     pub fn end(self) -> Option<AbsoluteEndBound> {
         match self {
@@ -927,7 +1035,29 @@ impl AbsoluteBound {
 
     /// Returns the opposite bound type with the opposite inclusivity
     ///
-    /// Returns [`None`] if the bound is infinite.
+    /// Simply use [`AbsoluteStartBound::opposite`] for start bounds,
+    /// and [`AbsoluteEndBound::opposite`] for end bounds, and then wraps the result in [`AbsoluteBound`].
+    ///
+    /// If the bound is infinite, the method returns [`None`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use periodical::intervals::absolute::AbsoluteBound;
+    /// # let bounds: [AbsoluteBound; 0] = [];
+    /// struct BoundChange {
+    ///     new_bound: AbsoluteBound,
+    ///     before_new_bound: Option<AbsoluteBound>,
+    /// }
+    ///
+    /// bounds.into_iter().map(|bound| BoundChange {
+    ///     new_bound: bound,
+    ///     before_new_bound: bound.opposite(),
+    /// });
+    /// ```
+    ///
+    /// A similar process is used in
+    /// [`LayeredAbsoluteBounds`](crate::iter::intervals::layered_bounds::LayeredAbsoluteBounds).
     #[must_use]
     pub fn opposite(&self) -> Option<Self> {
         match self {

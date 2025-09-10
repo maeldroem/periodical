@@ -883,6 +883,8 @@ pub fn prepare_relative_bounds_for_interval_creation(
 }
 
 /// Enum for relative start and end bounds
+///
+/// This enumerator is useful for storing both start and end bounds, usually for processing bounds individually.
 #[derive(Debug, Clone, Copy)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum RelativeBound {
@@ -891,19 +893,91 @@ pub enum RelativeBound {
 }
 
 impl RelativeBound {
-    /// Returns whether [`RelativeBound`] is of the [`Start`](RelativeBound::Start) variant
+    /// Returns whether it is of the [`Start`](RelativeBound::Start) variant
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::Duration;
+    /// # use periodical::intervals::relative::{
+    /// #     RelativeBound, RelativeEndBound, RelativeFiniteBound, RelativeStartBound,
+    /// # };
+    /// let start_offset = Duration::hours(8);
+    /// let end_offset = Duration::hours(16);
+    ///
+    /// let start = RelativeBound::Start(
+    ///     RelativeStartBound::Finite(RelativeFiniteBound::new(start_offset))
+    /// );
+    /// let end = RelativeBound::End(
+    ///     RelativeEndBound::Finite(RelativeFiniteBound::new(end_offset))
+    /// );
+    ///
+    /// assert!(start.is_start());
+    /// assert!(!end.is_start());
+    /// ```
     #[must_use]
     pub fn is_start(&self) -> bool {
         matches!(self, Self::Start(_))
     }
 
-    /// Returns whether [`RelativeBound`] is of the [`End`](RelativeBound::End) variant
+    /// Returns whether it is of the [`End`](RelativeBound::End) variant
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::Duration;
+    /// # use periodical::intervals::relative::{
+    /// #     RelativeBound, RelativeEndBound, RelativeFiniteBound, RelativeStartBound,
+    /// # };
+    /// let start_offset = Duration::hours(8);
+    /// let end_offset = Duration::hours(16);
+    ///
+    /// let start = RelativeBound::Start(
+    ///     RelativeStartBound::Finite(RelativeFiniteBound::new(start_offset))
+    /// );
+    /// let end = RelativeBound::End(
+    ///     RelativeEndBound::Finite(RelativeFiniteBound::new(end_offset))
+    /// );
+    ///
+    /// assert!(end.is_end());
+    /// assert!(!start.is_end());
+    /// ```
     #[must_use]
     pub fn is_end(&self) -> bool {
         matches!(self, Self::End(_))
     }
 
     /// Returns the content of the [`Start`](RelativeBound::Start) variant
+    ///
+    /// Consumes `self` and puts the content of the [`Start`](RelativeBound::Start) variant
+    /// in an [`Option`]. If instead `self` is another variant, the method returns [`None`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::Duration;
+    /// # use periodical::intervals::relative::{
+    /// #     RelativeBound, RelativeEndBound, RelativeFiniteBound, RelativeStartBound,
+    /// # };
+    /// let start_offset = Duration::hours(8);
+    /// let end_offset = Duration::hours(16);
+    ///
+    /// let start = RelativeBound::Start(
+    ///     RelativeStartBound::Finite(RelativeFiniteBound::new(start_offset))
+    /// );
+    /// let end = RelativeBound::End(
+    ///     RelativeEndBound::Finite(RelativeFiniteBound::new(end_offset))
+    /// );
+    ///
+    /// assert_eq!(
+    ///     start.start(),
+    ///     Some(RelativeStartBound::Finite(RelativeFiniteBound::new(start_offset))),
+    /// );
+    /// assert_eq!(
+    ///     end.start(),
+    ///     None,
+    /// );
+    /// ```
     #[must_use]
     pub fn start(self) -> Option<RelativeStartBound> {
         match self {
@@ -913,6 +987,36 @@ impl RelativeBound {
     }
 
     /// Returns the content of the [`End`](RelativeBound::End) variant
+    ///
+    /// Consumes `self` and puts the content of the [`End`](RelativeBound::End) variant
+    /// in an [`Option`]. If instead `self` is another variant, the method returns [`None`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::Duration;
+    /// # use periodical::intervals::relative::{
+    /// #     RelativeBound, RelativeEndBound, RelativeFiniteBound, RelativeStartBound,
+    /// # };
+    /// let start_offset = Duration::hours(8);
+    /// let end_offset = Duration::hours(16);
+    ///
+    /// let start = RelativeBound::Start(
+    ///     RelativeStartBound::Finite(RelativeFiniteBound::new(start_offset))
+    /// );
+    /// let end = RelativeBound::End(
+    ///     RelativeEndBound::Finite(RelativeFiniteBound::new(end_offset))
+    /// );
+    ///
+    /// assert_eq!(
+    ///     end.end(),
+    ///     Some(RelativeEndBound::Finite(RelativeFiniteBound::new(end_offset))),
+    /// );
+    /// assert_eq!(
+    ///     start.end(),
+    ///     None,
+    /// );
+    /// ```
     #[must_use]
     pub fn end(self) -> Option<RelativeEndBound> {
         match self {
@@ -923,7 +1027,29 @@ impl RelativeBound {
 
     /// Returns the opposite bound type with the opposite inclusivity
     ///
-    /// Returns [`None`] if the bound is infinite.
+    /// Simply use [`RelativeStartBound::opposite`] for start bounds,
+    /// and [`RelativeEndBound::opposite`] for end bounds, and then wraps the result in [`RelativeBound`].
+    ///
+    /// If the bound is infinite, the method returns [`None`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use periodical::intervals::relative::RelativeBound;
+    /// # let bounds: [RelativeBound; 0] = [];
+    /// struct BoundChange {
+    ///     new_bound: RelativeBound,
+    ///     before_new_bound: Option<RelativeBound>,
+    /// }
+    ///
+    /// bounds.into_iter().map(|bound| BoundChange {
+    ///     new_bound: bound,
+    ///     before_new_bound: bound.opposite(),
+    /// });
+    /// ```
+    ///
+    /// A similar process is used in
+    /// [`LayeredRelativeBounds`](crate::iter::intervals::layered_bounds::LayeredRelativeBounds).
     #[must_use]
     pub fn opposite(&self) -> Option<Self> {
         match self {
