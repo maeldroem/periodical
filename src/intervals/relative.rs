@@ -221,6 +221,9 @@ impl TryFrom<Bound<Duration>> for RelativeFiniteBound {
 ///
 /// Represents the start bound of an interval, may it be infinitely in the past or at a precise offset,
 /// in which case it contains an [`RelativeFiniteBound`].
+///
+/// Contrary to specific relative interval types, both [`RelativeStartBound`] and [`RelativeEndBound`] use an offset,
+/// and not an offset for the start and a length for the end.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum RelativeStartBound {
@@ -467,6 +470,9 @@ impl From<Bound<Duration>> for RelativeStartBound {
 ///
 /// Represents the end bound of an interval, may it be infinitely in the future or at a precise point in time,
 /// in which case it contains an [`RelativeFiniteBound`].
+///
+/// Contrary to specific relative interval types, both [`RelativeStartBound`] and [`RelativeEndBound`] use an offset,
+/// and not an offset for the start and a length for the end.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum RelativeEndBound {
