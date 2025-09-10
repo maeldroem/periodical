@@ -525,9 +525,9 @@ fn relative_end_bound_is_finite() {
 }
 
 #[test]
-fn relative_end_bound_is_infinite_past() {
-    assert!(!RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(1))).is_infinite_past());
-    assert!(RelativeEndBound::InfiniteFuture.is_infinite_past());
+fn relative_end_bound_is_infinite_future() {
+    assert!(!RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(1))).is_infinite_future());
+    assert!(RelativeEndBound::InfiniteFuture.is_infinite_future());
 }
 
 #[test]

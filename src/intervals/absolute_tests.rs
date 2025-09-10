@@ -536,9 +536,9 @@ fn absolute_end_bound_is_finite() {
 }
 
 #[test]
-fn absolute_end_bound_is_infinite_past() {
-    assert!(!AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))).is_infinite_past());
-    assert!(AbsoluteEndBound::InfiniteFuture.is_infinite_past());
+fn absolute_end_bound_is_infinite_future() {
+    assert!(!AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))).is_infinite_future());
+    assert!(AbsoluteEndBound::InfiniteFuture.is_infinite_future());
 }
 
 #[test]
