@@ -1166,7 +1166,17 @@ where
     }
 }
 
-/// Bounds of a non-empty relative interval
+/// Pair of [`RelativeStartBound`] and [`RelativeEndBound`]
+///
+/// This pair conserves the invariants required for an interval:
+///
+/// 1. The bounds are in chronological order
+/// 2. If the bounds have the same offset, their inclusivities should be [inclusive] for both
+///
+/// [`RelativeBounds`] should be used when you want a non-empty interval which don't need to conserve
+/// a given [`Openness`].
+///
+/// [inclusive]: BoundInclusivity::Inclusive
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct RelativeBounds {
     start: RelativeStartBound,
@@ -1174,15 +1184,57 @@ pub struct RelativeBounds {
 }
 
 impl RelativeBounds {
-    /// Creates an instance of relative bound without checking if the bounds are in order
+    /// Creates a new [`RelativeBounds`] without checking if it violates invariants
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::Duration;
+    /// # use periodical::intervals::relative::{
+    /// #     RelativeBounds, RelativeEndBound, RelativeFiniteBound, RelativeStartBound,
+    /// # };
+    /// // Start and end are not in chronological order!
+    /// let start_offset = Duration::hours(16);
+    /// let end_offset = Duration::hours(8);
+    ///
+    /// let start = RelativeStartBound::Finite(RelativeFiniteBound::new(start_offset));
+    /// let end = RelativeEndBound::Finite(RelativeFiniteBound::new(end_offset));
+    ///
+    /// let bounds = RelativeBounds::unchecked_new(start, end);
+    ///
+    /// assert_eq!(bounds.start(), &start);
+    /// assert_eq!(bounds.end(), &end);
+    /// ```
     #[must_use]
     pub fn unchecked_new(start: RelativeStartBound, end: RelativeEndBound) -> Self {
         RelativeBounds { start, end }
     }
 
-    /// Creates a new instance of relative bounds
+    /// Creates a new [`RelativeBounds`]
     ///
-    /// Uses [`prepare_relative_bounds_for_interval_creation`] under the hood for making the bounds safe to use.
+    /// Uses [`prepare_relative_bounds_for_interval_creation`] under the hood for making sure the bounds respect
+    /// the invariants.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::Duration;
+    /// # use periodical::intervals::relative::{
+    /// #     RelativeBounds, RelativeEndBound, RelativeFiniteBound, RelativeStartBound,
+    /// # };
+    /// // Start and end are not in chronological order!
+    /// let start_offset = Duration::hours(16);
+    /// let end_offset = Duration::hours(8);
+    ///
+    /// let start = RelativeStartBound::Finite(RelativeFiniteBound::new(start_offset));
+    /// let end = RelativeEndBound::Finite(RelativeFiniteBound::new(end_offset));
+    ///
+    /// let bounds = RelativeBounds::new(start, end);
+    ///
+    /// // Now the start and end are in chronological order
+    /// assert_eq!(bounds.start(), &end);
+    /// assert_eq!(bounds.end(), &start);
+    /// ```
     #[must_use]
     pub fn new(mut start: RelativeStartBound, mut end: RelativeEndBound) -> Self {
         prepare_relative_bounds_for_interval_creation(&mut start, &mut end);
@@ -1190,57 +1242,210 @@ impl RelativeBounds {
     }
 
     /// Returns the relative start bound
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::Duration;
+    /// # use periodical::intervals::relative::{
+    /// #     RelativeBounds, RelativeEndBound, RelativeFiniteBound, RelativeStartBound,
+    /// # };
+    /// let start_offset = Duration::hours(8);
+    /// let end_offset = Duration::hours(16);
+    ///
+    /// let start = RelativeStartBound::Finite(RelativeFiniteBound::new(start_offset));
+    /// let end = RelativeEndBound::Finite(RelativeFiniteBound::new(end_offset));
+    ///
+    /// let bounds = RelativeBounds::new(start, end);
+    ///
+    /// assert_eq!(bounds.start(), &start);
+    /// ```
     #[must_use]
     pub fn start(&self) -> &RelativeStartBound {
         &self.start
     }
 
     /// Returns the relative end bound
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::Duration;
+    /// # use periodical::intervals::relative::{
+    /// #     RelativeBounds, RelativeEndBound, RelativeFiniteBound, RelativeStartBound,
+    /// # };
+    /// let start_offset = Duration::hours(8);
+    /// let end_offset = Duration::hours(16);
+    ///
+    /// let start = RelativeStartBound::Finite(RelativeFiniteBound::new(start_offset));
+    /// let end = RelativeEndBound::Finite(RelativeFiniteBound::new(end_offset));
+    ///
+    /// let bounds = RelativeBounds::new(start, end);
+    ///
+    /// assert_eq!(bounds.end(), &end);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     pub fn end(&self) -> &RelativeEndBound {
         &self.end
     }
 
-    /// Sets the relative start bound without checking if it is in order
-    pub fn unchecked_set_start(&mut self, start: RelativeStartBound) {
-        self.start = start;
-    }
-
-    /// Sets the relative end bound without checking if it is in order
-    pub fn unchecked_set_end(&mut self, end: RelativeEndBound) {
-        self.end = end;
-    }
-
-    /// Sets the relative start bound
+    /// Sets the start bound without checking if it violates invariants
     ///
-    /// Returns whether the change was successful: the new start must be in chronological order and if it is equal
-    /// to the end bound, both bounds must be inclusive.
-    pub fn set_start(&mut self, start: RelativeStartBound) -> bool {
-        if start.partial_cmp(self.end()).is_none_or(Ordering::is_gt) {
-            return false;
-        }
-
-        self.unchecked_set_start(start);
-        true
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::Duration;
+    /// # use periodical::intervals::relative::{
+    /// #     RelativeBounds, RelativeEndBound, RelativeFiniteBound, RelativeStartBound,
+    /// # };
+    /// let start_offset = Duration::hours(8);
+    /// let end_offset = Duration::hours(16);
+    ///
+    /// let start = RelativeStartBound::Finite(RelativeFiniteBound::new(start_offset));
+    /// let end = RelativeEndBound::Finite(RelativeFiniteBound::new(end_offset));
+    ///
+    /// let mut bounds = RelativeBounds::new(start, end);
+    ///
+    /// let new_start_offset = Duration::hours(18);
+    /// let new_start = RelativeStartBound::Finite(RelativeFiniteBound::new(new_start_offset));
+    ///
+    /// // New start is past the end
+    /// bounds.unchecked_set_start(new_start);
+    ///
+    /// // And yet stays in `bounds`
+    /// assert_eq!(bounds.start(), &new_start);
+    /// assert_eq!(bounds.end(), &end);
+    /// ```
+    pub fn unchecked_set_start(&mut self, new_start: RelativeStartBound) {
+        self.start = new_start;
     }
 
-    /// Sets the relative end bound
+    /// Sets the end bound without checking if it violates invariants
     ///
-    /// Returns whether the change was successful: the new end must be in chronological order and if it is equal
-    /// to the start bound, both bounds must be inclusive.
-    pub fn set_end(&mut self, end: RelativeEndBound) -> bool {
-        if self.start().partial_cmp(&end).is_none_or(Ordering::is_gt) {
-            return false;
-        }
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::Duration;
+    /// # use periodical::intervals::relative::{
+    /// #     RelativeBounds, RelativeEndBound, RelativeFiniteBound, RelativeStartBound,
+    /// # };
+    /// let start_offset = Duration::hours(8);
+    /// let end_offset = Duration::hours(16);
+    ///
+    /// let start = RelativeStartBound::Finite(RelativeFiniteBound::new(start_offset));
+    /// let end = RelativeEndBound::Finite(RelativeFiniteBound::new(end_offset));
+    ///
+    /// let mut bounds = RelativeBounds::new(start, end);
+    ///
+    /// let new_end_offset = Duration::hours(6);
+    /// let new_end = RelativeEndBound::Finite(RelativeFiniteBound::new(new_end_offset));
+    ///
+    /// // New end is before the start
+    /// bounds.unchecked_set_end(new_end);
+    ///
+    /// // And yet stays in `bounds`
+    /// assert_eq!(bounds.start(), &start);
+    /// assert_eq!(bounds.end(), &new_end);
+    /// ```
+    pub fn unchecked_set_end(&mut self, new_end: RelativeEndBound) {
+        self.end = new_end;
+    }
 
-        self.unchecked_set_end(end);
-        true
+    /// Sets the start bound
+    ///
+    /// Returns whether the operation was successful and the start bound modified.
+    /// If the given new start bound violates the invariants, the method simply returns `false`
+    /// without changing the start bound.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::Duration;
+    /// # use periodical::intervals::relative::{
+    /// #     RelativeBounds, RelativeEndBound, RelativeFiniteBound, RelativeStartBound,
+    /// # };
+    /// let start_offset = Duration::hours(8);
+    /// let end_offset = Duration::hours(16);
+    ///
+    /// let start = RelativeStartBound::Finite(RelativeFiniteBound::new(start_offset));
+    /// let end = RelativeEndBound::Finite(RelativeFiniteBound::new(end_offset));
+    ///
+    /// let mut bounds = RelativeBounds::new(start, end);
+    ///
+    /// let new_start_offset = Duration::hours(18);
+    /// let new_start = RelativeStartBound::Finite(RelativeFiniteBound::new(new_start_offset));
+    ///
+    /// // New start is past the end, and therefore gets ignored
+    /// let was_successful = bounds.set_start(new_start);
+    ///
+    /// assert!(!was_successful);
+    /// assert_eq!(bounds.start(), &start);
+    /// assert_eq!(bounds.end(), &end);
+    /// ```
+    pub fn set_start(&mut self, new_start: RelativeStartBound) -> bool {
+        match check_relative_bounds_for_interval_creation(&new_start, self.end()) {
+            Ok(()) => {
+                self.unchecked_set_start(new_start);
+                true
+            },
+            Err(_) => false,
+        }
+    }
+
+    /// Sets the end bound
+    ///
+    /// Returns whether the operation was successful and the end bound modified.
+    /// If the given new end bound violates the invariants, the method simply returns `false`
+    /// without changing the end bound.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::Duration;
+    /// # use periodical::intervals::relative::{
+    /// #     RelativeBounds, RelativeEndBound, RelativeFiniteBound, RelativeStartBound,
+    /// # };
+    /// let start_offset = Duration::hours(8);
+    /// let end_offset = Duration::hours(16);
+    ///
+    /// let start = RelativeStartBound::Finite(RelativeFiniteBound::new(start_offset));
+    /// let end = RelativeEndBound::Finite(RelativeFiniteBound::new(end_offset));
+    ///
+    /// let mut bounds = RelativeBounds::new(start, end);
+    ///
+    /// let new_end_offset = Duration::hours(6);
+    /// let new_end = RelativeEndBound::Finite(RelativeFiniteBound::new(new_end_offset));
+    ///
+    /// // New end is before the start, and therefore gets ignored
+    /// let was_successful = bounds.set_end(new_end);
+    ///
+    /// assert!(!was_successful);
+    /// assert_eq!(bounds.start(), &start);
+    /// assert_eq!(bounds.end(), &end);
+    /// ```
+    pub fn set_end(&mut self, new_end: RelativeEndBound) -> bool {
+        match check_relative_bounds_for_interval_creation(self.start(), &new_end) {
+            Ok(()) => {
+                self.unchecked_set_end(new_end);
+                true
+            },
+            Err(_) => false,
+        }
     }
 
     /// Compares two [`RelativeBounds`], but if they have the same start, order by decreasing length
     ///
     /// Don't rely on this method for checking for equality of start, as it will produce other [`Ordering`]s if their
     /// length don't match too.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use periodical::intervals::relative::RelativeBounds;
+    /// # let mut bounds: [RelativeBounds; 0] = [];
+    /// bounds.sort_by(RelativeBounds::ord_by_start_and_inv_length);
+    /// ```
     #[must_use]
     pub fn ord_by_start_and_inv_length(&self, other: &Self) -> Ordering {
         match self.cmp(other) {

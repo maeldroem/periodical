@@ -1174,7 +1174,17 @@ where
     }
 }
 
-/// Bounds of a non-empty absolute interval
+/// Pair of [`AbsoluteStartBound`] and [`AbsoluteEndBound`]
+///
+/// This pair conserves the invariants required for an interval:
+///
+/// 1. The bounds are in chronological order
+/// 2. If the bounds have the same time, their inclusivities should be [inclusive] for both
+///
+/// [`AbsoluteBounds`] should be used when you want a non-empty interval which don't need to conserve
+/// a given [`Openness`].
+///
+/// [inclusive]: BoundInclusivity::Inclusive
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct AbsoluteBounds {
     start: AbsoluteStartBound,
@@ -1182,15 +1192,59 @@ pub struct AbsoluteBounds {
 }
 
 impl AbsoluteBounds {
-    /// Creates a new instance of absolute bounds without checking if the bounds are in order
+    /// Creates a new [`AbsoluteBounds`] without checking if it violates invariants
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::{
+    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+    /// # };
+    /// // Start and end are not in chronological order!
+    /// let start_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let end_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let start = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(start_time));
+    /// let end = AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(end_time));
+    ///
+    /// let bounds = AbsoluteBounds::unchecked_new(start, end);
+    ///
+    /// assert_eq!(bounds.start(), &start);
+    /// assert_eq!(bounds.end(), &end);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     pub fn unchecked_new(start: AbsoluteStartBound, end: AbsoluteEndBound) -> Self {
         AbsoluteBounds { start, end }
     }
 
-    /// Creates a new instance of absolute bounds
+    /// Creates a new [`AbsoluteBounds`]
     ///
-    /// Uses [`prepare_absolute_bounds_for_interval_creation`] under the hood for making the bounds safe to use.
+    /// Uses [`prepare_absolute_bounds_for_interval_creation`] under the hood for making sure the bounds respect
+    /// the invariants.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::{
+    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+    /// # };
+    /// // Start and end are not in chronological order!
+    /// let start_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let end_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let start = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(start_time));
+    /// let end = AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(end_time));
+    ///
+    /// let bounds = AbsoluteBounds::new(start, end);
+    ///
+    /// // Now the start and end are in chronological order
+    /// assert_eq!(bounds.start(), &end);
+    /// assert_eq!(bounds.end(), &start);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     pub fn new(mut start: AbsoluteStartBound, mut end: AbsoluteEndBound) -> Self {
         prepare_absolute_bounds_for_interval_creation(&mut start, &mut end);
@@ -1198,57 +1252,215 @@ impl AbsoluteBounds {
     }
 
     /// Returns the absolute start bound
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::{
+    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+    /// # };
+    /// let start_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let end_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let start = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(start_time));
+    /// let end = AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(end_time));
+    ///
+    /// let bounds = AbsoluteBounds::new(start, end);
+    ///
+    /// assert_eq!(bounds.start(), &start);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     pub fn start(&self) -> &AbsoluteStartBound {
         &self.start
     }
 
     /// Returns the absolute end bound
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::{
+    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+    /// # };
+    /// let start_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let end_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let start = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(start_time));
+    /// let end = AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(end_time));
+    ///
+    /// let bounds = AbsoluteBounds::new(start, end);
+    ///
+    /// assert_eq!(bounds.end(), &end);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     pub fn end(&self) -> &AbsoluteEndBound {
         &self.end
     }
 
-    /// Sets the start bound without checking if it is in the right order
+    /// Sets the start bound without checking if it violates invariants
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::{
+    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+    /// # };
+    /// let start_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let end_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let start = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(start_time));
+    /// let end = AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(end_time));
+    ///
+    /// let mut bounds = AbsoluteBounds::new(start, end);
+    ///
+    /// let new_start_time = "2025-01-01 18:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let new_start = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(new_start_time));
+    ///
+    /// // New start is past the end
+    /// bounds.unchecked_set_start(new_start);
+    ///
+    /// // And yet stays in `bounds`
+    /// assert_eq!(bounds.start(), &new_start);
+    /// assert_eq!(bounds.end(), &end);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     pub fn unchecked_set_start(&mut self, new_start: AbsoluteStartBound) {
         self.start = new_start;
     }
 
-    /// Sets the end bound without checking if it is in the right order
+    /// Sets the end bound without checking if it violates invariants
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::{
+    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+    /// # };
+    /// let start_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let end_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let start = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(start_time));
+    /// let end = AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(end_time));
+    ///
+    /// let mut bounds = AbsoluteBounds::new(start, end);
+    ///
+    /// let new_end_time = "2025-01-01 06:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let new_end = AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(new_end_time));
+    ///
+    /// // New end is before the start
+    /// bounds.unchecked_set_end(new_end);
+    ///
+    /// // And yet stays in `bounds`
+    /// assert_eq!(bounds.start(), &start);
+    /// assert_eq!(bounds.end(), &new_end);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     pub fn unchecked_set_end(&mut self, new_end: AbsoluteEndBound) {
         self.end = new_end;
     }
 
     /// Sets the start bound
     ///
-    /// Returns whether the operation was successful: the new start must be in chronological order and if it is equal
-    /// to the end bound, both bounds must be inclusive.
+    /// Returns whether the operation was successful and the start bound modified.
+    /// If the given new start bound violates the invariants, the method simply returns `false`
+    /// without changing the start bound.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::{
+    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+    /// # };
+    /// let start_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let end_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let start = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(start_time));
+    /// let end = AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(end_time));
+    ///
+    /// let mut bounds = AbsoluteBounds::new(start, end);
+    ///
+    /// let new_start_time = "2025-01-01 18:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let new_start = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(new_start_time));
+    ///
+    /// // New start is past the end, and therefore gets ignored
+    /// let was_successful = bounds.set_start(new_start);
+    ///
+    /// assert!(!was_successful);
+    /// assert_eq!(bounds.start(), &start);
+    /// assert_eq!(bounds.end(), &end);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     pub fn set_start(&mut self, new_start: AbsoluteStartBound) -> bool {
-        if new_start.partial_cmp(self.end()).is_none_or(Ordering::is_gt) {
-            return false;
+        match check_absolute_bounds_for_interval_creation(&new_start, self.end()) {
+            Ok(()) => {
+                self.unchecked_set_start(new_start);
+                true
+            },
+            Err(_) => false,
         }
-
-        self.unchecked_set_start(new_start);
-        true
     }
 
     /// Sets the end bound
     ///
-    /// Returns whether the operation was successful: the new end must be in chronological order and if it is equal
-    /// to the start bound, both bounds must be inclusive.
+    /// Returns whether the operation was successful and the end bound modified.
+    /// If the given new end bound violates the invariants, the method simply returns `false`
+    /// without changing the end bound.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::{
+    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+    /// # };
+    /// let start_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let end_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let start = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(start_time));
+    /// let end = AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(end_time));
+    ///
+    /// let mut bounds = AbsoluteBounds::new(start, end);
+    ///
+    /// let new_end_time = "2025-01-01 06:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let new_end = AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(new_end_time));
+    ///
+    /// // New end is before the start, and therefore gets ignored
+    /// let was_successful = bounds.set_end(new_end);
+    ///
+    /// assert!(!was_successful);
+    /// assert_eq!(bounds.start(), &start);
+    /// assert_eq!(bounds.end(), &end);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     pub fn set_end(&mut self, new_end: AbsoluteEndBound) -> bool {
-        if self.start().partial_cmp(&new_end).is_none_or(Ordering::is_gt) {
-            return false;
+        match check_absolute_bounds_for_interval_creation(self.start(), &new_end) {
+            Ok(()) => {
+                self.unchecked_set_end(new_end);
+                true
+            },
+            Err(_) => false,
         }
-
-        self.unchecked_set_end(new_end);
-        true
     }
 
     /// Compares two [`AbsoluteBounds`], but if they have the same start, order by decreasing length
     ///
     /// Don't rely on this method for checking for equality of start, as it will produce other [`Ordering`]s if their
     /// length don't match too.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use periodical::intervals::absolute::AbsoluteBounds;
+    /// # let mut bounds: [AbsoluteBounds; 0] = [];
+    /// bounds.sort_by(AbsoluteBounds::ord_by_start_and_inv_length);
+    /// ```
     #[must_use]
     pub fn ord_by_start_and_inv_length(&self, other: &Self) -> Ordering {
         match self.cmp(other) {
