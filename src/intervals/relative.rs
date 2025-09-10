@@ -1437,7 +1437,7 @@ impl RelativeBounds {
     /// Compares two [`RelativeBounds`], but if they have the same start, order by decreasing length
     ///
     /// Don't rely on this method for checking for equality of start, as it will produce other [`Ordering`]s if their
-    /// length don't match too.
+    /// lengths don't match too.
     ///
     /// # Examples
     ///
@@ -1588,7 +1588,10 @@ impl TryFrom<EmptiableRelativeBounds> for RelativeBounds {
     }
 }
 
-/// Bounds of a relative interval
+/// Enum containing [`RelativeBounds`] but with support for [empty intervals](EmptyInterval)
+///
+/// For more information, check [`RelativeBounds`], [`EmptyInterval`],
+/// or [`crate::intervals` module documentation](crate::intervals).
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum EmptiableRelativeBounds {
@@ -1597,7 +1600,28 @@ pub enum EmptiableRelativeBounds {
 }
 
 impl EmptiableRelativeBounds {
-    /// Converts the content of the [`Bound`](EmptiableRelativeBounds::Bound) variant into an [`Option`]
+    /// Returns the content of the [`Bound`](EmptiableRelativeBounds::Bound) variant
+    ///
+    /// Consumes `self` and puts the content of the [`Bound`](EmptiableRelativeBounds::Bound) variant
+    /// in an [`Option`]. If instead `self` is another variant, the method returns [`None`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use periodical::intervals::relative::{
+    /// #     EmptiableRelativeBounds, RelativeBounds, RelativeEndBound, RelativeStartBound,
+    /// # };
+    /// let bounds = RelativeBounds::new(
+    ///     RelativeStartBound::InfinitePast,
+    ///     RelativeEndBound::InfiniteFuture,
+    /// );
+    /// // Cloning is only for making the use of `bounds` okay in the following assertions
+    /// let bound_emptiable_bounds = EmptiableRelativeBounds::Bound(bounds.clone());
+    /// let empty_emptiable_bounds = EmptiableRelativeBounds::Empty;
+    ///
+    /// assert_eq!(bound_emptiable_bounds.bound(), Some(bounds));
+    /// assert_eq!(empty_emptiable_bounds.bound(), None);
+    /// ```
     #[must_use]
     pub fn bound(self) -> Option<RelativeBounds> {
         match self {
@@ -1608,8 +1632,21 @@ impl EmptiableRelativeBounds {
 
     /// Compares two [`EmptiableRelativeBounds`], but if they have the same start, order by decreasing length
     ///
+    /// Uses [`RelativeBounds::ord_by_start_and_inv_length`] under the hood for
+    /// the [`Bound`](EmptiableRelativeBounds::Bound) variants and [`EmptiableRelativeBounds::cmp`]
+    /// for the [`Empty`](EmptiableRelativeBounds::Empty) variants (which will just place all empty bounds before
+    /// any bound bounds).
+    ///
     /// Don't rely on this method for checking for equality of start, as it will produce other [`Ordering`]s if their
-    /// length don't match too.
+    /// lengths don't match too.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use periodical::intervals::relative::EmptiableRelativeBounds;
+    /// # let mut bounds: [EmptiableRelativeBounds; 0] = [];
+    /// bounds.sort_by(EmptiableRelativeBounds::ord_by_start_and_inv_length);
+    /// ```
     #[must_use]
     pub fn ord_by_start_and_inv_length(&self, other: &Self) -> Ordering {
         match (self, other) {
