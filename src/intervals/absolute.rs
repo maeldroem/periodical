@@ -2732,6 +2732,7 @@ impl From<RangeToInclusive<DateTime<Utc>>> for HalfBoundedAbsoluteInterval {
     }
 }
 
+/// Errors that can occur when trying to convert [`AbsoluteBounds`] into [`HalfBoundedAbsoluteInterval`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum HalfBoundedAbsoluteIntervalFromAbsoluteBoundsError {
     NotHalfBoundedInterval,
@@ -2771,6 +2772,7 @@ impl TryFrom<AbsoluteBounds> for HalfBoundedAbsoluteInterval {
     }
 }
 
+/// Errors that can occur when trying to convert [`AbsoluteInterval`] into [`HalfBoundedAbsoluteInterval`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum HalfBoundedAbsoluteIntervalFromAbsoluteIntervalError {
     WrongVariant,

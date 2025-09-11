@@ -2644,6 +2644,7 @@ impl From<RangeToInclusive<Duration>> for HalfBoundedRelativeInterval {
     }
 }
 
+/// Errors that can occur when trying to convert [`RelativeBounds`] into [`HalfBoundedRelativeInterval`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum HalfBoundedRelativeIntervalFromRelativeBoundsError {
     NotHalfBoundedInterval,
@@ -2683,6 +2684,7 @@ impl TryFrom<RelativeBounds> for HalfBoundedRelativeInterval {
     }
 }
 
+/// Errors that can occur when trying to convert [`RelativeInterval`] into [`HalfBoundedRelativeInterval`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum HalfBoundedRelativeIntervalFromRelativeIntervalError {
     WrongVariant,
