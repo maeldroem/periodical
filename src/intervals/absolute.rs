@@ -1,6 +1,13 @@
 //! Absolute intervals
 //!
 //! Absolute intervals are pinned to time, that is to say they have a start datetime and an end datetime.
+//!
+//! The most common absolute interval objects you will encounter are
+//!
+//! - [`AbsoluteBounds`]
+//! - [`EmptiableAbsoluteBounds`]
+//! - [`BoundedAbsoluteInterval`]
+//! - [`HalfBoundedAbsoluteInterval`]
 
 use std::cmp::Ordering;
 use std::error::Error;

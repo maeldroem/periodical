@@ -1,6 +1,13 @@
 //! Relative intervals
 //!
 //! Relative intervals contain an offset duration and a length instead of being fixed in time.
+//!
+//! The most common relative interval objects you will encounter are
+//!
+//! - [`RelativeBounds`]
+//! - [`EmptiableRelativeBounds`]
+//! - [`BoundedRelativeInterval`]
+//! - [`HalfBoundedRelativeInterval`]
 
 use std::cmp::Ordering;
 use std::error::Error;
