@@ -2799,7 +2799,18 @@ impl TryFrom<AbsoluteInterval> for HalfBoundedAbsoluteInterval {
     }
 }
 
-/// Represents any absolute interval, including empty and unbounded intervals
+/// An absolute interval
+///
+/// An enumerator to store any kind of absolute interval: [`BoundedAbsoluteInterval`],
+/// [`HalfBoundedAbsoluteInterval`], [`UnboundedInterval`], and [`EmptyInterval`].
+///
+/// The contained intervals conserve the [openness](Openness) invariant, but the chosen variant can change.
+/// Compared to [`AbsoluteBounds`], thanks to the variants we know exactly the kind of interval that is stored
+/// without needing to check inner data.
+///
+/// Usually this is the structure that you want to use when dealing with absolute intervals
+/// as it has more conversion methods from standard types, and also provides a quick way to know the type of
+/// the interval and perhaps extract from it to make its type immutable.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum AbsoluteInterval {
@@ -2810,10 +2821,20 @@ pub enum AbsoluteInterval {
 }
 
 impl AbsoluteInterval {
-    /// Compares two [`AbsoluteInterval`]s, but if they have the same start, order by decreasing length
+    /// Compares two [`AbsoluteInterval`], but if they have the same start, order by decreasing length
+    ///
+    /// Uses [`EmptiableAbsoluteBounds::ord_by_start_and_inv_length`] under the hood.
     ///
     /// Don't rely on this method for checking for equality of start, as it will produce other [`Ordering`]s if their
-    /// length don't match too.
+    /// lengths don't match too.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use periodical::intervals::absolute::AbsoluteInterval;
+    /// # let mut bounds: [AbsoluteInterval; 0] = [];
+    /// bounds.sort_by(AbsoluteInterval::ord_by_start_and_inv_length);
+    /// ```
     #[must_use]
     pub fn ord_by_start_and_inv_length(&self, other: &Self) -> Ordering {
         self.emptiable_abs_bounds()
@@ -3008,6 +3029,9 @@ impl From<EmptiableAbsoluteBounds> for AbsoluteInterval {
     }
 }
 
+/// Converts `(Option<DateTime<Utc>>, Option<DateTime<Utc>>)` into [`AbsoluteInterval`]
+///
+/// The first tuple element represents the start bound, the second element represents the end bound.
 impl From<(Option<DateTime<Utc>>, Option<DateTime<Utc>>)> for AbsoluteInterval {
     fn from((from_opt, to_opt): (Option<DateTime<Utc>>, Option<DateTime<Utc>>)) -> Self {
         match (from_opt, to_opt) {
@@ -3023,6 +3047,10 @@ impl From<(Option<DateTime<Utc>>, Option<DateTime<Utc>>)> for AbsoluteInterval {
     }
 }
 
+/// Converts `(Option<(DateTime<Utc>, BoundInclusivity)>, Option<(DateTime<Utc>, BoundInclusivity)>)`
+/// into [`AbsoluteInterval`]
+///
+/// The first tuple element represents the start bound, the second element represents the end bound.
 impl
     From<(
         Option<(DateTime<Utc>, BoundInclusivity)>,
@@ -3050,44 +3078,33 @@ impl
     }
 }
 
+/// Converts `(Option<(DateTime<Utc>, bool)>, Option<(DateTime<Utc>, bool)>)` into [`AbsoluteInterval`]
+///
+/// The first tuple element represents the start bound, the second element represents the end bound.
+///
+/// The booleans contained within the `Option<(DateTime<Utc>, bool)>`s are interpreted as _is it inclusive?_
 impl From<(Option<(DateTime<Utc>, bool)>, Option<(DateTime<Utc>, bool)>)> for AbsoluteInterval {
     fn from((from_opt, to_opt): (Option<(DateTime<Utc>, bool)>, Option<(DateTime<Utc>, bool)>)) -> Self {
         match (from_opt, to_opt) {
             (Some((from, is_from_inclusive)), Some((to, is_to_inclusive))) => {
                 AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new_with_inclusivity(
                     from,
-                    if is_from_inclusive {
-                        BoundInclusivity::Inclusive
-                    } else {
-                        BoundInclusivity::Exclusive
-                    },
+                    BoundInclusivity::from(is_from_inclusive),
                     to,
-                    if is_to_inclusive {
-                        BoundInclusivity::Inclusive
-                    } else {
-                        BoundInclusivity::Exclusive
-                    },
+                    BoundInclusivity::from(is_to_inclusive),
                 ))
             },
             (Some((from, is_from_inclusive)), None) => {
                 AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
                     from,
-                    if is_from_inclusive {
-                        BoundInclusivity::Inclusive
-                    } else {
-                        BoundInclusivity::Exclusive
-                    },
+                    BoundInclusivity::from(is_from_inclusive),
                     OpeningDirection::ToFuture,
                 ))
             },
             (None, Some((to, is_to_inclusive))) => {
                 AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
                     to,
-                    if is_to_inclusive {
-                        BoundInclusivity::Inclusive
-                    } else {
-                        BoundInclusivity::Exclusive
-                    },
+                    BoundInclusivity::from(is_to_inclusive),
                     OpeningDirection::ToPast,
                 ))
             },
@@ -3096,6 +3113,12 @@ impl From<(Option<(DateTime<Utc>, bool)>, Option<(DateTime<Utc>, bool)>)> for Ab
     }
 }
 
+/// Converts `(bool, Option<DateTime<Utc>>, Option<DateTime<Utc>>)` into [`AbsoluteInterval`]
+///
+/// The second tuple element represents the start bound, the third element represents the end bound.
+///
+/// The first boolean indicates whether the interval is an [`EmptyInterval`].
+/// If it is set to `true`, the next elements are ignored altogether.
 impl From<(bool, Option<DateTime<Utc>>, Option<DateTime<Utc>>)> for AbsoluteInterval {
     fn from((is_empty, from_opt, to_opt): (bool, Option<DateTime<Utc>>, Option<DateTime<Utc>>)) -> Self {
         if is_empty {
@@ -3115,6 +3138,13 @@ impl From<(bool, Option<DateTime<Utc>>, Option<DateTime<Utc>>)> for AbsoluteInte
     }
 }
 
+/// Converts `(bool, Option<(DateTime<Utc>, BoundInclusivity)>, Option<(DateTime<Utc>, BoundInclusivity)>)`
+/// into [`AbsoluteInterval`]
+///
+/// The second tuple element represents the start bound, the third element represents the end bound.
+///
+/// The first boolean indicates whether the interval is an [`EmptyInterval`].
+/// If it is set to `true`, the next elements are ignored altogether.
 impl
     From<(
         bool,
@@ -3148,6 +3178,14 @@ impl
     }
 }
 
+/// Converts `(bool, Option<(DateTime<Utc>, bool)>, Option<(DateTime<Utc>, bool)>)` into [`AbsoluteInterval`]
+///
+/// The second tuple element represents the start bound, the third element represents the end bound.
+///
+/// The first boolean indicates whether the interval is an [`EmptyInterval`].
+/// If it is set to `true`, the next elements are ignored altogether.
+///
+/// The booleans contained within the `Option<(DateTime<Utc>, bool)>`s are interpreted as _is it inclusive?_
 impl From<(bool, Option<(DateTime<Utc>, bool)>, Option<(DateTime<Utc>, bool)>)> for AbsoluteInterval {
     fn from(
         (is_empty, from_opt, to_opt): (bool, Option<(DateTime<Utc>, bool)>, Option<(DateTime<Utc>, bool)>),
@@ -3160,38 +3198,22 @@ impl From<(bool, Option<(DateTime<Utc>, bool)>, Option<(DateTime<Utc>, bool)>)> 
             (Some((from, is_from_inclusive)), Some((to, is_to_inclusive))) => {
                 AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new_with_inclusivity(
                     from,
-                    if is_from_inclusive {
-                        BoundInclusivity::Inclusive
-                    } else {
-                        BoundInclusivity::Exclusive
-                    },
+                    BoundInclusivity::from(is_from_inclusive),
                     to,
-                    if is_to_inclusive {
-                        BoundInclusivity::Inclusive
-                    } else {
-                        BoundInclusivity::Exclusive
-                    },
+                    BoundInclusivity::from(is_to_inclusive),
                 ))
             },
             (Some((from, is_from_inclusive)), None) => {
                 AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
                     from,
-                    if is_from_inclusive {
-                        BoundInclusivity::Inclusive
-                    } else {
-                        BoundInclusivity::Exclusive
-                    },
+                    BoundInclusivity::from(is_from_inclusive),
                     OpeningDirection::ToFuture,
                 ))
             },
             (None, Some((to, is_to_inclusive))) => {
                 AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
                     to,
-                    if is_to_inclusive {
-                        BoundInclusivity::Inclusive
-                    } else {
-                        BoundInclusivity::Exclusive
-                    },
+                    BoundInclusivity::from(is_to_inclusive),
                     OpeningDirection::ToPast,
                 ))
             },
@@ -3201,6 +3223,9 @@ impl From<(bool, Option<(DateTime<Utc>, bool)>, Option<(DateTime<Utc>, bool)>)> 
 }
 
 // Unfortunately can't use impl<R: RangeBounds> From<R> as it's conflicting with the core implementation of From
+/// Converts `(Bound<DateTime<Utc>>, Bound<DateTime<Utc>>)` into [`AbsoluteInterval`]
+///
+/// The first tuple element represents the start bound, the second tuple element represents the end bound.
 impl From<(Bound<DateTime<Utc>>, Bound<DateTime<Utc>>)> for AbsoluteInterval {
     fn from((start_bound, end_bound): (Bound<DateTime<Utc>>, Bound<DateTime<Utc>>)) -> Self {
         match (start_bound, end_bound) {

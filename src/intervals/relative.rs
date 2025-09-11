@@ -2711,7 +2711,18 @@ impl TryFrom<RelativeInterval> for HalfBoundedRelativeInterval {
     }
 }
 
-/// Represents any relative interval, including empty and unbounded interval
+/// A relative interval
+///
+/// An enumerator to store any kind of relative interval: [`BoundedRelativeInterval`],
+/// [`HalfBoundedRelativeInterval`], [`UnboundedInterval`], and [`EmptyInterval`].
+///
+/// The contained intervals conserve the [openness](Openness) invariant, but the chosen variant can change.
+/// Compared to [`RelativeBounds`], thanks to the variants we know exactly the kind of interval that is stored
+/// without needing to check inner data.
+///
+/// Usually this is the structure that you want to use when dealing with relative intervals
+/// as it has more conversion methods from standard types, and also provides a quick way to know the type of
+/// the interval and perhaps extract from it to make its type immutable.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum RelativeInterval {
@@ -2722,10 +2733,20 @@ pub enum RelativeInterval {
 }
 
 impl RelativeInterval {
-    /// Compares two [`RelativeInterval`]s, but if they have the same start, order by decreasing length
+    /// Compares two [`RelativeInterval`], but if they have the same start, order by decreasing length
+    ///
+    /// Uses [`EmptiableRelativeBounds::ord_by_start_and_inv_length`] under the hood.
     ///
     /// Don't rely on this method for checking for equality of start, as it will produce other [`Ordering`]s if their
-    /// length don't match too.
+    /// lengths don't match too.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use periodical::intervals::relative::RelativeInterval;
+    /// # let mut bounds: [RelativeInterval; 0] = [];
+    /// bounds.sort_by(RelativeInterval::ord_by_start_and_inv_length);
+    /// ```
     #[must_use]
     pub fn ord_by_start_and_inv_length(&self, other: &Self) -> Ordering {
         self.emptiable_rel_bounds()
@@ -2920,6 +2941,9 @@ impl From<EmptiableRelativeBounds> for RelativeInterval {
     }
 }
 
+/// Converts `(Option<Duration>, Option<Duration>)` into [`RelativeInterval`]
+///
+/// The first tuple element represents the start bound, the second element represents the end bound.
 impl From<(Option<Duration>, Option<Duration>)> for RelativeInterval {
     fn from((from_opt, to_opt): (Option<Duration>, Option<Duration>)) -> Self {
         match (from_opt, to_opt) {
@@ -2935,6 +2959,10 @@ impl From<(Option<Duration>, Option<Duration>)> for RelativeInterval {
     }
 }
 
+/// Converts `(Option<(Duration, BoundInclusivity)>, Option<(Duration, BoundInclusivity)>)`
+/// into [`RelativeInterval`]
+///
+/// The first tuple element represents the start bound, the second element represents the end bound.
 impl
     From<(
         Option<(Duration, BoundInclusivity)>,
@@ -2962,44 +2990,33 @@ impl
     }
 }
 
+/// Converts `(Option<(Duration, bool)>, Option<(Duration, bool)>)` into [`RelativeInterval`]
+///
+/// The first tuple element represents the start bound, the second element represents the end bound.
+///
+/// The booleans contained within the `Option<(Duration, bool)>`s are interpreted as _is it inclusive?_
 impl From<(Option<(Duration, bool)>, Option<(Duration, bool)>)> for RelativeInterval {
     fn from((from_opt, to_opt): (Option<(Duration, bool)>, Option<(Duration, bool)>)) -> Self {
         match (from_opt, to_opt) {
             (Some((from, is_from_inclusive)), Some((to, is_to_inclusive))) => {
                 RelativeInterval::Bounded(BoundedRelativeInterval::new_with_inclusivity(
                     from,
-                    if is_from_inclusive {
-                        BoundInclusivity::Inclusive
-                    } else {
-                        BoundInclusivity::Exclusive
-                    },
+                    BoundInclusivity::from(is_from_inclusive),
                     to,
-                    if is_to_inclusive {
-                        BoundInclusivity::Inclusive
-                    } else {
-                        BoundInclusivity::Exclusive
-                    },
+                    BoundInclusivity::from(is_to_inclusive),
                 ))
             },
             (Some((from, is_from_inclusive)), None) => {
                 RelativeInterval::HalfBounded(HalfBoundedRelativeInterval::new_with_inclusivity(
                     from,
-                    if is_from_inclusive {
-                        BoundInclusivity::Inclusive
-                    } else {
-                        BoundInclusivity::Exclusive
-                    },
+                    BoundInclusivity::from(is_from_inclusive),
                     OpeningDirection::ToFuture,
                 ))
             },
             (None, Some((to, is_to_inclusive))) => {
                 RelativeInterval::HalfBounded(HalfBoundedRelativeInterval::new_with_inclusivity(
                     to,
-                    if is_to_inclusive {
-                        BoundInclusivity::Inclusive
-                    } else {
-                        BoundInclusivity::Exclusive
-                    },
+                    BoundInclusivity::from(is_to_inclusive),
                     OpeningDirection::ToPast,
                 ))
             },
@@ -3008,6 +3025,12 @@ impl From<(Option<(Duration, bool)>, Option<(Duration, bool)>)> for RelativeInte
     }
 }
 
+/// Converts `(bool, Option<Duration>, Option<Duration>)` into [`RelativeInterval`]
+///
+/// The second tuple element represents the start bound, the third element represents the end bound.
+///
+/// The first boolean indicates whether the interval is an [`EmptyInterval`].
+/// If it is set to `true`, the next elements are ignored altogether.
 impl From<(bool, Option<Duration>, Option<Duration>)> for RelativeInterval {
     fn from((is_empty, from_opt, to_opt): (bool, Option<Duration>, Option<Duration>)) -> Self {
         if is_empty {
@@ -3027,6 +3050,13 @@ impl From<(bool, Option<Duration>, Option<Duration>)> for RelativeInterval {
     }
 }
 
+/// Converts `(bool, Option<(Duration, BoundInclusivity)>, Option<(Duration, BoundInclusivity)>)`
+/// into [`RelativeInterval`]
+///
+/// The second tuple element represents the start bound, the third element represents the end bound.
+///
+/// The first boolean indicates whether the interval is an [`EmptyInterval`].
+/// If it is set to `true`, the next elements are ignored altogether.
 impl
     From<(
         bool,
@@ -3060,6 +3090,14 @@ impl
     }
 }
 
+/// Converts `(bool, Option<(Duration, bool)>, Option<(Duration, bool)>)` into [`RelativeInterval`]
+///
+/// The second tuple element represents the start bound, the third element represents the end bound.
+///
+/// The first boolean indicates whether the interval is an [`EmptyInterval`].
+/// If it is set to `true`, the next elements are ignored altogether.
+///
+/// The booleans contained within the `Option<(Duration, bool)>`s are interpreted as _is it inclusive?_
 impl From<(bool, Option<(Duration, bool)>, Option<(Duration, bool)>)> for RelativeInterval {
     fn from((is_empty, from_opt, to_opt): (bool, Option<(Duration, bool)>, Option<(Duration, bool)>)) -> Self {
         if is_empty {
@@ -3070,38 +3108,22 @@ impl From<(bool, Option<(Duration, bool)>, Option<(Duration, bool)>)> for Relati
             (Some((from, is_from_inclusive)), Some((to, is_to_inclusive))) => {
                 RelativeInterval::Bounded(BoundedRelativeInterval::new_with_inclusivity(
                     from,
-                    if is_from_inclusive {
-                        BoundInclusivity::Inclusive
-                    } else {
-                        BoundInclusivity::Exclusive
-                    },
+                    BoundInclusivity::from(is_from_inclusive),
                     to,
-                    if is_to_inclusive {
-                        BoundInclusivity::Inclusive
-                    } else {
-                        BoundInclusivity::Exclusive
-                    },
+                    BoundInclusivity::from(is_to_inclusive),
                 ))
             },
             (Some((from, is_from_inclusive)), None) => {
                 RelativeInterval::HalfBounded(HalfBoundedRelativeInterval::new_with_inclusivity(
                     from,
-                    if is_from_inclusive {
-                        BoundInclusivity::Inclusive
-                    } else {
-                        BoundInclusivity::Exclusive
-                    },
+                    BoundInclusivity::from(is_from_inclusive),
                     OpeningDirection::ToFuture,
                 ))
             },
             (None, Some((to, is_to_inclusive))) => {
                 RelativeInterval::HalfBounded(HalfBoundedRelativeInterval::new_with_inclusivity(
                     to,
-                    if is_to_inclusive {
-                        BoundInclusivity::Inclusive
-                    } else {
-                        BoundInclusivity::Exclusive
-                    },
+                    BoundInclusivity::from(is_to_inclusive),
                     OpeningDirection::ToPast,
                 ))
             },
@@ -3111,6 +3133,9 @@ impl From<(bool, Option<(Duration, bool)>, Option<(Duration, bool)>)> for Relati
 }
 
 // Unfortunately can't use impl<R: RangeBounds> From<R> as it's conflicting with the core implementation of From
+/// Converts `(Bound<Duration>, Bound<Duration>)` into [`RelativeInterval`]
+///
+/// The first tuple element represents the start bound, the second tuple element represents the end bound.
 impl From<(Bound<Duration>, Bound<Duration>)> for RelativeInterval {
     fn from((start_bound, end_bound): (Bound<Duration>, Bound<Duration>)) -> Self {
         match (start_bound, end_bound) {
