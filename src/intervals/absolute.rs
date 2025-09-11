@@ -2654,6 +2654,9 @@ impl From<(DateTime<Utc>, OpeningDirection)> for HalfBoundedAbsoluteInterval {
     }
 }
 
+/// Converts `(DateTime<Utc>, bool)` into [`HalfBoundedAbsoluteInterval`]
+///
+/// The boolean is interpreted as _is it going to future?_
 impl From<(DateTime<Utc>, bool)> for HalfBoundedAbsoluteInterval {
     fn from((time, goes_to_future): (DateTime<Utc>, bool)) -> Self {
         HalfBoundedAbsoluteInterval::new(time, OpeningDirection::from(goes_to_future))
@@ -2666,18 +2669,29 @@ impl From<((DateTime<Utc>, BoundInclusivity), OpeningDirection)> for HalfBounded
     }
 }
 
+/// Converts `((DateTime<Utc>, BoundInclusivity), bool)` into [`HalfBoundedAbsoluteInterval`]
+///
+/// The boolean is interpreted as _is it going to future?_
 impl From<((DateTime<Utc>, BoundInclusivity), bool)> for HalfBoundedAbsoluteInterval {
     fn from(((time, inclusivity), goes_to_future): ((DateTime<Utc>, BoundInclusivity), bool)) -> Self {
         HalfBoundedAbsoluteInterval::new_with_inclusivity(time, inclusivity, OpeningDirection::from(goes_to_future))
     }
 }
 
+/// Converts `((DateTime<Utc>, bool), OpeningDirection)` into [`HalfBoundedAbsoluteInterval`]
+///
+/// The boolean is interpreted as _is it inclusive?_
 impl From<((DateTime<Utc>, bool), OpeningDirection)> for HalfBoundedAbsoluteInterval {
     fn from(((time, is_inclusive), direction): ((DateTime<Utc>, bool), OpeningDirection)) -> Self {
         HalfBoundedAbsoluteInterval::new_with_inclusivity(time, BoundInclusivity::from(is_inclusive), direction)
     }
 }
 
+/// Converts `((DateTime<Utc>, bool), bool)` into [`HalfBoundedAbsoluteInterval`]
+///
+/// The boolean of the first tuple element is interpreted as _is it inclusive?_
+///
+/// The boolean of the second tuple element is interpreted as _is it going to future?_
 impl From<((DateTime<Utc>, bool), bool)> for HalfBoundedAbsoluteInterval {
     fn from(((time, is_inclusive), goes_to_future): ((DateTime<Utc>, bool), bool)) -> Self {
         HalfBoundedAbsoluteInterval::new_with_inclusivity(

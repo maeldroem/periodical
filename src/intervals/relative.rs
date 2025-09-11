@@ -2566,16 +2566,12 @@ impl From<(Duration, OpeningDirection)> for HalfBoundedRelativeInterval {
     }
 }
 
+/// Converts `(Duration, bool)` into [`HalfBoundedRelativeInterval`]
+///
+/// The boolean is interpreted as _is it going to future?_
 impl From<(Duration, bool)> for HalfBoundedRelativeInterval {
     fn from((offset, goes_to_future): (Duration, bool)) -> Self {
-        HalfBoundedRelativeInterval::new(
-            offset,
-            if goes_to_future {
-                OpeningDirection::ToFuture
-            } else {
-                OpeningDirection::ToPast
-            },
-        )
+        HalfBoundedRelativeInterval::new(offset, OpeningDirection::from(goes_to_future))
     }
 }
 
@@ -2585,48 +2581,35 @@ impl From<((Duration, BoundInclusivity), OpeningDirection)> for HalfBoundedRelat
     }
 }
 
+/// Converts `((Duration, BoundInclusivity), bool)` into [`HalfBoundedRelativeInterval`]
+///
+/// The boolean is interpreted as _is it going to future?_
 impl From<((Duration, BoundInclusivity), bool)> for HalfBoundedRelativeInterval {
     fn from(((offset, inclusivity), goes_to_future): ((Duration, BoundInclusivity), bool)) -> Self {
-        HalfBoundedRelativeInterval::new_with_inclusivity(
-            offset,
-            inclusivity,
-            if goes_to_future {
-                OpeningDirection::ToFuture
-            } else {
-                OpeningDirection::ToPast
-            },
-        )
+        HalfBoundedRelativeInterval::new_with_inclusivity(offset, inclusivity, OpeningDirection::from(goes_to_future))
     }
 }
 
+/// Converts `((Duration, bool), OpeningDirection)` into [`HalfBoundedRelativeInterval`]
+///
+/// The boolean is interpreted as _is it inclusive?_
 impl From<((Duration, bool), OpeningDirection)> for HalfBoundedRelativeInterval {
     fn from(((offset, is_inclusive), direction): ((Duration, bool), OpeningDirection)) -> Self {
-        HalfBoundedRelativeInterval::new_with_inclusivity(
-            offset,
-            if is_inclusive {
-                BoundInclusivity::Inclusive
-            } else {
-                BoundInclusivity::Exclusive
-            },
-            direction,
-        )
+        HalfBoundedRelativeInterval::new_with_inclusivity(offset, BoundInclusivity::from(is_inclusive), direction)
     }
 }
 
+/// Converts `((Duration, bool), bool)` into [`HalfBoundedRelativeInterval`]
+///
+/// The boolean of the first tuple element is interpreted as _is it inclusive?_
+///
+/// The boolean of the second tuple element is interpreted as _is it going to future?_
 impl From<((Duration, bool), bool)> for HalfBoundedRelativeInterval {
     fn from(((offset, is_inclusive), goes_to_future): ((Duration, bool), bool)) -> Self {
         HalfBoundedRelativeInterval::new_with_inclusivity(
             offset,
-            if is_inclusive {
-                BoundInclusivity::Inclusive
-            } else {
-                BoundInclusivity::Exclusive
-            },
-            if goes_to_future {
-                OpeningDirection::ToFuture
-            } else {
-                OpeningDirection::ToPast
-            },
+            BoundInclusivity::from(is_inclusive),
+            OpeningDirection::from(goes_to_future),
         )
     }
 }
