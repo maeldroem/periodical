@@ -1601,11 +1601,67 @@ fn emptiable_relative_bounds_from_relative_bounds() {
 }
 
 #[test]
+fn bounded_relative_interval_unchecked_new_negative_len() {
+    let interval = BoundedRelativeInterval::unchecked_new(Duration::hours(1), Duration::hours(-5));
+
+    assert_eq!(interval.offset(), Duration::hours(1));
+    assert_eq!(interval.length(), Duration::hours(-5));
+    assert_eq!(interval.from_inclusivity(), BoundInclusivity::Inclusive);
+    assert_eq!(interval.to_inclusivity(), BoundInclusivity::Inclusive);
+}
+
+#[test]
 fn bounded_relative_interval_new() {
     let interval = BoundedRelativeInterval::new(Duration::hours(1), Duration::hours(2));
 
     assert_eq!(interval.offset(), Duration::hours(1));
     assert_eq!(interval.length(), Duration::hours(2));
+    assert_eq!(interval.from_inclusivity(), BoundInclusivity::Inclusive);
+    assert_eq!(interval.to_inclusivity(), BoundInclusivity::Inclusive);
+}
+
+#[test]
+fn bounded_relative_interval_new_negative_len() {
+    let interval = BoundedRelativeInterval::new(Duration::hours(1), Duration::hours(-5));
+
+    assert_eq!(interval.offset(), Duration::hours(-4));
+    assert_eq!(interval.length(), Duration::hours(5));
+    assert_eq!(interval.from_inclusivity(), BoundInclusivity::Inclusive);
+    assert_eq!(interval.to_inclusivity(), BoundInclusivity::Inclusive);
+}
+
+#[test]
+#[should_panic(expected = "`TimeDelta + TimeDelta` overflowed")]
+fn bounded_relative_interval_new_negative_len_duration_underflow() {
+    let _ = BoundedRelativeInterval::new(Duration::MIN, Duration::hours(-5));
+}
+
+#[test]
+fn bounded_relative_interval_unchecked_new_with_inclusivity() {
+    let interval = BoundedRelativeInterval::unchecked_new_with_inclusivity(
+        Duration::hours(1),
+        BoundInclusivity::Inclusive,
+        Duration::zero(),
+        BoundInclusivity::Exclusive,
+    );
+
+    assert_eq!(interval.offset(), Duration::hours(1));
+    assert_eq!(interval.length(), Duration::zero());
+    assert_eq!(interval.from_inclusivity(), BoundInclusivity::Inclusive);
+    assert_eq!(interval.to_inclusivity(), BoundInclusivity::Exclusive);
+}
+
+#[test]
+fn bounded_relative_interval_new_with_inclusivity_zero_len() {
+    let interval = BoundedRelativeInterval::new_with_inclusivity(
+        Duration::hours(5),
+        BoundInclusivity::Inclusive,
+        Duration::zero(),
+        BoundInclusivity::Exclusive,
+    );
+
+    assert_eq!(interval.offset(), Duration::hours(5));
+    assert_eq!(interval.length(), Duration::zero());
     assert_eq!(interval.from_inclusivity(), BoundInclusivity::Inclusive);
     assert_eq!(interval.to_inclusivity(), BoundInclusivity::Inclusive);
 }

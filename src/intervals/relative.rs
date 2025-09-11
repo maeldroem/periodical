@@ -1746,7 +1746,15 @@ impl From<RelativeBounds> for EmptiableRelativeBounds {
 
 /// A bounded relative interval
 ///
-/// An interval set with relative time, with a defined start and end
+/// An interval with a set offset and length. Like all specific relative interval types, it conserves the invariant
+/// of its length cannot be negative, and if the length is 0, the bounds must be inclusive.
+///
+/// However, like the other specific interval types, it conserves an additional invariant:
+/// Its [openness](Openness) cannot change. That is to say a bounded interval must remain a bounded interval.
+/// It cannot mutate from being a bounded interval to a half-bounded interval.
+///
+/// Instead, if you are looking for a relative interval that doesn't keep the [openness](Openness) invariant,
+/// see [`RelativeBounds`].
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct BoundedRelativeInterval {
     offset: Duration,
@@ -1756,9 +1764,25 @@ pub struct BoundedRelativeInterval {
 }
 
 impl BoundedRelativeInterval {
-    /// Creates a new instance of a bounded relative interval
+    /// Creates a new [`BoundedRelativeInterval`] without checking if it violates the invariants
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::Duration;
+    /// # use periodical::intervals::relative::BoundedRelativeInterval;
+    /// let offset = Duration::hours(2);
+    /// let length = Duration::hours(-5);
+    ///
+    /// // Even though the length is negative
+    /// let bounded_interval = BoundedRelativeInterval::unchecked_new(offset, length);
+    ///
+    /// // It remains that way
+    /// assert_eq!(bounded_interval.offset(), offset);
+    /// assert_eq!(bounded_interval.length(), length);
+    /// ```
     #[must_use]
-    pub fn new(offset: Duration, length: Duration) -> Self {
+    pub fn unchecked_new(offset: Duration, length: Duration) -> Self {
         BoundedRelativeInterval {
             offset,
             length,
@@ -1767,80 +1791,317 @@ impl BoundedRelativeInterval {
         }
     }
 
-    /// Creates a new instance of a bounded relative interval with given inclusivity for the bounds
+    /// Creates a new [`BoundedRelativeInterval`] with default bound inclusivities
     ///
-    /// If the length is 0, then the inclusivities will be set to inclusive.
+    /// If the length is negative, it assumes that the _end_ (offset + length) is the new offset,
+    /// and that the absolute value of the length is the new length.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the length is negative and `offset + length` underflows.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::Duration;
+    /// # use periodical::intervals::relative::BoundedRelativeInterval;
+    /// let offset = Duration::hours(1);
+    /// let length = Duration::hours(-5);
+    ///
+    /// let bounded_interval = BoundedRelativeInterval::new(offset, length);
+    ///
+    /// assert_eq!(bounded_interval.offset(), Duration::hours(-4));
+    /// assert_eq!(bounded_interval.length(), Duration::hours(5));
+    /// ```
     #[must_use]
-    pub fn new_with_inclusivity(
-        offset: Duration,
-        start_inclusivity: BoundInclusivity,
-        length: Duration,
-        end_inclusivity: BoundInclusivity,
-    ) -> Self {
-        if length.is_zero() {
-            return Self::new(offset, length);
+    pub fn new(mut offset: Duration, mut length: Duration) -> Self {
+        if length < Duration::zero() {
+            offset += length;
+            length = length.abs();
         }
 
         BoundedRelativeInterval {
             offset,
             length,
-            from_inclusivity: start_inclusivity,
-            to_inclusivity: end_inclusivity,
+            from_inclusivity: BoundInclusivity::default(),
+            to_inclusivity: BoundInclusivity::default(),
+        }
+    }
+
+    /// Creates a new [`BoundedRelativeInterval`] with the given bound inclusivities without checking
+    /// if it violates invariants
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::Duration;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// # use periodical::intervals::relative::BoundedRelativeInterval;
+    /// // Length at 0, not doubly inclusive
+    /// let bounded_interval = BoundedRelativeInterval::unchecked_new_with_inclusivity(
+    ///     Duration::zero(),
+    ///     BoundInclusivity::Inclusive,
+    ///     Duration::zero(),
+    ///     BoundInclusivity::Exclusive,
+    /// );
+    ///
+    /// assert_eq!(bounded_interval.from_inclusivity(), BoundInclusivity::Inclusive);
+    /// assert_eq!(bounded_interval.to_inclusivity(), BoundInclusivity::Exclusive);
+    /// ```
+    #[must_use]
+    pub fn unchecked_new_with_inclusivity(
+        offset: Duration,
+        from_inclusivity: BoundInclusivity,
+        length: Duration,
+        to_inclusivity: BoundInclusivity,
+    ) -> Self {
+        BoundedRelativeInterval {
+            offset,
+            length,
+            from_inclusivity,
+            to_inclusivity,
+        }
+    }
+
+    /// Creates a new [`BoundedRelativeInterval`] with the given bound inclusivities
+    ///
+    /// If the length is 0, then the inclusivities will be set to inclusive.
+    ///
+    /// If the length is negative, it assumes that the _end_ (offset + length) is the new offset,
+    /// and that the absolute value of the length is the new length. The bound inclusivities are also swapped
+    /// in this process.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the length is negative and `offset + length` underflows.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::Duration;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// # use periodical::intervals::relative::BoundedRelativeInterval;
+    /// // Length at 0, not doubly inclusive
+    /// let bounded_interval = BoundedRelativeInterval::new_with_inclusivity(
+    ///     Duration::hours(-5),
+    ///     BoundInclusivity::Inclusive,
+    ///     Duration::zero(),
+    ///     BoundInclusivity::Exclusive,
+    /// );
+    ///
+    /// // Therefore gets reset to inclusive for both bounds
+    /// assert_eq!(bounded_interval.from_inclusivity(), BoundInclusivity::Inclusive);
+    /// assert_eq!(bounded_interval.to_inclusivity(), BoundInclusivity::Inclusive);
+    /// ```
+    #[must_use]
+    pub fn new_with_inclusivity(
+        offset: Duration,
+        from_inclusivity: BoundInclusivity,
+        length: Duration,
+        to_inclusivity: BoundInclusivity,
+    ) -> Self {
+        match length.cmp(&Duration::zero()) {
+            Ordering::Less => {
+                Self::unchecked_new_with_inclusivity(offset + length, to_inclusivity, length.abs(), from_inclusivity)
+            },
+            Ordering::Equal => Self::unchecked_new(offset, length),
+            Ordering::Greater => Self::unchecked_new_with_inclusivity(offset, from_inclusivity, length, to_inclusivity),
         }
     }
 
     /// Returns the offset of the interval
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::Duration;
+    /// # use periodical::intervals::relative::BoundedRelativeInterval;
+    /// let bounded_interval = BoundedRelativeInterval::new(
+    ///     Duration::hours(1),
+    ///     Duration::hours(5),
+    /// );
+    ///
+    /// assert_eq!(bounded_interval.offset(), Duration::hours(1));
+    /// ```
     #[must_use]
     pub fn offset(&self) -> Duration {
         self.offset
     }
 
     /// Returns the length of the interval
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::Duration;
+    /// # use periodical::intervals::relative::BoundedRelativeInterval;
+    /// let bounded_interval = BoundedRelativeInterval::new(
+    ///     Duration::hours(1),
+    ///     Duration::hours(5),
+    /// );
+    ///
+    /// assert_eq!(bounded_interval.length(), Duration::hours(5));
+    /// ```
     #[must_use]
     pub fn length(&self) -> Duration {
         self.length
     }
 
     /// Returns the inclusivity of the start bound
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::Duration;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// # use periodical::intervals::relative::BoundedRelativeInterval;
+    /// let bounded_interval = BoundedRelativeInterval::new_with_inclusivity(
+    ///     Duration::hours(1),
+    ///     BoundInclusivity::Inclusive,
+    ///     Duration::hours(5),
+    ///     BoundInclusivity::Exclusive,
+    /// );
+    ///
+    /// assert_eq!(bounded_interval.from_inclusivity(), BoundInclusivity::Inclusive);
+    /// ```
     #[must_use]
     pub fn from_inclusivity(&self) -> BoundInclusivity {
         self.from_inclusivity
     }
 
     /// Returns the inclusivity of the end bound
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::Duration;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// # use periodical::intervals::relative::BoundedRelativeInterval;
+    /// let bounded_interval = BoundedRelativeInterval::new_with_inclusivity(
+    ///     Duration::hours(1),
+    ///     BoundInclusivity::Inclusive,
+    ///     Duration::hours(5),
+    ///     BoundInclusivity::Exclusive,
+    /// );
+    ///
+    /// assert_eq!(bounded_interval.to_inclusivity(), BoundInclusivity::Exclusive);
+    /// ```
     #[must_use]
     pub fn to_inclusivity(&self) -> BoundInclusivity {
         self.to_inclusivity
     }
 
-    /// Sets the offset of the interval
+    /// Sets the offset
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::Duration;
+    /// # use periodical::intervals::relative::BoundedRelativeInterval;
+    /// let mut bounded_interval = BoundedRelativeInterval::new(
+    ///     Duration::hours(1),
+    ///     Duration::hours(5),
+    /// );
+    ///
+    /// bounded_interval.set_offset(Duration::hours(2));
+    ///
+    /// assert_eq!(bounded_interval.offset(), Duration::hours(2));
+    /// ```
     pub fn set_offset(&mut self, new_offset: Duration) {
         self.offset = new_offset;
     }
 
-    /// Sets the length of the interval
+    /// Sets the length without checking if it violates invariants
     ///
-    /// Returns whether the operation is successful: if the length is 0, then the bound inclusivities must be inclusive.
-    pub fn set_length(&mut self, new_length: Duration) -> bool {
-        if new_length.is_zero()
-            && (self.from_inclusivity != BoundInclusivity::Inclusive
-                || self.to_inclusivity != BoundInclusivity::Inclusive)
-        {
-            return false;
-        }
-
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::Duration;
+    /// # use periodical::intervals::relative::BoundedRelativeInterval;
+    /// let mut bounded_interval = BoundedRelativeInterval::new(
+    ///     Duration::hours(1),
+    ///     Duration::hours(3),
+    /// );
+    ///
+    /// // Negative length
+    /// bounded_interval.unchecked_set_length(Duration::hours(-5));
+    ///
+    /// // Remains in the interval
+    /// assert_eq!(bounded_interval.length(), Duration::hours(-5));
+    /// ```
+    pub fn unchecked_set_length(&mut self, new_length: Duration) {
         self.length = new_length;
-        true
+    }
+
+    /// Sets the length
+    ///
+    /// Returns whether the operation was successful and the length modified.
+    /// If the given new length violates the invariants, the method simply returns `false`
+    /// without changing the length.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::Duration;
+    /// # use periodical::intervals::relative::BoundedRelativeInterval;
+    /// let mut bounded_interval = BoundedRelativeInterval::new(
+    ///     Duration::hours(1),
+    ///     Duration::hours(3),
+    /// );
+    ///
+    /// // New length is negative
+    /// let was_successful = bounded_interval.set_length(Duration::hours(-5));
+    ///
+    /// // Therefore gets ignored
+    /// assert!(!was_successful);
+    /// assert_eq!(bounded_interval.length(), Duration::hours(3));
+    /// ```
+    pub fn set_length(&mut self, new_length: Duration) -> bool {
+        match new_length.cmp(&Duration::zero()) {
+            Ordering::Less => false,
+            Ordering::Equal => {
+                if self.from_inclusivity() != BoundInclusivity::Inclusive
+                    || self.to_inclusivity() != BoundInclusivity::Inclusive
+                {
+                    return false;
+                }
+
+                self.unchecked_set_length(new_length);
+                true
+            },
+            Ordering::Greater => {
+                self.unchecked_set_length(new_length);
+                true
+            },
+        }
     }
 
     /// Sets the inclusivity of the start bound
     ///
-    /// Returns whether the operation is successful: if the length is 0, then the bound inclusivities must be inclusive.
+    /// Returns whether the operation was successful and the start bound's inclusivity modified.
+    /// If the given new start bound inclusivity violates the invariants, the method simply returns `false`
+    /// without changing the start bound's inclusivity.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::Duration;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// # use periodical::intervals::relative::BoundedRelativeInterval;
+    /// let mut bounded_interval = BoundedRelativeInterval::new(
+    ///     Duration::hours(5),
+    ///     Duration::zero(),
+    /// );
+    ///
+    /// // Length is 0, therefore interval cannot be other than doubly inclusive
+    /// let was_successful = bounded_interval.set_from_inclusivity(BoundInclusivity::Exclusive);
+    ///
+    /// // Therefore the new inclusivity gets ignored
+    /// assert!(!was_successful);
+    /// assert_eq!(bounded_interval.from_inclusivity(), BoundInclusivity::Inclusive);
+    /// ```
     pub fn set_from_inclusivity(&mut self, new_inclusivity: BoundInclusivity) -> bool {
-        if self.length.is_zero()
-            && (self.from_inclusivity != BoundInclusivity::Inclusive
-                || self.to_inclusivity != BoundInclusivity::Inclusive)
-        {
+        if self.length.is_zero() && new_inclusivity != BoundInclusivity::Inclusive {
             return false;
         }
 
@@ -1850,12 +2111,30 @@ impl BoundedRelativeInterval {
 
     /// Sets the inclusivity of the end bound
     ///
-    /// Returns whether the operation is successful: if the length is 0, then the bound inclusivities must be inclusive.
+    /// Returns whether the operation was successful and the end bound's inclusivity modified.
+    /// If the given new end bound inclusivity violates the invariants, the method simply returns `false`
+    /// without changing the end bound's inclusivity.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::Duration;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// # use periodical::intervals::relative::BoundedRelativeInterval;
+    /// let mut bounded_interval = BoundedRelativeInterval::new(
+    ///     Duration::hours(5),
+    ///     Duration::zero(),
+    /// );
+    ///
+    /// // Length is 0, therefore interval cannot be other than doubly inclusive
+    /// let was_successful = bounded_interval.set_to_inclusivity(BoundInclusivity::Exclusive);
+    ///
+    /// // Therefore the new inclusivity gets ignored
+    /// assert!(!was_successful);
+    /// assert_eq!(bounded_interval.to_inclusivity(), BoundInclusivity::Inclusive);
+    /// ```
     pub fn set_to_inclusivity(&mut self, new_inclusivity: BoundInclusivity) -> bool {
-        if self.length.is_zero()
-            && (self.from_inclusivity != BoundInclusivity::Inclusive
-                || self.to_inclusivity != BoundInclusivity::Inclusive)
-        {
+        if self.length.is_zero() && new_inclusivity != BoundInclusivity::Inclusive {
             return false;
         }
 

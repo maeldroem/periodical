@@ -1756,7 +1756,15 @@ impl From<AbsoluteBounds> for EmptiableAbsoluteBounds {
 
 /// A bounded absolute interval
 ///
-/// Interval set with absolute time, with a defined start and end
+/// An interval with a set start and end. Like all specific absolute interval types, it conserves the invariant
+/// of its bounds being in chronological and if the bounds have the same time, they must be inclusive.
+///
+/// However, like the other specific interval types, it conserves an additional invariant:
+/// Its [openness](Openness) cannot change. That is to say a bounded interval must remain a bounded interval.
+/// It cannot mutate from being a bounded interval to a half-bounded interval.
+///
+/// Instead, if you are looking for an absolute interval that doesn't keep the [openness](Openness) invariant,
+/// see [`AbsoluteBounds`].
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct BoundedAbsoluteInterval {
     from: DateTime<Utc>,
@@ -1766,7 +1774,24 @@ pub struct BoundedAbsoluteInterval {
 }
 
 impl BoundedAbsoluteInterval {
-    /// Creates a new instance of a bounded absolute interval without checking if from is greater than to
+    /// Creates a new [`BoundedAbsoluteInterval`] without checking if it violates the invariants
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// let from_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let to_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// // Even though the times are not in chronological order
+    /// let bounded_interval = BoundedAbsoluteInterval::unchecked_new(from_time, to_time);
+    ///
+    /// // They remain that way
+    /// assert_eq!(bounded_interval.from_time(), from_time);
+    /// assert_eq!(bounded_interval.to_time(), to_time);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     pub fn unchecked_new(from: DateTime<Utc>, to: DateTime<Utc>) -> Self {
         BoundedAbsoluteInterval {
@@ -1777,7 +1802,26 @@ impl BoundedAbsoluteInterval {
         }
     }
 
-    /// Creates a new instance of a bounded absolute interval
+    /// Creates a new [`BoundedAbsoluteInterval`] with default bound inclusivities
+    ///
+    /// If the from time is past the to time, it swaps them.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// let from_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let to_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// // Times that are not in chronological order
+    /// let bounded_interval = BoundedAbsoluteInterval::new(from_time, to_time);
+    ///
+    /// // Are swapped
+    /// assert_eq!(bounded_interval.from_time(), to_time);
+    /// assert_eq!(bounded_interval.to_time(), from_time);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     pub fn new(mut from: DateTime<Utc>, mut to: DateTime<Utc>) -> Self {
         if from > to {
@@ -1787,8 +1831,29 @@ impl BoundedAbsoluteInterval {
         Self::unchecked_new(from, to)
     }
 
-    /// Creates a new instance of a bounded absolute interval with given inclusivity for the bounds without checking
-    /// if from is greater than to
+    /// Creates a new [`BoundedAbsoluteInterval`] with the given bound inclusivities without checking
+    /// if it violates invariants
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// let time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// // Same time, not doubly inclusive
+    /// let bounded_interval = BoundedAbsoluteInterval::unchecked_new_with_inclusivity(
+    ///     time,
+    ///     BoundInclusivity::Inclusive,
+    ///     time,
+    ///     BoundInclusivity::Exclusive,
+    /// );
+    ///
+    /// assert_eq!(bounded_interval.from_inclusivity(), BoundInclusivity::Inclusive);
+    /// assert_eq!(bounded_interval.to_inclusivity(), BoundInclusivity::Exclusive);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     pub fn unchecked_new_with_inclusivity(
         from: DateTime<Utc>,
@@ -1804,11 +1869,34 @@ impl BoundedAbsoluteInterval {
         }
     }
 
-    /// Creates a new instance of a bounded absolute interval with given inclusivity for the bounds
+    /// Creates a new [`BoundedAbsoluteInterval`] with the given bound inclusivities
     ///
     /// If the given times are not in chronological order, we swap them so they are in chronological order.
+    ///
     /// If the given times are equal but have bound inclusivities other than inclusive,
     /// we set them to [`Inclusive`](BoundInclusivity::Inclusive).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// let time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// // Same time, not doubly inclusive
+    /// let bounded_interval = BoundedAbsoluteInterval::new_with_inclusivity(
+    ///     time,
+    ///     BoundInclusivity::Inclusive,
+    ///     time,
+    ///     BoundInclusivity::Exclusive,
+    /// );
+    ///
+    /// // Therefore gets reset to inclusive for both bounds
+    /// assert_eq!(bounded_interval.from_inclusivity(), BoundInclusivity::Inclusive);
+    /// assert_eq!(bounded_interval.to_inclusivity(), BoundInclusivity::Inclusive);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     pub fn new_with_inclusivity(
         from: DateTime<Utc>,
@@ -1824,46 +1912,181 @@ impl BoundedAbsoluteInterval {
     }
 
     /// Returns the start time
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// let from_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let to_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let bounded_inclusivity = BoundedAbsoluteInterval::new(from_time, to_time);
+    ///
+    /// assert_eq!(bounded_inclusivity.from_time(), from_time);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     pub fn from_time(&self) -> DateTime<Utc> {
         self.from
     }
 
     /// Returns the end time
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// let from_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let to_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let bounded_inclusivity = BoundedAbsoluteInterval::new(from_time, to_time);
+    ///
+    /// assert_eq!(bounded_inclusivity.to_time(), to_time);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     pub fn to_time(&self) -> DateTime<Utc> {
         self.to
     }
 
     /// Returns the inclusivity of the start bound
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// let from_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let to_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let bounded_interval = BoundedAbsoluteInterval::new_with_inclusivity(
+    ///     from_time,
+    ///     BoundInclusivity::Exclusive,
+    ///     to_time,
+    ///     BoundInclusivity::Exclusive,
+    /// );
+    ///
+    /// assert_eq!(bounded_interval.from_inclusivity(), BoundInclusivity::Exclusive);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     pub fn from_inclusivity(&self) -> BoundInclusivity {
         self.from_inclusivity
     }
 
     /// Returns the inclusivity of the end bound
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// let from_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let to_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let bounded_interval = BoundedAbsoluteInterval::new_with_inclusivity(
+    ///     from_time,
+    ///     BoundInclusivity::Exclusive,
+    ///     to_time,
+    ///     BoundInclusivity::Exclusive,
+    /// );
+    ///
+    /// assert_eq!(bounded_interval.to_inclusivity(), BoundInclusivity::Exclusive);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     pub fn to_inclusivity(&self) -> BoundInclusivity {
         self.to_inclusivity
     }
 
-    /// Sets the from time of the interval without checking if it is before the to time
+    /// Sets the from time without checking if it violates invariants
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// let from_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let to_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let mut bounded_interval = BoundedAbsoluteInterval::new(from_time, to_time);
+    ///
+    /// // New from is not in chronological order
+    /// let new_from_time = "2025-01-01 17:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// bounded_interval.unchecked_set_from(new_from_time);
+    ///
+    /// // And yet is stays that way
+    /// assert_eq!(bounded_interval.from_time(), new_from_time);
+    /// assert_eq!(bounded_interval.to_time(), to_time);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     pub fn unchecked_set_from(&mut self, new_from: DateTime<Utc>) {
         self.from = new_from;
     }
 
-    /// Sets the to time of the interval without checking if it is after the from time
+    /// Sets the to time without checking if it violates invariants
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// let from_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let to_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let mut bounded_interval = BoundedAbsoluteInterval::new(from_time, to_time);
+    ///
+    /// // New to is not in chronological order
+    /// let new_to_time = "2025-01-01 06:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// bounded_interval.unchecked_set_to(new_to_time);
+    ///
+    /// // And yet is stays that way
+    /// assert_eq!(bounded_interval.from_time(), from_time);
+    /// assert_eq!(bounded_interval.to_time(), new_to_time);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     pub fn unchecked_set_to(&mut self, new_to: DateTime<Utc>) {
         self.to = new_to;
     }
 
-    /// Sets the from time of the interval
+    /// Sets the from time
     ///
-    /// Returns boolean indicating whether the change was successful: the new from must be in chronological order
-    /// and if it is equal to the to time, then the bounds must be inclusive already.
+    /// Returns whether the operation was successful and the from time modified.
+    /// If the given new from time violates the invariants, the method simply returns `false`
+    /// without changing the from time.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// let from_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let to_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let mut bounded_interval = BoundedAbsoluteInterval::new(from_time, to_time);
+    ///
+    /// // New from is not in chronological order
+    /// let new_from_time = "2025-01-01 17:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let was_successful = bounded_interval.set_from(new_from_time);
+    ///
+    /// // Therefore gets ignored
+    /// assert!(!was_successful);
+    /// assert_eq!(bounded_interval.from_time(), from_time);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     pub fn set_from(&mut self, new_from: DateTime<Utc>) -> bool {
         match new_from.cmp(&self.to) {
-            Ordering::Less => self.unchecked_set_from(new_from),
+            Ordering::Less => {
+                self.unchecked_set_from(new_from);
+                true
+            },
             Ordering::Equal => {
                 if self.from_inclusivity != BoundInclusivity::Inclusive
                     || self.to_inclusivity != BoundInclusivity::Inclusive
@@ -1872,22 +2095,44 @@ impl BoundedAbsoluteInterval {
                 }
 
                 self.unchecked_set_from(new_from);
+                true
             },
-            Ordering::Greater => {
-                return false;
-            },
+            Ordering::Greater => false,
         }
-
-        true
     }
 
-    /// Sets the to time of the interval
+    /// Sets the to time
     ///
-    /// Returns boolean indicating whether the change was successful: the new to must be in chronological order
-    /// and if it is equal to the from time, then the bounds must be inclusive already.
+    /// Returns whether the operation was successful and the to time modified.
+    /// If the given new to time violates the invariants, the method simply returns `false`
+    /// without changing the to time.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// let from_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let to_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let mut bounded_interval = BoundedAbsoluteInterval::new(from_time, to_time);
+    ///
+    /// // New to is not in chronological order
+    /// let new_to_time = "2025-01-01 06:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let was_successful = bounded_interval.set_to(new_to_time);
+    ///
+    /// // Therefore gets ignored
+    /// assert!(!was_successful);
+    /// assert_eq!(bounded_interval.to_time(), to_time);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     pub fn set_to(&mut self, new_to: DateTime<Utc>) -> bool {
         match self.from.cmp(&new_to) {
-            Ordering::Less => self.unchecked_set_to(new_to),
+            Ordering::Less => {
+                self.unchecked_set_to(new_to);
+                true
+            },
             Ordering::Equal => {
                 if self.from_inclusivity != BoundInclusivity::Inclusive
                     || self.to_inclusivity != BoundInclusivity::Inclusive
@@ -1896,19 +2141,36 @@ impl BoundedAbsoluteInterval {
                 }
 
                 self.unchecked_set_to(new_to);
+                true
             },
-            Ordering::Greater => {
-                return false;
-            },
+            Ordering::Greater => false,
         }
-
-        true
     }
 
     /// Sets the inclusivity of the start bound
     ///
-    /// Returns whether the operation was successful: if the start and end times are equal, the inclusivities can't be
-    /// set to anything other than inclusive.
+    /// Returns whether the operation was successful and the start bound's inclusivity modified.
+    /// If the given new start bound inclusivity violates the invariants, the method simply returns `false`
+    /// without changing the start bound's inclusivity.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// let time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let mut bounded_interval = BoundedAbsoluteInterval::new(time, time);
+    ///
+    /// // Interval has same times, therefore cannot be other than doubly inclusive
+    /// let was_successful = bounded_interval.set_from_inclusivity(BoundInclusivity::Exclusive);
+    ///
+    /// // Therefore new inclusivity gets ignored
+    /// assert!(!was_successful);
+    /// assert_eq!(bounded_interval.from_inclusivity(), BoundInclusivity::Inclusive);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     pub fn set_from_inclusivity(&mut self, new_inclusivity: BoundInclusivity) -> bool {
         if self.from == self.to && new_inclusivity != BoundInclusivity::Inclusive {
             return false;
@@ -1920,8 +2182,28 @@ impl BoundedAbsoluteInterval {
 
     /// Sets the inclusivity of the end bound
     ///
-    /// Returns whether the operation was successful: if the start and end times are equal, the inclusivities can't be
-    /// set to anything other than inclusive.
+    /// Returns whether the operation was successful and the end bound's inclusivity modified.
+    /// If the given new end bound inclusivity violates the invariants, the method simply returns `false`
+    /// without changing the end bound's inclusivity.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// let time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let mut bounded_interval = BoundedAbsoluteInterval::new(time, time);
+    ///
+    /// // Interval has same times, therefore cannot be other than doubly inclusive
+    /// let was_successful = bounded_interval.set_to_inclusivity(BoundInclusivity::Exclusive);
+    ///
+    /// // Therefore new inclusivity gets ignored
+    /// assert!(!was_successful);
+    /// assert_eq!(bounded_interval.to_inclusivity(), BoundInclusivity::Inclusive);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     pub fn set_to_inclusivity(&mut self, new_inclusivity: BoundInclusivity) -> bool {
         if self.from == self.to && new_inclusivity != BoundInclusivity::Inclusive {
             return false;
