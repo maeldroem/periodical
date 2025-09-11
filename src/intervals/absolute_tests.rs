@@ -1964,7 +1964,7 @@ fn half_bounded_absolute_interval_new() {
 
     assert_eq!(interval.reference_time(), date(&Utc, 2025, 1, 1));
     assert_eq!(interval.opening_direction(), OpeningDirection::ToFuture);
-    assert_eq!(interval.reference_time_inclusivity(), BoundInclusivity::Inclusive);
+    assert_eq!(interval.reference_inclusivity(), BoundInclusivity::Inclusive);
 }
 
 #[test]
@@ -1977,7 +1977,7 @@ fn half_bounded_absolute_interval_new_with_inclusivity() {
 
     assert_eq!(interval.reference_time(), date(&Utc, 2025, 1, 1));
     assert_eq!(interval.opening_direction(), OpeningDirection::ToPast);
-    assert_eq!(interval.reference_time_inclusivity(), BoundInclusivity::Exclusive);
+    assert_eq!(interval.reference_inclusivity(), BoundInclusivity::Exclusive);
 }
 
 #[test]
@@ -2008,7 +2008,7 @@ fn half_bounded_absolute_interval_set_reference_time_inclusivity() {
         OpeningDirection::ToFuture,
     );
 
-    interval.set_reference_time_inclusivity(BoundInclusivity::Inclusive);
+    interval.set_reference_inclusivity(BoundInclusivity::Inclusive);
 
     assert_eq!(
         interval,

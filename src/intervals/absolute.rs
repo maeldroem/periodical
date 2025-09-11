@@ -1572,6 +1572,7 @@ where
     }
 }
 
+/// Errors that can occur when trying to convert [`EmptiableAbsoluteBounds`] into [`AbsoluteBounds`]
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum AbsoluteBoundsFromEmptiableAbsoluteBoundsError {
     EmptyVariant,
@@ -1757,7 +1758,7 @@ impl From<AbsoluteBounds> for EmptiableAbsoluteBounds {
 /// A bounded absolute interval
 ///
 /// An interval with a set start and end. Like all specific absolute interval types, it conserves the invariant
-/// of its bounds being in chronological and if the bounds have the same time, they must be inclusive.
+/// of its bounds being in chronological order and if the bounds have the same time, they must be inclusive.
 ///
 /// However, like the other specific interval types, it conserves an additional invariant:
 /// Its [openness](Openness) cannot change. That is to say a bounded interval must remain a bounded interval.
@@ -2268,6 +2269,9 @@ impl From<((DateTime<Utc>, BoundInclusivity), (DateTime<Utc>, BoundInclusivity))
     }
 }
 
+/// Converts `((DateTime<Utc>, bool), (DateTime<Utc>, bool))` into [`BoundedAbsoluteInterval`]
+///
+/// The booleans in the original structure are to be interpreted as _is it inclusive?_
 impl From<((DateTime<Utc>, bool), (DateTime<Utc>, bool))> for BoundedAbsoluteInterval {
     fn from(
         ((from, is_from_inclusive), (to, is_to_inclusive)): ((DateTime<Utc>, bool), (DateTime<Utc>, bool)),
@@ -2303,6 +2307,7 @@ impl From<RangeInclusive<DateTime<Utc>>> for BoundedAbsoluteInterval {
     }
 }
 
+/// Errors that can occur when trying to convert [`AbsoluteBounds`] into [`BoundedAbsoluteInterval`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum BoundedAbsoluteIntervalFromAbsoluteBoundsError {
     NotBoundedInterval,
@@ -2336,6 +2341,7 @@ impl TryFrom<AbsoluteBounds> for BoundedAbsoluteInterval {
     }
 }
 
+/// Errors that can occur when trying to convert [`AbsoluteInterval`] into [`BoundedAbsoluteInterval`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum BoundedAbsoluteIntervalFromAbsoluteIntervalError {
     WrongVariant,
@@ -2364,28 +2370,82 @@ impl TryFrom<AbsoluteInterval> for BoundedAbsoluteInterval {
 
 /// A half-bounded absolute interval
 ///
-/// An interval set with absolute time, has a defined reference time and an opening direction (only one defined bound).
-/// Infinite duration.
+/// An interval with a set reference time and an [opening direction](OpeningDirection).
+/// Like all specific absolute interval types, it conserves the invariant of its bounds being
+/// in chronological order[^chrono_order_invariant] and if the interval has a length of zero,
+/// they must be inclusive[^doubly_inclusive_invariant].
+///
+/// However, like the other specific interval types, it conserves an additional invariant:
+/// Its [openness](Openness) cannot change. That is to say a half-bounded interval must remain a half-bounded interval.
+/// It cannot mutate from being a half-bounded interval to a bounded interval.
+///
+/// [^chrono_order_invariant]: This invariant is automatically guaranteed in this structure
+///     since it only has one bound.
+/// [^doubly_inclusive_invariant]: This invariant is automatically guaranteed in this structure
+///     since the reference time is finite and therefore cannot reach the opposite end of the half-bounded interval,
+///     since the opposite end is infinite.
+///
+/// Instead, if you are looking for an absolute interval that doesn't keep the [openness](Openness) invariant,
+/// see [`AbsoluteBounds`].
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub struct HalfBoundedAbsoluteInterval {
     reference_time: DateTime<Utc>,
     opening_direction: OpeningDirection,
-    reference_time_inclusivity: BoundInclusivity,
+    reference_inclusivity: BoundInclusivity,
 }
 
 impl HalfBoundedAbsoluteInterval {
-    /// Creates a new instance of a half-bounded absolute interval
+    /// Creates a new [`HalfBoundedAbsoluteInterval`]
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
+    /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
+    /// let ref_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let half_bounded_interval = HalfBoundedAbsoluteInterval::new(
+    ///     ref_time,
+    ///     OpeningDirection::ToPast,
+    /// );
+    ///
+    /// assert_eq!(half_bounded_interval.reference_time(), ref_time);
+    /// assert_eq!(half_bounded_interval.reference_inclusivity(), BoundInclusivity::Inclusive);
+    /// assert_eq!(half_bounded_interval.opening_direction(), OpeningDirection::ToPast);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     pub fn new(reference_time: DateTime<Utc>, opening_direction: OpeningDirection) -> Self {
         HalfBoundedAbsoluteInterval {
             reference_time,
             opening_direction,
-            reference_time_inclusivity: BoundInclusivity::default(),
+            reference_inclusivity: BoundInclusivity::default(),
         }
     }
 
-    /// Creates a new instance of a half-bounded absolute interval with given inclusivity for the bound
+    /// Creates a new [`HalfBoundedAbsoluteInterval`] with the given bound inclusivities
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
+    /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
+    /// let ref_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let half_bounded_interval = HalfBoundedAbsoluteInterval::new_with_inclusivity(
+    ///     ref_time,
+    ///     BoundInclusivity::Exclusive,
+    ///     OpeningDirection::ToFuture,
+    /// );
+    ///
+    /// assert_eq!(half_bounded_interval.reference_time(), ref_time);
+    /// assert_eq!(half_bounded_interval.reference_inclusivity(), BoundInclusivity::Exclusive);
+    /// assert_eq!(half_bounded_interval.opening_direction(), OpeningDirection::ToFuture);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     pub fn new_with_inclusivity(
         reference_time: DateTime<Utc>,
@@ -2395,39 +2455,148 @@ impl HalfBoundedAbsoluteInterval {
         HalfBoundedAbsoluteInterval {
             reference_time,
             opening_direction,
-            reference_time_inclusivity,
+            reference_inclusivity: reference_time_inclusivity,
         }
     }
 
-    /// Returns the reference time of the interval
+    /// Returns the reference time
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
+    /// # use periodical::intervals::meta::OpeningDirection;
+    /// let ref_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let half_bounded_interval = HalfBoundedAbsoluteInterval::new(
+    ///     ref_time,
+    ///     OpeningDirection::ToPast,
+    /// );
+    ///
+    /// assert_eq!(half_bounded_interval.reference_time(), ref_time);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     pub fn reference_time(&self) -> DateTime<Utc> {
         self.reference_time
     }
 
-    /// Returns the opening direction of the interval
+    /// Returns the opening direction
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
+    /// # use periodical::intervals::meta::OpeningDirection;
+    /// let ref_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let half_bounded_interval = HalfBoundedAbsoluteInterval::new(
+    ///     ref_time,
+    ///     OpeningDirection::ToPast,
+    /// );
+    ///
+    /// assert_eq!(half_bounded_interval.opening_direction(), OpeningDirection::ToPast);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     pub fn opening_direction(&self) -> OpeningDirection {
         self.opening_direction
     }
 
     /// Returns the inclusivity of the reference time
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
+    /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
+    /// let ref_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let half_bounded_interval = HalfBoundedAbsoluteInterval::new_with_inclusivity(
+    ///     ref_time,
+    ///     BoundInclusivity::Exclusive,
+    ///     OpeningDirection::ToFuture,
+    /// );
+    ///
+    /// assert_eq!(half_bounded_interval.reference_inclusivity(), BoundInclusivity::Exclusive);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
-    pub fn reference_time_inclusivity(&self) -> BoundInclusivity {
-        self.reference_time_inclusivity
+    pub fn reference_inclusivity(&self) -> BoundInclusivity {
+        self.reference_inclusivity
     }
 
-    /// Sets the reference time of the interval
+    /// Sets the reference time
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
+    /// # use periodical::intervals::meta::OpeningDirection;
+    /// let ref_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let mut half_bounded_interval = HalfBoundedAbsoluteInterval::new(
+    ///     ref_time,
+    ///     OpeningDirection::ToFuture,
+    /// );
+    ///
+    /// let new_ref_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// half_bounded_interval.set_reference_time(new_ref_time);
+    ///
+    /// assert_eq!(half_bounded_interval.reference_time(), new_ref_time);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     pub fn set_reference_time(&mut self, new_reference_time: DateTime<Utc>) {
         self.reference_time = new_reference_time;
     }
 
     /// Sets the inclusivity of the reference time
-    pub fn set_reference_time_inclusivity(&mut self, new_inclusivity: BoundInclusivity) {
-        self.reference_time_inclusivity = new_inclusivity;
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
+    /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
+    /// let ref_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let mut half_bounded_interval = HalfBoundedAbsoluteInterval::new(
+    ///     ref_time,
+    ///     OpeningDirection::ToFuture,
+    /// );
+    ///
+    /// half_bounded_interval.set_reference_inclusivity(BoundInclusivity::Exclusive);
+    ///
+    /// assert_eq!(half_bounded_interval.reference_inclusivity(), BoundInclusivity::Exclusive);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
+    pub fn set_reference_inclusivity(&mut self, new_inclusivity: BoundInclusivity) {
+        self.reference_inclusivity = new_inclusivity;
     }
 
-    /// Sets the opening direction of the interval
+    /// Sets the opening direction
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
+    /// # use periodical::intervals::meta::OpeningDirection;
+    /// let ref_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let mut half_bounded_interval = HalfBoundedAbsoluteInterval::new(
+    ///     ref_time,
+    ///     OpeningDirection::ToFuture,
+    /// );
+    ///
+    /// half_bounded_interval.set_opening_direction(OpeningDirection::ToPast);
+    ///
+    /// assert_eq!(half_bounded_interval.opening_direction(), OpeningDirection::ToPast);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     pub fn set_opening_direction(&mut self, new_opening_direction: OpeningDirection) {
         self.opening_direction = new_opening_direction;
     }
@@ -2463,7 +2632,7 @@ impl HasAbsoluteBounds for HalfBoundedAbsoluteInterval {
             OpeningDirection::ToPast => AbsoluteStartBound::InfinitePast,
             OpeningDirection::ToFuture => AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
                 self.reference_time,
-                self.reference_time_inclusivity,
+                self.reference_inclusivity,
             )),
         }
     }
@@ -2472,7 +2641,7 @@ impl HasAbsoluteBounds for HalfBoundedAbsoluteInterval {
         match self.opening_direction {
             OpeningDirection::ToPast => AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
                 self.reference_time,
-                self.reference_time_inclusivity,
+                self.reference_inclusivity,
             )),
             OpeningDirection::ToFuture => AbsoluteEndBound::InfiniteFuture,
         }

@@ -1893,9 +1893,9 @@ fn bounded_relative_interval_try_from_relative_interval_wrong() {
 fn half_bounded_relative_interval_new() {
     let interval = HalfBoundedRelativeInterval::new(Duration::hours(1), OpeningDirection::ToFuture);
 
-    assert_eq!(interval.offset(), Duration::hours(1));
+    assert_eq!(interval.reference_offset(), Duration::hours(1));
     assert_eq!(interval.opening_direction(), OpeningDirection::ToFuture);
-    assert_eq!(interval.reference_time_inclusivity(), BoundInclusivity::Inclusive);
+    assert_eq!(interval.reference_inclusivity(), BoundInclusivity::Inclusive);
 }
 
 #[test]
@@ -1906,9 +1906,9 @@ fn half_bounded_relative_interval_new_with_inclusivity() {
         OpeningDirection::ToPast,
     );
 
-    assert_eq!(interval.offset(), Duration::hours(1));
+    assert_eq!(interval.reference_offset(), Duration::hours(1));
     assert_eq!(interval.opening_direction(), OpeningDirection::ToPast);
-    assert_eq!(interval.reference_time_inclusivity(), BoundInclusivity::Exclusive);
+    assert_eq!(interval.reference_inclusivity(), BoundInclusivity::Exclusive);
 }
 
 #[test]
@@ -1939,7 +1939,7 @@ fn half_bounded_relative_interval_set_reference_time_inclusivity() {
         OpeningDirection::ToFuture,
     );
 
-    interval.set_reference_time_inclusivity(BoundInclusivity::Inclusive);
+    interval.set_reference_inclusivity(BoundInclusivity::Inclusive);
 
     assert_eq!(
         interval,

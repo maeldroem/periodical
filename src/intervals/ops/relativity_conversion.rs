@@ -187,8 +187,8 @@ impl ToAbsolute for HalfBoundedRelativeInterval {
 
     fn to_absolute(&self, reference_time: DateTime<Utc>) -> Self::AbsoluteType {
         HalfBoundedAbsoluteInterval::new_with_inclusivity(
-            reference_time + self.offset(),
-            self.reference_time_inclusivity(),
+            reference_time + self.reference_offset(),
+            self.reference_inclusivity(),
             self.opening_direction(),
         )
     }
@@ -316,7 +316,7 @@ impl ToRelative for HalfBoundedAbsoluteInterval {
     fn to_relative(&self, reference_time: DateTime<Utc>) -> Self::RelativeType {
         HalfBoundedRelativeInterval::new_with_inclusivity(
             self.reference_time() - reference_time,
-            self.reference_time_inclusivity(),
+            self.reference_inclusivity(),
             self.opening_direction(),
         )
     }
