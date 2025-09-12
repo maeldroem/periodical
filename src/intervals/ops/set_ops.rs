@@ -504,18 +504,30 @@ where
 }
 
 /// Intersects two [`AbsoluteBounds`]
+///
+/// # Panics
+///
+/// Panics if two strictly overlapping bounds, when abridged, returns [`EmptiableAbsoluteBounds::Empty`]
 #[must_use]
 pub fn intersect_abs_bounds(a: &AbsoluteBounds, b: &AbsoluteBounds) -> IntersectionResult<AbsoluteBounds> {
     if !a.simple_overlaps(b) {
         return IntersectionResult::Separate;
     }
 
-    IntersectionResult::Intersected(a.abridge(b))
+    IntersectionResult::Intersected(
+        a.abridge(b)
+            .bound()
+            .expect("Two strictly overlapping bounds can always be abridged"),
+    )
 }
 
 /// Intersects an [`AbsoluteBounds`] with an [`EmptiableAbsoluteBounds`]
 ///
 /// Empty intervals are not positioned in time, and are always "outside", therefore cannot be intersected
+///
+/// # Panics
+///
+/// Panics if two strictly overlapping bounds, when abridged, returns [`EmptiableAbsoluteBounds::Empty`]
 #[must_use]
 pub fn intersect_abs_bounds_with_emptiable_abs_bounds(
     a: &AbsoluteBounds,
@@ -525,7 +537,11 @@ pub fn intersect_abs_bounds_with_emptiable_abs_bounds(
         return IntersectionResult::Separate;
     }
 
-    IntersectionResult::Intersected(a.abridge(b))
+    IntersectionResult::Intersected(
+        a.abridge(b)
+            .bound()
+            .expect("Two strictly overlapping bounds can always be abridged"),
+    )
 }
 
 /// Intersects two [`EmptiableAbsoluteBounds`]
@@ -544,18 +560,30 @@ pub fn intersect_emptiable_abs_bounds(
 }
 
 /// Intersects two [`RelativeBounds`]
+///
+/// # Panics
+///
+/// Panics if two strictly overlapping bounds, when abridged, returns [`EmptiableRelativeBounds::Empty`]
 #[must_use]
 pub fn intersect_rel_bounds(a: &RelativeBounds, b: &RelativeBounds) -> IntersectionResult<RelativeBounds> {
     if !a.simple_overlaps(b) {
         return IntersectionResult::Separate;
     }
 
-    IntersectionResult::Intersected(a.abridge(b))
+    IntersectionResult::Intersected(
+        a.abridge(b)
+            .bound()
+            .expect("Two strictly overlapping bounds can always be abridged"),
+    )
 }
 
 /// Intersects an [`RelativeBounds`] with an [`EmptiableRelativeBounds`]
 ///
 /// Empty intervals are not positioned in time, and are always "outside", therefore cannot be intersected
+///
+/// # Panics
+///
+/// Panics if two strictly overlapping bounds, when abridged, returns [`EmptiableRelativeBounds::Empty`]
 #[must_use]
 pub fn intersect_rel_bounds_with_emptiable_rel_bounds(
     a: &RelativeBounds,
@@ -565,7 +593,11 @@ pub fn intersect_rel_bounds_with_emptiable_rel_bounds(
         return IntersectionResult::Separate;
     }
 
-    IntersectionResult::Intersected(a.abridge(b))
+    IntersectionResult::Intersected(
+        a.abridge(b)
+            .bound()
+            .expect("Two strictly overlapping bounds can always be abridged"),
+    )
 }
 
 /// Intersects two [`EmptiableRelativeBounds`]
