@@ -13,6 +13,8 @@ use crate::intervals::relative::{HasRelativeBounds, RelativeBound};
 /// containing the positioned bound.
 ///
 /// <div class="warning">
+/// **Warning**
+///
 /// This object could be subject to change in future versions,
 /// for example by switching to a structure containing a field for the bound type (Start/End),
 /// and a field for the interval index.
