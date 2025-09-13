@@ -1,4 +1,148 @@
 //! Interval abridging
+//!
+//! Abridging is similar to the inverse of [`Extensible`](crate::intervals::ops::extend::Extensible).
+//! That is to say it will take the _highest_ start bound and link it to the _lowest_ end bound.
+//!
+//! If the highest start and the lowest end are equal and both are inclusive or exclusive, it returns a bound
+//! of this instant.
+//!
+//! However, if the highest start and lowest end are adjacent, one being inclusive and the other exclusive,
+//! abridging returns an empty interval.
+//!
+//! The terms _highest_ and _lowest_ are to be interpreted as _highest_ being towards future,
+//! _lowest_ being towards past.
+//!
+//! # Examples
+//!
+//! ## Non-overlapping intervals
+//!
+//! ```
+//! # use chrono::{DateTime, Utc};
+//! # use periodical::intervals::absolute::{AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound};
+//! # use periodical::intervals::meta::BoundInclusivity;
+//! # use periodical::intervals::ops::abridge::Abridgable;
+//! let first_start_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+//! let first_end_time = "2025-01-01 11:00:00Z".parse::<DateTime<Utc>>()?;
+//!
+//! let first_interval = AbsoluteBounds::new(
+//!     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(first_start_time)),
+//!     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(first_end_time)),
+//! );
+//!
+//! let second_start_time = "2025-01-01 13:00:00Z".parse::<DateTime<Utc>>()?;
+//! let second_end_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+//!
+//! let second_interval = AbsoluteBounds::new(
+//!     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(second_start_time)),
+//!     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(second_end_time)),
+//! );
+//!
+//! let abridged_interval = first_interval.abridge(&second_interval);
+//!
+//! // first interval:    [----]
+//! // second interval:           [----]  
+//! // abridged interval:      (--)
+//!
+//! assert_eq!(
+//!     *abridged_interval.clone().bound().expect("Empty abridged interval").start(),
+//!     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+//!         first_end_time,
+//!         BoundInclusivity::Exclusive,
+//!     )),
+//! );
+//! assert_eq!(
+//!     *abridged_interval.clone().bound().expect("Empty abridged interval").end(),
+//!     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+//!         second_start_time,
+//!         BoundInclusivity::Exclusive,
+//!     )),
+//! );
+//! # Ok::<(), chrono::format::ParseError>(())
+//! ```
+//!
+//! ## Overlapping intervals
+//!
+//! ```
+//! # use chrono::{DateTime, Utc};
+//! # use periodical::intervals::absolute::{AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound};
+//! # use periodical::intervals::meta::BoundInclusivity;
+//! # use periodical::intervals::ops::abridge::Abridgable;
+//! let first_start_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+//! let first_end_time = "2025-01-01 13:00:00Z".parse::<DateTime<Utc>>()?;
+//!
+//! let first_interval = AbsoluteBounds::new(
+//!     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(first_start_time)),
+//!     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(first_end_time)),
+//! );
+//!
+//! let second_start_time = "2025-01-01 11:00:00Z".parse::<DateTime<Utc>>()?;
+//! let second_end_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+//!
+//! let second_interval = AbsoluteBounds::new(
+//!     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(second_start_time)),
+//!     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(second_end_time)),
+//! );
+//!
+//! let abridged_interval = first_interval.abridge(&second_interval);
+//!
+//! // first interval:    [----]
+//! // second interval:     [----]  
+//! // abridged interval:   [--]
+//!
+//! assert_eq!(
+//!     *abridged_interval.clone().bound().expect("Empty abridged interval").start(),
+//!     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+//!         second_start_time,
+//!         BoundInclusivity::Inclusive,
+//!     )),
+//! );
+//! assert_eq!(
+//!     *abridged_interval.clone().bound().expect("Empty abridged interval").end(),
+//!     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+//!         first_end_time,
+//!         BoundInclusivity::Inclusive,
+//!     )),
+//! );
+//! # Ok::<(), chrono::format::ParseError>(())
+//! ```
+//!
+//! ## Inclusive-Exclusive adjacent intervals
+//!
+//! ```
+//! # use chrono::{DateTime, Utc};
+//! # use periodical::intervals::absolute::{
+//! #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, EmptiableAbsoluteBounds,
+//! # };
+//! # use periodical::intervals::meta::BoundInclusivity;
+//! # use periodical::intervals::ops::abridge::Abridgable;
+//! let first_start_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+//! let first_end_time = "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?;
+//!
+//! let first_interval = AbsoluteBounds::new(
+//!     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(first_start_time)),
+//!     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(first_end_time)),
+//! );
+//!
+//! let second_start_time = "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?;
+//! let second_end_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+//!
+//! let second_interval = AbsoluteBounds::new(
+//!     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+//!         second_start_time,
+//!         BoundInclusivity::Exclusive,
+//!     )),
+//!     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(second_end_time)),
+//! );
+//!
+//! let abridged_interval = first_interval.abridge(&second_interval);
+//!
+//! // first interval:    [----]
+//! // second interval:        (----]  
+//! // abridged interval: empty interval
+//!
+//! assert_eq!(abridged_interval, EmptiableAbsoluteBounds::Empty);
+//! # Ok::<(), chrono::format::ParseError>(())
+//! ```
 
 use super::prelude::*;
 
@@ -16,7 +160,23 @@ use crate::intervals::relative::{
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 use crate::intervals::{BoundedAbsoluteInterval, BoundedRelativeInterval, RelativeInterval};
 
-/// Capacity to abridge an interval with another, think of it as the inverse of [`Extensible`]
+/// Capacity to abridge an interval with another
+///
+/// Abridging is similar to the inverse of [`Extensible`](crate::intervals::ops::extend::Extensible).
+/// That is to say it will take the _highest_ start bound and link it to the _lowest_ end bound.
+///
+/// If the highest start and the lowest end are equal and both are inclusive or exclusive, it returns a bound
+/// of this instant.
+///
+/// However, if the highest start and lowest end are adjacent, one being inclusive and the other exclusive,
+/// abridging returns an empty interval.
+///
+/// The terms _highest_ and _lowest_ are to be interpreted as _highest_ being towards future,
+/// _lowest_ being towards past.
+///
+/// # Examples
+///
+/// See [module documentation](crate::intervals::ops::abridge)
 pub trait Abridgable<Rhs = Self> {
     /// Output type
     type Output;
