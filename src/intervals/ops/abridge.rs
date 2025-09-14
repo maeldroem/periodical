@@ -547,7 +547,7 @@ pub fn abridge_abs_bounds(og_bounds: &AbsoluteBounds, other_bounds: &AbsoluteBou
             unreachable!("Comparing a start bound to an end bound can never result in the ambiguity being `None`");
         },
         BoundOrdering::Equal(Some(ambiguity)) => {
-            if let BoundOverlapAmbiguity::StartEnd(reference_inclusivity, compared_inclusivity) = ambiguity {
+            if let BoundOverlapAmbiguity::EndStart(reference_inclusivity, compared_inclusivity) = ambiguity {
                 match (reference_inclusivity, compared_inclusivity) {
                     (BoundInclusivity::Inclusive, BoundInclusivity::Inclusive) => {
                         EmptiableAbsoluteBounds::Bound(AbsoluteBounds::unchecked_new(highest_start, lowest_end))
@@ -567,7 +567,7 @@ pub fn abridge_abs_bounds(og_bounds: &AbsoluteBounds, other_bounds: &AbsoluteBou
                     },
                 }
             } else {
-                unreachable!("Comparing a start bound to an end bound always results in a `StartEnd` ambiguity");
+                unreachable!("Comparing a start bound to an end bound always results in a `EndStart` ambiguity");
             }
         },
         BoundOrdering::Greater => {
@@ -646,7 +646,7 @@ pub fn abridge_rel_bounds(og_bounds: &RelativeBounds, other_bounds: &RelativeBou
             unreachable!("Comparing a start bound to an end bound can never result in the ambiguity being `None`");
         },
         BoundOrdering::Equal(Some(ambiguity)) => {
-            if let BoundOverlapAmbiguity::StartEnd(reference_inclusivity, compared_inclusivity) = ambiguity {
+            if let BoundOverlapAmbiguity::EndStart(reference_inclusivity, compared_inclusivity) = ambiguity {
                 match (reference_inclusivity, compared_inclusivity) {
                     (BoundInclusivity::Inclusive, BoundInclusivity::Inclusive) => {
                         EmptiableRelativeBounds::Bound(RelativeBounds::unchecked_new(highest_start, lowest_end))
@@ -666,7 +666,7 @@ pub fn abridge_rel_bounds(og_bounds: &RelativeBounds, other_bounds: &RelativeBou
                     },
                 }
             } else {
-                unreachable!("Comparing a start bound to an end bound always results in a `StartEnd` ambiguity");
+                unreachable!("Comparing a start bound to an end bound always results in a `EndStart` ambiguity");
             }
         },
         BoundOrdering::Greater => {

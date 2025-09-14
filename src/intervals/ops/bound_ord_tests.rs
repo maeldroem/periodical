@@ -59,8 +59,8 @@ fn bound_cmp_abs_start_start_equal_inclusive_exclusive() {
             ))
         ),
         BoundOrdering::Equal(Some(BoundOverlapAmbiguity::BothStarts(
-            BoundInclusivity::Inclusive,
             BoundInclusivity::Exclusive,
+            BoundInclusivity::Inclusive,
         ))),
     );
 }
@@ -76,8 +76,8 @@ fn bound_cmp_abs_start_start_equal_exclusive_inclusive() {
             &Utc, 2025, 1, 1
         )))),
         BoundOrdering::Equal(Some(BoundOverlapAmbiguity::BothStarts(
-            BoundInclusivity::Exclusive,
             BoundInclusivity::Inclusive,
+            BoundInclusivity::Exclusive,
         ))),
     );
 }
@@ -162,7 +162,7 @@ fn bound_cmp_abs_start_end_equal_inclusive_inclusive() {
         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))).bound_cmp(
             &AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1)))
         ),
-        BoundOrdering::Equal(Some(BoundOverlapAmbiguity::StartEnd(
+        BoundOrdering::Equal(Some(BoundOverlapAmbiguity::EndStart(
             BoundInclusivity::Inclusive,
             BoundInclusivity::Inclusive,
         ))),
@@ -178,9 +178,9 @@ fn bound_cmp_abs_start_end_equal_inclusive_exclusive() {
                 BoundInclusivity::Exclusive,
             ))
         ),
-        BoundOrdering::Equal(Some(BoundOverlapAmbiguity::StartEnd(
-            BoundInclusivity::Inclusive,
+        BoundOrdering::Equal(Some(BoundOverlapAmbiguity::EndStart(
             BoundInclusivity::Exclusive,
+            BoundInclusivity::Inclusive,
         ))),
     );
 }
@@ -195,9 +195,9 @@ fn bound_cmp_abs_start_end_equal_exclusive_inclusive() {
         .bound_cmp(&AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(
             &Utc, 2025, 1, 1
         )))),
-        BoundOrdering::Equal(Some(BoundOverlapAmbiguity::StartEnd(
-            BoundInclusivity::Exclusive,
+        BoundOrdering::Equal(Some(BoundOverlapAmbiguity::EndStart(
             BoundInclusivity::Inclusive,
+            BoundInclusivity::Exclusive,
         ))),
     );
 }
@@ -213,7 +213,7 @@ fn bound_cmp_abs_start_end_equal_exclusive_exclusive() {
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
         ))),
-        BoundOrdering::Equal(Some(BoundOverlapAmbiguity::StartEnd(
+        BoundOrdering::Equal(Some(BoundOverlapAmbiguity::EndStart(
             BoundInclusivity::Exclusive,
             BoundInclusivity::Exclusive,
         ))),
@@ -246,7 +246,7 @@ fn bound_cmp_abs_end_start_equal_inclusive_inclusive() {
         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))).bound_cmp(
             &AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1)))
         ),
-        BoundOrdering::Equal(Some(BoundOverlapAmbiguity::EndStart(
+        BoundOrdering::Equal(Some(BoundOverlapAmbiguity::StartEnd(
             BoundInclusivity::Inclusive,
             BoundInclusivity::Inclusive,
         ))),
@@ -262,9 +262,9 @@ fn bound_cmp_abs_end_start_equal_inclusive_exclusive() {
                 BoundInclusivity::Exclusive,
             ))
         ),
-        BoundOrdering::Equal(Some(BoundOverlapAmbiguity::EndStart(
-            BoundInclusivity::Inclusive,
+        BoundOrdering::Equal(Some(BoundOverlapAmbiguity::StartEnd(
             BoundInclusivity::Exclusive,
+            BoundInclusivity::Inclusive,
         ))),
     );
 }
@@ -279,9 +279,9 @@ fn bound_cmp_abs_end_start_equal_exclusive_inclusive() {
         .bound_cmp(&AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(
             &Utc, 2025, 1, 1
         )))),
-        BoundOrdering::Equal(Some(BoundOverlapAmbiguity::EndStart(
-            BoundInclusivity::Exclusive,
+        BoundOrdering::Equal(Some(BoundOverlapAmbiguity::StartEnd(
             BoundInclusivity::Inclusive,
+            BoundInclusivity::Exclusive,
         ))),
     );
 }
@@ -297,7 +297,7 @@ fn bound_cmp_abs_end_start_equal_exclusive_exclusive() {
             date(&Utc, 2025, 1, 1),
             BoundInclusivity::Exclusive,
         ))),
-        BoundOrdering::Equal(Some(BoundOverlapAmbiguity::EndStart(
+        BoundOrdering::Equal(Some(BoundOverlapAmbiguity::StartEnd(
             BoundInclusivity::Exclusive,
             BoundInclusivity::Exclusive,
         ))),
@@ -391,8 +391,8 @@ fn bound_cmp_abs_end_end_equal_inclusive_exclusive() {
             ))
         ),
         BoundOrdering::Equal(Some(BoundOverlapAmbiguity::BothEnds(
-            BoundInclusivity::Inclusive,
             BoundInclusivity::Exclusive,
+            BoundInclusivity::Inclusive,
         ))),
     );
 }
@@ -408,8 +408,8 @@ fn bound_cmp_abs_end_end_equal_exclusive_inclusive() {
             &Utc, 2025, 1, 1
         )))),
         BoundOrdering::Equal(Some(BoundOverlapAmbiguity::BothEnds(
-            BoundInclusivity::Exclusive,
             BoundInclusivity::Inclusive,
+            BoundInclusivity::Exclusive,
         ))),
     );
 }
@@ -483,8 +483,8 @@ fn bound_cmp_rel_start_start_equal_inclusive_exclusive() {
             ))
         ),
         BoundOrdering::Equal(Some(BoundOverlapAmbiguity::BothStarts(
-            BoundInclusivity::Inclusive,
             BoundInclusivity::Exclusive,
+            BoundInclusivity::Inclusive,
         ))),
     );
 }
@@ -500,8 +500,8 @@ fn bound_cmp_rel_start_start_equal_exclusive_inclusive() {
             101
         )))),
         BoundOrdering::Equal(Some(BoundOverlapAmbiguity::BothStarts(
-            BoundInclusivity::Exclusive,
             BoundInclusivity::Inclusive,
+            BoundInclusivity::Exclusive,
         ))),
     );
 }
@@ -586,7 +586,7 @@ fn bound_cmp_rel_start_end_equal_inclusive_inclusive() {
         RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(101))).bound_cmp(
             &RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(101)))
         ),
-        BoundOrdering::Equal(Some(BoundOverlapAmbiguity::StartEnd(
+        BoundOrdering::Equal(Some(BoundOverlapAmbiguity::EndStart(
             BoundInclusivity::Inclusive,
             BoundInclusivity::Inclusive,
         ))),
@@ -602,9 +602,9 @@ fn bound_cmp_rel_start_end_equal_inclusive_exclusive() {
                 BoundInclusivity::Exclusive,
             ))
         ),
-        BoundOrdering::Equal(Some(BoundOverlapAmbiguity::StartEnd(
-            BoundInclusivity::Inclusive,
+        BoundOrdering::Equal(Some(BoundOverlapAmbiguity::EndStart(
             BoundInclusivity::Exclusive,
+            BoundInclusivity::Inclusive,
         ))),
     );
 }
@@ -619,9 +619,9 @@ fn bound_cmp_rel_start_end_equal_exclusive_inclusive() {
         .bound_cmp(&RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(
             101
         )))),
-        BoundOrdering::Equal(Some(BoundOverlapAmbiguity::StartEnd(
-            BoundInclusivity::Exclusive,
+        BoundOrdering::Equal(Some(BoundOverlapAmbiguity::EndStart(
             BoundInclusivity::Inclusive,
+            BoundInclusivity::Exclusive,
         ))),
     );
 }
@@ -637,7 +637,7 @@ fn bound_cmp_rel_start_end_equal_exclusive_exclusive() {
             Duration::hours(101),
             BoundInclusivity::Exclusive,
         ))),
-        BoundOrdering::Equal(Some(BoundOverlapAmbiguity::StartEnd(
+        BoundOrdering::Equal(Some(BoundOverlapAmbiguity::EndStart(
             BoundInclusivity::Exclusive,
             BoundInclusivity::Exclusive,
         ))),
@@ -670,7 +670,7 @@ fn bound_cmp_rel_end_start_equal_inclusive_inclusive() {
         RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(101))).bound_cmp(
             &RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(101)))
         ),
-        BoundOrdering::Equal(Some(BoundOverlapAmbiguity::EndStart(
+        BoundOrdering::Equal(Some(BoundOverlapAmbiguity::StartEnd(
             BoundInclusivity::Inclusive,
             BoundInclusivity::Inclusive,
         ))),
@@ -686,9 +686,9 @@ fn bound_cmp_rel_end_start_equal_inclusive_exclusive() {
                 BoundInclusivity::Exclusive,
             ))
         ),
-        BoundOrdering::Equal(Some(BoundOverlapAmbiguity::EndStart(
-            BoundInclusivity::Inclusive,
+        BoundOrdering::Equal(Some(BoundOverlapAmbiguity::StartEnd(
             BoundInclusivity::Exclusive,
+            BoundInclusivity::Inclusive,
         ))),
     );
 }
@@ -703,9 +703,9 @@ fn bound_cmp_rel_end_start_equal_exclusive_inclusive() {
         .bound_cmp(&RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(
             101
         )))),
-        BoundOrdering::Equal(Some(BoundOverlapAmbiguity::EndStart(
-            BoundInclusivity::Exclusive,
+        BoundOrdering::Equal(Some(BoundOverlapAmbiguity::StartEnd(
             BoundInclusivity::Inclusive,
+            BoundInclusivity::Exclusive,
         ))),
     );
 }
@@ -721,7 +721,7 @@ fn bound_cmp_rel_end_start_equal_exclusive_exclusive() {
             Duration::hours(101),
             BoundInclusivity::Exclusive,
         ))),
-        BoundOrdering::Equal(Some(BoundOverlapAmbiguity::EndStart(
+        BoundOrdering::Equal(Some(BoundOverlapAmbiguity::StartEnd(
             BoundInclusivity::Exclusive,
             BoundInclusivity::Exclusive,
         ))),
@@ -812,8 +812,8 @@ fn bound_cmp_rel_end_end_equal_inclusive_exclusive() {
             RelativeFiniteBound::new_with_inclusivity(Duration::hours(101), BoundInclusivity::Exclusive,)
         )),
         BoundOrdering::Equal(Some(BoundOverlapAmbiguity::BothEnds(
-            BoundInclusivity::Inclusive,
             BoundInclusivity::Exclusive,
+            BoundInclusivity::Inclusive,
         ))),
     );
 }
@@ -829,8 +829,8 @@ fn bound_cmp_rel_end_end_equal_exclusive_inclusive() {
             101
         )))),
         BoundOrdering::Equal(Some(BoundOverlapAmbiguity::BothEnds(
-            BoundInclusivity::Exclusive,
             BoundInclusivity::Inclusive,
+            BoundInclusivity::Exclusive,
         ))),
     );
 }
