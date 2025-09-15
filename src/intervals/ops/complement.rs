@@ -1,4 +1,49 @@
-//! Interval complement
+//! Complement of an interval
+//!
+//! Returns the [complementary] intervals of a given interval using [`ComplementResult`] to store the result.
+//!
+//! # Examples
+//!
+//! ```
+//! # use chrono::{DateTime, Utc};
+//! # use periodical::ops::ComplementResult;
+//! # use periodical::intervals::absolute::{
+//! #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, EmptiableAbsoluteBounds,
+//! # };
+//! # use periodical::intervals::meta::BoundInclusivity;
+//! # use periodical::intervals::ops::complement::Complementable;
+//! let interval = AbsoluteBounds::new(
+//!     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+//!         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+//!         BoundInclusivity::Exclusive,
+//!     )),
+//!     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+//!         "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
+//!     )),
+//! );
+//!
+//! assert_eq!(
+//!     interval.complement(),
+//!     ComplementResult::Split(
+//!         EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
+//!             AbsoluteStartBound::InfinitePast,
+//!             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+//!                 "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+//!             )),
+//!         )),
+//!         EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
+//!             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+//!                 "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
+//!                 BoundInclusivity::Exclusive,
+//!             )),
+//!             AbsoluteEndBound::InfiniteFuture,
+//!         )),
+//!     ),
+//! );
+//! # Ok::<(), chrono::format::ParseError>(())
+//! ```
+//!
+//! [complementary]: https://en.wikipedia.org/w/index.php?title=Complement_(set_theory)&oldid=1272128427
 
 use super::prelude::*;
 
@@ -14,12 +59,54 @@ use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 use crate::intervals::{AbsoluteInterval, BoundedAbsoluteInterval, BoundedRelativeInterval, RelativeInterval};
 use crate::ops::ComplementResult;
 
-/// Capacity to get the complement of an interval
+/// Capacity to get the complementary intervals
+///
+/// # Examples
+///
+/// ```
+/// # use chrono::{DateTime, Utc};
+/// # use periodical::ops::ComplementResult;
+/// # use periodical::intervals::absolute::{
+/// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, EmptiableAbsoluteBounds,
+/// # };
+/// # use periodical::intervals::meta::BoundInclusivity;
+/// # use periodical::intervals::ops::complement::Complementable;
+/// let interval = AbsoluteBounds::new(
+///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+///         BoundInclusivity::Exclusive,
+///     )),
+///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+///         "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
+///     )),
+/// );
+///
+/// assert_eq!(
+///     interval.complement(),
+///     ComplementResult::Split(
+///         EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
+///             AbsoluteStartBound::InfinitePast,
+///             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+///                 "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+///             )),
+///         )),
+///         EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
+///             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+///                 "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
+///                 BoundInclusivity::Exclusive,
+///             )),
+///             AbsoluteEndBound::InfiniteFuture,
+///         )),
+///     ),
+/// );
+/// # Ok::<(), chrono::format::ParseError>(())
+/// ```
 pub trait Complementable {
     /// Output type
     type Output;
 
-    /// Returns the complement
+    /// Returns the complementary intervals of `self`
+    #[must_use]
     fn complement(&self) -> ComplementResult<Self::Output>;
 }
 
@@ -119,7 +206,9 @@ impl Complementable for EmptyInterval {
     }
 }
 
-/// Returns the complement of an [`AbsoluteBounds`]
+/// Returns the complementary intervals of an [`AbsoluteBounds`]
+///
+/// See [`Complementable`] for more info.
 #[must_use]
 pub fn complement_abs_bounds(bounds: &AbsoluteBounds) -> ComplementResult<EmptiableAbsoluteBounds> {
     type Sb = AbsoluteStartBound;
@@ -164,7 +253,9 @@ pub fn complement_abs_bounds(bounds: &AbsoluteBounds) -> ComplementResult<Emptia
     }
 }
 
-/// Returns the complement of an [`EmptiableAbsoluteBounds`]
+/// Returns the complementary intervals of an [`EmptiableAbsoluteBounds`]
+///
+/// See [`Complementable`] for more info.
 #[must_use]
 pub fn complement_emptiable_abs_bounds(
     emptiable_bounds: &EmptiableAbsoluteBounds,
@@ -176,7 +267,9 @@ pub fn complement_emptiable_abs_bounds(
     complement_abs_bounds(bounds)
 }
 
-/// Returns the complement of an [`RelativeBounds`]
+/// Returns the complementary intervals of a [`RelativeBounds`]
+///
+/// See [`Complementable`] for more info.
 #[must_use]
 pub fn complement_rel_bounds(bounds: &RelativeBounds) -> ComplementResult<EmptiableRelativeBounds> {
     type Sb = RelativeStartBound;
@@ -221,7 +314,9 @@ pub fn complement_rel_bounds(bounds: &RelativeBounds) -> ComplementResult<Emptia
     }
 }
 
-/// Returns the complement of an [`EmptiableRelativeBounds`]
+/// Returns the complementary intervals of an [`EmptiableRelativeBounds`]
+///
+/// See [`Complementable`] for more info.
 #[must_use]
 pub fn complement_emptiable_rel_bounds(
     emptiable_bounds: &EmptiableRelativeBounds,
