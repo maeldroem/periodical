@@ -1,4 +1,50 @@
-//! Interval extension
+//! Interval extension up to another interval
+//!
+//! Extends an interval up to another. The process takes the lowest start bound of the two intervals
+//! and the highest end bound of the two intervals, then creates a new interval spanning those two points.
+//!
+//! Regarding bound inclusivity, for each point we will get the bound inclusivity of the interval from which
+//! the point was taken. If they were equal, we choose the most inclusive bound.
+//!
+//! # Examples
+//!
+//! ```
+//! # use chrono::{DateTime, Utc};
+//! # use periodical::intervals::absolute::{
+//! #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, EmptiableAbsoluteBounds,
+//! # };
+//! # use periodical::intervals::ops::Extensible;
+//! let first_interval = AbsoluteBounds::new(
+//!     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+//!         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+//!     )),
+//!     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+//!         "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
+//!     )),
+//! );
+//!
+//! let second_interval = AbsoluteBounds::new(
+//!     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+//!         "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
+//!     )),
+//!     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+//!         "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
+//!     )),
+//! );
+//!
+//! assert_eq!(
+//!     first_interval.extend(&second_interval),
+//!     AbsoluteBounds::new(
+//!         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+//!             "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+//!         )),
+//!         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+//!             "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
+//!         )),
+//!     ),
+//! );
+//! # Ok::<(), chrono::format::ParseError>(())
+//! ```
 
 use super::prelude::*;
 
@@ -12,15 +58,21 @@ use crate::intervals::relative::{
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 use crate::intervals::{BoundedAbsoluteInterval, BoundedRelativeInterval, RelativeInterval};
 
-/// Capacity to extend an interval with another
+/// Capacity to extend an interval up to another
+///
+/// Extends an interval up to another. The process takes the lowest start bound of the two intervals
+/// and the highest end bound of the two intervals, then creates a new interval spanning those two points.
+///
+/// Regarding bound inclusivity, for each point we will get the bound inclusivity of the interval from which
+/// the point was taken. If they were equal, we choose the most inclusive bound.
 pub trait Extensible<Rhs = Self> {
     /// Output type
     type Output;
 
     /// Creates an extended interval from the current one and given one
     ///
-    /// Instead of uniting two intervals, this method takes the lowest point of both intervals' lower bound and the
-    /// highest point of both intervals' upper bound, then creates an interval that spans those two points.
+    /// Extends an interval up to another. The process takes the lowest start bound of the two intervals
+    /// and the highest end bound of the two intervals, then creates a new interval spanning those two points.
     ///
     /// Regarding bound inclusivity, for each point we will get the bound inclusivity of the interval from which
     /// the point was taken. If they were equal, we choose the most inclusive bound.
@@ -28,6 +80,46 @@ pub trait Extensible<Rhs = Self> {
     /// If both intervals are empty, the method just returns an empty interval.
     ///
     /// If one of the intervals is empty, the method just return a clone of the other non-empty interval.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::{
+    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, EmptiableAbsoluteBounds,
+    /// # };
+    /// # use periodical::intervals::ops::Extensible;
+    /// let first_interval = AbsoluteBounds::new(
+    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+    ///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     )),
+    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+    ///         "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     )),
+    /// );
+    ///
+    /// let second_interval = AbsoluteBounds::new(
+    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+    ///         "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     )),
+    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+    ///         "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     )),
+    /// );
+    ///
+    /// assert_eq!(
+    ///     first_interval.extend(&second_interval),
+    ///     AbsoluteBounds::new(
+    ///         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+    ///             "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+    ///         )),
+    ///         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+    ///             "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
+    ///         )),
+    ///     ),
+    /// );
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     fn extend(&self, rhs: &Rhs) -> Self::Output;
 }
@@ -353,6 +445,8 @@ impl Extensible<EmptyInterval> for EmptyInterval {
 }
 
 /// Extends two [`AbsoluteBounds`]
+///
+/// See [module documentation](crate::intervals::ops::extend) for more info.
 #[must_use]
 pub fn extend_abs_bounds(og_bounds: &AbsoluteBounds, other_bounds: &AbsoluteBounds) -> AbsoluteBounds {
     let new_start_bound = match (og_bounds.abs_start(), other_bounds.abs_start()) {
@@ -373,6 +467,8 @@ pub fn extend_abs_bounds(og_bounds: &AbsoluteBounds, other_bounds: &AbsoluteBoun
 }
 
 /// Extends an [`AbsoluteBounds`] with an [`EmptiableAbsoluteBounds`]
+///
+/// See [module documentation](crate::intervals::ops::extend) for more info.
 #[must_use]
 pub fn extend_abs_bounds_with_emptiable_abs_bounds(
     og_bounds: &AbsoluteBounds,
@@ -386,6 +482,8 @@ pub fn extend_abs_bounds_with_emptiable_abs_bounds(
 }
 
 /// Extends two [`EmptiableAbsoluteBounds`]
+///
+/// See [module documentation](crate::intervals::ops::extend) for more info.
 #[must_use]
 pub fn extend_emptiable_abs_bounds(
     og_bounds: &EmptiableAbsoluteBounds,
@@ -402,6 +500,8 @@ pub fn extend_emptiable_abs_bounds(
 }
 
 /// Extends two [`RelativeBounds`]
+///
+/// See [module documentation](crate::intervals::ops::extend) for more info.
 #[must_use]
 pub fn extend_rel_bounds(og_bounds: &RelativeBounds, other_bounds: &RelativeBounds) -> RelativeBounds {
     let new_start_bound = match (og_bounds.rel_start(), other_bounds.rel_start()) {
@@ -422,6 +522,8 @@ pub fn extend_rel_bounds(og_bounds: &RelativeBounds, other_bounds: &RelativeBoun
 }
 
 /// Extends an [`RelativeBounds`] with an [`EmptiableRelativeBounds`]
+///
+/// See [module documentation](crate::intervals::ops::extend) for more info.
 #[must_use]
 pub fn extend_rel_bounds_with_emptiable_rel_bounds(
     og_bounds: &RelativeBounds,
@@ -435,6 +537,8 @@ pub fn extend_rel_bounds_with_emptiable_rel_bounds(
 }
 
 /// Extends two [`EmptiableRelativeBounds`]
+///
+/// See [module documentation](crate::intervals::ops::extend) for more info.
 #[must_use]
 pub fn extend_emptiable_rel_bounds(
     og_bounds: &EmptiableRelativeBounds,
