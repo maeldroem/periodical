@@ -1,4 +1,51 @@
 //! Interval overlap positioning
+//!
+//! Given two intervals, positions the overlap, represented by [`OverlapPosition`].
+//!
+//! Like [`BoundOverlapAmbiguity`], since two intervals can be adjacent and "meet" at a given point,
+//! it creates an ambiguity due to the [`BoundInclusivity`](crate::intervals::meta::BoundInclusivity)
+//! of the intervals.
+//!
+//! Using [`CanPositionOverlap`] will return an [`OverlapPosition`], which will then need to be disambiguated
+//! in order to obtain a concrete diagnostic of the overlap.
+//!
+//! You can disambiguate an [`OverlapPosition`] using an [`OverlapRuleSet`] or a custom closure
+//! by using [`OverlapPosition::disambiguate_using`].
+//!
+//! A disambiguated [`OverlapPosition`] is represented by [`DisambiguatedOverlapPosition`].
+//!
+//! Once disambiguated, the overlap position can be converted into a boolean decision of whether the two intervals
+//! overlap according to your definition, using [`OverlapRule`]s with [`CanPositionOverlap::overlaps`].
+//!
+//! # Examples
+//!
+//! ```
+//! # use chrono::{DateTime, Utc};
+//! # use periodical::intervals::absolute::{
+//! #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+//! # };
+//! # use periodical::intervals::ops::overlap::CanPositionOverlap;
+//! let first_interval = AbsoluteBounds::new(
+//!     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+//!         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+//!     )),
+//!     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+//!         "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
+//!     )),
+//! );
+//!
+//! let second_interval = AbsoluteBounds::new(
+//!     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+//!         "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
+//!     )),
+//!     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+//!         "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
+//!     )),
+//! );
+//!
+//! assert!(first_interval.simple_overlaps(&second_interval));
+//! # Ok::<(), chrono::format::ParseError>(())
+//! ```
 
 use std::cmp::Ordering;
 use std::convert::Infallible;
@@ -23,106 +70,117 @@ use crate::intervals::relative::{
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 use crate::intervals::{AbsoluteInterval, BoundedAbsoluteInterval, BoundedRelativeInterval, RelativeInterval};
 
-/// Where the current time interval was found relative to the other time interval
+/// Overlap position
 ///
-/// See [`overlap_position`](CanPositionOverlap::overlap_position) for more information
+/// Defines where the compared interval was found relative to the reference interval.
+///
+/// When [`overlap_position`](CanPositionOverlap::overlap_position) evaluates the overlap position,
+/// it ignores the [inclusivities](crate::intervals::meta::BoundInclusivity) of the intervals
+/// and simply takes into account the position of the bounds.
+///
+/// If two bounds are adjacent, a [`BoundOverlapAmbiguity`] is created
+/// and then stored in the right variant of [`OverlapPosition`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum OverlapPosition {
-    /// The current time interval was found before the given other time interval
+    /// Compared interval is before the reference interval
     OutsideBefore,
-    /// The current time interval was found after the given other time interval
+    /// Compared interval is after the reference interval
     OutsideAfter,
-    /// The current time interval was found outside the given other time interval (result only possible when dealing with empty intervals)
+    /// Compared interval is outside the reference interval
+    ///
+    /// This result is only possible when dealing with empty intervals, as an empty interval does not have
+    /// a position in time.
     Outside,
-    /// The current time interval was found ending on the beginning of the given other time interval
+    /// Compared interval ends on the start of the reference interval
     ///
-    /// Since two bounds are overlapping, this creates an ambiguity, hence the contained [`BoundOverlapAmbiguity`].
-    /// The first contained bound is the reference, the second is the compared one.
-    ///
-    /// See [`overlap_position`](CanPositionOverlap::overlap_position) for more details.
+    /// Since two bounds are overlapping, this creates an ambiguity, hence the [`BoundOverlapAmbiguity`].
     EndsOnStart(BoundOverlapAmbiguity),
-    /// The current time interval was found starting on the end of the given other time interval
+    /// Compared interval starts on the end of the reference interval
     ///
-    /// Since two bounds are overlapping, this creates an ambiguity, hence the contained [`BoundOverlapAmbiguity`].
-    /// The first contained bound is the reference, the second is the compared one.
-    ///
-    /// See [`overlap_position`](CanPositionOverlap::overlap_position) for more details.
+    /// Since two bounds are overlapping, this creates an ambiguity, hence the [`BoundOverlapAmbiguity`].
     StartsOnEnd(BoundOverlapAmbiguity),
-    /// The current interval is crossing the start of the compared one (starting outside, ending inside)
+    /// Compared interval crosses the start of the reference interval
+    ///
+    /// The compared interval ends within the reference interval,
+    /// otherwise the overlap position would be [`Contains`](OverlapPosition::Contains).
     CrossesStart,
-    /// The current interval is crossing the end of the compared one (starting inside, ending outside)
+    /// Compared interval crosses the end of the reference interval
+    ///
+    /// The compared interval starts within the reference interval,
+    /// otherwise the overlap position would be [`Contains`](OverlapPosition::Contains).
     CrossesEnd,
-    /// The current time interval was found completely inside the given other time interval
+    /// Compared interval is inside the reference interval
     Inside,
-    /// The current time interval was found beginning on the start of the given other time interval and ending inside
-    /// that time interval
+    /// Compared interval is inside the reference interval and both have the same start
     ///
-    /// Since two bounds are overlapping, this creates an ambiguity, hence the contained [`BoundOverlapAmbiguity`].
-    /// The first contained bound is the reference, the second is the compared one.
+    /// Since two bounds are overlapping, this creates an ambiguity, hence the [`BoundOverlapAmbiguity`].
     ///
-    /// Since when comparing an unbounded interval with a half-bounded one can result in such an overlap position but no
-    /// defined bound is involved (i.e. the bound is infinity), hence the [`BoundOverlapAmbiguity`]
-    /// wrapped in an [`Option`].
-    ///
-    /// See [`overlap_position`](CanPositionOverlap::overlap_position) for more details.
+    /// Since comparing an unbounded interval with a half-bounded interval can result
+    /// in such an overlap position with no finite bounds involved, hence the [`BoundOverlapAmbiguity`]
+    /// being wrapped in an [`Option`].
     InsideAndSameStart(Option<BoundOverlapAmbiguity>),
-    /// The current time interval was found beginning inside the given other time interval and ending at the end of
-    /// that time interval
+    /// Compared interval is inside the reference interval and both have the same end
     ///
-    /// Since two bounds are overlapping, this creates an ambiguity, hence the contained [`BoundOverlapAmbiguity`].
-    /// The first contained bound is the reference, the second is the compared one.
+    /// Since two bounds are overlapping, this creates an ambiguity, hence the [`BoundOverlapAmbiguity`].
     ///
-    /// Since when comparing an unbounded interval with a half-bounded one can result in such an overlap position but no
-    /// defined bound is involved (i.e. the bound is infinity), hence the [`BoundOverlapAmbiguity`]
-    /// wrapped in an [`Option`].
-    ///
-    /// See [`overlap_position`](CanPositionOverlap::overlap_position) for more details.
+    /// Since comparing an unbounded interval with a half-bounded interval can result
+    /// in such an overlap position with no finite bounds involved, hence the [`BoundOverlapAmbiguity`]
+    /// being wrapped in an [`Option`].
     InsideAndSameEnd(Option<BoundOverlapAmbiguity>),
-    /// The current time interval was found beginning and ending at the same times as the given other time interval
+    /// Compared interval is equal to the reference interval
     ///
-    /// Since two pairs of bounds are overlapping, this creates an ambiguity, hence the contained [`BoundOverlapAmbiguity`].
-    /// The first contained bound of each pair is the reference, the second of each pair is the compared one.
+    /// Since two pairs of bounds are overlapping, this creates an ambiguity,
+    /// hence the pair of [`BoundOverlapAmbiguity`].
     ///
-    /// Since half-bounded intervals only have a single defined bound, the second element is an [`Option`].
-    /// Also, when you compare two unbounded intervals, they don't have defined bounds but still are equal, so all elements
-    /// are [`Option`]s in the end.
+    /// Since half-bounded intervals only have a single defined bound, the second ambiguity
+    /// is wrapped in an [`Option`].
+    /// Also, when you compare two unbounded intervals, neither have defined bounds, but still are equal,
+    /// so both [`BoundOverlapAmbiguity`] are wrapped in [`Option`].
     ///
-    /// See [`overlap_position`](CanPositionOverlap::overlap_position) for more details.
+    /// # Invariants
+    ///
+    /// The second [`Option`] can never be [`Some`] if the first [`Option`] is [`None`].
     Equal(Option<BoundOverlapAmbiguity>, Option<BoundOverlapAmbiguity>),
-    /// The current time interval was found beginning on the same point as the given other time interval and ending
-    /// after that time interval
+    /// Compared interval contains the reference interval and both have the same start
     ///
-    /// Since two bounds are overlapping, this creates an ambiguity, hence the contained [`BoundOverlapAmbiguity`].
-    /// The first contained bound is the reference, the second is the compared one.
+    /// Since two bounds are overlapping, this creates an ambiguity, hence the [`BoundOverlapAmbiguity`].
     ///
-    /// Since when comparing a half-bounded interval with an unbounded one can result in such an overlap position but no
-    /// defined bound is involved (i.e. the bound is infinity), the [`BoundOverlapAmbiguity`] is wrapped
-    /// in an [`Option`].
-    ///
-    /// See [`overlap_position`](CanPositionOverlap::overlap_position) for more details.
+    /// Since comparing an unbounded interval with a half-bounded interval can result
+    /// in such an overlap position with no finite bounds involved, hence the [`BoundOverlapAmbiguity`]
+    /// being wrapped in an [`Option`].
     ContainsAndSameStart(Option<BoundOverlapAmbiguity>),
-    /// The current time interval was found beginning before the given other time interval and ending at the same time
-    /// as that time interval
+    /// Compared interval contains the reference interval and both have the same end
     ///
-    /// Since two bounds are overlapping, this creates an ambiguity, hence the contained [`BoundOverlapAmbiguity`].
-    /// The first contained bound is the reference, the second is the compared one.
+    /// Since two bounds are overlapping, this creates an ambiguity, hence the [`BoundOverlapAmbiguity`].
     ///
-    /// Since when comparing a half-bounded interval with an unbounded one can result in such an overlap position but no
-    /// defined bound is involved (i.e. the bound is infinity), the [`BoundOverlapAmbiguity`] is wrapped
-    /// in an [`Option`].
-    ///
-    /// See [`overlap_position`](CanPositionOverlap::overlap_position) for more details.
+    /// Since comparing an unbounded interval with a half-bounded interval can result
+    /// in such an overlap position with no finite bounds involved, hence the [`BoundOverlapAmbiguity`]
+    /// being wrapped in an [`Option`].
     ContainsAndSameEnd(Option<BoundOverlapAmbiguity>),
-    /// The current time interval was found beginning before the given other time interval's start
-    /// and ending after that time interval's end
+    /// Compared interval fully contains the reference interval
     Contains,
 }
 
 impl OverlapPosition {
-    /// Discards the information about bound inclusivity but conserves the variant
+    /// Strips information about bound ambiguities and conserves the variant
     ///
     /// **Careful!** This method discards data about bound inclusivity and cannot be recovered after conversion.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// # use periodical::intervals::ops::bound_overlap_ambiguity::BoundOverlapAmbiguity;
+    /// # use periodical::intervals::ops::overlap::{DisambiguatedOverlapPosition, OverlapPosition};
+    /// assert_eq!(
+    ///     OverlapPosition::EndsOnStart(BoundOverlapAmbiguity::StartEnd(
+    ///         BoundInclusivity::Exclusive,
+    ///         BoundInclusivity::Exclusive,
+    ///     )).strip(),
+    ///     DisambiguatedOverlapPosition::EndsOnStart,
+    /// );
+    /// ```
     #[must_use]
     pub fn strip(self) -> DisambiguatedOverlapPosition {
         match self {
@@ -143,18 +201,77 @@ impl OverlapPosition {
         }
     }
 
-    /// Uses a rule set to transform the overlap position into a disambiguated one.
+    /// Disambiguates using an [`OverlapRuleSet`]
     ///
     /// **Careful!** This method discards data about bound inclusivity and cannot be recovered after conversion.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// # use periodical::intervals::ops::bound_overlap_ambiguity::BoundOverlapAmbiguity;
+    /// # use periodical::intervals::ops::overlap::{DisambiguatedOverlapPosition, OverlapPosition, OverlapRuleSet};
+    /// let pos = OverlapPosition::EndsOnStart(BoundOverlapAmbiguity::StartEnd(
+    ///     BoundInclusivity::Exclusive,
+    ///     BoundInclusivity::Exclusive,
+    /// ));
+    ///
+    /// assert_eq!(
+    ///     pos.disambiguate_using_rule_set(OverlapRuleSet::VeryLenient),
+    ///     DisambiguatedOverlapPosition::EndsOnStart,
+    /// );
+    /// ```
     #[must_use]
     pub fn disambiguate_using_rule_set(self, rule_set: OverlapRuleSet) -> DisambiguatedOverlapPosition {
         rule_set.disambiguate(self)
     }
+
+    /// Uses the given closure to disambiguate the [`OverlapPosition`]
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// # use periodical::intervals::ops::bound_overlap_ambiguity::BoundOverlapAmbiguity;
+    /// # use periodical::intervals::ops::overlap::{DisambiguatedOverlapPosition, OverlapPosition};
+    /// let pos = OverlapPosition::EndsOnStart(BoundOverlapAmbiguity::StartEnd(
+    ///     BoundInclusivity::Inclusive,
+    ///     BoundInclusivity::Exclusive,
+    /// ));
+    ///
+    /// let disambiguation_closure = |position: OverlapPosition| -> DisambiguatedOverlapPosition {
+    ///     match position {
+    ///         OverlapPosition::EndsOnStart(BoundOverlapAmbiguity::StartEnd(i1, i2)) => {
+    ///             if matches!(
+    ///                 (i1, i2),
+    ///                 (BoundInclusivity::Inclusive, BoundInclusivity::Exclusive)
+    ///             ) {
+    ///                 DisambiguatedOverlapPosition::EndsOnStart
+    ///             } else {
+    ///                 DisambiguatedOverlapPosition::OutsideBefore
+    ///             }
+    ///         },
+    ///         _ => unimplemented!(),
+    ///     }
+    /// };
+    ///
+    /// assert_eq!(
+    ///     pos.disambiguate_using(disambiguation_closure),
+    ///     DisambiguatedOverlapPosition::EndsOnStart,
+    /// );
+    /// ```
+    #[must_use]
+    pub fn disambiguate_using<F>(self, f: F) -> DisambiguatedOverlapPosition
+    where
+        F: FnOnce(OverlapPosition) -> DisambiguatedOverlapPosition,
+    {
+        (f)(self)
+    }
 }
 
-/// Same as [`OverlapPosition`] but without information about bound inclusivity
+/// Disambiguated [`OverlapPosition`]
 ///
-/// Used for methods that resolve ambiguities caused by bound inclusivity.
+/// Indicates where the overlap is situated compared to the reference interval without any ambiguity.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum DisambiguatedOverlapPosition {
@@ -188,122 +305,122 @@ pub enum DisambiguatedOverlapPosition {
     Contains,
 }
 
-/// Different rule sets for determining whether different [`OverlapPosition`]s are considered as overlapping or not.
+/// Rule sets for disambiguating an [`OverlapPosition`]
 ///
-/// See [`Interval::overlaps_using_rule_set`] for more.
+/// See [`overlaps`](CanPositionOverlap::overlaps) for more.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum OverlapRuleSet {
     /// Strict rule set
     ///
-    /// Mathematical interpretation of bounds. Here's a table of interactions for ambiguous cases:
+    /// Mathematical interpretation of bounds.
     ///
-    /// ```txt
+    /// # Overlap examples
+    ///
+    /// ```text
     /// [] = inclusive bounds, () = exclusive bounds
     ///
     /// Reference:                 [-------]
-    /// OutsideBefore              :       (-----]
-    /// OutsideAfter        [------)       :
-    /// ContainsAndSameStart       [-------)
-    /// ContainsAndSameEnd         (-------]
-    /// Contains                   (-------)
-    /// InsideAndSameStart         [----------)
-    /// InsideAndSameEnd        (----------]
+    /// OutsideBefore       [------)       :
+    /// OutsideAfter               :       (-----]
+    /// InsideAndSameStart         [-------)
+    /// InsideAndSameEnd           (-------]
+    /// Inside                     (-------)
+    /// ContainsAndSameStart       [----------)
+    /// ContainsAndSameEnd      (----------]
     ///
     /// Reference:                 (-------)
-    /// OutsideBefore              :       [-----]
-    /// OutsideAfter        [------]       :
-    /// Inside                     [-------]
-    /// InsideAndSameStart         (-------]
-    /// InsideAndSameEnd           [-------)
-    /// Inside                   [---------]
-    /// Inside                     [----------]
+    /// OutsideBefore       [------]       :
+    /// OutsideAfter               :       [-----]
+    /// Contains                   [-------]
+    /// ContainsAndSameStart       (-------]
+    /// ContainsAndSameEnd         [-------)
+    /// Contains                 [---------]
+    /// Contains                   [----------]
     /// ```
     #[default]
     Strict,
     /// Lenient rule set
     ///
-    /// Allows interactions that would count as not overlapping (or not overlapping _as much_) under the strict rule set
-    /// but doesn't allow cases where two exclusive bounds of opposite source (start/end) meet. Here's a table to
-    /// illustrate it:
+    /// Two bounds possessing the same point in time need to be either inclusive or at least one of them
+    /// needs to be exclusive (not both!) in order to be counted as equal.
     ///
-    /// ```txt
+    /// # Overlap examples
+    ///
+    /// ```text
     /// [] = inclusive bounds, () = exclusive bounds
     ///
     /// Reference:                [------]
-    /// StartsOnEnd         [-----)      :
-    /// EndsOnStart               :      (-----]
+    /// StartsOnEnd               :      (-----]
+    /// EndsOnStart         [-----)      :
     /// Equal                     (------]
     /// Equal                     [------)
     /// Equal                     (------)
-    /// ContainsAndSameStart      (---]  :
-    /// ContainsAndSameEnd        :  [---)
-    /// InsideAndSameStart        (----------]
-    /// InsideAndSameEnd      [----------)
+    /// InsideAndSameStart        (---]  :
+    /// InsideAndSameEnd          :  [---)
+    /// ContainsAndSameStart      (----------]
+    /// ContainsAndSameEnd    [----------)
     ///
     /// Reference:                (------)
-    /// StartsOnEnd         [-----]      :
-    /// EndsOnStart               :      [-----]
+    /// StartsOnEnd               :      [-----]
+    /// EndsOnStart         [-----]      :
     /// Equal                     [------]
     /// Equal                     (------]
     /// Equal                     [------)
-    /// ContainsAndSameStart      [---]  :
-    /// ContainsAndSameEnd        :  [---]
-    /// InsideAndSameStart        [---------]
-    /// InsideAndSameEnd       [---------]
+    /// InsideAndSameStart        [---]  :
+    /// InsideAndSameEnd          :  [---]
+    /// ContainsAndSameStart      [---------]
+    /// ContainsAndSameEnd     [---------]
     /// ```
     Lenient,
     /// Very lenient rule set
     ///
-    /// Same as the [lenient rule set](OverlapRuleSet::Lenient), but allows cases where two exclusive bounds of
-    /// opposite source (start/end) meet.
+    /// Two bounds possessing the same point in time are counted as equal, regardless of the inclusivity.
     VeryLenient,
     /// Continuous to future rule set
     ///
-    /// Like the [strict rule set](OverlapRuleSet::Strict), but counts as [`StartsOnEnd`](OverlapPosition::StartsOnEnd)
-    /// when the reference interval's inclusive start bound meets the compared interval's end bound, regardless of its
-    /// inclusivity, and counts as [`EndsOnStart`](OverlapPosition::EndsOnStart) when the reference interval's
-    /// end bound, regardless of its inclusivity, meets the compared interval's inclusive start bound.
-    /// Here's a table to illustrate it:
+    /// Follows the same principles as [`OverlapRuleSet::Strict`], but adds an exception:
+    /// if an exclusive end bound is adjacent to an inclusive start bound, it also counts as equal.
     ///
-    /// ```txt
+    /// # Overlap examples
+    ///
+    /// ```text
     /// [] = inclusive bounds, () = exclusive bounds
     ///
     /// Reference:            [------)
-    /// StartsOnEnd      [----)      :
-    /// StartsOnEnd      [----]      :
-    /// EndsOnStart           :      [-----]
-    /// OutsideBefore         :      (-----]
+    /// EndsOnStart      [----)      :
+    /// EndsOnStart      [----]      :
+    /// StartsOnEnd           :      [-----]
+    /// OutsideAfter          :      (-----]
     ///
     /// Reference:            (------]
-    /// OutsideAfter     [----]      :
-    /// OutsideAfter     [----)      :
-    /// EndsOnStart           :      [-----]
-    /// OutsideBefore         :      (-----)
+    /// OutsideBefore    [----]      :
+    /// OutsideBefore    [----)      :
+    /// StartsOnEnd           :      [-----]
+    /// OutsideAfter          :      (-----)
     /// ```
     ContinuousToFuture,
     /// Continuous to past rule set
     ///
-    /// Like the [strict rule set](OverlapRuleSet::Strict), but counts as [`StartsOnEnd`](OverlapPosition::StartsOnEnd)
-    /// when the reference interval's start bound, regardless of its inclusivity, meets the compared interval's
-    /// inclusive end bound, and counts as [`EndsOnStart`](OverlapPosition::EndsOnStart) when the reference interval's
-    /// inclusive end bound meets the compared interval's start bound, regardless of its inclusivity.
-    /// Here's a table to illustrate it:
+    /// Follows the same principles as [`OverlapRuleSet::Strict`], but adds an exception:
+    /// if an exclusive start bound is adjacent to an inclusive end bound, it also counts as equal.
     ///
-    /// ```txt
+    /// # Overlap examples
+    ///
+    /// ```text
     /// [] = inclusive bounds, () = exclusive bounds
     ///
     /// Reference:            (------]
-    /// StartsOnEnd      [----]      :
-    /// OutsideAfter     [----)      :
-    /// EndsOnStart           :      [-----]
-    /// EndsOnStart           :      (-----)
+    /// EndsOnStart      [----]      :
+    /// OutsideBefore    [----)      :
+    /// StartsOnEnd           :      [-----]
+    /// StartsOnEnd           :      (-----)
     ///
     /// Reference:            [------)
-    /// OutsideAfter     [----)      :
-    /// StartsOnEnd      [----]      :
-    /// OutsideBefore         :      [-----]
-    /// OutsideBefore         :      (-----]
+    /// OutsideBefore    [----)      :
+    /// EndsOnStart      [----]      :
+    /// OutsideAfter          :      [-----]
+    /// OutsideAfter          :      (-----]
     /// ```
     ContinuousToPast,
 }
@@ -312,6 +429,25 @@ impl OverlapRuleSet {
     /// Disambiguates an overlap position according to the rule set
     ///
     /// **Careful!** This method discards data about bound inclusivity and cannot be recovered after conversion.
+    ///
+    /// Preferably use [`OverlapPosition::disambiguate_using_rule_set`] instead.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// # use periodical::intervals::ops::bound_overlap_ambiguity::BoundOverlapAmbiguity;
+    /// # use periodical::intervals::ops::overlap::{DisambiguatedOverlapPosition, OverlapPosition, OverlapRuleSet};
+    /// let pos = OverlapPosition::EndsOnStart(BoundOverlapAmbiguity::StartEnd(
+    ///     BoundInclusivity::Exclusive,
+    ///     BoundInclusivity::Inclusive,
+    /// ));
+    ///
+    /// assert_eq!(
+    ///     OverlapRuleSet::Lenient.disambiguate(pos),
+    ///     DisambiguatedOverlapPosition::EndsOnStart,
+    /// );
+    /// ```
     #[must_use]
     pub fn disambiguate(&self, overlap_position: OverlapPosition) -> DisambiguatedOverlapPosition {
         type Bodrs = BoundOverlapDisambiguationRuleSet;
@@ -327,6 +463,8 @@ impl OverlapRuleSet {
 }
 
 /// Disambiguates an [`OverlapPosition`] using the given [`BoundOverlapDisambiguationRuleSet`]
+///
+/// This method is primarily used by [`OverlapRuleSet::disambiguate`].
 #[must_use]
 pub fn overlap_position_disambiguation(
     overlap_position: OverlapPosition,
@@ -474,30 +612,52 @@ pub fn overlap_position_bound_ambiguity_disambiguation_equal_bounded(
     }
 }
 
-/// Default overlap rules
+/// Overlap rules used as the reference for predefined decisions
 pub const DEFAULT_OVERLAP_RULES: [OverlapRule; 1] = [OverlapRule::AllowAdjacency];
 
-/// All rules for determining what counts as overlapping
+/// Rules for determining what counts as overlap
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum OverlapRule {
-    /// Counts adjacent / "touching" intervals as overlapping
+    /// Counts adjacent intervals as overlapping
     AllowAdjacency,
-    /// Counts interval as overlapping if it is adjacent only in the past compared to the reference interval
+    /// Counts interval as overlapping if it is adjacent in the past
+    ///
+    /// Compared to the reference interval, the compared interval needs to be in the past and adjacent
+    /// to the reference interval.
+    /// In other words, the [`DisambiguatedOverlapPosition`]
+    /// needs to be [`EndsOnStart`](DisambiguatedOverlapPosition::EndsOnStart).
     AllowPastAdjacency,
-    /// Counts interval as overlapping if it is adjacent only in the future compared to the reference interval
+    /// Counts interval as overlapping if it is adjacent in the future
+    ///
+    /// Compared to the reference interval, the compared interval needs to be in the future and adjacent
+    /// to the reference interval.
+    /// In other words, the [`DisambiguatedOverlapPosition`]
+    /// needs to be [`StartsOnEnd`](DisambiguatedOverlapPosition::StartsOnEnd).
     AllowFutureAdjacency,
-    /// Doesn't count adjacent / "touching" intervals as overlapping
+    /// Doesn't count adjacent intervals as overlapping
     DenyAdjacency,
-    /// Doesn't count interval as overlapping if it is adjacent only in the past compared to the reference interval
+    /// Doesn't count interval as overlapping if it is adjacent in the past
+    ///
+    /// Compared to the reference interval, the compared interval must not be in the past and adjacent
+    /// to the reference interval.
+    /// In other words, the [`DisambiguatedOverlapPosition`]
+    /// [`EndsOnStart`](DisambiguatedOverlapPosition::EndsOnStart) will deny overlap.
     DenyPastAdjacency,
-    /// Doesn't count interval as overlapping if it is adjacent only in the future compared to the reference interval
+    /// Doesn't count interval as overlapping if it is adjacent in the future
+    ///
+    /// Compared to the reference interval, the compared interval must not be in the future and adjacent
+    /// to the reference interval.
+    /// In other words, the [`DisambiguatedOverlapPosition`]
+    /// [`StartsOnEnd`](DisambiguatedOverlapPosition::StartsOnEnd) will deny overlap.
     DenyFutureAdjacency,
 }
 
 impl OverlapRule {
-    /// Returns the next state of the running overlap decision, given the current one and
-    /// the disambiguated containment position
+    /// Returns the next state of the running overlap decision
+    ///
+    /// This method takes the running overlap decision and the [`DisambiguatedOverlapPosition`]
+    /// and returns the next state of the running overlap decision.
     #[must_use]
     pub fn counts_as_overlap(&self, running: bool, disambiguated_pos: DisambiguatedOverlapPosition) -> bool {
         match self {
@@ -515,7 +675,48 @@ impl OverlapRule {
     }
 }
 
-/// Checks all the given rules and returns the final boolean regarding overlap
+/// Checks all given rules and returns the final boolean regarding overlap
+///
+/// Iterates over the given rules and [fold](Iterator::fold) them with [`OverlapRule::counts_as_overlap`]
+/// in order to get the final boolean regarding whether the intervals should be considered overlapping.
+///
+/// This method also contains the common logic of considering the following [`DisambiguatedOverlapPosition`]s
+/// as being an overlap:
+///
+/// - [`CrossesStart`](DisambiguatedOverlapPosition::CrossesStart)
+/// - [`CrossesEnd`](DisambiguatedOverlapPosition::CrossesEnd)
+/// - [`Inside`](DisambiguatedOverlapPosition::Inside)
+/// - [`InsideAndSameStart`](DisambiguatedOverlapPosition::InsideAndSameStart)
+/// - [`InsideAndSameEnd`](DisambiguatedOverlapPosition::InsideAndSameEnd)
+/// - [`Equal`](DisambiguatedOverlapPosition::Equal)
+/// - [`ContainsAndSameStart`](DisambiguatedOverlapPosition::ContainsAndSameStart)
+/// - [`ContainsAndSameEnd`](DisambiguatedOverlapPosition::ContainsAndSameEnd)
+/// - [`Contains`](DisambiguatedOverlapPosition::Contains)
+///
+/// If conflicting rules are provided, for example [`AllowPastAdjacency`](OverlapRule::AllowPastAdjacency)
+/// and [`DenyPastAdjacency`](OverlapRule::DenyPastAdjacency), the one appearing last is the one taking priority.
+///
+/// Don't use this method directly, use [`CanPositionOverlap::overlaps`] instead.
+///
+/// # Examples
+///
+/// ```
+/// # use periodical::intervals::ops::overlap::{check_overlap_rules, DisambiguatedOverlapPosition, OverlapRule};
+/// let disambiguated_pos = DisambiguatedOverlapPosition::EndsOnStart;
+///
+/// let deny_adjacency_diagnostic = check_overlap_rules(
+///     disambiguated_pos,
+///     &[OverlapRule::DenyAdjacency],
+/// );
+///
+/// let allow_adjacency_diagnostic = check_overlap_rules(
+///     disambiguated_pos,
+///     &[OverlapRule::AllowAdjacency],
+/// );
+///
+/// assert!(!deny_adjacency_diagnostic);
+/// assert!(allow_adjacency_diagnostic);
+/// ```
 #[must_use]
 pub fn check_overlap_rules<'a, RI>(disambiguated_overlap_position: DisambiguatedOverlapPosition, rules: RI) -> bool
 where
@@ -539,7 +740,8 @@ where
     })
 }
 
-/// Checks whether the given [`DisambiguatedOverlapPosition`] respects [the 'allow adjacency' rule](OverlapRule::AllowAdjacency)
+/// Checks whether the given [`DisambiguatedOverlapPosition`] respects
+/// the ['allow adjacency' rule](OverlapRule::AllowAdjacency)
 #[must_use]
 pub fn allow_adjacency_overlap_rule_counts_as_overlap(
     running: bool,
@@ -552,7 +754,8 @@ pub fn allow_adjacency_overlap_rule_counts_as_overlap(
         )
 }
 
-/// Checks whether the given [`DisambiguatedOverlapPosition`] respects [the 'allow past adjacency' rule](OverlapRule::AllowPastAdjacency)
+/// Checks whether the given [`DisambiguatedOverlapPosition`] respects
+/// the ['allow past adjacency' rule](OverlapRule::AllowPastAdjacency)
 #[must_use]
 pub fn allow_past_adjacency_overlap_rule_counts_as_overlap(
     running: bool,
@@ -561,7 +764,8 @@ pub fn allow_past_adjacency_overlap_rule_counts_as_overlap(
     running || matches!(disambiguated_pos, DisambiguatedOverlapPosition::EndsOnStart)
 }
 
-/// Checks whether the given [`DisambiguatedOverlapPosition`] respects [the 'allow future adjacency' rule](OverlapRule::AllowFutureAdjacency)
+/// Checks whether the given [`DisambiguatedOverlapPosition`] respects
+/// the ['allow future adjacency' rule](OverlapRule::AllowFutureAdjacency)
 #[must_use]
 pub fn allow_future_adjacency_overlap_rule_counts_as_overlap(
     running: bool,
@@ -570,7 +774,8 @@ pub fn allow_future_adjacency_overlap_rule_counts_as_overlap(
     running || matches!(disambiguated_pos, DisambiguatedOverlapPosition::StartsOnEnd)
 }
 
-/// Checks whether the given [`DisambiguatedOverlapPosition`] respects [the 'deny adjacency' rule](OverlapRule::DenyAdjacency)
+/// Checks whether the given [`DisambiguatedOverlapPosition`] respects
+/// the ['deny adjacency' rule](OverlapRule::DenyAdjacency)
 #[must_use]
 pub fn deny_adjacency_overlap_rule_counts_as_overlap(
     running: bool,
@@ -583,7 +788,8 @@ pub fn deny_adjacency_overlap_rule_counts_as_overlap(
         )
 }
 
-/// Checks whether the given [`DisambiguatedOverlapPosition`] respects [the 'deny past adjacency' rule](OverlapRule::DenyPastAdjacency)
+/// Checks whether the given [`DisambiguatedOverlapPosition`] respects
+/// the ['deny past adjacency' rule](OverlapRule::DenyPastAdjacency)
 #[must_use]
 pub fn deny_past_adjacency_overlap_rule_counts_as_overlap(
     running: bool,
@@ -592,7 +798,8 @@ pub fn deny_past_adjacency_overlap_rule_counts_as_overlap(
     running && !matches!(disambiguated_pos, DisambiguatedOverlapPosition::EndsOnStart)
 }
 
-/// Checks whether the given [`DisambiguatedOverlapPosition`] respects [the 'deny future adjacency' rule](OverlapRule::DenyFutureAdjacency)
+/// Checks whether the given [`DisambiguatedOverlapPosition`] respects
+/// the ['deny future adjacency' rule](OverlapRule::DenyFutureAdjacency)
 #[must_use]
 pub fn deny_future_adjacency_overlap_rule_counts_as_overlap(
     running: bool,
@@ -601,46 +808,92 @@ pub fn deny_future_adjacency_overlap_rule_counts_as_overlap(
     running && !matches!(disambiguated_pos, DisambiguatedOverlapPosition::StartsOnEnd)
 }
 
-/// Capacity to position an overlap from a given [`HasEmptiableAbsoluteBounds`] implementor
+/// Capacity to position an overlap with another interval
+///
+/// # Examples
+///
+/// ## Fetching the disambiguated overlap position
+///
+/// ```
+/// # use chrono::{DateTime, Utc};
+/// # use periodical::intervals::absolute::{
+/// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+/// # };
+/// # use periodical::intervals::meta::BoundInclusivity;
+/// # use periodical::intervals::ops::overlap::{CanPositionOverlap, DisambiguatedOverlapPosition, OverlapRuleSet};
+/// let compared_interval = AbsoluteBounds::new(
+///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+///     )),
+///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+///         "2025-01-01 10:00:00Z".parse::<DateTime<Utc>>()?,
+///     )),
+/// );
+///
+/// let reference_interval = AbsoluteBounds::new(
+///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+///         "2025-01-01 10:00:00Z".parse::<DateTime<Utc>>()?,
+///         BoundInclusivity::Exclusive,
+///     )),
+///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+///         "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
+///     )),
+/// );
+///
+/// assert_eq!(
+///     compared_interval.disambiguated_overlap_position(&reference_interval, OverlapRuleSet::Lenient),
+///     Ok(DisambiguatedOverlapPosition::EndsOnStart),
+/// );
+/// # Ok::<(), chrono::format::ParseError>(())
+/// ```
+///
+/// ## Checking if an interval is overlapping
+///
+/// ```
+/// # use chrono::{DateTime, Utc};
+/// # use periodical::intervals::absolute::{
+/// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+/// # };
+/// # use periodical::intervals::meta::BoundInclusivity;
+/// # use periodical::intervals::ops::overlap::{CanPositionOverlap, OverlapRule, OverlapRuleSet};
+/// let compared_interval = AbsoluteBounds::new(
+///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+///     )),
+///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+///         "2025-01-01 10:00:00Z".parse::<DateTime<Utc>>()?,
+///     )),
+/// );
+///
+/// let reference_interval = AbsoluteBounds::new(
+///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+///         "2025-01-01 10:00:00Z".parse::<DateTime<Utc>>()?,
+///         BoundInclusivity::Exclusive,
+///     )),
+///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+///         "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
+///     )),
+/// );
+///
+/// assert!(compared_interval.overlaps(
+///         &reference_interval,
+///         OverlapRuleSet::Lenient,
+///         &[OverlapRule::AllowAdjacency],
+/// ));
+/// # Ok::<(), chrono::format::ParseError>(())
+/// ```
 pub trait CanPositionOverlap<Rhs = Self> {
     /// Error type if the overlap positioning failed
     type Error;
 
-    /// Returns the overlap position of the given interval
+    /// Returns the [`OverlapPosition`] of the given interval
     ///
-    /// The current interval is compared to the other interval, that means that if you, for example, compare
-    /// a bounded absolute interval (instance) with an unbounded interval (given interval), you will get
-    /// [`OverlapPosition::Inside`] as the bounded absolute interval _is contained_ by an unbounded interval.
+    /// Evaluates the [`OverlapPosition`] of the compared, `self`, against the reference, `rhs`.
+    /// It ignores the [inclusivities](crate::intervals::meta::BoundInclusivity) of the intervals
+    /// and simply takes into account the position of the bounds.
     ///
-    /// An empty interval is always outside, even if compared against an unbounded interval, as an empty interval is a
-    /// concept-value (like infinity) rather than an actual value.
-    ///
-    /// # Bound inclusivity
-    ///
-    /// When checking the overlap position, the all bound inclusivities are considered as inclusive.
-    /// Then, on cases where the result could be ambiguous (e.g. if the compared interval's start ends up on
-    /// the reference interval's start but the reference's inclusivity of this bound is exclusive, or maybe both
-    /// intervals' concerned bound are exclusive, does it qualify as [`OverlapPosition::EndsOnStart`]?),
-    /// we simply include the inclusivity of the concerned bound and let the receiver make the call on whether
-    /// it counts or not.
-    ///
-    /// This way, we can guarantee maximum flexibility of this process.
-    ///
-    /// Ambiguous overlap positions contains the reference interval concerned bound's inclusivity first,
-    /// then the compared interval concerned bound's inclusivity second.
-    ///
-    /// The only exception to that is [`OverlapPosition::Equal`], where its first tuple is the bound inclusivities for
-    /// the reference interval, and its second tuple is the bound inclusivities for the compared interval.
-    ///
-    /// Since half-bounded and unbounded intervals are also subject to the overlap position check, most ambiguous overlap
-    /// positions have one or all of their elements as [`Option`]s. Those elements are set to [`None`] only when
-    /// there is no bound to speak of. The order of the elements remains the same though: first the reference, then
-    /// the compared.
-    ///
-    /// In the case of a pair of half-bounded intervals being compared, since they only have one bound, the second element
-    /// of each tuple will be [`None`].
-    /// In the case of a pair of unbounded intervals being compared, since they have no bounds but still are equal, all
-    /// elements will be [`None`].
+    /// If two bounds are adjacent, a [`BoundOverlapAmbiguity`] is created
+    /// and then stored in the right variant of [`OverlapPosition`].
     ///
     /// # Errors
     ///
@@ -648,7 +901,9 @@ pub trait CanPositionOverlap<Rhs = Self> {
     /// they can use the associated type [`Error`](CanPositionOverlap::Error).
     fn overlap_position(&self, rhs: &Rhs) -> Result<OverlapPosition, Self::Error>;
 
-    /// Returns the disambiguated overlap position of the given interval using a given rule set
+    /// Returns the [`DisambiguatedOverlapPosition`] of the given interval using a given rule set
+    ///
+    /// Uses [`OverlapRuleSet::disambiguate`] under the hood.
     ///
     /// See [`CanPositionOverlap::overlap_position`] for more details about overlap position.
     ///
@@ -665,9 +920,9 @@ pub trait CanPositionOverlap<Rhs = Self> {
             .map(|overlap_position| rule_set.disambiguate(overlap_position))
     }
 
-    /// Returns whether the given other interval overlaps the current one using predetermined rules
+    /// Returns whether the given interval overlaps the current one using predetermined rules
     ///
-    /// Uses the [default rule set](OverlapRuleSet::default) with the default rules,
+    /// Uses the [default rule set](OverlapRuleSet::default) with the [default rules](DEFAULT_OVERLAP_RULES).
     ///
     /// Those have been chosen because they are the closest to how we mathematically and humanly interpret overlaps.
     ///
@@ -675,27 +930,33 @@ pub trait CanPositionOverlap<Rhs = Self> {
     ///
     /// If you are looking to choose the rule set and the rules, see [`CanPositionOverlap::overlaps`].
     ///
-    /// If you want even more granular control, see [`CanPositionOverlap::overlaps_using_simple`].
+    /// If you want more granular control, see [`CanPositionOverlap::overlaps_using_disambiguated`].
     #[must_use]
     fn simple_overlaps(&self, rhs: &Rhs) -> bool {
         self.overlaps(rhs, OverlapRuleSet::default(), &DEFAULT_OVERLAP_RULES)
     }
 
-    /// Returns whether the given other interval overlaps the current one using the given [overlap rules](`OverlapRule`)
+    /// Returns whether the given other interval overlaps the current one
+    /// using the given [overlap rules](`OverlapRule`)
     ///
-    /// This method uses [`disambiguated_overlap_position`](CanPositionOverlap::disambiguated_overlap_position). If this aforementioned method returns an [`Err`],
-    /// then this method returns false.
+    /// Uses [`disambiguated_overlap_position`](CanPositionOverlap::disambiguated_overlap_position) under the hood.
     ///
-    /// If it returns [`Ok`], then the [`OverlapRule`]s are checked. This method returns true only if all provided
-    /// [`OverlapRule`]s are respected (i.e. returned true when calling [`OverlapRule::counts_as_overlap`]).
+    /// If this aforementioned method returns an [`Err`], then this method returns `false`.
+    /// If it returns [`Ok`], then the given [`OverlapRule`]s are checked.
+    ///
+    /// This method returns `true` if all provided [`OverlapRule`]s are respected.
+    /// This part of the process uses [`OverlapRule::counts_as_overlap`].
     ///
     /// # See also
     ///
-    /// If you are looking for the simplest way of checking for overlap, see [`simple_overlaps`](CanPositionOverlap::simple_overlaps).
+    /// If you are looking for the simplest way of checking for overlap,
+    /// see [`simple_overlaps`](CanPositionOverlap::simple_overlaps).
     ///
-    /// If you are looking for more control over what counts as overlap, see [`overlaps_using_simple`](CanPositionOverlap::overlaps_using_simple).
+    /// If you are looking for more control over what counts as overlap,
+    /// see [`overlaps_using_disambiguated`](CanPositionOverlap::overlaps_using_disambiguated).
     ///
-    /// If you want extremely granular control over what counts as overlap, see [`overlaps_using`](CanPositionOverlap::overlaps_using).
+    /// If you want even more granular control over what counts as overlap,
+    /// see [`overlaps_using`](CanPositionOverlap::overlaps_using).
     #[must_use]
     fn overlaps<'a, RI>(&self, rhs: &Rhs, rule_set: OverlapRuleSet, rules: RI) -> bool
     where
@@ -708,18 +969,19 @@ pub trait CanPositionOverlap<Rhs = Self> {
 
     /// Returns whether the given other interval overlaps the current interval using the given closure
     ///
-    /// This method uses [`CanPositionOverlap::overlap_position`]. If this aforementioned method returns an [`Err`],
-    /// then this method returns false.
+    /// Uses [`overlap_position`](`CanPositionOverlap::overlap_position`) under the hood.
     ///
-    /// If it returns [`Ok`], then the provided function is in charge of determining whether the [`OverlapPosition`]
-    /// given by [`CanPositionOverlap::overlap_position`] counts as overlapping or not.
+    /// If this aforementioned method returns an [`Err`], then this method returns `false`.
+    /// If it returns [`Ok`], then the provided closure is in charge of determining whether the [`OverlapPosition`]
+    /// given by [`overlap_position`](`CanPositionOverlap::overlap_position`) counts as overlapping or not.
     ///
     /// # See also
     ///
-    /// If you are looking for control over what's considered as overlapping but still want
-    /// predetermined [`DisambiguatedOverlapPosition`]s, see [`CanPositionOverlap::overlaps_using_simple`].
+    /// If you are looking for control over what's considered as an overlap but still want
+    /// predetermined [`DisambiguatedOverlapPosition`]s, see [`CanPositionOverlap::overlaps_using_disambiguated`].
     ///
-    /// If you are looking for predetermined decisions on what's considered as overlapping, see [`CanPositionOverlap::overlaps`].
+    /// If you are looking for predetermined decisions on what's considered as an overlap,
+    /// see [`CanPositionOverlap::simple_overlaps`].
     #[must_use]
     fn overlaps_using<F>(&self, rhs: &Rhs, f: F) -> bool
     where
@@ -728,20 +990,24 @@ pub trait CanPositionOverlap<Rhs = Self> {
         self.overlap_position(rhs).map(f).unwrap_or(false)
     }
 
-    /// Returns whether the given other interval overlaps the current interval using the given closure
+    /// Returns whether the given interval overlaps the current interval using the given closure
     /// with a disambiguated position
     ///
-    /// This method uses [`disambiguated_overlap_position`](CanPositionOverlap::disambiguated_overlap_position). If this aforementioned method returns an [`Err`],
-    /// then this method returns false.
+    /// Uses [`disambiguated_overlap_position`](CanPositionOverlap::disambiguated_overlap_position) under the hood.
     ///
-    /// If it returns [`Ok`], then the provided function is in charge of determining whether the [`DisambiguatedOverlapPosition`]
-    /// given by [`disambiguated_overlap_position`](CanPositionOverlap::disambiguated_overlap_position) counts as overlapping or not.
+    /// If this aforementioned method returns an [`Err`], then this method returns false.
+    /// If it returns [`Ok`], then the provided closure is in charge of determining whether
+    /// the [`DisambiguatedOverlapPosition`]
+    /// given by [`disambiguated_overlap_position`](CanPositionOverlap::disambiguated_overlap_position)
+    /// counts as overlapping or not.
     ///
     /// # See also
     ///
-    /// If you are looking for more granular control over what's considered as overlapping, see [`CanPositionOverlap::overlaps_using`].
+    /// If you are looking for more granular control over what's considered as an overlap,
+    /// see [`CanPositionOverlap::overlaps_using`].
     ///
-    /// If you are looking for predetermined decisions on what's considered as overlapping, see [`CanPositionOverlap::overlaps`].
+    /// If you are looking for predetermined decisions on what's considered as an overlap,
+    /// see [`CanPositionOverlap::simple_overlaps`].
     #[must_use]
     fn overlaps_using_disambiguated<F>(&self, rhs: &Rhs, rule_set: OverlapRuleSet, f: F) -> bool
     where
@@ -934,6 +1200,8 @@ where
 }
 
 /// Positions the overlap between two [`AbsoluteBounds`]
+///
+/// See [module documentation](crate::intervals::ops::overlap) for more info.
 #[must_use]
 pub fn overlap_position_abs_bounds(og: &AbsoluteBounds, other: &AbsoluteBounds) -> OverlapPosition {
     type Sb = AbsoluteStartBound;
@@ -1012,7 +1280,9 @@ pub fn overlap_position_abs_bounds(og: &AbsoluteBounds, other: &AbsoluteBounds) 
     }
 }
 
-/// Positions the overlap between a half-bounded interval going to the past and a bounded interval
+/// Positions the overlap of a half-bounded interval going to the past against a bounded interval
+///
+/// See [module documentation](crate::intervals::ops::overlap) for more info.
 #[must_use]
 pub fn overlap_position_abs_half_bounded_past_bounded(
     ref_bound: &AbsoluteFiniteBound,
@@ -1037,7 +1307,9 @@ pub fn overlap_position_abs_half_bounded_past_bounded(
     }
 }
 
-/// Positions the overlap between a half-bounded interval going to the future and a bounded interval
+/// Positions the overlap of a half-bounded interval going to the future against a bounded interval
+///
+/// See [module documentation](crate::intervals::ops::overlap) for more info.
 #[must_use]
 pub fn overlap_position_abs_half_bounded_future_bounded(
     ref_bound: &AbsoluteFiniteBound,
@@ -1062,7 +1334,9 @@ pub fn overlap_position_abs_half_bounded_future_bounded(
     }
 }
 
-/// Positions the overlap between a bounded interval and a half-bounded interval going to the past
+/// Positions the overlap of a bounded interval against a half-bounded interval going to the past
+///
+/// See [module documentation](crate::intervals::ops::overlap) for more info.
 #[must_use]
 pub fn overlap_position_abs_bounded_half_bounded_past(
     og_start: &AbsoluteFiniteBound,
@@ -1087,7 +1361,9 @@ pub fn overlap_position_abs_bounded_half_bounded_past(
     }
 }
 
-/// Positions the overlap between a bounded interval and a half-bounded interval going to the future
+/// Positions the overlap of a bounded interval against a half-bounded interval going to the future
+///
+/// See [module documentation](crate::intervals::ops::overlap) for more info.
 #[must_use]
 pub fn overlap_position_abs_bounded_half_bounded_future(
     og_start: &AbsoluteFiniteBound,
@@ -1113,6 +1389,8 @@ pub fn overlap_position_abs_bounded_half_bounded_future(
 }
 
 /// Positions the overlap between two bounded intervals
+///
+/// See [module documentation](crate::intervals::ops::overlap) for more info.
 #[must_use]
 pub fn overlap_position_abs_bounded_pair(
     og_start: &AbsoluteFiniteBound,
@@ -1170,6 +1448,8 @@ pub fn overlap_position_abs_bounded_pair(
 }
 
 /// Positions the overlap between two implementors of [`HasEmptiableAbsoluteBounds`]
+///
+/// See [module documentation](crate::intervals::ops::overlap) for more info.
 #[must_use]
 pub fn overlap_position_emptiable_abs_bounds<T, U>(og: &T, other: &U) -> OverlapPosition
 where
@@ -1185,6 +1465,8 @@ where
 }
 
 /// Positions the overlap between two [`RelativeBounds`]
+///
+/// See [module documentation](crate::intervals::ops::overlap) for more info.
 #[must_use]
 pub fn overlap_position_rel_bounds(og: &RelativeBounds, other: &RelativeBounds) -> OverlapPosition {
     type Sb = RelativeStartBound;
@@ -1263,7 +1545,9 @@ pub fn overlap_position_rel_bounds(og: &RelativeBounds, other: &RelativeBounds) 
     }
 }
 
-/// Positions the overlap between a half-bounded interval going to the past and a bounded interval
+/// Positions the overlap of a half-bounded interval going to the past against a bounded interval
+///
+/// See [module documentation](crate::intervals::ops::overlap) for more info.
 #[must_use]
 pub fn overlap_position_rel_half_bounded_past_bounded(
     ref_bound: &RelativeFiniteBound,
@@ -1288,7 +1572,9 @@ pub fn overlap_position_rel_half_bounded_past_bounded(
     }
 }
 
-/// Positions the overlap between a half-bounded interval going to the future and a bounded interval
+/// Positions the overlap of a half-bounded interval going to the future against a bounded interval
+///
+/// See [module documentation](crate::intervals::ops::overlap) for more info.
 #[must_use]
 pub fn overlap_position_rel_half_bounded_future_bounded(
     ref_bound: &RelativeFiniteBound,
@@ -1313,7 +1599,9 @@ pub fn overlap_position_rel_half_bounded_future_bounded(
     }
 }
 
-/// Positions the overlap between a bounded interval and a half-bounded interval going to the past
+/// Positions the overlap of a bounded interval against a half-bounded interval going to the past
+///
+/// See [module documentation](crate::intervals::ops::overlap) for more info.
 #[must_use]
 pub fn overlap_position_rel_bounded_half_bounded_past(
     og_start: &RelativeFiniteBound,
@@ -1338,7 +1626,9 @@ pub fn overlap_position_rel_bounded_half_bounded_past(
     }
 }
 
-/// Positions the overlap between a bounded interval and a half-bounded interval going to the future
+/// Positions the overlap of a bounded interval against a half-bounded interval going to the future
+///
+/// See [module documentation](crate::intervals::ops::overlap) for more info.
 #[must_use]
 pub fn overlap_position_rel_bounded_half_bounded_future(
     og_start: &RelativeFiniteBound,
@@ -1364,6 +1654,8 @@ pub fn overlap_position_rel_bounded_half_bounded_future(
 }
 
 /// Positions the overlap between two bounded intervals
+///
+/// See [module documentation](crate::intervals::ops::overlap) for more info.
 #[must_use]
 pub fn overlap_position_rel_bounded_pair(
     og_start: &RelativeFiniteBound,
@@ -1421,6 +1713,8 @@ pub fn overlap_position_rel_bounded_pair(
 }
 
 /// Positions the overlap between two implementors of [`HasEmptiableRelativeBounds`]
+///
+/// See [module documentation](crate::intervals::ops::overlap) for more info.
 #[must_use]
 pub fn overlap_position_emptiable_rel_bounds<T, U>(og: &T, other: &U) -> OverlapPosition
 where
