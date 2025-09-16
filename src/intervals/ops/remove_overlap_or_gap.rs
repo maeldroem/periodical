@@ -1,4 +1,9 @@
-//! Removal of overlaps and gaps between intervals
+//! Removal of overlaps or gaps between intervals
+//!
+//! Given two intervals, adjusts the first interval so that no gap nor overlap exist between the two intervals.
+//!
+//! This module combines [filling the gap](crate::intervals::ops::fill_gap) if no overlap is present,
+//! and [removing the overlap](crate::intervals::ops::remove_overlap) in the contrary.
 
 use super::grow::{GrowableEndBound, GrowableStartBound};
 use super::overlap::{CanPositionOverlap, DisambiguatedOverlapPosition, OverlapRuleSet};
@@ -8,40 +13,69 @@ use super::shrink::{ShrinkableEndBound, ShrinkableStartBound};
 
 use crate::intervals::absolute::{
     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteInterval, AbsoluteStartBound,
-    EmptiableAbsoluteBounds, HalfBoundedAbsoluteInterval, HasAbsoluteBounds, HasEmptiableAbsoluteBounds,
+    BoundedAbsoluteInterval, EmptiableAbsoluteBounds, HalfBoundedAbsoluteInterval, HasAbsoluteBounds,
+    HasEmptiableAbsoluteBounds,
 };
 use crate::intervals::meta::Interval;
 use crate::intervals::ops::remove_overlap::{remove_end_overlap_rel, remove_start_overlap_rel};
 use crate::intervals::relative::{
-    EmptiableRelativeBounds, HalfBoundedRelativeInterval, RelativeBounds, RelativeEndBound, RelativeFiniteBound,
-    RelativeStartBound,
+    BoundedRelativeInterval, EmptiableRelativeBounds, HalfBoundedRelativeInterval, RelativeBounds, RelativeEndBound,
+    RelativeFiniteBound, RelativeInterval, RelativeStartBound,
 };
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
-use crate::intervals::{BoundedAbsoluteInterval, BoundedRelativeInterval, RelativeInterval};
 
 /// Result of an overlap/gap removal
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum OverlapOrGapRemovalResult<T> {
-    /// The operation was successful and resulted into a single element (an empty interval counts as one too)
+    /// Resulted in a single element
+    ///
+    /// An empty interval counts as one too.
     Single(T),
-    /// The operation was successful and resulted into two split elements
+    /// Resulted in two split elements
     Split(T, T),
 }
 
 impl<T> OverlapOrGapRemovalResult<T> {
-    /// Whether the [`OverlapOrGapRemovalResult`] is of the [`Single`](OverlapOrGapRemovalResult::Single) variant
+    /// Whether it is of the [`Single`](OverlapOrGapRemovalResult::Single) variant
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use periodical::intervals::ops::remove_overlap_or_gap::OverlapOrGapRemovalResult;
+    /// assert!(OverlapOrGapRemovalResult::<()>::Single(()).is_single());
+    /// assert!(!OverlapOrGapRemovalResult::<()>::Split((), ()).is_single());
+    /// ```
     #[must_use]
     pub fn is_single(&self) -> bool {
         matches!(self, Self::Single(_))
     }
 
-    /// Whether the [`OverlapOrGapRemovalResult`] is of the [`Split`](OverlapOrGapRemovalResult::Split) variant
+    /// Whether it is of the [`Split`](OverlapOrGapRemovalResult::Split) variant
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use periodical::intervals::ops::remove_overlap_or_gap::OverlapOrGapRemovalResult;
+    /// assert!(OverlapOrGapRemovalResult::<()>::Split((), ()).is_split());
+    /// assert!(!OverlapOrGapRemovalResult::<()>::Single(()).is_split());
+    /// ```
     #[must_use]
     pub fn is_split(&self) -> bool {
         matches!(self, Self::Split(..))
     }
 
     /// Returns the content of the [`Single`](OverlapOrGapRemovalResult::Single) variant
+    ///
+    /// Consumes `self` and puts the content of the [`Single`](OverlapOrGapRemovalResult::Single) variant
+    /// in an [`Option`]. If instead `self` is another variant, the method returns [`None`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use periodical::intervals::ops::remove_overlap_or_gap::OverlapOrGapRemovalResult;
+    /// assert_eq!(OverlapOrGapRemovalResult::<u8>::Single(10).single(), Some(10));
+    /// assert_eq!(OverlapOrGapRemovalResult::<u8>::Split(10, 20).single(), None);
+    /// ```
     #[must_use]
     pub fn single(self) -> Option<T> {
         match self {
@@ -51,6 +85,17 @@ impl<T> OverlapOrGapRemovalResult<T> {
     }
 
     /// Returns the content of the [`Split`](OverlapOrGapRemovalResult::Split) variant
+    ///
+    /// Consumes `self` and puts the content of the [`Split`](OverlapOrGapRemovalResult::Split) variant
+    /// in an [`Option`]. If instead `self` is another variant, the method returns [`None`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use periodical::intervals::ops::remove_overlap_or_gap::OverlapOrGapRemovalResult;
+    /// assert_eq!(OverlapOrGapRemovalResult::<u8>::Split(10, 20).split(), Some((10, 20)));
+    /// assert_eq!(OverlapOrGapRemovalResult::<u8>::Single(10).split(), None);
+    /// ```
     #[must_use]
     pub fn split(self) -> Option<(T, T)> {
         match self {
@@ -63,6 +108,20 @@ impl<T> OverlapOrGapRemovalResult<T> {
     /// and [`Split`](OverlapOrGapRemovalResult::Split) variants
     ///
     /// Uses a closure that describes the transformation from `T` to `U`, used for each element in the enum.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use periodical::intervals::ops::remove_overlap_or_gap::OverlapOrGapRemovalResult;
+    /// assert_eq!(
+    ///     OverlapOrGapRemovalResult::<u8>::Single(10).map(|x| x * 2),
+    ///     OverlapOrGapRemovalResult::<u8>::Single(20),
+    /// );
+    /// assert_eq!(
+    ///     OverlapOrGapRemovalResult::<u8>::Split(10, 20).map(|x| x * 2),
+    ///     OverlapOrGapRemovalResult::<u8>::Split(20, 40),
+    /// );
+    /// ```
     #[must_use]
     pub fn map<F, U>(self, mut f: F) -> OverlapOrGapRemovalResult<U>
     where
@@ -75,12 +134,110 @@ impl<T> OverlapOrGapRemovalResult<T> {
     }
 }
 
-/// Capacity to remove any overlap or gap between two intervals
+/// Capacity to remove overlaps or gaps between two intervals
+///
+/// # Examples
+///
+/// ```
+/// # use chrono::{DateTime, Utc};
+/// # use periodical::intervals::absolute::{
+/// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, EmptiableAbsoluteBounds,
+/// # };
+/// # use periodical::intervals::meta::BoundInclusivity;
+/// # use periodical::intervals::ops::remove_overlap_or_gap::{OverlapOrGapRemovalResult, RemovableOverlapOrGap};
+/// let first_interval = AbsoluteBounds::new(
+///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+///     )),
+///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+///         "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
+///     )),
+/// );
+///
+/// let second_interval = AbsoluteBounds::new(
+///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+///         "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
+///     )),
+///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+///         "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
+///     )),
+/// );
+///
+/// assert_eq!(
+///     first_interval.remove_overlap_or_gap(&second_interval),
+///     OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
+///         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+///             "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+///         )),
+///         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+///             "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
+///             BoundInclusivity::Exclusive,
+///         )),
+///     ))),
+/// );
+/// # Ok::<(), chrono::format::ParseError>(())
+/// ```
 pub trait RemovableOverlapOrGap<Rhs = Self> {
     /// Output type
     type Output;
 
-    /// Returns a result that contains a version (or multiple versions, if split) of `self` without overlap or gap
+    /// Returns the [`OverlapOrGapRemovalResult`] of the interval
+    ///
+    /// A copy of the main interval, `self`, is created without any overlap or gap
+    /// with the second given interval remaining.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::{
+    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, EmptiableAbsoluteBounds,
+    /// # };
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// # use periodical::intervals::ops::remove_overlap_or_gap::{OverlapOrGapRemovalResult, RemovableOverlapOrGap};
+    /// let first_interval = AbsoluteBounds::new(
+    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+    ///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     )),
+    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+    ///         "2025-01-01 17:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     )),
+    /// );
+    ///
+    /// let second_interval = AbsoluteBounds::new(
+    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+    ///         "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     )),
+    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+    ///         "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     )),
+    /// );
+    ///
+    /// assert_eq!(
+    ///     first_interval.remove_overlap_or_gap(&second_interval),
+    ///     OverlapOrGapRemovalResult::Split(
+    ///         EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
+    ///             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+    ///                 "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+    ///             )),
+    ///             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+    ///                 "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
+    ///                 BoundInclusivity::Exclusive,
+    ///             )),
+    ///         )),
+    ///         EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
+    ///             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+    ///                 "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
+    ///                 BoundInclusivity::Exclusive,
+    ///             )),
+    ///             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+    ///                 "2025-01-01 17:00:00Z".parse::<DateTime<Utc>>()?,
+    ///             )),
+    ///         )),
+    ///     ),
+    /// );
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     fn remove_overlap_or_gap(&self, rhs: &Rhs) -> OverlapOrGapRemovalResult<Self::Output>;
 }
@@ -313,6 +470,8 @@ where
 }
 
 /// Removes any overlap or gap between two [`AbsoluteBounds`]
+///
+/// See [module documentation](crate::intervals::ops::remove_overlap_or_gap) for more information.
 #[must_use]
 pub fn remove_overlap_or_gap_abs_bounds(
     a: &AbsoluteBounds,
@@ -431,6 +590,8 @@ pub fn remove_overlap_or_gap_abs_bounds(
 }
 
 /// Removes any overlap or gap between an [`AbsoluteBounds`] and an [`EmptiableAbsoluteBounds`]
+///
+/// See [module documentation](crate::intervals::ops::remove_overlap_or_gap) for more information.
 #[must_use]
 pub fn remove_overlap_or_gap_abs_bounds_with_emptiable_abs_bounds(
     a: &AbsoluteBounds,
@@ -444,6 +605,8 @@ pub fn remove_overlap_or_gap_abs_bounds_with_emptiable_abs_bounds(
 }
 
 /// Removes any overlap or gap between two [`EmptiableAbsoluteBounds`]
+///
+/// See [module documentation](crate::intervals::ops::remove_overlap_or_gap) for more information.
 #[must_use]
 pub fn remove_overlap_or_gap_emptiable_abs_bounds(
     a: &EmptiableAbsoluteBounds,
@@ -457,6 +620,8 @@ pub fn remove_overlap_or_gap_emptiable_abs_bounds(
 }
 
 /// Removes any overlap or gap between two [`RelativeBounds`]
+///
+/// See [module documentation](crate::intervals::ops::remove_overlap_or_gap) for more information.
 #[must_use]
 pub fn remove_overlap_or_gap_rel_bounds(
     a: &RelativeBounds,
@@ -575,6 +740,8 @@ pub fn remove_overlap_or_gap_rel_bounds(
 }
 
 /// Removes any overlap or gap between an [`RelativeBounds`] and an [`EmptiableRelativeBounds`]
+///
+/// See [module documentation](crate::intervals::ops::remove_overlap_or_gap) for more information.
 #[must_use]
 pub fn remove_overlap_or_gap_rel_bounds_with_emptiable_rel_bounds(
     a: &RelativeBounds,
@@ -588,6 +755,8 @@ pub fn remove_overlap_or_gap_rel_bounds_with_emptiable_rel_bounds(
 }
 
 /// Removes any overlap or gap between two [`EmptiableRelativeBounds`]
+///
+/// See [module documentation](crate::intervals::ops::remove_overlap_or_gap) for more information.
 #[must_use]
 pub fn remove_overlap_or_gap_emptiable_rel_bounds(
     a: &EmptiableRelativeBounds,
