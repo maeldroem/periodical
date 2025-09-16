@@ -1,13 +1,22 @@
-//! Interval operations and comparisons
+//! Various operations related to intervals and bounds
 //!
-//! Operations and comparisons with intervals are implemented here. You will find methods like
+//! _Operation_ is a relatively vague term, but in this module you will find...
 //!
-//! - `contains`
-//! - `overlaps`
-//! - `try_extend`
+//! - [how to find overlaps between intervals](overlap)
+//! - [how to check if a time is contained within an interval](time_containment)
+//! - [how to cut intervals](cut)
+//! - how to remove [gaps](fill_gap), [overlaps](remove_overlap), even [both](remove_overlap_or_gap)
+//! - [how to order bounds](bound_ord)
+//! - [how to check if a bound is contained within an interval](bound_containment)
+//! - [how to get the complement of an interval](complement)
+//! - how to adjust intervals by [growing](grow) or [shrinking](shrink) their bounds
+//! - how to [extend] or [abridge] intervals
+//! - [how to change the precision of intervals and bounds](precision)
+//! - [how to apply set operations to intervals](set_ops)
+//! - [how to find the continuations of an interval](continuation)
+//! - [how to convert from relative to absolute and conversely](relativity_conversion)
 //!
-//! You will also find things that touch to precision of interval bounds as well as rule sets to decide what counts
-//! as overlapping and what doesn't.
+//! And, perchance, more to come in the future!
 
 pub mod abridge;
 pub mod bound_containment;
