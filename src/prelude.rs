@@ -20,7 +20,7 @@ pub use crate::intervals::ops::overlap::{
     CanPositionOverlap, DEFAULT_OVERLAP_RULES, DisambiguatedOverlapPosition, OverlapPosition, OverlapRule,
     OverlapRuleSet,
 };
-pub use crate::intervals::ops::precision::PreciseAbsoluteBounds;
+pub use crate::intervals::ops::precision::PreciseAbsoluteInterval;
 pub use crate::intervals::ops::relativity_conversion::{ToAbsolute, ToRelative};
 pub use crate::intervals::ops::remove_overlap::{OverlapRemovable, OverlapRemovalResult};
 pub use crate::intervals::ops::remove_overlap_or_gap::{OverlapOrGapRemovalResult, RemovableOverlapOrGap};

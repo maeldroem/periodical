@@ -81,7 +81,7 @@ pub use overlap::{
     CanPositionOverlap, DEFAULT_OVERLAP_RULES, DisambiguatedOverlapPosition, OverlapPosition, OverlapRule,
     OverlapRuleSet,
 };
-pub use precision::PreciseAbsoluteBounds;
+pub use precision::PreciseAbsoluteInterval;
 pub use relativity_conversion::{ToAbsolute, ToRelative};
 pub use remove_overlap::{OverlapRemovable, OverlapRemovalResult};
 pub use remove_overlap_or_gap::{OverlapOrGapRemovalResult, RemovableOverlapOrGap};

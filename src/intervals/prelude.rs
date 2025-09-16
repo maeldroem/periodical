@@ -21,7 +21,7 @@ pub use super::ops::overlap::{
     CanPositionOverlap, DEFAULT_OVERLAP_RULES, DisambiguatedOverlapPosition, OverlapPosition, OverlapRule,
     OverlapRuleSet,
 };
-pub use super::ops::precision::PreciseAbsoluteBounds;
+pub use super::ops::precision::PreciseAbsoluteInterval;
 pub use super::ops::relativity_conversion::{ToAbsolute, ToRelative};
 pub use super::ops::remove_overlap::{OverlapRemovable, OverlapRemovalResult};
 pub use super::ops::remove_overlap_or_gap::{OverlapOrGapRemovalResult, RemovableOverlapOrGap};
