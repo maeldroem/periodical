@@ -1,4 +1,7 @@
 //! Removal of overlaps between overlapping intervals
+//! 
+//! Given two intervals, adjusts the first interval so that no overlap exists between the two intervals.
+//! If the two intervals are not overlapping, the operation produces an error.
 
 use super::cut::{CutResult, CutType, Cuttable};
 use super::overlap::{CanPositionOverlap, DisambiguatedOverlapPosition, OverlapRuleSet};
@@ -19,24 +22,55 @@ use crate::intervals::{BoundedAbsoluteInterval, BoundedRelativeInterval, Relativ
 /// Result of an overlap removal
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum OverlapRemovalResult<T> {
+    /// Resulted in a single element
+    /// 
+    /// An empty interval counts as one too.
     Single(T),
+    /// Resulted in two split elements
     Split(T, T),
 }
 
 impl<T> OverlapRemovalResult<T> {
-    /// Returns whether the [`OverlapRemovalResult`] is of the [`Single`](OverlapRemovalResult::Single) variant
+    /// Returns whether it is of the [`Single`](OverlapRemovalResult::Single) variant
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// # use periodical::intervals::ops::remove_overlap::OverlapRemovalResult;
+    /// assert!(OverlapRemovalResult::<()>::Single(()).is_single());
+    /// assert!(!OverlapRemovalResult::<()>::Split((), ()).is_single());
+    /// ```
     #[must_use]
     pub fn is_single(&self) -> bool {
         matches!(self, Self::Single(_))
     }
 
-    /// Returns whether the [`OverlapRemovalResult`] is of the [`Split`](OverlapRemovalResult::Split) variant
+    /// Returns whether it is of the [`Split`](OverlapRemovalResult::Split) variant
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// # use periodical::intervals::ops::remove_overlap::OverlapRemovalResult;
+    /// assert!(OverlapRemovalResult::<()>::Split((), ()).is_split());
+    /// assert!(!OverlapRemovalResult::<()>::Single(()).is_split());
+    /// ```
     #[must_use]
     pub fn is_split(&self) -> bool {
         matches!(self, Self::Split(..))
     }
 
     /// Returns the content of the [`Single`](OverlapRemovalResult::Single) variant
+    /// 
+    /// Consumes `self` and puts the content of the [`Single`](OverlapRemovalResult::Single) variant
+    /// in an [`Option`]. If instead `self` is another variant, the method returns [`None`].
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// # use periodical::intervals::ops::remove_overlap::OverlapRemovalResult;
+    /// assert_eq!(OverlapRemovalResult::<u8>::Single(10).single(), Some(10));
+    /// assert_eq!(OverlapRemovalResult::<u8>::Split(10, 20).single(), None);
+    /// ```
     #[must_use]
     pub fn single(self) -> Option<T> {
         match self {
@@ -46,6 +80,17 @@ impl<T> OverlapRemovalResult<T> {
     }
 
     /// Returns the content of the [`Split`](OverlapRemovalResult::Split) variant
+    /// 
+    /// Consumes `self` and puts the content of the [`Split`](OverlapRemovalResult::Split) variant
+    /// in an [`Option`]. If Instead `self` is another variant, the method returns [`None`].
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// # use periodical::intervals::ops::remove_overlap::OverlapRemovalResult;
+    /// assert_eq!(OverlapRemovalResult::<u8>::Split(10, 20).split(), Some((10, 20)));
+    /// assert_eq!(OverlapRemovalResult::<u8>::Single(10).split(), None);
+    /// ```
     #[must_use]
     pub fn split(self) -> Option<(T, T)> {
         match self {
@@ -57,6 +102,20 @@ impl<T> OverlapRemovalResult<T> {
     /// Maps the contents of the variants
     ///
     /// Uses a closure that describes the transformation from `T` to `U`, used for each element in the enum.
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// # use periodical::intervals::ops::remove_overlap::OverlapRemovalResult;
+    /// assert_eq!(
+    ///     OverlapRemovalResult::<u8>::Single(10).map(|x| x * 2),
+    ///     OverlapRemovalResult::<u8>::Single(20),
+    /// );
+    /// assert_eq!(
+    ///     OverlapRemovalResult::<u8>::Split(10, 20).map(|x| x * 2),
+    ///     OverlapRemovalResult::<u8>::Split(20, 40),
+    /// );
+    /// ```
     #[must_use]
     pub fn map<F, U>(self, mut f: F) -> OverlapRemovalResult<U>
     where
@@ -69,8 +128,10 @@ impl<T> OverlapRemovalResult<T> {
     }
 }
 
+/// Errors that can occur when using [`OverlapRemovable`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum OverlapRemovalErr {
+    /// No overlap was found between the intervals
     NoOverlap,
 }
 
@@ -342,6 +403,8 @@ where
 }
 
 /// Removes overlap between two overlapping [`AbsoluteBounds`]
+/// 
+/// See [module documentation](crate::intervals::ops::remove_overlap) for more info.
 ///
 /// # Errors
 ///
@@ -440,7 +503,9 @@ pub fn remove_overlap_abs_bounds(
 }
 
 /// Removes the overlap of the two given [`AbsoluteBounds`] with
-/// an [`ContainsAndSameEnd`](OverlapPosition::ContainsAndSameEnd) overlap
+/// a [`ContainsAndSameEnd`](DisambiguatedOverlapPosition::ContainsAndSameEnd) overlap
+/// 
+/// See [module documentation](crate::intervals::ops::remove_overlap) for more info.
 #[must_use]
 pub fn remove_start_overlap_abs(a: &AbsoluteBounds, b: &AbsoluteBounds) -> AbsoluteBounds {
     let AbsoluteStartBound::Finite(finite_bound) = b.abs_start() else {
@@ -471,7 +536,9 @@ pub fn remove_start_overlap_abs(a: &AbsoluteBounds, b: &AbsoluteBounds) -> Absol
 }
 
 /// Removes the overlap of the two given [`AbsoluteBounds`] with
-/// an [`ContainsAndSameStart`](OverlapPosition::ContainsAndSameStart) overlap
+/// an [`ContainsAndSameStart`](DisambiguatedOverlapPosition::ContainsAndSameStart) overlap
+/// 
+/// See [module documentation](crate::intervals::ops::remove_overlap) for more info.
 #[must_use]
 pub fn remove_end_overlap_abs(a: &AbsoluteBounds, b: &AbsoluteBounds) -> AbsoluteBounds {
     let AbsoluteEndBound::Finite(finite_bound) = b.abs_end() else {
@@ -502,6 +569,8 @@ pub fn remove_end_overlap_abs(a: &AbsoluteBounds, b: &AbsoluteBounds) -> Absolut
 }
 
 /// Removes the overlap of an [`AbsoluteBounds`] with an [`EmptiableAbsoluteBounds`]
+/// 
+/// See [module documentation](crate::intervals::ops::remove_overlap) for more info.
 ///
 /// # Errors
 ///
@@ -518,6 +587,8 @@ pub fn remove_overlap_abs_bounds_with_emptiable_abs_bounds(
 }
 
 /// Removes the overlap of two [`EmptiableAbsoluteBounds`]
+/// 
+/// See [module documentation](crate::intervals::ops::remove_overlap) for more info.
 ///
 /// # Errors
 ///
@@ -534,6 +605,8 @@ pub fn remove_overlap_emptiable_abs_bounds(
 }
 
 /// Removes overlap between two overlapping [`RelativeBounds`]
+/// 
+/// See [module documentation](crate::intervals::ops::remove_overlap) for more info.
 ///
 /// # Errors
 ///
@@ -632,7 +705,9 @@ pub fn remove_overlap_rel_bounds(
 }
 
 /// Removes the overlap of the two given [`RelativeBounds`] with
-/// an [`ContainsAndSameEnd`](OverlapPosition::ContainsAndSameEnd) overlap
+/// an [`ContainsAndSameEnd`](DisambiguatedOverlapPosition::ContainsAndSameEnd) overlap
+/// 
+/// See [module documentation](crate::intervals::ops::remove_overlap) for more info.
 #[must_use]
 pub fn remove_start_overlap_rel(a: &RelativeBounds, b: &RelativeBounds) -> RelativeBounds {
     let RelativeStartBound::Finite(finite_bound) = b.rel_start() else {
@@ -663,7 +738,9 @@ pub fn remove_start_overlap_rel(a: &RelativeBounds, b: &RelativeBounds) -> Relat
 }
 
 /// Removes the overlap of the two given [`RelativeBounds`] with
-/// an [`ContainsAndSameStart`](OverlapPosition::ContainsAndSameStart) overlap
+/// an [`ContainsAndSameStart`](DisambiguatedOverlapPosition::ContainsAndSameStart) overlap
+/// 
+/// See [module documentation](crate::intervals::ops::remove_overlap) for more info.
 #[must_use]
 pub fn remove_end_overlap_rel(a: &RelativeBounds, b: &RelativeBounds) -> RelativeBounds {
     let RelativeEndBound::Finite(finite_bound) = b.rel_end() else {
@@ -694,6 +771,8 @@ pub fn remove_end_overlap_rel(a: &RelativeBounds, b: &RelativeBounds) -> Relativ
 }
 
 /// Removes the overlap of an [`RelativeBounds`] with an [`EmptiableRelativeBounds`]
+/// 
+/// See [module documentation](crate::intervals::ops::remove_overlap) for more info.
 ///
 /// # Errors
 ///
@@ -710,6 +789,8 @@ pub fn remove_overlap_rel_bounds_with_emptiable_rel_bounds(
 }
 
 /// Removes the overlap of two [`EmptiableRelativeBounds`]
+/// 
+/// See [module documentation](crate::intervals::ops::remove_overlap) for more info.
 ///
 /// # Errors
 ///
