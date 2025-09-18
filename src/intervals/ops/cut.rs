@@ -140,8 +140,8 @@
 use arbitrary::Arbitrary;
 use chrono::{DateTime, Duration, Utc};
 
+use super::point_containment::CanPositionPointContainment;
 use super::prelude::*;
-use super::time_containment::CanPositionTimeContainment;
 
 use crate::intervals::absolute::{
     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteInterval, AbsoluteStartBound,
@@ -676,7 +676,7 @@ impl Cuttable<Duration> for EmptyInterval {
 /// See [module documentation](crate::intervals::ops::cut) for more info.
 #[must_use]
 pub fn cut_abs_bounds(bounds: &AbsoluteBounds, at: DateTime<Utc>, cut_type: CutType) -> CutResult<AbsoluteBounds> {
-    if !bounds.simple_contains(at) {
+    if !bounds.simple_contains_point(at) {
         return CutResult::Uncut;
     }
 
@@ -734,7 +734,7 @@ pub fn cut_emptiable_abs_bounds(
 /// See [module documentation](crate::intervals::ops::cut) for more info.
 #[must_use]
 pub fn cut_rel_bounds(bounds: &RelativeBounds, at: Duration, cut_type: CutType) -> CutResult<RelativeBounds> {
-    if !bounds.simple_contains(at) {
+    if !bounds.simple_contains_point(at) {
         return CutResult::Uncut;
     }
 

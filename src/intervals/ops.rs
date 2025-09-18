@@ -29,6 +29,7 @@ pub mod extend;
 pub mod fill_gap;
 pub mod grow;
 pub mod overlap;
+pub mod point_containment;
 pub mod precision;
 pub mod prelude;
 pub mod relativity_conversion;
@@ -36,7 +37,6 @@ pub mod remove_overlap;
 pub mod remove_overlap_or_gap;
 pub mod set_ops;
 pub mod shrink;
-pub mod time_containment;
 
 #[cfg(test)]
 mod abridge_tests;
@@ -61,6 +61,8 @@ mod grow_tests;
 #[cfg(test)]
 mod overlap_tests;
 #[cfg(test)]
+mod point_containment_tests;
+#[cfg(test)]
 mod precision_tests;
 #[cfg(test)]
 mod relativity_conversion_tests;
@@ -72,8 +74,6 @@ mod remove_overlap_tests;
 mod set_ops_tests;
 #[cfg(test)]
 mod shrink_tests;
-#[cfg(test)]
-mod time_containment_tests;
 
 pub use abridge::Abridgable;
 pub use bound_containment::{
@@ -90,13 +90,13 @@ pub use overlap::{
     CanPositionOverlap, DEFAULT_OVERLAP_RULES, DisambiguatedOverlapPosition, OverlapPosition, OverlapRule,
     OverlapRuleSet,
 };
+pub use point_containment::{
+    CanPositionPointContainment, DEFAULT_POINT_CONTAINMENT_RULES, DisambiguatedPointContainmentPosition,
+    PointContainmentPosition, PointContainmentRule, PointContainmentRuleSet,
+};
 pub use precision::PreciseAbsoluteInterval;
 pub use relativity_conversion::{ToAbsolute, ToRelative};
 pub use remove_overlap::{OverlapRemovable, OverlapRemovalResult};
 pub use remove_overlap_or_gap::{OverlapOrGapRemovalResult, RemovableOverlapOrGap};
 pub use set_ops::{Differentiable, Intersectable, SymmetricallyDifferentiable, Unitable};
 pub use shrink::{ShrinkableEndBound, ShrinkableStartBound};
-pub use time_containment::{
-    CanPositionTimeContainment, DEFAULT_TIME_CONTAINMENT_RULES, DisambiguatedTimeContainmentPosition,
-    TimeContainmentPosition, TimeContainmentRule, TimeContainmentRuleSet,
-};

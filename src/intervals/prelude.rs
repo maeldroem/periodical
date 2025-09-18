@@ -21,16 +21,16 @@ pub use super::ops::overlap::{
     CanPositionOverlap, DEFAULT_OVERLAP_RULES, DisambiguatedOverlapPosition, OverlapPosition, OverlapRule,
     OverlapRuleSet,
 };
+pub use super::ops::point_containment::{
+    CanPositionPointContainment, DEFAULT_POINT_CONTAINMENT_RULES, DisambiguatedPointContainmentPosition,
+    PointContainmentPosition, PointContainmentRule, PointContainmentRuleSet,
+};
 pub use super::ops::precision::PreciseAbsoluteInterval;
 pub use super::ops::relativity_conversion::{ToAbsolute, ToRelative};
 pub use super::ops::remove_overlap::{OverlapRemovable, OverlapRemovalResult};
 pub use super::ops::remove_overlap_or_gap::{OverlapOrGapRemovalResult, RemovableOverlapOrGap};
 pub use super::ops::set_ops::{Differentiable, Intersectable, SymmetricallyDifferentiable, Unitable};
 pub use super::ops::shrink::{ShrinkableEndBound, ShrinkableStartBound};
-pub use super::ops::time_containment::{
-    CanPositionTimeContainment, DEFAULT_TIME_CONTAINMENT_RULES, DisambiguatedTimeContainmentPosition,
-    TimeContainmentPosition, TimeContainmentRule, TimeContainmentRuleSet,
-};
 pub use super::relative::{
     BoundedRelativeInterval, EmptiableRelativeBounds, HalfBoundedRelativeInterval, HasEmptiableRelativeBounds,
     HasRelativeBounds, RelativeBound, RelativeBounds, RelativeInterval,
