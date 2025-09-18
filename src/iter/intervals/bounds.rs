@@ -261,6 +261,7 @@ impl Extend<AbsoluteBounds> for AbsoluteBoundsIter {
 
 /// Iterator dispatcher trait for [`AbsoluteBoundsIter`]
 pub trait AbsoluteBoundsIteratorDispatcher: IntoIterator<Item = AbsoluteBounds> + Sized {
+    /// Creates an [`AbsoluteBoundsIter`] from the collection
     fn abs_bounds_iter(self) -> AbsoluteBoundsIter {
         AbsoluteBoundsIter::new(self.into_iter())
     }
@@ -467,6 +468,7 @@ impl Extend<RelativeBounds> for RelativeBoundsIter {
 
 /// Iterator dispatcher trait for [`RelativeBoundsIter`]
 pub trait RelativeBoundsIteratorDispatcher: IntoIterator<Item = RelativeBounds> + Sized {
+    /// Creates an [`RelativeBoundsIter`] from the collection
     fn rel_bounds_iter(self) -> RelativeBoundsIter {
         RelativeBoundsIter::new(self.into_iter())
     }
