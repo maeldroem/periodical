@@ -5,6 +5,7 @@ use std::iter::{FusedIterator, Peekable};
 use crate::intervals::absolute::{AbsoluteBound, AbsoluteBounds};
 use crate::intervals::bound_position::BoundPosition;
 use crate::intervals::relative::{RelativeBound, RelativeBounds};
+use crate::iter::intervals::layered_bounds::{LayeredAbsoluteBounds, LayeredRelativeBounds};
 use crate::iter::intervals::united_bounds::{AbsoluteUnitedBoundsIter, RelativeUnitedBoundsIter};
 
 /// Iterator for bounds of [`AbsoluteBounds`]
@@ -37,6 +38,14 @@ impl AbsoluteBoundsIter {
         bounds.sort();
 
         AbsoluteUnitedBoundsIter::new(bounds.into_iter())
+    }
+
+    #[must_use]
+    pub fn unchecked_layer(
+        self,
+        second_layer: AbsoluteBoundsIter,
+    ) -> LayeredAbsoluteBounds<Peekable<Self>, Peekable<AbsoluteBoundsIter>> {
+        LayeredAbsoluteBounds::new(self, second_layer)
     }
 }
 
@@ -128,6 +137,14 @@ impl RelativeBoundsIter {
         bounds.sort();
 
         RelativeUnitedBoundsIter::new(bounds.into_iter())
+    }
+
+    #[must_use]
+    pub fn unchecked_layer(
+        self,
+        second_layer: RelativeBoundsIter,
+    ) -> LayeredRelativeBounds<Peekable<Self>, Peekable<RelativeBoundsIter>> {
+        LayeredRelativeBounds::new(self, second_layer)
     }
 }
 
