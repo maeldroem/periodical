@@ -3,7 +3,7 @@
 //! _Operation_ is a relatively vague term, but in this module you will find...
 //!
 //! - [how to find overlaps between intervals](overlap)
-//! - [how to check if a time is contained within an interval](time_containment)
+//! - [how to check if a time is contained within an interval](point_containment)
 //! - [how to cut intervals](cut)
 //! - how to remove [gaps](fill_gap), [overlaps](remove_overlap), even [both](remove_overlap_or_gap)
 //! - [how to order bounds](bound_ord)
