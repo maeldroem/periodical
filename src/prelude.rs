@@ -35,3 +35,25 @@ pub use crate::intervals::relative::{
     HasRelativeBounds, RelativeBound, RelativeBounds, RelativeInterval,
 };
 pub use crate::intervals::special::{EmptyInterval, UnboundedInterval};
+pub use crate::iter::intervals::bounds::{AbsoluteBoundsIteratorDispatcher, RelativeBoundsIteratorDispatcher};
+pub use crate::iter::intervals::complement::ComplementIteratorDispatcher;
+pub use crate::iter::intervals::layered_bounds::{
+    LayeredAbsoluteBounds, LayeredBoundsState, LayeredBoundsStateChangeAtAbsoluteBound,
+    LayeredBoundsStateChangeAtRelativeBound, LayeredRelativeBounds,
+};
+pub use crate::iter::intervals::layered_bounds_set_ops::{
+    LayeredAbsoluteBoundsDifferenceIteratorDispatcher, LayeredAbsoluteBoundsIntersectionIteratorDispatcher,
+    LayeredAbsoluteBoundsSymmetricDifferenceIteratorDispatcher, LayeredAbsoluteBoundsUnionIteratorDispatcher,
+    LayeredRelativeBoundsDifferenceIteratorDispatcher, LayeredRelativeBoundsIntersectionIteratorDispatcher,
+    LayeredRelativeBoundsSymmetricDifferenceIteratorDispatcher, LayeredRelativeBoundsUnionIteratorDispatcher,
+};
+pub use crate::iter::intervals::precision::PrecisionChangeIteratorDispatcher;
+pub use crate::iter::intervals::relativity_conversion::{ToAbsoluteIteratorDispatcher, ToRelativeIteratorDispatcher};
+pub use crate::iter::intervals::remove_empty::RemoveEmptyIntervalsIteratorDispatcher;
+pub use crate::iter::intervals::set_ops::{
+    AccumulativeUnionIteratorDispatcher, AccumulativeUnionWithIteratorDispatcher, PeerDifferenceIteratorDispatcher,
+    PeerDifferenceWithIteratorDispatcher, PeerIntersectionIteratorDispatcher, PeerIntersectionWithIteratorDispatcher,
+    PeerSymmetricDifferenceIteratorDispatcher, PeerSymmetricDifferenceWithIteratorDispatcher,
+    PeerUnionIteratorDispatcher, PeerUnionWithIteratorDispatcher,
+};
+pub use crate::iter::intervals::united_bounds::{AbsoluteUnitedBoundsIter, RelativeUnitedBoundsIter};
