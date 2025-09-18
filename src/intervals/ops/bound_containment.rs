@@ -573,6 +573,26 @@ pub trait CanPositionBoundContainment<B> {
     /// Uses the [default rule set](BoundContainmentRuleSet::default)
     /// with [default rules](DEFAULT_BOUND_CONTAINMENT_RULES)
     /// in [`contains_bound`](CanPositionBoundContainment::contains_bound).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::{AbsoluteFiniteBound, AbsoluteStartBound, BoundedAbsoluteInterval};
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// # use periodical::intervals::ops::bound_containment::CanPositionBoundContainment;
+    /// let interval = BoundedAbsoluteInterval::new(
+    ///     "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
+    /// );
+    ///
+    /// let bound = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+    ///     "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+    /// ));
+    ///
+    /// assert!(interval.simple_contains_bound(&bound));
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     fn simple_contains_bound(&self, bound: &B) -> bool {
         self.contains_bound(
