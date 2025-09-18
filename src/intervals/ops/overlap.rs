@@ -899,6 +899,45 @@ pub trait CanPositionOverlap<Rhs = Self> {
     ///
     /// If this process is fallible in a given implementor,
     /// they can use the associated type [`Error`](CanPositionOverlap::Error).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::{
+    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+    /// # };
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// # use periodical::intervals::ops::bound_overlap_ambiguity::BoundOverlapAmbiguity;
+    /// # use periodical::intervals::ops::overlap::{CanPositionOverlap, OverlapPosition, OverlapRuleSet};
+    /// let compared_interval = AbsoluteBounds::new(
+    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+    ///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     )),
+    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+    ///         "2025-01-01 10:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     )),
+    /// );
+    ///
+    /// let reference_interval = AbsoluteBounds::new(
+    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+    ///         "2025-01-01 10:00:00Z".parse::<DateTime<Utc>>()?,
+    ///         BoundInclusivity::Exclusive,
+    ///     )),
+    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+    ///         "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     )),
+    /// );
+    ///
+    /// assert_eq!(
+    ///     compared_interval.overlap_position(&reference_interval),
+    ///     Ok(OverlapPosition::EndsOnStart(BoundOverlapAmbiguity::EndStart(
+    ///         BoundInclusivity::Inclusive,
+    ///         BoundInclusivity::Exclusive,
+    ///     ))),
+    /// );
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     fn overlap_position(&self, rhs: &Rhs) -> Result<OverlapPosition, Self::Error>;
 
     /// Returns the [`DisambiguatedOverlapPosition`] of the given interval using a given rule set
@@ -911,6 +950,41 @@ pub trait CanPositionOverlap<Rhs = Self> {
     ///
     /// If this process is fallible in a given implementor,
     /// they can use the associated type [`Error`](CanPositionOverlap::Error).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::{
+    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+    /// # };
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// # use periodical::intervals::ops::overlap::{CanPositionOverlap, DisambiguatedOverlapPosition, OverlapRuleSet};
+    /// let compared_interval = AbsoluteBounds::new(
+    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+    ///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     )),
+    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+    ///         "2025-01-01 10:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     )),
+    /// );
+    ///
+    /// let reference_interval = AbsoluteBounds::new(
+    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+    ///         "2025-01-01 10:00:00Z".parse::<DateTime<Utc>>()?,
+    ///         BoundInclusivity::Exclusive,
+    ///     )),
+    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+    ///         "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     )),
+    /// );
+    ///
+    /// assert_eq!(
+    ///     compared_interval.disambiguated_overlap_position(&reference_interval, OverlapRuleSet::Lenient),
+    ///     Ok(DisambiguatedOverlapPosition::EndsOnStart),
+    /// );
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     fn disambiguated_overlap_position(
         &self,
         rhs: &Rhs,
@@ -925,6 +999,37 @@ pub trait CanPositionOverlap<Rhs = Self> {
     /// Uses the [default rule set](OverlapRuleSet::default) with the [default rules](DEFAULT_OVERLAP_RULES).
     ///
     /// Those have been chosen because they are the closest to how we mathematically and humanly interpret overlaps.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::{
+    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+    /// # };
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// # use periodical::intervals::ops::overlap:: CanPositionOverlap;
+    /// let compared_interval = AbsoluteBounds::new(
+    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+    ///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     )),
+    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+    ///         "2025-01-01 11:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     )),
+    /// );
+    ///
+    /// let reference_interval = AbsoluteBounds::new(
+    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+    ///         "2025-01-01 10:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     )),
+    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+    ///         "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     )),
+    /// );
+    ///
+    /// assert!(compared_interval.simple_overlaps(&reference_interval));
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     ///
     /// # See also
     ///
@@ -946,6 +1051,42 @@ pub trait CanPositionOverlap<Rhs = Self> {
     ///
     /// This method returns `true` if all provided [`OverlapRule`]s are respected.
     /// This part of the process uses [`OverlapRule::counts_as_overlap`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::{
+    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+    /// # };
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// # use periodical::intervals::ops::overlap::{CanPositionOverlap, OverlapRule, OverlapRuleSet};
+    /// let compared_interval = AbsoluteBounds::new(
+    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+    ///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     )),
+    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+    ///         "2025-01-01 10:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     )),
+    /// );
+    ///
+    /// let reference_interval = AbsoluteBounds::new(
+    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+    ///         "2025-01-01 10:00:00Z".parse::<DateTime<Utc>>()?,
+    ///         BoundInclusivity::Exclusive,
+    ///     )),
+    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+    ///         "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     )),
+    /// );
+    ///
+    /// assert!(compared_interval.overlaps(
+    ///         &reference_interval,
+    ///         OverlapRuleSet::Lenient,
+    ///         &[OverlapRule::AllowAdjacency],
+    /// ));
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     ///
     /// # See also
     ///
@@ -975,6 +1116,54 @@ pub trait CanPositionOverlap<Rhs = Self> {
     /// If it returns [`Ok`], then the provided closure is in charge of determining whether the [`OverlapPosition`]
     /// given by [`overlap_position`](`CanPositionOverlap::overlap_position`) counts as overlapping or not.
     ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::{
+    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+    /// # };
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// # use periodical::intervals::ops::bound_overlap_ambiguity::BoundOverlapAmbiguity;
+    /// # use periodical::intervals::ops::overlap::{CanPositionOverlap, OverlapPosition};
+    /// let compared_interval = AbsoluteBounds::new(
+    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+    ///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     )),
+    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+    ///         "2025-01-01 10:00:00Z".parse::<DateTime<Utc>>()?,
+    ///         BoundInclusivity::Exclusive,
+    ///     )),
+    /// );
+    ///
+    /// let reference_interval = AbsoluteBounds::new(
+    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+    ///         "2025-01-01 10:00:00Z".parse::<DateTime<Utc>>()?,
+    ///         BoundInclusivity::Exclusive,
+    ///     )),
+    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+    ///         "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     )),
+    /// );
+    ///
+    /// let overlap_closure = |pos: OverlapPosition| -> bool {
+    ///     matches!(
+    ///         pos,
+    ///         OverlapPosition::EndsOnStart(BoundOverlapAmbiguity::EndStart(
+    ///             BoundInclusivity::Exclusive,
+    ///             BoundInclusivity::Exclusive,
+    ///         ))
+    ///         | OverlapPosition::StartsOnEnd(BoundOverlapAmbiguity::StartEnd(
+    ///             BoundInclusivity::Exclusive,
+    ///             BoundInclusivity::Exclusive,
+    ///         )),
+    ///     )
+    /// };
+    ///
+    /// assert!(compared_interval.overlaps_using(&reference_interval, overlap_closure));
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
+    ///
     /// # See also
     ///
     /// If you are looking for control over what's considered as an overlap but still want
@@ -1000,6 +1189,52 @@ pub trait CanPositionOverlap<Rhs = Self> {
     /// the [`DisambiguatedOverlapPosition`]
     /// given by [`disambiguated_overlap_position`](CanPositionOverlap::disambiguated_overlap_position)
     /// counts as overlapping or not.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::{
+    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+    /// # };
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// # use periodical::intervals::ops::bound_overlap_ambiguity::BoundOverlapAmbiguity;
+    /// # use periodical::intervals::ops::overlap::{CanPositionOverlap, DisambiguatedOverlapPosition, OverlapRuleSet};
+    /// let compared_interval = AbsoluteBounds::new(
+    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+    ///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     )),
+    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+    ///         "2025-01-01 10:00:00Z".parse::<DateTime<Utc>>()?,
+    ///         BoundInclusivity::Exclusive,
+    ///     )),
+    /// );
+    ///
+    /// let reference_interval = AbsoluteBounds::new(
+    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+    ///         "2025-01-01 10:00:00Z".parse::<DateTime<Utc>>()?,
+    ///         BoundInclusivity::Exclusive,
+    ///     )),
+    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+    ///         "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     )),
+    /// );
+    ///
+    /// let overlap_closure = |pos: DisambiguatedOverlapPosition| -> bool {
+    ///     matches!(
+    ///         pos,
+    ///         DisambiguatedOverlapPosition::EndsOnStart
+    ///         | DisambiguatedOverlapPosition::StartsOnEnd
+    ///     )
+    /// };
+    ///
+    /// assert!(compared_interval.overlaps_using_disambiguated(
+    ///     &reference_interval,
+    ///     OverlapRuleSet::VeryLenient,
+    ///     overlap_closure,
+    /// ));
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     ///
     /// # See also
     ///
