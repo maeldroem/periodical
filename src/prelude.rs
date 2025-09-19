@@ -47,8 +47,6 @@ pub use crate::iter::intervals::layered_bounds_set_ops::{
     LayeredRelativeBoundsDifferenceIteratorDispatcher, LayeredRelativeBoundsIntersectionIteratorDispatcher,
     LayeredRelativeBoundsSymmetricDifferenceIteratorDispatcher, LayeredRelativeBoundsUnionIteratorDispatcher,
 };
-pub use crate::iter::intervals::precision::PrecisionChangeIteratorDispatcher;
-pub use crate::iter::intervals::relativity_conversion::{ToAbsoluteIteratorDispatcher, ToRelativeIteratorDispatcher};
 pub use crate::iter::intervals::remove_empty::RemoveEmptyIntervalsIteratorDispatcher;
 pub use crate::iter::intervals::set_ops::{
     AccumulativeUnionIteratorDispatcher, AccumulativeUnionWithIteratorDispatcher, PeerDifferenceIteratorDispatcher,
