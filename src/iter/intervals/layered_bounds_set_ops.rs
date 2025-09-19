@@ -1,4 +1,9 @@
 //! Set operations iterators created from [layered bounds iterators](crate::iter::intervals::layered_bounds)
+//!
+//! - [Uniting a layered bounds iterator](unite)
+//! - [Intersected a layered bounds iterator](intersect)
+//! - [Difference using a layered bounds iterator](diff)
+//! - [Symmetric difference using a layered bounds iterator](sym_diff)
 
 pub mod diff;
 pub mod intersect;
