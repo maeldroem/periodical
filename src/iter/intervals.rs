@@ -9,6 +9,9 @@
 //! - [Operate set operations on intervals](set_ops)
 //! - [Retrieve the complements of intervals](complement)
 //! - [Remove empty intervals from a collection](remove_empty)
+//!
+//! Most iterators have a public `new` method, but most of them come with input requirements.
+//! Make sure your input meet those requirements.
 
 pub mod bounds;
 pub mod complement;
