@@ -1,4 +1,161 @@
-//! Iterator for dealing with two sets and to compare what begins when and overlaps with what
+//! Layered bounds iterator
+//!
+//! Iterator used for tracking layer changes between two sets of bounds, interpreted as two separate _layers_.
+//!
+//! This iterator is very useful for [set operations](crate::iter::intervals::layered_bounds_set_ops) but also
+//! for making the process of dealing with bounds flexible, as layered bounds iterator return changes
+//! in the [`LayeredBoundsState`] using either [`LayeredBoundsStateChangeAtAbsoluteBound`] for absolute bounds,
+//! or [`LayeredBoundsStateChangeAtRelativeBound`] for relative bounds.
+//!
+//! # Examples
+//!
+//! ```
+//! # use chrono::{DateTime, Utc};
+//! # use periodical::intervals::absolute::{
+//! #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+//! # };
+//! # use periodical::intervals::meta::BoundInclusivity;
+//! # use periodical::iter::intervals::bounds::AbsoluteBoundsIteratorDispatcher;
+//! # use periodical::iter::intervals::layered_bounds::{
+//! #     LayeredAbsoluteBounds, LayeredBoundsState, LayeredBoundsStateChangeAtAbsoluteBound,
+//! # };
+//! let first_layer_intervals = [
+//!     AbsoluteBounds::new(
+//!         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+//!             "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+//!         )),
+//!         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+//!             "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
+//!         )),
+//!     ),
+//!     AbsoluteBounds::new(
+//!         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+//!             "2025-01-01 13:00:00Z".parse::<DateTime<Utc>>()?,
+//!         )),
+//!         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+//!             "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
+//!         )),
+//!     ),
+//! ];
+//!
+//! let second_layer_intervals = [
+//!     AbsoluteBounds::new(
+//!         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+//!             "2025-01-01 07:00:00Z".parse::<DateTime<Utc>>()?,
+//!         )),
+//!         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+//!             "2025-01-01 11:00:00Z".parse::<DateTime<Utc>>()?,
+//!         )),
+//!     ),
+//!     AbsoluteBounds::new(
+//!         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+//!             "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
+//!         )),
+//!         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+//!             "2025-01-01 18:00:00Z".parse::<DateTime<Utc>>()?,
+//!         )),
+//!     ),
+//! ];
+//!
+//! assert_eq!(
+//!     first_layer_intervals
+//!         .abs_bounds_iter()
+//!         .united()
+//!         .layer(second_layer_intervals.abs_bounds_iter().united())
+//!         .collect::<Vec<_>>(),
+//!     vec![
+//!         LayeredBoundsStateChangeAtAbsoluteBound::new(
+//!             LayeredBoundsState::NoLayers,
+//!             LayeredBoundsState::SecondLayer,
+//!             Some(AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+//!                 "2025-01-01 07:00:00Z".parse::<DateTime<Utc>>()?,
+//!                 BoundInclusivity::Exclusive,
+//!             ))),
+//!             Some(AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+//!                 "2025-01-01 07:00:00Z".parse::<DateTime<Utc>>()?,
+//!             ))),
+//!         ),
+//!         LayeredBoundsStateChangeAtAbsoluteBound::new(
+//!             LayeredBoundsState::SecondLayer,
+//!             LayeredBoundsState::BothLayers,
+//!             Some(AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+//!                 "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+//!                 BoundInclusivity::Exclusive,
+//!             ))),
+//!             Some(AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+//!                 "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+//!             ))),
+//!         ),
+//!         LayeredBoundsStateChangeAtAbsoluteBound::new(
+//!             LayeredBoundsState::BothLayers,
+//!             LayeredBoundsState::FirstLayer,
+//!             Some(AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+//!                 "2025-01-01 11:00:00Z".parse::<DateTime<Utc>>()?,
+//!             ))),
+//!             Some(AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+//!                 "2025-01-01 11:00:00Z".parse::<DateTime<Utc>>()?,
+//!                 BoundInclusivity::Exclusive,
+//!             ))),
+//!         ),
+//!         LayeredBoundsStateChangeAtAbsoluteBound::new(
+//!             LayeredBoundsState::FirstLayer,
+//!             LayeredBoundsState::NoLayers,
+//!             Some(AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+//!                 "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
+//!             ))),
+//!             Some(AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+//!                 "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
+//!                 BoundInclusivity::Exclusive,
+//!             ))),
+//!         ),
+//!         LayeredBoundsStateChangeAtAbsoluteBound::new(
+//!             LayeredBoundsState::NoLayers,
+//!             LayeredBoundsState::FirstLayer,
+//!             Some(AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+//!                 "2025-01-01 13:00:00Z".parse::<DateTime<Utc>>()?,
+//!                 BoundInclusivity::Exclusive,
+//!             ))),
+//!             Some(AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+//!                 "2025-01-01 13:00:00Z".parse::<DateTime<Utc>>()?,
+//!             ))),
+//!         ),
+//!         LayeredBoundsStateChangeAtAbsoluteBound::new(
+//!             LayeredBoundsState::FirstLayer,
+//!             LayeredBoundsState::BothLayers,
+//!             Some(AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+//!                 "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
+//!                 BoundInclusivity::Exclusive,
+//!             ))),
+//!             Some(AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+//!                 "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
+//!             ))),
+//!         ),
+//!         LayeredBoundsStateChangeAtAbsoluteBound::new(
+//!             LayeredBoundsState::BothLayers,
+//!             LayeredBoundsState::SecondLayer,
+//!             Some(AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+//!                 "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
+//!             ))),
+//!             Some(AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+//!                 "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
+//!                 BoundInclusivity::Exclusive,
+//!             ))),
+//!         ),
+//!         LayeredBoundsStateChangeAtAbsoluteBound::new(
+//!             LayeredBoundsState::SecondLayer,
+//!             LayeredBoundsState::NoLayers,
+//!             Some(AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+//!                 "2025-01-01 18:00:00Z".parse::<DateTime<Utc>>()?,
+//!             ))),
+//!             Some(AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+//!                 "2025-01-01 18:00:00Z".parse::<DateTime<Utc>>()?,
+//!                 BoundInclusivity::Exclusive,
+//!             ))),
+//!         ),
+//!     ],
+//! );
+//! # Ok::<(), chrono::format::ParseError>(())
+//! ```
 
 use std::cmp::Ordering;
 use std::iter::{FusedIterator, Peekable};
@@ -13,25 +170,51 @@ use crate::intervals::ops::bound_ord::{BoundOrdering, PartialBoundOrd};
 use crate::intervals::ops::bound_overlap_ambiguity::BoundOverlapDisambiguationRuleSet;
 use crate::intervals::relative::{RelativeBound, RelativeEndBound, RelativeStartBound};
 
-/// State of a layered bounds iterator, indicating which layer(s) are active
+/// State of a layered bounds iterator
+///
+/// This state indicates which layers are active.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum LayeredBoundsState {
+    /// No layers are active
     #[default]
     NoLayers,
+    /// Only first layer is active
     FirstLayer,
+    /// Only second layer is active
     SecondLayer,
+    /// Both layers are active
     BothLayers,
 }
 
 impl LayeredBoundsState {
-    /// Returns whether the first layer is active in this state
+    /// Returns whether the first layer is active
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use periodical::iter::intervals::layered_bounds::LayeredBoundsState;
+    /// assert!(LayeredBoundsState::FirstLayer.is_first_layer_active());
+    /// assert!(LayeredBoundsState::BothLayers.is_first_layer_active());
+    /// assert!(!LayeredBoundsState::NoLayers.is_first_layer_active());
+    /// assert!(!LayeredBoundsState::SecondLayer.is_first_layer_active());
+    /// ```
     #[must_use]
     pub fn is_first_layer_active(&self) -> bool {
         matches!(self, Self::FirstLayer | Self::BothLayers)
     }
 
     /// Returns whether the second layer is active in this state
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use periodical::iter::intervals::layered_bounds::LayeredBoundsState;
+    /// assert!(LayeredBoundsState::SecondLayer.is_second_layer_active());
+    /// assert!(LayeredBoundsState::BothLayers.is_second_layer_active());
+    /// assert!(!LayeredBoundsState::NoLayers.is_second_layer_active());
+    /// assert!(!LayeredBoundsState::FirstLayer.is_second_layer_active());
+    /// ```
     #[must_use]
     pub fn is_second_layer_active(&self) -> bool {
         matches!(self, Self::SecondLayer | Self::BothLayers)
@@ -69,6 +252,13 @@ impl Sub for LayeredBoundsState {
 }
 
 /// State change of a [`LayeredAbsoluteBounds`]
+///
+/// This state change is situated using absolute bounds: [`AbsoluteStartBound`] and [`AbsoluteEndBound`].
+///
+/// A state change represents a point in the iterator where the [`LayeredBoundsState`] changes.
+/// It also stores with it _when_ the change happened, more precisely, when the old state ends, given by
+/// [`old_state_end`](LayeredBoundsStateChangeAtAbsoluteBound::old_state_end), and when the new state begins,
+/// given by [`new_state_start`](LayeredBoundsStateChangeAtAbsoluteBound::new_state_start).
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct LayeredBoundsStateChangeAtAbsoluteBound {
     old_state: LayeredBoundsState,
@@ -79,7 +269,7 @@ pub struct LayeredBoundsStateChangeAtAbsoluteBound {
 }
 
 impl LayeredBoundsStateChangeAtAbsoluteBound {
-    /// Creates a new instance of [`LayeredBoundsStateChangeAtAbsoluteBound`]
+    /// Creates a new [`LayeredBoundsStateChangeAtAbsoluteBound`]
     #[must_use]
     pub fn new(
         old_state: LayeredBoundsState,
@@ -95,25 +285,146 @@ impl LayeredBoundsStateChangeAtAbsoluteBound {
         }
     }
 
-    /// Returns the state of the [`LayeredAbsoluteBounds`] before the change
+    /// Returns the state before the change
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::{AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound};
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// # use periodical::iter::intervals::layered_bounds::{
+    /// #     LayeredBoundsState, LayeredBoundsStateChangeAtAbsoluteBound,
+    /// # };
+    /// let change = LayeredBoundsStateChangeAtAbsoluteBound::new(
+    ///     LayeredBoundsState::NoLayers,
+    ///     LayeredBoundsState::FirstLayer,
+    ///     Some(AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+    ///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     ))),
+    ///     Some(AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+    ///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+    ///         BoundInclusivity::Exclusive,
+    ///     ))),
+    /// );
+    ///
+    /// assert_eq!(change.old_state(), LayeredBoundsState::NoLayers);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     pub fn old_state(&self) -> LayeredBoundsState {
         self.old_state
     }
 
-    /// Returns the state of the [`LayeredAbsoluteBounds`] after the change
+    /// Returns the state after the change
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::{AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound};
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// # use periodical::iter::intervals::layered_bounds::{
+    /// #     LayeredBoundsState, LayeredBoundsStateChangeAtAbsoluteBound,
+    /// # };
+    /// let change = LayeredBoundsStateChangeAtAbsoluteBound::new(
+    ///     LayeredBoundsState::NoLayers,
+    ///     LayeredBoundsState::FirstLayer,
+    ///     Some(AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+    ///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     ))),
+    ///     Some(AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+    ///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+    ///         BoundInclusivity::Exclusive,
+    ///     ))),
+    /// );
+    ///
+    /// assert_eq!(change.new_state(), LayeredBoundsState::FirstLayer);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     pub fn new_state(&self) -> LayeredBoundsState {
         self.new_state
     }
 
-    /// Returns the optional [`AbsoluteEndBound`] that corresponds to the end of the old state
+    /// Returns the end of the old state
+    ///
+    /// Returns an [`AbsoluteEndBound`] wrapped in an [`Option`] that corresponds to the end of the old state.
+    ///
+    /// It is wrapped in an [`Option`] as the change can happen at [`AbsoluteStartBound::InfinitePast`],
+    /// therefore there is nothing that can be positioned _before_ infinite past.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::{AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound};
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// # use periodical::iter::intervals::layered_bounds::{
+    /// #     LayeredBoundsState, LayeredBoundsStateChangeAtAbsoluteBound,
+    /// # };
+    /// let change = LayeredBoundsStateChangeAtAbsoluteBound::new(
+    ///     LayeredBoundsState::NoLayers,
+    ///     LayeredBoundsState::FirstLayer,
+    ///     Some(AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+    ///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     ))),
+    ///     Some(AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+    ///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+    ///         BoundInclusivity::Exclusive,
+    ///     ))),
+    /// );
+    ///
+    /// assert_eq!(
+    ///     change.old_state_end(),
+    ///     Some(AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+    ///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     ))),
+    /// );
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     pub fn old_state_end(&self) -> Option<AbsoluteEndBound> {
         self.old_state_end
     }
 
-    /// Returns the optional [`AbsoluteStartBound`] that corresponds to the start of the new state
+    /// Returns the start of the new state
+    ///
+    /// Returns an [`AbsoluteStartBound`] wrapped in an [`Option`] that corresponds to the start of the new state.
+    ///
+    /// It is wrapped in an [`Option`] as the change can happen at [`AbsoluteEndBound::InfiniteFuture`],
+    /// therefore there is nothing that can be positioned _after_ infinite future.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::{AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound};
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// # use periodical::iter::intervals::layered_bounds::{
+    /// #     LayeredBoundsState, LayeredBoundsStateChangeAtAbsoluteBound,
+    /// # };
+    /// let change = LayeredBoundsStateChangeAtAbsoluteBound::new(
+    ///     LayeredBoundsState::NoLayers,
+    ///     LayeredBoundsState::FirstLayer,
+    ///     Some(AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+    ///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     ))),
+    ///     Some(AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+    ///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+    ///         BoundInclusivity::Exclusive,
+    ///     ))),
+    /// );
+    ///
+    /// assert_eq!(
+    ///     change.new_state_start(),
+    ///     Some(AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+    ///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+    ///         BoundInclusivity::Exclusive,
+    ///     ))),
+    /// );
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     pub fn new_state_start(&self) -> Option<AbsoluteStartBound> {
         self.new_state_start
@@ -121,6 +432,13 @@ impl LayeredBoundsStateChangeAtAbsoluteBound {
 }
 
 /// State change of a [`LayeredRelativeBounds`]
+///
+/// This state change is situated using relative bounds: [`RelativeStartBound`] and [`RelativeEndBound`].
+///
+/// A state change represents a point in the iterator where the [`LayeredBoundsState`] changes.
+/// It also stores with it _when_ the change happened, more precisely, when the old state ends, given by
+/// [`old_state_end`](LayeredBoundsStateChangeAtRelativeBound::old_state_end), and when the new state begins,
+/// given by [`new_state_start`](LayeredBoundsStateChangeAtRelativeBound::new_state_start).
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct LayeredBoundsStateChangeAtRelativeBound {
     old_state: LayeredBoundsState,
@@ -131,7 +449,7 @@ pub struct LayeredBoundsStateChangeAtRelativeBound {
 }
 
 impl LayeredBoundsStateChangeAtRelativeBound {
-    /// Creates a new instance of [`LayeredBoundsStateChangeAtRelativeBound`]
+    /// Creates a new [`LayeredBoundsStateChangeAtRelativeBound`]
     #[must_use]
     pub fn new(
         old_state: LayeredBoundsState,
@@ -147,25 +465,142 @@ impl LayeredBoundsStateChangeAtRelativeBound {
         }
     }
 
-    /// Returns the state of the [`LayeredRelativeBounds`] before the change
+    /// Returns the state before the change
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::Duration;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// # use periodical::intervals::relative::{RelativeEndBound, RelativeFiniteBound, RelativeStartBound};
+    /// # use periodical::iter::intervals::layered_bounds::{
+    /// #     LayeredBoundsState, LayeredBoundsStateChangeAtRelativeBound,
+    /// # };
+    /// let change = LayeredBoundsStateChangeAtRelativeBound::new(
+    ///     LayeredBoundsState::NoLayers,
+    ///     LayeredBoundsState::FirstLayer,
+    ///     Some(RelativeEndBound::Finite(RelativeFiniteBound::new(
+    ///         Duration::hours(8),
+    ///     ))),
+    ///     Some(RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+    ///         Duration::hours(8),
+    ///         BoundInclusivity::Exclusive,
+    ///     ))),
+    /// );
+    ///
+    /// assert_eq!(change.old_state(), LayeredBoundsState::NoLayers);
+    /// ```
     #[must_use]
     pub fn old_state(&self) -> LayeredBoundsState {
         self.old_state
     }
 
-    /// Returns the state of the [`LayeredRelativeBounds`] after the change
+    /// Returns the state after the change
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::Duration;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// # use periodical::intervals::relative::{RelativeEndBound, RelativeFiniteBound, RelativeStartBound};
+    /// # use periodical::iter::intervals::layered_bounds::{
+    /// #     LayeredBoundsState, LayeredBoundsStateChangeAtRelativeBound,
+    /// # };
+    /// let change = LayeredBoundsStateChangeAtRelativeBound::new(
+    ///     LayeredBoundsState::NoLayers,
+    ///     LayeredBoundsState::FirstLayer,
+    ///     Some(RelativeEndBound::Finite(RelativeFiniteBound::new(
+    ///         Duration::hours(8),
+    ///     ))),
+    ///     Some(RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+    ///         Duration::hours(8),
+    ///         BoundInclusivity::Exclusive,
+    ///     ))),
+    /// );
+    ///
+    /// assert_eq!(change.new_state(), LayeredBoundsState::FirstLayer);
+    /// ```
     #[must_use]
     pub fn new_state(&self) -> LayeredBoundsState {
         self.new_state
     }
 
-    /// Returns the optional [`RelativeEndBound`] that corresponds to the end of the old state
+    /// Returns the end of the old state
+    ///
+    /// Returns an [`RelativeEndBound`] wrapped in an [`Option`] that corresponds to the end of the old state.
+    ///
+    /// It is wrapped in an [`Option`] as the change can happen at [`RelativeStartBound::InfinitePast`],
+    /// therefore there is nothing that can be positioned _before_ infinite past.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::Duration;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// # use periodical::intervals::relative::{RelativeEndBound, RelativeFiniteBound, RelativeStartBound};
+    /// # use periodical::iter::intervals::layered_bounds::{
+    /// #     LayeredBoundsState, LayeredBoundsStateChangeAtRelativeBound,
+    /// # };
+    /// let change = LayeredBoundsStateChangeAtRelativeBound::new(
+    ///     LayeredBoundsState::NoLayers,
+    ///     LayeredBoundsState::FirstLayer,
+    ///     Some(RelativeEndBound::Finite(RelativeFiniteBound::new(
+    ///         Duration::hours(8),
+    ///     ))),
+    ///     Some(RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+    ///         Duration::hours(8),
+    ///         BoundInclusivity::Exclusive,
+    ///     ))),
+    /// );
+    ///
+    /// assert_eq!(
+    ///     change.old_state_end(),
+    ///     Some(RelativeEndBound::Finite(RelativeFiniteBound::new(
+    ///         Duration::hours(8),
+    ///     ))),
+    /// );
+    /// ```
     #[must_use]
     pub fn old_state_end(&self) -> Option<RelativeEndBound> {
         self.old_state_end
     }
 
-    /// Returns the optional [`RelativeStartBound`] that corresponds to the start of the new state
+    /// Returns the start of the new state
+    ///
+    /// Returns an [`RelativeStartBound`] wrapped in an [`Option`] that corresponds to the start of the new state.
+    ///
+    /// It is wrapped in an [`Option`] as the change can happen at [`RelativeEndBound::InfiniteFuture`],
+    /// therefore there is nothing that can be positioned _after_ infinite future.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::Duration;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// # use periodical::intervals::relative::{RelativeEndBound, RelativeFiniteBound, RelativeStartBound};
+    /// # use periodical::iter::intervals::layered_bounds::{
+    /// #     LayeredBoundsState, LayeredBoundsStateChangeAtRelativeBound,
+    /// # };
+    /// let change = LayeredBoundsStateChangeAtRelativeBound::new(
+    ///     LayeredBoundsState::NoLayers,
+    ///     LayeredBoundsState::FirstLayer,
+    ///     Some(RelativeEndBound::Finite(RelativeFiniteBound::new(
+    ///         Duration::hours(8),
+    ///     ))),
+    ///     Some(RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+    ///         Duration::hours(8),
+    ///         BoundInclusivity::Exclusive,
+    ///     ))),
+    /// );
+    ///
+    /// assert_eq!(
+    ///     change.new_state_start(),
+    ///     Some(RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+    ///         Duration::hours(8),
+    ///         BoundInclusivity::Exclusive,
+    ///     ))),
+    /// );
+    /// ```
     #[must_use]
     pub fn new_state_start(&self) -> Option<RelativeStartBound> {
         self.new_state_start
@@ -173,6 +608,159 @@ impl LayeredBoundsStateChangeAtRelativeBound {
 }
 
 /// Iterator tracking which layers of absolute bounds are active
+///
+/// Tracks the layers by using a [`LayeredBoundsState`] and outputs a [`LayeredBoundsStateChangeAtAbsoluteBound`]
+/// when this state changes.
+///
+/// # Examples
+///
+/// ```
+/// # use chrono::{DateTime, Utc};
+/// # use periodical::intervals::absolute::{
+/// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+/// # };
+/// # use periodical::intervals::meta::BoundInclusivity;
+/// # use periodical::iter::intervals::bounds::AbsoluteBoundsIteratorDispatcher;
+/// # use periodical::iter::intervals::layered_bounds::{
+/// #     LayeredAbsoluteBounds, LayeredBoundsState, LayeredBoundsStateChangeAtAbsoluteBound,
+/// # };
+/// let first_layer_intervals = [
+///     AbsoluteBounds::new(
+///         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+///             "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+///         )),
+///         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+///             "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
+///         )),
+///     ),
+///     AbsoluteBounds::new(
+///         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+///             "2025-01-01 13:00:00Z".parse::<DateTime<Utc>>()?,
+///         )),
+///         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+///             "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
+///         )),
+///     ),
+/// ];
+///
+/// let second_layer_intervals = [
+///     AbsoluteBounds::new(
+///         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+///             "2025-01-01 07:00:00Z".parse::<DateTime<Utc>>()?,
+///         )),
+///         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+///             "2025-01-01 11:00:00Z".parse::<DateTime<Utc>>()?,
+///         )),
+///     ),
+///     AbsoluteBounds::new(
+///         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+///             "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
+///         )),
+///         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+///             "2025-01-01 18:00:00Z".parse::<DateTime<Utc>>()?,
+///         )),
+///     ),
+/// ];
+///
+/// assert_eq!(
+///     first_layer_intervals
+///         .abs_bounds_iter()
+///         .united()
+///         .layer(second_layer_intervals.abs_bounds_iter().united())
+///         .collect::<Vec<_>>(),
+///     vec![
+///         LayeredBoundsStateChangeAtAbsoluteBound::new(
+///             LayeredBoundsState::NoLayers,
+///             LayeredBoundsState::SecondLayer,
+///             Some(AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+///                 "2025-01-01 07:00:00Z".parse::<DateTime<Utc>>()?,
+///                 BoundInclusivity::Exclusive,
+///             ))),
+///             Some(AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+///                 "2025-01-01 07:00:00Z".parse::<DateTime<Utc>>()?,
+///             ))),
+///         ),
+///         LayeredBoundsStateChangeAtAbsoluteBound::new(
+///             LayeredBoundsState::SecondLayer,
+///             LayeredBoundsState::BothLayers,
+///             Some(AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+///                 "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+///                 BoundInclusivity::Exclusive,
+///             ))),
+///             Some(AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+///                 "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+///             ))),
+///         ),
+///         LayeredBoundsStateChangeAtAbsoluteBound::new(
+///             LayeredBoundsState::BothLayers,
+///             LayeredBoundsState::FirstLayer,
+///             Some(AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+///                 "2025-01-01 11:00:00Z".parse::<DateTime<Utc>>()?,
+///             ))),
+///             Some(AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+///                 "2025-01-01 11:00:00Z".parse::<DateTime<Utc>>()?,
+///                 BoundInclusivity::Exclusive,
+///             ))),
+///         ),
+///         LayeredBoundsStateChangeAtAbsoluteBound::new(
+///             LayeredBoundsState::FirstLayer,
+///             LayeredBoundsState::NoLayers,
+///             Some(AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+///                 "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
+///             ))),
+///             Some(AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+///                 "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
+///                 BoundInclusivity::Exclusive,
+///             ))),
+///         ),
+///         LayeredBoundsStateChangeAtAbsoluteBound::new(
+///             LayeredBoundsState::NoLayers,
+///             LayeredBoundsState::FirstLayer,
+///             Some(AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+///                 "2025-01-01 13:00:00Z".parse::<DateTime<Utc>>()?,
+///                 BoundInclusivity::Exclusive,
+///             ))),
+///             Some(AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+///                 "2025-01-01 13:00:00Z".parse::<DateTime<Utc>>()?,
+///             ))),
+///         ),
+///         LayeredBoundsStateChangeAtAbsoluteBound::new(
+///             LayeredBoundsState::FirstLayer,
+///             LayeredBoundsState::BothLayers,
+///             Some(AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+///                 "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
+///                 BoundInclusivity::Exclusive,
+///             ))),
+///             Some(AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+///                 "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
+///             ))),
+///         ),
+///         LayeredBoundsStateChangeAtAbsoluteBound::new(
+///             LayeredBoundsState::BothLayers,
+///             LayeredBoundsState::SecondLayer,
+///             Some(AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+///                 "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
+///             ))),
+///             Some(AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+///                 "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
+///                 BoundInclusivity::Exclusive,
+///             ))),
+///         ),
+///         LayeredBoundsStateChangeAtAbsoluteBound::new(
+///             LayeredBoundsState::SecondLayer,
+///             LayeredBoundsState::NoLayers,
+///             Some(AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+///                 "2025-01-01 18:00:00Z".parse::<DateTime<Utc>>()?,
+///             ))),
+///             Some(AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+///                 "2025-01-01 18:00:00Z".parse::<DateTime<Utc>>()?,
+///                 BoundInclusivity::Exclusive,
+///             ))),
+///         ),
+///     ],
+/// );
+/// # Ok::<(), chrono::format::ParseError>(())
+/// ```
 #[derive(Debug, Clone, Hash)]
 pub struct LayeredAbsoluteBounds<I1, I2> {
     first_layer: I1,
@@ -184,7 +772,68 @@ pub struct LayeredAbsoluteBounds<I1, I2> {
 }
 
 impl<I1, I2> LayeredAbsoluteBounds<I1, I2> {
-    /// Returns the current [state](LayeredBoundsState) of the [`LayeredAbsoluteBounds`]
+    /// Returns the current [state](LayeredBoundsState)
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::{
+    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+    /// # };
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// # use periodical::iter::intervals::bounds::AbsoluteBoundsIteratorDispatcher;
+    /// # use periodical::iter::intervals::layered_bounds::{
+    /// #     LayeredAbsoluteBounds, LayeredBoundsState, LayeredBoundsStateChangeAtAbsoluteBound,
+    /// # };
+    /// let first_layer_intervals = [
+    ///     AbsoluteBounds::new(
+    ///         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+    ///             "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+    ///         )),
+    ///         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+    ///             "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
+    ///         )),
+    ///     ),
+    ///     AbsoluteBounds::new(
+    ///         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+    ///             "2025-01-01 13:00:00Z".parse::<DateTime<Utc>>()?,
+    ///         )),
+    ///         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+    ///             "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
+    ///         )),
+    ///     ),
+    /// ];
+    ///
+    /// let second_layer_intervals = [
+    ///     AbsoluteBounds::new(
+    ///         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+    ///             "2025-01-01 07:00:00Z".parse::<DateTime<Utc>>()?,
+    ///         )),
+    ///         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+    ///             "2025-01-01 11:00:00Z".parse::<DateTime<Utc>>()?,
+    ///         )),
+    ///     ),
+    ///     AbsoluteBounds::new(
+    ///         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+    ///             "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
+    ///         )),
+    ///         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+    ///             "2025-01-01 18:00:00Z".parse::<DateTime<Utc>>()?,
+    ///         )),
+    ///     ),
+    /// ];
+    ///
+    /// let mut layered_bounds = first_layer_intervals
+    ///     .abs_bounds_iter()
+    ///     .united()
+    ///     .layer(second_layer_intervals.abs_bounds_iter().united());
+    ///
+    /// layered_bounds.nth(2);
+    ///
+    /// assert_eq!(layered_bounds.state(), LayeredBoundsState::FirstLayer);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     pub fn state(&self) -> LayeredBoundsState {
         self.state
@@ -196,20 +845,25 @@ where
     I1: Iterator<Item = AbsoluteBound>,
     I2: Iterator<Item = AbsoluteBound>,
 {
-    /// Creates a new instance of [`LayeredAbsoluteBounds`]
+    /// Creates a new [`LayeredAbsoluteBounds`]
     ///
     /// # Input requirements
     ///
-    /// The bounds in the layer iterators **must be sorted chronologically** in order for the uniting process to work.
-    /// The responsibility of sorting the input is left to the caller in order to prevent double-sorting.
-    /// This requirement is automatically guaranteed if they are obtained from
+    /// 1. The bounds in each layer iterator **must be sorted chronologically**
+    /// 2. The bounds in each layer iterator **must not be overlapping**
+    /// 3. The bounds in each layer iterator **must be paired**,  that means there should be an equal amount of
+    ///    [`Start`](AbsoluteBound::Start)s and [`End`](AbsoluteBound::End)s.
+    ///
+    /// The responsibility of verifying those requirements are left to the caller
+    /// in order to prevent double-processing.
+    ///
+    /// Requirements 1 and 2 are automatically guaranteed if the bounds are obtained from
     /// [`AbsoluteUnitedBoundsIter`](crate::iter::intervals::united_bounds::AbsoluteUnitedBoundsIter).
     ///
-    /// The bounds in the layer iterators **must be paired**, that means there should be an equal amount of
-    /// [`Start`](AbsoluteBound::Start)s and [`End`](AbsoluteBound::End)s.
-    /// This is automatically guaranteed if they are obtained from
-    /// [intervals](crate::intervals::absolute::AbsoluteInterval)
-    /// or from [paired bounds](crate::intervals::absolute::AbsoluteBounds).
+    /// Requirement 3 is automatically guaranteed if the bounds are obtained from
+    /// a set of [intervals](crate::intervals::absolute::AbsoluteInterval)
+    /// or from [bound pairs](crate::intervals::absolute::AbsoluteBounds) and then processed through
+    /// [`AbsoluteBoundsIter`](crate::iter::intervals::bounds::AbsoluteBoundsIter).
     #[must_use]
     pub fn new(first_layer_iter: I1, second_layer_iter: I2) -> LayeredAbsoluteBounds<Peekable<I1>, Peekable<I2>> {
         LayeredAbsoluteBounds {
@@ -218,18 +872,6 @@ where
             state: LayeredBoundsState::default(),
             queued_result: None,
             exhausted: false,
-        }
-    }
-
-    /// Swaps the two layers while conserving the current state
-    #[must_use]
-    pub fn swap_layers(self) -> LayeredAbsoluteBounds<I2, I1> {
-        LayeredAbsoluteBounds {
-            first_layer: self.second_layer,
-            second_layer: self.first_layer,
-            state: self.state,
-            queued_result: self.queued_result,
-            exhausted: self.exhausted,
         }
     }
 }
@@ -350,8 +992,10 @@ where
 {
 }
 
-/// Creates the [`LayeredBoundsStateChangeAtAbsoluteBound`] for when only the first layer had a peeked value and was
-/// a start bound
+/// Computes the state change - first layer peeked, start bound
+///
+/// Computes the [`LayeredBoundsStateChangeAtAbsoluteBound`] when only the first layer has a peeked value
+/// and is a start bound.
 ///
 /// # Panics
 ///
@@ -383,8 +1027,10 @@ pub fn layered_abs_bounds_change_start_first_layer(
     )
 }
 
-/// Creates the [`LayeredBoundsStateChangeAtAbsoluteBound`] for when only the first layer had a peeked value and was
-/// an end bound
+/// Computes the state change - first layer peeked, end bound
+///
+/// Computes the [`LayeredBoundsStateChangeAtAbsoluteBound`] when only the first layer has a peeked value
+/// and is an end bound.
 ///
 /// # Panics
 ///
@@ -411,8 +1057,10 @@ pub fn layered_abs_bounds_change_end_first_layer(
     Change::new(old_state, *state_mut, Some(first_layer_end), first_layer_end.opposite())
 }
 
-/// Creates the [`LayeredBoundsStateChangeAtAbsoluteBound`] for when only the second layer had a peeked value and was
-/// a start bound
+/// Computes the state change - second layer peeked, start bound
+///
+/// Computes the [`LayeredBoundsStateChangeAtAbsoluteBound`] when only the second layer has a peeked value
+/// and is a start bound.
 ///
 /// # Panics
 ///
@@ -444,8 +1092,10 @@ pub fn layered_abs_bounds_change_start_second_layer(
     )
 }
 
-/// Creates the [`LayeredBoundsStateChangeAtAbsoluteBound`] for when only the second layer had a peeked value and was
-/// an end bound
+/// Computes the state change - second layer peeked, end bound
+///
+/// Computes the [`LayeredBoundsStateChangeAtAbsoluteBound`] when only the second layer has a peeked value
+/// and is an end bound.
 ///
 /// # Panics
 ///
@@ -477,9 +1127,10 @@ pub fn layered_abs_bounds_change_end_second_layer(
     )
 }
 
-/// Creates the [`LayeredBoundsStateChangeAtAbsoluteBound`] for when both layers have a peeked value
+/// Computes the state change - both layers peeked, both start bounds
 ///
-/// The first layer has a start bound and the second layer has a start bound.
+/// Computes the [`LayeredBoundsStateChangeAtAbsoluteBound`] when both layers have a peeked value
+/// and both are start bounds.
 ///
 /// # Panics
 ///
@@ -553,9 +1204,10 @@ pub fn layered_abs_bounds_change_start_start(
     }
 }
 
-/// Creates the [`LayeredBoundsStateChangeAtAbsoluteBound`] for when both layers have a peeked value
+/// Computes the state change - both layers peeked, first layer start bound, second layer end bound
 ///
-/// The first layer has a start bound and the second layer has an end bound.
+/// Computes the [`LayeredBoundsStateChangeAtAbsoluteBound`] when both layers have a peeked value
+/// and the first layer is a start bound and the second layer is an end bound.
 ///
 /// # Panics
 ///
@@ -669,9 +1321,10 @@ pub fn layered_abs_bounds_change_start_end(
     }
 }
 
-/// Creates the [`LayeredBoundsStateChangeAtAbsoluteBound`] for when both layers have a peeked value
+/// Computes the state change - both layers peeked, first layer end bound, second layer start bound
 ///
-/// The first layer has an end bound and the second layer has a start bound.
+/// Computes the [`LayeredBoundsStateChangeAtAbsoluteBound`] when both layers have a peeked value
+/// and the first layer is an end bound and the second layer is a start bound.
 ///
 /// # Panics
 ///
@@ -780,9 +1433,10 @@ pub fn layered_abs_bounds_change_end_start(
     }
 }
 
-/// Creates the [`LayeredBoundsStateChangeAtAbsoluteBound`] for when both layers have a peeked value
+/// Computes the state change - both layers peeked, first layer end bound, second layer start bound
 ///
-/// The first layer has an end bound and the second layer has an end bound.
+/// Computes the [`LayeredBoundsStateChangeAtAbsoluteBound`] when both layers have a peeked value
+/// and both are end bounds.
 ///
 /// # Panics
 ///
@@ -846,6 +1500,158 @@ pub fn layered_abs_bounds_change_end_end(
 }
 
 /// Iterator tracking which layers of relative bounds are active
+///
+/// Tracks the layers by using a [`LayeredBoundsState`] and outputs a [`LayeredBoundsStateChangeAtRelativeBound`]
+/// when this state changes.
+///
+/// # Examples
+///
+/// ```
+/// # use chrono::Duration;
+/// # use periodical::intervals::meta::BoundInclusivity;
+/// # use periodical::intervals::relative::{
+/// #     RelativeBounds, RelativeEndBound, RelativeFiniteBound, RelativeStartBound,
+/// # };
+/// # use periodical::iter::intervals::bounds::RelativeBoundsIteratorDispatcher;
+/// # use periodical::iter::intervals::layered_bounds::{
+/// #     LayeredBoundsState, LayeredBoundsStateChangeAtRelativeBound, LayeredRelativeBounds,
+/// # };
+/// let first_layer_intervals = [
+///     RelativeBounds::new(
+///         RelativeStartBound::Finite(RelativeFiniteBound::new(
+///             Duration::hours(8),
+///         )),
+///         RelativeEndBound::Finite(RelativeFiniteBound::new(
+///             Duration::hours(12),
+///         )),
+///     ),
+///     RelativeBounds::new(
+///         RelativeStartBound::Finite(RelativeFiniteBound::new(
+///             Duration::hours(13),
+///         )),
+///         RelativeEndBound::Finite(RelativeFiniteBound::new(
+///             Duration::hours(16),
+///         )),
+///     ),
+/// ];
+///
+/// let second_layer_intervals = [
+///     RelativeBounds::new(
+///         RelativeStartBound::Finite(RelativeFiniteBound::new(
+///             Duration::hours(7),
+///         )),
+///         RelativeEndBound::Finite(RelativeFiniteBound::new(
+///             Duration::hours(11),
+///         )),
+///     ),
+///     RelativeBounds::new(
+///         RelativeStartBound::Finite(RelativeFiniteBound::new(
+///             Duration::hours(14),
+///         )),
+///         RelativeEndBound::Finite(RelativeFiniteBound::new(
+///             Duration::hours(18),
+///         )),
+///     ),
+/// ];
+///
+/// assert_eq!(
+///     first_layer_intervals
+///         .rel_bounds_iter()
+///         .united()
+///         .layer(second_layer_intervals.rel_bounds_iter().united())
+///         .collect::<Vec<_>>(),
+///     vec![
+///         LayeredBoundsStateChangeAtRelativeBound::new(
+///             LayeredBoundsState::NoLayers,
+///             LayeredBoundsState::SecondLayer,
+///             Some(RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+///                 Duration::hours(7),
+///                 BoundInclusivity::Exclusive,
+///             ))),
+///             Some(RelativeStartBound::Finite(RelativeFiniteBound::new(
+///                 Duration::hours(7),
+///             ))),
+///         ),
+///         LayeredBoundsStateChangeAtRelativeBound::new(
+///             LayeredBoundsState::SecondLayer,
+///             LayeredBoundsState::BothLayers,
+///             Some(RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+///                 Duration::hours(8),
+///                 BoundInclusivity::Exclusive,
+///             ))),
+///             Some(RelativeStartBound::Finite(RelativeFiniteBound::new(
+///                 Duration::hours(8),
+///             ))),
+///         ),
+///         LayeredBoundsStateChangeAtRelativeBound::new(
+///             LayeredBoundsState::BothLayers,
+///             LayeredBoundsState::FirstLayer,
+///             Some(RelativeEndBound::Finite(RelativeFiniteBound::new(
+///                 Duration::hours(11),
+///             ))),
+///             Some(RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+///                 Duration::hours(11),
+///                 BoundInclusivity::Exclusive,
+///             ))),
+///         ),
+///         LayeredBoundsStateChangeAtRelativeBound::new(
+///             LayeredBoundsState::FirstLayer,
+///             LayeredBoundsState::NoLayers,
+///             Some(RelativeEndBound::Finite(RelativeFiniteBound::new(
+///                 Duration::hours(12),
+///             ))),
+///             Some(RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+///                 Duration::hours(12),
+///                 BoundInclusivity::Exclusive,
+///             ))),
+///         ),
+///         LayeredBoundsStateChangeAtRelativeBound::new(
+///             LayeredBoundsState::NoLayers,
+///             LayeredBoundsState::FirstLayer,
+///             Some(RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+///                 Duration::hours(13),
+///                 BoundInclusivity::Exclusive,
+///             ))),
+///             Some(RelativeStartBound::Finite(RelativeFiniteBound::new(
+///                 Duration::hours(13),
+///             ))),
+///         ),
+///         LayeredBoundsStateChangeAtRelativeBound::new(
+///             LayeredBoundsState::FirstLayer,
+///             LayeredBoundsState::BothLayers,
+///             Some(RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+///                 Duration::hours(14),
+///                 BoundInclusivity::Exclusive,
+///             ))),
+///             Some(RelativeStartBound::Finite(RelativeFiniteBound::new(
+///                 Duration::hours(14),
+///             ))),
+///         ),
+///         LayeredBoundsStateChangeAtRelativeBound::new(
+///             LayeredBoundsState::BothLayers,
+///             LayeredBoundsState::SecondLayer,
+///             Some(RelativeEndBound::Finite(RelativeFiniteBound::new(
+///                 Duration::hours(16),
+///             ))),
+///             Some(RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+///                 Duration::hours(16),
+///                 BoundInclusivity::Exclusive,
+///             ))),
+///         ),
+///         LayeredBoundsStateChangeAtRelativeBound::new(
+///             LayeredBoundsState::SecondLayer,
+///             LayeredBoundsState::NoLayers,
+///             Some(RelativeEndBound::Finite(RelativeFiniteBound::new(
+///                 Duration::hours(18),
+///             ))),
+///             Some(RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+///                 Duration::hours(18),
+///                 BoundInclusivity::Exclusive,
+///             ))),
+///         ),
+///     ],
+/// );
+/// ```
 #[derive(Debug, Clone, Hash)]
 pub struct LayeredRelativeBounds<I1, I2> {
     first_layer: I1,
@@ -857,7 +1663,67 @@ pub struct LayeredRelativeBounds<I1, I2> {
 }
 
 impl<I1, I2> LayeredRelativeBounds<I1, I2> {
-    /// Returns the current [state](LayeredBoundsState) of the [`LayeredRelativeBounds`]
+    /// Returns the current [state](LayeredBoundsState)
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::Duration;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// # use periodical::intervals::relative::{
+    /// #     RelativeBounds, RelativeEndBound, RelativeFiniteBound, RelativeStartBound,
+    /// # };
+    /// # use periodical::iter::intervals::bounds::RelativeBoundsIteratorDispatcher;
+    /// # use periodical::iter::intervals::layered_bounds::{
+    /// #     LayeredBoundsState, LayeredBoundsStateChangeAtRelativeBound, LayeredRelativeBounds,
+    /// # };
+    /// let first_layer_intervals = [
+    ///     RelativeBounds::new(
+    ///         RelativeStartBound::Finite(RelativeFiniteBound::new(
+    ///             Duration::hours(8),
+    ///         )),
+    ///         RelativeEndBound::Finite(RelativeFiniteBound::new(
+    ///             Duration::hours(12),
+    ///         )),
+    ///     ),
+    ///     RelativeBounds::new(
+    ///         RelativeStartBound::Finite(RelativeFiniteBound::new(
+    ///             Duration::hours(13),
+    ///         )),
+    ///         RelativeEndBound::Finite(RelativeFiniteBound::new(
+    ///             Duration::hours(16),
+    ///         )),
+    ///     ),
+    /// ];
+    ///
+    /// let second_layer_intervals = [
+    ///     RelativeBounds::new(
+    ///         RelativeStartBound::Finite(RelativeFiniteBound::new(
+    ///             Duration::hours(7),
+    ///         )),
+    ///         RelativeEndBound::Finite(RelativeFiniteBound::new(
+    ///             Duration::hours(11),
+    ///         )),
+    ///     ),
+    ///     RelativeBounds::new(
+    ///         RelativeStartBound::Finite(RelativeFiniteBound::new(
+    ///             Duration::hours(14),
+    ///         )),
+    ///         RelativeEndBound::Finite(RelativeFiniteBound::new(
+    ///             Duration::hours(18),
+    ///         )),
+    ///     ),
+    /// ];
+    ///
+    /// let mut layered_bounds = first_layer_intervals
+    ///     .rel_bounds_iter()
+    ///     .united()
+    ///     .layer(second_layer_intervals.rel_bounds_iter().united());
+    ///
+    /// layered_bounds.nth(2);
+    ///
+    /// assert_eq!(layered_bounds.state(), LayeredBoundsState::FirstLayer);
+    /// ```
     #[must_use]
     pub fn state(&self) -> LayeredBoundsState {
         self.state
@@ -869,20 +1735,25 @@ where
     I1: Iterator<Item = RelativeBound>,
     I2: Iterator<Item = RelativeBound>,
 {
-    /// Creates a new instance of [`LayeredRelativeBounds`]
+    /// Creates a new [`LayeredRelativeBounds`]
     ///
     /// # Input requirements
     ///
-    /// The bounds in the layer iterators **must be sorted chronologically** in order for the uniting process to work.
-    /// The responsibility of sorting the input is left to the caller in order to prevent double-sorting.
-    /// This requirement is automatically guaranteed if they are obtained from
+    /// 1. The bounds in each layer iterator **must be sorted chronologically**
+    /// 2. The bounds in each layer iterator **must not be overlapping**
+    /// 3. The bounds in each layer iterator **must be paired**,  that means there should be an equal amount of
+    ///    [`Start`](RelativeBound::Start)s and [`End`](RelativeBound::End)s.
+    ///
+    /// The responsibility of verifying those requirements are left to the caller
+    /// in order to prevent double-processing.
+    ///
+    /// Requirements 1 and 2 are automatically guaranteed if the bounds are obtained from
     /// [`RelativeUnitedBoundsIter`](crate::iter::intervals::united_bounds::RelativeUnitedBoundsIter).
     ///
-    /// The bounds in the layer iterators **must be paired**, that means there should be an equal amount of
-    /// [`Start`](RelativeBound::Start)s and [`End`](RelativeBound::End)s.
-    /// This is automatically guaranteed if they are obtained from
-    /// [intervals](crate::intervals::relative::RelativeInterval)
-    /// or from [paired bounds](crate::intervals::relative::RelativeBounds).
+    /// Requirement 3 is automatically guaranteed if the bounds are obtained from
+    /// a set of [intervals](crate::intervals::relative::RelativeInterval)
+    /// or from [bound pairs](crate::intervals::relative::RelativeBounds) and then processed through
+    /// [`RelativeBoundsIter`](crate::iter::intervals::bounds::RelativeBoundsIter).
     #[must_use]
     pub fn new(first_layer_iter: I1, second_layer_iter: I2) -> LayeredRelativeBounds<Peekable<I1>, Peekable<I2>> {
         LayeredRelativeBounds {
@@ -891,18 +1762,6 @@ where
             state: LayeredBoundsState::default(),
             queued_result: None,
             exhausted: false,
-        }
-    }
-
-    /// Swaps the two layers while conserving the current state
-    #[must_use]
-    pub fn swap_layers(self) -> LayeredRelativeBounds<I2, I1> {
-        LayeredRelativeBounds {
-            first_layer: self.second_layer,
-            second_layer: self.first_layer,
-            state: self.state,
-            queued_result: self.queued_result,
-            exhausted: self.exhausted,
         }
     }
 }
@@ -1023,8 +1882,10 @@ where
 {
 }
 
-/// Creates the [`LayeredBoundsStateChangeAtRelativeBound`] for when only the first layer had a peeked value and was
-/// a start bound
+/// Computes the state change - first layer peeked, start bound
+///
+/// Computes the [`LayeredBoundsStateChangeAtRelativeBound`] when only the first layer has a peeked value
+/// and is a start bound.
 ///
 /// # Panics
 ///
@@ -1056,8 +1917,10 @@ pub fn layered_rel_bounds_change_start_first_layer(
     )
 }
 
-/// Creates the [`LayeredBoundsStateChangeAtRelativeBound`] for when only the first layer had a peeked value and was
-/// an end bound
+/// Computes the state change - first layer peeked, end bound
+///
+/// Computes the [`LayeredBoundsStateChangeAtRelativeBound`] when only the first layer has a peeked value
+/// and is an end bound.
 ///
 /// # Panics
 ///
@@ -1084,8 +1947,10 @@ pub fn layered_rel_bounds_change_end_first_layer(
     Change::new(old_state, *state_mut, Some(first_layer_end), first_layer_end.opposite())
 }
 
-/// Creates the [`LayeredBoundsStateChangeAtRelativeBound`] for when only the second layer had a peeked value and was
-/// a start bound
+/// Computes the state change - second layer peeked, start bound
+///
+/// Computes the [`LayeredBoundsStateChangeAtRelativeBound`] when only the second layer has a peeked value
+/// and is a start bound.
 ///
 /// # Panics
 ///
@@ -1117,8 +1982,10 @@ pub fn layered_rel_bounds_change_start_second_layer(
     )
 }
 
-/// Creates the [`LayeredBoundsStateChangeAtRelativeBound`] for when only the second layer had a peeked value and was
-/// an end bound
+/// Computes the state change - second layer peeked, end bound
+///
+/// Computes the [`LayeredBoundsStateChangeAtRelativeBound`] when only the second layer has a peeked value
+/// and is an end bound.
 ///
 /// # Panics
 ///
@@ -1150,9 +2017,10 @@ pub fn layered_rel_bounds_change_end_second_layer(
     )
 }
 
-/// Creates the [`LayeredBoundsStateChangeAtRelativeBound`] for when both layers have a peeked value
+/// Computes the state change - both layers peeked, both start bounds
 ///
-/// The first layer has a start bound and the second layer has a start bound.
+/// Computes the [`LayeredBoundsStateChangeAtRelativeBound`] when both layers have a peeked value
+/// and both are start bounds.
 ///
 /// # Panics
 ///
@@ -1226,9 +2094,10 @@ pub fn layered_rel_bounds_change_start_start(
     }
 }
 
-/// Creates the [`LayeredBoundsStateChangeAtRelativeBound`] for when both layers have a peeked value
+/// Computes the state change - both layers peeked, first layer start bound, second layer end bound
 ///
-/// The first layer has a start bound and the second layer has an end bound.
+/// Computes the [`LayeredBoundsStateChangeAtRelativeBound`] when both layers have a peeked value
+/// and the first layer is a start bound and the second layer is an end bound.
 ///
 /// # Panics
 ///
@@ -1342,9 +2211,10 @@ pub fn layered_rel_bounds_change_start_end(
     }
 }
 
-/// Creates the [`LayeredBoundsStateChangeAtRelativeBound`] for when both layers have a peeked value
+/// Computes the state change - both layers peeked, first layer end bound, second layer start bound
 ///
-/// The first layer has an end bound and the second layer has a start bound.
+/// Computes the [`LayeredBoundsStateChangeAtRelativeBound`] when both layers have a peeked value
+/// and the first layer is an end bound and the second layer is a start bound.
 ///
 /// # Panics
 ///
@@ -1453,9 +2323,10 @@ pub fn layered_rel_bounds_change_end_start(
     }
 }
 
-/// Creates the [`LayeredBoundsStateChangeAtRelativeBound`] for when both layers have a peeked value
+/// Computes the state change - both layers peeked, first layer end bound, second layer start bound
 ///
-/// The first layer has an end bound and the second layer has an end bound.
+/// Computes the [`LayeredBoundsStateChangeAtRelativeBound`] when both layers have a peeked value
+/// and both are end bounds.
 ///
 /// # Panics
 ///
