@@ -1,4 +1,14 @@
 //! Interval iterators
+//!
+//! This module contains various iterators to deal with intervals. With those iterators, you can...
+//!
+//! - [Retrieve bounds from intervals](bounds)
+//! - [Unite bounds](united_bounds)
+//! - [Layering bounds to track active layers](layered_bounds)
+//! - [Operate set operations on layered bounds](layered_bounds_set_ops)
+//! - [Operate set operations on intervals](set_ops)
+//! - [Retrieve the complements of intervals](complement)
+//! - [Remove empty intervals from a collection](remove_empty)
 
 pub mod bounds;
 pub mod complement;
