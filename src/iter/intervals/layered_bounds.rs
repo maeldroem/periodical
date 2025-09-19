@@ -60,8 +60,8 @@
 //! assert_eq!(
 //!     first_layer_intervals
 //!         .abs_bounds_iter()
-//!         .united()
-//!         .layer(second_layer_intervals.abs_bounds_iter().united())
+//!         .unite_bounds()
+//!         .layer(second_layer_intervals.abs_bounds_iter().unite_bounds())
 //!         .collect::<Vec<_>>(),
 //!     vec![
 //!         LayeredBoundsStateChangeAtAbsoluteBound::new(
@@ -665,8 +665,8 @@ impl LayeredBoundsStateChangeAtRelativeBound {
 /// assert_eq!(
 ///     first_layer_intervals
 ///         .abs_bounds_iter()
-///         .united()
-///         .layer(second_layer_intervals.abs_bounds_iter().united())
+///         .unite_bounds()
+///         .layer(second_layer_intervals.abs_bounds_iter().unite_bounds())
 ///         .collect::<Vec<_>>(),
 ///     vec![
 ///         LayeredBoundsStateChangeAtAbsoluteBound::new(
@@ -826,8 +826,8 @@ impl<I1, I2> LayeredAbsoluteBounds<I1, I2> {
     ///
     /// let mut layered_bounds = first_layer_intervals
     ///     .abs_bounds_iter()
-    ///     .united()
-    ///     .layer(second_layer_intervals.abs_bounds_iter().united());
+    ///     .unite_bounds()
+    ///     .layer(second_layer_intervals.abs_bounds_iter().unite_bounds());
     ///
     /// layered_bounds.nth(2);
     ///
@@ -851,7 +851,7 @@ where
     ///
     /// 1. The bounds in each layer iterator **must be sorted chronologically**
     /// 2. The bounds in each layer iterator **must not be overlapping**
-    /// 3. The bounds in each layer iterator **must be paired**,  that means there should be an equal amount of
+    /// 3. The bounds in each layer iterator **must be paired**, that means there should be an equal amount of
     ///    [`Start`](AbsoluteBound::Start)s and [`End`](AbsoluteBound::End)s.
     ///
     /// The responsibility of verifying those requirements are left to the caller
@@ -1557,8 +1557,8 @@ pub fn layered_abs_bounds_change_end_end(
 /// assert_eq!(
 ///     first_layer_intervals
 ///         .rel_bounds_iter()
-///         .united()
-///         .layer(second_layer_intervals.rel_bounds_iter().united())
+///         .unite_bounds()
+///         .layer(second_layer_intervals.rel_bounds_iter().unite_bounds())
 ///         .collect::<Vec<_>>(),
 ///     vec![
 ///         LayeredBoundsStateChangeAtRelativeBound::new(
@@ -1717,8 +1717,8 @@ impl<I1, I2> LayeredRelativeBounds<I1, I2> {
     ///
     /// let mut layered_bounds = first_layer_intervals
     ///     .rel_bounds_iter()
-    ///     .united()
-    ///     .layer(second_layer_intervals.rel_bounds_iter().united());
+    ///     .unite_bounds()
+    ///     .layer(second_layer_intervals.rel_bounds_iter().unite_bounds());
     ///
     /// layered_bounds.nth(2);
     ///
@@ -1741,7 +1741,7 @@ where
     ///
     /// 1. The bounds in each layer iterator **must be sorted chronologically**
     /// 2. The bounds in each layer iterator **must not be overlapping**
-    /// 3. The bounds in each layer iterator **must be paired**,  that means there should be an equal amount of
+    /// 3. The bounds in each layer iterator **must be paired**, that means there should be an equal amount of
     ///    [`Start`](RelativeBound::Start)s and [`End`](RelativeBound::End)s.
     ///
     /// The responsibility of verifying those requirements are left to the caller

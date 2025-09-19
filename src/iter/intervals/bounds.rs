@@ -116,7 +116,7 @@ impl AbsoluteBoundsIter {
     /// ];
     ///
     /// assert_eq!(
-    ///     intervals.abs_bounds_iter().united().collect::<Vec<_>>(),
+    ///     intervals.abs_bounds_iter().unite_bounds().collect::<Vec<_>>(),
     ///     vec![
     ///         AbsoluteBound::Start(AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
     ///             "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
@@ -129,7 +129,7 @@ impl AbsoluteBoundsIter {
     /// # Ok::<(), chrono::format::ParseError>(())
     /// ```
     #[must_use]
-    pub fn united(self) -> AbsoluteUnitedBoundsIter<Peekable<impl Iterator<Item = AbsoluteBound>>> {
+    pub fn unite_bounds(self) -> AbsoluteUnitedBoundsIter<Peekable<impl Iterator<Item = AbsoluteBound>>> {
         let mut bounds = self.collect::<Vec<_>>();
         bounds.sort();
 
@@ -325,7 +325,7 @@ impl RelativeBoundsIter {
     /// ];
     ///
     /// assert_eq!(
-    ///     intervals.rel_bounds_iter().united().collect::<Vec<_>>(),
+    ///     intervals.rel_bounds_iter().unite_bounds().collect::<Vec<_>>(),
     ///     vec![
     ///         RelativeBound::Start(RelativeStartBound::Finite(RelativeFiniteBound::new(
     ///             Duration::hours(8),
@@ -337,7 +337,7 @@ impl RelativeBoundsIter {
     /// );
     /// ```
     #[must_use]
-    pub fn united(self) -> RelativeUnitedBoundsIter<Peekable<impl Iterator<Item = RelativeBound>>> {
+    pub fn unite_bounds(self) -> RelativeUnitedBoundsIter<Peekable<impl Iterator<Item = RelativeBound>>> {
         let mut bounds = self.collect::<Vec<_>>();
         bounds.sort();
 
