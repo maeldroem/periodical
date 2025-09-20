@@ -135,14 +135,6 @@ fn peer_difference_run() {
                 )),
                 None,
             ),
-            // 7,
-            (
-                EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
-                    AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 23))),
-                    AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 25))),
-                )),
-                None,
-            ),
         ],
     );
 }
@@ -285,14 +277,6 @@ fn peer_difference_with_run() {
                         date(&Utc, 2025, 1, 23),
                         BoundInclusivity::Exclusive,
                     )),
-                )),
-                None,
-            ),
-            // 7,
-            (
-                EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
-                    AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 23))),
-                    AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 25))),
                 )),
                 None,
             ),
