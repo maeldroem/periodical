@@ -1,6 +1,8 @@
 use chrono::Utc;
 
-use crate::intervals::absolute::{AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound};
+use crate::intervals::absolute::{
+    AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, EmptiableAbsoluteBounds,
+};
 use crate::intervals::meta::BoundInclusivity;
 use crate::intervals::ops::abridge::Abridgable;
 use crate::intervals::ops::overlap::{CanPositionOverlap, DEFAULT_OVERLAP_RULES, OverlapRuleSet};
@@ -111,11 +113,6 @@ fn peer_intersection_run() {
                 AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 20))),
                 AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 30))),
             ),
-            // 7,
-            AbsoluteBounds::new(
-                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 2, 1))),
-                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 2, 5))),
-            ),
         ],
     );
 }
@@ -174,29 +171,30 @@ fn peer_intersection_with_run() {
         ),
     ];
 
-    let custom_intersection_f = |a: &AbsoluteBounds, b: &AbsoluteBounds| -> IntersectionResult<AbsoluteBounds> {
-        if a.overlaps(b, OverlapRuleSet::VeryLenient, &DEFAULT_OVERLAP_RULES) {
-            IntersectionResult::Intersected(a.abridge(b))
-        } else {
-            IntersectionResult::Separate
-        }
-    };
+    let custom_intersection_f =
+        |a: &AbsoluteBounds, b: &AbsoluteBounds| -> IntersectionResult<EmptiableAbsoluteBounds> {
+            if a.overlaps(b, OverlapRuleSet::VeryLenient, &DEFAULT_OVERLAP_RULES) {
+                IntersectionResult::Intersected(a.abridge(b))
+            } else {
+                IntersectionResult::Separate
+            }
+        };
 
     assert_eq!(
         bounds.peer_intersection_with(custom_intersection_f).collect::<Vec<_>>(),
         vec![
             // 1, 2
-            AbsoluteBounds::new(
+            EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
                 AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2))),
                 AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 4))),
-            ),
+            )),
             // 2, 3
-            AbsoluteBounds::new(
+            EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
                 AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2))),
                 AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 4))),
-            ),
+            )),
             // 3, 4
-            AbsoluteBounds::new(
+            EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
                 AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
                     date(&Utc, 2025, 1, 10),
                     BoundInclusivity::Exclusive,
@@ -205,30 +203,25 @@ fn peer_intersection_with_run() {
                     date(&Utc, 2025, 1, 15),
                     BoundInclusivity::Exclusive,
                 )),
-            ),
+            )),
             // 4, 5
-            AbsoluteBounds::new(
+            EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
                 AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 15))),
                 AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 15))),
-            ),
+            )),
             // 5, 6
-            AbsoluteBounds::new(
+            EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
                 AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 20))),
                 AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
                     date(&Utc, 2025, 1, 25),
                     BoundInclusivity::Exclusive,
                 )),
-            ),
+            )),
             // 6, 7
-            AbsoluteBounds::new(
+            EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
                 AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 20))),
                 AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 30))),
-            ),
-            // 7,
-            AbsoluteBounds::new(
-                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 2, 1))),
-                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 2, 5))),
-            ),
+            )),
         ],
     );
 }

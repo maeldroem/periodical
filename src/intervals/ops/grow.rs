@@ -1,4 +1,44 @@
 //! Interval growth
+//!
+//! Grows an interval up to a given point.
+//!
+//! To more explicitly grow an interval, the trait for growth is actually two traits.
+//! One for growing the start bound of an interval, [`GrowableStartBound`],
+//! and one for growing the end bound of an interval, [`GrowableEndBound`].
+//!
+//! # Examples
+//!
+//! ```
+//! # use chrono::{DateTime, Utc};
+//! # use periodical::intervals::absolute::{
+//! #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+//! # };
+//! # use periodical::intervals::ops::grow::GrowableStartBound;
+//! let interval = AbsoluteBounds::new(
+//!     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+//!         "2025-01-01 10:00:00Z".parse::<DateTime<Utc>>()?,
+//!     )),
+//!     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+//!         "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
+//!     )),
+//! );
+//!
+//! let grown_interval = interval.grow_start(
+//!     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+//!         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+//!     ))
+//! );
+//!
+//! assert_eq!(grown_interval, AbsoluteBounds::new(
+//!     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+//!         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+//!     )),
+//!     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+//!         "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
+//!     )),
+//! ));
+//! # Ok::<(), chrono::format::ParseError>(())
+//! ```
 
 use super::prelude::*;
 
@@ -14,21 +54,57 @@ use crate::intervals::{BoundedAbsoluteInterval, BoundedRelativeInterval, Relativ
 
 /// Capacity to grow an interval's start bound up to a given new start bound
 ///
-/// The generic type parameter `P` corresponds to the position type, usually a `*StartBound`.
+/// The generic type parameter `P` corresponds to the position type,
+/// usually an [`AbsoluteStartBound`] or [`RelativeStartBound`].
 pub trait GrowableStartBound<P> {
     /// Output type
     type Output;
 
-    /// Grows the start of the given interval up to the given bound
+    /// Grows the start bound of the given interval up to the given bound
     ///
     /// This method creates a version of the interval where the start bound is more in the past than the original one.
     /// Of course, it only happens if the passed new start bound is actually more in the past than the original one.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::{
+    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+    /// # };
+    /// # use periodical::intervals::ops::grow::GrowableStartBound;
+    /// let interval = AbsoluteBounds::new(
+    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+    ///         "2025-01-01 10:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     )),
+    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+    ///         "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     )),
+    /// );
+    ///
+    /// let grown_interval = interval.grow_start(
+    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+    ///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     ))
+    /// );
+    ///
+    /// assert_eq!(grown_interval, AbsoluteBounds::new(
+    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+    ///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     )),
+    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+    ///         "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     )),
+    /// ));
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     fn grow_start(&self, position: P) -> Self::Output;
 }
 
 /// Capacity to grow an interval's end bound up to a given new end bound
 ///
-/// The generic type parameter `P` corresponds to the position type, usually a `*EndBound`.
+/// The generic type parameter `P` corresponds to the position type,
+/// usually an [`AbsoluteEndBound`] or [`RelativeEndBound`].
 pub trait GrowableEndBound<P> {
     /// Output type
     type Output;
@@ -37,6 +113,40 @@ pub trait GrowableEndBound<P> {
     ///
     /// This method creates a version of the interval where the end bound is more in the future than the original one.
     /// Of course, it only happens if the passed new end bound is actually more in the future than the original one.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::{
+    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+    /// # };
+    /// # use periodical::intervals::ops::grow::GrowableEndBound;
+    /// let interval = AbsoluteBounds::new(
+    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+    ///         "2025-01-01 10:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     )),
+    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+    ///         "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     )),
+    /// );
+    ///
+    /// let grown_interval = interval.grow_end(
+    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+    ///         "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     ))
+    /// );
+    ///
+    /// assert_eq!(grown_interval, AbsoluteBounds::new(
+    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+    ///         "2025-01-01 10:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     )),
+    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+    ///         "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     )),
+    /// ));
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     fn grow_end(&self, position: P) -> Self::Output;
 }
 
@@ -264,7 +374,9 @@ impl GrowableEndBound<RelativeEndBound> for EmptyInterval {
     }
 }
 
-/// Makes the start of the passed [`AbsoluteBounds`] grow up to the given bound if it is lesser than the original
+/// Grows the start bound of an [`AbsoluteBounds`]
+///
+/// See [module documentation](crate::intervals::ops::grow) for more info.
 #[must_use]
 pub fn grow_start_abs_bounds(bounds: &AbsoluteBounds, at: AbsoluteStartBound) -> AbsoluteBounds {
     let mut new_bounds = bounds.clone();
@@ -272,7 +384,9 @@ pub fn grow_start_abs_bounds(bounds: &AbsoluteBounds, at: AbsoluteStartBound) ->
     new_bounds
 }
 
-/// Makes the start of the passed [`EmptiableAbsoluteBounds`] grow up to the given bound if it is lesser than the original
+/// Grows the start bound of an [`EmptiableAbsoluteBounds`]
+///
+/// See [module documentation](crate::intervals::ops::grow) for more info.
 #[must_use]
 pub fn grow_start_emptiable_abs_bounds(
     emptiable_bounds: &EmptiableAbsoluteBounds,
@@ -285,7 +399,9 @@ pub fn grow_start_emptiable_abs_bounds(
     EmptiableAbsoluteBounds::from(grow_start_abs_bounds(bounds, at))
 }
 
-/// Makes the end of the passed [`AbsoluteBounds`] grow up to the given bound if it is greater than the original
+/// Grows the end bound of an [`AbsoluteBounds`]
+///
+/// See [module documentation](crate::intervals::ops::grow) for more info.
 #[must_use]
 pub fn grow_end_abs_bounds(bounds: &AbsoluteBounds, at: AbsoluteEndBound) -> AbsoluteBounds {
     let mut new_bounds = bounds.clone();
@@ -293,7 +409,9 @@ pub fn grow_end_abs_bounds(bounds: &AbsoluteBounds, at: AbsoluteEndBound) -> Abs
     new_bounds
 }
 
-/// Makes the end of the passed [`EmptiableAbsoluteBounds`] grow up to the given bound if it is greater than the original
+/// Grows the end bound of an [`EmptiableAbsoluteBounds`]
+///
+/// See [module documentation](crate::intervals::ops::grow) for more info.
 #[must_use]
 pub fn grow_end_emptiable_abs_bounds(
     emptiable_bounds: &EmptiableAbsoluteBounds,
@@ -306,7 +424,9 @@ pub fn grow_end_emptiable_abs_bounds(
     EmptiableAbsoluteBounds::from(grow_end_abs_bounds(bounds, at))
 }
 
-/// Makes the start of the passed [`RelativeBounds`] grow up to the given bound if it is lesser than the original
+/// Grows the start bound of a [`RelativeBounds`]
+///
+/// See [module documentation](crate::intervals::ops::grow) for more info.
 #[must_use]
 pub fn grow_start_rel_bounds(bounds: &RelativeBounds, at: RelativeStartBound) -> RelativeBounds {
     let mut new_bounds = bounds.clone();
@@ -314,7 +434,9 @@ pub fn grow_start_rel_bounds(bounds: &RelativeBounds, at: RelativeStartBound) ->
     new_bounds
 }
 
-/// Makes the start of the passed [`EmptiableRelativeBounds`] grow up to the given bound if it is lesser than the original
+/// Grows the start bound of an [`EmptiableRelativeBounds`]
+///
+/// See [module documentation](crate::intervals::ops::grow) for more info.
 #[must_use]
 pub fn grow_start_emptiable_rel_bounds(
     emptiable_bounds: &EmptiableRelativeBounds,
@@ -327,7 +449,9 @@ pub fn grow_start_emptiable_rel_bounds(
     EmptiableRelativeBounds::from(grow_start_rel_bounds(bounds, at))
 }
 
-/// Makes the end of the passed [`RelativeBounds`] grow up to the given bound if it is greater than the original
+/// Grows the end bound of a [`RelativeBounds`]
+///
+/// See [module documentation](crate::intervals::ops::grow) for more info.
 #[must_use]
 pub fn grow_end_rel_bounds(bounds: &RelativeBounds, at: RelativeEndBound) -> RelativeBounds {
     let mut new_bounds = bounds.clone();
@@ -335,7 +459,9 @@ pub fn grow_end_rel_bounds(bounds: &RelativeBounds, at: RelativeEndBound) -> Rel
     new_bounds
 }
 
-/// Makes the end of the passed [`EmptiableRelativeBounds`] grow up to the given bound if it is greater than the original
+/// Grows the end bound of an [`EmptiableRelativeBounds`]
+///
+/// See [module documentation](crate::intervals::ops::grow) for more info.
 #[must_use]
 pub fn grow_end_emptiable_rel_bounds(
     emptiable_bounds: &EmptiableRelativeBounds,

@@ -1,4 +1,74 @@
-//! Interval iterators regarding interval symmetrical difference (a.k.a. XOR)
+//! Interval iterators to operate symmetric differences on intervals
+//!
+//! # Examples
+//!
+//! ```
+//! # use chrono::{DateTime, Utc};
+//! # use periodical::intervals::absolute::{
+//! #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, EmptiableAbsoluteBounds,
+//! # };
+//! # use periodical::intervals::meta::BoundInclusivity;
+//! # use periodical::iter::intervals::set_ops::sym_diff::PeerSymmetricDifferenceIteratorDispatcher;
+//! let intervals = [
+//!     AbsoluteBounds::new(
+//!         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+//!             "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+//!         )),
+//!         AbsoluteEndBound::InfiniteFuture,
+//!     ),
+//!     AbsoluteBounds::new(
+//!         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+//!             "2025-01-01 10:00:00Z".parse::<DateTime<Utc>>()?,
+//!         )),
+//!         AbsoluteEndBound::InfiniteFuture,
+//!     ),
+//!     AbsoluteBounds::new(
+//!         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+//!             "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
+//!         )),
+//!         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+//!             "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
+//!         )),
+//!     ),
+//! ];
+//!
+//! assert_eq!(
+//!     intervals.peer_symmetric_difference().collect::<Vec<_>>(),
+//!     vec![
+//!         (
+//!             EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
+//!                 AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+//!                     "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+//!                 )),
+//!                 AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+//!                     "2025-01-01 10:00:00Z".parse::<DateTime<Utc>>()?,
+//!                     BoundInclusivity::Exclusive,
+//!                 )),
+//!             )),
+//!             None,
+//!         ),
+//!         (
+//!             EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
+//!                 AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+//!                     "2025-01-01 10:00:00Z".parse::<DateTime<Utc>>()?,
+//!                 )),
+//!                 AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+//!                     "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
+//!                     BoundInclusivity::Exclusive,
+//!                 )),
+//!             )),
+//!             Some(EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
+//!                 AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+//!                     "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
+//!                     BoundInclusivity::Exclusive,
+//!                 )),
+//!                 AbsoluteEndBound::InfiniteFuture,
+//!             ))),
+//!         ),
+//!     ],
+//! );
+//! # Ok::<(), chrono::format::ParseError>(())
+//! ```
 
 use std::iter::{FusedIterator, Peekable};
 
@@ -6,6 +76,12 @@ use crate::intervals::prelude::*;
 use crate::ops::SymmetricDifferenceResult;
 
 /// Peer symmetric difference iterator for intervals using predefined rules
+///
+/// Operates a [symmetric difference] on peers, that is to say, we operate the intersection on every pair of intervals.
+///
+/// Uses [`SymmetricallyDifferentiable`] under the hood.
+///
+/// [symmetric difference]: https://en.wikipedia.org/w/index.php?title=Symmetric_difference&oldid=1311741596
 #[derive(Debug, Clone, Hash)]
 pub struct PeerSymmetricDifference<I> {
     iter: I,
@@ -17,6 +93,7 @@ where
     I: Iterator<Item = &'a T>,
     T: 'a + SymmetricallyDifferentiable<Output = U> + Into<U> + Clone,
 {
+    /// Creates a new [`PeerSymmetricDifference`]
     pub fn new(iter: I) -> PeerSymmetricDifference<Peekable<I>> {
         PeerSymmetricDifference {
             iter: iter.peekable(),
@@ -44,11 +121,11 @@ where
 
         let Some(peeked) = self.iter.peek() else {
             self.exhausted = true;
-            return Some((current.clone().into(), None));
+            return None;
         };
 
         match current.symmetrically_differentiate(peeked) {
-            SymmetricDifferenceResult::Shrunk(shrunk) => Some((shrunk, None)),
+            SymmetricDifferenceResult::Single(shrunk) => Some((shrunk, None)),
             SymmetricDifferenceResult::Split(split_first_part, split_second_part) => {
                 Some((split_first_part, Some(split_second_part)))
             },
@@ -57,7 +134,11 @@ where
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        self.iter.size_hint()
+        let inner_size_hint = self.iter.size_hint();
+        (
+            inner_size_hint.0.saturating_sub(1),
+            inner_size_hint.1.map(|x| x.saturating_sub(1)),
+        )
     }
 }
 
@@ -80,9 +161,12 @@ where
 {
     /// Symmetrically differentiates peer intervals of the iterator using the default overlap rules
     ///
-    /// Processes elements pair by pair and returns the result of the symmetric difference.
-    /// If the symmetric difference is successful, it returns all the parts of the differentiated intervals.
-    /// If it is unsuccessful, it returns the pair of inspected elements.
+    /// Operates a [symmetric difference] on peers, that is to say, we operate the intersection on every pair
+    /// of intervals.
+    ///
+    /// Uses [`SymmetricallyDifferentiable`] under the hood.
+    ///
+    /// [symmetric difference]: https://en.wikipedia.org/w/index.php?title=Symmetric_difference&oldid=1311741596
     fn peer_symmetric_difference(self) -> PeerSymmetricDifference<Peekable<Self::IntoIter>> {
         PeerSymmetricDifference::new(self.into_iter())
     }
@@ -97,6 +181,12 @@ where
 }
 
 /// Peer symmetric difference iterator for intervals using the given closure
+///
+/// Operates a [symmetric difference] on peers, that is to say, we operate the intersection on every pair of intervals.
+///
+/// Uses [`SymmetricallyDifferentiable`] under the hood.
+///
+/// [symmetric difference]: https://en.wikipedia.org/w/index.php?title=Symmetric_difference&oldid=1311741596
 #[derive(Debug, Clone)]
 pub struct PeerSymmetricDifferenceWith<I, F> {
     iter: I,
@@ -110,6 +200,7 @@ where
     T: 'a + Into<U> + Clone,
     F: FnMut(&T, &T) -> SymmetricDifferenceResult<U>,
 {
+    /// Creates a new [`PeerSymmetricDifferenceWith`]
     pub fn new(iter: I, f: F) -> PeerSymmetricDifferenceWith<Peekable<I>, F> {
         PeerSymmetricDifferenceWith {
             iter: iter.peekable(),
@@ -139,11 +230,11 @@ where
 
         let Some(peeked) = self.iter.peek() else {
             self.exhausted = true;
-            return Some((current.clone().into(), None));
+            return None;
         };
 
         match (self.f)(current, peeked) {
-            SymmetricDifferenceResult::Shrunk(shrunk) => Some((shrunk, None)),
+            SymmetricDifferenceResult::Single(shrunk) => Some((shrunk, None)),
             SymmetricDifferenceResult::Split(split_first_part, split_second_part) => {
                 Some((split_first_part, Some(split_second_part)))
             },
@@ -152,7 +243,11 @@ where
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        self.iter.size_hint()
+        let inner_size_hint = self.iter.size_hint();
+        (
+            inner_size_hint.0.saturating_sub(1),
+            inner_size_hint.1.map(|x| x.saturating_sub(1)),
+        )
     }
 }
 
@@ -177,9 +272,12 @@ where
 {
     /// Symmetrically differentiates peer intervals of the iterator using the given closure
     ///
-    /// Processes elements pair by pair and returns the result of the symmetric difference.
-    /// If the symmetric difference is successful, it returns all the parts of the differentiated intervals.
-    /// If it is unsuccessful, it returns the pair of inspected elements.
+    /// Operates a [symmetric difference] on peers, that is to say, we operate the intersection on every pair
+    /// of intervals.
+    ///
+    /// Uses [`SymmetricallyDifferentiable`] under the hood.
+    ///
+    /// [symmetric difference]: https://en.wikipedia.org/w/index.php?title=Symmetric_difference&oldid=1311741596
     fn peer_symmetric_difference_with(self, f: F) -> PeerSymmetricDifferenceWith<Peekable<Self::IntoIter>, F> {
         PeerSymmetricDifferenceWith::new(self.into_iter(), f)
     }

@@ -217,7 +217,7 @@ fn bound_position_get_rel_bound_of_end_outside() {
 fn bound_position_add_bounds_index_on_start_no_overflow() {
     let mut position = BoundPosition::Start(5);
 
-    assert!(!position.add_bounds_index(3));
+    assert!(!position.add_interval_index(3));
     assert_eq!(position, BoundPosition::Start(8));
 }
 
@@ -225,7 +225,7 @@ fn bound_position_add_bounds_index_on_start_no_overflow() {
 fn bound_position_add_bounds_index_on_start_overflow() {
     let mut position = BoundPosition::Start(5);
 
-    assert!(position.add_bounds_index(usize::MAX));
+    assert!(position.add_interval_index(usize::MAX));
     assert_eq!(position, BoundPosition::MAX);
 }
 
@@ -233,7 +233,7 @@ fn bound_position_add_bounds_index_on_start_overflow() {
 fn bound_position_add_bounds_index_on_end_no_overflow() {
     let mut position = BoundPosition::End(5);
 
-    assert!(!position.add_bounds_index(3));
+    assert!(!position.add_interval_index(3));
     assert_eq!(position, BoundPosition::End(8));
 }
 
@@ -241,7 +241,7 @@ fn bound_position_add_bounds_index_on_end_no_overflow() {
 fn bound_position_add_bounds_index_on_end_overflow() {
     let mut position = BoundPosition::End(5);
 
-    assert!(position.add_bounds_index(usize::MAX));
+    assert!(position.add_interval_index(usize::MAX));
     assert_eq!(position, BoundPosition::MAX);
 }
 
@@ -249,7 +249,7 @@ fn bound_position_add_bounds_index_on_end_overflow() {
 fn bound_position_sub_bounds_index_on_start_no_underflow() {
     let mut position = BoundPosition::Start(8);
 
-    assert!(!position.sub_bounds_index(3));
+    assert!(!position.sub_interval_index(3));
     assert_eq!(position, BoundPosition::Start(5));
 }
 
@@ -257,7 +257,7 @@ fn bound_position_sub_bounds_index_on_start_no_underflow() {
 fn bound_position_sub_bounds_index_on_start_underflow() {
     let mut position = BoundPosition::Start(8);
 
-    assert!(position.sub_bounds_index(9));
+    assert!(position.sub_interval_index(9));
     assert_eq!(position, BoundPosition::MIN);
 }
 
@@ -265,7 +265,7 @@ fn bound_position_sub_bounds_index_on_start_underflow() {
 fn bound_position_sub_bounds_index_on_end_no_underflow() {
     let mut position = BoundPosition::End(8);
 
-    assert!(!position.sub_bounds_index(3));
+    assert!(!position.sub_interval_index(3));
     assert_eq!(position, BoundPosition::End(5));
 }
 
@@ -273,7 +273,7 @@ fn bound_position_sub_bounds_index_on_end_no_underflow() {
 fn bound_position_sub_bounds_index_on_end_underflow() {
     let mut position = BoundPosition::End(8);
 
-    assert!(position.sub_bounds_index(9));
+    assert!(position.sub_interval_index(9));
     assert_eq!(position, BoundPosition::MIN);
 }
 
@@ -281,7 +281,7 @@ fn bound_position_sub_bounds_index_on_end_underflow() {
 fn bound_position_increment_bounds_index_start_no_overflow() {
     let mut position = BoundPosition::Start(8);
 
-    assert!(!position.increment_bounds_index());
+    assert!(!position.increment_interval_index());
     assert_eq!(position, BoundPosition::Start(9));
 }
 
@@ -289,7 +289,7 @@ fn bound_position_increment_bounds_index_start_no_overflow() {
 fn bound_position_increment_bounds_index_start_overflow() {
     let mut position = BoundPosition::Start(usize::MAX);
 
-    assert!(position.increment_bounds_index());
+    assert!(position.increment_interval_index());
     assert_eq!(position, BoundPosition::MAX);
 }
 
@@ -297,7 +297,7 @@ fn bound_position_increment_bounds_index_start_overflow() {
 fn bound_position_increment_bounds_index_end_no_overflow() {
     let mut position = BoundPosition::End(8);
 
-    assert!(!position.increment_bounds_index());
+    assert!(!position.increment_interval_index());
     assert_eq!(position, BoundPosition::End(9));
 }
 
@@ -305,7 +305,7 @@ fn bound_position_increment_bounds_index_end_no_overflow() {
 fn bound_position_increment_bounds_index_end_overflow() {
     let mut position = BoundPosition::End(usize::MAX);
 
-    assert!(position.increment_bounds_index());
+    assert!(position.increment_interval_index());
     assert_eq!(position, BoundPosition::MAX);
 }
 
@@ -313,7 +313,7 @@ fn bound_position_increment_bounds_index_end_overflow() {
 fn bound_position_decrement_bounds_index_start_no_underflow() {
     let mut position = BoundPosition::Start(6);
 
-    assert!(!position.decrement_bounds_index());
+    assert!(!position.decrement_interval_index());
     assert_eq!(position, BoundPosition::Start(5));
 }
 
@@ -321,7 +321,7 @@ fn bound_position_decrement_bounds_index_start_no_underflow() {
 fn bound_position_decrement_bounds_index_start_underflow() {
     let mut position = BoundPosition::Start(usize::MIN);
 
-    assert!(position.decrement_bounds_index());
+    assert!(position.decrement_interval_index());
     assert_eq!(position, BoundPosition::MIN);
 }
 
@@ -329,7 +329,7 @@ fn bound_position_decrement_bounds_index_start_underflow() {
 fn bound_position_decrement_bounds_index_end_no_underflow() {
     let mut position = BoundPosition::End(6);
 
-    assert!(!position.decrement_bounds_index());
+    assert!(!position.decrement_interval_index());
     assert_eq!(position, BoundPosition::End(5));
 }
 
@@ -337,7 +337,7 @@ fn bound_position_decrement_bounds_index_end_no_underflow() {
 fn bound_position_decrement_bounds_index_end_underflow() {
     let mut position = BoundPosition::End(usize::MIN);
 
-    assert!(position.decrement_bounds_index());
+    assert!(position.decrement_interval_index());
     assert_eq!(position, BoundPosition::MIN);
 }
 

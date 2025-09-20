@@ -536,9 +536,9 @@ fn absolute_end_bound_is_finite() {
 }
 
 #[test]
-fn absolute_end_bound_is_infinite_past() {
-    assert!(!AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))).is_infinite_past());
-    assert!(AbsoluteEndBound::InfiniteFuture.is_infinite_past());
+fn absolute_end_bound_is_infinite_future() {
+    assert!(!AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))).is_infinite_future());
+    assert!(AbsoluteEndBound::InfiniteFuture.is_infinite_future());
 }
 
 #[test]
@@ -1964,7 +1964,7 @@ fn half_bounded_absolute_interval_new() {
 
     assert_eq!(interval.reference_time(), date(&Utc, 2025, 1, 1));
     assert_eq!(interval.opening_direction(), OpeningDirection::ToFuture);
-    assert_eq!(interval.reference_time_inclusivity(), BoundInclusivity::Inclusive);
+    assert_eq!(interval.reference_inclusivity(), BoundInclusivity::Inclusive);
 }
 
 #[test]
@@ -1977,7 +1977,7 @@ fn half_bounded_absolute_interval_new_with_inclusivity() {
 
     assert_eq!(interval.reference_time(), date(&Utc, 2025, 1, 1));
     assert_eq!(interval.opening_direction(), OpeningDirection::ToPast);
-    assert_eq!(interval.reference_time_inclusivity(), BoundInclusivity::Exclusive);
+    assert_eq!(interval.reference_inclusivity(), BoundInclusivity::Exclusive);
 }
 
 #[test]
@@ -2008,7 +2008,7 @@ fn half_bounded_absolute_interval_set_reference_time_inclusivity() {
         OpeningDirection::ToFuture,
     );
 
-    interval.set_reference_time_inclusivity(BoundInclusivity::Inclusive);
+    interval.set_reference_inclusivity(BoundInclusivity::Inclusive);
 
     assert_eq!(
         interval,
@@ -2469,8 +2469,9 @@ fn prepare_absolute_bounds_for_interval_creation_inf_past_inf_future() {
     let mut start = AbsoluteStartBound::InfinitePast;
     let mut end = AbsoluteEndBound::InfiniteFuture;
 
-    prepare_absolute_bounds_for_interval_creation(&mut start, &mut end);
+    let was_changed = prepare_absolute_bounds_for_interval_creation(&mut start, &mut end);
 
+    assert!(!was_changed);
     assert_eq!(start, AbsoluteStartBound::InfinitePast);
     assert_eq!(end, AbsoluteEndBound::InfiniteFuture);
 }
@@ -2480,8 +2481,9 @@ fn prepare_absolute_bounds_for_interval_creation_inf_past_finite() {
     let mut start = AbsoluteStartBound::InfinitePast;
     let mut end = AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1)));
 
-    prepare_absolute_bounds_for_interval_creation(&mut start, &mut end);
+    let was_changed = prepare_absolute_bounds_for_interval_creation(&mut start, &mut end);
 
+    assert!(!was_changed);
     assert_eq!(start, AbsoluteStartBound::InfinitePast);
     assert_eq!(
         end,
@@ -2494,8 +2496,9 @@ fn prepare_absolute_bounds_for_interval_creation_finite_inf_future() {
     let mut start = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1)));
     let mut end = AbsoluteEndBound::InfiniteFuture;
 
-    prepare_absolute_bounds_for_interval_creation(&mut start, &mut end);
+    let was_changed = prepare_absolute_bounds_for_interval_creation(&mut start, &mut end);
 
+    assert!(!was_changed);
     assert_eq!(
         start,
         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1)))
@@ -2508,8 +2511,9 @@ fn prepare_absolute_bounds_for_interval_creation_finite_finite_different_times_c
     let mut start = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1)));
     let mut end = AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2)));
 
-    prepare_absolute_bounds_for_interval_creation(&mut start, &mut end);
+    let was_changed = prepare_absolute_bounds_for_interval_creation(&mut start, &mut end);
 
+    assert!(!was_changed);
     assert_eq!(
         start,
         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1)))
@@ -2525,8 +2529,9 @@ fn prepare_absolute_bounds_for_interval_creation_finite_finite_different_times_w
     let mut start = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2)));
     let mut end = AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1)));
 
-    prepare_absolute_bounds_for_interval_creation(&mut start, &mut end);
+    let was_changed = prepare_absolute_bounds_for_interval_creation(&mut start, &mut end);
 
+    assert!(was_changed);
     assert_eq!(
         start,
         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1)))
@@ -2542,8 +2547,9 @@ fn prepare_absolute_bounds_for_interval_creation_finite_finite_same_time_inclusi
     let mut start = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1)));
     let mut end = AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1)));
 
-    prepare_absolute_bounds_for_interval_creation(&mut start, &mut end);
+    let was_changed = prepare_absolute_bounds_for_interval_creation(&mut start, &mut end);
 
+    assert!(!was_changed);
     assert_eq!(
         start,
         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1)))
@@ -2562,8 +2568,9 @@ fn prepare_absolute_bounds_for_interval_creation_finite_finite_same_time_inclusi
         BoundInclusivity::Exclusive,
     ));
 
-    prepare_absolute_bounds_for_interval_creation(&mut start, &mut end);
+    let was_changed = prepare_absolute_bounds_for_interval_creation(&mut start, &mut end);
 
+    assert!(was_changed);
     assert_eq!(
         start,
         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1)))

@@ -182,7 +182,7 @@ fn abs_united_bounds_run_from_abs_bounds_iter() {
     ];
 
     assert_eq!(
-        data.abs_bounds_iter().united().collect::<Vec<_>>(),
+        data.abs_bounds_iter().unite_bounds().collect::<Vec<_>>(),
         vec![
             AbsoluteBound::Start(AbsoluteStartBound::InfinitePast),
             AbsoluteBound::End(AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(
@@ -352,7 +352,7 @@ fn rel_united_bounds_run_from_rel_bounds_iter() {
     ];
 
     assert_eq!(
-        data.rel_bounds_iter().united().collect::<Vec<_>>(),
+        data.rel_bounds_iter().unite_bounds().collect::<Vec<_>>(),
         vec![
             RelativeBound::Start(RelativeStartBound::InfinitePast),
             RelativeBound::End(RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(1)))),

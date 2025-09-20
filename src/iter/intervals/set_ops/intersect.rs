@@ -1,4 +1,58 @@
-//! Interval iterators regarding interval intersection
+//! Interval iterators to operate intersections on intervals
+//!
+//! # Examples
+//!
+//! ```
+//! # use chrono::{DateTime, Utc};
+//! # use periodical::intervals::absolute::{
+//! #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, EmptiableAbsoluteBounds,
+//! # };
+//! # use periodical::intervals::meta::BoundInclusivity;
+//! # use periodical::iter::intervals::set_ops::intersect::PeerIntersectionIteratorDispatcher;
+//! let intervals = [
+//!     AbsoluteBounds::new(
+//!         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+//!             "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+//!         )),
+//!         AbsoluteEndBound::InfiniteFuture,
+//!     ),
+//!     AbsoluteBounds::new(
+//!         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+//!             "2025-01-01 10:00:00Z".parse::<DateTime<Utc>>()?,
+//!         )),
+//!         AbsoluteEndBound::InfiniteFuture,
+//!     ),
+//!     AbsoluteBounds::new(
+//!         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+//!             "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
+//!         )),
+//!         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+//!             "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
+//!         )),
+//!     ),
+//! ];
+//!
+//! assert_eq!(
+//!     intervals.peer_intersection().collect::<Vec<_>>(),
+//!     vec![
+//!         AbsoluteBounds::new(
+//!             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+//!                 "2025-01-01 10:00:00Z".parse::<DateTime<Utc>>()?,
+//!             )),
+//!             AbsoluteEndBound::InfiniteFuture,
+//!         ),
+//!         AbsoluteBounds::new(
+//!             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+//!                 "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
+//!             )),
+//!             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+//!                 "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
+//!             )),
+//!         ),
+//!     ],
+//! );
+//! # Ok::<(), chrono::format::ParseError>(())
+//! ```
 
 use std::iter::{FusedIterator, Peekable};
 
@@ -6,6 +60,12 @@ use crate::intervals::prelude::*;
 use crate::ops::IntersectionResult;
 
 /// Peer intersection iterator for intervals using predefined rules
+///
+/// Operates an [intersection] on peers, that is to say, we operate the intersection on every pair of intervals.
+///
+/// Uses [`Intersectable`] under the hood.
+///
+/// [intersection]: https://en.wikipedia.org/w/index.php?title=Intersection_(set_theory)&oldid=1191979994
 #[derive(Debug, Clone, Hash)]
 pub struct PeerIntersection<I> {
     iter: I,
@@ -17,6 +77,7 @@ where
     I: Iterator<Item = &'a T>,
     T: 'a + Intersectable<Output = U> + Into<U> + Clone,
 {
+    /// Creates a new [`PeerIntersection`]
     pub fn new(iter: I) -> PeerIntersection<Peekable<I>> {
         PeerIntersection {
             iter: iter.peekable(),
@@ -44,7 +105,7 @@ where
 
         let Some(peeked) = self.iter.peek() else {
             self.exhausted = true;
-            return Some(current.clone().into());
+            return None;
         };
 
         match current.intersect(peeked) {
@@ -54,7 +115,11 @@ where
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        self.iter.size_hint()
+        let inner_size_hint = self.iter.size_hint();
+        (
+            inner_size_hint.0.saturating_sub(1),
+            inner_size_hint.1.map(|x| x.saturating_sub(1)),
+        )
     }
 }
 
@@ -77,8 +142,11 @@ where
 {
     /// Intersects peer intervals of the iterator using the default overlap rules
     ///
-    /// Processes elements pair by pair and returns the result of the intersection. If the intersection is successful,
-    /// it returns the intersected interval. If it is unsuccessful, it returns the current element.
+    /// Operates an [intersection] on peers, that is to say, we operate the intersection on every pair of intervals.
+    ///
+    /// Uses [`Intersectable`] under the hood.
+    ///
+    /// [intersection]: https://en.wikipedia.org/w/index.php?title=Intersection_(set_theory)&oldid=1191979994
     fn peer_intersection(self) -> PeerIntersection<Peekable<Self::IntoIter>> {
         PeerIntersection::new(self.into_iter())
     }
@@ -93,6 +161,12 @@ where
 }
 
 /// Peer intersection iterator for intervals using the given closure
+///
+/// Operates an [intersection] on peers, that is to say, we operate the intersection on every pair of intervals.
+///
+/// Uses [`Intersectable`] under the hood.
+///
+/// [intersection]: https://en.wikipedia.org/w/index.php?title=Intersection_(set_theory)&oldid=1191979994
 #[derive(Debug, Clone)]
 pub struct PeerIntersectionWith<I, F> {
     iter: I,
@@ -106,6 +180,7 @@ where
     T: 'a + Into<U> + Clone,
     F: FnMut(&T, &T) -> IntersectionResult<U>,
 {
+    /// Creates a new [`PeerIntersectionWith`]
     pub fn new(iter: I, f: F) -> PeerIntersectionWith<Peekable<I>, F> {
         PeerIntersectionWith {
             iter: iter.peekable(),
@@ -135,7 +210,7 @@ where
 
         let Some(peeked) = self.iter.peek() else {
             self.exhausted = true;
-            return Some(current.clone().into());
+            return None;
         };
 
         match (self.f)(current, peeked) {
@@ -145,7 +220,11 @@ where
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        self.iter.size_hint()
+        let inner_size_hint = self.iter.size_hint();
+        (
+            inner_size_hint.0.saturating_sub(1),
+            inner_size_hint.1.map(|x| x.saturating_sub(1)),
+        )
     }
 }
 
@@ -170,8 +249,11 @@ where
 {
     /// Intersects peer intervals of the iterator using the given closure
     ///
-    /// Processes elements pair by pair and returns the result of the intersection. If the intersection is successful,
-    /// it returns the intersected interval. If it is unsuccessful, it returns the current element.
+    /// Operates an [intersection] on peers, that is to say, we operate the intersection on every pair of intervals.
+    ///
+    /// Uses [`Intersectable`] under the hood.
+    ///
+    /// [intersection]: https://en.wikipedia.org/w/index.php?title=Intersection_(set_theory)&oldid=1191979994
     fn peer_intersection_with(self, f: F) -> PeerIntersectionWith<Peekable<Self::IntoIter>, F> {
         PeerIntersectionWith::new(self.into_iter(), f)
     }

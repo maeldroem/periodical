@@ -14,7 +14,10 @@ fn abridge_abs_bounds_two_unbounded() {
         AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture).abridge(
             &AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture)
         ),
-        AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture),
+        EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
+            AbsoluteStartBound::InfinitePast,
+            AbsoluteEndBound::InfiniteFuture
+        )),
     );
 }
 
@@ -27,10 +30,10 @@ fn abridge_abs_bounds_unbounded_half_bounded() {
                 AbsoluteEndBound::InfiniteFuture,
             )
         ),
-        AbsoluteBounds::new(
+        EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
             AbsoluteEndBound::InfiniteFuture,
-        ),
+        )),
     );
 }
 
@@ -43,10 +46,10 @@ fn abridge_abs_bounds_unbounded_bounded() {
                 AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2))),
             )
         ),
-        AbsoluteBounds::new(
+        EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2))),
-        ),
+        )),
     );
 }
 
@@ -61,10 +64,10 @@ fn abridge_abs_bounds_half_bounded_unbounded() {
             AbsoluteStartBound::InfinitePast,
             AbsoluteEndBound::InfiniteFuture
         )),
-        AbsoluteBounds::new(
+        EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
             AbsoluteEndBound::InfiniteFuture,
-        ),
+        )),
     );
 }
 
@@ -79,10 +82,10 @@ fn abridge_abs_bounds_two_equal_half_bounded() {
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
             AbsoluteEndBound::InfiniteFuture,
         )),
-        AbsoluteBounds::new(
+        EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
             AbsoluteEndBound::InfiniteFuture,
-        ),
+        )),
     );
 }
 
@@ -97,10 +100,10 @@ fn abridge_abs_bounds_two_half_bounded_same_ref_time() {
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
             AbsoluteEndBound::InfiniteFuture,
         )),
-        AbsoluteBounds::new(
+        EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
-        ),
+        )),
     );
 }
 
@@ -115,7 +118,7 @@ fn abridge_abs_bounds_two_half_bounded_with_gap() {
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2))),
             AbsoluteEndBound::InfiniteFuture,
         )),
-        AbsoluteBounds::new(
+        EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Exclusive,
@@ -124,7 +127,7 @@ fn abridge_abs_bounds_two_half_bounded_with_gap() {
                 date(&Utc, 2025, 1, 2),
                 BoundInclusivity::Exclusive,
             )),
-        ),
+        )),
     );
 }
 
@@ -139,10 +142,10 @@ fn abridge_abs_bounds_two_half_bounded_same_direction_different_times() {
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
             AbsoluteEndBound::InfiniteFuture,
         )),
-        AbsoluteBounds::new(
+        EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2))),
             AbsoluteEndBound::InfiniteFuture,
-        ),
+        )),
     );
 }
 
@@ -157,7 +160,7 @@ fn abridge_abs_bounds_bounded_half_bounded_with_gap() {
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 3))),
             AbsoluteEndBound::InfiniteFuture,
         )),
-        AbsoluteBounds::new(
+        EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
                 date(&Utc, 2025, 1, 2),
                 BoundInclusivity::Exclusive,
@@ -166,7 +169,7 @@ fn abridge_abs_bounds_bounded_half_bounded_with_gap() {
                 date(&Utc, 2025, 1, 3),
                 BoundInclusivity::Exclusive,
             )),
-        ),
+        )),
     );
 }
 
@@ -181,7 +184,7 @@ fn abridge_abs_bounds_two_bounded_with_gap() {
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 3))),
             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 4))),
         )),
-        AbsoluteBounds::new(
+        EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
                 date(&Utc, 2025, 1, 2),
                 BoundInclusivity::Exclusive,
@@ -190,7 +193,7 @@ fn abridge_abs_bounds_two_bounded_with_gap() {
                 date(&Utc, 2025, 1, 3),
                 BoundInclusivity::Exclusive,
             )),
-        ),
+        )),
     );
 }
 
@@ -205,10 +208,10 @@ fn abridge_abs_bounds_two_bounded_overlapping() {
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2))),
             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 4))),
         )),
-        AbsoluteBounds::new(
+        EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2))),
             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 3))),
-        ),
+        )),
     );
 }
 
@@ -231,6 +234,87 @@ fn abridge_abs_bounds_w_emptiable_abs_bounds() {
     assert_eq!(
         AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture)
             .abridge(&EmptiableAbsoluteBounds::Empty),
-        AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture),
+        EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
+            AbsoluteStartBound::InfinitePast,
+            AbsoluteEndBound::InfiniteFuture
+        )),
+    );
+}
+
+#[test]
+fn abridge_abs_bounds_abs_bounds_adjacent_inclusive_inclusive() {
+    assert_eq!(
+        AbsoluteBounds::new(
+            AbsoluteStartBound::InfinitePast,
+            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
+        )
+        .abridge(&AbsoluteBounds::new(
+            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
+            AbsoluteEndBound::InfiniteFuture,
+        )),
+        EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
+            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
+            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
+        )),
+    );
+}
+
+#[test]
+fn abridge_abs_bounds_abs_bounds_adjacent_inclusive_exclusive() {
+    assert_eq!(
+        AbsoluteBounds::new(
+            AbsoluteStartBound::InfinitePast,
+            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
+        )
+        .abridge(&AbsoluteBounds::new(
+            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+            )),
+            AbsoluteEndBound::InfiniteFuture,
+        )),
+        EmptiableAbsoluteBounds::Empty,
+    );
+}
+
+#[test]
+fn abridge_abs_bounds_abs_bounds_adjacent_exclusive_inclusive() {
+    assert_eq!(
+        AbsoluteBounds::new(
+            AbsoluteStartBound::InfinitePast,
+            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+            )),
+        )
+        .abridge(&AbsoluteBounds::new(
+            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
+            AbsoluteEndBound::InfiniteFuture,
+        )),
+        EmptiableAbsoluteBounds::Empty,
+    );
+}
+
+#[test]
+fn abridge_abs_bounds_abs_bounds_adjacent_exclusive_exclusive() {
+    assert_eq!(
+        AbsoluteBounds::new(
+            AbsoluteStartBound::InfinitePast,
+            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+            )),
+        )
+        .abridge(&AbsoluteBounds::new(
+            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                date(&Utc, 2025, 1, 1),
+                BoundInclusivity::Exclusive,
+            )),
+            AbsoluteEndBound::InfiniteFuture,
+        )),
+        EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
+            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
+            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
+        )),
     );
 }

@@ -1,16 +1,48 @@
-//! Bound inclusivity overlap ambiguity
+//! Bound overlap ambiguity
 //!
-//! TODO: Make time containment positioning and overlap positioning use `Option<BoundOverlapAmbiguity>` for consistency.
+//! This module manages ambiguities that are created when comparing two bounds that have the same position,
+//! like time for absolute bounds, or offset for relative bounds.
+//!
+//! The ambiguity is stored in [`BoundOverlapAmbiguity`]. It stores the source of the bounds (start/end)
+//! and their inclusivities.
+//! From that structure, you can then choose how to disambiguate it.
+//! This is most commonly done using a [`BoundOverlapDisambiguationRuleSet`],
+//! but you can also use your own closure for disambiguation.
+//!
+//! Once disambiguated, you obtain a [`DisambiguatedBoundOverlap`], indicating how the compared bound should be
+//! interpreted relative to the reference bound.
+//!
+//! Most structures using [`BoundOverlapAmbiguity`] wrap it in an [`Option`], as infinite bounds can have
+//! the same position (either infinitely in the past or infinitely in the future), but don't carry information
+//! about inclusivity, therefore not creating an ambiguity despite them technically having the same position.
+//!
+//! # Examples
+//!
+//! ```
+//! # use periodical::intervals::meta::BoundInclusivity;
+//! # use periodical::intervals::ops::bound_overlap_ambiguity::{
+//! #     BoundOverlapAmbiguity, BoundOverlapDisambiguationRuleSet, DisambiguatedBoundOverlap,
+//! # };
+//! let ambiguity = BoundOverlapAmbiguity::StartEnd(
+//!     BoundInclusivity::Inclusive, // Reference is an inclusive start bound
+//!     BoundInclusivity::Exclusive, // Compared is an exclusive end bound
+//! );
+//!
+//! assert_eq!(
+//!     ambiguity.disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Strict),
+//!     DisambiguatedBoundOverlap::Before,
+//! );
+//! ```
 
 #[cfg(feature = "arbitrary")]
 use arbitrary::Arbitrary;
 
 use crate::intervals::meta::BoundInclusivity;
 
-/// Ambiguity in bound overlap
+/// Bound overlap ambiguity
 ///
-/// If an interval bound's position is the same as a compared interval bound's position, an ambiguity is created
-/// as this overlap can be interpreted in different ways.
+/// Ambiguities occur when two compared bounds have the same position (time/offset) as the inclusivities of the bounds
+/// can result in different interpretations.
 ///
 /// Consider the following:
 ///
@@ -23,7 +55,7 @@ use crate::intervals::meta::BoundInclusivity;
 /// ```
 ///
 /// Should we consider those two intervals as overlapping? in the strict mathematical interpretation, no, but if you
-/// are uniting those two intervals, then yes (as they leave no gap in between).
+/// are uniting those two intervals, then yes, as they don't have a gap in between them.
 ///
 /// That's what the bound overlap ambiguity is for.
 ///
@@ -35,44 +67,96 @@ pub enum BoundOverlapAmbiguity {
     BothStarts(BoundInclusivity, BoundInclusivity),
     /// Inclusivities come from two end bounds
     BothEnds(BoundInclusivity, BoundInclusivity),
-    /// Inclusivities come from a start bound and an end bound
+    /// Inclusivities come from a start bound (reference) and an end bound (compared)
     StartEnd(BoundInclusivity, BoundInclusivity),
-    /// Inclusivities come from an end bound and a start bound
+    /// Inclusivities come from an end bound (reference) and a start bound (compared)
     EndStart(BoundInclusivity, BoundInclusivity),
 }
 
 impl BoundOverlapAmbiguity {
-    /// Whether the [`BoundOverlapAmbiguity`] is of the [`BothStarts`](BoundOverlapAmbiguity::BothStarts) variant
+    /// Whether it is of the [`BothStarts`](BoundOverlapAmbiguity::BothStarts) variant
     #[must_use]
     pub fn is_both_starts(&self) -> bool {
         matches!(self, Self::BothStarts(..))
     }
 
-    /// Whether the [`BoundOverlapAmbiguity`] is of the [`BothEnds`](BoundOverlapAmbiguity::BothEnds) variant
+    /// Whether it is of the [`BothEnds`](BoundOverlapAmbiguity::BothEnds) variant
     #[must_use]
     pub fn is_both_ends(&self) -> bool {
         matches!(self, Self::BothEnds(..))
     }
 
-    /// Whether the [`BoundOverlapAmbiguity`] is of the [`StartEnd`](BoundOverlapAmbiguity::StartEnd) variant
+    /// Whether it is of the [`StartEnd`](BoundOverlapAmbiguity::StartEnd) variant
     #[must_use]
     pub fn is_start_end(&self) -> bool {
         matches!(self, Self::StartEnd(..))
     }
 
-    /// Whether the [`BoundOverlapAmbiguity`] is of the [`EndStart`](BoundOverlapAmbiguity::EndStart) variant
+    /// Whether it is of the [`EndStart`](BoundOverlapAmbiguity::EndStart) variant
     #[must_use]
     pub fn is_end_start(&self) -> bool {
         matches!(self, Self::EndStart(..))
     }
 
     /// Disambiguates the ambiguity using the given [`BoundOverlapDisambiguationRuleSet`]
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// # use periodical::intervals::ops::bound_overlap_ambiguity::{
+    /// #     BoundOverlapAmbiguity, BoundOverlapDisambiguationRuleSet, DisambiguatedBoundOverlap,
+    /// # };
+    /// let ambiguity = BoundOverlapAmbiguity::StartEnd(
+    ///     BoundInclusivity::Inclusive, // Reference is an inclusive start bound
+    ///     BoundInclusivity::Exclusive, // Compared is an exclusive end bound
+    /// );
+    ///
+    /// assert_eq!(
+    ///     ambiguity.disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Strict),
+    ///     DisambiguatedBoundOverlap::Before,
+    /// );
+    /// ```
     #[must_use]
     pub fn disambiguate_using_rule_set(self, rule_set: BoundOverlapDisambiguationRuleSet) -> DisambiguatedBoundOverlap {
         rule_set.disambiguate(self)
     }
 
     /// Disambiguates the ambiguity using the given closure
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// # use periodical::intervals::ops::bound_overlap_ambiguity::{
+    /// #     BoundOverlapAmbiguity, DisambiguatedBoundOverlap,
+    /// # };
+    /// let ambiguity = BoundOverlapAmbiguity::StartEnd(
+    ///     BoundInclusivity::Inclusive, // Reference is an inclusive start bound
+    ///     BoundInclusivity::Exclusive, // Compared is an exclusive end bound
+    /// );
+    ///
+    /// let disambiguation_closure = |amb: BoundOverlapAmbiguity| -> DisambiguatedBoundOverlap {
+    ///     match amb {
+    ///         BoundOverlapAmbiguity::StartEnd(ref_incl, comp_incl) => {
+    ///             if matches!(
+    ///                 (ref_incl, comp_incl),
+    ///                 (BoundInclusivity::Exclusive, BoundInclusivity::Inclusive),
+    ///             ) {
+    ///                 DisambiguatedBoundOverlap::Equal
+    ///             } else {
+    ///                 DisambiguatedBoundOverlap::Before
+    ///             }
+    ///         },
+    ///         _ => unimplemented!(),
+    ///     }
+    /// };
+    ///
+    /// assert_eq!(
+    ///     ambiguity.disambiguate_using(disambiguation_closure),
+    ///     DisambiguatedBoundOverlap::Before,
+    /// );
+    /// ```
     #[must_use]
     pub fn disambiguate_using<F>(self, f: F) -> DisambiguatedBoundOverlap
     where
@@ -83,33 +167,66 @@ impl BoundOverlapAmbiguity {
 }
 
 /// Rule sets to disambiguate a [`BoundOverlapAmbiguity`]
+///
+/// Rule sets are common strategies to resolve ambiguities.
+/// If you require a custom disambiguation, see [`BoundOverlapAmbiguity::disambiguate_using`].
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum BoundOverlapDisambiguationRuleSet {
-    /// Strict mathematical interpretation of bound inclusivities
+    /// Strict rule set
+    ///
+    /// Mathematical interpretation of bound inclusivities.
+    ///
+    /// Two bounds possessing the same point in time need to be inclusive in order to be counted as equal.
+    ///
+    /// This rule set is often used for overlap checks.
     #[default]
     Strict,
     /// Lenient rule set
     ///
-    /// An inclusive bound meeting an exclusive bound counts as equal
+    /// Two bounds possessing the same point in time need to be either inclusive or at least one of them
+    /// needs to be exclusive (not both!) in order to be counted as equal.
+    ///
+    /// This rule set if often used for interval unions.
     Lenient,
     /// Very lenient rule set
     ///
-    /// Even two exclusive bounds are considered equal
+    /// Two bounds possessing the same point in time are counted as equal, regardless of the inclusivity.
     VeryLenient,
     /// Continuous to future rule set
     ///
-    /// Like [`Strict`](BoundOverlapDisambiguationRuleSet::Strict) but considers equal an exclusive end bound meeting
-    /// an inclusive start bound
+    /// Follows the same principles as [`BoundOverlapDisambiguationRuleSet::Strict`], but adds an exception:
+    /// if an exclusive end bound is adjacent to an inclusive start bound, it also counts as equal.
     ContinuousToFuture,
     /// Continuous to past rule set
     ///
-    /// Like [`Strict`](BoundOverlapDisambiguationRuleSet::Strict) but considers equal an exclusive start bound meeting
-    /// an inclusive end bound
+    /// Follows the same principles as [`BoundOverlapDisambiguationRuleSet::Strict`], but adds an exception:
+    /// if an exclusive start bound is adjacent to an inclusive end bound, it also counts as equal.
     ContinuousToPast,
 }
 
 impl BoundOverlapDisambiguationRuleSet {
+    /// Uses the rule set to disambiguate a [`BoundOverlapAmbiguity`]
+    ///
+    /// Preferably use [`BoundOverlapAmbiguity::disambiguate_using_rule_set`] instead.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// # use periodical::intervals::ops::bound_overlap_ambiguity::{
+    /// #     BoundOverlapAmbiguity, BoundOverlapDisambiguationRuleSet, DisambiguatedBoundOverlap,
+    /// # };
+    /// let ambiguity = BoundOverlapAmbiguity::StartEnd(
+    ///     BoundInclusivity::Inclusive, // Reference is an inclusive start bound
+    ///     BoundInclusivity::Exclusive, // Compared is an exclusive end bound
+    /// );
+    ///
+    /// assert_eq!(
+    ///     BoundOverlapDisambiguationRuleSet::Strict.disambiguate(ambiguity),
+    ///     DisambiguatedBoundOverlap::Before,
+    /// );
+    /// ```
     #[must_use]
     pub fn disambiguate(&self, ambiguity: BoundOverlapAmbiguity) -> DisambiguatedBoundOverlap {
         match self {
@@ -219,14 +336,17 @@ pub fn continuous_to_past_bound_overlap_disambiguation(ambiguity: BoundOverlapAm
     }
 }
 
-/// Disambiguated [`BoundOverlapAmbiguity`]
+/// Resolved bound overlap
+///
+/// Represents a disambiguated [`BoundOverlapAmbiguity`], indicating the position of the compared bound
+/// relative to the reference bound.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum DisambiguatedBoundOverlap {
-    /// Second, compared bound was before the first, reference bound
+    /// Compared bound is before the reference bound
     Before,
-    /// Second, compared bound was equal to the first, reference bound
+    /// Compared bound is equal to the reference bound
     Equal,
-    /// Second, compared bound was after the first, reference bound
+    /// Compared bound is after the reference bound
     After,
 }

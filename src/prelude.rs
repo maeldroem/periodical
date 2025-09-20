@@ -1,3 +1,8 @@
+//! Global prelude
+//!
+//! Import it with a wildcard, i.e. `use periodical::prelude::*;`, in order to bring common traits into scope
+//! and import common structures.
+
 pub use crate::intervals::absolute::{
     AbsoluteBound, AbsoluteBounds, AbsoluteInterval, BoundedAbsoluteInterval, EmptiableAbsoluteBounds,
     HalfBoundedAbsoluteInterval, HasAbsoluteBounds, HasEmptiableAbsoluteBounds,
@@ -15,18 +20,38 @@ pub use crate::intervals::ops::overlap::{
     CanPositionOverlap, DEFAULT_OVERLAP_RULES, DisambiguatedOverlapPosition, OverlapPosition, OverlapRule,
     OverlapRuleSet,
 };
-pub use crate::intervals::ops::precision::PreciseAbsoluteBounds;
+pub use crate::intervals::ops::point_containment::{
+    CanPositionPointContainment, DEFAULT_POINT_CONTAINMENT_RULES, DisambiguatedPointContainmentPosition,
+    PointContainmentPosition, PointContainmentRule, PointContainmentRuleSet,
+};
+pub use crate::intervals::ops::precision::PreciseAbsoluteInterval;
 pub use crate::intervals::ops::relativity_conversion::{ToAbsolute, ToRelative};
 pub use crate::intervals::ops::remove_overlap::{OverlapRemovable, OverlapRemovalResult};
 pub use crate::intervals::ops::remove_overlap_or_gap::{OverlapOrGapRemovalResult, RemovableOverlapOrGap};
 pub use crate::intervals::ops::set_ops::{Differentiable, Intersectable, SymmetricallyDifferentiable, Unitable};
 pub use crate::intervals::ops::shrink::{ShrinkableEndBound, ShrinkableStartBound};
-pub use crate::intervals::ops::time_containment::{
-    CanPositionTimeContainment, DEFAULT_TIME_CONTAINMENT_RULES, DisambiguatedTimeContainmentPosition,
-    TimeContainmentPosition, TimeContainmentRule, TimeContainmentRuleSet,
-};
 pub use crate::intervals::relative::{
     BoundedRelativeInterval, EmptiableRelativeBounds, HalfBoundedRelativeInterval, HasEmptiableRelativeBounds,
     HasRelativeBounds, RelativeBound, RelativeBounds, RelativeInterval,
 };
 pub use crate::intervals::special::{EmptyInterval, UnboundedInterval};
+pub use crate::iter::intervals::bounds::{AbsoluteBoundsIteratorDispatcher, RelativeBoundsIteratorDispatcher};
+pub use crate::iter::intervals::complement::ComplementIteratorDispatcher;
+pub use crate::iter::intervals::layered_bounds::{
+    LayeredAbsoluteBounds, LayeredBoundsState, LayeredBoundsStateChangeAtAbsoluteBound,
+    LayeredBoundsStateChangeAtRelativeBound, LayeredRelativeBounds,
+};
+pub use crate::iter::intervals::layered_bounds_set_ops::{
+    LayeredAbsoluteBoundsDifferenceIteratorDispatcher, LayeredAbsoluteBoundsIntersectionIteratorDispatcher,
+    LayeredAbsoluteBoundsSymmetricDifferenceIteratorDispatcher, LayeredAbsoluteBoundsUnionIteratorDispatcher,
+    LayeredRelativeBoundsDifferenceIteratorDispatcher, LayeredRelativeBoundsIntersectionIteratorDispatcher,
+    LayeredRelativeBoundsSymmetricDifferenceIteratorDispatcher, LayeredRelativeBoundsUnionIteratorDispatcher,
+};
+pub use crate::iter::intervals::remove_empty::RemoveEmptyIntervalsIteratorDispatcher;
+pub use crate::iter::intervals::set_ops::{
+    AccumulativeUnionIteratorDispatcher, AccumulativeUnionWithIteratorDispatcher, PeerDifferenceIteratorDispatcher,
+    PeerDifferenceWithIteratorDispatcher, PeerIntersectionIteratorDispatcher, PeerIntersectionWithIteratorDispatcher,
+    PeerSymmetricDifferenceIteratorDispatcher, PeerSymmetricDifferenceWithIteratorDispatcher,
+    PeerUnionIteratorDispatcher, PeerUnionWithIteratorDispatcher,
+};
+pub use crate::iter::intervals::united_bounds::{AbsoluteUnitedBoundsIter, RelativeUnitedBoundsIter};

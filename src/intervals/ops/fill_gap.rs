@@ -1,4 +1,50 @@
 //! Fill gaps between non-overlapping intervals
+//!
+//! Use [`GapFillable::fill_gap`] to fill gaps between non-overlapping intervals.
+//! This operation takes the first interval, provided by `self`, and extends it so that it fills the gap
+//! up to the second interval.
+//!
+//! # Examples
+//!
+//! ```
+//! # use chrono::{DateTime, Utc};
+//! # use periodical::intervals::absolute::{
+//! #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, EmptiableAbsoluteBounds,
+//! # };
+//! # use periodical::intervals::meta::BoundInclusivity;
+//! # use periodical::intervals::ops::fill_gap::GapFillable;
+//! let first_interval = AbsoluteBounds::new(
+//!     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+//!         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+//!     )),
+//!     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+//!         "2025-01-01 10:00:00Z".parse::<DateTime<Utc>>()?,
+//!     )),
+//! );
+//!
+//! let second_interval = AbsoluteBounds::new(
+//!     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+//!         "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
+//!     )),
+//!     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+//!         "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
+//!     )),
+//! );
+//!
+//! assert_eq!(
+//!     first_interval.fill_gap(&second_interval),
+//!     Ok(AbsoluteBounds::new(
+//!         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+//!             "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+//!         )),
+//!         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+//!             "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
+//!             BoundInclusivity::Exclusive,
+//!         )),
+//!     )),
+//! );
+//! # Ok::<(), chrono::format::ParseError>(())
+//! ```
 
 use super::grow::{GrowableEndBound, GrowableStartBound};
 use super::overlap::{CanPositionOverlap, DisambiguatedOverlapPosition, OverlapRuleSet};
@@ -22,16 +68,62 @@ pub enum GapFillError {
     Overlap,
 }
 
-/// Capacity to fill the gap between two intervals if they don't strictly overlap
+/// Capacity to fill gaps between non-overlapping intervals
+///
+/// Filling a gap returns a copy of the first interval, given by `self`, that fills the gap up to the second interval.
 pub trait GapFillable<Rhs = Self> {
     /// Output type
     type Output;
 
-    /// Returns a result that contains a version of `self` that no longer has a strict gap with the given `rhs`
+    /// Fills the gap up the other interval
+    ///
+    /// Returns a copy of `self` that fills the gap up to the second interval.
     ///
     /// # Errors
     ///
-    /// If the two intervals are not overlapping, it should result in [`GapFillError::Overlap`].
+    /// If the two intervals are overlapping, it result in [`GapFillError::Overlap`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::{
+    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, EmptiableAbsoluteBounds,
+    /// # };
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// # use periodical::intervals::ops::fill_gap::GapFillable;
+    /// let first_interval = AbsoluteBounds::new(
+    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+    ///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     )),
+    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+    ///         "2025-01-01 10:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     )),
+    /// );
+    ///
+    /// let second_interval = AbsoluteBounds::new(
+    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+    ///         "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     )),
+    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+    ///         "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     )),
+    /// );
+    ///
+    /// assert_eq!(
+    ///     first_interval.fill_gap(&second_interval),
+    ///     Ok(AbsoluteBounds::new(
+    ///         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+    ///             "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+    ///         )),
+    ///         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+    ///             "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
+    ///             BoundInclusivity::Exclusive,
+    ///         )),
+    ///     )),
+    /// );
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     fn fill_gap(&self, rhs: &Rhs) -> Result<Self::Output, GapFillError>;
 }
 
@@ -343,11 +435,13 @@ impl GapFillable<EmptyInterval> for EmptyInterval {
     }
 }
 
-/// Returns a result that contains a version of `a` that no longer has a strict gap with the given `b`
+/// Extends an [`AbsoluteBounds`] to fill the gap up to the other [`AbsoluteBounds`]
+///
+/// See [module documentation](crate::intervals::ops::fill_gap) for more info.
 ///
 /// # Errors
 ///
-/// If the given bounds overlap, this method fails with [`GapFillError::Overlap`]
+/// If the given bounds overlap, it results in [`GapFillError::Overlap`]
 pub fn fill_gap_abs_bounds(a: &AbsoluteBounds, b: &AbsoluteBounds) -> Result<AbsoluteBounds, GapFillError> {
     type Dop = DisambiguatedOverlapPosition;
 
@@ -389,11 +483,13 @@ pub fn fill_gap_abs_bounds(a: &AbsoluteBounds, b: &AbsoluteBounds) -> Result<Abs
     }
 }
 
-/// Returns a result that contains a version of `a` that no longer has a strict gap with the given `b`
+/// Extends an [`AbsoluteBounds`] to fill the gap up to the other [`EmptiableAbsoluteBounds`]
+///
+/// See [module documentation](crate::intervals::ops::fill_gap) for more info.
 ///
 /// # Errors
 ///
-/// If the given bounds overlap, this method fails with [`GapFillError::Overlap`]
+/// If the given bounds overlap, it results in [`GapFillError::Overlap`]
 pub fn fill_gap_abs_bounds_with_emptiable_abs_bounds(
     a: &AbsoluteBounds,
     b: &EmptiableAbsoluteBounds,
@@ -405,11 +501,13 @@ pub fn fill_gap_abs_bounds_with_emptiable_abs_bounds(
     fill_gap_abs_bounds(a, b_abs_bounds)
 }
 
-/// Returns a result that contains a version of `a` that no longer has a strict gap with the given `b`
+/// Extends an [`EmptiableAbsoluteBounds`] to fill the gap up to the other [`EmptiableAbsoluteBounds`]
+///
+/// See [module documentation](crate::intervals::ops::fill_gap) for more info.
 ///
 /// # Errors
 ///
-/// If the given bounds overlap, this method fails with [`GapFillError::Overlap`]
+/// If the given bounds overlap, it results in [`GapFillError::Overlap`]
 pub fn fill_gap_emptiable_abs_bounds(
     a: &EmptiableAbsoluteBounds,
     b: &EmptiableAbsoluteBounds,
@@ -421,11 +519,13 @@ pub fn fill_gap_emptiable_abs_bounds(
     fill_gap_abs_bounds_with_emptiable_abs_bounds(a_abs_bounds, b).map(EmptiableAbsoluteBounds::from)
 }
 
-/// Returns a result that contains a version of `a` that no longer has a strict gap with the given `b`
+/// Extends a [`RelativeBounds`] to fill the gap up to the other [`RelativeBounds`]
+///
+/// See [module documentation](crate::intervals::ops::fill_gap) for more info.
 ///
 /// # Errors
 ///
-/// If the given bounds overlap, this method fails with [`GapFillError::Overlap`]
+/// If the given bounds overlap, it results in [`GapFillError::Overlap`]
 pub fn fill_gap_rel_bounds(a: &RelativeBounds, b: &RelativeBounds) -> Result<RelativeBounds, GapFillError> {
     type Dop = DisambiguatedOverlapPosition;
 
@@ -467,11 +567,13 @@ pub fn fill_gap_rel_bounds(a: &RelativeBounds, b: &RelativeBounds) -> Result<Rel
     }
 }
 
-/// Returns a result that contains a version of `a` that no longer has a strict gap with the given `b`
+/// Extends a [`RelativeBounds`] to fill the gap up to the other [`EmptiableRelativeBounds`]
+///
+/// See [module documentation](crate::intervals::ops::fill_gap) for more info.
 ///
 /// # Errors
 ///
-/// If the given bounds overlap, this method fails with [`GapFillError::Overlap`]
+/// If the given bounds overlap, it results in [`GapFillError::Overlap`]
 pub fn fill_gap_rel_bounds_with_emptiable_rel_bounds(
     a: &RelativeBounds,
     b: &EmptiableRelativeBounds,
@@ -483,11 +585,13 @@ pub fn fill_gap_rel_bounds_with_emptiable_rel_bounds(
     fill_gap_rel_bounds(a, b_rel_bounds)
 }
 
-/// Returns a result that contains a version of `a` that no longer has a strict gap with the given `b`
+/// Extends an [`EmptiableRelativeBounds`] to fill the gap up to the other [`EmptiableRelativeBounds`]
+///
+/// See [module documentation](crate::intervals::ops::fill_gap) for more info.
 ///
 /// # Errors
 ///
-/// If the given bounds overlap, this method fails with [`GapFillError::Overlap`]
+/// If the given bounds overlap, it results in [`GapFillError::Overlap`]
 pub fn fill_gap_emptiable_rel_bounds(
     a: &EmptiableRelativeBounds,
     b: &EmptiableRelativeBounds,

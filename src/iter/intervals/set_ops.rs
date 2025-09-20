@@ -1,4 +1,11 @@
-//! Interval set operations iterators
+//! Iterators for interval set operations
+//!
+//! The following set operations are implemented:
+//!
+//! - [Unions](unite)
+//! - [Intersections](intersect)
+//! - [Differences](diff)
+//! - [Symmetric differences](sym_diff)
 
 pub mod diff;
 pub mod intersect;

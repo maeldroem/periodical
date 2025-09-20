@@ -511,7 +511,7 @@ fn difference_unbounded_unbounded() {
         AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture,).differentiate(
             &AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture,)
         ),
-        DifferenceResult::Shrunk(EmptiableAbsoluteBounds::Empty),
+        DifferenceResult::Single(EmptiableAbsoluteBounds::Empty),
     );
 }
 
@@ -553,7 +553,7 @@ fn difference_bounded_adjacent_inclusive_inclusive() {
                 BoundInclusivity::Inclusive,
             )),
         )),
-        DifferenceResult::Shrunk(EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
+        DifferenceResult::Single(EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
                 date(&Utc, 2025, 1, 1),
                 BoundInclusivity::Inclusive,
@@ -658,7 +658,7 @@ fn difference_bounded_clear_overlap() {
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2))),
             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 4))),
         )),
-        DifferenceResult::Shrunk(EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
+        DifferenceResult::Single(EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
                 date(&Utc, 2025, 1, 2),
@@ -679,7 +679,7 @@ fn difference_bounded_on_unbounded() {
             AbsoluteStartBound::InfinitePast,
             AbsoluteEndBound::InfiniteFuture,
         )),
-        DifferenceResult::Shrunk(EmptiableAbsoluteBounds::Empty),
+        DifferenceResult::Single(EmptiableAbsoluteBounds::Empty),
     );
 }
 
@@ -747,7 +747,7 @@ fn sym_difference_unbounded_unbounded() {
                 AbsoluteStartBound::InfinitePast,
                 AbsoluteEndBound::InfiniteFuture,
             )),
-        SymmetricDifferenceResult::Shrunk(EmptiableAbsoluteBounds::Empty),
+        SymmetricDifferenceResult::Single(EmptiableAbsoluteBounds::Empty),
     );
 }
 

@@ -1,11 +1,147 @@
 //! Interval cutting
+//!
+//! Cutting an interval results in two split intervals, if the position of the cut is within the interval, that is.
+//! The type of gap created by the cut is chosen by the given [`CutType`], which describes the new inclusivities
+//! of the now-split intervals for where the cut has occurred.
+//!
+//! Cutting an interval at a finite point will work only if the actual bound is inclusive and the [`CutType`]
+//! also defines that this part of the cut should be inclusive, resulting in an interval representing
+//! a single point in time.
+//! If those requirements are not met, the operation will result in [`CutResult::Uncut`], as cutting
+//! would create an illegal interval.
+//!
+//! If you are looking to make a "cut" with a non-zero duration gap,
+//! see [`Differentiable`](crate::intervals::ops::set_ops::Differentiable).
+//!
+//! # Examples
+//!
+//! ## Cutting an interval in two
+//!
+//! ```
+//! # use chrono::{DateTime, Utc};
+//! # use periodical::intervals::absolute::{
+//! #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, EmptiableAbsoluteBounds,
+//! # };
+//! # use periodical::intervals::meta::BoundInclusivity;
+//! # use periodical::intervals::ops::cut::{CutResult, Cuttable, CutType};
+//! let interval = AbsoluteBounds::new(
+//!     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+//!         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+//!     )),
+//!     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+//!         "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
+//!     )),
+//! );
+//!
+//! let cut_type = CutType::new(BoundInclusivity::Exclusive, BoundInclusivity::Exclusive);
+//! let at = "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?;
+//!
+//! assert_eq!(
+//!     interval.cut_at(at, cut_type),
+//!     CutResult::Cut(
+//!         AbsoluteBounds::new(
+//!             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+//!                 "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?
+//!             )),
+//!             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+//!                 "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
+//!                 BoundInclusivity::Exclusive,
+//!             )),
+//!         ),
+//!         AbsoluteBounds::new(
+//!             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+//!                 "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
+//!                 BoundInclusivity::Exclusive,
+//!             )),
+//!             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+//!                 "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
+//!             )),
+//!         ),
+//!     ),
+//! );
+//! # Ok::<(), chrono::format::ParseError>(())
+//! ```
+//!
+//! ## Cutting at one end
+//!
+//! ```
+//! # use chrono::{DateTime, Utc};
+//! # use periodical::intervals::absolute::{
+//! #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, EmptiableAbsoluteBounds,
+//! # };
+//! # use periodical::intervals::meta::BoundInclusivity;
+//! # use periodical::intervals::ops::cut::{CutResult, Cuttable, CutType};
+//! let interval = AbsoluteBounds::new(
+//!     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+//!         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+//!     )),
+//!     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+//!         "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
+//!     )),
+//! );
+//!
+//! let cut_type = CutType::new(BoundInclusivity::Exclusive, BoundInclusivity::Inclusive);
+//! let at = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+//!
+//! assert_eq!(
+//!     interval.cut_at(at, cut_type),
+//!     CutResult::Cut(
+//!         AbsoluteBounds::new(
+//!             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+//!                 "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?
+//!             )),
+//!             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+//!                 "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
+//!                 BoundInclusivity::Exclusive,
+//!             )),
+//!         ),
+//!         AbsoluteBounds::new(
+//!             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+//!                 "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
+//!             )),
+//!             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+//!                 "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
+//!             )),
+//!         ),
+//!     ),
+//! );
+//! # Ok::<(), chrono::format::ParseError>(())
+//! ```
+//!
+//! ## Trying to cut a bound into an illegal interval
+//!
+//! ```
+//! # use chrono::{DateTime, Utc};
+//! # use periodical::intervals::absolute::{
+//! #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, EmptiableAbsoluteBounds,
+//! # };
+//! # use periodical::intervals::meta::BoundInclusivity;
+//! # use periodical::intervals::ops::cut::{CutResult, Cuttable, CutType};
+//! let interval = AbsoluteBounds::new(
+//!     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+//!         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+//!     )),
+//!     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+//!         "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
+//!     )),
+//! );
+//!
+//! let cut_type = CutType::new(BoundInclusivity::Exclusive, BoundInclusivity::Exclusive);
+//! let at = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+//!
+//! assert_eq!(
+//!     interval.cut_at(at, cut_type),
+//!     CutResult::Uncut,
+//! );
+//! # Ok::<(), chrono::format::ParseError>(())
+//! ```
 
 #[cfg(feature = "arbitrary")]
 use arbitrary::Arbitrary;
 use chrono::{DateTime, Duration, Utc};
 
+use super::point_containment::CanPositionPointContainment;
 use super::prelude::*;
-use super::time_containment::CanPositionTimeContainment;
 
 use crate::intervals::absolute::{
     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteInterval, AbsoluteStartBound,
@@ -20,33 +156,73 @@ use crate::intervals::relative::{
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 use crate::intervals::{BoundedAbsoluteInterval, BoundedRelativeInterval, RelativeInterval};
 
-/// Cut types, used by [`Cuttable`]
+/// Cut type
 ///
-/// The contained bound inclusivities represent the start and end inclusivities for where the cut will be made.
+/// Describes what [`BoundInclusivity`]s should be put at the place of the cut.
+///
+/// The first element describes the [`BoundInclusivity`] to put on the past part of the cut,
+/// the second element describes the [`BoundInclusivity`] to put on the future part of the cut.
+///
+/// For example, `CutType::new(BoundInclusivity::Inclusive, BoundInclusivity::Exclusive)`,
+/// will cut an interval such that the first cut part will end with an inclusive bound at the position
+/// given to [`Cuttable::cut_at`], and the second part will start with an exclusive bound at the same position.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub struct CutType(BoundInclusivity, BoundInclusivity);
 
 impl CutType {
-    /// Creates a new instance of [`CutType`]
+    /// Creates a new [`CutType`]
     #[must_use]
     pub fn new(past_inclusivity: BoundInclusivity, future_inclusivity: BoundInclusivity) -> Self {
         CutType(past_inclusivity, future_inclusivity)
     }
 
-    /// Returns the bound inclusivity for the past side after the cut was made
+    /// Returns the [`BoundInclusivity`] for the past side
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// # use periodical::intervals::ops::cut::CutType;
+    /// let cut_type = CutType::new(BoundInclusivity::Inclusive, BoundInclusivity::Exclusive);
+    ///
+    /// assert_eq!(cut_type.past_bound_inclusivity(), BoundInclusivity::Inclusive);
+    /// ```
     #[must_use]
     pub fn past_bound_inclusivity(&self) -> BoundInclusivity {
         self.0
     }
 
-    /// Returns the bound inclusivity for the future side after the cut was made
+    /// Returns the [`BoundInclusivity`] for the future side
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// # use periodical::intervals::ops::cut::CutType;
+    /// let cut_type = CutType::new(BoundInclusivity::Inclusive, BoundInclusivity::Exclusive);
+    ///
+    /// assert_eq!(cut_type.future_bound_inclusivity(), BoundInclusivity::Exclusive);
+    /// ```
     #[must_use]
     pub fn future_bound_inclusivity(&self) -> BoundInclusivity {
         self.1
     }
 
-    /// Returns a copy of the current instance with opposite inclusivities
+    /// Returns a [`CutType`] with opposite inclusivities
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// # use periodical::intervals::ops::cut::CutType;
+    /// let cut_type = CutType::new(BoundInclusivity::Inclusive, BoundInclusivity::Exclusive);
+    ///
+    /// assert_eq!(
+    ///     cut_type.opposite(),
+    ///     CutType::new(BoundInclusivity::Exclusive, BoundInclusivity::Inclusive),
+    /// );
+    /// ```
     #[must_use]
     pub fn opposite(&self) -> Self {
         CutType::new(self.0.opposite(), self.1.opposite())
@@ -59,31 +235,62 @@ impl From<(BoundInclusivity, BoundInclusivity)> for CutType {
     }
 }
 
-/// Result of a cut
+/// Result of a [cut](Cuttable)
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum CutResult<T> {
-    /// The cutting point was outside the given interval, or the cut itself was unsuccessful
-    Uncut,
-    /// The cut was successful, contains the cut two parts
+    /// Uncut result
     ///
-    /// The two parts are in chronological order, since all intervals are too.
+    /// The cutting point is either outside the given interval, or would have created an illegal interval.
+    Uncut,
+    /// Cut result
+    ///
+    /// The cut was successful, the variant contains the two cut parts.
+    ///
+    /// The cut parts are always in chronological order, since a single interval can't be described backwards.
     Cut(T, T),
 }
 
 impl<T> CutResult<T> {
-    /// Whether the [`CutResult`] is of the [`Uncut`](CutResult::Uncut) variant
+    /// Whether it is of the [`Uncut`](CutResult::Uncut) variant
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use periodical::intervals::ops::cut::CutResult;
+    /// assert!(CutResult::<()>::Uncut.is_uncut());
+    /// assert!(!CutResult::<()>::Cut((), ()).is_uncut());
+    /// ```
     #[must_use]
     pub fn is_uncut(&self) -> bool {
         matches!(self, CutResult::Uncut)
     }
 
-    /// Whether the [`CutResult`] is of the [`Cut`](CutResult::Cut) variant
+    /// Whether it is of the [`Cut`](CutResult::Cut) variant
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use periodical::intervals::ops::cut::CutResult;
+    /// assert!(CutResult::<()>::Cut((), ()).is_cut());
+    /// assert!(!CutResult::<()>::Uncut.is_cut());
+    /// ```
     #[must_use]
     pub fn is_cut(&self) -> bool {
         matches!(self, CutResult::Cut(..))
     }
 
     /// Returns the content of the [`Cut`](CutResult::Cut) variant
+    ///
+    /// Consumes `self` and puts the content of the [`Cut`](CutResult::Cut) variant
+    /// in an [`Option`]. If instead `self` is another variant, the method returns [`None`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use periodical::intervals::ops::cut::CutResult;
+    /// assert_eq!(CutResult::<u8>::Cut(10, 20).cut(), Some((10, 20)));
+    /// assert_eq!(CutResult::<u8>::Uncut.cut(), None);
+    /// ```
     #[must_use]
     pub fn cut(self) -> Option<(T, T)> {
         match self {
@@ -93,6 +300,16 @@ impl<T> CutResult<T> {
     }
 
     /// Maps the contents of the [`Cut`](CutResult::Cut) variant
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use periodical::intervals::ops::cut::CutResult;
+    /// assert_eq!(
+    ///     CutResult::<u8>::Cut(10, 20).map_cut(|x, y| (x * 2, y * 3)),
+    ///     CutResult::<u8>::Cut(20, 60),
+    /// );
+    /// ```
     #[must_use]
     pub fn map_cut<F, U>(self, mut f: F) -> CutResult<U>
     where
@@ -108,16 +325,197 @@ impl<T> CutResult<T> {
     }
 }
 
-/// Capacity to cut at specific time(s)
+/// Capacity to cut an interval
 ///
 /// The generic type parameter `P` corresponds to the type used for positioning the cut.
 ///
-/// If you are looking for removing a given interval from another, see [`TODO TODO TODO`]
+/// Cutting an interval results in two split intervals, if the position of the cut is within the interval, that is.
+/// The type of gap created by the cut is chosen by the given [`CutType`], which describes the new inclusivities
+/// of the now-split intervals for where the cut has occurred.
+///
+/// Cutting an interval at a finite point will work only if the actual bound is inclusive and the [`CutType`]
+/// also defines that this part of the cut should be inclusive, resulting in an interval representing
+/// a single point in time.
+/// If those requirements are not met, the operation will result in [`CutResult::Uncut`], as cutting
+/// would create an illegal interval.
+///
+/// If you are looking to make a "cut" with a non-zero duration gap,
+/// see [`Differentiable`](crate::intervals::ops::set_ops::Differentiable).
+///
+/// # Examples
+///
+/// ## Cutting an interval in two
+///
+/// ```
+/// # use chrono::{DateTime, Utc};
+/// # use periodical::intervals::absolute::{
+/// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, EmptiableAbsoluteBounds,
+/// # };
+/// # use periodical::intervals::meta::BoundInclusivity;
+/// # use periodical::intervals::ops::cut::{CutResult, Cuttable, CutType};
+/// let interval = AbsoluteBounds::new(
+///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+///     )),
+///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+///         "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
+///     )),
+/// );
+///
+/// let cut_type = CutType::new(BoundInclusivity::Exclusive, BoundInclusivity::Exclusive);
+/// let at = "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?;
+///
+/// assert_eq!(
+///     interval.cut_at(at, cut_type),
+///     CutResult::Cut(
+///         AbsoluteBounds::new(
+///             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+///                 "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?
+///             )),
+///             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+///                 "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
+///                 BoundInclusivity::Exclusive,
+///             )),
+///         ),
+///         AbsoluteBounds::new(
+///             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+///                 "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
+///                 BoundInclusivity::Exclusive,
+///             )),
+///             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+///                 "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
+///             )),
+///         ),
+///     ),
+/// );
+/// # Ok::<(), chrono::format::ParseError>(())
+/// ```
+///
+/// ## Cutting at one end
+///
+/// ```
+/// # use chrono::{DateTime, Utc};
+/// # use periodical::intervals::absolute::{
+/// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, EmptiableAbsoluteBounds,
+/// # };
+/// # use periodical::intervals::meta::BoundInclusivity;
+/// # use periodical::intervals::ops::cut::{CutResult, Cuttable, CutType};
+/// let interval = AbsoluteBounds::new(
+///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+///     )),
+///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+///         "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
+///     )),
+/// );
+///
+/// let cut_type = CutType::new(BoundInclusivity::Exclusive, BoundInclusivity::Inclusive);
+/// let at = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+///
+/// assert_eq!(
+///     interval.cut_at(at, cut_type),
+///     CutResult::Cut(
+///         AbsoluteBounds::new(
+///             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+///                 "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?
+///             )),
+///             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+///                 "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
+///                 BoundInclusivity::Exclusive,
+///             )),
+///         ),
+///         AbsoluteBounds::new(
+///             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+///                 "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
+///             )),
+///             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+///                 "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
+///             )),
+///         ),
+///     ),
+/// );
+/// # Ok::<(), chrono::format::ParseError>(())
+/// ```
+///
+/// ## Trying to cut a bound into an illegal interval
+///
+/// ```
+/// # use chrono::{DateTime, Utc};
+/// # use periodical::intervals::absolute::{
+/// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, EmptiableAbsoluteBounds,
+/// # };
+/// # use periodical::intervals::meta::BoundInclusivity;
+/// # use periodical::intervals::ops::cut::{CutResult, Cuttable, CutType};
+/// let interval = AbsoluteBounds::new(
+///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+///     )),
+///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+///         "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
+///     )),
+/// );
+///
+/// let cut_type = CutType::new(BoundInclusivity::Exclusive, BoundInclusivity::Exclusive);
+/// let at = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+///
+/// assert_eq!(
+///     interval.cut_at(at, cut_type),
+///     CutResult::Uncut,
+/// );
+/// # Ok::<(), chrono::format::ParseError>(())
+/// ```
 pub trait Cuttable<P> {
     /// Output type
     type Output;
 
-    /// Cuts the interval
+    /// Cuts the interval at the given position
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::{
+    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, EmptiableAbsoluteBounds,
+    /// # };
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// # use periodical::intervals::ops::cut::{CutResult, Cuttable, CutType};
+    /// let interval = AbsoluteBounds::new(
+    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+    ///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     )),
+    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+    ///         "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     )),
+    /// );
+    ///
+    /// let cut_type = CutType::new(BoundInclusivity::Exclusive, BoundInclusivity::Exclusive);
+    /// let at = "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// assert_eq!(
+    ///     interval.cut_at(at, cut_type),
+    ///     CutResult::Cut(
+    ///         AbsoluteBounds::new(
+    ///             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+    ///                 "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?
+    ///             )),
+    ///             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+    ///                 "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
+    ///                 BoundInclusivity::Exclusive,
+    ///             )),
+    ///         ),
+    ///         AbsoluteBounds::new(
+    ///             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+    ///                 "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
+    ///                 BoundInclusivity::Exclusive,
+    ///             )),
+    ///             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+    ///                 "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
+    ///             )),
+    ///         ),
+    ///     ),
+    /// );
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     fn cut_at(&self, position: P, cut_type: CutType) -> CutResult<Self::Output>;
 }
 
@@ -273,10 +671,12 @@ impl Cuttable<Duration> for EmptyInterval {
     }
 }
 
-/// Cuts an [`AbsoluteBounds`]
+/// Cuts an [`AbsoluteBounds`] with a [`DateTime<Utc>`]
+///
+/// See [module documentation](crate::intervals::ops::cut) for more info.
 #[must_use]
 pub fn cut_abs_bounds(bounds: &AbsoluteBounds, at: DateTime<Utc>, cut_type: CutType) -> CutResult<AbsoluteBounds> {
-    if !bounds.simple_contains(at) {
+    if !bounds.simple_contains_point(at) {
         return CutResult::Uncut;
     }
 
@@ -311,7 +711,9 @@ pub fn cut_abs_bounds(bounds: &AbsoluteBounds, at: DateTime<Utc>, cut_type: CutT
     CutResult::Cut(past_split, future_split)
 }
 
-/// Cuts an [`EmptiableAbsoluteBounds`]
+/// Cuts an [`EmptiableAbsoluteBounds`] with a [`DateTime<Utc>`]
+///
+/// See [module documentation](crate::intervals::ops::cut) for more info.
 #[must_use]
 pub fn cut_emptiable_abs_bounds(
     bounds: &EmptiableAbsoluteBounds,
@@ -327,10 +729,12 @@ pub fn cut_emptiable_abs_bounds(
         .map_cut(|c1, c2| (EmptiableAbsoluteBounds::from(c1), EmptiableAbsoluteBounds::from(c2)))
 }
 
-/// Cuts an [`RelativeBounds`]
+/// Cuts a [`RelativeBounds`] with a [`DateTime<Utc>`]
+///
+/// See [module documentation](crate::intervals::ops::cut) for more info.
 #[must_use]
 pub fn cut_rel_bounds(bounds: &RelativeBounds, at: Duration, cut_type: CutType) -> CutResult<RelativeBounds> {
-    if !bounds.simple_contains(at) {
+    if !bounds.simple_contains_point(at) {
         return CutResult::Uncut;
     }
 
@@ -365,7 +769,9 @@ pub fn cut_rel_bounds(bounds: &RelativeBounds, at: Duration, cut_type: CutType) 
     CutResult::Cut(past_split, future_split)
 }
 
-/// Cuts an [`EmptiableRelativeBounds`]
+/// Cuts an [`EmptiableRelativeBounds`] with a [`DateTime<Utc>`]
+///
+/// See [module documentation](crate::intervals::ops::cut) for more info.
 #[must_use]
 pub fn cut_emptiable_rel_bounds(
     bounds: &EmptiableRelativeBounds,

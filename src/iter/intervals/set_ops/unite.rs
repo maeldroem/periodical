@@ -1,4 +1,56 @@
-//! Interval iterators regarding interval union
+//! Interval iterators to operate unions on intervals
+//!
+//! # Examples
+//!
+//! ```
+//! # use chrono::{DateTime, Utc};
+//! # use periodical::intervals::absolute::{
+//! #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, EmptiableAbsoluteBounds,
+//! # };
+//! # use periodical::intervals::meta::BoundInclusivity;
+//! # use periodical::iter::intervals::set_ops::unite::PeerUnionIteratorDispatcher;
+//! let intervals = [
+//!     AbsoluteBounds::new(
+//!         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+//!             "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+//!         )),
+//!         AbsoluteEndBound::InfiniteFuture,
+//!     ),
+//!     AbsoluteBounds::new(
+//!         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+//!             "2025-01-01 10:00:00Z".parse::<DateTime<Utc>>()?,
+//!         )),
+//!         AbsoluteEndBound::InfiniteFuture,
+//!     ),
+//!     AbsoluteBounds::new(
+//!         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+//!             "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
+//!         )),
+//!         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+//!             "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
+//!         )),
+//!     ),
+//! ];
+//!
+//! assert_eq!(
+//!     intervals.peer_union().collect::<Vec<_>>(),
+//!     vec![
+//!         AbsoluteBounds::new(
+//!             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+//!                 "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+//!             )),
+//!             AbsoluteEndBound::InfiniteFuture,
+//!         ),
+//!         AbsoluteBounds::new(
+//!             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+//!                 "2025-01-01 10:00:00Z".parse::<DateTime<Utc>>()?,
+//!             )),
+//!             AbsoluteEndBound::InfiniteFuture,
+//!         ),
+//!     ],
+//! );
+//! # Ok::<(), chrono::format::ParseError>(())
+//! ```
 
 use std::iter::{FusedIterator, Peekable};
 
@@ -6,6 +58,8 @@ use crate::intervals::prelude::*;
 use crate::ops::UnionResult;
 
 /// Accumulative union iterator using the predefined rules
+///
+/// Unites accumulatively the intervals.
 #[derive(Debug, Clone, Hash)]
 pub struct AccumulativeUnion<I> {
     iter: I,
@@ -19,6 +73,7 @@ where
     for<'x> &'x T: Into<&'x A>,
     A: Unitable<Output = A>,
 {
+    /// Creates a new [`AccumulativeUnion`]
     pub fn new(iter: I) -> AccumulativeUnion<Peekable<I>> {
         AccumulativeUnion {
             iter: iter.peekable(),
@@ -118,6 +173,7 @@ where
     T: 'a + Clone,
     F: FnMut(&T, &T) -> UnionResult<T>,
 {
+    /// Creates a new [`AccumulativeUnionWith`]
     pub fn new(iter: I, f: F) -> AccumulativeUnionWith<Peekable<I>, F> {
         AccumulativeUnionWith {
             iter: iter.peekable(),
@@ -199,6 +255,12 @@ where
 }
 
 /// Peer union iterator for intervals using predefined rules
+///
+/// Operates a [union] on peers, that is to say, we operate the union on every pair of intervals.
+///
+/// Uses [`Unitable`] under the hood.
+///
+/// [union]: https://en.wikipedia.org/w/index.php?title=Union_(set_theory)&oldid=1310613637
 #[derive(Debug, Clone, Hash)]
 pub struct PeerUnion<I> {
     iter: I,
@@ -210,6 +272,7 @@ where
     I: Iterator<Item = &'a T>,
     T: 'a + Unitable<Output = A> + Into<A> + Clone,
 {
+    /// Creates a new [`PeerUnion`]
     pub fn new(iter: I) -> PeerUnion<Peekable<I>> {
         PeerUnion {
             iter: iter.peekable(),
@@ -237,7 +300,7 @@ where
 
         let Some(peeked) = self.iter.peek() else {
             self.exhausted = true;
-            return Some(current.clone().into());
+            return None;
         };
 
         match current.unite(peeked) {
@@ -247,7 +310,11 @@ where
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        self.iter.size_hint()
+        let inner_size_hint = self.iter.size_hint();
+        (
+            inner_size_hint.0.saturating_sub(1),
+            inner_size_hint.1.map(|x| x.saturating_sub(1)),
+        )
     }
 }
 
@@ -270,8 +337,11 @@ where
 {
     /// Unites peer intervals of the iterator using the default overlap rules
     ///
-    /// Processes elements pair by pair and returns the result of the union. If the union is successful,
-    /// it returns the united interval. If it is unsuccessful, it returns the current element.
+    /// Operates a [union] on peers, that is to say, we operate the union on every pair of intervals.
+    ///
+    /// Uses [`Unitable`] under the hood.
+    ///
+    /// [union]: https://en.wikipedia.org/w/index.php?title=Union_(set_theory)&oldid=1310613637
     fn peer_union(self) -> PeerUnion<Peekable<Self::IntoIter>> {
         PeerUnion::new(self.into_iter())
     }
@@ -285,6 +355,12 @@ where
 }
 
 /// Peer union iterator for intervals using the given closure
+///
+/// Operates a [union] on peers, that is to say, we operate the union on every pair of intervals.
+///
+/// Uses [`Unitable`] under the hood.
+///
+/// [union]: https://en.wikipedia.org/w/index.php?title=Union_(set_theory)&oldid=1310613637
 #[derive(Debug, Clone)]
 pub struct PeerUnionWith<I, F> {
     iter: I,
@@ -298,6 +374,7 @@ where
     T: 'a + Into<A> + Clone,
     F: FnMut(&T, &T) -> UnionResult<A>,
 {
+    /// Creates a new [`PeerUnionWith`]
     pub fn new(iter: I, f: F) -> PeerUnionWith<Peekable<I>, F> {
         PeerUnionWith {
             iter: iter.peekable(),
@@ -327,7 +404,7 @@ where
 
         let Some(peeked) = self.iter.peek() else {
             self.exhausted = true;
-            return Some(current.clone().into());
+            return None;
         };
 
         match (self.f)(current, peeked) {
@@ -337,7 +414,11 @@ where
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        self.iter.size_hint()
+        let inner_size_hint = self.iter.size_hint();
+        (
+            inner_size_hint.0.saturating_sub(1),
+            inner_size_hint.1.map(|x| x.saturating_sub(1)),
+        )
     }
 }
 
@@ -352,7 +433,7 @@ where
 {
 }
 
-/// Dispatcher trait for peer union iterators
+/// Dispatcher trait for [`PeerUnionWith`]
 pub trait PeerUnionWithIteratorDispatcher<'a, T, A, F>
 where
     Self: IntoIterator + Sized,
@@ -362,8 +443,11 @@ where
 {
     /// Unites peer intervals of the iterator using the given closure
     ///
-    /// Processes elements pair by pair and returns the result of the union. If the union is successful,
-    /// it returns the united interval. If it is unsuccessful, it returns the current element.
+    /// Operates a [union] on peers, that is to say, we operate the union on every pair of intervals.
+    ///
+    /// Uses [`Unitable`] under the hood.
+    ///
+    /// [union]: https://en.wikipedia.org/w/index.php?title=Union_(set_theory)&oldid=1310613637
     fn peer_union_with(self, f: F) -> PeerUnionWith<Peekable<Self::IntoIter>, F> {
         PeerUnionWith::new(self.into_iter(), f)
     }

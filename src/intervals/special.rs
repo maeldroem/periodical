@@ -1,6 +1,6 @@
 //! Special intervals
 //!
-//! Unbounded and empty intervals
+//! Includes intervals that are not absolute nor relative: [`UnboundedInterval`] and [`EmptyInterval`].
 
 use std::error::Error;
 use std::fmt::Display;
@@ -25,7 +25,7 @@ use super::relative::{
 
 /// An unbounded interval
 ///
-/// Interval without relativity (not absolute nor relative) and without any bounds.
+/// Interval without [relativity](Relativity) (not absolute nor relative) and without any bounds.
 /// Is equivalent to _time itself_ (all time), infinite duration.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
@@ -85,6 +85,8 @@ impl From<RangeFull> for UnboundedInterval {
     }
 }
 
+/// Error that can occur when trying to convert an [`AbsoluteInterval`] or [`RelativeInterval`]
+/// into an [`UnboundedInterval`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum UnboundedIntervalConversionErr {
     WrongVariant,
@@ -122,7 +124,7 @@ impl TryFrom<RelativeInterval> for UnboundedInterval {
     }
 }
 
-/// No interval
+/// Empty interval
 ///
 /// Similar to the [empty set](https://en.wikipedia.org/wiki/Empty_set), this allows for still performing
 /// operations such as the complement of the interval without issues, but the difference between an empty set and
@@ -197,6 +199,8 @@ impl From<()> for EmptyInterval {
     }
 }
 
+/// Errors that can occur when trying to convert an [`AbsoluteInterval`] or [`RelativeInterval`]
+/// into an [`EmptyInterval`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum EmptyIntervalConversionErr {
     WrongVariant,

@@ -1,13 +1,22 @@
-//! Interval operations and comparisons
+//! Various operations related to intervals and bounds
 //!
-//! Operations and comparisons with intervals are implemented here. You will find methods like
+//! _Operation_ is a relatively vague term, but in this module you will find...
 //!
-//! - `contains`
-//! - `overlaps`
-//! - `try_extend`
+//! - [how to find overlaps between intervals](overlap)
+//! - [how to check if a time is contained within an interval](point_containment)
+//! - [how to cut intervals](cut)
+//! - how to remove [gaps](fill_gap), [overlaps](remove_overlap), even [both](remove_overlap_or_gap)
+//! - [how to order bounds](bound_ord)
+//! - [how to check if a bound is contained within an interval](bound_containment)
+//! - [how to get the complement of an interval](complement)
+//! - how to adjust intervals by [growing](grow) or [shrinking](shrink) their bounds
+//! - how to [extend] or [abridge] intervals
+//! - [how to change the precision of intervals and bounds](precision)
+//! - [how to apply set operations to intervals](set_ops)
+//! - [how to find the continuations of an interval](continuation)
+//! - [how to convert from relative to absolute and conversely](relativity_conversion)
 //!
-//! You will also find things that touch to precision of interval bounds as well as rule sets to decide what counts
-//! as overlapping and what doesn't.
+//! And, perchance, more to come in the future!
 
 pub mod abridge;
 pub mod bound_containment;
@@ -20,6 +29,7 @@ pub mod extend;
 pub mod fill_gap;
 pub mod grow;
 pub mod overlap;
+pub mod point_containment;
 pub mod precision;
 pub mod prelude;
 pub mod relativity_conversion;
@@ -27,7 +37,6 @@ pub mod remove_overlap;
 pub mod remove_overlap_or_gap;
 pub mod set_ops;
 pub mod shrink;
-pub mod time_containment;
 
 #[cfg(test)]
 mod abridge_tests;
@@ -52,6 +61,8 @@ mod grow_tests;
 #[cfg(test)]
 mod overlap_tests;
 #[cfg(test)]
+mod point_containment_tests;
+#[cfg(test)]
 mod precision_tests;
 #[cfg(test)]
 mod relativity_conversion_tests;
@@ -63,8 +74,6 @@ mod remove_overlap_tests;
 mod set_ops_tests;
 #[cfg(test)]
 mod shrink_tests;
-#[cfg(test)]
-mod time_containment_tests;
 
 pub use abridge::Abridgable;
 pub use bound_containment::{
@@ -81,13 +90,13 @@ pub use overlap::{
     CanPositionOverlap, DEFAULT_OVERLAP_RULES, DisambiguatedOverlapPosition, OverlapPosition, OverlapRule,
     OverlapRuleSet,
 };
-pub use precision::PreciseAbsoluteBounds;
+pub use point_containment::{
+    CanPositionPointContainment, DEFAULT_POINT_CONTAINMENT_RULES, DisambiguatedPointContainmentPosition,
+    PointContainmentPosition, PointContainmentRule, PointContainmentRuleSet,
+};
+pub use precision::PreciseAbsoluteInterval;
 pub use relativity_conversion::{ToAbsolute, ToRelative};
 pub use remove_overlap::{OverlapRemovable, OverlapRemovalResult};
 pub use remove_overlap_or_gap::{OverlapOrGapRemovalResult, RemovableOverlapOrGap};
 pub use set_ops::{Differentiable, Intersectable, SymmetricallyDifferentiable, Unitable};
 pub use shrink::{ShrinkableEndBound, ShrinkableStartBound};
-pub use time_containment::{
-    CanPositionTimeContainment, DEFAULT_TIME_CONTAINMENT_RULES, DisambiguatedTimeContainmentPosition,
-    TimeContainmentPosition, TimeContainmentRule, TimeContainmentRuleSet,
-};

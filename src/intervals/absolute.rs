@@ -1,4 +1,13 @@
 //! Absolute intervals
+//!
+//! Absolute intervals are pinned to time, that is to say they have a start datetime and an end datetime.
+//!
+//! The most common absolute interval objects you will encounter are
+//!
+//! - [`AbsoluteBounds`]
+//! - [`EmptiableAbsoluteBounds`]
+//! - [`BoundedAbsoluteInterval`]
+//! - [`HalfBoundedAbsoluteInterval`]
 
 use std::cmp::Ordering;
 use std::error::Error;
@@ -17,6 +26,36 @@ use super::prelude::*;
 use super::special::{EmptyInterval, UnboundedInterval};
 
 /// An absolute finite bound
+///
+/// Contains a time and an ambiguous [`BoundInclusivity`]: if it is [`Exclusive`](BoundInclusivity::Exclusive),
+/// then we additionally need the _source_ (whether it acts as the start or end of an interval) in order to know
+/// what this bound truly encompasses.
+///
+/// This is why when comparing finite bounds, only its position (for absolute bounds, its time) is used.
+///
+/// # Examples
+///
+/// ## Basic use
+///
+/// ```
+/// # use chrono::{DateTime, Utc};
+/// # use periodical::intervals::absolute::AbsoluteFiniteBound;
+/// let finite_bound = AbsoluteFiniteBound::new("2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?);
+/// # Ok::<(), chrono::format::ParseError>(())
+/// ```
+///
+/// ## Creating an [`AbsoluteFiniteBound`] with an explicit [`BoundInclusivity`]
+///
+/// ```
+/// # use chrono::{DateTime, Utc};
+/// # use periodical::intervals::absolute::AbsoluteFiniteBound;
+/// # use periodical::intervals::meta::BoundInclusivity;
+/// let finite_bound = AbsoluteFiniteBound::new_with_inclusivity(
+///     "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+///     BoundInclusivity::Exclusive,
+/// );
+/// # Ok::<(), chrono::format::ParseError>(())
+/// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub struct AbsoluteFiniteBound {
@@ -25,30 +64,75 @@ pub struct AbsoluteFiniteBound {
 }
 
 impl AbsoluteFiniteBound {
-    /// Creates a new instance of an absolute finite bound using just a given time
+    /// Creates a new [`AbsoluteFiniteBound`] using the given time
+    ///
+    /// This creates a finite bound using the [default `BoundInclusivity`](BoundInclusivity::default).
     #[must_use]
     pub fn new(time: DateTime<Utc>) -> Self {
         Self::new_with_inclusivity(time, BoundInclusivity::default())
     }
 
-    /// Creates a new instance of an absolute finite bound using the given time and bound inclusivity
+    /// Creates a new [`AbsoluteFiniteBound`] using the given time and [`BoundInclusivity`]
     #[must_use]
     pub fn new_with_inclusivity(time: DateTime<Utc>, inclusivity: BoundInclusivity) -> Self {
         AbsoluteFiniteBound { time, inclusivity }
     }
 
-    /// Returns the time of the absolute finite bound
+    /// Returns the time
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::AbsoluteFiniteBound;
+    /// let time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let finite_bound = AbsoluteFiniteBound::new(time);
+    ///
+    /// assert_eq!(finite_bound.time(), time);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     pub fn time(&self) -> DateTime<Utc> {
         self.time
     }
 
-    /// Sets the time of the absolute finite bound
+    /// Sets the time
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::AbsoluteFiniteBound;
+    /// let time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let new_time = "2025-01-02 16:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let mut finite_bound = AbsoluteFiniteBound::new(time);
+    /// finite_bound.set_time(new_time);
+    ///
+    /// assert_eq!(finite_bound.time(), new_time);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     pub fn set_time(&mut self, new_time: DateTime<Utc>) {
         self.time = new_time;
     }
 
-    /// Sets the bound inclusivity of the absolute finite bound
+    /// Sets the bound inclusivity
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::AbsoluteFiniteBound;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// # use periodical::prelude::*;
+    /// let time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let mut finite_bound = AbsoluteFiniteBound::new(time);
+    /// finite_bound.set_inclusivity(BoundInclusivity::Exclusive);
+    ///
+    /// assert_eq!(finite_bound.inclusivity(), BoundInclusivity::Exclusive);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     pub fn set_inclusivity(&mut self, new_inclusivity: BoundInclusivity) {
         self.inclusivity = new_inclusivity;
     }
@@ -90,6 +174,9 @@ impl From<(DateTime<Utc>, BoundInclusivity)> for AbsoluteFiniteBound {
     }
 }
 
+/// Conversion from the tuple `(DateTime<Utc>, bool)` to [`AbsoluteFiniteBound`]
+///
+/// Interprets the boolean as _is it inclusive?_
 impl From<(DateTime<Utc>, bool)> for AbsoluteFiniteBound {
     fn from((time, is_inclusive): (DateTime<Utc>, bool)) -> Self {
         AbsoluteFiniteBound::new_with_inclusivity(time, BoundInclusivity::from(is_inclusive))
@@ -137,7 +224,10 @@ impl TryFrom<Bound<DateTime<Utc>>> for AbsoluteFiniteBound {
     }
 }
 
-/// An absolute start bound, including [inclusivity](BoundInclusivity)
+/// An absolute start bound
+///
+/// Represents the start bound of an interval, may it be infinitely in the past or at a precise point in time,
+/// in which case it contains an [`AbsoluteFiniteBound`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum AbsoluteStartBound {
@@ -146,19 +236,67 @@ pub enum AbsoluteStartBound {
 }
 
 impl AbsoluteStartBound {
-    /// Returns whether the [`AbsoluteStartBound`] is of the [`Finite`](AbsoluteStartBound::Finite) variant
+    /// Returns whether it is of the [`Finite`](AbsoluteStartBound::Finite) variant
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::{AbsoluteFiniteBound, AbsoluteStartBound};
+    /// let infinite_start_bound = AbsoluteStartBound::InfinitePast;
+    ///
+    /// let time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let finite_start_bound = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(time));
+    ///
+    /// assert!(finite_start_bound.is_finite());
+    /// assert!(!infinite_start_bound.is_finite());
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     pub fn is_finite(&self) -> bool {
         matches!(self, Self::Finite(_))
     }
 
-    /// Returns whether the [`AbsoluteStartBound`] is of the [`InfinitePast`](AbsoluteStartBound::InfinitePast) variant
+    /// Returns whether it is of the [`InfinitePast`](AbsoluteStartBound::InfinitePast) variant
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::{AbsoluteFiniteBound, AbsoluteStartBound};
+    /// let infinite_start_bound = AbsoluteStartBound::InfinitePast;
+    ///
+    /// let time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let finite_start_bound = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(time));
+    ///
+    /// assert!(infinite_start_bound.is_infinite_past());
+    /// assert!(!finite_start_bound.is_infinite_past());
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     pub fn is_infinite_past(&self) -> bool {
         matches!(self, Self::InfinitePast)
     }
 
     /// Returns the content of the [`Finite`](AbsoluteStartBound::Finite) variant
+    ///
+    /// Consumes `self` and puts the content of the [`Finite`](AbsoluteStartBound::Finite) variant
+    /// in an [`Option`]. If instead `self` is another variant, the method returns [`None`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::{AbsoluteFiniteBound, AbsoluteStartBound};
+    /// let infinite_start_bound = AbsoluteStartBound::InfinitePast;
+    ///
+    /// let time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let finite_start_bound = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(time));
+    ///
+    /// assert_eq!(finite_start_bound.finite(), Some(AbsoluteFiniteBound::new(time)));
+    /// assert_eq!(infinite_start_bound.finite(), None);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     pub fn finite(self) -> Option<AbsoluteFiniteBound> {
         match self {
@@ -169,8 +307,26 @@ impl AbsoluteStartBound {
 
     /// Returns the opposite [`AbsoluteEndBound`]
     ///
-    /// Returns [`None`] if the [`AbsoluteStartBound`] is of the [`InfinitePast`](AbsoluteStartBound::InfinitePast)
-    /// variant.
+    /// If the [`AbsoluteStartBound`] is of the [`InfinitePast`](AbsoluteStartBound::InfinitePast) variant,
+    /// then the method returns [`None`].
+    /// Otherwise, if the [`AbsoluteStartBound`] is finite, then an [`AbsoluteEndBound`] is created
+    /// with the same time, but the opposite [`BoundInclusivity`].
+    ///
+    /// This is used for example for determining the last point in time before this bound begins.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::{AbsoluteFiniteBound, AbsoluteStartBound};
+    /// let time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let start_second_part_my_shift = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(time));
+    /// let break_end_before_shift = start_second_part_my_shift
+    ///     .opposite()
+    ///     .expect("provided a finite bound");
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     pub fn opposite(&self) -> Option<AbsoluteEndBound> {
         match self {
@@ -318,7 +474,10 @@ impl From<Bound<DateTime<Utc>>> for AbsoluteStartBound {
     }
 }
 
-/// An absolute end bound, including [inclusivity](BoundInclusivity)
+/// An absolute end bound
+///
+/// Represents the end bound of an interval, may it be infinitely in the future or at a precise point in time,
+/// in which case it contains an [`AbsoluteFiniteBound`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum AbsoluteEndBound {
@@ -327,19 +486,67 @@ pub enum AbsoluteEndBound {
 }
 
 impl AbsoluteEndBound {
-    /// Returns whether the [`AbsoluteEndBound`] is of the [`Finite`](AbsoluteEndBound::Finite) variant
+    /// Returns whether it is of the [`Finite`](AbsoluteEndBound::Finite) variant
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::{AbsoluteEndBound, AbsoluteFiniteBound};
+    /// let infinite_end_bound = AbsoluteEndBound::InfiniteFuture;
+    ///
+    /// let time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let finite_end_bound = AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(time));
+    ///
+    /// assert!(finite_end_bound.is_finite());
+    /// assert!(!infinite_end_bound.is_finite());
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     pub fn is_finite(&self) -> bool {
         matches!(self, Self::Finite(_))
     }
 
-    /// Returns whether the [`AbsoluteEndBound`] is of the [`InfiniteFuture`](AbsoluteEndBound::InfiniteFuture) variant
+    /// Returns whether it is of the [`InfiniteFuture`](AbsoluteEndBound::InfiniteFuture) variant
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::{AbsoluteEndBound, AbsoluteFiniteBound};
+    /// let infinite_end_bound = AbsoluteEndBound::InfiniteFuture;
+    ///
+    /// let time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let finite_end_bound = AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(time));
+    ///
+    /// assert!(infinite_end_bound.is_infinite_future());
+    /// assert!(!finite_end_bound.is_infinite_future());
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
-    pub fn is_infinite_past(&self) -> bool {
+    pub fn is_infinite_future(&self) -> bool {
         matches!(self, Self::InfiniteFuture)
     }
 
     /// Returns the content of the [`Finite`](AbsoluteEndBound::Finite) variant
+    ///
+    /// Consumes `self` and puts the content of the [`Finite`](AbsoluteEndBound::Finite) variant
+    /// in an [`Option`]. If instead `self` is another variant, the method returns [`None`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::{AbsoluteEndBound, AbsoluteFiniteBound};
+    /// let infinite_end_bound = AbsoluteEndBound::InfiniteFuture;
+    ///
+    /// let time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let finite_end_bound = AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(time));
+    ///
+    /// assert_eq!(finite_end_bound.finite(), Some(AbsoluteFiniteBound::new(time)));
+    /// assert_eq!(infinite_end_bound.finite(), None);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     pub fn finite(self) -> Option<AbsoluteFiniteBound> {
         match self {
@@ -350,8 +557,26 @@ impl AbsoluteEndBound {
 
     /// Returns the opposite [`AbsoluteStartBound`]
     ///
-    /// Returns [`None`] if the [`AbsoluteEndBound`] is of the [`InfiniteFuture`](AbsoluteEndBound::InfiniteFuture)
-    /// variant.
+    /// If the [`AbsoluteEndBound`] is of the [`InfiniteFuture`](AbsoluteEndBound::InfiniteFuture) variant,
+    /// then the method returns [`None`].
+    /// Otherwise, if the [`AbsoluteEndBound`] is finite, then an [`AbsoluteStartBound`] is created
+    /// with the same time, but the opposite [`BoundInclusivity`].
+    ///
+    /// This is used for example for determining the first point in time after this bound ends.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::{AbsoluteEndBound, AbsoluteFiniteBound};
+    /// let time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let end_first_shift = AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(time));
+    /// let break_start = end_first_shift
+    ///     .opposite()
+    ///     .expect("provided a finite bound");
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     pub fn opposite(&self) -> Option<AbsoluteStartBound> {
         match self {
@@ -482,6 +707,34 @@ impl From<Bound<DateTime<Utc>>> for AbsoluteEndBound {
 }
 
 /// Swaps an absolute start bound with an absolute end bound
+///
+/// This method is primarily used in the case where a start bound and an end bound are not in chronological order.
+///
+/// # Examples
+///
+/// ```
+/// # use chrono::{DateTime, Utc};
+/// # use periodical::intervals::absolute::{
+/// #     AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, swap_absolute_bounds,
+/// # };
+/// let start_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+/// let end_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+///
+/// let mut start = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(start_time));
+/// let mut end = AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(end_time));
+///
+/// swap_absolute_bounds(&mut start, &mut end);
+///
+/// assert_eq!(
+///     start,
+///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(end_time)),
+/// );
+/// assert_eq!(
+///     end,
+///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(start_time)),
+/// );
+/// # Ok::<(), chrono::format::ParseError>(())
+/// ```
 pub fn swap_absolute_bounds(start: &mut AbsoluteStartBound, end: &mut AbsoluteEndBound) {
     // We temporarily reborrow start and end for the match arms so that when a pattern matches, they move out of their
     // temporary scope and we can use the original mutable references without guard patterns shenanigans.
@@ -528,13 +781,42 @@ impl Error for AbsoluteBoundsCheckForIntervalCreationError {}
 
 /// Checks if the given start and end bound are ready for creating an interval
 ///
+/// This method is used as part of [`prepare_absolute_bounds_for_interval_creation`], which is used by
+/// [`AbsoluteBounds::new`], but also in other places where we want to make sure that a start and end bound
+/// are ready to be used as part of the interval without using methods like [`AbsoluteBounds::new`] that
+/// already go through this process.
+///
 /// # Errors
 ///
 /// If the start bound is past the end bound,
 /// it returns [`StartPastEnd`](AbsoluteBoundsCheckForIntervalCreationError::StartPastEnd).
 ///
-/// If both bounds are at the same time, but one of them has an exclusive bound inclusivity, it returns
+/// If both bounds have the same time, but at least one of them has an exclusive bound inclusivity, it returns
 /// [`SameTimeButNotDoublyInclusive`](AbsoluteBoundsCheckForIntervalCreationError::SameTimeButNotDoublyInclusive).
+///
+/// # Examples
+///
+/// ```
+/// # use periodical::intervals::absolute::{
+/// #     AbsoluteBoundsCheckForIntervalCreationError, AbsoluteEndBound, AbsoluteStartBound,
+/// #     check_absolute_bounds_for_interval_creation,
+/// # };
+/// fn validate_bounds_from_user(
+///     start: &AbsoluteStartBound,
+///     end: &AbsoluteEndBound,
+/// ) -> Result<(), String> {
+///     type IntervalCreaErr = AbsoluteBoundsCheckForIntervalCreationError;
+///     match check_absolute_bounds_for_interval_creation(start, end) {
+///         Ok(()) => Ok(()),
+///         Err(IntervalCreaErr::StartPastEnd) => Err(
+///             "Start and end must be in chronological order!".to_string()
+///         ),
+///         Err(IntervalCreaErr::SameTimeButNotDoublyInclusive) => Err(
+///             "To represent a single point in time, both inclusivities must be inclusive!".to_string()
+///         ),
+///     }
+/// }
+/// ```
 pub fn check_absolute_bounds_for_interval_creation(
     start: &AbsoluteStartBound,
     end: &AbsoluteEndBound,
@@ -559,18 +841,43 @@ pub fn check_absolute_bounds_for_interval_creation(
     }
 }
 
-/// Prepares a start and end bound for being used for creating an interval
+/// Prepares a start and end bound for being used as part of an interval
 ///
 /// If some problems are present, see [`check_absolute_bounds_for_interval_creation`], it resolves them automatically
 /// by modifying the passed mutable references for the start and end bound.
+///
+/// The returned boolean indicates whether a change was operated in order to fix the given bounds.
+///
+/// # Examples
+///
+/// ```
+/// # use chrono::{DateTime, Utc};
+/// # use periodical::intervals::absolute::{
+/// #     AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, prepare_absolute_bounds_for_interval_creation,
+/// # };
+/// let start_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+/// let end_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+///
+/// // Warning: not in chronological order!
+/// let mut start = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(start_time));
+/// let mut end = AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(end_time));
+///
+/// let was_changed = prepare_absolute_bounds_for_interval_creation(&mut start, &mut end);
+///
+/// if was_changed {
+///     // Prompt the user for confirmation regarding the fixed bounds
+/// }
+/// # Ok::<(), chrono::format::ParseError>(())
+/// ```
 pub fn prepare_absolute_bounds_for_interval_creation(
     start_mut: &mut AbsoluteStartBound,
     end_mut: &mut AbsoluteEndBound,
-) {
+) -> bool {
     match check_absolute_bounds_for_interval_creation(start_mut, end_mut) {
-        Ok(()) => {},
+        Ok(()) => false,
         Err(AbsoluteBoundsCheckForIntervalCreationError::StartPastEnd) => {
             swap_absolute_bounds(start_mut, end_mut);
+            true
         },
         Err(AbsoluteBoundsCheckForIntervalCreationError::SameTimeButNotDoublyInclusive) => {
             if let AbsoluteStartBound::Finite(finite_start_mut) = start_mut {
@@ -580,11 +887,15 @@ pub fn prepare_absolute_bounds_for_interval_creation(
             if let AbsoluteEndBound::Finite(finite_end_mut) = end_mut {
                 finite_end_mut.set_inclusivity(BoundInclusivity::Inclusive);
             }
+
+            true
         },
     }
 }
 
 /// Enum for absolute start and end bounds
+///
+/// This enumerator is useful for storing both start and end bounds, usually for processing bounds individually.
 #[derive(Debug, Clone, Copy)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum AbsoluteBound {
@@ -593,19 +904,94 @@ pub enum AbsoluteBound {
 }
 
 impl AbsoluteBound {
-    /// Returns whether [`AbsoluteBound`] is of the [`Start`](AbsoluteBound::Start) variant
+    /// Returns whether it is of the [`Start`](AbsoluteBound::Start) variant
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::{
+    /// #     AbsoluteBound, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+    /// # };
+    /// let start_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let end_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let start = AbsoluteBound::Start(
+    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(start_time))
+    /// );
+    /// let end = AbsoluteBound::End(
+    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(end_time))
+    /// );
+    ///
+    /// assert!(start.is_start());
+    /// assert!(!end.is_start());
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     pub fn is_start(&self) -> bool {
         matches!(self, Self::Start(_))
     }
 
-    /// Returns whether [`AbsoluteBound`] is of the [`End`](AbsoluteBound::End) variant
+    /// Returns whether it is of the [`End`](AbsoluteBound::End) variant
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::{
+    /// #     AbsoluteBound, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+    /// # };
+    /// let start_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let end_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let start = AbsoluteBound::Start(
+    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(start_time))
+    /// );
+    /// let end = AbsoluteBound::End(
+    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(end_time))
+    /// );
+    ///
+    /// assert!(end.is_end());
+    /// assert!(!start.is_end());
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     pub fn is_end(&self) -> bool {
         matches!(self, Self::End(_))
     }
 
     /// Returns the content of the [`Start`](AbsoluteBound::Start) variant
+    ///
+    /// Consumes `self` and puts the content of the [`Start`](AbsoluteBound::Start) variant
+    /// in an [`Option`]. If instead `self` is another variant, the method returns [`None`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::{
+    /// #     AbsoluteBound, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+    /// # };
+    /// let start_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let end_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let start = AbsoluteBound::Start(
+    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(start_time))
+    /// );
+    /// let end = AbsoluteBound::End(
+    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(end_time))
+    /// );
+    ///
+    /// assert_eq!(
+    ///     start.start(),
+    ///     Some(AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(start_time))),
+    /// );
+    /// assert_eq!(
+    ///     end.start(),
+    ///     None,
+    /// );
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     pub fn start(self) -> Option<AbsoluteStartBound> {
         match self {
@@ -615,6 +1001,37 @@ impl AbsoluteBound {
     }
 
     /// Returns the content of the [`End`](AbsoluteBound::End) variant
+    ///
+    /// Consumes `self` and puts the content of the [`End`](AbsoluteBound::End) variant
+    /// in an [`Option`]. If instead `self` is another variant, the method returns [`None`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::{
+    /// #     AbsoluteBound, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+    /// # };
+    /// let start_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let end_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let start = AbsoluteBound::Start(
+    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(start_time))
+    /// );
+    /// let end = AbsoluteBound::End(
+    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(end_time))
+    /// );
+    ///
+    /// assert_eq!(
+    ///     end.end(),
+    ///     Some(AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(end_time))),
+    /// );
+    /// assert_eq!(
+    ///     start.end(),
+    ///     None,
+    /// );
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     pub fn end(self) -> Option<AbsoluteEndBound> {
         match self {
@@ -625,7 +1042,29 @@ impl AbsoluteBound {
 
     /// Returns the opposite bound type with the opposite inclusivity
     ///
-    /// Returns [`None`] if the bound is infinite.
+    /// Simply use [`AbsoluteStartBound::opposite`] for start bounds,
+    /// and [`AbsoluteEndBound::opposite`] for end bounds, and then wraps the result in [`AbsoluteBound`].
+    ///
+    /// If the bound is infinite, the method returns [`None`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use periodical::intervals::absolute::AbsoluteBound;
+    /// # let bounds: [AbsoluteBound; 0] = [];
+    /// struct BoundChange {
+    ///     new_bound: AbsoluteBound,
+    ///     before_new_bound: Option<AbsoluteBound>,
+    /// }
+    ///
+    /// bounds.into_iter().map(|bound| BoundChange {
+    ///     new_bound: bound,
+    ///     before_new_bound: bound.opposite(),
+    /// });
+    /// ```
+    ///
+    /// A similar process is used in
+    /// [`LayeredAbsoluteBounds`](crate::iter::intervals::layered_bounds::LayeredAbsoluteBounds).
     #[must_use]
     pub fn opposite(&self) -> Option<Self> {
         match self {
@@ -693,32 +1132,32 @@ impl From<AbsoluteEndBound> for AbsoluteBound {
     }
 }
 
-/// Represents something that has **non-empty** absolute bounds
+/// Possession of **non-empty** absolute bounds
 pub trait HasAbsoluteBounds {
-    /// Returns the absolute bounds
+    /// Returns the absolute bounds of the object
     #[must_use]
     fn abs_bounds(&self) -> AbsoluteBounds;
 
-    /// Returns the absolute start bound
+    /// Returns the absolute start bound of the object
     #[must_use]
     fn abs_start(&self) -> AbsoluteStartBound;
 
-    /// Returns the absolute end bound
+    /// Returns the absolute end bound of the object
     #[must_use]
     fn abs_end(&self) -> AbsoluteEndBound;
 }
 
-/// Represents something that has possibly empty absolute bounds
+/// Possession of possibly empty absolute bounds
 pub trait HasEmptiableAbsoluteBounds {
-    /// Returns the [`EmptiableAbsoluteBounds`] of self
+    /// Returns the [`EmptiableAbsoluteBounds`] of the object
     #[must_use]
     fn emptiable_abs_bounds(&self) -> EmptiableAbsoluteBounds;
 
-    /// Returns an [`Option`] of [the absolute start bound](AbsoluteStartBound)
+    /// Returns an [`Option`] of [the absolute start bound](AbsoluteStartBound) of the object
     #[must_use]
     fn partial_abs_start(&self) -> Option<AbsoluteStartBound>;
 
-    /// Returns an [`Option`] of [the absolute end bound](AbsoluteEndBound)
+    /// Returns an [`Option`] of [the absolute end bound](AbsoluteEndBound) of the object
     #[must_use]
     fn partial_abs_end(&self) -> Option<AbsoluteEndBound>;
 }
@@ -742,7 +1181,17 @@ where
     }
 }
 
-/// Bounds of a non-empty absolute interval
+/// Pair of [`AbsoluteStartBound`] and [`AbsoluteEndBound`]
+///
+/// This pair conserves the invariants required for an interval:
+///
+/// 1. The bounds are in chronological order
+/// 2. If the bounds have the same time, their inclusivities should be [inclusive] for both
+///
+/// [`AbsoluteBounds`] should be used when you want a non-empty interval which don't need to conserve
+/// a given [`Openness`].
+///
+/// [inclusive]: BoundInclusivity::Inclusive
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct AbsoluteBounds {
     start: AbsoluteStartBound,
@@ -750,15 +1199,59 @@ pub struct AbsoluteBounds {
 }
 
 impl AbsoluteBounds {
-    /// Creates a new instance of absolute bounds without checking if the bounds are in order
+    /// Creates a new [`AbsoluteBounds`] without checking if it violates invariants
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::{
+    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+    /// # };
+    /// // Start and end are not in chronological order!
+    /// let start_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let end_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let start = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(start_time));
+    /// let end = AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(end_time));
+    ///
+    /// let bounds = AbsoluteBounds::unchecked_new(start, end);
+    ///
+    /// assert_eq!(bounds.start(), &start);
+    /// assert_eq!(bounds.end(), &end);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     pub fn unchecked_new(start: AbsoluteStartBound, end: AbsoluteEndBound) -> Self {
         AbsoluteBounds { start, end }
     }
 
-    /// Creates a new instance of absolute bounds
+    /// Creates a new [`AbsoluteBounds`]
     ///
-    /// Uses [`prepare_absolute_bounds_for_interval_creation`] under the hood for making the bounds safe to use.
+    /// Uses [`prepare_absolute_bounds_for_interval_creation`] under the hood for making sure the bounds respect
+    /// the invariants.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::{
+    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+    /// # };
+    /// // Start and end are not in chronological order!
+    /// let start_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let end_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let start = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(start_time));
+    /// let end = AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(end_time));
+    ///
+    /// let bounds = AbsoluteBounds::new(start, end);
+    ///
+    /// // Now the start and end are in chronological order
+    /// assert_eq!(bounds.start(), &end);
+    /// assert_eq!(bounds.end(), &start);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     pub fn new(mut start: AbsoluteStartBound, mut end: AbsoluteEndBound) -> Self {
         prepare_absolute_bounds_for_interval_creation(&mut start, &mut end);
@@ -766,57 +1259,215 @@ impl AbsoluteBounds {
     }
 
     /// Returns the absolute start bound
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::{
+    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+    /// # };
+    /// let start_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let end_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let start = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(start_time));
+    /// let end = AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(end_time));
+    ///
+    /// let bounds = AbsoluteBounds::new(start, end);
+    ///
+    /// assert_eq!(bounds.start(), &start);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     pub fn start(&self) -> &AbsoluteStartBound {
         &self.start
     }
 
     /// Returns the absolute end bound
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::{
+    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+    /// # };
+    /// let start_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let end_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let start = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(start_time));
+    /// let end = AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(end_time));
+    ///
+    /// let bounds = AbsoluteBounds::new(start, end);
+    ///
+    /// assert_eq!(bounds.end(), &end);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     pub fn end(&self) -> &AbsoluteEndBound {
         &self.end
     }
 
-    /// Sets the start bound without checking if it is in the right order
+    /// Sets the start bound without checking if it violates invariants
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::{
+    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+    /// # };
+    /// let start_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let end_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let start = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(start_time));
+    /// let end = AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(end_time));
+    ///
+    /// let mut bounds = AbsoluteBounds::new(start, end);
+    ///
+    /// let new_start_time = "2025-01-01 18:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let new_start = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(new_start_time));
+    ///
+    /// // New start is past the end
+    /// bounds.unchecked_set_start(new_start);
+    ///
+    /// // And yet stays in `bounds`
+    /// assert_eq!(bounds.start(), &new_start);
+    /// assert_eq!(bounds.end(), &end);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     pub fn unchecked_set_start(&mut self, new_start: AbsoluteStartBound) {
         self.start = new_start;
     }
 
-    /// Sets the end bound without checking if it is in the right order
+    /// Sets the end bound without checking if it violates invariants
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::{
+    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+    /// # };
+    /// let start_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let end_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let start = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(start_time));
+    /// let end = AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(end_time));
+    ///
+    /// let mut bounds = AbsoluteBounds::new(start, end);
+    ///
+    /// let new_end_time = "2025-01-01 06:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let new_end = AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(new_end_time));
+    ///
+    /// // New end is before the start
+    /// bounds.unchecked_set_end(new_end);
+    ///
+    /// // And yet stays in `bounds`
+    /// assert_eq!(bounds.start(), &start);
+    /// assert_eq!(bounds.end(), &new_end);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     pub fn unchecked_set_end(&mut self, new_end: AbsoluteEndBound) {
         self.end = new_end;
     }
 
     /// Sets the start bound
     ///
-    /// Returns whether the operation was successful: the new start must be in chronological order and if it is equal
-    /// to the end bound, both bounds must be inclusive.
+    /// Returns whether the operation was successful and the start bound modified.
+    /// If the given new start bound violates the invariants, the method simply returns `false`
+    /// without changing the start bound.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::{
+    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+    /// # };
+    /// let start_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let end_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let start = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(start_time));
+    /// let end = AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(end_time));
+    ///
+    /// let mut bounds = AbsoluteBounds::new(start, end);
+    ///
+    /// let new_start_time = "2025-01-01 18:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let new_start = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(new_start_time));
+    ///
+    /// // New start is past the end, and therefore gets ignored
+    /// let was_successful = bounds.set_start(new_start);
+    ///
+    /// assert!(!was_successful);
+    /// assert_eq!(bounds.start(), &start);
+    /// assert_eq!(bounds.end(), &end);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     pub fn set_start(&mut self, new_start: AbsoluteStartBound) -> bool {
-        if new_start.partial_cmp(self.end()).is_none_or(Ordering::is_gt) {
-            return false;
+        match check_absolute_bounds_for_interval_creation(&new_start, self.end()) {
+            Ok(()) => {
+                self.unchecked_set_start(new_start);
+                true
+            },
+            Err(_) => false,
         }
-
-        self.unchecked_set_start(new_start);
-        true
     }
 
     /// Sets the end bound
     ///
-    /// Returns whether the operation was successful: the new end must be in chronological order and if it is equal
-    /// to the start bound, both bounds must be inclusive.
+    /// Returns whether the operation was successful and the end bound modified.
+    /// If the given new end bound violates the invariants, the method simply returns `false`
+    /// without changing the end bound.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::{
+    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+    /// # };
+    /// let start_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let end_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let start = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(start_time));
+    /// let end = AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(end_time));
+    ///
+    /// let mut bounds = AbsoluteBounds::new(start, end);
+    ///
+    /// let new_end_time = "2025-01-01 06:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let new_end = AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(new_end_time));
+    ///
+    /// // New end is before the start, and therefore gets ignored
+    /// let was_successful = bounds.set_end(new_end);
+    ///
+    /// assert!(!was_successful);
+    /// assert_eq!(bounds.start(), &start);
+    /// assert_eq!(bounds.end(), &end);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     pub fn set_end(&mut self, new_end: AbsoluteEndBound) -> bool {
-        if self.start().partial_cmp(&new_end).is_none_or(Ordering::is_gt) {
-            return false;
+        match check_absolute_bounds_for_interval_creation(self.start(), &new_end) {
+            Ok(()) => {
+                self.unchecked_set_end(new_end);
+                true
+            },
+            Err(_) => false,
         }
-
-        self.unchecked_set_end(new_end);
-        true
     }
 
     /// Compares two [`AbsoluteBounds`], but if they have the same start, order by decreasing length
     ///
     /// Don't rely on this method for checking for equality of start, as it will produce other [`Ordering`]s if their
-    /// length don't match too.
+    /// lengths don't match too.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use periodical::intervals::absolute::AbsoluteBounds;
+    /// # let mut bounds: [AbsoluteBounds; 0] = [];
+    /// bounds.sort_by(AbsoluteBounds::ord_by_start_and_inv_length);
+    /// ```
     #[must_use]
     pub fn ord_by_start_and_inv_length(&self, other: &Self) -> Ordering {
         match self.cmp(other) {
@@ -928,6 +1579,7 @@ where
     }
 }
 
+/// Errors that can occur when trying to convert [`EmptiableAbsoluteBounds`] into [`AbsoluteBounds`]
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum AbsoluteBoundsFromEmptiableAbsoluteBoundsError {
     EmptyVariant,
@@ -954,7 +1606,10 @@ impl TryFrom<EmptiableAbsoluteBounds> for AbsoluteBounds {
     }
 }
 
-// Bounds of an absolute interval
+/// Enum containing [`AbsoluteBounds`] but with support for [empty intervals](EmptyInterval)
+///
+/// For more information, check [`AbsoluteBounds`], [`EmptyInterval`],
+/// or [`crate::intervals` module documentation](crate::intervals).
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum EmptiableAbsoluteBounds {
@@ -963,7 +1618,28 @@ pub enum EmptiableAbsoluteBounds {
 }
 
 impl EmptiableAbsoluteBounds {
-    /// Converts the content of the [`Bound`](EmptiableAbsoluteBounds::Bound) variant into an [`Option`]
+    /// Returns the content of the [`Bound`](EmptiableAbsoluteBounds::Bound) variant
+    ///
+    /// Consumes `self` and puts the content of the [`Bound`](EmptiableAbsoluteBounds::Bound) variant
+    /// in an [`Option`]. If instead `self` is another variant, the method returns [`None`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use periodical::intervals::absolute::{
+    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteStartBound, EmptiableAbsoluteBounds,
+    /// # };
+    /// let bounds = AbsoluteBounds::new(
+    ///     AbsoluteStartBound::InfinitePast,
+    ///     AbsoluteEndBound::InfiniteFuture,
+    /// );
+    /// // Cloning is only for making the use of `bounds` okay in the following assertions
+    /// let bound_emptiable_bounds = EmptiableAbsoluteBounds::Bound(bounds.clone());
+    /// let empty_emptiable_bounds = EmptiableAbsoluteBounds::Empty;
+    ///
+    /// assert_eq!(bound_emptiable_bounds.bound(), Some(bounds));
+    /// assert_eq!(empty_emptiable_bounds.bound(), None);
+    /// ```
     #[must_use]
     pub fn bound(self) -> Option<AbsoluteBounds> {
         match self {
@@ -974,8 +1650,21 @@ impl EmptiableAbsoluteBounds {
 
     /// Compares two [`EmptiableAbsoluteBounds`], but if they have the same start, order by decreasing length
     ///
+    /// Uses [`AbsoluteBounds::ord_by_start_and_inv_length`] under the hood for
+    /// the [`Bound`](EmptiableAbsoluteBounds::Bound) variants and [`EmptiableAbsoluteBounds::cmp`]
+    /// for the [`Empty`](EmptiableAbsoluteBounds::Empty) variants (which will just place all empty bounds before
+    /// any bound bounds).
+    ///
     /// Don't rely on this method for checking for equality of start, as it will produce other [`Ordering`]s if their
-    /// length don't match too.
+    /// lengths don't match too.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use periodical::intervals::absolute::EmptiableAbsoluteBounds;
+    /// # let mut bounds: [EmptiableAbsoluteBounds; 0] = [];
+    /// bounds.sort_by(EmptiableAbsoluteBounds::ord_by_start_and_inv_length);
+    /// ```
     #[must_use]
     pub fn ord_by_start_and_inv_length(&self, other: &Self) -> Ordering {
         match (self, other) {
@@ -1075,7 +1764,15 @@ impl From<AbsoluteBounds> for EmptiableAbsoluteBounds {
 
 /// A bounded absolute interval
 ///
-/// Interval set with absolute time, with a defined start and end
+/// An interval with a set start and end. Like all specific absolute interval types, it conserves the invariant
+/// of its bounds being in chronological order and if the bounds have the same time, they must be inclusive.
+///
+/// However, like the other specific interval types, it conserves an additional invariant:
+/// Its [openness](Openness) cannot change. That is to say a bounded interval must remain a bounded interval.
+/// It cannot mutate from being a bounded interval to a half-bounded interval.
+///
+/// Instead, if you are looking for an absolute interval that doesn't keep the [openness](Openness) invariant,
+/// see [`AbsoluteBounds`].
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct BoundedAbsoluteInterval {
     from: DateTime<Utc>,
@@ -1085,7 +1782,24 @@ pub struct BoundedAbsoluteInterval {
 }
 
 impl BoundedAbsoluteInterval {
-    /// Creates a new instance of a bounded absolute interval without checking if from is greater than to
+    /// Creates a new [`BoundedAbsoluteInterval`] without checking if it violates the invariants
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// let from_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let to_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// // Even though the times are not in chronological order
+    /// let bounded_interval = BoundedAbsoluteInterval::unchecked_new(from_time, to_time);
+    ///
+    /// // They remain that way
+    /// assert_eq!(bounded_interval.from_time(), from_time);
+    /// assert_eq!(bounded_interval.to_time(), to_time);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     pub fn unchecked_new(from: DateTime<Utc>, to: DateTime<Utc>) -> Self {
         BoundedAbsoluteInterval {
@@ -1096,7 +1810,26 @@ impl BoundedAbsoluteInterval {
         }
     }
 
-    /// Creates a new instance of a bounded absolute interval
+    /// Creates a new [`BoundedAbsoluteInterval`] with default bound inclusivities
+    ///
+    /// If the from time is past the to time, it swaps them.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// let from_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let to_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// // Times that are not in chronological order
+    /// let bounded_interval = BoundedAbsoluteInterval::new(from_time, to_time);
+    ///
+    /// // Are swapped
+    /// assert_eq!(bounded_interval.from_time(), to_time);
+    /// assert_eq!(bounded_interval.to_time(), from_time);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     pub fn new(mut from: DateTime<Utc>, mut to: DateTime<Utc>) -> Self {
         if from > to {
@@ -1106,8 +1839,29 @@ impl BoundedAbsoluteInterval {
         Self::unchecked_new(from, to)
     }
 
-    /// Creates a new instance of a bounded absolute interval with given inclusivity for the bounds without checking
-    /// if from is greater than to
+    /// Creates a new [`BoundedAbsoluteInterval`] with the given bound inclusivities without checking
+    /// if it violates invariants
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// let time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// // Same time, not doubly inclusive
+    /// let bounded_interval = BoundedAbsoluteInterval::unchecked_new_with_inclusivity(
+    ///     time,
+    ///     BoundInclusivity::Inclusive,
+    ///     time,
+    ///     BoundInclusivity::Exclusive,
+    /// );
+    ///
+    /// assert_eq!(bounded_interval.from_inclusivity(), BoundInclusivity::Inclusive);
+    /// assert_eq!(bounded_interval.to_inclusivity(), BoundInclusivity::Exclusive);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     pub fn unchecked_new_with_inclusivity(
         from: DateTime<Utc>,
@@ -1123,11 +1877,34 @@ impl BoundedAbsoluteInterval {
         }
     }
 
-    /// Creates a new instance of a bounded absolute interval with given inclusivity for the bounds
+    /// Creates a new [`BoundedAbsoluteInterval`] with the given bound inclusivities
     ///
     /// If the given times are not in chronological order, we swap them so they are in chronological order.
+    ///
     /// If the given times are equal but have bound inclusivities other than inclusive,
     /// we set them to [`Inclusive`](BoundInclusivity::Inclusive).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// let time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// // Same time, not doubly inclusive
+    /// let bounded_interval = BoundedAbsoluteInterval::new_with_inclusivity(
+    ///     time,
+    ///     BoundInclusivity::Inclusive,
+    ///     time,
+    ///     BoundInclusivity::Exclusive,
+    /// );
+    ///
+    /// // Therefore gets reset to inclusive for both bounds
+    /// assert_eq!(bounded_interval.from_inclusivity(), BoundInclusivity::Inclusive);
+    /// assert_eq!(bounded_interval.to_inclusivity(), BoundInclusivity::Inclusive);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     pub fn new_with_inclusivity(
         from: DateTime<Utc>,
@@ -1143,46 +1920,181 @@ impl BoundedAbsoluteInterval {
     }
 
     /// Returns the start time
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// let from_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let to_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let bounded_inclusivity = BoundedAbsoluteInterval::new(from_time, to_time);
+    ///
+    /// assert_eq!(bounded_inclusivity.from_time(), from_time);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     pub fn from_time(&self) -> DateTime<Utc> {
         self.from
     }
 
     /// Returns the end time
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// let from_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let to_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let bounded_inclusivity = BoundedAbsoluteInterval::new(from_time, to_time);
+    ///
+    /// assert_eq!(bounded_inclusivity.to_time(), to_time);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     pub fn to_time(&self) -> DateTime<Utc> {
         self.to
     }
 
     /// Returns the inclusivity of the start bound
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// let from_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let to_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let bounded_interval = BoundedAbsoluteInterval::new_with_inclusivity(
+    ///     from_time,
+    ///     BoundInclusivity::Exclusive,
+    ///     to_time,
+    ///     BoundInclusivity::Exclusive,
+    /// );
+    ///
+    /// assert_eq!(bounded_interval.from_inclusivity(), BoundInclusivity::Exclusive);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     pub fn from_inclusivity(&self) -> BoundInclusivity {
         self.from_inclusivity
     }
 
     /// Returns the inclusivity of the end bound
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// let from_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let to_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let bounded_interval = BoundedAbsoluteInterval::new_with_inclusivity(
+    ///     from_time,
+    ///     BoundInclusivity::Exclusive,
+    ///     to_time,
+    ///     BoundInclusivity::Exclusive,
+    /// );
+    ///
+    /// assert_eq!(bounded_interval.to_inclusivity(), BoundInclusivity::Exclusive);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     pub fn to_inclusivity(&self) -> BoundInclusivity {
         self.to_inclusivity
     }
 
-    /// Sets the from time of the interval without checking if it is before the to time
+    /// Sets the from time without checking if it violates invariants
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// let from_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let to_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let mut bounded_interval = BoundedAbsoluteInterval::new(from_time, to_time);
+    ///
+    /// // New from is not in chronological order
+    /// let new_from_time = "2025-01-01 17:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// bounded_interval.unchecked_set_from(new_from_time);
+    ///
+    /// // And yet is stays that way
+    /// assert_eq!(bounded_interval.from_time(), new_from_time);
+    /// assert_eq!(bounded_interval.to_time(), to_time);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     pub fn unchecked_set_from(&mut self, new_from: DateTime<Utc>) {
         self.from = new_from;
     }
 
-    /// Sets the to time of the interval without checking if it is after the from time
+    /// Sets the to time without checking if it violates invariants
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// let from_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let to_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let mut bounded_interval = BoundedAbsoluteInterval::new(from_time, to_time);
+    ///
+    /// // New to is not in chronological order
+    /// let new_to_time = "2025-01-01 06:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// bounded_interval.unchecked_set_to(new_to_time);
+    ///
+    /// // And yet is stays that way
+    /// assert_eq!(bounded_interval.from_time(), from_time);
+    /// assert_eq!(bounded_interval.to_time(), new_to_time);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     pub fn unchecked_set_to(&mut self, new_to: DateTime<Utc>) {
         self.to = new_to;
     }
 
-    /// Sets the from time of the interval
+    /// Sets the from time
     ///
-    /// Returns boolean indicating whether the change was successful: the new from must be in chronological order
-    /// and if it is equal to the to time, then the bounds must be inclusive already.
+    /// Returns whether the operation was successful and the from time modified.
+    /// If the given new from time violates the invariants, the method simply returns `false`
+    /// without changing the from time.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// let from_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let to_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let mut bounded_interval = BoundedAbsoluteInterval::new(from_time, to_time);
+    ///
+    /// // New from is not in chronological order
+    /// let new_from_time = "2025-01-01 17:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let was_successful = bounded_interval.set_from(new_from_time);
+    ///
+    /// // Therefore gets ignored
+    /// assert!(!was_successful);
+    /// assert_eq!(bounded_interval.from_time(), from_time);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     pub fn set_from(&mut self, new_from: DateTime<Utc>) -> bool {
         match new_from.cmp(&self.to) {
-            Ordering::Less => self.unchecked_set_from(new_from),
+            Ordering::Less => {
+                self.unchecked_set_from(new_from);
+                true
+            },
             Ordering::Equal => {
                 if self.from_inclusivity != BoundInclusivity::Inclusive
                     || self.to_inclusivity != BoundInclusivity::Inclusive
@@ -1191,22 +2103,44 @@ impl BoundedAbsoluteInterval {
                 }
 
                 self.unchecked_set_from(new_from);
+                true
             },
-            Ordering::Greater => {
-                return false;
-            },
+            Ordering::Greater => false,
         }
-
-        true
     }
 
-    /// Sets the to time of the interval
+    /// Sets the to time
     ///
-    /// Returns boolean indicating whether the change was successful: the new to must be in chronological order
-    /// and if it is equal to the from time, then the bounds must be inclusive already.
+    /// Returns whether the operation was successful and the to time modified.
+    /// If the given new to time violates the invariants, the method simply returns `false`
+    /// without changing the to time.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// let from_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let to_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let mut bounded_interval = BoundedAbsoluteInterval::new(from_time, to_time);
+    ///
+    /// // New to is not in chronological order
+    /// let new_to_time = "2025-01-01 06:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let was_successful = bounded_interval.set_to(new_to_time);
+    ///
+    /// // Therefore gets ignored
+    /// assert!(!was_successful);
+    /// assert_eq!(bounded_interval.to_time(), to_time);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     pub fn set_to(&mut self, new_to: DateTime<Utc>) -> bool {
         match self.from.cmp(&new_to) {
-            Ordering::Less => self.unchecked_set_to(new_to),
+            Ordering::Less => {
+                self.unchecked_set_to(new_to);
+                true
+            },
             Ordering::Equal => {
                 if self.from_inclusivity != BoundInclusivity::Inclusive
                     || self.to_inclusivity != BoundInclusivity::Inclusive
@@ -1215,19 +2149,36 @@ impl BoundedAbsoluteInterval {
                 }
 
                 self.unchecked_set_to(new_to);
+                true
             },
-            Ordering::Greater => {
-                return false;
-            },
+            Ordering::Greater => false,
         }
-
-        true
     }
 
     /// Sets the inclusivity of the start bound
     ///
-    /// Returns whether the operation was successful: if the start and end times are equal, the inclusivities can't be
-    /// set to anything other than inclusive.
+    /// Returns whether the operation was successful and the start bound's inclusivity modified.
+    /// If the given new start bound inclusivity violates the invariants, the method simply returns `false`
+    /// without changing the start bound's inclusivity.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// let time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let mut bounded_interval = BoundedAbsoluteInterval::new(time, time);
+    ///
+    /// // Interval has same times, therefore cannot be other than doubly inclusive
+    /// let was_successful = bounded_interval.set_from_inclusivity(BoundInclusivity::Exclusive);
+    ///
+    /// // Therefore new inclusivity gets ignored
+    /// assert!(!was_successful);
+    /// assert_eq!(bounded_interval.from_inclusivity(), BoundInclusivity::Inclusive);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     pub fn set_from_inclusivity(&mut self, new_inclusivity: BoundInclusivity) -> bool {
         if self.from == self.to && new_inclusivity != BoundInclusivity::Inclusive {
             return false;
@@ -1239,8 +2190,28 @@ impl BoundedAbsoluteInterval {
 
     /// Sets the inclusivity of the end bound
     ///
-    /// Returns whether the operation was successful: if the start and end times are equal, the inclusivities can't be
-    /// set to anything other than inclusive.
+    /// Returns whether the operation was successful and the end bound's inclusivity modified.
+    /// If the given new end bound inclusivity violates the invariants, the method simply returns `false`
+    /// without changing the end bound's inclusivity.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// let time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let mut bounded_interval = BoundedAbsoluteInterval::new(time, time);
+    ///
+    /// // Interval has same times, therefore cannot be other than doubly inclusive
+    /// let was_successful = bounded_interval.set_to_inclusivity(BoundInclusivity::Exclusive);
+    ///
+    /// // Therefore new inclusivity gets ignored
+    /// assert!(!was_successful);
+    /// assert_eq!(bounded_interval.to_inclusivity(), BoundInclusivity::Inclusive);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     pub fn set_to_inclusivity(&mut self, new_inclusivity: BoundInclusivity) -> bool {
         if self.from == self.to && new_inclusivity != BoundInclusivity::Inclusive {
             return false;
@@ -1305,6 +2276,9 @@ impl From<((DateTime<Utc>, BoundInclusivity), (DateTime<Utc>, BoundInclusivity))
     }
 }
 
+/// Converts `((DateTime<Utc>, bool), (DateTime<Utc>, bool))` into [`BoundedAbsoluteInterval`]
+///
+/// The booleans in the original structure are to be interpreted as _is it inclusive?_
 impl From<((DateTime<Utc>, bool), (DateTime<Utc>, bool))> for BoundedAbsoluteInterval {
     fn from(
         ((from, is_from_inclusive), (to, is_to_inclusive)): ((DateTime<Utc>, bool), (DateTime<Utc>, bool)),
@@ -1340,6 +2314,7 @@ impl From<RangeInclusive<DateTime<Utc>>> for BoundedAbsoluteInterval {
     }
 }
 
+/// Errors that can occur when trying to convert [`AbsoluteBounds`] into [`BoundedAbsoluteInterval`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum BoundedAbsoluteIntervalFromAbsoluteBoundsError {
     NotBoundedInterval,
@@ -1373,6 +2348,7 @@ impl TryFrom<AbsoluteBounds> for BoundedAbsoluteInterval {
     }
 }
 
+/// Errors that can occur when trying to convert [`AbsoluteInterval`] into [`BoundedAbsoluteInterval`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum BoundedAbsoluteIntervalFromAbsoluteIntervalError {
     WrongVariant,
@@ -1401,28 +2377,82 @@ impl TryFrom<AbsoluteInterval> for BoundedAbsoluteInterval {
 
 /// A half-bounded absolute interval
 ///
-/// An interval set with absolute time, has a defined reference time and an opening direction (only one defined bound).
-/// Infinite duration.
+/// An interval with a set reference time and an [opening direction](OpeningDirection).
+/// Like all specific absolute interval types, it conserves the invariant of its bounds being
+/// in chronological order[^chrono_order_invariant] and if the interval has a length of zero,
+/// they must be inclusive[^doubly_inclusive_invariant].
+///
+/// However, like the other specific interval types, it conserves an additional invariant:
+/// Its [openness](Openness) cannot change. That is to say a half-bounded interval must remain a half-bounded interval.
+/// It cannot mutate from being a half-bounded interval to a bounded interval.
+///
+/// [^chrono_order_invariant]: This invariant is automatically guaranteed in this structure
+///     since it only has one bound.
+/// [^doubly_inclusive_invariant]: This invariant is automatically guaranteed in this structure
+///     since the reference time is finite and therefore cannot reach the opposite end of the half-bounded interval,
+///     since the opposite end is infinite.
+///
+/// Instead, if you are looking for an absolute interval that doesn't keep the [openness](Openness) invariant,
+/// see [`AbsoluteBounds`].
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub struct HalfBoundedAbsoluteInterval {
     reference_time: DateTime<Utc>,
     opening_direction: OpeningDirection,
-    reference_time_inclusivity: BoundInclusivity,
+    reference_inclusivity: BoundInclusivity,
 }
 
 impl HalfBoundedAbsoluteInterval {
-    /// Creates a new instance of a half-bounded absolute interval
+    /// Creates a new [`HalfBoundedAbsoluteInterval`]
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
+    /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
+    /// let ref_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let half_bounded_interval = HalfBoundedAbsoluteInterval::new(
+    ///     ref_time,
+    ///     OpeningDirection::ToPast,
+    /// );
+    ///
+    /// assert_eq!(half_bounded_interval.reference_time(), ref_time);
+    /// assert_eq!(half_bounded_interval.reference_inclusivity(), BoundInclusivity::Inclusive);
+    /// assert_eq!(half_bounded_interval.opening_direction(), OpeningDirection::ToPast);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     pub fn new(reference_time: DateTime<Utc>, opening_direction: OpeningDirection) -> Self {
         HalfBoundedAbsoluteInterval {
             reference_time,
             opening_direction,
-            reference_time_inclusivity: BoundInclusivity::default(),
+            reference_inclusivity: BoundInclusivity::default(),
         }
     }
 
-    /// Creates a new instance of a half-bounded absolute interval with given inclusivity for the bound
+    /// Creates a new [`HalfBoundedAbsoluteInterval`] with the given bound inclusivities
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
+    /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
+    /// let ref_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let half_bounded_interval = HalfBoundedAbsoluteInterval::new_with_inclusivity(
+    ///     ref_time,
+    ///     BoundInclusivity::Exclusive,
+    ///     OpeningDirection::ToFuture,
+    /// );
+    ///
+    /// assert_eq!(half_bounded_interval.reference_time(), ref_time);
+    /// assert_eq!(half_bounded_interval.reference_inclusivity(), BoundInclusivity::Exclusive);
+    /// assert_eq!(half_bounded_interval.opening_direction(), OpeningDirection::ToFuture);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     pub fn new_with_inclusivity(
         reference_time: DateTime<Utc>,
@@ -1432,39 +2462,148 @@ impl HalfBoundedAbsoluteInterval {
         HalfBoundedAbsoluteInterval {
             reference_time,
             opening_direction,
-            reference_time_inclusivity,
+            reference_inclusivity: reference_time_inclusivity,
         }
     }
 
-    /// Returns the reference time of the interval
+    /// Returns the reference time
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
+    /// # use periodical::intervals::meta::OpeningDirection;
+    /// let ref_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let half_bounded_interval = HalfBoundedAbsoluteInterval::new(
+    ///     ref_time,
+    ///     OpeningDirection::ToPast,
+    /// );
+    ///
+    /// assert_eq!(half_bounded_interval.reference_time(), ref_time);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     pub fn reference_time(&self) -> DateTime<Utc> {
         self.reference_time
     }
 
-    /// Returns the opening direction of the interval
+    /// Returns the opening direction
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
+    /// # use periodical::intervals::meta::OpeningDirection;
+    /// let ref_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let half_bounded_interval = HalfBoundedAbsoluteInterval::new(
+    ///     ref_time,
+    ///     OpeningDirection::ToPast,
+    /// );
+    ///
+    /// assert_eq!(half_bounded_interval.opening_direction(), OpeningDirection::ToPast);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     pub fn opening_direction(&self) -> OpeningDirection {
         self.opening_direction
     }
 
     /// Returns the inclusivity of the reference time
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
+    /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
+    /// let ref_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let half_bounded_interval = HalfBoundedAbsoluteInterval::new_with_inclusivity(
+    ///     ref_time,
+    ///     BoundInclusivity::Exclusive,
+    ///     OpeningDirection::ToFuture,
+    /// );
+    ///
+    /// assert_eq!(half_bounded_interval.reference_inclusivity(), BoundInclusivity::Exclusive);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
-    pub fn reference_time_inclusivity(&self) -> BoundInclusivity {
-        self.reference_time_inclusivity
+    pub fn reference_inclusivity(&self) -> BoundInclusivity {
+        self.reference_inclusivity
     }
 
-    /// Sets the reference time of the interval
+    /// Sets the reference time
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
+    /// # use periodical::intervals::meta::OpeningDirection;
+    /// let ref_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let mut half_bounded_interval = HalfBoundedAbsoluteInterval::new(
+    ///     ref_time,
+    ///     OpeningDirection::ToFuture,
+    /// );
+    ///
+    /// let new_ref_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// half_bounded_interval.set_reference_time(new_ref_time);
+    ///
+    /// assert_eq!(half_bounded_interval.reference_time(), new_ref_time);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     pub fn set_reference_time(&mut self, new_reference_time: DateTime<Utc>) {
         self.reference_time = new_reference_time;
     }
 
     /// Sets the inclusivity of the reference time
-    pub fn set_reference_time_inclusivity(&mut self, new_inclusivity: BoundInclusivity) {
-        self.reference_time_inclusivity = new_inclusivity;
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
+    /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
+    /// let ref_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let mut half_bounded_interval = HalfBoundedAbsoluteInterval::new(
+    ///     ref_time,
+    ///     OpeningDirection::ToFuture,
+    /// );
+    ///
+    /// half_bounded_interval.set_reference_inclusivity(BoundInclusivity::Exclusive);
+    ///
+    /// assert_eq!(half_bounded_interval.reference_inclusivity(), BoundInclusivity::Exclusive);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
+    pub fn set_reference_inclusivity(&mut self, new_inclusivity: BoundInclusivity) {
+        self.reference_inclusivity = new_inclusivity;
     }
 
-    /// Sets the opening direction of the interval
+    /// Sets the opening direction
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Utc};
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
+    /// # use periodical::intervals::meta::OpeningDirection;
+    /// let ref_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    ///
+    /// let mut half_bounded_interval = HalfBoundedAbsoluteInterval::new(
+    ///     ref_time,
+    ///     OpeningDirection::ToFuture,
+    /// );
+    ///
+    /// half_bounded_interval.set_opening_direction(OpeningDirection::ToPast);
+    ///
+    /// assert_eq!(half_bounded_interval.opening_direction(), OpeningDirection::ToPast);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     pub fn set_opening_direction(&mut self, new_opening_direction: OpeningDirection) {
         self.opening_direction = new_opening_direction;
     }
@@ -1500,7 +2639,7 @@ impl HasAbsoluteBounds for HalfBoundedAbsoluteInterval {
             OpeningDirection::ToPast => AbsoluteStartBound::InfinitePast,
             OpeningDirection::ToFuture => AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
                 self.reference_time,
-                self.reference_time_inclusivity,
+                self.reference_inclusivity,
             )),
         }
     }
@@ -1509,7 +2648,7 @@ impl HasAbsoluteBounds for HalfBoundedAbsoluteInterval {
         match self.opening_direction {
             OpeningDirection::ToPast => AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
                 self.reference_time,
-                self.reference_time_inclusivity,
+                self.reference_inclusivity,
             )),
             OpeningDirection::ToFuture => AbsoluteEndBound::InfiniteFuture,
         }
@@ -1522,6 +2661,9 @@ impl From<(DateTime<Utc>, OpeningDirection)> for HalfBoundedAbsoluteInterval {
     }
 }
 
+/// Converts `(DateTime<Utc>, bool)` into [`HalfBoundedAbsoluteInterval`]
+///
+/// The boolean is interpreted as _is it going to future?_
 impl From<(DateTime<Utc>, bool)> for HalfBoundedAbsoluteInterval {
     fn from((time, goes_to_future): (DateTime<Utc>, bool)) -> Self {
         HalfBoundedAbsoluteInterval::new(time, OpeningDirection::from(goes_to_future))
@@ -1534,18 +2676,29 @@ impl From<((DateTime<Utc>, BoundInclusivity), OpeningDirection)> for HalfBounded
     }
 }
 
+/// Converts `((DateTime<Utc>, BoundInclusivity), bool)` into [`HalfBoundedAbsoluteInterval`]
+///
+/// The boolean is interpreted as _is it going to future?_
 impl From<((DateTime<Utc>, BoundInclusivity), bool)> for HalfBoundedAbsoluteInterval {
     fn from(((time, inclusivity), goes_to_future): ((DateTime<Utc>, BoundInclusivity), bool)) -> Self {
         HalfBoundedAbsoluteInterval::new_with_inclusivity(time, inclusivity, OpeningDirection::from(goes_to_future))
     }
 }
 
+/// Converts `((DateTime<Utc>, bool), OpeningDirection)` into [`HalfBoundedAbsoluteInterval`]
+///
+/// The boolean is interpreted as _is it inclusive?_
 impl From<((DateTime<Utc>, bool), OpeningDirection)> for HalfBoundedAbsoluteInterval {
     fn from(((time, is_inclusive), direction): ((DateTime<Utc>, bool), OpeningDirection)) -> Self {
         HalfBoundedAbsoluteInterval::new_with_inclusivity(time, BoundInclusivity::from(is_inclusive), direction)
     }
 }
 
+/// Converts `((DateTime<Utc>, bool), bool)` into [`HalfBoundedAbsoluteInterval`]
+///
+/// The boolean of the first tuple element is interpreted as _is it inclusive?_
+///
+/// The boolean of the second tuple element is interpreted as _is it going to future?_
 impl From<((DateTime<Utc>, bool), bool)> for HalfBoundedAbsoluteInterval {
     fn from(((time, is_inclusive), goes_to_future): ((DateTime<Utc>, bool), bool)) -> Self {
         HalfBoundedAbsoluteInterval::new_with_inclusivity(
@@ -1586,6 +2739,7 @@ impl From<RangeToInclusive<DateTime<Utc>>> for HalfBoundedAbsoluteInterval {
     }
 }
 
+/// Errors that can occur when trying to convert [`AbsoluteBounds`] into [`HalfBoundedAbsoluteInterval`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum HalfBoundedAbsoluteIntervalFromAbsoluteBoundsError {
     NotHalfBoundedInterval,
@@ -1625,6 +2779,7 @@ impl TryFrom<AbsoluteBounds> for HalfBoundedAbsoluteInterval {
     }
 }
 
+/// Errors that can occur when trying to convert [`AbsoluteInterval`] into [`HalfBoundedAbsoluteInterval`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum HalfBoundedAbsoluteIntervalFromAbsoluteIntervalError {
     WrongVariant,
@@ -1651,7 +2806,18 @@ impl TryFrom<AbsoluteInterval> for HalfBoundedAbsoluteInterval {
     }
 }
 
-/// Represents any absolute interval, including empty and unbounded intervals
+/// An absolute interval
+///
+/// An enumerator to store any kind of absolute interval: [`BoundedAbsoluteInterval`],
+/// [`HalfBoundedAbsoluteInterval`], [`UnboundedInterval`], and [`EmptyInterval`].
+///
+/// The contained intervals conserve the [openness](Openness) invariant, but the chosen variant can change.
+/// Compared to [`AbsoluteBounds`], thanks to the variants we know exactly the kind of interval that is stored
+/// without needing to check inner data.
+///
+/// Usually this is the structure that you want to use when dealing with absolute intervals
+/// as it has more conversion methods from standard types, and also provides a quick way to know the type of
+/// the interval and perhaps extract from it to make its type immutable.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum AbsoluteInterval {
@@ -1662,10 +2828,20 @@ pub enum AbsoluteInterval {
 }
 
 impl AbsoluteInterval {
-    /// Compares two [`AbsoluteInterval`]s, but if they have the same start, order by decreasing length
+    /// Compares two [`AbsoluteInterval`], but if they have the same start, order by decreasing length
+    ///
+    /// Uses [`EmptiableAbsoluteBounds::ord_by_start_and_inv_length`] under the hood.
     ///
     /// Don't rely on this method for checking for equality of start, as it will produce other [`Ordering`]s if their
-    /// length don't match too.
+    /// lengths don't match too.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use periodical::intervals::absolute::AbsoluteInterval;
+    /// # let mut bounds: [AbsoluteInterval; 0] = [];
+    /// bounds.sort_by(AbsoluteInterval::ord_by_start_and_inv_length);
+    /// ```
     #[must_use]
     pub fn ord_by_start_and_inv_length(&self, other: &Self) -> Ordering {
         self.emptiable_abs_bounds()
@@ -1860,6 +3036,9 @@ impl From<EmptiableAbsoluteBounds> for AbsoluteInterval {
     }
 }
 
+/// Converts `(Option<DateTime<Utc>>, Option<DateTime<Utc>>)` into [`AbsoluteInterval`]
+///
+/// The first tuple element represents the start bound, the second element represents the end bound.
 impl From<(Option<DateTime<Utc>>, Option<DateTime<Utc>>)> for AbsoluteInterval {
     fn from((from_opt, to_opt): (Option<DateTime<Utc>>, Option<DateTime<Utc>>)) -> Self {
         match (from_opt, to_opt) {
@@ -1875,6 +3054,10 @@ impl From<(Option<DateTime<Utc>>, Option<DateTime<Utc>>)> for AbsoluteInterval {
     }
 }
 
+/// Converts `(Option<(DateTime<Utc>, BoundInclusivity)>, Option<(DateTime<Utc>, BoundInclusivity)>)`
+/// into [`AbsoluteInterval`]
+///
+/// The first tuple element represents the start bound, the second element represents the end bound.
 impl
     From<(
         Option<(DateTime<Utc>, BoundInclusivity)>,
@@ -1902,44 +3085,33 @@ impl
     }
 }
 
+/// Converts `(Option<(DateTime<Utc>, bool)>, Option<(DateTime<Utc>, bool)>)` into [`AbsoluteInterval`]
+///
+/// The first tuple element represents the start bound, the second element represents the end bound.
+///
+/// The booleans contained within the `Option<(DateTime<Utc>, bool)>`s are interpreted as _is it inclusive?_
 impl From<(Option<(DateTime<Utc>, bool)>, Option<(DateTime<Utc>, bool)>)> for AbsoluteInterval {
     fn from((from_opt, to_opt): (Option<(DateTime<Utc>, bool)>, Option<(DateTime<Utc>, bool)>)) -> Self {
         match (from_opt, to_opt) {
             (Some((from, is_from_inclusive)), Some((to, is_to_inclusive))) => {
                 AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new_with_inclusivity(
                     from,
-                    if is_from_inclusive {
-                        BoundInclusivity::Inclusive
-                    } else {
-                        BoundInclusivity::Exclusive
-                    },
+                    BoundInclusivity::from(is_from_inclusive),
                     to,
-                    if is_to_inclusive {
-                        BoundInclusivity::Inclusive
-                    } else {
-                        BoundInclusivity::Exclusive
-                    },
+                    BoundInclusivity::from(is_to_inclusive),
                 ))
             },
             (Some((from, is_from_inclusive)), None) => {
                 AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
                     from,
-                    if is_from_inclusive {
-                        BoundInclusivity::Inclusive
-                    } else {
-                        BoundInclusivity::Exclusive
-                    },
+                    BoundInclusivity::from(is_from_inclusive),
                     OpeningDirection::ToFuture,
                 ))
             },
             (None, Some((to, is_to_inclusive))) => {
                 AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
                     to,
-                    if is_to_inclusive {
-                        BoundInclusivity::Inclusive
-                    } else {
-                        BoundInclusivity::Exclusive
-                    },
+                    BoundInclusivity::from(is_to_inclusive),
                     OpeningDirection::ToPast,
                 ))
             },
@@ -1948,6 +3120,12 @@ impl From<(Option<(DateTime<Utc>, bool)>, Option<(DateTime<Utc>, bool)>)> for Ab
     }
 }
 
+/// Converts `(bool, Option<DateTime<Utc>>, Option<DateTime<Utc>>)` into [`AbsoluteInterval`]
+///
+/// The second tuple element represents the start bound, the third element represents the end bound.
+///
+/// The first boolean indicates whether the interval is an [`EmptyInterval`].
+/// If it is set to `true`, the next elements are ignored altogether.
 impl From<(bool, Option<DateTime<Utc>>, Option<DateTime<Utc>>)> for AbsoluteInterval {
     fn from((is_empty, from_opt, to_opt): (bool, Option<DateTime<Utc>>, Option<DateTime<Utc>>)) -> Self {
         if is_empty {
@@ -1967,6 +3145,13 @@ impl From<(bool, Option<DateTime<Utc>>, Option<DateTime<Utc>>)> for AbsoluteInte
     }
 }
 
+/// Converts `(bool, Option<(DateTime<Utc>, BoundInclusivity)>, Option<(DateTime<Utc>, BoundInclusivity)>)`
+/// into [`AbsoluteInterval`]
+///
+/// The second tuple element represents the start bound, the third element represents the end bound.
+///
+/// The first boolean indicates whether the interval is an [`EmptyInterval`].
+/// If it is set to `true`, the next elements are ignored altogether.
 impl
     From<(
         bool,
@@ -2000,6 +3185,14 @@ impl
     }
 }
 
+/// Converts `(bool, Option<(DateTime<Utc>, bool)>, Option<(DateTime<Utc>, bool)>)` into [`AbsoluteInterval`]
+///
+/// The second tuple element represents the start bound, the third element represents the end bound.
+///
+/// The first boolean indicates whether the interval is an [`EmptyInterval`].
+/// If it is set to `true`, the next elements are ignored altogether.
+///
+/// The booleans contained within the `Option<(DateTime<Utc>, bool)>`s are interpreted as _is it inclusive?_
 impl From<(bool, Option<(DateTime<Utc>, bool)>, Option<(DateTime<Utc>, bool)>)> for AbsoluteInterval {
     fn from(
         (is_empty, from_opt, to_opt): (bool, Option<(DateTime<Utc>, bool)>, Option<(DateTime<Utc>, bool)>),
@@ -2012,38 +3205,22 @@ impl From<(bool, Option<(DateTime<Utc>, bool)>, Option<(DateTime<Utc>, bool)>)> 
             (Some((from, is_from_inclusive)), Some((to, is_to_inclusive))) => {
                 AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new_with_inclusivity(
                     from,
-                    if is_from_inclusive {
-                        BoundInclusivity::Inclusive
-                    } else {
-                        BoundInclusivity::Exclusive
-                    },
+                    BoundInclusivity::from(is_from_inclusive),
                     to,
-                    if is_to_inclusive {
-                        BoundInclusivity::Inclusive
-                    } else {
-                        BoundInclusivity::Exclusive
-                    },
+                    BoundInclusivity::from(is_to_inclusive),
                 ))
             },
             (Some((from, is_from_inclusive)), None) => {
                 AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
                     from,
-                    if is_from_inclusive {
-                        BoundInclusivity::Inclusive
-                    } else {
-                        BoundInclusivity::Exclusive
-                    },
+                    BoundInclusivity::from(is_from_inclusive),
                     OpeningDirection::ToFuture,
                 ))
             },
             (None, Some((to, is_to_inclusive))) => {
                 AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
                     to,
-                    if is_to_inclusive {
-                        BoundInclusivity::Inclusive
-                    } else {
-                        BoundInclusivity::Exclusive
-                    },
+                    BoundInclusivity::from(is_to_inclusive),
                     OpeningDirection::ToPast,
                 ))
             },
@@ -2053,6 +3230,9 @@ impl From<(bool, Option<(DateTime<Utc>, bool)>, Option<(DateTime<Utc>, bool)>)> 
 }
 
 // Unfortunately can't use impl<R: RangeBounds> From<R> as it's conflicting with the core implementation of From
+/// Converts `(Bound<DateTime<Utc>>, Bound<DateTime<Utc>>)` into [`AbsoluteInterval`]
+///
+/// The first tuple element represents the start bound, the second tuple element represents the end bound.
 impl From<(Bound<DateTime<Utc>>, Bound<DateTime<Utc>>)> for AbsoluteInterval {
     fn from((start_bound, end_bound): (Bound<DateTime<Utc>>, Bound<DateTime<Utc>>)) -> Self {
         match (start_bound, end_bound) {

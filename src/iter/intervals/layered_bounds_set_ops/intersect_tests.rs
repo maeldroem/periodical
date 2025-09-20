@@ -96,8 +96,8 @@ fn create_layered_abs_bounds_intersection_run() {
     assert_eq!(
         first_layer_data
             .abs_bounds_iter()
-            .united()
-            .layer(second_layer_data.abs_bounds_iter().united())
+            .unite_bounds()
+            .layer(second_layer_data.abs_bounds_iter().unite_bounds())
             .abs_intersect_layered()
             .collect::<Vec<_>>(),
         vec![
@@ -206,8 +206,8 @@ fn create_layered_rel_bounds_intersection_run() {
     assert_eq!(
         first_layer_data
             .rel_bounds_iter()
-            .united()
-            .layer(second_layer_data.rel_bounds_iter().united())
+            .unite_bounds()
+            .layer(second_layer_data.rel_bounds_iter().unite_bounds())
             .rel_intersect_layered()
             .collect::<Vec<_>>(),
         vec![

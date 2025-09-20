@@ -525,9 +525,9 @@ fn relative_end_bound_is_finite() {
 }
 
 #[test]
-fn relative_end_bound_is_infinite_past() {
-    assert!(!RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(1))).is_infinite_past());
-    assert!(RelativeEndBound::InfiniteFuture.is_infinite_past());
+fn relative_end_bound_is_infinite_future() {
+    assert!(!RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(1))).is_infinite_future());
+    assert!(RelativeEndBound::InfiniteFuture.is_infinite_future());
 }
 
 #[test]
@@ -1601,11 +1601,67 @@ fn emptiable_relative_bounds_from_relative_bounds() {
 }
 
 #[test]
+fn bounded_relative_interval_unchecked_new_negative_len() {
+    let interval = BoundedRelativeInterval::unchecked_new(Duration::hours(1), Duration::hours(-5));
+
+    assert_eq!(interval.offset(), Duration::hours(1));
+    assert_eq!(interval.length(), Duration::hours(-5));
+    assert_eq!(interval.from_inclusivity(), BoundInclusivity::Inclusive);
+    assert_eq!(interval.to_inclusivity(), BoundInclusivity::Inclusive);
+}
+
+#[test]
 fn bounded_relative_interval_new() {
     let interval = BoundedRelativeInterval::new(Duration::hours(1), Duration::hours(2));
 
     assert_eq!(interval.offset(), Duration::hours(1));
     assert_eq!(interval.length(), Duration::hours(2));
+    assert_eq!(interval.from_inclusivity(), BoundInclusivity::Inclusive);
+    assert_eq!(interval.to_inclusivity(), BoundInclusivity::Inclusive);
+}
+
+#[test]
+fn bounded_relative_interval_new_negative_len() {
+    let interval = BoundedRelativeInterval::new(Duration::hours(1), Duration::hours(-5));
+
+    assert_eq!(interval.offset(), Duration::hours(-4));
+    assert_eq!(interval.length(), Duration::hours(5));
+    assert_eq!(interval.from_inclusivity(), BoundInclusivity::Inclusive);
+    assert_eq!(interval.to_inclusivity(), BoundInclusivity::Inclusive);
+}
+
+#[test]
+#[should_panic(expected = "`TimeDelta + TimeDelta` overflowed")]
+fn bounded_relative_interval_new_negative_len_duration_underflow() {
+    let _ = BoundedRelativeInterval::new(Duration::MIN, Duration::hours(-5));
+}
+
+#[test]
+fn bounded_relative_interval_unchecked_new_with_inclusivity() {
+    let interval = BoundedRelativeInterval::unchecked_new_with_inclusivity(
+        Duration::hours(1),
+        BoundInclusivity::Inclusive,
+        Duration::zero(),
+        BoundInclusivity::Exclusive,
+    );
+
+    assert_eq!(interval.offset(), Duration::hours(1));
+    assert_eq!(interval.length(), Duration::zero());
+    assert_eq!(interval.from_inclusivity(), BoundInclusivity::Inclusive);
+    assert_eq!(interval.to_inclusivity(), BoundInclusivity::Exclusive);
+}
+
+#[test]
+fn bounded_relative_interval_new_with_inclusivity_zero_len() {
+    let interval = BoundedRelativeInterval::new_with_inclusivity(
+        Duration::hours(5),
+        BoundInclusivity::Inclusive,
+        Duration::zero(),
+        BoundInclusivity::Exclusive,
+    );
+
+    assert_eq!(interval.offset(), Duration::hours(5));
+    assert_eq!(interval.length(), Duration::zero());
     assert_eq!(interval.from_inclusivity(), BoundInclusivity::Inclusive);
     assert_eq!(interval.to_inclusivity(), BoundInclusivity::Inclusive);
 }
@@ -1837,9 +1893,9 @@ fn bounded_relative_interval_try_from_relative_interval_wrong() {
 fn half_bounded_relative_interval_new() {
     let interval = HalfBoundedRelativeInterval::new(Duration::hours(1), OpeningDirection::ToFuture);
 
-    assert_eq!(interval.offset(), Duration::hours(1));
+    assert_eq!(interval.reference_offset(), Duration::hours(1));
     assert_eq!(interval.opening_direction(), OpeningDirection::ToFuture);
-    assert_eq!(interval.reference_time_inclusivity(), BoundInclusivity::Inclusive);
+    assert_eq!(interval.reference_inclusivity(), BoundInclusivity::Inclusive);
 }
 
 #[test]
@@ -1850,9 +1906,9 @@ fn half_bounded_relative_interval_new_with_inclusivity() {
         OpeningDirection::ToPast,
     );
 
-    assert_eq!(interval.offset(), Duration::hours(1));
+    assert_eq!(interval.reference_offset(), Duration::hours(1));
     assert_eq!(interval.opening_direction(), OpeningDirection::ToPast);
-    assert_eq!(interval.reference_time_inclusivity(), BoundInclusivity::Exclusive);
+    assert_eq!(interval.reference_inclusivity(), BoundInclusivity::Exclusive);
 }
 
 #[test]
@@ -1883,7 +1939,7 @@ fn half_bounded_relative_interval_set_reference_time_inclusivity() {
         OpeningDirection::ToFuture,
     );
 
-    interval.set_reference_time_inclusivity(BoundInclusivity::Inclusive);
+    interval.set_reference_inclusivity(BoundInclusivity::Inclusive);
 
     assert_eq!(
         interval,
@@ -2338,8 +2394,9 @@ fn prepare_relative_bounds_for_interval_creation_inf_past_inf_future() {
     let mut start = RelativeStartBound::InfinitePast;
     let mut end = RelativeEndBound::InfiniteFuture;
 
-    prepare_relative_bounds_for_interval_creation(&mut start, &mut end);
+    let was_changed = prepare_relative_bounds_for_interval_creation(&mut start, &mut end);
 
+    assert!(!was_changed);
     assert_eq!(start, RelativeStartBound::InfinitePast);
     assert_eq!(end, RelativeEndBound::InfiniteFuture);
 }
@@ -2349,8 +2406,9 @@ fn prepare_relative_bounds_for_interval_creation_inf_past_finite() {
     let mut start = RelativeStartBound::InfinitePast;
     let mut end = RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(1)));
 
-    prepare_relative_bounds_for_interval_creation(&mut start, &mut end);
+    let was_changed = prepare_relative_bounds_for_interval_creation(&mut start, &mut end);
 
+    assert!(!was_changed);
     assert_eq!(start, RelativeStartBound::InfinitePast);
     assert_eq!(
         end,
@@ -2363,8 +2421,9 @@ fn prepare_relative_bounds_for_interval_creation_finite_inf_future() {
     let mut start = RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(1)));
     let mut end = RelativeEndBound::InfiniteFuture;
 
-    prepare_relative_bounds_for_interval_creation(&mut start, &mut end);
+    let was_changed = prepare_relative_bounds_for_interval_creation(&mut start, &mut end);
 
+    assert!(!was_changed);
     assert_eq!(
         start,
         RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(1)))
@@ -2377,8 +2436,9 @@ fn prepare_relative_bounds_for_interval_creation_finite_finite_different_offsets
     let mut start = RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(1)));
     let mut end = RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(2)));
 
-    prepare_relative_bounds_for_interval_creation(&mut start, &mut end);
+    let was_changed = prepare_relative_bounds_for_interval_creation(&mut start, &mut end);
 
+    assert!(!was_changed);
     assert_eq!(
         start,
         RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(1)))
@@ -2394,8 +2454,9 @@ fn prepare_relative_bounds_for_interval_creation_finite_finite_different_offsets
     let mut start = RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(2)));
     let mut end = RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(1)));
 
-    prepare_relative_bounds_for_interval_creation(&mut start, &mut end);
+    let was_changed = prepare_relative_bounds_for_interval_creation(&mut start, &mut end);
 
+    assert!(was_changed);
     assert_eq!(
         start,
         RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(1)))
@@ -2411,8 +2472,9 @@ fn prepare_relative_bounds_for_interval_creation_finite_finite_same_offset_inclu
     let mut start = RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(1)));
     let mut end = RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(1)));
 
-    prepare_relative_bounds_for_interval_creation(&mut start, &mut end);
+    let was_changed = prepare_relative_bounds_for_interval_creation(&mut start, &mut end);
 
+    assert!(!was_changed);
     assert_eq!(
         start,
         RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(1)))
@@ -2431,8 +2493,9 @@ fn prepare_relative_bounds_for_interval_creation_finite_finite_same_offset_inclu
         BoundInclusivity::Exclusive,
     ));
 
-    prepare_relative_bounds_for_interval_creation(&mut start, &mut end);
+    let was_changed = prepare_relative_bounds_for_interval_creation(&mut start, &mut end);
 
+    assert!(was_changed);
     assert_eq!(
         start,
         RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(1)))

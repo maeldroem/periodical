@@ -121,8 +121,8 @@ fn layered_abs_bounds_sym_diff_run() {
     assert_eq!(
         first_layer_data
             .abs_bounds_iter()
-            .united()
-            .layer(second_layer_data.abs_bounds_iter().united())
+            .unite_bounds()
+            .layer(second_layer_data.abs_bounds_iter().unite_bounds())
             .abs_symmetric_difference_layered()
             .collect::<Vec<_>>(),
         vec![
@@ -305,8 +305,8 @@ fn layered_rel_bounds_sym_diff_run() {
     assert_eq!(
         first_layer_data
             .rel_bounds_iter()
-            .united()
-            .layer(second_layer_data.rel_bounds_iter().united())
+            .unite_bounds()
+            .layer(second_layer_data.rel_bounds_iter().unite_bounds())
             .rel_symmetric_difference_layered()
             .collect::<Vec<_>>(),
         vec![

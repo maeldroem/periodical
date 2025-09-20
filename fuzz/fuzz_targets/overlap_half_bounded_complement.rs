@@ -18,7 +18,7 @@ fuzz_target!(|data: (HalfBoundedAbsoluteInterval, OverlapRuleSet)| {
 
     match (
         source_half_bounded.opening_direction(),
-        source_half_bounded.reference_time_inclusivity(),
+        source_half_bounded.reference_inclusivity(),
         rule_set,
     ) {
         (

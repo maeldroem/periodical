@@ -1,4 +1,47 @@
-//! Interval bound re-precising
+//! Precision change for intervals and bounds
+//!
+//! This module is in charge of handling the act of changing the precision of intervals and bounds: (re-)_precising_.
+//!
+//! Precising intervals and bounds works differently depending
+//! on their [`Relativity`](crate::intervals::meta::Relativity).
+//!
+//! For absolute structures, [`PreciseAbsoluteInterval`] handles intervals, [`PreciseAbsoluteBound`] handles bounds.
+//!
+//! For relative structures, the sibling traits do not exist as of version `0.1`, but are planned for future versions.
+//!
+//! The precision itself is defined by [`Precision`].
+//!
+//! # Examples
+//!
+//! ```
+//! # use chrono::{DateTime, Duration, Utc};
+//! # use periodical::ops::Precision;
+//! # use periodical::intervals::absolute::{
+//! #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+//! # };
+//! # use periodical::intervals::ops::precision::PreciseAbsoluteInterval;
+//! let interval = AbsoluteBounds::new(
+//!     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+//!         "2025-01-01 08:03:29.591Z".parse::<DateTime<Utc>>()?,
+//!     )),
+//!     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+//!         "2025-01-01 15:57:44.041Z".parse::<DateTime<Utc>>()?,
+//!     )),
+//! );
+//!
+//! assert_eq!(
+//!     interval.precise_interval(Precision::ToPast(Duration::minutes(5))),
+//!     Ok(AbsoluteBounds::new(
+//!         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+//!             "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+//!         )),
+//!         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+//!             "2025-01-01 15:55:00Z".parse::<DateTime<Utc>>()?,
+//!         )),
+//!     )),
+//! );
+//! # Ok::<(), chrono::format::ParseError>(())
+//! ```
 
 use chrono::{DateTime, Utc};
 
@@ -11,130 +54,253 @@ use crate::intervals::absolute::{
 use crate::intervals::special::EmptyInterval;
 use crate::ops::{Precision, PrecisionError};
 
-/// Trait to try to re-precise absolute bounds
-pub trait PreciseAbsoluteBounds {
-    /// Output of methods precising the bounds
-    type PrecisedBoundsOutput;
+/// Ability to precise absolute intervals
+///
+/// The precision itself is defined by [`Precision`].
+///
+/// # Examples
+///
+/// ```
+/// # use chrono::{DateTime, Duration, Utc};
+/// # use periodical::ops::Precision;
+/// # use periodical::intervals::absolute::{
+/// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+/// # };
+/// # use periodical::intervals::ops::precision::PreciseAbsoluteInterval;
+/// let interval = AbsoluteBounds::new(
+///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+///         "2025-01-01 08:03:29.591Z".parse::<DateTime<Utc>>()?,
+///     )),
+///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+///         "2025-01-01 15:57:44.041Z".parse::<DateTime<Utc>>()?,
+///     )),
+/// );
+///
+/// assert_eq!(
+///     interval.precise_interval(Precision::ToPast(Duration::minutes(5))),
+///     Ok(AbsoluteBounds::new(
+///         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+///             "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+///         )),
+///         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+///             "2025-01-01 15:55:00Z".parse::<DateTime<Utc>>()?,
+///         )),
+///     )),
+/// );
+/// # Ok::<(), chrono::format::ParseError>(())
+/// ```
+pub trait PreciseAbsoluteInterval {
+    /// Output of methods precising an interval
+    type PrecisedIntervalOutput;
 
-    /// Output of methods precising the start bound
-    type PrecisedStartBoundOutput;
-
-    /// Output of methods precising the end bound
-    type PrecisedEndBoundOutput;
-
-    /// Precises the start and end bound with different precisions for both of them
+    /// Precises the start and end bounds with different [`Precision`]s
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Duration, Utc};
+    /// # use periodical::ops::Precision;
+    /// # use periodical::intervals::absolute::{
+    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+    /// # };
+    /// # use periodical::intervals::ops::precision::PreciseAbsoluteInterval;
+    /// let interval = AbsoluteBounds::new(
+    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+    ///         "2025-01-01 08:03:29.591Z".parse::<DateTime<Utc>>()?,
+    ///     )),
+    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+    ///         "2025-01-01 15:57:44.041Z".parse::<DateTime<Utc>>()?,
+    ///     )),
+    /// );
+    ///
+    /// assert_eq!(
+    ///     interval.precise_interval_with_different_precisions(
+    ///         Precision::ToPast(Duration::minutes(5)),
+    ///         Precision::ToFuture(Duration::minutes(5)),
+    ///     ),
+    ///     Ok(AbsoluteBounds::new(
+    ///         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+    ///             "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+    ///         )),
+    ///         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+    ///             "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
+    ///         )),
+    ///     )),
+    /// );
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
-    fn precise_bounds_with_different_precisions(
+    fn precise_interval_with_different_precisions(
         &self,
         precision_start: Precision,
         precision_end: Precision,
-    ) -> Self::PrecisedBoundsOutput;
+    ) -> Self::PrecisedIntervalOutput;
 
-    /// Precises the start and end bound with the given precision
+    /// Precises the start and end bounds with the given [`Precision`]
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Duration, Utc};
+    /// # use periodical::ops::Precision;
+    /// # use periodical::intervals::absolute::{
+    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+    /// # };
+    /// # use periodical::intervals::ops::precision::PreciseAbsoluteInterval;
+    /// let interval = AbsoluteBounds::new(
+    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+    ///         "2025-01-01 08:03:29.591Z".parse::<DateTime<Utc>>()?,
+    ///     )),
+    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+    ///         "2025-01-01 15:57:44.041Z".parse::<DateTime<Utc>>()?,
+    ///     )),
+    /// );
+    ///
+    /// assert_eq!(
+    ///     interval.precise_interval(Precision::ToPast(Duration::minutes(5))),
+    ///     Ok(AbsoluteBounds::new(
+    ///         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+    ///             "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+    ///         )),
+    ///         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+    ///             "2025-01-01 15:55:00Z".parse::<DateTime<Utc>>()?,
+    ///         )),
+    ///     )),
+    /// );
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
-    fn precise_bounds(&self, precision: Precision) -> Self::PrecisedBoundsOutput {
-        self.precise_bounds_with_different_precisions(precision, precision)
+    fn precise_interval(&self, precision: Precision) -> Self::PrecisedIntervalOutput {
+        self.precise_interval_with_different_precisions(precision, precision)
     }
 
-    /// Precises the start bound with the given precision
+    /// Precises the start and end bounds with different precisions and base times for both of them
+    ///
+    /// See [`Precision::precise_time_with_base_time`] for more information.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Duration, Utc};
+    /// # use periodical::ops::Precision;
+    /// # use periodical::intervals::absolute::{
+    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+    /// # };
+    /// # use periodical::intervals::ops::precision::PreciseAbsoluteInterval;
+    /// let interval = AbsoluteBounds::new(
+    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+    ///         "2025-01-01 08:11:29.591Z".parse::<DateTime<Utc>>()?,
+    ///     )),
+    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+    ///         "2025-01-01 15:57:44.041Z".parse::<DateTime<Utc>>()?,
+    ///     )),
+    /// );
+    ///
+    /// assert_eq!(
+    ///     interval.precise_interval_with_different_precisions_with_base_time(
+    ///         Precision::ToFuture(Duration::minutes(7)),
+    ///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+    ///         Precision::ToPast(Duration::minutes(7)),
+    ///         "2025-01-01 15:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     ),
+    ///     Ok(AbsoluteBounds::new(
+    ///         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+    ///             "2025-01-01 08:14:00Z".parse::<DateTime<Utc>>()?,
+    ///         )),
+    ///         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+    ///             "2025-01-01 15:56:00Z".parse::<DateTime<Utc>>()?,
+    ///         )),
+    ///     )),
+    /// );
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
-    fn precise_start_bound(&self, precision: Precision) -> Self::PrecisedStartBoundOutput;
-
-    /// Precises the end bound with the given precision
-    #[must_use]
-    fn precise_end_bound(&self, precision: Precision) -> Self::PrecisedEndBoundOutput;
-
-    /// Precises the start and end bound with different precisions and base times for both of them
-    #[must_use]
-    fn precise_bounds_with_different_precisions_with_base_time(
+    fn precise_interval_with_different_precisions_with_base_time(
         &self,
         precision_start: Precision,
         base_start: DateTime<Utc>,
         precision_end: Precision,
         base_end: DateTime<Utc>,
-    ) -> Self::PrecisedBoundsOutput;
+    ) -> Self::PrecisedIntervalOutput;
 
     /// Precises the start and end bound with the given precision and base time
+    ///
+    /// See [`Precision::precise_time`] for more information.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Duration, Utc};
+    /// # use periodical::ops::Precision;
+    /// # use periodical::intervals::absolute::{
+    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+    /// # };
+    /// # use periodical::intervals::ops::precision::PreciseAbsoluteInterval;
+    /// let interval = AbsoluteBounds::new(
+    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+    ///         "2025-01-01 08:11:29.591Z".parse::<DateTime<Utc>>()?,
+    ///     )),
+    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+    ///         "2025-01-01 15:57:44.041Z".parse::<DateTime<Utc>>()?,
+    ///     )),
+    /// );
+    ///
+    /// assert_eq!(
+    ///     interval.precise_interval_with_base_time(
+    ///         Precision::ToFuture(Duration::minutes(7)),
+    ///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     ),
+    ///     Ok(AbsoluteBounds::new(
+    ///         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+    ///             "2025-01-01 08:14:00Z".parse::<DateTime<Utc>>()?,
+    ///         )),
+    ///         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+    ///             "2025-01-01 16:03:00Z".parse::<DateTime<Utc>>()?,
+    ///         )),
+    ///     )),
+    /// );
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
-    fn precise_bounds_with_base_time(&self, precision: Precision, base: DateTime<Utc>) -> Self::PrecisedBoundsOutput {
-        self.precise_bounds_with_different_precisions_with_base_time(precision, base, precision, base)
+    fn precise_interval_with_base_time(
+        &self,
+        precision: Precision,
+        base: DateTime<Utc>,
+    ) -> Self::PrecisedIntervalOutput {
+        self.precise_interval_with_different_precisions_with_base_time(precision, base, precision, base)
     }
-
-    /// Precises the start bound with the given precision and base time
-    #[must_use]
-    fn precise_start_bound_with_base_time(
-        &self,
-        precision: Precision,
-        base: DateTime<Utc>,
-    ) -> Self::PrecisedStartBoundOutput;
-
-    /// Precises the end bound with the given precision and base time
-    #[must_use]
-    fn precise_end_bound_with_base_time(
-        &self,
-        precision: Precision,
-        base: DateTime<Utc>,
-    ) -> Self::PrecisedEndBoundOutput;
 }
 
-impl PreciseAbsoluteBounds for AbsoluteBounds {
-    type PrecisedBoundsOutput = Result<Self, PrecisionError>;
-    type PrecisedStartBoundOutput = Result<AbsoluteStartBound, PrecisionError>;
-    type PrecisedEndBoundOutput = Result<AbsoluteEndBound, PrecisionError>;
+impl PreciseAbsoluteInterval for AbsoluteBounds {
+    type PrecisedIntervalOutput = Result<Self, PrecisionError>;
 
-    fn precise_bounds_with_different_precisions(
+    fn precise_interval_with_different_precisions(
         &self,
         precision_start: Precision,
         precision_end: Precision,
-    ) -> Self::PrecisedBoundsOutput {
+    ) -> Self::PrecisedIntervalOutput {
         precise_abs_bounds(self, precision_start, precision_end)
     }
 
-    fn precise_start_bound(&self, precision: Precision) -> Self::PrecisedStartBoundOutput {
-        precise_abs_start_bound(self.start(), precision)
-    }
-
-    fn precise_end_bound(&self, precision: Precision) -> Self::PrecisedEndBoundOutput {
-        precise_abs_end_bound(self.end(), precision)
-    }
-
-    fn precise_bounds_with_different_precisions_with_base_time(
+    fn precise_interval_with_different_precisions_with_base_time(
         &self,
         precision_start: Precision,
         base_start: DateTime<Utc>,
         precision_end: Precision,
         base_end: DateTime<Utc>,
-    ) -> Self::PrecisedBoundsOutput {
+    ) -> Self::PrecisedIntervalOutput {
         precise_abs_bounds_with_base_time(self, precision_start, base_start, precision_end, base_end)
-    }
-
-    fn precise_start_bound_with_base_time(
-        &self,
-        precision: Precision,
-        base: DateTime<Utc>,
-    ) -> Self::PrecisedStartBoundOutput {
-        precise_abs_start_bound_with_base_time(self.start(), precision, base)
-    }
-
-    fn precise_end_bound_with_base_time(
-        &self,
-        precision: Precision,
-        base: DateTime<Utc>,
-    ) -> Self::PrecisedEndBoundOutput {
-        precise_abs_end_bound_with_base_time(self.end(), precision, base)
     }
 }
 
-impl PreciseAbsoluteBounds for EmptiableAbsoluteBounds {
-    type PrecisedBoundsOutput = Result<Self, PrecisionError>;
-    type PrecisedStartBoundOutput = Result<Option<AbsoluteStartBound>, PrecisionError>;
-    type PrecisedEndBoundOutput = Result<Option<AbsoluteEndBound>, PrecisionError>;
+impl PreciseAbsoluteInterval for EmptiableAbsoluteBounds {
+    type PrecisedIntervalOutput = Result<Self, PrecisionError>;
 
-    fn precise_bounds_with_different_precisions(
+    fn precise_interval_with_different_precisions(
         &self,
         start_precision: Precision,
         end_precision: Precision,
-    ) -> Self::PrecisedBoundsOutput {
+    ) -> Self::PrecisedIntervalOutput {
         if let EmptiableAbsoluteBounds::Bound(abs_bounds) = self {
             return Ok(EmptiableAbsoluteBounds::Bound(precise_abs_bounds(
                 abs_bounds,
@@ -146,29 +312,13 @@ impl PreciseAbsoluteBounds for EmptiableAbsoluteBounds {
         Ok(EmptiableAbsoluteBounds::Empty)
     }
 
-    fn precise_start_bound(&self, precision: Precision) -> Self::PrecisedStartBoundOutput {
-        if let EmptiableAbsoluteBounds::Bound(abs_bounds) = self {
-            return Ok(Some(precise_abs_start_bound(abs_bounds.start(), precision)?));
-        }
-
-        Ok(None)
-    }
-
-    fn precise_end_bound(&self, precision: Precision) -> Self::PrecisedEndBoundOutput {
-        if let EmptiableAbsoluteBounds::Bound(abs_bounds) = self {
-            return Ok(Some(precise_abs_end_bound(abs_bounds.end(), precision)?));
-        }
-
-        Ok(None)
-    }
-
-    fn precise_bounds_with_different_precisions_with_base_time(
+    fn precise_interval_with_different_precisions_with_base_time(
         &self,
         precision_start: Precision,
         base_start: DateTime<Utc>,
         precision_end: Precision,
         base_end: DateTime<Utc>,
-    ) -> Self::PrecisedBoundsOutput {
+    ) -> Self::PrecisedIntervalOutput {
         if let EmptiableAbsoluteBounds::Bound(abs_bounds) = self {
             return Ok(EmptiableAbsoluteBounds::Bound(precise_abs_bounds_with_base_time(
                 abs_bounds,
@@ -181,50 +331,16 @@ impl PreciseAbsoluteBounds for EmptiableAbsoluteBounds {
 
         Ok(EmptiableAbsoluteBounds::Empty)
     }
-
-    fn precise_start_bound_with_base_time(
-        &self,
-        precision: Precision,
-        base: DateTime<Utc>,
-    ) -> Self::PrecisedStartBoundOutput {
-        if let EmptiableAbsoluteBounds::Bound(abs_bounds) = self {
-            return Ok(Some(precise_abs_start_bound_with_base_time(
-                abs_bounds.start(),
-                precision,
-                base,
-            )?));
-        }
-
-        Ok(None)
-    }
-
-    fn precise_end_bound_with_base_time(
-        &self,
-        precision: Precision,
-        base: DateTime<Utc>,
-    ) -> Self::PrecisedEndBoundOutput {
-        if let EmptiableAbsoluteBounds::Bound(abs_bounds) = self {
-            return Ok(Some(precise_abs_end_bound_with_base_time(
-                abs_bounds.end(),
-                precision,
-                base,
-            )?));
-        }
-
-        Ok(None)
-    }
 }
 
-impl PreciseAbsoluteBounds for AbsoluteInterval {
-    type PrecisedBoundsOutput = Result<Self, PrecisionError>;
-    type PrecisedStartBoundOutput = Result<Option<AbsoluteStartBound>, PrecisionError>;
-    type PrecisedEndBoundOutput = Result<Option<AbsoluteEndBound>, PrecisionError>;
+impl PreciseAbsoluteInterval for AbsoluteInterval {
+    type PrecisedIntervalOutput = Result<Self, PrecisionError>;
 
-    fn precise_bounds_with_different_precisions(
+    fn precise_interval_with_different_precisions(
         &self,
         precision_start: Precision,
         precision_end: Precision,
-    ) -> Self::PrecisedBoundsOutput {
+    ) -> Self::PrecisedIntervalOutput {
         if let EmptiableAbsoluteBounds::Bound(ref abs_bounds) = self.emptiable_abs_bounds() {
             return Ok(AbsoluteInterval::from(precise_abs_bounds(
                 abs_bounds,
@@ -236,29 +352,13 @@ impl PreciseAbsoluteBounds for AbsoluteInterval {
         Ok(AbsoluteInterval::Empty(EmptyInterval))
     }
 
-    fn precise_start_bound(&self, precision: Precision) -> Self::PrecisedStartBoundOutput {
-        if let EmptiableAbsoluteBounds::Bound(abs_bounds) = self.emptiable_abs_bounds() {
-            return Ok(Some(precise_abs_start_bound(abs_bounds.start(), precision)?));
-        }
-
-        Ok(None)
-    }
-
-    fn precise_end_bound(&self, precision: Precision) -> Self::PrecisedEndBoundOutput {
-        if let EmptiableAbsoluteBounds::Bound(abs_bounds) = self.emptiable_abs_bounds() {
-            return Ok(Some(precise_abs_end_bound(abs_bounds.end(), precision)?));
-        }
-
-        Ok(None)
-    }
-
-    fn precise_bounds_with_different_precisions_with_base_time(
+    fn precise_interval_with_different_precisions_with_base_time(
         &self,
         precision_start: Precision,
         base_start: DateTime<Utc>,
         precision_end: Precision,
         base_end: DateTime<Utc>,
-    ) -> Self::PrecisedBoundsOutput {
+    ) -> Self::PrecisedIntervalOutput {
         if let EmptiableAbsoluteBounds::Bound(ref abs_bounds) = self.emptiable_abs_bounds() {
             return Ok(AbsoluteInterval::from(precise_abs_bounds_with_base_time(
                 abs_bounds,
@@ -271,37 +371,132 @@ impl PreciseAbsoluteBounds for AbsoluteInterval {
 
         Ok(AbsoluteInterval::Empty(EmptyInterval))
     }
+}
 
-    fn precise_start_bound_with_base_time(
-        &self,
-        precision: Precision,
-        base: DateTime<Utc>,
-    ) -> Self::PrecisedStartBoundOutput {
-        if let EmptiableAbsoluteBounds::Bound(abs_bounds) = self.emptiable_abs_bounds() {
-            return Ok(Some(precise_abs_start_bound_with_base_time(
-                abs_bounds.start(),
-                precision,
-                base,
-            )?));
-        }
+/// Ability to precise absolute bounds
+///
+/// The precision itself is defined by [`Precision`].
+///
+/// # Examples
+///
+/// ```
+/// # use chrono::{DateTime, Duration, Utc};
+/// # use periodical::ops::Precision;
+/// # use periodical::intervals::absolute::{AbsoluteFiniteBound, AbsoluteStartBound};
+/// # use periodical::intervals::meta::BoundInclusivity;
+/// # use periodical::intervals::ops::precision::PreciseAbsoluteBound;
+/// let bound = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+///     "2025-01-01 08:24:41Z".parse::<DateTime<Utc>>()?,
+///     BoundInclusivity::Exclusive,
+/// ));
+///
+/// assert_eq!(
+///     bound.precise_bound(Precision::ToFuture(Duration::minutes(5))),
+///     Ok(AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+///         "2025-01-01 08:25:00Z".parse::<DateTime<Utc>>()?,
+///         BoundInclusivity::Exclusive,
+///     ))),
+/// );
+/// # Ok::<(), chrono::format::ParseError>(())
+/// ```
+pub trait PreciseAbsoluteBound {
+    type PrecisedBoundOutput;
 
-        Ok(None)
+    /// Precises the bound with the given precision
+    ///
+    /// See [`Precision::precise_time`] for more information.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Duration, Utc};
+    /// # use periodical::ops::Precision;
+    /// # use periodical::intervals::absolute::{AbsoluteFiniteBound, AbsoluteStartBound};
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// # use periodical::intervals::ops::precision::PreciseAbsoluteBound;
+    /// let bound = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+    ///     "2025-01-01 08:24:41Z".parse::<DateTime<Utc>>()?,
+    ///     BoundInclusivity::Exclusive,
+    /// ));
+    ///
+    /// assert_eq!(
+    ///     bound.precise_bound(Precision::ToFuture(Duration::minutes(5))),
+    ///     Ok(AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+    ///         "2025-01-01 08:25:00Z".parse::<DateTime<Utc>>()?,
+    ///         BoundInclusivity::Exclusive,
+    ///     ))),
+    /// );
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
+    #[must_use]
+    fn precise_bound(&self, precision: Precision) -> Self::PrecisedBoundOutput;
+
+    /// Precises the bound with the given precision and base time
+    ///
+    /// See [`Precision::precise_time_with_base_time`] for more information.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Duration, Utc};
+    /// # use periodical::ops::Precision;
+    /// # use periodical::intervals::absolute::{AbsoluteFiniteBound, AbsoluteStartBound};
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// # use periodical::intervals::ops::precision::PreciseAbsoluteBound;
+    /// let bound = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+    ///     "2025-01-01 08:24:41Z".parse::<DateTime<Utc>>()?,
+    ///     BoundInclusivity::Exclusive,
+    /// ));
+    ///
+    /// assert_eq!(
+    ///     bound.precise_bound_with_base_time(
+    ///         Precision::ToFuture(Duration::minutes(7)),
+    ///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     ),
+    ///     Ok(AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+    ///         "2025-01-01 08:28:00Z".parse::<DateTime<Utc>>()?,
+    ///         BoundInclusivity::Exclusive,
+    ///     ))),
+    /// );
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
+    #[must_use]
+    fn precise_bound_with_base_time(&self, precision: Precision, base: DateTime<Utc>) -> Self::PrecisedBoundOutput;
+}
+
+impl PreciseAbsoluteBound for AbsoluteFiniteBound {
+    type PrecisedBoundOutput = Result<Self, PrecisionError>;
+
+    fn precise_bound(&self, precision: Precision) -> Self::PrecisedBoundOutput {
+        precise_abs_finite_bound(self, precision)
     }
 
-    fn precise_end_bound_with_base_time(
-        &self,
-        precision: Precision,
-        base: DateTime<Utc>,
-    ) -> Self::PrecisedEndBoundOutput {
-        if let EmptiableAbsoluteBounds::Bound(abs_bounds) = self.emptiable_abs_bounds() {
-            return Ok(Some(precise_abs_end_bound_with_base_time(
-                abs_bounds.end(),
-                precision,
-                base,
-            )?));
-        }
+    fn precise_bound_with_base_time(&self, precision: Precision, base: DateTime<Utc>) -> Self::PrecisedBoundOutput {
+        precise_abs_finite_bound_with_base_time(self, precision, base)
+    }
+}
 
-        Ok(None)
+impl PreciseAbsoluteBound for AbsoluteStartBound {
+    type PrecisedBoundOutput = Result<Self, PrecisionError>;
+
+    fn precise_bound(&self, precision: Precision) -> Self::PrecisedBoundOutput {
+        precise_abs_start_bound(self, precision)
+    }
+
+    fn precise_bound_with_base_time(&self, precision: Precision, base: DateTime<Utc>) -> Self::PrecisedBoundOutput {
+        precise_abs_start_bound_with_base_time(self, precision, base)
+    }
+}
+
+impl PreciseAbsoluteBound for AbsoluteEndBound {
+    type PrecisedBoundOutput = Result<Self, PrecisionError>;
+
+    fn precise_bound(&self, precision: Precision) -> Self::PrecisedBoundOutput {
+        precise_abs_end_bound(self, precision)
+    }
+
+    fn precise_bound_with_base_time(&self, precision: Precision, base: DateTime<Utc>) -> Self::PrecisedBoundOutput {
+        precise_abs_end_bound_with_base_time(self, precision, base)
     }
 }
 
@@ -321,6 +516,21 @@ pub fn precise_abs_bounds(
     ))
 }
 
+/// Precises an [`AbsoluteFiniteBound`] with the given [`Precision`]
+///
+/// # Errors
+///
+/// See [`Precision::precise_time`]
+pub fn precise_abs_finite_bound(
+    bound: &AbsoluteFiniteBound,
+    precision: Precision,
+) -> Result<AbsoluteFiniteBound, PrecisionError> {
+    Ok(AbsoluteFiniteBound::new_with_inclusivity(
+        precision.precise_time(bound.time())?,
+        bound.inclusivity(),
+    ))
+}
+
 /// Precises an [`AbsoluteStartBound`] with the given [`Precision`]
 ///
 /// # Errors
@@ -333,10 +543,7 @@ pub fn precise_abs_start_bound(
     match bound {
         AbsoluteStartBound::InfinitePast => Ok(*bound),
         AbsoluteStartBound::Finite(finite_bound) => {
-            Ok(AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                precision.precise_time(finite_bound.time())?,
-                finite_bound.inclusivity(),
-            )))
+            precise_abs_finite_bound(finite_bound, precision).map(AbsoluteStartBound::Finite)
         },
     }
 }
@@ -353,10 +560,7 @@ pub fn precise_abs_end_bound(
     match bound {
         AbsoluteEndBound::InfiniteFuture => Ok(*bound),
         AbsoluteEndBound::Finite(finite_bound) => {
-            Ok(AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                precision.precise_time(finite_bound.time())?,
-                finite_bound.inclusivity(),
-            )))
+            precise_abs_finite_bound(finite_bound, precision).map(AbsoluteEndBound::Finite)
         },
     }
 }
@@ -379,6 +583,22 @@ pub fn precise_abs_bounds_with_base_time(
     ))
 }
 
+/// Precises an [`AbsoluteFiniteBound`] with the given [`Precision`]
+///
+/// # Errors
+///
+/// See [`Precision::precise_time_with_base_time`]
+pub fn precise_abs_finite_bound_with_base_time(
+    bound: &AbsoluteFiniteBound,
+    precision: Precision,
+    base: DateTime<Utc>,
+) -> Result<AbsoluteFiniteBound, PrecisionError> {
+    Ok(AbsoluteFiniteBound::new_with_inclusivity(
+        precision.precise_time_with_base_time(bound.time(), base)?,
+        bound.inclusivity(),
+    ))
+}
+
 /// Precises an [`AbsoluteStartBound`] with the given [`Precision`]
 ///
 /// # Errors
@@ -392,10 +612,7 @@ pub fn precise_abs_start_bound_with_base_time(
     match bound {
         AbsoluteStartBound::InfinitePast => Ok(*bound),
         AbsoluteStartBound::Finite(finite_bound) => {
-            Ok(AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                precision.precise_time_with_base_time(finite_bound.time(), base)?,
-                finite_bound.inclusivity(),
-            )))
+            precise_abs_finite_bound_with_base_time(finite_bound, precision, base).map(AbsoluteStartBound::Finite)
         },
     }
 }
@@ -413,10 +630,7 @@ pub fn precise_abs_end_bound_with_base_time(
     match bound {
         AbsoluteEndBound::InfiniteFuture => Ok(*bound),
         AbsoluteEndBound::Finite(finite_bound) => {
-            Ok(AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                precision.precise_time_with_base_time(finite_bound.time(), base)?,
-                finite_bound.inclusivity(),
-            )))
+            precise_abs_finite_bound_with_base_time(finite_bound, precision, base).map(AbsoluteEndBound::Finite)
         },
     }
 }

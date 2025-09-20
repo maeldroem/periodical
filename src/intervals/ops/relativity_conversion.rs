@@ -1,6 +1,7 @@
 //! Relativity conversion
 //!
-//! Conversion from absolute intervals to relative intervals, and conversely.
+//! Conversion from absolute to relative is defined by [`ToRelative`].
+//! Its opposite, conversion from relative to absolute, is defined by [`ToAbsolute`].
 
 use chrono::{DateTime, Utc};
 
@@ -15,14 +16,81 @@ use crate::intervals::relative::{
 };
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 
-/// Conversion trait for every interval that can be converted into an absolute interval
+/// Conversion into absolute
+///
+/// This trait is reflexive: absolute structures should implement [`ToAbsolute`].
+///
+/// # Examples
+///
+/// ```
+/// # use chrono::{DateTime, Duration, Utc};
+/// # use periodical::intervals::absolute::{
+/// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+/// # };
+/// # use periodical::intervals::ops::relativity_conversion::ToAbsolute;
+/// # use periodical::intervals::relative::{
+/// #     RelativeBounds, RelativeEndBound, RelativeFiniteBound, RelativeStartBound,
+/// # };
+/// let rel_interval = RelativeBounds::new(
+///     RelativeStartBound::Finite(RelativeFiniteBound::new(
+///         Duration::hours(8),
+///     )),
+///     RelativeEndBound::Finite(RelativeFiniteBound::new(
+///         Duration::hours(16),
+///     )),
+/// );
+///
+/// assert_eq!(
+///     rel_interval.to_absolute("2025-01-01 00:00:00Z".parse::<DateTime<Utc>>()?),
+///     AbsoluteBounds::new(
+///         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+///             "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+///         )),
+///         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+///             "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
+///         )),
+///     ),
+/// );
+/// # Ok::<(), chrono::format::ParseError>(())
+/// ```
 pub trait ToAbsolute {
     type AbsoluteType;
 
-    /// Converts any interval into an absolute interval
+    /// Converts into absolute
     ///
-    /// If relative, then a new absolute interval is created from the relative one.
-    /// If absolute or [any](super::meta::Relativity::Any), then a clone of the current interval is made.
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Duration, Utc};
+    /// # use periodical::intervals::absolute::{
+    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+    /// # };
+    /// # use periodical::intervals::ops::relativity_conversion::ToAbsolute;
+    /// # use periodical::intervals::relative::{
+    /// #     RelativeBounds, RelativeEndBound, RelativeFiniteBound, RelativeStartBound,
+    /// # };
+    /// let rel_interval = RelativeBounds::new(
+    ///     RelativeStartBound::Finite(RelativeFiniteBound::new(
+    ///         Duration::hours(8),
+    ///     )),
+    ///     RelativeEndBound::Finite(RelativeFiniteBound::new(
+    ///         Duration::hours(16),
+    ///     )),
+    /// );
+    ///
+    /// assert_eq!(
+    ///     rel_interval.to_absolute("2025-01-01 00:00:00Z".parse::<DateTime<Utc>>()?),
+    ///     AbsoluteBounds::new(
+    ///         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+    ///             "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+    ///         )),
+    ///         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+    ///             "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
+    ///         )),
+    ///     ),
+    /// );
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     fn to_absolute(&self, reference_time: DateTime<Utc>) -> Self::AbsoluteType;
 }
@@ -187,8 +255,8 @@ impl ToAbsolute for HalfBoundedRelativeInterval {
 
     fn to_absolute(&self, reference_time: DateTime<Utc>) -> Self::AbsoluteType {
         HalfBoundedAbsoluteInterval::new_with_inclusivity(
-            reference_time + self.offset(),
-            self.reference_time_inclusivity(),
+            reference_time + self.reference_offset(),
+            self.reference_inclusivity(),
             self.opening_direction(),
         )
     }
@@ -207,14 +275,81 @@ impl ToAbsolute for RelativeInterval {
     }
 }
 
-/// Conversion trait for every interval that can be converted into a relative interval
+/// Conversion into relative
+///
+/// This trait is reflexive: relative structures should implement [`ToRelative`].
+///
+/// # Examples
+///
+/// ```
+/// # use chrono::{DateTime, Duration, Utc};
+/// # use periodical::intervals::absolute::{
+/// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+/// # };
+/// # use periodical::intervals::ops::relativity_conversion::ToRelative;
+/// # use periodical::intervals::relative::{
+/// #     RelativeBounds, RelativeEndBound, RelativeFiniteBound, RelativeStartBound,
+/// # };
+/// let abs_interval = AbsoluteBounds::new(
+///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+///     )),
+///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+///         "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
+///     )),
+/// );
+///
+/// assert_eq!(
+///     abs_interval.to_relative("2025-01-01 00:00:00Z".parse::<DateTime<Utc>>()?),
+///     RelativeBounds::new(
+///         RelativeStartBound::Finite(RelativeFiniteBound::new(
+///             Duration::hours(8),
+///         )),
+///         RelativeEndBound::Finite(RelativeFiniteBound::new(
+///             Duration::hours(16),
+///         )),
+///     ),
+/// );
+/// # Ok::<(), chrono::format::ParseError>(())
+/// ```
 pub trait ToRelative {
     type RelativeType;
 
-    /// Converts any interval into a relative interval
+    /// Converts into relative
     ///
-    /// If absolute, then a new relative interval is created from the absolute one.
-    /// If relative or [any](super::meta::Relativity::Any), then a clone of the current interval is made.
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Duration, Utc};
+    /// # use periodical::intervals::absolute::{
+    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+    /// # };
+    /// # use periodical::intervals::ops::relativity_conversion::ToRelative;
+    /// # use periodical::intervals::relative::{
+    /// #     RelativeBounds, RelativeEndBound, RelativeFiniteBound, RelativeStartBound,
+    /// # };
+    /// let abs_interval = AbsoluteBounds::new(
+    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+    ///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     )),
+    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+    ///         "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     )),
+    /// );
+    ///
+    /// assert_eq!(
+    ///     abs_interval.to_relative("2025-01-01 00:00:00Z".parse::<DateTime<Utc>>()?),
+    ///     RelativeBounds::new(
+    ///         RelativeStartBound::Finite(RelativeFiniteBound::new(
+    ///             Duration::hours(8),
+    ///         )),
+    ///         RelativeEndBound::Finite(RelativeFiniteBound::new(
+    ///             Duration::hours(16),
+    ///         )),
+    ///     ),
+    /// );
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
     #[must_use]
     fn to_relative(&self, reference_time: DateTime<Utc>) -> Self::RelativeType;
 }
@@ -316,7 +451,7 @@ impl ToRelative for HalfBoundedAbsoluteInterval {
     fn to_relative(&self, reference_time: DateTime<Utc>) -> Self::RelativeType {
         HalfBoundedRelativeInterval::new_with_inclusivity(
             self.reference_time() - reference_time,
-            self.reference_time_inclusivity(),
+            self.reference_inclusivity(),
             self.opening_direction(),
         )
     }

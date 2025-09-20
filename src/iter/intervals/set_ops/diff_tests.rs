@@ -135,14 +135,6 @@ fn peer_difference_run() {
                 )),
                 None,
             ),
-            // 7,
-            (
-                EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
-                    AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 23))),
-                    AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 25))),
-                )),
-                None,
-            ),
         ],
     );
 }
@@ -205,7 +197,7 @@ fn peer_difference_with_run() {
     let custom_difference_f = |a: &AbsoluteBounds, b: &AbsoluteBounds| -> DifferenceResult<EmptiableAbsoluteBounds> {
         if a.overlaps(b, OverlapRuleSet::VeryLenient, &DEFAULT_OVERLAP_RULES) {
             match a.remove_overlap_or_gap(b) {
-                OverlapOrGapRemovalResult::Single(x) => DifferenceResult::Shrunk(x),
+                OverlapOrGapRemovalResult::Single(x) => DifferenceResult::Single(x),
                 OverlapOrGapRemovalResult::Split(x, y) => DifferenceResult::Split(x, y),
             }
         } else {
@@ -285,14 +277,6 @@ fn peer_difference_with_run() {
                         date(&Utc, 2025, 1, 23),
                         BoundInclusivity::Exclusive,
                     )),
-                )),
-                None,
-            ),
-            // 7,
-            (
-                EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
-                    AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 23))),
-                    AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 25))),
                 )),
                 None,
             ),
