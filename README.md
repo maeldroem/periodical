@@ -59,9 +59,16 @@ And if it doesn't, feel absolutely free to [contribute](CONTRIBUTING.md) or [sug
 
 ## Future
 
+(order doesn't represent priority)
+
 - [ ] [`serde`](https://lib.rs/serde) support :1234:
 - [ ] Convenience methods for creating common intervals with ease :chart_with_upwards_trend:
 - [ ] Interval periodicity :repeat:
 - [ ] Implementation of [`rayon`](https://lib.rs/rayon) for lightning-fast iterators :zap:
-- [ ] Epsilon support for interval durations
-- [ ] [Cargo mutants](https://lib.rs/crates/cargo-mutants)
+- [ ] Epsilon support for interval durations :ant:
+- [ ] [Cargo mutants](https://lib.rs/crates/cargo-mutants) :mag:
+- [ ] Methods to get overlap/gap durations :left_right_arrow:
+- [ ] Interval formatting (standard and non-standard) :black_nib:
+- [ ] Precision change trait for relative intervals
+- [ ] Support for non-UTC timezones :globe_with_meridians:
+- [ ] Crate usage examples for practical solutions :wrench:
