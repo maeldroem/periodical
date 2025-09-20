@@ -1,10 +1,9 @@
-//! Interval iterators to operate a difference on intervals
+//! Interval iterators to operate differences on intervals
 //!
 //! # Examples
 //!
 //! ```
 //! # use chrono::{DateTime, Utc};
-//! # use periodical::ops::DifferenceResult;
 //! # use periodical::intervals::absolute::{
 //! #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, EmptiableAbsoluteBounds,
 //! # };
@@ -137,10 +136,10 @@ where
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let inner_size = self.iter.size_hint();
+        let inner_size_hint = self.iter.size_hint();
         (
-            inner_size.0.saturating_sub(1),
-            inner_size.1.map(|x| x.saturating_sub(1)),
+            inner_size_hint.0.saturating_sub(1),
+            inner_size_hint.1.map(|x| x.saturating_sub(1)),
         )
     }
 }
@@ -247,10 +246,10 @@ where
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let inner_size = self.iter.size_hint();
+        let inner_size_hint = self.iter.size_hint();
         (
-            inner_size.0.saturating_sub(1),
-            inner_size.1.map(|x| x.saturating_sub(1)),
+            inner_size_hint.0.saturating_sub(1),
+            inner_size_hint.1.map(|x| x.saturating_sub(1)),
         )
     }
 }
