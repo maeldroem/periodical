@@ -48,15 +48,6 @@ And if it doesn't, feel absolutely free to [contribute](CONTRIBUTING.md) or [sug
 
 # Roadmap :soon:
 
-## 0.1.0
-
-- [x] Tests
-- [x] Test coverage
-- [x] [`arbitrary`](https://lib.rs/arbitrary) support
-- [x] Fuzzing
-- [ ] Full-fledged documentation
-- [x] Conversion methods to create `periodical`-specific types from standard types
-
 ## Future
 
 (order doesn't represent priority)
