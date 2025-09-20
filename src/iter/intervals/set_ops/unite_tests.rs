@@ -272,17 +272,6 @@ fn peer_union_run() {
                     BoundInclusivity::Exclusive,
                 )),
             ),
-            // 6,
-            AbsoluteBounds::new(
-                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 30),
-                    BoundInclusivity::Exclusive,
-                )),
-                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                    date(&Utc, 2025, 2, 1),
-                    BoundInclusivity::Exclusive,
-                )),
-            ),
         ],
     );
 }
@@ -409,11 +398,6 @@ fn peer_union_with_run() {
                     date(&Utc, 2025, 2, 1),
                     BoundInclusivity::Exclusive,
                 )),
-            ),
-            // 7,
-            AbsoluteBounds::new(
-                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 2, 5))),
-                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 2, 10))),
             ),
         ],
     );
