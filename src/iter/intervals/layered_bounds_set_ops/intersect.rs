@@ -1,0 +1,309 @@
+//! Intersection of a [layered bounds iterator](crate::iter::intervals::layered_bounds)
+//!
+//! Operates an [intersection] on a [layered bounds iterator](crate::iter::intervals::layered_bounds).
+//!
+//! [intersection]: https://en.wikipedia.org/w/index.php?title=Intersection_(set_theory)&oldid=1191979994
+//!
+//! # Examples
+//!
+//! ```
+//! # use chrono::{DateTime, Utc};
+//! # use periodical::intervals::absolute::{
+//! #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+//! # };
+//! # use periodical::intervals::meta::BoundInclusivity;
+//! # use periodical::iter::intervals::bounds::AbsoluteBoundsIteratorDispatcher;
+//! # use periodical::iter::intervals::layered_bounds_set_ops::LayeredAbsoluteBoundsIntersectionIteratorDispatcher;
+//! # use periodical::iter::intervals::layered_bounds::{
+//! #     LayeredAbsoluteBounds, LayeredBoundsState, LayeredBoundsStateChangeAtAbsoluteBound,
+//! # };
+//! let first_layer_intervals = [
+//!     AbsoluteBounds::new(
+//!         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+//!             "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+//!         )),
+//!         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+//!             "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
+//!         )),
+//!     ),
+//!     AbsoluteBounds::new(
+//!         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+//!             "2025-01-01 13:00:00Z".parse::<DateTime<Utc>>()?,
+//!         )),
+//!         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+//!             "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
+//!         )),
+//!     ),
+//! ];
+//!
+//! let second_layer_intervals = [
+//!     AbsoluteBounds::new(
+//!         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+//!             "2025-01-01 07:00:00Z".parse::<DateTime<Utc>>()?,
+//!         )),
+//!         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+//!             "2025-01-01 11:00:00Z".parse::<DateTime<Utc>>()?,
+//!         )),
+//!     ),
+//!     AbsoluteBounds::new(
+//!         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+//!             "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
+//!         )),
+//!         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+//!             "2025-01-01 18:00:00Z".parse::<DateTime<Utc>>()?,
+//!         )),
+//!     ),
+//! ];
+//!
+//! assert_eq!(
+//!     first_layer_intervals
+//!         .abs_bounds_iter()
+//!         .unite_bounds()
+//!         .layer(second_layer_intervals.abs_bounds_iter().unite_bounds())
+//!         .abs_intersect_layered()
+//!         .collect::<Vec<_>>(),
+//!     vec![
+//!         AbsoluteBounds::new(
+//!             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+//!                 "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+//!             )),
+//!             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+//!                 "2025-01-01 11:00:00Z".parse::<DateTime<Utc>>()?,
+//!             )),
+//!         ),
+//!         AbsoluteBounds::new(
+//!             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
+//!                 "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
+//!             )),
+//!             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
+//!                 "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
+//!             )),
+//!         ),
+//!     ],
+//! );
+//! # Ok::<(), chrono::format::ParseError>(())
+//! ```
+
+use std::iter::FusedIterator;
+
+use crate::intervals::absolute::AbsoluteBounds;
+use crate::intervals::relative::RelativeBounds;
+use crate::iter::intervals::layered_bounds::{
+    LayeredBoundsState, LayeredBoundsStateChangeAtAbsoluteBound, LayeredBoundsStateChangeAtRelativeBound,
+};
+
+/// Intersection iterator
+/// for [`LayeredAbsoluteBounds`](crate::iter::intervals::layered_bounds::LayeredAbsoluteBounds)
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct LayeredAbsoluteBoundsIntersection<I> {
+    iter: I,
+    exhausted: bool,
+}
+
+impl<I> LayeredAbsoluteBoundsIntersection<I>
+where
+    I: Iterator<Item = LayeredBoundsStateChangeAtAbsoluteBound>,
+{
+    /// Creates a new [`LayeredAbsoluteBoundsIntersection`]
+    ///
+    /// # Input requirements
+    ///
+    /// 1. The iterator **must return continuous [state changes](LayeredBoundsStateChangeAtAbsoluteBound)**
+    /// 2. The state changes **must be in chronological order**
+    ///
+    /// For more precision about requirement 1, _continuous state changes_ means that the first state change
+    /// must have [`NoLayers`](LayeredBoundsState::NoLayers)
+    /// as its [old state](LayeredBoundsStateChangeAtAbsoluteBound::old_state),
+    /// the last change must have [`NoLayers`](LayeredBoundsState::NoLayers)
+    /// as its [new state](LayeredBoundsStateChangeAtAbsoluteBound::new_state), and all state changes must follow each
+    /// other, i.e. if one change transitions from state A to state B, the next change's old state must be the previous
+    /// change's new state: state B.
+    ///
+    /// All requirements are automatically guaranteed if the state changes are obtained from
+    /// [`LayeredAbsoluteBounds`](crate::iter::intervals::layered_bounds::LayeredAbsoluteBounds).
+    pub fn new(iter: I) -> LayeredAbsoluteBoundsIntersection<I> {
+        LayeredAbsoluteBoundsIntersection { iter, exhausted: false }
+    }
+}
+
+impl<I> Iterator for LayeredAbsoluteBoundsIntersection<I>
+where
+    I: Iterator<Item = LayeredBoundsStateChangeAtAbsoluteBound>,
+{
+    type Item = AbsoluteBounds;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.exhausted {
+            return None;
+        }
+
+        loop {
+            let Some(current) = self.iter.next() else {
+                self.exhausted = true;
+                return None;
+            };
+
+            if !matches!(current.new_state(), LayeredBoundsState::BothLayers) {
+                continue;
+            }
+
+            let Some(start) = current.new_state_start() else {
+                unreachable!("When the state is not `NoLayers`, the new state's start is guaranteed to exist");
+            };
+
+            let Some(next) = self.iter.next() else {
+                unreachable!(
+                    "The input requirements guarantee that the given iterator \
+                    cannot end on an active state such as `BothLayers`"
+                );
+            };
+
+            let Some(end) = next.old_state_end() else {
+                unreachable!(
+                    "We can infer the guarantee that the state change following one that transitions to `BothLayers` \
+                    must contain an end to the old state, given that the input requirements guarantee \
+                    that the given iterator cannot end on an active state such as `BothLayers`"
+                );
+            };
+
+            return Some(AbsoluteBounds::new(start, end));
+        }
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (0, self.iter.size_hint().1.map(|upper_bound| upper_bound.div_ceil(2)))
+    }
+}
+
+impl<I> FusedIterator for LayeredAbsoluteBoundsIntersection<I> where
+    I: Iterator<Item = LayeredBoundsStateChangeAtAbsoluteBound>
+{
+}
+
+/// Iterator dispatcher trait for [`LayeredAbsoluteBoundsIntersection`]
+pub trait LayeredAbsoluteBoundsIntersectionIteratorDispatcher
+where
+    Self: IntoIterator<Item = LayeredBoundsStateChangeAtAbsoluteBound> + Sized,
+{
+    /// Operates an [intersection]
+    ///
+    /// See [module documentation](crate::iter::intervals::layered_bounds_set_ops::intersect) for more information.
+    ///
+    /// [intersection]: https://en.wikipedia.org/w/index.php?title=Intersection_(set_theory)&oldid=1191979994
+    fn abs_intersect_layered(self) -> LayeredAbsoluteBoundsIntersection<Self::IntoIter> {
+        LayeredAbsoluteBoundsIntersection::new(self.into_iter())
+    }
+}
+
+impl<I> LayeredAbsoluteBoundsIntersectionIteratorDispatcher for I where
+    I: IntoIterator<Item = LayeredBoundsStateChangeAtAbsoluteBound> + Sized
+{
+}
+
+/// Intersection iterator
+/// for [`LayeredRelativeBounds`](crate::iter::intervals::layered_bounds::LayeredRelativeBounds)
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct LayeredRelativeBoundsIntersection<I> {
+    iter: I,
+    exhausted: bool,
+}
+
+impl<I> LayeredRelativeBoundsIntersection<I>
+where
+    I: Iterator<Item = LayeredBoundsStateChangeAtRelativeBound>,
+{
+    /// Creates a new [`LayeredRelativeBoundsIntersection`]
+    ///
+    /// # Input requirements
+    ///
+    /// 1. The iterator **must return continuous [state changes](LayeredBoundsStateChangeAtRelativeBound)**
+    /// 2. The state changes **must be in chronological order**
+    ///
+    /// For more precision about requirement 1, _continuous state changes_ means that the first state change
+    /// must have [`NoLayers`](LayeredBoundsState::NoLayers)
+    /// as its [old state](LayeredBoundsStateChangeAtRelativeBound::old_state),
+    /// the last change must have [`NoLayers`](LayeredBoundsState::NoLayers)
+    /// as its [new state](LayeredBoundsStateChangeAtRelativeBound::new_state), and all state changes must follow each
+    /// other, i.e. if one change transitions from state A to state B, the next change's old state must be the previous
+    /// change's new state: state B.
+    ///
+    /// All requirements are automatically guaranteed if the state changes are obtained from
+    /// [`LayeredRelativeBounds`](crate::iter::intervals::layered_bounds::LayeredRelativeBounds).
+    pub fn new(iter: I) -> LayeredRelativeBoundsIntersection<I> {
+        LayeredRelativeBoundsIntersection { iter, exhausted: false }
+    }
+}
+
+impl<I> Iterator for LayeredRelativeBoundsIntersection<I>
+where
+    I: Iterator<Item = LayeredBoundsStateChangeAtRelativeBound>,
+{
+    type Item = RelativeBounds;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.exhausted {
+            return None;
+        }
+
+        loop {
+            let Some(current) = self.iter.next() else {
+                self.exhausted = true;
+                return None;
+            };
+
+            if !matches!(current.new_state(), LayeredBoundsState::BothLayers) {
+                continue;
+            }
+
+            let Some(start) = current.new_state_start() else {
+                unreachable!("When the state is not `NoLayers`, the new state's start is guaranteed to exist");
+            };
+
+            let Some(next) = self.iter.next() else {
+                unreachable!(
+                    "The input requirements guarantee that the given iterator \
+                    cannot end on an active state such as `BothLayers`"
+                );
+            };
+
+            let Some(end) = next.old_state_end() else {
+                unreachable!(
+                    "We can infer the guarantee that the state change following one that transitions to `BothLayers` \
+                    must contain an end to the old state, given that the input requirements guarantee \
+                    that the given iterator cannot end on an active state such as `BothLayers`"
+                );
+            };
+
+            return Some(RelativeBounds::new(start, end));
+        }
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (0, self.iter.size_hint().1.map(|upper_bound| upper_bound.div_ceil(2)))
+    }
+}
+
+impl<I> FusedIterator for LayeredRelativeBoundsIntersection<I> where
+    I: Iterator<Item = LayeredBoundsStateChangeAtRelativeBound>
+{
+}
+
+/// Iterator dispatcher trait for [`LayeredRelativeBoundsIntersection`]
+pub trait LayeredRelativeBoundsIntersectionIteratorDispatcher
+where
+    Self: IntoIterator<Item = LayeredBoundsStateChangeAtRelativeBound> + Sized,
+{
+    /// Operates an [intersection]
+    ///
+    /// See [module documentation](crate::iter::intervals::layered_bounds_set_ops::intersect) for more information.
+    ///
+    /// [intersection]: https://en.wikipedia.org/w/index.php?title=Intersection_(set_theory)&oldid=1191979994
+    fn rel_intersect_layered(self) -> LayeredRelativeBoundsIntersection<Self::IntoIter> {
+        LayeredRelativeBoundsIntersection::new(self.into_iter())
+    }
+}
+
+impl<I> LayeredRelativeBoundsIntersectionIteratorDispatcher for I where
+    I: IntoIterator<Item = LayeredBoundsStateChangeAtRelativeBound> + Sized
+{
+}

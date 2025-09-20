@@ -1,13 +1,13 @@
 [package]
 name = "periodical"
 version = "0.1.0"
-authors = ["Mældrøm"]
+authors = ["Mældrøm <maeldroem@proton.me>"]
 edition = "2024"
-description = "Management of all kinds of time intervals, repeating intervals, scheduling operations and much more!"
+description = "Management of all kinds of time intervals, use it to manage schedules, find overlaps, and more!"
 documentation = "https://docs.rs/periodical"
 repository = "https://github.com/maeldroem/periodical"
 license = "BSD-3-Clause"
-keywords = ["time", "interval", "ranges", "scheduling", "periods"]
+keywords = ["time", "interval", "ranges"]
 categories = ["date-and-time"]
 
 [lints.clippy]
@@ -16,9 +16,18 @@ perf = "warn"
 style = "warn"
 pedantic = "warn"
 
+[workspace]
+resolver = "3"
+members = ["fuzz"]
+
+[workspace.dependencies]
+chrono = "0.4.42"
+
 [features]
 serde = ["dep:serde", "chrono/serde"]
+arbitrary = ["dep:arbitrary", "chrono/arbitrary"]
 
 [dependencies]
-chrono = "0.4.41"
-serde = { version = "1.0.219", optional = true }
+arbitrary = { version = "1.4.2", optional = true, features = ["derive"] }
+chrono = "0.4.42"
+serde = { version = "1.0.225", optional = true }
