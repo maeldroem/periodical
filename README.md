@@ -58,8 +58,7 @@ this can lead to pay differences or wrong checks for enforcing the legal norm.
 
 <img
     src="repo-docs/img/day-problem-naive-approach-patch-1.gif"
-    width="auto"
-    height="500"
+    style="width: auto; height: 300px;"
     alt="Day problem - naive approach patch 1"
 />
 
@@ -68,8 +67,7 @@ which need to consider adjacency as an overlap, and can introduce bugs that are 
 
 <img
     src="repo-docs/img/day-problem-naive-approach-patch-2.gif"
-    width="auto"
-    height="500"
+    style="width: auto; height: 300px;"
     alt="Day problem - naive approach patch 2"
 />
 
@@ -78,15 +76,13 @@ two intervals and will still count as being in the first day, when it's clearly 
 
 <img
     src="repo-docs/img/day-problem-naive-approach.gif"
-    width="auto"
-    height="500"
+    style="width: auto; height: 300px;"
     alt="Day problem - naive approach patch 1"
 />
 
 <img
     src="repo-docs/img/day-problem-solved-with-periodical.gif"
-    width="auto"
-    height="500"
+    style="width: auto; height: 300px;"
     alt="Day problem - naive approach patch 1"
 />
 
