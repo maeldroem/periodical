@@ -21,7 +21,7 @@ use chrono::Duration;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use crate::intervals::meta::Interval;
+use crate::intervals::meta::{Epsilon, Interval};
 
 use super::meta::{BoundInclusivity, Duration as IntervalDuration, OpeningDirection, Openness, Relativity};
 use super::prelude::*;
@@ -1496,6 +1496,7 @@ impl HasDuration for RelativeBounds {
                         .offset()
                         .checked_sub(&finite_start.offset())
                         .unwrap_or(Duration::zero()),
+                    Epsilon::from((finite_start.inclusivity(), finite_end.inclusivity())),
                 )
             },
         }
@@ -1706,7 +1707,7 @@ impl HasDuration for EmptiableRelativeBounds {
     fn duration(&self) -> IntervalDuration {
         match self {
             Self::Bound(bound) => bound.duration(),
-            Self::Empty => IntervalDuration::Finite(Duration::zero()),
+            Self::Empty => IntervalDuration::Finite(Duration::zero(), Epsilon::None),
         }
     }
 }
@@ -2176,7 +2177,10 @@ impl HasRelativity for BoundedRelativeInterval {
 
 impl HasDuration for BoundedRelativeInterval {
     fn duration(&self) -> IntervalDuration {
-        IntervalDuration::Finite(self.length)
+        IntervalDuration::Finite(
+            self.length,
+            Epsilon::from((self.from_inclusivity(), self.to_inclusivity())),
+        )
     }
 }
 

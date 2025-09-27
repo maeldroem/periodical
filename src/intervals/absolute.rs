@@ -21,7 +21,7 @@ use chrono::{DateTime, Duration, Utc};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use crate::intervals::meta::Interval;
+use crate::intervals::meta::{Epsilon, Interval};
 
 use super::meta::{BoundInclusivity, Duration as IntervalDuration, OpeningDirection, Openness, Relativity};
 use super::prelude::*;
@@ -1506,7 +1506,10 @@ impl HasDuration for AbsoluteBounds {
         match (self.start(), self.end()) {
             (AbsoluteStartBound::InfinitePast, _) | (_, AbsoluteEndBound::InfiniteFuture) => IntervalDuration::Infinite,
             (AbsoluteStartBound::Finite(finite_start), AbsoluteEndBound::Finite(finite_end)) => {
-                IntervalDuration::Finite(finite_end.time().signed_duration_since(finite_start.time()))
+                IntervalDuration::Finite(
+                    finite_end.time().signed_duration_since(finite_start.time()),
+                    Epsilon::from((finite_start.inclusivity(), finite_end.inclusivity())),
+                )
             },
         }
     }
@@ -1716,7 +1719,7 @@ impl HasDuration for EmptiableAbsoluteBounds {
     fn duration(&self) -> IntervalDuration {
         match self {
             Self::Bound(bound) => bound.duration(),
-            Self::Empty => IntervalDuration::Finite(Duration::zero()),
+            Self::Empty => IntervalDuration::Finite(Duration::zero(), Epsilon::None),
         }
     }
 }
@@ -2247,7 +2250,10 @@ impl HasRelativity for BoundedAbsoluteInterval {
 
 impl HasDuration for BoundedAbsoluteInterval {
     fn duration(&self) -> IntervalDuration {
-        IntervalDuration::Finite(self.to - self.from)
+        IntervalDuration::Finite(
+            self.to - self.from,
+            Epsilon::from((self.from_inclusivity(), self.to_inclusivity())),
+        )
     }
 }
 

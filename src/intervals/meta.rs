@@ -312,6 +312,21 @@ impl Display for Epsilon {
     }
 }
 
+/// Converts `(BoundInclusivity, BoundInclusivity)` into [`Epsilon`]
+///
+/// The tuple elements represent the start bound inclusivity and end bound inclusivity, respectively.
+/// Exclusive bounds, [`BoundInclusivity::Exclusive`], create an epsilon.
+impl From<(BoundInclusivity, BoundInclusivity)> for Epsilon {
+    fn from((start_inclusivity, end_inclusivity): (BoundInclusivity, BoundInclusivity)) -> Self {
+        match (start_inclusivity, end_inclusivity) {
+            (BoundInclusivity::Inclusive, BoundInclusivity::Inclusive) => Epsilon::None,
+            (BoundInclusivity::Exclusive, BoundInclusivity::Inclusive) => Epsilon::Start,
+            (BoundInclusivity::Inclusive, BoundInclusivity::Exclusive) => Epsilon::End,
+            (BoundInclusivity::Exclusive, BoundInclusivity::Exclusive) => Epsilon::Both,
+        }
+    }
+}
+
 /// Converts `(bool, bool)` into [`Epsilon`]
 ///
 /// The first tuple element represents whether the start bound has an epsilon,
@@ -367,8 +382,8 @@ impl Duration {
     /// # Examples
     ///
     /// ```
-    /// # use periodical::intervals::meta::Duration;
-    /// assert!(Duration::Finite(chrono::Duration::hours(1)).is_finite());
+    /// # use periodical::intervals::meta::{Duration, Epsilon};
+    /// assert!(Duration::Finite(chrono::Duration::hours(1), Epsilon::None).is_finite());
     /// ```
     #[must_use]
     pub fn is_finite(&self) -> bool {
@@ -388,7 +403,7 @@ impl Duration {
     ///     Duration::Finite(chrono::Duration::hours(2), Epsilon::End).finite(),
     ///     Some((chrono::Duration::hours(2), Epsilon::End)),
     /// );
-    /// assert_eq!(Duration::Infinite, None);
+    /// assert_eq!(Duration::Infinite.finite(), None);
     /// ```
     #[must_use]
     pub fn finite(self) -> Option<(chrono::Duration, Epsilon)> {

@@ -5,7 +5,7 @@ use crate::intervals::absolute::{
     EmptiableAbsoluteBounds, HasAbsoluteBounds, HasEmptiableAbsoluteBounds,
 };
 use crate::intervals::meta::{
-    Duration as IntervalDuration, Emptiable, HasDuration, HasOpenness, HasRelativity, Openness, Relativity,
+    Duration as IntervalDuration, Emptiable, Epsilon, HasDuration, HasOpenness, HasRelativity, Openness, Relativity,
 };
 use crate::intervals::relative::{
     BoundedRelativeInterval, EmptiableRelativeBounds, HasEmptiableRelativeBounds, HasRelativeBounds, RelativeBounds,
@@ -116,7 +116,10 @@ fn empty_interval_relativity() {
 
 #[test]
 fn empty_interval_duration() {
-    assert_eq!(EmptyInterval.duration(), IntervalDuration::Finite(Duration::zero()));
+    assert_eq!(
+        EmptyInterval.duration(),
+        IntervalDuration::Finite(Duration::zero(), Epsilon::None)
+    );
 }
 
 #[test]
