@@ -18,6 +18,8 @@ use std::ops::{Bound, Range, RangeBounds, RangeFrom, RangeFull, RangeInclusive, 
 #[cfg(feature = "arbitrary")]
 use arbitrary::Arbitrary;
 use chrono::Duration;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
 use crate::intervals::meta::Interval;
 
@@ -56,6 +58,7 @@ use super::special::{EmptyInterval, UnboundedInterval};
 /// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub struct RelativeFiniteBound {
     offset: Duration,
     inclusivity: BoundInclusivity,
@@ -233,6 +236,7 @@ impl TryFrom<Bound<Duration>> for RelativeFiniteBound {
 /// and not an offset for the start and a length for the end.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum RelativeStartBound {
     Finite(RelativeFiniteBound),
     InfinitePast,
@@ -482,6 +486,7 @@ impl From<Bound<Duration>> for RelativeStartBound {
 /// and not an offset for the start and a length for the end.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum RelativeEndBound {
     Finite(RelativeFiniteBound),
     InfiniteFuture,
@@ -894,6 +899,7 @@ pub fn prepare_relative_bounds_for_interval_creation(
 /// This enumerator is useful for storing both start and end bounds, usually for processing bounds individually.
 #[derive(Debug, Clone, Copy)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum RelativeBound {
     Start(RelativeStartBound),
     End(RelativeEndBound),
@@ -1185,6 +1191,7 @@ where
 ///
 /// [inclusive]: BoundInclusivity::Inclusive
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub struct RelativeBounds {
     start: RelativeStartBound,
     end: RelativeEndBound,
@@ -1602,6 +1609,7 @@ impl TryFrom<EmptiableRelativeBounds> for RelativeBounds {
 /// or [`crate::intervals` module documentation](crate::intervals).
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum EmptiableRelativeBounds {
     Empty,
     Bound(RelativeBounds),
@@ -1764,6 +1772,7 @@ impl From<RelativeBounds> for EmptiableRelativeBounds {
 /// Instead, if you are looking for a relative interval that doesn't keep the [openness](Openness) invariant,
 /// see [`RelativeBounds`].
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub struct BoundedRelativeInterval {
     offset: Duration,
     length: Duration,
@@ -2331,6 +2340,7 @@ impl TryFrom<RelativeInterval> for BoundedRelativeInterval {
 /// see [`RelativeBounds`].
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub struct HalfBoundedRelativeInterval {
     reference_offset: Duration,
     opening_direction: OpeningDirection,
@@ -2732,6 +2742,7 @@ impl TryFrom<RelativeInterval> for HalfBoundedRelativeInterval {
 /// the interval and perhaps extract from it to make its type immutable.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum RelativeInterval {
     Bounded(BoundedRelativeInterval),
     HalfBounded(HalfBoundedRelativeInterval),

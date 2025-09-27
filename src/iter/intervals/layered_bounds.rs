@@ -163,6 +163,8 @@ use std::ops::{Add, Sub};
 
 #[cfg(feature = "arbitrary")]
 use arbitrary::Arbitrary;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
 use crate::intervals::absolute::{AbsoluteBound, AbsoluteEndBound, AbsoluteStartBound};
 use crate::intervals::meta::BoundInclusivity;
@@ -175,6 +177,7 @@ use crate::intervals::relative::{RelativeBound, RelativeEndBound, RelativeStartB
 /// This state indicates which layers are active.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum LayeredBoundsState {
     /// No layers are active
     #[default]
@@ -260,6 +263,7 @@ impl Sub for LayeredBoundsState {
 /// [`old_state_end`](LayeredBoundsStateChangeAtAbsoluteBound::old_state_end), and when the new state begins,
 /// given by [`new_state_start`](LayeredBoundsStateChangeAtAbsoluteBound::new_state_start).
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub struct LayeredBoundsStateChangeAtAbsoluteBound {
     old_state: LayeredBoundsState,
     new_state: LayeredBoundsState,
@@ -440,6 +444,7 @@ impl LayeredBoundsStateChangeAtAbsoluteBound {
 /// [`old_state_end`](LayeredBoundsStateChangeAtRelativeBound::old_state_end), and when the new state begins,
 /// given by [`new_state_start`](LayeredBoundsStateChangeAtRelativeBound::new_state_start).
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub struct LayeredBoundsStateChangeAtRelativeBound {
     old_state: LayeredBoundsState,
     new_state: LayeredBoundsState,

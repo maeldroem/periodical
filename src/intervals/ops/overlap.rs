@@ -52,6 +52,8 @@ use std::convert::Infallible;
 
 #[cfg(feature = "arbitrary")]
 use arbitrary::Arbitrary;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
 use super::prelude::*;
 
@@ -82,6 +84,7 @@ use crate::intervals::{AbsoluteInterval, BoundedAbsoluteInterval, BoundedRelativ
 /// and then stored in the right variant of [`OverlapPosition`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum OverlapPosition {
     /// Compared interval is before the reference interval
     OutsideBefore,
@@ -274,6 +277,7 @@ impl OverlapPosition {
 /// Indicates where the overlap is situated compared to the reference interval without any ambiguity.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum DisambiguatedOverlapPosition {
     /// See [`OverlapPosition::OutsideBefore`]
     OutsideBefore,
@@ -310,6 +314,7 @@ pub enum DisambiguatedOverlapPosition {
 /// See [`overlaps`](CanPositionOverlap::overlaps) for more.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum OverlapRuleSet {
     /// Strict rule set
     ///
@@ -618,6 +623,7 @@ pub const DEFAULT_OVERLAP_RULES: [OverlapRule; 1] = [OverlapRule::AllowAdjacency
 /// Rules for determining what counts as overlap
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum OverlapRule {
     /// Counts adjacent intervals as overlapping
     AllowAdjacency,

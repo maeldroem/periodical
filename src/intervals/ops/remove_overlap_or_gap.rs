@@ -5,6 +5,9 @@
 //! This module combines [filling the gap](crate::intervals::ops::fill_gap) if no overlap is present,
 //! and [removing the overlap](crate::intervals::ops::remove_overlap) in the contrary.
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 use super::grow::{GrowableEndBound, GrowableStartBound};
 use super::overlap::{CanPositionOverlap, DisambiguatedOverlapPosition, OverlapRuleSet};
 use super::prelude::*;
@@ -26,6 +29,7 @@ use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 
 /// Result of an overlap/gap removal
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum OverlapOrGapRemovalResult<T> {
     /// Resulted in a single element
     ///

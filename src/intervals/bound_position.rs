@@ -3,6 +3,9 @@
 //! This module contains [`BoundPosition`], which allows for tracking bounds across a collection of intervals.
 //! This is used by iterators in this crate, but can also be used in other places to share a bound position.
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 use crate::intervals::absolute::{AbsoluteBound, HasAbsoluteBounds};
 use crate::intervals::relative::{HasRelativeBounds, RelativeBound};
 
@@ -20,6 +23,7 @@ use crate::intervals::relative::{HasRelativeBounds, RelativeBound};
 /// and a field for the interval index.
 /// </div>
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum BoundPosition {
     Start(usize),
     End(usize),

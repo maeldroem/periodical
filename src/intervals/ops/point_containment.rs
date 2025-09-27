@@ -47,6 +47,8 @@ use std::convert::Infallible;
 #[cfg(feature = "arbitrary")]
 use arbitrary::Arbitrary;
 use chrono::{DateTime, Duration, Utc};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
 use super::prelude::*;
 
@@ -74,6 +76,7 @@ use crate::intervals::{AbsoluteInterval, BoundedAbsoluteInterval, BoundedRelativ
 /// and [`OnEnd`](PointContainmentPosition::OnEnd).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum PointContainmentPosition {
     /// Compared point is before the interval's start
     OutsideBefore,
@@ -206,6 +209,7 @@ impl PointContainmentPosition {
 /// Indicates where the point is situated compared to the interval without any ambiguity.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum DisambiguatedPointContainmentPosition {
     /// See [`OutsideBefore`](PointContainmentPosition::OutsideBefore)
     OutsideBefore,
@@ -226,6 +230,7 @@ pub enum DisambiguatedPointContainmentPosition {
 /// See [`contains_point`](CanPositionPointContainment::contains_point) for more.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum PointContainmentRuleSet {
     /// Strict rule set
     ///
@@ -324,6 +329,7 @@ pub const DEFAULT_POINT_CONTAINMENT_RULES: [PointContainmentRule; 1] = [PointCon
 /// Rules for determining what counts as containment
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum PointContainmentRule {
     /// Counts points that are on the interval's start
     AllowOnStart,

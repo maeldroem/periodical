@@ -139,6 +139,8 @@
 #[cfg(feature = "arbitrary")]
 use arbitrary::Arbitrary;
 use chrono::{DateTime, Duration, Utc};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
 use super::point_containment::CanPositionPointContainment;
 use super::prelude::*;
@@ -168,6 +170,7 @@ use crate::intervals::{BoundedAbsoluteInterval, BoundedRelativeInterval, Relativ
 /// given to [`Cuttable::cut_at`], and the second part will start with an exclusive bound at the same position.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub struct CutType(BoundInclusivity, BoundInclusivity);
 
 impl CutType {
@@ -237,6 +240,7 @@ impl From<(BoundInclusivity, BoundInclusivity)> for CutType {
 
 /// Result of a [cut](Cuttable)
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum CutResult<T> {
     /// Uncut result
     ///
