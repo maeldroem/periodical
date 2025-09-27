@@ -124,6 +124,14 @@ Most of the things you can think of doing with time intervals, you can do it wit
 
 And if it doesn't, feel absolutely free to [contribute](CONTRIBUTING.md) or [suggest a change](CONTRIBUTING.md) 😃
 
+# MSRV policy 🦀
+
+The [MSRV, Minimum Supported Rust Version](https://doc.rust-lang.org/cargo/reference/rust-version.html),
+of this crate is currently set to Rust `X.Y.Z`, but is subject to change.
+
+Since increasing the MSRV is a breaking change, the version number of this crate will increase in a similar manner
+when it is changed, as [SemVer](https://semver.org/) describes it.
+
 # Roadmap 🔜
 
 ## 0.2
@@ -131,6 +139,7 @@ And if it doesn't, feel absolutely free to [contribute](CONTRIBUTING.md) or [sug
 - [ ] [`serde`](https://lib.rs/serde) support 🔢
 - [ ] Epsilon support for interval durations 🤏
 - [ ] Implementation of [`rayon`](https://lib.rs/rayon) for lightning-fast iterators ⚡
+- [ ] Added [MSRV](https://doc.rust-lang.org/cargo/reference/rust-version.html)
 
 ## Future
 
