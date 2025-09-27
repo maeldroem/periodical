@@ -57,7 +57,7 @@ For example, if your application manages payroll or has to check for some legal 
 this can lead to pay differences or wrong checks for enforcing the legal norm.
 
 <details>
-    <summary>Naive approach - Patch 1 demo</summary>
+    <summary>Naive approach - Patch 1 demo 📽️</summary>
     <img
         src="repo-docs/img/day-problem-naive-approach-patch-1.gif"
         style="width: auto; height: 300px;"
@@ -69,7 +69,7 @@ Patch 2 may therefore seem more practical. However, changing the overlap check i
 which need to consider adjacency as an overlap, and can introduce bugs that are triggered by this specific case.
 
 <details>
-    <summary>Naive approach - Patch 2 demo</summary>
+    <summary>Naive approach - Patch 2 demo 📽️</summary>
     <img
         src="repo-docs/img/day-problem-naive-approach-patch-2.gif"
         style="width: auto; height: 300px;"
@@ -81,7 +81,7 @@ Also, if you choose to not apply any patches, you will have the issue of `2025-0
 two intervals and will still count as being in the first day, when it's clearly not supposed to be the case.
 
 <details>
-    <summary>Naive approach demo</summary>
+    <summary>Naive approach demo 📽️</summary>
     <img
         src="repo-docs/img/day-problem-naive-approach.gif"
         style="width: auto; height: 300px;"
@@ -90,7 +90,7 @@ two intervals and will still count as being in the first day, when it's clearly 
 </details>
 
 <details>
-    <summary>Solution with <code>periodical</code> demo</summary>
+    <summary>Solution with <code>periodical</code> demo 📽️</summary>
     <img
         src="repo-docs/img/day-problem-solved-with-periodical.gif"
         style="width: auto; height: 300px;"
