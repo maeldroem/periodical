@@ -12,7 +12,7 @@ use chrono::Duration;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use crate::intervals::meta::Interval;
+use crate::intervals::meta::{Epsilon, Interval};
 
 use super::absolute::{
     AbsoluteBounds, AbsoluteEndBound, AbsoluteInterval, AbsoluteStartBound, EmptiableAbsoluteBounds, HasAbsoluteBounds,
@@ -159,7 +159,7 @@ impl HasRelativity for EmptyInterval {
 
 impl HasDuration for EmptyInterval {
     fn duration(&self) -> IntervalDuration {
-        IntervalDuration::Finite(Duration::zero())
+        IntervalDuration::Finite(Duration::zero(), Epsilon::None)
     }
 }
 

@@ -2,6 +2,7 @@
 //!
 //! Contains information about intervals such as [`Relativity`], [`Openness`], [`OpeningDirection`], and more.
 
+use std::error::Error;
 use std::fmt::Display;
 
 #[cfg(feature = "arbitrary")]
@@ -147,19 +148,230 @@ impl From<bool> for OpeningDirection {
     }
 }
 
+/// Infinitesimal duration variation of an interval
+///
+/// Represents the infinitesimal duration variation(s) created by [exclusive bounds](BoundInclusivity::Exclusive).
+///
+/// An infinitesimal duration is represented by an epsilon sign, hence the name.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
+pub enum Epsilon {
+    /// No epsilon
+    #[default]
+    None,
+    /// Epsilon variation on start bound
+    Start,
+    /// Epsilon variation on end bound
+    End,
+    /// Epsilon variation on both bounds
+    Both,
+}
+
+impl Epsilon {
+    /// Returns whether an epsilon is present
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use periodical::intervals::meta::Epsilon;
+    /// assert!(Epsilon::Start.has_epsilon());
+    /// assert!(Epsilon::End.has_epsilon());
+    /// assert!(Epsilon::Both.has_epsilon());
+    /// assert!(!Epsilon::None.has_epsilon());
+    /// ```
+    #[must_use]
+    pub fn has_epsilon(&self) -> bool {
+        !matches!(self, Self::None)
+    }
+
+    /// Returns whether the start bound has an epsilon
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use periodical::intervals::meta::Epsilon;
+    /// assert!(Epsilon::Start.has_epsilon_on_start());
+    /// assert!(Epsilon::Both.has_epsilon_on_start());
+    /// assert!(!Epsilon::None.has_epsilon_on_start());
+    /// assert!(!Epsilon::End.has_epsilon_on_start());
+    /// ```
+    #[must_use]
+    pub fn has_epsilon_on_start(&self) -> bool {
+        matches!(self, Self::Start | Self::Both)
+    }
+
+    /// Returns whether the end bound has an epsilon
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use periodical::intervals::meta::Epsilon;
+    /// assert!(Epsilon::End.has_epsilon_on_end());
+    /// assert!(Epsilon::Both.has_epsilon_on_end());
+    /// assert!(!Epsilon::None.has_epsilon_on_end());
+    /// assert!(!Epsilon::Start.has_epsilon_on_end());
+    /// ```
+    #[must_use]
+    pub fn has_epsilon_on_end(&self) -> bool {
+        matches!(self, Self::End | Self::Both)
+    }
+
+    /// Interprets the epsilon as a specific duration using different duration interpretations per bound
+    ///
+    /// # Errors
+    ///
+    /// If `start_epsilon_duration` + `end_epsilon_duration` overflows,
+    /// the method returns [`DurationOverflow`](EpsilonInterpretationDurationError::DurationOverflow).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use periodical::intervals::meta::{Epsilon, EpsilonInterpretationDurationError};
+    /// let start_epsilon_duration = chrono::Duration::seconds(1);
+    /// let end_epsilon_duration = chrono::Duration::seconds(2);
+    ///
+    /// assert_eq!(
+    ///     Epsilon::None.interpret_as_duration_bound_specific(start_epsilon_duration, end_epsilon_duration),
+    ///     Ok(chrono::Duration::zero()),
+    /// );
+    /// assert_eq!(
+    ///     Epsilon::Start.interpret_as_duration_bound_specific(start_epsilon_duration, end_epsilon_duration),
+    ///     Ok(start_epsilon_duration),
+    /// );
+    /// assert_eq!(
+    ///     Epsilon::End.interpret_as_duration_bound_specific(start_epsilon_duration, end_epsilon_duration),
+    ///     Ok(end_epsilon_duration),
+    /// );
+    /// assert_eq!(
+    ///     Epsilon::Both.interpret_as_duration_bound_specific(start_epsilon_duration, end_epsilon_duration),
+    ///     Ok(start_epsilon_duration + end_epsilon_duration)
+    /// );
+    /// ```
+    pub fn interpret_as_duration_bound_specific(
+        &self,
+        start_epsilon_duration: chrono::Duration,
+        end_epsilon_duration: chrono::Duration,
+    ) -> Result<chrono::Duration, EpsilonInterpretationDurationError> {
+        match self {
+            Self::None => Ok(chrono::Duration::zero()),
+            Self::Start => Ok(start_epsilon_duration),
+            Self::End => Ok(end_epsilon_duration),
+            Self::Both => start_epsilon_duration
+                .checked_add(&end_epsilon_duration)
+                .ok_or(EpsilonInterpretationDurationError::DurationOverflow),
+        }
+    }
+
+    /// Interprets the epsilon as a specific duration using the given duration
+    ///
+    /// # Errors
+    ///
+    /// If `epsilon_duration * 2` overflows,
+    /// the method returns [`DurationOverflow`](EpsilonInterpretationDurationError::DurationOverflow).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use periodical::intervals::meta::{Epsilon, EpsilonInterpretationDurationError};
+    /// let epsilon_duration = chrono::Duration::seconds(1);
+    ///
+    /// assert_eq!(
+    ///     Epsilon::None.interpret_as_duration(epsilon_duration),
+    ///     Ok(chrono::Duration::zero()),
+    /// );
+    /// assert_eq!(
+    ///     Epsilon::Start.interpret_as_duration(epsilon_duration),
+    ///     Ok(epsilon_duration),
+    /// );
+    /// assert_eq!(
+    ///     Epsilon::End.interpret_as_duration(epsilon_duration),
+    ///     Ok(epsilon_duration),
+    /// );
+    /// assert_eq!(
+    ///     Epsilon::Both.interpret_as_duration(epsilon_duration),
+    ///     Ok(epsilon_duration * 2),
+    /// );
+    /// ```
+    pub fn interpret_as_duration(
+        &self,
+        epsilon_duration: chrono::Duration,
+    ) -> Result<chrono::Duration, EpsilonInterpretationDurationError> {
+        self.interpret_as_duration_bound_specific(epsilon_duration, epsilon_duration)
+    }
+}
+
+impl Display for Epsilon {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::None => write!(f, "No epsilons"),
+            Self::Start => write!(f, "Epsilon on start bound"),
+            Self::End => write!(f, "Epsilon on end bound"),
+            Self::Both => write!(f, "Epsilon on both bounds"),
+        }
+    }
+}
+
+/// Converts `(BoundInclusivity, BoundInclusivity)` into [`Epsilon`]
+///
+/// The tuple elements represent the start bound inclusivity and end bound inclusivity, respectively.
+/// Exclusive bounds, [`BoundInclusivity::Exclusive`], create an epsilon.
+impl From<(BoundInclusivity, BoundInclusivity)> for Epsilon {
+    fn from((start_inclusivity, end_inclusivity): (BoundInclusivity, BoundInclusivity)) -> Self {
+        match (start_inclusivity, end_inclusivity) {
+            (BoundInclusivity::Inclusive, BoundInclusivity::Inclusive) => Epsilon::None,
+            (BoundInclusivity::Exclusive, BoundInclusivity::Inclusive) => Epsilon::Start,
+            (BoundInclusivity::Inclusive, BoundInclusivity::Exclusive) => Epsilon::End,
+            (BoundInclusivity::Exclusive, BoundInclusivity::Exclusive) => Epsilon::Both,
+        }
+    }
+}
+
+/// Converts `(bool, bool)` into [`Epsilon`]
+///
+/// The first tuple element represents whether the start bound has an epsilon,
+/// the second tuple element represents whether the end bound has an epsilon.
+impl From<(bool, bool)> for Epsilon {
+    fn from((start_has_epsilon, end_has_epsilon): (bool, bool)) -> Self {
+        match (start_has_epsilon, end_has_epsilon) {
+            (false, false) => Epsilon::None,
+            (true, false) => Epsilon::Start,
+            (false, true) => Epsilon::End,
+            (true, true) => Epsilon::Both,
+        }
+    }
+}
+
+/// Errors that can occur when [`Epsilon`] is interpreted as a duration
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum EpsilonInterpretationDurationError {
+    /// Duration interpretation overflowed
+    DurationOverflow,
+}
+
+impl Display for EpsilonInterpretationDurationError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::DurationOverflow => write!(f, "Epsilon interpretation made `chrono::Duration` overflow"),
+        }
+    }
+}
+
+impl Error for EpsilonInterpretationDurationError {}
+
 /// Interval duration
 ///
 /// Supports `chrono`'s [`Duration`](chrono::Duration) for finite durations and supports
 /// representation for infinite durations.
 ///
-/// In the future this enumerator will contain more variants to account for infinitesimal durations
-/// (also known as _epsilon_) differences created by the use of [exclusive bounds](BoundInclusivity::Exclusive).
+/// [`Finite`](Duration::Finite) supports infinitesimal duration variations, also known as [`Epsilon`]s,
+/// created by the use of [exclusive bounds](BoundInclusivity::Exclusive).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum Duration {
     /// Finite duration
-    Finite(chrono::Duration),
+    Finite(chrono::Duration, Epsilon),
     /// Infinite duration
     Infinite,
 }
@@ -170,31 +382,109 @@ impl Duration {
     /// # Examples
     ///
     /// ```
-    /// # use periodical::intervals::meta::Duration;
-    /// assert!(Duration::Finite(chrono::Duration::hours(1)).is_finite());
+    /// # use periodical::intervals::meta::{Duration, Epsilon};
+    /// assert!(Duration::Finite(chrono::Duration::hours(1), Epsilon::None).is_finite());
     /// ```
     #[must_use]
     pub fn is_finite(&self) -> bool {
-        matches!(self, Duration::Finite(_))
+        matches!(self, Duration::Finite(..))
     }
 
     /// Returns the content of the [`Finite`](Duration::Finite) variant
     ///
     /// Consumes `self` and puts the content of the [`Finite`](Duration::Finite) variant
     /// in an [`Option`]. If instead `self` is another variant, the method returns [`None`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use periodical::intervals::meta::{Duration, Epsilon};
+    /// assert_eq!(
+    ///     Duration::Finite(chrono::Duration::hours(2), Epsilon::End).finite(),
+    ///     Some((chrono::Duration::hours(2), Epsilon::End)),
+    /// );
+    /// assert_eq!(Duration::Infinite.finite(), None);
+    /// ```
     #[must_use]
-    pub fn finite(self) -> Option<chrono::Duration> {
+    pub fn finite(self) -> Option<(chrono::Duration, Epsilon)> {
         match self {
-            Self::Finite(duration) => Some(duration),
+            Self::Finite(duration, epsilon) => Some((duration, epsilon)),
             Self::Infinite => None,
         }
+    }
+
+    /// Returns the content of the [`Finite`](Duration::Finite) variant and subtracts interpreted epsilon duration
+    /// from it
+    ///
+    /// Consumes `self`, then uses the content of the [`Finite`](Duration::Finite) variant to compute the final
+    /// interpreted duration, using [`Epsilon::interpret_as_duration`] under the hood,
+    /// and puts the result in an [`Option`]. If instead `self` is another variant, the method returns [`None`].
+    ///
+    /// If [`Epsilon::interpret_as_duration`] returns an [`Err`], then the method returns [`None`].
+    ///
+    /// If the duration is small or if the interpreted [`Epsilon`]\(s) are larger than the duration, resulting
+    /// in a negative duration, the duration defaults to [an empty duration](chrono::Duration::zero).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use periodical::intervals::meta::{Duration, Epsilon};
+    /// let epsilon_duration = chrono::Duration::seconds(1);
+    /// let large_epsilon_duration = chrono::Duration::hours(2);
+    ///
+    /// assert_eq!(
+    ///     Duration::Finite(chrono::Duration::hours(1), Epsilon::End)
+    ///     .finite_interpret_epsilon(epsilon_duration),
+    ///     Some(chrono::Duration::minutes(59) + chrono::Duration::seconds(59)),
+    /// );
+    /// assert_eq!(
+    ///     Duration::Infinite.finite_interpret_epsilon(epsilon_duration),
+    ///     None,
+    /// );
+    /// assert_eq!(
+    ///     Duration::Finite(chrono::Duration::hours(1), Epsilon::Start)
+    ///     .finite_interpret_epsilon(large_epsilon_duration),
+    ///     Some(chrono::Duration::zero()),
+    /// );
+    /// ```
+    #[must_use]
+    pub fn finite_interpret_epsilon(self, epsilon_duration: chrono::Duration) -> Option<chrono::Duration> {
+        let (duration, epsilon) = self.finite()?;
+        let Ok(interpreted_epsilon) = epsilon.interpret_as_duration(epsilon_duration) else {
+            return None;
+        };
+
+        duration
+            .checked_sub(&interpreted_epsilon)
+            .map(|dur| dur.max(chrono::Duration::zero()))
+    }
+
+    /// Returns the [`chrono::Duration`] of the [`Finite`](Duration::Finite) variant and strips the epsilon duration
+    ///
+    /// Consumes `self`, then simply returns the [`chrono::Duration`] stored in the [`Finite`](Duration::Finite)
+    /// variant, without using the stored [`Epsilon`]. Puts the result in an [`Option`].
+    /// If instead `self` is another variant, the method returns [`None`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use periodical::intervals::meta::{Duration, Epsilon};
+    /// assert_eq!(
+    ///     Duration::Finite(chrono::Duration::hours(2), Epsilon::Both).finite_strip_epsilon(),
+    ///     Some(chrono::Duration::hours(2)),
+    /// );
+    /// assert_eq!(Duration::Infinite.finite_strip_epsilon(), None);
+    /// ```
+    #[must_use]
+    pub fn finite_strip_epsilon(self) -> Option<chrono::Duration> {
+        Some(self.finite()?.0)
     }
 }
 
 impl Display for Duration {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Finite(duration) => write!(f, "Finite duration: {duration}"),
+            Self::Finite(duration, epsilon) => write!(f, "Finite duration: {duration} ({epsilon})"),
             Self::Infinite => write!(f, "Infinite duration"),
         }
     }
@@ -202,7 +492,13 @@ impl Display for Duration {
 
 impl From<chrono::Duration> for Duration {
     fn from(duration: chrono::Duration) -> Self {
-        Duration::Finite(duration)
+        Duration::Finite(duration, Epsilon::default())
+    }
+}
+
+impl From<(chrono::Duration, Epsilon)> for Duration {
+    fn from((duration, epsilon): (chrono::Duration, Epsilon)) -> Self {
+        Duration::Finite(duration, epsilon)
     }
 }
 
