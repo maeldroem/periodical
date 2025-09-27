@@ -48,6 +48,8 @@ use std::cmp::Ordering;
 
 #[cfg(feature = "arbitrary")]
 use arbitrary::Arbitrary;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
 use crate::intervals::absolute::{AbsoluteBound, AbsoluteEndBound, AbsoluteStartBound};
 use crate::intervals::ops::bound_overlap_ambiguity::{
@@ -63,6 +65,7 @@ use super::prelude::*;
 /// when the bounds are equal in position (time/offset).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum BoundOrdering {
     Less,
     Equal(Option<BoundOverlapAmbiguity>),

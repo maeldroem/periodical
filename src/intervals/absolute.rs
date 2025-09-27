@@ -18,6 +18,8 @@ use std::ops::{Bound, Range, RangeBounds, RangeFrom, RangeFull, RangeInclusive, 
 #[cfg(feature = "arbitrary")]
 use arbitrary::Arbitrary;
 use chrono::{DateTime, Duration, Utc};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
 use crate::intervals::meta::Interval;
 
@@ -58,6 +60,7 @@ use super::special::{EmptyInterval, UnboundedInterval};
 /// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub struct AbsoluteFiniteBound {
     time: DateTime<Utc>,
     inclusivity: BoundInclusivity,
@@ -230,6 +233,7 @@ impl TryFrom<Bound<DateTime<Utc>>> for AbsoluteFiniteBound {
 /// in which case it contains an [`AbsoluteFiniteBound`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum AbsoluteStartBound {
     Finite(AbsoluteFiniteBound),
     InfinitePast,
@@ -480,6 +484,7 @@ impl From<Bound<DateTime<Utc>>> for AbsoluteStartBound {
 /// in which case it contains an [`AbsoluteFiniteBound`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum AbsoluteEndBound {
     Finite(AbsoluteFiniteBound),
     InfiniteFuture,
@@ -898,6 +903,7 @@ pub fn prepare_absolute_bounds_for_interval_creation(
 /// This enumerator is useful for storing both start and end bounds, usually for processing bounds individually.
 #[derive(Debug, Clone, Copy)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum AbsoluteBound {
     Start(AbsoluteStartBound),
     End(AbsoluteEndBound),
@@ -1193,6 +1199,7 @@ where
 ///
 /// [inclusive]: BoundInclusivity::Inclusive
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub struct AbsoluteBounds {
     start: AbsoluteStartBound,
     end: AbsoluteEndBound,
@@ -1612,6 +1619,7 @@ impl TryFrom<EmptiableAbsoluteBounds> for AbsoluteBounds {
 /// or [`crate::intervals` module documentation](crate::intervals).
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum EmptiableAbsoluteBounds {
     Empty,
     Bound(AbsoluteBounds),
@@ -1774,6 +1782,7 @@ impl From<AbsoluteBounds> for EmptiableAbsoluteBounds {
 /// Instead, if you are looking for an absolute interval that doesn't keep the [openness](Openness) invariant,
 /// see [`AbsoluteBounds`].
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub struct BoundedAbsoluteInterval {
     from: DateTime<Utc>,
     to: DateTime<Utc>,
@@ -2396,6 +2405,7 @@ impl TryFrom<AbsoluteInterval> for BoundedAbsoluteInterval {
 /// see [`AbsoluteBounds`].
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub struct HalfBoundedAbsoluteInterval {
     reference_time: DateTime<Utc>,
     opening_direction: OpeningDirection,
@@ -2820,6 +2830,7 @@ impl TryFrom<AbsoluteInterval> for HalfBoundedAbsoluteInterval {
 /// the interval and perhaps extract from it to make its type immutable.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum AbsoluteInterval {
     Bounded(BoundedAbsoluteInterval),
     HalfBounded(HalfBoundedAbsoluteInterval),

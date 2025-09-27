@@ -9,6 +9,8 @@ use std::ops::RangeFull;
 #[cfg(feature = "arbitrary")]
 use arbitrary::Arbitrary;
 use chrono::Duration;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
 use crate::intervals::meta::Interval;
 
@@ -29,6 +31,7 @@ use super::relative::{
 /// Is equivalent to _time itself_ (all time), infinite duration.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub struct UnboundedInterval;
 
 impl Interval for UnboundedInterval {}
@@ -137,6 +140,7 @@ impl TryFrom<RelativeInterval> for UnboundedInterval {
 /// in time, it is always _outside_, _separate_ from the compared.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub struct EmptyInterval;
 
 impl Interval for EmptyInterval {}

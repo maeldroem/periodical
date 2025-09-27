@@ -36,6 +36,8 @@
 
 #[cfg(feature = "arbitrary")]
 use arbitrary::Arbitrary;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
 use crate::intervals::meta::BoundInclusivity;
 
@@ -62,6 +64,7 @@ use crate::intervals::meta::BoundInclusivity;
 /// The first contained [`BoundInclusivity`] should always be the reference, the second should always be the compared.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum BoundOverlapAmbiguity {
     /// Inclusivities come from two start bounds
     BothStarts(BoundInclusivity, BoundInclusivity),
@@ -172,6 +175,7 @@ impl BoundOverlapAmbiguity {
 /// If you require a custom disambiguation, see [`BoundOverlapAmbiguity::disambiguate_using`].
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum BoundOverlapDisambiguationRuleSet {
     /// Strict rule set
     ///
@@ -342,6 +346,7 @@ pub fn continuous_to_past_bound_overlap_disambiguation(ambiguity: BoundOverlapAm
 /// relative to the reference bound.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum DisambiguatedBoundOverlap {
     /// Compared bound is before the reference bound
     Before,

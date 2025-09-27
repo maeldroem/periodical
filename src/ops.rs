@@ -9,6 +9,8 @@ use std::error::Error;
 use std::fmt::Display;
 
 use chrono::{DateTime, Duration, DurationRound, RoundingError, Utc};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
 /// Precision to use for re-precising times and intervals
 ///
@@ -86,6 +88,7 @@ use chrono::{DateTime, Duration, DurationRound, RoundingError, Utc};
 /// # Ok::<(), chrono::format::ParseError>(())
 /// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum Precision {
     /// Rounds the compared times to the given duration
     ToNearest(Duration),
@@ -191,6 +194,7 @@ impl Precision {
 ///
 /// It is currently not used in `periodical` and therefore may be subject to deletion in the future.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum RunningResult<R, D = R> {
     /// Result is unfinished
     ///
@@ -328,6 +332,7 @@ impl<R, D> RunningResult<R, D> {
 ///
 /// [1]: https://en.wikipedia.org/w/index.php?title=Complement_(set_theory)&oldid=1272128427
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum ComplementResult<C> {
     /// Complement was successful and resulted in a single element
     Single(C),
@@ -432,6 +437,7 @@ impl<C> ComplementResult<C> {
 ///
 /// [1]: https://en.wikipedia.org/w/index.php?title=Union_(set_theory)&oldid=1309419266
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum UnionResult<U> {
     /// Union was successful, the united element is contained within this variant
     United(U),
@@ -512,6 +518,7 @@ impl<U> UnionResult<U> {
 ///
 /// [1]: https://en.wikipedia.org/w/index.php?title=Intersection_(set_theory)&oldid=1191979994
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum IntersectionResult<I> {
     /// Intersection was successful, the intersected element is contained within this variant
     Intersected(I),
@@ -598,6 +605,7 @@ impl<I> IntersectionResult<I> {
 ///
 /// [1]: https://en.wikipedia.org/w/index.php?title=Complement_(set_theory)&oldid=1272128427#Relative_complement
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum DifferenceResult<D> {
     /// Difference was successful and resulted in one single element
     Single(D),
@@ -740,6 +748,7 @@ impl<D> DifferenceResult<D> {
 ///
 /// [1]: https://en.wikipedia.org/w/index.php?title=Symmetric_difference&oldid=1300584821
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum SymmetricDifferenceResult<D> {
     /// Symmetric difference was successful and resulted in one single element
     Single(D),

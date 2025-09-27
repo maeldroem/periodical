@@ -54,6 +54,9 @@
 
 use std::iter::{FusedIterator, Peekable};
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 use crate::intervals::absolute::{AbsoluteBound, AbsoluteBounds};
 use crate::intervals::bound_position::BoundPosition;
 use crate::intervals::relative::{RelativeBound, RelativeBounds};
@@ -62,6 +65,7 @@ use crate::iter::intervals::united_bounds::{AbsoluteUnitedBoundsIter, RelativeUn
 
 /// Iterator of [`AbsoluteBound`] from absolute intervals
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub struct AbsoluteBoundsIter {
     bounds: Vec<AbsoluteBounds>,
     position: BoundPosition,
@@ -271,6 +275,7 @@ impl<I> AbsoluteBoundsIteratorDispatcher for I where I: IntoIterator<Item = Abso
 
 /// Iterator of [`RelativeBound`] from relative intervals
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub struct RelativeBoundsIter {
     bounds: Vec<RelativeBounds>,
     position: BoundPosition,

@@ -15,6 +15,8 @@ use std::cmp::Ordering;
 
 #[cfg(feature = "arbitrary")]
 use arbitrary::Arbitrary;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
 use super::prelude::*;
 
@@ -31,6 +33,7 @@ use crate::intervals::{AbsoluteBounds, EmptiableAbsoluteBounds, EmptiableRelativ
 /// Indicates where the bound is situated compared to a given interval
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum BoundContainmentPosition {
     /// Bound was found before the interval's start
     OutsideBefore,
@@ -137,6 +140,7 @@ impl BoundContainmentPosition {
 /// Indicates where the bound is situated compared to a given interval without any ambiguity.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum DisambiguatedBoundContainmentPosition {
     /// See [`OutsideBefore`](BoundContainmentPosition::OutsideBefore)
     OutsideBefore,
@@ -159,6 +163,7 @@ pub enum DisambiguatedBoundContainmentPosition {
 /// See [`contains_bound`](CanPositionBoundContainment::contains_bound) for more.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum BoundContainmentRuleSet {
     /// Strict rule set
     ///
@@ -291,6 +296,7 @@ pub const DEFAULT_BOUND_CONTAINMENT_RULES: [BoundContainmentRule; 1] = [BoundCon
 /// whether the bound is contained within the interval or not, according to the given rules.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum BoundContainmentRule {
     /// Counts as contained when the bound is on the start of the interval
     AllowOnStart,

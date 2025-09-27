@@ -6,6 +6,8 @@ use std::fmt::Display;
 
 #[cfg(feature = "arbitrary")]
 use arbitrary::Arbitrary;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
 /// Global interval trait
 ///
@@ -25,6 +27,7 @@ pub trait Interval {}
 /// Describes how open is the interval is.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum Openness {
     /// Defined start and end bounds
     Bounded,
@@ -63,6 +66,7 @@ pub trait HasOpenness {
 /// An interval relativity defines in which kind of time it lives in.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum Relativity {
     /// Interval lives in absolute time
     ///
@@ -113,6 +117,7 @@ pub trait HasRelativity {
 /// This indicates which _direction_ the half-bounded interval covers.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum OpeningDirection {
     /// Infinitely towards future
     ToFuture,
@@ -151,6 +156,7 @@ impl From<bool> for OpeningDirection {
 /// (also known as _epsilon_) differences created by the use of [exclusive bounds](BoundInclusivity::Exclusive).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum Duration {
     /// Finite duration
     Finite(chrono::Duration),
@@ -211,6 +217,7 @@ pub trait HasDuration {
 /// Inclusivity of an interval's bound
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum BoundInclusivity {
     /// Includes the point described by the bound
     #[default]

@@ -3,6 +3,9 @@
 //! Given two intervals, adjusts the first interval so that no overlap exists between the two intervals.
 //! If the two intervals are not overlapping, the operation produces an error.
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 use super::cut::{CutResult, CutType, Cuttable};
 use super::overlap::{CanPositionOverlap, DisambiguatedOverlapPosition, OverlapRuleSet};
 use super::prelude::*;
@@ -21,6 +24,7 @@ use crate::intervals::{BoundedAbsoluteInterval, BoundedRelativeInterval, Relativ
 
 /// Result of an overlap removal
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum OverlapRemovalResult<T> {
     /// Resulted in a single element
     ///
