@@ -188,6 +188,19 @@ fn interval_duration_finite_interpret_duration_on_finite_large_epsilon() {
 }
 
 #[test]
+fn interval_duration_finite_strip_epsilon_finite() {
+    assert_eq!(
+        Duration::Finite(chrono::Duration::hours(2), Epsilon::Both).finite_strip_epsilon(),
+        Some(chrono::Duration::hours(2)),
+    );
+}
+
+#[test]
+fn interval_duration_finite_strip_epsilon_infinite() {
+    assert_eq!(Duration::Infinite.finite_strip_epsilon(), None);
+}
+
+#[test]
 fn interval_duration_from_duration() {
     assert_eq!(
         Duration::from(chrono::Duration::zero()),

@@ -458,6 +458,27 @@ impl Duration {
             .checked_sub(&interpreted_epsilon)
             .map(|dur| dur.max(chrono::Duration::zero()))
     }
+
+    /// Returns the [`chrono::Duration`] of the [`Finite`](Duration::Finite) variant and strips the epsilon duration
+    ///
+    /// Consumes `self`, then simply returns the [`chrono::Duration`] stored in the [`Finite`](Duration::Finite)
+    /// variant, without using the stored [`Epsilon`]. Puts the result in an [`Option`].
+    /// If instead `self` is another variant, the method returns [`None`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use periodical::intervals::meta::{Duration, Epsilon};
+    /// assert_eq!(
+    ///     Duration::Finite(chrono::Duration::hours(2), Epsilon::Both).finite_strip_epsilon(),
+    ///     Some(chrono::Duration::hours(2)),
+    /// );
+    /// assert_eq!(Duration::Infinite.finite_strip_epsilon(), None);
+    /// ```
+    #[must_use]
+    pub fn finite_strip_epsilon(self) -> Option<chrono::Duration> {
+        Some(self.finite()?.0)
+    }
 }
 
 impl Display for Duration {
