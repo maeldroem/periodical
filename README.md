@@ -56,35 +56,47 @@ when combined with multiple patched intervals, will end up creating a noticeable
 For example, if your application manages payroll or has to check for some legal norm, on the scale of a year,
 this can lead to pay differences or wrong checks for enforcing the legal norm.
 
-<img
-    src="repo-docs/img/day-problem-naive-approach-patch-1.gif"
-    style="width: auto; height: 300px;"
-    alt="Day problem - naive approach patch 1"
-/>
+<details>
+    <summary>Naive approach - Patch 1 demo</summary>
+    <img
+        src="repo-docs/img/day-problem-naive-approach-patch-1.gif"
+        style="width: auto; height: 300px;"
+        alt="Day problem - naive approach, patch 1"
+    />
+</details>
 
 Patch 2 may therefore seem more practical. However, changing the overlap check itself may impact other overlaps
 which need to consider adjacency as an overlap, and can introduce bugs that are triggered by this specific case.
 
-<img
-    src="repo-docs/img/day-problem-naive-approach-patch-2.gif"
-    style="width: auto; height: 300px;"
-    alt="Day problem - naive approach patch 2"
-/>
+<details>
+    <summary>Naive approach - Patch 2 demo</summary>
+    <img
+        src="repo-docs/img/day-problem-naive-approach-patch-2.gif"
+        style="width: auto; height: 300px;"
+        alt="Day problem - naive approach, patch 2"
+    />
+</details>
 
 Also, if you choose to not apply any patches, you will have the issue of `2025-01-02 00:00:00Z` belonging to
 two intervals and will still count as being in the first day, when it's clearly not supposed to be the case.
 
-<img
-    src="repo-docs/img/day-problem-naive-approach.gif"
-    style="width: auto; height: 300px;"
-    alt="Day problem - naive approach patch 1"
-/>
+<details>
+    <summary>Naive approach demo</summary>
+    <img
+        src="repo-docs/img/day-problem-naive-approach.gif"
+        style="width: auto; height: 300px;"
+        alt="Day problem - naive approach"
+    />
+</details>
 
-<img
-    src="repo-docs/img/day-problem-solved-with-periodical.gif"
-    style="width: auto; height: 300px;"
-    alt="Day problem - naive approach patch 1"
-/>
+<details>
+    <summary>Solution with <code>periodical</code> demo</summary>
+    <img
+        src="repo-docs/img/day-problem-solved-with-periodical.gif"
+        style="width: auto; height: 300px;"
+        alt="Day problem - solution with periodical"
+    />
+</details>
 
 # About 📖
 
@@ -97,7 +109,7 @@ intervals.
 but also find what kind of overlap exists!
 
 Since bound inclusivities can introduce ambiguity for what we consider and overlap or containment, the crate provides
-many ways to disambiguate those cases in the way way <ins>you</ins> want.
+many ways to disambiguate those cases in the way way <em>you</em> want.
 
 This allows for treating a day as it really is: From midnight, included, to the next midnight, excluded.
 And still receive precise data about its duration and if it's adjacent to another day's interval.
