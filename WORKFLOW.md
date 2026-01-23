@@ -115,7 +115,10 @@ In order to enforce that, merges from any branch into `dev` should be done by us
 following [the commit rules](#commits).
 
 When the `dev` branch has reached a stable state, usually after making sure all tests are passing, it can be merged
-into `main` through a detailed PR.
+into `main`.
+
+The merge into `main` should **not** be squashed as this causes a break in Git's history, causing Git to no longer
+find the common ancestor for a future merge.
 
 Now, when you start working on a new thing, you should branch off `dev` and should name it by following the syntax
 `<type>/<name>`, where `<type>` is the most relevant choice out of the list below, and where `<name>` is
