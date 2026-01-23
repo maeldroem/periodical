@@ -17,7 +17,7 @@ use std::ops::{Bound, Range, RangeBounds, RangeFrom, RangeFull, RangeInclusive, 
 
 #[cfg(feature = "arbitrary")]
 use arbitrary::Arbitrary;
-use chrono::{DateTime, Duration, Utc};
+use chrono::{DateTime, Days, Duration, Utc};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
@@ -25,6 +25,7 @@ use crate::intervals::meta::{Epsilon, Interval};
 use crate::intervals::ops::bound_overlap_ambiguity::{
     BoundOverlapAmbiguity, BoundOverlapDisambiguationRuleSet, DisambiguatedBoundOverlap,
 };
+use crate::time_constants::NAIVE_TIME_MIDNIGHT;
 
 use super::meta::{
     BoundInclusivity, Duration as IntervalDuration, Emptiable, HasBoundInclusivity, HasDuration, HasOpenness,
@@ -1942,6 +1943,48 @@ impl BoundedAbsoluteInterval {
         }
     }
 
+    /// Returns the current day in the given [`TimeZone`](chrono::TimeZone) as a [`BoundedAbsoluteInterval`]
+    /// 
+    /// # Errors
+    /// 
+    /// Returns [`StartInTimeGap`](BoundedAbsoluteIntervalCreationError::StartInTimeGap) if today at midnight
+    /// in the given timezone is positioned inside a time gap[^1].
+    /// 
+    /// Returns [`OutOfRangeEndDate`](BoundedAbsoluteIntervalCreationError::OutOfRangeEndDate) if tomorrow's date
+    /// is out of range.
+    /// 
+    /// Returns [`EndInTimeGap`](BoundedAbsoluteIntervalCreationError::EndInTimeGap) if tomorrow at midnight
+    /// in the given timezone is positioned inside a time gap[^1].
+    /// 
+    /// [^1]: See [`MappedLocalTime::None`](https://docs.rs/chrono/latest/chrono/offset/enum.LocalResult.html#variant.None)
+    pub fn today<Tz>(tz: Tz) -> Result<Self, BoundedAbsoluteIntervalCreationError>
+    where
+        Tz: chrono::TimeZone,
+    {
+        let today = Utc::now().with_timezone(&tz).date_naive();
+        let from = today
+            .and_time(NAIVE_TIME_MIDNIGHT)
+            .and_local_timezone(tz.clone())
+            .earliest()
+            .ok_or(BoundedAbsoluteIntervalCreationError::StartInTimeGap)?;
+
+        let tomorrow = today
+            .checked_add_days(Days::new(1))
+            .ok_or(BoundedAbsoluteIntervalCreationError::OutOfRangeEndDate)?;
+        let to = tomorrow
+            .and_time(NAIVE_TIME_MIDNIGHT)
+            .and_local_timezone(tz)
+            .latest()
+            .ok_or(BoundedAbsoluteIntervalCreationError::EndInTimeGap)?;
+
+        Ok(Self::unchecked_new_with_inclusivity(
+            from.with_timezone(&Utc),
+            BoundInclusivity::Inclusive,
+            to.with_timezone(&Utc),
+            BoundInclusivity::Exclusive,
+        ))
+    }
+
     /// Returns the start time
     ///
     /// # Examples
@@ -2244,6 +2287,40 @@ impl BoundedAbsoluteInterval {
         true
     }
 }
+
+/// Errors that can occur when creating a new [`BoundedAbsoluteInterval`]
+/// 
+/// Those errors are mostly created by convenience methods, such as [`BoundedAbsoluteInterval::today`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum BoundedAbsoluteIntervalCreationError {
+    /// Start date could not be created as it was out of range
+    OutOfRangeStartDate,
+    /// End date could not be created as it was out of range
+    OutOfRangeEndDate,
+    /// Start time could not be created as positioned in a time gap
+    /// 
+    /// Time gaps are often created by daylight savings time (DST), where a given duration can be skipped,
+    /// therefore creating either a fold or a gap in time.
+    StartInTimeGap,
+    /// End time could not be created as positioned in a time gap
+    /// 
+    /// Time gaps are often created by daylight savings time (DST), where a given duration can be skipped,
+    /// therefore creating either a fold or a gap in time.
+    EndInTimeGap,
+}
+
+impl Display for BoundedAbsoluteIntervalCreationError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::OutOfRangeStartDate => write!(f, "Start date could not be created as it was out of range"),
+            Self::OutOfRangeEndDate => write!(f, "End date could not be created as it was out of range"),
+            Self::StartInTimeGap => write!(f, "Start time could not be created as positioned in a time gap"),
+            Self::EndInTimeGap => write!(f, "End time could not be created as positioned in a time gap"),
+        }
+    }
+}
+
+impl Error for BoundedAbsoluteIntervalCreationError {}
 
 impl Interval for BoundedAbsoluteInterval {}
 
