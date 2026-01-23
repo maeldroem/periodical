@@ -138,8 +138,7 @@ when it is changed, as [SemVer](https://semver.org/) describes it.
 
 - [x] [`serde`](https://lib.rs/serde) support 🔢
 - [x] Epsilon support for interval durations 🤏
-- [ ] Implementation of [`rayon`](https://lib.rs/rayon) for lightning-fast iterators ⚡
-- [ ] Added [MSRV](https://doc.rust-lang.org/cargo/reference/rust-version.html)
+- [x] Added [MSRV](https://doc.rust-lang.org/cargo/reference/rust-version.html)
 
 ## Future
 
