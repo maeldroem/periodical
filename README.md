@@ -7,7 +7,7 @@
 [![Periodical documentation](https://docs.rs/periodical/badge.svg)](https://docs.rs/periodical)
 [![build status](https://github.com/maeldroem/periodical/actions/workflows/rust.yml/badge.svg?branch=main)](https://github.com/maeldroem/periodical/actions)
 
-💕 <a href="https://github.com/sponsors/maeldroem"><img src="https://img.shields.io/badge/Sponsor-%E2%9D%A4-%23db61a2.svg?&logo=github&logoColor=white&labelColor=181717&style=flat-square" alt="GitHub Sponsor" height="30" /></a> 💕
+💕 <a href="https://github.com/sponsors/maeldroem"><img src="https://img.shields.io/badge/Sponsor-%E2%9D%A4-%23db61a2.svg?&logo=github&logoColor=white&labelColor=181717&style=flat-square" alt="GitHub Sponsor" /></a> 💕
 
 </div>
 
@@ -160,3 +160,13 @@ when it is changed, as [SemVer](https://semver.org/) describes it.
 
 [gh_discussion_rayon]: https://github.com/rayon-rs/rayon/discussions/1272
 
+---------------------
+
+<div align="center">
+<a href="https://brainmade.org/">
+    <img src="https://brainmade.org/black-logo.png" alt="BrainMade.org logo" width="300" />
+</a>
+</div>
+
+The reason emojis are present is to better illustrate and add variety to the reading.
+It is not the result of an AI generation.
