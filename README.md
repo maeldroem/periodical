@@ -134,21 +134,18 @@ when it is changed, as [SemVer](https://semver.org/) describes it.
 
 # Roadmap 🔜
 
-## 0.2
+## 0.3
 
-- [x] [`serde`](https://lib.rs/serde) support 🔢
-- [x] Epsilon support for interval durations 🤏
-- [x] Added [MSRV](https://doc.rust-lang.org/cargo/reference/rust-version.html)
+- [ ] Convenience methods for creating common intervals with ease 📈
+- [ ] Interval periodicity 🔁
+- [ ] Methods to get overlap/gap durations ↔️
+- [ ] Interval formatting (standard and non-standard) ✒️
 
 ## Future
 
 (order doesn't represent priority)
 
-- [ ] Convenience methods for creating common intervals with ease 📈
-- [ ] Interval periodicity 🔁
 - [ ] [Cargo mutants](https://lib.rs/crates/cargo-mutants) 🧪
-- [ ] Methods to get overlap/gap durations ↔️
-- [ ] Interval formatting (standard and non-standard) ✒️
 - [ ] Precision change trait for relative intervals
 - [ ] Support for non-UTC timezones 🌐
 - [ ] Crate usage examples for practical solutions 🔧
