@@ -152,3 +152,11 @@ when it is changed, as [SemVer](https://semver.org/) describes it.
 - [ ] Precision change trait for relative intervals
 - [ ] Support for non-UTC timezones 🌐
 - [ ] Crate usage examples for practical solutions 🔧
+- [ ] Implementation of [`rayon`](https://lib.rs/rayon) for lightning-fast iterators ⚡[^1]
+
+[^1]: Delayed until [`rayon`](https://lib.rs/rayon) describes its trait implementations on
+      foreign types better, see
+      [GitHub Discussion "Understanding rayon workflow and trait implementations"][gh_discussion_rayon]
+
+[gh_discussion_rayon]: https://github.com/rayon-rs/rayon/discussions/1272
+
