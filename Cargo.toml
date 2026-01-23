@@ -1,6 +1,6 @@
 [package]
 name = "periodical"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Mældrøm <maeldroem@proton.me>"]
 edition = "2024"
 description = "Management of all kinds of time intervals, use it to manage schedules, find overlaps, and more!"
