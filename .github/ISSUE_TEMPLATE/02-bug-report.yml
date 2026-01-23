@@ -1,0 +1,36 @@
+name: Bug report
+description: File a bug report
+title: ""
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for taking the time to fill out this bug report!
+  - type: textarea
+    id: explanation
+    attributes:
+      label: Explanation
+      description: What happened?
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: What version of `periodical` did you find this bug on?
+      placeholder: x.y.z
+    validations:
+      required: false
+  - type: textarea
+    id: reproducing-steps
+    attributes:
+      label: Reproducing steps
+      description: If available, share the steps to reproduce your bug
+    validations:
+      required: false
+  - type: textarea
+    id: extra-notes
+    attributes:
+      label: Any extra notes you want to add?
+    validations:
+      required: false

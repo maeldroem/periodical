@@ -1,0 +1,27 @@
+name: Suggestion
+description: Suggest a feature or a change
+title: ""
+labels: ["suggestion"]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for taking the time to suggest a feature/change!
+  - type: textarea
+    id: explanation
+    attributes:
+      label: Explanation
+      description: What does your suggestion consist of?
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use case
+      description: If applicable, how would a user use/benefit from your feature/change?
+  - type: Justifying feedback
+    id: justifying-feedback
+    attributes:
+      label: Justifying feedback
+      description: If applicable, any feedback from users that are explicitly or implicitly requesting such feature/change
+  - type: textarea
+    id: extra-notes
+    attributes:
+      label: Any extra notes you want to add?
