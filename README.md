@@ -127,7 +127,7 @@ And if it doesn't, feel absolutely free to [contribute](CONTRIBUTING.md) or [sug
 # MSRV policy 🦀
 
 The [MSRV, Minimum Supported Rust Version](https://doc.rust-lang.org/cargo/reference/rust-version.html),
-of this crate is currently set to Rust `X.Y.Z`, but is subject to change.
+of this crate is currently set to Rust `1.87.0`, but is subject to change.
 
 Since increasing the MSRV is a breaking change, the version number of this crate will increase in a similar manner
 when it is changed, as [SemVer](https://semver.org/) describes it.
