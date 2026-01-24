@@ -1738,6 +1738,20 @@ fn bounded_absolute_interval_from_max_date() {
 }
 
 #[test]
+fn bounded_absolute_interval_day_in_days_from_today_future() {
+    let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    
+    let _interval = BoundedAbsoluteInterval::day_in_days_from_today(5, offset_tz).unwrap();
+}
+
+#[test]
+fn bounded_absolute_interval_day_in_days_from_today_past() {
+    let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    
+    let _interval = BoundedAbsoluteInterval::day_in_days_from_today(-3, offset_tz).unwrap();
+}
+
+#[test]
 fn bounded_absolute_unchecked_set_from() {
     let mut interval = BoundedAbsoluteInterval::new_with_inclusivity(
         date(&Utc, 2025, 1, 1),

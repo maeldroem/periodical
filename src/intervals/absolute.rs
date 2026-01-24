@@ -2003,6 +2003,57 @@ impl BoundedAbsoluteInterval {
         ))
     }
 
+    /// Creates a new [`BoundedAbsoluteInterval`] of the day in a given amount of days relative to today
+    /// in the given timezone
+    /// 
+    /// Represents the day that is positioned N days compared to today.
+    /// Also accepts negative values to represent a day in the past.
+    /// 
+    /// # Errors
+    /// 
+    /// Returns [`OutOfRangeStartDate`](BoundedAbsoluteIntervalCreationError::OutOfRangeStartDate)
+    /// or [`OutOfRangeEndDate`](BoundedAbsoluteIntervalCreationError::OutOfRangeEndDate)
+    /// if the date is out of range after applying the `days_offset`.
+    /// 
+    /// See [`from_date`](BoundedAbsoluteInterval::from_date) for more errors that could occur, as this method
+    /// uses it.
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// # use chrono::{DateTime, Duration, Utc, FixedOffset};
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// // UTC+02:00
+    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    /// 
+    /// let interval = BoundedAbsoluteInterval::day_in_days_from_today(5, offset_tz).unwrap();
+    /// ```
+    pub fn day_in_days_from_today<Tz>(days_offset: i64, tz: Tz) -> Result<Self, BoundedAbsoluteIntervalCreationError>
+    where
+        Tz: TimeZone,
+    {
+        if days_offset.is_positive() {
+            Self::from_date(
+                Utc::now()
+                    .with_timezone(&tz)
+                    .date_naive()
+                    .checked_add_days(Days::new(days_offset.unsigned_abs()))
+                    .ok_or(BoundedAbsoluteIntervalCreationError::OutOfRangeEndDate)?,
+                tz,
+            )
+        } else {
+            Self::from_date(
+                Utc::now()
+                    .with_timezone(&tz)
+                    .date_naive()
+                    .checked_sub_days(Days::new(days_offset.unsigned_abs()))
+                    .ok_or(BoundedAbsoluteIntervalCreationError::OutOfRangeEndDate)?,
+                tz,
+            )
+        }
+    }
+
     /// Returns the current day in the given [`TimeZone`](chrono::TimeZone) as a [`BoundedAbsoluteInterval`]
     /// 
     /// Uses [`from_date`](BoundedAbsoluteInterval::from_date) with the current day.
@@ -2036,6 +2087,54 @@ impl BoundedAbsoluteInterval {
         Tz: TimeZone,
     {
         Self::from_date(Utc::now().with_timezone(&tz).date_naive(), tz)
+    }
+
+    /// Creates a new [`BoundedAbsoluteInterval`] of tomorrow in the given timezone
+    /// 
+    /// # Errors
+    /// 
+    /// See [`day_in_days_from_today`](BoundedAbsoluteInterval::day_in_days_from_today) for more details.
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// # use chrono::{DateTime, Duration, Utc, FixedOffset};
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// // UTC+02:00
+    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    /// 
+    /// let tomorrow = BoundedAbsoluteInterval::tomorrow(offset_tz).unwrap();
+    /// ```
+    pub fn tomorrow<Tz>(tz: Tz) -> Result<Self, BoundedAbsoluteIntervalCreationError>
+    where
+        Tz: TimeZone,
+    {
+        Self::day_in_days_from_today(1, tz)
+    }
+
+    /// Creates a new [`BoundedAbsoluteInterval`] of yesterday in the given timezone
+    /// 
+    /// # Errors
+    /// 
+    /// See [`day_in_days_from_today`](BoundedAbsoluteInterval::day_in_days_from_today) for more details.
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// # use chrono::{DateTime, Duration, Utc, FixedOffset};
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// // UTC+02:00
+    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    /// 
+    /// let yesterday = BoundedAbsoluteInterval::yesterday(offset_tz).unwrap();
+    /// ```
+    pub fn yesterday<Tz>(tz: Tz) -> Result<Self, BoundedAbsoluteIntervalCreationError>
+    where
+        Tz: TimeZone,
+    {
+        Self::day_in_days_from_today(-1, tz)
     }
 
     /// Returns the start time
