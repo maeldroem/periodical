@@ -1,11 +1,11 @@
 use std::cmp::Ordering;
 use std::ops::Bound;
 
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Duration, FixedOffset, NaiveDate, Utc};
 
 use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity, OpeningDirection};
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
-use crate::test_utils::date;
+use crate::test_utils::{date, datetime};
 
 use super::absolute::*;
 
@@ -1711,6 +1711,30 @@ fn bounded_absolute_interval_new_with_inclusivity_swap() {
     assert_eq!(interval.to_time(), date(&Utc, 2025, 1, 2));
     assert_eq!(interval.from_inclusivity(), BoundInclusivity::Inclusive);
     assert_eq!(interval.to_inclusivity(), BoundInclusivity::Exclusive);
+}
+
+#[test]
+fn bounded_absolute_interval_from_date() {
+    let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    let date = NaiveDate::from_ymd_opt(2026, 1, 5).unwrap();
+    
+    let interval = BoundedAbsoluteInterval::from_date(date, offset_tz).unwrap();
+    
+    assert_eq!(interval.from_time(), datetime(&Utc, 2026, 1, 4, 22, 0, 0));
+    assert_eq!(interval.from_inclusivity(), BoundInclusivity::Inclusive);
+    assert_eq!(interval.to_time(), datetime(&Utc, 2026, 1, 5, 22, 0, 0));
+    assert_eq!(interval.to_inclusivity(), BoundInclusivity::Exclusive);
+}
+
+#[test]
+fn bounded_absolute_interval_from_max_date() {
+    let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    let date = NaiveDate::MAX;
+    
+    assert_eq!(
+        BoundedAbsoluteInterval::from_date(date, offset_tz),
+        Err(BoundedAbsoluteIntervalCreationError::OutOfRangeEndDate)
+    );
 }
 
 #[test]
