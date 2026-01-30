@@ -1717,9 +1717,9 @@ fn bounded_absolute_interval_new_with_inclusivity_swap() {
 fn bounded_absolute_interval_from_date() {
     let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
     let date = NaiveDate::from_ymd_opt(2026, 1, 5).unwrap();
-    
+
     let interval = BoundedAbsoluteInterval::from_date(date, offset_tz).unwrap();
-    
+
     assert_eq!(interval.from_time(), datetime(&Utc, 2026, 1, 4, 22, 0, 0));
     assert_eq!(interval.from_inclusivity(), BoundInclusivity::Inclusive);
     assert_eq!(interval.to_time(), datetime(&Utc, 2026, 1, 5, 22, 0, 0));
@@ -1730,7 +1730,7 @@ fn bounded_absolute_interval_from_date() {
 fn bounded_absolute_interval_from_max_date() {
     let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
     let date = NaiveDate::MAX;
-    
+
     assert_eq!(
         BoundedAbsoluteInterval::from_date(date, offset_tz),
         Err(BoundedAbsoluteIntervalCreationError::OutOfRangeEndDate)
@@ -1738,17 +1738,52 @@ fn bounded_absolute_interval_from_max_date() {
 }
 
 #[test]
-fn bounded_absolute_interval_day_in_days_from_today_future() {
+fn bounded_absolute_interval_from_inclusive_date_range() {
     let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
-    
-    let _interval = BoundedAbsoluteInterval::day_in_days_from_today(5, offset_tz).unwrap();
+    let from = NaiveDate::from_ymd_opt(2026, 1, 5).unwrap();
+    let to = NaiveDate::from_ymd_opt(2026, 1, 10).unwrap();
+
+    let interval = BoundedAbsoluteInterval::from_inclusive_date_range(from, to, offset_tz).unwrap();
+
+    assert_eq!(interval.from_time(), datetime(&Utc, 2026, 1, 4, 22, 0, 0));
+    assert_eq!(interval.from_inclusivity(), BoundInclusivity::Inclusive);
+    assert_eq!(interval.to_time(), datetime(&Utc, 2026, 1, 10, 22, 0, 0));
+    assert_eq!(interval.to_inclusivity(), BoundInclusivity::Exclusive);
 }
 
 #[test]
-fn bounded_absolute_interval_day_in_days_from_today_past() {
+fn bounded_absolute_interval_from_inclusive_date_range_max_from_and_to() {
     let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
-    
-    let _interval = BoundedAbsoluteInterval::day_in_days_from_today(-3, offset_tz).unwrap();
+
+    assert_eq!(
+        BoundedAbsoluteInterval::from_inclusive_date_range(NaiveDate::MAX, NaiveDate::MAX, offset_tz),
+        Err(BoundedAbsoluteIntervalCreationError::OutOfRangeEndDate)
+    );
+}
+
+#[test]
+fn bounded_absolute_interval_from_inclusive_date_range_max_to() {
+    let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    let from = NaiveDate::from_ymd_opt(2026, 1, 1).unwrap();
+
+    assert_eq!(
+        BoundedAbsoluteInterval::from_inclusive_date_range(from, NaiveDate::MAX, offset_tz),
+        Err(BoundedAbsoluteIntervalCreationError::OutOfRangeEndDate)
+    );
+}
+
+#[test]
+fn bounded_absolute_interval_from_inclusive_date_range_reversed_order() {
+    let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    let from = NaiveDate::from_ymd_opt(2026, 1, 10).unwrap();
+    let to = NaiveDate::from_ymd_opt(2026, 1, 5).unwrap();
+
+    let interval = BoundedAbsoluteInterval::from_inclusive_date_range(from, to, offset_tz).unwrap();
+
+    assert_eq!(interval.from_time(), datetime(&Utc, 2026, 1, 4, 22, 0, 0));
+    assert_eq!(interval.from_inclusivity(), BoundInclusivity::Inclusive);
+    assert_eq!(interval.to_time(), datetime(&Utc, 2026, 1, 10, 22, 0, 0));
+    assert_eq!(interval.to_inclusivity(), BoundInclusivity::Exclusive);
 }
 
 #[test]

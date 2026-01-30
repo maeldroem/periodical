@@ -17,7 +17,7 @@ use std::ops::{Bound, Range, RangeBounds, RangeFrom, RangeFull, RangeInclusive, 
 
 #[cfg(feature = "arbitrary")]
 use arbitrary::Arbitrary;
-use chrono::{DateTime, Days, Duration, NaiveDate, TimeZone, Utc};
+use chrono::{DateTime, Days, Duration, NaiveDate, TimeZone, Utc, Weekday};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
@@ -25,7 +25,10 @@ use crate::intervals::meta::{Epsilon, Interval};
 use crate::intervals::ops::bound_overlap_ambiguity::{
     BoundOverlapAmbiguity, BoundOverlapDisambiguationRuleSet, DisambiguatedBoundOverlap,
 };
-use crate::time::NAIVE_TIME_MIDNIGHT;
+use crate::time::{
+    NAIVE_TIME_MIDNIGHT, NaiveDuration, checked_add_naive_duration_to_naive_date,
+    checked_sub_naive_duration_to_naive_date,
+};
 
 use super::meta::{
     BoundInclusivity, Duration as IntervalDuration, Emptiable, HasBoundInclusivity, HasDuration, HasOpenness,
@@ -1944,22 +1947,22 @@ impl BoundedAbsoluteInterval {
     }
 
     /// Creates a new [`BoundedAbsoluteInterval`] of the given date in the given timezone
-    /// 
+    ///
     /// # Errors
-    /// 
+    ///
     /// Returns [`StartInTimeGap`](BoundedAbsoluteIntervalCreationError::StartInTimeGap) if the given date
     /// at midnight in the given timezone is positioned inside a time gap[^1].
-    /// 
+    ///
     /// Returns [`OutOfRangeEndDate`](BoundedAbsoluteIntervalCreationError::OutOfRangeEndDate) if the day after
     /// the given date is out of range.
-    /// 
+    ///
     /// Returns [`EndInTimeGap`](BoundedAbsoluteIntervalCreationError::EndInTimeGap) if the day after the given date
     /// at midnight in the given timezone is positioned inside a time gap[^1].
-    /// 
+    ///
     /// [^1]: See [`MappedLocalTime::None`](https://docs.rs/chrono/latest/chrono/offset/enum.LocalResult.html#variant.None)
-    /// 
+    ///
     /// # Examples
-    /// 
+    ///
     /// ```
     /// # use chrono::{DateTime, Duration, Utc, NaiveDate, FixedOffset};
     /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
@@ -1967,9 +1970,9 @@ impl BoundedAbsoluteInterval {
     /// // UTC+02:00
     /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
     /// let date = NaiveDate::from_ymd_opt(2026, 1, 5).unwrap();
-    /// 
+    ///
     /// let interval = BoundedAbsoluteInterval::from_date(date, offset_tz).unwrap();
-    /// 
+    ///
     /// assert_eq!(interval.from_time(), "2026-01-04 22:00:00Z".parse::<DateTime<Utc>>()?);
     /// assert_eq!(interval.from_inclusivity(), BoundInclusivity::Inclusive);
     /// assert_eq!(interval.to_time(), "2026-01-05 22:00:00Z".parse::<DateTime<Utc>>()?);
@@ -2003,83 +2006,114 @@ impl BoundedAbsoluteInterval {
         ))
     }
 
-    /// Creates a new [`BoundedAbsoluteInterval`] of the day in a given amount of days relative to today
-    /// in the given timezone
-    /// 
-    /// Represents the day that is positioned N days compared to today.
-    /// Also accepts negative values to represent a day in the past.
-    /// 
+    /// Creates a new [`BoundedAbsoluteInterval`] of the day after a given [naive duration](NaiveDuration)
+    /// relative to today in the given timezone
+    ///
     /// # Errors
-    /// 
-    /// Returns [`OutOfRangeStartDate`](BoundedAbsoluteIntervalCreationError::OutOfRangeStartDate)
-    /// or [`OutOfRangeEndDate`](BoundedAbsoluteIntervalCreationError::OutOfRangeEndDate)
-    /// if the date is out of range after applying the `days_offset`.
-    /// 
+    ///
+    /// Returns [`DateOperationError`](BoundedAbsoluteIntervalCreationError::DateOperationError) if
+    /// [`time::checked_add_naive_duration_to_naive_date`](`checked_add_naive_duration_to_naive_date)
+    /// returns [`None`].
+    ///
     /// See [`from_date`](BoundedAbsoluteInterval::from_date) for more errors that could occur, as this method
     /// uses it.
-    /// 
+    ///
     /// # Examples
-    /// 
+    ///
     /// ```
     /// # use chrono::{DateTime, Duration, Utc, FixedOffset};
     /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
     /// # use periodical::intervals::meta::BoundInclusivity;
+    /// # use periodical::time::NaiveDuration;
     /// // UTC+02:00
     /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
-    /// 
-    /// let interval = BoundedAbsoluteInterval::day_in_days_from_today(5, offset_tz).unwrap();
+    ///
+    /// let interval = BoundedAbsoluteInterval::day_after_naive_duration_from_today(
+    ///     NaiveDuration::days(5),
+    ///     offset_tz
+    /// ).unwrap();
     /// ```
-    pub fn day_in_days_from_today<Tz>(days_offset: i64, tz: Tz) -> Result<Self, BoundedAbsoluteIntervalCreationError>
+    pub fn day_after_naive_duration_from_today<Tz>(
+        naive_duration: NaiveDuration,
+        tz: Tz,
+    ) -> Result<Self, BoundedAbsoluteIntervalCreationError>
     where
         Tz: TimeZone,
     {
-        if days_offset.is_positive() {
-            Self::from_date(
-                Utc::now()
-                    .with_timezone(&tz)
-                    .date_naive()
-                    .checked_add_days(Days::new(days_offset.unsigned_abs()))
-                    .ok_or(BoundedAbsoluteIntervalCreationError::OutOfRangeEndDate)?,
-                tz,
-            )
-        } else {
-            Self::from_date(
-                Utc::now()
-                    .with_timezone(&tz)
-                    .date_naive()
-                    .checked_sub_days(Days::new(days_offset.unsigned_abs()))
-                    .ok_or(BoundedAbsoluteIntervalCreationError::OutOfRangeEndDate)?,
-                tz,
-            )
-        }
+        Self::from_date(
+            checked_add_naive_duration_to_naive_date(Utc::now().with_timezone(&tz).date_naive(), naive_duration)
+                .ok_or(BoundedAbsoluteIntervalCreationError::DateOperationError)?,
+            tz,
+        )
+    }
+
+    /// Creates a new [`BoundedAbsoluteInterval`] of the day before a given [naive duration](NaiveDuration)
+    /// relative to today in the given timezone
+    ///
+    /// # Errors
+    ///
+    /// Returns [`DateOperationError`](BoundedAbsoluteIntervalCreationError::DateOperationError) if
+    /// [`time::checked_sub_naive_duration_to_naive_date`](`checked_sub_naive_duration_to_naive_date)
+    /// returns [`None`].
+    ///
+    /// See [`from_date`](BoundedAbsoluteInterval::from_date) for more errors that could occur, as this method
+    /// uses it.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Duration, Utc, FixedOffset};
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// # use periodical::time::NaiveDuration;
+    /// // UTC+02:00
+    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    ///
+    /// let interval = BoundedAbsoluteInterval::day_before_naive_duration_from_today(
+    ///     NaiveDuration::days(5),
+    ///     offset_tz
+    /// ).unwrap();
+    /// ```
+    pub fn day_before_naive_duration_from_today<Tz>(
+        naive_duration: NaiveDuration,
+        tz: Tz,
+    ) -> Result<Self, BoundedAbsoluteIntervalCreationError>
+    where
+        Tz: TimeZone,
+    {
+        Self::from_date(
+            checked_sub_naive_duration_to_naive_date(Utc::now().with_timezone(&tz).date_naive(), naive_duration)
+                .ok_or(BoundedAbsoluteIntervalCreationError::DateOperationError)?,
+            tz,
+        )
     }
 
     /// Returns the current day in the given [`TimeZone`](chrono::TimeZone) as a [`BoundedAbsoluteInterval`]
-    /// 
+    ///
     /// Uses [`from_date`](BoundedAbsoluteInterval::from_date) with the current day.
-    /// 
+    ///
     /// # Errors
-    /// 
+    ///
     /// Returns [`StartInTimeGap`](BoundedAbsoluteIntervalCreationError::StartInTimeGap) if today at midnight
     /// in the given timezone is positioned inside a time gap[^1].
-    /// 
+    ///
     /// Returns [`OutOfRangeEndDate`](BoundedAbsoluteIntervalCreationError::OutOfRangeEndDate) if tomorrow's date
     /// is out of range.
-    /// 
+    ///
     /// Returns [`EndInTimeGap`](BoundedAbsoluteIntervalCreationError::EndInTimeGap) if tomorrow at midnight
     /// in the given timezone is positioned inside a time gap[^1].
-    /// 
+    ///
     /// [^1]: See [`MappedLocalTime::None`](https://docs.rs/chrono/latest/chrono/offset/enum.LocalResult.html#variant.None)
-    /// 
+    ///
     /// # Examples
-    /// 
+    ///
     /// ```
     /// # use chrono::{DateTime, Duration, Utc, NaiveDate, FixedOffset};
     /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// // UTC+02:00
     /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
-    /// 
+    ///
     /// let today = BoundedAbsoluteInterval::today(offset_tz).unwrap();
     /// ```
     pub fn today<Tz>(tz: Tz) -> Result<Self, BoundedAbsoluteIntervalCreationError>
@@ -2090,51 +2124,161 @@ impl BoundedAbsoluteInterval {
     }
 
     /// Creates a new [`BoundedAbsoluteInterval`] of tomorrow in the given timezone
-    /// 
+    ///
     /// # Errors
-    /// 
+    ///
     /// See [`day_in_days_from_today`](BoundedAbsoluteInterval::day_in_days_from_today) for more details.
-    /// 
+    ///
     /// # Examples
-    /// 
+    ///
     /// ```
     /// # use chrono::{DateTime, Duration, Utc, FixedOffset};
     /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// // UTC+02:00
     /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
-    /// 
+    ///
     /// let tomorrow = BoundedAbsoluteInterval::tomorrow(offset_tz).unwrap();
     /// ```
     pub fn tomorrow<Tz>(tz: Tz) -> Result<Self, BoundedAbsoluteIntervalCreationError>
     where
         Tz: TimeZone,
     {
-        Self::day_in_days_from_today(1, tz)
+        Self::day_after_naive_duration_from_today(NaiveDuration::days(1), tz)
     }
 
     /// Creates a new [`BoundedAbsoluteInterval`] of yesterday in the given timezone
-    /// 
+    ///
     /// # Errors
-    /// 
+    ///
     /// See [`day_in_days_from_today`](BoundedAbsoluteInterval::day_in_days_from_today) for more details.
-    /// 
+    ///
     /// # Examples
-    /// 
+    ///
     /// ```
     /// # use chrono::{DateTime, Duration, Utc, FixedOffset};
     /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// // UTC+02:00
     /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
-    /// 
+    ///
     /// let yesterday = BoundedAbsoluteInterval::yesterday(offset_tz).unwrap();
     /// ```
     pub fn yesterday<Tz>(tz: Tz) -> Result<Self, BoundedAbsoluteIntervalCreationError>
     where
         Tz: TimeZone,
     {
-        Self::day_in_days_from_today(-1, tz)
+        Self::day_before_naive_duration_from_today(NaiveDuration::days(1), tz)
+    }
+
+    /// Creates a new [`BoundedAbsoluteInterval`] from the provided inclusive date range in the given timezone
+    ///
+    /// Dates given in reverse chronological order are treated the same way as if they were provided
+    /// in chronological order.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`StartInTimeGap`](BoundedAbsoluteIntervalCreationError::StartInTimeGap) if the given from date
+    /// at midnight in the given timezone is positioned inside a time gap[^1].
+    ///
+    /// Returns [`OutOfRangeEndDate`](BoundedAbsoluteIntervalCreationError::OutOfRangeEndDate) if the day after
+    /// the given to date is out of range.
+    ///
+    /// Returns [`EndInTimeGap`](BoundedAbsoluteIntervalCreationError::EndInTimeGap) if the day after
+    /// the given to date at midnight in the given timezone is positioned inside a time gap[^1].
+    ///
+    /// [^1]: See [`MappedLocalTime::None`](https://docs.rs/chrono/latest/chrono/offset/enum.LocalResult.html#variant.None)
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Duration, Utc, NaiveDate, FixedOffset};
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// // UTC+02:00
+    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    /// let from = NaiveDate::from_ymd_opt(2026, 1, 5).unwrap();
+    /// let to = NaiveDate::from_ymd_opt(2026, 1, 10).unwrap();
+    ///
+    /// let interval = BoundedAbsoluteInterval::from_inclusive_date_range(from, to, offset_tz).unwrap();
+    ///
+    /// assert_eq!(interval.from_time(), "2026-01-04 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(interval.from_inclusivity(), BoundInclusivity::Inclusive);
+    /// assert_eq!(interval.to_time(), "2026-01-10 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(interval.to_inclusivity(), BoundInclusivity::Exclusive);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
+    pub fn from_inclusive_date_range<Tz>(
+        mut from_date: NaiveDate,
+        mut to_date: NaiveDate,
+        tz: Tz,
+    ) -> Result<Self, BoundedAbsoluteIntervalCreationError>
+    where
+        Tz: TimeZone,
+    {
+        if from_date > to_date {
+            std::mem::swap(&mut from_date, &mut to_date);
+        }
+
+        let from = from_date
+            .and_time(NAIVE_TIME_MIDNIGHT)
+            .and_local_timezone(tz.clone())
+            .earliest()
+            .ok_or(BoundedAbsoluteIntervalCreationError::StartInTimeGap)?;
+
+        let to = to_date
+            .checked_add_days(Days::new(1))
+            .ok_or(BoundedAbsoluteIntervalCreationError::OutOfRangeEndDate)?
+            .and_time(NAIVE_TIME_MIDNIGHT)
+            .and_local_timezone(tz)
+            .latest()
+            .ok_or(BoundedAbsoluteIntervalCreationError::EndInTimeGap)?;
+
+        Ok(Self::unchecked_new_with_inclusivity(
+            from.with_timezone(&Utc),
+            BoundInclusivity::Inclusive,
+            to.with_timezone(&Utc),
+            BoundInclusivity::Exclusive,
+        ))
+    }
+
+    pub fn week_in_weeks_from_today<Tz>(weeks_offset: i64, tz: Tz) -> Result<Self, BoundedAbsoluteIntervalCreationError>
+    where
+        Tz: TimeZone,
+    {
+        todo!()
+    }
+
+    /// Creates a new [`BoundedAbsoluteInterval`] of the current week in the given timezone
+    ///
+    /// Since the definition of a _week_ changes from place to place, this method requires the day of the week
+    /// to consider as the start of a week.
+    ///
+    /// If you want a stable _week_ definition, use [`this_iso_week`](BoundedAbsoluteInterval::this_iso_week),
+    /// which uses [ISO weeks](https://en.wikipedia.org/w/index.php?title=ISO_week_date&oldid=1334192696).
+    ///
+    /// # Errors
+    ///
+    /// See [`from_inclusive_date_range`](BoundedAbsoluteInterval::from_inclusive_date_range) for more details.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// ```
+    pub fn this_week<Tz>(week_start: Weekday, tz: Tz) -> Result<Self, BoundedAbsoluteIntervalCreationError>
+    where
+        Tz: TimeZone,
+    {
+        let this_week = Utc::now().with_timezone(&tz).date_naive().week(week_start);
+
+        let from_date = this_week
+            .checked_first_day()
+            .ok_or(BoundedAbsoluteIntervalCreationError::OutOfRangeStartDate)?;
+        let to_date = this_week
+            .checked_last_day()
+            .ok_or(BoundedAbsoluteIntervalCreationError::OutOfRangeEndDate)?;
+
+        Self::from_inclusive_date_range(from_date, to_date, tz)
     }
 
     /// Returns the start time
@@ -2441,7 +2585,7 @@ impl BoundedAbsoluteInterval {
 }
 
 /// Errors that can occur when creating a new [`BoundedAbsoluteInterval`]
-/// 
+///
 /// Those errors are mostly created by convenience methods, such as [`BoundedAbsoluteInterval::today`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum BoundedAbsoluteIntervalCreationError {
@@ -2450,15 +2594,25 @@ pub enum BoundedAbsoluteIntervalCreationError {
     /// End date could not be created as it was out of range
     OutOfRangeEndDate,
     /// Start time could not be created as positioned in a time gap
-    /// 
+    ///
     /// Time gaps are often created by daylight savings time (DST), where a given duration can be skipped,
     /// therefore creating either a fold or a gap in time.
     StartInTimeGap,
     /// End time could not be created as positioned in a time gap
-    /// 
+    ///
     /// Time gaps are often created by daylight savings time (DST), where a given duration can be skipped,
     /// therefore creating either a fold or a gap in time.
     EndInTimeGap,
+    /// Something went wrong when computing a date
+    ///
+    /// This does not mean that the resulting date was out of range, but rather that something failed
+    /// in the process of calculating a date.
+    ///
+    /// An example would be subtracting a large value from a date's year (`chrono` stores years in [`i32`]):
+    /// Removing `i64::from(i32::MAX + 10)` from [`i32::MAX`] can be represented by an [`i32`],
+    /// but the computation may use `.checked_sub(i32::try_from(x))`, which would fail as `i64::from(i32::MAX + 10)`
+    /// cannot be stored in an [`i32`].
+    DateOperationError,
 }
 
 impl Display for BoundedAbsoluteIntervalCreationError {
@@ -2468,6 +2622,7 @@ impl Display for BoundedAbsoluteIntervalCreationError {
             Self::OutOfRangeEndDate => write!(f, "End date could not be created as it was out of range"),
             Self::StartInTimeGap => write!(f, "Start time could not be created as positioned in a time gap"),
             Self::EndInTimeGap => write!(f, "End time could not be created as positioned in a time gap"),
+            Self::DateOperationError => write!(f, "Something went wrong when computing a date"),
         }
     }
 }
