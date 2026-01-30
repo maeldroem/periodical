@@ -25,7 +25,7 @@ use crate::intervals::meta::{Epsilon, Interval};
 use crate::intervals::ops::bound_overlap_ambiguity::{
     BoundOverlapAmbiguity, BoundOverlapDisambiguationRuleSet, DisambiguatedBoundOverlap,
 };
-use crate::time_constants::NAIVE_TIME_MIDNIGHT;
+use crate::time::NAIVE_TIME_MIDNIGHT;
 
 use super::meta::{
     BoundInclusivity, Duration as IntervalDuration, Emptiable, HasBoundInclusivity, HasDuration, HasOpenness,

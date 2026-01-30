@@ -59,9 +59,9 @@ pub mod intervals;
 pub mod iter;
 pub mod ops;
 pub mod prelude;
+pub mod time;
 
 mod utils;
-mod time_constants;
 
 #[cfg(feature = "arbitrary")]
 mod arbitrary_impl;
@@ -71,4 +71,5 @@ use utils::tests;
 tests! {
     mod ops_tests;
     mod test_utils;
+    mod time_tests;
 }
