@@ -4,7 +4,7 @@
 //!
 //! It also contains structures to represent naive durations, used for convenience.
 
-use chrono::{Datelike, NaiveDate, NaiveTime, Weekday};
+use chrono::{Datelike, NaiveDate, NaiveTime, TimeZone, Utc, Weekday};
 
 /// Number of days in a week
 pub const DAYS_IN_WEEK: u8 = 7;
@@ -19,6 +19,23 @@ pub const NAIVE_TIME_MIDNIGHT: NaiveTime =
 /// Represents noon as a [`NaiveTime`]
 pub const NAIVE_TIME_NOON: NaiveTime =
     NaiveTime::from_hms_opt(12, 0, 0).expect("Provided valid hour/minute/second (hms) combination");
+
+/// Gets the [`NaiveDate`] for today
+/// 
+/// # Examples
+/// 
+/// ```
+/// # use chrono::{Duration, FixedOffset, NaiveDate};
+/// # use periodical::time::naive_date_today;
+/// let tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap()
+/// let today_date = naive_date_today(tz);
+/// ```
+pub fn naive_date_today<Tz>(tz: &Tz) -> NaiveDate
+where
+    Tz: TimeZone,
+{
+    Utc::now().with_timezone(tz).date_naive()
+}
 
 /// A naive duration
 ///
