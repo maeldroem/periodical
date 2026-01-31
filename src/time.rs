@@ -4,7 +4,9 @@
 //!
 //! It also contains structures to represent naive durations, used for convenience.
 
-use chrono::{Datelike, NaiveDate, NaiveTime, TimeZone, Utc, Weekday};
+use std::cmp::Ordering;
+
+use chrono::{Datelike, Month, NaiveDate, NaiveTime, TimeZone, Utc, Weekday};
 
 /// Number of days in a week
 pub const DAYS_IN_WEEK: u8 = 7;
@@ -35,6 +37,47 @@ where
     Tz: TimeZone,
 {
     Utc::now().with_timezone(tz).date_naive()
+}
+
+/// Naive month within a year
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct NaiveMonth {
+    year: i32,
+    month: Month,
+}
+
+impl NaiveMonth {
+    /// Creates a new [`NaiveMonth`] from the given year and month
+    #[must_use]
+    pub fn new(year: i32, month: Month) -> Self {
+        Self { year, month }
+    }
+
+    /// Returns the year of the [`NaiveMonth`]
+    #[must_use]
+    pub fn year(&self) -> i32 {
+        self.year
+    }
+
+    /// Returns the [`Month`] of the [`NaiveMonth`]
+    #[must_use]
+    pub fn month(&self) -> Month {
+        self.month
+    }
+}
+
+impl PartialOrd for NaiveMonth {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for NaiveMonth {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.year()
+            .cmp(&other.year())
+            .then_with(|| self.month().cmp(&self.month()))
+    }
 }
 
 /// A naive duration
@@ -423,5 +466,3 @@ where
         .into_iter()
         .try_fold(naive_date, checked_sub_naive_duration_to_naive_date)
 }
-
-// TODO: checked add/sub for naive weeks, naive months, etc.
