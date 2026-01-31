@@ -64,6 +64,28 @@ impl NaiveMonth {
     pub fn month(&self) -> Month {
         self.month
     }
+
+    /// Returns the first day of the month
+    /// 
+    /// Returns [`None`] if a [`NaiveDate`] cannot be created with the year and month, usually meaning
+    /// the date is out of range, see [`NaiveDate::from_ymd_opt`].
+    #[must_use]
+    pub fn checked_first_day(&self) -> Option<NaiveDate> {
+        NaiveDate::from_ymd_opt(self.year(), self.month().number_from_month(), 1)
+    }
+
+    /// Returns the first day of the month
+    /// 
+    /// Returns [`None`] if a [`NaiveDate`] cannot be created with the year and month, usually meaning
+    /// the date is out of range, see [`NaiveDate::from_ymd_opt`].
+    #[must_use]
+    pub fn checked_last_day(&self) -> Option<NaiveDate> {
+        NaiveDate::from_ymd_opt(
+            self.year(),
+            self.month().number_from_month(),
+            u32::from(self.month().num_days(self.year())?),
+        )
+    }
 }
 
 impl PartialOrd for NaiveMonth {
