@@ -1,8 +1,24 @@
 use std::cmp::Ordering;
 
-use chrono::{NaiveDate, Weekday};
+use chrono::{Month, NaiveDate, Weekday};
 
 use super::time::*;
+
+#[test]
+fn naive_month_checked_first_day() {
+    assert_eq!(
+        NaiveMonth::new(2026, Month::April).checked_first_day().unwrap(),
+        NaiveDate::from_ymd_opt(2026, 4, 1).unwrap(),
+    );
+}
+
+#[test]
+fn naive_month_checked_last_day() {
+    assert_eq!(
+        NaiveMonth::new(2026, Month::April).checked_last_day().unwrap(),
+        NaiveDate::from_ymd_opt(2026, 4, 30).unwrap(),
+    );
+}
 
 #[test]
 fn naive_duration_days_is_zero() {
