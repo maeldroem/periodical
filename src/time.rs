@@ -21,9 +21,9 @@ pub const NAIVE_TIME_NOON: NaiveTime =
     NaiveTime::from_hms_opt(12, 0, 0).expect("Provided valid hour/minute/second (hms) combination");
 
 /// Gets the [`NaiveDate`] for today
-/// 
+///
 /// # Examples
-/// 
+///
 /// ```
 /// # use chrono::{Duration, FixedOffset, NaiveDate};
 /// # use periodical::time::naive_date_today;
