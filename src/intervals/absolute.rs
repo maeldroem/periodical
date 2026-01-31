@@ -4398,6 +4398,851 @@ impl HalfBoundedAbsoluteInterval {
         }
     }
 
+    /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans from now on
+    ///
+    /// The given inclusivity refers to whether we should include or exclude the current time.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// let from_now_on = HalfBoundedAbsoluteInterval::since_now(BoundInclusivity::Inclusive);
+    /// ```
+    #[must_use]
+    pub fn since_now(inclusivity: BoundInclusivity) -> Self {
+        Self::new_with_inclusivity(Utc::now(), inclusivity, OpeningDirection::ToFuture)
+    }
+
+    /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans until now
+    ///
+    /// The given inclusivity refers to whether we should include or exclude the current time.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// let until_now = HalfBoundedAbsoluteInterval::until_now(BoundInclusivity::Inclusive);
+    /// ```
+    #[must_use]
+    pub fn until_now(inclusivity: BoundInclusivity) -> Self {
+        Self::new_with_inclusivity(Utc::now(), inclusivity, OpeningDirection::ToPast)
+    }
+
+    /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans since the start of the given day in the given timezone
+    ///
+    /// The start of the resulting interval is [inclusive](BoundInclusivity::Inclusive).
+    ///
+    /// # Errors
+    ///
+    /// Returns [`ReferenceTimeInTimeGap`](HalfBoundedAbsoluteIntervalCreationError::ReferenceTimeInTimeGap) if
+    /// the given date's start (midnight) is positioned inside a time gap[^1].
+    ///
+    /// [^1]: See [`MappedLocalTime::None`](https://docs.rs/chrono/latest/chrono/offset/enum.LocalResult.html#variant.None)
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Duration, FixedOffset, NaiveDate, Utc};
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
+    /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
+    /// // UTC+02:00
+    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    ///
+    /// let from_first_of_may = HalfBoundedAbsoluteInterval::since_date(
+    ///     NaiveDate::from_ymd_opt(2026, 5, 1).unwrap(),
+    ///     offset_tz,
+    /// ).unwrap();
+    ///
+    /// assert_eq!(from_first_of_may.reference_time(), "2026-04-30 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(from_first_of_may.reference_inclusivity(), BoundInclusivity::Inclusive);
+    /// assert_eq!(from_first_of_may.opening_direction(), OpeningDirection::ToFuture);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
+    pub fn since_date<Tz>(naive_date: NaiveDate, tz: Tz) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError>
+    where
+        Tz: TimeZone,
+    {
+        let reference_time = naive_date
+            .and_time(NAIVE_TIME_MIDNIGHT)
+            .and_local_timezone(tz)
+            .earliest()
+            .ok_or(HalfBoundedAbsoluteIntervalCreationError::ReferenceTimeInTimeGap)?
+            .with_timezone(&Utc);
+
+        Ok(Self::new(reference_time, OpeningDirection::ToFuture))
+    }
+
+    /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans until the start of the given day in the given timezone
+    ///
+    /// The end of the resulting interval is [exclusive](BoundInclusivity::Exclusive).
+    ///
+    /// # Errors
+    ///
+    /// Returns [`ReferenceTimeInTimeGap`](HalfBoundedAbsoluteIntervalCreationError::ReferenceTimeInTimeGap) if
+    /// the given date's start (midnight) is positioned inside a time gap[^1].
+    ///
+    /// [^1]: See [`MappedLocalTime::None`](https://docs.rs/chrono/latest/chrono/offset/enum.LocalResult.html#variant.None)
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Duration, FixedOffset, NaiveDate, Utc};
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
+    /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
+    /// // UTC+02:00
+    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    ///
+    /// let until_first_of_may = HalfBoundedAbsoluteInterval::until_date(
+    ///     NaiveDate::from_ymd_opt(2026, 5, 1).unwrap(),
+    ///     offset_tz,
+    /// ).unwrap();
+    ///
+    /// assert_eq!(until_first_of_may.reference_time(), "2026-04-30 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(until_first_of_may.reference_inclusivity(), BoundInclusivity::Exclusive);
+    /// assert_eq!(until_first_of_may.opening_direction(), OpeningDirection::ToPast);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
+    pub fn until_date<Tz>(naive_date: NaiveDate, tz: Tz) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError>
+    where
+        Tz: TimeZone,
+    {
+        let reference_time = naive_date
+            .and_time(NAIVE_TIME_MIDNIGHT)
+            .and_local_timezone(tz)
+            .earliest()
+            .ok_or(HalfBoundedAbsoluteIntervalCreationError::ReferenceTimeInTimeGap)?
+            .with_timezone(&Utc);
+
+        Ok(Self::new_with_inclusivity(
+            reference_time,
+            BoundInclusivity::Exclusive,
+            OpeningDirection::ToPast,
+        ))
+    }
+
+    /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans since today in the given timezone
+    ///
+    /// See [`since_date`](HalfBoundedAbsoluteInterval::since_date) for more details.
+    ///
+    /// # Errors
+    ///
+    /// See [`since_date`](HalfBoundedAbsoluteInterval::since_date) for more details.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{Duration, FixedOffset};
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
+    /// // UTC+02:00
+    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    ///
+    /// let since_today = HalfBoundedAbsoluteInterval::since_today(offset_tz).unwrap();
+    /// ```
+    pub fn since_today<Tz>(tz: Tz) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError>
+    where
+        Tz: TimeZone,
+    {
+        Self::since_date(naive_date_today(&tz), tz)
+    }
+
+    /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans until today in the given timezone
+    ///
+    /// See [`until_date`](HalfBoundedAbsoluteInterval::until_date) for more details.
+    ///
+    /// # Errors
+    ///
+    /// See [`until_date`](HalfBoundedAbsoluteInterval::until_date) for more details.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{Duration, FixedOffset};
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
+    /// // UTC+02:00
+    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    ///
+    /// let until_today = HalfBoundedAbsoluteInterval::until_today(offset_tz).unwrap();
+    /// ```
+    pub fn until_today<Tz>(tz: Tz) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError>
+    where
+        Tz: TimeZone,
+    {
+        Self::until_date(naive_date_today(&tz), tz)
+    }
+
+    /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans since tomorrow in the given timezone
+    ///
+    /// See [`since_date`](HalfBoundedAbsoluteInterval::since_date) for more details.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`OutOfRangeReferenceDate`](HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate) if
+    /// [`checked_add_naive_duration_to_naive_date`] returns [`None`].
+    ///
+    /// See [`since_date`](HalfBoundedAbsoluteInterval::since_date) for more errors that could occur,
+    /// as this method uses it.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{Duration, FixedOffset};
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
+    /// // UTC+02:00
+    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    ///
+    /// let since_tomorrow = HalfBoundedAbsoluteInterval::since_tomorrow(offset_tz).unwrap();
+    /// ```
+    pub fn since_tomorrow<Tz>(tz: Tz) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError>
+    where
+        Tz: TimeZone,
+    {
+        Self::since_date(
+            checked_add_naive_duration_to_naive_date(naive_date_today(&tz), NaiveDuration::Days(1))
+                .ok_or(HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate)?,
+            tz,
+        )
+    }
+
+    /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans until tomorrow in the given timezone
+    ///
+    /// See [`until_date`](HalfBoundedAbsoluteInterval::until_date) for more details.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`OutOfRangeReferenceDate`](HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate) if
+    /// [`checked_add_naive_duration_to_naive_date`] returns [`None`].
+    ///
+    /// See [`until_date`](HalfBoundedAbsoluteInterval::until_date) for more errors that could occur,
+    /// as this method uses it.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{Duration, FixedOffset};
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
+    /// // UTC+02:00
+    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    ///
+    /// let until_tomorrow = HalfBoundedAbsoluteInterval::until_tomorrow(offset_tz).unwrap();
+    /// ```
+    pub fn until_tomorrow<Tz>(tz: Tz) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError>
+    where
+        Tz: TimeZone,
+    {
+        Self::until_date(
+            checked_add_naive_duration_to_naive_date(naive_date_today(&tz), NaiveDuration::Days(1))
+                .ok_or(HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate)?,
+            tz,
+        )
+    }
+
+    /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans since yesterday in the given timezone
+    ///
+    /// See [`since_date`](HalfBoundedAbsoluteInterval::since_date) for more details.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`OutOfRangeReferenceDate`](HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate) if
+    /// [`checked_sub_naive_duration_to_naive_date`] returns [`None`].
+    ///
+    /// See [`since_date`](HalfBoundedAbsoluteInterval::since_date) for more errors that could occur,
+    /// as this method uses it.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{Duration, FixedOffset};
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
+    /// // UTC+02:00
+    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    ///
+    /// let since_yesterday = HalfBoundedAbsoluteInterval::since_yesterday(offset_tz).unwrap();
+    /// ```
+    pub fn since_yesterday<Tz>(tz: Tz) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError>
+    where
+        Tz: TimeZone,
+    {
+        Self::since_date(
+            checked_sub_naive_duration_to_naive_date(naive_date_today(&tz), NaiveDuration::Days(1))
+                .ok_or(HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate)?,
+            tz,
+        )
+    }
+
+    /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans until yesterday in the given timezone
+    ///
+    /// See [`since_date`](HalfBoundedAbsoluteInterval::since_date) for more details.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`OutOfRangeReferenceDate`](HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate) if
+    /// [`checked_sub_naive_duration_to_naive_date`] returns [`None`].
+    ///
+    /// See [`since_date`](HalfBoundedAbsoluteInterval::since_date) for more errors that could occur,
+    /// as this method uses it.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{Duration, FixedOffset};
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
+    /// // UTC+02:00
+    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    ///
+    /// let until_yesterday = HalfBoundedAbsoluteInterval::until_yesterday(offset_tz).unwrap();
+    /// ```
+    pub fn until_yesterday<Tz>(tz: Tz) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError>
+    where
+        Tz: TimeZone,
+    {
+        Self::until_date(
+            checked_sub_naive_duration_to_naive_date(naive_date_today(&tz), NaiveDuration::Days(1))
+                .ok_or(HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate)?,
+            tz,
+        )
+    }
+
+    /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans since the given week in the given timezone
+    ///
+    /// See [`since_date`](HalfBoundedAbsoluteInterval::since_date) for more details.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`OutOfRangeReferenceDate`](HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate) if
+    /// the week's first day is out of range.
+    ///
+    /// See [`since_date`](HalfBoundedAbsoluteInterval::since_date) for more errors that could occur,
+    /// as this method uses it.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Duration, FixedOffset, NaiveDate, Utc, Weekday};
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
+    /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
+    /// // UTC+02:00
+    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    ///
+    /// let interval = HalfBoundedAbsoluteInterval::since_week(
+    ///     NaiveDate::from_ymd_opt(2026, 5, 1).unwrap().week(Weekday::Mon),
+    ///     offset_tz,
+    /// ).unwrap();
+    ///
+    /// assert_eq!(interval.reference_time(), "2026-04-26 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(interval.reference_inclusivity(), BoundInclusivity::Inclusive);
+    /// assert_eq!(interval.opening_direction(), OpeningDirection::ToFuture);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
+    pub fn since_week<Tz>(week: NaiveWeek, tz: Tz) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError>
+    where
+        Tz: TimeZone,
+    {
+        Self::since_date(
+            week.checked_first_day()
+                .ok_or(HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate)?,
+            tz,
+        )
+    }
+
+    /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans until the given week in the given timezone
+    ///
+    /// See [`until_date`](HalfBoundedAbsoluteInterval::until_date) for more details.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`OutOfRangeReferenceDate`](HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate) if
+    /// the week's first day is out of range.
+    ///
+    /// See [`until_date`](HalfBoundedAbsoluteInterval::until_date) for more errors that could occur,
+    /// as this method uses it.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Duration, FixedOffset, NaiveDate, Utc, Weekday};
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
+    /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
+    /// // UTC+02:00
+    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    ///
+    /// let interval = HalfBoundedAbsoluteInterval::until_week(
+    ///     NaiveDate::from_ymd_opt(2026, 5, 1).unwrap().week(Weekday::Mon),
+    ///     offset_tz,
+    /// ).unwrap();
+    ///
+    /// assert_eq!(interval.reference_time(), "2026-04-26 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(interval.reference_inclusivity(), BoundInclusivity::Exclusive);
+    /// assert_eq!(interval.opening_direction(), OpeningDirection::ToPast);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
+    pub fn until_week<Tz>(week: NaiveWeek, tz: Tz) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError>
+    where
+        Tz: TimeZone,
+    {
+        Self::until_date(
+            week.checked_first_day()
+                .ok_or(HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate)?,
+            tz,
+        )
+    }
+
+    /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans since the current week in the given timezone
+    ///
+    /// See [`since_week`](HalfBoundedAbsoluteInterval::since_week) for more details.
+    ///
+    /// # Errors
+    ///
+    /// See [`since_week`](HalfBoundedAbsoluteInterval::since_week) for more details.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{Duration, FixedOffset, Weekday};
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
+    /// // UTC+02:00
+    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    ///
+    /// let since_this_week = HalfBoundedAbsoluteInterval::since_this_week(Weekday::Mon, offset_tz).unwrap();
+    /// ```
+    pub fn since_this_week<Tz>(week_start: Weekday, tz: Tz) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError>
+    where
+        Tz: TimeZone,
+    {
+        Self::since_week(naive_date_today(&tz).week(week_start), tz)
+    }
+
+    /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans until the current week in the given timezone
+    ///
+    /// See [`until_week`](HalfBoundedAbsoluteInterval::until_week) for more details.
+    ///
+    /// # Errors
+    ///
+    /// See [`until_week`](HalfBoundedAbsoluteInterval::until_week) for more details.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{Duration, FixedOffset, Weekday};
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
+    /// // UTC+02:00
+    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    ///
+    /// let until_this_week = HalfBoundedAbsoluteInterval::until_this_week(Weekday::Mon, offset_tz).unwrap();
+    pub fn until_this_week<Tz>(week_start: Weekday, tz: Tz) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError>
+    where
+        Tz: TimeZone,
+    {
+        Self::until_week(naive_date_today(&tz).week(week_start), tz)
+    }
+
+    /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans since the given ISO week in the given timezone
+    ///
+    /// See [`since_date`](HalfBoundedAbsoluteInterval::since_date) for more details.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`OutOfRangeReferenceDate`](HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate) if
+    /// the week's first day is out of range.
+    ///
+    /// See [`since_date`](HalfBoundedAbsoluteInterval::since_date) for more errors that could occur,
+    /// as this method uses it.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{Datelike, DateTime, Duration, FixedOffset, NaiveDate, Utc, Weekday};
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
+    /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
+    /// // UTC+02:00
+    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    ///
+    /// let interval = HalfBoundedAbsoluteInterval::since_iso_week(
+    ///     NaiveDate::from_ymd_opt(2026, 5, 1).unwrap().iso_week(),
+    ///     offset_tz,
+    /// ).unwrap();
+    ///
+    /// assert_eq!(interval.reference_time(), "2026-04-26 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(interval.reference_inclusivity(), BoundInclusivity::Inclusive);
+    /// assert_eq!(interval.opening_direction(), OpeningDirection::ToFuture);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
+    pub fn since_iso_week<Tz>(iso_week: IsoWeek, tz: Tz) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError>
+    where
+        Tz: TimeZone,
+    {
+        Self::since_date(
+            NaiveDate::from_isoywd_opt(iso_week.year(), iso_week.week(), Weekday::Mon)
+                .ok_or(HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate)?,
+            tz,
+        )
+    }
+
+    /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans until the given ISO week in the given timezone
+    ///
+    /// See [`until_date`](HalfBoundedAbsoluteInterval::until_date) for more details.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`OutOfRangeReferenceDate`](HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate) if
+    /// the week's first day is out of range.
+    ///
+    /// See [`until_date`](HalfBoundedAbsoluteInterval::until_date) for more errors that could occur,
+    /// as this method uses it.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{Datelike, DateTime, Duration, FixedOffset, NaiveDate, Utc, Weekday};
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
+    /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
+    /// // UTC+02:00
+    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    ///
+    /// let interval = HalfBoundedAbsoluteInterval::until_iso_week(
+    ///     NaiveDate::from_ymd_opt(2026, 5, 1).unwrap().iso_week(),
+    ///     offset_tz,
+    /// ).unwrap();
+    ///
+    /// assert_eq!(interval.reference_time(), "2026-04-26 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(interval.reference_inclusivity(), BoundInclusivity::Exclusive);
+    /// assert_eq!(interval.opening_direction(), OpeningDirection::ToPast);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
+    pub fn until_iso_week<Tz>(iso_week: IsoWeek, tz: Tz) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError>
+    where
+        Tz: TimeZone,
+    {
+        Self::until_date(
+            NaiveDate::from_isoywd_opt(iso_week.year(), iso_week.week(), Weekday::Mon)
+                .ok_or(HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate)?,
+            tz,
+        )
+    }
+
+    /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans since the current ISO week in the given timezone
+    ///
+    /// See [`since_iso_week`](HalfBoundedAbsoluteInterval::since_iso_week) for more details.
+    ///
+    /// # Errors
+    ///
+    /// See [`since_iso_week`](HalfBoundedAbsoluteInterval::since_iso_week) for more details.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{Duration, FixedOffset, Weekday};
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
+    /// // UTC+02:00
+    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    ///
+    /// let since_this_iso_week = HalfBoundedAbsoluteInterval::since_this_iso_week(offset_tz).unwrap();
+    /// ```
+    pub fn since_this_iso_week<Tz>(tz: Tz) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError>
+    where
+        Tz: TimeZone,
+    {
+        Self::since_iso_week(naive_date_today(&tz).iso_week(), tz)
+    }
+
+    /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans until the current ISO week in the given timezone
+    ///
+    /// See [`until_iso_week`](HalfBoundedAbsoluteInterval::until_iso_week) for more details.
+    ///
+    /// # Errors
+    ///
+    /// See [`until_iso_week`](HalfBoundedAbsoluteInterval::until_iso_week) for more details.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{Duration, FixedOffset, Weekday};
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
+    /// // UTC+02:00
+    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    ///
+    /// let until_this_iso_week = HalfBoundedAbsoluteInterval::until_this_iso_week(offset_tz).unwrap();
+    /// ```
+    pub fn until_this_iso_week<Tz>(tz: Tz) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError>
+    where
+        Tz: TimeZone,
+    {
+        Self::until_iso_week(naive_date_today(&tz).iso_week(), tz)
+    }
+
+    /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans since the given month in the given timezone
+    ///
+    /// See [`since_date`](HalfBoundedAbsoluteInterval::since_date) for more details.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`OutOfRangeReferenceDate`](HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate) if
+    /// the month's first day is out of range.
+    ///
+    /// See [`since_date`](HalfBoundedAbsoluteInterval::since_date) for more errors that could occur,
+    /// as this method uses it.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Duration, FixedOffset, Month, Utc};
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
+    /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
+    /// # use periodical::time::NaiveMonth;
+    /// // UTC+02:00
+    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    ///
+    /// let since_month = HalfBoundedAbsoluteInterval::since_month(
+    ///     NaiveMonth::new(2026, Month::March),
+    ///     offset_tz,
+    /// ).unwrap();
+    ///
+    /// assert_eq!(since_month.reference_time(), "2026-02-28 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(since_month.reference_inclusivity(), BoundInclusivity::Inclusive);
+    /// assert_eq!(since_month.opening_direction(), OpeningDirection::ToFuture);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
+    pub fn since_month<Tz>(month: NaiveMonth, tz: Tz) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError>
+    where
+        Tz: TimeZone,
+    {
+        Self::since_date(
+            month
+                .checked_first_day()
+                .ok_or(HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate)?,
+            tz,
+        )
+    }
+
+    /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans until the given month in the given timezone
+    ///
+    /// See [`until_date`](HalfBoundedAbsoluteInterval::until_date) for more details.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`OutOfRangeReferenceDate`](HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate) if
+    /// the month's first day is out of range.
+    ///
+    /// See [`until_date`](HalfBoundedAbsoluteInterval::until_date) for more errors that could occur,
+    /// as this method uses it.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Duration, FixedOffset, Month, Utc};
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
+    /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
+    /// # use periodical::time::NaiveMonth;
+    /// // UTC+02:00
+    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    ///
+    /// let until_month = HalfBoundedAbsoluteInterval::until_month(
+    ///     NaiveMonth::new(2026, Month::March),
+    ///     offset_tz,
+    /// ).unwrap();
+    ///
+    /// assert_eq!(until_month.reference_time(), "2026-02-28 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(until_month.reference_inclusivity(), BoundInclusivity::Exclusive);
+    /// assert_eq!(until_month.opening_direction(), OpeningDirection::ToPast);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
+    pub fn until_month<Tz>(month: NaiveMonth, tz: Tz) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError>
+    where
+        Tz: TimeZone,
+    {
+        Self::until_date(
+            month
+                .checked_first_day()
+                .ok_or(HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate)?,
+            tz,
+        )
+    }
+
+    /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans since the current month in the given timezone
+    ///
+    /// See [`since_month`](HalfBoundedAbsoluteInterval::since_month) for more details.
+    ///
+    /// # Errors
+    ///
+    /// See [`since_month`](HalfBoundedAbsoluteInterval::since_month) for more details.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{Duration, FixedOffset, Weekday};
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
+    /// // UTC+02:00
+    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    ///
+    /// let since_this_month = HalfBoundedAbsoluteInterval::since_this_month(offset_tz).unwrap();
+    /// ```
+    pub fn since_this_month<Tz>(tz: Tz) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError>
+    where
+        Tz: TimeZone,
+    {
+        Self::since_month(
+            NaiveMonth::try_from(naive_date_today(&tz))
+                .or(Err(HalfBoundedAbsoluteIntervalCreationError::DateOperationError))?,
+            tz,
+        )
+    }
+
+    /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans until the current month in the given timezone
+    ///
+    /// See [`until_month`](HalfBoundedAbsoluteInterval::until_month) for more details.
+    ///
+    /// # Errors
+    ///
+    /// See [`until_month`](HalfBoundedAbsoluteInterval::until_month) for more details.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{Duration, FixedOffset, Weekday};
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
+    /// // UTC+02:00
+    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    ///
+    /// let until_this_month = HalfBoundedAbsoluteInterval::until_this_month(offset_tz).unwrap();
+    /// ```
+    pub fn until_this_month<Tz>(tz: Tz) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError>
+    where
+        Tz: TimeZone,
+    {
+        Self::until_month(
+            NaiveMonth::try_from(naive_date_today(&tz))
+                .or(Err(HalfBoundedAbsoluteIntervalCreationError::DateOperationError))?,
+            tz,
+        )
+    }
+
+    /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans since the given year in the given timezone
+    ///
+    /// See [`since_date`](HalfBoundedAbsoluteInterval::since_date) for more details.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`OutOfRangeReferenceDate`](HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate) if
+    /// the year's first day is out of range.
+    ///
+    /// See [`since_date`](HalfBoundedAbsoluteInterval::since_date) for more errors that could occur,
+    /// as this method uses it.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Duration, FixedOffset, Month, Utc};
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
+    /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
+    /// // UTC+02:00
+    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    ///
+    /// let since_year = HalfBoundedAbsoluteInterval::since_year(2026, offset_tz).unwrap();
+    ///
+    /// assert_eq!(since_year.reference_time(), "2025-12-31 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(since_year.reference_inclusivity(), BoundInclusivity::Inclusive);
+    /// assert_eq!(since_year.opening_direction(), OpeningDirection::ToFuture);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
+    pub fn since_year<Tz>(year: i32, tz: Tz) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError>
+    where
+        Tz: TimeZone,
+    {
+        Self::since_date(
+            NaiveDate::from_yo_opt(year, 1).ok_or(HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate)?,
+            tz,
+        )
+    }
+
+    /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans until the given year in the given timezone
+    ///
+    /// See [`until_date`](HalfBoundedAbsoluteInterval::until_date) for more details.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`OutOfRangeReferenceDate`](HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate) if
+    /// the year's first day is out of range.
+    ///
+    /// See [`until_date`](HalfBoundedAbsoluteInterval::until_date) for more errors that could occur,
+    /// as this method uses it.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Duration, FixedOffset, Month, Utc};
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
+    /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
+    /// // UTC+02:00
+    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    ///
+    /// let until_year = HalfBoundedAbsoluteInterval::until_year(2026, offset_tz).unwrap();
+    ///
+    /// assert_eq!(until_year.reference_time(), "2025-12-31 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(until_year.reference_inclusivity(), BoundInclusivity::Exclusive);
+    /// assert_eq!(until_year.opening_direction(), OpeningDirection::ToPast);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
+    pub fn until_year<Tz>(year: i32, tz: Tz) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError>
+    where
+        Tz: TimeZone,
+    {
+        Self::until_date(
+            NaiveDate::from_yo_opt(year, 1).ok_or(HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate)?,
+            tz,
+        )
+    }
+
+    /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans since the current year in the given timezone
+    ///
+    /// See [`since_year`](HalfBoundedAbsoluteInterval::since_year) for more details.
+    ///
+    /// # Errors
+    ///
+    /// See [`since_year`](HalfBoundedAbsoluteInterval::since_year) for more details.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{Duration, FixedOffset, Weekday};
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
+    /// // UTC+02:00
+    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    ///
+    /// let since_this_year = HalfBoundedAbsoluteInterval::since_this_year(offset_tz).unwrap();
+    /// ```
+    pub fn since_this_year<Tz>(tz: Tz) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError>
+    where
+        Tz: TimeZone,
+    {
+        Self::since_year(naive_date_today(&tz).year(), tz)
+    }
+
+    /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans until the current year in the given timezone
+    ///
+    /// See [`until_year`](HalfBoundedAbsoluteInterval::until_year) for more details.
+    ///
+    /// # Errors
+    ///
+    /// See [`until_year`](HalfBoundedAbsoluteInterval::until_year) for more details.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{Duration, FixedOffset, Weekday};
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
+    /// // UTC+02:00
+    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    ///
+    /// let since_this_year = HalfBoundedAbsoluteInterval::until_this_year(offset_tz).unwrap();
+    /// ```
+    pub fn until_this_year<Tz>(tz: Tz) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError>
+    where
+        Tz: TimeZone,
+    {
+        Self::until_year(naive_date_today(&tz).year(), tz)
+    }
+
     /// Returns the reference time
     ///
     /// # Examples
@@ -4540,6 +5385,36 @@ impl HalfBoundedAbsoluteInterval {
         self.opening_direction = new_opening_direction;
     }
 }
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum HalfBoundedAbsoluteIntervalCreationError {
+    /// Reference date could not be created as it was out of range
+    OutOfRangeReferenceDate,
+    /// Reference time could not be created as positioned in a time gap
+    ///
+    /// Time gaps are often created by daylight savings time (DST), where a given duration can be skipped,
+    /// therefore creating either a fold or a gap in time.
+    ReferenceTimeInTimeGap,
+    /// Something went wrong when computing a date
+    ///
+    /// This does not mean that the resulting date was out of range, but rather that something failed
+    /// in the process of calculating a date.
+    DateOperationError,
+}
+
+impl Display for HalfBoundedAbsoluteIntervalCreationError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::OutOfRangeReferenceDate => write!(f, "Reference date could not be created as it was out of range"),
+            Self::ReferenceTimeInTimeGap => {
+                write!(f, "Reference time could not be created as positioned in a time gap")
+            },
+            Self::DateOperationError => write!(f, "Something went wrong when computing a date"),
+        }
+    }
+}
+
+impl Error for HalfBoundedAbsoluteIntervalCreationError {}
 
 impl Interval for HalfBoundedAbsoluteInterval {}
 
