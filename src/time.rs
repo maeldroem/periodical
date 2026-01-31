@@ -27,8 +27,8 @@ pub const NAIVE_TIME_NOON: NaiveTime =
 /// ```
 /// # use chrono::{Duration, FixedOffset, NaiveDate};
 /// # use periodical::time::naive_date_today;
-/// let tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap()
-/// let today_date = naive_date_today(tz);
+/// let tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+/// let today_date = naive_date_today(&tz);
 /// ```
 pub fn naive_date_today<Tz>(tz: &Tz) -> NaiveDate
 where
