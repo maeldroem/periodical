@@ -1744,9 +1744,10 @@ fn bounded_absolute_interval_day_after_naive_duration_from_naive_date() {
     let interval = BoundedAbsoluteInterval::day_after_naive_duration_from_naive_date(
         NaiveDate::from_ymd_opt(2026, 4, 29).unwrap(),
         NaiveDuration::days(5),
-        offset_tz
-    ).unwrap();
-    
+        offset_tz,
+    )
+    .unwrap();
+
     assert_eq!(interval.from_time(), datetime(&Utc, 2026, 5, 3, 22, 0, 0));
     assert_eq!(interval.from_inclusivity(), BoundInclusivity::Inclusive);
     assert_eq!(interval.to_time(), datetime(&Utc, 2026, 5, 4, 22, 0, 0));
@@ -1759,9 +1760,10 @@ fn bounded_absolute_interval_day_before_naive_duration_from_naive_date() {
     let interval = BoundedAbsoluteInterval::day_before_naive_duration_from_naive_date(
         NaiveDate::from_ymd_opt(2026, 4, 29).unwrap(),
         NaiveDuration::days(5),
-        offset_tz
-    ).unwrap();
-    
+        offset_tz,
+    )
+    .unwrap();
+
     assert_eq!(interval.from_time(), datetime(&Utc, 2026, 4, 23, 22, 0, 0));
     assert_eq!(interval.from_inclusivity(), BoundInclusivity::Inclusive);
     assert_eq!(interval.to_time(), datetime(&Utc, 2026, 4, 24, 22, 0, 0));
@@ -1879,8 +1881,9 @@ fn bounded_absolute_interval_week_after_naive_duration_from_naive_date() {
         NaiveDuration::weeks(Weekday::Mon, 2),
         Weekday::Mon,
         offset_tz,
-    ).unwrap();
-    
+    )
+    .unwrap();
+
     assert_eq!(week.from_time(), datetime(&Utc, 2026, 5, 10, 22, 0, 0));
     assert_eq!(week.from_inclusivity(), BoundInclusivity::Inclusive);
     assert_eq!(week.to_time(), datetime(&Utc, 2026, 5, 17, 22, 0, 0));
@@ -1895,8 +1898,9 @@ fn bounded_absolute_interval_week_before_naive_duration_from_naive_date() {
         NaiveDuration::weeks(Weekday::Mon, 2),
         Weekday::Mon,
         offset_tz,
-    ).unwrap();
-    
+    )
+    .unwrap();
+
     assert_eq!(week.from_time(), datetime(&Utc, 2026, 4, 12, 22, 0, 0));
     assert_eq!(week.from_inclusivity(), BoundInclusivity::Inclusive);
     assert_eq!(week.to_time(), datetime(&Utc, 2026, 4, 19, 22, 0, 0));
@@ -1985,8 +1989,9 @@ fn bounded_absolute_interval_iso_week_after_naive_duration_from_naive_date() {
         NaiveDate::from_ymd_opt(2026, 5, 1).unwrap(),
         NaiveDuration::weeks(Weekday::Mon, 2),
         offset_tz,
-    ).unwrap();
-    
+    )
+    .unwrap();
+
     assert_eq!(week.from_time(), datetime(&Utc, 2026, 5, 10, 22, 0, 0));
     assert_eq!(week.from_inclusivity(), BoundInclusivity::Inclusive);
     assert_eq!(week.to_time(), datetime(&Utc, 2026, 5, 17, 22, 0, 0));
@@ -2000,8 +2005,9 @@ fn bounded_absolute_interval_iso_week_before_naive_duration_from_naive_date() {
         NaiveDate::from_ymd_opt(2026, 5, 1).unwrap(),
         NaiveDuration::weeks(Weekday::Mon, 2),
         offset_tz,
-    ).unwrap();
-    
+    )
+    .unwrap();
+
     assert_eq!(week.from_time(), datetime(&Utc, 2026, 4, 12, 22, 0, 0));
     assert_eq!(week.from_inclusivity(), BoundInclusivity::Inclusive);
     assert_eq!(week.to_time(), datetime(&Utc, 2026, 4, 19, 22, 0, 0));
@@ -2011,12 +2017,9 @@ fn bounded_absolute_interval_iso_week_before_naive_duration_from_naive_date() {
 #[test]
 fn bounded_absolute_interval_week_from_month() {
     let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
-    
-    let month = BoundedAbsoluteInterval::from_month(
-        NaiveMonth::new(2026, Month::May),
-        offset_tz,
-    ).unwrap();
-    
+
+    let month = BoundedAbsoluteInterval::from_month(NaiveMonth::new(2026, Month::May), offset_tz).unwrap();
+
     assert_eq!(month.from_time(), datetime(&Utc, 2026, 4, 30, 22, 0, 0));
     assert_eq!(month.from_inclusivity(), BoundInclusivity::Inclusive);
     assert_eq!(month.to_time(), datetime(&Utc, 2026, 5, 31, 22, 0, 0));
@@ -2026,13 +2029,14 @@ fn bounded_absolute_interval_week_from_month() {
 #[test]
 fn bounded_absolute_interval_from_inclusive_month_range() {
     let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
-    
+
     let interval = BoundedAbsoluteInterval::from_inclusive_month_range(
         NaiveMonth::new(2026, Month::January),
         NaiveMonth::new(2026, Month::May),
         offset_tz,
-    ).unwrap();
-    
+    )
+    .unwrap();
+
     assert_eq!(interval.from_time(), datetime(&Utc, 2025, 12, 31, 22, 0, 0));
     assert_eq!(interval.from_inclusivity(), BoundInclusivity::Inclusive);
     assert_eq!(interval.to_time(), datetime(&Utc, 2026, 5, 31, 22, 0, 0));
@@ -2043,9 +2047,9 @@ fn bounded_absolute_interval_from_inclusive_month_range() {
 fn bounded_absolute_interval_from_inclusive_month_range_same_month() {
     let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
     let month = NaiveMonth::new(2026, Month::May);
-    
+
     let interval = BoundedAbsoluteInterval::from_inclusive_month_range(month, month, offset_tz).unwrap();
-    
+
     assert_eq!(interval.from_time(), datetime(&Utc, 2026, 4, 30, 22, 0, 0));
     assert_eq!(interval.from_inclusivity(), BoundInclusivity::Inclusive);
     assert_eq!(interval.to_time(), datetime(&Utc, 2026, 5, 31, 22, 0, 0));
@@ -2055,13 +2059,14 @@ fn bounded_absolute_interval_from_inclusive_month_range_same_month() {
 #[test]
 fn bounded_absolute_interval_from_inclusive_month_range_reverse_order() {
     let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
-    
+
     let interval = BoundedAbsoluteInterval::from_inclusive_month_range(
         NaiveMonth::new(2026, Month::May),
         NaiveMonth::new(2026, Month::January),
         offset_tz,
-    ).unwrap();
-    
+    )
+    .unwrap();
+
     assert_eq!(interval.from_time(), datetime(&Utc, 2025, 12, 31, 22, 0, 0));
     assert_eq!(interval.from_inclusivity(), BoundInclusivity::Inclusive);
     assert_eq!(interval.to_time(), datetime(&Utc, 2026, 5, 31, 22, 0, 0));
@@ -2075,8 +2080,9 @@ fn bounded_absolute_interval_month_after_naive_duration_from_naive_date() {
         NaiveDate::from_ymd_opt(2026, 5, 5).unwrap(),
         NaiveDuration::months(2),
         offset_tz,
-    ).unwrap();
-    
+    )
+    .unwrap();
+
     assert_eq!(month.from_time(), datetime(&Utc, 2026, 6, 30, 22, 0, 0));
     assert_eq!(month.from_inclusivity(), BoundInclusivity::Inclusive);
     assert_eq!(month.to_time(), datetime(&Utc, 2026, 7, 31, 22, 0, 0));
@@ -2090,8 +2096,9 @@ fn bounded_absolute_interval_month_before_naive_duration_from_naive_date() {
         NaiveDate::from_ymd_opt(2026, 5, 5).unwrap(),
         NaiveDuration::months(2),
         offset_tz,
-    ).unwrap();
-    
+    )
+    .unwrap();
+
     assert_eq!(month.from_time(), datetime(&Utc, 2026, 2, 28, 22, 0, 0));
     assert_eq!(month.from_inclusivity(), BoundInclusivity::Inclusive);
     assert_eq!(month.to_time(), datetime(&Utc, 2026, 3, 31, 22, 0, 0));
@@ -2102,7 +2109,7 @@ fn bounded_absolute_interval_month_before_naive_duration_from_naive_date() {
 fn bounded_absolute_interval_from_year_common() {
     let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
     let year = BoundedAbsoluteInterval::from_year(2026, offset_tz).unwrap();
-    
+
     assert_eq!(year.from_time(), datetime(&Utc, 2025, 12, 31, 22, 0, 0));
     assert_eq!(year.from_inclusivity(), BoundInclusivity::Inclusive);
     assert_eq!(year.to_time(), datetime(&Utc, 2026, 12, 31, 22, 0, 0));
@@ -2113,7 +2120,7 @@ fn bounded_absolute_interval_from_year_common() {
 fn bounded_absolute_interval_from_year_leap() {
     let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
     let year = BoundedAbsoluteInterval::from_year(2028, offset_tz).unwrap();
-    
+
     assert_eq!(year.from_time(), datetime(&Utc, 2027, 12, 31, 22, 0, 0));
     assert_eq!(year.from_inclusivity(), BoundInclusivity::Inclusive);
     assert_eq!(year.to_time(), datetime(&Utc, 2028, 12, 31, 22, 0, 0));
@@ -2124,7 +2131,7 @@ fn bounded_absolute_interval_from_year_leap() {
 fn bounded_absolute_interval_from_inclusive_year_range() {
     let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
     let years = BoundedAbsoluteInterval::from_inclusive_year_range(2025, 2030, offset_tz).unwrap();
-    
+
     assert_eq!(years.from_time(), datetime(&Utc, 2024, 12, 31, 22, 0, 0));
     assert_eq!(years.from_inclusivity(), BoundInclusivity::Inclusive);
     assert_eq!(years.to_time(), datetime(&Utc, 2030, 12, 31, 22, 0, 0));
@@ -2135,7 +2142,7 @@ fn bounded_absolute_interval_from_inclusive_year_range() {
 fn bounded_absolute_interval_from_inclusive_year_range_same_year() {
     let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
     let year = BoundedAbsoluteInterval::from_inclusive_year_range(2030, 2030, offset_tz).unwrap();
-    
+
     assert_eq!(year.from_time(), datetime(&Utc, 2029, 12, 31, 22, 0, 0));
     assert_eq!(year.from_inclusivity(), BoundInclusivity::Inclusive);
     assert_eq!(year.to_time(), datetime(&Utc, 2030, 12, 31, 22, 0, 0));
@@ -2146,7 +2153,7 @@ fn bounded_absolute_interval_from_inclusive_year_range_same_year() {
 fn bounded_absolute_interval_from_inclusive_year_range_reverse_order() {
     let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
     let years = BoundedAbsoluteInterval::from_inclusive_year_range(2030, 2025, offset_tz).unwrap();
-    
+
     assert_eq!(years.from_time(), datetime(&Utc, 2024, 12, 31, 22, 0, 0));
     assert_eq!(years.from_inclusivity(), BoundInclusivity::Inclusive);
     assert_eq!(years.to_time(), datetime(&Utc, 2030, 12, 31, 22, 0, 0));
@@ -2156,13 +2163,14 @@ fn bounded_absolute_interval_from_inclusive_year_range_reverse_order() {
 #[test]
 fn bounded_absolute_interval_year_after_naive_duration_from_naive_date() {
     let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
-    
+
     let year = BoundedAbsoluteInterval::year_after_naive_duration_from_naive_date(
         NaiveDate::from_ymd_opt(2026, 5, 5).unwrap(),
         NaiveDuration::months(15),
         offset_tz,
-    ).unwrap();
-    
+    )
+    .unwrap();
+
     assert_eq!(year.from_time(), datetime(&Utc, 2026, 12, 31, 22, 0, 0));
     assert_eq!(year.from_inclusivity(), BoundInclusivity::Inclusive);
     assert_eq!(year.to_time(), datetime(&Utc, 2027, 12, 31, 22, 0, 0));
@@ -2172,13 +2180,14 @@ fn bounded_absolute_interval_year_after_naive_duration_from_naive_date() {
 #[test]
 fn bounded_absolute_interval_year_before_naive_duration_from_naive_date() {
     let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
-    
+
     let year = BoundedAbsoluteInterval::year_before_naive_duration_from_naive_date(
         NaiveDate::from_ymd_opt(2026, 5, 5).unwrap(),
         NaiveDuration::months(15),
         offset_tz,
-    ).unwrap();
-    
+    )
+    .unwrap();
+
     assert_eq!(year.from_time(), datetime(&Utc, 2024, 12, 31, 22, 0, 0));
     assert_eq!(year.from_inclusivity(), BoundInclusivity::Inclusive);
     assert_eq!(year.to_time(), datetime(&Utc, 2025, 12, 31, 22, 0, 0));
