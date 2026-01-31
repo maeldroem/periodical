@@ -17,7 +17,7 @@ use std::ops::{Bound, Range, RangeBounds, RangeFrom, RangeFull, RangeInclusive, 
 
 #[cfg(feature = "arbitrary")]
 use arbitrary::Arbitrary;
-use chrono::{DateTime, Days, Duration, NaiveDate, TimeZone, Utc, Weekday};
+use chrono::{DateTime, Datelike, Days, Duration, IsoWeek, NaiveDate, NaiveWeek, TimeZone, Utc, Weekday};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
@@ -2244,6 +2244,63 @@ impl BoundedAbsoluteInterval {
         ))
     }
 
+    /// Creates a new [`BoundedAbsoluteInterval`] from the provided inclusive week range in the given timezone
+    /// 
+    /// Weeks given in reverse chronological order are treated the same way as if they were provided
+    /// in chronological order.
+    /// 
+    /// Note that the given from/to weeks can have different start days, so the resulting interval may not
+    /// always be a multiple of 7 days.
+    /// 
+    /// # Errors
+    /// 
+    /// Returns [`OutOfRangeStartDate`](BoundedAbsoluteIntervalCreationError::OutOfRangeStartDate) if
+    /// the from week's first day is out of range.
+    /// 
+    /// Returns [`OutOfRangeEndDate`](BoundedAbsoluteIntervalCreationError::OutOfRangeEndDate) if
+    /// the to week's last day is out of range.
+    /// 
+    /// See [`from_inclusive_date_range`](BoundedAbsoluteInterval::from_inclusive_date_range) for more errors
+    /// that could occur, as this method uses it.
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// # use chrono::{Datelike, DateTime, Duration, FixedOffset, NaiveDate, NaiveWeek, Utc, Weekday};
+    /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// // UTC+02:00
+    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    /// let from = NaiveDate::from_ymd_opt(2026, 1, 7).unwrap().week(Weekday::Mon);
+    /// let to = NaiveDate::from_ymd_opt(2026, 3, 17).unwrap().week(Weekday::Sat);
+    /// 
+    /// let interval = BoundedAbsoluteInterval::from_inclusive_week_range(from, to, offset_tz).unwrap();
+    /// 
+    /// assert_eq!(interval.from_time(), "2026-01-04 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(interval.from_inclusivity(), BoundInclusivity::Inclusive);
+    /// assert_eq!(interval.to_time(), "2026-03-20 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(interval.to_inclusivity(), BoundInclusivity::Exclusive);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
+    pub fn from_inclusive_week_range<Tz>(
+        mut from: NaiveWeek,
+        mut to: NaiveWeek,
+        tz: Tz,
+    ) -> Result<Self, BoundedAbsoluteIntervalCreationError>
+    where
+        Tz: TimeZone,
+    {
+        if from.checked_first_day() > to.checked_first_day() {
+            std::mem::swap(&mut from, &mut to);
+        }
+
+        Self::from_inclusive_date_range(
+            from.checked_first_day().ok_or(BoundedAbsoluteIntervalCreationError::OutOfRangeStartDate)?,
+            to.checked_last_day().ok_or(BoundedAbsoluteIntervalCreationError::OutOfRangeEndDate)?,
+            tz,
+        )
+    }
+
     /// Creates a new [`BoundedAbsoluteInterval`] of the week after a given [naive duration](NaiveDuration)
     /// relative to today in the given timezone
     /// 
@@ -2375,7 +2432,7 @@ impl BoundedAbsoluteInterval {
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// // UTC+02:00
     /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
-    /// let this_week = BoundedAbsoluteInterval::week_before_naive_duration_from_today(
+    /// let this_week = BoundedAbsoluteInterval::this_week(
     ///     Weekday::Mon,
     ///     offset_tz,
     /// );
@@ -2467,7 +2524,266 @@ impl BoundedAbsoluteInterval {
         )
     }
 
-    // TODO: ISO Week convenience methods
+    /// Creates a new [`BoundedAbsoluteInterval`] from the provided inclusive ISO week range in the given timezone
+    /// 
+    /// Weeks given in reverse chronological order are treated the same way as if they were provided
+    /// in chronological order.
+    /// 
+    /// # Errors
+    /// 
+    /// Returns [`OutOfRangeStartDate`](BoundedAbsoluteIntervalCreationError::OutOfRangeStartDate) if
+    /// the from week's first day is out of range.
+    /// 
+    /// Returns [`OutOfRangeEndDate`](BoundedAbsoluteIntervalCreationError::OutOfRangeEndDate) if
+    /// the to week's last day is out of range.
+    /// 
+    /// See [`from_inclusive_date_range`](BoundedAbsoluteInterval::from_inclusive_date_range) for more errors
+    /// that could occur, as this method uses it.
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// # use chrono::{Datelike, DateTime, Duration, FixedOffset, NaiveDate, Utc};
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// // UTC+02:00
+    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    /// 
+    /// // Currently chrono has no public constructor for IsoWeek yet
+    /// let from = NaiveDate::from_ymd_opt(2026, 1, 7).unwrap().iso_week();
+    /// let to = NaiveDate::from_ymd_opt(2026, 3, 17).unwrap().iso_week();
+    /// 
+    /// let interval = BoundedAbsoluteInterval::from_inclusive_iso_week_range(from, to, offset_tz).unwrap();
+    /// 
+    /// assert_eq!(interval.from_time(), "2026-01-04 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(interval.from_inclusivity(), BoundInclusivity::Inclusive);
+    /// assert_eq!(interval.to_time(), "2026-03-22 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(interval.to_inclusivity(), BoundInclusivity::Exclusive);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
+    pub fn from_inclusive_iso_week_range<Tz>(
+        mut from: IsoWeek,
+        mut to: IsoWeek,
+        tz: Tz,
+    ) -> Result<Self, BoundedAbsoluteIntervalCreationError>
+    where
+        Tz: TimeZone,
+    {
+        if from.year() > to.year() || (from.year() == to.year() && from.week() > to.week()) {
+            std::mem::swap(&mut from, &mut to);
+        }
+
+        Self::from_inclusive_date_range(
+            NaiveDate::from_isoywd_opt(from.year(), from.week(), Weekday::Mon)
+                .ok_or(BoundedAbsoluteIntervalCreationError::OutOfRangeStartDate)?,
+            NaiveDate::from_isoywd_opt(to.year(), to.week(), Weekday::Sun)
+                .ok_or(BoundedAbsoluteIntervalCreationError::OutOfRangeEndDate)?,
+            tz,
+        )
+    }
+
+    /// Creates a new [`BoundedAbsoluteInterval`] of the given week from the ISO year and week numbers
+    /// in the given timezone
+    /// 
+    /// Weeks given in reverse chronological order are treated the same way as if they were provided
+    /// in chronological order.
+    /// 
+    /// # Errors
+    /// 
+    /// Returns [`DateOperationError`](BoundedAbsoluteIntervalCreationError::DateOperationError) if
+    /// the provided ISO year and week numbers are invalid.
+    /// 
+    /// Returns [`OutOfRangeStartDate`](BoundedAbsoluteIntervalCreationError::OutOfRangeStartDate) if
+    /// the week's first day is out of range.
+    /// 
+    /// Returns [`OutOfRangeEndDate`](BoundedAbsoluteIntervalCreationError::OutOfRangeEndDate) if
+    /// the week's last day is out of range.
+    /// 
+    /// See [`from_inclusive_date_range`](BoundedAbsoluteInterval::from_inclusive_date_range) for more errors
+    /// that could occur, as this method uses it.
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// # use chrono::{DateTime, Duration, FixedOffset, Utc, Weekday};
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// // UTC+02:00
+    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    /// 
+    /// let iso_week = BoundedAbsoluteInterval::week_from_iso_year_week(2026, 5, offset_tz).unwrap();
+    /// 
+    /// assert_eq!(iso_week.from_time(), "2026-01-25 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(iso_week.from_inclusivity(), BoundInclusivity::Inclusive);
+    /// assert_eq!(iso_week.to_time(), "2026-02-01 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(iso_week.to_inclusivity(), BoundInclusivity::Exclusive);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
+    pub fn week_from_iso_year_week<Tz>(
+        year: i32,
+        week: u8,
+        tz: Tz,
+    ) -> Result<Self, BoundedAbsoluteIntervalCreationError>
+    where
+        Tz: TimeZone,
+    {
+        let iso_week = NaiveDate::from_isoywd_opt(year, u32::from(week), Weekday::Mon)
+            .ok_or(BoundedAbsoluteIntervalCreationError::DateOperationError)?
+            .week(Weekday::Mon);
+
+        Self::from_inclusive_date_range(
+            iso_week.checked_first_day().ok_or(BoundedAbsoluteIntervalCreationError::OutOfRangeStartDate)?,
+            iso_week.checked_last_day().ok_or(BoundedAbsoluteIntervalCreationError::OutOfRangeEndDate)?,
+            tz,
+        )
+    }
+
+    /// Creates a new [`BoundedAbsoluteInterval`] of the ISO week after a given [naive duration](NaiveDuration)
+    /// relative to today in the given timezone
+    /// 
+    /// # Errors
+    /// 
+    /// See [`week_after_naive_duration_from_today`](BoundedAbsoluteInterval::week_after_naive_duration_from_today)
+    /// for more details.
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// # use chrono::{Duration, FixedOffset, Weekday};
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// # use periodical::time::NaiveDuration;
+    /// // UTC+02:00
+    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    /// 
+    /// let iso_week = BoundedAbsoluteInterval::iso_week_after_naive_duration_from_today(
+    ///     NaiveDuration::months(2),
+    ///     offset_tz,
+    /// );
+    /// ```
+    pub fn iso_week_after_naive_duration_from_today<Tz>(
+        naive_duration: NaiveDuration,
+        tz: Tz,
+    ) -> Result<Self, BoundedAbsoluteIntervalCreationError>
+    where
+        Tz: TimeZone,
+    {
+        Self::week_after_naive_duration_from_today(naive_duration, Weekday::Mon, tz)
+    }
+
+    /// Creates a new [`BoundedAbsoluteInterval`] of the ISO week before a given [naive duration](NaiveDuration)
+    /// relative to today in the given timezone
+    /// 
+    /// # Errors
+    /// 
+    /// See [`week_before_naive_duration_from_today`](BoundedAbsoluteInterval::week_before_naive_duration_from_today)
+    /// for more details.
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// # use chrono::{Duration, FixedOffset, Weekday};
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// # use periodical::time::NaiveDuration;
+    /// // UTC+02:00
+    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    /// 
+    /// let iso_week = BoundedAbsoluteInterval::iso_week_before_naive_duration_from_today(
+    ///     NaiveDuration::months(2),
+    ///     offset_tz,
+    /// );
+    /// ```
+    pub fn iso_week_before_naive_duration_from_today<Tz>(
+        naive_duration: NaiveDuration,
+        tz: Tz,
+    ) -> Result<Self, BoundedAbsoluteIntervalCreationError>
+    where
+        Tz: TimeZone,
+    {
+        Self::week_before_naive_duration_from_today(naive_duration, Weekday::Mon, tz)
+    }
+
+    /// Creates a new [`BoundedAbsoluteInterval`] of the current ISO week in the given timezone
+    /// 
+    /// # Errors
+    /// 
+    /// Returns [`DateOperationError`](BoundedAbsoluteIntervalCreationError::DateOperationError) if
+    /// the current ISO week has a week number that doesn't fit in an [`u8`], which is not normally possible.
+    /// 
+    /// See [`week_from_iso_year_week`](BoundedAbsoluteInterval::week_from_iso_year_week) for more errors
+    /// that could occur, as this method uses it.
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// # use chrono::{Duration, FixedOffset};
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// // UTC+02:00
+    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    /// 
+    /// let iso_week = BoundedAbsoluteInterval::this_iso_week(offset_tz).unwrap();
+    /// ```
+    pub fn this_iso_week<Tz>(tz: Tz) -> Result<Self, BoundedAbsoluteIntervalCreationError>
+    where
+        Tz: TimeZone,
+    {
+        let this_iso_week = naive_date_today(&tz).iso_week();
+
+        Self::week_from_iso_year_week(
+            this_iso_week.year(),
+            u8::try_from(this_iso_week.week()).or(Err(BoundedAbsoluteIntervalCreationError::DateOperationError))?,
+            tz,
+        )
+    }
+
+    /// Creates a new [`BoundedAbsoluteInterval`] of the next ISO week in the given timezone
+    /// 
+    /// # Errors
+    /// 
+    /// See [`iso_week_after_naive_duration_from_today`](BoundedAbsoluteInterval::iso_week_after_naive_duration_from_today)
+    /// for more details.
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// # use chrono::{Duration, FixedOffset};
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// // UTC+02:00
+    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    /// 
+    /// let iso_week = BoundedAbsoluteInterval::next_iso_week(offset_tz).unwrap();
+    /// ```
+    pub fn next_iso_week<Tz>(tz: Tz) -> Result<Self, BoundedAbsoluteIntervalCreationError>
+    where
+        Tz: TimeZone,
+    {
+        Self::iso_week_after_naive_duration_from_today(NaiveDuration::Weeks(Weekday::Mon, 1), tz)
+    }
+
+    /// Creates a new [`BoundedAbsoluteInterval`] of the previous ISO week in the given timezone
+    /// 
+    /// # Errors
+    /// 
+    /// See [`iso_week_before_naive_duration_from_today`](BoundedAbsoluteInterval::iso_week_before_naive_duration_from_today)
+    /// for more details.
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// # use chrono::{Duration, FixedOffset};
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// // UTC+02:00
+    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    /// 
+    /// let iso_week = BoundedAbsoluteInterval::previous_iso_week(offset_tz).unwrap();
+    /// ```
+    pub fn previous_iso_week<Tz>(tz: Tz) -> Result<Self, BoundedAbsoluteIntervalCreationError>
+    where
+        Tz: TimeZone,
+    {
+        Self::iso_week_before_naive_duration_from_today(NaiveDuration::Weeks(Weekday::Mon, 1), tz)
+    }
 
     // TODO: Months convenience methods
 
