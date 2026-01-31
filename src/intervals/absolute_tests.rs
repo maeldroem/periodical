@@ -1787,6 +1787,19 @@ fn bounded_absolute_interval_from_inclusive_date_range_reversed_order() {
 }
 
 #[test]
+fn bounded_absolute_interval_from_week() {
+    let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    let week = NaiveDate::from_ymd_opt(2026, 5, 1).unwrap().week(Weekday::Tue);
+
+    let week_interval = BoundedAbsoluteInterval::from_week(week, offset_tz).unwrap();
+
+    assert_eq!(week_interval.from_time(), datetime(&Utc, 2026, 4, 27, 22, 0, 0));
+    assert_eq!(week_interval.from_inclusivity(), BoundInclusivity::Inclusive);
+    assert_eq!(week_interval.to_time(), datetime(&Utc, 2026, 5, 4, 22, 0, 0));
+    assert_eq!(week_interval.to_inclusivity(), BoundInclusivity::Exclusive);
+}
+
+#[test]
 fn bounded_absolute_interval_from_inclusive_week_range() {
     let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
     let from = NaiveDate::from_ymd_opt(2026, 1, 7).unwrap().week(Weekday::Mon);
@@ -1825,6 +1838,19 @@ fn bounded_absolute_interval_from_inclusive_week_range_reverse_order() {
     assert_eq!(interval.from_inclusivity(), BoundInclusivity::Inclusive);
     assert_eq!(interval.to_time(), datetime(&Utc, 2026, 2, 23, 22, 0, 0));
     assert_eq!(interval.to_inclusivity(), BoundInclusivity::Exclusive);
+}
+
+#[test]
+fn bounded_absolute_interval_from_iso_week() {
+    let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    let iso_week = NaiveDate::from_ymd_opt(2026, 5, 1).unwrap().iso_week();
+
+    let iso_week_interval = BoundedAbsoluteInterval::from_iso_week(iso_week, offset_tz).unwrap();
+
+    assert_eq!(iso_week_interval.from_time(), datetime(&Utc, 2026, 4, 26, 22, 0, 0));
+    assert_eq!(iso_week_interval.from_inclusivity(), BoundInclusivity::Inclusive);
+    assert_eq!(iso_week_interval.to_time(), datetime(&Utc, 2026, 5, 3, 22, 0, 0));
+    assert_eq!(iso_week_interval.to_inclusivity(), BoundInclusivity::Exclusive);
 }
 
 #[test]
