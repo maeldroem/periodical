@@ -72,7 +72,7 @@ impl NaiveMonth {
     }
 
     /// Returns the first day of the month
-    /// 
+    ///
     /// Returns [`None`] if a [`NaiveDate`] cannot be created with the year and month, usually meaning
     /// the date is out of range, see [`NaiveDate::from_ymd_opt`].
     #[must_use]
@@ -81,7 +81,7 @@ impl NaiveMonth {
     }
 
     /// Returns the first day of the month
-    /// 
+    ///
     /// Returns [`None`] if a [`NaiveDate`] cannot be created with the year and month, usually meaning
     /// the date is out of range, see [`NaiveDate::from_ymd_opt`].
     #[must_use]
@@ -114,9 +114,8 @@ impl TryFrom<NaiveDate> for NaiveMonth {
     fn try_from(value: NaiveDate) -> Result<Self, Self::Error> {
         Ok(NaiveMonth::new(
             value.year(),
-            Month::try_from(
-                u8::try_from(value.month()).or(Err(NaiveMonthTryFromNaiveDateError))?
-            ).or(Err(NaiveMonthTryFromNaiveDateError))?,
+            Month::try_from(u8::try_from(value.month()).or(Err(NaiveMonthTryFromNaiveDateError))?)
+                .or(Err(NaiveMonthTryFromNaiveDateError))?,
         ))
     }
 }
