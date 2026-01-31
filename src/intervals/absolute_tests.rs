@@ -1,11 +1,12 @@
 use std::cmp::Ordering;
 use std::ops::Bound;
 
-use chrono::{DateTime, Datelike, Duration, FixedOffset, NaiveDate, Utc, Weekday};
+use chrono::{DateTime, Datelike, Duration, FixedOffset, Month, NaiveDate, Utc, Weekday};
 
 use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity, OpeningDirection};
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 use crate::test_utils::{date, datetime};
+use crate::time::NaiveMonth;
 
 use super::absolute::*;
 
@@ -1913,6 +1914,66 @@ fn bounded_absolute_interval_week_from_iso_year_week_invalid_week() {
         BoundedAbsoluteInterval::week_from_iso_year_week(2026, 60, offset_tz),
         Err(BoundedAbsoluteIntervalCreationError::DateOperationError),
     );
+}
+
+#[test]
+fn bounded_absolute_interval_week_from_month() {
+    let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    
+    let month = BoundedAbsoluteInterval::from_month(
+        NaiveMonth::new(2026, Month::May),
+        offset_tz,
+    ).unwrap();
+    
+    assert_eq!(month.from_time(), datetime(&Utc, 2026, 4, 30, 22, 0, 0));
+    assert_eq!(month.from_inclusivity(), BoundInclusivity::Inclusive);
+    assert_eq!(month.to_time(), datetime(&Utc, 2026, 5, 31, 22, 0, 0));
+    assert_eq!(month.to_inclusivity(), BoundInclusivity::Exclusive);
+}
+
+#[test]
+fn bounded_absolute_interval_from_inclusive_month_range() {
+    let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    
+    let interval = BoundedAbsoluteInterval::from_inclusive_month_range(
+        NaiveMonth::new(2026, Month::January),
+        NaiveMonth::new(2026, Month::May),
+        offset_tz,
+    ).unwrap();
+    
+    assert_eq!(interval.from_time(), datetime(&Utc, 2025, 12, 31, 22, 0, 0));
+    assert_eq!(interval.from_inclusivity(), BoundInclusivity::Inclusive);
+    assert_eq!(interval.to_time(), datetime(&Utc, 2026, 5, 31, 22, 0, 0));
+    assert_eq!(interval.to_inclusivity(), BoundInclusivity::Exclusive);
+}
+
+#[test]
+fn bounded_absolute_interval_from_inclusive_month_range_same_month() {
+    let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    let month = NaiveMonth::new(2026, Month::May);
+    
+    let interval = BoundedAbsoluteInterval::from_inclusive_month_range(month, month, offset_tz).unwrap();
+    
+    assert_eq!(interval.from_time(), datetime(&Utc, 2026, 4, 30, 22, 0, 0));
+    assert_eq!(interval.from_inclusivity(), BoundInclusivity::Inclusive);
+    assert_eq!(interval.to_time(), datetime(&Utc, 2026, 5, 31, 22, 0, 0));
+    assert_eq!(interval.to_inclusivity(), BoundInclusivity::Exclusive);
+}
+
+#[test]
+fn bounded_absolute_interval_from_inclusive_month_range_reverse_order() {
+    let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    
+    let interval = BoundedAbsoluteInterval::from_inclusive_month_range(
+        NaiveMonth::new(2026, Month::May),
+        NaiveMonth::new(2026, Month::January),
+        offset_tz,
+    ).unwrap();
+    
+    assert_eq!(interval.from_time(), datetime(&Utc, 2025, 12, 31, 22, 0, 0));
+    assert_eq!(interval.from_inclusivity(), BoundInclusivity::Inclusive);
+    assert_eq!(interval.to_time(), datetime(&Utc, 2026, 5, 31, 22, 0, 0));
+    assert_eq!(interval.to_inclusivity(), BoundInclusivity::Exclusive);
 }
 
 #[test]
