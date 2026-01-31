@@ -26,8 +26,7 @@ use crate::intervals::ops::bound_overlap_ambiguity::{
     BoundOverlapAmbiguity, BoundOverlapDisambiguationRuleSet, DisambiguatedBoundOverlap,
 };
 use crate::time::{
-    NAIVE_TIME_MIDNIGHT, NaiveDuration, NaiveMonth, checked_add_naive_duration_to_naive_date,
-    checked_sub_naive_duration_to_naive_date, naive_date_today,
+    DAYS_IN_COMMON_YEAR, DAYS_IN_LEAP_YEAR, NAIVE_TIME_MIDNIGHT, NaiveDuration, NaiveMonth, checked_add_naive_duration_to_naive_date, checked_sub_naive_duration_to_naive_date, naive_date_today
 };
 
 use super::meta::{
@@ -2848,7 +2847,7 @@ impl BoundedAbsoluteInterval {
     where
         Tz: TimeZone,
     {
-        Self::iso_week_after_naive_duration_from_today(NaiveDuration::Weeks(Weekday::Mon, 1), tz)
+        Self::iso_week_after_naive_duration_from_today(NaiveDuration::weeks(Weekday::Mon, 1), tz)
     }
 
     /// Creates a new [`BoundedAbsoluteInterval`] of the previous ISO week in the given timezone
@@ -2872,7 +2871,7 @@ impl BoundedAbsoluteInterval {
     where
         Tz: TimeZone,
     {
-        Self::iso_week_before_naive_duration_from_today(NaiveDuration::Weeks(Weekday::Mon, 1), tz)
+        Self::iso_week_before_naive_duration_from_today(NaiveDuration::weeks(Weekday::Mon, 1), tz)
     }
 
     /// Creates a new [`BoundedAbsoluteInterval`] of the given month in the given timezone
@@ -3140,7 +3139,269 @@ impl BoundedAbsoluteInterval {
         Self::month_before_naive_duration_from_today(NaiveDuration::months(1), tz)
     }
 
-    // TODO: Years convenience methods
+    /// Creates a new [`BoundedAbsoluteInterval`] from the given year in the given timezone
+    /// 
+    /// # Errors
+    /// 
+    /// Returns [`OutOfRangeStartDate`](BoundedAbsoluteIntervalCreationError::OutOfRangeStartDate) if
+    /// the year's first day is out of range.
+    /// 
+    /// Returns [`OutOfRangeEndDate`](BoundedAbsoluteIntervalCreationError::OutOfRangeEndDate) if
+    /// the year's last day is out of range.
+    /// 
+    /// See [`from_inclusive_date_range`](BoundedAbsoluteInterval::from_inclusive_date_range) for more errors
+    /// that could occur, as this method uses it.
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// # use chrono::{DateTime, Duration, FixedOffset, Utc};
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// // UTC+02:00
+    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    /// 
+    /// let year = BoundedAbsoluteInterval::from_year(2026, offset_tz).unwrap();
+    /// 
+    /// assert_eq!(year.from_time(), "2025-12-31 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(year.from_inclusivity(), BoundInclusivity::Inclusive);
+    /// assert_eq!(year.to_time(), "2026-12-31 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(year.to_inclusivity(), BoundInclusivity::Exclusive);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
+    pub fn from_year<Tz>(year: i32, tz: Tz) -> Result<Self, BoundedAbsoluteIntervalCreationError>
+    where
+        Tz: TimeZone,
+    {
+        let first_day_of_year = NaiveDate::from_yo_opt(year, 1)
+            .ok_or(BoundedAbsoluteIntervalCreationError::OutOfRangeStartDate)?;
+
+        let last_day_of_year = NaiveDate::from_yo_opt(
+            year,
+            if first_day_of_year.leap_year() { u32::from(DAYS_IN_LEAP_YEAR) } else { u32::from(DAYS_IN_COMMON_YEAR) },
+        )
+            .ok_or(BoundedAbsoluteIntervalCreationError::OutOfRangeEndDate)?;
+
+        Self::from_inclusive_date_range(first_day_of_year, last_day_of_year, tz)
+    }
+
+    /// Creates a new [`BoundedAbsoluteInterval`] from the provided inclusive year range in the given timezone
+    /// 
+    /// Years given in reverse chronological order are treated the same way as if they were provided
+    /// in chronological order.
+    /// 
+    /// # Errors
+    /// 
+    /// Returns [`OutOfRangeStartDate`](BoundedAbsoluteIntervalCreationError::OutOfRangeStartDate) if
+    /// the first day of `from_year` is out of range.
+    /// 
+    /// Returns [`DateOperationError`](BoundedAbsoluteIntervalCreationError::DateOperationError) if
+    /// the first day of `to_year` is out of range (needed in order to determine if the year is a leap year).
+    /// 
+    /// Returns [`OutOfRangeEndDate`](BoundedAbsoluteIntervalCreationError::OutOfRangeEndDate) if
+    /// the last day of `to_year` is out of range.
+    /// 
+    /// See [`from_inclusive_date_range`](BoundedAbsoluteInterval::from_inclusive_date_range) for more errors
+    /// that could occur, as this method uses it.
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// # use chrono::{DateTime, Duration, FixedOffset, Utc};
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// // UTC+02:00
+    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    /// 
+    /// let years = BoundedAbsoluteInterval::from_inclusive_year_range(2025, 2030, offset_tz).unwrap();
+    /// 
+    /// assert_eq!(years.from_time(), "2024-12-31 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(years.from_inclusivity(), BoundInclusivity::Inclusive);
+    /// assert_eq!(years.to_time(), "2030-12-31 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(years.to_inclusivity(), BoundInclusivity::Exclusive);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
+    pub fn from_inclusive_year_range<Tz>(
+        mut from_year: i32,
+        mut to_year: i32,
+        tz: Tz,
+    ) -> Result<Self, BoundedAbsoluteIntervalCreationError>
+    where
+        Tz: TimeZone,
+    {
+        if from_year > to_year {
+            std::mem::swap(&mut from_year, &mut to_year);
+        }
+
+        let first_day_of_from_year = NaiveDate::from_yo_opt(from_year, 1)
+            .ok_or(BoundedAbsoluteIntervalCreationError::OutOfRangeStartDate)?;
+
+        let first_day_of_to_year = NaiveDate::from_yo_opt(to_year, 1)
+            .ok_or(BoundedAbsoluteIntervalCreationError::DateOperationError)?;
+
+        let last_day_of_to_year = NaiveDate::from_yo_opt(
+            to_year,
+            if first_day_of_to_year.leap_year() {
+                u32::from(DAYS_IN_LEAP_YEAR)
+            } else {
+                u32::from(DAYS_IN_COMMON_YEAR)
+            },
+        )
+            .ok_or(BoundedAbsoluteIntervalCreationError::OutOfRangeEndDate)?;
+
+        Self::from_inclusive_date_range(first_day_of_from_year, last_day_of_to_year, tz)
+    }
+
+    /// Creates a new [`BoundedAbsoluteInterval`] of the year after a given [naive duration](NaiveDuration)
+    /// relative to today in the given timezone
+    ///
+    /// # Errors
+    ///
+    /// Returns [`DateOperationError`](BoundedAbsoluteIntervalCreationError::DateOperationError) if
+    /// [`time::checked_add_naive_duration_to_naive_date`](`checked_add_naive_duration_to_naive_date)
+    /// returns [`None`].
+    ///
+    /// See [`from_year`](BoundedAbsoluteInterval::from_year) for more errors that could occur,
+    /// as this method uses it.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{Duration, FixedOffset};
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// # use periodical::time::NaiveDuration;
+    /// // UTC+02:00
+    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    /// 
+    /// let year = BoundedAbsoluteInterval::year_after_naive_duration_from_today(
+    ///     NaiveDuration::months(15),
+    ///     offset_tz,
+    /// );
+    /// ```
+    pub fn year_after_naive_duration_from_today<Tz>(
+        naive_duration: NaiveDuration,
+        tz: Tz,
+    ) -> Result<Self, BoundedAbsoluteIntervalCreationError>
+    where
+        Tz: TimeZone,
+    {
+        Self::from_year(
+            checked_add_naive_duration_to_naive_date(naive_date_today(&tz), naive_duration)
+                .ok_or(BoundedAbsoluteIntervalCreationError::DateOperationError)?
+                .year(),
+            tz,
+        )
+    }
+
+    /// Creates a new [`BoundedAbsoluteInterval`] of the year before a given [naive duration](NaiveDuration)
+    /// relative to today in the given timezone
+    ///
+    /// # Errors
+    ///
+    /// Returns [`DateOperationError`](BoundedAbsoluteIntervalCreationError::DateOperationError) if
+    /// [`time::checked_sub_naive_duration_to_naive_date`](`checked_sub_naive_duration_to_naive_date)
+    /// returns [`None`].
+    ///
+    /// See [`from_year`](BoundedAbsoluteInterval::from_year) for more errors that could occur,
+    /// as this method uses it.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{Duration, FixedOffset};
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// # use periodical::time::NaiveDuration;
+    /// // UTC+02:00
+    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    /// 
+    /// let year = BoundedAbsoluteInterval::year_before_naive_duration_from_today(
+    ///     NaiveDuration::months(15),
+    ///     offset_tz,
+    /// );
+    /// ```
+    pub fn year_before_naive_duration_from_today<Tz>(
+        naive_duration: NaiveDuration,
+        tz: Tz,
+    ) -> Result<Self, BoundedAbsoluteIntervalCreationError>
+    where
+        Tz: TimeZone,
+    {
+        Self::from_year(
+            checked_sub_naive_duration_to_naive_date(naive_date_today(&tz), naive_duration)
+                .ok_or(BoundedAbsoluteIntervalCreationError::DateOperationError)?
+                .year(),
+            tz,
+        )
+    }
+
+    /// Creates a new [`BoundedAbsoluteInterval`] of the current year in the given timezone
+    ///
+    /// # Errors
+    ///
+    /// See [`from_year`](BoundedAbsoluteInterval::from_year) for more details.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{Duration, FixedOffset};
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// // UTC+02:00
+    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    /// 
+    /// let year = BoundedAbsoluteInterval::this_year(offset_tz);
+    /// ```
+    pub fn this_year<Tz>(tz: Tz) -> Result<Self, BoundedAbsoluteIntervalCreationError>
+    where
+        Tz: TimeZone,
+    {
+        Self::from_year(naive_date_today(&tz).year(), tz)
+    }
+
+    /// Creates a new [`BoundedAbsoluteInterval`] of the next year in the given timezone
+    ///
+    /// # Errors
+    ///
+    /// See [`from_year`](BoundedAbsoluteInterval::from_year) for more details.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{Duration, FixedOffset};
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// // UTC+02:00
+    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    /// 
+    /// let year = BoundedAbsoluteInterval::next_year(offset_tz);
+    /// ```
+    pub fn next_year<Tz>(tz: Tz) -> Result<Self, BoundedAbsoluteIntervalCreationError>
+    where
+        Tz: TimeZone,
+    {
+        Self::year_after_naive_duration_from_today(NaiveDuration::years(1), tz)
+    }
+
+    /// Creates a new [`BoundedAbsoluteInterval`] of the previous year in the given timezone
+    ///
+    /// # Errors
+    ///
+    /// See [`from_year`](BoundedAbsoluteInterval::from_year) for more details.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{Duration, FixedOffset};
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// // UTC+02:00
+    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    /// 
+    /// let year = BoundedAbsoluteInterval::previous_year(offset_tz);
+    /// ```
+    pub fn previous_year<Tz>(tz: Tz) -> Result<Self, BoundedAbsoluteIntervalCreationError>
+    where
+        Tz: TimeZone,
+    {
+        Self::year_before_naive_duration_from_today(NaiveDuration::years(1), tz)
+    }
 
     /// Returns the start time
     ///

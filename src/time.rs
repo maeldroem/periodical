@@ -16,6 +16,10 @@ pub const DAYS_IN_WEEK: u8 = 7;
 /// Number of months in a year
 pub const MONTHS_IN_YEAR: u8 = 12;
 
+pub const DAYS_IN_COMMON_YEAR: u16 = 365;
+
+pub const DAYS_IN_LEAP_YEAR: u16 = 366;
+
 /// Represents midnight as a [`NaiveTime`]
 pub const NAIVE_TIME_MIDNIGHT: NaiveTime =
     NaiveTime::from_hms_opt(0, 0, 0).expect("Provided valid hour/minute/second (hms) combination");
