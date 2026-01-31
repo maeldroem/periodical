@@ -21,6 +21,30 @@ fn naive_month_checked_last_day() {
 }
 
 #[test]
+fn naive_month_ord() {
+    assert_eq!(
+        NaiveMonth::new(2026, Month::January).cmp(&NaiveMonth::new(2026, Month::January)),
+        Ordering::Equal,
+    );
+    assert_eq!(
+        NaiveMonth::new(2025, Month::January).cmp(&NaiveMonth::new(2027, Month::January)),
+        Ordering::Less,
+    );
+    assert_eq!(
+        NaiveMonth::new(2027, Month::January).cmp(&NaiveMonth::new(2025, Month::January)),
+        Ordering::Greater,
+    );
+    assert_eq!(
+        NaiveMonth::new(2026, Month::February).cmp(&NaiveMonth::new(2026, Month::November)),
+        Ordering::Less,
+    );
+    assert_eq!(
+        NaiveMonth::new(2026, Month::November).cmp(&NaiveMonth::new(2026, Month::February)),
+        Ordering::Greater,
+    );
+}
+
+#[test]
 fn naive_duration_days_is_zero() {
     assert!(!NaiveDuration::days(1).is_zero());
     assert!(NaiveDuration::days(0).is_zero());

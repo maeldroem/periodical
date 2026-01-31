@@ -5,6 +5,8 @@
 //! It also contains structures to represent naive durations, used for convenience.
 
 use std::cmp::Ordering;
+use std::error::Error;
+use std::fmt::Display;
 
 use chrono::{Datelike, Month, NaiveDate, NaiveTime, TimeZone, Utc, Weekday};
 
@@ -98,9 +100,33 @@ impl Ord for NaiveMonth {
     fn cmp(&self, other: &Self) -> Ordering {
         self.year()
             .cmp(&other.year())
-            .then_with(|| self.month().cmp(&self.month()))
+            .then_with(|| self.month().cmp(&other.month()))
     }
 }
+
+impl TryFrom<NaiveDate> for NaiveMonth {
+    type Error = NaiveMonthTryFromNaiveDateError;
+
+    fn try_from(value: NaiveDate) -> Result<Self, Self::Error> {
+        Ok(NaiveMonth::new(
+            value.year(),
+            Month::try_from(
+                u8::try_from(value.month()).or(Err(NaiveMonthTryFromNaiveDateError))?
+            ).or(Err(NaiveMonthTryFromNaiveDateError))?,
+        ))
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct NaiveMonthTryFromNaiveDateError;
+
+impl Display for NaiveMonthTryFromNaiveDateError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Error when trying to convert a `NaiveDate` into a `NaiveMonth`")
+    }
+}
+
+impl Error for NaiveMonthTryFromNaiveDateError {}
 
 /// A naive duration
 ///
