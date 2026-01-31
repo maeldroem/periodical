@@ -1977,6 +1977,61 @@ fn bounded_absolute_interval_from_inclusive_month_range_reverse_order() {
 }
 
 #[test]
+fn bounded_absolute_interval_from_year_common() {
+    let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    let year = BoundedAbsoluteInterval::from_year(2026, offset_tz).unwrap();
+    
+    assert_eq!(year.from_time(), datetime(&Utc, 2025, 12, 31, 22, 0, 0));
+    assert_eq!(year.from_inclusivity(), BoundInclusivity::Inclusive);
+    assert_eq!(year.to_time(), datetime(&Utc, 2026, 12, 31, 22, 0, 0));
+    assert_eq!(year.to_inclusivity(), BoundInclusivity::Exclusive);
+}
+
+#[test]
+fn bounded_absolute_interval_from_year_leap() {
+    let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    let year = BoundedAbsoluteInterval::from_year(2028, offset_tz).unwrap();
+    
+    assert_eq!(year.from_time(), datetime(&Utc, 2027, 12, 31, 22, 0, 0));
+    assert_eq!(year.from_inclusivity(), BoundInclusivity::Inclusive);
+    assert_eq!(year.to_time(), datetime(&Utc, 2028, 12, 31, 22, 0, 0));
+    assert_eq!(year.to_inclusivity(), BoundInclusivity::Exclusive);
+}
+
+#[test]
+fn bounded_absolute_interval_from_inclusive_year_range() {
+    let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    let years = BoundedAbsoluteInterval::from_inclusive_year_range(2025, 2030, offset_tz).unwrap();
+    
+    assert_eq!(years.from_time(), datetime(&Utc, 2024, 12, 31, 22, 0, 0));
+    assert_eq!(years.from_inclusivity(), BoundInclusivity::Inclusive);
+    assert_eq!(years.to_time(), datetime(&Utc, 2030, 12, 31, 22, 0, 0));
+    assert_eq!(years.to_inclusivity(), BoundInclusivity::Exclusive);
+}
+
+#[test]
+fn bounded_absolute_interval_from_inclusive_year_range_same_year() {
+    let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    let year = BoundedAbsoluteInterval::from_inclusive_year_range(2030, 2030, offset_tz).unwrap();
+    
+    assert_eq!(year.from_time(), datetime(&Utc, 2029, 12, 31, 22, 0, 0));
+    assert_eq!(year.from_inclusivity(), BoundInclusivity::Inclusive);
+    assert_eq!(year.to_time(), datetime(&Utc, 2030, 12, 31, 22, 0, 0));
+    assert_eq!(year.to_inclusivity(), BoundInclusivity::Exclusive);
+}
+
+#[test]
+fn bounded_absolute_interval_from_inclusive_year_range_reverse_order() {
+    let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    let years = BoundedAbsoluteInterval::from_inclusive_year_range(2030, 2025, offset_tz).unwrap();
+    
+    assert_eq!(years.from_time(), datetime(&Utc, 2024, 12, 31, 22, 0, 0));
+    assert_eq!(years.from_inclusivity(), BoundInclusivity::Inclusive);
+    assert_eq!(years.to_time(), datetime(&Utc, 2030, 12, 31, 22, 0, 0));
+    assert_eq!(years.to_inclusivity(), BoundInclusivity::Exclusive);
+}
+
+#[test]
 fn bounded_absolute_unchecked_set_from() {
     let mut interval = BoundedAbsoluteInterval::new_with_inclusivity(
         date(&Utc, 2025, 1, 1),
