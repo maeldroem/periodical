@@ -17,7 +17,7 @@ use std::ops::{Bound, Range, RangeBounds, RangeFrom, RangeFull, RangeInclusive, 
 
 #[cfg(feature = "arbitrary")]
 use arbitrary::Arbitrary;
-use chrono::{DateTime, Datelike, Days, Duration, IsoWeek, Month, NaiveDate, NaiveWeek, TimeZone, Utc, Weekday};
+use chrono::{DateTime, Datelike, Days, Duration, IsoWeek, NaiveDate, NaiveWeek, TimeZone, Utc, Weekday};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
@@ -2875,7 +2875,270 @@ impl BoundedAbsoluteInterval {
         Self::iso_week_before_naive_duration_from_today(NaiveDuration::Weeks(Weekday::Mon, 1), tz)
     }
 
-    // TODO: Months convenience methods
+    /// Creates a new [`BoundedAbsoluteInterval`] of the given month in the given timezone
+    /// 
+    /// # Errors
+    /// 
+    /// Returns [`OutOfRangeStartDate`](BoundedAbsoluteIntervalCreationError::OutOfRangeStartDate) if
+    /// the first day of the month is out of range.
+    /// 
+    /// Returns [`OutOfRangeEndDate`](BoundedAbsoluteIntervalCreationError::OutOfRangeEndDate) if
+    /// the last day of the month is out of range.
+    /// 
+    /// See [`from_inclusive_date_range`](BoundedAbsoluteInterval::from_inclusive_date_range) for more errors
+    /// that could occur, as this method uses it.
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// # use chrono::{DateTime, Duration, FixedOffset, Month, Utc};
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// # use periodical::time::NaiveMonth;
+    /// // UTC+02:00
+    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    /// 
+    /// let month = BoundedAbsoluteInterval::from_month(
+    ///     NaiveMonth::new(2026, Month::May),
+    ///     offset_tz,
+    /// ).unwrap();
+    /// 
+    /// assert_eq!(month.from_time(), "2026-04-30 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(month.from_inclusivity(), BoundInclusivity::Inclusive);
+    /// assert_eq!(month.to_time(), "2026-05-31 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(month.to_inclusivity(), BoundInclusivity::Exclusive);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
+    pub fn from_month<Tz>(month: NaiveMonth, tz: Tz) -> Result<Self, BoundedAbsoluteIntervalCreationError>
+    where
+        Tz: TimeZone,
+    {
+        Self::from_inclusive_date_range(
+            month.checked_first_day().ok_or(BoundedAbsoluteIntervalCreationError::OutOfRangeStartDate)?,
+            month.checked_last_day().ok_or(BoundedAbsoluteIntervalCreationError::OutOfRangeEndDate)?,
+            tz,
+        )
+    }
+
+    /// Creates a new [`BoundedAbsoluteInterval`] from the provided inclusive month range in the given timezone
+    ///
+    /// Months given in reverse chronological order are treated the same way as if they were provided
+    /// in chronological order.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`OutOfRangeStartDate`](BoundedAbsoluteIntervalCreationError::OutOfRangeStartDate) if
+    /// the from month's first day is out of range.
+    ///
+    /// Returns [`OutOfRangeEndDate`](BoundedAbsoluteIntervalCreationError::OutOfRangeEndDate) if
+    /// the to month's last day is out of range.
+    ///
+    /// See [`from_inclusive_date_range`](BoundedAbsoluteInterval::from_inclusive_date_range) for more errors
+    /// that could occur, as this method uses it.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{DateTime, Duration, FixedOffset, Month, Utc};
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// # use periodical::time::NaiveMonth;
+    /// // UTC+02:00
+    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    ///
+    /// let interval = BoundedAbsoluteInterval::from_inclusive_month_range(
+    ///     NaiveMonth::new(2026, Month::January),
+    ///     NaiveMonth::new(2026, Month::May),
+    ///     offset_tz,
+    /// ).unwrap();
+    ///
+    /// assert_eq!(interval.from_time(), "2025-12-31 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(interval.from_inclusivity(), BoundInclusivity::Inclusive);
+    /// assert_eq!(interval.to_time(), "2026-05-31 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(interval.to_inclusivity(), BoundInclusivity::Exclusive);
+    /// # Ok::<(), chrono::format::ParseError>(())
+    /// ```
+    pub fn from_inclusive_month_range<Tz>(
+        mut from: NaiveMonth,
+        mut to: NaiveMonth,
+        tz: Tz,
+    ) -> Result<Self, BoundedAbsoluteIntervalCreationError>
+    where
+        Tz: TimeZone,
+    {
+        if from > to {
+            std::mem::swap(&mut from, &mut to);
+        }
+
+        Self::from_inclusive_date_range(
+            from.checked_first_day().ok_or(BoundedAbsoluteIntervalCreationError::OutOfRangeStartDate)?,
+            to.checked_last_day().ok_or(BoundedAbsoluteIntervalCreationError::OutOfRangeEndDate)?,
+            tz,
+        )
+    }
+
+    /// Creates a new [`BoundedAbsoluteInterval`] of the month after a given [naive duration](NaiveDuration)
+    /// relative to today in the given timezone
+    ///
+    /// # Errors
+    ///
+    /// Returns [`DateOperationError`](BoundedAbsoluteIntervalCreationError::DateOperationError) if
+    /// [`time::checked_add_naive_duration_to_naive_date`](`checked_add_naive_duration_to_naive_date)
+    /// returns [`None`], or if conversion of today's [`NaiveDate`] to a [`NaiveMonth`] failed.
+    ///
+    /// See [`from_month`](BoundedAbsoluteInterval::from_month) for more errors that could occur,
+    /// as this method uses it.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{Duration, FixedOffset};
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// # use periodical::time::NaiveDuration;
+    /// // UTC+02:00
+    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    /// 
+    /// let month = BoundedAbsoluteInterval::month_after_naive_duration_from_today(
+    ///     NaiveDuration::months(2),
+    ///     offset_tz,
+    /// );
+    /// ```
+    pub fn month_after_naive_duration_from_today<Tz>(
+        naive_duration: NaiveDuration,
+        tz: Tz,
+    ) -> Result<Self, BoundedAbsoluteIntervalCreationError>
+    where
+        Tz: TimeZone,
+    {
+        let day = checked_add_naive_duration_to_naive_date(naive_date_today(&tz), naive_duration)
+            .ok_or(BoundedAbsoluteIntervalCreationError::DateOperationError)?;
+
+        Self::from_month(
+            NaiveMonth::try_from(day).or(Err(BoundedAbsoluteIntervalCreationError::DateOperationError))?,
+            tz,
+        )
+    }
+
+    /// Creates a new [`BoundedAbsoluteInterval`] of the month after a given [naive duration](NaiveDuration)
+    /// relative to today in the given timezone
+    ///
+    /// # Errors
+    ///
+    /// Returns [`DateOperationError`](BoundedAbsoluteIntervalCreationError::DateOperationError) if
+    /// [`time::checked_sub_naive_duration_to_naive_date`](`checked_sub_naive_duration_to_naive_date)
+    /// returns [`None`], or if conversion of today's [`NaiveDate`] to a [`NaiveMonth`] failed.
+    ///
+    /// See [`from_month`](BoundedAbsoluteInterval::from_month) for more errors that could occur,
+    /// as this method uses it.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use chrono::{Duration, FixedOffset};
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// # use periodical::time::NaiveDuration;
+    /// // UTC+02:00
+    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    /// 
+    /// let month = BoundedAbsoluteInterval::month_before_naive_duration_from_today(
+    ///     NaiveDuration::months(2),
+    ///     offset_tz,
+    /// );
+    /// ```
+    pub fn month_before_naive_duration_from_today<Tz>(
+        naive_duration: NaiveDuration,
+        tz: Tz,
+    ) -> Result<Self, BoundedAbsoluteIntervalCreationError>
+    where
+        Tz: TimeZone,
+    {
+        let day = checked_sub_naive_duration_to_naive_date(naive_date_today(&tz), naive_duration)
+            .ok_or(BoundedAbsoluteIntervalCreationError::DateOperationError)?;
+
+        Self::from_month(
+            NaiveMonth::try_from(day).or(Err(BoundedAbsoluteIntervalCreationError::DateOperationError))?,
+            tz,
+        )
+    }
+
+    /// Creates a new [`BoundedAbsoluteInterval`] of the current month in the given timezone
+    /// 
+    /// # Errors
+    /// 
+    /// Returns [`DateOperationError`](BoundedAbsoluteIntervalCreationError::DateOperationError) if
+    /// conversion of today's [`NaiveDate`] to a [`NaiveMonth`] failed.
+    /// 
+    /// See [`from_month`](BoundedAbsoluteInterval::from_month) for more errors that could occur,
+    /// as this method uses it.
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// # use chrono::{Duration, FixedOffset};
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// // UTC+02:00
+    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    /// 
+    /// let month = BoundedAbsoluteInterval::this_month(offset_tz);
+    /// ```
+    pub fn this_month<Tz>(tz: Tz) -> Result<Self, BoundedAbsoluteIntervalCreationError>
+    where
+        Tz: TimeZone,
+    {
+        Self::from_month(
+            NaiveMonth::try_from(naive_date_today(&tz))
+                .or(Err(BoundedAbsoluteIntervalCreationError::DateOperationError))?,
+            tz,
+        )
+    }
+
+    /// Creates a new [`BoundedAbsoluteInterval`] of the next month in the given timezone
+    /// 
+    /// # Errors
+    /// 
+    /// See [`month_after_naive_duration_from_today`](BoundedAbsoluteInterval::month_after_naive_duration_from_today)
+    /// for more details.
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// # use chrono::{Duration, FixedOffset};
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// // UTC+02:00
+    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    /// 
+    /// let month = BoundedAbsoluteInterval::next_month(offset_tz);
+    /// ```
+    pub fn next_month<Tz>(tz: Tz) -> Result<Self, BoundedAbsoluteIntervalCreationError>
+    where
+        Tz: TimeZone,
+    {
+        Self::month_after_naive_duration_from_today(NaiveDuration::months(1), tz)
+    }
+
+    /// Creates a new [`BoundedAbsoluteInterval`] of the previous month in the given timezone
+    /// 
+    /// # Errors
+    /// 
+    /// See [`month_before_naive_duration_from_today`](BoundedAbsoluteInterval::month_before_naive_duration_from_today)
+    /// for more details.
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// # use chrono::{Duration, FixedOffset};
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// // UTC+02:00
+    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+    /// 
+    /// let month = BoundedAbsoluteInterval::previous_month(offset_tz);
+    /// ```
+    pub fn previous_month<Tz>(tz: Tz) -> Result<Self, BoundedAbsoluteIntervalCreationError>
+    where
+        Tz: TimeZone,
+    {
+        Self::month_before_naive_duration_from_today(NaiveDuration::months(1), tz)
+    }
 
     // TODO: Years convenience methods
 
