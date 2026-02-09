@@ -56,7 +56,7 @@
 
 use std::iter::{FusedIterator, Peekable};
 
-use crate::intervals::prelude::*;
+use crate::intervals::ops::Intersectable;
 use crate::ops::IntersectionResult;
 
 /// Peer intersection iterator for intervals using predefined rules

@@ -16,14 +16,12 @@
 //!
 //! See [`Abridgable`].
 
-use super::prelude::*;
-
 use crate::intervals::absolute::{
     AbsoluteBounds, AbsoluteEndBound, AbsoluteInterval, AbsoluteStartBound, BoundedAbsoluteInterval,
     EmptiableAbsoluteBounds, HalfBoundedAbsoluteInterval, HasAbsoluteBounds, HasEmptiableAbsoluteBounds,
     swap_absolute_bounds,
 };
-use crate::intervals::meta::BoundInclusivity;
+use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
 use crate::intervals::ops::bound_ord::{BoundOrdering, PartialBoundOrd};
 use crate::intervals::ops::bound_overlap_ambiguity::BoundOverlapAmbiguity;
 use crate::intervals::relative::{

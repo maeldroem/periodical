@@ -72,7 +72,7 @@
 
 use std::iter::{FusedIterator, Peekable};
 
-use crate::intervals::prelude::*;
+use crate::intervals::ops::Differentiable;
 use crate::ops::DifferenceResult;
 
 /// Peer difference iterator for intervals using predefined rules

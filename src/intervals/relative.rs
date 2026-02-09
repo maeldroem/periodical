@@ -22,9 +22,12 @@ use chrono::Duration;
 use serde::{Deserialize, Serialize};
 
 use crate::intervals::meta::{Epsilon, Interval};
+use crate::intervals::ops::bound_overlap_ambiguity::{BoundOverlapAmbiguity, BoundOverlapDisambiguationRuleSet, DisambiguatedBoundOverlap};
 
-use super::meta::{BoundInclusivity, Duration as IntervalDuration, OpeningDirection, Openness, Relativity};
-use super::prelude::*;
+use super::meta::{
+    BoundInclusivity, Duration as IntervalDuration, Emptiable, HasBoundInclusivity, HasDuration, HasOpenness,
+    HasRelativity, OpeningDirection, Openness, Relativity,
+};
 use super::special::{EmptyInterval, UnboundedInterval};
 
 /// A relative finite bound

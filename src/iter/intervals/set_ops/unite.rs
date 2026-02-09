@@ -54,7 +54,7 @@
 
 use std::iter::{FusedIterator, Peekable};
 
-use crate::intervals::prelude::*;
+use crate::intervals::ops::Unitable;
 use crate::ops::UnionResult;
 
 /// Accumulative union iterator using the predefined rules
