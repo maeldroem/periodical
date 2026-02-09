@@ -3,17 +3,21 @@
 //! # Interval structure and terminology
 //!
 //! Interval refers to an interval, a range, like in mathematics. But if we are talking strictly about this crate,
-//! then an interval, such as [`AbsoluteInterval`] and [`RelativeInterval`] are enumerators over specific intervals,
-//! like [`BoundedAbsoluteInterval`] or [`HalfBoundedRelativeInterval`].
+//! then an interval, such as [`AbsoluteInterval`](absolute::AbsoluteInterval)
+//! and [`RelativeInterval`][relative::RelativeInterval] are enumerators
+//! over specific intervals, like [`BoundedAbsoluteInterval`][absolute::BoundedAbsoluteInterval]
+//! or [`HalfBoundedRelativeInterval`][relative::HalfBoundedRelativeInterval].
 //!
 //! Those specific intervals must conserve their invariants.
 //! A bounded interval must remain bounded, a half-bounded interval must remain half-bounded.
 //!
-//! All such intervals are can be interpreted of a pair of bounds, like [`AbsoluteBounds`] and [`RelativeBounds`],
-//! but in practice, specific intervals only store the kind of data they absolutely need.
+//! All such intervals are can be interpreted of a pair of bounds, like [`AbsoluteBounds`][absolute::AbsoluteBounds]
+//! and [`RelativeBounds`][relative::RelativeBounds], but in practice, specific intervals only store the kind of data
+//! they absolutely need.
 //! Every interval can be converted to and created from a pair of bounds, though.
 //!
-//! They may also come in _emptiable_ variants, like [`EmptiableAbsoluteBounds`] and [`EmptiableRelativeBounds`],
+//! They may also come in _emptiable_ variants, like [`EmptiableAbsoluteBounds`](absolute::EmptiableAbsoluteBounds)
+//! and [`EmptiableRelativeBounds`](relative::EmptiableRelativeBounds),
 //! that are similar to the previously mentioned pair of bounds, but support the representation
 //! of [empty intervals](special::EmptyInterval).
 //!
@@ -26,18 +30,20 @@
 //! 2. If both points are at the same position,
 //!    their [bound inclusivities](meta::BoundInclusivity) can only be [inclusive](meta::BoundInclusivity::Inclusive)
 //!
-//! Bounds can be modified however you want, as they don't need to conserve invariants regarding [openness](Openness)
-//! of their bounds.
+//! Bounds can be modified however you want, as they don't need to conserve invariants
+//! regarding [openness](meta::Openness) of their bounds.
 //!
 //! A way to represent an individual bound, regardless of its _source_ (start/end) exists:
-//! [`AbsoluteBound`] and [`RelativeBound`].
+//! [`AbsoluteBound`](absolute::AbsoluteBounds) and [`RelativeBound`](relative::RelativeBounds).
 //!
 //! While processing intervals through operations like unions and intersections can yield a different kind of interval,
 //! they never mutate themselves in order to represent this new state, as they have to conserve their invariant
-//! regarding [bound openness](Openness). This is the difference between an interval and bounds in this crate.
+//! regarding [bound openness](meta::Openness). This is the difference between an interval and bounds in this crate.
 //!
-//! Pairs of bounds are composed of both a start bound (e.g. [`AbsoluteStartBound`], [`RelativeStartBound`])
-//! and an end bound (e.g. [`AbsoluteEndBound`], [`RelativeEndBound`]).
+//! Pairs of bounds are composed of both a start bound (e.g. [`AbsoluteStartBound`](absolute::AbsoluteStartBound),
+//! [`RelativeStartBound`](relative::RelativeStartBound))
+//! and an end bound (e.g. [`AbsoluteEndBound`](absolute::AbsoluteEndBound),
+//! [`RelativeEndBound`](relative::RelativeEndBound)).
 //!
 //! Those individual bounds represent the start and end of their parent, supporting an infinite start/end via their
 //! `InfinitePast` (for start bounds) or `InfiniteFuture` (for end bounds) variants.
@@ -52,14 +58,14 @@
 //! While they are separate, their finite variants are not. This means their [inclusivity](meta::BoundInclusivity)
 //! are ambiguous. This is why, when comparing them, only their time/offset is taken into account.
 //!
-//! [Empty intervals](EmptyInterval) are equivalent to no interval, to an empty set.
+//! [Empty intervals](special::EmptyInterval) are equivalent to no interval, to an empty set.
 //! They do not possess a specific point in time.
 //! This is the reason why they can't be compared with other intervals, or are mostly ignored.
 //!
 //! The reason why empty intervals exist is to provide a way to represent _no interval_,
 //! without the use of an [`Option`] to represent it.
 //! This also makes it compatible with other interval operations, for example you can still get the
-//! complement of an empty interval, which results in an [unbounded interval](`UnboundedInterval`).
+//! complement of an empty interval, which results in an [unbounded interval](special::UnboundedInterval).
 //!
 //! # Examples
 //!
@@ -86,6 +92,8 @@
 //! # Ok::<(), chrono::format::ParseError>(())
 //! ```
 
+use crate::utils::tests;
+
 pub mod absolute;
 pub mod bound_position;
 pub mod meta;
@@ -94,8 +102,6 @@ pub mod prelude;
 pub mod relative;
 pub mod special;
 
-use crate::utils::tests;
-
 tests! {
     mod absolute_tests;
     mod bound_position_tests;
@@ -103,14 +109,3 @@ tests! {
     mod relative_tests;
     mod special_tests;
 }
-
-pub use absolute::{
-    AbsoluteBound, AbsoluteBounds, AbsoluteEndBound, AbsoluteInterval, AbsoluteStartBound, BoundedAbsoluteInterval,
-    EmptiableAbsoluteBounds, HalfBoundedAbsoluteInterval, HasAbsoluteBounds, HasEmptiableAbsoluteBounds,
-};
-pub use meta::{Emptiable, HasBoundInclusivity, HasDuration, HasOpenness, HasRelativity, Openness, Relativity};
-pub use relative::{
-    BoundedRelativeInterval, EmptiableRelativeBounds, HalfBoundedRelativeInterval, HasEmptiableRelativeBounds,
-    HasRelativeBounds, RelativeBound, RelativeBounds, RelativeEndBound, RelativeInterval, RelativeStartBound,
-};
-pub use special::{EmptyInterval, UnboundedInterval};
