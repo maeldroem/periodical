@@ -52,14 +52,14 @@ use super::prelude::*;
 
 use crate::intervals::absolute::{
     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteInterval, AbsoluteStartBound,
-    EmptiableAbsoluteBounds, HalfBoundedAbsoluteInterval, HasAbsoluteBounds, HasEmptiableAbsoluteBounds,
+    BoundedAbsoluteInterval, EmptiableAbsoluteBounds, HalfBoundedAbsoluteInterval, HasAbsoluteBounds,
+    HasEmptiableAbsoluteBounds,
 };
 use crate::intervals::relative::{
-    EmptiableRelativeBounds, HalfBoundedRelativeInterval, RelativeBounds, RelativeEndBound, RelativeFiniteBound,
-    RelativeStartBound,
+    BoundedRelativeInterval, EmptiableRelativeBounds, HalfBoundedRelativeInterval, RelativeBounds, RelativeEndBound,
+    RelativeFiniteBound, RelativeInterval, RelativeStartBound,
 };
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
-use crate::intervals::{BoundedAbsoluteInterval, BoundedRelativeInterval, RelativeInterval};
 
 /// Errors that can be produced when using [`GapFillable`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]

@@ -18,6 +18,8 @@
 //!
 //! And, perchance, more to come in the future!
 
+use crate::utils::{inline_docs, tests};
+
 pub mod abridge;
 pub mod bound_containment;
 pub mod bound_ord;
@@ -37,8 +39,6 @@ pub mod remove_overlap;
 pub mod remove_overlap_or_gap;
 pub mod set_ops;
 pub mod shrink;
-
-use crate::utils::tests;
 
 tests! {
     mod abridge_tests;
@@ -61,28 +61,31 @@ tests! {
     mod shrink_tests;
 }
 
-pub use abridge::Abridgable;
-pub use bound_containment::{
-    BoundContainmentPosition, BoundContainmentRule, BoundContainmentRuleSet, CanPositionBoundContainment,
-    DEFAULT_BOUND_CONTAINMENT_RULES, DisambiguatedBoundContainmentPosition,
-};
-pub use bound_ord::{BoundOrdering, PartialBoundOrd};
-pub use complement::Complementable;
-pub use cut::{CutResult, CutType, Cuttable};
-pub use extend::Extensible;
-pub use fill_gap::GapFillable;
-pub use grow::{GrowableEndBound, GrowableStartBound};
-pub use overlap::{
-    CanPositionOverlap, DEFAULT_OVERLAP_RULES, DisambiguatedOverlapPosition, OverlapPosition, OverlapRule,
-    OverlapRuleSet,
-};
-pub use point_containment::{
-    CanPositionPointContainment, DEFAULT_POINT_CONTAINMENT_RULES, DisambiguatedPointContainmentPosition,
-    PointContainmentPosition, PointContainmentRule, PointContainmentRuleSet,
-};
-pub use precision::PreciseAbsoluteInterval;
-pub use relativity_conversion::{ToAbsolute, ToRelative};
-pub use remove_overlap::{OverlapRemovable, OverlapRemovalResult};
-pub use remove_overlap_or_gap::{OverlapOrGapRemovalResult, RemovableOverlapOrGap};
-pub use set_ops::{Differentiable, Intersectable, SymmetricallyDifferentiable, Unitable};
-pub use shrink::{ShrinkableEndBound, ShrinkableStartBound};
+inline_docs!{
+    pub use abridge::Abridgable;
+    pub use bound_containment::{
+        BoundContainmentPosition, BoundContainmentRule, BoundContainmentRuleSet, CanPositionBoundContainment,
+        DEFAULT_BOUND_CONTAINMENT_RULES, DisambiguatedBoundContainmentPosition,
+    };
+    pub use bound_ord::{BoundOrdering, PartialBoundOrd};
+    pub use complement::Complementable;
+    pub use cut::{CutResult, CutType, Cuttable};
+    pub use extend::Extensible;
+    pub use fill_gap::GapFillable;
+    pub use grow::{GrowableEndBound, GrowableStartBound};
+    pub use overlap::{
+        CanPositionOverlap, DEFAULT_OVERLAP_RULES, DisambiguatedOverlapPosition, OverlapPosition, OverlapRule,
+        OverlapRuleSet,
+    };
+    pub use point_containment::{
+        CanPositionPointContainment, DEFAULT_POINT_CONTAINMENT_RULES, DisambiguatedPointContainmentPosition,
+        PointContainmentPosition, PointContainmentRule, PointContainmentRuleSet,
+    };
+    pub use precision::PreciseAbsoluteInterval;
+    pub use relativity_conversion::{ToAbsolute, ToRelative};
+    pub use remove_overlap::{OverlapRemovable, OverlapRemovalResult};
+    pub use remove_overlap_or_gap::{OverlapOrGapRemovalResult, RemovableOverlapOrGap};
+    pub use set_ops::{Differentiable, Intersectable, SymmetricallyDifferentiable, Unitable};
+    pub use shrink::{ShrinkableEndBound, ShrinkableStartBound};
+}
+
