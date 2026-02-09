@@ -45,12 +45,11 @@
 
 use chrono::{DateTime, Utc};
 
-use super::prelude::*;
-
 use crate::intervals::absolute::{
     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteInterval, AbsoluteStartBound,
     EmptiableAbsoluteBounds, HasEmptiableAbsoluteBounds,
 };
+use crate::intervals::meta::HasBoundInclusivity;
 use crate::intervals::special::EmptyInterval;
 use crate::ops::{Precision, PrecisionError};
 

@@ -18,14 +18,16 @@ use arbitrary::Arbitrary;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use super::prelude::*;
-
-use crate::intervals::absolute::{AbsoluteBounds, AbsoluteEndBound, AbsoluteStartBound, EmptiableAbsoluteBounds};
-use crate::intervals::meta::BoundInclusivity;
+use crate::intervals::absolute::{
+    AbsoluteBounds, AbsoluteEndBound, AbsoluteStartBound, EmptiableAbsoluteBounds, HasEmptiableAbsoluteBounds,
+};
+use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
 use crate::intervals::ops::bound_overlap_ambiguity::{
     BoundOverlapAmbiguity, BoundOverlapDisambiguationRuleSet, DisambiguatedBoundOverlap,
 };
-use crate::intervals::relative::{EmptiableRelativeBounds, RelativeBounds, RelativeEndBound, RelativeStartBound};
+use crate::intervals::relative::{
+    EmptiableRelativeBounds, HasEmptiableRelativeBounds, RelativeBounds, RelativeEndBound, RelativeStartBound,
+};
 
 /// Bound position relative to an interval
 ///

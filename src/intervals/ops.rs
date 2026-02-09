@@ -33,7 +33,6 @@ pub mod grow;
 pub mod overlap;
 pub mod point_containment;
 pub mod precision;
-pub mod prelude;
 pub mod relativity_conversion;
 pub mod remove_overlap;
 pub mod remove_overlap_or_gap;
