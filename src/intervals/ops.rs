@@ -38,6 +38,7 @@ pub mod remove_overlap;
 pub mod remove_overlap_or_gap;
 pub mod set_ops;
 pub mod shrink;
+pub mod split;
 
 tests! {
     mod abridge_tests;
@@ -58,6 +59,7 @@ tests! {
     mod remove_overlap_tests;
     mod set_ops_tests;
     mod shrink_tests;
+    mod split_tests;
 }
 
 inline_docs! {
