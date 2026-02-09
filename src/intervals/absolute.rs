@@ -1959,7 +1959,7 @@ impl BoundedAbsoluteInterval {
     /// Returns [`EndInTimeGap`](BoundedAbsoluteIntervalCreationError::EndInTimeGap) if the day after the given date
     /// at midnight in the given timezone is positioned inside a time gap[^1].
     ///
-    /// [^1]: See [`MappedLocalTime::None`](https://docs.rs/chrono/latest/chrono/offset/enum.LocalResult.html#variant.None)
+    /// [^1]: See [`MappedLocalTime::None`](chrono::offset::LocalResult::None)
     ///
     /// # Examples
     ///
@@ -2030,7 +2030,7 @@ impl BoundedAbsoluteInterval {
     ///
     /// let interval = BoundedAbsoluteInterval::day_after_naive_duration_from_naive_date(
     ///     NaiveDate::from_ymd_opt(2026, 4, 29).unwrap(),
-    ///     NaiveDuration::days(5),
+    ///     NaiveDuration::Days(5),
     ///     offset_tz
     /// ).unwrap();
     ///
@@ -2079,7 +2079,7 @@ impl BoundedAbsoluteInterval {
     ///
     /// let interval = BoundedAbsoluteInterval::day_before_naive_duration_from_naive_date(
     ///     NaiveDate::from_ymd_opt(2026, 4, 29).unwrap(),
-    ///     NaiveDuration::days(5),
+    ///     NaiveDuration::Days(5),
     ///     offset_tz
     /// ).unwrap();
     ///
@@ -2123,7 +2123,7 @@ impl BoundedAbsoluteInterval {
     /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
     ///
     /// let interval = BoundedAbsoluteInterval::day_after_naive_duration_from_today(
-    ///     NaiveDuration::days(5),
+    ///     NaiveDuration::Days(5),
     ///     offset_tz
     /// ).unwrap();
     /// ```
@@ -2156,7 +2156,7 @@ impl BoundedAbsoluteInterval {
     /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
     ///
     /// let interval = BoundedAbsoluteInterval::day_before_naive_duration_from_today(
-    ///     NaiveDuration::days(5),
+    ///     NaiveDuration::Days(5),
     ///     offset_tz
     /// ).unwrap();
     /// ```
@@ -2185,7 +2185,7 @@ impl BoundedAbsoluteInterval {
     /// Returns [`EndInTimeGap`](BoundedAbsoluteIntervalCreationError::EndInTimeGap) if tomorrow at midnight
     /// in the given timezone is positioned inside a time gap[^1].
     ///
-    /// [^1]: See [`MappedLocalTime::None`](https://docs.rs/chrono/latest/chrono/offset/enum.LocalResult.html#variant.None)
+    /// [^1]: See [`MappedLocalTime::None`](chrono::offset::LocalResult::None)
     ///
     /// # Examples
     ///
@@ -2227,7 +2227,7 @@ impl BoundedAbsoluteInterval {
     where
         Tz: TimeZone,
     {
-        Self::day_after_naive_duration_from_today(NaiveDuration::days(1), tz)
+        Self::day_after_naive_duration_from_today(NaiveDuration::Days(1), tz)
     }
 
     /// Creates a new [`BoundedAbsoluteInterval`] of yesterday in the given timezone
@@ -2252,7 +2252,7 @@ impl BoundedAbsoluteInterval {
     where
         Tz: TimeZone,
     {
-        Self::day_before_naive_duration_from_today(NaiveDuration::days(1), tz)
+        Self::day_before_naive_duration_from_today(NaiveDuration::Days(1), tz)
     }
 
     /// Creates a new [`BoundedAbsoluteInterval`] from the provided inclusive date range in the given timezone
@@ -2271,7 +2271,7 @@ impl BoundedAbsoluteInterval {
     /// Returns [`EndInTimeGap`](BoundedAbsoluteIntervalCreationError::EndInTimeGap) if the day after
     /// the given to date at midnight in the given timezone is positioned inside a time gap[^1].
     ///
-    /// [^1]: See [`MappedLocalTime::None`](https://docs.rs/chrono/latest/chrono/offset/enum.LocalResult.html#variant.None)
+    /// [^1]: See [`MappedLocalTime::None`](chrono::offset::LocalResult::None)
     ///
     /// # Examples
     ///
@@ -2453,7 +2453,7 @@ impl BoundedAbsoluteInterval {
     ///
     /// let week = BoundedAbsoluteInterval::week_after_naive_duration_from_naive_date(
     ///     NaiveDate::from_ymd_opt(2026, 5, 1).unwrap(),
-    ///     NaiveDuration::weeks(Weekday::Mon, 2),
+    ///     NaiveDuration::Weeks(Weekday::Mon, 2),
     ///     Weekday::Mon,
     ///     offset_tz,
     /// ).unwrap();
@@ -2504,7 +2504,7 @@ impl BoundedAbsoluteInterval {
     ///
     /// let week = BoundedAbsoluteInterval::week_before_naive_duration_from_naive_date(
     ///     NaiveDate::from_ymd_opt(2026, 5, 1).unwrap(),
-    ///     NaiveDuration::weeks(Weekday::Mon, 2),
+    ///     NaiveDuration::Weeks(Weekday::Mon, 2),
     ///     Weekday::Mon,
     ///     offset_tz,
     /// ).unwrap();
@@ -2549,7 +2549,7 @@ impl BoundedAbsoluteInterval {
     /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
     ///
     /// let week = BoundedAbsoluteInterval::week_after_naive_duration_from_today(
-    ///     NaiveDuration::months(2),
+    ///     NaiveDuration::Months(2),
     ///     Weekday::Mon,
     ///     offset_tz,
     /// ).unwrap();
@@ -2583,7 +2583,7 @@ impl BoundedAbsoluteInterval {
     /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
     ///
     /// let week = BoundedAbsoluteInterval::week_before_naive_duration_from_today(
-    ///     NaiveDuration::months(2),
+    ///     NaiveDuration::Months(2),
     ///     Weekday::Mon,
     ///     offset_tz,
     /// ).unwrap();
@@ -2678,7 +2678,7 @@ impl BoundedAbsoluteInterval {
     where
         Tz: TimeZone,
     {
-        Self::week_after_naive_duration_from_today(NaiveDuration::weeks(week_start, 1), week_start, tz)
+        Self::week_after_naive_duration_from_today(NaiveDuration::Weeks(week_start, 1), week_start, tz)
     }
 
     /// Creates a new [`BoundedAbsoluteInterval`] of the previous week in the given timezone
@@ -2711,7 +2711,7 @@ impl BoundedAbsoluteInterval {
     where
         Tz: TimeZone,
     {
-        Self::week_before_naive_duration_from_today(NaiveDuration::weeks(week_start, 1), week_start, tz)
+        Self::week_before_naive_duration_from_today(NaiveDuration::Weeks(week_start, 1), week_start, tz)
     }
 
     /// Creates a new [`BoundedAbsoluteInterval`] from the provided ISO week in the given timezone
@@ -2892,7 +2892,7 @@ impl BoundedAbsoluteInterval {
     ///
     /// let week = BoundedAbsoluteInterval::iso_week_after_naive_duration_from_naive_date(
     ///     NaiveDate::from_ymd_opt(2026, 5, 1).unwrap(),
-    ///     NaiveDuration::weeks(Weekday::Mon, 2),
+    ///     NaiveDuration::IsoWeeks(2),
     ///     offset_tz,
     /// ).unwrap();
     ///
@@ -2933,7 +2933,7 @@ impl BoundedAbsoluteInterval {
     ///
     /// let week = BoundedAbsoluteInterval::iso_week_before_naive_duration_from_naive_date(
     ///     NaiveDate::from_ymd_opt(2026, 5, 1).unwrap(),
-    ///     NaiveDuration::weeks(Weekday::Mon, 2),
+    ///     NaiveDuration::IsoWeeks(2),
     ///     offset_tz,
     /// ).unwrap();
     ///
@@ -2972,7 +2972,7 @@ impl BoundedAbsoluteInterval {
     /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
     ///
     /// let iso_week = BoundedAbsoluteInterval::iso_week_after_naive_duration_from_today(
-    ///     NaiveDuration::months(2),
+    ///     NaiveDuration::Months(2),
     ///     offset_tz,
     /// );
     /// ```
@@ -3004,7 +3004,7 @@ impl BoundedAbsoluteInterval {
     /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
     ///
     /// let iso_week = BoundedAbsoluteInterval::iso_week_before_naive_duration_from_today(
-    ///     NaiveDuration::months(2),
+    ///     NaiveDuration::Months(2),
     ///     offset_tz,
     /// );
     /// ```
@@ -3072,7 +3072,7 @@ impl BoundedAbsoluteInterval {
     where
         Tz: TimeZone,
     {
-        Self::iso_week_after_naive_duration_from_today(NaiveDuration::weeks(Weekday::Mon, 1), tz)
+        Self::iso_week_after_naive_duration_from_today(NaiveDuration::IsoWeeks(1), tz)
     }
 
     /// Creates a new [`BoundedAbsoluteInterval`] of the previous ISO week in the given timezone
@@ -3096,7 +3096,7 @@ impl BoundedAbsoluteInterval {
     where
         Tz: TimeZone,
     {
-        Self::iso_week_before_naive_duration_from_today(NaiveDuration::weeks(Weekday::Mon, 1), tz)
+        Self::iso_week_before_naive_duration_from_today(NaiveDuration::IsoWeeks(1), tz)
     }
 
     /// Creates a new [`BoundedAbsoluteInterval`] of the given month in the given timezone
@@ -3231,7 +3231,7 @@ impl BoundedAbsoluteInterval {
     ///
     /// let month = BoundedAbsoluteInterval::month_after_naive_duration_from_naive_date(
     ///     NaiveDate::from_ymd_opt(2026, 5, 5).unwrap(),
-    ///     NaiveDuration::months(2),
+    ///     NaiveDuration::Months(2),
     ///     offset_tz,
     /// ).unwrap();
     ///
@@ -3282,7 +3282,7 @@ impl BoundedAbsoluteInterval {
     ///
     /// let month = BoundedAbsoluteInterval::month_before_naive_duration_from_naive_date(
     ///     NaiveDate::from_ymd_opt(2026, 5, 5).unwrap(),
-    ///     NaiveDuration::months(2),
+    ///     NaiveDuration::Months(2),
     ///     offset_tz,
     /// ).unwrap();
     ///
@@ -3327,7 +3327,7 @@ impl BoundedAbsoluteInterval {
     /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
     ///
     /// let month = BoundedAbsoluteInterval::month_after_naive_duration_from_today(
-    ///     NaiveDuration::months(2),
+    ///     NaiveDuration::Months(2),
     ///     offset_tz,
     /// ).unwrap();
     /// ```
@@ -3359,7 +3359,7 @@ impl BoundedAbsoluteInterval {
     /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
     ///
     /// let month = BoundedAbsoluteInterval::month_before_naive_duration_from_today(
-    ///     NaiveDuration::months(2),
+    ///     NaiveDuration::Months(2),
     ///     offset_tz,
     /// ).unwrap();
     /// ```
@@ -3425,7 +3425,7 @@ impl BoundedAbsoluteInterval {
     where
         Tz: TimeZone,
     {
-        Self::month_after_naive_duration_from_today(NaiveDuration::months(1), tz)
+        Self::month_after_naive_duration_from_today(NaiveDuration::Months(1), tz)
     }
 
     /// Creates a new [`BoundedAbsoluteInterval`] of the previous month in the given timezone
@@ -3449,7 +3449,7 @@ impl BoundedAbsoluteInterval {
     where
         Tz: TimeZone,
     {
-        Self::month_before_naive_duration_from_today(NaiveDuration::months(1), tz)
+        Self::month_before_naive_duration_from_today(NaiveDuration::Months(1), tz)
     }
 
     /// Creates a new [`BoundedAbsoluteInterval`] from the given year in the given timezone
@@ -3593,7 +3593,7 @@ impl BoundedAbsoluteInterval {
     ///
     /// let year = BoundedAbsoluteInterval::year_after_naive_duration_from_naive_date(
     ///     NaiveDate::from_ymd_opt(2026, 5, 5).unwrap(),
-    ///     NaiveDuration::months(15),
+    ///     NaiveDuration::Months(15),
     ///     offset_tz,
     /// ).unwrap();
     ///
@@ -3643,7 +3643,7 @@ impl BoundedAbsoluteInterval {
     ///
     /// let year = BoundedAbsoluteInterval::year_before_naive_duration_from_naive_date(
     ///     NaiveDate::from_ymd_opt(2026, 5, 5).unwrap(),
-    ///     NaiveDuration::months(15),
+    ///     NaiveDuration::Months(15),
     ///     offset_tz,
     /// ).unwrap();
     ///
@@ -3687,7 +3687,7 @@ impl BoundedAbsoluteInterval {
     /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
     ///
     /// let year = BoundedAbsoluteInterval::year_after_naive_duration_from_today(
-    ///     NaiveDuration::months(15),
+    ///     NaiveDuration::Months(15),
     ///     offset_tz,
     /// ).unwrap();
     /// ```
@@ -3719,7 +3719,7 @@ impl BoundedAbsoluteInterval {
     /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
     ///
     /// let year = BoundedAbsoluteInterval::year_before_naive_duration_from_today(
-    ///     NaiveDuration::months(15),
+    ///     NaiveDuration::Months(15),
     ///     offset_tz,
     /// ).unwrap();
     /// ```
@@ -3776,7 +3776,7 @@ impl BoundedAbsoluteInterval {
     where
         Tz: TimeZone,
     {
-        Self::year_after_naive_duration_from_today(NaiveDuration::years(1), tz)
+        Self::year_after_naive_duration_from_today(NaiveDuration::Years(1), tz)
     }
 
     /// Creates a new [`BoundedAbsoluteInterval`] of the previous year in the given timezone
@@ -3799,7 +3799,7 @@ impl BoundedAbsoluteInterval {
     where
         Tz: TimeZone,
     {
-        Self::year_before_naive_duration_from_today(NaiveDuration::years(1), tz)
+        Self::year_before_naive_duration_from_today(NaiveDuration::Years(1), tz)
     }
 
     /// Returns the start time
@@ -4439,7 +4439,7 @@ impl HalfBoundedAbsoluteInterval {
     /// Returns [`ReferenceTimeInTimeGap`](HalfBoundedAbsoluteIntervalCreationError::ReferenceTimeInTimeGap) if
     /// the given date's start (midnight) is positioned inside a time gap[^1].
     ///
-    /// [^1]: See [`MappedLocalTime::None`](https://docs.rs/chrono/latest/chrono/offset/enum.LocalResult.html#variant.None)
+    /// [^1]: See [`MappedLocalTime::None`](chrono::offset::LocalResult::None)
     ///
     /// # Examples
     ///
@@ -4483,7 +4483,7 @@ impl HalfBoundedAbsoluteInterval {
     /// Returns [`ReferenceTimeInTimeGap`](HalfBoundedAbsoluteIntervalCreationError::ReferenceTimeInTimeGap) if
     /// the given date's start (midnight) is positioned inside a time gap[^1].
     ///
-    /// [^1]: See [`MappedLocalTime::None`](https://docs.rs/chrono/latest/chrono/offset/enum.LocalResult.html#variant.None)
+    /// [^1]: See [`MappedLocalTime::None`](chrono::offset::LocalResult::None)
     ///
     /// # Examples
     ///

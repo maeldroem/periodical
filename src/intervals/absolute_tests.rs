@@ -1743,7 +1743,7 @@ fn bounded_absolute_interval_day_after_naive_duration_from_naive_date() {
     let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
     let interval = BoundedAbsoluteInterval::day_after_naive_duration_from_naive_date(
         NaiveDate::from_ymd_opt(2026, 4, 29).unwrap(),
-        NaiveDuration::days(5),
+        NaiveDuration::Days(5),
         offset_tz,
     )
     .unwrap();
@@ -1759,7 +1759,7 @@ fn bounded_absolute_interval_day_before_naive_duration_from_naive_date() {
     let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
     let interval = BoundedAbsoluteInterval::day_before_naive_duration_from_naive_date(
         NaiveDate::from_ymd_opt(2026, 4, 29).unwrap(),
-        NaiveDuration::days(5),
+        NaiveDuration::Days(5),
         offset_tz,
     )
     .unwrap();
@@ -1878,7 +1878,7 @@ fn bounded_absolute_interval_week_after_naive_duration_from_naive_date() {
     let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
     let week = BoundedAbsoluteInterval::week_after_naive_duration_from_naive_date(
         NaiveDate::from_ymd_opt(2026, 5, 1).unwrap(),
-        NaiveDuration::weeks(Weekday::Mon, 2),
+        NaiveDuration::Weeks(Weekday::Mon, 2),
         Weekday::Mon,
         offset_tz,
     )
@@ -1895,7 +1895,7 @@ fn bounded_absolute_interval_week_before_naive_duration_from_naive_date() {
     let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
     let week = BoundedAbsoluteInterval::week_before_naive_duration_from_naive_date(
         NaiveDate::from_ymd_opt(2026, 5, 1).unwrap(),
-        NaiveDuration::weeks(Weekday::Mon, 2),
+        NaiveDuration::Weeks(Weekday::Mon, 2),
         Weekday::Mon,
         offset_tz,
     )
@@ -1987,7 +1987,7 @@ fn bounded_absolute_interval_iso_week_after_naive_duration_from_naive_date() {
     let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
     let week = BoundedAbsoluteInterval::iso_week_after_naive_duration_from_naive_date(
         NaiveDate::from_ymd_opt(2026, 5, 1).unwrap(),
-        NaiveDuration::weeks(Weekday::Mon, 2),
+        NaiveDuration::IsoWeeks(2),
         offset_tz,
     )
     .unwrap();
@@ -2003,7 +2003,7 @@ fn bounded_absolute_interval_iso_week_before_naive_duration_from_naive_date() {
     let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
     let week = BoundedAbsoluteInterval::iso_week_before_naive_duration_from_naive_date(
         NaiveDate::from_ymd_opt(2026, 5, 1).unwrap(),
-        NaiveDuration::weeks(Weekday::Mon, 2),
+        NaiveDuration::IsoWeeks(2),
         offset_tz,
     )
     .unwrap();
@@ -2078,7 +2078,7 @@ fn bounded_absolute_interval_month_after_naive_duration_from_naive_date() {
     let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
     let month = BoundedAbsoluteInterval::month_after_naive_duration_from_naive_date(
         NaiveDate::from_ymd_opt(2026, 5, 5).unwrap(),
-        NaiveDuration::months(2),
+        NaiveDuration::Months(2),
         offset_tz,
     )
     .unwrap();
@@ -2094,7 +2094,7 @@ fn bounded_absolute_interval_month_before_naive_duration_from_naive_date() {
     let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
     let month = BoundedAbsoluteInterval::month_before_naive_duration_from_naive_date(
         NaiveDate::from_ymd_opt(2026, 5, 5).unwrap(),
-        NaiveDuration::months(2),
+        NaiveDuration::Months(2),
         offset_tz,
     )
     .unwrap();
@@ -2166,7 +2166,7 @@ fn bounded_absolute_interval_year_after_naive_duration_from_naive_date() {
 
     let year = BoundedAbsoluteInterval::year_after_naive_duration_from_naive_date(
         NaiveDate::from_ymd_opt(2026, 5, 5).unwrap(),
-        NaiveDuration::months(15),
+        NaiveDuration::Months(15),
         offset_tz,
     )
     .unwrap();
@@ -2183,7 +2183,7 @@ fn bounded_absolute_interval_year_before_naive_duration_from_naive_date() {
 
     let year = BoundedAbsoluteInterval::year_before_naive_duration_from_naive_date(
         NaiveDate::from_ymd_opt(2026, 5, 5).unwrap(),
-        NaiveDuration::months(15),
+        NaiveDuration::Months(15),
         offset_tz,
     )
     .unwrap();

@@ -46,134 +46,134 @@ fn naive_month_ord() {
 
 #[test]
 fn naive_duration_days_is_zero() {
-    assert!(!NaiveDuration::days(1).is_zero());
-    assert!(NaiveDuration::days(0).is_zero());
-    assert!(!NaiveDuration::days(-1).is_zero());
+    assert!(!NaiveDuration::Days(1).is_zero());
+    assert!(NaiveDuration::Days(0).is_zero());
+    assert!(!NaiveDuration::Days(-1).is_zero());
 }
 
 #[test]
 fn naive_duration_weeks_is_zero() {
-    assert!(!NaiveDuration::weeks(Weekday::Mon, 1).is_zero());
-    assert!(NaiveDuration::weeks(Weekday::Mon, 0).is_zero());
-    assert!(!NaiveDuration::weeks(Weekday::Mon, -1).is_zero());
+    assert!(!NaiveDuration::Weeks(Weekday::Mon, 1).is_zero());
+    assert!(NaiveDuration::Weeks(Weekday::Mon, 0).is_zero());
+    assert!(!NaiveDuration::Weeks(Weekday::Mon, -1).is_zero());
 }
 
 #[test]
 fn naive_duration_months_is_zero() {
-    assert!(!NaiveDuration::months(1).is_zero());
-    assert!(NaiveDuration::months(0).is_zero());
-    assert!(!NaiveDuration::months(-1).is_zero());
+    assert!(!NaiveDuration::Months(1).is_zero());
+    assert!(NaiveDuration::Months(0).is_zero());
+    assert!(!NaiveDuration::Months(-1).is_zero());
 }
 
 #[test]
 fn naive_duration_years_is_zero() {
-    assert!(!NaiveDuration::years(1).is_zero());
-    assert!(NaiveDuration::years(0).is_zero());
-    assert!(!NaiveDuration::years(-1).is_zero());
+    assert!(!NaiveDuration::Years(1).is_zero());
+    assert!(NaiveDuration::Years(0).is_zero());
+    assert!(!NaiveDuration::Years(-1).is_zero());
 }
 
 #[test]
 fn naive_duration_days_is_positive() {
-    assert!(NaiveDuration::days(1).is_positive());
-    assert!(!NaiveDuration::days(0).is_positive());
-    assert!(!NaiveDuration::days(-1).is_positive());
+    assert!(NaiveDuration::Days(1).is_positive());
+    assert!(!NaiveDuration::Days(0).is_positive());
+    assert!(!NaiveDuration::Days(-1).is_positive());
 }
 
 #[test]
 fn naive_duration_weeks_is_positive() {
-    assert!(NaiveDuration::weeks(Weekday::Mon, 1).is_positive());
-    assert!(!NaiveDuration::weeks(Weekday::Mon, 0).is_positive());
-    assert!(!NaiveDuration::weeks(Weekday::Mon, -1).is_positive());
+    assert!(NaiveDuration::Weeks(Weekday::Mon, 1).is_positive());
+    assert!(!NaiveDuration::Weeks(Weekday::Mon, 0).is_positive());
+    assert!(!NaiveDuration::Weeks(Weekday::Mon, -1).is_positive());
 }
 
 #[test]
 fn naive_duration_months_is_positive() {
-    assert!(NaiveDuration::months(1).is_positive());
-    assert!(!NaiveDuration::months(0).is_positive());
-    assert!(!NaiveDuration::months(-1).is_positive());
+    assert!(NaiveDuration::Months(1).is_positive());
+    assert!(!NaiveDuration::Months(0).is_positive());
+    assert!(!NaiveDuration::Months(-1).is_positive());
 }
 
 #[test]
 fn naive_duration_years_is_positive() {
-    assert!(NaiveDuration::years(1).is_positive());
-    assert!(!NaiveDuration::years(0).is_positive());
-    assert!(!NaiveDuration::years(-1).is_positive());
+    assert!(NaiveDuration::Years(1).is_positive());
+    assert!(!NaiveDuration::Years(0).is_positive());
+    assert!(!NaiveDuration::Years(-1).is_positive());
 }
 
 #[test]
 fn naive_duration_days_is_negative() {
-    assert!(!NaiveDuration::days(1).is_negative());
-    assert!(!NaiveDuration::days(0).is_negative());
-    assert!(NaiveDuration::days(-1).is_negative());
+    assert!(!NaiveDuration::Days(1).is_negative());
+    assert!(!NaiveDuration::Days(0).is_negative());
+    assert!(NaiveDuration::Days(-1).is_negative());
 }
 
 #[test]
 fn naive_duration_weeks_is_negative() {
-    assert!(!NaiveDuration::weeks(Weekday::Mon, 1).is_negative());
-    assert!(!NaiveDuration::weeks(Weekday::Mon, 0).is_negative());
-    assert!(NaiveDuration::weeks(Weekday::Mon, -1).is_negative());
+    assert!(!NaiveDuration::Weeks(Weekday::Mon, 1).is_negative());
+    assert!(!NaiveDuration::Weeks(Weekday::Mon, 0).is_negative());
+    assert!(NaiveDuration::Weeks(Weekday::Mon, -1).is_negative());
 }
 
 #[test]
 fn naive_duration_months_is_negative() {
-    assert!(!NaiveDuration::months(1).is_negative());
-    assert!(!NaiveDuration::months(0).is_negative());
-    assert!(NaiveDuration::months(-1).is_negative());
+    assert!(!NaiveDuration::Months(1).is_negative());
+    assert!(!NaiveDuration::Months(0).is_negative());
+    assert!(NaiveDuration::Months(-1).is_negative());
 }
 
 #[test]
 fn naive_duration_years_is_negative() {
-    assert!(!NaiveDuration::years(1).is_negative());
-    assert!(!NaiveDuration::years(0).is_negative());
-    assert!(NaiveDuration::years(-1).is_negative());
+    assert!(!NaiveDuration::Years(1).is_negative());
+    assert!(!NaiveDuration::Years(0).is_negative());
+    assert!(NaiveDuration::Years(-1).is_negative());
 }
 
 #[test]
 fn naive_duration_cant_compare_different_units() {
     assert_eq!(
-        NaiveDuration::days(1).partial_cmp(&NaiveDuration::weeks(Weekday::Mon, 1)),
+        NaiveDuration::Days(1).partial_cmp(&NaiveDuration::Weeks(Weekday::Mon, 1)),
         None
     );
-    assert_eq!(NaiveDuration::days(1).partial_cmp(&NaiveDuration::months(1)), None);
-    assert_eq!(NaiveDuration::days(1).partial_cmp(&NaiveDuration::years(1)), None);
+    assert_eq!(NaiveDuration::Days(1).partial_cmp(&NaiveDuration::Months(1)), None);
+    assert_eq!(NaiveDuration::Days(1).partial_cmp(&NaiveDuration::Years(1)), None);
     assert_eq!(
-        NaiveDuration::weeks(Weekday::Mon, 1).partial_cmp(&NaiveDuration::days(1)),
-        None
-    );
-    assert_eq!(
-        NaiveDuration::weeks(Weekday::Mon, 1).partial_cmp(&NaiveDuration::months(1)),
+        NaiveDuration::Weeks(Weekday::Mon, 1).partial_cmp(&NaiveDuration::Days(1)),
         None
     );
     assert_eq!(
-        NaiveDuration::weeks(Weekday::Mon, 1).partial_cmp(&NaiveDuration::years(1)),
+        NaiveDuration::Weeks(Weekday::Mon, 1).partial_cmp(&NaiveDuration::Months(1)),
         None
     );
-    assert_eq!(NaiveDuration::months(1).partial_cmp(&NaiveDuration::days(1)), None);
     assert_eq!(
-        NaiveDuration::months(1).partial_cmp(&NaiveDuration::weeks(Weekday::Mon, 1)),
+        NaiveDuration::Weeks(Weekday::Mon, 1).partial_cmp(&NaiveDuration::Years(1)),
         None
     );
-    assert_eq!(NaiveDuration::months(1).partial_cmp(&NaiveDuration::years(1)), None);
-    assert_eq!(NaiveDuration::years(1).partial_cmp(&NaiveDuration::days(1)), None);
+    assert_eq!(NaiveDuration::Months(1).partial_cmp(&NaiveDuration::Days(1)), None);
     assert_eq!(
-        NaiveDuration::years(1).partial_cmp(&NaiveDuration::weeks(Weekday::Mon, 1)),
+        NaiveDuration::Months(1).partial_cmp(&NaiveDuration::Weeks(Weekday::Mon, 1)),
         None
     );
-    assert_eq!(NaiveDuration::years(1).partial_cmp(&NaiveDuration::months(1)), None);
+    assert_eq!(NaiveDuration::Months(1).partial_cmp(&NaiveDuration::Years(1)), None);
+    assert_eq!(NaiveDuration::Years(1).partial_cmp(&NaiveDuration::Days(1)), None);
+    assert_eq!(
+        NaiveDuration::Years(1).partial_cmp(&NaiveDuration::Weeks(Weekday::Mon, 1)),
+        None
+    );
+    assert_eq!(NaiveDuration::Years(1).partial_cmp(&NaiveDuration::Months(1)), None);
 }
 
 #[test]
 fn naive_duration_compare_days() {
     assert_eq!(
-        NaiveDuration::days(1).partial_cmp(&NaiveDuration::days(0)),
+        NaiveDuration::Days(1).partial_cmp(&NaiveDuration::Days(0)),
         Some(Ordering::Greater)
     );
     assert_eq!(
-        NaiveDuration::days(0).partial_cmp(&NaiveDuration::days(1)),
+        NaiveDuration::Days(0).partial_cmp(&NaiveDuration::Days(1)),
         Some(Ordering::Less)
     );
     assert_eq!(
-        NaiveDuration::days(0).partial_cmp(&NaiveDuration::days(0)),
+        NaiveDuration::Days(0).partial_cmp(&NaiveDuration::Days(0)),
         Some(Ordering::Equal)
     );
 }
@@ -181,15 +181,15 @@ fn naive_duration_compare_days() {
 #[test]
 fn naive_duration_compare_weeks_same_ref_day() {
     assert_eq!(
-        NaiveDuration::weeks(Weekday::Mon, 1).partial_cmp(&NaiveDuration::weeks(Weekday::Mon, 0)),
+        NaiveDuration::Weeks(Weekday::Mon, 1).partial_cmp(&NaiveDuration::Weeks(Weekday::Mon, 0)),
         Some(Ordering::Greater),
     );
     assert_eq!(
-        NaiveDuration::weeks(Weekday::Mon, 0).partial_cmp(&NaiveDuration::weeks(Weekday::Mon, 1)),
+        NaiveDuration::Weeks(Weekday::Mon, 0).partial_cmp(&NaiveDuration::Weeks(Weekday::Mon, 1)),
         Some(Ordering::Less),
     );
     assert_eq!(
-        NaiveDuration::weeks(Weekday::Mon, 0).partial_cmp(&NaiveDuration::weeks(Weekday::Mon, 0)),
+        NaiveDuration::Weeks(Weekday::Mon, 0).partial_cmp(&NaiveDuration::Weeks(Weekday::Mon, 0)),
         Some(Ordering::Equal),
     );
 }
@@ -197,15 +197,15 @@ fn naive_duration_compare_weeks_same_ref_day() {
 #[test]
 fn naive_duration_compare_weeks_different_ref_day() {
     assert_eq!(
-        NaiveDuration::weeks(Weekday::Mon, 1).partial_cmp(&NaiveDuration::weeks(Weekday::Sun, 0)),
+        NaiveDuration::Weeks(Weekday::Mon, 1).partial_cmp(&NaiveDuration::Weeks(Weekday::Sun, 0)),
         Some(Ordering::Greater),
     );
     assert_eq!(
-        NaiveDuration::weeks(Weekday::Mon, 0).partial_cmp(&NaiveDuration::weeks(Weekday::Sun, 1)),
+        NaiveDuration::Weeks(Weekday::Mon, 0).partial_cmp(&NaiveDuration::Weeks(Weekday::Sun, 1)),
         Some(Ordering::Less),
     );
     assert_eq!(
-        NaiveDuration::weeks(Weekday::Mon, 0).partial_cmp(&NaiveDuration::weeks(Weekday::Sun, 0)),
+        NaiveDuration::Weeks(Weekday::Mon, 0).partial_cmp(&NaiveDuration::Weeks(Weekday::Sun, 0)),
         Some(Ordering::Equal),
     );
 }
@@ -213,15 +213,15 @@ fn naive_duration_compare_weeks_different_ref_day() {
 #[test]
 fn naive_duration_compare_months() {
     assert_eq!(
-        NaiveDuration::months(1).partial_cmp(&NaiveDuration::months(0)),
+        NaiveDuration::Months(1).partial_cmp(&NaiveDuration::Months(0)),
         Some(Ordering::Greater)
     );
     assert_eq!(
-        NaiveDuration::months(0).partial_cmp(&NaiveDuration::months(1)),
+        NaiveDuration::Months(0).partial_cmp(&NaiveDuration::Months(1)),
         Some(Ordering::Less)
     );
     assert_eq!(
-        NaiveDuration::months(0).partial_cmp(&NaiveDuration::months(0)),
+        NaiveDuration::Months(0).partial_cmp(&NaiveDuration::Months(0)),
         Some(Ordering::Equal)
     );
 }
@@ -229,15 +229,15 @@ fn naive_duration_compare_months() {
 #[test]
 fn naive_duration_compare_years() {
     assert_eq!(
-        NaiveDuration::years(1).partial_cmp(&NaiveDuration::years(0)),
+        NaiveDuration::Years(1).partial_cmp(&NaiveDuration::Years(0)),
         Some(Ordering::Greater)
     );
     assert_eq!(
-        NaiveDuration::years(0).partial_cmp(&NaiveDuration::years(1)),
+        NaiveDuration::Years(0).partial_cmp(&NaiveDuration::Years(1)),
         Some(Ordering::Less)
     );
     assert_eq!(
-        NaiveDuration::years(0).partial_cmp(&NaiveDuration::years(0)),
+        NaiveDuration::Years(0).partial_cmp(&NaiveDuration::Years(0)),
         Some(Ordering::Equal)
     );
 }
@@ -257,7 +257,7 @@ fn checked_add_naive_duration_to_naive_date_positive_days() {
     assert_eq!(
         checked_add_naive_duration_to_naive_date(
             NaiveDate::from_ymd_opt(2026, 5, 1).unwrap(),
-            NaiveDuration::days(420),
+            NaiveDuration::Days(420),
         )
         .unwrap(),
         NaiveDate::from_ymd_opt(2027, 6, 25).unwrap(),
@@ -269,7 +269,7 @@ fn checked_add_naive_duration_to_naive_date_negative_days() {
     assert_eq!(
         checked_add_naive_duration_to_naive_date(
             NaiveDate::from_ymd_opt(2026, 5, 1).unwrap(),
-            NaiveDuration::days(-420),
+            NaiveDuration::Days(-420),
         )
         .unwrap(),
         NaiveDate::from_ymd_opt(2025, 3, 7).unwrap(),
@@ -283,7 +283,7 @@ fn checked_add_naive_duration_to_naive_date_zero_weeks_monday_ref() {
     assert_eq!(
         checked_add_naive_duration_to_naive_date(
             NaiveDate::from_ymd_opt(2026, 5, 1).unwrap(),
-            NaiveDuration::weeks(Weekday::Mon, 0),
+            NaiveDuration::Weeks(Weekday::Mon, 0),
         )
         .unwrap(),
         NaiveDate::from_ymd_opt(2026, 4, 27).unwrap(),
@@ -295,7 +295,7 @@ fn checked_add_naive_duration_to_naive_date_zero_weeks_sunday_ref() {
     assert_eq!(
         checked_add_naive_duration_to_naive_date(
             NaiveDate::from_ymd_opt(2026, 5, 1).unwrap(),
-            NaiveDuration::weeks(Weekday::Sun, 0),
+            NaiveDuration::Weeks(Weekday::Sun, 0),
         )
         .unwrap(),
         NaiveDate::from_ymd_opt(2026, 4, 26).unwrap(),
@@ -307,7 +307,7 @@ fn checked_add_naive_duration_to_naive_date_zero_weeks_monday_ref_on_sunday() {
     assert_eq!(
         checked_add_naive_duration_to_naive_date(
             NaiveDate::from_ymd_opt(2026, 2, 8).unwrap(),
-            NaiveDuration::weeks(Weekday::Mon, 0),
+            NaiveDuration::Weeks(Weekday::Mon, 0),
         )
         .unwrap(),
         NaiveDate::from_ymd_opt(2026, 2, 2).unwrap(),
@@ -319,7 +319,7 @@ fn checked_add_naive_duration_to_naive_date_zero_weeks_sunday_ref_on_sunday() {
     assert_eq!(
         checked_add_naive_duration_to_naive_date(
             NaiveDate::from_ymd_opt(2026, 2, 8).unwrap(),
-            NaiveDuration::weeks(Weekday::Sun, 0),
+            NaiveDuration::Weeks(Weekday::Sun, 0),
         )
         .unwrap(),
         NaiveDate::from_ymd_opt(2026, 2, 8).unwrap(),
@@ -331,7 +331,7 @@ fn checked_add_naive_duration_to_naive_date_positive_weeks() {
     assert_eq!(
         checked_add_naive_duration_to_naive_date(
             NaiveDate::from_ymd_opt(2026, 5, 1).unwrap(),
-            NaiveDuration::weeks(Weekday::Mon, 15),
+            NaiveDuration::Weeks(Weekday::Mon, 15),
         )
         .unwrap(),
         NaiveDate::from_ymd_opt(2026, 8, 10).unwrap(),
@@ -343,7 +343,7 @@ fn checked_add_naive_duration_to_naive_date_negative_weeks() {
     assert_eq!(
         checked_add_naive_duration_to_naive_date(
             NaiveDate::from_ymd_opt(2026, 5, 1).unwrap(),
-            NaiveDuration::weeks(Weekday::Mon, -10),
+            NaiveDuration::Weeks(Weekday::Mon, -10),
         )
         .unwrap(),
         NaiveDate::from_ymd_opt(2026, 2, 16).unwrap(),
@@ -357,7 +357,7 @@ fn checked_add_naive_duration_to_naive_date_zero_months() {
     assert_eq!(
         checked_add_naive_duration_to_naive_date(
             NaiveDate::from_ymd_opt(2026, 5, 20).unwrap(),
-            NaiveDuration::months(0),
+            NaiveDuration::Months(0),
         )
         .unwrap(),
         NaiveDate::from_ymd_opt(2026, 5, 1).unwrap(),
@@ -369,7 +369,7 @@ fn checked_add_naive_duration_to_naive_date_positive_months_no_extra_year() {
     assert_eq!(
         checked_add_naive_duration_to_naive_date(
             NaiveDate::from_ymd_opt(2026, 5, 20).unwrap(),
-            NaiveDuration::months(30),
+            NaiveDuration::Months(30),
         )
         .unwrap(),
         NaiveDate::from_ymd_opt(2028, 11, 1).unwrap(),
@@ -381,7 +381,7 @@ fn checked_add_naive_duration_to_naive_date_positive_months_extra_year() {
     assert_eq!(
         checked_add_naive_duration_to_naive_date(
             NaiveDate::from_ymd_opt(2026, 10, 20).unwrap(),
-            NaiveDuration::months(30),
+            NaiveDuration::Months(30),
         )
         .unwrap(),
         NaiveDate::from_ymd_opt(2029, 4, 1).unwrap(),
@@ -393,7 +393,7 @@ fn checked_add_naive_duration_to_naive_date_negative_months_no_extra_year() {
     assert_eq!(
         checked_add_naive_duration_to_naive_date(
             NaiveDate::from_ymd_opt(2026, 8, 20).unwrap(),
-            NaiveDuration::months(-30),
+            NaiveDuration::Months(-30),
         )
         .unwrap(),
         NaiveDate::from_ymd_opt(2024, 2, 1).unwrap(),
@@ -405,7 +405,7 @@ fn checked_add_naive_duration_to_naive_date_negative_months_extra_year() {
     assert_eq!(
         checked_add_naive_duration_to_naive_date(
             NaiveDate::from_ymd_opt(2026, 5, 20).unwrap(),
-            NaiveDuration::months(-30),
+            NaiveDuration::Months(-30),
         )
         .unwrap(),
         NaiveDate::from_ymd_opt(2023, 11, 1).unwrap(),
@@ -419,7 +419,7 @@ fn checked_add_naive_duration_to_naive_date_zero_years() {
     assert_eq!(
         checked_add_naive_duration_to_naive_date(
             NaiveDate::from_ymd_opt(2026, 5, 20).unwrap(),
-            NaiveDuration::years(0),
+            NaiveDuration::Years(0),
         )
         .unwrap(),
         NaiveDate::from_ymd_opt(2026, 1, 1).unwrap(),
@@ -431,7 +431,7 @@ fn checked_add_naive_duration_to_naive_date_positive_years() {
     assert_eq!(
         checked_add_naive_duration_to_naive_date(
             NaiveDate::from_ymd_opt(2026, 5, 20).unwrap(),
-            NaiveDuration::years(10),
+            NaiveDuration::Years(10),
         )
         .unwrap(),
         NaiveDate::from_ymd_opt(2036, 1, 1).unwrap(),
@@ -443,7 +443,7 @@ fn checked_add_naive_duration_to_naive_date_negative_years() {
     assert_eq!(
         checked_add_naive_duration_to_naive_date(
             NaiveDate::from_ymd_opt(2026, 5, 20).unwrap(),
-            NaiveDuration::years(-10),
+            NaiveDuration::Years(-10),
         )
         .unwrap(),
         NaiveDate::from_ymd_opt(2016, 1, 1).unwrap(),
@@ -465,7 +465,7 @@ fn checked_sub_naive_duration_to_naive_date_positive_days() {
     assert_eq!(
         checked_sub_naive_duration_to_naive_date(
             NaiveDate::from_ymd_opt(2026, 5, 1).unwrap(),
-            NaiveDuration::days(420),
+            NaiveDuration::Days(420),
         )
         .unwrap(),
         NaiveDate::from_ymd_opt(2025, 3, 7).unwrap(),
@@ -477,7 +477,7 @@ fn checked_sub_naive_duration_to_naive_date_negative_days() {
     assert_eq!(
         checked_sub_naive_duration_to_naive_date(
             NaiveDate::from_ymd_opt(2026, 5, 1).unwrap(),
-            NaiveDuration::days(-420),
+            NaiveDuration::Days(-420),
         )
         .unwrap(),
         NaiveDate::from_ymd_opt(2027, 6, 25).unwrap(),
@@ -491,7 +491,7 @@ fn checked_sub_naive_duration_to_naive_date_zero_weeks_monday_ref() {
     assert_eq!(
         checked_sub_naive_duration_to_naive_date(
             NaiveDate::from_ymd_opt(2026, 5, 1).unwrap(),
-            NaiveDuration::weeks(Weekday::Mon, 0),
+            NaiveDuration::Weeks(Weekday::Mon, 0),
         )
         .unwrap(),
         NaiveDate::from_ymd_opt(2026, 4, 27).unwrap(),
@@ -503,7 +503,7 @@ fn checked_sub_naive_duration_to_naive_date_zero_weeks_sunday_ref() {
     assert_eq!(
         checked_sub_naive_duration_to_naive_date(
             NaiveDate::from_ymd_opt(2026, 5, 1).unwrap(),
-            NaiveDuration::weeks(Weekday::Sun, 0),
+            NaiveDuration::Weeks(Weekday::Sun, 0),
         )
         .unwrap(),
         NaiveDate::from_ymd_opt(2026, 4, 26).unwrap(),
@@ -515,7 +515,7 @@ fn checked_sub_naive_duration_to_naive_date_zero_weeks_monday_ref_on_sunday() {
     assert_eq!(
         checked_sub_naive_duration_to_naive_date(
             NaiveDate::from_ymd_opt(2026, 2, 8).unwrap(),
-            NaiveDuration::weeks(Weekday::Mon, 0),
+            NaiveDuration::Weeks(Weekday::Mon, 0),
         )
         .unwrap(),
         NaiveDate::from_ymd_opt(2026, 2, 2).unwrap(),
@@ -527,7 +527,7 @@ fn checked_sub_naive_duration_to_naive_date_zero_weeks_sunday_ref_on_sunday() {
     assert_eq!(
         checked_sub_naive_duration_to_naive_date(
             NaiveDate::from_ymd_opt(2026, 2, 8).unwrap(),
-            NaiveDuration::weeks(Weekday::Sun, 0),
+            NaiveDuration::Weeks(Weekday::Sun, 0),
         )
         .unwrap(),
         NaiveDate::from_ymd_opt(2026, 2, 8).unwrap(),
@@ -539,7 +539,7 @@ fn checked_sub_naive_duration_to_naive_date_positive_weeks() {
     assert_eq!(
         checked_sub_naive_duration_to_naive_date(
             NaiveDate::from_ymd_opt(2026, 5, 1).unwrap(),
-            NaiveDuration::weeks(Weekday::Mon, 15),
+            NaiveDuration::Weeks(Weekday::Mon, 15),
         )
         .unwrap(),
         NaiveDate::from_ymd_opt(2026, 1, 12).unwrap(),
@@ -551,7 +551,7 @@ fn checked_sub_naive_duration_to_naive_date_negative_weeks() {
     assert_eq!(
         checked_sub_naive_duration_to_naive_date(
             NaiveDate::from_ymd_opt(2026, 5, 1).unwrap(),
-            NaiveDuration::weeks(Weekday::Mon, -10),
+            NaiveDuration::Weeks(Weekday::Mon, -10),
         )
         .unwrap(),
         NaiveDate::from_ymd_opt(2026, 7, 6).unwrap(),
@@ -565,7 +565,7 @@ fn checked_sub_naive_duration_to_naive_date_zero_months() {
     assert_eq!(
         checked_sub_naive_duration_to_naive_date(
             NaiveDate::from_ymd_opt(2026, 5, 20).unwrap(),
-            NaiveDuration::months(0),
+            NaiveDuration::Months(0),
         )
         .unwrap(),
         NaiveDate::from_ymd_opt(2026, 5, 1).unwrap(),
@@ -577,7 +577,7 @@ fn checked_sub_naive_duration_to_naive_date_positive_months_no_extra_year() {
     assert_eq!(
         checked_sub_naive_duration_to_naive_date(
             NaiveDate::from_ymd_opt(2026, 8, 20).unwrap(),
-            NaiveDuration::months(30),
+            NaiveDuration::Months(30),
         )
         .unwrap(),
         NaiveDate::from_ymd_opt(2024, 2, 1).unwrap(),
@@ -589,7 +589,7 @@ fn checked_sub_naive_duration_to_naive_date_positive_months_extra_year() {
     assert_eq!(
         checked_sub_naive_duration_to_naive_date(
             NaiveDate::from_ymd_opt(2026, 5, 20).unwrap(),
-            NaiveDuration::months(30),
+            NaiveDuration::Months(30),
         )
         .unwrap(),
         NaiveDate::from_ymd_opt(2023, 11, 1).unwrap(),
@@ -601,7 +601,7 @@ fn checked_sub_naive_duration_to_naive_date_negative_months_no_extra_year() {
     assert_eq!(
         checked_sub_naive_duration_to_naive_date(
             NaiveDate::from_ymd_opt(2026, 10, 20).unwrap(),
-            NaiveDuration::months(-30),
+            NaiveDuration::Months(-30),
         )
         .unwrap(),
         NaiveDate::from_ymd_opt(2029, 4, 1).unwrap(),
@@ -613,7 +613,7 @@ fn checked_sub_naive_duration_to_naive_date_negative_months_extra_year() {
     assert_eq!(
         checked_sub_naive_duration_to_naive_date(
             NaiveDate::from_ymd_opt(2026, 5, 20).unwrap(),
-            NaiveDuration::months(-30),
+            NaiveDuration::Months(-30),
         )
         .unwrap(),
         NaiveDate::from_ymd_opt(2028, 11, 1).unwrap(),
@@ -627,7 +627,7 @@ fn checked_sub_naive_duration_to_naive_date_zero_years() {
     assert_eq!(
         checked_sub_naive_duration_to_naive_date(
             NaiveDate::from_ymd_opt(2026, 5, 20).unwrap(),
-            NaiveDuration::years(0),
+            NaiveDuration::Years(0),
         )
         .unwrap(),
         NaiveDate::from_ymd_opt(2026, 1, 1).unwrap(),
@@ -639,7 +639,7 @@ fn checked_sub_naive_duration_to_naive_date_positive_years() {
     assert_eq!(
         checked_sub_naive_duration_to_naive_date(
             NaiveDate::from_ymd_opt(2026, 5, 20).unwrap(),
-            NaiveDuration::years(10),
+            NaiveDuration::Years(10),
         )
         .unwrap(),
         NaiveDate::from_ymd_opt(2016, 1, 1).unwrap(),
@@ -651,7 +651,7 @@ fn checked_sub_naive_duration_to_naive_date_negative_years() {
     assert_eq!(
         checked_sub_naive_duration_to_naive_date(
             NaiveDate::from_ymd_opt(2026, 5, 20).unwrap(),
-            NaiveDuration::years(-10),
+            NaiveDuration::Years(-10),
         )
         .unwrap(),
         NaiveDate::from_ymd_opt(2036, 1, 1).unwrap(),

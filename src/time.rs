@@ -170,6 +170,10 @@ pub enum NaiveDuration {
     ///
     /// </div>
     Weeks(Weekday, i64),
+    /// Naive ISO weeks duration
+    /// 
+    /// Equivalent to [`NaiveDuration::Weeks`] using [monday](Weekday::Mon) as the week start.
+    IsoWeeks(i64),
     /// Naive months duration
     ///
     /// <div class="warning">
@@ -193,30 +197,6 @@ pub enum NaiveDuration {
 }
 
 impl NaiveDuration {
-    /// Creates a [`NaiveDuration`] for N [days](NaiveDuration::Days)
-    #[must_use]
-    pub fn days(n: i64) -> Self {
-        Self::Days(n)
-    }
-
-    /// Creates a [`NaiveDuration`] for N [weeks](NaiveDuration::Weeks)
-    #[must_use]
-    pub fn weeks(week_start: Weekday, n: i64) -> Self {
-        Self::Weeks(week_start, n)
-    }
-
-    /// Creates a [`NaiveDuration`] for N [months](NaiveDuration::Months)
-    #[must_use]
-    pub fn months(n: i64) -> Self {
-        Self::Months(n)
-    }
-
-    /// Creates a [`NaiveDuration`] for N [years](NaiveDuration::Years)
-    #[must_use]
-    pub fn years(n: i32) -> Self {
-        Self::Years(n)
-    }
-
     /// Whether the stored naive duration is zero
     ///
     /// This does **not** mean that after applying the [`NaiveDuration`] to another naive structure
@@ -224,7 +204,7 @@ impl NaiveDuration {
     #[must_use]
     pub fn is_zero(&self) -> bool {
         match self {
-            Self::Days(x) | Self::Weeks(_, x) | Self::Months(x) => *x == 0,
+            Self::Days(x) | Self::Weeks(_, x) | Self::IsoWeeks(x) | Self::Months(x) => *x == 0,
             Self::Years(x) => *x == 0,
         }
     }
@@ -236,7 +216,7 @@ impl NaiveDuration {
     #[must_use]
     pub fn is_positive(&self) -> bool {
         match self {
-            Self::Days(x) | Self::Weeks(_, x) | Self::Months(x) => x.is_positive(),
+            Self::Days(x) | Self::Weeks(_, x) | Self::IsoWeeks(x) | Self::Months(x) => x.is_positive(),
             Self::Years(x) => x.is_positive(),
         }
     }
@@ -248,7 +228,7 @@ impl NaiveDuration {
     #[must_use]
     pub fn is_negative(&self) -> bool {
         match self {
-            Self::Days(x) | Self::Weeks(_, x) | Self::Months(x) => x.is_negative(),
+            Self::Days(x) | Self::Weeks(_, x) | Self::IsoWeeks(x) | Self::Months(x) => x.is_negative(),
             Self::Years(x) => x.is_negative(),
         }
     }
@@ -298,34 +278,8 @@ pub fn checked_add_naive_duration_to_naive_date(
                 naive_date.checked_sub_days(duration)
             }
         },
-        NaiveDuration::Weeks(week_start, x) => {
-            // The absolute value of i64 is always storable in a u64, as we get rid of the sign bit
-            let weeks = x.unsigned_abs();
-            // Since the now-removed sign bit isn't used, we can multiply the value by 2
-            // so that we do make use of this last bit (as *2 = <<1).
-            // We use the checked multiplication so that we still prevent potential panics, even though
-            // they should not happen.
-            let double_weeks = chrono::Days::new(weeks.checked_mul(2)?);
-            // Shadow the weeks variable in order to store it in the structure chrono expects
-            let weeks = chrono::Days::new(weeks);
-
-            let week_first_day = naive_date.week(week_start).checked_first_day()?;
-
-            // (3*2 + 1)*weeks = 7*weeks = weeks in days
-            if x >= 0 {
-                week_first_day
-                    .checked_add_days(double_weeks)?
-                    .checked_add_days(double_weeks)?
-                    .checked_add_days(double_weeks)?
-                    .checked_add_days(weeks)
-            } else {
-                week_first_day
-                    .checked_sub_days(double_weeks)?
-                    .checked_sub_days(double_weeks)?
-                    .checked_sub_days(double_weeks)?
-                    .checked_sub_days(weeks)
-            }
-        },
+        NaiveDuration::Weeks(week_start, x) => checked_add_naive_weeks_to_naive_date(week_start, x, naive_date),
+        NaiveDuration::IsoWeeks(x) => checked_add_naive_weeks_to_naive_date(Weekday::Mon, x, naive_date),
         NaiveDuration::Months(x) => {
             // How many years in the given amount of months
             let mut years_offset = x.unsigned_abs() / u64::from(MONTHS_IN_YEAR);
@@ -375,6 +329,39 @@ pub fn checked_add_naive_duration_to_naive_date(
     }
 }
 
+fn checked_add_naive_weeks_to_naive_date(
+    week_start: Weekday,
+    amount: i64,
+    naive_date: NaiveDate,
+) -> Option<NaiveDate> {
+    // The absolute value of i64 is always storable in a u64, as we get rid of the sign bit
+    let weeks = amount.unsigned_abs();
+    // Since the now-removed sign bit isn't used, we can multiply the value by 2
+    // so that we do make use of this last bit (as *2 = <<1).
+    // We use the checked multiplication so that we still prevent potential panics, even though
+    // they should not happen.
+    let double_weeks = chrono::Days::new(weeks.checked_mul(2)?);
+    // Shadow the weeks variable in order to store it in the structure chrono expects
+    let weeks = chrono::Days::new(weeks);
+
+    let week_first_day = naive_date.week(week_start).checked_first_day()?;
+
+    // (3*2 + 1)*weeks = 7*weeks = weeks in days
+    if amount >= 0 {
+        week_first_day
+            .checked_add_days(double_weeks)?
+            .checked_add_days(double_weeks)?
+            .checked_add_days(double_weeks)?
+            .checked_add_days(weeks)
+    } else {
+        week_first_day
+            .checked_sub_days(double_weeks)?
+            .checked_sub_days(double_weeks)?
+            .checked_sub_days(double_weeks)?
+            .checked_sub_days(weeks)
+    }
+}
+
 /// Checked subtraction of a [`NaiveDuration`] to a [`NaiveDate`]
 ///
 /// Subtracting [days](NaiveDuration::Days) to a [`NaiveDate`] simply uses [`NaiveDate::checked_sub_days`].
@@ -411,34 +398,8 @@ pub fn checked_sub_naive_duration_to_naive_date(
                 naive_date.checked_add_days(duration)
             }
         },
-        NaiveDuration::Weeks(week_start, x) => {
-            // The absolute value of i64 is always storable in a u64, as we get rid of the sign bit
-            let weeks = x.unsigned_abs();
-            // Since the now-removed sign bit isn't used, we can multiply the value by 2
-            // so that we do make use of this last bit (as *2 = <<1).
-            // We use the checked multiplication so that we still prevent potential panics, even though
-            // they should not happen.
-            let double_weeks = chrono::Days::new(weeks.checked_mul(2)?);
-            // Shadow the weeks variable in order to store it in the structure chrono expects
-            let weeks = chrono::Days::new(weeks);
-
-            let week_first_day = naive_date.week(week_start).checked_first_day()?;
-
-            // (3*2 + 1)*weeks = 7*weeks = weeks in days
-            if x >= 0 {
-                week_first_day
-                    .checked_sub_days(double_weeks)?
-                    .checked_sub_days(double_weeks)?
-                    .checked_sub_days(double_weeks)?
-                    .checked_sub_days(weeks)
-            } else {
-                week_first_day
-                    .checked_add_days(double_weeks)?
-                    .checked_add_days(double_weeks)?
-                    .checked_add_days(double_weeks)?
-                    .checked_add_days(weeks)
-            }
-        },
+        NaiveDuration::Weeks(week_start, x) => checked_sub_naive_weeks_to_naive_date(week_start, x, naive_date),
+        NaiveDuration::IsoWeeks(x) => checked_sub_naive_weeks_to_naive_date(Weekday::Mon, x, naive_date),
         NaiveDuration::Months(x) => {
             // How many years in the given amount of months
             let mut years_offset = x.unsigned_abs() / u64::from(MONTHS_IN_YEAR);
@@ -485,6 +446,39 @@ pub fn checked_sub_naive_duration_to_naive_date(
             }
         },
         NaiveDuration::Years(x) => NaiveDate::from_ymd_opt(naive_date.year().checked_sub(x)?, 1, 1),
+    }
+}
+
+fn checked_sub_naive_weeks_to_naive_date(
+    week_start: Weekday,
+    amount: i64,
+    naive_date: NaiveDate,
+) -> Option<NaiveDate> {
+    // The absolute value of i64 is always storable in a u64, as we get rid of the sign bit
+    let weeks = amount.unsigned_abs();
+    // Since the now-removed sign bit isn't used, we can multiply the value by 2
+    // so that we do make use of this last bit (as *2 = <<1).
+    // We use the checked multiplication so that we still prevent potential panics, even though
+    // they should not happen.
+    let double_weeks = chrono::Days::new(weeks.checked_mul(2)?);
+    // Shadow the weeks variable in order to store it in the structure chrono expects
+    let weeks = chrono::Days::new(weeks);
+
+    let week_first_day = naive_date.week(week_start).checked_first_day()?;
+
+    // (3*2 + 1)*weeks = 7*weeks = weeks in days
+    if amount >= 0 {
+        week_first_day
+            .checked_sub_days(double_weeks)?
+            .checked_sub_days(double_weeks)?
+            .checked_sub_days(double_weeks)?
+            .checked_sub_days(weeks)
+    } else {
+        week_first_day
+            .checked_add_days(double_weeks)?
+            .checked_add_days(double_weeks)?
+            .checked_add_days(double_weeks)?
+            .checked_add_days(weeks)
     }
 }
 
