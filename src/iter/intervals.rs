@@ -21,16 +21,15 @@ pub mod remove_empty;
 pub mod set_ops;
 pub mod united_bounds;
 
-#[cfg(test)]
-mod bounds_tests;
-#[cfg(test)]
-mod complement_tests;
-#[cfg(test)]
-mod layered_bounds_tests;
-#[cfg(test)]
-mod remove_empty_tests;
-#[cfg(test)]
-mod united_bounds_tests;
+use crate::utils::tests;
+
+tests! {
+    mod bounds_tests;
+    mod complement_tests;
+    mod layered_bounds_tests;
+    mod remove_empty_tests;
+    mod united_bounds_tests;
+}
 
 // NOTE: collections can be improved by making them parallel with the rayon crate
 

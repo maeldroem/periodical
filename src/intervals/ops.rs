@@ -38,42 +38,28 @@ pub mod remove_overlap_or_gap;
 pub mod set_ops;
 pub mod shrink;
 
-#[cfg(test)]
-mod abridge_tests;
-#[cfg(test)]
-mod bound_containment_tests;
-#[cfg(test)]
-mod bound_ord_tests;
-#[cfg(test)]
-mod bound_overlap_ambiguity_tests;
-#[cfg(test)]
-mod complement_tests;
-#[cfg(test)]
-mod continuation_tests;
-#[cfg(test)]
-mod cut_tests;
-#[cfg(test)]
-mod extend_tests;
-#[cfg(test)]
-mod fill_gap_tests;
-#[cfg(test)]
-mod grow_tests;
-#[cfg(test)]
-mod overlap_tests;
-#[cfg(test)]
-mod point_containment_tests;
-#[cfg(test)]
-mod precision_tests;
-#[cfg(test)]
-mod relativity_conversion_tests;
-#[cfg(test)]
-mod remove_overlap_or_gap_tests;
-#[cfg(test)]
-mod remove_overlap_tests;
-#[cfg(test)]
-mod set_ops_tests;
-#[cfg(test)]
-mod shrink_tests;
+use crate::utils::tests;
+
+tests! {
+    mod abridge_tests;
+    mod bound_containment_tests;
+    mod bound_ord_tests;
+    mod bound_overlap_ambiguity_tests;
+    mod complement_tests;
+    mod continuation_tests;
+    mod cut_tests;
+    mod extend_tests;
+    mod fill_gap_tests;
+    mod grow_tests;
+    mod overlap_tests;
+    mod point_containment_tests;
+    mod precision_tests;
+    mod relativity_conversion_tests;
+    mod remove_overlap_or_gap_tests;
+    mod remove_overlap_tests;
+    mod set_ops_tests;
+    mod shrink_tests;
+}
 
 pub use abridge::Abridgable;
 pub use bound_containment::{
