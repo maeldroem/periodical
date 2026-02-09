@@ -94,16 +94,15 @@ pub mod prelude;
 pub mod relative;
 pub mod special;
 
-#[cfg(test)]
-mod absolute_tests;
-#[cfg(test)]
-mod bound_position_tests;
-#[cfg(test)]
-mod meta_tests;
-#[cfg(test)]
-mod relative_tests;
-#[cfg(test)]
-mod special_tests;
+use crate::utils::tests;
+
+tests! {
+    mod absolute_tests;
+    mod bound_position_tests;
+    mod meta_tests;
+    mod relative_tests;
+    mod special_tests;
+}
 
 pub use absolute::{
     AbsoluteBound, AbsoluteBounds, AbsoluteEndBound, AbsoluteInterval, AbsoluteStartBound, BoundedAbsoluteInterval,

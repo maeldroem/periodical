@@ -24,10 +24,14 @@ pub mod iter;
 pub mod ops;
 pub mod prelude;
 
+mod utils;
+
 #[cfg(feature = "arbitrary")]
 mod arbitrary_impl;
 
-#[cfg(test)]
-mod ops_tests;
-#[cfg(test)]
-mod test_utils;
+use utils::tests;
+
+tests!{
+    mod ops_tests;
+    mod test_utils;
+}

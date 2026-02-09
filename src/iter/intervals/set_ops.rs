@@ -12,14 +12,14 @@ pub mod intersect;
 pub mod sym_diff;
 pub mod unite;
 
-#[cfg(test)]
-mod diff_tests;
-#[cfg(test)]
-mod intersect_tests;
-#[cfg(test)]
-mod sym_diff_tests;
-#[cfg(test)]
-mod unite_tests;
+use crate::utils::tests;
+
+tests!{
+    mod diff_tests;
+    mod intersect_tests;
+    mod sym_diff_tests;
+    mod unite_tests;
+}
 
 pub use diff::{
     PeerDifference, PeerDifferenceIteratorDispatcher, PeerDifferenceWith, PeerDifferenceWithIteratorDispatcher,
