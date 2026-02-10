@@ -194,7 +194,7 @@ pub enum NaiveDuration {
     /// </div>
     Weeks(Weekday, i64),
     /// Naive ISO weeks duration
-    /// 
+    ///
     /// Equivalent to [`NaiveDuration::Weeks`] using [monday](Weekday::Mon) as the week start.
     IsoWeeks(i64),
     /// Naive months duration
@@ -352,11 +352,7 @@ pub fn checked_add_naive_duration_to_naive_date(
     }
 }
 
-fn checked_add_naive_weeks_to_naive_date(
-    week_start: Weekday,
-    amount: i64,
-    naive_date: NaiveDate,
-) -> Option<NaiveDate> {
+fn checked_add_naive_weeks_to_naive_date(week_start: Weekday, amount: i64, naive_date: NaiveDate) -> Option<NaiveDate> {
     // The absolute value of i64 is always storable in a u64, as we get rid of the sign bit
     let weeks = amount.unsigned_abs();
     // Since the now-removed sign bit isn't used, we can multiply the value by 2
@@ -472,11 +468,7 @@ pub fn checked_sub_naive_duration_to_naive_date(
     }
 }
 
-fn checked_sub_naive_weeks_to_naive_date(
-    week_start: Weekday,
-    amount: i64,
-    naive_date: NaiveDate,
-) -> Option<NaiveDate> {
+fn checked_sub_naive_weeks_to_naive_date(week_start: Weekday, amount: i64, naive_date: NaiveDate) -> Option<NaiveDate> {
     // The absolute value of i64 is always storable in a u64, as we get rid of the sign bit
     let weeks = amount.unsigned_abs();
     // Since the now-removed sign bit isn't used, we can multiply the value by 2

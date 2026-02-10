@@ -1,5 +1,5 @@
 //! Interval splitting iterators
-//! 
+//!
 //! See [`intervals::ops::split`](crate::intervals::ops::split) for more details.
 
 use chrono::{NaiveDate, TimeZone, Utc};
@@ -63,7 +63,7 @@ where
                     self.exhausted = true;
                     return None;
                 };
-    
+
                 let CutResult::Cut(infinite_start, remaining_interval) = self.remaining_interval.cut_at(
                     new_end.with_timezone(&Utc),
                     CutType::new(BoundInclusivity::Exclusive, BoundInclusivity::Inclusive),
@@ -71,11 +71,11 @@ where
                     self.exhausted = true;
                     return None;
                 };
-    
+
                 self.remaining_interval = remaining_interval;
-                return Some(infinite_start);
+                Some(infinite_start)
             },
-            Some(start) => {
+            Some(start_bound) => {
                 todo!()
             },
         }
