@@ -48,18 +48,18 @@
 
 use super::grow::{GrowableEndBound, GrowableStartBound};
 use super::overlap::{CanPositionOverlap, DisambiguatedOverlapPosition, OverlapRuleSet};
-use super::prelude::*;
 
 use crate::intervals::absolute::{
     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteInterval, AbsoluteStartBound,
-    EmptiableAbsoluteBounds, HalfBoundedAbsoluteInterval, HasAbsoluteBounds, HasEmptiableAbsoluteBounds,
+    BoundedAbsoluteInterval, EmptiableAbsoluteBounds, HalfBoundedAbsoluteInterval, HasAbsoluteBounds,
+    HasEmptiableAbsoluteBounds,
 };
+use crate::intervals::meta::HasBoundInclusivity;
 use crate::intervals::relative::{
-    EmptiableRelativeBounds, HalfBoundedRelativeInterval, RelativeBounds, RelativeEndBound, RelativeFiniteBound,
-    RelativeStartBound,
+    BoundedRelativeInterval, EmptiableRelativeBounds, HalfBoundedRelativeInterval, HasEmptiableRelativeBounds,
+    HasRelativeBounds, RelativeBounds, RelativeEndBound, RelativeFiniteBound, RelativeInterval, RelativeStartBound,
 };
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
-use crate::intervals::{BoundedAbsoluteInterval, BoundedRelativeInterval, RelativeInterval};
 
 /// Errors that can be produced when using [`GapFillable`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]

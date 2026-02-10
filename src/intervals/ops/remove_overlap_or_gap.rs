@@ -10,7 +10,6 @@ use serde::{Deserialize, Serialize};
 
 use super::grow::{GrowableEndBound, GrowableStartBound};
 use super::overlap::{CanPositionOverlap, DisambiguatedOverlapPosition, OverlapRuleSet};
-use super::prelude::*;
 use super::remove_overlap::{remove_end_overlap_abs, remove_start_overlap_abs};
 use super::shrink::{ShrinkableEndBound, ShrinkableStartBound};
 
@@ -19,11 +18,11 @@ use crate::intervals::absolute::{
     BoundedAbsoluteInterval, EmptiableAbsoluteBounds, HalfBoundedAbsoluteInterval, HasAbsoluteBounds,
     HasEmptiableAbsoluteBounds,
 };
-use crate::intervals::meta::Interval;
+use crate::intervals::meta::{HasBoundInclusivity, Interval};
 use crate::intervals::ops::remove_overlap::{remove_end_overlap_rel, remove_start_overlap_rel};
 use crate::intervals::relative::{
-    BoundedRelativeInterval, EmptiableRelativeBounds, HalfBoundedRelativeInterval, RelativeBounds, RelativeEndBound,
-    RelativeFiniteBound, RelativeInterval, RelativeStartBound,
+    BoundedRelativeInterval, EmptiableRelativeBounds, HalfBoundedRelativeInterval, HasEmptiableRelativeBounds,
+    HasRelativeBounds, RelativeBounds, RelativeEndBound, RelativeFiniteBound, RelativeInterval, RelativeStartBound,
 };
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 

@@ -13,6 +13,8 @@
 //! Most iterators have a public `new` method, but most of them come with input requirements.
 //! Make sure your input meet those requirements.
 
+use crate::utils::tests;
+
 pub mod bounds;
 pub mod complement;
 pub mod layered_bounds;
@@ -21,16 +23,13 @@ pub mod remove_empty;
 pub mod set_ops;
 pub mod united_bounds;
 
-#[cfg(test)]
-mod bounds_tests;
-#[cfg(test)]
-mod complement_tests;
-#[cfg(test)]
-mod layered_bounds_tests;
-#[cfg(test)]
-mod remove_empty_tests;
-#[cfg(test)]
-mod united_bounds_tests;
+tests! {
+    mod bounds_tests;
+    mod complement_tests;
+    mod layered_bounds_tests;
+    mod remove_empty_tests;
+    mod united_bounds_tests;
+}
 
 // NOTE: collections can be improved by making them parallel with the rayon crate
 

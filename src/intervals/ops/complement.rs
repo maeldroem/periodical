@@ -45,18 +45,17 @@
 //!
 //! [complementary]: https://en.wikipedia.org/w/index.php?title=Complement_(set_theory)&oldid=1272128427
 
-use super::prelude::*;
-
 use crate::intervals::absolute::{
-    AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, EmptiableAbsoluteBounds,
-    HalfBoundedAbsoluteInterval, HasEmptiableAbsoluteBounds,
+    AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteInterval, AbsoluteStartBound,
+    BoundedAbsoluteInterval, EmptiableAbsoluteBounds, HalfBoundedAbsoluteInterval, HasAbsoluteBounds,
+    HasEmptiableAbsoluteBounds,
 };
+use crate::intervals::meta::HasBoundInclusivity;
 use crate::intervals::relative::{
-    EmptiableRelativeBounds, HalfBoundedRelativeInterval, RelativeBounds, RelativeEndBound, RelativeFiniteBound,
-    RelativeStartBound,
+    BoundedRelativeInterval, EmptiableRelativeBounds, HalfBoundedRelativeInterval, HasEmptiableRelativeBounds,
+    HasRelativeBounds, RelativeBounds, RelativeEndBound, RelativeFiniteBound, RelativeInterval, RelativeStartBound,
 };
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
-use crate::intervals::{AbsoluteInterval, BoundedAbsoluteInterval, BoundedRelativeInterval, RelativeInterval};
 use crate::ops::ComplementResult;
 
 /// Capacity to get the complementary intervals

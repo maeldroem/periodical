@@ -143,20 +143,19 @@ use chrono::{DateTime, Duration, Utc};
 use serde::{Deserialize, Serialize};
 
 use super::point_containment::CanPositionPointContainment;
-use super::prelude::*;
 
 use crate::intervals::absolute::{
     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteInterval, AbsoluteStartBound,
-    EmptiableAbsoluteBounds, HalfBoundedAbsoluteInterval, HasEmptiableAbsoluteBounds,
-    check_absolute_bounds_for_interval_creation,
+    BoundedAbsoluteInterval, EmptiableAbsoluteBounds, HalfBoundedAbsoluteInterval, HasAbsoluteBounds,
+    HasEmptiableAbsoluteBounds, check_absolute_bounds_for_interval_creation,
 };
 use crate::intervals::meta::BoundInclusivity;
 use crate::intervals::relative::{
-    EmptiableRelativeBounds, HalfBoundedRelativeInterval, RelativeBounds, RelativeEndBound, RelativeFiniteBound,
-    RelativeStartBound, check_relative_bounds_for_interval_creation,
+    BoundedRelativeInterval, EmptiableRelativeBounds, HalfBoundedRelativeInterval, HasEmptiableRelativeBounds,
+    HasRelativeBounds, RelativeBounds, RelativeEndBound, RelativeFiniteBound, RelativeInterval, RelativeStartBound,
+    check_relative_bounds_for_interval_creation,
 };
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
-use crate::intervals::{BoundedAbsoluteInterval, BoundedRelativeInterval, RelativeInterval};
 
 /// Cut type
 ///

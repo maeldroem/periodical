@@ -73,7 +73,7 @@
 //! # Ok::<(), chrono::format::ParseError>(())
 //! ```
 
-use crate::intervals::prelude::*;
+use crate::intervals::ops::Complementable;
 use crate::ops::ComplementResult;
 
 /// Dispatcher trait for the [`ComplementIter`] iterator

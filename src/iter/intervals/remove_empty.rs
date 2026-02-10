@@ -75,7 +75,7 @@
 //! # Ok::<(), chrono::format::ParseError>(())
 //! ```
 
-use crate::intervals::Emptiable;
+use crate::intervals::meta::Emptiable;
 
 /// Dispatcher trait for empty interval removal iterator
 pub trait RemoveEmptyIntervalsIteratorDispatcher

@@ -47,15 +47,17 @@
 //! # Ok::<(), chrono::format::ParseError>(())
 //! ```
 
-use super::prelude::*;
-
-use crate::intervals::absolute::{AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound};
-use crate::intervals::relative::{RelativeBounds, RelativeEndBound, RelativeFiniteBound, RelativeStartBound};
-use crate::intervals::special::{EmptyInterval, UnboundedInterval};
-use crate::intervals::{
-    AbsoluteBounds, AbsoluteInterval, BoundedAbsoluteInterval, BoundedRelativeInterval, EmptiableAbsoluteBounds,
-    EmptiableRelativeBounds, HalfBoundedAbsoluteInterval, HalfBoundedRelativeInterval, RelativeInterval,
+use crate::intervals::absolute::{
+    AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteInterval, AbsoluteStartBound,
+    BoundedAbsoluteInterval, EmptiableAbsoluteBounds, HalfBoundedAbsoluteInterval, HasAbsoluteBounds,
+    HasEmptiableAbsoluteBounds,
 };
+use crate::intervals::meta::HasBoundInclusivity;
+use crate::intervals::relative::{
+    BoundedRelativeInterval, EmptiableRelativeBounds, HalfBoundedRelativeInterval, HasEmptiableRelativeBounds,
+    HasRelativeBounds, RelativeBounds, RelativeEndBound, RelativeFiniteBound, RelativeInterval, RelativeStartBound,
+};
+use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 
 /// Capacity to get the past and future continuations of a given interval
 ///

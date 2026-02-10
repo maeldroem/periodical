@@ -16,21 +16,19 @@
 //!
 //! See [`Abridgable`].
 
-use super::prelude::*;
-
 use crate::intervals::absolute::{
-    AbsoluteBounds, AbsoluteEndBound, AbsoluteInterval, AbsoluteStartBound, EmptiableAbsoluteBounds,
-    HalfBoundedAbsoluteInterval, HasAbsoluteBounds, HasEmptiableAbsoluteBounds, swap_absolute_bounds,
+    AbsoluteBounds, AbsoluteEndBound, AbsoluteInterval, AbsoluteStartBound, BoundedAbsoluteInterval,
+    EmptiableAbsoluteBounds, HalfBoundedAbsoluteInterval, HasAbsoluteBounds, HasEmptiableAbsoluteBounds,
+    swap_absolute_bounds,
 };
-use crate::intervals::meta::BoundInclusivity;
+use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
 use crate::intervals::ops::bound_ord::{BoundOrdering, PartialBoundOrd};
 use crate::intervals::ops::bound_overlap_ambiguity::BoundOverlapAmbiguity;
 use crate::intervals::relative::{
-    EmptiableRelativeBounds, HalfBoundedRelativeInterval, HasEmptiableRelativeBounds, HasRelativeBounds,
-    RelativeBounds, RelativeEndBound, RelativeStartBound, swap_relative_bounds,
+    BoundedRelativeInterval, EmptiableRelativeBounds, HalfBoundedRelativeInterval, HasEmptiableRelativeBounds,
+    HasRelativeBounds, RelativeBounds, RelativeEndBound, RelativeInterval, RelativeStartBound, swap_relative_bounds,
 };
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
-use crate::intervals::{BoundedAbsoluteInterval, BoundedRelativeInterval, RelativeInterval};
 
 /// Capacity to abridge an interval with another
 ///

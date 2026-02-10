@@ -52,12 +52,11 @@ use arbitrary::Arbitrary;
 use serde::{Deserialize, Serialize};
 
 use crate::intervals::absolute::{AbsoluteBound, AbsoluteEndBound, AbsoluteStartBound};
+use crate::intervals::meta::HasBoundInclusivity;
 use crate::intervals::ops::bound_overlap_ambiguity::{
     BoundOverlapAmbiguity, BoundOverlapDisambiguationRuleSet, DisambiguatedBoundOverlap,
 };
 use crate::intervals::relative::{RelativeBound, RelativeEndBound, RelativeStartBound};
-
-use super::prelude::*;
 
 /// [`Ordering`] for bounds with support for [`BoundOverlapAmbiguity`]
 ///

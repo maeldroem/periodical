@@ -10,17 +10,19 @@
 use super::abridge::Abridgable;
 use super::extend::Extensible;
 use super::overlap::CanPositionOverlap;
-use super::prelude::*;
 
 use crate::intervals::absolute::{
-    AbsoluteBounds, AbsoluteInterval, EmptiableAbsoluteBounds, HalfBoundedAbsoluteInterval,
+    AbsoluteBounds, AbsoluteInterval, BoundedAbsoluteInterval, EmptiableAbsoluteBounds, HalfBoundedAbsoluteInterval,
+    HasAbsoluteBounds, HasEmptiableAbsoluteBounds,
 };
 use crate::intervals::meta::Interval;
 use crate::intervals::ops::overlap::{OverlapRule, OverlapRuleSet};
 use crate::intervals::ops::remove_overlap::{OverlapRemovable, OverlapRemovalErr, OverlapRemovalResult};
-use crate::intervals::relative::{EmptiableRelativeBounds, HalfBoundedRelativeInterval, RelativeBounds};
+use crate::intervals::relative::{
+    BoundedRelativeInterval, EmptiableRelativeBounds, HalfBoundedRelativeInterval, HasEmptiableRelativeBounds,
+    HasRelativeBounds, RelativeBounds, RelativeInterval,
+};
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
-use crate::intervals::{BoundedAbsoluteInterval, BoundedRelativeInterval, RelativeInterval};
 use crate::ops::{DifferenceResult, IntersectionResult, SymmetricDifferenceResult, UnionResult};
 
 /// Capacity to unite an interval with another

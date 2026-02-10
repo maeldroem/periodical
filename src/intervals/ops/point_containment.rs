@@ -50,18 +50,16 @@ use chrono::{DateTime, Duration, Utc};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use super::prelude::*;
-
 use crate::intervals::absolute::{
-    AbsoluteBounds, AbsoluteEndBound, AbsoluteStartBound, EmptiableAbsoluteBounds, HalfBoundedAbsoluteInterval,
-    HasAbsoluteBounds, HasEmptiableAbsoluteBounds,
+    AbsoluteBounds, AbsoluteEndBound, AbsoluteInterval, AbsoluteStartBound, BoundedAbsoluteInterval,
+    EmptiableAbsoluteBounds, HalfBoundedAbsoluteInterval, HasAbsoluteBounds, HasEmptiableAbsoluteBounds,
 };
-use crate::intervals::meta::BoundInclusivity;
+use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
 use crate::intervals::relative::{
-    EmptiableRelativeBounds, HalfBoundedRelativeInterval, RelativeBounds, RelativeEndBound, RelativeStartBound,
+    BoundedRelativeInterval, EmptiableRelativeBounds, HalfBoundedRelativeInterval, HasEmptiableRelativeBounds,
+    HasRelativeBounds, RelativeBounds, RelativeEndBound, RelativeInterval, RelativeStartBound,
 };
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
-use crate::intervals::{AbsoluteInterval, BoundedAbsoluteInterval, BoundedRelativeInterval, RelativeInterval};
 
 /// Point containment position
 ///

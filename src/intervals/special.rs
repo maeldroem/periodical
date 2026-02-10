@@ -18,8 +18,9 @@ use super::absolute::{
     AbsoluteBounds, AbsoluteEndBound, AbsoluteInterval, AbsoluteStartBound, EmptiableAbsoluteBounds, HasAbsoluteBounds,
     HasEmptiableAbsoluteBounds,
 };
-use super::meta::{Duration as IntervalDuration, Openness, Relativity};
-use super::prelude::*;
+use super::meta::{
+    Duration as IntervalDuration, Emptiable, HasDuration, HasOpenness, HasRelativity, Openness, Relativity,
+};
 use super::relative::{
     EmptiableRelativeBounds, HasEmptiableRelativeBounds, HasRelativeBounds, RelativeBounds, RelativeEndBound,
     RelativeInterval, RelativeStartBound,

@@ -2,7 +2,7 @@ use chrono::{Duration, Utc};
 
 use crate::intervals::absolute::{AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound};
 use crate::intervals::meta::BoundInclusivity;
-use crate::intervals::prelude::BoundOverlapAmbiguity;
+use crate::intervals::ops::bound_overlap_ambiguity::BoundOverlapAmbiguity;
 use crate::intervals::relative::{RelativeEndBound, RelativeFiniteBound, RelativeStartBound};
 use crate::test_utils::date;
 

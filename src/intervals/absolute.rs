@@ -22,9 +22,14 @@ use chrono::{DateTime, Duration, Utc};
 use serde::{Deserialize, Serialize};
 
 use crate::intervals::meta::{Epsilon, Interval};
+use crate::intervals::ops::bound_overlap_ambiguity::{
+    BoundOverlapAmbiguity, BoundOverlapDisambiguationRuleSet, DisambiguatedBoundOverlap,
+};
 
-use super::meta::{BoundInclusivity, Duration as IntervalDuration, OpeningDirection, Openness, Relativity};
-use super::prelude::*;
+use super::meta::{
+    BoundInclusivity, Duration as IntervalDuration, Emptiable, HasBoundInclusivity, HasDuration, HasOpenness,
+    HasRelativity, OpeningDirection, Openness, Relativity,
+};
 use super::special::{EmptyInterval, UnboundedInterval};
 
 /// An absolute finite bound
@@ -1104,8 +1109,14 @@ impl Ord for AbsoluteBound {
         match (self, other) {
             (AbsoluteBound::Start(og_start), AbsoluteBound::Start(other_start)) => og_start.cmp(other_start),
             (AbsoluteBound::End(og_end), AbsoluteBound::End(other_end)) => og_end.cmp(other_end),
-            (AbsoluteBound::Start(og_start), AbsoluteBound::End(other_end)) => og_start.partial_cmp(other_end).unwrap(),
-            (AbsoluteBound::End(og_end), AbsoluteBound::Start(other_start)) => og_end.partial_cmp(other_start).unwrap(),
+            (AbsoluteBound::Start(og_start), AbsoluteBound::End(other_end)) => {
+                // Partial ordering between two different bounds should not fail, but we provide a default just in case
+                og_start.partial_cmp(other_end).unwrap_or(Ordering::Equal)
+            },
+            (AbsoluteBound::End(og_end), AbsoluteBound::Start(other_start)) => {
+                // Partial ordering between two different bounds should not fail, but we provide a default just in case
+                og_end.partial_cmp(other_start).unwrap_or(Ordering::Equal)
+            },
         }
     }
 }

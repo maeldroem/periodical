@@ -22,9 +22,14 @@ use chrono::Duration;
 use serde::{Deserialize, Serialize};
 
 use crate::intervals::meta::{Epsilon, Interval};
+use crate::intervals::ops::bound_overlap_ambiguity::{
+    BoundOverlapAmbiguity, BoundOverlapDisambiguationRuleSet, DisambiguatedBoundOverlap,
+};
 
-use super::meta::{BoundInclusivity, Duration as IntervalDuration, OpeningDirection, Openness, Relativity};
-use super::prelude::*;
+use super::meta::{
+    BoundInclusivity, Duration as IntervalDuration, Emptiable, HasBoundInclusivity, HasDuration, HasOpenness,
+    HasRelativity, OpeningDirection, Openness, Relativity,
+};
 use super::special::{EmptyInterval, UnboundedInterval};
 
 /// A relative finite bound
@@ -1096,8 +1101,14 @@ impl Ord for RelativeBound {
         match (self, other) {
             (RelativeBound::Start(og_start), RelativeBound::Start(other_start)) => og_start.cmp(other_start),
             (RelativeBound::End(og_end), RelativeBound::End(other_end)) => og_end.cmp(other_end),
-            (RelativeBound::Start(og_start), RelativeBound::End(other_end)) => og_start.partial_cmp(other_end).unwrap(),
-            (RelativeBound::End(og_end), RelativeBound::Start(other_start)) => og_end.partial_cmp(other_start).unwrap(),
+            (RelativeBound::Start(og_start), RelativeBound::End(other_end)) => {
+                // Partial ordering between two different bounds should not fail, but we provide a default just in case
+                og_start.partial_cmp(other_end).unwrap_or(Ordering::Equal)
+            },
+            (RelativeBound::End(og_end), RelativeBound::Start(other_start)) => {
+                // Partial ordering between two different bounds should not fail, but we provide a default just in case
+                og_end.partial_cmp(other_start).unwrap_or(Ordering::Equal)
+            },
         }
     }
 }
