@@ -8,7 +8,7 @@ edition = "2024"
 cargo-fuzz = true
 
 [dependencies]
-chrono = { workspace = true }
+jiff = { workspace = true }
 libfuzzer-sys = "0.4"
 
 [dependencies.periodical]
