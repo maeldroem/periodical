@@ -33,10 +33,33 @@ pub const NAIVE_TIME_NOON: NaiveTime =
 /// # Examples
 ///
 /// ```
+/// # use std::num::TryFromIntError;
 /// # use chrono::{Duration, FixedOffset, NaiveDate};
 /// # use periodical::time::naive_date_today;
-/// let tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
+/// #
+/// # #[derive(Debug)]
+/// # struct FixedOffsetError;
+/// #
+/// # #[derive(Debug)]
+/// # enum ExampleErr {
+/// #     TryFromIntError(TryFromIntError),
+/// #     FixedOffsetError(FixedOffsetError),
+/// # }
+/// #
+/// # impl From<TryFromIntError> for ExampleErr {
+/// #     fn from(value: TryFromIntError) -> Self {
+/// #         ExampleErr::TryFromIntError(value)
+/// #     }
+/// # }
+/// #
+/// # impl From<FixedOffsetError> for ExampleErr {
+/// #     fn from(value: FixedOffsetError) -> Self {
+/// #         ExampleErr::FixedOffsetError(value)
+/// #     }
+/// # }
+/// let tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
 /// let today_date = naive_date_today(&tz);
+/// # Ok::<(), ExampleErr>(())
 /// ```
 pub fn naive_date_today<Tz>(tz: &Tz) -> NaiveDate
 where
