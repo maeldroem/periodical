@@ -4187,7 +4187,7 @@ impl BoundedAbsoluteInterval {
     /// #         ExampleError::BoundedAbsoluteIntervalCreationError(value)
     /// #     }
     /// # }
-    /// # 
+    /// #
     /// # impl From<chrono::format::ParseError> for ExampleError {
     /// #     fn from(value: chrono::format::ParseError) -> Self {
     /// #         ExampleError::ParseError(value)
@@ -4275,7 +4275,7 @@ impl BoundedAbsoluteInterval {
     /// #         ExampleError::BoundedAbsoluteIntervalCreationError(value)
     /// #     }
     /// # }
-    /// # 
+    /// #
     /// # impl From<chrono::format::ParseError> for ExampleError {
     /// #     fn from(value: chrono::format::ParseError) -> Self {
     /// #         ExampleError::ParseError(value)
