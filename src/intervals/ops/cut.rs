@@ -151,9 +151,9 @@ use crate::intervals::absolute::{
 };
 use crate::intervals::meta::BoundInclusivity;
 use crate::intervals::relative::{
-    BoundedRelativeInterval, EmptiableRelativeBounds, HasEmptiableRelativeBounds, HasRelativeBounds,
-    HalfBoundedRelativeInterval, RelativeBounds, RelativeEndBound, RelativeFiniteBound, RelativeInterval,
-    RelativeStartBound, check_relative_bounds_for_interval_creation,
+    BoundedRelativeInterval, EmptiableRelativeBounds, HalfBoundedRelativeInterval, HasEmptiableRelativeBounds,
+    HasRelativeBounds, RelativeBounds, RelativeEndBound, RelativeFiniteBound, RelativeInterval, RelativeStartBound,
+    check_relative_bounds_for_interval_creation,
 };
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 

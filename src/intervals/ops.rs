@@ -60,7 +60,7 @@ tests! {
     mod shrink_tests;
 }
 
-inline_docs!{
+inline_docs! {
     pub use abridge::Abridgable;
     pub use bound_containment::{
         BoundContainmentPosition, BoundContainmentRule, BoundContainmentRuleSet, CanPositionBoundContainment,
@@ -87,4 +87,3 @@ inline_docs!{
     pub use set_ops::{Differentiable, Intersectable, SymmetricallyDifferentiable, Unitable};
     pub use shrink::{ShrinkableEndBound, ShrinkableStartBound};
 }
-
