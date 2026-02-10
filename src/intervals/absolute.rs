@@ -1107,8 +1107,14 @@ impl Ord for AbsoluteBound {
         match (self, other) {
             (AbsoluteBound::Start(og_start), AbsoluteBound::Start(other_start)) => og_start.cmp(other_start),
             (AbsoluteBound::End(og_end), AbsoluteBound::End(other_end)) => og_end.cmp(other_end),
-            (AbsoluteBound::Start(og_start), AbsoluteBound::End(other_end)) => og_start.partial_cmp(other_end).unwrap(),
-            (AbsoluteBound::End(og_end), AbsoluteBound::Start(other_start)) => og_end.partial_cmp(other_start).unwrap(),
+            (AbsoluteBound::Start(og_start), AbsoluteBound::End(other_end)) => {
+                // Partial ordering between two different bounds should not fail, but we provide a default just in case
+                og_start.partial_cmp(other_end).unwrap_or(Ordering::Equal)
+            },
+            (AbsoluteBound::End(og_end), AbsoluteBound::Start(other_start)) => {
+                // Partial ordering between two different bounds should not fail, but we provide a default just in case
+                og_end.partial_cmp(other_start).unwrap_or(Ordering::Equal)
+            },
         }
     }
 }
