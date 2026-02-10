@@ -75,12 +75,12 @@ impl NaiveDurationSplitResult {
     /// # use chrono::{DateTime, Utc};
     /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, HalfBoundedAbsoluteInterval};
     /// # use periodical::intervals::meta::OpeningDirection;
-    /// # use periodical::iter::intervals::split::NaiveDurationSplitResult;
+    /// # use periodical::intervals::ops::split::NaiveDurationSplitResult;
     /// let infinite_split = HalfBoundedAbsoluteInterval::new(
     ///     "2026-01-01 00:00:00Z".parse::<DateTime<Utc>>()?,
     ///     OpeningDirection::ToPast,
     /// );
-    /// let infinite_result = NaiveDurationSplitResult::Infinite(infinite_split);
+    /// let infinite_result = NaiveDurationSplitResult::Infinite(infinite_split.clone());
     /// 
     /// let full_split = BoundedAbsoluteInterval::new(
     ///     "2026-01-01 00:00:00Z".parse::<DateTime<Utc>>()?,
@@ -111,12 +111,12 @@ impl NaiveDurationSplitResult {
     /// # use chrono::{DateTime, Utc};
     /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, HalfBoundedAbsoluteInterval};
     /// # use periodical::intervals::meta::OpeningDirection;
-    /// # use periodical::iter::intervals::split::NaiveDurationSplitResult;
+    /// # use periodical::intervals::ops::split::NaiveDurationSplitResult;
     /// let full_split = BoundedAbsoluteInterval::new(
     ///     "2026-01-01 00:00:00Z".parse::<DateTime<Utc>>()?,
     ///     "2026-01-02 00:00:00Z".parse::<DateTime<Utc>>()?,
     /// );
-    /// let full_result = NaiveDurationSplitResult::Full(full_split);
+    /// let full_result = NaiveDurationSplitResult::Full(full_split.clone());
     /// 
     /// let infinite_split = HalfBoundedAbsoluteInterval::new(
     ///     "2026-01-01 00:00:00Z".parse::<DateTime<Utc>>()?,
@@ -147,12 +147,12 @@ impl NaiveDurationSplitResult {
     /// # use chrono::{DateTime, Utc};
     /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, HalfBoundedAbsoluteInterval};
     /// # use periodical::intervals::meta::OpeningDirection;
-    /// # use periodical::iter::intervals::split::NaiveDurationSplitResult;
+    /// # use periodical::intervals::ops::split::NaiveDurationSplitResult;
     /// let partial_split = BoundedAbsoluteInterval::new(
     ///     "2026-01-01 00:00:00Z".parse::<DateTime<Utc>>()?,
     ///     "2026-01-02 00:00:00Z".parse::<DateTime<Utc>>()?,
     /// );
-    /// let partial_result = NaiveDurationSplitResult::Partial(partial_split);
+    /// let partial_result = NaiveDurationSplitResult::Partial(partial_split.clone());
     /// 
     /// let infinite_split = HalfBoundedAbsoluteInterval::new(
     ///     "2026-01-01 00:00:00Z".parse::<DateTime<Utc>>()?,
@@ -180,7 +180,7 @@ impl NaiveDurationSplitResult {
     /// # use chrono::{DateTime, Utc};
     /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, HalfBoundedAbsoluteInterval};
     /// # use periodical::intervals::meta::OpeningDirection;
-    /// # use periodical::iter::intervals::split::NaiveDurationSplitResult;
+    /// # use periodical::intervals::ops::split::NaiveDurationSplitResult;
     /// let infinite_split = HalfBoundedAbsoluteInterval::new(
     ///     "2026-01-01 00:00:00Z".parse::<DateTime<Utc>>()?,
     ///     OpeningDirection::ToPast,
@@ -210,7 +210,7 @@ impl NaiveDurationSplitResult {
     /// # use chrono::{DateTime, Utc};
     /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, HalfBoundedAbsoluteInterval};
     /// # use periodical::intervals::meta::OpeningDirection;
-    /// # use periodical::iter::intervals::split::NaiveDurationSplitResult;
+    /// # use periodical::intervals::ops::split::NaiveDurationSplitResult;
     /// let full_split = BoundedAbsoluteInterval::new(
     ///     "2026-01-01 00:00:00Z".parse::<DateTime<Utc>>()?,
     ///     "2026-01-02 00:00:00Z".parse::<DateTime<Utc>>()?,
@@ -240,7 +240,7 @@ impl NaiveDurationSplitResult {
     /// # use chrono::{DateTime, Utc};
     /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, HalfBoundedAbsoluteInterval};
     /// # use periodical::intervals::meta::OpeningDirection;
-    /// # use periodical::iter::intervals::split::NaiveDurationSplitResult;
+    /// # use periodical::intervals::ops::split::NaiveDurationSplitResult;
     /// let partial_split = BoundedAbsoluteInterval::new(
     ///     "2026-01-01 00:00:00Z".parse::<DateTime<Utc>>()?,
     ///     "2026-01-02 00:00:00Z".parse::<DateTime<Utc>>()?,
