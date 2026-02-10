@@ -14,7 +14,7 @@ pub mod intersect;
 pub mod sym_diff;
 pub mod unite;
 
-tests!{
+tests! {
     mod diff_tests;
     mod intersect_tests;
     mod sym_diff_tests;
@@ -38,4 +38,3 @@ inline_docs! {
         PeerUnionWithIteratorDispatcher,
     };
 }
-
