@@ -14,10 +14,11 @@ use std::error::Error;
 use std::fmt::Display;
 use std::hash::{Hash, Hasher};
 use std::ops::{Bound, Range, RangeBounds, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive};
+use std::time::Duration;
 
 #[cfg(feature = "arbitrary")]
 use arbitrary::Arbitrary;
-use chrono::Duration;
+use jiff::{SignedDuration};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
@@ -34,7 +35,7 @@ use super::special::{EmptyInterval, UnboundedInterval};
 
 /// A relative finite bound
 ///
-/// Contains an offset [`Duration`] and an ambiguous [`BoundInclusivity`]:
+/// Contains an offset [`SignedDuration`] and an ambiguous [`BoundInclusivity`]:
 /// if it is [`Exclusive`](BoundInclusivity::Exclusive), then we additionally need the _source_
 /// (whether it acts as the start or end of an interval) in order to know what this bound truly encompasses.
 ///
@@ -65,7 +66,7 @@ use super::special::{EmptyInterval, UnboundedInterval};
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub struct RelativeFiniteBound {
-    offset: Duration,
+    offset: SignedDuration,
     inclusivity: BoundInclusivity,
 }
 
@@ -74,13 +75,13 @@ impl RelativeFiniteBound {
     ///
     /// This creates a finite bound using the [default `BoundInclusivity`](BoundInclusivity::default)
     #[must_use]
-    pub fn new(offset: Duration) -> Self {
+    pub fn new(offset: SignedDuration) -> Self {
         Self::new_with_inclusivity(offset, BoundInclusivity::default())
     }
 
     /// Creates a new [`RelativeFiniteBound`] using the given offset and [`BoundInclusivity`]
     #[must_use]
-    pub fn new_with_inclusivity(offset: Duration, inclusivity: BoundInclusivity) -> Self {
+    pub fn new_with_inclusivity(offset: SignedDuration, inclusivity: BoundInclusivity) -> Self {
         RelativeFiniteBound { offset, inclusivity }
     }
 
@@ -89,14 +90,14 @@ impl RelativeFiniteBound {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::Duration;
+    /// # use chrono::SignedDuration;
     /// # use periodical::intervals::relative::RelativeFiniteBound;
-    /// let finite_bound = RelativeFiniteBound::new(Duration::hours(12));
+    /// let finite_bound = RelativeFiniteBound::new(SignedDuration::hours(12));
     ///
-    /// assert_eq!(finite_bound.offset(), Duration::hours(12));
+    /// assert_eq!(finite_bound.offset(), SignedDuration::hours(12));
     /// ```
     #[must_use]
-    pub fn offset(&self) -> Duration {
+    pub fn offset(&self) -> SignedDuration {
         self.offset
     }
 
@@ -105,14 +106,14 @@ impl RelativeFiniteBound {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::Duration;
+    /// # use chrono::SignedDuration;
     /// # use periodical::intervals::relative::RelativeFiniteBound;
-    /// let mut finite_bound = RelativeFiniteBound::new(Duration::hours(1));
-    /// finite_bound.set_offset(Duration::hours(32));
+    /// let mut finite_bound = RelativeFiniteBound::new(SignedDuration::hours(1));
+    /// finite_bound.set_offset(SignedDuration::hours(32));
     ///
-    /// assert_eq!(finite_bound.offset(), Duration::hours(32));
+    /// assert_eq!(finite_bound.offset(), SignedDuration::hours(32));
     /// ```
-    pub fn set_offset(&mut self, offset: Duration) {
+    pub fn set_offset(&mut self, offset: SignedDuration) {
         self.offset = offset;
     }
 
@@ -121,11 +122,11 @@ impl RelativeFiniteBound {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::Duration;
+    /// # use chrono::SignedDuration;
     /// # use periodical::intervals::relative::RelativeFiniteBound;
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::prelude::*;
-    /// let mut finite_bound = RelativeFiniteBound::new(Duration::hours(1));
+    /// let mut finite_bound = RelativeFiniteBound::new(SignedDuration::hours(1));
     /// finite_bound.set_inclusivity(BoundInclusivity::Exclusive);
     ///
     /// assert_eq!(finite_bound.inclusivity(), BoundInclusivity::Exclusive);
@@ -163,23 +164,23 @@ impl Display for RelativeFiniteBound {
     }
 }
 
-impl From<Duration> for RelativeFiniteBound {
-    fn from(value: Duration) -> Self {
+impl From<SignedDuration> for RelativeFiniteBound {
+    fn from(value: SignedDuration) -> Self {
         RelativeFiniteBound::new(value)
     }
 }
 
-impl From<(Duration, BoundInclusivity)> for RelativeFiniteBound {
-    fn from((offset, inclusivity): (Duration, BoundInclusivity)) -> Self {
+impl From<(SignedDuration, BoundInclusivity)> for RelativeFiniteBound {
+    fn from((offset, inclusivity): (SignedDuration, BoundInclusivity)) -> Self {
         RelativeFiniteBound::new_with_inclusivity(offset, inclusivity)
     }
 }
 
-/// Conversion from the tuple `(Duration, bool)` to [`RelativeFiniteBound`]
+/// Conversion from the tuple `(SignedDuration, bool)` to [`RelativeFiniteBound`]
 ///
 /// Interprets the boolean as _is it inclusive?_
-impl From<(Duration, bool)> for RelativeFiniteBound {
-    fn from((offset, is_inclusive): (Duration, bool)) -> Self {
+impl From<(SignedDuration, bool)> for RelativeFiniteBound {
+    fn from((offset, is_inclusive): (SignedDuration, bool)) -> Self {
         RelativeFiniteBound::new_with_inclusivity(
             offset,
             if is_inclusive {
@@ -191,7 +192,7 @@ impl From<(Duration, bool)> for RelativeFiniteBound {
     }
 }
 
-/// Errors that can occur when trying to convert a [`Bound<Duration>`] into an [`RelativeFiniteBound`]
+/// Errors that can occur when trying to convert a [`Bound<SignedDuration>`] into an [`RelativeFiniteBound`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum RelativeFiniteBoundFromBoundError {
     /// The given bound was of the [`Unbounded`](Bound::Unbounded) variant
@@ -214,10 +215,10 @@ impl Display for RelativeFiniteBoundFromBoundError {
 
 impl Error for RelativeFiniteBoundFromBoundError {}
 
-impl TryFrom<Bound<Duration>> for RelativeFiniteBound {
+impl TryFrom<Bound<SignedDuration>> for RelativeFiniteBound {
     type Error = RelativeFiniteBoundFromBoundError;
 
-    fn try_from(value: Bound<Duration>) -> Result<Self, Self::Error> {
+    fn try_from(value: Bound<SignedDuration>) -> Result<Self, Self::Error> {
         match value {
             Bound::Included(offset) => Ok(RelativeFiniteBound::new_with_inclusivity(
                 offset,
@@ -253,11 +254,11 @@ impl RelativeStartBound {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::Duration;
+    /// # use chrono::SignedDuration;
     /// # use periodical::intervals::relative::{RelativeFiniteBound, RelativeStartBound};
     /// let infinite_start_bound = RelativeStartBound::InfinitePast;
     /// let finite_start_bound = RelativeStartBound::Finite(
-    ///     RelativeFiniteBound::new(Duration::hours(1))
+    ///     RelativeFiniteBound::new(SignedDuration::hours(1))
     /// );
     ///
     /// assert!(finite_start_bound.is_finite());
@@ -273,11 +274,11 @@ impl RelativeStartBound {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::Duration;
+    /// # use chrono::SignedDuration;
     /// # use periodical::intervals::relative::{RelativeFiniteBound, RelativeStartBound};
     /// let infinite_start_bound = RelativeStartBound::InfinitePast;
     /// let finite_start_bound = RelativeStartBound::Finite(
-    ///     RelativeFiniteBound::new(Duration::hours(1))
+    ///     RelativeFiniteBound::new(SignedDuration::hours(1))
     /// );
     ///
     /// assert!(infinite_start_bound.is_infinite_past());
@@ -296,14 +297,14 @@ impl RelativeStartBound {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::Duration;
+    /// # use chrono::SignedDuration;
     /// # use periodical::intervals::relative::{RelativeFiniteBound, RelativeStartBound};
     /// let infinite_start_bound = RelativeStartBound::InfinitePast;
     /// let finite_start_bound = RelativeStartBound::Finite(
-    ///     RelativeFiniteBound::new(Duration::hours(1))
+    ///     RelativeFiniteBound::new(SignedDuration::hours(1))
     /// );
     ///
-    /// assert_eq!(finite_start_bound.finite(), Some(RelativeFiniteBound::new(Duration::hours(1))));
+    /// assert_eq!(finite_start_bound.finite(), Some(RelativeFiniteBound::new(SignedDuration::hours(1))));
     /// assert_eq!(infinite_start_bound.finite(), None);
     /// ```
     #[must_use]
@@ -326,10 +327,10 @@ impl RelativeStartBound {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::Duration;
+    /// # use chrono::SignedDuration;
     /// # use periodical::intervals::relative::{RelativeFiniteBound, RelativeStartBound};
     /// let start_second_part_my_shift = RelativeStartBound::Finite(
-    ///     RelativeFiniteBound::new(Duration::hours(3))
+    ///     RelativeFiniteBound::new(SignedDuration::hours(3))
     /// );
     /// let break_end_before_shift = start_second_part_my_shift
     ///     .opposite()
@@ -466,8 +467,8 @@ impl From<RelativeFiniteBound> for RelativeStartBound {
     }
 }
 
-impl From<Bound<Duration>> for RelativeStartBound {
-    fn from(bound: Bound<Duration>) -> Self {
+impl From<Bound<SignedDuration>> for RelativeStartBound {
+    fn from(bound: Bound<SignedDuration>) -> Self {
         match bound {
             Bound::Included(offset) => RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
                 offset,
@@ -503,11 +504,11 @@ impl RelativeEndBound {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::Duration;
+    /// # use chrono::SignedDuration;
     /// # use periodical::intervals::relative::{RelativeEndBound, RelativeFiniteBound};
     /// let infinite_end_bound = RelativeEndBound::InfiniteFuture;
     /// let finite_end_bound = RelativeEndBound::Finite(
-    ///     RelativeFiniteBound::new(Duration::hours(1))
+    ///     RelativeFiniteBound::new(SignedDuration::hours(1))
     /// );
     ///
     /// assert!(finite_end_bound.is_finite());
@@ -523,11 +524,11 @@ impl RelativeEndBound {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::Duration;
+    /// # use chrono::SignedDuration;
     /// # use periodical::intervals::relative::{RelativeEndBound, RelativeFiniteBound};
     /// let infinite_end_bound = RelativeEndBound::InfiniteFuture;
     /// let finite_end_bound = RelativeEndBound::Finite(
-    ///     RelativeFiniteBound::new(Duration::hours(1))
+    ///     RelativeFiniteBound::new(SignedDuration::hours(1))
     /// );
     ///
     /// assert!(infinite_end_bound.is_infinite_future());
@@ -546,14 +547,14 @@ impl RelativeEndBound {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::Duration;
+    /// # use chrono::SignedDuration;
     /// # use periodical::intervals::relative::{RelativeEndBound, RelativeFiniteBound};
     /// let infinite_end_bound = RelativeEndBound::InfiniteFuture;
     /// let finite_end_bound = RelativeEndBound::Finite(
-    ///     RelativeFiniteBound::new(Duration::hours(1))
+    ///     RelativeFiniteBound::new(SignedDuration::hours(1))
     /// );
     ///
-    /// assert_eq!(finite_end_bound.finite(), Some(RelativeFiniteBound::new(Duration::hours(1))));
+    /// assert_eq!(finite_end_bound.finite(), Some(RelativeFiniteBound::new(SignedDuration::hours(1))));
     /// assert_eq!(infinite_end_bound.finite(), None);
     /// ```
     #[must_use]
@@ -576,10 +577,10 @@ impl RelativeEndBound {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::Duration;
+    /// # use chrono::SignedDuration;
     /// # use periodical::intervals::relative::{RelativeEndBound, RelativeFiniteBound};
     /// let end_first_shift = RelativeEndBound::Finite(
-    ///     RelativeFiniteBound::new(Duration::hours(1))
+    ///     RelativeFiniteBound::new(SignedDuration::hours(1))
     /// );
     /// let break_start = end_first_shift
     ///     .opposite()
@@ -698,8 +699,8 @@ impl From<RelativeFiniteBound> for RelativeEndBound {
     }
 }
 
-impl From<Bound<Duration>> for RelativeEndBound {
-    fn from(bound: Bound<Duration>) -> Self {
+impl From<Bound<SignedDuration>> for RelativeEndBound {
+    fn from(bound: Bound<SignedDuration>) -> Self {
         match bound {
             Bound::Included(offset) => RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
                 offset,
@@ -721,12 +722,12 @@ impl From<Bound<Duration>> for RelativeEndBound {
 /// # Examples
 ///
 /// ```
-/// # use chrono::Duration;
+/// # use chrono::SignedDuration;
 /// # use periodical::intervals::relative::{
 /// #     RelativeEndBound, RelativeFiniteBound, RelativeStartBound, swap_relative_bounds,
 /// # };
-/// let start_offset = Duration::hours(16);
-/// let end_offset = Duration::hours(8);
+/// let start_offset = SignedDuration::hours(16);
+/// let end_offset = SignedDuration::hours(8);
 ///
 /// let mut start = RelativeStartBound::Finite(RelativeFiniteBound::new(start_offset));
 /// let mut end = RelativeEndBound::Finite(RelativeFiniteBound::new(end_offset));
@@ -858,12 +859,12 @@ pub fn check_relative_bounds_for_interval_creation(
 /// # Examples
 ///
 /// ```
-/// # use chrono::Duration;
+/// # use chrono::SignedDuration;
 /// # use periodical::intervals::relative::{
 /// #     RelativeEndBound, RelativeFiniteBound, RelativeStartBound, prepare_relative_bounds_for_interval_creation,
 /// # };
-/// let start_offset = Duration::hours(16);
-/// let end_offset = Duration::hours(8);
+/// let start_offset = SignedDuration::hours(16);
+/// let end_offset = SignedDuration::hours(8);
 ///
 /// // Warning: not in chronological order!
 /// let mut start = RelativeStartBound::Finite(RelativeFiniteBound::new(start_offset));
@@ -916,12 +917,12 @@ impl RelativeBound {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::Duration;
+    /// # use chrono::SignedDuration;
     /// # use periodical::intervals::relative::{
     /// #     RelativeBound, RelativeEndBound, RelativeFiniteBound, RelativeStartBound,
     /// # };
-    /// let start_offset = Duration::hours(8);
-    /// let end_offset = Duration::hours(16);
+    /// let start_offset = SignedDuration::hours(8);
+    /// let end_offset = SignedDuration::hours(16);
     ///
     /// let start = RelativeBound::Start(
     ///     RelativeStartBound::Finite(RelativeFiniteBound::new(start_offset))
@@ -943,12 +944,12 @@ impl RelativeBound {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::Duration;
+    /// # use chrono::SignedDuration;
     /// # use periodical::intervals::relative::{
     /// #     RelativeBound, RelativeEndBound, RelativeFiniteBound, RelativeStartBound,
     /// # };
-    /// let start_offset = Duration::hours(8);
-    /// let end_offset = Duration::hours(16);
+    /// let start_offset = SignedDuration::hours(8);
+    /// let end_offset = SignedDuration::hours(16);
     ///
     /// let start = RelativeBound::Start(
     ///     RelativeStartBound::Finite(RelativeFiniteBound::new(start_offset))
@@ -973,12 +974,12 @@ impl RelativeBound {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::Duration;
+    /// # use chrono::SignedDuration;
     /// # use periodical::intervals::relative::{
     /// #     RelativeBound, RelativeEndBound, RelativeFiniteBound, RelativeStartBound,
     /// # };
-    /// let start_offset = Duration::hours(8);
-    /// let end_offset = Duration::hours(16);
+    /// let start_offset = SignedDuration::hours(8);
+    /// let end_offset = SignedDuration::hours(16);
     ///
     /// let start = RelativeBound::Start(
     ///     RelativeStartBound::Finite(RelativeFiniteBound::new(start_offset))
@@ -1012,12 +1013,12 @@ impl RelativeBound {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::Duration;
+    /// # use chrono::SignedDuration;
     /// # use periodical::intervals::relative::{
     /// #     RelativeBound, RelativeEndBound, RelativeFiniteBound, RelativeStartBound,
     /// # };
-    /// let start_offset = Duration::hours(8);
-    /// let end_offset = Duration::hours(16);
+    /// let start_offset = SignedDuration::hours(8);
+    /// let end_offset = SignedDuration::hours(16);
     ///
     /// let start = RelativeBound::Start(
     ///     RelativeStartBound::Finite(RelativeFiniteBound::new(start_offset))
@@ -1214,13 +1215,13 @@ impl RelativeBounds {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::Duration;
+    /// # use chrono::SignedDuration;
     /// # use periodical::intervals::relative::{
     /// #     RelativeBounds, RelativeEndBound, RelativeFiniteBound, RelativeStartBound,
     /// # };
     /// // Start and end are not in chronological order!
-    /// let start_offset = Duration::hours(16);
-    /// let end_offset = Duration::hours(8);
+    /// let start_offset = SignedDuration::hours(16);
+    /// let end_offset = SignedDuration::hours(8);
     ///
     /// let start = RelativeStartBound::Finite(RelativeFiniteBound::new(start_offset));
     /// let end = RelativeEndBound::Finite(RelativeFiniteBound::new(end_offset));
@@ -1243,13 +1244,13 @@ impl RelativeBounds {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::Duration;
+    /// # use chrono::SignedDuration;
     /// # use periodical::intervals::relative::{
     /// #     RelativeBounds, RelativeEndBound, RelativeFiniteBound, RelativeStartBound,
     /// # };
     /// // Start and end are not in chronological order!
-    /// let start_offset = Duration::hours(16);
-    /// let end_offset = Duration::hours(8);
+    /// let start_offset = SignedDuration::hours(16);
+    /// let end_offset = SignedDuration::hours(8);
     ///
     /// let start = RelativeStartBound::Finite(RelativeFiniteBound::new(start_offset));
     /// let end = RelativeEndBound::Finite(RelativeFiniteBound::new(end_offset));
@@ -1271,12 +1272,12 @@ impl RelativeBounds {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::Duration;
+    /// # use chrono::SignedDuration;
     /// # use periodical::intervals::relative::{
     /// #     RelativeBounds, RelativeEndBound, RelativeFiniteBound, RelativeStartBound,
     /// # };
-    /// let start_offset = Duration::hours(8);
-    /// let end_offset = Duration::hours(16);
+    /// let start_offset = SignedDuration::hours(8);
+    /// let end_offset = SignedDuration::hours(16);
     ///
     /// let start = RelativeStartBound::Finite(RelativeFiniteBound::new(start_offset));
     /// let end = RelativeEndBound::Finite(RelativeFiniteBound::new(end_offset));
@@ -1295,12 +1296,12 @@ impl RelativeBounds {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::Duration;
+    /// # use chrono::SignedDuration;
     /// # use periodical::intervals::relative::{
     /// #     RelativeBounds, RelativeEndBound, RelativeFiniteBound, RelativeStartBound,
     /// # };
-    /// let start_offset = Duration::hours(8);
-    /// let end_offset = Duration::hours(16);
+    /// let start_offset = SignedDuration::hours(8);
+    /// let end_offset = SignedDuration::hours(16);
     ///
     /// let start = RelativeStartBound::Finite(RelativeFiniteBound::new(start_offset));
     /// let end = RelativeEndBound::Finite(RelativeFiniteBound::new(end_offset));
@@ -1320,19 +1321,19 @@ impl RelativeBounds {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::Duration;
+    /// # use chrono::SignedDuration;
     /// # use periodical::intervals::relative::{
     /// #     RelativeBounds, RelativeEndBound, RelativeFiniteBound, RelativeStartBound,
     /// # };
-    /// let start_offset = Duration::hours(8);
-    /// let end_offset = Duration::hours(16);
+    /// let start_offset = SignedDuration::hours(8);
+    /// let end_offset = SignedDuration::hours(16);
     ///
     /// let start = RelativeStartBound::Finite(RelativeFiniteBound::new(start_offset));
     /// let end = RelativeEndBound::Finite(RelativeFiniteBound::new(end_offset));
     ///
     /// let mut bounds = RelativeBounds::new(start, end);
     ///
-    /// let new_start_offset = Duration::hours(18);
+    /// let new_start_offset = SignedDuration::hours(18);
     /// let new_start = RelativeStartBound::Finite(RelativeFiniteBound::new(new_start_offset));
     ///
     /// // New start is past the end
@@ -1506,7 +1507,7 @@ impl HasDuration for RelativeBounds {
                     finite_end
                         .offset()
                         .checked_sub(&finite_start.offset())
-                        .unwrap_or(Duration::zero()),
+                        .unwrap_or(SignedDuration::zero()),
                     Epsilon::from((finite_start.inclusivity(), finite_end.inclusivity())),
                 )
             },
@@ -1578,7 +1579,7 @@ impl Display for RelativeBounds {
 
 impl<R> From<R> for RelativeBounds
 where
-    R: RangeBounds<Duration>,
+    R: RangeBounds<SignedDuration>,
 {
     fn from(range: R) -> Self {
         RelativeBounds::new(
@@ -1718,7 +1719,7 @@ impl HasDuration for EmptiableRelativeBounds {
     fn duration(&self) -> IntervalDuration {
         match self {
             Self::Bound(bound) => bound.duration(),
-            Self::Empty => IntervalDuration::Finite(Duration::zero(), Epsilon::None),
+            Self::Empty => IntervalDuration::Finite(SignedDuration::zero(), Epsilon::None),
         }
     }
 }
@@ -1786,7 +1787,7 @@ impl From<RelativeBounds> for EmptiableRelativeBounds {
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub struct BoundedRelativeInterval {
-    offset: Duration,
+    offset: SignedDuration,
     length: Duration,
     from_inclusivity: BoundInclusivity,
     to_inclusivity: BoundInclusivity,
@@ -1811,7 +1812,7 @@ impl BoundedRelativeInterval {
     /// assert_eq!(bounded_interval.length(), length);
     /// ```
     #[must_use]
-    pub fn unchecked_new(offset: Duration, length: Duration) -> Self {
+    pub fn unchecked_new(offset: SignedDuration, length: Duration) -> Self {
         BoundedRelativeInterval {
             offset,
             length,
@@ -1843,7 +1844,7 @@ impl BoundedRelativeInterval {
     /// assert_eq!(bounded_interval.length(), Duration::hours(5));
     /// ```
     #[must_use]
-    pub fn new(mut offset: Duration, mut length: Duration) -> Self {
+    pub fn new(mut offset: SignedDuration, mut length: Duration) -> Self {
         if length < Duration::zero() {
             offset += length;
             length = length.abs();
@@ -1879,7 +1880,7 @@ impl BoundedRelativeInterval {
     /// ```
     #[must_use]
     pub fn unchecked_new_with_inclusivity(
-        offset: Duration,
+        offset: SignedDuration,
         from_inclusivity: BoundInclusivity,
         length: Duration,
         to_inclusivity: BoundInclusivity,
@@ -1924,7 +1925,7 @@ impl BoundedRelativeInterval {
     /// ```
     #[must_use]
     pub fn new_with_inclusivity(
-        offset: Duration,
+        offset: SignedDuration,
         from_inclusivity: BoundInclusivity,
         length: Duration,
         to_inclusivity: BoundInclusivity,
@@ -1953,7 +1954,7 @@ impl BoundedRelativeInterval {
     /// assert_eq!(bounded_interval.offset(), Duration::hours(1));
     /// ```
     #[must_use]
-    pub fn offset(&self) -> Duration {
+    pub fn offset(&self) -> SignedDuration {
         self.offset
     }
 
@@ -2036,7 +2037,7 @@ impl BoundedRelativeInterval {
     ///
     /// assert_eq!(bounded_interval.offset(), Duration::hours(2));
     /// ```
-    pub fn set_offset(&mut self, new_offset: Duration) {
+    pub fn set_offset(&mut self, new_offset: SignedDuration) {
         self.offset = new_offset;
     }
 
@@ -2215,25 +2216,25 @@ impl HasRelativeBounds for BoundedRelativeInterval {
     }
 }
 
-impl From<(Duration, Duration)> for BoundedRelativeInterval {
-    fn from((from, to): (Duration, Duration)) -> Self {
+impl From<(SignedDuration, SignedDuration)> for BoundedRelativeInterval {
+    fn from((from, to): (SignedDuration, SignedDuration)) -> Self {
         BoundedRelativeInterval::new(from, to)
     }
 }
 
-impl From<((Duration, BoundInclusivity), (Duration, BoundInclusivity))> for BoundedRelativeInterval {
+impl From<((SignedDuration, BoundInclusivity), (SignedDuration, BoundInclusivity))> for BoundedRelativeInterval {
     fn from(
-        ((from, from_inclusivity), (to, to_inclusivity)): ((Duration, BoundInclusivity), (Duration, BoundInclusivity)),
+        ((from, from_inclusivity), (to, to_inclusivity)): ((SignedDuration, BoundInclusivity), (SignedDuration, BoundInclusivity)),
     ) -> Self {
         BoundedRelativeInterval::new_with_inclusivity(from, from_inclusivity, to, to_inclusivity)
     }
 }
 
-/// Converts `((Duration, bool), (Duration, bool))` into [`BoundedRelativeInterval`]
+/// Converts `((SignedDuration, bool), (SignedDuration, bool))` into [`BoundedRelativeInterval`]
 ///
 /// The booleans in the original structure are to be interpreted as _is it inclusive?_
-impl From<((Duration, bool), (Duration, bool))> for BoundedRelativeInterval {
-    fn from(((from, is_from_inclusive), (to, is_to_inclusive)): ((Duration, bool), (Duration, bool))) -> Self {
+impl From<((SignedDuration, bool), (SignedDuration, bool))> for BoundedRelativeInterval {
+    fn from(((from, is_from_inclusive), (to, is_to_inclusive)): ((SignedDuration, bool), (SignedDuration, bool))) -> Self {
         BoundedRelativeInterval::new_with_inclusivity(
             from,
             if is_from_inclusive {
@@ -2251,8 +2252,8 @@ impl From<((Duration, bool), (Duration, bool))> for BoundedRelativeInterval {
     }
 }
 
-impl From<Range<Duration>> for BoundedRelativeInterval {
-    fn from(range: Range<Duration>) -> Self {
+impl From<Range<SignedDuration>> for BoundedRelativeInterval {
+    fn from(range: Range<SignedDuration>) -> Self {
         BoundedRelativeInterval::new_with_inclusivity(
             range.start,
             BoundInclusivity::Inclusive,
@@ -2262,8 +2263,8 @@ impl From<Range<Duration>> for BoundedRelativeInterval {
     }
 }
 
-impl From<RangeInclusive<Duration>> for BoundedRelativeInterval {
-    fn from(range: RangeInclusive<Duration>) -> Self {
+impl From<RangeInclusive<SignedDuration>> for BoundedRelativeInterval {
+    fn from(range: RangeInclusive<SignedDuration>) -> Self {
         BoundedRelativeInterval::new_with_inclusivity(
             *range.start(),
             BoundInclusivity::Inclusive,
@@ -2357,7 +2358,7 @@ impl TryFrom<RelativeInterval> for BoundedRelativeInterval {
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub struct HalfBoundedRelativeInterval {
-    reference_offset: Duration,
+    reference_offset: SignedDuration,
     opening_direction: OpeningDirection,
     reference_inclusivity: BoundInclusivity,
 }
@@ -2381,7 +2382,7 @@ impl HalfBoundedRelativeInterval {
     /// assert_eq!(half_bounded_interval.opening_direction(), OpeningDirection::ToPast);
     /// ```
     #[must_use]
-    pub fn new(reference_offset: Duration, opening_direction: OpeningDirection) -> Self {
+    pub fn new(reference_offset: SignedDuration, opening_direction: OpeningDirection) -> Self {
         HalfBoundedRelativeInterval {
             reference_offset,
             opening_direction,
@@ -2409,7 +2410,7 @@ impl HalfBoundedRelativeInterval {
     /// ```
     #[must_use]
     pub fn new_with_inclusivity(
-        reference_offset: Duration,
+        reference_offset: SignedDuration,
         reference_time_inclusivity: BoundInclusivity,
         opening_direction: OpeningDirection,
     ) -> Self {
@@ -2436,7 +2437,7 @@ impl HalfBoundedRelativeInterval {
     /// assert_eq!(half_bounded_interval.reference_offset(), Duration::hours(8));
     /// ```
     #[must_use]
-    pub fn reference_offset(&self) -> Duration {
+    pub fn reference_offset(&self) -> SignedDuration {
         self.reference_offset
     }
 
@@ -2498,7 +2499,7 @@ impl HalfBoundedRelativeInterval {
     ///
     /// assert_eq!(half_bounded_interval.reference_offset(), Duration::hours(1));
     /// ```
-    pub fn set_offset(&mut self, new_offset: Duration) {
+    pub fn set_offset(&mut self, new_offset: SignedDuration) {
         self.reference_offset = new_offset;
     }
 
@@ -2592,52 +2593,52 @@ impl HasRelativeBounds for HalfBoundedRelativeInterval {
     }
 }
 
-impl From<(Duration, OpeningDirection)> for HalfBoundedRelativeInterval {
-    fn from((offset, direction): (Duration, OpeningDirection)) -> Self {
+impl From<(SignedDuration, OpeningDirection)> for HalfBoundedRelativeInterval {
+    fn from((offset, direction): (SignedDuration, OpeningDirection)) -> Self {
         HalfBoundedRelativeInterval::new(offset, direction)
     }
 }
 
-/// Converts `(Duration, bool)` into [`HalfBoundedRelativeInterval`]
+/// Converts `(SignedDuration, bool)` into [`HalfBoundedRelativeInterval`]
 ///
 /// The boolean is interpreted as _is it going to future?_
-impl From<(Duration, bool)> for HalfBoundedRelativeInterval {
-    fn from((offset, goes_to_future): (Duration, bool)) -> Self {
+impl From<(SignedDuration, bool)> for HalfBoundedRelativeInterval {
+    fn from((offset, goes_to_future): (SignedDuration, bool)) -> Self {
         HalfBoundedRelativeInterval::new(offset, OpeningDirection::from(goes_to_future))
     }
 }
 
-impl From<((Duration, BoundInclusivity), OpeningDirection)> for HalfBoundedRelativeInterval {
-    fn from(((offset, inclusivity), direction): ((Duration, BoundInclusivity), OpeningDirection)) -> Self {
+impl From<((SignedDuration, BoundInclusivity), OpeningDirection)> for HalfBoundedRelativeInterval {
+    fn from(((offset, inclusivity), direction): ((SignedDuration, BoundInclusivity), OpeningDirection)) -> Self {
         HalfBoundedRelativeInterval::new_with_inclusivity(offset, inclusivity, direction)
     }
 }
 
-/// Converts `((Duration, BoundInclusivity), bool)` into [`HalfBoundedRelativeInterval`]
+/// Converts `((SignedDuration, BoundInclusivity), bool)` into [`HalfBoundedRelativeInterval`]
 ///
 /// The boolean is interpreted as _is it going to future?_
-impl From<((Duration, BoundInclusivity), bool)> for HalfBoundedRelativeInterval {
-    fn from(((offset, inclusivity), goes_to_future): ((Duration, BoundInclusivity), bool)) -> Self {
+impl From<((SignedDuration, BoundInclusivity), bool)> for HalfBoundedRelativeInterval {
+    fn from(((offset, inclusivity), goes_to_future): ((SignedDuration, BoundInclusivity), bool)) -> Self {
         HalfBoundedRelativeInterval::new_with_inclusivity(offset, inclusivity, OpeningDirection::from(goes_to_future))
     }
 }
 
-/// Converts `((Duration, bool), OpeningDirection)` into [`HalfBoundedRelativeInterval`]
+/// Converts `((SignedDuration, bool), OpeningDirection)` into [`HalfBoundedRelativeInterval`]
 ///
 /// The boolean is interpreted as _is it inclusive?_
-impl From<((Duration, bool), OpeningDirection)> for HalfBoundedRelativeInterval {
-    fn from(((offset, is_inclusive), direction): ((Duration, bool), OpeningDirection)) -> Self {
+impl From<((SignedDuration, bool), OpeningDirection)> for HalfBoundedRelativeInterval {
+    fn from(((offset, is_inclusive), direction): ((SignedDuration, bool), OpeningDirection)) -> Self {
         HalfBoundedRelativeInterval::new_with_inclusivity(offset, BoundInclusivity::from(is_inclusive), direction)
     }
 }
 
-/// Converts `((Duration, bool), bool)` into [`HalfBoundedRelativeInterval`]
+/// Converts `((SignedDuration, bool), bool)` into [`HalfBoundedRelativeInterval`]
 ///
 /// The boolean of the first tuple element is interpreted as _is it inclusive?_
 ///
 /// The boolean of the second tuple element is interpreted as _is it going to future?_
-impl From<((Duration, bool), bool)> for HalfBoundedRelativeInterval {
-    fn from(((offset, is_inclusive), goes_to_future): ((Duration, bool), bool)) -> Self {
+impl From<((SignedDuration, bool), bool)> for HalfBoundedRelativeInterval {
+    fn from(((offset, is_inclusive), goes_to_future): ((SignedDuration, bool), bool)) -> Self {
         HalfBoundedRelativeInterval::new_with_inclusivity(
             offset,
             BoundInclusivity::from(is_inclusive),
@@ -2646,8 +2647,8 @@ impl From<((Duration, bool), bool)> for HalfBoundedRelativeInterval {
     }
 }
 
-impl From<RangeFrom<Duration>> for HalfBoundedRelativeInterval {
-    fn from(range: RangeFrom<Duration>) -> Self {
+impl From<RangeFrom<SignedDuration>> for HalfBoundedRelativeInterval {
+    fn from(range: RangeFrom<SignedDuration>) -> Self {
         HalfBoundedRelativeInterval::new_with_inclusivity(
             range.start,
             BoundInclusivity::Inclusive,
@@ -2656,8 +2657,8 @@ impl From<RangeFrom<Duration>> for HalfBoundedRelativeInterval {
     }
 }
 
-impl From<RangeTo<Duration>> for HalfBoundedRelativeInterval {
-    fn from(range: RangeTo<Duration>) -> Self {
+impl From<RangeTo<SignedDuration>> for HalfBoundedRelativeInterval {
+    fn from(range: RangeTo<SignedDuration>) -> Self {
         HalfBoundedRelativeInterval::new_with_inclusivity(
             range.end,
             BoundInclusivity::Exclusive,
@@ -2666,8 +2667,8 @@ impl From<RangeTo<Duration>> for HalfBoundedRelativeInterval {
     }
 }
 
-impl From<RangeToInclusive<Duration>> for HalfBoundedRelativeInterval {
-    fn from(range: RangeToInclusive<Duration>) -> Self {
+impl From<RangeToInclusive<SignedDuration>> for HalfBoundedRelativeInterval {
+    fn from(range: RangeToInclusive<SignedDuration>) -> Self {
         HalfBoundedRelativeInterval::new_with_inclusivity(
             range.end,
             BoundInclusivity::Inclusive,
@@ -2974,11 +2975,11 @@ impl From<EmptiableRelativeBounds> for RelativeInterval {
     }
 }
 
-/// Converts `(Option<Duration>, Option<Duration>)` into [`RelativeInterval`]
+/// Converts `(Option<SignedDuration>, Option<SignedDuration>)` into [`RelativeInterval`]
 ///
 /// The first tuple element represents the start bound, the second element represents the end bound.
-impl From<(Option<Duration>, Option<Duration>)> for RelativeInterval {
-    fn from((from_opt, to_opt): (Option<Duration>, Option<Duration>)) -> Self {
+impl From<(Option<SignedDuration>, Option<SignedDuration>)> for RelativeInterval {
+    fn from((from_opt, to_opt): (Option<SignedDuration>, Option<SignedDuration>)) -> Self {
         match (from_opt, to_opt) {
             (Some(from), Some(to)) => RelativeInterval::Bounded(BoundedRelativeInterval::new(from, to)),
             (Some(from), None) => {
@@ -2992,20 +2993,20 @@ impl From<(Option<Duration>, Option<Duration>)> for RelativeInterval {
     }
 }
 
-/// Converts `(Option<(Duration, BoundInclusivity)>, Option<(Duration, BoundInclusivity)>)`
+/// Converts `(Option<(SignedDuration, BoundInclusivity)>, Option<(SignedDuration, BoundInclusivity)>)`
 /// into [`RelativeInterval`]
 ///
 /// The first tuple element represents the start bound, the second element represents the end bound.
 impl
     From<(
-        Option<(Duration, BoundInclusivity)>,
-        Option<(Duration, BoundInclusivity)>,
+        Option<(SignedDuration, BoundInclusivity)>,
+        Option<(SignedDuration, BoundInclusivity)>,
     )> for RelativeInterval
 {
     fn from(
         (from_opt, to_opt): (
-            Option<(Duration, BoundInclusivity)>,
-            Option<(Duration, BoundInclusivity)>,
+            Option<(SignedDuration, BoundInclusivity)>,
+            Option<(SignedDuration, BoundInclusivity)>,
         ),
     ) -> Self {
         match (from_opt, to_opt) {
@@ -3023,13 +3024,13 @@ impl
     }
 }
 
-/// Converts `(Option<(Duration, bool)>, Option<(Duration, bool)>)` into [`RelativeInterval`]
+/// Converts `(Option<(SignedDuration, bool)>, Option<(SignedDuration, bool)>)` into [`RelativeInterval`]
 ///
 /// The first tuple element represents the start bound, the second element represents the end bound.
 ///
-/// The booleans contained within the `Option<(Duration, bool)>`s are interpreted as _is it inclusive?_
-impl From<(Option<(Duration, bool)>, Option<(Duration, bool)>)> for RelativeInterval {
-    fn from((from_opt, to_opt): (Option<(Duration, bool)>, Option<(Duration, bool)>)) -> Self {
+/// The booleans contained within the `Option<(SignedDuration, bool)>`s are interpreted as _is it inclusive?_
+impl From<(Option<(SignedDuration, bool)>, Option<(SignedDuration, bool)>)> for RelativeInterval {
+    fn from((from_opt, to_opt): (Option<(SignedDuration, bool)>, Option<(SignedDuration, bool)>)) -> Self {
         match (from_opt, to_opt) {
             (Some((from, is_from_inclusive)), Some((to, is_to_inclusive))) => {
                 RelativeInterval::Bounded(BoundedRelativeInterval::new_with_inclusivity(
@@ -3058,14 +3059,14 @@ impl From<(Option<(Duration, bool)>, Option<(Duration, bool)>)> for RelativeInte
     }
 }
 
-/// Converts `(bool, Option<Duration>, Option<Duration>)` into [`RelativeInterval`]
+/// Converts `(bool, Option<SignedDuration>, Option<SignedDuration>)` into [`RelativeInterval`]
 ///
 /// The second tuple element represents the start bound, the third element represents the end bound.
 ///
 /// The first boolean indicates whether the interval is an [`EmptyInterval`].
 /// If it is set to `true`, the next elements are ignored altogether.
-impl From<(bool, Option<Duration>, Option<Duration>)> for RelativeInterval {
-    fn from((is_empty, from_opt, to_opt): (bool, Option<Duration>, Option<Duration>)) -> Self {
+impl From<(bool, Option<SignedDuration>, Option<SignedDuration>)> for RelativeInterval {
+    fn from((is_empty, from_opt, to_opt): (bool, Option<SignedDuration>, Option<SignedDuration>)) -> Self {
         if is_empty {
             return RelativeInterval::Empty(EmptyInterval);
         }
@@ -3083,7 +3084,7 @@ impl From<(bool, Option<Duration>, Option<Duration>)> for RelativeInterval {
     }
 }
 
-/// Converts `(bool, Option<(Duration, BoundInclusivity)>, Option<(Duration, BoundInclusivity)>)`
+/// Converts `(bool, Option<(SignedDuration, BoundInclusivity)>, Option<(SignedDuration, BoundInclusivity)>)`
 /// into [`RelativeInterval`]
 ///
 /// The second tuple element represents the start bound, the third element represents the end bound.
@@ -3093,15 +3094,15 @@ impl From<(bool, Option<Duration>, Option<Duration>)> for RelativeInterval {
 impl
     From<(
         bool,
-        Option<(Duration, BoundInclusivity)>,
-        Option<(Duration, BoundInclusivity)>,
+        Option<(SignedDuration, BoundInclusivity)>,
+        Option<(SignedDuration, BoundInclusivity)>,
     )> for RelativeInterval
 {
     fn from(
         (is_empty, from_opt, to_opt): (
             bool,
-            Option<(Duration, BoundInclusivity)>,
-            Option<(Duration, BoundInclusivity)>,
+            Option<(SignedDuration, BoundInclusivity)>,
+            Option<(SignedDuration, BoundInclusivity)>,
         ),
     ) -> Self {
         if is_empty {
@@ -3123,16 +3124,16 @@ impl
     }
 }
 
-/// Converts `(bool, Option<(Duration, bool)>, Option<(Duration, bool)>)` into [`RelativeInterval`]
+/// Converts `(bool, Option<(SignedDuration, bool)>, Option<(SignedDuration, bool)>)` into [`RelativeInterval`]
 ///
 /// The second tuple element represents the start bound, the third element represents the end bound.
 ///
 /// The first boolean indicates whether the interval is an [`EmptyInterval`].
 /// If it is set to `true`, the next elements are ignored altogether.
 ///
-/// The booleans contained within the `Option<(Duration, bool)>`s are interpreted as _is it inclusive?_
-impl From<(bool, Option<(Duration, bool)>, Option<(Duration, bool)>)> for RelativeInterval {
-    fn from((is_empty, from_opt, to_opt): (bool, Option<(Duration, bool)>, Option<(Duration, bool)>)) -> Self {
+/// The booleans contained within the `Option<(SignedDuration, bool)>`s are interpreted as _is it inclusive?_
+impl From<(bool, Option<(SignedDuration, bool)>, Option<(SignedDuration, bool)>)> for RelativeInterval {
+    fn from((is_empty, from_opt, to_opt): (bool, Option<(SignedDuration, bool)>, Option<(SignedDuration, bool)>)) -> Self {
         if is_empty {
             return RelativeInterval::Empty(EmptyInterval);
         }
@@ -3166,11 +3167,11 @@ impl From<(bool, Option<(Duration, bool)>, Option<(Duration, bool)>)> for Relati
 }
 
 // Unfortunately can't use impl<R: RangeBounds> From<R> as it's conflicting with the core implementation of From
-/// Converts `(Bound<Duration>, Bound<Duration>)` into [`RelativeInterval`]
+/// Converts `(Bound<SignedDuration>, Bound<SignedDuration>)` into [`RelativeInterval`]
 ///
 /// The first tuple element represents the start bound, the second tuple element represents the end bound.
-impl From<(Bound<Duration>, Bound<Duration>)> for RelativeInterval {
-    fn from((start_bound, end_bound): (Bound<Duration>, Bound<Duration>)) -> Self {
+impl From<(Bound<SignedDuration>, Bound<SignedDuration>)> for RelativeInterval {
+    fn from((start_bound, end_bound): (Bound<SignedDuration>, Bound<SignedDuration>)) -> Self {
         match (start_bound, end_bound) {
             (Bound::Included(from), Bound::Included(to)) => {
                 RelativeInterval::Bounded(BoundedRelativeInterval::new_with_inclusivity(
@@ -3237,32 +3238,32 @@ impl From<(Bound<Duration>, Bound<Duration>)> for RelativeInterval {
     }
 }
 
-impl From<Range<Duration>> for RelativeInterval {
-    fn from(value: Range<Duration>) -> Self {
+impl From<Range<SignedDuration>> for RelativeInterval {
+    fn from(value: Range<SignedDuration>) -> Self {
         RelativeInterval::Bounded(BoundedRelativeInterval::from(value))
     }
 }
 
-impl From<RangeInclusive<Duration>> for RelativeInterval {
-    fn from(value: RangeInclusive<Duration>) -> Self {
+impl From<RangeInclusive<SignedDuration>> for RelativeInterval {
+    fn from(value: RangeInclusive<SignedDuration>) -> Self {
         RelativeInterval::Bounded(BoundedRelativeInterval::from(value))
     }
 }
 
-impl From<RangeFrom<Duration>> for RelativeInterval {
-    fn from(value: RangeFrom<Duration>) -> Self {
+impl From<RangeFrom<SignedDuration>> for RelativeInterval {
+    fn from(value: RangeFrom<SignedDuration>) -> Self {
         RelativeInterval::HalfBounded(HalfBoundedRelativeInterval::from(value))
     }
 }
 
-impl From<RangeTo<Duration>> for RelativeInterval {
-    fn from(value: RangeTo<Duration>) -> Self {
+impl From<RangeTo<SignedDuration>> for RelativeInterval {
+    fn from(value: RangeTo<SignedDuration>) -> Self {
         RelativeInterval::HalfBounded(HalfBoundedRelativeInterval::from(value))
     }
 }
 
-impl From<RangeToInclusive<Duration>> for RelativeInterval {
-    fn from(value: RangeToInclusive<Duration>) -> Self {
+impl From<RangeToInclusive<SignedDuration>> for RelativeInterval {
+    fn from(value: RangeToInclusive<SignedDuration>) -> Self {
         RelativeInterval::HalfBounded(HalfBoundedRelativeInterval::from(value))
     }
 }
