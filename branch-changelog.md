@@ -10,15 +10,15 @@
 
 ## Added
 
-- [ ] Added rough `NaiveWeek` structure as a drop-in replacement for `chrono`'s `NaiveWeek`
-- [ ] Added `NaiveIsoWeek`
+- [x] Added rough `NaiveWeek` structure as a drop-in replacement for `chrono`'s `NaiveWeek`
+- [x] Added rough `NaiveIsoWeek` structure
 
 ## Changed
 
 - [ ] Migrating `absolute.rs` to jiff
 - [ ] Migrating `relative.rs` to jiff
 - [ ] Migrating `special.rs` to jiff
-- [ ] Migrating `time.rs` to jiff
+- [x] Migrating `time.rs` to jiff
 - [ ] Migrating `ops.rs` to jiff
 
 - [ ] Migrating `absolute.rs`'s tests to jiff
