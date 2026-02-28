@@ -24,8 +24,10 @@ pub const MAX_WEEKS_IN_YEAR: u8 = 53;
 /// Number of months in a year
 pub const MONTHS_IN_YEAR: u8 = 12;
 
+/// Number of days in a common year
 pub const DAYS_IN_COMMON_YEAR: u16 = 365;
 
+/// Number of days in a leap year
 pub const DAYS_IN_LEAP_YEAR: u16 = 366;
 
 /// Gets today's [`Date`] in the given [`TimeZone`]
@@ -49,11 +51,15 @@ pub fn naive_date_today(tz: &TimeZone) -> Date {
 /// 
 /// Since weeks can start on different days, this function takes a [`Weekday`].
 /// 
+/// # Errors
+/// 
+/// Returns [`Error`](JiffError) if the given year is out of range.
+/// 
 /// TEST THIS THOROUGHLY
 pub fn weeks_in_year(year: i16, week_start: Weekday) -> Result<u8, JiffError> {
     let start_of_year = Date::new(year, 1, 1)?;
-    let first_weekday = start_of_year.clone().weekday();
-    let leftover_days = start_of_year.days_in_year() % DAYS_IN_WEEK;
+    let first_weekday = start_of_year.weekday();
+    let leftover_days = i8::from(start_of_year.days_in_year() % DAYS_IN_WEEK);
     
     // Logic: if the amount of days to reach `week_start` from `first_weekday` is greater than the leftover days,
     // this means that we have "entered" a new multiple of 7, a week, therefore there will be no space at
@@ -131,8 +137,10 @@ impl Display for NaiveWeekCreationError {
 
 impl Error for NaiveWeekCreationError {}
 
-impl From<NaiveWeekInYear> for NaiveWeek {
-    fn from(value: NaiveWeekInYear) -> Self {
+impl TryFrom<NaiveWeekInYear> for NaiveWeek {
+    type Error = NaiveWeekCreationError;
+
+    fn try_from(value: NaiveWeekInYear) -> Result<Self, Self::Error> {
         NaiveWeek::new(value.week_number(), value.week_start())
     }
 }
@@ -167,7 +175,7 @@ impl NaiveWeekInYear {
     /// 
     /// TODO
     #[must_use]
-    pub fn from_naive_week(naive_week: NaiveWeek, year: i16) -> Self {
+    pub fn from_naive_week(naive_week: NaiveWeek, year: i16) -> Result<Self, NaiveWeekInYearCreationError> {
         NaiveWeekInYear::new(naive_week.week_number(), naive_week.week_start(), year)
     }
 
@@ -191,20 +199,32 @@ impl NaiveWeekInYear {
         self.year
     }
 
+    /// Returns the first day of the week
     #[must_use]
-    pub fn first_day(&self) -> Result<Date, ()> {
-        let start_of_year = Date::new(self.year(), 1, 1)?;
+    pub fn first_day(&self) -> Result<Date, NaiveWeekDayError> {
+        let start_of_year = Date::new(self.year(), 1, 1).or(Err(NaiveWeekDayError::OutOfRangeYear))?;
 
-        let days_from_first_day = u16::from(weeks_in_year(self.year(), self.week_start())?)
+        let days_from_first_day = u16::from(
+            weeks_in_year(self.year(), self.week_start())
+                .or(Err(NaiveWeekDayError::OutOfRangeYear))?
+        )
             .strict_mul(u16::from(DAYS_IN_WEEK))
-            .strict_add(start_of_year.clone().weekday().until(self.week_start()));
+            .strict_add(u16::from(start_of_year.weekday().until(self.week_start()).unsigned_abs()));
 
-        start_of_year.checked_add(Span::new().days(days_from_first_day))?
+        start_of_year
+            .checked_add(Span::new().days(days_from_first_day))
+            .or(Err(NaiveWeekDayError::OutOfRangeResult))
     }
 
+    /// Returns the last day of the week
     #[must_use]
-    pub fn last_day(&self) -> Result<Date, ()> {
-        self.first_day().and_then(|day| day.checked_add(Span::new().days(DAYS_IN_WEEK - 1)))
+    pub fn last_day(&self) -> Result<Date, NaiveWeekDayError> {
+        self
+            .first_day()
+            .and_then(|day| day
+                .checked_add(Span::new().days(DAYS_IN_WEEK - 1))
+                .or(Err(NaiveWeekDayError::OutOfRangeResult))
+            )
     }
 }
 
@@ -224,6 +244,23 @@ impl Display for NaiveWeekInYearCreationError {
 }
 
 impl Error for NaiveWeekInYearCreationError {}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum NaiveWeekDayError {
+    OutOfRangeYear,
+    OutOfRangeResult,
+}
+
+impl Display for NaiveWeekDayError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::OutOfRangeYear => write!(f, "Out of range year"),
+            Self::OutOfRangeResult => write!(f, "Out of range result"),
+        }
+    }
+}
+
+impl Error for NaiveWeekDayError {}
 
 /// Month representation
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -338,7 +375,7 @@ pub struct NaiveMonthInYear {
 impl NaiveMonthInYear {
     /// Creates a new [`NaiveMonthInYear`] from the given year and month
     #[must_use]
-    pub fn new(year: i16, month: Month) -> Self {
+    pub fn new(month: Month, year: i16) -> Self {
         Self { year, month }
     }
 
@@ -356,16 +393,38 @@ impl NaiveMonthInYear {
 
     /// Returns the first day of this month of the year
     #[must_use]
-    pub fn first_day(&self) -> Result<Date, ()> {
-        Date::new(self.year(), i8::try_from(self.month().one_offset_number()), 1)
+    pub fn first_day(&self) -> Result<Date, NaiveMonthInYearDayError> {
+        Date::new(
+            self.year(),
+            i8::try_from(self.month().one_offset_number()).or(Err(NaiveMonthInYearDayError::OutOfRangeMonth))?,
+            1,
+        )
+            .or(Err(NaiveMonthInYearDayError::OutOfRangeYear))
     }
 
     /// Returns the last day of this month of the year
     #[must_use]
-    pub fn last_day(&self) -> Result<Date, ()> {
+    pub fn last_day(&self) -> Result<Date, NaiveMonthInYearDayError> {
         self.first_day().map(|day| day.last_of_month())
     }
 }
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum NaiveMonthInYearDayError {
+    OutOfRangeYear,
+    OutOfRangeMonth,
+}
+
+impl Display for NaiveMonthInYearDayError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::OutOfRangeYear => write!(f, "Out of range year"),
+            Self::OutOfRangeMonth => write!(f, "Out of range month"),
+        }
+    }
+}
+
+impl Error for NaiveMonthInYearDayError {}
 
 impl PartialOrd for NaiveMonthInYear {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
@@ -400,105 +459,235 @@ impl Display for NaiveMonthTryFromNaiveDateError {
 
 impl Error for NaiveMonthTryFromNaiveDateError {}
 
-/// A naive duration
+/// A calendar anchor offset
+/// 
+/// # What is a calendar anchor
+/// 
+/// A _calendar anchor_ is any subdivision of the Gregorian calendar, e.g. days, weeks, months, years.
 ///
 /// As other naive units, it is not a precise amount, rather an abstract value that we often use
 /// in common speech.
 ///
-/// The goal of this structure is to represent naive durations that can be applied to naive structures
+/// The goal of this structure is to represent calendar offsets that can be applied to naive structures
 /// such as [`Date`s](Date).
+/// 
+/// # Why can't calendar anchor offsets be combined in one value?
 ///
-/// The reason [`NaiveDuration`]s can't be combined into one structure (as in you can't add
+/// The reason [`CalendarAnchorOffset`]s can't be combined into one structure (as in you can't add
 /// two instances together) as the order in which they are applied to a naive structure such as [`Date`]
 /// matters.
+/// 
+/// # How it works
+/// 
+/// A calendar anchor offset is very different from how [`Span`]s work, as it interprets calendar offsets
+/// by the absolute position of its anchor.
+/// 
+/// The _absolute position_ of a calendar anchor is based on where the anchors are placed in the calendar,
+/// rather than their actual duration.
+/// Therefore, a week is not equal to 7 days, it instead represents "What is the nth week compared to X".
+/// 
+/// For example, if we want the month that happens in 2 months when observing the calendar,
+/// and the current date is `2026-04-15`, then it would return June of 2026, as if we only observe the month
+/// on the calendar, it is the second month that happens from this month (April of 2026).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum NaiveDuration {
-    /// Naive days duration
+pub enum CalendarAnchorOffset {
+    /// N days calendar anchor offset
     Days(i64),
-    /// Naive weeks duration
+    /// N weeks with custom week start calendar anchor offset
+    Weeks(i64, Weekday),
+    /// N ISO weeks calendar anchor offset
     ///
-    /// The naive week is defined using a given [`Weekday`] as its start day.
-    ///
-    /// <div class="warning">
-    ///
-    /// Moving 2 weeks away **does not mean 14 naive days**.
-    ///
-    /// Instead, it refers to the second week to come after the current one.
-    ///
-    /// </div>
-    Weeks(Weekday, i64),
-    /// Naive ISO weeks duration
-    ///
-    /// Equivalent to [`NaiveDuration::Weeks`] using [monday](Weekday::Monday) as the week start.
+    /// Equivalent to [`CalendarAnchorOffset::Weeks`] using [monday](Weekday::Monday) as the week start.
     IsoWeeks(i64),
-    /// Naive months duration
-    ///
-    /// <div class="warning">
-    ///
-    /// Moving 1 month away **does not mean 30/31 naive days**.
-    ///
-    /// Instead, it refers to the first month to come after the current one.
-    ///
-    /// </div>
+    /// N months calendar anchor offset
     Months(i64),
-    /// Naive years duration
-    ///
-    /// <div class="warning">
-    ///
-    /// Moving 1 year away **does not mean 365 naive days**.
-    ///
-    /// Instead, it refers to the first year to come after the current one.
-    ///
-    /// </div>
+    /// N years calendar anchor offset
     Years(i32),
 }
 
-impl NaiveDuration {
-    /// Whether the stored naive duration is zero
+impl CalendarAnchorOffset {
+    /// Whether the calendar offset duration is zero
     ///
-    /// This does **not** mean that after applying the [`NaiveDuration`] to another naive structure
-    /// will result in the same naive structure.
+    /// This does **not** mean that after applying the [`CalendarAnchorOffset`] to another naive structure
+    /// will result in the same value as the original naive structure.
     #[must_use]
     pub fn is_zero(&self) -> bool {
         match self {
-            Self::Days(x) | Self::Weeks(_, x) | Self::IsoWeeks(x) | Self::Months(x) => *x == 0,
+            Self::Days(x) | Self::Weeks(x, _) | Self::IsoWeeks(x) | Self::Months(x) => *x == 0,
             Self::Years(x) => *x == 0,
         }
     }
 
     /// Whether the stored naive duration is positive (`> 0`)
     ///
-    /// This does **not** mean that after applying the [`NaiveDuration`] to another naive structure
-    /// will result in a naive structure that go after the original one.
+    /// This does **not** mean that after applying the [`CalendarAnchorOffset`] to another naive structure
+    /// will result in a value greater than the original naive structure.
     #[must_use]
     pub fn is_positive(&self) -> bool {
         match self {
-            Self::Days(x) | Self::Weeks(_, x) | Self::IsoWeeks(x) | Self::Months(x) => x.is_positive(),
+            Self::Days(x) | Self::Weeks(x, _) | Self::IsoWeeks(x) | Self::Months(x) => x.is_positive(),
             Self::Years(x) => x.is_positive(),
         }
     }
 
     /// Whether the stored naive duration is negative (`< 0`)
     ///
-    /// This does **not** mean that after applying the [`NaiveDuration`] to another naive structure
-    /// will result in a naive structure that precedes the original one.
+    /// This does **not** mean that after applying the [`CalendarAnchorOffset`] to another naive structure
+    /// will result in a value less than the original naive structure.
     #[must_use]
     pub fn is_negative(&self) -> bool {
         match self {
-            Self::Days(x) | Self::Weeks(_, x) | Self::IsoWeeks(x) | Self::Months(x) => x.is_negative(),
+            Self::Days(x) | Self::Weeks(x, _) | Self::IsoWeeks(x) | Self::Months(x) => x.is_negative(),
             Self::Years(x) => x.is_negative(),
         }
     }
 }
 
-impl PartialOrd for NaiveDuration {
+impl PartialOrd for CalendarAnchorOffset {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         match (self, other) {
             (Self::Days(x), Self::Days(y))
-            | (Self::Weeks(_, x), Self::Weeks(_, y))
+            | (Self::Weeks(x, _), Self::Weeks(y, _))
             | (Self::Months(x), Self::Months(y)) => Some(x.cmp(y)),
             (Self::Years(x), Self::Years(y)) => Some(x.cmp(y)),
             _ => None,
         }
     }
 }
+
+pub fn checked_add_calendar_week_offset_to_date(
+    weeks_offset: i64,
+    week_start: Weekday,
+    date: Date,
+) -> Result<Date, CalendarAnchorOffsetDateError> {
+    date
+        .checked_add(Span::new().days(date.weekday().until(week_start)))
+        .or(Err(CalendarAnchorOffsetDateError::OutOfRangeResult))?
+        .checked_add(
+            Span::new().try_weeks(
+                weeks_offset.checked_sub(1).ok_or(CalendarAnchorOffsetDateError::OffsetTooLarge)?
+            )
+                .or(Err(CalendarAnchorOffsetDateError::OffsetTooLarge))?
+        )
+        .or(Err(CalendarAnchorOffsetDateError::OutOfRangeResult))
+}
+
+pub fn checked_sub_calendar_week_offset_to_date(
+    weeks_offset: i64,
+    week_start: Weekday,
+    date: Date,
+) -> Result<Date, CalendarAnchorOffsetDateError> {
+    date
+        .checked_add(Span::new().days(date.weekday().until(week_start)))
+        .or(Err(CalendarAnchorOffsetDateError::OutOfRangeResult))?
+        .checked_sub(
+            Span::new().try_weeks(
+                weeks_offset.checked_sub(1).ok_or(CalendarAnchorOffsetDateError::OffsetTooLarge)?
+            )
+                .or(Err(CalendarAnchorOffsetDateError::OffsetTooLarge))?
+        )
+        .or(Err(CalendarAnchorOffsetDateError::OutOfRangeResult))
+}
+
+pub fn checked_add_calendar_anchor_offset_to_date(
+    calendar_anchor_offset: CalendarAnchorOffset,
+    date: Date,
+) -> Result<Date, CalendarAnchorOffsetDateError> {
+    match calendar_anchor_offset {
+        CalendarAnchorOffset::Days(days_offset) => {
+            date
+                .checked_add(
+                    Span::new()
+                        .try_days(days_offset)
+                        .or(Err(CalendarAnchorOffsetDateError::OffsetTooLarge))?
+                )
+                .or(Err(CalendarAnchorOffsetDateError::OutOfRangeResult))
+        },
+        CalendarAnchorOffset::Weeks(weeks_offset, week_start) => {
+            checked_add_calendar_week_offset_to_date(weeks_offset, week_start, date)
+        },
+        CalendarAnchorOffset::IsoWeeks(weeks_offset) => {
+            checked_add_calendar_week_offset_to_date(weeks_offset, Weekday::Monday, date)
+        },
+        CalendarAnchorOffset::Months(months_offset) => {
+            date
+                .checked_add(
+                    Span::new()
+                        .try_months(months_offset)
+                        .or(Err(CalendarAnchorOffsetDateError::OffsetTooLarge))?
+                )
+                .or(Err(CalendarAnchorOffsetDateError::OutOfRangeResult))?
+                .first_of_month()
+        },
+        CalendarAnchorOffset::Years(years_offset) => {
+            date
+                .checked_add(
+                    Span::new()
+                        .try_years(years_offset)
+                        .or(Err(CalendarAnchorOffsetDateError::OffsetTooLarge))?
+                )
+                .or(Err(CalendarAnchorOffsetDateError::OutOfRangeResult))?
+                .first_of_year()
+        },
+    }
+}
+
+pub fn checked_sub_calendar_anchor_offset_to_date(
+    calendar_anchor_offset: CalendarAnchorOffset,
+    date: Date,
+) -> Result<Date, CalendarAnchorOffsetDateError> {
+    match calendar_anchor_offset {
+        CalendarAnchorOffset::Days(days_offset) => {
+            date
+                .checked_sub(
+                    Span::new()
+                        .try_days(days_offset)
+                        .or(Err(CalendarAnchorOffsetDateError::OffsetTooLarge))?
+                )
+                .or(Err(CalendarAnchorOffsetDateError::OutOfRangeResult))
+        },
+        CalendarAnchorOffset::Weeks(weeks_offset, week_start) => {
+            checked_sub_calendar_week_offset_to_date(weeks_offset, week_start, date)
+        },
+        CalendarAnchorOffset::IsoWeeks(weeks_offset) => {
+            checked_sub_calendar_week_offset_to_date(weeks_offset, Weekday::Monday, date)
+        },
+        CalendarAnchorOffset::Months(months_offset) => {
+            date
+                .checked_sub(
+                    Span::new()
+                        .try_months(months_offset)
+                        .or(Err(CalendarAnchorOffsetDateError::OffsetTooLarge))?
+                )
+                .or(Err(CalendarAnchorOffsetDateError::OutOfRangeResult))?
+                .first_of_month()
+        },
+        CalendarAnchorOffset::Years(years_offset) => {
+            date
+                .checked_sub(
+                    Span::new()
+                        .try_years(years_offset)
+                        .or(Err(CalendarAnchorOffsetDateError::OffsetTooLarge))?
+                )
+                .or(Err(CalendarAnchorOffsetDateError::OutOfRangeResult))?
+                .first_of_year()
+        },
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum CalendarAnchorOffsetDateError {
+    OffsetTooLarge,
+    OutOfRangeResult,
+}
+
+impl Display for CalendarAnchorOffsetDateError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::OffsetTooLarge => write!(f, "Calendar anchor offset was too large to be applied"),
+            Self::OutOfRangeResult => write!(f, "Out of range result"),
+        }
+    }
+}
+
+impl Error for CalendarAnchorOffsetDateError {}

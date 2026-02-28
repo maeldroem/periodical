@@ -15,6 +15,8 @@
 - [x] Added `Month` in `time`
 - [x] Added `NaiveMonthInYear` in `time`
 - [x] Added method to compute the number of weeks in a given year with a custom week start day
+- [x] Added `checked_add_calendar_week_offset_to_date` and its subtraction variant
+- [x] Added `checked_add_calendar_anchor_offset_to_date` and its subtraction variant
 
 ## Changed
 
@@ -40,6 +42,8 @@
 
 - [ ] Renamed all occurrences of "from" and "to" to "start" and "end" respectively to avoid confusion
   and to make it easier to refer to ("start time" is more explicit than "from time")
+
+- [x] Renamed `NaiveDuration` to `CalendarAnchorOffset`
 
 ## Deprecated
 
