@@ -14,10 +14,13 @@ use std::error::Error;
 use std::fmt::Display;
 use std::hash::{Hash, Hasher};
 use std::ops::{Bound, Range, RangeBounds, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive};
+use std::time::Duration;
 
 #[cfg(feature = "arbitrary")]
 use arbitrary::Arbitrary;
-use chrono::{DateTime, Datelike, Days, Duration, IsoWeek, NaiveDate, NaiveWeek, TimeZone, Utc, Weekday};
+use jiff::civil::{Date, Weekday};
+use jiff::tz::TimeZone;
+use jiff::{Timestamp};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
@@ -51,7 +54,7 @@ use super::special::{EmptyInterval, UnboundedInterval};
 /// ```
 /// # use chrono::{DateTime, Utc};
 /// # use periodical::intervals::absolute::AbsoluteFiniteBound;
-/// let finite_bound = AbsoluteFiniteBound::new("2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?);
+/// let finite_bound = AbsoluteFiniteBound::new("2025-01-01 08:00:00Z".parse::<Timestamp>()?);
 /// # Ok::<(), chrono::format::ParseError>(())
 /// ```
 ///
@@ -62,7 +65,7 @@ use super::special::{EmptyInterval, UnboundedInterval};
 /// # use periodical::intervals::absolute::AbsoluteFiniteBound;
 /// # use periodical::intervals::meta::BoundInclusivity;
 /// let finite_bound = AbsoluteFiniteBound::new_with_inclusivity(
-///     "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+///     "2025-01-01 08:00:00Z".parse::<Timestamp>()?,
 ///     BoundInclusivity::Exclusive,
 /// );
 /// # Ok::<(), chrono::format::ParseError>(())
@@ -71,7 +74,7 @@ use super::special::{EmptyInterval, UnboundedInterval};
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub struct AbsoluteFiniteBound {
-    time: DateTime<Utc>,
+    time: Timestamp,
     inclusivity: BoundInclusivity,
 }
 
@@ -80,13 +83,13 @@ impl AbsoluteFiniteBound {
     ///
     /// This creates a finite bound using the [default `BoundInclusivity`](BoundInclusivity::default).
     #[must_use]
-    pub fn new(time: DateTime<Utc>) -> Self {
+    pub fn new(time: Timestamp) -> Self {
         Self::new_with_inclusivity(time, BoundInclusivity::default())
     }
 
     /// Creates a new [`AbsoluteFiniteBound`] using the given time and [`BoundInclusivity`]
     #[must_use]
-    pub fn new_with_inclusivity(time: DateTime<Utc>, inclusivity: BoundInclusivity) -> Self {
+    pub fn new_with_inclusivity(time: Timestamp, inclusivity: BoundInclusivity) -> Self {
         AbsoluteFiniteBound { time, inclusivity }
     }
 
@@ -97,14 +100,14 @@ impl AbsoluteFiniteBound {
     /// ```
     /// # use chrono::{DateTime, Utc};
     /// # use periodical::intervals::absolute::AbsoluteFiniteBound;
-    /// let time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     /// let finite_bound = AbsoluteFiniteBound::new(time);
     ///
     /// assert_eq!(finite_bound.time(), time);
     /// # Ok::<(), chrono::format::ParseError>(())
     /// ```
     #[must_use]
-    pub fn time(&self) -> DateTime<Utc> {
+    pub fn time(&self) -> Timestamp {
         self.time
     }
 
@@ -115,8 +118,8 @@ impl AbsoluteFiniteBound {
     /// ```
     /// # use chrono::{DateTime, Utc};
     /// # use periodical::intervals::absolute::AbsoluteFiniteBound;
-    /// let time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
-    /// let new_time = "2025-01-02 16:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
+    /// let new_time = "2025-01-02 16:00:00Z".parse::<Timestamp>()?;
     ///
     /// let mut finite_bound = AbsoluteFiniteBound::new(time);
     /// finite_bound.set_time(new_time);
@@ -124,7 +127,7 @@ impl AbsoluteFiniteBound {
     /// assert_eq!(finite_bound.time(), new_time);
     /// # Ok::<(), chrono::format::ParseError>(())
     /// ```
-    pub fn set_time(&mut self, new_time: DateTime<Utc>) {
+    pub fn set_time(&mut self, new_time: Timestamp) {
         self.time = new_time;
     }
 
@@ -137,7 +140,7 @@ impl AbsoluteFiniteBound {
     /// # use periodical::intervals::absolute::AbsoluteFiniteBound;
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::prelude::*;
-    /// let time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     ///
     /// let mut finite_bound = AbsoluteFiniteBound::new(time);
     /// finite_bound.set_inclusivity(BoundInclusivity::Exclusive);
@@ -174,28 +177,28 @@ impl Display for AbsoluteFiniteBound {
     }
 }
 
-impl From<DateTime<Utc>> for AbsoluteFiniteBound {
-    fn from(value: DateTime<Utc>) -> Self {
+impl From<Timestamp> for AbsoluteFiniteBound {
+    fn from(value: Timestamp) -> Self {
         AbsoluteFiniteBound::new(value)
     }
 }
 
-impl From<(DateTime<Utc>, BoundInclusivity)> for AbsoluteFiniteBound {
-    fn from((time, inclusivity): (DateTime<Utc>, BoundInclusivity)) -> Self {
+impl From<(Timestamp, BoundInclusivity)> for AbsoluteFiniteBound {
+    fn from((time, inclusivity): (Timestamp, BoundInclusivity)) -> Self {
         AbsoluteFiniteBound::new_with_inclusivity(time, inclusivity)
     }
 }
 
-/// Conversion from the tuple `(DateTime<Utc>, bool)` to [`AbsoluteFiniteBound`]
+/// Conversion from the tuple `(Timestamp, bool)` to [`AbsoluteFiniteBound`]
 ///
 /// Interprets the boolean as _is it inclusive?_
-impl From<(DateTime<Utc>, bool)> for AbsoluteFiniteBound {
-    fn from((time, is_inclusive): (DateTime<Utc>, bool)) -> Self {
+impl From<(Timestamp, bool)> for AbsoluteFiniteBound {
+    fn from((time, is_inclusive): (Timestamp, bool)) -> Self {
         AbsoluteFiniteBound::new_with_inclusivity(time, BoundInclusivity::from(is_inclusive))
     }
 }
 
-/// Errors that can occur when trying to convert a [`Bound<DateTime<Utc>>`] into an [`AbsoluteFiniteBound`]
+/// Errors that can occur when trying to convert a [`Bound<Timestamp>`] into an [`AbsoluteFiniteBound`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum AbsoluteFiniteBoundFromBoundError {
     /// The given bound was of the [`Unbounded`](Bound::Unbounded) variant
@@ -218,10 +221,10 @@ impl Display for AbsoluteFiniteBoundFromBoundError {
 
 impl Error for AbsoluteFiniteBoundFromBoundError {}
 
-impl TryFrom<Bound<DateTime<Utc>>> for AbsoluteFiniteBound {
+impl TryFrom<Bound<Timestamp>> for AbsoluteFiniteBound {
     type Error = AbsoluteFiniteBoundFromBoundError;
 
-    fn try_from(value: Bound<DateTime<Utc>>) -> Result<Self, Self::Error> {
+    fn try_from(value: Bound<Timestamp>) -> Result<Self, Self::Error> {
         match value {
             Bound::Included(time) => Ok(AbsoluteFiniteBound::new_with_inclusivity(
                 time,
@@ -258,7 +261,7 @@ impl AbsoluteStartBound {
     /// # use periodical::intervals::absolute::{AbsoluteFiniteBound, AbsoluteStartBound};
     /// let infinite_start_bound = AbsoluteStartBound::InfinitePast;
     ///
-    /// let time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     /// let finite_start_bound = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(time));
     ///
     /// assert!(finite_start_bound.is_finite());
@@ -279,7 +282,7 @@ impl AbsoluteStartBound {
     /// # use periodical::intervals::absolute::{AbsoluteFiniteBound, AbsoluteStartBound};
     /// let infinite_start_bound = AbsoluteStartBound::InfinitePast;
     ///
-    /// let time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     /// let finite_start_bound = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(time));
     ///
     /// assert!(infinite_start_bound.is_infinite_past());
@@ -303,7 +306,7 @@ impl AbsoluteStartBound {
     /// # use periodical::intervals::absolute::{AbsoluteFiniteBound, AbsoluteStartBound};
     /// let infinite_start_bound = AbsoluteStartBound::InfinitePast;
     ///
-    /// let time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     /// let finite_start_bound = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(time));
     ///
     /// assert_eq!(finite_start_bound.finite(), Some(AbsoluteFiniteBound::new(time)));
@@ -332,7 +335,7 @@ impl AbsoluteStartBound {
     /// ```
     /// # use chrono::{DateTime, Utc};
     /// # use periodical::intervals::absolute::{AbsoluteFiniteBound, AbsoluteStartBound};
-    /// let time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     ///
     /// let start_second_part_my_shift = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(time));
     /// let break_end_before_shift = start_second_part_my_shift
@@ -471,8 +474,8 @@ impl From<AbsoluteFiniteBound> for AbsoluteStartBound {
     }
 }
 
-impl From<Bound<DateTime<Utc>>> for AbsoluteStartBound {
-    fn from(bound: Bound<DateTime<Utc>>) -> Self {
+impl From<Bound<Timestamp>> for AbsoluteStartBound {
+    fn from(bound: Bound<Timestamp>) -> Self {
         match bound {
             Bound::Included(time) => AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
                 time,
@@ -509,7 +512,7 @@ impl AbsoluteEndBound {
     /// # use periodical::intervals::absolute::{AbsoluteEndBound, AbsoluteFiniteBound};
     /// let infinite_end_bound = AbsoluteEndBound::InfiniteFuture;
     ///
-    /// let time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     /// let finite_end_bound = AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(time));
     ///
     /// assert!(finite_end_bound.is_finite());
@@ -530,7 +533,7 @@ impl AbsoluteEndBound {
     /// # use periodical::intervals::absolute::{AbsoluteEndBound, AbsoluteFiniteBound};
     /// let infinite_end_bound = AbsoluteEndBound::InfiniteFuture;
     ///
-    /// let time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     /// let finite_end_bound = AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(time));
     ///
     /// assert!(infinite_end_bound.is_infinite_future());
@@ -554,7 +557,7 @@ impl AbsoluteEndBound {
     /// # use periodical::intervals::absolute::{AbsoluteEndBound, AbsoluteFiniteBound};
     /// let infinite_end_bound = AbsoluteEndBound::InfiniteFuture;
     ///
-    /// let time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     /// let finite_end_bound = AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(time));
     ///
     /// assert_eq!(finite_end_bound.finite(), Some(AbsoluteFiniteBound::new(time)));
@@ -583,7 +586,7 @@ impl AbsoluteEndBound {
     /// ```
     /// # use chrono::{DateTime, Utc};
     /// # use periodical::intervals::absolute::{AbsoluteEndBound, AbsoluteFiniteBound};
-    /// let time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     ///
     /// let end_first_shift = AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(time));
     /// let break_start = end_first_shift
@@ -704,8 +707,8 @@ impl From<AbsoluteFiniteBound> for AbsoluteEndBound {
     }
 }
 
-impl From<Bound<DateTime<Utc>>> for AbsoluteEndBound {
-    fn from(bound: Bound<DateTime<Utc>>) -> Self {
+impl From<Bound<Timestamp>> for AbsoluteEndBound {
+    fn from(bound: Bound<Timestamp>) -> Self {
         match bound {
             Bound::Included(time) => AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
                 time,
@@ -731,8 +734,8 @@ impl From<Bound<DateTime<Utc>>> for AbsoluteEndBound {
 /// # use periodical::intervals::absolute::{
 /// #     AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, swap_absolute_bounds,
 /// # };
-/// let start_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
-/// let end_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+/// let start_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
+/// let end_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
 ///
 /// let mut start = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(start_time));
 /// let mut end = AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(end_time));
@@ -869,8 +872,8 @@ pub fn check_absolute_bounds_for_interval_creation(
 /// # use periodical::intervals::absolute::{
 /// #     AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, prepare_absolute_bounds_for_interval_creation,
 /// # };
-/// let start_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
-/// let end_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+/// let start_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
+/// let end_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
 ///
 /// // Warning: not in chronological order!
 /// let mut start = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(start_time));
@@ -928,8 +931,8 @@ impl AbsoluteBound {
     /// # use periodical::intervals::absolute::{
     /// #     AbsoluteBound, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
     /// # };
-    /// let start_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
-    /// let end_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let start_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
+    /// let end_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
     ///
     /// let start = AbsoluteBound::Start(
     ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(start_time))
@@ -956,8 +959,8 @@ impl AbsoluteBound {
     /// # use periodical::intervals::absolute::{
     /// #     AbsoluteBound, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
     /// # };
-    /// let start_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
-    /// let end_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let start_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
+    /// let end_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
     ///
     /// let start = AbsoluteBound::Start(
     ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(start_time))
@@ -987,8 +990,8 @@ impl AbsoluteBound {
     /// # use periodical::intervals::absolute::{
     /// #     AbsoluteBound, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
     /// # };
-    /// let start_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
-    /// let end_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let start_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
+    /// let end_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
     ///
     /// let start = AbsoluteBound::Start(
     ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(start_time))
@@ -1027,8 +1030,8 @@ impl AbsoluteBound {
     /// # use periodical::intervals::absolute::{
     /// #     AbsoluteBound, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
     /// # };
-    /// let start_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
-    /// let end_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let start_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
+    /// let end_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
     ///
     /// let start = AbsoluteBound::Start(
     ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(start_time))
@@ -1231,8 +1234,8 @@ impl AbsoluteBounds {
     /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
     /// # };
     /// // Start and end are not in chronological order!
-    /// let start_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
-    /// let end_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let start_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
+    /// let end_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     ///
     /// let start = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(start_time));
     /// let end = AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(end_time));
@@ -1261,8 +1264,8 @@ impl AbsoluteBounds {
     /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
     /// # };
     /// // Start and end are not in chronological order!
-    /// let start_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
-    /// let end_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let start_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
+    /// let end_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     ///
     /// let start = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(start_time));
     /// let end = AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(end_time));
@@ -1289,8 +1292,8 @@ impl AbsoluteBounds {
     /// # use periodical::intervals::absolute::{
     /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
     /// # };
-    /// let start_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
-    /// let end_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let start_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
+    /// let end_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
     ///
     /// let start = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(start_time));
     /// let end = AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(end_time));
@@ -1314,8 +1317,8 @@ impl AbsoluteBounds {
     /// # use periodical::intervals::absolute::{
     /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
     /// # };
-    /// let start_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
-    /// let end_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let start_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
+    /// let end_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
     ///
     /// let start = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(start_time));
     /// let end = AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(end_time));
@@ -1339,15 +1342,15 @@ impl AbsoluteBounds {
     /// # use periodical::intervals::absolute::{
     /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
     /// # };
-    /// let start_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
-    /// let end_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let start_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
+    /// let end_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
     ///
     /// let start = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(start_time));
     /// let end = AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(end_time));
     ///
     /// let mut bounds = AbsoluteBounds::new(start, end);
     ///
-    /// let new_start_time = "2025-01-01 18:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let new_start_time = "2025-01-01 18:00:00Z".parse::<Timestamp>()?;
     /// let new_start = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(new_start_time));
     ///
     /// // New start is past the end
@@ -1371,15 +1374,15 @@ impl AbsoluteBounds {
     /// # use periodical::intervals::absolute::{
     /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
     /// # };
-    /// let start_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
-    /// let end_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let start_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
+    /// let end_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
     ///
     /// let start = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(start_time));
     /// let end = AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(end_time));
     ///
     /// let mut bounds = AbsoluteBounds::new(start, end);
     ///
-    /// let new_end_time = "2025-01-01 06:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let new_end_time = "2025-01-01 06:00:00Z".parse::<Timestamp>()?;
     /// let new_end = AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(new_end_time));
     ///
     /// // New end is before the start
@@ -1407,15 +1410,15 @@ impl AbsoluteBounds {
     /// # use periodical::intervals::absolute::{
     /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
     /// # };
-    /// let start_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
-    /// let end_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let start_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
+    /// let end_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
     ///
     /// let start = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(start_time));
     /// let end = AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(end_time));
     ///
     /// let mut bounds = AbsoluteBounds::new(start, end);
     ///
-    /// let new_start_time = "2025-01-01 18:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let new_start_time = "2025-01-01 18:00:00Z".parse::<Timestamp>()?;
     /// let new_start = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(new_start_time));
     ///
     /// // New start is past the end, and therefore gets ignored
@@ -1449,15 +1452,15 @@ impl AbsoluteBounds {
     /// # use periodical::intervals::absolute::{
     /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
     /// # };
-    /// let start_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
-    /// let end_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let start_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
+    /// let end_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
     ///
     /// let start = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(start_time));
     /// let end = AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(end_time));
     ///
     /// let mut bounds = AbsoluteBounds::new(start, end);
     ///
-    /// let new_end_time = "2025-01-01 06:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let new_end_time = "2025-01-01 06:00:00Z".parse::<Timestamp>()?;
     /// let new_end = AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(new_end_time));
     ///
     /// // New end is before the start, and therefore gets ignored
@@ -1594,7 +1597,7 @@ impl Display for AbsoluteBounds {
 
 impl<R> From<R> for AbsoluteBounds
 where
-    R: RangeBounds<DateTime<Utc>>,
+    R: RangeBounds<Timestamp>,
 {
     fn from(range: R) -> Self {
         AbsoluteBounds::new(
@@ -1734,7 +1737,7 @@ impl HasDuration for EmptiableAbsoluteBounds {
     fn duration(&self) -> IntervalDuration {
         match self {
             Self::Bound(bound) => bound.duration(),
-            Self::Empty => IntervalDuration::Finite(Duration::zero(), Epsilon::None),
+            Self::Empty => IntervalDuration::Finite(Duration::ZERO, Epsilon::None),
         }
     }
 }
@@ -1802,8 +1805,8 @@ impl From<AbsoluteBounds> for EmptiableAbsoluteBounds {
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub struct BoundedAbsoluteInterval {
-    from: DateTime<Utc>,
-    to: DateTime<Utc>,
+    from: Timestamp,
+    to: Timestamp,
     from_inclusivity: BoundInclusivity,
     to_inclusivity: BoundInclusivity,
 }
@@ -1816,8 +1819,8 @@ impl BoundedAbsoluteInterval {
     /// ```
     /// # use chrono::{DateTime, Utc};
     /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
-    /// let from_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
-    /// let to_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let from_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
+    /// let to_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     ///
     /// // Even though the times are not in chronological order
     /// let bounded_interval = BoundedAbsoluteInterval::unchecked_new(from_time, to_time);
@@ -1828,7 +1831,7 @@ impl BoundedAbsoluteInterval {
     /// # Ok::<(), chrono::format::ParseError>(())
     /// ```
     #[must_use]
-    pub fn unchecked_new(from: DateTime<Utc>, to: DateTime<Utc>) -> Self {
+    pub fn unchecked_new(from: Timestamp, to: Timestamp) -> Self {
         BoundedAbsoluteInterval {
             from,
             to,
@@ -1846,8 +1849,8 @@ impl BoundedAbsoluteInterval {
     /// ```
     /// # use chrono::{DateTime, Utc};
     /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
-    /// let from_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
-    /// let to_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let from_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
+    /// let to_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     ///
     /// // Times that are not in chronological order
     /// let bounded_interval = BoundedAbsoluteInterval::new(from_time, to_time);
@@ -1858,7 +1861,7 @@ impl BoundedAbsoluteInterval {
     /// # Ok::<(), chrono::format::ParseError>(())
     /// ```
     #[must_use]
-    pub fn new(mut from: DateTime<Utc>, mut to: DateTime<Utc>) -> Self {
+    pub fn new(mut from: Timestamp, mut to: Timestamp) -> Self {
         if from > to {
             std::mem::swap(&mut from, &mut to);
         }
@@ -1875,7 +1878,7 @@ impl BoundedAbsoluteInterval {
     /// # use chrono::{DateTime, Utc};
     /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
     /// # use periodical::intervals::meta::BoundInclusivity;
-    /// let time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     ///
     /// // Same time, not doubly inclusive
     /// let bounded_interval = BoundedAbsoluteInterval::unchecked_new_with_inclusivity(
@@ -1891,9 +1894,9 @@ impl BoundedAbsoluteInterval {
     /// ```
     #[must_use]
     pub fn unchecked_new_with_inclusivity(
-        from: DateTime<Utc>,
+        from: Timestamp,
         from_inclusivity: BoundInclusivity,
-        to: DateTime<Utc>,
+        to: Timestamp,
         to_inclusivity: BoundInclusivity,
     ) -> Self {
         BoundedAbsoluteInterval {
@@ -1917,7 +1920,7 @@ impl BoundedAbsoluteInterval {
     /// # use chrono::{DateTime, Utc};
     /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
     /// # use periodical::intervals::meta::BoundInclusivity;
-    /// let time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     ///
     /// // Same time, not doubly inclusive
     /// let bounded_interval = BoundedAbsoluteInterval::new_with_inclusivity(
@@ -1934,9 +1937,9 @@ impl BoundedAbsoluteInterval {
     /// ```
     #[must_use]
     pub fn new_with_inclusivity(
-        from: DateTime<Utc>,
+        from: Timestamp,
         from_inclusivity: BoundInclusivity,
-        to: DateTime<Utc>,
+        to: Timestamp,
         to_inclusivity: BoundInclusivity,
     ) -> Self {
         match from.cmp(&to) {
@@ -1965,7 +1968,7 @@ impl BoundedAbsoluteInterval {
     ///
     /// ```
     /// # use std::num::TryFromIntError;
-    /// # use chrono::{DateTime, Duration, Utc, NaiveDate, FixedOffset};
+    /// # use chrono::{DateTime, Duration, Utc, Date, FixedOffset};
     /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// #
@@ -1973,13 +1976,13 @@ impl BoundedAbsoluteInterval {
     /// # struct FixedOffsetError;
     /// #
     /// # #[derive(Debug)]
-    /// # struct NaiveDateFromYmdError;
+    /// # struct DateFromYmdError;
     /// #
     /// # #[derive(Debug)]
     /// # enum ExampleError {
     /// #     TryFromIntError(TryFromIntError),
     /// #     FixedOffsetError(FixedOffsetError),
-    /// #     NaiveDateFromYmdError(NaiveDateFromYmdError),
+    /// #     DateFromYmdError(DateFromYmdError),
     /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
     /// #     ParseError(chrono::format::ParseError),
     /// # }
@@ -1996,9 +1999,9 @@ impl BoundedAbsoluteInterval {
     /// #     }
     /// # }
     /// #
-    /// # impl From<NaiveDateFromYmdError> for ExampleError {
-    /// #     fn from(value: NaiveDateFromYmdError) -> Self {
-    /// #         ExampleError::NaiveDateFromYmdError(value)
+    /// # impl From<DateFromYmdError> for ExampleError {
+    /// #     fn from(value: DateFromYmdError) -> Self {
+    /// #         ExampleError::DateFromYmdError(value)
     /// #     }
     /// # }
     /// #
@@ -2015,20 +2018,17 @@ impl BoundedAbsoluteInterval {
     /// # }
     /// // UTC+02:00
     /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    /// let date = NaiveDate::from_ymd_opt(2026, 1, 5).ok_or(NaiveDateFromYmdError)?;
+    /// let date = Date::from_ymd_opt(2026, 1, 5).ok_or(DateFromYmdError)?;
     ///
     /// let interval = BoundedAbsoluteInterval::from_date(date, offset_tz)?;
     ///
-    /// assert_eq!(interval.from_time(), "2026-01-04 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(interval.from_time(), "2026-01-04 22:00:00Z".parse::<Timestamp>()?);
     /// assert_eq!(interval.from_inclusivity(), BoundInclusivity::Inclusive);
-    /// assert_eq!(interval.to_time(), "2026-01-05 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(interval.to_time(), "2026-01-05 22:00:00Z".parse::<Timestamp>()?);
     /// assert_eq!(interval.to_inclusivity(), BoundInclusivity::Exclusive);
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn from_date<Tz>(naive_date: NaiveDate, tz: Tz) -> Result<Self, BoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+    pub fn from_date(naive_date: Date, tz: TimeZone) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
         let from = naive_date
             .and_time(NAIVE_TIME_MIDNIGHT)
             .and_local_timezone(tz.clone())
@@ -2068,7 +2068,7 @@ impl BoundedAbsoluteInterval {
     ///
     /// ```
     /// # use std::num::TryFromIntError;
-    /// # use chrono::{DateTime, Duration, FixedOffset, NaiveDate, Utc};
+    /// # use chrono::{DateTime, Duration, FixedOffset, Date, Utc};
     /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::time::NaiveDuration;
@@ -2077,13 +2077,13 @@ impl BoundedAbsoluteInterval {
     /// # struct FixedOffsetError;
     /// #
     /// # #[derive(Debug)]
-    /// # struct NaiveDateFromYmdError;
+    /// # struct DateFromYmdError;
     /// #
     /// # #[derive(Debug)]
     /// # enum ExampleError {
     /// #     TryFromIntError(TryFromIntError),
     /// #     FixedOffsetError(FixedOffsetError),
-    /// #     NaiveDateFromYmdError(NaiveDateFromYmdError),
+    /// #     DateFromYmdError(DateFromYmdError),
     /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
     /// #     ParseError(chrono::format::ParseError),
     /// # }
@@ -2100,9 +2100,9 @@ impl BoundedAbsoluteInterval {
     /// #     }
     /// # }
     /// #
-    /// # impl From<NaiveDateFromYmdError> for ExampleError {
-    /// #     fn from(value: NaiveDateFromYmdError) -> Self {
-    /// #         ExampleError::NaiveDateFromYmdError(value)
+    /// # impl From<DateFromYmdError> for ExampleError {
+    /// #     fn from(value: DateFromYmdError) -> Self {
+    /// #         ExampleError::DateFromYmdError(value)
     /// #     }
     /// # }
     /// #
@@ -2121,25 +2121,22 @@ impl BoundedAbsoluteInterval {
     /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
     ///
     /// let interval = BoundedAbsoluteInterval::day_after_naive_duration_from_naive_date(
-    ///     NaiveDate::from_ymd_opt(2026, 4, 29).ok_or(NaiveDateFromYmdError)?,
+    ///     Date::from_ymd_opt(2026, 4, 29).ok_or(DateFromYmdError)?,
     ///     NaiveDuration::Days(5),
     ///     offset_tz
     /// )?;
     ///
-    /// assert_eq!(interval.from_time(), "2026-05-03 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(interval.from_time(), "2026-05-03 22:00:00Z".parse::<Timestamp>()?);
     /// assert_eq!(interval.from_inclusivity(), BoundInclusivity::Inclusive);
-    /// assert_eq!(interval.to_time(), "2026-05-04 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(interval.to_time(), "2026-05-04 22:00:00Z".parse::<Timestamp>()?);
     /// assert_eq!(interval.to_inclusivity(), BoundInclusivity::Exclusive);
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn day_after_naive_duration_from_naive_date<Tz>(
-        naive_date: NaiveDate,
+    pub fn day_after_naive_duration_from_naive_date(
+        naive_date: Date,
         naive_duration: NaiveDuration,
-        tz: Tz,
-    ) -> Result<Self, BoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+        tz: TimeZone,
+    ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
         Self::from_date(
             checked_add_naive_duration_to_naive_date(naive_date, naive_duration)
                 .ok_or(BoundedAbsoluteIntervalCreationError::DateOperationError)?,
@@ -2163,7 +2160,7 @@ impl BoundedAbsoluteInterval {
     ///
     /// ```
     /// # use std::num::TryFromIntError;
-    /// # use chrono::{DateTime, Duration, FixedOffset, NaiveDate, Utc};
+    /// # use chrono::{DateTime, Duration, FixedOffset, Date, Utc};
     /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::time::NaiveDuration;
@@ -2172,13 +2169,13 @@ impl BoundedAbsoluteInterval {
     /// # struct FixedOffsetError;
     /// #
     /// # #[derive(Debug)]
-    /// # struct NaiveDateFromYmdError;
+    /// # struct DateFromYmdError;
     /// #
     /// # #[derive(Debug)]
     /// # enum ExampleError {
     /// #     TryFromIntError(TryFromIntError),
     /// #     FixedOffsetError(FixedOffsetError),
-    /// #     NaiveDateFromYmdError(NaiveDateFromYmdError),
+    /// #     DateFromYmdError(DateFromYmdError),
     /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
     /// #     ParseError(chrono::format::ParseError),
     /// # }
@@ -2195,9 +2192,9 @@ impl BoundedAbsoluteInterval {
     /// #     }
     /// # }
     /// #
-    /// # impl From<NaiveDateFromYmdError> for ExampleError {
-    /// #     fn from(value: NaiveDateFromYmdError) -> Self {
-    /// #         ExampleError::NaiveDateFromYmdError(value)
+    /// # impl From<DateFromYmdError> for ExampleError {
+    /// #     fn from(value: DateFromYmdError) -> Self {
+    /// #         ExampleError::DateFromYmdError(value)
     /// #     }
     /// # }
     /// #
@@ -2216,25 +2213,22 @@ impl BoundedAbsoluteInterval {
     /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
     ///
     /// let interval = BoundedAbsoluteInterval::day_before_naive_duration_from_naive_date(
-    ///     NaiveDate::from_ymd_opt(2026, 4, 29).ok_or(NaiveDateFromYmdError)?,
+    ///     Date::from_ymd_opt(2026, 4, 29).ok_or(DateFromYmdError)?,
     ///     NaiveDuration::Days(5),
     ///     offset_tz
     /// )?;
     ///
-    /// assert_eq!(interval.from_time(), "2026-04-23 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(interval.from_time(), "2026-04-23 22:00:00Z".parse::<Timestamp>()?);
     /// assert_eq!(interval.from_inclusivity(), BoundInclusivity::Inclusive);
-    /// assert_eq!(interval.to_time(), "2026-04-24 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(interval.to_time(), "2026-04-24 22:00:00Z".parse::<Timestamp>()?);
     /// assert_eq!(interval.to_inclusivity(), BoundInclusivity::Exclusive);
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn day_before_naive_duration_from_naive_date<Tz>(
-        naive_date: NaiveDate,
+    pub fn day_before_naive_duration_from_naive_date(
+        naive_date: Date,
         naive_duration: NaiveDuration,
-        tz: Tz,
-    ) -> Result<Self, BoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+        tz: TimeZone,
+    ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
         Self::from_date(
             checked_sub_naive_duration_to_naive_date(naive_date, naive_duration)
                 .ok_or(BoundedAbsoluteIntervalCreationError::DateOperationError)?,
@@ -2297,11 +2291,8 @@ impl BoundedAbsoluteInterval {
     /// ```
     pub fn day_after_naive_duration_from_today<Tz>(
         naive_duration: NaiveDuration,
-        tz: Tz,
-    ) -> Result<Self, BoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+        tz: TimeZone,
+    ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
         Self::day_after_naive_duration_from_naive_date(naive_date_today(&tz), naive_duration, tz)
     }
 
@@ -2358,13 +2349,10 @@ impl BoundedAbsoluteInterval {
     /// )?;
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn day_before_naive_duration_from_today<Tz>(
+    pub fn day_before_naive_duration_from_today(
         naive_duration: NaiveDuration,
-        tz: Tz,
-    ) -> Result<Self, BoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+        tz: TimeZone,
+    ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
         Self::day_before_naive_duration_from_naive_date(naive_date_today(&tz), naive_duration, tz)
     }
 
@@ -2389,7 +2377,7 @@ impl BoundedAbsoluteInterval {
     ///
     /// ```
     /// # use std::num::TryFromIntError;
-    /// # use chrono::{DateTime, Duration, Utc, NaiveDate, FixedOffset};
+    /// # use chrono::{DateTime, Duration, Utc, Date, FixedOffset};
     /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// #
@@ -2426,10 +2414,7 @@ impl BoundedAbsoluteInterval {
     /// let today = BoundedAbsoluteInterval::today(offset_tz)?;
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn today<Tz>(tz: Tz) -> Result<Self, BoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+    pub fn today(tz: TimeZone) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
         Self::from_date(naive_date_today(&tz), tz)
     }
 
@@ -2481,10 +2466,7 @@ impl BoundedAbsoluteInterval {
     /// let tomorrow = BoundedAbsoluteInterval::tomorrow(offset_tz)?;
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn tomorrow<Tz>(tz: Tz) -> Result<Self, BoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+    pub fn tomorrow(tz: TimeZone) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
         Self::day_after_naive_duration_from_today(NaiveDuration::Days(1), tz)
     }
 
@@ -2536,10 +2518,7 @@ impl BoundedAbsoluteInterval {
     /// let yesterday = BoundedAbsoluteInterval::yesterday(offset_tz)?;
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn yesterday<Tz>(tz: Tz) -> Result<Self, BoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+    pub fn yesterday(tz: TimeZone) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
         Self::day_before_naive_duration_from_today(NaiveDuration::Days(1), tz)
     }
 
@@ -2565,7 +2544,7 @@ impl BoundedAbsoluteInterval {
     ///
     /// ```
     /// # use std::num::TryFromIntError;
-    /// # use chrono::{DateTime, Duration, Utc, NaiveDate, FixedOffset};
+    /// # use chrono::{DateTime, Duration, Utc, Date, FixedOffset};
     /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// #
@@ -2573,13 +2552,13 @@ impl BoundedAbsoluteInterval {
     /// # struct FixedOffsetError;
     /// #
     /// # #[derive(Debug)]
-    /// # struct NaiveDateFromYmdError;
+    /// # struct DateFromYmdError;
     /// #
     /// # #[derive(Debug)]
     /// # enum ExampleError {
     /// #     TryFromIntError(TryFromIntError),
     /// #     FixedOffsetError(FixedOffsetError),
-    /// #     NaiveDateFromYmdError(NaiveDateFromYmdError),
+    /// #     DateFromYmdError(DateFromYmdError),
     /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
     /// #     ParseError(chrono::format::ParseError),
     /// # }
@@ -2596,9 +2575,9 @@ impl BoundedAbsoluteInterval {
     /// #     }
     /// # }
     /// #
-    /// # impl From<NaiveDateFromYmdError> for ExampleError {
-    /// #     fn from(value: NaiveDateFromYmdError) -> Self {
-    /// #         ExampleError::NaiveDateFromYmdError(value)
+    /// # impl From<DateFromYmdError> for ExampleError {
+    /// #     fn from(value: DateFromYmdError) -> Self {
+    /// #         ExampleError::DateFromYmdError(value)
     /// #     }
     /// # }
     /// #
@@ -2615,25 +2594,22 @@ impl BoundedAbsoluteInterval {
     /// # }
     /// // UTC+02:00
     /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    /// let from = NaiveDate::from_ymd_opt(2026, 1, 5).ok_or(NaiveDateFromYmdError)?;
-    /// let to = NaiveDate::from_ymd_opt(2026, 1, 10).ok_or(NaiveDateFromYmdError)?;
+    /// let from = Date::from_ymd_opt(2026, 1, 5).ok_or(DateFromYmdError)?;
+    /// let to = Date::from_ymd_opt(2026, 1, 10).ok_or(DateFromYmdError)?;
     ///
     /// let interval = BoundedAbsoluteInterval::from_inclusive_date_range(from, to, offset_tz)?;
     ///
-    /// assert_eq!(interval.from_time(), "2026-01-04 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(interval.from_time(), "2026-01-04 22:00:00Z".parse::<Timestamp>()?);
     /// assert_eq!(interval.from_inclusivity(), BoundInclusivity::Inclusive);
-    /// assert_eq!(interval.to_time(), "2026-01-10 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(interval.to_time(), "2026-01-10 22:00:00Z".parse::<Timestamp>()?);
     /// assert_eq!(interval.to_inclusivity(), BoundInclusivity::Exclusive);
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn from_inclusive_date_range<Tz>(
-        mut from_date: NaiveDate,
-        mut to_date: NaiveDate,
-        tz: Tz,
-    ) -> Result<Self, BoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+    pub fn from_inclusive_date_range(
+        mut from_date: Date,
+        mut to_date: Date,
+        tz: TimeZone,
+    ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
         if from_date > to_date {
             std::mem::swap(&mut from_date, &mut to_date);
         }
@@ -2677,7 +2653,7 @@ impl BoundedAbsoluteInterval {
     ///
     /// ```
     /// # use std::num::TryFromIntError;
-    /// # use chrono::{DateTime, Duration, FixedOffset, NaiveDate, Utc, Weekday};
+    /// # use chrono::{DateTime, Duration, FixedOffset, Date, Utc, Weekday};
     /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// #
@@ -2685,13 +2661,13 @@ impl BoundedAbsoluteInterval {
     /// # struct FixedOffsetError;
     /// #
     /// # #[derive(Debug)]
-    /// # struct NaiveDateFromYmdError;
+    /// # struct DateFromYmdError;
     /// #
     /// # #[derive(Debug)]
     /// # enum ExampleError {
     /// #     TryFromIntError(TryFromIntError),
     /// #     FixedOffsetError(FixedOffsetError),
-    /// #     NaiveDateFromYmdError(NaiveDateFromYmdError),
+    /// #     DateFromYmdError(DateFromYmdError),
     /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
     /// #     ParseError(chrono::format::ParseError),
     /// # }
@@ -2708,9 +2684,9 @@ impl BoundedAbsoluteInterval {
     /// #     }
     /// # }
     /// #
-    /// # impl From<NaiveDateFromYmdError> for ExampleError {
-    /// #     fn from(value: NaiveDateFromYmdError) -> Self {
-    /// #         ExampleError::NaiveDateFromYmdError(value)
+    /// # impl From<DateFromYmdError> for ExampleError {
+    /// #     fn from(value: DateFromYmdError) -> Self {
+    /// #         ExampleError::DateFromYmdError(value)
     /// #     }
     /// # }
     /// #
@@ -2727,20 +2703,17 @@ impl BoundedAbsoluteInterval {
     /// # }
     /// // UTC+02:00
     /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    /// let week = NaiveDate::from_ymd_opt(2026, 5, 1).ok_or(NaiveDateFromYmdError)?.week(Weekday::Tue);
+    /// let week = Date::from_ymd_opt(2026, 5, 1).ok_or(DateFromYmdError)?.week(Weekday::Tue);
     ///
     /// let week_interval = BoundedAbsoluteInterval::from_week(week, offset_tz)?;
     ///
-    /// assert_eq!(week_interval.from_time(), "2026-04-27 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(week_interval.from_time(), "2026-04-27 22:00:00Z".parse::<Timestamp>()?);
     /// assert_eq!(week_interval.from_inclusivity(), BoundInclusivity::Inclusive);
-    /// assert_eq!(week_interval.to_time(), "2026-05-04 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(week_interval.to_time(), "2026-05-04 22:00:00Z".parse::<Timestamp>()?);
     /// assert_eq!(week_interval.to_inclusivity(), BoundInclusivity::Exclusive);
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn from_week<Tz>(week: NaiveWeek, tz: Tz) -> Result<Self, BoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+    pub fn from_week(week: NaiveWeek, tz: TimeZone) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
         Self::from_inclusive_date_range(
             week.checked_first_day()
                 .ok_or(BoundedAbsoluteIntervalCreationError::OutOfRangeStartDate)?,
@@ -2773,7 +2746,7 @@ impl BoundedAbsoluteInterval {
     ///
     /// ```
     /// # use std::num::TryFromIntError;
-    /// # use chrono::{Datelike, DateTime, Duration, FixedOffset, NaiveDate, NaiveWeek, Utc, Weekday};
+    /// # use chrono::{Datelike, DateTime, Duration, FixedOffset, Date, NaiveWeek, Utc, Weekday};
     /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// #
@@ -2781,13 +2754,13 @@ impl BoundedAbsoluteInterval {
     /// # struct FixedOffsetError;
     /// #
     /// # #[derive(Debug)]
-    /// # struct NaiveDateFromYmdError;
+    /// # struct DateFromYmdError;
     /// #
     /// # #[derive(Debug)]
     /// # enum ExampleError {
     /// #     TryFromIntError(TryFromIntError),
     /// #     FixedOffsetError(FixedOffsetError),
-    /// #     NaiveDateFromYmdError(NaiveDateFromYmdError),
+    /// #     DateFromYmdError(DateFromYmdError),
     /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
     /// #     ParseError(chrono::format::ParseError),
     /// # }
@@ -2804,9 +2777,9 @@ impl BoundedAbsoluteInterval {
     /// #     }
     /// # }
     /// #
-    /// # impl From<NaiveDateFromYmdError> for ExampleError {
-    /// #     fn from(value: NaiveDateFromYmdError) -> Self {
-    /// #         ExampleError::NaiveDateFromYmdError(value)
+    /// # impl From<DateFromYmdError> for ExampleError {
+    /// #     fn from(value: DateFromYmdError) -> Self {
+    /// #         ExampleError::DateFromYmdError(value)
     /// #     }
     /// # }
     /// #
@@ -2823,25 +2796,22 @@ impl BoundedAbsoluteInterval {
     /// # }
     /// // UTC+02:00
     /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    /// let from = NaiveDate::from_ymd_opt(2026, 1, 7).ok_or(NaiveDateFromYmdError)?.week(Weekday::Mon);
-    /// let to = NaiveDate::from_ymd_opt(2026, 3, 17).ok_or(NaiveDateFromYmdError)?.week(Weekday::Sat);
+    /// let from = Date::from_ymd_opt(2026, 1, 7).ok_or(DateFromYmdError)?.week(Weekday::Mon);
+    /// let to = Date::from_ymd_opt(2026, 3, 17).ok_or(DateFromYmdError)?.week(Weekday::Sat);
     ///
     /// let interval = BoundedAbsoluteInterval::from_inclusive_week_range(from, to, offset_tz)?;
     ///
-    /// assert_eq!(interval.from_time(), "2026-01-04 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(interval.from_time(), "2026-01-04 22:00:00Z".parse::<Timestamp>()?);
     /// assert_eq!(interval.from_inclusivity(), BoundInclusivity::Inclusive);
-    /// assert_eq!(interval.to_time(), "2026-03-20 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(interval.to_time(), "2026-03-20 22:00:00Z".parse::<Timestamp>()?);
     /// assert_eq!(interval.to_inclusivity(), BoundInclusivity::Exclusive);
     /// # Ok::<(), ExampleError>(())
     /// ```
     pub fn from_inclusive_week_range<Tz>(
         mut from: NaiveWeek,
         mut to: NaiveWeek,
-        tz: Tz,
-    ) -> Result<Self, BoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+        tz: TimeZone,
+    ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
         if from.checked_first_day() > to.checked_first_day() {
             std::mem::swap(&mut from, &mut to);
         }
@@ -2871,7 +2841,7 @@ impl BoundedAbsoluteInterval {
     ///
     /// ```
     /// # use std::num::TryFromIntError;
-    /// # use chrono::{DateTime, Duration, FixedOffset, NaiveDate, Utc, Weekday};
+    /// # use chrono::{DateTime, Duration, FixedOffset, Date, Utc, Weekday};
     /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::time::NaiveDuration;
@@ -2880,13 +2850,13 @@ impl BoundedAbsoluteInterval {
     /// # struct FixedOffsetError;
     /// #
     /// # #[derive(Debug)]
-    /// # struct NaiveDateFromYmdError;
+    /// # struct DateFromYmdError;
     /// #
     /// # #[derive(Debug)]
     /// # enum ExampleError {
     /// #     TryFromIntError(TryFromIntError),
     /// #     FixedOffsetError(FixedOffsetError),
-    /// #     NaiveDateFromYmdError(NaiveDateFromYmdError),
+    /// #     DateFromYmdError(DateFromYmdError),
     /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
     /// #     ParseError(chrono::format::ParseError),
     /// # }
@@ -2903,9 +2873,9 @@ impl BoundedAbsoluteInterval {
     /// #     }
     /// # }
     /// #
-    /// # impl From<NaiveDateFromYmdError> for ExampleError {
-    /// #     fn from(value: NaiveDateFromYmdError) -> Self {
-    /// #         ExampleError::NaiveDateFromYmdError(value)
+    /// # impl From<DateFromYmdError> for ExampleError {
+    /// #     fn from(value: DateFromYmdError) -> Self {
+    /// #         ExampleError::DateFromYmdError(value)
     /// #     }
     /// # }
     /// #
@@ -2924,27 +2894,24 @@ impl BoundedAbsoluteInterval {
     /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
     ///
     /// let week = BoundedAbsoluteInterval::week_after_naive_duration_from_naive_date(
-    ///     NaiveDate::from_ymd_opt(2026, 5, 1).ok_or(NaiveDateFromYmdError)?,
+    ///     Date::from_ymd_opt(2026, 5, 1).ok_or(DateFromYmdError)?,
     ///     NaiveDuration::Weeks(Weekday::Mon, 2),
     ///     Weekday::Mon,
     ///     offset_tz,
     /// )?;
     ///
-    /// assert_eq!(week.from_time(), "2026-05-10 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(week.from_time(), "2026-05-10 22:00:00Z".parse::<Timestamp>()?);
     /// assert_eq!(week.from_inclusivity(), BoundInclusivity::Inclusive);
-    /// assert_eq!(week.to_time(), "2026-05-17 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(week.to_time(), "2026-05-17 22:00:00Z".parse::<Timestamp>()?);
     /// assert_eq!(week.to_inclusivity(), BoundInclusivity::Exclusive);
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn week_after_naive_duration_from_naive_date<Tz>(
-        naive_date: NaiveDate,
+    pub fn week_after_naive_duration_from_naive_date(
+        naive_date: Date,
         naive_duration: NaiveDuration,
         week_start: Weekday,
-        tz: Tz,
-    ) -> Result<Self, BoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+        tz: TimeZone,
+    ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
         let week = checked_add_naive_duration_to_naive_date(naive_date, naive_duration)
             .ok_or(BoundedAbsoluteIntervalCreationError::DateOperationError)?
             .week(week_start);
@@ -2968,7 +2935,7 @@ impl BoundedAbsoluteInterval {
     ///
     /// ```
     /// # use std::num::TryFromIntError;
-    /// # use chrono::{DateTime, Duration, FixedOffset, NaiveDate, Utc, Weekday};
+    /// # use chrono::{DateTime, Duration, FixedOffset, Date, Utc, Weekday};
     /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::time::NaiveDuration;
@@ -2977,13 +2944,13 @@ impl BoundedAbsoluteInterval {
     /// # struct FixedOffsetError;
     /// #
     /// # #[derive(Debug)]
-    /// # struct NaiveDateFromYmdError;
+    /// # struct DateFromYmdError;
     /// #
     /// # #[derive(Debug)]
     /// # enum ExampleError {
     /// #     TryFromIntError(TryFromIntError),
     /// #     FixedOffsetError(FixedOffsetError),
-    /// #     NaiveDateFromYmdError(NaiveDateFromYmdError),
+    /// #     DateFromYmdError(DateFromYmdError),
     /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
     /// #     ParseError(chrono::format::ParseError),
     /// # }
@@ -3000,9 +2967,9 @@ impl BoundedAbsoluteInterval {
     /// #     }
     /// # }
     /// #
-    /// # impl From<NaiveDateFromYmdError> for ExampleError {
-    /// #     fn from(value: NaiveDateFromYmdError) -> Self {
-    /// #         ExampleError::NaiveDateFromYmdError(value)
+    /// # impl From<DateFromYmdError> for ExampleError {
+    /// #     fn from(value: DateFromYmdError) -> Self {
+    /// #         ExampleError::DateFromYmdError(value)
     /// #     }
     /// # }
     /// #
@@ -3021,27 +2988,24 @@ impl BoundedAbsoluteInterval {
     /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
     ///
     /// let week = BoundedAbsoluteInterval::week_before_naive_duration_from_naive_date(
-    ///     NaiveDate::from_ymd_opt(2026, 5, 1).ok_or(NaiveDateFromYmdError)?,
+    ///     Date::from_ymd_opt(2026, 5, 1).ok_or(DateFromYmdError)?,
     ///     NaiveDuration::Weeks(Weekday::Mon, 2),
     ///     Weekday::Mon,
     ///     offset_tz,
     /// )?;
     ///
-    /// assert_eq!(week.from_time(), "2026-04-12 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(week.from_time(), "2026-04-12 22:00:00Z".parse::<Timestamp>()?);
     /// assert_eq!(week.from_inclusivity(), BoundInclusivity::Inclusive);
-    /// assert_eq!(week.to_time(), "2026-04-19 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(week.to_time(), "2026-04-19 22:00:00Z".parse::<Timestamp>()?);
     /// assert_eq!(week.to_inclusivity(), BoundInclusivity::Exclusive);
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn week_before_naive_duration_from_naive_date<Tz>(
-        naive_date: NaiveDate,
+    pub fn week_before_naive_duration_from_naive_date(
+        naive_date: Date,
         naive_duration: NaiveDuration,
         week_start: Weekday,
-        tz: Tz,
-    ) -> Result<Self, BoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+        tz: TimeZone,
+    ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
         let week = checked_sub_naive_duration_to_naive_date(naive_date, naive_duration)
             .ok_or(BoundedAbsoluteIntervalCreationError::DateOperationError)?
             .week(week_start);
@@ -3102,14 +3066,11 @@ impl BoundedAbsoluteInterval {
     /// )?;
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn week_after_naive_duration_from_today<Tz>(
+    pub fn week_after_naive_duration_from_today(
         naive_duration: NaiveDuration,
         week_start: Weekday,
-        tz: Tz,
-    ) -> Result<Self, BoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+        tz: TimeZone,
+    ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
         Self::week_after_naive_duration_from_naive_date(naive_date_today(&tz), naive_duration, week_start, tz)
     }
 
@@ -3166,14 +3127,11 @@ impl BoundedAbsoluteInterval {
     /// )?;
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn week_before_naive_duration_from_today<Tz>(
+    pub fn week_before_naive_duration_from_today(
         naive_duration: NaiveDuration,
         week_start: Weekday,
-        tz: Tz,
-    ) -> Result<Self, BoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+        tz: TimeZone,
+    ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
         Self::week_before_naive_duration_from_naive_date(naive_date_today(&tz), naive_duration, week_start, tz)
     }
 
@@ -3239,10 +3197,7 @@ impl BoundedAbsoluteInterval {
     /// )?;
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn this_week<Tz>(week_start: Weekday, tz: Tz) -> Result<Self, BoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+    pub fn this_week(week_start: Weekday, tz: TimeZone) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
         let this_week = naive_date_today(&tz).week(week_start);
 
         Self::from_inclusive_date_range(
@@ -3312,10 +3267,7 @@ impl BoundedAbsoluteInterval {
     /// )?;
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn next_week<Tz>(week_start: Weekday, tz: Tz) -> Result<Self, BoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+    pub fn next_week(week_start: Weekday, tz: TimeZone) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
         Self::week_after_naive_duration_from_today(NaiveDuration::Weeks(week_start, 1), week_start, tz)
     }
 
@@ -3375,10 +3327,7 @@ impl BoundedAbsoluteInterval {
     /// )?;
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn previous_week<Tz>(week_start: Weekday, tz: Tz) -> Result<Self, BoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+    pub fn previous_week(week_start: Weekday, tz: TimeZone) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
         Self::week_before_naive_duration_from_today(NaiveDuration::Weeks(week_start, 1), week_start, tz)
     }
 
@@ -3396,7 +3345,7 @@ impl BoundedAbsoluteInterval {
     ///
     /// ```
     /// # use std::num::TryFromIntError;
-    /// # use chrono::{Datelike, DateTime, Duration, FixedOffset, NaiveDate, Utc, Weekday};
+    /// # use chrono::{Datelike, DateTime, Duration, FixedOffset, Date, Utc, Weekday};
     /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// #
@@ -3404,13 +3353,13 @@ impl BoundedAbsoluteInterval {
     /// # struct FixedOffsetError;
     /// #
     /// # #[derive(Debug)]
-    /// # struct NaiveDateFromYmdError;
+    /// # struct DateFromYmdError;
     /// #
     /// # #[derive(Debug)]
     /// # enum ExampleError {
     /// #     TryFromIntError(TryFromIntError),
     /// #     FixedOffsetError(FixedOffsetError),
-    /// #     NaiveDateFromYmdError(NaiveDateFromYmdError),
+    /// #     DateFromYmdError(DateFromYmdError),
     /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
     /// #     ParseError(chrono::format::ParseError),
     /// # }
@@ -3427,9 +3376,9 @@ impl BoundedAbsoluteInterval {
     /// #     }
     /// # }
     /// #
-    /// # impl From<NaiveDateFromYmdError> for ExampleError {
-    /// #     fn from(value: NaiveDateFromYmdError) -> Self {
-    /// #         ExampleError::NaiveDateFromYmdError(value)
+    /// # impl From<DateFromYmdError> for ExampleError {
+    /// #     fn from(value: DateFromYmdError) -> Self {
+    /// #         ExampleError::DateFromYmdError(value)
     /// #     }
     /// # }
     /// #
@@ -3446,22 +3395,19 @@ impl BoundedAbsoluteInterval {
     /// # }
     /// // UTC+02:00
     /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    /// let iso_week = NaiveDate::from_ymd_opt(2026, 5, 1).ok_or(NaiveDateFromYmdError)?.iso_week();
+    /// let iso_week = Date::from_ymd_opt(2026, 5, 1).ok_or(DateFromYmdError)?.iso_week();
     ///
     /// let iso_week_interval = BoundedAbsoluteInterval::from_iso_week(iso_week, offset_tz)?;
     ///
-    /// assert_eq!(iso_week_interval.from_time(), "2026-04-26 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(iso_week_interval.from_time(), "2026-04-26 22:00:00Z".parse::<Timestamp>()?);
     /// assert_eq!(iso_week_interval.from_inclusivity(), BoundInclusivity::Inclusive);
-    /// assert_eq!(iso_week_interval.to_time(), "2026-05-03 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(iso_week_interval.to_time(), "2026-05-03 22:00:00Z".parse::<Timestamp>()?);
     /// assert_eq!(iso_week_interval.to_inclusivity(), BoundInclusivity::Exclusive);
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn from_iso_week<Tz>(iso_week: IsoWeek, tz: Tz) -> Result<Self, BoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+    pub fn from_iso_week(iso_week: IsoWeek, tz: TimeZone) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
         Self::from_week(
-            NaiveDate::from_isoywd_opt(iso_week.year(), iso_week.week(), Weekday::Mon)
+            Date::from_isoywd_opt(iso_week.year(), iso_week.week(), Weekday::Mon)
                 .ok_or(BoundedAbsoluteIntervalCreationError::OutOfRangeStartDate)?
                 .week(Weekday::Mon),
             tz,
@@ -3488,7 +3434,7 @@ impl BoundedAbsoluteInterval {
     ///
     /// ```
     /// # use std::num::TryFromIntError;
-    /// # use chrono::{Datelike, DateTime, Duration, FixedOffset, NaiveDate, Utc};
+    /// # use chrono::{Datelike, DateTime, Duration, FixedOffset, Date, Utc};
     /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// #
@@ -3496,13 +3442,13 @@ impl BoundedAbsoluteInterval {
     /// # struct FixedOffsetError;
     /// #
     /// # #[derive(Debug)]
-    /// # struct NaiveDateFromYmdError;
+    /// # struct DateFromYmdError;
     /// #
     /// # #[derive(Debug)]
     /// # enum ExampleError {
     /// #     TryFromIntError(TryFromIntError),
     /// #     FixedOffsetError(FixedOffsetError),
-    /// #     NaiveDateFromYmdError(NaiveDateFromYmdError),
+    /// #     DateFromYmdError(DateFromYmdError),
     /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
     /// #     ParseError(chrono::format::ParseError),
     /// # }
@@ -3519,9 +3465,9 @@ impl BoundedAbsoluteInterval {
     /// #     }
     /// # }
     /// #
-    /// # impl From<NaiveDateFromYmdError> for ExampleError {
-    /// #     fn from(value: NaiveDateFromYmdError) -> Self {
-    /// #         ExampleError::NaiveDateFromYmdError(value)
+    /// # impl From<DateFromYmdError> for ExampleError {
+    /// #     fn from(value: DateFromYmdError) -> Self {
+    /// #         ExampleError::DateFromYmdError(value)
     /// #     }
     /// # }
     /// #
@@ -3540,33 +3486,30 @@ impl BoundedAbsoluteInterval {
     /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
     ///
     /// // Currently chrono has no public constructor for IsoWeek yet
-    /// let from = NaiveDate::from_ymd_opt(2026, 1, 7).ok_or(NaiveDateFromYmdError)?.iso_week();
-    /// let to = NaiveDate::from_ymd_opt(2026, 3, 17).ok_or(NaiveDateFromYmdError)?.iso_week();
+    /// let from = Date::from_ymd_opt(2026, 1, 7).ok_or(DateFromYmdError)?.iso_week();
+    /// let to = Date::from_ymd_opt(2026, 3, 17).ok_or(DateFromYmdError)?.iso_week();
     ///
     /// let interval = BoundedAbsoluteInterval::from_inclusive_iso_week_range(from, to, offset_tz)?;
     ///
-    /// assert_eq!(interval.from_time(), "2026-01-04 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(interval.from_time(), "2026-01-04 22:00:00Z".parse::<Timestamp>()?);
     /// assert_eq!(interval.from_inclusivity(), BoundInclusivity::Inclusive);
-    /// assert_eq!(interval.to_time(), "2026-03-22 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(interval.to_time(), "2026-03-22 22:00:00Z".parse::<Timestamp>()?);
     /// assert_eq!(interval.to_inclusivity(), BoundInclusivity::Exclusive);
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn from_inclusive_iso_week_range<Tz>(
+    pub fn from_inclusive_iso_week_range(
         mut from: IsoWeek,
         mut to: IsoWeek,
-        tz: Tz,
-    ) -> Result<Self, BoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+        tz: TimeZone,
+    ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
         if from.year() > to.year() || (from.year() == to.year() && from.week() > to.week()) {
             std::mem::swap(&mut from, &mut to);
         }
 
         Self::from_inclusive_date_range(
-            NaiveDate::from_isoywd_opt(from.year(), from.week(), Weekday::Mon)
+            Date::from_isoywd_opt(from.year(), from.week(), Weekday::Mon)
                 .ok_or(BoundedAbsoluteIntervalCreationError::OutOfRangeStartDate)?,
-            NaiveDate::from_isoywd_opt(to.year(), to.week(), Weekday::Sun)
+            Date::from_isoywd_opt(to.year(), to.week(), Weekday::Sun)
                 .ok_or(BoundedAbsoluteIntervalCreationError::OutOfRangeEndDate)?,
             tz,
         )
@@ -3639,21 +3582,18 @@ impl BoundedAbsoluteInterval {
     ///
     /// let iso_week = BoundedAbsoluteInterval::week_from_iso_year_week(2026, 5, offset_tz)?;
     ///
-    /// assert_eq!(iso_week.from_time(), "2026-01-25 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(iso_week.from_time(), "2026-01-25 22:00:00Z".parse::<Timestamp>()?);
     /// assert_eq!(iso_week.from_inclusivity(), BoundInclusivity::Inclusive);
-    /// assert_eq!(iso_week.to_time(), "2026-02-01 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(iso_week.to_time(), "2026-02-01 22:00:00Z".parse::<Timestamp>()?);
     /// assert_eq!(iso_week.to_inclusivity(), BoundInclusivity::Exclusive);
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn week_from_iso_year_week<Tz>(
+    pub fn week_from_iso_year_week(
         year: i32,
         week: u8,
-        tz: Tz,
-    ) -> Result<Self, BoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
-        let iso_week = NaiveDate::from_isoywd_opt(year, u32::from(week), Weekday::Mon)
+        tz: TimeZone,
+    ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
+        let iso_week = Date::from_isoywd_opt(year, u32::from(week), Weekday::Mon)
             .ok_or(BoundedAbsoluteIntervalCreationError::DateOperationError)?
             .week(Weekday::Mon);
 
@@ -3680,7 +3620,7 @@ impl BoundedAbsoluteInterval {
     ///
     /// ```
     /// # use std::num::TryFromIntError;
-    /// # use chrono::{DateTime, Duration, FixedOffset, NaiveDate, Utc, Weekday};
+    /// # use chrono::{DateTime, Duration, FixedOffset, Date, Utc, Weekday};
     /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::time::NaiveDuration;
@@ -3689,13 +3629,13 @@ impl BoundedAbsoluteInterval {
     /// # struct FixedOffsetError;
     /// #
     /// # #[derive(Debug)]
-    /// # struct NaiveDateFromYmdError;
+    /// # struct DateFromYmdError;
     /// #
     /// # #[derive(Debug)]
     /// # enum ExampleError {
     /// #     TryFromIntError(TryFromIntError),
     /// #     FixedOffsetError(FixedOffsetError),
-    /// #     NaiveDateFromYmdError(NaiveDateFromYmdError),
+    /// #     DateFromYmdError(DateFromYmdError),
     /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
     /// #     ParseError(chrono::format::ParseError),
     /// # }
@@ -3712,9 +3652,9 @@ impl BoundedAbsoluteInterval {
     /// #     }
     /// # }
     /// #
-    /// # impl From<NaiveDateFromYmdError> for ExampleError {
-    /// #     fn from(value: NaiveDateFromYmdError) -> Self {
-    /// #         ExampleError::NaiveDateFromYmdError(value)
+    /// # impl From<DateFromYmdError> for ExampleError {
+    /// #     fn from(value: DateFromYmdError) -> Self {
+    /// #         ExampleError::DateFromYmdError(value)
     /// #     }
     /// # }
     /// #
@@ -3733,25 +3673,22 @@ impl BoundedAbsoluteInterval {
     /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
     ///
     /// let week = BoundedAbsoluteInterval::iso_week_after_naive_duration_from_naive_date(
-    ///     NaiveDate::from_ymd_opt(2026, 5, 1).ok_or(NaiveDateFromYmdError)?,
+    ///     Date::from_ymd_opt(2026, 5, 1).ok_or(DateFromYmdError)?,
     ///     NaiveDuration::IsoWeeks(2),
     ///     offset_tz,
     /// )?;
     ///
-    /// assert_eq!(week.from_time(), "2026-05-10 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(week.from_time(), "2026-05-10 22:00:00Z".parse::<Timestamp>()?);
     /// assert_eq!(week.from_inclusivity(), BoundInclusivity::Inclusive);
-    /// assert_eq!(week.to_time(), "2026-05-17 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(week.to_time(), "2026-05-17 22:00:00Z".parse::<Timestamp>()?);
     /// assert_eq!(week.to_inclusivity(), BoundInclusivity::Exclusive);
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn iso_week_after_naive_duration_from_naive_date<Tz>(
-        naive_date: NaiveDate,
+    pub fn iso_week_after_naive_duration_from_naive_date(
+        naive_date: Date,
         naive_duration: NaiveDuration,
-        tz: Tz,
-    ) -> Result<Self, BoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+        tz: TimeZone,
+    ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
         Self::week_after_naive_duration_from_naive_date(naive_date, naive_duration, Weekday::Mon, tz)
     }
 
@@ -3767,7 +3704,7 @@ impl BoundedAbsoluteInterval {
     ///
     /// ```
     /// # use std::num::TryFromIntError;
-    /// # use chrono::{DateTime, Duration, FixedOffset, NaiveDate, Utc, Weekday};
+    /// # use chrono::{DateTime, Duration, FixedOffset, Date, Utc, Weekday};
     /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::time::NaiveDuration;
@@ -3776,13 +3713,13 @@ impl BoundedAbsoluteInterval {
     /// # struct FixedOffsetError;
     /// #
     /// # #[derive(Debug)]
-    /// # struct NaiveDateFromYmdError;
+    /// # struct DateFromYmdError;
     /// #
     /// # #[derive(Debug)]
     /// # enum ExampleError {
     /// #     TryFromIntError(TryFromIntError),
     /// #     FixedOffsetError(FixedOffsetError),
-    /// #     NaiveDateFromYmdError(NaiveDateFromYmdError),
+    /// #     DateFromYmdError(DateFromYmdError),
     /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
     /// #     ParseError(chrono::format::ParseError),
     /// # }
@@ -3799,9 +3736,9 @@ impl BoundedAbsoluteInterval {
     /// #     }
     /// # }
     /// #
-    /// # impl From<NaiveDateFromYmdError> for ExampleError {
-    /// #     fn from(value: NaiveDateFromYmdError) -> Self {
-    /// #         ExampleError::NaiveDateFromYmdError(value)
+    /// # impl From<DateFromYmdError> for ExampleError {
+    /// #     fn from(value: DateFromYmdError) -> Self {
+    /// #         ExampleError::DateFromYmdError(value)
     /// #     }
     /// # }
     /// #
@@ -3820,25 +3757,22 @@ impl BoundedAbsoluteInterval {
     /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
     ///
     /// let week = BoundedAbsoluteInterval::iso_week_before_naive_duration_from_naive_date(
-    ///     NaiveDate::from_ymd_opt(2026, 5, 1).ok_or(NaiveDateFromYmdError)?,
+    ///     Date::from_ymd_opt(2026, 5, 1).ok_or(DateFromYmdError)?,
     ///     NaiveDuration::IsoWeeks(2),
     ///     offset_tz,
     /// )?;
     ///
-    /// assert_eq!(week.from_time(), "2026-04-12 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(week.from_time(), "2026-04-12 22:00:00Z".parse::<Timestamp>()?);
     /// assert_eq!(week.from_inclusivity(), BoundInclusivity::Inclusive);
-    /// assert_eq!(week.to_time(), "2026-04-19 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(week.to_time(), "2026-04-19 22:00:00Z".parse::<Timestamp>()?);
     /// assert_eq!(week.to_inclusivity(), BoundInclusivity::Exclusive);
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn iso_week_before_naive_duration_from_naive_date<Tz>(
-        naive_date: NaiveDate,
+    pub fn iso_week_before_naive_duration_from_naive_date(
+        naive_date: Date,
         naive_duration: NaiveDuration,
-        tz: Tz,
-    ) -> Result<Self, BoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+        tz: TimeZone,
+    ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
         Self::week_before_naive_duration_from_naive_date(naive_date, naive_duration, Weekday::Mon, tz)
     }
 
@@ -3894,13 +3828,10 @@ impl BoundedAbsoluteInterval {
     /// )?;
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn iso_week_after_naive_duration_from_today<Tz>(
+    pub fn iso_week_after_naive_duration_from_today(
         naive_duration: NaiveDuration,
-        tz: Tz,
-    ) -> Result<Self, BoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+        tz: TimeZone,
+    ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
         Self::iso_week_after_naive_duration_from_naive_date(naive_date_today(&tz), naive_duration, tz)
     }
 
@@ -3956,13 +3887,10 @@ impl BoundedAbsoluteInterval {
     /// )?;
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn iso_week_before_naive_duration_from_today<Tz>(
+    pub fn iso_week_before_naive_duration_from_today(
         naive_duration: NaiveDuration,
-        tz: Tz,
-    ) -> Result<Self, BoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+        tz: TimeZone,
+    ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
         Self::iso_week_before_naive_duration_from_naive_date(naive_date_today(&tz), naive_duration, tz)
     }
 
@@ -4016,10 +3944,7 @@ impl BoundedAbsoluteInterval {
     /// let iso_week = BoundedAbsoluteInterval::this_iso_week(offset_tz)?;
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn this_iso_week<Tz>(tz: Tz) -> Result<Self, BoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+    pub fn this_iso_week(tz: TimeZone) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
         let this_iso_week = naive_date_today(&tz).iso_week();
 
         Self::week_from_iso_year_week(
@@ -4076,10 +4001,7 @@ impl BoundedAbsoluteInterval {
     /// let iso_week = BoundedAbsoluteInterval::next_iso_week(offset_tz)?;
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn next_iso_week<Tz>(tz: Tz) -> Result<Self, BoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+    pub fn next_iso_week(tz: TimeZone) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
         Self::iso_week_after_naive_duration_from_today(NaiveDuration::IsoWeeks(1), tz)
     }
 
@@ -4130,10 +4052,7 @@ impl BoundedAbsoluteInterval {
     /// let iso_week = BoundedAbsoluteInterval::previous_iso_week(offset_tz)?;
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn previous_iso_week<Tz>(tz: Tz) -> Result<Self, BoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+    pub fn previous_iso_week(tz: TimeZone) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
         Self::iso_week_before_naive_duration_from_today(NaiveDuration::IsoWeeks(1), tz)
     }
 
@@ -4201,16 +4120,13 @@ impl BoundedAbsoluteInterval {
     ///     offset_tz,
     /// )?;
     ///
-    /// assert_eq!(month.from_time(), "2026-04-30 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(month.from_time(), "2026-04-30 22:00:00Z".parse::<Timestamp>()?);
     /// assert_eq!(month.from_inclusivity(), BoundInclusivity::Inclusive);
-    /// assert_eq!(month.to_time(), "2026-05-31 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(month.to_time(), "2026-05-31 22:00:00Z".parse::<Timestamp>()?);
     /// assert_eq!(month.to_inclusivity(), BoundInclusivity::Exclusive);
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn from_month<Tz>(month: NaiveMonth, tz: Tz) -> Result<Self, BoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+    pub fn from_month(month: NaiveMonth, tz: TimeZone) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
         Self::from_inclusive_date_range(
             month
                 .checked_first_day()
@@ -4290,20 +4206,17 @@ impl BoundedAbsoluteInterval {
     ///     offset_tz,
     /// )?;
     ///
-    /// assert_eq!(interval.from_time(), "2025-12-31 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(interval.from_time(), "2025-12-31 22:00:00Z".parse::<Timestamp>()?);
     /// assert_eq!(interval.from_inclusivity(), BoundInclusivity::Inclusive);
-    /// assert_eq!(interval.to_time(), "2026-05-31 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(interval.to_time(), "2026-05-31 22:00:00Z".parse::<Timestamp>()?);
     /// assert_eq!(interval.to_inclusivity(), BoundInclusivity::Exclusive);
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn from_inclusive_month_range<Tz>(
+    pub fn from_inclusive_month_range(
         mut from: NaiveMonth,
         mut to: NaiveMonth,
-        tz: Tz,
-    ) -> Result<Self, BoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+        tz: TimeZone,
+    ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
         if from > to {
             std::mem::swap(&mut from, &mut to);
         }
@@ -4324,7 +4237,7 @@ impl BoundedAbsoluteInterval {
     ///
     /// Returns [`DateOperationError`](BoundedAbsoluteIntervalCreationError::DateOperationError) if
     /// [`time::checked_add_naive_duration_to_naive_date`](`checked_add_naive_duration_to_naive_date)
-    /// returns [`None`], or if conversion of today's [`NaiveDate`] to a [`NaiveMonth`] failed.
+    /// returns [`None`], or if conversion of today's [`Date`] to a [`NaiveMonth`] failed.
     ///
     /// See [`from_month`](BoundedAbsoluteInterval::from_month) for more errors that could occur,
     /// as this method uses it.
@@ -4333,7 +4246,7 @@ impl BoundedAbsoluteInterval {
     ///
     /// ```
     /// # use std::num::TryFromIntError;
-    /// # use chrono::{DateTime, Duration, FixedOffset, NaiveDate, Utc};
+    /// # use chrono::{DateTime, Duration, FixedOffset, Date, Utc};
     /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::time::NaiveDuration;
@@ -4342,13 +4255,13 @@ impl BoundedAbsoluteInterval {
     /// # struct FixedOffsetError;
     /// #
     /// # #[derive(Debug)]
-    /// # struct NaiveDateFromYmdError;
+    /// # struct DateFromYmdError;
     /// #
     /// # #[derive(Debug)]
     /// # enum ExampleError {
     /// #     TryFromIntError(TryFromIntError),
     /// #     FixedOffsetError(FixedOffsetError),
-    /// #     NaiveDateFromYmdError(NaiveDateFromYmdError),
+    /// #     DateFromYmdError(DateFromYmdError),
     /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
     /// #     ParseError(chrono::format::ParseError),
     /// # }
@@ -4365,9 +4278,9 @@ impl BoundedAbsoluteInterval {
     /// #     }
     /// # }
     /// #
-    /// # impl From<NaiveDateFromYmdError> for ExampleError {
-    /// #     fn from(value: NaiveDateFromYmdError) -> Self {
-    /// #         ExampleError::NaiveDateFromYmdError(value)
+    /// # impl From<DateFromYmdError> for ExampleError {
+    /// #     fn from(value: DateFromYmdError) -> Self {
+    /// #         ExampleError::DateFromYmdError(value)
     /// #     }
     /// # }
     /// #
@@ -4386,25 +4299,22 @@ impl BoundedAbsoluteInterval {
     /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
     ///
     /// let month = BoundedAbsoluteInterval::month_after_naive_duration_from_naive_date(
-    ///     NaiveDate::from_ymd_opt(2026, 5, 5).ok_or(NaiveDateFromYmdError)?,
+    ///     Date::from_ymd_opt(2026, 5, 5).ok_or(DateFromYmdError)?,
     ///     NaiveDuration::Months(2),
     ///     offset_tz,
     /// )?;
     ///
-    /// assert_eq!(month.from_time(), "2026-06-30 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(month.from_time(), "2026-06-30 22:00:00Z".parse::<Timestamp>()?);
     /// assert_eq!(month.from_inclusivity(), BoundInclusivity::Inclusive);
-    /// assert_eq!(month.to_time(), "2026-07-31 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(month.to_time(), "2026-07-31 22:00:00Z".parse::<Timestamp>()?);
     /// assert_eq!(month.to_inclusivity(), BoundInclusivity::Exclusive);
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn month_after_naive_duration_from_naive_date<Tz>(
-        naive_date: NaiveDate,
+    pub fn month_after_naive_duration_from_naive_date(
+        naive_date: Date,
         naive_duration: NaiveDuration,
-        tz: Tz,
-    ) -> Result<Self, BoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+        tz: TimeZone,
+    ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
         let day = checked_add_naive_duration_to_naive_date(naive_date, naive_duration)
             .ok_or(BoundedAbsoluteIntervalCreationError::DateOperationError)?;
 
@@ -4421,7 +4331,7 @@ impl BoundedAbsoluteInterval {
     ///
     /// Returns [`DateOperationError`](BoundedAbsoluteIntervalCreationError::DateOperationError) if
     /// [`time::checked_sub_naive_duration_to_naive_date`](`checked_sub_naive_duration_to_naive_date)
-    /// returns [`None`], or if conversion of today's [`NaiveDate`] to a [`NaiveMonth`] failed.
+    /// returns [`None`], or if conversion of today's [`Date`] to a [`NaiveMonth`] failed.
     ///
     /// See [`from_month`](BoundedAbsoluteInterval::from_month) for more errors that could occur,
     /// as this method uses it.
@@ -4430,7 +4340,7 @@ impl BoundedAbsoluteInterval {
     ///
     /// ```
     /// # use std::num::TryFromIntError;
-    /// # use chrono::{DateTime, Duration, FixedOffset, NaiveDate, Utc};
+    /// # use chrono::{DateTime, Duration, FixedOffset, Date, Utc};
     /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::time::NaiveDuration;
@@ -4439,13 +4349,13 @@ impl BoundedAbsoluteInterval {
     /// # struct FixedOffsetError;
     /// #
     /// # #[derive(Debug)]
-    /// # struct NaiveDateFromYmdError;
+    /// # struct DateFromYmdError;
     /// #
     /// # #[derive(Debug)]
     /// # enum ExampleError {
     /// #     TryFromIntError(TryFromIntError),
     /// #     FixedOffsetError(FixedOffsetError),
-    /// #     NaiveDateFromYmdError(NaiveDateFromYmdError),
+    /// #     DateFromYmdError(DateFromYmdError),
     /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
     /// #     ParseError(chrono::format::ParseError),
     /// # }
@@ -4462,9 +4372,9 @@ impl BoundedAbsoluteInterval {
     /// #     }
     /// # }
     /// #
-    /// # impl From<NaiveDateFromYmdError> for ExampleError {
-    /// #     fn from(value: NaiveDateFromYmdError) -> Self {
-    /// #         ExampleError::NaiveDateFromYmdError(value)
+    /// # impl From<DateFromYmdError> for ExampleError {
+    /// #     fn from(value: DateFromYmdError) -> Self {
+    /// #         ExampleError::DateFromYmdError(value)
     /// #     }
     /// # }
     /// #
@@ -4483,25 +4393,22 @@ impl BoundedAbsoluteInterval {
     /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
     ///
     /// let month = BoundedAbsoluteInterval::month_before_naive_duration_from_naive_date(
-    ///     NaiveDate::from_ymd_opt(2026, 5, 5).ok_or(NaiveDateFromYmdError)?,
+    ///     Date::from_ymd_opt(2026, 5, 5).ok_or(DateFromYmdError)?,
     ///     NaiveDuration::Months(2),
     ///     offset_tz,
     /// )?;
     ///
-    /// assert_eq!(month.from_time(), "2026-02-28 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(month.from_time(), "2026-02-28 22:00:00Z".parse::<Timestamp>()?);
     /// assert_eq!(month.from_inclusivity(), BoundInclusivity::Inclusive);
-    /// assert_eq!(month.to_time(), "2026-03-31 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(month.to_time(), "2026-03-31 22:00:00Z".parse::<Timestamp>()?);
     /// assert_eq!(month.to_inclusivity(), BoundInclusivity::Exclusive);
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn month_before_naive_duration_from_naive_date<Tz>(
-        naive_date: NaiveDate,
+    pub fn month_before_naive_duration_from_naive_date(
+        naive_date: Date,
         naive_duration: NaiveDuration,
-        tz: Tz,
-    ) -> Result<Self, BoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+        tz: TimeZone,
+    ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
         let day = checked_sub_naive_duration_to_naive_date(naive_date, naive_duration)
             .ok_or(BoundedAbsoluteIntervalCreationError::DateOperationError)?;
 
@@ -4563,13 +4470,10 @@ impl BoundedAbsoluteInterval {
     /// )?;
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn month_after_naive_duration_from_today<Tz>(
+    pub fn month_after_naive_duration_from_today(
         naive_duration: NaiveDuration,
-        tz: Tz,
-    ) -> Result<Self, BoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+        tz: TimeZone,
+    ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
         Self::month_after_naive_duration_from_naive_date(naive_date_today(&tz), naive_duration, tz)
     }
 
@@ -4625,13 +4529,10 @@ impl BoundedAbsoluteInterval {
     /// )?;
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn month_before_naive_duration_from_today<Tz>(
+    pub fn month_before_naive_duration_from_today(
         naive_duration: NaiveDuration,
-        tz: Tz,
-    ) -> Result<Self, BoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+        tz: TimeZone,
+    ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
         Self::month_before_naive_duration_from_naive_date(naive_date_today(&tz), naive_duration, tz)
     }
 
@@ -4640,7 +4541,7 @@ impl BoundedAbsoluteInterval {
     /// # Errors
     ///
     /// Returns [`DateOperationError`](BoundedAbsoluteIntervalCreationError::DateOperationError) if
-    /// conversion of today's [`NaiveDate`] to a [`NaiveMonth`] failed.
+    /// conversion of today's [`Date`] to a [`NaiveMonth`] failed.
     ///
     /// See [`from_month`](BoundedAbsoluteInterval::from_month) for more errors that could occur,
     /// as this method uses it.
@@ -4685,10 +4586,7 @@ impl BoundedAbsoluteInterval {
     /// let month = BoundedAbsoluteInterval::this_month(offset_tz)?;
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn this_month<Tz>(tz: Tz) -> Result<Self, BoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+    pub fn this_month(tz: TimeZone) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
         Self::from_month(
             NaiveMonth::try_from(naive_date_today(&tz))
                 .or(Err(BoundedAbsoluteIntervalCreationError::DateOperationError))?,
@@ -4743,10 +4641,7 @@ impl BoundedAbsoluteInterval {
     /// let month = BoundedAbsoluteInterval::next_month(offset_tz)?;
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn next_month<Tz>(tz: Tz) -> Result<Self, BoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+    pub fn next_month(tz: TimeZone) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
         Self::month_after_naive_duration_from_today(NaiveDuration::Months(1), tz)
     }
 
@@ -4797,10 +4692,7 @@ impl BoundedAbsoluteInterval {
     /// let month = BoundedAbsoluteInterval::previous_month(offset_tz)?;
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn previous_month<Tz>(tz: Tz) -> Result<Self, BoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+    pub fn previous_month(tz: TimeZone) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
         Self::month_before_naive_duration_from_today(NaiveDuration::Months(1), tz)
     }
 
@@ -4864,20 +4756,17 @@ impl BoundedAbsoluteInterval {
     ///
     /// let year = BoundedAbsoluteInterval::from_year(2026, offset_tz)?;
     ///
-    /// assert_eq!(year.from_time(), "2025-12-31 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(year.from_time(), "2025-12-31 22:00:00Z".parse::<Timestamp>()?);
     /// assert_eq!(year.from_inclusivity(), BoundInclusivity::Inclusive);
-    /// assert_eq!(year.to_time(), "2026-12-31 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(year.to_time(), "2026-12-31 22:00:00Z".parse::<Timestamp>()?);
     /// assert_eq!(year.to_inclusivity(), BoundInclusivity::Exclusive);
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn from_year<Tz>(year: i32, tz: Tz) -> Result<Self, BoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+    pub fn from_year(year: i32, tz: TimeZone) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
         let first_day_of_year =
-            NaiveDate::from_yo_opt(year, 1).ok_or(BoundedAbsoluteIntervalCreationError::OutOfRangeStartDate)?;
+            Date::from_yo_opt(year, 1).ok_or(BoundedAbsoluteIntervalCreationError::OutOfRangeStartDate)?;
 
-        let last_day_of_year = NaiveDate::from_yo_opt(
+        let last_day_of_year = Date::from_yo_opt(
             year,
             if first_day_of_year.leap_year() {
                 u32::from(DAYS_IN_LEAP_YEAR)
@@ -4956,31 +4845,28 @@ impl BoundedAbsoluteInterval {
     ///
     /// let years = BoundedAbsoluteInterval::from_inclusive_year_range(2025, 2030, offset_tz)?;
     ///
-    /// assert_eq!(years.from_time(), "2024-12-31 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(years.from_time(), "2024-12-31 22:00:00Z".parse::<Timestamp>()?);
     /// assert_eq!(years.from_inclusivity(), BoundInclusivity::Inclusive);
-    /// assert_eq!(years.to_time(), "2030-12-31 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(years.to_time(), "2030-12-31 22:00:00Z".parse::<Timestamp>()?);
     /// assert_eq!(years.to_inclusivity(), BoundInclusivity::Exclusive);
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn from_inclusive_year_range<Tz>(
+    pub fn from_inclusive_year_range(
         mut from_year: i32,
         mut to_year: i32,
-        tz: Tz,
-    ) -> Result<Self, BoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+        tz: TimeZone,
+    ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
         if from_year > to_year {
             std::mem::swap(&mut from_year, &mut to_year);
         }
 
         let first_day_of_from_year =
-            NaiveDate::from_yo_opt(from_year, 1).ok_or(BoundedAbsoluteIntervalCreationError::OutOfRangeStartDate)?;
+            Date::from_yo_opt(from_year, 1).ok_or(BoundedAbsoluteIntervalCreationError::OutOfRangeStartDate)?;
 
         let first_day_of_to_year =
-            NaiveDate::from_yo_opt(to_year, 1).ok_or(BoundedAbsoluteIntervalCreationError::DateOperationError)?;
+            Date::from_yo_opt(to_year, 1).ok_or(BoundedAbsoluteIntervalCreationError::DateOperationError)?;
 
-        let last_day_of_to_year = NaiveDate::from_yo_opt(
+        let last_day_of_to_year = Date::from_yo_opt(
             to_year,
             if first_day_of_to_year.leap_year() {
                 u32::from(DAYS_IN_LEAP_YEAR)
@@ -5009,7 +4895,7 @@ impl BoundedAbsoluteInterval {
     ///
     /// ```
     /// # use std::num::TryFromIntError;
-    /// # use chrono::{DateTime, Duration, FixedOffset, NaiveDate, Utc};
+    /// # use chrono::{DateTime, Duration, FixedOffset, Date, Utc};
     /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::time::NaiveDuration;
@@ -5018,13 +4904,13 @@ impl BoundedAbsoluteInterval {
     /// # struct FixedOffsetError;
     /// #
     /// # #[derive(Debug)]
-    /// # struct NaiveDateFromYmdError;
+    /// # struct DateFromYmdError;
     /// #
     /// # #[derive(Debug)]
     /// # enum ExampleError {
     /// #     TryFromIntError(TryFromIntError),
     /// #     FixedOffsetError(FixedOffsetError),
-    /// #     NaiveDateFromYmdError(NaiveDateFromYmdError),
+    /// #     DateFromYmdError(DateFromYmdError),
     /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
     /// #     ParseError(chrono::format::ParseError),
     /// # }
@@ -5041,9 +4927,9 @@ impl BoundedAbsoluteInterval {
     /// #     }
     /// # }
     /// #
-    /// # impl From<NaiveDateFromYmdError> for ExampleError {
-    /// #     fn from(value: NaiveDateFromYmdError) -> Self {
-    /// #         ExampleError::NaiveDateFromYmdError(value)
+    /// # impl From<DateFromYmdError> for ExampleError {
+    /// #     fn from(value: DateFromYmdError) -> Self {
+    /// #         ExampleError::DateFromYmdError(value)
     /// #     }
     /// # }
     /// #
@@ -5062,25 +4948,22 @@ impl BoundedAbsoluteInterval {
     /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
     ///
     /// let year = BoundedAbsoluteInterval::year_after_naive_duration_from_naive_date(
-    ///     NaiveDate::from_ymd_opt(2026, 5, 5).ok_or(NaiveDateFromYmdError)?,
+    ///     Date::from_ymd_opt(2026, 5, 5).ok_or(DateFromYmdError)?,
     ///     NaiveDuration::Months(15),
     ///     offset_tz,
     /// )?;
     ///
-    /// assert_eq!(year.from_time(), "2026-12-31 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(year.from_time(), "2026-12-31 22:00:00Z".parse::<Timestamp>()?);
     /// assert_eq!(year.from_inclusivity(), BoundInclusivity::Inclusive);
-    /// assert_eq!(year.to_time(), "2027-12-31 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(year.to_time(), "2027-12-31 22:00:00Z".parse::<Timestamp>()?);
     /// assert_eq!(year.to_inclusivity(), BoundInclusivity::Exclusive);
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn year_after_naive_duration_from_naive_date<Tz>(
-        naive_date: NaiveDate,
+    pub fn year_after_naive_duration_from_naive_date(
+        naive_date: Date,
         naive_duration: NaiveDuration,
-        tz: Tz,
-    ) -> Result<Self, BoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+        tz: TimeZone,
+    ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
         Self::from_year(
             checked_add_naive_duration_to_naive_date(naive_date, naive_duration)
                 .ok_or(BoundedAbsoluteIntervalCreationError::DateOperationError)?
@@ -5105,7 +4988,7 @@ impl BoundedAbsoluteInterval {
     ///
     /// ```
     /// # use std::num::TryFromIntError;
-    /// # use chrono::{DateTime, Duration, FixedOffset, NaiveDate, Utc};
+    /// # use chrono::{DateTime, Duration, FixedOffset, Date, Utc};
     /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::time::NaiveDuration;
@@ -5114,13 +4997,13 @@ impl BoundedAbsoluteInterval {
     /// # struct FixedOffsetError;
     /// #
     /// # #[derive(Debug)]
-    /// # struct NaiveDateFromYmdError;
+    /// # struct DateFromYmdError;
     /// #
     /// # #[derive(Debug)]
     /// # enum ExampleError {
     /// #     TryFromIntError(TryFromIntError),
     /// #     FixedOffsetError(FixedOffsetError),
-    /// #     NaiveDateFromYmdError(NaiveDateFromYmdError),
+    /// #     DateFromYmdError(DateFromYmdError),
     /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
     /// #     ParseError(chrono::format::ParseError),
     /// # }
@@ -5137,9 +5020,9 @@ impl BoundedAbsoluteInterval {
     /// #     }
     /// # }
     /// #
-    /// # impl From<NaiveDateFromYmdError> for ExampleError {
-    /// #     fn from(value: NaiveDateFromYmdError) -> Self {
-    /// #         ExampleError::NaiveDateFromYmdError(value)
+    /// # impl From<DateFromYmdError> for ExampleError {
+    /// #     fn from(value: DateFromYmdError) -> Self {
+    /// #         ExampleError::DateFromYmdError(value)
     /// #     }
     /// # }
     /// #
@@ -5158,25 +5041,22 @@ impl BoundedAbsoluteInterval {
     /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
     ///
     /// let year = BoundedAbsoluteInterval::year_before_naive_duration_from_naive_date(
-    ///     NaiveDate::from_ymd_opt(2026, 5, 5).ok_or(NaiveDateFromYmdError)?,
+    ///     Date::from_ymd_opt(2026, 5, 5).ok_or(DateFromYmdError)?,
     ///     NaiveDuration::Months(15),
     ///     offset_tz,
     /// )?;
     ///
-    /// assert_eq!(year.from_time(), "2024-12-31 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(year.from_time(), "2024-12-31 22:00:00Z".parse::<Timestamp>()?);
     /// assert_eq!(year.from_inclusivity(), BoundInclusivity::Inclusive);
-    /// assert_eq!(year.to_time(), "2025-12-31 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(year.to_time(), "2025-12-31 22:00:00Z".parse::<Timestamp>()?);
     /// assert_eq!(year.to_inclusivity(), BoundInclusivity::Exclusive);
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn year_before_naive_duration_from_naive_date<Tz>(
-        naive_date: NaiveDate,
+    pub fn year_before_naive_duration_from_naive_date(
+        naive_date: Date,
         naive_duration: NaiveDuration,
-        tz: Tz,
-    ) -> Result<Self, BoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+        tz: TimeZone,
+    ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
         Self::from_year(
             checked_sub_naive_duration_to_naive_date(naive_date, naive_duration)
                 .ok_or(BoundedAbsoluteIntervalCreationError::DateOperationError)?
@@ -5237,13 +5117,10 @@ impl BoundedAbsoluteInterval {
     /// )?;
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn year_after_naive_duration_from_today<Tz>(
+    pub fn year_after_naive_duration_from_today(
         naive_duration: NaiveDuration,
-        tz: Tz,
-    ) -> Result<Self, BoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+        tz: TimeZone,
+    ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
         Self::year_after_naive_duration_from_naive_date(naive_date_today(&tz), naive_duration, tz)
     }
 
@@ -5299,13 +5176,10 @@ impl BoundedAbsoluteInterval {
     /// )?;
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn year_before_naive_duration_from_today<Tz>(
+    pub fn year_before_naive_duration_from_today(
         naive_duration: NaiveDuration,
-        tz: Tz,
-    ) -> Result<Self, BoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+        tz: TimeZone,
+    ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
         Self::year_before_naive_duration_from_naive_date(naive_date_today(&tz), naive_duration, tz)
     }
 
@@ -5355,10 +5229,7 @@ impl BoundedAbsoluteInterval {
     /// let year = BoundedAbsoluteInterval::this_year(offset_tz)?;
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn this_year<Tz>(tz: Tz) -> Result<Self, BoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+    pub fn this_year(tz: TimeZone) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
         Self::from_year(naive_date_today(&tz).year(), tz)
     }
 
@@ -5408,10 +5279,7 @@ impl BoundedAbsoluteInterval {
     /// let year = BoundedAbsoluteInterval::next_year(offset_tz)?;
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn next_year<Tz>(tz: Tz) -> Result<Self, BoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+    pub fn next_year(tz: TimeZone) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
         Self::year_after_naive_duration_from_today(NaiveDuration::Years(1), tz)
     }
 
@@ -5461,10 +5329,7 @@ impl BoundedAbsoluteInterval {
     /// let year = BoundedAbsoluteInterval::previous_year(offset_tz)?;
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn previous_year<Tz>(tz: Tz) -> Result<Self, BoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+    pub fn previous_year(tz: TimeZone) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
         Self::year_before_naive_duration_from_today(NaiveDuration::Years(1), tz)
     }
 
@@ -5475,8 +5340,8 @@ impl BoundedAbsoluteInterval {
     /// ```
     /// # use chrono::{DateTime, Utc};
     /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
-    /// let from_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
-    /// let to_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let from_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
+    /// let to_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
     ///
     /// let bounded_inclusivity = BoundedAbsoluteInterval::new(from_time, to_time);
     ///
@@ -5484,7 +5349,7 @@ impl BoundedAbsoluteInterval {
     /// # Ok::<(), chrono::format::ParseError>(())
     /// ```
     #[must_use]
-    pub fn from_time(&self) -> DateTime<Utc> {
+    pub fn from_time(&self) -> Timestamp {
         self.from
     }
 
@@ -5495,8 +5360,8 @@ impl BoundedAbsoluteInterval {
     /// ```
     /// # use chrono::{DateTime, Utc};
     /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
-    /// let from_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
-    /// let to_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let from_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
+    /// let to_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
     ///
     /// let bounded_inclusivity = BoundedAbsoluteInterval::new(from_time, to_time);
     ///
@@ -5504,7 +5369,7 @@ impl BoundedAbsoluteInterval {
     /// # Ok::<(), chrono::format::ParseError>(())
     /// ```
     #[must_use]
-    pub fn to_time(&self) -> DateTime<Utc> {
+    pub fn to_time(&self) -> Timestamp {
         self.to
     }
 
@@ -5516,8 +5381,8 @@ impl BoundedAbsoluteInterval {
     /// # use chrono::{DateTime, Utc};
     /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
     /// # use periodical::intervals::meta::BoundInclusivity;
-    /// let from_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
-    /// let to_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let from_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
+    /// let to_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
     ///
     /// let bounded_interval = BoundedAbsoluteInterval::new_with_inclusivity(
     ///     from_time,
@@ -5542,8 +5407,8 @@ impl BoundedAbsoluteInterval {
     /// # use chrono::{DateTime, Utc};
     /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
     /// # use periodical::intervals::meta::BoundInclusivity;
-    /// let from_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
-    /// let to_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let from_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
+    /// let to_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
     ///
     /// let bounded_interval = BoundedAbsoluteInterval::new_with_inclusivity(
     ///     from_time,
@@ -5567,13 +5432,13 @@ impl BoundedAbsoluteInterval {
     /// ```
     /// # use chrono::{DateTime, Utc};
     /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
-    /// let from_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
-    /// let to_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let from_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
+    /// let to_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
     ///
     /// let mut bounded_interval = BoundedAbsoluteInterval::new(from_time, to_time);
     ///
     /// // New from is not in chronological order
-    /// let new_from_time = "2025-01-01 17:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let new_from_time = "2025-01-01 17:00:00Z".parse::<Timestamp>()?;
     ///
     /// bounded_interval.unchecked_set_from(new_from_time);
     ///
@@ -5582,7 +5447,7 @@ impl BoundedAbsoluteInterval {
     /// assert_eq!(bounded_interval.to_time(), to_time);
     /// # Ok::<(), chrono::format::ParseError>(())
     /// ```
-    pub fn unchecked_set_from(&mut self, new_from: DateTime<Utc>) {
+    pub fn unchecked_set_from(&mut self, new_from: Timestamp) {
         self.from = new_from;
     }
 
@@ -5593,13 +5458,13 @@ impl BoundedAbsoluteInterval {
     /// ```
     /// # use chrono::{DateTime, Utc};
     /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
-    /// let from_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
-    /// let to_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let from_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
+    /// let to_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
     ///
     /// let mut bounded_interval = BoundedAbsoluteInterval::new(from_time, to_time);
     ///
     /// // New to is not in chronological order
-    /// let new_to_time = "2025-01-01 06:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let new_to_time = "2025-01-01 06:00:00Z".parse::<Timestamp>()?;
     ///
     /// bounded_interval.unchecked_set_to(new_to_time);
     ///
@@ -5608,7 +5473,7 @@ impl BoundedAbsoluteInterval {
     /// assert_eq!(bounded_interval.to_time(), new_to_time);
     /// # Ok::<(), chrono::format::ParseError>(())
     /// ```
-    pub fn unchecked_set_to(&mut self, new_to: DateTime<Utc>) {
+    pub fn unchecked_set_to(&mut self, new_to: Timestamp) {
         self.to = new_to;
     }
 
@@ -5623,13 +5488,13 @@ impl BoundedAbsoluteInterval {
     /// ```
     /// # use chrono::{DateTime, Utc};
     /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
-    /// let from_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
-    /// let to_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let from_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
+    /// let to_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
     ///
     /// let mut bounded_interval = BoundedAbsoluteInterval::new(from_time, to_time);
     ///
     /// // New from is not in chronological order
-    /// let new_from_time = "2025-01-01 17:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let new_from_time = "2025-01-01 17:00:00Z".parse::<Timestamp>()?;
     ///
     /// let was_successful = bounded_interval.set_from(new_from_time);
     ///
@@ -5638,7 +5503,7 @@ impl BoundedAbsoluteInterval {
     /// assert_eq!(bounded_interval.from_time(), from_time);
     /// # Ok::<(), chrono::format::ParseError>(())
     /// ```
-    pub fn set_from(&mut self, new_from: DateTime<Utc>) -> bool {
+    pub fn set_from(&mut self, new_from: Timestamp) -> bool {
         match new_from.cmp(&self.to) {
             Ordering::Less => {
                 self.unchecked_set_from(new_from);
@@ -5669,13 +5534,13 @@ impl BoundedAbsoluteInterval {
     /// ```
     /// # use chrono::{DateTime, Utc};
     /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
-    /// let from_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
-    /// let to_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let from_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
+    /// let to_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
     ///
     /// let mut bounded_interval = BoundedAbsoluteInterval::new(from_time, to_time);
     ///
     /// // New to is not in chronological order
-    /// let new_to_time = "2025-01-01 06:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let new_to_time = "2025-01-01 06:00:00Z".parse::<Timestamp>()?;
     ///
     /// let was_successful = bounded_interval.set_to(new_to_time);
     ///
@@ -5684,7 +5549,7 @@ impl BoundedAbsoluteInterval {
     /// assert_eq!(bounded_interval.to_time(), to_time);
     /// # Ok::<(), chrono::format::ParseError>(())
     /// ```
-    pub fn set_to(&mut self, new_to: DateTime<Utc>) -> bool {
+    pub fn set_to(&mut self, new_to: Timestamp) -> bool {
         match self.from.cmp(&new_to) {
             Ordering::Less => {
                 self.unchecked_set_to(new_to);
@@ -5716,7 +5581,7 @@ impl BoundedAbsoluteInterval {
     /// # use chrono::{DateTime, Utc};
     /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
     /// # use periodical::intervals::meta::BoundInclusivity;
-    /// let time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     ///
     /// let mut bounded_interval = BoundedAbsoluteInterval::new(time, time);
     ///
@@ -5749,7 +5614,7 @@ impl BoundedAbsoluteInterval {
     /// # use chrono::{DateTime, Utc};
     /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
     /// # use periodical::intervals::meta::BoundInclusivity;
-    /// let time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     ///
     /// let mut bounded_interval = BoundedAbsoluteInterval::new(time, time);
     ///
@@ -5856,29 +5721,29 @@ impl HasAbsoluteBounds for BoundedAbsoluteInterval {
     }
 }
 
-impl From<(DateTime<Utc>, DateTime<Utc>)> for BoundedAbsoluteInterval {
-    fn from((from, to): (DateTime<Utc>, DateTime<Utc>)) -> Self {
+impl From<(Timestamp, Timestamp)> for BoundedAbsoluteInterval {
+    fn from((from, to): (Timestamp, Timestamp)) -> Self {
         BoundedAbsoluteInterval::new(from, to)
     }
 }
 
-impl From<((DateTime<Utc>, BoundInclusivity), (DateTime<Utc>, BoundInclusivity))> for BoundedAbsoluteInterval {
+impl From<((Timestamp, BoundInclusivity), (Timestamp, BoundInclusivity))> for BoundedAbsoluteInterval {
     fn from(
         ((from, from_inclusivity), (to, to_inclusivity)): (
-            (DateTime<Utc>, BoundInclusivity),
-            (DateTime<Utc>, BoundInclusivity),
+            (Timestamp, BoundInclusivity),
+            (Timestamp, BoundInclusivity),
         ),
     ) -> Self {
         BoundedAbsoluteInterval::new_with_inclusivity(from, from_inclusivity, to, to_inclusivity)
     }
 }
 
-/// Converts `((DateTime<Utc>, bool), (DateTime<Utc>, bool))` into [`BoundedAbsoluteInterval`]
+/// Converts `((Timestamp, bool), (Timestamp, bool))` into [`BoundedAbsoluteInterval`]
 ///
 /// The booleans in the original structure are to be interpreted as _is it inclusive?_
-impl From<((DateTime<Utc>, bool), (DateTime<Utc>, bool))> for BoundedAbsoluteInterval {
+impl From<((Timestamp, bool), (Timestamp, bool))> for BoundedAbsoluteInterval {
     fn from(
-        ((from, is_from_inclusive), (to, is_to_inclusive)): ((DateTime<Utc>, bool), (DateTime<Utc>, bool)),
+        ((from, is_from_inclusive), (to, is_to_inclusive)): ((Timestamp, bool), (Timestamp, bool)),
     ) -> Self {
         BoundedAbsoluteInterval::new_with_inclusivity(
             from,
@@ -5889,8 +5754,8 @@ impl From<((DateTime<Utc>, bool), (DateTime<Utc>, bool))> for BoundedAbsoluteInt
     }
 }
 
-impl From<Range<DateTime<Utc>>> for BoundedAbsoluteInterval {
-    fn from(range: Range<DateTime<Utc>>) -> Self {
+impl From<Range<Timestamp>> for BoundedAbsoluteInterval {
+    fn from(range: Range<Timestamp>) -> Self {
         BoundedAbsoluteInterval::new_with_inclusivity(
             range.start,
             BoundInclusivity::Inclusive,
@@ -5900,8 +5765,8 @@ impl From<Range<DateTime<Utc>>> for BoundedAbsoluteInterval {
     }
 }
 
-impl From<RangeInclusive<DateTime<Utc>>> for BoundedAbsoluteInterval {
-    fn from(range: RangeInclusive<DateTime<Utc>>) -> Self {
+impl From<RangeInclusive<Timestamp>> for BoundedAbsoluteInterval {
+    fn from(range: RangeInclusive<Timestamp>) -> Self {
         BoundedAbsoluteInterval::new_with_inclusivity(
             *range.start(),
             BoundInclusivity::Inclusive,
@@ -5995,7 +5860,7 @@ impl TryFrom<AbsoluteInterval> for BoundedAbsoluteInterval {
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub struct HalfBoundedAbsoluteInterval {
-    reference_time: DateTime<Utc>,
+    reference_time: Timestamp,
     opening_direction: OpeningDirection,
     reference_inclusivity: BoundInclusivity,
 }
@@ -6009,7 +5874,7 @@ impl HalfBoundedAbsoluteInterval {
     /// # use chrono::{DateTime, Utc};
     /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
     /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
-    /// let ref_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let ref_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     ///
     /// let half_bounded_interval = HalfBoundedAbsoluteInterval::new(
     ///     ref_time,
@@ -6022,7 +5887,7 @@ impl HalfBoundedAbsoluteInterval {
     /// # Ok::<(), chrono::format::ParseError>(())
     /// ```
     #[must_use]
-    pub fn new(reference_time: DateTime<Utc>, opening_direction: OpeningDirection) -> Self {
+    pub fn new(reference_time: Timestamp, opening_direction: OpeningDirection) -> Self {
         HalfBoundedAbsoluteInterval {
             reference_time,
             opening_direction,
@@ -6038,7 +5903,7 @@ impl HalfBoundedAbsoluteInterval {
     /// # use chrono::{DateTime, Utc};
     /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
     /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
-    /// let ref_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let ref_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     ///
     /// let half_bounded_interval = HalfBoundedAbsoluteInterval::new_with_inclusivity(
     ///     ref_time,
@@ -6053,7 +5918,7 @@ impl HalfBoundedAbsoluteInterval {
     /// ```
     #[must_use]
     pub fn new_with_inclusivity(
-        reference_time: DateTime<Utc>,
+        reference_time: Timestamp,
         reference_time_inclusivity: BoundInclusivity,
         opening_direction: OpeningDirection,
     ) -> Self {
@@ -6077,7 +5942,7 @@ impl HalfBoundedAbsoluteInterval {
     /// ```
     #[must_use]
     pub fn since_now(inclusivity: BoundInclusivity) -> Self {
-        Self::new_with_inclusivity(Utc::now(), inclusivity, OpeningDirection::ToFuture)
+        Self::new_with_inclusivity(Timestamp::now(), inclusivity, OpeningDirection::ToFuture)
     }
 
     /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans until now
@@ -6093,7 +5958,7 @@ impl HalfBoundedAbsoluteInterval {
     /// ```
     #[must_use]
     pub fn until_now(inclusivity: BoundInclusivity) -> Self {
-        Self::new_with_inclusivity(Utc::now(), inclusivity, OpeningDirection::ToPast)
+        Self::new_with_inclusivity(Timestamp::now(), inclusivity, OpeningDirection::ToPast)
     }
 
     /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans since the start of the given day in the given timezone
@@ -6111,7 +5976,7 @@ impl HalfBoundedAbsoluteInterval {
     ///
     /// ```
     /// # use std::num::TryFromIntError;
-    /// # use chrono::{DateTime, Duration, FixedOffset, NaiveDate, Utc};
+    /// # use chrono::{DateTime, Duration, FixedOffset, Date, Utc};
     /// # use periodical::intervals::absolute::{HalfBoundedAbsoluteInterval, HalfBoundedAbsoluteIntervalCreationError};
     /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
     /// #
@@ -6119,13 +5984,13 @@ impl HalfBoundedAbsoluteInterval {
     /// # struct FixedOffsetError;
     /// #
     /// # #[derive(Debug)]
-    /// # struct NaiveDateFromYmdError;
+    /// # struct DateFromYmdError;
     /// #
     /// # #[derive(Debug)]
     /// # enum ExampleError {
     /// #     TryFromIntError(TryFromIntError),
     /// #     FixedOffsetError(FixedOffsetError),
-    /// #     NaiveDateFromYmdError(NaiveDateFromYmdError),
+    /// #     DateFromYmdError(DateFromYmdError),
     /// #     HalfBoundedAbsoluteIntervalCreationError(HalfBoundedAbsoluteIntervalCreationError),
     /// #     ParseError(chrono::format::ParseError),
     /// # }
@@ -6142,9 +6007,9 @@ impl HalfBoundedAbsoluteInterval {
     /// #     }
     /// # }
     /// #
-    /// # impl From<NaiveDateFromYmdError> for ExampleError {
-    /// #     fn from(value: NaiveDateFromYmdError) -> Self {
-    /// #         ExampleError::NaiveDateFromYmdError(value)
+    /// # impl From<DateFromYmdError> for ExampleError {
+    /// #     fn from(value: DateFromYmdError) -> Self {
+    /// #         ExampleError::DateFromYmdError(value)
     /// #     }
     /// # }
     /// #
@@ -6163,19 +6028,16 @@ impl HalfBoundedAbsoluteInterval {
     /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
     ///
     /// let from_first_of_may = HalfBoundedAbsoluteInterval::since_date(
-    ///     NaiveDate::from_ymd_opt(2026, 5, 1).ok_or(NaiveDateFromYmdError)?,
+    ///     Date::from_ymd_opt(2026, 5, 1).ok_or(DateFromYmdError)?,
     ///     offset_tz,
     /// )?;
     ///
-    /// assert_eq!(from_first_of_may.reference_time(), "2026-04-30 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(from_first_of_may.reference_time(), "2026-04-30 22:00:00Z".parse::<Timestamp>()?);
     /// assert_eq!(from_first_of_may.reference_inclusivity(), BoundInclusivity::Inclusive);
     /// assert_eq!(from_first_of_may.opening_direction(), OpeningDirection::ToFuture);
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn since_date<Tz>(naive_date: NaiveDate, tz: Tz) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+    pub fn since_date(naive_date: Date, tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
         let reference_time = naive_date
             .and_time(NAIVE_TIME_MIDNIGHT)
             .and_local_timezone(tz)
@@ -6201,7 +6063,7 @@ impl HalfBoundedAbsoluteInterval {
     ///
     /// ```
     /// # use std::num::TryFromIntError;
-    /// # use chrono::{DateTime, Duration, FixedOffset, NaiveDate, Utc};
+    /// # use chrono::{DateTime, Duration, FixedOffset, Date, Utc};
     /// # use periodical::intervals::absolute::{HalfBoundedAbsoluteInterval, HalfBoundedAbsoluteIntervalCreationError};
     /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
     /// #
@@ -6209,13 +6071,13 @@ impl HalfBoundedAbsoluteInterval {
     /// # struct FixedOffsetError;
     /// #
     /// # #[derive(Debug)]
-    /// # struct NaiveDateFromYmdError;
+    /// # struct DateFromYmdError;
     /// #
     /// # #[derive(Debug)]
     /// # enum ExampleError {
     /// #     TryFromIntError(TryFromIntError),
     /// #     FixedOffsetError(FixedOffsetError),
-    /// #     NaiveDateFromYmdError(NaiveDateFromYmdError),
+    /// #     DateFromYmdError(DateFromYmdError),
     /// #     HalfBoundedAbsoluteIntervalCreationError(HalfBoundedAbsoluteIntervalCreationError),
     /// #     ParseError(chrono::format::ParseError),
     /// # }
@@ -6232,9 +6094,9 @@ impl HalfBoundedAbsoluteInterval {
     /// #     }
     /// # }
     /// #
-    /// # impl From<NaiveDateFromYmdError> for ExampleError {
-    /// #     fn from(value: NaiveDateFromYmdError) -> Self {
-    /// #         ExampleError::NaiveDateFromYmdError(value)
+    /// # impl From<DateFromYmdError> for ExampleError {
+    /// #     fn from(value: DateFromYmdError) -> Self {
+    /// #         ExampleError::DateFromYmdError(value)
     /// #     }
     /// # }
     /// #
@@ -6253,19 +6115,16 @@ impl HalfBoundedAbsoluteInterval {
     /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
     ///
     /// let until_first_of_may = HalfBoundedAbsoluteInterval::until_date(
-    ///     NaiveDate::from_ymd_opt(2026, 5, 1).ok_or(NaiveDateFromYmdError)?,
+    ///     Date::from_ymd_opt(2026, 5, 1).ok_or(DateFromYmdError)?,
     ///     offset_tz,
     /// )?;
     ///
-    /// assert_eq!(until_first_of_may.reference_time(), "2026-04-30 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(until_first_of_may.reference_time(), "2026-04-30 22:00:00Z".parse::<Timestamp>()?);
     /// assert_eq!(until_first_of_may.reference_inclusivity(), BoundInclusivity::Exclusive);
     /// assert_eq!(until_first_of_may.opening_direction(), OpeningDirection::ToPast);
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn until_date<Tz>(naive_date: NaiveDate, tz: Tz) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+    pub fn until_date(naive_date: Date, tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
         let reference_time = naive_date
             .and_time(NAIVE_TIME_MIDNIGHT)
             .and_local_timezone(tz)
@@ -6328,10 +6187,7 @@ impl HalfBoundedAbsoluteInterval {
     /// let since_today = HalfBoundedAbsoluteInterval::since_today(offset_tz)?;
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn since_today<Tz>(tz: Tz) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+    pub fn since_today(tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
         Self::since_date(naive_date_today(&tz), tz)
     }
 
@@ -6383,10 +6239,7 @@ impl HalfBoundedAbsoluteInterval {
     /// let until_today = HalfBoundedAbsoluteInterval::until_today(offset_tz)?;
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn until_today<Tz>(tz: Tz) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+    pub fn until_today(tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
         Self::until_date(naive_date_today(&tz), tz)
     }
 
@@ -6442,10 +6295,7 @@ impl HalfBoundedAbsoluteInterval {
     /// let since_tomorrow = HalfBoundedAbsoluteInterval::since_tomorrow(offset_tz)?;
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn since_tomorrow<Tz>(tz: Tz) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+    pub fn since_tomorrow(tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
         Self::since_date(
             checked_add_naive_duration_to_naive_date(naive_date_today(&tz), NaiveDuration::Days(1))
                 .ok_or(HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate)?,
@@ -6505,10 +6355,7 @@ impl HalfBoundedAbsoluteInterval {
     /// let until_tomorrow = HalfBoundedAbsoluteInterval::until_tomorrow(offset_tz)?;
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn until_tomorrow<Tz>(tz: Tz) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+    pub fn until_tomorrow(tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
         Self::until_date(
             checked_add_naive_duration_to_naive_date(naive_date_today(&tz), NaiveDuration::Days(1))
                 .ok_or(HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate)?,
@@ -6568,10 +6415,7 @@ impl HalfBoundedAbsoluteInterval {
     /// let since_yesterday = HalfBoundedAbsoluteInterval::since_yesterday(offset_tz)?;
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn since_yesterday<Tz>(tz: Tz) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+    pub fn since_yesterday(tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
         Self::since_date(
             checked_sub_naive_duration_to_naive_date(naive_date_today(&tz), NaiveDuration::Days(1))
                 .ok_or(HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate)?,
@@ -6631,10 +6475,7 @@ impl HalfBoundedAbsoluteInterval {
     /// let until_yesterday = HalfBoundedAbsoluteInterval::until_yesterday(offset_tz)?;
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn until_yesterday<Tz>(tz: Tz) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+    pub fn until_yesterday(tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
         Self::until_date(
             checked_sub_naive_duration_to_naive_date(naive_date_today(&tz), NaiveDuration::Days(1))
                 .ok_or(HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate)?,
@@ -6658,7 +6499,7 @@ impl HalfBoundedAbsoluteInterval {
     ///
     /// ```
     /// # use std::num::TryFromIntError;
-    /// # use chrono::{DateTime, Duration, FixedOffset, NaiveDate, Utc, Weekday};
+    /// # use chrono::{DateTime, Duration, FixedOffset, Date, Utc, Weekday};
     /// # use periodical::intervals::absolute::{HalfBoundedAbsoluteInterval, HalfBoundedAbsoluteIntervalCreationError};
     /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
     /// #
@@ -6666,13 +6507,13 @@ impl HalfBoundedAbsoluteInterval {
     /// # struct FixedOffsetError;
     /// #
     /// # #[derive(Debug)]
-    /// # struct NaiveDateFromYmdError;
+    /// # struct DateFromYmdError;
     /// #
     /// # #[derive(Debug)]
     /// # enum ExampleError {
     /// #     TryFromIntError(TryFromIntError),
     /// #     FixedOffsetError(FixedOffsetError),
-    /// #     NaiveDateFromYmdError(NaiveDateFromYmdError),
+    /// #     DateFromYmdError(DateFromYmdError),
     /// #     HalfBoundedAbsoluteIntervalCreationError(HalfBoundedAbsoluteIntervalCreationError),
     /// #     ParseError(chrono::format::ParseError),
     /// # }
@@ -6689,9 +6530,9 @@ impl HalfBoundedAbsoluteInterval {
     /// #     }
     /// # }
     /// #
-    /// # impl From<NaiveDateFromYmdError> for ExampleError {
-    /// #     fn from(value: NaiveDateFromYmdError) -> Self {
-    /// #         ExampleError::NaiveDateFromYmdError(value)
+    /// # impl From<DateFromYmdError> for ExampleError {
+    /// #     fn from(value: DateFromYmdError) -> Self {
+    /// #         ExampleError::DateFromYmdError(value)
     /// #     }
     /// # }
     /// #
@@ -6710,19 +6551,16 @@ impl HalfBoundedAbsoluteInterval {
     /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
     ///
     /// let interval = HalfBoundedAbsoluteInterval::since_week(
-    ///     NaiveDate::from_ymd_opt(2026, 5, 1).ok_or(NaiveDateFromYmdError)?.week(Weekday::Mon),
+    ///     Date::from_ymd_opt(2026, 5, 1).ok_or(DateFromYmdError)?.week(Weekday::Mon),
     ///     offset_tz,
     /// )?;
     ///
-    /// assert_eq!(interval.reference_time(), "2026-04-26 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(interval.reference_time(), "2026-04-26 22:00:00Z".parse::<Timestamp>()?);
     /// assert_eq!(interval.reference_inclusivity(), BoundInclusivity::Inclusive);
     /// assert_eq!(interval.opening_direction(), OpeningDirection::ToFuture);
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn since_week<Tz>(week: NaiveWeek, tz: Tz) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+    pub fn since_week(week: NaiveWeek, tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
         Self::since_date(
             week.checked_first_day()
                 .ok_or(HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate)?,
@@ -6746,7 +6584,7 @@ impl HalfBoundedAbsoluteInterval {
     ///
     /// ```
     /// # use std::num::TryFromIntError;
-    /// # use chrono::{DateTime, Duration, FixedOffset, NaiveDate, Utc, Weekday};
+    /// # use chrono::{DateTime, Duration, FixedOffset, Date, Utc, Weekday};
     /// # use periodical::intervals::absolute::{HalfBoundedAbsoluteInterval, HalfBoundedAbsoluteIntervalCreationError};
     /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
     /// #
@@ -6754,13 +6592,13 @@ impl HalfBoundedAbsoluteInterval {
     /// # struct FixedOffsetError;
     /// #
     /// # #[derive(Debug)]
-    /// # struct NaiveDateFromYmdError;
+    /// # struct DateFromYmdError;
     /// #
     /// # #[derive(Debug)]
     /// # enum ExampleError {
     /// #     TryFromIntError(TryFromIntError),
     /// #     FixedOffsetError(FixedOffsetError),
-    /// #     NaiveDateFromYmdError(NaiveDateFromYmdError),
+    /// #     DateFromYmdError(DateFromYmdError),
     /// #     HalfBoundedAbsoluteIntervalCreationError(HalfBoundedAbsoluteIntervalCreationError),
     /// #     ParseError(chrono::format::ParseError),
     /// # }
@@ -6777,9 +6615,9 @@ impl HalfBoundedAbsoluteInterval {
     /// #     }
     /// # }
     /// #
-    /// # impl From<NaiveDateFromYmdError> for ExampleError {
-    /// #     fn from(value: NaiveDateFromYmdError) -> Self {
-    /// #         ExampleError::NaiveDateFromYmdError(value)
+    /// # impl From<DateFromYmdError> for ExampleError {
+    /// #     fn from(value: DateFromYmdError) -> Self {
+    /// #         ExampleError::DateFromYmdError(value)
     /// #     }
     /// # }
     /// #
@@ -6798,19 +6636,16 @@ impl HalfBoundedAbsoluteInterval {
     /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
     ///
     /// let interval = HalfBoundedAbsoluteInterval::until_week(
-    ///     NaiveDate::from_ymd_opt(2026, 5, 1).ok_or(NaiveDateFromYmdError)?.week(Weekday::Mon),
+    ///     Date::from_ymd_opt(2026, 5, 1).ok_or(DateFromYmdError)?.week(Weekday::Mon),
     ///     offset_tz,
     /// )?;
     ///
-    /// assert_eq!(interval.reference_time(), "2026-04-26 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(interval.reference_time(), "2026-04-26 22:00:00Z".parse::<Timestamp>()?);
     /// assert_eq!(interval.reference_inclusivity(), BoundInclusivity::Exclusive);
     /// assert_eq!(interval.opening_direction(), OpeningDirection::ToPast);
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn until_week<Tz>(week: NaiveWeek, tz: Tz) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+    pub fn until_week(week: NaiveWeek, tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
         Self::until_date(
             week.checked_first_day()
                 .ok_or(HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate)?,
@@ -6866,10 +6701,7 @@ impl HalfBoundedAbsoluteInterval {
     /// let since_this_week = HalfBoundedAbsoluteInterval::since_this_week(Weekday::Mon, offset_tz)?;
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn since_this_week<Tz>(week_start: Weekday, tz: Tz) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+    pub fn since_this_week(week_start: Weekday, tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
         Self::since_week(naive_date_today(&tz).week(week_start), tz)
     }
 
@@ -6920,10 +6752,7 @@ impl HalfBoundedAbsoluteInterval {
     ///
     /// let until_this_week = HalfBoundedAbsoluteInterval::until_this_week(Weekday::Mon, offset_tz)?;
     /// # Ok::<(), ExampleError>(())
-    pub fn until_this_week<Tz>(week_start: Weekday, tz: Tz) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+    pub fn until_this_week(week_start: Weekday, tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
         Self::until_week(naive_date_today(&tz).week(week_start), tz)
     }
 
@@ -6943,7 +6772,7 @@ impl HalfBoundedAbsoluteInterval {
     ///
     /// ```
     /// # use std::num::TryFromIntError;
-    /// # use chrono::{Datelike, DateTime, Duration, FixedOffset, NaiveDate, Utc, Weekday};
+    /// # use chrono::{Datelike, DateTime, Duration, FixedOffset, Date, Utc, Weekday};
     /// # use periodical::intervals::absolute::{HalfBoundedAbsoluteInterval, HalfBoundedAbsoluteIntervalCreationError};
     /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
     /// #
@@ -6951,13 +6780,13 @@ impl HalfBoundedAbsoluteInterval {
     /// # struct FixedOffsetError;
     /// #
     /// # #[derive(Debug)]
-    /// # struct NaiveDateFromYmdError;
+    /// # struct DateFromYmdError;
     /// #
     /// # #[derive(Debug)]
     /// # enum ExampleError {
     /// #     TryFromIntError(TryFromIntError),
     /// #     FixedOffsetError(FixedOffsetError),
-    /// #     NaiveDateFromYmdError(NaiveDateFromYmdError),
+    /// #     DateFromYmdError(DateFromYmdError),
     /// #     HalfBoundedAbsoluteIntervalCreationError(HalfBoundedAbsoluteIntervalCreationError),
     /// #     ParseError(chrono::format::ParseError),
     /// # }
@@ -6974,9 +6803,9 @@ impl HalfBoundedAbsoluteInterval {
     /// #     }
     /// # }
     /// #
-    /// # impl From<NaiveDateFromYmdError> for ExampleError {
-    /// #     fn from(value: NaiveDateFromYmdError) -> Self {
-    /// #         ExampleError::NaiveDateFromYmdError(value)
+    /// # impl From<DateFromYmdError> for ExampleError {
+    /// #     fn from(value: DateFromYmdError) -> Self {
+    /// #         ExampleError::DateFromYmdError(value)
     /// #     }
     /// # }
     /// #
@@ -6995,21 +6824,18 @@ impl HalfBoundedAbsoluteInterval {
     /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
     ///
     /// let interval = HalfBoundedAbsoluteInterval::since_iso_week(
-    ///     NaiveDate::from_ymd_opt(2026, 5, 1).ok_or(NaiveDateFromYmdError)?.iso_week(),
+    ///     Date::from_ymd_opt(2026, 5, 1).ok_or(DateFromYmdError)?.iso_week(),
     ///     offset_tz,
     /// )?;
     ///
-    /// assert_eq!(interval.reference_time(), "2026-04-26 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(interval.reference_time(), "2026-04-26 22:00:00Z".parse::<Timestamp>()?);
     /// assert_eq!(interval.reference_inclusivity(), BoundInclusivity::Inclusive);
     /// assert_eq!(interval.opening_direction(), OpeningDirection::ToFuture);
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn since_iso_week<Tz>(iso_week: IsoWeek, tz: Tz) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+    pub fn since_iso_week(iso_week: IsoWeek, tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
         Self::since_date(
-            NaiveDate::from_isoywd_opt(iso_week.year(), iso_week.week(), Weekday::Mon)
+            Date::from_isoywd_opt(iso_week.year(), iso_week.week(), Weekday::Mon)
                 .ok_or(HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate)?,
             tz,
         )
@@ -7031,7 +6857,7 @@ impl HalfBoundedAbsoluteInterval {
     ///
     /// ```
     /// # use std::num::TryFromIntError;
-    /// # use chrono::{Datelike, DateTime, Duration, FixedOffset, NaiveDate, Utc, Weekday};
+    /// # use chrono::{Datelike, DateTime, Duration, FixedOffset, Date, Utc, Weekday};
     /// # use periodical::intervals::absolute::{HalfBoundedAbsoluteInterval, HalfBoundedAbsoluteIntervalCreationError};
     /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
     /// #
@@ -7039,13 +6865,13 @@ impl HalfBoundedAbsoluteInterval {
     /// # struct FixedOffsetError;
     /// #
     /// # #[derive(Debug)]
-    /// # struct NaiveDateFromYmdError;
+    /// # struct DateFromYmdError;
     /// #
     /// # #[derive(Debug)]
     /// # enum ExampleError {
     /// #     TryFromIntError(TryFromIntError),
     /// #     FixedOffsetError(FixedOffsetError),
-    /// #     NaiveDateFromYmdError(NaiveDateFromYmdError),
+    /// #     DateFromYmdError(DateFromYmdError),
     /// #     HalfBoundedAbsoluteIntervalCreationError(HalfBoundedAbsoluteIntervalCreationError),
     /// #     ParseError(chrono::format::ParseError),
     /// # }
@@ -7062,9 +6888,9 @@ impl HalfBoundedAbsoluteInterval {
     /// #     }
     /// # }
     /// #
-    /// # impl From<NaiveDateFromYmdError> for ExampleError {
-    /// #     fn from(value: NaiveDateFromYmdError) -> Self {
-    /// #         ExampleError::NaiveDateFromYmdError(value)
+    /// # impl From<DateFromYmdError> for ExampleError {
+    /// #     fn from(value: DateFromYmdError) -> Self {
+    /// #         ExampleError::DateFromYmdError(value)
     /// #     }
     /// # }
     /// #
@@ -7083,21 +6909,18 @@ impl HalfBoundedAbsoluteInterval {
     /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
     ///
     /// let interval = HalfBoundedAbsoluteInterval::until_iso_week(
-    ///     NaiveDate::from_ymd_opt(2026, 5, 1).ok_or(NaiveDateFromYmdError)?.iso_week(),
+    ///     Date::from_ymd_opt(2026, 5, 1).ok_or(DateFromYmdError)?.iso_week(),
     ///     offset_tz,
     /// )?;
     ///
-    /// assert_eq!(interval.reference_time(), "2026-04-26 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(interval.reference_time(), "2026-04-26 22:00:00Z".parse::<Timestamp>()?);
     /// assert_eq!(interval.reference_inclusivity(), BoundInclusivity::Exclusive);
     /// assert_eq!(interval.opening_direction(), OpeningDirection::ToPast);
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn until_iso_week<Tz>(iso_week: IsoWeek, tz: Tz) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+    pub fn until_iso_week(iso_week: IsoWeek, tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
         Self::until_date(
-            NaiveDate::from_isoywd_opt(iso_week.year(), iso_week.week(), Weekday::Mon)
+            Date::from_isoywd_opt(iso_week.year(), iso_week.week(), Weekday::Mon)
                 .ok_or(HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate)?,
             tz,
         )
@@ -7151,10 +6974,7 @@ impl HalfBoundedAbsoluteInterval {
     /// let since_this_iso_week = HalfBoundedAbsoluteInterval::since_this_iso_week(offset_tz)?;
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn since_this_iso_week<Tz>(tz: Tz) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+    pub fn since_this_iso_week(tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
         Self::since_iso_week(naive_date_today(&tz).iso_week(), tz)
     }
 
@@ -7206,10 +7026,7 @@ impl HalfBoundedAbsoluteInterval {
     /// let until_this_iso_week = HalfBoundedAbsoluteInterval::until_this_iso_week(offset_tz)?;
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn until_this_iso_week<Tz>(tz: Tz) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+    pub fn until_this_iso_week(tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
         Self::until_iso_week(naive_date_today(&tz).iso_week(), tz)
     }
 
@@ -7276,15 +7093,12 @@ impl HalfBoundedAbsoluteInterval {
     ///     offset_tz,
     /// )?;
     ///
-    /// assert_eq!(since_month.reference_time(), "2026-02-28 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(since_month.reference_time(), "2026-02-28 22:00:00Z".parse::<Timestamp>()?);
     /// assert_eq!(since_month.reference_inclusivity(), BoundInclusivity::Inclusive);
     /// assert_eq!(since_month.opening_direction(), OpeningDirection::ToFuture);
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn since_month<Tz>(month: NaiveMonth, tz: Tz) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+    pub fn since_month(month: NaiveMonth, tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
         Self::since_date(
             month
                 .checked_first_day()
@@ -7356,15 +7170,12 @@ impl HalfBoundedAbsoluteInterval {
     ///     offset_tz,
     /// )?;
     ///
-    /// assert_eq!(until_month.reference_time(), "2026-02-28 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(until_month.reference_time(), "2026-02-28 22:00:00Z".parse::<Timestamp>()?);
     /// assert_eq!(until_month.reference_inclusivity(), BoundInclusivity::Exclusive);
     /// assert_eq!(until_month.opening_direction(), OpeningDirection::ToPast);
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn until_month<Tz>(month: NaiveMonth, tz: Tz) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+    pub fn until_month(month: NaiveMonth, tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
         Self::until_date(
             month
                 .checked_first_day()
@@ -7421,10 +7232,7 @@ impl HalfBoundedAbsoluteInterval {
     /// let since_this_month = HalfBoundedAbsoluteInterval::since_this_month(offset_tz)?;
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn since_this_month<Tz>(tz: Tz) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+    pub fn since_this_month(tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
         Self::since_month(
             NaiveMonth::try_from(naive_date_today(&tz))
                 .or(Err(HalfBoundedAbsoluteIntervalCreationError::DateOperationError))?,
@@ -7480,10 +7288,7 @@ impl HalfBoundedAbsoluteInterval {
     /// let until_this_month = HalfBoundedAbsoluteInterval::until_this_month(offset_tz)?;
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn until_this_month<Tz>(tz: Tz) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+    pub fn until_this_month(tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
         Self::until_month(
             NaiveMonth::try_from(naive_date_today(&tz))
                 .or(Err(HalfBoundedAbsoluteIntervalCreationError::DateOperationError))?,
@@ -7550,17 +7355,14 @@ impl HalfBoundedAbsoluteInterval {
     ///
     /// let since_year = HalfBoundedAbsoluteInterval::since_year(2026, offset_tz)?;
     ///
-    /// assert_eq!(since_year.reference_time(), "2025-12-31 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(since_year.reference_time(), "2025-12-31 22:00:00Z".parse::<Timestamp>()?);
     /// assert_eq!(since_year.reference_inclusivity(), BoundInclusivity::Inclusive);
     /// assert_eq!(since_year.opening_direction(), OpeningDirection::ToFuture);
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn since_year<Tz>(year: i32, tz: Tz) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+    pub fn since_year(year: i32, tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
         Self::since_date(
-            NaiveDate::from_yo_opt(year, 1).ok_or(HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate)?,
+            Date::from_yo_opt(year, 1).ok_or(HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate)?,
             tz,
         )
     }
@@ -7624,17 +7426,14 @@ impl HalfBoundedAbsoluteInterval {
     ///
     /// let until_year = HalfBoundedAbsoluteInterval::until_year(2026, offset_tz)?;
     ///
-    /// assert_eq!(until_year.reference_time(), "2025-12-31 22:00:00Z".parse::<DateTime<Utc>>()?);
+    /// assert_eq!(until_year.reference_time(), "2025-12-31 22:00:00Z".parse::<Timestamp>()?);
     /// assert_eq!(until_year.reference_inclusivity(), BoundInclusivity::Exclusive);
     /// assert_eq!(until_year.opening_direction(), OpeningDirection::ToPast);
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn until_year<Tz>(year: i32, tz: Tz) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+    pub fn until_year(year: i32, tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
         Self::until_date(
-            NaiveDate::from_yo_opt(year, 1).ok_or(HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate)?,
+            Date::from_yo_opt(year, 1).ok_or(HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate)?,
             tz,
         )
     }
@@ -7687,10 +7486,7 @@ impl HalfBoundedAbsoluteInterval {
     /// let since_this_year = HalfBoundedAbsoluteInterval::since_this_year(offset_tz)?;
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn since_this_year<Tz>(tz: Tz) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+    pub fn since_this_year(tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
         Self::since_year(naive_date_today(&tz).year(), tz)
     }
 
@@ -7742,10 +7538,7 @@ impl HalfBoundedAbsoluteInterval {
     /// let since_this_year = HalfBoundedAbsoluteInterval::until_this_year(offset_tz)?;
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn until_this_year<Tz>(tz: Tz) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError>
-    where
-        Tz: TimeZone,
-    {
+    pub fn until_this_year(tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
         Self::until_year(naive_date_today(&tz).year(), tz)
     }
 
@@ -7757,7 +7550,7 @@ impl HalfBoundedAbsoluteInterval {
     /// # use chrono::{DateTime, Utc};
     /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
     /// # use periodical::intervals::meta::OpeningDirection;
-    /// let ref_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let ref_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     ///
     /// let half_bounded_interval = HalfBoundedAbsoluteInterval::new(
     ///     ref_time,
@@ -7768,7 +7561,7 @@ impl HalfBoundedAbsoluteInterval {
     /// # Ok::<(), chrono::format::ParseError>(())
     /// ```
     #[must_use]
-    pub fn reference_time(&self) -> DateTime<Utc> {
+    pub fn reference_time(&self) -> Timestamp {
         self.reference_time
     }
 
@@ -7780,7 +7573,7 @@ impl HalfBoundedAbsoluteInterval {
     /// # use chrono::{DateTime, Utc};
     /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
     /// # use periodical::intervals::meta::OpeningDirection;
-    /// let ref_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let ref_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     ///
     /// let half_bounded_interval = HalfBoundedAbsoluteInterval::new(
     ///     ref_time,
@@ -7801,7 +7594,7 @@ impl HalfBoundedAbsoluteInterval {
     /// # use chrono::{DateTime, Utc};
     /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
     /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
-    /// let ref_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let ref_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     ///
     /// let half_bounded_interval = HalfBoundedAbsoluteInterval::new_with_inclusivity(
     ///     ref_time,
@@ -7825,21 +7618,21 @@ impl HalfBoundedAbsoluteInterval {
     /// # use chrono::{DateTime, Utc};
     /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
     /// # use periodical::intervals::meta::OpeningDirection;
-    /// let ref_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let ref_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     ///
     /// let mut half_bounded_interval = HalfBoundedAbsoluteInterval::new(
     ///     ref_time,
     ///     OpeningDirection::ToFuture,
     /// );
     ///
-    /// let new_ref_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let new_ref_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
     ///
     /// half_bounded_interval.set_reference_time(new_ref_time);
     ///
     /// assert_eq!(half_bounded_interval.reference_time(), new_ref_time);
     /// # Ok::<(), chrono::format::ParseError>(())
     /// ```
-    pub fn set_reference_time(&mut self, new_reference_time: DateTime<Utc>) {
+    pub fn set_reference_time(&mut self, new_reference_time: Timestamp) {
         self.reference_time = new_reference_time;
     }
 
@@ -7851,7 +7644,7 @@ impl HalfBoundedAbsoluteInterval {
     /// # use chrono::{DateTime, Utc};
     /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
     /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
-    /// let ref_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let ref_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     ///
     /// let mut half_bounded_interval = HalfBoundedAbsoluteInterval::new(
     ///     ref_time,
@@ -7875,7 +7668,7 @@ impl HalfBoundedAbsoluteInterval {
     /// # use chrono::{DateTime, Utc};
     /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
     /// # use periodical::intervals::meta::OpeningDirection;
-    /// let ref_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let ref_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     ///
     /// let mut half_bounded_interval = HalfBoundedAbsoluteInterval::new(
     ///     ref_time,
@@ -7968,52 +7761,52 @@ impl HasAbsoluteBounds for HalfBoundedAbsoluteInterval {
     }
 }
 
-impl From<(DateTime<Utc>, OpeningDirection)> for HalfBoundedAbsoluteInterval {
-    fn from((time, direction): (DateTime<Utc>, OpeningDirection)) -> Self {
+impl From<(Timestamp, OpeningDirection)> for HalfBoundedAbsoluteInterval {
+    fn from((time, direction): (Timestamp, OpeningDirection)) -> Self {
         HalfBoundedAbsoluteInterval::new(time, direction)
     }
 }
 
-/// Converts `(DateTime<Utc>, bool)` into [`HalfBoundedAbsoluteInterval`]
+/// Converts `(Timestamp, bool)` into [`HalfBoundedAbsoluteInterval`]
 ///
 /// The boolean is interpreted as _is it going to future?_
-impl From<(DateTime<Utc>, bool)> for HalfBoundedAbsoluteInterval {
-    fn from((time, goes_to_future): (DateTime<Utc>, bool)) -> Self {
+impl From<(Timestamp, bool)> for HalfBoundedAbsoluteInterval {
+    fn from((time, goes_to_future): (Timestamp, bool)) -> Self {
         HalfBoundedAbsoluteInterval::new(time, OpeningDirection::from(goes_to_future))
     }
 }
 
-impl From<((DateTime<Utc>, BoundInclusivity), OpeningDirection)> for HalfBoundedAbsoluteInterval {
-    fn from(((time, inclusivity), direction): ((DateTime<Utc>, BoundInclusivity), OpeningDirection)) -> Self {
+impl From<((Timestamp, BoundInclusivity), OpeningDirection)> for HalfBoundedAbsoluteInterval {
+    fn from(((time, inclusivity), direction): ((Timestamp, BoundInclusivity), OpeningDirection)) -> Self {
         HalfBoundedAbsoluteInterval::new_with_inclusivity(time, inclusivity, direction)
     }
 }
 
-/// Converts `((DateTime<Utc>, BoundInclusivity), bool)` into [`HalfBoundedAbsoluteInterval`]
+/// Converts `((Timestamp, BoundInclusivity), bool)` into [`HalfBoundedAbsoluteInterval`]
 ///
 /// The boolean is interpreted as _is it going to future?_
-impl From<((DateTime<Utc>, BoundInclusivity), bool)> for HalfBoundedAbsoluteInterval {
-    fn from(((time, inclusivity), goes_to_future): ((DateTime<Utc>, BoundInclusivity), bool)) -> Self {
+impl From<((Timestamp, BoundInclusivity), bool)> for HalfBoundedAbsoluteInterval {
+    fn from(((time, inclusivity), goes_to_future): ((Timestamp, BoundInclusivity), bool)) -> Self {
         HalfBoundedAbsoluteInterval::new_with_inclusivity(time, inclusivity, OpeningDirection::from(goes_to_future))
     }
 }
 
-/// Converts `((DateTime<Utc>, bool), OpeningDirection)` into [`HalfBoundedAbsoluteInterval`]
+/// Converts `((Timestamp, bool), OpeningDirection)` into [`HalfBoundedAbsoluteInterval`]
 ///
 /// The boolean is interpreted as _is it inclusive?_
-impl From<((DateTime<Utc>, bool), OpeningDirection)> for HalfBoundedAbsoluteInterval {
-    fn from(((time, is_inclusive), direction): ((DateTime<Utc>, bool), OpeningDirection)) -> Self {
+impl From<((Timestamp, bool), OpeningDirection)> for HalfBoundedAbsoluteInterval {
+    fn from(((time, is_inclusive), direction): ((Timestamp, bool), OpeningDirection)) -> Self {
         HalfBoundedAbsoluteInterval::new_with_inclusivity(time, BoundInclusivity::from(is_inclusive), direction)
     }
 }
 
-/// Converts `((DateTime<Utc>, bool), bool)` into [`HalfBoundedAbsoluteInterval`]
+/// Converts `((Timestamp, bool), bool)` into [`HalfBoundedAbsoluteInterval`]
 ///
 /// The boolean of the first tuple element is interpreted as _is it inclusive?_
 ///
 /// The boolean of the second tuple element is interpreted as _is it going to future?_
-impl From<((DateTime<Utc>, bool), bool)> for HalfBoundedAbsoluteInterval {
-    fn from(((time, is_inclusive), goes_to_future): ((DateTime<Utc>, bool), bool)) -> Self {
+impl From<((Timestamp, bool), bool)> for HalfBoundedAbsoluteInterval {
+    fn from(((time, is_inclusive), goes_to_future): ((Timestamp, bool), bool)) -> Self {
         HalfBoundedAbsoluteInterval::new_with_inclusivity(
             time,
             BoundInclusivity::from(is_inclusive),
@@ -8022,8 +7815,8 @@ impl From<((DateTime<Utc>, bool), bool)> for HalfBoundedAbsoluteInterval {
     }
 }
 
-impl From<RangeFrom<DateTime<Utc>>> for HalfBoundedAbsoluteInterval {
-    fn from(range: RangeFrom<DateTime<Utc>>) -> Self {
+impl From<RangeFrom<Timestamp>> for HalfBoundedAbsoluteInterval {
+    fn from(range: RangeFrom<Timestamp>) -> Self {
         HalfBoundedAbsoluteInterval::new_with_inclusivity(
             range.start,
             BoundInclusivity::Inclusive,
@@ -8032,8 +7825,8 @@ impl From<RangeFrom<DateTime<Utc>>> for HalfBoundedAbsoluteInterval {
     }
 }
 
-impl From<RangeTo<DateTime<Utc>>> for HalfBoundedAbsoluteInterval {
-    fn from(range: RangeTo<DateTime<Utc>>) -> Self {
+impl From<RangeTo<Timestamp>> for HalfBoundedAbsoluteInterval {
+    fn from(range: RangeTo<Timestamp>) -> Self {
         HalfBoundedAbsoluteInterval::new_with_inclusivity(
             range.end,
             BoundInclusivity::Exclusive,
@@ -8042,8 +7835,8 @@ impl From<RangeTo<DateTime<Utc>>> for HalfBoundedAbsoluteInterval {
     }
 }
 
-impl From<RangeToInclusive<DateTime<Utc>>> for HalfBoundedAbsoluteInterval {
-    fn from(range: RangeToInclusive<DateTime<Utc>>) -> Self {
+impl From<RangeToInclusive<Timestamp>> for HalfBoundedAbsoluteInterval {
+    fn from(range: RangeToInclusive<Timestamp>) -> Self {
         HalfBoundedAbsoluteInterval::new_with_inclusivity(
             range.end,
             BoundInclusivity::Inclusive,
@@ -8350,11 +8143,11 @@ impl From<EmptiableAbsoluteBounds> for AbsoluteInterval {
     }
 }
 
-/// Converts `(Option<DateTime<Utc>>, Option<DateTime<Utc>>)` into [`AbsoluteInterval`]
+/// Converts `(Option<Timestamp>, Option<Timestamp>)` into [`AbsoluteInterval`]
 ///
 /// The first tuple element represents the start bound, the second element represents the end bound.
-impl From<(Option<DateTime<Utc>>, Option<DateTime<Utc>>)> for AbsoluteInterval {
-    fn from((from_opt, to_opt): (Option<DateTime<Utc>>, Option<DateTime<Utc>>)) -> Self {
+impl From<(Option<Timestamp>, Option<Timestamp>)> for AbsoluteInterval {
+    fn from((from_opt, to_opt): (Option<Timestamp>, Option<Timestamp>)) -> Self {
         match (from_opt, to_opt) {
             (Some(from), Some(to)) => AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(from, to)),
             (Some(from), None) => {
@@ -8368,20 +8161,20 @@ impl From<(Option<DateTime<Utc>>, Option<DateTime<Utc>>)> for AbsoluteInterval {
     }
 }
 
-/// Converts `(Option<(DateTime<Utc>, BoundInclusivity)>, Option<(DateTime<Utc>, BoundInclusivity)>)`
+/// Converts `(Option<(Timestamp, BoundInclusivity)>, Option<(Timestamp, BoundInclusivity)>)`
 /// into [`AbsoluteInterval`]
 ///
 /// The first tuple element represents the start bound, the second element represents the end bound.
 impl
     From<(
-        Option<(DateTime<Utc>, BoundInclusivity)>,
-        Option<(DateTime<Utc>, BoundInclusivity)>,
+        Option<(Timestamp, BoundInclusivity)>,
+        Option<(Timestamp, BoundInclusivity)>,
     )> for AbsoluteInterval
 {
     fn from(
         (from_opt, to_opt): (
-            Option<(DateTime<Utc>, BoundInclusivity)>,
-            Option<(DateTime<Utc>, BoundInclusivity)>,
+            Option<(Timestamp, BoundInclusivity)>,
+            Option<(Timestamp, BoundInclusivity)>,
         ),
     ) -> Self {
         match (from_opt, to_opt) {
@@ -8399,13 +8192,13 @@ impl
     }
 }
 
-/// Converts `(Option<(DateTime<Utc>, bool)>, Option<(DateTime<Utc>, bool)>)` into [`AbsoluteInterval`]
+/// Converts `(Option<(Timestamp, bool)>, Option<(Timestamp, bool)>)` into [`AbsoluteInterval`]
 ///
 /// The first tuple element represents the start bound, the second element represents the end bound.
 ///
-/// The booleans contained within the `Option<(DateTime<Utc>, bool)>`s are interpreted as _is it inclusive?_
-impl From<(Option<(DateTime<Utc>, bool)>, Option<(DateTime<Utc>, bool)>)> for AbsoluteInterval {
-    fn from((from_opt, to_opt): (Option<(DateTime<Utc>, bool)>, Option<(DateTime<Utc>, bool)>)) -> Self {
+/// The booleans contained within the `Option<(Timestamp, bool)>`s are interpreted as _is it inclusive?_
+impl From<(Option<(Timestamp, bool)>, Option<(Timestamp, bool)>)> for AbsoluteInterval {
+    fn from((from_opt, to_opt): (Option<(Timestamp, bool)>, Option<(Timestamp, bool)>)) -> Self {
         match (from_opt, to_opt) {
             (Some((from, is_from_inclusive)), Some((to, is_to_inclusive))) => {
                 AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new_with_inclusivity(
@@ -8434,14 +8227,14 @@ impl From<(Option<(DateTime<Utc>, bool)>, Option<(DateTime<Utc>, bool)>)> for Ab
     }
 }
 
-/// Converts `(bool, Option<DateTime<Utc>>, Option<DateTime<Utc>>)` into [`AbsoluteInterval`]
+/// Converts `(bool, Option<Timestamp>, Option<Timestamp>)` into [`AbsoluteInterval`]
 ///
 /// The second tuple element represents the start bound, the third element represents the end bound.
 ///
 /// The first boolean indicates whether the interval is an [`EmptyInterval`].
 /// If it is set to `true`, the next elements are ignored altogether.
-impl From<(bool, Option<DateTime<Utc>>, Option<DateTime<Utc>>)> for AbsoluteInterval {
-    fn from((is_empty, from_opt, to_opt): (bool, Option<DateTime<Utc>>, Option<DateTime<Utc>>)) -> Self {
+impl From<(bool, Option<Timestamp>, Option<Timestamp>)> for AbsoluteInterval {
+    fn from((is_empty, from_opt, to_opt): (bool, Option<Timestamp>, Option<Timestamp>)) -> Self {
         if is_empty {
             return AbsoluteInterval::Empty(EmptyInterval);
         }
@@ -8459,7 +8252,7 @@ impl From<(bool, Option<DateTime<Utc>>, Option<DateTime<Utc>>)> for AbsoluteInte
     }
 }
 
-/// Converts `(bool, Option<(DateTime<Utc>, BoundInclusivity)>, Option<(DateTime<Utc>, BoundInclusivity)>)`
+/// Converts `(bool, Option<(Timestamp, BoundInclusivity)>, Option<(Timestamp, BoundInclusivity)>)`
 /// into [`AbsoluteInterval`]
 ///
 /// The second tuple element represents the start bound, the third element represents the end bound.
@@ -8469,15 +8262,15 @@ impl From<(bool, Option<DateTime<Utc>>, Option<DateTime<Utc>>)> for AbsoluteInte
 impl
     From<(
         bool,
-        Option<(DateTime<Utc>, BoundInclusivity)>,
-        Option<(DateTime<Utc>, BoundInclusivity)>,
+        Option<(Timestamp, BoundInclusivity)>,
+        Option<(Timestamp, BoundInclusivity)>,
     )> for AbsoluteInterval
 {
     fn from(
         (is_empty, from_opt, to_opt): (
             bool,
-            Option<(DateTime<Utc>, BoundInclusivity)>,
-            Option<(DateTime<Utc>, BoundInclusivity)>,
+            Option<(Timestamp, BoundInclusivity)>,
+            Option<(Timestamp, BoundInclusivity)>,
         ),
     ) -> Self {
         if is_empty {
@@ -8499,17 +8292,17 @@ impl
     }
 }
 
-/// Converts `(bool, Option<(DateTime<Utc>, bool)>, Option<(DateTime<Utc>, bool)>)` into [`AbsoluteInterval`]
+/// Converts `(bool, Option<(Timestamp, bool)>, Option<(Timestamp, bool)>)` into [`AbsoluteInterval`]
 ///
 /// The second tuple element represents the start bound, the third element represents the end bound.
 ///
 /// The first boolean indicates whether the interval is an [`EmptyInterval`].
 /// If it is set to `true`, the next elements are ignored altogether.
 ///
-/// The booleans contained within the `Option<(DateTime<Utc>, bool)>`s are interpreted as _is it inclusive?_
-impl From<(bool, Option<(DateTime<Utc>, bool)>, Option<(DateTime<Utc>, bool)>)> for AbsoluteInterval {
+/// The booleans contained within the `Option<(Timestamp, bool)>`s are interpreted as _is it inclusive?_
+impl From<(bool, Option<(Timestamp, bool)>, Option<(Timestamp, bool)>)> for AbsoluteInterval {
     fn from(
-        (is_empty, from_opt, to_opt): (bool, Option<(DateTime<Utc>, bool)>, Option<(DateTime<Utc>, bool)>),
+        (is_empty, from_opt, to_opt): (bool, Option<(Timestamp, bool)>, Option<(Timestamp, bool)>),
     ) -> Self {
         if is_empty {
             return AbsoluteInterval::Empty(EmptyInterval);
@@ -8544,11 +8337,11 @@ impl From<(bool, Option<(DateTime<Utc>, bool)>, Option<(DateTime<Utc>, bool)>)> 
 }
 
 // Unfortunately can't use impl<R: RangeBounds> From<R> as it's conflicting with the core implementation of From
-/// Converts `(Bound<DateTime<Utc>>, Bound<DateTime<Utc>>)` into [`AbsoluteInterval`]
+/// Converts `(Bound<Timestamp>, Bound<Timestamp>)` into [`AbsoluteInterval`]
 ///
 /// The first tuple element represents the start bound, the second tuple element represents the end bound.
-impl From<(Bound<DateTime<Utc>>, Bound<DateTime<Utc>>)> for AbsoluteInterval {
-    fn from((start_bound, end_bound): (Bound<DateTime<Utc>>, Bound<DateTime<Utc>>)) -> Self {
+impl From<(Bound<Timestamp>, Bound<Timestamp>)> for AbsoluteInterval {
+    fn from((start_bound, end_bound): (Bound<Timestamp>, Bound<Timestamp>)) -> Self {
         match (start_bound, end_bound) {
             (Bound::Included(from), Bound::Included(to)) => {
                 AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new_with_inclusivity(
@@ -8615,32 +8408,32 @@ impl From<(Bound<DateTime<Utc>>, Bound<DateTime<Utc>>)> for AbsoluteInterval {
     }
 }
 
-impl From<Range<DateTime<Utc>>> for AbsoluteInterval {
-    fn from(value: Range<DateTime<Utc>>) -> Self {
+impl From<Range<Timestamp>> for AbsoluteInterval {
+    fn from(value: Range<Timestamp>) -> Self {
         AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from(value))
     }
 }
 
-impl From<RangeInclusive<DateTime<Utc>>> for AbsoluteInterval {
-    fn from(value: RangeInclusive<DateTime<Utc>>) -> Self {
+impl From<RangeInclusive<Timestamp>> for AbsoluteInterval {
+    fn from(value: RangeInclusive<Timestamp>) -> Self {
         AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from(value))
     }
 }
 
-impl From<RangeFrom<DateTime<Utc>>> for AbsoluteInterval {
-    fn from(value: RangeFrom<DateTime<Utc>>) -> Self {
+impl From<RangeFrom<Timestamp>> for AbsoluteInterval {
+    fn from(value: RangeFrom<Timestamp>) -> Self {
         AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::from(value))
     }
 }
 
-impl From<RangeTo<DateTime<Utc>>> for AbsoluteInterval {
-    fn from(value: RangeTo<DateTime<Utc>>) -> Self {
+impl From<RangeTo<Timestamp>> for AbsoluteInterval {
+    fn from(value: RangeTo<Timestamp>) -> Self {
         AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::from(value))
     }
 }
 
-impl From<RangeToInclusive<DateTime<Utc>>> for AbsoluteInterval {
-    fn from(value: RangeToInclusive<DateTime<Utc>>) -> Self {
+impl From<RangeToInclusive<Timestamp>> for AbsoluteInterval {
+    fn from(value: RangeToInclusive<Timestamp>) -> Self {
         AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::from(value))
     }
 }
