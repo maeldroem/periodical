@@ -10,28 +10,33 @@
 
 ## Added
 
-- [x] Added rough `NaiveWeek` structure as a drop-in replacement for `chrono`'s `NaiveWeek`
-- [x] Added rough `NaiveIsoWeek` structure
+- [x] Added `NaiveWeek` in `time`
+- [x] Added `NaiveWeekInYear` in `time`
+- [x] Added `Month` in `time`
+- [x] Added `NaiveMonthInYear` in `time`
+- [x] Added method to compute the number of weeks in a given year with a custom week start day
 
 ## Changed
 
-- [ ] Migrating `absolute.rs` to jiff
-- [ ] Migrating `relative.rs` to jiff
-- [ ] Migrating `special.rs` to jiff
-- [x] Migrating `time.rs` to jiff
-- [ ] Migrating `ops.rs` to jiff
+- [ ] Migrating `intervals::absolute` to jiff
+- [ ] Migrating `intervals::relative` to jiff
+- [ ] Migrating `intervals::special` to jiff
+- [x] Migrating `time` to jiff
+- [ ] Migrating `intervals::ops` to jiff
 
-- [ ] Migrating `absolute.rs`'s tests to jiff
-- [ ] Migrating `relative.rs`'s tests to jiff
-- [ ] Migrating `special.rs`'s tests to jiff
-- [ ] Migrating `time.rs`'s tests to jiff
-- [ ] Migrating `ops.rs`'s tests to jiff
+- [ ] Migrating `intervals::absolute`'s tests to jiff
+- [ ] Migrating `intervals::relative`'s tests to jiff
+- [ ] Migrating `intervals::special`'s tests to jiff
+- [ ] Migrating `time`'s tests to jiff
+- [ ] Migrating `intervals::ops`'s tests to jiff
 
-- [ ] Migrating `absolute.rs`'s examples to jiff
-- [ ] Migrating `relative.rs`'s examples to jiff
-- [ ] Migrating `special.rs`'s examples to jiff
-- [ ] Migrating `time.rs`'s examples to jiff
-- [ ] Migrating `ops.rs`'s examples to jiff
+- [ ] Migrating `intervals::absolute`'s examples to jiff
+- [ ] Migrating `intervals::relative`'s examples to jiff
+- [ ] Migrating `intervals::special`'s examples to jiff
+- [ ] Migrating `intervals::ops`'s examples to jiff
+
+- [ ] Updating `time` tests to check new structures
+- [ ] Finishing `time` docs
 
 - [ ] Renamed all occurrences of "from" and "to" to "start" and "end" respectively to avoid confusion
   and to make it easier to refer to ("start time" is more explicit than "from time")
