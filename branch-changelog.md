@@ -37,7 +37,7 @@
 - [ ] Migrating `intervals::ops`'s examples to jiff
 
 - [ ] Updating `time` tests to check new structures
-- [ ] Finishing `time` docs
+- [x] Finishing `time` docs
 
 - [ ] Renamed all occurrences of "from" and "to" to "start" and "end" respectively to avoid confusion
   and to make it easier to refer to ("start time" is more explicit than "from time")
