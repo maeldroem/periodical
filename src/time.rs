@@ -9,17 +9,17 @@ use std::error::Error;
 use std::fmt::Display;
 
 use jiff::{Error as JiffError, Span, Timestamp};
-use jiff::civil::{Date, Weekday};
+use jiff::civil::{Date, ISOWeekDate, Weekday};
 use jiff::tz::TimeZone;
 
 /// Number of days in a week
 pub const DAYS_IN_WEEK: u8 = 7;
 
 /// Minimum amount of weeks in a year
-pub const MIN_WEEKS_IN_YEAR: u8 = 52;
+pub const WEEKS_IN_SHORT_YEAR: u8 = 52;
 
 /// Maximum amount of weeks in a year
-pub const MAX_WEEKS_IN_YEAR: u8 = 53;
+pub const WEEKS_IN_LONG_YEAR: u8 = 53;
 
 /// Number of months in a year
 pub const MONTHS_IN_YEAR: u8 = 12;
@@ -47,150 +47,68 @@ pub fn naive_date_today(tz: &TimeZone) -> Date {
     tz.to_datetime(Timestamp::now()).date()
 }
 
-/// Returns the amount of weeks in a given year
-/// 
-/// Since weeks can start on different days, this function takes a [`Weekday`].
-/// 
-/// # Errors
-/// 
-/// Returns [`Error`](JiffError) if the given year is out of range.
-/// 
-/// TEST THIS THOROUGHLY
-pub fn weeks_in_year(year: i16, week_start: Weekday) -> Result<u8, JiffError> {
+/// Returns the number of ISO weeks in a given year
+pub fn iso_weeks_in_year(year: i16) -> Result<u8, JiffError> {
     let start_of_year = Date::new(year, 1, 1)?;
-    let first_weekday = start_of_year.weekday();
-    let leftover_days = i8::from(start_of_year.days_in_year() % DAYS_IN_WEEK);
+
+    // https://en.wikipedia.org/wiki/ISO_week_date?useskin=vector#Weeks_per_year
+    let is_long_year = start_of_year.weekday() == Weekday::Thursday
+        || (start_of_year.in_leap_year() && start_of_year.weekday() == Weekday::Wednesday);
     
-    // Logic: if the amount of days to reach `week_start` from `first_weekday` is greater than the leftover days,
-    // this means that we have "entered" a new multiple of 7, a week, therefore there will be no space at
-    // the end of the year to store an extra week start.
-    if week_start.until(first_weekday) > leftover_days {
-        Ok(MIN_WEEKS_IN_YEAR)
+    if is_long_year {
+        Ok(WEEKS_IN_LONG_YEAR)
     } else {
-        Ok(MAX_WEEKS_IN_YEAR)
-    }
-}
-
-/// Naive week with a week start [`Weekday`]
-/// 
-/// Represents a given week within an unspecified year, starting on a given [`Weekday`].
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct NaiveWeek {
-    week_number: u8, // 1-offset
-    week_start: Weekday,
-}
-
-impl NaiveWeek {
-    /// Creates a new [`NaiveWeek`] from a given week number and week start [`Weekday`]
-    /// 
-    /// The given week number is expressed as a 1-offset number, so week 1 is the first week.
-    /// 
-    /// TODO ERRORS
-    #[must_use]
-    pub fn new(week_number: u8, week_start: Weekday) -> Result<Self, NaiveWeekCreationError> {
-        if week_number == 0 || week_number > MAX_WEEKS_IN_YEAR {
-            return Err(NaiveWeekCreationError::OutOfRangeWeekNumber);
-        }
-
-        Ok(NaiveWeek { week_number, week_start })
-    }
-
-    /// Returns the 1-offset week number
-    /// 
-    /// The returned week number is expressed as a 1-offset number, so week 1 is the first week.
-    #[must_use]
-    pub fn week_number(&self) -> u8 {
-        self.week_number
-    }
-
-    /// Returns the week start [`Weekday`]
-    #[must_use]
-    pub fn week_start(&self) -> Weekday {
-        self.week_start
-    }
-
-    /// Associates a given year with the week
-    /// 
-    /// TODO ERRORS
-    /// 
-    /// # Examples
-    /// 
-    /// TODO
-    #[must_use]
-    pub fn with_year(self, year: i16) -> Result<NaiveWeekInYear, NaiveWeekInYearCreationError> {
-        NaiveWeekInYear::from_naive_week(self, year)
+        Ok(WEEKS_IN_SHORT_YEAR)
     }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum NaiveWeekCreationError {
-    OutOfRangeWeekNumber,
-}
-
-impl Display for NaiveWeekCreationError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::OutOfRangeWeekNumber => write!(f, "Out of range week number"),
-        }
-    }
-}
-
-impl Error for NaiveWeekCreationError {}
-
-impl TryFrom<NaiveWeekInYear> for NaiveWeek {
-    type Error = NaiveWeekCreationError;
-
-    fn try_from(value: NaiveWeekInYear) -> Result<Self, Self::Error> {
-        NaiveWeek::new(value.week_number(), value.week_start())
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct NaiveWeekInYear {
-    week_number: u8, // 1-offset
-    week_start: Weekday,
+pub struct OffsetIsoWeek {
+    week: u8,
     year: i16,
+    week_start_offset: i8,
 }
 
-impl NaiveWeekInYear {
-    /// Creates a new [`NaiveWeekInYear`] from a week number, week start, and year
+impl OffsetIsoWeek {
+    /// Creates a new [`OffsetIsoWeek`] without an offset
+    pub fn new(week: u8, year: i16) -> Result<Self, OffsetIsoWeekCreationError> {
+        Self::new_with_offset(week, year, 0)
+    }
+
+    /// Creates a new [`OffsetIsoWeek`] with the given week start offset
     /// 
-    /// The given week number is expressed as a 1-offset number, so week 1 is the first week.
+    /// # Errors
     /// 
-    /// TODO ERRORS
-    #[must_use]
-    pub fn new(week_number: u8, week_start: Weekday, year: i16) -> Result<Self, NaiveWeekInYearCreationError> {
-        if week_number == 0
-            || week_number > weeks_in_year(year, week_start).or(Err(NaiveWeekInYearCreationError::OutOfRangeYear))?
-        {
-            return Err(NaiveWeekInYearCreationError::OutOfRangeWeekNumber);
+    /// If the year is out of range, [`OutOfRangeYear`](OffsetIsoWeekCreationError::OutOfRangeYear) is returned.
+    /// 
+    /// If the week start offset is outside the `-6..=6` range,
+    /// [`OutOfRangeOffset`](OffsetIsoWeekCreationError::OutOfRangeOffset) is returned.
+    pub fn new_with_offset(
+        week: u8,
+        year: i16,
+        week_start_offset: i8,
+    ) -> Result<Self, OffsetIsoWeekCreationError> {
+        let iso_weeks_in_year = iso_weeks_in_year(year).or(Err(OffsetIsoWeekCreationError::OutOfRangeYear))?;
+
+        if !(1..=iso_weeks_in_year).contains(&week) {
+            return Err(OffsetIsoWeekCreationError::OutOfRangeWeek);
         }
 
-        Ok(NaiveWeekInYear { week_number, week_start, year })
+        if !(-6i8..=6i8).contains(&week_start_offset) {
+            return Err(OffsetIsoWeekCreationError::OutOfRangeOffset);
+        }
+
+        Ok(OffsetIsoWeek {
+            week,
+            year,
+            week_start_offset,
+        })
     }
 
-    /// Creates a new [`NaiveWeekInYear`] from a [`NaiveWeek`] and a year
-    /// 
-    /// # Examples
-    /// 
-    /// TODO
+    /// Returns the week number
     #[must_use]
-    pub fn from_naive_week(naive_week: NaiveWeek, year: i16) -> Result<Self, NaiveWeekInYearCreationError> {
-        NaiveWeekInYear::new(naive_week.week_number(), naive_week.week_start(), year)
-    }
-
-    /// Returns the 1-offset week number
-    /// 
-    /// The returned week number is expressed as a 1-offset number, so week 1 is the first week.
-    #[must_use]
-    pub fn week_number(&self) -> u8 {
-        self.week_number
-    }
-
-    /// Returns the week start [`Weekday`]
-    #[must_use]
-    pub fn week_start(&self) -> Weekday {
-        self.week_start
+    pub fn week(&self) -> u8 {
+        self.week
     }
 
     /// Returns the year
@@ -199,68 +117,72 @@ impl NaiveWeekInYear {
         self.year
     }
 
-    /// Returns the first day of the week
+    /// Returns the week start offset
     #[must_use]
-    pub fn first_day(&self) -> Result<Date, NaiveWeekDayError> {
-        let start_of_year = Date::new(self.year(), 1, 1).or(Err(NaiveWeekDayError::OutOfRangeYear))?;
+    pub fn week_start_offset(&self) -> i8 {
+        self.week_start_offset
+    }
 
-        let days_from_first_day = u16::from(
-            weeks_in_year(self.year(), self.week_start())
-                .or(Err(NaiveWeekDayError::OutOfRangeYear))?
+    /// Returns the offset first day of the week
+    pub fn first_day(&self) -> Result<Date, OffsetIsoWeekDateError> {
+        let iso_week_first_day = ISOWeekDate::new(
+            self.year(),
+            i8::try_from(self.week()).or(Err(OffsetIsoWeekDateError))?,
+            Weekday::Monday,
         )
-            .strict_mul(u16::from(DAYS_IN_WEEK))
-            .strict_add(u16::from(start_of_year.weekday().until(self.week_start()).unsigned_abs()));
+            .or(Err(OffsetIsoWeekDateError))?
+            .date();
 
-        start_of_year
-            .checked_add(Span::new().days(days_from_first_day))
-            .or(Err(NaiveWeekDayError::OutOfRangeResult))
+        iso_week_first_day
+            .checked_add(Span::new().try_days(self.week_start_offset()).or(Err(OffsetIsoWeekDateError))?)
+            .or(Err(OffsetIsoWeekDateError))
     }
 
-    /// Returns the last day of the week
-    #[must_use]
-    pub fn last_day(&self) -> Result<Date, NaiveWeekDayError> {
-        self
-            .first_day()
-            .and_then(|day| day
-                .checked_add(Span::new().days(DAYS_IN_WEEK - 1))
-                .or(Err(NaiveWeekDayError::OutOfRangeResult))
-            )
+    /// Returns the offset last day of the week
+    pub fn last_day(&self) -> Result<Date, OffsetIsoWeekDateError> {
+        let iso_week_last_day = ISOWeekDate::new(
+            self.year(),
+            i8::try_from(self.week()).or(Err(OffsetIsoWeekDateError))?,
+            Weekday::Sunday,
+        )
+            .or(Err(OffsetIsoWeekDateError))?
+            .date();
+
+        iso_week_last_day
+            .checked_add(Span::new().try_days(self.week_start_offset()).or(Err(OffsetIsoWeekDateError))?)
+            .or(Err(OffsetIsoWeekDateError))
     }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum NaiveWeekInYearCreationError {
+pub enum OffsetIsoWeekCreationError {
     OutOfRangeYear,
-    OutOfRangeWeekNumber,
+    OutOfRangeWeek,
+    OutOfRangeOffset,
 }
 
-impl Display for NaiveWeekInYearCreationError {
+impl Display for OffsetIsoWeekCreationError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::OutOfRangeYear => write!(f, "Out of range year"),
-            Self::OutOfRangeWeekNumber => write!(f, "Out of range week number"),
+            Self::OutOfRangeWeek => write!(f, "Out of range week number"),
+            Self::OutOfRangeOffset => write!(f, "Out of range week start offset"),
         }
     }
 }
 
-impl Error for NaiveWeekInYearCreationError {}
+impl Error for OffsetIsoWeekCreationError {}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum NaiveWeekDayError {
-    OutOfRangeYear,
-    OutOfRangeResult,
-}
+pub struct OffsetIsoWeekDateError;
 
-impl Display for NaiveWeekDayError {
+impl Display for OffsetIsoWeekDateError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::OutOfRangeYear => write!(f, "Out of range year"),
-            Self::OutOfRangeResult => write!(f, "Out of range result"),
-        }
+        write!(f, "Conversion of the OffsetIsoWeek to a Date failed")
     }
 }
 
-impl Error for NaiveWeekDayError {}
+impl Error for OffsetIsoWeekDateError {}
 
 /// Month representation
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -610,24 +532,24 @@ pub fn checked_add_calendar_anchor_offset_to_date(
             checked_add_calendar_week_offset_to_date(weeks_offset, Weekday::Monday, date)
         },
         CalendarAnchorOffset::Months(months_offset) => {
-            date
+            Ok(date
                 .checked_add(
                     Span::new()
                         .try_months(months_offset)
                         .or(Err(CalendarAnchorOffsetDateError::OffsetTooLarge))?
                 )
                 .or(Err(CalendarAnchorOffsetDateError::OutOfRangeResult))?
-                .first_of_month()
+                .first_of_month())
         },
         CalendarAnchorOffset::Years(years_offset) => {
-            date
+            Ok(date
                 .checked_add(
                     Span::new()
                         .try_years(years_offset)
                         .or(Err(CalendarAnchorOffsetDateError::OffsetTooLarge))?
                 )
                 .or(Err(CalendarAnchorOffsetDateError::OutOfRangeResult))?
-                .first_of_year()
+                .first_of_year())
         },
     }
 }
@@ -653,24 +575,24 @@ pub fn checked_sub_calendar_anchor_offset_to_date(
             checked_sub_calendar_week_offset_to_date(weeks_offset, Weekday::Monday, date)
         },
         CalendarAnchorOffset::Months(months_offset) => {
-            date
+            Ok(date
                 .checked_sub(
                     Span::new()
                         .try_months(months_offset)
                         .or(Err(CalendarAnchorOffsetDateError::OffsetTooLarge))?
                 )
                 .or(Err(CalendarAnchorOffsetDateError::OutOfRangeResult))?
-                .first_of_month()
+                .first_of_month())
         },
         CalendarAnchorOffset::Years(years_offset) => {
-            date
+            Ok(date
                 .checked_sub(
                     Span::new()
                         .try_years(years_offset)
                         .or(Err(CalendarAnchorOffsetDateError::OffsetTooLarge))?
                 )
                 .or(Err(CalendarAnchorOffsetDateError::OutOfRangeResult))?
-                .first_of_year()
+                .first_of_year())
         },
     }
 }
