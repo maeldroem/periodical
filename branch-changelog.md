@@ -10,13 +10,12 @@
 
 ## Added
 
-- [x] Added `NaiveWeek` in `time`
-- [x] Added `NaiveWeekInYear` in `time`
+- [x] Added `OffsetIsoWeek` in `time`
 - [x] Added `Month` in `time`
 - [x] Added `NaiveMonthInYear` in `time`
-- [x] Added method to compute the number of weeks in a given year with a custom week start day
 - [x] Added `checked_add_calendar_week_offset_to_date` and its subtraction variant
 - [x] Added `checked_add_calendar_anchor_offset_to_date` and its subtraction variant
+- [x] Added `iso_weeks_in_year` to return the number of ISO weeks in a given year
 
 ## Changed
 
