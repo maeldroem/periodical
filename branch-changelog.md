@@ -28,7 +28,7 @@
 - [ ] Migrating `intervals::absolute`'s tests to jiff
 - [ ] Migrating `intervals::relative`'s tests to jiff
 - [ ] Migrating `intervals::special`'s tests to jiff
-- [ ] Migrating `time`'s tests to jiff
+- [x] Migrating `time`'s tests to jiff
 - [ ] Migrating `intervals::ops`'s tests to jiff
 
 - [ ] Migrating `intervals::absolute`'s examples to jiff
@@ -36,7 +36,7 @@
 - [ ] Migrating `intervals::special`'s examples to jiff
 - [ ] Migrating `intervals::ops`'s examples to jiff
 
-- [ ] Updating `time` tests to check new structures
+- [x] Updating `time` tests to check new structures
 - [x] Finishing `time` docs
 
 - [ ] Renamed all occurrences of "from" and "to" to "start" and "end" respectively to avoid confusion
