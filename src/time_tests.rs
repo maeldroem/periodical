@@ -1,6 +1,6 @@
 use std::cmp::Ordering;
 
-use crate::test_utils::{AnyError, TestResult, TEST_OK};
+use crate::test_utils::{AnyError, TestResult};
 
 use super::time::*;
 
@@ -46,7 +46,7 @@ mod offset_iso_week {
         let iso_week = OffsetIsoWeek::new(5, 2026)?;
         assert_eq!(iso_week.first_day()?, "2026-01-26".parse::<Date>()?);
         assert_eq!(iso_week.last_day()?, "2026-02-01".parse::<Date>()?);
-        TEST_OK
+        Ok(())
     }
 
     #[test]
@@ -54,7 +54,7 @@ mod offset_iso_week {
         let offset_iso_week = OffsetIsoWeek::new_with_offset(5, 2026, -1)?;
         assert_eq!(offset_iso_week.first_day()?, "2026-01-25".parse::<Date>()?);
         assert_eq!(offset_iso_week.last_day()?, "2026-01-31".parse::<Date>()?);
-        TEST_OK
+        Ok(())
     }
 
     #[test]
@@ -62,7 +62,7 @@ mod offset_iso_week {
         let offset_iso_week = OffsetIsoWeek::new_with_offset(5, 2026, 2)?;
         assert_eq!(offset_iso_week.first_day()?, "2026-01-28".parse::<Date>()?);
         assert_eq!(offset_iso_week.last_day()?, "2026-02-03".parse::<Date>()?);
-        TEST_OK
+        Ok(())
     }
 }
 
@@ -103,7 +103,7 @@ mod month_in_year {
         let month = MonthInYear::new(Month::May, 2026);
         assert_eq!(month.first_day()?, "2026-05-01".parse::<Date>()?);
         assert_eq!(month.last_day()?, "2026-05-31".parse::<Date>()?);
-        TEST_OK
+        Ok(())
     }
 }
 
@@ -322,7 +322,7 @@ mod calendar_anchor_offset {
             checked_add_calendar_anchor_offset_to_date(CalendarAnchorOffset::Days(0), date)?,
             date,
         );
-        TEST_OK
+        Ok(())
     }
 
     #[test]
@@ -334,7 +334,7 @@ mod calendar_anchor_offset {
             )?,
             "2027-06-25".parse::<Date>()?,
         );
-        TEST_OK
+        Ok(())
     }
 
     #[test]
@@ -346,7 +346,7 @@ mod calendar_anchor_offset {
             )?,
             "2025-03-07".parse::<Date>()?,
         );
-        TEST_OK
+        Ok(())
     }
 
     #[test]
@@ -360,7 +360,7 @@ mod calendar_anchor_offset {
             )?,
             "2026-04-27".parse::<Date>()?,
         );
-        TEST_OK
+        Ok(())
     }
 
     #[test]
@@ -372,7 +372,7 @@ mod calendar_anchor_offset {
             )?,
             "2026-04-26".parse::<Date>()?,
         );
-        TEST_OK
+        Ok(())
     }
 
     #[test]
@@ -384,7 +384,7 @@ mod calendar_anchor_offset {
             )?,
             "2026-02-02".parse::<Date>()?,
         );
-        TEST_OK
+        Ok(())
     }
 
     #[test]
@@ -396,7 +396,7 @@ mod calendar_anchor_offset {
             )?,
             "2026-02-08".parse::<Date>()?,
         );
-        TEST_OK
+        Ok(())
     }
 
     #[test]
@@ -408,7 +408,7 @@ mod calendar_anchor_offset {
             )?,
             "2026-08-10".parse::<Date>()?,
         );
-        TEST_OK
+        Ok(())
     }
 
     #[test]
@@ -420,7 +420,7 @@ mod calendar_anchor_offset {
             )?,
             "2026-02-16".parse::<Date>()?,
         );
-        TEST_OK
+        Ok(())
     }
 
     #[test]
@@ -434,7 +434,7 @@ mod calendar_anchor_offset {
             )?,
             "2026-05-01".parse::<Date>()?,
         );
-        TEST_OK
+        Ok(())
     }
 
     #[test]
@@ -446,7 +446,7 @@ mod calendar_anchor_offset {
             )?,
             "2028-11-01".parse::<Date>()?,
         );
-        TEST_OK
+        Ok(())
     }
 
     #[test]
@@ -458,7 +458,7 @@ mod calendar_anchor_offset {
             )?,
             "2029-04-01".parse::<Date>()?,
         );
-        TEST_OK
+        Ok(())
     }
 
     #[test]
@@ -470,7 +470,7 @@ mod calendar_anchor_offset {
             )?,
             "2024-02-01".parse::<Date>()?,
         );
-        TEST_OK
+        Ok(())
     }
 
     #[test]
@@ -482,7 +482,7 @@ mod calendar_anchor_offset {
             )?,
             "2023-11-01".parse::<Date>()?,
         );
-        TEST_OK
+        Ok(())
     }
 
     #[test]
@@ -496,7 +496,7 @@ mod calendar_anchor_offset {
             )?,
             "2026-01-01".parse::<Date>()?,
         );
-        TEST_OK
+        Ok(())
     }
 
     #[test]
@@ -508,7 +508,7 @@ mod calendar_anchor_offset {
             )?,
             "2036-01-01".parse::<Date>()?,
         );
-        TEST_OK
+        Ok(())
     }
 
     #[test]
@@ -520,7 +520,7 @@ mod calendar_anchor_offset {
             )?,
             "2016-01-01".parse::<Date>()?,
         );
-        TEST_OK
+        Ok(())
     }
 
     #[test]
@@ -531,7 +531,7 @@ mod calendar_anchor_offset {
             checked_sub_calendar_anchor_offset_to_date(CalendarAnchorOffset::Days(0), date)?,
             date,
         );
-        TEST_OK
+        Ok(())
     }
 
     #[test]
@@ -543,7 +543,7 @@ mod calendar_anchor_offset {
             )?,
             "2025-03-07".parse::<Date>()?,
         );
-        TEST_OK
+        Ok(())
     }
 
     #[test]
@@ -555,7 +555,7 @@ mod calendar_anchor_offset {
             )?,
             "2027-06-25".parse::<Date>()?,
         );
-        TEST_OK
+        Ok(())
     }
 
     #[test]
@@ -569,7 +569,7 @@ mod calendar_anchor_offset {
             )?,
             "2026-04-27".parse::<Date>()?,
         );
-        TEST_OK
+        Ok(())
     }
 
     #[test]
@@ -581,7 +581,7 @@ mod calendar_anchor_offset {
             )?,
             "2026-04-26".parse::<Date>()?,
         );
-        TEST_OK
+        Ok(())
     }
 
     #[test]
@@ -593,7 +593,7 @@ mod calendar_anchor_offset {
             )?,
             "2026-02-02".parse::<Date>()?,
         );
-        TEST_OK
+        Ok(())
     }
 
     #[test]
@@ -605,7 +605,7 @@ mod calendar_anchor_offset {
             )?,
             "2026-02-08".parse::<Date>()?,
         );
-        TEST_OK
+        Ok(())
     }
 
     #[test]
@@ -617,7 +617,7 @@ mod calendar_anchor_offset {
             )?,
             "2026-01-12".parse::<Date>()?,
         );
-        TEST_OK
+        Ok(())
     }
 
     #[test]
@@ -629,7 +629,7 @@ mod calendar_anchor_offset {
             )?,
             "2026-07-06".parse::<Date>()?,
         );
-        TEST_OK
+        Ok(())
     }
 
     #[test]
@@ -643,7 +643,7 @@ mod calendar_anchor_offset {
             )?,
             "2026-05-01".parse::<Date>()?,
         );
-        TEST_OK
+        Ok(())
     }
 
     #[test]
@@ -655,7 +655,7 @@ mod calendar_anchor_offset {
             )?,
             "2024-02-01".parse::<Date>()?,
         );
-        TEST_OK
+        Ok(())
     }
 
     #[test]
@@ -667,7 +667,7 @@ mod calendar_anchor_offset {
             )?,
             "2023-11-01".parse::<Date>()?,
         );
-        TEST_OK
+        Ok(())
     }
 
     #[test]
@@ -679,7 +679,7 @@ mod calendar_anchor_offset {
             )?,
             "2029-04-01".parse::<Date>()?,
         );
-        TEST_OK
+        Ok(())
     }
 
     #[test]
@@ -691,7 +691,7 @@ mod calendar_anchor_offset {
             )?,
             "2028-11-01".parse::<Date>()?,
         );
-        TEST_OK
+        Ok(())
     }
 
     #[test]
@@ -705,7 +705,7 @@ mod calendar_anchor_offset {
             )?,
             "2026-01-01".parse::<Date>()?,
         );
-        TEST_OK
+        Ok(())
     }
 
     #[test]
@@ -717,7 +717,7 @@ mod calendar_anchor_offset {
             )?,
             "2016-01-01".parse::<Date>()?,
         );
-        TEST_OK
+        Ok(())
     }
 
     #[test]
@@ -729,6 +729,6 @@ mod calendar_anchor_offset {
             )?,
             "2036-01-01".parse::<Date>()?,
         );
-        TEST_OK
+        Ok(())
     }
 }

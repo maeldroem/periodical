@@ -5,10 +5,10 @@
 use std::error::Error;
 use std::fmt::Display;
 use std::ops::RangeFull;
+use std::time::Duration as StdDuration;
 
 #[cfg(feature = "arbitrary")]
 use arbitrary::Arbitrary;
-use chrono::Duration;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
@@ -28,7 +28,7 @@ use super::relative::{
 
 /// An unbounded interval
 ///
-/// Interval without [relativity](Relativity) (not absolute nor relative) and without any bounds.
+/// Interval without [`Relativity`] (not absolute nor relative) and without any bounds.
 /// Is equivalent to _time itself_ (all time), infinite duration.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
@@ -160,7 +160,7 @@ impl HasRelativity for EmptyInterval {
 
 impl HasDuration for EmptyInterval {
     fn duration(&self) -> IntervalDuration {
-        IntervalDuration::Finite(Duration::zero(), Epsilon::None)
+        IntervalDuration::Finite(StdDuration::ZERO, Epsilon::None)
     }
 }
 

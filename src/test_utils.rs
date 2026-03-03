@@ -1,18 +1,18 @@
-use chrono::{DateTime, NaiveDate, TimeZone};
+use std::error::Error;
 
-pub fn date<T: TimeZone>(tz: &T, year: i32, month: u32, day: u32) -> DateTime<T> {
-    tz.from_local_datetime(&NaiveDate::from_ymd_opt(year, month, day).unwrap().into())
-        .earliest()
-        .unwrap()
+/// Any error
+/// 
+/// Used to easily allow tests to use `?` on [`Result`]s with different error types
+#[derive(Debug)]
+pub struct AnyError(pub Box<dyn Error>);
+
+impl<E> From<E> for AnyError
+where
+    E: Error + 'static,
+{
+    fn from(value: E) -> Self {
+        AnyError(Box::new(value))
+    }
 }
 
-pub fn datetime<T: TimeZone>(tz: &T, year: i32, month: u32, day: u32, hour: u32, min: u32, sec: u32) -> DateTime<T> {
-    tz.from_local_datetime(
-        &NaiveDate::from_ymd_opt(year, month, day)
-            .unwrap()
-            .and_hms_opt(hour, min, sec)
-            .unwrap(),
-    )
-    .earliest()
-    .unwrap()
-}
+pub type TestResult = Result<(), AnyError>;
