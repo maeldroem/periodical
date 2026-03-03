@@ -1,4 +1,8 @@
-use chrono::{Duration, Utc};
+use std::time::Duration as StdDuration;
+
+use jiff::SignedDuration;
+use jiff::civil::Date;
+use jiff::tz::TimeZone;
 
 use crate::intervals::absolute::{
     AbsoluteBounds, AbsoluteEndBound, AbsoluteInterval, AbsoluteStartBound, BoundedAbsoluteInterval,
@@ -11,7 +15,7 @@ use crate::intervals::relative::{
     BoundedRelativeInterval, EmptiableRelativeBounds, HasEmptiableRelativeBounds, HasRelativeBounds, RelativeBounds,
     RelativeEndBound, RelativeInterval, RelativeStartBound,
 };
-use crate::test_utils::date;
+use crate::test_utils::TestResult;
 
 use super::special::*;
 
@@ -75,14 +79,15 @@ fn unbounded_interval_try_from_abs_interval_correct_variant() {
 }
 
 #[test]
-fn unbounded_interval_try_from_abs_interval_wrong_variant() {
+fn unbounded_interval_try_from_abs_interval_wrong_variant() -> TestResult {
     assert_eq!(
         UnboundedInterval::try_from(AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
-            date(&Utc, 2025, 1, 1),
-            date(&Utc, 2025, 1, 2),
+            Date::new(2025, 1, 1)?.to_zoned(TimeZone::UTC)?.timestamp(),
+            Date::new(2025, 1, 2)?.to_zoned(TimeZone::UTC)?.timestamp(),
         ))),
         Err(UnboundedIntervalConversionErr::WrongVariant),
     );
+    Ok(())
 }
 
 #[test]
@@ -97,8 +102,8 @@ fn unbounded_interval_try_from_rel_interval_correct_variant() {
 fn unbounded_interval_try_from_rel_interval_wrong_variant() {
     assert_eq!(
         UnboundedInterval::try_from(RelativeInterval::Bounded(BoundedRelativeInterval::new(
-            Duration::hours(1),
-            Duration::hours(5),
+            SignedDuration::from_hours(1),
+            StdDuration::from_hours(5),
         ))),
         Err(UnboundedIntervalConversionErr::WrongVariant),
     );
@@ -118,7 +123,7 @@ fn empty_interval_relativity() {
 fn empty_interval_duration() {
     assert_eq!(
         EmptyInterval.duration(),
-        IntervalDuration::Finite(Duration::zero(), Epsilon::None)
+        IntervalDuration::Finite(StdDuration::ZERO, Epsilon::None)
     );
 }
 
@@ -166,14 +171,15 @@ fn empty_interval_try_from_abs_interval_correct_variant() {
 }
 
 #[test]
-fn empty_interval_try_from_abs_interval_wrong_variant() {
+fn empty_interval_try_from_abs_interval_wrong_variant() -> TestResult {
     assert_eq!(
         EmptyInterval::try_from(AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
-            date(&Utc, 2025, 1, 1),
-            date(&Utc, 2025, 1, 2),
+            Date::new(2025, 1, 1)?.to_zoned(TimeZone::UTC)?.timestamp(),
+            Date::new(2025, 1, 2)?.to_zoned(TimeZone::UTC)?.timestamp(),
         ))),
         Err(EmptyIntervalConversionErr::WrongVariant),
     );
+    Ok(())
 }
 
 #[test]
@@ -188,8 +194,8 @@ fn empty_interval_try_from_rel_interval_correct_variant() {
 fn empty_interval_try_from_rel_interval_wrong_variant() {
     assert_eq!(
         EmptyInterval::try_from(RelativeInterval::Bounded(BoundedRelativeInterval::new(
-            Duration::hours(1),
-            Duration::hours(5),
+            SignedDuration::from_hours(1),
+            StdDuration::from_hours(5),
         ))),
         Err(EmptyIntervalConversionErr::WrongVariant),
     );
