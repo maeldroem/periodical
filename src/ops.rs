@@ -7,8 +7,10 @@
 
 use std::error::Error;
 use std::fmt::Display;
+use std::time::Duration as StdDuration;
 
-use chrono::{DateTime, Duration, DurationRound, RoundingError, Utc};
+use jiff::tz::{AmbiguousZoned, TimeZone};
+use jiff::{Error as JiffError, Zoned};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
@@ -91,32 +93,12 @@ use serde::{Deserialize, Serialize};
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum Precision {
     /// Rounds the compared times to the given duration
-    ToNearest(Duration),
+    ToNearest(StdDuration),
     /// Ceils/Rounds up the compared times to the given duration
-    ToFuture(Duration),
+    ToFuture(StdDuration),
     /// Floors/Rounds down the compared times to the given duration
-    ToPast(Duration),
+    ToPast(StdDuration),
 }
-
-/// Errors that can be produced when using [`Precision`]
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum PrecisionError {
-    /// A rounding error happened, see `chrono`'s [`RoundingError`]
-    RoundingError(RoundingError),
-    /// An operation produced an out-of-range date
-    OutOfRangeDate,
-}
-
-impl Display for PrecisionError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::RoundingError(rounding_err) => rounding_err.fmt(f),
-            Self::OutOfRangeDate => write!(f, "Operation produced an out-of-range date"),
-        }
-    }
-}
-
-impl Error for PrecisionError {}
 
 impl Precision {
     /// Uses the given precision to precise the given time
@@ -138,11 +120,21 @@ impl Precision {
     /// For more details, check [`chrono`'s limitations on the `DurationRound` trait][1].
     ///
     /// [1]: https://docs.rs/chrono/latest/chrono/round/trait.DurationRound.html#limitations
-    pub fn precise_time(&self, time: DateTime<Utc>) -> Result<DateTime<Utc>, PrecisionError> {
+    pub fn precise_time(&self, zoned_time: Zoned) -> Result<AmbiguousZoned, PrecisionError> {
+        // here the assumed time scale is linear: use Zoned's DateTime as reference (via UTC),
+        // do the rounding, then convert to Zoned. This avoids dealing with TZ changes breaking "civil times".
+        // Return AmbiguousZoned (TimeZone::to_ambiguous_zoned(DateTime instance))
+        let date_time = zoned_time.datetime();
         match self {
-            Self::ToNearest(duration) => time.duration_round(*duration).map_err(PrecisionError::RoundingError),
-            Self::ToFuture(duration) => time.duration_round_up(*duration).map_err(PrecisionError::RoundingError),
-            Self::ToPast(duration) => time.duration_trunc(*duration).map_err(PrecisionError::RoundingError),
+            Self::ToNearest(duration) => {
+                todo!()
+            },
+            Self::ToFuture(duration) => {
+                todo!()
+            },
+            Self::ToPast(duration) => {
+                todo!()
+            },
         }
     }
 
@@ -165,9 +157,13 @@ impl Precision {
     /// [1]: https://docs.rs/chrono/latest/chrono/round/trait.DurationRound.html#limitations
     pub fn precise_time_with_base_time(
         &self,
-        time: DateTime<Utc>,
-        base: DateTime<Utc>,
-    ) -> Result<DateTime<Utc>, PrecisionError> {
+        time: Zoned,
+        base: Zoned,
+        tz: TimeZone,
+    ) -> Result<Zoned, PrecisionError> {
+        // Add to docs that tz is used as the _time scale_. UTC should be used in most cases.
+        // but if a timezone uses a change that is smaller than hours, then some precisions like 15m
+        // may not work as expected (expected "time only" rounding or "by time duration" rounding?)
         let unix_epoch_base_diff = base.signed_duration_since(DateTime::UNIX_EPOCH);
         let rebased_time = time
             .checked_sub_signed(unix_epoch_base_diff)
@@ -186,6 +182,26 @@ impl Precision {
             .ok_or(PrecisionError::OutOfRangeDate)
     }
 }
+
+/// Errors that can be produced when using [`Precision`]
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum PrecisionError {
+    /// A rounding error happened
+    RoundingError(JiffError),
+    /// An operation produced an out-of-range date
+    OutOfRangeDate,
+}
+
+impl Display for PrecisionError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::RoundingError(rounding_err) => rounding_err.fmt(f),
+            Self::OutOfRangeDate => write!(f, "Operation produced an out-of-range date"),
+        }
+    }
+}
+
+impl Error for PrecisionError {}
 
 /// Represents a running result
 ///
