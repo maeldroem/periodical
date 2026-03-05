@@ -5,14 +5,33 @@
 //! Those structures are not part of [`intervals::ops`](crate::intervals::ops) as they are not related to intervals
 //! and can be used in other contexts.
 
+use std::cmp::Ordering;
 use std::error::Error;
 use std::fmt::Display;
 use std::time::Duration as StdDuration;
 
 use jiff::tz::{AmbiguousZoned, TimeZone};
-use jiff::{Error as JiffError, Zoned};
+use jiff::Zoned;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum PrecisionMode {
+    /// Rounds the compared times to the given duration
+    ToNearest,
+    /// Ceils/Rounds up the compared times to the given duration
+    ToFuture,
+    /// Floors/Rounds down the compared times to the given duration
+    ToPast,
+}
+
+impl PrecisionMode {
+    /// Creates a [`Precision`] with the given precision
+    #[must_use]
+    pub fn with_precision(self, precision: StdDuration) -> Precision {
+        Precision::new(precision, self)
+    }
+}
 
 /// Precision to use for re-precising times and intervals
 ///
@@ -91,16 +110,75 @@ use serde::{Deserialize, Serialize};
 /// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
-pub enum Precision {
-    /// Rounds the compared times to the given duration
-    ToNearest(StdDuration),
-    /// Ceils/Rounds up the compared times to the given duration
-    ToFuture(StdDuration),
-    /// Floors/Rounds down the compared times to the given duration
-    ToPast(StdDuration),
+pub struct Precision {
+    precision: StdDuration,
+    mode: PrecisionMode,
 }
 
 impl Precision {
+    /// Creates a new [`Precision`]
+    #[must_use]
+    pub fn new(precision: StdDuration, mode: PrecisionMode) -> Self {
+        Precision {
+            precision,
+            mode,
+        }
+    }
+
+    /// Returns the stored precision 
+    #[must_use]
+    pub fn precision(&self) -> StdDuration {
+        self.precision
+    }
+
+    /// Returns the stored [`PrecisionMode`]
+    #[must_use]
+    pub fn mode(&self) -> PrecisionMode {
+        self.mode
+    }
+
+    pub fn precise_duration(&self, duration: StdDuration) -> Result<StdDuration, PrecisionError> {
+        let timestamp_nanos = duration.as_nanos();
+        let precision_nanos = self.precision().as_nanos();
+        let timestamp_rem = timestamp_nanos % precision_nanos;
+        let truncated_timestamp = timestamp_nanos.saturating_sub(timestamp_rem);
+
+        let new_timestamp = match self.mode() {
+            Self::ToNearest => {
+                let precision_midpoint = precision_nanos / 2;
+                let round_to_future = timestamp_rem
+                    .cmp(&precision_midpoint)
+                    .then_with(|| if precision_nanos.is_multiple_of(2) {
+                        Ordering::Less
+                    } else {
+                        Ordering::Greater
+                    })
+                    .is_gt();
+
+                if round_to_future {
+                    truncated_timestamp.saturating_add(timestamp_rem)
+                } else {
+                    truncated_timestamp
+                }
+            },
+            Self::ToFuture => {
+                truncated_timestamp.saturating_add(precision_nanos)
+            },
+            Self::ToPast => {
+                truncated_timestamp
+            },
+        };
+
+        // Polyfill for StdDuration::from_nanos_u128() to avoid bumping MSRV
+        // & StdDuration::try_from_nanos_u128() doesn't yet exist
+        let nanos_per_sec = StdDuration::from_secs(1).as_nanos();
+        let secs_component = u64::try_from(new_timestamp / nanos_per_sec)
+            .or(Err(PrecisionError::OperationError))?;
+        let nanos_component = (new_timestamp % nanos_per_sec) as u32;
+
+        Ok(StdDuration::new(secs_component, nanos_component))
+    }
+
     /// Uses the given precision to precise the given time
     ///
     /// # Pitfalls
@@ -124,18 +202,24 @@ impl Precision {
         // here the assumed time scale is linear: use Zoned's DateTime as reference (via UTC),
         // do the rounding, then convert to Zoned. This avoids dealing with TZ changes breaking "civil times".
         // Return AmbiguousZoned (TimeZone::to_ambiguous_zoned(DateTime instance))
-        let date_time = zoned_time.datetime();
-        match self {
-            Self::ToNearest(duration) => {
-                todo!()
-            },
-            Self::ToFuture(duration) => {
-                todo!()
-            },
-            Self::ToPast(duration) => {
-                todo!()
-            },
-        }
+        let utc_day_start = zoned_time
+            .datetime()
+            .start_of_day()
+            .to_zoned(TimeZone::UTC)
+            .or(Err(PrecisionError::OutOfRangeDate))?;
+        let duration_diff = zoned_time
+            .datetime()
+            .to_zoned(TimeZone::UTC)
+            .or(Err(PrecisionError::OutOfRangeDate))?
+            .timestamp()
+            .duration_since(utc_day_start.timestamp())
+            .unsigned_abs();
+        let precised_datetime = utc_day_start
+            .checked_add(self.precise_duration(duration_diff)?)
+            .or(Err(PrecisionError::OutOfRangeDate))?
+            .datetime();
+
+        Ok(zoned_time.time_zone().to_ambiguous_zoned(precised_datetime))
     }
 
     /// Uses the given precision to precise the given time using the given base
@@ -164,30 +248,15 @@ impl Precision {
         // Add to docs that tz is used as the _time scale_. UTC should be used in most cases.
         // but if a timezone uses a change that is smaller than hours, then some precisions like 15m
         // may not work as expected (expected "time only" rounding or "by time duration" rounding?)
-        let unix_epoch_base_diff = base.signed_duration_since(DateTime::UNIX_EPOCH);
-        let rebased_time = time
-            .checked_sub_signed(unix_epoch_base_diff)
-            .ok_or(PrecisionError::OutOfRangeDate)?;
-
-        let precised_rebased_time = match self {
-            Self::ToNearest(duration) => rebased_time.duration_round(*duration),
-            Self::ToFuture(duration) => rebased_time.duration_round_up(*duration),
-            Self::ToPast(duration) => rebased_time.duration_trunc(*duration),
-        };
-
-        let precised_rebased_time = precised_rebased_time.map_err(PrecisionError::RoundingError)?;
-
-        precised_rebased_time
-            .checked_add_signed(unix_epoch_base_diff)
-            .ok_or(PrecisionError::OutOfRangeDate)
+        todo!()
     }
 }
 
 /// Errors that can be produced when using [`Precision`]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PrecisionError {
-    /// A rounding error happened
-    RoundingError(JiffError),
+    /// An operation failed during application of the precision
+    OperationError,
     /// An operation produced an out-of-range date
     OutOfRangeDate,
 }
@@ -195,7 +264,7 @@ pub enum PrecisionError {
 impl Display for PrecisionError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::RoundingError(rounding_err) => rounding_err.fmt(f),
+            Self::OperationError => write!(f, "Applying the precision failed"),
             Self::OutOfRangeDate => write!(f, "Operation produced an out-of-range date"),
         }
     }
