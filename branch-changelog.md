@@ -16,6 +16,8 @@
 - [x] Added `checked_add_calendar_week_offset_to_date` and its subtraction variant
 - [x] Added `checked_add_calendar_anchor_offset_to_date` and its subtraction variant
 - [x] Added `iso_weeks_in_year` to return the number of ISO weeks in a given year
+- [x] Added `PrecisionMode`
+- [x] Added a way to precise durations (`Precision::precise_duration`)
 
 ## Changed
 
@@ -43,6 +45,8 @@
   and to make it easier to refer to ("start time" is more explicit than "from time")
 
 - [x] Renamed `NaiveDuration` to `CalendarAnchorOffset`
+- [x] Refactored `Precision` to contain a `Duration` and a `PrecisionMode`
+- [x] Refactored `Precision::precise_time`
 
 ## Deprecated
 
