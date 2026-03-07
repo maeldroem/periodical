@@ -25,7 +25,7 @@
 - [ ] Migrating `intervals::relative` to jiff
 - [x] Migrating `intervals::special` to jiff
 - [x] Migrating `time` to jiff
-- [ ] Migrating `intervals::ops` to jiff
+- [x] Migrating `intervals::ops` to jiff
 
 - [ ] Migrating `intervals::absolute`'s tests to jiff
 - [ ] Migrating `intervals::relative`'s tests to jiff
