@@ -11,7 +11,7 @@ use std::fmt::Display;
 use std::time::Duration as StdDuration;
 
 use jiff::tz::{AmbiguousZoned, TimeZone};
-use jiff::Zoned;
+use jiff::{SignedDuration, Zoned};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
@@ -141,7 +141,7 @@ impl Precision {
         let timestamp_nanos = duration.as_nanos();
         let precision_nanos = self.precision().as_nanos();
         let timestamp_rem = timestamp_nanos % precision_nanos;
-        let truncated_timestamp = timestamp_nanos.saturating_sub(timestamp_rem);
+        let truncated_timestamp = timestamp_nanos.checked_sub(timestamp_rem).ok_or(PrecisionError::OutOfRangeDate)?;
 
         let new_timestamp = match self.mode() {
             Self::ToNearest => {
@@ -179,6 +179,46 @@ impl Precision {
         Ok(StdDuration::new(secs_component, nanos_component))
     }
 
+    pub fn precise_signed_duration(&self, signed_duration: SignedDuration) -> Result<SignedDuration, PrecisionError> {
+        // TODO: Test parity with precise_duration()
+        let timestamp_nanos = signed_duration.as_nanos().abs_diff(i128::MIN);
+        let precision_nanos = self.precision().as_nanos();
+        let timestamp_rem = timestamp_nanos % precision_nanos;
+        let truncated_timestamp = timestamp_nanos.checked_sub(timestamp_rem).ok_or(PrecisionError::OutOfRangeDate)?;
+        
+        let new_timestamp = match self.mode() {
+            PrecisionMode::ToNearest => {
+                let precision_midpoint = precision_nanos / 2;
+                let round_to_future = timestamp_rem
+                    .cmp(&precision_midpoint)
+                    .then_with(|| if precision_nanos.is_multiple_of(2) {
+                        Ordering::Less
+                    } else {
+                        Ordering::Greater
+                    })
+                    .is_gt();
+
+                if round_to_future {
+                    truncated_timestamp.saturating_add(timestamp_rem)
+                } else {
+                    truncated_timestamp
+                }
+            },
+            PrecisionMode::ToFuture => {
+                truncated_timestamp.saturating_add(timestamp_rem)
+            },
+            PrecisionMode::ToPast => {
+                truncated_timestamp
+            },
+        };
+        
+        let signed_new_timestamp = i128::MIN
+            .checked_add_unsigned(new_timestamp)
+            .ok_or(PrecisionError::OutOfRangeDate)?;
+
+        Ok(SignedDuration::from_nanos_i128(signed_new_timestamp))
+    }
+
     /// Uses the given precision to precise the given time
     ///
     /// # Pitfalls
@@ -198,7 +238,7 @@ impl Precision {
     /// For more details, check [`chrono`'s limitations on the `DurationRound` trait][1].
     ///
     /// [1]: https://docs.rs/chrono/latest/chrono/round/trait.DurationRound.html#limitations
-    pub fn precise_time(&self, zoned_time: Zoned) -> Result<AmbiguousZoned, PrecisionError> {
+    pub fn precise_time(&self, zoned_time: &Zoned) -> Result<AmbiguousZoned, PrecisionError> {
         // here the assumed time scale is linear: use Zoned's DateTime as reference (via UTC),
         // do the rounding, then convert to Zoned. This avoids dealing with TZ changes breaking "civil times".
         // Return AmbiguousZoned (TimeZone::to_ambiguous_zoned(DateTime instance))
@@ -212,10 +252,9 @@ impl Precision {
             .to_zoned(TimeZone::UTC)
             .or(Err(PrecisionError::OutOfRangeDate))?
             .timestamp()
-            .duration_since(utc_day_start.timestamp())
-            .unsigned_abs();
+            .duration_since(utc_day_start.timestamp());
         let precised_datetime = utc_day_start
-            .checked_add(self.precise_duration(duration_diff)?)
+            .checked_add(self.precise_signed_duration(duration_diff)?)
             .or(Err(PrecisionError::OutOfRangeDate))?
             .datetime();
 
@@ -241,14 +280,19 @@ impl Precision {
     /// [1]: https://docs.rs/chrono/latest/chrono/round/trait.DurationRound.html#limitations
     pub fn precise_time_with_base_time(
         &self,
-        time: Zoned,
-        base: Zoned,
+        time: &Zoned,
+        base: &Zoned,
         tz: TimeZone,
     ) -> Result<Zoned, PrecisionError> {
         // Add to docs that tz is used as the _time scale_. UTC should be used in most cases.
         // but if a timezone uses a change that is smaller than hours, then some precisions like 15m
-        // may not work as expected (expected "time only" rounding or "by time duration" rounding?)
-        todo!()
+        // may not work as expected
+        let time = time.with_time_zone(tz);
+        let base = base.with_time_zone(tz);
+
+        base
+            .checked_add(self.precise_signed_duration(time.duration_since(&base)))
+            .map_err(|_| PrecisionError::OutOfRangeDate)
     }
 }
 
