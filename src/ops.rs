@@ -5,7 +5,6 @@
 //! Those structures are not part of [`intervals::ops`](crate::intervals::ops) as they are not related to intervals
 //! and can be used in other contexts.
 
-use std::cmp::Ordering;
 use std::error::Error;
 use std::fmt::Display;
 use std::time::Duration as StdDuration;
@@ -30,11 +29,23 @@ pub enum PrecisionMode {
 }
 
 impl PrecisionMode {
+    /// Creates a [`Precision`] with the given precision without checking invariants
+    /// 
+    /// Equivalent to calling [`Precision::unchecked_new`] with `self` and the desired duration.
+    #[must_use]
+    pub fn unchecked_with_precision(self, precision: StdDuration) -> Precision {
+        Precision::unchecked_new(precision, self)
+    }
+
     /// Creates a [`Precision`] with the given precision
     /// 
     /// Equivalent to calling [`Precision::new`] with `self` and the desired duration.
-    #[must_use]
-    pub fn with_precision(self, precision: StdDuration) -> Precision {
+    /// 
+    /// # Errors
+    /// 
+    /// Returns [`PrecisionIsZero`](PrecisionCreationError::PrecisionIsZero) if the given precision
+    /// is zero.
+    pub fn with_precision(self, precision: StdDuration) -> Result<Precision, PrecisionCreationError> {
         Precision::new(precision, self)
     }
 }
@@ -65,6 +76,10 @@ impl PrecisionMode {
 /// Rounding a time can also be ambiguous when the given day includes timezone-related offsets,
 /// like daylight savings. How those issues are handled are explained in more details in
 /// the relevant methods.
+/// 
+/// # Invariants
+/// 
+/// The stored precision must be positive.
 ///
 /// # Examples
 ///
@@ -75,19 +90,7 @@ impl PrecisionMode {
 /// # use std::time::Duration;
 /// # use jiff::Zoned;
 /// # use periodical::ops::{Precision, PrecisionMode};
-/// # 
-/// # #[derive(Debug)]
-/// # struct AnyError(pub Box<dyn Error>);
-/// # 
-/// # impl<E> From<E> for AnyError
-/// # where
-/// #     E: Error + 'static,
-/// # {
-/// #     fn from(value: E) -> Self {
-/// #         AnyError(Box::new(value))
-/// #     }
-/// # }
-/// let round_to_nearest_five_mins = Precision::new(Duration::from_mins(5), PrecisionMode::ToNearest);
+/// let round_to_nearest_five_mins = Precision::new(Duration::from_mins(5), PrecisionMode::ToNearest)?;
 ///
 /// let two_minutes_after_eight = "2025-01-01 08:02:11+01:00[Europe/Oslo]".parse::<Zoned>()?;
 /// let fourteen_minutes_after_ten = "2025-01-01 10:14:21+01:00[Europe/Oslo]".parse::<Zoned>()?;
@@ -101,7 +104,7 @@ impl PrecisionMode {
 ///     round_to_nearest_five_mins.precise_time(&fourteen_minutes_after_ten)?.unambiguous()?,
 ///     "2025-01-01 10:15:00+01:00[Europe/Oslo]".parse::<Zoned>()?,
 /// );
-/// # Ok::<(), AnyError>(())
+/// # Ok::<(), Box<dyn Error>>(())
 /// ```
 ///
 /// ## Rounding up every 35 minutes with a given base time
@@ -111,19 +114,7 @@ impl PrecisionMode {
 /// # use std::time::Duration;
 /// # use jiff::Zoned;
 /// # use periodical::ops::{Precision, PrecisionMode};
-/// # 
-/// # #[derive(Debug)]
-/// # struct AnyError(pub Box<dyn Error>);
-/// # 
-/// # impl<E> From<E> for AnyError
-/// # where
-/// #     E: Error + 'static,
-/// # {
-/// #     fn from(value: E) -> Self {
-/// #         AnyError(Box::new(value))
-/// #     }
-/// # }
-/// let round_up_every_35_mins = Precision::new(Duration::from_mins(35), PrecisionMode::ToFuture);
+/// let round_up_every_35_mins = Precision::new(Duration::from_mins(35), PrecisionMode::ToFuture)?;
 ///
 /// let first_january_2025 = "2025-01-01 00:00:00+01:00[Europe/Oslo]".parse::<Zoned>()?;
 /// let two_minutes_after_eight = "2025-01-01 08:02:11+01:00[Europe/Oslo]".parse::<Zoned>()?;
@@ -150,7 +141,7 @@ impl PrecisionMode {
 ///     )?,
 ///     "2025-01-01 10:30:00+01:00[Europe/Oslo]".parse::<Zoned>()?,
 /// );
-/// # Ok::<(), AnyError>(())
+/// # Ok::<(), Box<dyn Error>>(())
 /// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
@@ -160,13 +151,27 @@ pub struct Precision {
 }
 
 impl Precision {
-    /// Creates a new [`Precision`]
+    /// Creates a new [`Precision`] without checking invariants
     #[must_use]
-    pub fn new(precision: StdDuration, mode: PrecisionMode) -> Self {
+    pub fn unchecked_new(precision: StdDuration, mode: PrecisionMode) -> Self {
         Precision {
             precision,
             mode,
         }
+    }
+
+    /// Creates a new [`Precision`]
+    /// 
+    /// # Errors
+    /// 
+    /// Returns [`PrecisionIsZero`](PrecisionCreationError::PrecisionIsZero) if the given precision
+    /// is zero.
+    pub fn new(precision: StdDuration, mode: PrecisionMode) -> Result<Self, PrecisionCreationError> {
+        if precision.is_zero() {
+            return Err(PrecisionCreationError::PrecisionIsZero);
+        }
+
+        Ok(Self::unchecked_new(precision, mode))
     }
 
     /// Returns the precision duration
@@ -184,6 +189,10 @@ impl Precision {
     /// Applies the precision to a given [`u128`] representing a duration
     /// 
     /// This operation is mostly designed for use by [`precise_duration`](Precision::precise_duration).
+    /// 
+    /// # Panics
+    /// 
+    /// Panics if [`Precision`]'s invariants are not respected, i.e. the stored precision is zero.
     #[must_use]
     pub fn precise_unsigned_nanos(&self, duration: u128) -> u128 {
         let precision_nanos = self.precision().as_nanos();
@@ -198,16 +207,8 @@ impl Precision {
         match self.mode() {
             PrecisionMode::ToNearest => {
                 let precision_midpoint = precision_nanos / 2;
-                let round_to_future = timestamp_rem
-                    .cmp(&precision_midpoint)
-                    .then_with(|| if precision_nanos.is_multiple_of(2) {
-                        Ordering::Less
-                    } else {
-                        Ordering::Greater
-                    })
-                    .is_gt();
 
-                if round_to_future {
+                if timestamp_rem.cmp(&precision_midpoint).is_ge() {
                     truncated_timestamp.saturating_add(precision_nanos)
                 } else {
                     truncated_timestamp
@@ -225,6 +226,10 @@ impl Precision {
     /// Applies the precision to a given [`i128`] representing a duration
     /// 
     /// This operation is mostly designed for use by [`precise_signed_duration`](Precision::precise_signed_duration).
+    /// 
+    /// # Panics
+    /// 
+    /// Panics if [`Precision`]'s invariants are not respected, i.e. the stored precision is zero.
     #[must_use]
     pub fn precise_signed_nanos(&self, duration: i128) -> i128 {
         let precision_nanos = self.precision().as_nanos();
@@ -234,26 +239,21 @@ impl Precision {
             return duration;
         }
 
-        let truncated_timestamp = match duration.signum() {
-            1 => duration.saturating_sub_unsigned(timestamp_rem),
+        // How much needs to be removed to get to the past anchor
+        let timestamp_diff_to_past = match duration.signum() {
+            1 => timestamp_rem,
             0 => 0,
-            -1 => duration.saturating_sub_unsigned(precision_nanos - timestamp_rem),
+            -1 => precision_nanos - timestamp_rem,
             _ => unreachable!("core::num::signum is guaranteed to return only in the range -1..=1"),
         };
+
+        let truncated_timestamp = duration.saturating_sub_unsigned(timestamp_diff_to_past);
 
         match self.mode() {
             PrecisionMode::ToNearest => {
                 let precision_midpoint = precision_nanos / 2;
-                let round_to_future = timestamp_rem
-                    .cmp(&precision_midpoint)
-                    .then_with(|| if precision_nanos.is_multiple_of(2) {
-                        Ordering::Less
-                    } else {
-                        Ordering::Greater
-                    })
-                    .is_gt();
 
-                if round_to_future {
+                if timestamp_diff_to_past.cmp(&precision_midpoint).is_ge() {
                     truncated_timestamp.saturating_add_unsigned(precision_nanos)
                 } else {
                     truncated_timestamp
@@ -277,18 +277,23 @@ impl Precision {
     /// Returns [`OutOfRangeDate`](PrecisionError::OutOfRangeDate) if the computed new duration
     /// has an amount of seconds superior to what [`u64`] can store.
     /// 
+    /// # Panics
+    /// 
+    /// Panics if [`Precision`]'s invariants are not respected, i.e. the stored precision is zero.
+    /// 
     /// # Examples
     /// 
     /// ```
+    /// # use std::error::Error;
     /// # use std::time::Duration;
-    /// # use periodical::ops::{Precision, PrecisionError, PrecisionMode};
-    /// let precision = Precision::new(Duration::from_mins(15), PrecisionMode::ToPast);
+    /// # use periodical::ops::{Precision, PrecisionMode};
+    /// let precision = Precision::new(Duration::from_mins(15), PrecisionMode::ToPast)?;
     /// 
     /// assert_eq!(
     ///     precision.precise_duration(Duration::from_mins(77))?,
     ///     Duration::from_mins(75),
     /// );
-    /// # Ok::<(), PrecisionError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn precise_duration(&self, duration: StdDuration) -> Result<StdDuration, PrecisionError> {
         let new_timestamp = self.precise_unsigned_nanos(duration.as_nanos());
@@ -313,19 +318,24 @@ impl Precision {
     /// Returns [`OutOfRangeDate`](PrecisionError::OutOfRangeDate) if the computed new duration
     /// exceeded what [`i128`] can store.
     /// 
+    /// # Panics
+    /// 
+    /// Panics if [`Precision`]'s invariants are not respected, i.e. the stored precision is zero.
+    /// 
     /// # Examples
     /// 
     /// ```
+    /// # use std::error::Error;
     /// # use std::time::Duration;
     /// # use jiff::SignedDuration;
-    /// # use periodical::ops::{Precision, PrecisionError, PrecisionMode};
-    /// let precision = Precision::new(Duration::from_mins(15), PrecisionMode::ToFuture);
+    /// # use periodical::ops::{Precision, PrecisionMode};
+    /// let precision = Precision::new(Duration::from_mins(15), PrecisionMode::ToFuture)?;
     /// 
     /// assert_eq!(
     ///     precision.precise_signed_duration(SignedDuration::from_mins(-44))?,
     ///     SignedDuration::from_mins(-30),
     /// );
-    /// # Ok::<(), PrecisionError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn precise_signed_duration(&self, signed_duration: SignedDuration) -> Result<SignedDuration, PrecisionError> {
         Ok(SignedDuration::from_nanos_i128(self.precise_signed_nanos(signed_duration.as_nanos())))
@@ -360,6 +370,10 @@ impl Precision {
     /// a timestamp too small to be stored correctly or if the resulting time would result in a time that
     /// cannot be stored in [`Zoned`].
     /// 
+    /// # Panics
+    /// 
+    /// Panics if [`Precision`]'s invariants are not respected, i.e. the stored precision is zero.
+    /// 
     /// # Examples
     /// 
     /// ## Simple rounding
@@ -369,26 +383,14 @@ impl Precision {
     /// # use std::time::Duration;
     /// # use jiff::Zoned;
     /// # use periodical::ops::{Precision, PrecisionMode};
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct AnyError(pub Box<dyn Error>);
-    /// # 
-    /// # impl<E> From<E> for AnyError
-    /// # where
-    /// #     E: Error + 'static,
-    /// # {
-    /// #     fn from(value: E) -> Self {
-    /// #         AnyError(Box::new(value))
-    /// #     }
-    /// # }
-    /// let precision = Precision::new(Duration::from_hours(2), PrecisionMode::ToFuture);
+    /// let precision = Precision::new(Duration::from_hours(2), PrecisionMode::ToFuture)?;
     /// let time = "2026-01-01 07:52:46+01:00[Europe/Oslo]".parse::<Zoned>()?;
     /// 
     /// assert_eq!(
     ///     precision.precise_time(&time)?.unambiguous()?,
     ///     "2026-01-01 08:00:00+01:00[Europe/Oslo]".parse::<Zoned>()?,
     /// );
-    /// # Ok::<(), AnyError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     /// 
     /// ## Rounding on a DST day
@@ -398,19 +400,7 @@ impl Precision {
     /// # use std::time::Duration;
     /// # use jiff::Zoned;
     /// # use periodical::ops::{Precision, PrecisionMode};
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct AnyError(pub Box<dyn Error>);
-    /// # 
-    /// # impl<E> From<E> for AnyError
-    /// # where
-    /// #     E: Error + 'static,
-    /// # {
-    /// #     fn from(value: E) -> Self {
-    /// #         AnyError(Box::new(value))
-    /// #     }
-    /// # }
-    /// let precision = Precision::new(Duration::from_mins(30), PrecisionMode::ToFuture);
+    /// let precision = Precision::new(Duration::from_mins(30), PrecisionMode::ToFuture)?;
     /// let ok_time = "2026-03-29 07:52:46+02:00[Europe/Oslo]".parse::<Zoned>()?;
     /// let gap_time = "2026-03-29 01:55:34+01:00[Europe/Oslo]".parse::<Zoned>()?;
     /// 
@@ -428,7 +418,7 @@ impl Precision {
     ///     // first time after DST time gap
     ///     "2026-03-29 03:00:00+02:00[Europe/Oslo]".parse::<Zoned>()?,
     /// );
-    /// # Ok::<(), AnyError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     /// 
     /// ## A time already rounded won't change
@@ -438,26 +428,14 @@ impl Precision {
     /// # use std::time::Duration;
     /// # use jiff::Zoned;
     /// # use periodical::ops::{Precision, PrecisionMode};
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct AnyError(pub Box<dyn Error>);
-    /// # 
-    /// # impl<E> From<E> for AnyError
-    /// # where
-    /// #     E: Error + 'static,
-    /// # {
-    /// #     fn from(value: E) -> Self {
-    /// #         AnyError(Box::new(value))
-    /// #     }
-    /// # }
-    /// let precision = Precision::new(Duration::from_mins(5), PrecisionMode::ToFuture);
+    /// let precision = Precision::new(Duration::from_mins(5), PrecisionMode::ToFuture)?;
     /// let time = "2026-01-01 08:45:00+01:00[Europe/Oslo]".parse::<Zoned>()?;
     /// 
     /// assert_eq!(
     ///     precision.precise_time(&time)?.unambiguous()?,
     ///     time,
     /// );
-    /// # Ok::<(), AnyError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     ///
     /// [1]: https://en.wikipedia.org/w/index.php?title=Unix_time&useskin=vector
@@ -503,6 +481,10 @@ impl Precision {
     ///
     /// Returns [`OutOfRangeDate`](PrecisionError::OutOfRangeDate) if the resulting time would result in a time that
     /// cannot be stored in [`Zoned`].
+    /// 
+    /// # Panics
+    /// 
+    /// Panics if [`Precision`]'s invariants are not respected, i.e. the stored precision is zero.
     ///
     /// # Examples
     /// 
@@ -513,19 +495,7 @@ impl Precision {
     /// # use std::time::Duration;
     /// # use jiff::Zoned;
     /// # use periodical::ops::{Precision, PrecisionMode};
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct AnyError(pub Box<dyn Error>);
-    /// # 
-    /// # impl<E> From<E> for AnyError
-    /// # where
-    /// #     E: Error + 'static,
-    /// # {
-    /// #     fn from(value: E) -> Self {
-    /// #         AnyError(Box::new(value))
-    /// #     }
-    /// # }
-    /// let precision = Precision::new(Duration::from_hours(2), PrecisionMode::ToFuture);
+    /// let precision = Precision::new(Duration::from_hours(2), PrecisionMode::ToFuture)?;
     /// let time = "2026-03-29 07:55:02+02:00[Europe/Oslo]".parse::<Zoned>()?;
     /// let base = time.start_of_day()?;
     /// 
@@ -533,7 +503,7 @@ impl Precision {
     ///     precision.precise_time_with_base_time(&time, &base, None)?,
     ///     "2026-03-29 09:00:00+02:00[Europe/Oslo]".parse::<Zoned>()?,
     /// );
-    /// # Ok::<(), AnyError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     /// 
     /// ## Rounding using a non-24-hours divisor
@@ -543,19 +513,7 @@ impl Precision {
     /// # use std::time::Duration;
     /// # use jiff::Zoned;
     /// # use periodical::ops::{Precision, PrecisionMode};
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct AnyError(pub Box<dyn Error>);
-    /// # 
-    /// # impl<E> From<E> for AnyError
-    /// # where
-    /// #     E: Error + 'static,
-    /// # {
-    /// #     fn from(value: E) -> Self {
-    /// #         AnyError(Box::new(value))
-    /// #     }
-    /// # }
-    /// let precision = Precision::new(Duration::from_mins(22), PrecisionMode::ToFuture);
+    /// let precision = Precision::new(Duration::from_mins(22), PrecisionMode::ToFuture)?;
     /// let time = "2026-01-02 07:55:02+01:00[Europe/Oslo]".parse::<Zoned>()?;
     /// let base = "2026-01-01 00:00:00+01:00[Europe/Oslo]".parse::<Zoned>()?;
     /// 
@@ -563,7 +521,7 @@ impl Precision {
     ///     precision.precise_time_with_base_time(&time, &base, None)?,
     ///     "2026-01-02 08:16:00+01:00[Europe/Oslo]".parse::<Zoned>()?,
     /// );
-    /// # Ok::<(), AnyError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     ///
     /// [1]: https://en.wikipedia.org/w/index.php?title=Unix_time&useskin=vector
@@ -577,14 +535,33 @@ impl Precision {
         let time = time.with_time_zone(tz.clone());
         let base = base.with_time_zone(tz);
 
+        dbg!(&time, &base);
+
         base
             .checked_add(self.precise_signed_duration(time.duration_since(&base))?)
             .map_err(|_| PrecisionError::OutOfRangeDate)
     }
 }
 
+/// Errors that can be produced when creating a [`Precision`]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum PrecisionCreationError {
+    /// Duration given as a precision is zero
+    PrecisionIsZero,
+}
+
+impl Display for PrecisionCreationError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::PrecisionIsZero => write!(f, "Duration given as a precision is zero"),
+        }
+    }
+}
+
+impl Error for PrecisionCreationError {}
+
 /// Errors that can be produced when using [`Precision`]
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum PrecisionError {
     /// An operation produced an out-of-range date
     OutOfRangeDate,
