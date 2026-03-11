@@ -1,6 +1,5 @@
 use std::cmp::Ordering;
-
-use crate::test_utils::{AnyError, TestResult};
+use std::error::Error;
 
 use super::time::*;
 
@@ -10,7 +9,7 @@ mod iso_weeks_in_year_fn {
     use super::*;
 
     #[test]
-    fn short_year() -> TestResult {
+    fn short_year() -> Result<(), Box<dyn Error>> {
         [2025, 2024, 2023, 2022, 2021, 2019, 2018, 2017, 2016, 2014, 2013, 2012, 2011, 2010]
             .into_iter()
             .try_for_each(|year| {
@@ -19,12 +18,12 @@ mod iso_weeks_in_year_fn {
                     ISO_WEEKS_IN_SHORT_YEAR,
                     "Expecting short ISO year for year {year}",
                 );
-                Ok::<(), AnyError>(())
+                Ok(())
             })
     }
 
     #[test]
-    fn long_year() -> TestResult {
+    fn long_year() -> Result<(), Box<dyn Error>> {
         [2026, 2020, 2015, 2009]
             .into_iter()
             .try_for_each(|year| {
@@ -33,7 +32,7 @@ mod iso_weeks_in_year_fn {
                     ISO_WEEKS_IN_LONG_YEAR,
                     "Expecting long ISO year for year {year}",
                 );
-                Ok::<(), AnyError>(())
+                Ok(())
             })
     }
 }
@@ -42,7 +41,7 @@ mod offset_iso_week {
     use super::*;
 
     #[test]
-    fn new_without_offset() -> TestResult {
+    fn new_without_offset() -> Result<(), Box<dyn Error>> {
         let iso_week = OffsetIsoWeek::new(5, 2026)?;
         assert_eq!(iso_week.first_day()?, "2026-01-26".parse::<Date>()?);
         assert_eq!(iso_week.last_day()?, "2026-02-01".parse::<Date>()?);
@@ -50,7 +49,7 @@ mod offset_iso_week {
     }
 
     #[test]
-    fn new_with_offset_sunday() -> TestResult {
+    fn new_with_offset_sunday() -> Result<(), Box<dyn Error>> {
         let offset_iso_week = OffsetIsoWeek::new_with_offset(5, 2026, -1)?;
         assert_eq!(offset_iso_week.first_day()?, "2026-01-25".parse::<Date>()?);
         assert_eq!(offset_iso_week.last_day()?, "2026-01-31".parse::<Date>()?);
@@ -58,7 +57,7 @@ mod offset_iso_week {
     }
 
     #[test]
-    fn new_with_offset_wednesday() -> TestResult {
+    fn new_with_offset_wednesday() -> Result<(), Box<dyn Error>> {
         let offset_iso_week = OffsetIsoWeek::new_with_offset(5, 2026, 2)?;
         assert_eq!(offset_iso_week.first_day()?, "2026-01-28".parse::<Date>()?);
         assert_eq!(offset_iso_week.last_day()?, "2026-02-03".parse::<Date>()?);
@@ -99,7 +98,7 @@ mod month_in_year {
     use super::*;
 
     #[test]
-    fn month_first_and_last_days() -> TestResult {
+    fn month_first_and_last_days() -> Result<(), Box<dyn Error>> {
         let month = MonthInYear::new(Month::May, 2026);
         assert_eq!(month.first_day()?, "2026-05-01".parse::<Date>()?);
         assert_eq!(month.last_day()?, "2026-05-31".parse::<Date>()?);
@@ -315,7 +314,7 @@ mod calendar_anchor_offset {
     }
 
     #[test]
-    fn checked_add_calendar_anchor_offset_to_date_zero_days() -> TestResult {
+    fn checked_add_calendar_anchor_offset_to_date_zero_days() -> Result<(), Box<dyn Error>> {
         let date = "2026-05-01".parse::<Date>()?;
 
         assert_eq!(
@@ -326,7 +325,7 @@ mod calendar_anchor_offset {
     }
 
     #[test]
-    fn checked_add_calendar_anchor_offset_to_date_positive_days() -> TestResult {
+    fn checked_add_calendar_anchor_offset_to_date_positive_days() -> Result<(), Box<dyn Error>> {
         assert_eq!(
             checked_add_calendar_anchor_offset_to_date(
                 CalendarAnchorOffset::Days(420),
@@ -338,7 +337,7 @@ mod calendar_anchor_offset {
     }
 
     #[test]
-    fn checked_add_calendar_anchor_offset_to_date_negative_days() -> TestResult {
+    fn checked_add_calendar_anchor_offset_to_date_negative_days() -> Result<(), Box<dyn Error>> {
         assert_eq!(
             checked_add_calendar_anchor_offset_to_date(
                 CalendarAnchorOffset::Days(-420),
@@ -350,7 +349,7 @@ mod calendar_anchor_offset {
     }
 
     #[test]
-    fn checked_add_calendar_anchor_offset_to_date_zero_weeks_monday_ref() -> TestResult {
+    fn checked_add_calendar_anchor_offset_to_date_zero_weeks_monday_ref() -> Result<(), Box<dyn Error>> {
         // Per `checked_add_calendar_anchor_offset_to_date`'s doc, adding weeks to get a day
         // returns the first day of the week.
         assert_eq!(
@@ -364,7 +363,7 @@ mod calendar_anchor_offset {
     }
 
     #[test]
-    fn checked_add_calendar_anchor_offset_to_date_zero_weeks_sunday_ref() -> TestResult {
+    fn checked_add_calendar_anchor_offset_to_date_zero_weeks_sunday_ref() -> Result<(), Box<dyn Error>> {
         assert_eq!(
             checked_add_calendar_anchor_offset_to_date(
                 CalendarAnchorOffset::Weeks(0, Weekday::Sunday),
@@ -376,7 +375,7 @@ mod calendar_anchor_offset {
     }
 
     #[test]
-    fn checked_add_calendar_anchor_offset_to_date_zero_weeks_monday_ref_on_sunday() -> TestResult {
+    fn checked_add_calendar_anchor_offset_to_date_zero_weeks_monday_ref_on_sunday() -> Result<(), Box<dyn Error>> {
         assert_eq!(
             checked_add_calendar_anchor_offset_to_date(
                 CalendarAnchorOffset::Weeks(0, Weekday::Monday),
@@ -388,7 +387,7 @@ mod calendar_anchor_offset {
     }
 
     #[test]
-    fn checked_add_calendar_anchor_offset_to_date_zero_weeks_sunday_ref_on_sunday() -> TestResult {
+    fn checked_add_calendar_anchor_offset_to_date_zero_weeks_sunday_ref_on_sunday() -> Result<(), Box<dyn Error>> {
         assert_eq!(
             checked_add_calendar_anchor_offset_to_date(
                 CalendarAnchorOffset::Weeks(0, Weekday::Sunday),
@@ -400,7 +399,7 @@ mod calendar_anchor_offset {
     }
 
     #[test]
-    fn checked_add_calendar_anchor_offset_to_date_positive_weeks() -> TestResult {
+    fn checked_add_calendar_anchor_offset_to_date_positive_weeks() -> Result<(), Box<dyn Error>> {
         assert_eq!(
             checked_add_calendar_anchor_offset_to_date(
                 CalendarAnchorOffset::Weeks(15, Weekday::Monday),
@@ -412,7 +411,7 @@ mod calendar_anchor_offset {
     }
 
     #[test]
-    fn checked_add_calendar_anchor_offset_to_date_negative_weeks() -> TestResult {
+    fn checked_add_calendar_anchor_offset_to_date_negative_weeks() -> Result<(), Box<dyn Error>> {
         assert_eq!(
             checked_add_calendar_anchor_offset_to_date(
                 CalendarAnchorOffset::Weeks(-10, Weekday::Monday),
@@ -424,7 +423,7 @@ mod calendar_anchor_offset {
     }
 
     #[test]
-    fn checked_add_calendar_anchor_offset_to_date_zero_months() -> TestResult {
+    fn checked_add_calendar_anchor_offset_to_date_zero_months() -> Result<(), Box<dyn Error>> {
         // Per `checked_add_calendar_anchor_offset_to_date`'s doc, adding months to get a day
         // returns the first day of the month.
         assert_eq!(
@@ -438,7 +437,7 @@ mod calendar_anchor_offset {
     }
 
     #[test]
-    fn checked_add_calendar_anchor_offset_to_date_positive_months_no_extra_year() -> TestResult {
+    fn checked_add_calendar_anchor_offset_to_date_positive_months_no_extra_year() -> Result<(), Box<dyn Error>> {
         assert_eq!(
             checked_add_calendar_anchor_offset_to_date(
                 CalendarAnchorOffset::Months(30),
@@ -450,7 +449,7 @@ mod calendar_anchor_offset {
     }
 
     #[test]
-    fn checked_add_calendar_anchor_offset_to_date_positive_months_extra_year() -> TestResult {
+    fn checked_add_calendar_anchor_offset_to_date_positive_months_extra_year() -> Result<(), Box<dyn Error>> {
         assert_eq!(
             checked_add_calendar_anchor_offset_to_date(
                 CalendarAnchorOffset::Months(30),
@@ -462,7 +461,7 @@ mod calendar_anchor_offset {
     }
 
     #[test]
-    fn checked_add_calendar_anchor_offset_to_date_negative_months_no_extra_year() -> TestResult {
+    fn checked_add_calendar_anchor_offset_to_date_negative_months_no_extra_year() -> Result<(), Box<dyn Error>> {
         assert_eq!(
             checked_add_calendar_anchor_offset_to_date(
                 CalendarAnchorOffset::Months(-30),
@@ -474,7 +473,7 @@ mod calendar_anchor_offset {
     }
 
     #[test]
-    fn checked_add_calendar_anchor_offset_to_date_negative_months_extra_year() -> TestResult {
+    fn checked_add_calendar_anchor_offset_to_date_negative_months_extra_year() -> Result<(), Box<dyn Error>> {
         assert_eq!(
             checked_add_calendar_anchor_offset_to_date(
                 CalendarAnchorOffset::Months(-30),
@@ -486,7 +485,7 @@ mod calendar_anchor_offset {
     }
 
     #[test]
-    fn checked_add_calendar_anchor_offset_to_date_zero_years() -> TestResult {
+    fn checked_add_calendar_anchor_offset_to_date_zero_years() -> Result<(), Box<dyn Error>> {
         // Per `checked_add_calendar_anchor_offset_to_date`'s doc, adding years to get a day
         // returns the first day of the year.
         assert_eq!(
@@ -500,7 +499,7 @@ mod calendar_anchor_offset {
     }
 
     #[test]
-    fn checked_add_calendar_anchor_offset_to_date_positive_years() -> TestResult {
+    fn checked_add_calendar_anchor_offset_to_date_positive_years() -> Result<(), Box<dyn Error>> {
         assert_eq!(
             checked_add_calendar_anchor_offset_to_date(
                 CalendarAnchorOffset::Years(10),
@@ -512,7 +511,7 @@ mod calendar_anchor_offset {
     }
 
     #[test]
-    fn checked_add_calendar_anchor_offset_to_date_negative_years() -> TestResult {
+    fn checked_add_calendar_anchor_offset_to_date_negative_years() -> Result<(), Box<dyn Error>> {
         assert_eq!(
             checked_add_calendar_anchor_offset_to_date(
                 CalendarAnchorOffset::Years(-10),
@@ -524,7 +523,7 @@ mod calendar_anchor_offset {
     }
 
     #[test]
-    fn checked_sub_calendar_anchor_offset_to_date_zero_days() -> TestResult {
+    fn checked_sub_calendar_anchor_offset_to_date_zero_days() -> Result<(), Box<dyn Error>> {
         let date = "2026-05-01".parse::<Date>()?;
 
         assert_eq!(
@@ -535,7 +534,7 @@ mod calendar_anchor_offset {
     }
 
     #[test]
-    fn checked_sub_calendar_anchor_offset_to_date_positive_days() -> TestResult {
+    fn checked_sub_calendar_anchor_offset_to_date_positive_days() -> Result<(), Box<dyn Error>> {
         assert_eq!(
             checked_sub_calendar_anchor_offset_to_date(
                 CalendarAnchorOffset::Days(420),
@@ -547,7 +546,7 @@ mod calendar_anchor_offset {
     }
 
     #[test]
-    fn checked_sub_calendar_anchor_offset_to_date_negative_days() -> TestResult {
+    fn checked_sub_calendar_anchor_offset_to_date_negative_days() -> Result<(), Box<dyn Error>> {
         assert_eq!(
             checked_sub_calendar_anchor_offset_to_date(
                 CalendarAnchorOffset::Days(-420),
@@ -559,7 +558,7 @@ mod calendar_anchor_offset {
     }
 
     #[test]
-    fn checked_sub_calendar_anchor_offset_to_date_zero_weeks_monday_ref() -> TestResult {
+    fn checked_sub_calendar_anchor_offset_to_date_zero_weeks_monday_ref() -> Result<(), Box<dyn Error>> {
         // Per `checked_sub_calendar_anchor_offset_to_date`'s doc, subtracting weeks to get a day
         // returns the first day of the week.
         assert_eq!(
@@ -573,7 +572,7 @@ mod calendar_anchor_offset {
     }
 
     #[test]
-    fn checked_sub_calendar_anchor_offset_to_date_zero_weeks_sunday_ref() -> TestResult {
+    fn checked_sub_calendar_anchor_offset_to_date_zero_weeks_sunday_ref() -> Result<(), Box<dyn Error>> {
         assert_eq!(
             checked_sub_calendar_anchor_offset_to_date(
                 CalendarAnchorOffset::Weeks(0, Weekday::Sunday),
@@ -585,7 +584,7 @@ mod calendar_anchor_offset {
     }
 
     #[test]
-    fn checked_sub_calendar_anchor_offset_to_date_zero_weeks_monday_ref_on_sunday() -> TestResult {
+    fn checked_sub_calendar_anchor_offset_to_date_zero_weeks_monday_ref_on_sunday() -> Result<(), Box<dyn Error>> {
         assert_eq!(
             checked_sub_calendar_anchor_offset_to_date(
                 CalendarAnchorOffset::Weeks(0, Weekday::Monday),
@@ -597,7 +596,7 @@ mod calendar_anchor_offset {
     }
 
     #[test]
-    fn checked_sub_calendar_anchor_offset_to_date_zero_weeks_sunday_ref_on_sunday() -> TestResult {
+    fn checked_sub_calendar_anchor_offset_to_date_zero_weeks_sunday_ref_on_sunday() -> Result<(), Box<dyn Error>> {
         assert_eq!(
             checked_sub_calendar_anchor_offset_to_date(
                 CalendarAnchorOffset::Weeks(0, Weekday::Sunday),
@@ -609,7 +608,7 @@ mod calendar_anchor_offset {
     }
 
     #[test]
-    fn checked_sub_calendar_anchor_offset_to_date_positive_weeks() -> TestResult {
+    fn checked_sub_calendar_anchor_offset_to_date_positive_weeks() -> Result<(), Box<dyn Error>> {
         assert_eq!(
             checked_sub_calendar_anchor_offset_to_date(
                 CalendarAnchorOffset::Weeks(15, Weekday::Monday),
@@ -621,7 +620,7 @@ mod calendar_anchor_offset {
     }
 
     #[test]
-    fn checked_sub_calendar_anchor_offset_to_date_negative_weeks() -> TestResult {
+    fn checked_sub_calendar_anchor_offset_to_date_negative_weeks() -> Result<(), Box<dyn Error>> {
         assert_eq!(
             checked_sub_calendar_anchor_offset_to_date(
                 CalendarAnchorOffset::Weeks(-10, Weekday::Monday),
@@ -633,7 +632,7 @@ mod calendar_anchor_offset {
     }
 
     #[test]
-    fn checked_sub_calendar_anchor_offset_to_date_zero_months() -> TestResult {
+    fn checked_sub_calendar_anchor_offset_to_date_zero_months() -> Result<(), Box<dyn Error>> {
         // Per `checked_sub_calendar_anchor_offset_to_date`'s doc, subtracting months to get a day
         // returns the first day of the month.
         assert_eq!(
@@ -647,7 +646,7 @@ mod calendar_anchor_offset {
     }
 
     #[test]
-    fn checked_sub_calendar_anchor_offset_to_date_positive_months_no_extra_year() -> TestResult {
+    fn checked_sub_calendar_anchor_offset_to_date_positive_months_no_extra_year() -> Result<(), Box<dyn Error>> {
         assert_eq!(
             checked_sub_calendar_anchor_offset_to_date(
                 CalendarAnchorOffset::Months(30),
@@ -659,7 +658,7 @@ mod calendar_anchor_offset {
     }
 
     #[test]
-    fn checked_sub_calendar_anchor_offset_to_date_positive_months_extra_year() -> TestResult {
+    fn checked_sub_calendar_anchor_offset_to_date_positive_months_extra_year() -> Result<(), Box<dyn Error>> {
         assert_eq!(
             checked_sub_calendar_anchor_offset_to_date(
                 CalendarAnchorOffset::Months(30),
@@ -671,7 +670,7 @@ mod calendar_anchor_offset {
     }
 
     #[test]
-    fn checked_sub_calendar_anchor_offset_to_date_negative_months_no_extra_year() -> TestResult {
+    fn checked_sub_calendar_anchor_offset_to_date_negative_months_no_extra_year() -> Result<(), Box<dyn Error>> {
         assert_eq!(
             checked_sub_calendar_anchor_offset_to_date(
                 CalendarAnchorOffset::Months(-30),
@@ -683,7 +682,7 @@ mod calendar_anchor_offset {
     }
 
     #[test]
-    fn checked_sub_calendar_anchor_offset_to_date_negative_months_extra_year() -> TestResult {
+    fn checked_sub_calendar_anchor_offset_to_date_negative_months_extra_year() -> Result<(), Box<dyn Error>> {
         assert_eq!(
             checked_sub_calendar_anchor_offset_to_date(
                 CalendarAnchorOffset::Months(-30),
@@ -695,7 +694,7 @@ mod calendar_anchor_offset {
     }
 
     #[test]
-    fn checked_sub_calendar_anchor_offset_to_date_zero_years() -> TestResult {
+    fn checked_sub_calendar_anchor_offset_to_date_zero_years() -> Result<(), Box<dyn Error>> {
         // Per `checked_sub_calendar_anchor_offset_to_date`'s doc, adding years to get a day
         // returns the first day of the year.
         assert_eq!(
@@ -709,7 +708,7 @@ mod calendar_anchor_offset {
     }
 
     #[test]
-    fn checked_sub_calendar_anchor_offset_to_date_positive_years() -> TestResult {
+    fn checked_sub_calendar_anchor_offset_to_date_positive_years() -> Result<(), Box<dyn Error>> {
         assert_eq!(
             checked_sub_calendar_anchor_offset_to_date(
                 CalendarAnchorOffset::Years(10),
@@ -721,7 +720,7 @@ mod calendar_anchor_offset {
     }
 
     #[test]
-    fn checked_sub_calendar_anchor_offset_to_date_negative_years() -> TestResult {
+    fn checked_sub_calendar_anchor_offset_to_date_negative_years() -> Result<(), Box<dyn Error>> {
         assert_eq!(
             checked_sub_calendar_anchor_offset_to_date(
                 CalendarAnchorOffset::Years(-10),
