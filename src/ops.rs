@@ -89,17 +89,17 @@ impl PrecisionMode {
 /// # }
 /// let round_to_nearest_five_mins = Precision::new(Duration::from_mins(5), PrecisionMode::ToNearest);
 ///
-/// let two_minutes_after_eight = "2025-01-01 08:02:11Z[Europe/Oslo]".parse::<Zoned>()?;
-/// let fourteen_minutes_after_ten = "2025-01-01 10:14:21Z[Europe/Oslo]".parse::<Zoned>()?;
+/// let two_minutes_after_eight = "2025-01-01 08:02:11+01:00[Europe/Oslo]".parse::<Zoned>()?;
+/// let fourteen_minutes_after_ten = "2025-01-01 10:14:21+01:00[Europe/Oslo]".parse::<Zoned>()?;
 ///
 /// assert_eq!(
 ///     round_to_nearest_five_mins.precise_time(&two_minutes_after_eight)?.unambiguous()?,
-///     "2025-01-01 08:00:00Z[Europe/Oslo]".parse::<Zoned>()?,
+///     "2025-01-01 08:00:00+01:00[Europe/Oslo]".parse::<Zoned>()?,
 /// );
 ///
 /// assert_eq!(
 ///     round_to_nearest_five_mins.precise_time(&fourteen_minutes_after_ten)?.unambiguous()?,
-///     "2025-01-01 10:15:00Z[Europe/Oslo]".parse::<Zoned>()?,
+///     "2025-01-01 10:15:00+01:00[Europe/Oslo]".parse::<Zoned>()?,
 /// );
 /// # Ok::<(), AnyError>(())
 /// ```
@@ -125,9 +125,9 @@ impl PrecisionMode {
 /// # }
 /// let round_up_every_35_mins = Precision::new(Duration::from_mins(35), PrecisionMode::ToFuture);
 ///
-/// let first_january_2025 = "2025-01-01 00:00:00Z[Europe/Oslo]".parse::<Zoned>()?;
-/// let two_minutes_after_eight = "2025-01-01 08:02:11Z[Europe/Oslo]".parse::<Zoned>()?;
-/// let fourteen_minutes_after_ten = "2025-01-01 10:14:21Z[Europe/Oslo]".parse::<Zoned>()?;
+/// let first_january_2025 = "2025-01-01 00:00:00+01:00[Europe/Oslo]".parse::<Zoned>()?;
+/// let two_minutes_after_eight = "2025-01-01 08:02:11+01:00[Europe/Oslo]".parse::<Zoned>()?;
+/// let fourteen_minutes_after_ten = "2025-01-01 10:14:21+01:00[Europe/Oslo]".parse::<Zoned>()?;
 ///
 /// // 13 * 35m = 07:35
 /// // 14 * 35m = 08:10
@@ -137,7 +137,7 @@ impl PrecisionMode {
 ///         &first_january_2025,
 ///         None,
 ///     )?,
-///     "2025-01-01 08:10:00Z[Europe/Oslo]".parse::<Zoned>()?,
+///     "2025-01-01 08:10:00+01:00[Europe/Oslo]".parse::<Zoned>()?,
 /// );
 ///
 /// // 17 * 35m = 09:55
@@ -148,7 +148,7 @@ impl PrecisionMode {
 ///         &first_january_2025,
 ///         None,
 ///     )?,
-///     "2025-01-01 10:30:00Z[Europe/Oslo]".parse::<Zoned>()?,
+///     "2025-01-01 10:30:00+01:00[Europe/Oslo]".parse::<Zoned>()?,
 /// );
 /// # Ok::<(), AnyError>(())
 /// ```
@@ -185,9 +185,14 @@ impl Precision {
     /// 
     /// This operation is mostly designed for use by [`precise_duration`](Precision::precise_duration).
     #[must_use]
-    pub fn precise_u128_duration(&self, duration: u128) -> u128 {
+    pub fn precise_unsigned_nanos(&self, duration: u128) -> u128 {
         let precision_nanos = self.precision().as_nanos();
         let timestamp_rem = duration % precision_nanos;
+
+        if timestamp_rem == 0 { // Already rounded, no need to go to next anchor
+            return duration;
+        }
+
         let truncated_timestamp = duration - timestamp_rem;
 
         match self.mode() {
@@ -203,7 +208,7 @@ impl Precision {
                     .is_gt();
 
                 if round_to_future {
-                    truncated_timestamp.saturating_add(timestamp_rem)
+                    truncated_timestamp.saturating_add(precision_nanos)
                 } else {
                     truncated_timestamp
                 }
@@ -221,13 +226,18 @@ impl Precision {
     /// 
     /// This operation is mostly designed for use by [`precise_signed_duration`](Precision::precise_signed_duration).
     #[must_use]
-    pub fn precise_i128_duration(&self, duration: i128) -> i128 {
+    pub fn precise_signed_nanos(&self, duration: i128) -> i128 {
         let precision_nanos = self.precision().as_nanos();
         let timestamp_rem = duration.unsigned_abs() % precision_nanos;
+
+        if timestamp_rem == 0 { // Already rounded, no need to go to next anchor
+            return duration;
+        }
+
         let truncated_timestamp = match duration.signum() {
             1 => duration.saturating_sub_unsigned(timestamp_rem),
             0 => 0,
-            -1 => duration.saturating_add_unsigned(precision_nanos - timestamp_rem),
+            -1 => duration.saturating_sub_unsigned(precision_nanos - timestamp_rem),
             _ => unreachable!("core::num::signum is guaranteed to return only in the range -1..=1"),
         };
 
@@ -244,7 +254,7 @@ impl Precision {
                     .is_gt();
 
                 if round_to_future {
-                    truncated_timestamp.saturating_add_unsigned(timestamp_rem)
+                    truncated_timestamp.saturating_add_unsigned(precision_nanos)
                 } else {
                     truncated_timestamp
                 }
@@ -281,7 +291,7 @@ impl Precision {
     /// # Ok::<(), PrecisionError>(())
     /// ```
     pub fn precise_duration(&self, duration: StdDuration) -> Result<StdDuration, PrecisionError> {
-        let new_timestamp = self.precise_u128_duration(duration.as_nanos());
+        let new_timestamp = self.precise_unsigned_nanos(duration.as_nanos());
 
         // Polyfill for StdDuration::from_nanos_u128() to avoid bumping MSRV
         // & StdDuration::try_from_nanos_u128() doesn't yet exist
@@ -318,7 +328,7 @@ impl Precision {
     /// # Ok::<(), PrecisionError>(())
     /// ```
     pub fn precise_signed_duration(&self, signed_duration: SignedDuration) -> Result<SignedDuration, PrecisionError> {
-        Ok(SignedDuration::from_nanos_i128(self.precise_i128_duration(signed_duration.as_nanos())))
+        Ok(SignedDuration::from_nanos_i128(self.precise_signed_nanos(signed_duration.as_nanos())))
     }
 
     /// Applies the precision to the given time
@@ -372,11 +382,11 @@ impl Precision {
     /// #     }
     /// # }
     /// let precision = Precision::new(Duration::from_hours(2), PrecisionMode::ToFuture);
-    /// let time = "2026-01-01 07:52:46Z[Europe/Oslo]".parse::<Zoned>()?;
+    /// let time = "2026-01-01 07:52:46+01:00[Europe/Oslo]".parse::<Zoned>()?;
     /// 
     /// assert_eq!(
     ///     precision.precise_time(&time)?.unambiguous()?,
-    ///     "2026-01-01 08:00:00Z[Europe/Oslo]".parse::<Zoned>()?,
+    ///     "2026-01-01 08:00:00+01:00[Europe/Oslo]".parse::<Zoned>()?,
     /// );
     /// # Ok::<(), AnyError>(())
     /// ```
@@ -401,12 +411,12 @@ impl Precision {
     /// #     }
     /// # }
     /// let precision = Precision::new(Duration::from_mins(30), PrecisionMode::ToFuture);
-    /// let ok_time = "2026-03-29 07:52:46Z[Europe/Oslo]".parse::<Zoned>()?;
-    /// let gap_time = "2026-03-29 01:55:34Z[Europe/Oslo]".parse::<Zoned>()?;
+    /// let ok_time = "2026-03-29 07:52:46+02:00[Europe/Oslo]".parse::<Zoned>()?;
+    /// let gap_time = "2026-03-29 01:55:34+01:00[Europe/Oslo]".parse::<Zoned>()?;
     /// 
     /// assert_eq!(
     ///     precision.precise_time(&ok_time)?.unambiguous()?,
-    ///     "2026-03-29 08:00:00Z[Europe/Oslo]".parse::<Zoned>()?,
+    ///     "2026-03-29 08:00:00+02:00[Europe/Oslo]".parse::<Zoned>()?,
     /// );
     /// 
     /// // since rounding 01:55:34 would end up at 02:00:00, which is when DST starts in this timezone,
@@ -416,7 +426,36 @@ impl Precision {
     /// assert_eq!(
     ///     precision.precise_time(&gap_time)?.compatible()?,
     ///     // first time after DST time gap
-    ///     "2026-03-29 03:00:00Z[Europe/Oslo]".parse::<Zoned>()?,
+    ///     "2026-03-29 03:00:00+02:00[Europe/Oslo]".parse::<Zoned>()?,
+    /// );
+    /// # Ok::<(), AnyError>(())
+    /// ```
+    /// 
+    /// ## A time already rounded won't change
+    /// 
+    /// ```
+    /// # use std::error::Error;
+    /// # use std::time::Duration;
+    /// # use jiff::Zoned;
+    /// # use periodical::ops::{Precision, PrecisionMode};
+    /// #
+    /// # #[derive(Debug)]
+    /// # struct AnyError(pub Box<dyn Error>);
+    /// # 
+    /// # impl<E> From<E> for AnyError
+    /// # where
+    /// #     E: Error + 'static,
+    /// # {
+    /// #     fn from(value: E) -> Self {
+    /// #         AnyError(Box::new(value))
+    /// #     }
+    /// # }
+    /// let precision = Precision::new(Duration::from_mins(5), PrecisionMode::ToFuture);
+    /// let time = "2026-01-01 08:45:00+01:00[Europe/Oslo]".parse::<Zoned>()?;
+    /// 
+    /// assert_eq!(
+    ///     precision.precise_time(&time)?.unambiguous()?,
+    ///     time,
     /// );
     /// # Ok::<(), AnyError>(())
     /// ```
@@ -487,12 +526,12 @@ impl Precision {
     /// #     }
     /// # }
     /// let precision = Precision::new(Duration::from_hours(2), PrecisionMode::ToFuture);
-    /// let time = "2026-03-29 07:55:02Z[Europe/Oslo]".parse::<Zoned>()?;
+    /// let time = "2026-03-29 07:55:02+02:00[Europe/Oslo]".parse::<Zoned>()?;
     /// let base = time.start_of_day()?;
     /// 
     /// assert_eq!(
     ///     precision.precise_time_with_base_time(&time, &base, None)?,
-    ///     "2026-03-29 09:00:00Z[Europe/Oslo]".parse::<Zoned>()?,
+    ///     "2026-03-29 09:00:00+02:00[Europe/Oslo]".parse::<Zoned>()?,
     /// );
     /// # Ok::<(), AnyError>(())
     /// ```
@@ -517,12 +556,12 @@ impl Precision {
     /// #     }
     /// # }
     /// let precision = Precision::new(Duration::from_mins(22), PrecisionMode::ToFuture);
-    /// let time = "2026-01-02 07:55:02Z[Europe/Oslo]".parse::<Zoned>()?;
-    /// let base = "2026-01-01 00:00:00Z[Europe/Oslo]".parse::<Zoned>()?;
+    /// let time = "2026-01-02 07:55:02+01:00[Europe/Oslo]".parse::<Zoned>()?;
+    /// let base = "2026-01-01 00:00:00+01:00[Europe/Oslo]".parse::<Zoned>()?;
     /// 
     /// assert_eq!(
     ///     precision.precise_time_with_base_time(&time, &base, None)?,
-    ///     "2026-01-02 08:16:00Z[Europe/Oslo]".parse::<Zoned>()?,
+    ///     "2026-01-02 08:16:00+01:00[Europe/Oslo]".parse::<Zoned>()?,
     /// );
     /// # Ok::<(), AnyError>(())
     /// ```

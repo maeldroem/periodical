@@ -17,7 +17,10 @@
 - [x] Added `checked_add_calendar_anchor_offset_to_date` and its subtraction variant
 - [x] Added `iso_weeks_in_year` to return the number of ISO weeks in a given year
 - [x] Added `PrecisionMode`
-- [x] Added a way to precise durations (`Precision::precise_duration`)
+- [x] Added a way to precise signed and unsigned durations (`Precision::precise_duration`
+  `Precision::precise_signed_duration`)
+- [x] Added a way to precise signed and unsigned amounts of nanoseconds (`Precision::precise_unsigned_nanos`,
+  `Precision::precise_signed_nanos`)
 
 ## Changed
 
@@ -36,7 +39,7 @@
 - [ ] Migrating `intervals::absolute`'s examples to jiff
 - [ ] Migrating `intervals::relative`'s examples to jiff
 - [x] Migrating `intervals::special`'s examples to jiff
-- [ ] Migrating `intervals::ops`'s examples to jiff
+- [x] Migrating `intervals::ops`'s examples to jiff
 
 - [x] Updating `time` tests to check new structures
 - [x] Finishing `time` docs
