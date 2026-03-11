@@ -70,6 +70,5 @@ use utils::tests;
 
 tests! {
     mod ops_tests;
-    mod test_utils;
     mod time_tests;
 }
