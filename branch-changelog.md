@@ -28,18 +28,18 @@
 - [ ] Migrating `intervals::relative` to jiff
 - [x] Migrating `intervals::special` to jiff
 - [x] Migrating `time` to jiff
-- [x] Migrating `intervals::ops` to jiff
+- [x] Migrating `ops` to jiff
 
 - [ ] Migrating `intervals::absolute`'s tests to jiff
 - [ ] Migrating `intervals::relative`'s tests to jiff
 - [ ] Migrating `intervals::special`'s tests to jiff
 - [x] Migrating `time`'s tests to jiff
-- [ ] Migrating `intervals::ops`'s tests to jiff
+- [x] Migrating `ops`'s tests to jiff
 
 - [ ] Migrating `intervals::absolute`'s examples to jiff
 - [ ] Migrating `intervals::relative`'s examples to jiff
 - [x] Migrating `intervals::special`'s examples to jiff
-- [x] Migrating `intervals::ops`'s examples to jiff
+- [x] Migrating `ops`'s examples to jiff
 
 - [x] Updating `time` tests to check new structures
 - [x] Finishing `time` docs
