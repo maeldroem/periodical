@@ -6,7 +6,7 @@ use chrono::{DateTime, Datelike, Duration, FixedOffset, Month, NaiveDate, Utc, W
 use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity, OpeningDirection};
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 use crate::test_utils::{date, datetime};
-use crate::time::{NaiveDuration, NaiveMonth};
+use crate::time::{CalendarAnchorOffset, MonthInYear};
 
 use super::absolute::*;
 
@@ -1743,7 +1743,7 @@ fn bounded_absolute_interval_day_after_naive_duration_from_naive_date() {
     let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
     let interval = BoundedAbsoluteInterval::day_after_naive_duration_from_naive_date(
         NaiveDate::from_ymd_opt(2026, 4, 29).unwrap(),
-        NaiveDuration::Days(5),
+        CalendarAnchorOffset::Days(5),
         offset_tz,
     )
     .unwrap();
@@ -1759,7 +1759,7 @@ fn bounded_absolute_interval_day_before_naive_duration_from_naive_date() {
     let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
     let interval = BoundedAbsoluteInterval::day_before_naive_duration_from_naive_date(
         NaiveDate::from_ymd_opt(2026, 4, 29).unwrap(),
-        NaiveDuration::Days(5),
+        CalendarAnchorOffset::Days(5),
         offset_tz,
     )
     .unwrap();
@@ -1878,7 +1878,7 @@ fn bounded_absolute_interval_week_after_naive_duration_from_naive_date() {
     let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
     let week = BoundedAbsoluteInterval::week_after_naive_duration_from_naive_date(
         NaiveDate::from_ymd_opt(2026, 5, 1).unwrap(),
-        NaiveDuration::Weeks(Weekday::Mon, 2),
+        CalendarAnchorOffset::Weeks(Weekday::Mon, 2),
         Weekday::Mon,
         offset_tz,
     )
@@ -1895,7 +1895,7 @@ fn bounded_absolute_interval_week_before_naive_duration_from_naive_date() {
     let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
     let week = BoundedAbsoluteInterval::week_before_naive_duration_from_naive_date(
         NaiveDate::from_ymd_opt(2026, 5, 1).unwrap(),
-        NaiveDuration::Weeks(Weekday::Mon, 2),
+        CalendarAnchorOffset::Weeks(Weekday::Mon, 2),
         Weekday::Mon,
         offset_tz,
     )
@@ -1987,7 +1987,7 @@ fn bounded_absolute_interval_iso_week_after_naive_duration_from_naive_date() {
     let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
     let week = BoundedAbsoluteInterval::iso_week_after_naive_duration_from_naive_date(
         NaiveDate::from_ymd_opt(2026, 5, 1).unwrap(),
-        NaiveDuration::IsoWeeks(2),
+        CalendarAnchorOffset::IsoWeeks(2),
         offset_tz,
     )
     .unwrap();
@@ -2003,7 +2003,7 @@ fn bounded_absolute_interval_iso_week_before_naive_duration_from_naive_date() {
     let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
     let week = BoundedAbsoluteInterval::iso_week_before_naive_duration_from_naive_date(
         NaiveDate::from_ymd_opt(2026, 5, 1).unwrap(),
-        NaiveDuration::IsoWeeks(2),
+        CalendarAnchorOffset::IsoWeeks(2),
         offset_tz,
     )
     .unwrap();
@@ -2018,7 +2018,7 @@ fn bounded_absolute_interval_iso_week_before_naive_duration_from_naive_date() {
 fn bounded_absolute_interval_week_from_month() {
     let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
 
-    let month = BoundedAbsoluteInterval::from_month(NaiveMonth::new(2026, Month::May), offset_tz).unwrap();
+    let month = BoundedAbsoluteInterval::from_month(MonthInYear::new(2026, Month::May), offset_tz).unwrap();
 
     assert_eq!(month.from_time(), datetime(&Utc, 2026, 4, 30, 22, 0, 0));
     assert_eq!(month.from_inclusivity(), BoundInclusivity::Inclusive);
@@ -2031,8 +2031,8 @@ fn bounded_absolute_interval_from_inclusive_month_range() {
     let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
 
     let interval = BoundedAbsoluteInterval::from_inclusive_month_range(
-        NaiveMonth::new(2026, Month::January),
-        NaiveMonth::new(2026, Month::May),
+        MonthInYear::new(2026, Month::January),
+        MonthInYear::new(2026, Month::May),
         offset_tz,
     )
     .unwrap();
@@ -2046,7 +2046,7 @@ fn bounded_absolute_interval_from_inclusive_month_range() {
 #[test]
 fn bounded_absolute_interval_from_inclusive_month_range_same_month() {
     let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
-    let month = NaiveMonth::new(2026, Month::May);
+    let month = MonthInYear::new(2026, Month::May);
 
     let interval = BoundedAbsoluteInterval::from_inclusive_month_range(month, month, offset_tz).unwrap();
 
@@ -2061,8 +2061,8 @@ fn bounded_absolute_interval_from_inclusive_month_range_reverse_order() {
     let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
 
     let interval = BoundedAbsoluteInterval::from_inclusive_month_range(
-        NaiveMonth::new(2026, Month::May),
-        NaiveMonth::new(2026, Month::January),
+        MonthInYear::new(2026, Month::May),
+        MonthInYear::new(2026, Month::January),
         offset_tz,
     )
     .unwrap();
@@ -2078,7 +2078,7 @@ fn bounded_absolute_interval_month_after_naive_duration_from_naive_date() {
     let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
     let month = BoundedAbsoluteInterval::month_after_naive_duration_from_naive_date(
         NaiveDate::from_ymd_opt(2026, 5, 5).unwrap(),
-        NaiveDuration::Months(2),
+        CalendarAnchorOffset::Months(2),
         offset_tz,
     )
     .unwrap();
@@ -2094,7 +2094,7 @@ fn bounded_absolute_interval_month_before_naive_duration_from_naive_date() {
     let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
     let month = BoundedAbsoluteInterval::month_before_naive_duration_from_naive_date(
         NaiveDate::from_ymd_opt(2026, 5, 5).unwrap(),
-        NaiveDuration::Months(2),
+        CalendarAnchorOffset::Months(2),
         offset_tz,
     )
     .unwrap();
@@ -2166,7 +2166,7 @@ fn bounded_absolute_interval_year_after_naive_duration_from_naive_date() {
 
     let year = BoundedAbsoluteInterval::year_after_naive_duration_from_naive_date(
         NaiveDate::from_ymd_opt(2026, 5, 5).unwrap(),
-        NaiveDuration::Months(15),
+        CalendarAnchorOffset::Months(15),
         offset_tz,
     )
     .unwrap();
@@ -2183,7 +2183,7 @@ fn bounded_absolute_interval_year_before_naive_duration_from_naive_date() {
 
     let year = BoundedAbsoluteInterval::year_before_naive_duration_from_naive_date(
         NaiveDate::from_ymd_opt(2026, 5, 5).unwrap(),
-        NaiveDuration::Months(15),
+        CalendarAnchorOffset::Months(15),
         offset_tz,
     )
     .unwrap();
@@ -2544,7 +2544,7 @@ fn half_bounded_absolute_interval_until_iso_week() {
 #[test]
 fn half_bounded_absolute_interval_since_month() {
     let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
-    let since_month = HalfBoundedAbsoluteInterval::since_month(NaiveMonth::new(2026, Month::March), offset_tz).unwrap();
+    let since_month = HalfBoundedAbsoluteInterval::since_month(MonthInYear::new(2026, Month::March), offset_tz).unwrap();
 
     assert_eq!(since_month.reference_time(), datetime(&Utc, 2026, 2, 28, 22, 0, 0));
     assert_eq!(since_month.reference_inclusivity(), BoundInclusivity::Inclusive);
@@ -2554,7 +2554,7 @@ fn half_bounded_absolute_interval_since_month() {
 #[test]
 fn half_bounded_absolute_interval_until_month() {
     let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into().unwrap()).unwrap();
-    let until_month = HalfBoundedAbsoluteInterval::until_month(NaiveMonth::new(2026, Month::March), offset_tz).unwrap();
+    let until_month = HalfBoundedAbsoluteInterval::until_month(MonthInYear::new(2026, Month::March), offset_tz).unwrap();
 
     assert_eq!(until_month.reference_time(), datetime(&Utc, 2026, 2, 28, 22, 0, 0));
     assert_eq!(until_month.reference_inclusivity(), BoundInclusivity::Exclusive);

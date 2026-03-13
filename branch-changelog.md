@@ -4,7 +4,8 @@
 
 - Check logic of absolute.rs and relative.rs to avoid confusion, especially since
   relative.rs has bounds that can be defined as two offsets OR one offset and a length
-- Renamed from/to times to start/end
+- Rename from/to times to start/end
+- Rename "bounds" (plural) to bound pair
 
 # Changelog
 
@@ -50,6 +51,9 @@
 - [x] Renamed `NaiveDuration` to `CalendarAnchorOffset`
 - [x] Refactored `Precision` to contain a `Duration` and a `PrecisionMode`
 - [x] Refactored `Precision::precise_time`
+
+- [x] Split `absolute` and `relative` modules internally for better code management
+- [ ] Split convenience methods for absolute/relative intervals into the `convenience` module
 
 ## Deprecated
 
