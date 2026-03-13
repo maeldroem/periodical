@@ -9,6 +9,11 @@
 //! - [`BoundedAbsoluteInterval`]
 //! - [`HalfBoundedAbsoluteInterval`]
 
+use std::cmp::Ordering;
+use std::error::Error;
+use std::fmt::Display;
+
+use crate::intervals::meta::BoundInclusivity;
 use crate::utils::{inline_docs, tests};
 
 pub mod bound;
@@ -52,7 +57,8 @@ inline_docs! {
 /// # Examples
 ///
 /// ```
-/// # use chrono::{DateTime, Utc};
+/// # use std::error::Error;
+/// # use jiff::Timestamp;
 /// # use periodical::intervals::absolute::{
 /// #     AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, swap_absolute_bounds,
 /// # };
@@ -72,7 +78,7 @@ inline_docs! {
 ///     end,
 ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(start_time)),
 /// );
-/// # Ok::<(), chrono::format::ParseError>(())
+/// # Ok::<(), Box<dyn Error>>(())
 /// ```
 pub fn swap_absolute_bounds(start: &mut AbsoluteStartBound, end: &mut AbsoluteEndBound) {
     // We temporarily reborrow start and end for the match arms so that when a pattern matches, they move out of their

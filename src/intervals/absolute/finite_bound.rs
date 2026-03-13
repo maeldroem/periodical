@@ -1,3 +1,28 @@
+//! Absolute finite bound
+//! 
+//! An absolute finite bound has two components: an absolute time, represented by a [`Timestamp`],
+//! and a [bound inclusivity](BoundInclusivity).
+//! 
+//! Absolute finite bounds are usually converted into either an
+//! [`AbsoluteStartBound`](crate::intervals::absolute::AbsoluteStartBound) through the
+//! [`to_start_bound`](AbsoluteFiniteBound::to_start_bound) method,
+//! or into an
+//! [`AbsoluteEndBound`](crate::intervals::absolute::AbsoluteEndBound) through the
+//! [`to_end_bound`](AbsoluteFiniteBound::to_end_bound) method.
+
+use std::cmp::Ordering;
+use std::error::Error;
+use std::fmt::Display;
+use std::ops::Bound;
+
+#[cfg(feature = "arbitrary")]
+use arbitrary::Arbitrary;
+use jiff::Timestamp;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
+use crate::intervals::absolute::{AbsoluteEndBound, AbsoluteStartBound};
+use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
 
 /// An absolute finite bound
 ///
@@ -12,23 +37,25 @@
 /// ## Basic use
 ///
 /// ```
-/// # use chrono::{DateTime, Utc};
+/// # use std::error::Error;
+/// # use jiff::Timestamp;
 /// # use periodical::intervals::absolute::AbsoluteFiniteBound;
 /// let finite_bound = AbsoluteFiniteBound::new("2025-01-01 08:00:00Z".parse::<Timestamp>()?);
-/// # Ok::<(), chrono::format::ParseError>(())
+/// # Ok::<(), Box<dyn Error>>(())
 /// ```
 ///
 /// ## Creating an [`AbsoluteFiniteBound`] with an explicit [`BoundInclusivity`]
 ///
 /// ```
-/// # use chrono::{DateTime, Utc};
+/// # use std::error::Error;
+/// # use jiff::Timestamp;
 /// # use periodical::intervals::absolute::AbsoluteFiniteBound;
 /// # use periodical::intervals::meta::BoundInclusivity;
 /// let finite_bound = AbsoluteFiniteBound::new_with_inclusivity(
 ///     "2025-01-01 08:00:00Z".parse::<Timestamp>()?,
 ///     BoundInclusivity::Exclusive,
 /// );
-/// # Ok::<(), chrono::format::ParseError>(())
+/// # Ok::<(), Box<dyn Error>>(())
 /// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
@@ -58,13 +85,14 @@ impl AbsoluteFiniteBound {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Utc};
+    /// # use std::error::Error;
+    /// # use jiff::Timestamp;
     /// # use periodical::intervals::absolute::AbsoluteFiniteBound;
     /// let time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     /// let finite_bound = AbsoluteFiniteBound::new(time);
     ///
     /// assert_eq!(finite_bound.time(), time);
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
     pub fn time(&self) -> Timestamp {
@@ -76,7 +104,8 @@ impl AbsoluteFiniteBound {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Utc};
+    /// # use std::error::Error;
+    /// # use jiff::Timestamp;
     /// # use periodical::intervals::absolute::AbsoluteFiniteBound;
     /// let time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     /// let new_time = "2025-01-02 16:00:00Z".parse::<Timestamp>()?;
@@ -85,7 +114,7 @@ impl AbsoluteFiniteBound {
     /// finite_bound.set_time(new_time);
     ///
     /// assert_eq!(finite_bound.time(), new_time);
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn set_time(&mut self, new_time: Timestamp) {
         self.time = new_time;
@@ -96,7 +125,8 @@ impl AbsoluteFiniteBound {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Utc};
+    /// # use std::error::Error;
+    /// # use jiff::Timestamp;
     /// # use periodical::intervals::absolute::AbsoluteFiniteBound;
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::prelude::*;
@@ -106,10 +136,20 @@ impl AbsoluteFiniteBound {
     /// finite_bound.set_inclusivity(BoundInclusivity::Exclusive);
     ///
     /// assert_eq!(finite_bound.inclusivity(), BoundInclusivity::Exclusive);
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn set_inclusivity(&mut self, new_inclusivity: BoundInclusivity) {
         self.inclusivity = new_inclusivity;
+    }
+
+    #[must_use]
+    pub fn to_start_bound(self) -> AbsoluteStartBound {
+        AbsoluteStartBound::Finite(self)
+    }
+
+    #[must_use]
+    pub fn to_end_bound(self) -> AbsoluteEndBound {
+        AbsoluteEndBound::Finite(self)
     }
 }
 
