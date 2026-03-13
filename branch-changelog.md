@@ -30,7 +30,7 @@
 
 ## Changed
 
-- [ ] Migrated `intervals::absolute` to jiff
+- [x] Migrated `intervals::absolute` to jiff
   - [ ] Migrated `bound_pair` to jiff
   - [ ] Migrated `bound` to jiff
   - [ ] Migrated `bounded_interval` to jiff
