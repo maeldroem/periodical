@@ -59,25 +59,17 @@ inline_docs! {
 /// ```
 /// # use std::error::Error;
 /// # use jiff::Timestamp;
-/// # use periodical::intervals::absolute::{
-/// #     AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, swap_absolute_bounds,
-/// # };
+/// # use periodical::intervals::absolute::{AbsoluteFiniteBound, swap_absolute_bounds};
 /// let start_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
 /// let end_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
 ///
-/// let mut start = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(start_time));
-/// let mut end = AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(end_time));
+/// let mut start = AbsoluteFiniteBound::new(start_time).to_start_bound();
+/// let mut end = AbsoluteFiniteBound::new(end_time).to_end_bound();
 ///
 /// swap_absolute_bounds(&mut start, &mut end);
 ///
-/// assert_eq!(
-///     start,
-///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(end_time)),
-/// );
-/// assert_eq!(
-///     end,
-///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(start_time)),
-/// );
+/// assert_eq!(start, AbsoluteFiniteBound::new(end_time).to_start_bound());
+/// assert_eq!(end, AbsoluteFiniteBound::new(start_time).to_end_bound());
 /// # Ok::<(), Box<dyn Error>>(())
 /// ```
 pub fn swap_absolute_bounds(start: &mut AbsoluteStartBound, end: &mut AbsoluteEndBound) {
@@ -196,23 +188,22 @@ pub fn check_absolute_bounds_for_interval_creation(
 /// # Examples
 ///
 /// ```
-/// # use chrono::{DateTime, Utc};
-/// # use periodical::intervals::absolute::{
-/// #     AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, prepare_absolute_bounds_for_interval_creation,
-/// # };
+/// # use std::error::Error;
+/// # use jiff::Timestamp;
+/// # use periodical::intervals::absolute::{AbsoluteFiniteBound, prepare_absolute_bounds_for_interval_creation};
 /// let start_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
 /// let end_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
 ///
 /// // Warning: not in chronological order!
-/// let mut start = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(start_time));
-/// let mut end = AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(end_time));
+/// let mut start = AbsoluteFiniteBound::new(start_time).to_start_bound();
+/// let mut end = AbsoluteFiniteBound::new(end_time).to_end_bound();
 ///
 /// let was_changed = prepare_absolute_bounds_for_interval_creation(&mut start, &mut end);
 ///
 /// if was_changed {
 ///     // Prompt the user for confirmation regarding the fixed bounds
 /// }
-/// # Ok::<(), chrono::format::ParseError>(())
+/// # Ok::<(), Box<dyn Error>>(())
 /// ```
 pub fn prepare_absolute_bounds_for_interval_creation(
     start_mut: &mut AbsoluteStartBound,

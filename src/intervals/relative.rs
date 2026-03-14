@@ -52,26 +52,20 @@ inline_docs! {
 /// # Examples
 ///
 /// ```
-/// # use chrono::SignedDuration;
-/// # use periodical::intervals::relative::{
-/// #     RelativeEndBound, RelativeFiniteBound, RelativeStartBound, swap_relative_bounds,
-/// # };
-/// let start_offset = SignedDuration::hours(16);
-/// let end_offset = SignedDuration::hours(8);
+/// # use std::error::Error;
+/// # use jiff::SignedDuration;
+/// # use periodical::intervals::relative::{RelativeFiniteBound, swap_relative_bounds};
+/// let start_offset = SignedDuration::from_hours(16);
+/// let end_offset = SignedDuration::from_hours(8);
 ///
-/// let mut start = RelativeStartBound::Finite(RelativeFiniteBound::new(start_offset));
-/// let mut end = RelativeEndBound::Finite(RelativeFiniteBound::new(end_offset));
+/// let mut start = RelativeFiniteBound::new(start_offset).to_start_bound();
+/// let mut end = RelativeFiniteBound::new(end_offset).to_end_bound();
 ///
 /// swap_relative_bounds(&mut start, &mut end);
 ///
-/// assert_eq!(
-///     start,
-///     RelativeStartBound::Finite(RelativeFiniteBound::new(end_offset)),
-/// );
-/// assert_eq!(
-///     end,
-///     RelativeEndBound::Finite(RelativeFiniteBound::new(start_offset)),
-/// );
+/// assert_eq!(start, RelativeFiniteBound::new(end_offset).to_start_bound());
+/// assert_eq!(end, RelativeFiniteBound::new(start_offset).to_end_bound());
+/// # Ok::<(), Box<dyn Error>>(())
 /// ```
 pub fn swap_relative_bounds(start: &mut RelativeStartBound, end: &mut RelativeEndBound) {
     // We temporarily reborrow start and end for the match arms so that when a pattern matches, they move out of their
@@ -189,22 +183,22 @@ pub fn check_relative_bounds_for_interval_creation(
 /// # Examples
 ///
 /// ```
-/// # use chrono::SignedDuration;
-/// # use periodical::intervals::relative::{
-/// #     RelativeEndBound, RelativeFiniteBound, RelativeStartBound, prepare_relative_bounds_for_interval_creation,
-/// # };
-/// let start_offset = SignedDuration::hours(16);
-/// let end_offset = SignedDuration::hours(8);
+/// # use std::error::Error;
+/// # use jiff::SignedDuration;
+/// # use periodical::intervals::relative::{RelativeFiniteBound, prepare_relative_bounds_for_interval_creation};
+/// let start_offset = SignedDuration::from_hours(16);
+/// let end_offset = SignedDuration::from_hours(8);
 ///
 /// // Warning: not in chronological order!
-/// let mut start = RelativeStartBound::Finite(RelativeFiniteBound::new(start_offset));
-/// let mut end = RelativeEndBound::Finite(RelativeFiniteBound::new(end_offset));
+/// let mut start = RelativeFiniteBound::new(start_offset).to_start_bound();
+/// let mut end = RelativeFiniteBound::new(end_offset).to_end_bound();
 ///
 /// let was_changed = prepare_relative_bounds_for_interval_creation(&mut start, &mut end);
 ///
 /// if was_changed {
 ///     // Prompt the user for confirmation regarding the fixed bounds
 /// }
+/// # Ok::<(), Box<dyn Error>>(())
 /// ```
 pub fn prepare_relative_bounds_for_interval_creation(
     start_mut: &mut RelativeStartBound,
