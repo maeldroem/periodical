@@ -61,11 +61,11 @@
   - [ ] Migrated `bound`'s tests to jiff
   - [ ] Migrated `bounded_interval`'s tests to jiff
   - [ ] Migrated `emptiable_bound_pair`'s tests to jiff
-  - [ ] Migrated `end_bound`'s tests to jiff
-  - [ ] Migrated `finite_bound`'s tests to jiff
+  - [x] Migrated `end_bound`'s tests to jiff
+  - [x] Migrated `finite_bound`'s tests to jiff
   - [ ] Migrated `half_bounded_interval`'s tests to jiff
   - [ ] Migrated `interval`'s tests to jiff
-  - [ ] Migrated `start_bound`'s tests to jiff
+  - [x] Migrated `start_bound`'s tests to jiff
 - [ ] Migrated `intervals::relative`'s tests to jiff
   - [ ] Migrated `bound_pair`'s tests to jiff
   - [ ] Migrated `bound`'s tests to jiff
