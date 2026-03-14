@@ -1,7 +1,25 @@
+//! Absolute bound representation
+//! 
+//! Represents an absolute bound regardless of its source (start/end).
+//! This is particularly useful for representing absolute bounds of an interval as a single type,
+//! while still conserving its source.
+
+use std::cmp::Ordering;
+use std::hash::{Hash, Hasher};
+
+#[cfg(feature = "arbitrary")]
+use arbitrary::Arbitrary;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
+use crate::intervals::absolute::{AbsoluteEndBound, AbsoluteStartBound};
+
 
 /// Enum for absolute start and end bounds
 ///
-/// This enumerator is useful for storing both start and end bounds, usually for processing bounds individually.
+/// Represents an absolute bound regardless of its source (start/end).
+/// This is particularly useful for representing absolute bounds of an interval as a single type,
+/// while still conserving its source.
 #[derive(Debug, Clone, Copy)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
@@ -16,23 +34,22 @@ impl AbsoluteBound {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Utc};
-    /// # use periodical::intervals::absolute::{
-    /// #     AbsoluteBound, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
-    /// # };
+    /// # use std::error::Error;
+    /// # use jiff::Timestamp;
+    /// # use periodical::intervals::absolute::{AbsoluteBound, AbsoluteFiniteBound};
     /// let start_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     /// let end_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
     ///
     /// let start = AbsoluteBound::Start(
-    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(start_time))
+    ///     AbsoluteFiniteBound::new(start_time).to_start_bound()
     /// );
     /// let end = AbsoluteBound::End(
-    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(end_time))
+    ///     AbsoluteFiniteBound::new(end_time).to_end_bound()
     /// );
     ///
     /// assert!(start.is_start());
     /// assert!(!end.is_start());
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
     pub fn is_start(&self) -> bool {
@@ -44,23 +61,22 @@ impl AbsoluteBound {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Utc};
-    /// # use periodical::intervals::absolute::{
-    /// #     AbsoluteBound, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
-    /// # };
+    /// # use std::error::Error;
+    /// # use jiff::Timestamp;
+    /// # use periodical::intervals::absolute::{AbsoluteBound, AbsoluteFiniteBound};
     /// let start_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     /// let end_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
     ///
     /// let start = AbsoluteBound::Start(
-    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(start_time))
+    ///     AbsoluteFiniteBound::new(start_time).to_start_bound()
     /// );
     /// let end = AbsoluteBound::End(
-    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(end_time))
+    ///     AbsoluteFiniteBound::new(end_time).to_end_bound()
     /// );
     ///
     /// assert!(end.is_end());
     /// assert!(!start.is_end());
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
     pub fn is_end(&self) -> bool {
@@ -75,7 +91,8 @@ impl AbsoluteBound {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Utc};
+    /// # use std::error::Error;
+    /// # use jiff::Timestamp;
     /// # use periodical::intervals::absolute::{
     /// #     AbsoluteBound, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
     /// # };
@@ -83,21 +100,21 @@ impl AbsoluteBound {
     /// let end_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
     ///
     /// let start = AbsoluteBound::Start(
-    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(start_time))
+    ///     AbsoluteFiniteBound::new(start_time).to_start_bound()
     /// );
     /// let end = AbsoluteBound::End(
-    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(end_time))
+    ///     AbsoluteFiniteBound::new(end_time).to_end_bound()
     /// );
     ///
     /// assert_eq!(
     ///     start.start(),
-    ///     Some(AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(start_time))),
+    ///     Some(AbsoluteFiniteBound::new(start_time).to_start_bound()),
     /// );
     /// assert_eq!(
     ///     end.start(),
     ///     None,
     /// );
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
     pub fn start(self) -> Option<AbsoluteStartBound> {
@@ -115,7 +132,8 @@ impl AbsoluteBound {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Utc};
+    /// # use std::error::Error;
+    /// # use jiff::Timestamp;
     /// # use periodical::intervals::absolute::{
     /// #     AbsoluteBound, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
     /// # };
@@ -123,21 +141,21 @@ impl AbsoluteBound {
     /// let end_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
     ///
     /// let start = AbsoluteBound::Start(
-    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(start_time))
+    ///     AbsoluteFiniteBound::new(start_time).to_start_bound()
     /// );
     /// let end = AbsoluteBound::End(
-    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(end_time))
+    ///     AbsoluteFiniteBound::new(end_time).to_end_bound()
     /// );
     ///
     /// assert_eq!(
     ///     end.end(),
-    ///     Some(AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(end_time))),
+    ///     Some(AbsoluteFiniteBound::new(end_time).to_end_bound()),
     /// );
     /// assert_eq!(
     ///     start.end(),
     ///     None,
     /// );
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
     pub fn end(self) -> Option<AbsoluteEndBound> {

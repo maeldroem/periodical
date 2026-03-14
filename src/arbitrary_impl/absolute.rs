@@ -3,7 +3,7 @@
 use arbitrary::{Arbitrary, Error, Unstructured};
 use jiff::Timestamp;
 
-use crate::intervals::absolute::AbsoluteFiniteBound;
+use crate::intervals::absolute::{AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound};
 use crate::intervals::meta::BoundInclusivity;
 
 impl<'a> Arbitrary<'a> for AbsoluteFiniteBound {
@@ -16,18 +16,18 @@ impl<'a> Arbitrary<'a> for AbsoluteFiniteBound {
     }
 }
 
-/*
-impl<'a> Arbitrary<'a> for AbsoluteBounds {
+impl<'a> Arbitrary<'a> for AbsoluteBoundPair {
     fn arbitrary(u: &mut Unstructured<'a>) -> arbitrary::Result<Self> {
         let start = AbsoluteStartBound::arbitrary(u)?;
         let end = AbsoluteEndBound::arbitrary(u)?;
 
-        // We use AbsoluteBounds::new so that if start > end, they get swapped
+        // We use AbsoluteBoundPair::new so that if start > end, they get swapped
         // A fuzz test exists to verify that this behavior is correct
-        Ok(AbsoluteBounds::new(start, end))
+        Ok(AbsoluteBoundPair::new(start, end))
     }
 }
 
+/*
 impl<'a> Arbitrary<'a> for BoundedAbsoluteInterval {
     fn arbitrary(u: &mut Unstructured<'a>) -> arbitrary::Result<Self> {
         let start_time = DateTime::<Utc>::arbitrary(u)?;
