@@ -119,7 +119,7 @@ impl AbsoluteEndBound {
     /// # use std::error::Error;
     /// # use jiff::Timestamp;
     /// # use periodical::intervals::absolute::{AbsoluteEndBound, AbsoluteFiniteBound};
-    /// # use periodical::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
+    /// # use periodical::intervals::meta::BoundInclusivity;
     /// #
     /// # #[derive(Debug)]
     /// # struct FiniteBoundExpectedError;
