@@ -416,14 +416,14 @@ fn absolute_end_bound_same_times_inclusive_bounds_partial_cmp() -> Result<(), Bo
 #[test]
 fn from_absolute_finite_bound() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        AbsoluteFiniteBound::new_with_inclusivity(
+        AbsoluteStartBound::from(AbsoluteFiniteBound::new_with_inclusivity(
             "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
             BoundInclusivity::Exclusive,
-        ).to_start_bound(),
-        AbsoluteFiniteBound::new_with_inclusivity(
+        )),
+        AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
             "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
             BoundInclusivity::Exclusive,
-        ).to_start_bound(),
+        )),
     );
     Ok(())
 }
