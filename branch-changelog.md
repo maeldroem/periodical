@@ -40,7 +40,7 @@
   - [ ] Migrated `half_bounded_interval` to jiff
   - [ ] Migrated `interval` to jiff
   - [x] Migrated `start_bound` to jiff
-- [ ] Migrated `intervals::relative` to jiff
+- [x] Migrated `intervals::relative` to jiff
   - [ ] Migrated `bound_pair` to jiff
   - [ ] Migrated `bound` to jiff
   - [ ] Migrated `bounded_interval` to jiff
@@ -82,7 +82,7 @@
 - [x] Migrated `time`'s tests to jiff
 - [x] Migrated `ops`'s tests to jiff
 
-- [ ] Migrated `intervals::absolute`'s examples to jiff
+- [x] Migrated `intervals::absolute`'s examples to jiff
   - [ ] Migrated `bound_pair`'s examples to jiff
   - [ ] Migrated `bound`'s examples to jiff
   - [ ] Migrated `bounded_interval`'s examples to jiff
@@ -92,7 +92,7 @@
   - [ ] Migrated `half_bounded_interval`'s examples to jiff
   - [ ] Migrated `interval`'s examples to jiff
   - [x] Migrated `start_bound`'s examples to jiff
-- [ ] Migrated `intervals::relative`'s examples to jiff
+- [x] Migrated `intervals::relative`'s examples to jiff
   - [ ] Migrated `bound_pair`'s examples to jiff
   - [ ] Migrated `bound`'s examples to jiff
   - [ ] Migrated `bounded_interval`'s examples to jiff
