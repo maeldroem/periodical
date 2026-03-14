@@ -1,9 +1,37 @@
+//! Relative bound pair
+//! 
+//! Represents a pair composed of a [`RelativeStartBound`] and a [`RelativeEndBound`].
+//! 
+//! Contrary to a specific interval type, it doesn't keep any [`Openness`](crate::intervals::meta::Openness)-related
+//! invariants, making it useful for changing an interval's openness easily.
+//! 
+//! Relative bound pairs are also used for when, after a given operation, the openness of the resulting interval
+//! can't be guaranteed at compile-time. This also gives the opportunity for the caller to make a choice
+//! of whether to include/exclude the resulting interval on an openness-related basis.
 
-/// Possession of non-empty relative bounds
-pub trait HasRelativeBounds {
-    /// Returns the relative bounds of the object
+use std::cmp::Ordering;
+use std::error::Error;
+use std::fmt::Display;
+use std::ops::RangeBounds;
+
+use jiff::SignedDuration;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
+use crate::intervals::relative::{
+    RelativeEndBound, RelativeStartBound, EmptiableRelativeBoundPair, check_relative_bound_pair_for_interval_creation,
+    prepare_relative_bound_pair_for_interval_creation,
+};
+use crate::intervals::meta::{
+    Duration as IntervalDuration, Epsilon, HasBoundInclusivity, HasDuration, HasOpenness, HasRelativity, Interval,
+    Openness, Relativity
+};
+
+/// Possession of non-empty relative bound pair
+pub trait HasRelativeBoundPair {
+    /// Returns the relative bound pair of the object
     #[must_use]
-    fn rel_bounds(&self) -> RelativeBounds;
+    fn rel_bound_pair(&self) -> RelativeBoundPair;
 
     /// Returns the relative start bound of the object
     #[must_use]
@@ -16,69 +44,64 @@ pub trait HasRelativeBounds {
 
 /// Pair of [`RelativeStartBound`] and [`RelativeEndBound`]
 ///
-/// This pair conserves the invariants required for an interval:
+/// [`RelativeBoundPair`] should be used when you want a non-empty interval which don't need to conserve
+/// a given [`Openness`].
+/// 
+/// # Invariants
 ///
 /// 1. The bounds are in chronological order
-/// 2. If the bounds have the same offset, their inclusivities should be [inclusive] for both
-///
-/// [`RelativeBounds`] should be used when you want a non-empty interval which don't need to conserve
-/// a given [`Openness`].
-///
-/// [inclusive]: BoundInclusivity::Inclusive
+/// 2. If the bounds have the same offset, their inclusivities should be
+///    [inclusive](crate::intervals::meta::BoundInclusivity::Inclusive) for both
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
-pub struct RelativeBounds {
+pub struct RelativeBoundPair {
     start: RelativeStartBound,
     end: RelativeEndBound,
 }
 
-impl RelativeBounds {
-    /// Creates a new [`RelativeBounds`] without checking if it violates invariants
+impl RelativeBoundPair {
+    /// Creates a new [`RelativeBoundPair`] without checking if it violates invariants
     ///
     /// # Examples
     ///
     /// ```
-    /// # use chrono::SignedDuration;
-    /// # use periodical::intervals::relative::{
-    /// #     RelativeBounds, RelativeEndBound, RelativeFiniteBound, RelativeStartBound,
-    /// # };
+    /// # use jiff::SignedDuration;
+    /// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBound};
     /// // Start and end are not in chronological order!
-    /// let start_offset = SignedDuration::hours(16);
-    /// let end_offset = SignedDuration::hours(8);
+    /// let start_offset = SignedDuration::from_hours(16);
+    /// let end_offset = SignedDuration::from_hours(8);
     ///
-    /// let start = RelativeStartBound::Finite(RelativeFiniteBound::new(start_offset));
-    /// let end = RelativeEndBound::Finite(RelativeFiniteBound::new(end_offset));
+    /// let start = RelativeFiniteBound::new(start_offset).to_start_bound();
+    /// let end = RelativeFiniteBound::new(end_offset).to_end_bound();
     ///
-    /// let bounds = RelativeBounds::unchecked_new(start, end);
+    /// let bounds = RelativeBoundPair::unchecked_new(start, end);
     ///
     /// assert_eq!(bounds.start(), &start);
     /// assert_eq!(bounds.end(), &end);
     /// ```
     #[must_use]
     pub fn unchecked_new(start: RelativeStartBound, end: RelativeEndBound) -> Self {
-        RelativeBounds { start, end }
+        RelativeBoundPair { start, end }
     }
 
-    /// Creates a new [`RelativeBounds`]
+    /// Creates a new [`RelativeBoundPair`]
     ///
-    /// Uses [`prepare_relative_bounds_for_interval_creation`] under the hood for making sure the bounds respect
+    /// Uses [`prepare_relative_bound_pair_for_interval_creation`] under the hood for making sure the bounds respect
     /// the invariants.
     ///
     /// # Examples
     ///
     /// ```
-    /// # use chrono::SignedDuration;
-    /// # use periodical::intervals::relative::{
-    /// #     RelativeBounds, RelativeEndBound, RelativeFiniteBound, RelativeStartBound,
-    /// # };
+    /// # use jiff::SignedDuration;
+    /// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBound};
     /// // Start and end are not in chronological order!
-    /// let start_offset = SignedDuration::hours(16);
-    /// let end_offset = SignedDuration::hours(8);
+    /// let start_offset = SignedDuration::from_hours(16);
+    /// let end_offset = SignedDuration::from_hours(8);
     ///
-    /// let start = RelativeStartBound::Finite(RelativeFiniteBound::new(start_offset));
-    /// let end = RelativeEndBound::Finite(RelativeFiniteBound::new(end_offset));
+    /// let start = RelativeFiniteBound::new(start_offset).to_start_bound();
+    /// let end = RelativeFiniteBound::new(end_offset).to_end_bound();
     ///
-    /// let bounds = RelativeBounds::new(start, end);
+    /// let bounds = RelativeBoundPair::new(start, end);
     ///
     /// // Now the start and end are in chronological order
     /// assert_eq!(bounds.start(), &end);
@@ -86,8 +109,44 @@ impl RelativeBounds {
     /// ```
     #[must_use]
     pub fn new(mut start: RelativeStartBound, mut end: RelativeEndBound) -> Self {
-        prepare_relative_bounds_for_interval_creation(&mut start, &mut end);
+        prepare_relative_bound_pair_for_interval_creation(&mut start, &mut end);
         Self::unchecked_new(start, end)
+    }
+
+    /// Creates an [`RelativeBoundPair`] from a [`SignedDuration`] range
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// # use jiff::SignedDuration;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBound};
+    /// let start = SignedDuration::from_hours(-5);
+    /// let end = SignedDuration::from_hours(20);
+    /// 
+    /// let bounds = RelativeBoundPair::from_range(start..end);
+    /// 
+    /// assert_eq!(
+    ///     bounds.start(),
+    ///     &RelativeFiniteBound::new(start).to_start_bound(),
+    /// );
+    /// assert_eq!(
+    ///     bounds.end(),
+    ///     &RelativeFiniteBound::new_with_inclusivity(
+    ///         end,
+    ///         BoundInclusivity::Exclusive,
+    ///     ).to_end_bound(),
+    /// );
+    /// ```
+    #[must_use]
+    pub fn from_range<R>(range: R) -> Self
+    where
+        R: RangeBounds<SignedDuration>,
+    {
+        RelativeBoundPair::new(
+            RelativeStartBound::from(range.start_bound().cloned()),
+            RelativeEndBound::from(range.end_bound().cloned()),
+        )
     }
 
     /// Returns the relative start bound
@@ -95,17 +154,15 @@ impl RelativeBounds {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::SignedDuration;
-    /// # use periodical::intervals::relative::{
-    /// #     RelativeBounds, RelativeEndBound, RelativeFiniteBound, RelativeStartBound,
-    /// # };
-    /// let start_offset = SignedDuration::hours(8);
-    /// let end_offset = SignedDuration::hours(16);
+    /// # use jiff::SignedDuration;
+    /// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBound};
+    /// let start_offset = SignedDuration::from_hours(8);
+    /// let end_offset = SignedDuration::from_hours(16);
     ///
-    /// let start = RelativeStartBound::Finite(RelativeFiniteBound::new(start_offset));
-    /// let end = RelativeEndBound::Finite(RelativeFiniteBound::new(end_offset));
+    /// let start = RelativeFiniteBound::new(start_offset).to_start_bound();
+    /// let end = RelativeFiniteBound::new(end_offset).to_end_bound();
     ///
-    /// let bounds = RelativeBounds::new(start, end);
+    /// let bounds = RelativeBoundPair::new(start, end);
     ///
     /// assert_eq!(bounds.start(), &start);
     /// ```
@@ -119,20 +176,17 @@ impl RelativeBounds {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::SignedDuration;
-    /// # use periodical::intervals::relative::{
-    /// #     RelativeBounds, RelativeEndBound, RelativeFiniteBound, RelativeStartBound,
-    /// # };
-    /// let start_offset = SignedDuration::hours(8);
-    /// let end_offset = SignedDuration::hours(16);
+    /// # use jiff::SignedDuration;
+    /// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBound};
+    /// let start_offset = SignedDuration::from_hours(8);
+    /// let end_offset = SignedDuration::from_hours(16);
     ///
-    /// let start = RelativeStartBound::Finite(RelativeFiniteBound::new(start_offset));
-    /// let end = RelativeEndBound::Finite(RelativeFiniteBound::new(end_offset));
+    /// let start = RelativeFiniteBound::new(start_offset).to_start_bound();
+    /// let end = RelativeFiniteBound::new(end_offset).to_end_bound();
     ///
-    /// let bounds = RelativeBounds::new(start, end);
+    /// let bounds = RelativeBoundPair::new(start, end);
     ///
     /// assert_eq!(bounds.end(), &end);
-    /// # Ok::<(), chrono::format::ParseError>(())
     /// ```
     #[must_use]
     pub fn end(&self) -> &RelativeEndBound {
@@ -144,20 +198,18 @@ impl RelativeBounds {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::SignedDuration;
-    /// # use periodical::intervals::relative::{
-    /// #     RelativeBounds, RelativeEndBound, RelativeFiniteBound, RelativeStartBound,
-    /// # };
-    /// let start_offset = SignedDuration::hours(8);
-    /// let end_offset = SignedDuration::hours(16);
+    /// # use jiff::SignedDuration;
+    /// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBound};
+    /// let start_offset = SignedDuration::from_hours(8);
+    /// let end_offset = SignedDuration::from_hours(16);
     ///
-    /// let start = RelativeStartBound::Finite(RelativeFiniteBound::new(start_offset));
-    /// let end = RelativeEndBound::Finite(RelativeFiniteBound::new(end_offset));
+    /// let start = RelativeFiniteBound::new(start_offset).to_start_bound();
+    /// let end = RelativeFiniteBound::new(end_offset).to_end_bound();
     ///
-    /// let mut bounds = RelativeBounds::new(start, end);
+    /// let mut bounds = RelativeBoundPair::new(start, end);
     ///
-    /// let new_start_offset = SignedDuration::hours(18);
-    /// let new_start = RelativeStartBound::Finite(RelativeFiniteBound::new(new_start_offset));
+    /// let new_start_offset = SignedDuration::from_hours(18);
+    /// let new_start = RelativeFiniteBound::new(new_start_offset).to_start_bound();
     ///
     /// // New start is past the end
     /// bounds.unchecked_set_start(new_start);
@@ -175,20 +227,18 @@ impl RelativeBounds {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::Duration;
-    /// # use periodical::intervals::relative::{
-    /// #     RelativeBounds, RelativeEndBound, RelativeFiniteBound, RelativeStartBound,
-    /// # };
-    /// let start_offset = Duration::hours(8);
-    /// let end_offset = Duration::hours(16);
+    /// # use jiff::SignedDuration;
+    /// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBound};
+    /// let start_offset = SignedDuration::from_hours(8);
+    /// let end_offset = SignedDuration::from_hours(16);
     ///
-    /// let start = RelativeStartBound::Finite(RelativeFiniteBound::new(start_offset));
-    /// let end = RelativeEndBound::Finite(RelativeFiniteBound::new(end_offset));
+    /// let start = RelativeFiniteBound::new(start_offset).to_start_bound();
+    /// let end = RelativeFiniteBound::new(end_offset).to_end_bound();
     ///
-    /// let mut bounds = RelativeBounds::new(start, end);
+    /// let mut bounds = RelativeBoundPair::new(start, end);
     ///
-    /// let new_end_offset = Duration::hours(6);
-    /// let new_end = RelativeEndBound::Finite(RelativeFiniteBound::new(new_end_offset));
+    /// let new_end_offset = SignedDuration::from_hours(6);
+    /// let new_end = RelativeFiniteBound::new(new_end_offset).to_end_bound();
     ///
     /// // New end is before the start
     /// bounds.unchecked_set_end(new_end);
@@ -210,20 +260,18 @@ impl RelativeBounds {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::Duration;
-    /// # use periodical::intervals::relative::{
-    /// #     RelativeBounds, RelativeEndBound, RelativeFiniteBound, RelativeStartBound,
-    /// # };
-    /// let start_offset = Duration::hours(8);
-    /// let end_offset = Duration::hours(16);
+    /// # use jiff::SignedDuration;
+    /// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBound};
+    /// let start_offset = SignedDuration::from_hours(8);
+    /// let end_offset = SignedDuration::from_hours(16);
     ///
-    /// let start = RelativeStartBound::Finite(RelativeFiniteBound::new(start_offset));
-    /// let end = RelativeEndBound::Finite(RelativeFiniteBound::new(end_offset));
+    /// let start = RelativeFiniteBound::new(start_offset).to_start_bound();
+    /// let end = RelativeFiniteBound::new(end_offset).to_end_bound();
     ///
-    /// let mut bounds = RelativeBounds::new(start, end);
+    /// let mut bounds = RelativeBoundPair::new(start, end);
     ///
-    /// let new_start_offset = Duration::hours(18);
-    /// let new_start = RelativeStartBound::Finite(RelativeFiniteBound::new(new_start_offset));
+    /// let new_start_offset = SignedDuration::from_hours(18);
+    /// let new_start = RelativeFiniteBound::new(new_start_offset).to_start_bound();
     ///
     /// // New start is past the end, and therefore gets ignored
     /// let was_successful = bounds.set_start(new_start);
@@ -233,7 +281,7 @@ impl RelativeBounds {
     /// assert_eq!(bounds.end(), &end);
     /// ```
     pub fn set_start(&mut self, new_start: RelativeStartBound) -> bool {
-        match check_relative_bounds_for_interval_creation(&new_start, self.end()) {
+        match check_relative_bound_pair_for_interval_creation(&new_start, self.end()) {
             Ok(()) => {
                 self.unchecked_set_start(new_start);
                 true
@@ -251,20 +299,18 @@ impl RelativeBounds {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::Duration;
-    /// # use periodical::intervals::relative::{
-    /// #     RelativeBounds, RelativeEndBound, RelativeFiniteBound, RelativeStartBound,
-    /// # };
-    /// let start_offset = Duration::hours(8);
-    /// let end_offset = Duration::hours(16);
+    /// # use jiff::SignedDuration;
+    /// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBound};
+    /// let start_offset = SignedDuration::from_hours(8);
+    /// let end_offset = SignedDuration::from_hours(16);
     ///
-    /// let start = RelativeStartBound::Finite(RelativeFiniteBound::new(start_offset));
-    /// let end = RelativeEndBound::Finite(RelativeFiniteBound::new(end_offset));
+    /// let start = RelativeFiniteBound::new(start_offset).to_start_bound();
+    /// let end = RelativeFiniteBound::new(end_offset).to_end_bound();
     ///
-    /// let mut bounds = RelativeBounds::new(start, end);
+    /// let mut bounds = RelativeBoundPair::new(start, end);
     ///
-    /// let new_end_offset = Duration::hours(6);
-    /// let new_end = RelativeEndBound::Finite(RelativeFiniteBound::new(new_end_offset));
+    /// let new_end_offset = SignedDuration::from_hours(6);
+    /// let new_end = RelativeFiniteBound::new(new_end_offset).to_end_bound();
     ///
     /// // New end is before the start, and therefore gets ignored
     /// let was_successful = bounds.set_end(new_end);
@@ -274,7 +320,7 @@ impl RelativeBounds {
     /// assert_eq!(bounds.end(), &end);
     /// ```
     pub fn set_end(&mut self, new_end: RelativeEndBound) -> bool {
-        match check_relative_bounds_for_interval_creation(self.start(), &new_end) {
+        match check_relative_bound_pair_for_interval_creation(self.start(), &new_end) {
             Ok(()) => {
                 self.unchecked_set_end(new_end);
                 true
@@ -283,7 +329,7 @@ impl RelativeBounds {
         }
     }
 
-    /// Compares two [`RelativeBounds`], but if they have the same start, order by decreasing length
+    /// Compares two [`RelativeBoundPair`], but if they have the same start, order by decreasing length
     ///
     /// Don't rely on this method for checking for equality of start, as it will produce other [`Ordering`]s if their
     /// lengths don't match too.
@@ -291,9 +337,9 @@ impl RelativeBounds {
     /// # Examples
     ///
     /// ```
-    /// # use periodical::intervals::relative::RelativeBounds;
-    /// # let mut bounds: [RelativeBounds; 0] = [];
-    /// bounds.sort_by(RelativeBounds::ord_by_start_and_inv_length);
+    /// # use periodical::intervals::relative::RelativeBoundPair;
+    /// # let mut bounds: [RelativeBoundPair; 0] = [];
+    /// bounds.sort_by(RelativeBoundPair::ord_by_start_and_inv_length);
     /// ```
     #[must_use]
     pub fn ord_by_start_and_inv_length(&self, other: &Self) -> Ordering {
@@ -305,10 +351,10 @@ impl RelativeBounds {
     }
 }
 
-impl Interval for RelativeBounds {}
+impl Interval for RelativeBoundPair {}
 
-impl HasRelativeBounds for RelativeBounds {
-    fn rel_bounds(&self) -> RelativeBounds {
+impl HasRelativeBoundPair for RelativeBoundPair {
+    fn rel_bound_pair(&self) -> RelativeBoundPair {
         self.clone()
     }
 
@@ -321,7 +367,7 @@ impl HasRelativeBounds for RelativeBounds {
     }
 }
 
-impl HasDuration for RelativeBounds {
+impl HasDuration for RelativeBoundPair {
     fn duration(&self) -> IntervalDuration {
         match (self.start(), self.end()) {
             (RelativeStartBound::InfinitePast, _) | (_, RelativeEndBound::InfiniteFuture) => IntervalDuration::Infinite,
@@ -329,8 +375,8 @@ impl HasDuration for RelativeBounds {
                 IntervalDuration::Finite(
                     finite_end
                         .offset()
-                        .checked_sub(&finite_start.offset())
-                        .unwrap_or(SignedDuration::zero()),
+                        .saturating_sub(finite_start.offset())
+                        .unsigned_abs(),
                     Epsilon::from((finite_start.inclusivity(), finite_end.inclusivity())),
                 )
             },
@@ -338,7 +384,7 @@ impl HasDuration for RelativeBounds {
     }
 }
 
-impl HasOpenness for RelativeBounds {
+impl HasOpenness for RelativeBoundPair {
     fn openness(&self) -> Openness {
         match (self.start(), self.end()) {
             (RelativeStartBound::InfinitePast, RelativeEndBound::InfiniteFuture) => Openness::Unbounded,
@@ -349,19 +395,19 @@ impl HasOpenness for RelativeBounds {
     }
 }
 
-impl HasRelativity for RelativeBounds {
+impl HasRelativity for RelativeBoundPair {
     fn relativity(&self) -> Relativity {
         Relativity::Relative
     }
 }
 
-impl PartialOrd for RelativeBounds {
+impl PartialOrd for RelativeBoundPair {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl Ord for RelativeBounds {
+impl Ord for RelativeBoundPair {
     fn cmp(&self, other: &Self) -> Ordering {
         // using the comparison of self.end and other.end as a way to disambiguate when the two starts are equal
         // leads to side-effects, like when we store absolute bounds inside a BTreeSet, then if we use `range()`,
@@ -370,71 +416,31 @@ impl Ord for RelativeBounds {
     }
 }
 
-impl Display for RelativeBounds {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let mut result = Ok(());
-
-        result = result.and(write!(f, "Relative bounds: "));
-
-        match self.start() {
-            RelativeStartBound::Finite(RelativeFiniteBound { offset, inclusivity }) => {
-                result = result.and(write!(f, "{offset} ({inclusivity})"));
-            },
-            RelativeStartBound::InfinitePast => {
-                result = result.and(write!(f, "Infinite past"));
-            },
-        }
-
-        result = result.and(write!(f, " to "));
-
-        match self.end() {
-            RelativeEndBound::Finite(RelativeFiniteBound { offset, inclusivity }) => {
-                result = result.and(write!(f, "{offset} ({inclusivity})"));
-            },
-            RelativeEndBound::InfiniteFuture => {
-                result = result.and(write!(f, "Infinite future"));
-            },
-        }
-
-        result
-    }
-}
-
-impl<R> From<R> for RelativeBounds
-where
-    R: RangeBounds<SignedDuration>,
-{
-    fn from(range: R) -> Self {
-        RelativeBounds::new(
-            RelativeStartBound::from(range.start_bound().cloned()),
-            RelativeEndBound::from(range.end_bound().cloned()),
-        )
-    }
-}
-
-/// Errors that can occur when trying to convert [`EmptiableRelativeBounds`] into [`RelativeBounds`]
+/// Errors that can occur when trying to convert [`EmptiableRelativeBoundPair`] into [`RelativeBoundPair`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum RelativeBoundsFromEmptiableRelativeBoundsError {
+pub enum RelativeBoundPairFromEmptiableRelativeBoundPairError {
     EmptyVariant,
 }
 
-impl Display for RelativeBoundsFromEmptiableRelativeBoundsError {
+impl Display for RelativeBoundPairFromEmptiableRelativeBoundPairError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::EmptyVariant => write!(f, "Provided EmptiableRelativeBounds was empty"),
+            Self::EmptyVariant => write!(f, "Provided EmptiableRelativeBoundPair was empty"),
         }
     }
 }
 
-impl Error for RelativeBoundsFromEmptiableRelativeBoundsError {}
+impl Error for RelativeBoundPairFromEmptiableRelativeBoundPairError {}
 
-impl TryFrom<EmptiableRelativeBounds> for RelativeBounds {
-    type Error = RelativeBoundsFromEmptiableRelativeBoundsError;
+impl TryFrom<EmptiableRelativeBoundPair> for RelativeBoundPair {
+    type Error = RelativeBoundPairFromEmptiableRelativeBoundPairError;
 
-    fn try_from(value: EmptiableRelativeBounds) -> Result<Self, Self::Error> {
+    fn try_from(value: EmptiableRelativeBoundPair) -> Result<Self, Self::Error> {
         match value {
-            EmptiableRelativeBounds::Empty => Err(RelativeBoundsFromEmptiableRelativeBoundsError::EmptyVariant),
-            EmptiableRelativeBounds::Bound(bounds) => Ok(bounds),
+            EmptiableRelativeBoundPair::Empty => {
+                Err(RelativeBoundPairFromEmptiableRelativeBoundPairError::EmptyVariant)
+            },
+            EmptiableRelativeBoundPair::Bound(bounds) => Ok(bounds),
         }
     }
 }

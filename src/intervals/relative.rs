@@ -54,20 +54,20 @@ inline_docs! {
 /// ```
 /// # use std::error::Error;
 /// # use jiff::SignedDuration;
-/// # use periodical::intervals::relative::{RelativeFiniteBound, swap_relative_bounds};
+/// # use periodical::intervals::relative::{RelativeFiniteBound, swap_relative_bound_pair};
 /// let start_offset = SignedDuration::from_hours(16);
 /// let end_offset = SignedDuration::from_hours(8);
 ///
 /// let mut start = RelativeFiniteBound::new(start_offset).to_start_bound();
 /// let mut end = RelativeFiniteBound::new(end_offset).to_end_bound();
 ///
-/// swap_relative_bounds(&mut start, &mut end);
+/// swap_relative_bound_pair(&mut start, &mut end);
 ///
 /// assert_eq!(start, RelativeFiniteBound::new(end_offset).to_start_bound());
 /// assert_eq!(end, RelativeFiniteBound::new(start_offset).to_end_bound());
 /// # Ok::<(), Box<dyn Error>>(())
 /// ```
-pub fn swap_relative_bounds(start: &mut RelativeStartBound, end: &mut RelativeEndBound) {
+pub fn swap_relative_bound_pair(start: &mut RelativeStartBound, end: &mut RelativeEndBound) {
     // We temporarily reborrow start and end for the match arms so that when a pattern matches, they move out of their
     // temporary scope and we can use the original mutable references without guard patterns shenanigans.
     // When destructuring, however, the scope of the reborrowed value extends up to where it is used within the body,
@@ -90,14 +90,14 @@ pub fn swap_relative_bounds(start: &mut RelativeStartBound, end: &mut RelativeEn
 
 /// Possible problems that can prevent creating an interval from the given start and end bounds
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum RelativeBoundsCheckForIntervalCreationError {
+pub enum RelativeBoundPairCheckForIntervalCreationError {
     /// Start bound is past the end bound
     StartPastEnd,
     /// Both bounds are on the same offset but don't have only inclusive bound inclusivities
     SameOffsetButNotDoublyInclusive,
 }
 
-impl Display for RelativeBoundsCheckForIntervalCreationError {
+impl Display for RelativeBoundPairCheckForIntervalCreationError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::StartPastEnd => write!(f, "Start bound is past the end bound"),
@@ -109,36 +109,36 @@ impl Display for RelativeBoundsCheckForIntervalCreationError {
     }
 }
 
-impl Error for RelativeBoundsCheckForIntervalCreationError {}
+impl Error for RelativeBoundPairCheckForIntervalCreationError {}
 
 /// Checks if the given start and end bound are ready for creating an interval
 ///
-/// This method is used as part of [`prepare_relative_bounds_for_interval_creation`], which is used by
-/// [`RelativeBounds::new`], but also in other places where we want to make sure that a start and end bound
-/// are ready to be used as part of the interval without using methods like [`RelativeBounds::new`] that
+/// This method is used as part of [`prepare_relative_bound_pair_for_interval_creation`], which is used by
+/// [`RelativeBoundPair::new`], but also in other places where we want to make sure that a start and end bound
+/// are ready to be used as part of the interval without using methods like [`RelativeBoundPair::new`] that
 /// already go through this process.
 ///
 /// # Errors
 ///
 /// If the start bound is past the end bound,
-/// it returns [`StartPastEnd`](RelativeBoundsCheckForIntervalCreationError::StartPastEnd).
+/// it returns [`StartPastEnd`](RelativeBoundPairCheckForIntervalCreationError::StartPastEnd).
 ///
 /// If both bounds have the same offset, but at least one of them has an exclusive bound inclusivity, it returns
-/// [`SameOffsetButNotDoublyInclusive`](RelativeBoundsCheckForIntervalCreationError::SameOffsetButNotDoublyInclusive).
+/// [`SameOffsetButNotDoublyInclusive`](RelativeBoundPairCheckForIntervalCreationError::SameOffsetButNotDoublyInclusive).
 ///
 /// # Examples
 ///
 /// ```
 /// # use periodical::intervals::relative::{
-/// #     RelativeBoundsCheckForIntervalCreationError, RelativeEndBound, RelativeStartBound,
-/// #     check_relative_bounds_for_interval_creation,
+/// #     RelativeBoundPairCheckForIntervalCreationError, RelativeEndBound, RelativeStartBound,
+/// #     check_relative_bound_pair_for_interval_creation,
 /// # };
 /// fn validate_bounds_from_user(
 ///     start: &RelativeStartBound,
 ///     end: &RelativeEndBound,
 /// ) -> Result<(), String> {
-///     type IntervalCreaErr = RelativeBoundsCheckForIntervalCreationError;
-///     match check_relative_bounds_for_interval_creation(start, end) {
+///     type IntervalCreaErr = RelativeBoundPairCheckForIntervalCreationError;
+///     match check_relative_bound_pair_for_interval_creation(start, end) {
 ///         Ok(()) => Ok(()),
 ///         Err(IntervalCreaErr::StartPastEnd) => Err(
 ///             "Start and end must be in chronological order!".to_string()
@@ -149,10 +149,10 @@ impl Error for RelativeBoundsCheckForIntervalCreationError {}
 ///     }
 /// }
 /// ```
-pub fn check_relative_bounds_for_interval_creation(
+pub fn check_relative_bound_pair_for_interval_creation(
     start: &RelativeStartBound,
     end: &RelativeEndBound,
-) -> Result<(), RelativeBoundsCheckForIntervalCreationError> {
+) -> Result<(), RelativeBoundPairCheckForIntervalCreationError> {
     match (start, end) {
         (RelativeStartBound::InfinitePast, _) | (_, RelativeEndBound::InfiniteFuture) => Ok(()),
         (RelativeStartBound::Finite(finite_start), RelativeEndBound::Finite(finite_end)) => {
@@ -164,10 +164,10 @@ pub fn check_relative_bounds_for_interval_creation(
                     {
                         Ok(())
                     } else {
-                        Err(RelativeBoundsCheckForIntervalCreationError::SameOffsetButNotDoublyInclusive)
+                        Err(RelativeBoundPairCheckForIntervalCreationError::SameOffsetButNotDoublyInclusive)
                     }
                 },
-                Ordering::Greater => Err(RelativeBoundsCheckForIntervalCreationError::StartPastEnd),
+                Ordering::Greater => Err(RelativeBoundPairCheckForIntervalCreationError::StartPastEnd),
             }
         },
     }
@@ -175,7 +175,7 @@ pub fn check_relative_bounds_for_interval_creation(
 
 /// Prepares a start and end bound for being used as part of an interval
 ///
-/// If some problems are present, see [`check_relative_bounds_for_interval_creation`], it resolves them automatically
+/// If some problems are present, see [`check_relative_bound_pair_for_interval_creation`], it resolves them automatically
 /// by modifying the passed mutable references for the start and end bound.
 ///
 /// The returned boolean indicates whether a change was operated in order to fix the given bounds.
@@ -185,7 +185,7 @@ pub fn check_relative_bounds_for_interval_creation(
 /// ```
 /// # use std::error::Error;
 /// # use jiff::SignedDuration;
-/// # use periodical::intervals::relative::{RelativeFiniteBound, prepare_relative_bounds_for_interval_creation};
+/// # use periodical::intervals::relative::{RelativeFiniteBound, prepare_relative_bound_pair_for_interval_creation};
 /// let start_offset = SignedDuration::from_hours(16);
 /// let end_offset = SignedDuration::from_hours(8);
 ///
@@ -193,24 +193,24 @@ pub fn check_relative_bounds_for_interval_creation(
 /// let mut start = RelativeFiniteBound::new(start_offset).to_start_bound();
 /// let mut end = RelativeFiniteBound::new(end_offset).to_end_bound();
 ///
-/// let was_changed = prepare_relative_bounds_for_interval_creation(&mut start, &mut end);
+/// let was_changed = prepare_relative_bound_pair_for_interval_creation(&mut start, &mut end);
 ///
 /// if was_changed {
 ///     // Prompt the user for confirmation regarding the fixed bounds
 /// }
 /// # Ok::<(), Box<dyn Error>>(())
 /// ```
-pub fn prepare_relative_bounds_for_interval_creation(
+pub fn prepare_relative_bound_pair_for_interval_creation(
     start_mut: &mut RelativeStartBound,
     end_mut: &mut RelativeEndBound,
 ) -> bool {
-    match check_relative_bounds_for_interval_creation(start_mut, end_mut) {
+    match check_relative_bound_pair_for_interval_creation(start_mut, end_mut) {
         Ok(()) => false,
-        Err(RelativeBoundsCheckForIntervalCreationError::StartPastEnd) => {
-            swap_relative_bounds(start_mut, end_mut);
+        Err(RelativeBoundPairCheckForIntervalCreationError::StartPastEnd) => {
+            swap_relative_bound_pair(start_mut, end_mut);
             true
         },
-        Err(RelativeBoundsCheckForIntervalCreationError::SameOffsetButNotDoublyInclusive) => {
+        Err(RelativeBoundPairCheckForIntervalCreationError::SameOffsetButNotDoublyInclusive) => {
             if let RelativeStartBound::Finite(finite_start_mut) = start_mut {
                 finite_start_mut.set_inclusivity(BoundInclusivity::Inclusive);
             }

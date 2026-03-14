@@ -4,7 +4,7 @@ use arbitrary::{Arbitrary, Error, Unstructured};
 use jiff::SignedDuration;
 
 use crate::intervals::meta::BoundInclusivity;
-use crate::intervals::relative::RelativeFiniteBound;
+use crate::intervals::relative::{RelativeBoundPair, RelativeEndBound, RelativeFiniteBound, RelativeStartBound};
 
 impl<'a> Arbitrary<'a> for RelativeFiniteBound {
     fn arbitrary(u: &mut Unstructured<'a>) -> arbitrary::Result<Self> {
@@ -16,18 +16,18 @@ impl<'a> Arbitrary<'a> for RelativeFiniteBound {
     }
 }
 
-/*
-impl<'a> Arbitrary<'a> for RelativeBounds {
+impl<'a> Arbitrary<'a> for RelativeBoundPair {
     fn arbitrary(u: &mut Unstructured<'a>) -> arbitrary::Result<Self> {
         let start = RelativeStartBound::arbitrary(u)?;
         let end = RelativeEndBound::arbitrary(u)?;
 
-        // We use RelativeBounds::new so that if start > end, they get swapped
+        // We use RelativeBoundPair::new so that if start > end, they get swapped
         // A fuzz test exists to verify that this behavior is correct
-        Ok(RelativeBounds::new(start, end))
+        Ok(RelativeBoundPair::new(start, end))
     }
 }
 
+/*
 impl<'a> Arbitrary<'a> for BoundedRelativeInterval {
     fn arbitrary(u: &mut Unstructured<'a>) -> arbitrary::Result<Self> {
         let start_offset = Duration::arbitrary(u)?;

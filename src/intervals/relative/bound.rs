@@ -1,7 +1,24 @@
+//! Relative bound representation
+//! 
+//! Represents a relative bound regardless of its source (start/end).
+//! This is particularly useful for representing relative bounds of an interval as a single type,
+//! while still conserving its source.
+
+use std::cmp::Ordering;
+use std::hash::{Hash, Hasher};
+
+#[cfg(feature = "arbitrary")]
+use arbitrary::Arbitrary;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
+use crate::intervals::relative::{RelativeEndBound, RelativeStartBound};
 
 /// Enum for relative start and end bounds
 ///
-/// This enumerator is useful for storing both start and end bounds, usually for processing bounds individually.
+/// Represents a relative bound regardless of its source (start/end).
+/// This is particularly useful for representing relative bounds of an interval as a single type,
+/// while still conserving its source.
 #[derive(Debug, Clone, Copy)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
@@ -16,18 +33,16 @@ impl RelativeBound {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::SignedDuration;
-    /// # use periodical::intervals::relative::{
-    /// #     RelativeBound, RelativeEndBound, RelativeFiniteBound, RelativeStartBound,
-    /// # };
-    /// let start_offset = SignedDuration::hours(8);
-    /// let end_offset = SignedDuration::hours(16);
+    /// # use jiff::SignedDuration;
+    /// # use periodical::intervals::relative::{RelativeBound, RelativeFiniteBound};
+    /// let start_offset = SignedDuration::from_hours(8);
+    /// let end_offset = SignedDuration::from_hours(16);
     ///
     /// let start = RelativeBound::Start(
-    ///     RelativeStartBound::Finite(RelativeFiniteBound::new(start_offset))
+    ///     RelativeFiniteBound::new(start_offset).to_start_bound()
     /// );
     /// let end = RelativeBound::End(
-    ///     RelativeEndBound::Finite(RelativeFiniteBound::new(end_offset))
+    ///     RelativeFiniteBound::new(end_offset).to_end_bound()
     /// );
     ///
     /// assert!(start.is_start());
@@ -43,18 +58,16 @@ impl RelativeBound {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::SignedDuration;
-    /// # use periodical::intervals::relative::{
-    /// #     RelativeBound, RelativeEndBound, RelativeFiniteBound, RelativeStartBound,
-    /// # };
-    /// let start_offset = SignedDuration::hours(8);
-    /// let end_offset = SignedDuration::hours(16);
+    /// # use jiff::SignedDuration;
+    /// # use periodical::intervals::relative::{RelativeBound, RelativeFiniteBound};
+    /// let start_offset = SignedDuration::from_hours(8);
+    /// let end_offset = SignedDuration::from_hours(16);
     ///
     /// let start = RelativeBound::Start(
-    ///     RelativeStartBound::Finite(RelativeFiniteBound::new(start_offset))
+    ///     RelativeFiniteBound::new(start_offset).to_start_bound()
     /// );
     /// let end = RelativeBound::End(
-    ///     RelativeEndBound::Finite(RelativeFiniteBound::new(end_offset))
+    ///     RelativeFiniteBound::new(end_offset).to_end_bound()
     /// );
     ///
     /// assert!(end.is_end());
@@ -73,23 +86,21 @@ impl RelativeBound {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::SignedDuration;
-    /// # use periodical::intervals::relative::{
-    /// #     RelativeBound, RelativeEndBound, RelativeFiniteBound, RelativeStartBound,
-    /// # };
-    /// let start_offset = SignedDuration::hours(8);
-    /// let end_offset = SignedDuration::hours(16);
+    /// # use jiff::SignedDuration;
+    /// # use periodical::intervals::relative::{RelativeBound, RelativeFiniteBound};
+    /// let start_offset = SignedDuration::from_hours(8);
+    /// let end_offset = SignedDuration::from_hours(16);
     ///
     /// let start = RelativeBound::Start(
-    ///     RelativeStartBound::Finite(RelativeFiniteBound::new(start_offset))
+    ///     RelativeFiniteBound::new(start_offset).to_start_bound()
     /// );
     /// let end = RelativeBound::End(
-    ///     RelativeEndBound::Finite(RelativeFiniteBound::new(end_offset))
+    ///     RelativeFiniteBound::new(end_offset).to_end_bound()
     /// );
     ///
     /// assert_eq!(
     ///     start.start(),
-    ///     Some(RelativeStartBound::Finite(RelativeFiniteBound::new(start_offset))),
+    ///     Some(RelativeFiniteBound::new(start_offset).to_start_bound()),
     /// );
     /// assert_eq!(
     ///     end.start(),
@@ -112,23 +123,21 @@ impl RelativeBound {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::SignedDuration;
-    /// # use periodical::intervals::relative::{
-    /// #     RelativeBound, RelativeEndBound, RelativeFiniteBound, RelativeStartBound,
-    /// # };
-    /// let start_offset = SignedDuration::hours(8);
-    /// let end_offset = SignedDuration::hours(16);
+    /// # use jiff::SignedDuration;
+    /// # use periodical::intervals::relative::{RelativeBound, RelativeFiniteBound};
+    /// let start_offset = SignedDuration::from_hours(8);
+    /// let end_offset = SignedDuration::from_hours(16);
     ///
     /// let start = RelativeBound::Start(
-    ///     RelativeStartBound::Finite(RelativeFiniteBound::new(start_offset))
+    ///     RelativeFiniteBound::new(start_offset).to_start_bound()
     /// );
     /// let end = RelativeBound::End(
-    ///     RelativeEndBound::Finite(RelativeFiniteBound::new(end_offset))
+    ///     RelativeFiniteBound::new(end_offset).to_end_bound()
     /// );
     ///
     /// assert_eq!(
     ///     end.end(),
-    ///     Some(RelativeEndBound::Finite(RelativeFiniteBound::new(end_offset))),
+    ///     Some(RelativeFiniteBound::new(end_offset).to_end_bound()),
     /// );
     /// assert_eq!(
     ///     start.end(),
