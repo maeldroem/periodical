@@ -476,15 +476,6 @@ impl Duration {
     }
 }
 
-impl Display for Duration {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Finite(duration, epsilon) => write!(f, "Finite duration: {duration} ({epsilon})"),
-            Self::Infinite => write!(f, "Infinite duration"),
-        }
-    }
-}
-
 impl From<StdDuration> for Duration {
     fn from(duration: StdDuration) -> Self {
         Duration::Finite(duration, Epsilon::default())

@@ -35,11 +35,11 @@
   - [ ] Migrated `bound` to jiff
   - [ ] Migrated `bounded_interval` to jiff
   - [ ] Migrated `emptiable_bound_pair` to jiff
-  - [ ] Migrated `end_bound` to jiff
+  - [x] Migrated `end_bound` to jiff
   - [x] Migrated `finite_bound` to jiff
   - [ ] Migrated `half_bounded_interval` to jiff
   - [ ] Migrated `interval` to jiff
-  - [ ] Migrated `start_bound` to jiff
+  - [x] Migrated `start_bound` to jiff
 - [ ] Migrated `intervals::relative` to jiff
   - [ ] Migrated `bound_pair` to jiff
   - [ ] Migrated `bound` to jiff
@@ -87,11 +87,11 @@
   - [ ] Migrated `bound`'s examples to jiff
   - [ ] Migrated `bounded_interval`'s examples to jiff
   - [ ] Migrated `emptiable_bound_pair`'s examples to jiff
-  - [ ] Migrated `end_bound`'s examples to jiff
-  - [ ] Migrated `finite_bound`'s examples to jiff
+  - [x] Migrated `end_bound`'s examples to jiff
+  - [x] Migrated `finite_bound`'s examples to jiff
   - [ ] Migrated `half_bounded_interval`'s examples to jiff
   - [ ] Migrated `interval`'s examples to jiff
-  - [ ] Migrated `start_bound`'s examples to jiff
+  - [x] Migrated `start_bound`'s examples to jiff
 - [ ] Migrated `intervals::relative`'s examples to jiff
   - [ ] Migrated `bound_pair`'s examples to jiff
   - [ ] Migrated `bound`'s examples to jiff

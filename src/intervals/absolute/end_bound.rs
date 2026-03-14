@@ -1,3 +1,23 @@
+//! Absolute end bound
+//! 
+//! Represents the end bound of an absolute interval. It can either be finite, in which case
+//! it will contain an [`AbsoluteFiniteBound`], or represent an open end bound through
+//! the [`InfiniteFuture`](AbsoluteEndBound::InfiniteFuture) variant.
+
+use std::cmp::Ordering;
+use std::ops::Bound;
+
+#[cfg(feature = "arbitrary")]
+use arbitrary::Arbitrary;
+use jiff::Timestamp;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
+use crate::intervals::absolute::{AbsoluteFiniteBound, AbsoluteStartBound};
+use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
+use crate::intervals::ops::bound_overlap_ambiguity::{
+    BoundOverlapAmbiguity, BoundOverlapDisambiguationRuleSet, DisambiguatedBoundOverlap,
+};
 
 /// An absolute end bound
 ///
@@ -17,16 +37,17 @@ impl AbsoluteEndBound {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Utc};
+    /// # use std::error::Error;
+    /// # use jiff::Timestamp;
     /// # use periodical::intervals::absolute::{AbsoluteEndBound, AbsoluteFiniteBound};
     /// let infinite_end_bound = AbsoluteEndBound::InfiniteFuture;
     ///
     /// let time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
-    /// let finite_end_bound = AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(time));
+    /// let finite_end_bound = AbsoluteFiniteBound::new(time).to_end_bound();
     ///
     /// assert!(finite_end_bound.is_finite());
     /// assert!(!infinite_end_bound.is_finite());
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
     pub fn is_finite(&self) -> bool {
@@ -38,16 +59,17 @@ impl AbsoluteEndBound {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Utc};
+    /// # use std::error::Error;
+    /// # use jiff::Timestamp;
     /// # use periodical::intervals::absolute::{AbsoluteEndBound, AbsoluteFiniteBound};
     /// let infinite_end_bound = AbsoluteEndBound::InfiniteFuture;
     ///
     /// let time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
-    /// let finite_end_bound = AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(time));
+    /// let finite_end_bound = AbsoluteFiniteBound::new(time).to_end_bound();
     ///
     /// assert!(infinite_end_bound.is_infinite_future());
     /// assert!(!finite_end_bound.is_infinite_future());
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
     pub fn is_infinite_future(&self) -> bool {
@@ -62,16 +84,17 @@ impl AbsoluteEndBound {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Utc};
+    /// # use std::error::Error;
+    /// # use jiff::Timestamp;
     /// # use periodical::intervals::absolute::{AbsoluteEndBound, AbsoluteFiniteBound};
     /// let infinite_end_bound = AbsoluteEndBound::InfiniteFuture;
     ///
     /// let time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
-    /// let finite_end_bound = AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(time));
+    /// let finite_end_bound = AbsoluteFiniteBound::new(time).to_end_bound();
     ///
     /// assert_eq!(finite_end_bound.finite(), Some(AbsoluteFiniteBound::new(time)));
     /// assert_eq!(infinite_end_bound.finite(), None);
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
     pub fn finite(self) -> Option<AbsoluteFiniteBound> {
@@ -93,23 +116,44 @@ impl AbsoluteEndBound {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Utc};
+    /// # use std::error::Error;
+    /// # use jiff::Timestamp;
     /// # use periodical::intervals::absolute::{AbsoluteEndBound, AbsoluteFiniteBound};
+    /// # use periodical::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
+    /// #
+    /// # #[derive(Debug)]
+    /// # struct FiniteBoundExpectedError;
+    /// #
+    /// # impl std::fmt::Display for FiniteBoundExpectedError {
+    /// #     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
+    /// #         write!(f, "Finite bound expected")
+    /// #     }
+    /// # }
+    /// #
+    /// # impl Error for FiniteBoundExpectedError {}
     /// let time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     ///
-    /// let end_first_shift = AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(time));
+    /// let end_first_shift = AbsoluteFiniteBound::new(time).to_end_bound();
     /// let break_start = end_first_shift
     ///     .opposite()
-    ///     .expect("provided a finite bound");
-    /// # Ok::<(), chrono::format::ParseError>(())
+    ///     .ok_or(FiniteBoundExpectedError)?;
+    /// 
+    /// assert_eq!(
+    ///     break_start.finite(),
+    ///     Some(AbsoluteFiniteBound::new_with_inclusivity(
+    ///         time,
+    ///         BoundInclusivity::Exclusive,
+    ///     )),
+    /// );
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
     pub fn opposite(&self) -> Option<AbsoluteStartBound> {
         match self {
-            Self::Finite(finite) => Some(AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            Self::Finite(finite) => Some(AbsoluteFiniteBound::new_with_inclusivity(
                 finite.time(),
                 finite.inclusivity().opposite(),
-            ))),
+            ).to_start_bound()),
             Self::InfiniteFuture => None,
         }
     }
@@ -189,24 +233,6 @@ impl PartialOrd<AbsoluteStartBound> for AbsoluteEndBound {
                 Ordering::Greater => Some(Ordering::Greater),
             },
         }
-    }
-}
-
-impl Display for AbsoluteEndBound {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let mut result = Ok(());
-        result = result.and(write!(f, "Absolute end: "));
-
-        match self {
-            Self::Finite(AbsoluteFiniteBound { time, inclusivity }) => {
-                result = result.and(write!(f, "{time} ({inclusivity})"));
-            },
-            Self::InfiniteFuture => {
-                result = result.and(write!(f, "Infinite future"));
-            },
-        }
-
-        result
     }
 }
 
