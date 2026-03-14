@@ -139,22 +139,12 @@ impl AbsoluteFiniteBound {
     }
 
     /// Wraps the finite bound in an [`AbsoluteStartBound`]
-    /// 
-    /// # Examples
-    /// 
-    /// ```
-    /// ```
     #[must_use]
     pub fn to_start_bound(self) -> AbsoluteStartBound {
         AbsoluteStartBound::from(self)
     }
 
     /// Wraps the finite bound in an [`AbsoluteEndBound`]
-    /// 
-    /// # Examples
-    /// 
-    /// ```
-    /// ```
     #[must_use]
     pub fn to_end_bound(self) -> AbsoluteEndBound {
         AbsoluteEndBound::from(self)
