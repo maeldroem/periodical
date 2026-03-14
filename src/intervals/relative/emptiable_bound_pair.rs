@@ -1,27 +1,45 @@
+//! Emptiable absolute bound pair
+//! 
+//! Similar to [absolute bound pair](crate::intervals::absolute::bound_pair), but has the extra
+//! ability of being able to represent an [empty interval](crate::intervals::special::EmptyInterval).
 
-/// Possession of possibly empty relative bounds
-pub trait HasEmptiableRelativeBounds {
-    /// Returns the [`EmptiableRelativeBounds`] of the object
+use std::cmp::Ordering;
+use std::time::Duration;
+
+#[cfg(feature = "arbitrary")]
+use arbitrary::Arbitrary;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
+use crate::intervals::relative::{HasRelativeBoundPair, RelativeBoundPair, RelativeEndBound, RelativeStartBound};
+use crate::intervals::meta::{
+    Duration as IntervalDuration, Emptiable, Epsilon, HasDuration, HasOpenness, HasRelativity, Interval, Openness,
+    Relativity,
+};
+
+/// Possession of possibly empty relative bound pair
+pub trait HasEmptiableRelativeBoundPair {
+    /// Returns the [`EmptiableRelativeBoundPair`] of the object
     #[must_use]
-    fn emptiable_rel_bounds(&self) -> EmptiableRelativeBounds;
+    fn emptiable_rel_bound_pair(&self) -> EmptiableRelativeBoundPair;
 
-    /// Returns an [`Option`] of [the relative start bound](RelativeStartBound) of the object
+    /// Returns [the relative start bound](RelativeStartBound) of the object, if applicable
     #[must_use]
     fn partial_rel_start(&self) -> Option<RelativeStartBound>;
 
-    /// Returns an [`Option`] of [the relative end bound](RelativeEndBound) of the object
+    /// Returns [the relative end bound](RelativeEndBound) of the object, if applicable
     #[must_use]
     fn partial_rel_end(&self) -> Option<RelativeEndBound>;
 }
 
-/// All implementors of [`HasRelativeBounds`] implement [`HasEmptiableRelativeBounds`].
+/// All implementors of [`HasRelativeBoundPair`] implement [`HasEmptiableRelativeBoundPair`].
 /// This could change in the future to separate emptiable from non-emptiable bounds.
-impl<T> HasEmptiableRelativeBounds for T
+impl<T> HasEmptiableRelativeBoundPair for T
 where
-    T: HasRelativeBounds,
+    T: HasRelativeBoundPair,
 {
-    fn emptiable_rel_bounds(&self) -> EmptiableRelativeBounds {
-        EmptiableRelativeBounds::Bound(self.rel_bounds())
+    fn emptiable_rel_bound_pair(&self) -> EmptiableRelativeBoundPair {
+        EmptiableRelativeBoundPair::Bound(self.rel_bound_pair())
     }
 
     fn partial_rel_start(&self) -> Option<RelativeStartBound> {
@@ -33,54 +51,55 @@ where
     }
 }
 
-/// Enum containing [`RelativeBounds`] but with support for [empty intervals](EmptyInterval)
+/// Enum containing [`RelativeBoundPair`] but with support for
+/// [empty intervals](crate::intervals::special::EmptyInterval)
 ///
-/// For more information, check [`RelativeBounds`], [`EmptyInterval`],
+/// For more information, check [`RelativeBoundPair`], [`EmptyInterval`](crate::intervals::special::EmptyInterval),
 /// or [`crate::intervals` module documentation](crate::intervals).
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
-pub enum EmptiableRelativeBounds {
+pub enum EmptiableRelativeBoundPair {
     Empty,
-    Bound(RelativeBounds),
+    Bound(RelativeBoundPair),
 }
 
-impl EmptiableRelativeBounds {
-    /// Returns the content of the [`Bound`](EmptiableRelativeBounds::Bound) variant
+impl EmptiableRelativeBoundPair {
+    /// Returns the content of the [`Bound`](EmptiableRelativeBoundPair::Bound) variant
     ///
-    /// Consumes `self` and puts the content of the [`Bound`](EmptiableRelativeBounds::Bound) variant
+    /// Consumes `self` and puts the content of the [`Bound`](EmptiableRelativeBoundPair::Bound) variant
     /// in an [`Option`]. If instead `self` is another variant, the method returns [`None`].
     ///
     /// # Examples
     ///
     /// ```
     /// # use periodical::intervals::relative::{
-    /// #     EmptiableRelativeBounds, RelativeBounds, RelativeEndBound, RelativeStartBound,
+    /// #     EmptiableRelativeBoundPair, RelativeBoundPair, RelativeEndBound, RelativeStartBound,
     /// # };
-    /// let bounds = RelativeBounds::new(
+    /// let bounds = RelativeBoundPair::new(
     ///     RelativeStartBound::InfinitePast,
     ///     RelativeEndBound::InfiniteFuture,
     /// );
     /// // Cloning is only for making the use of `bounds` okay in the following assertions
-    /// let bound_emptiable_bounds = EmptiableRelativeBounds::Bound(bounds.clone());
-    /// let empty_emptiable_bounds = EmptiableRelativeBounds::Empty;
+    /// let bound_emptiable_bounds = EmptiableRelativeBoundPair::Bound(bounds.clone());
+    /// let empty_emptiable_bounds = EmptiableRelativeBoundPair::Empty;
     ///
     /// assert_eq!(bound_emptiable_bounds.bound(), Some(bounds));
     /// assert_eq!(empty_emptiable_bounds.bound(), None);
     /// ```
     #[must_use]
-    pub fn bound(self) -> Option<RelativeBounds> {
+    pub fn bound(self) -> Option<RelativeBoundPair> {
         match self {
-            EmptiableRelativeBounds::Empty => None,
-            EmptiableRelativeBounds::Bound(bound) => Some(bound),
+            EmptiableRelativeBoundPair::Empty => None,
+            EmptiableRelativeBoundPair::Bound(bound) => Some(bound),
         }
     }
 
-    /// Compares two [`EmptiableRelativeBounds`], but if they have the same start, order by decreasing length
+    /// Compares two [`EmptiableRelativeBoundPair`], but if they have the same start, order by decreasing length
     ///
-    /// Uses [`RelativeBounds::ord_by_start_and_inv_length`] under the hood for
-    /// the [`Bound`](EmptiableRelativeBounds::Bound) variants and [`EmptiableRelativeBounds::cmp`]
-    /// for the [`Empty`](EmptiableRelativeBounds::Empty) variants (which will just place all empty bounds before
+    /// Uses [`RelativeBoundPair::ord_by_start_and_inv_length`] under the hood for
+    /// the [`Bound`](EmptiableRelativeBoundPair::Bound) variants and [`EmptiableRelativeBoundPair::cmp`]
+    /// for the [`Empty`](EmptiableRelativeBoundPair::Empty) variants (which will just place all empty bounds before
     /// any bound bounds).
     ///
     /// Don't rely on this method for checking for equality of start, as it will produce other [`Ordering`]s if their
@@ -89,25 +108,28 @@ impl EmptiableRelativeBounds {
     /// # Examples
     ///
     /// ```
-    /// # use periodical::intervals::relative::EmptiableRelativeBounds;
-    /// # let mut bounds: [EmptiableRelativeBounds; 0] = [];
-    /// bounds.sort_by(EmptiableRelativeBounds::ord_by_start_and_inv_length);
+    /// # use periodical::intervals::relative::EmptiableRelativeBoundPair;
+    /// # let mut bounds: [EmptiableRelativeBoundPair; 0] = [];
+    /// bounds.sort_by(EmptiableRelativeBoundPair::ord_by_start_and_inv_length);
     /// ```
     #[must_use]
     pub fn ord_by_start_and_inv_length(&self, other: &Self) -> Ordering {
         match (self, other) {
-            (EmptiableRelativeBounds::Bound(og_rel_bounds), EmptiableRelativeBounds::Bound(other_rel_bounds)) => {
-                og_rel_bounds.ord_by_start_and_inv_length(other_rel_bounds)
+            (
+                EmptiableRelativeBoundPair::Bound(og_rel_bound_pair),
+                EmptiableRelativeBoundPair::Bound(other_rel_bound_pair)
+            ) => {
+                og_rel_bound_pair.ord_by_start_and_inv_length(other_rel_bound_pair)
             },
             _ => self.cmp(other),
         }
     }
 }
 
-impl Interval for EmptiableRelativeBounds {}
+impl Interval for EmptiableRelativeBoundPair {}
 
-impl HasEmptiableRelativeBounds for EmptiableRelativeBounds {
-    fn emptiable_rel_bounds(&self) -> EmptiableRelativeBounds {
+impl HasEmptiableRelativeBoundPair for EmptiableRelativeBoundPair {
+    fn emptiable_rel_bound_pair(&self) -> EmptiableRelativeBoundPair {
         self.clone()
     }
 
@@ -126,22 +148,22 @@ impl HasEmptiableRelativeBounds for EmptiableRelativeBounds {
     }
 }
 
-impl Emptiable for EmptiableRelativeBounds {
+impl Emptiable for EmptiableRelativeBoundPair {
     fn is_empty(&self) -> bool {
         matches!(self, Self::Empty)
     }
 }
 
-impl HasDuration for EmptiableRelativeBounds {
+impl HasDuration for EmptiableRelativeBoundPair {
     fn duration(&self) -> IntervalDuration {
         match self {
             Self::Bound(bound) => bound.duration(),
-            Self::Empty => IntervalDuration::Finite(SignedDuration::zero(), Epsilon::None),
+            Self::Empty => IntervalDuration::Finite(Duration::ZERO, Epsilon::None),
         }
     }
 }
 
-impl HasOpenness for EmptiableRelativeBounds {
+impl HasOpenness for EmptiableRelativeBoundPair {
     fn openness(&self) -> Openness {
         match self {
             Self::Bound(bound) => bound.openness(),
@@ -150,42 +172,33 @@ impl HasOpenness for EmptiableRelativeBounds {
     }
 }
 
-impl HasRelativity for EmptiableRelativeBounds {
+impl HasRelativity for EmptiableRelativeBoundPair {
     fn relativity(&self) -> Relativity {
         Relativity::Relative
     }
 }
 
-impl PartialOrd for EmptiableRelativeBounds {
+impl PartialOrd for EmptiableRelativeBoundPair {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl Ord for EmptiableRelativeBounds {
+impl Ord for EmptiableRelativeBoundPair {
     fn cmp(&self, other: &Self) -> Ordering {
         match (self, other) {
-            (EmptiableRelativeBounds::Empty, EmptiableRelativeBounds::Empty) => Ordering::Equal,
-            (EmptiableRelativeBounds::Empty, EmptiableRelativeBounds::Bound(_)) => Ordering::Less,
-            (EmptiableRelativeBounds::Bound(_), EmptiableRelativeBounds::Empty) => Ordering::Greater,
-            (EmptiableRelativeBounds::Bound(og_rel_bounds), EmptiableRelativeBounds::Bound(other_rel_bounds)) => {
-                og_rel_bounds.cmp(other_rel_bounds)
+            (EmptiableRelativeBoundPair::Empty, EmptiableRelativeBoundPair::Empty) => Ordering::Equal,
+            (EmptiableRelativeBoundPair::Empty, EmptiableRelativeBoundPair::Bound(_)) => Ordering::Less,
+            (EmptiableRelativeBoundPair::Bound(_), EmptiableRelativeBoundPair::Empty) => Ordering::Greater,
+            (EmptiableRelativeBoundPair::Bound(og_rel_bound_pair), EmptiableRelativeBoundPair::Bound(other_rel_bound_pair)) => {
+                og_rel_bound_pair.cmp(other_rel_bound_pair)
             },
         }
     }
 }
 
-impl Display for EmptiableRelativeBounds {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Empty => write!(f, "Empty relative interval bounds"),
-            Self::Bound(bounds) => write!(f, "{bounds}"),
-        }
-    }
-}
-
-impl From<RelativeBounds> for EmptiableRelativeBounds {
-    fn from(value: RelativeBounds) -> Self {
-        EmptiableRelativeBounds::Bound(value)
+impl From<RelativeBoundPair> for EmptiableRelativeBoundPair {
+    fn from(value: RelativeBoundPair) -> Self {
+        EmptiableRelativeBoundPair::Bound(value)
     }
 }
