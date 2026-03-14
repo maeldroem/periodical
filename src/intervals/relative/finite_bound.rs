@@ -1,3 +1,26 @@
+//! Relative finite bound
+//! 
+//! A relative finite bound has two components: an offset, represented by a [`SignedDuration`],
+//! and a [bound inclusivity](BoundInclusivity).
+//! 
+//! Relative finite bounds are usually converted into either an
+//! [`RelativeStartBound`](crate::intervals::relative::RelativeStartBound) through the
+//! [`to_start_bound`](RelativeFiniteBound::to_start_bound) method,
+//! or into an
+//! [`RelativeEndBound`](crate::intervals::relative::RelativeEndBound) through the
+//! [`to_end_bound`](RelativeFiniteBound::to_end_bound) method.
+
+use std::cmp::Ordering;
+use std::error::Error;
+use std::fmt::Display;
+use std::ops::Bound;
+
+use jiff::SignedDuration;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
+use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
+use crate::intervals::relative::{RelativeEndBound, RelativeStartBound};
 
 /// A relative finite bound
 ///
@@ -12,28 +35,27 @@
 /// ## Basic use
 ///
 /// ```
-/// # use chrono::Duration;
+/// # use jiff::SignedDuration;
 /// # use periodical::intervals::relative::RelativeFiniteBound;
-/// let finite_bound = RelativeFiniteBound::new(Duration::hours(21));
+/// let finite_bound = RelativeFiniteBound::new(SignedDuration::from_hours(21));
 /// ```
 ///
 /// ## Creating an [`RelativeFiniteBound`] with an explicit [`BoundInclusivity`]
 ///
 /// ```
-/// # use chrono::Duration;
+/// # use jiff::SignedDuration;
 /// # use periodical::intervals::relative::RelativeFiniteBound;
 /// # use periodical::intervals::meta::BoundInclusivity;
 /// let finite_bound = RelativeFiniteBound::new_with_inclusivity(
-///     Duration::hours(21),
+///     SignedDuration::from_hours(21),
 ///     BoundInclusivity::Exclusive,
 /// );
 /// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub struct RelativeFiniteBound {
-    offset: SignedDuration,
-    inclusivity: BoundInclusivity,
+    pub(crate) offset: SignedDuration,
+    pub(crate) inclusivity: BoundInclusivity,
 }
 
 impl RelativeFiniteBound {
@@ -56,11 +78,11 @@ impl RelativeFiniteBound {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::SignedDuration;
+    /// # use jiff::SignedDuration;
     /// # use periodical::intervals::relative::RelativeFiniteBound;
-    /// let finite_bound = RelativeFiniteBound::new(SignedDuration::hours(12));
+    /// let finite_bound = RelativeFiniteBound::new(SignedDuration::from_hours(12));
     ///
-    /// assert_eq!(finite_bound.offset(), SignedDuration::hours(12));
+    /// assert_eq!(finite_bound.offset(), SignedDuration::from_hours(12));
     /// ```
     #[must_use]
     pub fn offset(&self) -> SignedDuration {
@@ -72,12 +94,12 @@ impl RelativeFiniteBound {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::SignedDuration;
+    /// # use jiff::SignedDuration;
     /// # use periodical::intervals::relative::RelativeFiniteBound;
-    /// let mut finite_bound = RelativeFiniteBound::new(SignedDuration::hours(1));
-    /// finite_bound.set_offset(SignedDuration::hours(32));
+    /// let mut finite_bound = RelativeFiniteBound::new(SignedDuration::from_hours(1));
+    /// finite_bound.set_offset(SignedDuration::from_hours(32));
     ///
-    /// assert_eq!(finite_bound.offset(), SignedDuration::hours(32));
+    /// assert_eq!(finite_bound.offset(), SignedDuration::from_hours(32));
     /// ```
     pub fn set_offset(&mut self, offset: SignedDuration) {
         self.offset = offset;
@@ -88,17 +110,28 @@ impl RelativeFiniteBound {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::SignedDuration;
+    /// # use jiff::SignedDuration;
     /// # use periodical::intervals::relative::RelativeFiniteBound;
-    /// # use periodical::intervals::meta::BoundInclusivity;
-    /// # use periodical::prelude::*;
-    /// let mut finite_bound = RelativeFiniteBound::new(SignedDuration::hours(1));
+    /// # use periodical::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
+    /// let mut finite_bound = RelativeFiniteBound::new(SignedDuration::from_hours(1));
     /// finite_bound.set_inclusivity(BoundInclusivity::Exclusive);
     ///
     /// assert_eq!(finite_bound.inclusivity(), BoundInclusivity::Exclusive);
     /// ```
     pub fn set_inclusivity(&mut self, inclusivity: BoundInclusivity) {
         self.inclusivity = inclusivity;
+    }
+
+    /// Wraps the finite bound in an [`RelativeStartBound`]
+    #[must_use]
+    pub fn to_start_bound(self) -> RelativeStartBound {
+        RelativeStartBound::from(self)
+    }
+
+    /// Wraps the finite bound in an [`RelativeEndBound`]
+    #[must_use]
+    pub fn to_end_bound(self) -> RelativeEndBound {
+        RelativeEndBound::from(self)
     }
 }
 
@@ -120,16 +153,6 @@ impl Ord for RelativeFiniteBound {
     }
 }
 
-impl Display for RelativeFiniteBound {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "Relative finite bound with offset {} ({})",
-            self.offset, self.inclusivity
-        )
-    }
-}
-
 impl From<SignedDuration> for RelativeFiniteBound {
     fn from(value: SignedDuration) -> Self {
         RelativeFiniteBound::new(value)
@@ -139,22 +162,6 @@ impl From<SignedDuration> for RelativeFiniteBound {
 impl From<(SignedDuration, BoundInclusivity)> for RelativeFiniteBound {
     fn from((offset, inclusivity): (SignedDuration, BoundInclusivity)) -> Self {
         RelativeFiniteBound::new_with_inclusivity(offset, inclusivity)
-    }
-}
-
-/// Conversion from the tuple `(SignedDuration, bool)` to [`RelativeFiniteBound`]
-///
-/// Interprets the boolean as _is it inclusive?_
-impl From<(SignedDuration, bool)> for RelativeFiniteBound {
-    fn from((offset, is_inclusive): (SignedDuration, bool)) -> Self {
-        RelativeFiniteBound::new_with_inclusivity(
-            offset,
-            if is_inclusive {
-                BoundInclusivity::Inclusive
-            } else {
-                BoundInclusivity::Exclusive
-            },
-        )
     }
 }
 

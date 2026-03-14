@@ -45,11 +45,11 @@
   - [ ] Migrated `bound` to jiff
   - [ ] Migrated `bounded_interval` to jiff
   - [ ] Migrated `emptiable_bound_pair` to jiff
-  - [ ] Migrated `end_bound` to jiff
-  - [ ] Migrated `finite_bound` to jiff
+  - [x] Migrated `end_bound` to jiff
+  - [x] Migrated `finite_bound` to jiff
   - [ ] Migrated `half_bounded_interval` to jiff
   - [ ] Migrated `interval` to jiff
-  - [ ] Migrated `start_bound` to jiff
+  - [x] Migrated `start_bound` to jiff
 - [ ] Migrated `convenience::absolute` to jiff
 - [ ] Migrated `convenience::relative` to jiff
 - [x] Migrated `intervals::special` to jiff
@@ -71,11 +71,11 @@
   - [ ] Migrated `bound`'s tests to jiff
   - [ ] Migrated `bounded_interval`'s tests to jiff
   - [ ] Migrated `emptiable_bound_pair`'s tests to jiff
-  - [ ] Migrated `end_bound`'s tests to jiff
-  - [ ] Migrated `finite_bound`'s tests to jiff
+  - [x] Migrated `end_bound`'s tests to jiff
+  - [x] Migrated `finite_bound`'s tests to jiff
   - [ ] Migrated `half_bounded_interval`'s tests to jiff
   - [ ] Migrated `interval`'s tests to jiff
-  - [ ] Migrated `start_bound`'s tests to jiff
+  - [x] Migrated `start_bound`'s tests to jiff
 - [ ] Migrated `convenience::absolute`'s tests to jiff
 - [ ] Migrated `convenience::relative`'s tests to jiff
 - [ ] Migrated `intervals::special`'s tests to jiff
@@ -97,11 +97,11 @@
   - [ ] Migrated `bound`'s examples to jiff
   - [ ] Migrated `bounded_interval`'s examples to jiff
   - [ ] Migrated `emptiable_bound_pair`'s examples to jiff
-  - [ ] Migrated `end_bound`'s examples to jiff
-  - [ ] Migrated `finite_bound`'s examples to jiff
+  - [x] Migrated `end_bound`'s examples to jiff
+  - [x] Migrated `finite_bound`'s examples to jiff
   - [ ] Migrated `half_bounded_interval`'s examples to jiff
   - [ ] Migrated `interval`'s examples to jiff
-  - [ ] Migrated `start_bound`'s examples to jiff
+  - [x] Migrated `start_bound`'s examples to jiff
 - [ ] Migrated `convenience::absolute`'s examples to jiff
 - [ ] Migrated `convenience::relative`'s examples to jiff
 - [x] Migrated `intervals::special`'s examples to jiff

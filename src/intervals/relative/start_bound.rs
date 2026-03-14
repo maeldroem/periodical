@@ -1,3 +1,23 @@
+//! Relative start bound
+//! 
+//! Represents the start bound of a relative interval. It can either be finite, in which case
+//! it will contain an [`RelativeFiniteBound`], or represent an open start bound through
+//! the [`InfinitePast`](RelativeStartBound::InfinitePast) variant.
+
+use std::cmp::Ordering;
+use std::ops::Bound;
+
+#[cfg(feature = "arbitrary")]
+use arbitrary::Arbitrary;
+use jiff::SignedDuration;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
+use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
+use crate::intervals::ops::bound_overlap_ambiguity::{
+    BoundOverlapAmbiguity, BoundOverlapDisambiguationRuleSet, DisambiguatedBoundOverlap,
+};
+use crate::intervals::relative::{RelativeEndBound, RelativeFiniteBound};
 
 /// A relative start bound
 ///
@@ -20,11 +40,11 @@ impl RelativeStartBound {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::SignedDuration;
+    /// # use jiff::SignedDuration;
     /// # use periodical::intervals::relative::{RelativeFiniteBound, RelativeStartBound};
     /// let infinite_start_bound = RelativeStartBound::InfinitePast;
     /// let finite_start_bound = RelativeStartBound::Finite(
-    ///     RelativeFiniteBound::new(SignedDuration::hours(1))
+    ///     RelativeFiniteBound::new(SignedDuration::from_hours(1))
     /// );
     ///
     /// assert!(finite_start_bound.is_finite());
@@ -40,11 +60,11 @@ impl RelativeStartBound {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::SignedDuration;
+    /// # use jiff::SignedDuration;
     /// # use periodical::intervals::relative::{RelativeFiniteBound, RelativeStartBound};
     /// let infinite_start_bound = RelativeStartBound::InfinitePast;
     /// let finite_start_bound = RelativeStartBound::Finite(
-    ///     RelativeFiniteBound::new(SignedDuration::hours(1))
+    ///     RelativeFiniteBound::new(SignedDuration::from_hours(1))
     /// );
     ///
     /// assert!(infinite_start_bound.is_infinite_past());
@@ -63,14 +83,17 @@ impl RelativeStartBound {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::SignedDuration;
+    /// # use jiff::SignedDuration;
     /// # use periodical::intervals::relative::{RelativeFiniteBound, RelativeStartBound};
     /// let infinite_start_bound = RelativeStartBound::InfinitePast;
     /// let finite_start_bound = RelativeStartBound::Finite(
-    ///     RelativeFiniteBound::new(SignedDuration::hours(1))
+    ///     RelativeFiniteBound::new(SignedDuration::from_hours(1))
     /// );
     ///
-    /// assert_eq!(finite_start_bound.finite(), Some(RelativeFiniteBound::new(SignedDuration::hours(1))));
+    /// assert_eq!(
+    ///     finite_start_bound.finite(),
+    ///     Some(RelativeFiniteBound::new(SignedDuration::from_hours(1))),
+    /// );
     /// assert_eq!(infinite_start_bound.finite(), None);
     /// ```
     #[must_use]
@@ -93,22 +116,44 @@ impl RelativeStartBound {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::SignedDuration;
+    /// # use std::error::Error;
+    /// # use jiff::SignedDuration;
+    /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::relative::{RelativeFiniteBound, RelativeStartBound};
+    /// #
+    /// # #[derive(Debug)]
+    /// # struct FiniteBoundExpectedError;
+    /// #
+    /// # impl std::fmt::Display for FiniteBoundExpectedError {
+    /// #     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
+    /// #         write!(f, "Finite bound expected")
+    /// #     }
+    /// # }
+    /// #
+    /// # impl Error for FiniteBoundExpectedError {}
     /// let start_second_part_my_shift = RelativeStartBound::Finite(
-    ///     RelativeFiniteBound::new(SignedDuration::hours(3))
+    ///     RelativeFiniteBound::new(SignedDuration::from_hours(3))
     /// );
     /// let break_end_before_shift = start_second_part_my_shift
     ///     .opposite()
-    ///     .expect("provided a finite bound");
+    ///     .ok_or(FiniteBoundExpectedError)?;
+    /// 
+    /// assert_eq!(
+    ///     break_end_before_shift.finite(),
+    ///     Some(RelativeFiniteBound::new_with_inclusivity(
+    ///         SignedDuration::from_hours(3),
+    ///         BoundInclusivity::Exclusive,
+    ///     )),
+    /// );
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
     pub fn opposite(&self) -> Option<RelativeEndBound> {
         match self {
-            Self::Finite(finite) => Some(RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+            Self::Finite(finite) => Some(RelativeFiniteBound::new_with_inclusivity(
                 finite.offset(),
                 finite.inclusivity().opposite(),
-            ))),
+            ).to_end_bound()),
             Self::InfinitePast => None,
         }
     }
@@ -116,25 +161,22 @@ impl RelativeStartBound {
 
 impl PartialEq<RelativeEndBound> for RelativeStartBound {
     fn eq(&self, other: &RelativeEndBound) -> bool {
-        let RelativeStartBound::Finite(RelativeFiniteBound {
+        if let RelativeStartBound::Finite(RelativeFiniteBound {
             offset: start_offset,
             inclusivity: start_inclusivity,
         }) = self
-        else {
-            return false;
-        };
-        let RelativeEndBound::Finite(RelativeFiniteBound {
-            offset: end_offset,
-            inclusivity: end_inclusivity,
-        }) = other
-        else {
-            return false;
-        };
-
-        // If the offsets are equal, anything other than double inclusive bounds is invalid
-        start_offset == end_offset
-            && *start_inclusivity == BoundInclusivity::Inclusive
-            && *end_inclusivity == BoundInclusivity::Inclusive
+            && let RelativeEndBound::Finite(RelativeFiniteBound {
+                offset: end_offset,
+                inclusivity: end_inclusivity,
+            }) = other
+        {
+            // If the offsets are equal, anything other than double inclusive bounds is invalid
+            start_offset == end_offset
+                && *start_inclusivity == BoundInclusivity::Inclusive
+                && *end_inclusivity == BoundInclusivity::Inclusive
+        } else {
+            false
+        }
     }
 }
 
@@ -206,24 +248,6 @@ impl PartialOrd<RelativeEndBound> for RelativeStartBound {
                 Ordering::Greater => Some(Ordering::Greater),
             },
         }
-    }
-}
-
-impl Display for RelativeStartBound {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let mut result = Ok(());
-        result = result.and(write!(f, "Relative start: "));
-
-        match self {
-            Self::Finite(RelativeFiniteBound { offset, inclusivity }) => {
-                result = result.and(write!(f, "{offset} ({inclusivity})"));
-            },
-            Self::InfinitePast => {
-                result = result.and(write!(f, "Infinite past"));
-            },
-        }
-
-        result
     }
 }
 
