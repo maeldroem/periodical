@@ -15,8 +15,6 @@ use std::error::Error;
 use std::fmt::Display;
 use std::ops::Bound;
 
-#[cfg(feature = "arbitrary")]
-use arbitrary::Arbitrary;
 use jiff::Timestamp;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -58,11 +56,10 @@ use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
 /// # Ok::<(), Box<dyn Error>>(())
 /// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub struct AbsoluteFiniteBound {
-    time: Timestamp,
-    inclusivity: BoundInclusivity,
+    pub(crate) time: Timestamp,
+    pub(crate) inclusivity: BoundInclusivity,
 }
 
 impl AbsoluteFiniteBound {
@@ -128,8 +125,7 @@ impl AbsoluteFiniteBound {
     /// # use std::error::Error;
     /// # use jiff::Timestamp;
     /// # use periodical::intervals::absolute::AbsoluteFiniteBound;
-    /// # use periodical::intervals::meta::BoundInclusivity;
-    /// # use periodical::prelude::*;
+    /// # use periodical::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
     /// let time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     ///
     /// let mut finite_bound = AbsoluteFiniteBound::new(time);
@@ -142,14 +138,26 @@ impl AbsoluteFiniteBound {
         self.inclusivity = new_inclusivity;
     }
 
+    /// Wraps the finite bound in an [`AbsoluteStartBound`]
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// ```
     #[must_use]
     pub fn to_start_bound(self) -> AbsoluteStartBound {
-        AbsoluteStartBound::Finite(self)
+        AbsoluteStartBound::from(self)
     }
 
+    /// Wraps the finite bound in an [`AbsoluteEndBound`]
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// ```
     #[must_use]
     pub fn to_end_bound(self) -> AbsoluteEndBound {
-        AbsoluteEndBound::Finite(self)
+        AbsoluteEndBound::from(self)
     }
 }
 
@@ -171,12 +179,6 @@ impl Ord for AbsoluteFiniteBound {
     }
 }
 
-impl Display for AbsoluteFiniteBound {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Absolute finite bound at {} ({})", self.time, self.inclusivity)
-    }
-}
-
 impl From<Timestamp> for AbsoluteFiniteBound {
     fn from(value: Timestamp) -> Self {
         AbsoluteFiniteBound::new(value)
@@ -186,15 +188,6 @@ impl From<Timestamp> for AbsoluteFiniteBound {
 impl From<(Timestamp, BoundInclusivity)> for AbsoluteFiniteBound {
     fn from((time, inclusivity): (Timestamp, BoundInclusivity)) -> Self {
         AbsoluteFiniteBound::new_with_inclusivity(time, inclusivity)
-    }
-}
-
-/// Conversion from the tuple `(Timestamp, bool)` to [`AbsoluteFiniteBound`]
-///
-/// Interprets the boolean as _is it inclusive?_
-impl From<(Timestamp, bool)> for AbsoluteFiniteBound {
-    fn from((time, is_inclusive): (Timestamp, bool)) -> Self {
-        AbsoluteFiniteBound::new_with_inclusivity(time, BoundInclusivity::from(is_inclusive))
     }
 }
 
