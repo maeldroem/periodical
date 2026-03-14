@@ -12,7 +12,10 @@ use arbitrary::Arbitrary;
 use serde::{Deserialize, Serialize};
 
 use crate::intervals::absolute::{AbsoluteBoundPair, AbsoluteEndBound, AbsoluteStartBound, HasAbsoluteBoundPair};
-use crate::intervals::meta::{Duration as IntervalDuration, Emptiable, Epsilon, HasDuration, HasOpenness, HasRelativity, Interval, Openness, Relativity};
+use crate::intervals::meta::{
+    Duration as IntervalDuration, Emptiable, Epsilon, HasDuration, HasOpenness, HasRelativity, Interval, Openness,
+    Relativity,
+};
 
 /// Possession of possibly empty absolute bound pair
 pub trait HasEmptiableAbsoluteBoundPair {

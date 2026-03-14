@@ -23,7 +23,8 @@ use crate::intervals::absolute::{
     prepare_absolute_bound_pair_for_interval_creation,
 };
 use crate::intervals::meta::{
-    Duration as IntervalDuration, Epsilon, HasBoundInclusivity, HasDuration, HasOpenness, HasRelativity, Interval, Openness, Relativity
+    Duration as IntervalDuration, Epsilon, HasBoundInclusivity, HasDuration, HasOpenness, HasRelativity, Interval,
+    Openness, Relativity
 };
 
 /// Possession of a **non-empty** absolute bound pair
@@ -49,8 +50,8 @@ pub trait HasAbsoluteBoundPair {
 /// # Invariants
 ///
 /// 1. The bounds are in chronological order
-/// 2. If the bounds have the same time, their inclusivities should be [inclusive](BoundInclusivity::Inclusive)
-///    for both
+/// 2. If the bounds have the same time, their inclusivities should be
+///    [inclusive](crate::intervals::meta::BoundInclusivity::Inclusive) for both
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub struct AbsoluteBoundPair {
@@ -124,7 +125,7 @@ impl AbsoluteBoundPair {
     /// # use std::error::Error;
     /// # use jiff::Timestamp;
     /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
-    /// # use periodical::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
+    /// # use periodical::intervals::meta::BoundInclusivity;
     /// let start = "2026-01-01 00:00:00Z".parse::<Timestamp>()?;
     /// let end = "2026-05-01 00:00:00Z".parse::<Timestamp>()?;
     /// 
