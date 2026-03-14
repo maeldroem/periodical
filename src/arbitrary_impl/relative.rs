@@ -12,7 +12,7 @@ impl<'a> Arbitrary<'a> for RelativeFiniteBound {
         let signed_duration = SignedDuration::try_from_nanos_i128(u.int_in_range(signed_duration_range)?)
             .ok_or(Error::IncorrectFormat)?;
 
-        Ok(Self::new_with_inclusivity(signed_duration, BoundInclusivity::arbitrary(u)))
+        Ok(Self::new_with_inclusivity(signed_duration, BoundInclusivity::arbitrary(u)?))
     }
 }
 
