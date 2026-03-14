@@ -1,3 +1,23 @@
+//! Relative end bound
+//! 
+//! Represents the end bound of a relative interval. It can either be finite, in which case
+//! it will contain an [`RelativeFiniteBound`], or represent an open end bound through
+//! the [`InfiniteFuture`](RelativeEndBound::InfiniteFuture) variant.
+
+use std::cmp::Ordering;
+use std::ops::Bound;
+
+#[cfg(feature = "arbitrary")]
+use arbitrary::Arbitrary;
+use jiff::SignedDuration;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
+use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
+use crate::intervals::ops::bound_overlap_ambiguity::{
+    BoundOverlapAmbiguity, BoundOverlapDisambiguationRuleSet, DisambiguatedBoundOverlap,
+};
+use crate::intervals::relative::{RelativeFiniteBound, RelativeStartBound};
 
 /// A relative end interval bound
 ///
@@ -20,11 +40,11 @@ impl RelativeEndBound {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::SignedDuration;
+    /// # use jiff::SignedDuration;
     /// # use periodical::intervals::relative::{RelativeEndBound, RelativeFiniteBound};
     /// let infinite_end_bound = RelativeEndBound::InfiniteFuture;
     /// let finite_end_bound = RelativeEndBound::Finite(
-    ///     RelativeFiniteBound::new(SignedDuration::hours(1))
+    ///     RelativeFiniteBound::new(SignedDuration::from_hours(1))
     /// );
     ///
     /// assert!(finite_end_bound.is_finite());
@@ -40,11 +60,11 @@ impl RelativeEndBound {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::SignedDuration;
+    /// # use jiff::SignedDuration;
     /// # use periodical::intervals::relative::{RelativeEndBound, RelativeFiniteBound};
     /// let infinite_end_bound = RelativeEndBound::InfiniteFuture;
     /// let finite_end_bound = RelativeEndBound::Finite(
-    ///     RelativeFiniteBound::new(SignedDuration::hours(1))
+    ///     RelativeFiniteBound::new(SignedDuration::from_hours(1))
     /// );
     ///
     /// assert!(infinite_end_bound.is_infinite_future());
@@ -63,14 +83,17 @@ impl RelativeEndBound {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::SignedDuration;
+    /// # use jiff::SignedDuration;
     /// # use periodical::intervals::relative::{RelativeEndBound, RelativeFiniteBound};
     /// let infinite_end_bound = RelativeEndBound::InfiniteFuture;
     /// let finite_end_bound = RelativeEndBound::Finite(
-    ///     RelativeFiniteBound::new(SignedDuration::hours(1))
+    ///     RelativeFiniteBound::new(SignedDuration::from_hours(1))
     /// );
     ///
-    /// assert_eq!(finite_end_bound.finite(), Some(RelativeFiniteBound::new(SignedDuration::hours(1))));
+    /// assert_eq!(
+    ///     finite_end_bound.finite(),
+    ///     Some(RelativeFiniteBound::new(SignedDuration::from_hours(1))),
+    /// );
     /// assert_eq!(infinite_end_bound.finite(), None);
     /// ```
     #[must_use]
@@ -93,22 +116,44 @@ impl RelativeEndBound {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::SignedDuration;
+    /// # use std::error::Error;
+    /// # use jiff::SignedDuration;
+    /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::relative::{RelativeEndBound, RelativeFiniteBound};
+    /// #
+    /// # #[derive(Debug)]
+    /// # struct FiniteBoundExpectedError;
+    /// #
+    /// # impl std::fmt::Display for FiniteBoundExpectedError {
+    /// #     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
+    /// #         write!(f, "Finite bound expected")
+    /// #     }
+    /// # }
+    /// #
+    /// # impl Error for FiniteBoundExpectedError {}
     /// let end_first_shift = RelativeEndBound::Finite(
-    ///     RelativeFiniteBound::new(SignedDuration::hours(1))
+    ///     RelativeFiniteBound::new(SignedDuration::from_hours(1))
     /// );
     /// let break_start = end_first_shift
     ///     .opposite()
-    ///     .expect("provided a finite bound");
+    ///     .ok_or(FiniteBoundExpectedError)?;
+    /// 
+    /// assert_eq!(
+    ///     break_start.finite(),
+    ///     Some(RelativeFiniteBound::new_with_inclusivity(
+    ///         SignedDuration::from_hours(1),
+    ///         BoundInclusivity::Exclusive,
+    ///     )),
+    /// );
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
     pub fn opposite(&self) -> Option<RelativeStartBound> {
         match self {
-            Self::Finite(finite) => Some(RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+            Self::Finite(finite) => Some(RelativeFiniteBound::new_with_inclusivity(
                 finite.offset(),
                 finite.inclusivity().opposite(),
-            ))),
+            ).to_start_bound()),
             Self::InfiniteFuture => None,
         }
     }
@@ -188,24 +233,6 @@ impl PartialOrd<RelativeStartBound> for RelativeEndBound {
                 Ordering::Greater => Some(Ordering::Greater),
             },
         }
-    }
-}
-
-impl Display for RelativeEndBound {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let mut result = Ok(());
-        result = result.and(write!(f, "Relative end: "));
-
-        match self {
-            Self::Finite(RelativeFiniteBound { offset, inclusivity }) => {
-                result = result.and(write!(f, "{offset} ({inclusivity})"));
-            },
-            Self::InfiniteFuture => {
-                result = result.and(write!(f, "Infinite future"));
-            },
-        }
-
-        result
     }
 }
 

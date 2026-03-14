@@ -1,6 +1,20 @@
 //! [`Arbitrary`] implementations for items within the [`relative`](crate::intervals::relative) module
 
-use arbitrary::{Arbitrary, Unstructured};
+use arbitrary::{Arbitrary, Error, Unstructured};
+use jiff::SignedDuration;
+
+use crate::intervals::meta::BoundInclusivity;
+use crate::intervals::relative::RelativeFiniteBound;
+
+impl<'a> Arbitrary<'a> for RelativeFiniteBound {
+    fn arbitrary(u: &mut Unstructured<'a>) -> arbitrary::Result<Self> {
+        let signed_duration_range = SignedDuration::MIN.as_nanos()..=SignedDuration::MAX.as_nanos();
+        let signed_duration = SignedDuration::try_from_nanos_i128(u.int_in_range(signed_duration_range)?)
+            .ok_or(Error::IncorrectFormat)?;
+
+        Ok(Self::new_with_inclusivity(signed_duration, BoundInclusivity::arbitrary(u)))
+    }
+}
 
 /*
 impl<'a> Arbitrary<'a> for RelativeBounds {
