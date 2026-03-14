@@ -31,10 +31,10 @@
 ## Changed
 
 - [x] Migrated `intervals::absolute` to jiff
-  - [ ] Migrated `bound_pair` to jiff
-  - [ ] Migrated `bound` to jiff
+  - [x] Migrated `bound_pair` to jiff
+  - [x] Migrated `bound` to jiff
   - [ ] Migrated `bounded_interval` to jiff
-  - [ ] Migrated `emptiable_bound_pair` to jiff
+  - [x] Migrated `emptiable_bound_pair` to jiff
   - [x] Migrated `end_bound` to jiff
   - [x] Migrated `finite_bound` to jiff
   - [ ] Migrated `half_bounded_interval` to jiff
@@ -83,10 +83,10 @@
 - [x] Migrated `ops`'s tests to jiff
 
 - [x] Migrated `intervals::absolute`'s examples to jiff
-  - [ ] Migrated `bound_pair`'s examples to jiff
-  - [ ] Migrated `bound`'s examples to jiff
+  - [x] Migrated `bound_pair`'s examples to jiff
+  - [x] Migrated `bound`'s examples to jiff
   - [ ] Migrated `bounded_interval`'s examples to jiff
-  - [ ] Migrated `emptiable_bound_pair`'s examples to jiff
+  - [x] Migrated `emptiable_bound_pair`'s examples to jiff
   - [x] Migrated `end_bound`'s examples to jiff
   - [x] Migrated `finite_bound`'s examples to jiff
   - [ ] Migrated `half_bounded_interval`'s examples to jiff
@@ -113,6 +113,7 @@
 
 - [ ] Renamed all occurrences of "from" and "to" to "start" and "end" respectively to avoid confusion
   and to make it easier to refer to ("start time" is more explicit than "from time")
+- [ ] Renamed "bounds" to "bound pair"
 
 - [x] Renamed `NaiveDuration` to `CalendarAnchorOffset`
 - [x] Refactored `Precision` to contain a `Duration` and a `PrecisionMode`
