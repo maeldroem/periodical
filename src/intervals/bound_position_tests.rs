@@ -1,12 +1,9 @@
-use chrono::{Duration, Utc};
+use std::error::Error;
 
-use crate::intervals::absolute::{
-    AbsoluteBound, AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
-};
-use crate::intervals::relative::{
-    RelativeBound, RelativeBounds, RelativeEndBound, RelativeFiniteBound, RelativeStartBound,
-};
-use crate::test_utils::date;
+use jiff::{SignedDuration, Timestamp};
+
+use crate::intervals::absolute::{AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound};
+use crate::intervals::relative::{RelativeBoundPair, RelativeEndBound, RelativeFiniteBound, RelativeStartBound};
 
 use super::bound_position::*;
 
@@ -16,205 +13,205 @@ fn default_bound_position() {
 }
 
 #[test]
-fn bound_position_index_of_start() {
+fn index_of_start() {
     assert_eq!(BoundPosition::Start(51907).index(), 51907);
 }
 
 #[test]
-fn bound_position_index_of_end() {
+fn index_of_end() {
     assert_eq!(BoundPosition::End(8976).index(), 8976);
 }
 
 #[test]
-fn bound_position_get_abs_bound_of_start_inside() {
+fn get_abs_bound_of_start_inside() -> Result<(), Box<dyn Error>> {
     let data = [
-        AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 2, 1))),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 2, 5))),
+        AbsoluteBoundPair::new(
+            AbsoluteFiniteBound::new("2025-02-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+            AbsoluteFiniteBound::new("2025-02-05 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
         ),
-        AbsoluteBounds::new(
+        AbsoluteBoundPair::new(
             AbsoluteStartBound::InfinitePast,
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
+            AbsoluteFiniteBound::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
         ),
-        AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 5, 1))),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 5, 4))),
+        AbsoluteBoundPair::new(
+            AbsoluteFiniteBound::new("2025-05-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+            AbsoluteFiniteBound::new("2025-05-04 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
         ),
-        AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture),
+        AbsoluteBoundPair::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture),
     ];
 
     assert_eq!(
         BoundPosition::Start(2).get_abs_bound(data.iter()),
-        Some(AbsoluteBound::Start(AbsoluteStartBound::Finite(
-            AbsoluteFiniteBound::new(date(&Utc, 2025, 5, 1))
-        ))),
+        Some(AbsoluteStartBound::Finite(
+            AbsoluteFiniteBound::new("2025-05-01 00:00:00Z".parse::<Timestamp>()?)
+        ).to_bound()),
     );
+    Ok(())
 }
 
 #[test]
-fn bound_position_get_abs_bound_of_start_outside() {
+fn get_abs_bound_of_start_outside() -> Result<(), Box<dyn Error>> {
     let data = [
-        AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 2, 1))),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 2, 5))),
+        AbsoluteBoundPair::new(
+            AbsoluteFiniteBound::new("2025-02-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+            AbsoluteFiniteBound::new("2025-02-05 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
         ),
-        AbsoluteBounds::new(
+        AbsoluteBoundPair::new(
             AbsoluteStartBound::InfinitePast,
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
+            AbsoluteFiniteBound::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
         ),
-        AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 5, 1))),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 5, 4))),
+        AbsoluteBoundPair::new(
+            AbsoluteFiniteBound::new("2025-05-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+            AbsoluteFiniteBound::new("2025-05-04 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
         ),
-        AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture),
+        AbsoluteBoundPair::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture),
     ];
 
-    assert_eq!(BoundPosition::Start(5).get_abs_bound(data.iter()), None,);
+    assert_eq!(BoundPosition::Start(5).get_abs_bound(data.iter()), None);
+    Ok(())
 }
 
 #[test]
-fn bound_position_get_abs_bound_of_end_inside() {
+fn get_abs_bound_of_end_inside() -> Result<(), Box<dyn Error>> {
     let data = [
-        AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 2, 1))),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 2, 5))),
+        AbsoluteBoundPair::new(
+            AbsoluteFiniteBound::new("2025-02-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+            AbsoluteFiniteBound::new("2025-02-05 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
         ),
-        AbsoluteBounds::new(
+        AbsoluteBoundPair::new(
             AbsoluteStartBound::InfinitePast,
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
+            AbsoluteFiniteBound::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
         ),
-        AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 5, 1))),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 5, 4))),
+        AbsoluteBoundPair::new(
+            AbsoluteFiniteBound::new("2025-05-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+            AbsoluteFiniteBound::new("2025-05-04 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
         ),
-        AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture),
+        AbsoluteBoundPair::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture),
     ];
 
     assert_eq!(
         BoundPosition::End(2).get_abs_bound(data.iter()),
-        Some(AbsoluteBound::End(AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-            date(&Utc, 2025, 5, 4)
-        )))),
+        Some(AbsoluteFiniteBound::new(
+            "2025-05-04 00:00:00Z".parse::<Timestamp>()?
+        ).to_end_bound().to_bound()),
     );
+    Ok(())
 }
 
 #[test]
-fn bound_position_get_abs_bound_of_end_outside() {
+fn get_abs_bound_of_end_outside() -> Result<(), Box<dyn Error>> {
     let data = [
-        AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 2, 1))),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 2, 5))),
+        AbsoluteBoundPair::new(
+            AbsoluteFiniteBound::new("2025-02-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+            AbsoluteFiniteBound::new("2025-02-05 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
         ),
-        AbsoluteBounds::new(
+        AbsoluteBoundPair::new(
             AbsoluteStartBound::InfinitePast,
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
+            AbsoluteFiniteBound::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
         ),
-        AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 5, 1))),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 5, 4))),
+        AbsoluteBoundPair::new(
+            AbsoluteFiniteBound::new("2025-05-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+            AbsoluteFiniteBound::new("2025-05-04 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
         ),
-        AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture),
+        AbsoluteBoundPair::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture),
     ];
 
-    assert_eq!(BoundPosition::End(5).get_abs_bound(data.iter()), None,);
+    assert_eq!(BoundPosition::End(5).get_abs_bound(data.iter()), None);
+    Ok(())
 }
 
 #[test]
-fn bound_position_get_rel_bound_of_start_inside() {
+fn get_rel_bound_of_start_inside() {
     let data = [
-        RelativeBounds::new(
-            RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(21))),
-            RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(25))),
+        RelativeBoundPair::new(
+            RelativeFiniteBound::new(SignedDuration::from_hours(21)).to_start_bound(),
+            RelativeFiniteBound::new(SignedDuration::from_hours(25)).to_end_bound(),
         ),
-        RelativeBounds::new(
+        RelativeBoundPair::new(
             RelativeStartBound::InfinitePast,
-            RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(11))),
+            RelativeFiniteBound::new(SignedDuration::from_hours(11)).to_end_bound(),
         ),
-        RelativeBounds::new(
-            RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(51))),
-            RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(54))),
+        RelativeBoundPair::new(
+            RelativeFiniteBound::new(SignedDuration::from_hours(51)).to_start_bound(),
+            RelativeFiniteBound::new(SignedDuration::from_hours(54)).to_end_bound(),
         ),
-        RelativeBounds::new(RelativeStartBound::InfinitePast, RelativeEndBound::InfiniteFuture),
+        RelativeBoundPair::new(RelativeStartBound::InfinitePast, RelativeEndBound::InfiniteFuture),
     ];
 
     assert_eq!(
         BoundPosition::Start(2).get_rel_bound(data.iter()),
-        Some(RelativeBound::Start(RelativeStartBound::Finite(
-            RelativeFiniteBound::new(Duration::hours(51))
-        ))),
+        Some(RelativeFiniteBound::new(SignedDuration::from_hours(51)).to_start_bound().to_bound()),
     );
 }
 
 #[test]
-fn bound_position_get_rel_bound_of_start_outside() {
+fn get_rel_bound_of_start_outside() {
     let data = [
-        RelativeBounds::new(
-            RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(21))),
-            RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(25))),
+        RelativeBoundPair::new(
+            RelativeFiniteBound::new(SignedDuration::from_hours(21)).to_start_bound(),
+            RelativeFiniteBound::new(SignedDuration::from_hours(25)).to_end_bound(),
         ),
-        RelativeBounds::new(
+        RelativeBoundPair::new(
             RelativeStartBound::InfinitePast,
-            RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(11))),
+            RelativeFiniteBound::new(SignedDuration::from_hours(11)).to_end_bound(),
         ),
-        RelativeBounds::new(
-            RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(51))),
-            RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(54))),
+        RelativeBoundPair::new(
+            RelativeFiniteBound::new(SignedDuration::from_hours(51)).to_start_bound(),
+            RelativeFiniteBound::new(SignedDuration::from_hours(54)).to_end_bound(),
         ),
-        RelativeBounds::new(RelativeStartBound::InfinitePast, RelativeEndBound::InfiniteFuture),
+        RelativeBoundPair::new(RelativeStartBound::InfinitePast, RelativeEndBound::InfiniteFuture),
     ];
 
-    assert_eq!(BoundPosition::Start(5).get_rel_bound(data.iter()), None,);
+    assert_eq!(BoundPosition::Start(5).get_rel_bound(data.iter()), None);
 }
 
 #[test]
-fn bound_position_get_rel_bound_of_end_inside() {
+fn get_rel_bound_of_end_inside() {
     let data = [
-        RelativeBounds::new(
-            RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(21))),
-            RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(25))),
+        RelativeBoundPair::new(
+            RelativeFiniteBound::new(SignedDuration::from_hours(21)).to_start_bound(),
+            RelativeFiniteBound::new(SignedDuration::from_hours(25)).to_end_bound(),
         ),
-        RelativeBounds::new(
+        RelativeBoundPair::new(
             RelativeStartBound::InfinitePast,
-            RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(11))),
+            RelativeFiniteBound::new(SignedDuration::from_hours(11)).to_end_bound(),
         ),
-        RelativeBounds::new(
-            RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(51))),
-            RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(54))),
+        RelativeBoundPair::new(
+            RelativeFiniteBound::new(SignedDuration::from_hours(51)).to_start_bound(),
+            RelativeFiniteBound::new(SignedDuration::from_hours(54)).to_end_bound(),
         ),
-        RelativeBounds::new(RelativeStartBound::InfinitePast, RelativeEndBound::InfiniteFuture),
+        RelativeBoundPair::new(RelativeStartBound::InfinitePast, RelativeEndBound::InfiniteFuture),
     ];
 
     assert_eq!(
         BoundPosition::End(2).get_rel_bound(data.iter()),
-        Some(RelativeBound::End(RelativeEndBound::Finite(RelativeFiniteBound::new(
-            Duration::hours(54)
-        )))),
+        Some(RelativeFiniteBound::new(SignedDuration::from_hours(54)).to_end_bound().to_bound()),
     );
 }
 
 #[test]
-fn bound_position_get_rel_bound_of_end_outside() {
+fn get_rel_bound_of_end_outside() {
     let data = [
-        RelativeBounds::new(
-            RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(21))),
-            RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(25))),
+        RelativeBoundPair::new(
+            RelativeFiniteBound::new(SignedDuration::from_hours(21)).to_start_bound(),
+            RelativeFiniteBound::new(SignedDuration::from_hours(25)).to_end_bound(),
         ),
-        RelativeBounds::new(
+        RelativeBoundPair::new(
             RelativeStartBound::InfinitePast,
-            RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(11))),
+            RelativeFiniteBound::new(SignedDuration::from_hours(11)).to_end_bound(),
         ),
-        RelativeBounds::new(
-            RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(51))),
-            RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(54))),
+        RelativeBoundPair::new(
+            RelativeFiniteBound::new(SignedDuration::from_hours(51)).to_start_bound(),
+            RelativeFiniteBound::new(SignedDuration::from_hours(54)).to_end_bound(),
         ),
-        RelativeBounds::new(RelativeStartBound::InfinitePast, RelativeEndBound::InfiniteFuture),
+        RelativeBoundPair::new(RelativeStartBound::InfinitePast, RelativeEndBound::InfiniteFuture),
     ];
 
-    assert_eq!(BoundPosition::End(5).get_rel_bound(data.iter()), None,);
+    assert_eq!(BoundPosition::End(5).get_rel_bound(data.iter()), None);
 }
 
 #[test]
-fn bound_position_add_bounds_index_on_start_no_overflow() {
+fn add_bounds_index_on_start_no_overflow() {
     let mut position = BoundPosition::Start(5);
 
     assert!(!position.add_interval_index(3));
@@ -222,7 +219,7 @@ fn bound_position_add_bounds_index_on_start_no_overflow() {
 }
 
 #[test]
-fn bound_position_add_bounds_index_on_start_overflow() {
+fn add_bounds_index_on_start_overflow() {
     let mut position = BoundPosition::Start(5);
 
     assert!(position.add_interval_index(usize::MAX));
@@ -230,7 +227,7 @@ fn bound_position_add_bounds_index_on_start_overflow() {
 }
 
 #[test]
-fn bound_position_add_bounds_index_on_end_no_overflow() {
+fn add_bounds_index_on_end_no_overflow() {
     let mut position = BoundPosition::End(5);
 
     assert!(!position.add_interval_index(3));
@@ -238,7 +235,7 @@ fn bound_position_add_bounds_index_on_end_no_overflow() {
 }
 
 #[test]
-fn bound_position_add_bounds_index_on_end_overflow() {
+fn add_bounds_index_on_end_overflow() {
     let mut position = BoundPosition::End(5);
 
     assert!(position.add_interval_index(usize::MAX));
@@ -246,7 +243,7 @@ fn bound_position_add_bounds_index_on_end_overflow() {
 }
 
 #[test]
-fn bound_position_sub_bounds_index_on_start_no_underflow() {
+fn sub_bounds_index_on_start_no_underflow() {
     let mut position = BoundPosition::Start(8);
 
     assert!(!position.sub_interval_index(3));
@@ -254,7 +251,7 @@ fn bound_position_sub_bounds_index_on_start_no_underflow() {
 }
 
 #[test]
-fn bound_position_sub_bounds_index_on_start_underflow() {
+fn sub_bounds_index_on_start_underflow() {
     let mut position = BoundPosition::Start(8);
 
     assert!(position.sub_interval_index(9));
@@ -262,7 +259,7 @@ fn bound_position_sub_bounds_index_on_start_underflow() {
 }
 
 #[test]
-fn bound_position_sub_bounds_index_on_end_no_underflow() {
+fn sub_bounds_index_on_end_no_underflow() {
     let mut position = BoundPosition::End(8);
 
     assert!(!position.sub_interval_index(3));
@@ -270,7 +267,7 @@ fn bound_position_sub_bounds_index_on_end_no_underflow() {
 }
 
 #[test]
-fn bound_position_sub_bounds_index_on_end_underflow() {
+fn sub_bounds_index_on_end_underflow() {
     let mut position = BoundPosition::End(8);
 
     assert!(position.sub_interval_index(9));
@@ -278,7 +275,7 @@ fn bound_position_sub_bounds_index_on_end_underflow() {
 }
 
 #[test]
-fn bound_position_increment_bounds_index_start_no_overflow() {
+fn increment_bounds_index_start_no_overflow() {
     let mut position = BoundPosition::Start(8);
 
     assert!(!position.increment_interval_index());
@@ -286,7 +283,7 @@ fn bound_position_increment_bounds_index_start_no_overflow() {
 }
 
 #[test]
-fn bound_position_increment_bounds_index_start_overflow() {
+fn increment_bounds_index_start_overflow() {
     let mut position = BoundPosition::Start(usize::MAX);
 
     assert!(position.increment_interval_index());
@@ -294,7 +291,7 @@ fn bound_position_increment_bounds_index_start_overflow() {
 }
 
 #[test]
-fn bound_position_increment_bounds_index_end_no_overflow() {
+fn increment_bounds_index_end_no_overflow() {
     let mut position = BoundPosition::End(8);
 
     assert!(!position.increment_interval_index());
@@ -302,7 +299,7 @@ fn bound_position_increment_bounds_index_end_no_overflow() {
 }
 
 #[test]
-fn bound_position_increment_bounds_index_end_overflow() {
+fn increment_bounds_index_end_overflow() {
     let mut position = BoundPosition::End(usize::MAX);
 
     assert!(position.increment_interval_index());
@@ -310,7 +307,7 @@ fn bound_position_increment_bounds_index_end_overflow() {
 }
 
 #[test]
-fn bound_position_decrement_bounds_index_start_no_underflow() {
+fn decrement_bounds_index_start_no_underflow() {
     let mut position = BoundPosition::Start(6);
 
     assert!(!position.decrement_interval_index());
@@ -318,7 +315,7 @@ fn bound_position_decrement_bounds_index_start_no_underflow() {
 }
 
 #[test]
-fn bound_position_decrement_bounds_index_start_underflow() {
+fn decrement_bounds_index_start_underflow() {
     let mut position = BoundPosition::Start(usize::MIN);
 
     assert!(position.decrement_interval_index());
@@ -326,7 +323,7 @@ fn bound_position_decrement_bounds_index_start_underflow() {
 }
 
 #[test]
-fn bound_position_decrement_bounds_index_end_no_underflow() {
+fn decrement_bounds_index_end_no_underflow() {
     let mut position = BoundPosition::End(6);
 
     assert!(!position.decrement_interval_index());
@@ -334,7 +331,7 @@ fn bound_position_decrement_bounds_index_end_no_underflow() {
 }
 
 #[test]
-fn bound_position_decrement_bounds_index_end_underflow() {
+fn decrement_bounds_index_end_underflow() {
     let mut position = BoundPosition::End(usize::MIN);
 
     assert!(position.decrement_interval_index());
@@ -342,7 +339,7 @@ fn bound_position_decrement_bounds_index_end_underflow() {
 }
 
 #[test]
-fn bound_position_advance_by_8_start_no_overflow() {
+fn advance_by_8_start_no_overflow() {
     let mut position = BoundPosition::Start(5);
 
     assert!(!position.advance_by(8));
@@ -350,7 +347,7 @@ fn bound_position_advance_by_8_start_no_overflow() {
 }
 
 #[test]
-fn bound_position_advance_by_7_start_no_overflow() {
+fn advance_by_7_start_no_overflow() {
     let mut position = BoundPosition::Start(5);
 
     assert!(!position.advance_by(7));
@@ -358,7 +355,7 @@ fn bound_position_advance_by_7_start_no_overflow() {
 }
 
 #[test]
-fn bound_position_advance_by_start_overflow() {
+fn advance_by_start_overflow() {
     let mut position = BoundPosition::Start(5);
 
     assert!(!position.advance_by(usize::MAX));
@@ -367,7 +364,7 @@ fn bound_position_advance_by_start_overflow() {
 }
 
 #[test]
-fn bound_position_advance_by_8_end_no_overflow() {
+fn advance_by_8_end_no_overflow() {
     let mut position = BoundPosition::End(5);
 
     assert!(!position.advance_by(8));
@@ -375,7 +372,7 @@ fn bound_position_advance_by_8_end_no_overflow() {
 }
 
 #[test]
-fn bound_position_advance_by_7_end_no_overflow() {
+fn advance_by_7_end_no_overflow() {
     let mut position = BoundPosition::End(5);
 
     assert!(!position.advance_by(7));
@@ -383,7 +380,7 @@ fn bound_position_advance_by_7_end_no_overflow() {
 }
 
 #[test]
-fn bound_position_advance_by_end_overflow() {
+fn advance_by_end_overflow() {
     let mut position = BoundPosition::End(5);
 
     assert!(!position.advance_by(usize::MAX));
@@ -392,7 +389,7 @@ fn bound_position_advance_by_end_overflow() {
 }
 
 #[test]
-fn bound_position_advance_back_by_8_start_no_underflow() {
+fn advance_back_by_8_start_no_underflow() {
     let mut position = BoundPosition::Start(10);
 
     assert!(!position.advance_back_by(8));
@@ -400,7 +397,7 @@ fn bound_position_advance_back_by_8_start_no_underflow() {
 }
 
 #[test]
-fn bound_position_advance_back_by_7_start_no_underflow() {
+fn advance_back_by_7_start_no_underflow() {
     let mut position = BoundPosition::Start(10);
 
     assert!(!position.advance_back_by(7));
@@ -408,7 +405,7 @@ fn bound_position_advance_back_by_7_start_no_underflow() {
 }
 
 #[test]
-fn bound_position_advance_back_by_start_underflow() {
+fn advance_back_by_start_underflow() {
     let mut position = BoundPosition::Start(10);
 
     assert!(position.advance_back_by(30));
@@ -416,7 +413,7 @@ fn bound_position_advance_back_by_start_underflow() {
 }
 
 #[test]
-fn bound_position_advance_back_by_8_end_no_underflow() {
+fn advance_back_by_8_end_no_underflow() {
     let mut position = BoundPosition::End(10);
 
     assert!(!position.advance_back_by(8));
@@ -424,7 +421,7 @@ fn bound_position_advance_back_by_8_end_no_underflow() {
 }
 
 #[test]
-fn bound_position_advance_back_by_7_end_no_underflow() {
+fn advance_back_by_7_end_no_underflow() {
     let mut position = BoundPosition::End(10);
 
     assert!(!position.advance_back_by(7));
@@ -432,7 +429,7 @@ fn bound_position_advance_back_by_7_end_no_underflow() {
 }
 
 #[test]
-fn bound_position_advance_back_by_end_underflow() {
+fn advance_back_by_end_underflow() {
     let mut position = BoundPosition::End(10);
 
     assert!(position.advance_back_by(30));
@@ -440,7 +437,7 @@ fn bound_position_advance_back_by_end_underflow() {
 }
 
 #[test]
-fn bound_position_next_bound_start_no_overflow() {
+fn next_bound_start_no_overflow() {
     let mut position = BoundPosition::Start(5);
 
     assert!(!position.next_bound());
@@ -448,7 +445,7 @@ fn bound_position_next_bound_start_no_overflow() {
 }
 
 #[test]
-fn bound_position_next_bound_start_at_usize_max() {
+fn next_bound_start_at_usize_max() {
     let mut position = BoundPosition::Start(usize::MAX);
 
     assert!(!position.next_bound());
@@ -456,7 +453,7 @@ fn bound_position_next_bound_start_at_usize_max() {
 }
 
 #[test]
-fn bound_position_next_bound_end_no_overflow() {
+fn next_bound_end_no_overflow() {
     let mut position = BoundPosition::End(5);
 
     assert!(!position.next_bound());
@@ -464,7 +461,7 @@ fn bound_position_next_bound_end_no_overflow() {
 }
 
 #[test]
-fn bound_position_next_bound_end_overflow() {
+fn next_bound_end_overflow() {
     let mut position = BoundPosition::End(usize::MAX);
 
     assert!(position.next_bound());
@@ -472,7 +469,7 @@ fn bound_position_next_bound_end_overflow() {
 }
 
 #[test]
-fn bound_position_prev_bound_start_no_underflow() {
+fn prev_bound_start_no_underflow() {
     let mut position = BoundPosition::Start(5);
 
     assert!(!position.prev_bound());
@@ -480,7 +477,7 @@ fn bound_position_prev_bound_start_no_underflow() {
 }
 
 #[test]
-fn bound_position_prev_bound_start_underflow() {
+fn prev_bound_start_underflow() {
     let mut position = BoundPosition::Start(usize::MIN);
 
     assert!(position.prev_bound());
@@ -488,7 +485,7 @@ fn bound_position_prev_bound_start_underflow() {
 }
 
 #[test]
-fn bound_position_prev_bound_end_no_underflow() {
+fn prev_bound_end_no_underflow() {
     let mut position = BoundPosition::End(5);
 
     assert!(!position.prev_bound());
@@ -496,7 +493,7 @@ fn bound_position_prev_bound_end_no_underflow() {
 }
 
 #[test]
-fn bound_position_prev_bound_end_usize_min_no_underflow() {
+fn prev_bound_end_usize_min_no_underflow() {
     let mut position = BoundPosition::End(usize::MIN);
 
     assert!(!position.prev_bound());
