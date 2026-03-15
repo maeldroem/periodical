@@ -36,7 +36,7 @@ fn epsilon_has_epsilon_on_end() {
 fn epsilon_interpret_as_duration_bound_specific_none() {
     assert_eq!(
         Epsilon::None.interpret_as_duration_bound_specific(StdDuration::from_secs(1), StdDuration::from_secs(2)),
-        Ok(StdDuration::zero()),
+        Ok(StdDuration::ZERO),
     );
 }
 
@@ -68,7 +68,7 @@ fn epsilon_interpret_as_duration_bound_specific_both() {
 fn epsilon_interpret_as_duration_none() {
     assert_eq!(
         Epsilon::None.interpret_as_duration(StdDuration::from_secs(1)),
-        Ok(StdDuration::zero())
+        Ok(StdDuration::ZERO)
     );
 }
 
@@ -150,7 +150,7 @@ fn epsilon_from_bool_pair_true_true() {
 
 #[test]
 fn interval_duration_is_finite() {
-    assert!(Duration::Finite(StdDuration::zero(), Epsilon::None).is_finite());
+    assert!(Duration::Finite(StdDuration::ZERO, Epsilon::None).is_finite());
     assert!(!Duration::Infinite.is_finite());
 }
 
@@ -185,7 +185,7 @@ fn interval_duration_finite_interpret_duration_on_finite_large_epsilon() {
     assert_eq!(
         Duration::Finite(StdDuration::from_hours(1), Epsilon::Start)
             .finite_interpret_epsilon(StdDuration::from_hours(2)),
-        Some(StdDuration::zero()),
+        Some(StdDuration::ZERO),
     );
 }
 
@@ -205,8 +205,8 @@ fn interval_duration_finite_strip_epsilon_infinite() {
 #[test]
 fn interval_duration_from_duration() {
     assert_eq!(
-        Duration::from(StdDuration::zero()),
-        Duration::Finite(StdDuration::zero(), Epsilon::default())
+        Duration::from(StdDuration::ZERO),
+        Duration::Finite(StdDuration::ZERO, Epsilon::default())
     );
 }
 
