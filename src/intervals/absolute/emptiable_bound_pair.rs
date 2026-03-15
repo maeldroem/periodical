@@ -133,14 +133,14 @@ impl HasEmptiableAbsoluteBoundPair for EmptiableAbsoluteBoundPair {
     fn partial_abs_start(&self) -> Option<AbsoluteStartBound> {
         match self {
             Self::Empty => None,
-            Self::Bound(bounds) => Some(*bounds.start()),
+            Self::Bound(bounds) => Some(bounds.start()),
         }
     }
 
     fn partial_abs_end(&self) -> Option<AbsoluteEndBound> {
         match self {
             Self::Empty => None,
-            Self::Bound(bounds) => Some(*bounds.end()),
+            Self::Bound(bounds) => Some(bounds.end()),
         }
     }
 }

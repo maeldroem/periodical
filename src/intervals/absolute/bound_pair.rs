@@ -77,8 +77,8 @@ impl AbsoluteBoundPair {
     ///
     /// let bounds = AbsoluteBoundPair::unchecked_new(start, end);
     ///
-    /// assert_eq!(bounds.start(), &start);
-    /// assert_eq!(bounds.end(), &end);
+    /// assert_eq!(bounds.start(), start);
+    /// assert_eq!(bounds.end(), end);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
@@ -107,8 +107,8 @@ impl AbsoluteBoundPair {
     /// let bounds = AbsoluteBoundPair::new(start, end);
     ///
     /// // Now the start and end are in chronological order
-    /// assert_eq!(bounds.start(), &end);
-    /// assert_eq!(bounds.end(), &start);
+    /// assert_eq!(bounds.start(), end);
+    /// assert_eq!(bounds.end(), start);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
@@ -133,11 +133,11 @@ impl AbsoluteBoundPair {
     /// 
     /// assert_eq!(
     ///     bounds.start(),
-    ///     &AbsoluteFiniteBound::new(start).to_start_bound(),
+    ///     AbsoluteFiniteBound::new(start).to_start_bound(),
     /// );
     /// assert_eq!(
     ///     bounds.end(),
-    ///     &AbsoluteFiniteBound::new_with_inclusivity(
+    ///     AbsoluteFiniteBound::new_with_inclusivity(
     ///         end,
     ///         BoundInclusivity::Exclusive,
     ///     ).to_end_bound(),
@@ -153,6 +153,12 @@ impl AbsoluteBoundPair {
             AbsoluteStartBound::from(range.start_bound().cloned()),
             AbsoluteEndBound::from(range.end_bound().cloned()),
         )
+    }
+
+    /// Wraps the [`AbsoluteBoundPair`] in an [`EmptiableAbsoluteBoundPair`]
+    #[must_use]
+    pub fn to_emptiable(self) -> EmptiableAbsoluteBoundPair {
+        EmptiableAbsoluteBoundPair::from(self)
     }
 
     /// Returns the absolute start bound
@@ -171,12 +177,12 @@ impl AbsoluteBoundPair {
     ///
     /// let bounds = AbsoluteBoundPair::new(start, end);
     ///
-    /// assert_eq!(bounds.start(), &start);
+    /// assert_eq!(bounds.start(), start);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    pub fn start(&self) -> &AbsoluteStartBound {
-        &self.start
+    pub fn start(&self) -> AbsoluteStartBound {
+        self.start
     }
 
     /// Returns the absolute end bound
@@ -195,12 +201,12 @@ impl AbsoluteBoundPair {
     ///
     /// let bounds = AbsoluteBoundPair::new(start, end);
     ///
-    /// assert_eq!(bounds.end(), &end);
+    /// assert_eq!(bounds.end(), end);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    pub fn end(&self) -> &AbsoluteEndBound {
-        &self.end
+    pub fn end(&self) -> AbsoluteEndBound {
+        self.end
     }
 
     /// Sets the start bound without checking if it violates invariants
@@ -226,8 +232,8 @@ impl AbsoluteBoundPair {
     /// bounds.unchecked_set_start(new_start);
     ///
     /// // And yet stays in `bounds`
-    /// assert_eq!(bounds.start(), &new_start);
-    /// assert_eq!(bounds.end(), &end);
+    /// assert_eq!(bounds.start(), new_start);
+    /// assert_eq!(bounds.end(), end);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn unchecked_set_start(&mut self, new_start: AbsoluteStartBound) {
@@ -257,8 +263,8 @@ impl AbsoluteBoundPair {
     /// bounds.unchecked_set_end(new_end);
     ///
     /// // And yet stays in `bounds`
-    /// assert_eq!(bounds.start(), &start);
-    /// assert_eq!(bounds.end(), &new_end);
+    /// assert_eq!(bounds.start(), start);
+    /// assert_eq!(bounds.end(), new_end);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn unchecked_set_end(&mut self, new_end: AbsoluteEndBound) {
@@ -292,12 +298,12 @@ impl AbsoluteBoundPair {
     /// let was_successful = bounds.set_start(new_start);
     ///
     /// assert!(!was_successful);
-    /// assert_eq!(bounds.start(), &start);
-    /// assert_eq!(bounds.end(), &end);
+    /// assert_eq!(bounds.start(), start);
+    /// assert_eq!(bounds.end(), end);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn set_start(&mut self, new_start: AbsoluteStartBound) -> bool {
-        match check_absolute_bound_pair_for_interval_creation(&new_start, self.end()) {
+        match check_absolute_bound_pair_for_interval_creation(&new_start, &self.end()) {
             Ok(()) => {
                 self.unchecked_set_start(new_start);
                 true
@@ -333,12 +339,12 @@ impl AbsoluteBoundPair {
     /// let was_successful = bounds.set_end(new_end);
     ///
     /// assert!(!was_successful);
-    /// assert_eq!(bounds.start(), &start);
-    /// assert_eq!(bounds.end(), &end);
+    /// assert_eq!(bounds.start(), start);
+    /// assert_eq!(bounds.end(), end);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn set_end(&mut self, new_end: AbsoluteEndBound) -> bool {
-        match check_absolute_bound_pair_for_interval_creation(self.start(), &new_end) {
+        match check_absolute_bound_pair_for_interval_creation(&self.start(), &new_end) {
             Ok(()) => {
                 self.unchecked_set_end(new_end);
                 true
@@ -377,11 +383,11 @@ impl HasAbsoluteBoundPair for AbsoluteBoundPair {
     }
 
     fn abs_start(&self) -> AbsoluteStartBound {
-        *self.start()
+        self.start()
     }
 
     fn abs_end(&self) -> AbsoluteEndBound {
-        *self.end()
+        self.end()
     }
 }
 

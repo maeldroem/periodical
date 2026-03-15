@@ -4,11 +4,21 @@ use std::ops::Bound;
 
 use jiff::Timestamp;
 
-use crate::intervals::absolute::{AbsoluteFiniteBound, AbsoluteStartBound};
+use crate::intervals::absolute::{AbsoluteBound, AbsoluteFiniteBound, AbsoluteStartBound};
 use crate::intervals::meta::BoundInclusivity;
 
 use super::end_bound::*;
 
+#[test]
+fn to_bound() -> Result<(), Box<dyn Error>> {
+    let end_bound = AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound();
+    
+    assert_eq!(
+        end_bound.to_bound(),
+        AbsoluteBound::End(end_bound),
+    );
+    Ok(())
+}
 
 #[test]
 fn is_finite() -> Result<(), Box<dyn Error>> {
