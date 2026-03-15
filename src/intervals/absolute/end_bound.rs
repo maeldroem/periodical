@@ -13,7 +13,7 @@ use jiff::Timestamp;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use crate::intervals::absolute::{AbsoluteFiniteBound, AbsoluteStartBound};
+use crate::intervals::absolute::{AbsoluteBound, AbsoluteFiniteBound, AbsoluteStartBound};
 use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
 use crate::intervals::ops::bound_overlap_ambiguity::{
     BoundOverlapAmbiguity, BoundOverlapDisambiguationRuleSet, DisambiguatedBoundOverlap,
@@ -32,6 +32,12 @@ pub enum AbsoluteEndBound {
 }
 
 impl AbsoluteEndBound {
+    /// Wraps the end bound in the corresponding [`AbsoluteBound`] variant
+    #[must_use]
+    pub fn to_bound(self) -> AbsoluteBound {
+        AbsoluteBound::from(self)
+    }
+
     /// Returns whether it is of the [`Finite`](AbsoluteEndBound::Finite) variant
     ///
     /// # Examples
