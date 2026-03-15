@@ -136,14 +136,14 @@ impl HasEmptiableRelativeBoundPair for EmptiableRelativeBoundPair {
     fn partial_rel_start(&self) -> Option<RelativeStartBound> {
         match self {
             Self::Empty => None,
-            Self::Bound(bounds) => Some(*bounds.start()),
+            Self::Bound(bounds) => Some(bounds.start()),
         }
     }
 
     fn partial_rel_end(&self) -> Option<RelativeEndBound> {
         match self {
             Self::Empty => None,
-            Self::Bound(bounds) => Some(*bounds.end()),
+            Self::Bound(bounds) => Some(bounds.end()),
         }
     }
 }

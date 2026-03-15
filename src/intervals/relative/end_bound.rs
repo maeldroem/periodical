@@ -17,7 +17,7 @@ use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
 use crate::intervals::ops::bound_overlap_ambiguity::{
     BoundOverlapAmbiguity, BoundOverlapDisambiguationRuleSet, DisambiguatedBoundOverlap,
 };
-use crate::intervals::relative::{RelativeFiniteBound, RelativeStartBound};
+use crate::intervals::relative::{RelativeBound, RelativeFiniteBound, RelativeStartBound};
 
 /// A relative end interval bound
 ///
@@ -35,6 +35,12 @@ pub enum RelativeEndBound {
 }
 
 impl RelativeEndBound {
+    /// Wraps the end bound of the corresponding [`RelativeBound`] variant
+    #[must_use]
+    pub fn to_bound(self) -> RelativeBound {
+        RelativeBound::from(self)
+    }
+
     /// Returns whether it is of the [`Finite`](RelativeEndBound::Finite) variant
     ///
     /// # Examples

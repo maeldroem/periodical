@@ -76,8 +76,8 @@ impl RelativeBoundPair {
     ///
     /// let bounds = RelativeBoundPair::unchecked_new(start, end);
     ///
-    /// assert_eq!(bounds.start(), &start);
-    /// assert_eq!(bounds.end(), &end);
+    /// assert_eq!(bounds.start(), start);
+    /// assert_eq!(bounds.end(), end);
     /// ```
     #[must_use]
     pub fn unchecked_new(start: RelativeStartBound, end: RelativeEndBound) -> Self {
@@ -104,8 +104,8 @@ impl RelativeBoundPair {
     /// let bounds = RelativeBoundPair::new(start, end);
     ///
     /// // Now the start and end are in chronological order
-    /// assert_eq!(bounds.start(), &end);
-    /// assert_eq!(bounds.end(), &start);
+    /// assert_eq!(bounds.start(), end);
+    /// assert_eq!(bounds.end(), start);
     /// ```
     #[must_use]
     pub fn new(mut start: RelativeStartBound, mut end: RelativeEndBound) -> Self {
@@ -128,11 +128,11 @@ impl RelativeBoundPair {
     /// 
     /// assert_eq!(
     ///     bounds.start(),
-    ///     &RelativeFiniteBound::new(start).to_start_bound(),
+    ///     RelativeFiniteBound::new(start).to_start_bound(),
     /// );
     /// assert_eq!(
     ///     bounds.end(),
-    ///     &RelativeFiniteBound::new_with_inclusivity(
+    ///     RelativeFiniteBound::new_with_inclusivity(
     ///         end,
     ///         BoundInclusivity::Exclusive,
     ///     ).to_end_bound(),
@@ -147,6 +147,12 @@ impl RelativeBoundPair {
             RelativeStartBound::from(range.start_bound().cloned()),
             RelativeEndBound::from(range.end_bound().cloned()),
         )
+    }
+
+    /// Wraps the [`RelativeBoundPair`] in an [`EmptiableRelativeBoundPair`]
+    #[must_use]
+    pub fn to_emptiable(self) -> EmptiableRelativeBoundPair {
+        EmptiableRelativeBoundPair::from(self)
     }
 
     /// Returns the relative start bound
@@ -164,11 +170,11 @@ impl RelativeBoundPair {
     ///
     /// let bounds = RelativeBoundPair::new(start, end);
     ///
-    /// assert_eq!(bounds.start(), &start);
+    /// assert_eq!(bounds.start(), start);
     /// ```
     #[must_use]
-    pub fn start(&self) -> &RelativeStartBound {
-        &self.start
+    pub fn start(&self) -> RelativeStartBound {
+        self.start
     }
 
     /// Returns the relative end bound
@@ -186,11 +192,11 @@ impl RelativeBoundPair {
     ///
     /// let bounds = RelativeBoundPair::new(start, end);
     ///
-    /// assert_eq!(bounds.end(), &end);
+    /// assert_eq!(bounds.end(), end);
     /// ```
     #[must_use]
-    pub fn end(&self) -> &RelativeEndBound {
-        &self.end
+    pub fn end(&self) -> RelativeEndBound {
+        self.end
     }
 
     /// Sets the start bound without checking if it violates invariants
@@ -215,8 +221,8 @@ impl RelativeBoundPair {
     /// bounds.unchecked_set_start(new_start);
     ///
     /// // And yet stays in `bounds`
-    /// assert_eq!(bounds.start(), &new_start);
-    /// assert_eq!(bounds.end(), &end);
+    /// assert_eq!(bounds.start(), new_start);
+    /// assert_eq!(bounds.end(), end);
     /// ```
     pub fn unchecked_set_start(&mut self, new_start: RelativeStartBound) {
         self.start = new_start;
@@ -244,8 +250,8 @@ impl RelativeBoundPair {
     /// bounds.unchecked_set_end(new_end);
     ///
     /// // And yet stays in `bounds`
-    /// assert_eq!(bounds.start(), &start);
-    /// assert_eq!(bounds.end(), &new_end);
+    /// assert_eq!(bounds.start(), start);
+    /// assert_eq!(bounds.end(), new_end);
     /// ```
     pub fn unchecked_set_end(&mut self, new_end: RelativeEndBound) {
         self.end = new_end;
@@ -277,11 +283,11 @@ impl RelativeBoundPair {
     /// let was_successful = bounds.set_start(new_start);
     ///
     /// assert!(!was_successful);
-    /// assert_eq!(bounds.start(), &start);
-    /// assert_eq!(bounds.end(), &end);
+    /// assert_eq!(bounds.start(), start);
+    /// assert_eq!(bounds.end(), end);
     /// ```
     pub fn set_start(&mut self, new_start: RelativeStartBound) -> bool {
-        match check_relative_bound_pair_for_interval_creation(&new_start, self.end()) {
+        match check_relative_bound_pair_for_interval_creation(&new_start, &self.end()) {
             Ok(()) => {
                 self.unchecked_set_start(new_start);
                 true
@@ -316,11 +322,11 @@ impl RelativeBoundPair {
     /// let was_successful = bounds.set_end(new_end);
     ///
     /// assert!(!was_successful);
-    /// assert_eq!(bounds.start(), &start);
-    /// assert_eq!(bounds.end(), &end);
+    /// assert_eq!(bounds.start(), start);
+    /// assert_eq!(bounds.end(), end);
     /// ```
     pub fn set_end(&mut self, new_end: RelativeEndBound) -> bool {
-        match check_relative_bound_pair_for_interval_creation(self.start(), &new_end) {
+        match check_relative_bound_pair_for_interval_creation(&self.start(), &new_end) {
             Ok(()) => {
                 self.unchecked_set_end(new_end);
                 true
@@ -359,11 +365,11 @@ impl HasRelativeBoundPair for RelativeBoundPair {
     }
 
     fn rel_start(&self) -> RelativeStartBound {
-        *self.start()
+        self.start()
     }
 
     fn rel_end(&self) -> RelativeEndBound {
-        *self.end()
+        self.end()
     }
 }
 

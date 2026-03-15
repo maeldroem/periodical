@@ -4,9 +4,19 @@ use std::ops::Bound;
 use jiff::SignedDuration;
 
 use crate::intervals::meta::BoundInclusivity;
-use crate::intervals::relative::{RelativeFiniteBound, RelativeStartBound};
+use crate::intervals::relative::{RelativeBound, RelativeFiniteBound, RelativeStartBound};
 
 use super::end_bound::*;
+
+#[test]
+fn to_bound() {
+    let end_bound = RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound();
+    
+    assert_eq!(
+        end_bound.to_bound(),
+        RelativeBound::End(end_bound),
+    );
+}
 
 #[test]
 fn is_finite() {
