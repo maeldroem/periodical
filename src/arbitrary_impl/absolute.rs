@@ -1,10 +1,12 @@
 //! [`Arbitrary`] implementations for items within the [`absolute`](crate::intervals::absolute) module
 
+use std::time::Duration;
+
 use arbitrary::{Arbitrary, Error, Unstructured};
 use jiff::Timestamp;
 
-use crate::intervals::absolute::{AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound};
-use crate::intervals::meta::BoundInclusivity;
+use crate::intervals::absolute::{AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, BoundedAbsoluteInterval, HalfBoundedAbsoluteInterval};
+use crate::intervals::meta::{BoundInclusivity, OpeningDirection};
 
 impl<'a> Arbitrary<'a> for AbsoluteFiniteBound {
     fn arbitrary(u: &mut Unstructured<'a>) -> arbitrary::Result<Self> {
@@ -27,13 +29,14 @@ impl<'a> Arbitrary<'a> for AbsoluteBoundPair {
     }
 }
 
-/*
 impl<'a> Arbitrary<'a> for BoundedAbsoluteInterval {
     fn arbitrary(u: &mut Unstructured<'a>) -> arbitrary::Result<Self> {
-        let start_time = DateTime::<Utc>::arbitrary(u)?;
-        let end_time = start_time
-            .checked_add_signed(Duration::arbitrary(u)?)
-            .unwrap_or(start_time);
+        let timestamp_range = Timestamp::MIN.as_nanosecond()..=Timestamp::MAX.as_nanosecond();
+
+        let start_time = Timestamp::from_nanosecond(u.int_in_range(timestamp_range)?)
+            .or(Err(Error::IncorrectFormat))?;
+        let end_time = start_time.saturating_add(Duration::from_secs(u64::arbitrary(u)?))
+            .or(Err(Error::IncorrectFormat))?;
 
         if start_time == end_time {
             Ok(BoundedAbsoluteInterval::new_with_inclusivity(
@@ -52,4 +55,18 @@ impl<'a> Arbitrary<'a> for BoundedAbsoluteInterval {
         }
     }
 }
-*/
+
+impl<'a> Arbitrary<'a> for HalfBoundedAbsoluteInterval {
+    fn arbitrary(u: &mut Unstructured<'a>) -> arbitrary::Result<Self> {
+        let timestamp_range = Timestamp::MIN.as_nanosecond()..=Timestamp::MAX.as_nanosecond();
+
+        let reference_time = Timestamp::from_nanosecond(u.int_in_range(timestamp_range)?)
+            .or(Err(Error::IncorrectFormat))?;
+
+        Ok(HalfBoundedAbsoluteInterval::new_with_inclusivity(
+            reference_time,
+            BoundInclusivity::arbitrary(u)?,
+            OpeningDirection::arbitrary(u)?,
+        ))
+    }
+}

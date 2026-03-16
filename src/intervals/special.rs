@@ -15,15 +15,15 @@ use serde::{Deserialize, Serialize};
 use crate::intervals::meta::{Epsilon, Interval};
 
 use super::absolute::{
-    AbsoluteBounds, AbsoluteEndBound, AbsoluteInterval, AbsoluteStartBound, EmptiableAbsoluteBounds, HasAbsoluteBounds,
-    HasEmptiableAbsoluteBounds,
+    AbsoluteBoundPair, AbsoluteEndBound, AbsoluteInterval, AbsoluteStartBound, EmptiableAbsoluteBoundPair,
+    HasAbsoluteBoundPair, HasEmptiableAbsoluteBoundPair,
 };
 use super::meta::{
     Duration as IntervalDuration, Emptiable, HasDuration, HasOpenness, HasRelativity, Openness, Relativity,
 };
 use super::relative::{
-    EmptiableRelativeBounds, HasEmptiableRelativeBounds, HasRelativeBounds, RelativeBounds, RelativeEndBound,
-    RelativeInterval, RelativeStartBound,
+    EmptiableRelativeBoundPair, HasEmptiableRelativeBoundPair, HasRelativeBoundPair, RelativeBoundPair,
+    RelativeEndBound, RelativeInterval, RelativeStartBound,
 };
 
 /// An unbounded interval
@@ -55,9 +55,9 @@ impl HasDuration for UnboundedInterval {
     }
 }
 
-impl HasAbsoluteBounds for UnboundedInterval {
-    fn abs_bounds(&self) -> AbsoluteBounds {
-        AbsoluteBounds::new(self.abs_start(), self.abs_end())
+impl HasAbsoluteBoundPair for UnboundedInterval {
+    fn abs_bound_pair(&self) -> AbsoluteBoundPair {
+        AbsoluteBoundPair::new(self.abs_start(), self.abs_end())
     }
 
     fn abs_start(&self) -> AbsoluteStartBound {
@@ -69,9 +69,9 @@ impl HasAbsoluteBounds for UnboundedInterval {
     }
 }
 
-impl HasRelativeBounds for UnboundedInterval {
-    fn rel_bounds(&self) -> RelativeBounds {
-        RelativeBounds::new(self.rel_start(), self.rel_end())
+impl HasRelativeBoundPair for UnboundedInterval {
+    fn rel_bound_pair(&self) -> RelativeBoundPair {
+        RelativeBoundPair::new(self.rel_start(), self.rel_end())
     }
 
     fn rel_start(&self) -> RelativeStartBound {
@@ -164,9 +164,9 @@ impl HasDuration for EmptyInterval {
     }
 }
 
-impl HasEmptiableAbsoluteBounds for EmptyInterval {
-    fn emptiable_abs_bounds(&self) -> EmptiableAbsoluteBounds {
-        EmptiableAbsoluteBounds::Empty
+impl HasEmptiableAbsoluteBoundPair for EmptyInterval {
+    fn emptiable_abs_bound_pair(&self) -> EmptiableAbsoluteBoundPair {
+        EmptiableAbsoluteBoundPair::Empty
     }
 
     fn partial_abs_start(&self) -> Option<AbsoluteStartBound> {
@@ -178,9 +178,9 @@ impl HasEmptiableAbsoluteBounds for EmptyInterval {
     }
 }
 
-impl HasEmptiableRelativeBounds for EmptyInterval {
-    fn emptiable_rel_bounds(&self) -> EmptiableRelativeBounds {
-        EmptiableRelativeBounds::Empty
+impl HasEmptiableRelativeBoundPair for EmptyInterval {
+    fn emptiable_rel_bound_pair(&self) -> EmptiableRelativeBoundPair {
+        EmptiableRelativeBoundPair::Empty
     }
 
     fn partial_rel_start(&self) -> Option<RelativeStartBound> {
@@ -195,12 +195,6 @@ impl HasEmptiableRelativeBounds for EmptyInterval {
 impl Emptiable for EmptyInterval {
     fn is_empty(&self) -> bool {
         true
-    }
-}
-
-impl From<()> for EmptyInterval {
-    fn from(_value: ()) -> Self {
-        EmptyInterval
     }
 }
 
@@ -221,6 +215,8 @@ impl Display for EmptyIntervalConversionErr {
 
 impl Error for EmptyIntervalConversionErr {}
 
+/*
+IMPL TRY FROM ON Emptiable VARIANTS OF INTERVALS
 impl TryFrom<AbsoluteInterval> for EmptyInterval {
     type Error = EmptyIntervalConversionErr;
 
@@ -242,3 +238,4 @@ impl TryFrom<RelativeInterval> for EmptyInterval {
         }
     }
 }
+*/

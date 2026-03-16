@@ -13,24 +13,26 @@ use std::cmp::Ordering;
 use std::error::Error;
 use std::fmt::Display;
 
-use crate::intervals::meta::BoundInclusivity;
+use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
 use crate::utils::{inline_docs, tests};
 
 pub mod bound;
 pub mod bounded_interval;
 pub mod bound_pair;
-pub mod end_bound;
 pub mod emptiable_bound_pair;
+// pub mod emptiable_interval;
+pub mod end_bound;
 pub mod finite_bound;
 pub mod half_bounded_interval;
 pub mod interval;
 pub mod start_bound;
 
 tests! {
-    mod bound_pair_tests;
-    mod bound_tests;
     mod bounded_interval_tests;
+    mod bound_tests;
+    mod bound_pair_tests;
     mod emptiable_bound_pair_tests;
+    mod emptiable_interval_tests;
     mod end_bound_tests;
     mod finite_bound_tests;
     mod half_bounded_interval_tests;
@@ -39,12 +41,16 @@ tests! {
 }
 
 inline_docs! {
+    pub use bounded_interval::{
+        BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError,
+        BoundedAbsoluteIntervalFromAbsoluteBoundPairError, BoundedAbsoluteIntervalFromAbsoluteIntervalError,
+    };
     pub use bound::AbsoluteBound;
-    pub use bounded_interval::BoundedAbsoluteInterval;
-    pub use bound_pair::{HasAbsoluteBounds, AbsoluteBounds};
+    pub use bound_pair::{AbsoluteBoundPair, AbsoluteBoundPairFromEmptiableAbsoluteBoundPairError, HasAbsoluteBoundPair};
     pub use end_bound::AbsoluteEndBound;
-    pub use emptiable_bound_pair::{HasEmptiableAbsoluteBounds, EmptiableAbsoluteBounds};
-    pub use finite_bound::AbsoluteFiniteBound;
+    pub use emptiable_bound_pair::{HasEmptiableAbsoluteBoundPair, EmptiableAbsoluteBoundPair};
+    // pub use emptiable_interval::EmptiableAbsoluteInterval;
+    pub use finite_bound::{AbsoluteFiniteBound, AbsoluteFiniteBoundFromBoundError};
     pub use half_bounded_interval::HalfBoundedAbsoluteInterval;
     pub use interval::AbsoluteInterval;
     pub use start_bound::AbsoluteStartBound;

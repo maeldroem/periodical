@@ -1,22 +1,50 @@
+//! Absolute bounded interval
+//! 
+//! A bounded interval has a start and end. Like all specific absolute interval types, it conserves the invariant
+//! of its bounds being in chronological order and if the bounds have the same time, they must be inclusive.
+//! 
+//! Similar to the other specific interval types, its [openness](Openness) cannot change.
+//! That is to say a bounded interval must remain a bounded interval.
+//! It cannot mutate from being a bounded interval to a half-bounded interval.
+//! 
+//! Instead, if you are looking for an absolute interval that doesn't keep the [openness](Openness) invariant,
+//! see [`AbsoluteBoundPair`].
+
+use std::cmp::Ordering;
+use std::error::Error;
+use std::fmt::Display;
+use std::ops::{Range, RangeInclusive};
+
+use jiff::Timestamp;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
+use crate::intervals::absolute::{
+    AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteInterval, AbsoluteStartBound,
+    HasAbsoluteBoundPair,
+};
+use crate::intervals::meta::{
+    BoundInclusivity, Duration as IntervalDuration, Epsilon, HasBoundInclusivity, HasDuration, HasOpenness, HasRelativity, Interval, Openness, Relativity
+};
 
 /// A bounded absolute interval
-///
-/// An interval with a set start and end. Like all specific absolute interval types, it conserves the invariant
+/// 
+/// A bounded interval has a start and end. Like all specific absolute interval types, it conserves the invariant
 /// of its bounds being in chronological order and if the bounds have the same time, they must be inclusive.
-///
-/// However, like the other specific interval types, it conserves an additional invariant:
-/// Its [openness](Openness) cannot change. That is to say a bounded interval must remain a bounded interval.
+/// 
+/// Similar to the other specific interval types, its [openness](Openness) cannot change.
+/// That is to say a bounded interval must remain a bounded interval.
 /// It cannot mutate from being a bounded interval to a half-bounded interval.
-///
+/// 
 /// Instead, if you are looking for an absolute interval that doesn't keep the [openness](Openness) invariant,
-/// see [`AbsoluteBounds`].
+/// see [`AbsoluteBoundPair`].
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub struct BoundedAbsoluteInterval {
-    from: Timestamp,
-    to: Timestamp,
-    from_inclusivity: BoundInclusivity,
-    to_inclusivity: BoundInclusivity,
+    start: Timestamp,
+    end: Timestamp,
+    start_inclusivity: BoundInclusivity,
+    end_inclusivity: BoundInclusivity,
 }
 
 impl BoundedAbsoluteInterval {
@@ -25,56 +53,58 @@ impl BoundedAbsoluteInterval {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Utc};
+    /// # use std::error::Error;
+    /// # use jiff::Timestamp;
     /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
-    /// let from_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
-    /// let to_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
+    /// let start = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
+    /// let end = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     ///
     /// // Even though the times are not in chronological order
-    /// let bounded_interval = BoundedAbsoluteInterval::unchecked_new(from_time, to_time);
+    /// let bounded_interval = BoundedAbsoluteInterval::unchecked_new(start, end);
     ///
     /// // They remain that way
-    /// assert_eq!(bounded_interval.from_time(), from_time);
-    /// assert_eq!(bounded_interval.to_time(), to_time);
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// assert_eq!(bounded_interval.start(), start);
+    /// assert_eq!(bounded_interval.end(), end);
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    pub fn unchecked_new(from: Timestamp, to: Timestamp) -> Self {
+    pub fn unchecked_new(start: Timestamp, end: Timestamp) -> Self {
         BoundedAbsoluteInterval {
-            from,
-            to,
-            from_inclusivity: BoundInclusivity::default(),
-            to_inclusivity: BoundInclusivity::default(),
+            start,
+            end,
+            start_inclusivity: BoundInclusivity::default(),
+            end_inclusivity: BoundInclusivity::default(),
         }
     }
 
     /// Creates a new [`BoundedAbsoluteInterval`] with default bound inclusivities
     ///
-    /// If the from time is past the to time, it swaps them.
+    /// If the start time is past the end time, it swaps them.
     ///
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Utc};
+    /// # use std::error::Error;
+    /// # use jiff::Timestamp;
     /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
-    /// let from_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
-    /// let to_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
+    /// let start = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
+    /// let end = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     ///
     /// // Times that are not in chronological order
-    /// let bounded_interval = BoundedAbsoluteInterval::new(from_time, to_time);
+    /// let bounded_interval = BoundedAbsoluteInterval::new(start, end);
     ///
     /// // Are swapped
-    /// assert_eq!(bounded_interval.from_time(), to_time);
-    /// assert_eq!(bounded_interval.to_time(), from_time);
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// assert_eq!(bounded_interval.start(), end);
+    /// assert_eq!(bounded_interval.end(), start);
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    pub fn new(mut from: Timestamp, mut to: Timestamp) -> Self {
-        if from > to {
-            std::mem::swap(&mut from, &mut to);
+    pub fn new(mut start: Timestamp, mut end: Timestamp) -> Self {
+        if start > end {
+            std::mem::swap(&mut start, &mut end);
         }
 
-        Self::unchecked_new(from, to)
+        Self::unchecked_new(start, end)
     }
 
     /// Creates a new [`BoundedAbsoluteInterval`] with the given bound inclusivities without checking
@@ -83,7 +113,8 @@ impl BoundedAbsoluteInterval {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Utc};
+    /// # use std::error::Error;
+    /// # use jiff::Timestamp;
     /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// let time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
@@ -96,22 +127,22 @@ impl BoundedAbsoluteInterval {
     ///     BoundInclusivity::Exclusive,
     /// );
     ///
-    /// assert_eq!(bounded_interval.from_inclusivity(), BoundInclusivity::Inclusive);
-    /// assert_eq!(bounded_interval.to_inclusivity(), BoundInclusivity::Exclusive);
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// assert_eq!(bounded_interval.start_inclusivity(), BoundInclusivity::Inclusive);
+    /// assert_eq!(bounded_interval.end_inclusivity(), BoundInclusivity::Exclusive);
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
     pub fn unchecked_new_with_inclusivity(
-        from: Timestamp,
-        from_inclusivity: BoundInclusivity,
-        to: Timestamp,
-        to_inclusivity: BoundInclusivity,
+        start: Timestamp,
+        start_inclusivity: BoundInclusivity,
+        end: Timestamp,
+        end_inclusivity: BoundInclusivity,
     ) -> Self {
         BoundedAbsoluteInterval {
-            from,
-            to,
-            from_inclusivity,
-            to_inclusivity,
+            start,
+            end,
+            start_inclusivity,
+            end_inclusivity,
         }
     }
 
@@ -125,7 +156,8 @@ impl BoundedAbsoluteInterval {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Utc};
+    /// # use std::error::Error;
+    /// # use jiff::Timestamp;
     /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// let time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
@@ -139,3406 +171,22 @@ impl BoundedAbsoluteInterval {
     /// );
     ///
     /// // Therefore gets reset to inclusive for both bounds
-    /// assert_eq!(bounded_interval.from_inclusivity(), BoundInclusivity::Inclusive);
-    /// assert_eq!(bounded_interval.to_inclusivity(), BoundInclusivity::Inclusive);
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// assert_eq!(bounded_interval.start_inclusivity(), BoundInclusivity::Inclusive);
+    /// assert_eq!(bounded_interval.end_inclusivity(), BoundInclusivity::Inclusive);
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
     pub fn new_with_inclusivity(
-        from: Timestamp,
-        from_inclusivity: BoundInclusivity,
-        to: Timestamp,
-        to_inclusivity: BoundInclusivity,
+        start: Timestamp,
+        start_inclusivity: BoundInclusivity,
+        end: Timestamp,
+        end_inclusivity: BoundInclusivity,
     ) -> Self {
-        match from.cmp(&to) {
-            Ordering::Less => Self::unchecked_new_with_inclusivity(from, from_inclusivity, to, to_inclusivity),
-            Ordering::Equal => Self::unchecked_new(from, to),
-            Ordering::Greater => Self::unchecked_new_with_inclusivity(to, to_inclusivity, from, from_inclusivity),
+        match start.cmp(&end) {
+            Ordering::Less => Self::unchecked_new_with_inclusivity(start, start_inclusivity, end, end_inclusivity),
+            Ordering::Equal => Self::unchecked_new(start, end),
+            Ordering::Greater => Self::unchecked_new_with_inclusivity(end, end_inclusivity, start, start_inclusivity),
         }
-    }
-
-    /// Creates a new [`BoundedAbsoluteInterval`] of the given date in the given timezone
-    ///
-    /// # Errors
-    ///
-    /// Returns [`StartInTimeGap`](BoundedAbsoluteIntervalCreationError::StartInTimeGap) if the given date
-    /// at midnight in the given timezone is positioned inside a time gap[^1].
-    ///
-    /// Returns [`OutOfRangeEndDate`](BoundedAbsoluteIntervalCreationError::OutOfRangeEndDate) if the day after
-    /// the given date is out of range.
-    ///
-    /// Returns [`EndInTimeGap`](BoundedAbsoluteIntervalCreationError::EndInTimeGap) if the day after the given date
-    /// at midnight in the given timezone is positioned inside a time gap[^1].
-    ///
-    /// [^1]: See [`MappedLocalTime::None`](chrono::offset::LocalResult::None)
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{DateTime, Duration, Utc, Date, FixedOffset};
-    /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
-    /// # use periodical::intervals::meta::BoundInclusivity;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct DateFromYmdError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     DateFromYmdError(DateFromYmdError),
-    /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
-    /// #     ParseError(chrono::format::ParseError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<DateFromYmdError> for ExampleError {
-    /// #     fn from(value: DateFromYmdError) -> Self {
-    /// #         ExampleError::DateFromYmdError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<BoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: BoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::BoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<chrono::format::ParseError> for ExampleError {
-    /// #     fn from(value: chrono::format::ParseError) -> Self {
-    /// #         ExampleError::ParseError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    /// let date = Date::from_ymd_opt(2026, 1, 5).ok_or(DateFromYmdError)?;
-    ///
-    /// let interval = BoundedAbsoluteInterval::from_date(date, offset_tz)?;
-    ///
-    /// assert_eq!(interval.from_time(), "2026-01-04 22:00:00Z".parse::<Timestamp>()?);
-    /// assert_eq!(interval.from_inclusivity(), BoundInclusivity::Inclusive);
-    /// assert_eq!(interval.to_time(), "2026-01-05 22:00:00Z".parse::<Timestamp>()?);
-    /// assert_eq!(interval.to_inclusivity(), BoundInclusivity::Exclusive);
-    /// # Ok::<(), ExampleError>(())
-    /// ```
-    pub fn from_date(naive_date: Date, tz: TimeZone) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
-        let from = naive_date
-            .and_time(NAIVE_TIME_MIDNIGHT)
-            .and_local_timezone(tz.clone())
-            .earliest()
-            .ok_or(BoundedAbsoluteIntervalCreationError::StartInTimeGap)?;
-
-        let next_day = naive_date
-            .checked_add_days(Days::new(1))
-            .ok_or(BoundedAbsoluteIntervalCreationError::OutOfRangeEndDate)?;
-        let to = next_day
-            .and_time(NAIVE_TIME_MIDNIGHT)
-            .and_local_timezone(tz)
-            .latest()
-            .ok_or(BoundedAbsoluteIntervalCreationError::EndInTimeGap)?;
-
-        Ok(Self::unchecked_new_with_inclusivity(
-            from.with_timezone(&Utc),
-            BoundInclusivity::Inclusive,
-            to.with_timezone(&Utc),
-            BoundInclusivity::Exclusive,
-        ))
-    }
-
-    /// Creates a new [`BoundedAbsoluteInterval`] of the day after a given [naive duration](NaiveDuration)
-    /// relative to the given day in the given timezone
-    ///
-    /// # Errors
-    ///
-    /// Returns [`DateOperationError`](BoundedAbsoluteIntervalCreationError::DateOperationError) if
-    /// [`time::checked_add_naive_duration_to_naive_date`](`checked_add_naive_duration_to_naive_date)
-    /// returns [`None`].
-    ///
-    /// See [`from_date`](BoundedAbsoluteInterval::from_date) for more errors that could occur, as this method
-    /// uses it.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{DateTime, Duration, FixedOffset, Date, Utc};
-    /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
-    /// # use periodical::intervals::meta::BoundInclusivity;
-    /// # use periodical::time::NaiveDuration;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct DateFromYmdError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     DateFromYmdError(DateFromYmdError),
-    /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
-    /// #     ParseError(chrono::format::ParseError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<DateFromYmdError> for ExampleError {
-    /// #     fn from(value: DateFromYmdError) -> Self {
-    /// #         ExampleError::DateFromYmdError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<BoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: BoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::BoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<chrono::format::ParseError> for ExampleError {
-    /// #     fn from(value: chrono::format::ParseError) -> Self {
-    /// #         ExampleError::ParseError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
-    /// let interval = BoundedAbsoluteInterval::day_after_naive_duration_from_naive_date(
-    ///     Date::from_ymd_opt(2026, 4, 29).ok_or(DateFromYmdError)?,
-    ///     NaiveDuration::Days(5),
-    ///     offset_tz
-    /// )?;
-    ///
-    /// assert_eq!(interval.from_time(), "2026-05-03 22:00:00Z".parse::<Timestamp>()?);
-    /// assert_eq!(interval.from_inclusivity(), BoundInclusivity::Inclusive);
-    /// assert_eq!(interval.to_time(), "2026-05-04 22:00:00Z".parse::<Timestamp>()?);
-    /// assert_eq!(interval.to_inclusivity(), BoundInclusivity::Exclusive);
-    /// # Ok::<(), ExampleError>(())
-    /// ```
-    pub fn day_after_naive_duration_from_naive_date(
-        naive_date: Date,
-        naive_duration: CalendarAnchorOffset,
-        tz: TimeZone,
-    ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
-        Self::from_date(
-            checked_add_naive_duration_to_naive_date(naive_date, naive_duration)
-                .ok_or(BoundedAbsoluteIntervalCreationError::DateOperationError)?,
-            tz,
-        )
-    }
-
-    /// Creates a new [`BoundedAbsoluteInterval`] of the day after a given [naive duration](NaiveDuration)
-    /// relative to the given day in the given timezone
-    ///
-    /// # Errors
-    ///
-    /// Returns [`DateOperationError`](BoundedAbsoluteIntervalCreationError::DateOperationError) if
-    /// [`time::checked_sub_naive_duration_to_naive_date`](`checked_sub_naive_duration_to_naive_date)
-    /// returns [`None`].
-    ///
-    /// See [`from_date`](BoundedAbsoluteInterval::from_date) for more errors that could occur, as this method
-    /// uses it.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{DateTime, Duration, FixedOffset, Date, Utc};
-    /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
-    /// # use periodical::intervals::meta::BoundInclusivity;
-    /// # use periodical::time::NaiveDuration;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct DateFromYmdError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     DateFromYmdError(DateFromYmdError),
-    /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
-    /// #     ParseError(chrono::format::ParseError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<DateFromYmdError> for ExampleError {
-    /// #     fn from(value: DateFromYmdError) -> Self {
-    /// #         ExampleError::DateFromYmdError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<BoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: BoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::BoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<chrono::format::ParseError> for ExampleError {
-    /// #     fn from(value: chrono::format::ParseError) -> Self {
-    /// #         ExampleError::ParseError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
-    /// let interval = BoundedAbsoluteInterval::day_before_naive_duration_from_naive_date(
-    ///     Date::from_ymd_opt(2026, 4, 29).ok_or(DateFromYmdError)?,
-    ///     NaiveDuration::Days(5),
-    ///     offset_tz
-    /// )?;
-    ///
-    /// assert_eq!(interval.from_time(), "2026-04-23 22:00:00Z".parse::<Timestamp>()?);
-    /// assert_eq!(interval.from_inclusivity(), BoundInclusivity::Inclusive);
-    /// assert_eq!(interval.to_time(), "2026-04-24 22:00:00Z".parse::<Timestamp>()?);
-    /// assert_eq!(interval.to_inclusivity(), BoundInclusivity::Exclusive);
-    /// # Ok::<(), ExampleError>(())
-    /// ```
-    pub fn day_before_naive_duration_from_naive_date(
-        naive_date: Date,
-        naive_duration: CalendarAnchorOffset,
-        tz: TimeZone,
-    ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
-        Self::from_date(
-            checked_sub_naive_duration_to_naive_date(naive_date, naive_duration)
-                .ok_or(BoundedAbsoluteIntervalCreationError::DateOperationError)?,
-            tz,
-        )
-    }
-
-    /// Creates a new [`BoundedAbsoluteInterval`] of the day after a given [naive duration](NaiveDuration)
-    /// relative to today in the given timezone
-    ///
-    /// # Errors
-    ///
-    /// See [`day_after_naive_duration_from_naive_date`](BoundedAbsoluteInterval::day_after_naive_duration_from_naive_date)
-    /// for more details.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{DateTime, Duration, Utc, FixedOffset};
-    /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
-    /// # use periodical::intervals::meta::BoundInclusivity;
-    /// # use periodical::time::NaiveDuration;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<BoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: BoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::BoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
-    /// let interval = BoundedAbsoluteInterval::day_after_naive_duration_from_today(
-    ///     NaiveDuration::Days(5),
-    ///     offset_tz
-    /// )?;
-    /// # Ok::<(), ExampleError>(())
-    /// ```
-    pub fn day_after_naive_duration_from_today<Tz>(
-        naive_duration: CalendarAnchorOffset,
-        tz: TimeZone,
-    ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
-        Self::day_after_naive_duration_from_naive_date(naive_date_today(&tz), naive_duration, tz)
-    }
-
-    /// Creates a new [`BoundedAbsoluteInterval`] of the day before a given [naive duration](NaiveDuration)
-    /// relative to today in the given timezone
-    ///
-    /// # Errors
-    ///
-    /// See [`day_before_naive_duration_from_naive_date`](BoundedAbsoluteInterval::day_before_naive_duration_from_naive_date)
-    /// for more details.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{DateTime, Duration, Utc, FixedOffset};
-    /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
-    /// # use periodical::intervals::meta::BoundInclusivity;
-    /// # use periodical::time::NaiveDuration;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<BoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: BoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::BoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
-    /// let interval = BoundedAbsoluteInterval::day_before_naive_duration_from_today(
-    ///     NaiveDuration::Days(5),
-    ///     offset_tz
-    /// )?;
-    /// # Ok::<(), ExampleError>(())
-    /// ```
-    pub fn day_before_naive_duration_from_today(
-        naive_duration: CalendarAnchorOffset,
-        tz: TimeZone,
-    ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
-        Self::day_before_naive_duration_from_naive_date(naive_date_today(&tz), naive_duration, tz)
-    }
-
-    /// Returns the current day in the given [`TimeZone`] as a [`BoundedAbsoluteInterval`]
-    ///
-    /// Uses [`from_date`](BoundedAbsoluteInterval::from_date) with the current day.
-    ///
-    /// # Errors
-    ///
-    /// Returns [`StartInTimeGap`](BoundedAbsoluteIntervalCreationError::StartInTimeGap) if today at midnight
-    /// in the given timezone is positioned inside a time gap[^1].
-    ///
-    /// Returns [`OutOfRangeEndDate`](BoundedAbsoluteIntervalCreationError::OutOfRangeEndDate) if tomorrow's date
-    /// is out of range.
-    ///
-    /// Returns [`EndInTimeGap`](BoundedAbsoluteIntervalCreationError::EndInTimeGap) if tomorrow at midnight
-    /// in the given timezone is positioned inside a time gap[^1].
-    ///
-    /// [^1]: See [`MappedLocalTime::None`](chrono::offset::LocalResult::None)
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{DateTime, Duration, Utc, Date, FixedOffset};
-    /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
-    /// # use periodical::intervals::meta::BoundInclusivity;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<BoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: BoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::BoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
-    /// let today = BoundedAbsoluteInterval::today(offset_tz)?;
-    /// # Ok::<(), ExampleError>(())
-    /// ```
-    pub fn today(tz: TimeZone) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
-        Self::from_date(naive_date_today(&tz), tz)
-    }
-
-    /// Creates a new [`BoundedAbsoluteInterval`] of tomorrow in the given timezone
-    ///
-    /// # Errors
-    ///
-    /// See [`day_after_naive_duration_from_today`](BoundedAbsoluteInterval::day_after_naive_duration_from_today)
-    /// for more details.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{DateTime, Duration, Utc, FixedOffset};
-    /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
-    /// # use periodical::intervals::meta::BoundInclusivity;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<BoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: BoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::BoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
-    /// let tomorrow = BoundedAbsoluteInterval::tomorrow(offset_tz)?;
-    /// # Ok::<(), ExampleError>(())
-    /// ```
-    pub fn tomorrow(tz: TimeZone) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
-        Self::day_after_naive_duration_from_today(CalendarAnchorOffset::Days(1), tz)
-    }
-
-    /// Creates a new [`BoundedAbsoluteInterval`] of yesterday in the given timezone
-    ///
-    /// # Errors
-    ///
-    /// See [`day_before_naive_duration_from_today`](BoundedAbsoluteInterval::day_before_naive_duration_from_today)
-    /// for more details.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{DateTime, Duration, Utc, FixedOffset};
-    /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
-    /// # use periodical::intervals::meta::BoundInclusivity;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<BoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: BoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::BoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
-    /// let yesterday = BoundedAbsoluteInterval::yesterday(offset_tz)?;
-    /// # Ok::<(), ExampleError>(())
-    /// ```
-    pub fn yesterday(tz: TimeZone) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
-        Self::day_before_naive_duration_from_today(CalendarAnchorOffset::Days(1), tz)
-    }
-
-    /// Creates a new [`BoundedAbsoluteInterval`] from the provided inclusive date range in the given timezone
-    ///
-    /// Dates given in reverse chronological order are treated the same way as if they were provided
-    /// in chronological order.
-    ///
-    /// # Errors
-    ///
-    /// Returns [`StartInTimeGap`](BoundedAbsoluteIntervalCreationError::StartInTimeGap) if the given from date
-    /// at midnight in the given timezone is positioned inside a time gap[^1].
-    ///
-    /// Returns [`OutOfRangeEndDate`](BoundedAbsoluteIntervalCreationError::OutOfRangeEndDate) if the day after
-    /// the given to date is out of range.
-    ///
-    /// Returns [`EndInTimeGap`](BoundedAbsoluteIntervalCreationError::EndInTimeGap) if the day after
-    /// the given to date at midnight in the given timezone is positioned inside a time gap[^1].
-    ///
-    /// [^1]: See [`MappedLocalTime::None`](chrono::offset::LocalResult::None)
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{DateTime, Duration, Utc, Date, FixedOffset};
-    /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
-    /// # use periodical::intervals::meta::BoundInclusivity;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct DateFromYmdError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     DateFromYmdError(DateFromYmdError),
-    /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
-    /// #     ParseError(chrono::format::ParseError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<DateFromYmdError> for ExampleError {
-    /// #     fn from(value: DateFromYmdError) -> Self {
-    /// #         ExampleError::DateFromYmdError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<BoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: BoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::BoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<chrono::format::ParseError> for ExampleError {
-    /// #     fn from(value: chrono::format::ParseError) -> Self {
-    /// #         ExampleError::ParseError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    /// let from = Date::from_ymd_opt(2026, 1, 5).ok_or(DateFromYmdError)?;
-    /// let to = Date::from_ymd_opt(2026, 1, 10).ok_or(DateFromYmdError)?;
-    ///
-    /// let interval = BoundedAbsoluteInterval::from_inclusive_date_range(from, to, offset_tz)?;
-    ///
-    /// assert_eq!(interval.from_time(), "2026-01-04 22:00:00Z".parse::<Timestamp>()?);
-    /// assert_eq!(interval.from_inclusivity(), BoundInclusivity::Inclusive);
-    /// assert_eq!(interval.to_time(), "2026-01-10 22:00:00Z".parse::<Timestamp>()?);
-    /// assert_eq!(interval.to_inclusivity(), BoundInclusivity::Exclusive);
-    /// # Ok::<(), ExampleError>(())
-    /// ```
-    pub fn from_inclusive_date_range(
-        mut from_date: Date,
-        mut to_date: Date,
-        tz: TimeZone,
-    ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
-        if from_date > to_date {
-            std::mem::swap(&mut from_date, &mut to_date);
-        }
-
-        let from = from_date
-            .and_time(NAIVE_TIME_MIDNIGHT)
-            .and_local_timezone(tz.clone())
-            .earliest()
-            .ok_or(BoundedAbsoluteIntervalCreationError::StartInTimeGap)?;
-
-        let to = to_date
-            .checked_add_days(Days::new(1))
-            .ok_or(BoundedAbsoluteIntervalCreationError::OutOfRangeEndDate)?
-            .and_time(NAIVE_TIME_MIDNIGHT)
-            .and_local_timezone(tz)
-            .latest()
-            .ok_or(BoundedAbsoluteIntervalCreationError::EndInTimeGap)?;
-
-        Ok(Self::unchecked_new_with_inclusivity(
-            from.with_timezone(&Utc),
-            BoundInclusivity::Inclusive,
-            to.with_timezone(&Utc),
-            BoundInclusivity::Exclusive,
-        ))
-    }
-
-    /// Creates a new [`BoundedAbsoluteInterval`] from the provided week in the given timezone
-    ///
-    /// # Errors
-    ///
-    /// Returns [`OutOfRangeStartDate`](BoundedAbsoluteIntervalCreationError::OutOfRangeStartDate) if
-    /// the week's first date is out of range.
-    ///
-    /// Returns [`OutOfRangeEndDate`](BoundedAbsoluteIntervalCreationError::OutOfRangeEndDate) if
-    /// the week's last date is out of range.
-    ///
-    /// See [`from_inclusive_date_range`](BoundedAbsoluteInterval::from_inclusive_date_range) for more errors
-    /// that could occur, as this method uses it.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{DateTime, Duration, FixedOffset, Date, Utc, Weekday};
-    /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
-    /// # use periodical::intervals::meta::BoundInclusivity;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct DateFromYmdError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     DateFromYmdError(DateFromYmdError),
-    /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
-    /// #     ParseError(chrono::format::ParseError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<DateFromYmdError> for ExampleError {
-    /// #     fn from(value: DateFromYmdError) -> Self {
-    /// #         ExampleError::DateFromYmdError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<BoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: BoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::BoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<chrono::format::ParseError> for ExampleError {
-    /// #     fn from(value: chrono::format::ParseError) -> Self {
-    /// #         ExampleError::ParseError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    /// let week = Date::from_ymd_opt(2026, 5, 1).ok_or(DateFromYmdError)?.week(Weekday::Tue);
-    ///
-    /// let week_interval = BoundedAbsoluteInterval::from_week(week, offset_tz)?;
-    ///
-    /// assert_eq!(week_interval.from_time(), "2026-04-27 22:00:00Z".parse::<Timestamp>()?);
-    /// assert_eq!(week_interval.from_inclusivity(), BoundInclusivity::Inclusive);
-    /// assert_eq!(week_interval.to_time(), "2026-05-04 22:00:00Z".parse::<Timestamp>()?);
-    /// assert_eq!(week_interval.to_inclusivity(), BoundInclusivity::Exclusive);
-    /// # Ok::<(), ExampleError>(())
-    /// ```
-    pub fn from_week(week: NaiveWeek, tz: TimeZone) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
-        Self::from_inclusive_date_range(
-            week.checked_first_day()
-                .ok_or(BoundedAbsoluteIntervalCreationError::OutOfRangeStartDate)?,
-            week.checked_last_day()
-                .ok_or(BoundedAbsoluteIntervalCreationError::OutOfRangeEndDate)?,
-            tz,
-        )
-    }
-
-    /// Creates a new [`BoundedAbsoluteInterval`] from the provided inclusive week range in the given timezone
-    ///
-    /// Weeks given in reverse chronological order are treated the same way as if they were provided
-    /// in chronological order.
-    ///
-    /// Note that the given from/to weeks can have different start days, so the resulting interval may not
-    /// always be a multiple of 7 days.
-    ///
-    /// # Errors
-    ///
-    /// Returns [`OutOfRangeStartDate`](BoundedAbsoluteIntervalCreationError::OutOfRangeStartDate) if
-    /// the from week's first day is out of range.
-    ///
-    /// Returns [`OutOfRangeEndDate`](BoundedAbsoluteIntervalCreationError::OutOfRangeEndDate) if
-    /// the to week's last day is out of range.
-    ///
-    /// See [`from_inclusive_date_range`](BoundedAbsoluteInterval::from_inclusive_date_range) for more errors
-    /// that could occur, as this method uses it.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{Datelike, DateTime, Duration, FixedOffset, Date, NaiveWeek, Utc, Weekday};
-    /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
-    /// # use periodical::intervals::meta::BoundInclusivity;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct DateFromYmdError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     DateFromYmdError(DateFromYmdError),
-    /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
-    /// #     ParseError(chrono::format::ParseError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<DateFromYmdError> for ExampleError {
-    /// #     fn from(value: DateFromYmdError) -> Self {
-    /// #         ExampleError::DateFromYmdError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<BoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: BoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::BoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<chrono::format::ParseError> for ExampleError {
-    /// #     fn from(value: chrono::format::ParseError) -> Self {
-    /// #         ExampleError::ParseError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    /// let from = Date::from_ymd_opt(2026, 1, 7).ok_or(DateFromYmdError)?.week(Weekday::Mon);
-    /// let to = Date::from_ymd_opt(2026, 3, 17).ok_or(DateFromYmdError)?.week(Weekday::Sat);
-    ///
-    /// let interval = BoundedAbsoluteInterval::from_inclusive_week_range(from, to, offset_tz)?;
-    ///
-    /// assert_eq!(interval.from_time(), "2026-01-04 22:00:00Z".parse::<Timestamp>()?);
-    /// assert_eq!(interval.from_inclusivity(), BoundInclusivity::Inclusive);
-    /// assert_eq!(interval.to_time(), "2026-03-20 22:00:00Z".parse::<Timestamp>()?);
-    /// assert_eq!(interval.to_inclusivity(), BoundInclusivity::Exclusive);
-    /// # Ok::<(), ExampleError>(())
-    /// ```
-    pub fn from_inclusive_week_range<Tz>(
-        mut from: NaiveWeek,
-        mut to: NaiveWeek,
-        tz: TimeZone,
-    ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
-        if from.checked_first_day() > to.checked_first_day() {
-            std::mem::swap(&mut from, &mut to);
-        }
-
-        Self::from_inclusive_date_range(
-            from.checked_first_day()
-                .ok_or(BoundedAbsoluteIntervalCreationError::OutOfRangeStartDate)?,
-            to.checked_last_day()
-                .ok_or(BoundedAbsoluteIntervalCreationError::OutOfRangeEndDate)?,
-            tz,
-        )
-    }
-
-    /// Creates a new [`BoundedAbsoluteInterval`] of the week after a given [naive duration](NaiveDuration)
-    /// relative to the given date in the given timezone
-    ///
-    /// # Errors
-    ///
-    /// Returns [`DateOperationError`](BoundedAbsoluteIntervalCreationError::DateOperationError) if
-    /// [`time::checked_add_naive_duration_to_naive_date`](`checked_add_naive_duration_to_naive_date)
-    /// returns [`None`].
-    ///
-    /// See [`from_week`](BoundedAbsoluteInterval::from_week) for more errors that could occur,
-    /// as this method uses it.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{DateTime, Duration, FixedOffset, Date, Utc, Weekday};
-    /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
-    /// # use periodical::intervals::meta::BoundInclusivity;
-    /// # use periodical::time::NaiveDuration;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct DateFromYmdError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     DateFromYmdError(DateFromYmdError),
-    /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
-    /// #     ParseError(chrono::format::ParseError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<DateFromYmdError> for ExampleError {
-    /// #     fn from(value: DateFromYmdError) -> Self {
-    /// #         ExampleError::DateFromYmdError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<BoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: BoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::BoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<chrono::format::ParseError> for ExampleError {
-    /// #     fn from(value: chrono::format::ParseError) -> Self {
-    /// #         ExampleError::ParseError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
-    /// let week = BoundedAbsoluteInterval::week_after_naive_duration_from_naive_date(
-    ///     Date::from_ymd_opt(2026, 5, 1).ok_or(DateFromYmdError)?,
-    ///     NaiveDuration::Weeks(Weekday::Mon, 2),
-    ///     Weekday::Mon,
-    ///     offset_tz,
-    /// )?;
-    ///
-    /// assert_eq!(week.from_time(), "2026-05-10 22:00:00Z".parse::<Timestamp>()?);
-    /// assert_eq!(week.from_inclusivity(), BoundInclusivity::Inclusive);
-    /// assert_eq!(week.to_time(), "2026-05-17 22:00:00Z".parse::<Timestamp>()?);
-    /// assert_eq!(week.to_inclusivity(), BoundInclusivity::Exclusive);
-    /// # Ok::<(), ExampleError>(())
-    /// ```
-    pub fn week_after_naive_duration_from_naive_date(
-        naive_date: Date,
-        naive_duration: CalendarAnchorOffset,
-        week_start: Weekday,
-        tz: TimeZone,
-    ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
-        let week = checked_add_naive_duration_to_naive_date(naive_date, naive_duration)
-            .ok_or(BoundedAbsoluteIntervalCreationError::DateOperationError)?
-            .week(week_start);
-
-        Self::from_week(week, tz)
-    }
-
-    /// Creates a new [`BoundedAbsoluteInterval`] of the week before a given [naive duration](NaiveDuration)
-    /// relative to the given date in the given timezone
-    ///
-    /// # Errors
-    ///
-    /// Returns [`DateOperationError`](BoundedAbsoluteIntervalCreationError::DateOperationError) if
-    /// [`time::checked_sub_naive_duration_to_naive_date`](`checked_sub_naive_duration_to_naive_date)
-    /// returns [`None`].
-    ///
-    /// See [`from_week`](BoundedAbsoluteInterval::from_week) for more errors that could occur,
-    /// as this method uses it.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{DateTime, Duration, FixedOffset, Date, Utc, Weekday};
-    /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
-    /// # use periodical::intervals::meta::BoundInclusivity;
-    /// # use periodical::time::NaiveDuration;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct DateFromYmdError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     DateFromYmdError(DateFromYmdError),
-    /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
-    /// #     ParseError(chrono::format::ParseError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<DateFromYmdError> for ExampleError {
-    /// #     fn from(value: DateFromYmdError) -> Self {
-    /// #         ExampleError::DateFromYmdError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<BoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: BoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::BoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<chrono::format::ParseError> for ExampleError {
-    /// #     fn from(value: chrono::format::ParseError) -> Self {
-    /// #         ExampleError::ParseError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
-    /// let week = BoundedAbsoluteInterval::week_before_naive_duration_from_naive_date(
-    ///     Date::from_ymd_opt(2026, 5, 1).ok_or(DateFromYmdError)?,
-    ///     NaiveDuration::Weeks(Weekday::Mon, 2),
-    ///     Weekday::Mon,
-    ///     offset_tz,
-    /// )?;
-    ///
-    /// assert_eq!(week.from_time(), "2026-04-12 22:00:00Z".parse::<Timestamp>()?);
-    /// assert_eq!(week.from_inclusivity(), BoundInclusivity::Inclusive);
-    /// assert_eq!(week.to_time(), "2026-04-19 22:00:00Z".parse::<Timestamp>()?);
-    /// assert_eq!(week.to_inclusivity(), BoundInclusivity::Exclusive);
-    /// # Ok::<(), ExampleError>(())
-    /// ```
-    pub fn week_before_naive_duration_from_naive_date(
-        naive_date: Date,
-        naive_duration: CalendarAnchorOffset,
-        week_start: Weekday,
-        tz: TimeZone,
-    ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
-        let week = checked_sub_naive_duration_to_naive_date(naive_date, naive_duration)
-            .ok_or(BoundedAbsoluteIntervalCreationError::DateOperationError)?
-            .week(week_start);
-
-        Self::from_week(week, tz)
-    }
-
-    /// Creates a new [`BoundedAbsoluteInterval`] of the week after a given [naive duration](NaiveDuration)
-    /// relative to today in the given timezone
-    ///
-    /// # Errors
-    ///
-    /// See [`week_after_naive_duration_from_naive_date`](BoundedAbsoluteInterval::week_after_naive_duration_from_naive_date)
-    /// for more details.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{Duration, FixedOffset, Weekday};
-    /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
-    /// # use periodical::time::NaiveDuration;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<BoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: BoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::BoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
-    /// let week = BoundedAbsoluteInterval::week_after_naive_duration_from_today(
-    ///     NaiveDuration::Months(2),
-    ///     Weekday::Mon,
-    ///     offset_tz,
-    /// )?;
-    /// # Ok::<(), ExampleError>(())
-    /// ```
-    pub fn week_after_naive_duration_from_today(
-        naive_duration: CalendarAnchorOffset,
-        week_start: Weekday,
-        tz: TimeZone,
-    ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
-        Self::week_after_naive_duration_from_naive_date(naive_date_today(&tz), naive_duration, week_start, tz)
-    }
-
-    /// Creates a new [`BoundedAbsoluteInterval`] of the week before a given [naive duration](NaiveDuration)
-    /// relative to today in the given timezone
-    ///
-    /// # Errors
-    ///
-    /// See [`week_before_naive_duration_from_naive_date`](BoundedAbsoluteInterval::week_before_naive_duration_from_naive_date)
-    /// for more details.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{Duration, FixedOffset, Weekday};
-    /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
-    /// # use periodical::time::NaiveDuration;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<BoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: BoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::BoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
-    /// let week = BoundedAbsoluteInterval::week_before_naive_duration_from_today(
-    ///     NaiveDuration::Months(2),
-    ///     Weekday::Mon,
-    ///     offset_tz,
-    /// )?;
-    /// # Ok::<(), ExampleError>(())
-    /// ```
-    pub fn week_before_naive_duration_from_today(
-        naive_duration: CalendarAnchorOffset,
-        week_start: Weekday,
-        tz: TimeZone,
-    ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
-        Self::week_before_naive_duration_from_naive_date(naive_date_today(&tz), naive_duration, week_start, tz)
-    }
-
-    /// Creates a new [`BoundedAbsoluteInterval`] of the current week in the given timezone
-    ///
-    /// Since the definition of a _week_ changes from place to place, this method requires the day of the week
-    /// to consider as the start of a week.
-    ///
-    /// If you want a stable _week_ definition, use [`this_iso_week`](BoundedAbsoluteInterval::this_iso_week),
-    /// which uses [ISO weeks](https://en.wikipedia.org/w/index.php?title=ISO_week_date&oldid=1334192696).
-    ///
-    /// # Errors
-    ///
-    /// Returns [`OutOfRangeStartDate`](BoundedAbsoluteIntervalCreationError::OutOfRangeStartDate) if
-    /// the week's start is out of range.
-    ///
-    /// Returns [`OutOfRangeEndDate`](BoundedAbsoluteIntervalCreationError::OutOfRangeEndDate) if
-    /// the week's end is out of range.
-    ///
-    /// See [`from_inclusive_date_range`](BoundedAbsoluteInterval::from_inclusive_date_range) for more errors
-    /// that could occur, as this method uses it.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{Duration, FixedOffset, Weekday};
-    /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
-    /// # use periodical::intervals::meta::BoundInclusivity;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<BoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: BoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::BoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    /// let this_week = BoundedAbsoluteInterval::this_week(
-    ///     Weekday::Mon,
-    ///     offset_tz,
-    /// )?;
-    /// # Ok::<(), ExampleError>(())
-    /// ```
-    pub fn this_week(week_start: Weekday, tz: TimeZone) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
-        let this_week = naive_date_today(&tz).week(week_start);
-
-        Self::from_inclusive_date_range(
-            this_week
-                .checked_first_day()
-                .ok_or(BoundedAbsoluteIntervalCreationError::OutOfRangeStartDate)?,
-            this_week
-                .checked_last_day()
-                .ok_or(BoundedAbsoluteIntervalCreationError::OutOfRangeEndDate)?,
-            tz,
-        )
-    }
-
-    /// Creates a new [`BoundedAbsoluteInterval`] of the next week in the given timezone
-    ///
-    /// Since the definition of a _week_ changes from place to place, this method requires the day of the week
-    /// to consider as the start of a week.
-    ///
-    /// If you want a stable _week_ definition, use [`next_iso_week`](BoundedAbsoluteInterval::next_iso_week),
-    /// which uses [ISO weeks](https://en.wikipedia.org/w/index.php?title=ISO_week_date&oldid=1334192696).
-    ///
-    /// # Errors
-    ///
-    /// See [`week_after_naive_duration_from_today`](BoundedAbsoluteInterval::week_after_naive_duration_from_today)
-    /// for more details.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{Duration, FixedOffset, Weekday};
-    /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
-    /// # use periodical::intervals::meta::BoundInclusivity;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<BoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: BoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::BoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    /// let next_week = BoundedAbsoluteInterval::next_week(
-    ///     Weekday::Mon,
-    ///     offset_tz,
-    /// )?;
-    /// # Ok::<(), ExampleError>(())
-    /// ```
-    pub fn next_week(week_start: Weekday, tz: TimeZone) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
-        Self::week_after_naive_duration_from_today(CalendarAnchorOffset::Weeks(week_start, 1), week_start, tz)
-    }
-
-    /// Creates a new [`BoundedAbsoluteInterval`] of the previous week in the given timezone
-    ///
-    /// Since the definition of a _week_ changes from place to place, this method requires the day of the week
-    /// to consider as the start of a week.
-    ///
-    /// If you want a stable _week_ definition, use [`previous_iso_week`](BoundedAbsoluteInterval::previous_iso_week),
-    /// which uses [ISO weeks](https://en.wikipedia.org/w/index.php?title=ISO_week_date&oldid=1334192696).
-    ///
-    /// # Errors
-    ///
-    /// See [`week_before_naive_duration_from_today`](BoundedAbsoluteInterval::week_before_naive_duration_from_today)
-    /// for more details.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{Duration, FixedOffset, Weekday};
-    /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
-    /// # use periodical::intervals::meta::BoundInclusivity;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<BoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: BoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::BoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    /// let previous_week = BoundedAbsoluteInterval::previous_week(
-    ///     Weekday::Mon,
-    ///     offset_tz,
-    /// )?;
-    /// # Ok::<(), ExampleError>(())
-    /// ```
-    pub fn previous_week(week_start: Weekday, tz: TimeZone) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
-        Self::week_before_naive_duration_from_today(CalendarAnchorOffset::Weeks(week_start, 1), week_start, tz)
-    }
-
-    /// Creates a new [`BoundedAbsoluteInterval`] from the provided ISO week in the given timezone
-    ///
-    /// # Errors
-    ///
-    /// Returns [`OutOfRangeStartDate`](BoundedAbsoluteIntervalCreationError::OutOfRangeStartDate) if
-    /// the week's first date is out of range.
-    ///
-    /// See [`from_week`](BoundedAbsoluteInterval::from_week) for more errors that could occur,
-    /// as this method uses it.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{Datelike, DateTime, Duration, FixedOffset, Date, Utc, Weekday};
-    /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
-    /// # use periodical::intervals::meta::BoundInclusivity;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct DateFromYmdError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     DateFromYmdError(DateFromYmdError),
-    /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
-    /// #     ParseError(chrono::format::ParseError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<DateFromYmdError> for ExampleError {
-    /// #     fn from(value: DateFromYmdError) -> Self {
-    /// #         ExampleError::DateFromYmdError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<BoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: BoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::BoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<chrono::format::ParseError> for ExampleError {
-    /// #     fn from(value: chrono::format::ParseError) -> Self {
-    /// #         ExampleError::ParseError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    /// let iso_week = Date::from_ymd_opt(2026, 5, 1).ok_or(DateFromYmdError)?.iso_week();
-    ///
-    /// let iso_week_interval = BoundedAbsoluteInterval::from_iso_week(iso_week, offset_tz)?;
-    ///
-    /// assert_eq!(iso_week_interval.from_time(), "2026-04-26 22:00:00Z".parse::<Timestamp>()?);
-    /// assert_eq!(iso_week_interval.from_inclusivity(), BoundInclusivity::Inclusive);
-    /// assert_eq!(iso_week_interval.to_time(), "2026-05-03 22:00:00Z".parse::<Timestamp>()?);
-    /// assert_eq!(iso_week_interval.to_inclusivity(), BoundInclusivity::Exclusive);
-    /// # Ok::<(), ExampleError>(())
-    /// ```
-    pub fn from_iso_week(iso_week: IsoWeek, tz: TimeZone) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
-        Self::from_week(
-            Date::from_isoywd_opt(iso_week.year(), iso_week.week(), Weekday::Mon)
-                .ok_or(BoundedAbsoluteIntervalCreationError::OutOfRangeStartDate)?
-                .week(Weekday::Mon),
-            tz,
-        )
-    }
-
-    /// Creates a new [`BoundedAbsoluteInterval`] from the provided inclusive ISO week range in the given timezone
-    ///
-    /// Weeks given in reverse chronological order are treated the same way as if they were provided
-    /// in chronological order.
-    ///
-    /// # Errors
-    ///
-    /// Returns [`OutOfRangeStartDate`](BoundedAbsoluteIntervalCreationError::OutOfRangeStartDate) if
-    /// the from week's first day is out of range.
-    ///
-    /// Returns [`OutOfRangeEndDate`](BoundedAbsoluteIntervalCreationError::OutOfRangeEndDate) if
-    /// the to week's last day is out of range.
-    ///
-    /// See [`from_inclusive_date_range`](BoundedAbsoluteInterval::from_inclusive_date_range) for more errors
-    /// that could occur, as this method uses it.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{Datelike, DateTime, Duration, FixedOffset, Date, Utc};
-    /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
-    /// # use periodical::intervals::meta::BoundInclusivity;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct DateFromYmdError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     DateFromYmdError(DateFromYmdError),
-    /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
-    /// #     ParseError(chrono::format::ParseError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<DateFromYmdError> for ExampleError {
-    /// #     fn from(value: DateFromYmdError) -> Self {
-    /// #         ExampleError::DateFromYmdError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<BoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: BoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::BoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<chrono::format::ParseError> for ExampleError {
-    /// #     fn from(value: chrono::format::ParseError) -> Self {
-    /// #         ExampleError::ParseError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
-    /// // Currently chrono has no public constructor for IsoWeek yet
-    /// let from = Date::from_ymd_opt(2026, 1, 7).ok_or(DateFromYmdError)?.iso_week();
-    /// let to = Date::from_ymd_opt(2026, 3, 17).ok_or(DateFromYmdError)?.iso_week();
-    ///
-    /// let interval = BoundedAbsoluteInterval::from_inclusive_iso_week_range(from, to, offset_tz)?;
-    ///
-    /// assert_eq!(interval.from_time(), "2026-01-04 22:00:00Z".parse::<Timestamp>()?);
-    /// assert_eq!(interval.from_inclusivity(), BoundInclusivity::Inclusive);
-    /// assert_eq!(interval.to_time(), "2026-03-22 22:00:00Z".parse::<Timestamp>()?);
-    /// assert_eq!(interval.to_inclusivity(), BoundInclusivity::Exclusive);
-    /// # Ok::<(), ExampleError>(())
-    /// ```
-    pub fn from_inclusive_iso_week_range(
-        mut from: IsoWeek,
-        mut to: IsoWeek,
-        tz: TimeZone,
-    ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
-        if from.year() > to.year() || (from.year() == to.year() && from.week() > to.week()) {
-            std::mem::swap(&mut from, &mut to);
-        }
-
-        Self::from_inclusive_date_range(
-            Date::from_isoywd_opt(from.year(), from.week(), Weekday::Mon)
-                .ok_or(BoundedAbsoluteIntervalCreationError::OutOfRangeStartDate)?,
-            Date::from_isoywd_opt(to.year(), to.week(), Weekday::Sun)
-                .ok_or(BoundedAbsoluteIntervalCreationError::OutOfRangeEndDate)?,
-            tz,
-        )
-    }
-
-    /// Creates a new [`BoundedAbsoluteInterval`] of the given week from the ISO year and week numbers
-    /// in the given timezone
-    ///
-    /// Weeks given in reverse chronological order are treated the same way as if they were provided
-    /// in chronological order.
-    ///
-    /// # Errors
-    ///
-    /// Returns [`DateOperationError`](BoundedAbsoluteIntervalCreationError::DateOperationError) if
-    /// the provided ISO year and week numbers are invalid.
-    ///
-    /// Returns [`OutOfRangeStartDate`](BoundedAbsoluteIntervalCreationError::OutOfRangeStartDate) if
-    /// the week's first day is out of range.
-    ///
-    /// Returns [`OutOfRangeEndDate`](BoundedAbsoluteIntervalCreationError::OutOfRangeEndDate) if
-    /// the week's last day is out of range.
-    ///
-    /// See [`from_inclusive_date_range`](BoundedAbsoluteInterval::from_inclusive_date_range) for more errors
-    /// that could occur, as this method uses it.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{DateTime, Duration, FixedOffset, Utc, Weekday};
-    /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
-    /// # use periodical::intervals::meta::BoundInclusivity;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
-    /// #     ParseError(chrono::format::ParseError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<BoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: BoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::BoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<chrono::format::ParseError> for ExampleError {
-    /// #     fn from(value: chrono::format::ParseError) -> Self {
-    /// #         ExampleError::ParseError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
-    /// let iso_week = BoundedAbsoluteInterval::week_from_iso_year_week(2026, 5, offset_tz)?;
-    ///
-    /// assert_eq!(iso_week.from_time(), "2026-01-25 22:00:00Z".parse::<Timestamp>()?);
-    /// assert_eq!(iso_week.from_inclusivity(), BoundInclusivity::Inclusive);
-    /// assert_eq!(iso_week.to_time(), "2026-02-01 22:00:00Z".parse::<Timestamp>()?);
-    /// assert_eq!(iso_week.to_inclusivity(), BoundInclusivity::Exclusive);
-    /// # Ok::<(), ExampleError>(())
-    /// ```
-    pub fn week_from_iso_year_week(
-        year: i32,
-        week: u8,
-        tz: TimeZone,
-    ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
-        let iso_week = Date::from_isoywd_opt(year, u32::from(week), Weekday::Mon)
-            .ok_or(BoundedAbsoluteIntervalCreationError::DateOperationError)?
-            .week(Weekday::Mon);
-
-        Self::from_inclusive_date_range(
-            iso_week
-                .checked_first_day()
-                .ok_or(BoundedAbsoluteIntervalCreationError::OutOfRangeStartDate)?,
-            iso_week
-                .checked_last_day()
-                .ok_or(BoundedAbsoluteIntervalCreationError::OutOfRangeEndDate)?,
-            tz,
-        )
-    }
-
-    /// Creates a new [`BoundedAbsoluteInterval`] of the ISO week after a given [naive duration](NaiveDuration)
-    /// relative to the given date in the given timezone
-    ///
-    /// # Errors
-    ///
-    /// See [`week_after_naive_duration_from_naive_date`](BoundedAbsoluteInterval::week_after_naive_duration_from_naive_date)
-    /// for more details.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{DateTime, Duration, FixedOffset, Date, Utc, Weekday};
-    /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
-    /// # use periodical::intervals::meta::BoundInclusivity;
-    /// # use periodical::time::NaiveDuration;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct DateFromYmdError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     DateFromYmdError(DateFromYmdError),
-    /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
-    /// #     ParseError(chrono::format::ParseError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<DateFromYmdError> for ExampleError {
-    /// #     fn from(value: DateFromYmdError) -> Self {
-    /// #         ExampleError::DateFromYmdError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<BoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: BoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::BoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<chrono::format::ParseError> for ExampleError {
-    /// #     fn from(value: chrono::format::ParseError) -> Self {
-    /// #         ExampleError::ParseError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
-    /// let week = BoundedAbsoluteInterval::iso_week_after_naive_duration_from_naive_date(
-    ///     Date::from_ymd_opt(2026, 5, 1).ok_or(DateFromYmdError)?,
-    ///     NaiveDuration::IsoWeeks(2),
-    ///     offset_tz,
-    /// )?;
-    ///
-    /// assert_eq!(week.from_time(), "2026-05-10 22:00:00Z".parse::<Timestamp>()?);
-    /// assert_eq!(week.from_inclusivity(), BoundInclusivity::Inclusive);
-    /// assert_eq!(week.to_time(), "2026-05-17 22:00:00Z".parse::<Timestamp>()?);
-    /// assert_eq!(week.to_inclusivity(), BoundInclusivity::Exclusive);
-    /// # Ok::<(), ExampleError>(())
-    /// ```
-    pub fn iso_week_after_naive_duration_from_naive_date(
-        naive_date: Date,
-        naive_duration: CalendarAnchorOffset,
-        tz: TimeZone,
-    ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
-        Self::week_after_naive_duration_from_naive_date(naive_date, naive_duration, Weekday::Mon, tz)
-    }
-
-    /// Creates a new [`BoundedAbsoluteInterval`] of the ISO week before a given [naive duration](NaiveDuration)
-    /// relative to the given date in the given timezone
-    ///
-    /// # Errors
-    ///
-    /// See [`week_before_naive_duration_from_naive_date`](BoundedAbsoluteInterval::week_before_naive_duration_from_naive_date)
-    /// for more details.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{DateTime, Duration, FixedOffset, Date, Utc, Weekday};
-    /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
-    /// # use periodical::intervals::meta::BoundInclusivity;
-    /// # use periodical::time::NaiveDuration;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct DateFromYmdError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     DateFromYmdError(DateFromYmdError),
-    /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
-    /// #     ParseError(chrono::format::ParseError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<DateFromYmdError> for ExampleError {
-    /// #     fn from(value: DateFromYmdError) -> Self {
-    /// #         ExampleError::DateFromYmdError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<BoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: BoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::BoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<chrono::format::ParseError> for ExampleError {
-    /// #     fn from(value: chrono::format::ParseError) -> Self {
-    /// #         ExampleError::ParseError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
-    /// let week = BoundedAbsoluteInterval::iso_week_before_naive_duration_from_naive_date(
-    ///     Date::from_ymd_opt(2026, 5, 1).ok_or(DateFromYmdError)?,
-    ///     NaiveDuration::IsoWeeks(2),
-    ///     offset_tz,
-    /// )?;
-    ///
-    /// assert_eq!(week.from_time(), "2026-04-12 22:00:00Z".parse::<Timestamp>()?);
-    /// assert_eq!(week.from_inclusivity(), BoundInclusivity::Inclusive);
-    /// assert_eq!(week.to_time(), "2026-04-19 22:00:00Z".parse::<Timestamp>()?);
-    /// assert_eq!(week.to_inclusivity(), BoundInclusivity::Exclusive);
-    /// # Ok::<(), ExampleError>(())
-    /// ```
-    pub fn iso_week_before_naive_duration_from_naive_date(
-        naive_date: Date,
-        naive_duration: CalendarAnchorOffset,
-        tz: TimeZone,
-    ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
-        Self::week_before_naive_duration_from_naive_date(naive_date, naive_duration, Weekday::Mon, tz)
-    }
-
-    /// Creates a new [`BoundedAbsoluteInterval`] of the ISO week after a given [naive duration](NaiveDuration)
-    /// relative to today in the given timezone
-    ///
-    /// # Errors
-    ///
-    /// See [`iso_week_after_naive_duration_from_naive_date`](BoundedAbsoluteInterval::iso_week_after_naive_duration_from_naive_date)
-    /// for more details.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{Duration, FixedOffset, Weekday};
-    /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
-    /// # use periodical::time::NaiveDuration;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<BoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: BoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::BoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
-    /// let iso_week = BoundedAbsoluteInterval::iso_week_after_naive_duration_from_today(
-    ///     NaiveDuration::Months(2),
-    ///     offset_tz,
-    /// )?;
-    /// # Ok::<(), ExampleError>(())
-    /// ```
-    pub fn iso_week_after_naive_duration_from_today(
-        naive_duration: CalendarAnchorOffset,
-        tz: TimeZone,
-    ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
-        Self::iso_week_after_naive_duration_from_naive_date(naive_date_today(&tz), naive_duration, tz)
-    }
-
-    /// Creates a new [`BoundedAbsoluteInterval`] of the ISO week before a given [naive duration](NaiveDuration)
-    /// relative to today in the given timezone
-    ///
-    /// # Errors
-    ///
-    /// See [`iso_week_before_naive_duration_from_naive_date`](BoundedAbsoluteInterval::iso_week_before_naive_duration_from_naive_date)
-    /// for more details.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{Duration, FixedOffset, Weekday};
-    /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
-    /// # use periodical::time::NaiveDuration;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<BoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: BoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::BoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
-    /// let iso_week = BoundedAbsoluteInterval::iso_week_before_naive_duration_from_today(
-    ///     NaiveDuration::Months(2),
-    ///     offset_tz,
-    /// )?;
-    /// # Ok::<(), ExampleError>(())
-    /// ```
-    pub fn iso_week_before_naive_duration_from_today(
-        naive_duration: CalendarAnchorOffset,
-        tz: TimeZone,
-    ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
-        Self::iso_week_before_naive_duration_from_naive_date(naive_date_today(&tz), naive_duration, tz)
-    }
-
-    /// Creates a new [`BoundedAbsoluteInterval`] of the current ISO week in the given timezone
-    ///
-    /// # Errors
-    ///
-    /// Returns [`DateOperationError`](BoundedAbsoluteIntervalCreationError::DateOperationError) if
-    /// the current ISO week has a week number that doesn't fit in an [`u8`], which is not normally possible.
-    ///
-    /// See [`week_from_iso_year_week`](BoundedAbsoluteInterval::week_from_iso_year_week) for more errors
-    /// that could occur, as this method uses it.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{Duration, FixedOffset};
-    /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<BoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: BoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::BoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
-    /// let iso_week = BoundedAbsoluteInterval::this_iso_week(offset_tz)?;
-    /// # Ok::<(), ExampleError>(())
-    /// ```
-    pub fn this_iso_week(tz: TimeZone) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
-        let this_iso_week = naive_date_today(&tz).iso_week();
-
-        Self::week_from_iso_year_week(
-            this_iso_week.year(),
-            u8::try_from(this_iso_week.week()).or(Err(BoundedAbsoluteIntervalCreationError::DateOperationError))?,
-            tz,
-        )
-    }
-
-    /// Creates a new [`BoundedAbsoluteInterval`] of the next ISO week in the given timezone
-    ///
-    /// # Errors
-    ///
-    /// See [`iso_week_after_naive_duration_from_today`](BoundedAbsoluteInterval::iso_week_after_naive_duration_from_today)
-    /// for more details.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{Duration, FixedOffset};
-    /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<BoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: BoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::BoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
-    /// let iso_week = BoundedAbsoluteInterval::next_iso_week(offset_tz)?;
-    /// # Ok::<(), ExampleError>(())
-    /// ```
-    pub fn next_iso_week(tz: TimeZone) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
-        Self::iso_week_after_naive_duration_from_today(CalendarAnchorOffset::IsoWeeks(1), tz)
-    }
-
-    /// Creates a new [`BoundedAbsoluteInterval`] of the previous ISO week in the given timezone
-    ///
-    /// # Errors
-    ///
-    /// See [`iso_week_before_naive_duration_from_today`](BoundedAbsoluteInterval::iso_week_before_naive_duration_from_today)
-    /// for more details.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{Duration, FixedOffset};
-    /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<BoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: BoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::BoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
-    /// let iso_week = BoundedAbsoluteInterval::previous_iso_week(offset_tz)?;
-    /// # Ok::<(), ExampleError>(())
-    /// ```
-    pub fn previous_iso_week(tz: TimeZone) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
-        Self::iso_week_before_naive_duration_from_today(CalendarAnchorOffset::IsoWeeks(1), tz)
-    }
-
-    /// Creates a new [`BoundedAbsoluteInterval`] of the given month in the given timezone
-    ///
-    /// # Errors
-    ///
-    /// Returns [`OutOfRangeStartDate`](BoundedAbsoluteIntervalCreationError::OutOfRangeStartDate) if
-    /// the first day of the month is out of range.
-    ///
-    /// Returns [`OutOfRangeEndDate`](BoundedAbsoluteIntervalCreationError::OutOfRangeEndDate) if
-    /// the last day of the month is out of range.
-    ///
-    /// See [`from_inclusive_date_range`](BoundedAbsoluteInterval::from_inclusive_date_range) for more errors
-    /// that could occur, as this method uses it.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{DateTime, Duration, FixedOffset, Month, Utc};
-    /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
-    /// # use periodical::intervals::meta::BoundInclusivity;
-    /// # use periodical::time::NaiveMonth;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
-    /// #     ParseError(chrono::format::ParseError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<BoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: BoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::BoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<chrono::format::ParseError> for ExampleError {
-    /// #     fn from(value: chrono::format::ParseError) -> Self {
-    /// #         ExampleError::ParseError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
-    /// let month = BoundedAbsoluteInterval::from_month(
-    ///     NaiveMonth::new(2026, Month::May),
-    ///     offset_tz,
-    /// )?;
-    ///
-    /// assert_eq!(month.from_time(), "2026-04-30 22:00:00Z".parse::<Timestamp>()?);
-    /// assert_eq!(month.from_inclusivity(), BoundInclusivity::Inclusive);
-    /// assert_eq!(month.to_time(), "2026-05-31 22:00:00Z".parse::<Timestamp>()?);
-    /// assert_eq!(month.to_inclusivity(), BoundInclusivity::Exclusive);
-    /// # Ok::<(), ExampleError>(())
-    /// ```
-    pub fn from_month(month: MonthInYear, tz: TimeZone) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
-        Self::from_inclusive_date_range(
-            month
-                .checked_first_day()
-                .ok_or(BoundedAbsoluteIntervalCreationError::OutOfRangeStartDate)?,
-            month
-                .checked_last_day()
-                .ok_or(BoundedAbsoluteIntervalCreationError::OutOfRangeEndDate)?,
-            tz,
-        )
-    }
-
-    /// Creates a new [`BoundedAbsoluteInterval`] from the provided inclusive month range in the given timezone
-    ///
-    /// Months given in reverse chronological order are treated the same way as if they were provided
-    /// in chronological order.
-    ///
-    /// # Errors
-    ///
-    /// Returns [`OutOfRangeStartDate`](BoundedAbsoluteIntervalCreationError::OutOfRangeStartDate) if
-    /// the from month's first day is out of range.
-    ///
-    /// Returns [`OutOfRangeEndDate`](BoundedAbsoluteIntervalCreationError::OutOfRangeEndDate) if
-    /// the to month's last day is out of range.
-    ///
-    /// See [`from_inclusive_date_range`](BoundedAbsoluteInterval::from_inclusive_date_range) for more errors
-    /// that could occur, as this method uses it.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{DateTime, Duration, FixedOffset, Month, Utc};
-    /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
-    /// # use periodical::intervals::meta::BoundInclusivity;
-    /// # use periodical::time::NaiveMonth;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
-    /// #     ParseError(chrono::format::ParseError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<BoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: BoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::BoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<chrono::format::ParseError> for ExampleError {
-    /// #     fn from(value: chrono::format::ParseError) -> Self {
-    /// #         ExampleError::ParseError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
-    /// let interval = BoundedAbsoluteInterval::from_inclusive_month_range(
-    ///     NaiveMonth::new(2026, Month::January),
-    ///     NaiveMonth::new(2026, Month::May),
-    ///     offset_tz,
-    /// )?;
-    ///
-    /// assert_eq!(interval.from_time(), "2025-12-31 22:00:00Z".parse::<Timestamp>()?);
-    /// assert_eq!(interval.from_inclusivity(), BoundInclusivity::Inclusive);
-    /// assert_eq!(interval.to_time(), "2026-05-31 22:00:00Z".parse::<Timestamp>()?);
-    /// assert_eq!(interval.to_inclusivity(), BoundInclusivity::Exclusive);
-    /// # Ok::<(), ExampleError>(())
-    /// ```
-    pub fn from_inclusive_month_range(
-        mut from: MonthInYear,
-        mut to: MonthInYear,
-        tz: TimeZone,
-    ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
-        if from > to {
-            std::mem::swap(&mut from, &mut to);
-        }
-
-        Self::from_inclusive_date_range(
-            from.checked_first_day()
-                .ok_or(BoundedAbsoluteIntervalCreationError::OutOfRangeStartDate)?,
-            to.checked_last_day()
-                .ok_or(BoundedAbsoluteIntervalCreationError::OutOfRangeEndDate)?,
-            tz,
-        )
-    }
-
-    /// Creates a new [`BoundedAbsoluteInterval`] of the month after a given [naive duration](NaiveDuration)
-    /// relative to the given date in the given timezone
-    ///
-    /// # Errors
-    ///
-    /// Returns [`DateOperationError`](BoundedAbsoluteIntervalCreationError::DateOperationError) if
-    /// [`time::checked_add_naive_duration_to_naive_date`](`checked_add_naive_duration_to_naive_date)
-    /// returns [`None`], or if conversion of today's [`Date`] to a [`NaiveMonth`] failed.
-    ///
-    /// See [`from_month`](BoundedAbsoluteInterval::from_month) for more errors that could occur,
-    /// as this method uses it.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{DateTime, Duration, FixedOffset, Date, Utc};
-    /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
-    /// # use periodical::intervals::meta::BoundInclusivity;
-    /// # use periodical::time::NaiveDuration;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct DateFromYmdError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     DateFromYmdError(DateFromYmdError),
-    /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
-    /// #     ParseError(chrono::format::ParseError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<DateFromYmdError> for ExampleError {
-    /// #     fn from(value: DateFromYmdError) -> Self {
-    /// #         ExampleError::DateFromYmdError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<BoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: BoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::BoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<chrono::format::ParseError> for ExampleError {
-    /// #     fn from(value: chrono::format::ParseError) -> Self {
-    /// #         ExampleError::ParseError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
-    /// let month = BoundedAbsoluteInterval::month_after_naive_duration_from_naive_date(
-    ///     Date::from_ymd_opt(2026, 5, 5).ok_or(DateFromYmdError)?,
-    ///     NaiveDuration::Months(2),
-    ///     offset_tz,
-    /// )?;
-    ///
-    /// assert_eq!(month.from_time(), "2026-06-30 22:00:00Z".parse::<Timestamp>()?);
-    /// assert_eq!(month.from_inclusivity(), BoundInclusivity::Inclusive);
-    /// assert_eq!(month.to_time(), "2026-07-31 22:00:00Z".parse::<Timestamp>()?);
-    /// assert_eq!(month.to_inclusivity(), BoundInclusivity::Exclusive);
-    /// # Ok::<(), ExampleError>(())
-    /// ```
-    pub fn month_after_naive_duration_from_naive_date(
-        naive_date: Date,
-        naive_duration: CalendarAnchorOffset,
-        tz: TimeZone,
-    ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
-        let day = checked_add_naive_duration_to_naive_date(naive_date, naive_duration)
-            .ok_or(BoundedAbsoluteIntervalCreationError::DateOperationError)?;
-
-        Self::from_month(
-            MonthInYear::try_from(day).or(Err(BoundedAbsoluteIntervalCreationError::DateOperationError))?,
-            tz,
-        )
-    }
-
-    /// Creates a new [`BoundedAbsoluteInterval`] of the month before a given [naive duration](NaiveDuration)
-    /// relative to the given date in the given timezone
-    ///
-    /// # Errors
-    ///
-    /// Returns [`DateOperationError`](BoundedAbsoluteIntervalCreationError::DateOperationError) if
-    /// [`time::checked_sub_naive_duration_to_naive_date`](`checked_sub_naive_duration_to_naive_date)
-    /// returns [`None`], or if conversion of today's [`Date`] to a [`NaiveMonth`] failed.
-    ///
-    /// See [`from_month`](BoundedAbsoluteInterval::from_month) for more errors that could occur,
-    /// as this method uses it.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{DateTime, Duration, FixedOffset, Date, Utc};
-    /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
-    /// # use periodical::intervals::meta::BoundInclusivity;
-    /// # use periodical::time::NaiveDuration;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct DateFromYmdError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     DateFromYmdError(DateFromYmdError),
-    /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
-    /// #     ParseError(chrono::format::ParseError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<DateFromYmdError> for ExampleError {
-    /// #     fn from(value: DateFromYmdError) -> Self {
-    /// #         ExampleError::DateFromYmdError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<BoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: BoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::BoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<chrono::format::ParseError> for ExampleError {
-    /// #     fn from(value: chrono::format::ParseError) -> Self {
-    /// #         ExampleError::ParseError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
-    /// let month = BoundedAbsoluteInterval::month_before_naive_duration_from_naive_date(
-    ///     Date::from_ymd_opt(2026, 5, 5).ok_or(DateFromYmdError)?,
-    ///     NaiveDuration::Months(2),
-    ///     offset_tz,
-    /// )?;
-    ///
-    /// assert_eq!(month.from_time(), "2026-02-28 22:00:00Z".parse::<Timestamp>()?);
-    /// assert_eq!(month.from_inclusivity(), BoundInclusivity::Inclusive);
-    /// assert_eq!(month.to_time(), "2026-03-31 22:00:00Z".parse::<Timestamp>()?);
-    /// assert_eq!(month.to_inclusivity(), BoundInclusivity::Exclusive);
-    /// # Ok::<(), ExampleError>(())
-    /// ```
-    pub fn month_before_naive_duration_from_naive_date(
-        naive_date: Date,
-        naive_duration: CalendarAnchorOffset,
-        tz: TimeZone,
-    ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
-        let day = checked_sub_naive_duration_to_naive_date(naive_date, naive_duration)
-            .ok_or(BoundedAbsoluteIntervalCreationError::DateOperationError)?;
-
-        Self::from_month(
-            MonthInYear::try_from(day).or(Err(BoundedAbsoluteIntervalCreationError::DateOperationError))?,
-            tz,
-        )
-    }
-
-    /// Creates a new [`BoundedAbsoluteInterval`] of the month after a given [naive duration](NaiveDuration)
-    /// relative to today in the given timezone
-    ///
-    /// # Errors
-    ///
-    /// See [`month_after_naive_duration_from_naive_date`](BoundedAbsoluteInterval::month_after_naive_duration_from_naive_date)
-    /// for more details.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{Duration, FixedOffset};
-    /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
-    /// # use periodical::time::NaiveDuration;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<BoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: BoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::BoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
-    /// let month = BoundedAbsoluteInterval::month_after_naive_duration_from_today(
-    ///     NaiveDuration::Months(2),
-    ///     offset_tz,
-    /// )?;
-    /// # Ok::<(), ExampleError>(())
-    /// ```
-    pub fn month_after_naive_duration_from_today(
-        naive_duration: CalendarAnchorOffset,
-        tz: TimeZone,
-    ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
-        Self::month_after_naive_duration_from_naive_date(naive_date_today(&tz), naive_duration, tz)
-    }
-
-    /// Creates a new [`BoundedAbsoluteInterval`] of the month after a given [naive duration](NaiveDuration)
-    /// relative to today in the given timezone
-    ///
-    /// # Errors
-    ///
-    /// See [`month_before_naive_duration_from_naive_date`](BoundedAbsoluteInterval::month_before_naive_duration_from_naive_date)
-    /// for more details.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{Duration, FixedOffset};
-    /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
-    /// # use periodical::time::NaiveDuration;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<BoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: BoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::BoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
-    /// let month = BoundedAbsoluteInterval::month_before_naive_duration_from_today(
-    ///     NaiveDuration::Months(2),
-    ///     offset_tz,
-    /// )?;
-    /// # Ok::<(), ExampleError>(())
-    /// ```
-    pub fn month_before_naive_duration_from_today(
-        naive_duration: CalendarAnchorOffset,
-        tz: TimeZone,
-    ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
-        Self::month_before_naive_duration_from_naive_date(naive_date_today(&tz), naive_duration, tz)
-    }
-
-    /// Creates a new [`BoundedAbsoluteInterval`] of the current month in the given timezone
-    ///
-    /// # Errors
-    ///
-    /// Returns [`DateOperationError`](BoundedAbsoluteIntervalCreationError::DateOperationError) if
-    /// conversion of today's [`Date`] to a [`NaiveMonth`] failed.
-    ///
-    /// See [`from_month`](BoundedAbsoluteInterval::from_month) for more errors that could occur,
-    /// as this method uses it.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{Duration, FixedOffset};
-    /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<BoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: BoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::BoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
-    /// let month = BoundedAbsoluteInterval::this_month(offset_tz)?;
-    /// # Ok::<(), ExampleError>(())
-    /// ```
-    pub fn this_month(tz: TimeZone) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
-        Self::from_month(
-            MonthInYear::try_from(naive_date_today(&tz))
-                .or(Err(BoundedAbsoluteIntervalCreationError::DateOperationError))?,
-            tz,
-        )
-    }
-
-    /// Creates a new [`BoundedAbsoluteInterval`] of the next month in the given timezone
-    ///
-    /// # Errors
-    ///
-    /// See [`month_after_naive_duration_from_today`](BoundedAbsoluteInterval::month_after_naive_duration_from_today)
-    /// for more details.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{Duration, FixedOffset};
-    /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<BoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: BoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::BoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
-    /// let month = BoundedAbsoluteInterval::next_month(offset_tz)?;
-    /// # Ok::<(), ExampleError>(())
-    /// ```
-    pub fn next_month(tz: TimeZone) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
-        Self::month_after_naive_duration_from_today(CalendarAnchorOffset::Months(1), tz)
-    }
-
-    /// Creates a new [`BoundedAbsoluteInterval`] of the previous month in the given timezone
-    ///
-    /// # Errors
-    ///
-    /// See [`month_before_naive_duration_from_today`](BoundedAbsoluteInterval::month_before_naive_duration_from_today)
-    /// for more details.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{Duration, FixedOffset};
-    /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<BoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: BoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::BoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
-    /// let month = BoundedAbsoluteInterval::previous_month(offset_tz)?;
-    /// # Ok::<(), ExampleError>(())
-    /// ```
-    pub fn previous_month(tz: TimeZone) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
-        Self::month_before_naive_duration_from_today(CalendarAnchorOffset::Months(1), tz)
-    }
-
-    /// Creates a new [`BoundedAbsoluteInterval`] from the given year in the given timezone
-    ///
-    /// # Errors
-    ///
-    /// Returns [`OutOfRangeStartDate`](BoundedAbsoluteIntervalCreationError::OutOfRangeStartDate) if
-    /// the year's first day is out of range.
-    ///
-    /// Returns [`OutOfRangeEndDate`](BoundedAbsoluteIntervalCreationError::OutOfRangeEndDate) if
-    /// the year's last day is out of range.
-    ///
-    /// See [`from_inclusive_date_range`](BoundedAbsoluteInterval::from_inclusive_date_range) for more errors
-    /// that could occur, as this method uses it.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{DateTime, Duration, FixedOffset, Utc};
-    /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
-    /// # use periodical::intervals::meta::BoundInclusivity;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
-    /// #     ParseError(chrono::format::ParseError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<BoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: BoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::BoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<chrono::format::ParseError> for ExampleError {
-    /// #     fn from(value: chrono::format::ParseError) -> Self {
-    /// #         ExampleError::ParseError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
-    /// let year = BoundedAbsoluteInterval::from_year(2026, offset_tz)?;
-    ///
-    /// assert_eq!(year.from_time(), "2025-12-31 22:00:00Z".parse::<Timestamp>()?);
-    /// assert_eq!(year.from_inclusivity(), BoundInclusivity::Inclusive);
-    /// assert_eq!(year.to_time(), "2026-12-31 22:00:00Z".parse::<Timestamp>()?);
-    /// assert_eq!(year.to_inclusivity(), BoundInclusivity::Exclusive);
-    /// # Ok::<(), ExampleError>(())
-    /// ```
-    pub fn from_year(year: i32, tz: TimeZone) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
-        let first_day_of_year =
-            Date::from_yo_opt(year, 1).ok_or(BoundedAbsoluteIntervalCreationError::OutOfRangeStartDate)?;
-
-        let last_day_of_year = Date::from_yo_opt(
-            year,
-            if first_day_of_year.leap_year() {
-                u32::from(DAYS_IN_LEAP_YEAR)
-            } else {
-                u32::from(DAYS_IN_COMMON_YEAR)
-            },
-        )
-        .ok_or(BoundedAbsoluteIntervalCreationError::OutOfRangeEndDate)?;
-
-        Self::from_inclusive_date_range(first_day_of_year, last_day_of_year, tz)
-    }
-
-    /// Creates a new [`BoundedAbsoluteInterval`] from the provided inclusive year range in the given timezone
-    ///
-    /// Years given in reverse chronological order are treated the same way as if they were provided
-    /// in chronological order.
-    ///
-    /// # Errors
-    ///
-    /// Returns [`OutOfRangeStartDate`](BoundedAbsoluteIntervalCreationError::OutOfRangeStartDate) if
-    /// the first day of `from_year` is out of range.
-    ///
-    /// Returns [`DateOperationError`](BoundedAbsoluteIntervalCreationError::DateOperationError) if
-    /// the first day of `to_year` is out of range (needed in order to determine if the year is a leap year).
-    ///
-    /// Returns [`OutOfRangeEndDate`](BoundedAbsoluteIntervalCreationError::OutOfRangeEndDate) if
-    /// the last day of `to_year` is out of range.
-    ///
-    /// See [`from_inclusive_date_range`](BoundedAbsoluteInterval::from_inclusive_date_range) for more errors
-    /// that could occur, as this method uses it.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{DateTime, Duration, FixedOffset, Utc};
-    /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
-    /// # use periodical::intervals::meta::BoundInclusivity;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
-    /// #     ParseError(chrono::format::ParseError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<BoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: BoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::BoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<chrono::format::ParseError> for ExampleError {
-    /// #     fn from(value: chrono::format::ParseError) -> Self {
-    /// #         ExampleError::ParseError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
-    /// let years = BoundedAbsoluteInterval::from_inclusive_year_range(2025, 2030, offset_tz)?;
-    ///
-    /// assert_eq!(years.from_time(), "2024-12-31 22:00:00Z".parse::<Timestamp>()?);
-    /// assert_eq!(years.from_inclusivity(), BoundInclusivity::Inclusive);
-    /// assert_eq!(years.to_time(), "2030-12-31 22:00:00Z".parse::<Timestamp>()?);
-    /// assert_eq!(years.to_inclusivity(), BoundInclusivity::Exclusive);
-    /// # Ok::<(), ExampleError>(())
-    /// ```
-    pub fn from_inclusive_year_range(
-        mut from_year: i32,
-        mut to_year: i32,
-        tz: TimeZone,
-    ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
-        if from_year > to_year {
-            std::mem::swap(&mut from_year, &mut to_year);
-        }
-
-        let first_day_of_from_year =
-            Date::from_yo_opt(from_year, 1).ok_or(BoundedAbsoluteIntervalCreationError::OutOfRangeStartDate)?;
-
-        let first_day_of_to_year =
-            Date::from_yo_opt(to_year, 1).ok_or(BoundedAbsoluteIntervalCreationError::DateOperationError)?;
-
-        let last_day_of_to_year = Date::from_yo_opt(
-            to_year,
-            if first_day_of_to_year.leap_year() {
-                u32::from(DAYS_IN_LEAP_YEAR)
-            } else {
-                u32::from(DAYS_IN_COMMON_YEAR)
-            },
-        )
-        .ok_or(BoundedAbsoluteIntervalCreationError::OutOfRangeEndDate)?;
-
-        Self::from_inclusive_date_range(first_day_of_from_year, last_day_of_to_year, tz)
-    }
-
-    /// Creates a new [`BoundedAbsoluteInterval`] of the year after a given [naive duration](NaiveDuration)
-    /// relative to the given date in the given timezone
-    ///
-    /// # Errors
-    ///
-    /// Returns [`DateOperationError`](BoundedAbsoluteIntervalCreationError::DateOperationError) if
-    /// [`time::checked_add_naive_duration_to_naive_date`](`checked_add_naive_duration_to_naive_date)
-    /// returns [`None`].
-    ///
-    /// See [`from_year`](BoundedAbsoluteInterval::from_year) for more errors that could occur,
-    /// as this method uses it.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{DateTime, Duration, FixedOffset, Date, Utc};
-    /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
-    /// # use periodical::intervals::meta::BoundInclusivity;
-    /// # use periodical::time::NaiveDuration;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct DateFromYmdError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     DateFromYmdError(DateFromYmdError),
-    /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
-    /// #     ParseError(chrono::format::ParseError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<DateFromYmdError> for ExampleError {
-    /// #     fn from(value: DateFromYmdError) -> Self {
-    /// #         ExampleError::DateFromYmdError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<BoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: BoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::BoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<chrono::format::ParseError> for ExampleError {
-    /// #     fn from(value: chrono::format::ParseError) -> Self {
-    /// #         ExampleError::ParseError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
-    /// let year = BoundedAbsoluteInterval::year_after_naive_duration_from_naive_date(
-    ///     Date::from_ymd_opt(2026, 5, 5).ok_or(DateFromYmdError)?,
-    ///     NaiveDuration::Months(15),
-    ///     offset_tz,
-    /// )?;
-    ///
-    /// assert_eq!(year.from_time(), "2026-12-31 22:00:00Z".parse::<Timestamp>()?);
-    /// assert_eq!(year.from_inclusivity(), BoundInclusivity::Inclusive);
-    /// assert_eq!(year.to_time(), "2027-12-31 22:00:00Z".parse::<Timestamp>()?);
-    /// assert_eq!(year.to_inclusivity(), BoundInclusivity::Exclusive);
-    /// # Ok::<(), ExampleError>(())
-    /// ```
-    pub fn year_after_naive_duration_from_naive_date(
-        naive_date: Date,
-        naive_duration: CalendarAnchorOffset,
-        tz: TimeZone,
-    ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
-        Self::from_year(
-            checked_add_naive_duration_to_naive_date(naive_date, naive_duration)
-                .ok_or(BoundedAbsoluteIntervalCreationError::DateOperationError)?
-                .year(),
-            tz,
-        )
-    }
-
-    /// Creates a new [`BoundedAbsoluteInterval`] of the year before a given [naive duration](NaiveDuration)
-    /// relative to the given date in the given timezone
-    ///
-    /// # Errors
-    ///
-    /// Returns [`DateOperationError`](BoundedAbsoluteIntervalCreationError::DateOperationError) if
-    /// [`time::checked_sub_naive_duration_to_naive_date`](`checked_sub_naive_duration_to_naive_date)
-    /// returns [`None`].
-    ///
-    /// See [`from_year`](BoundedAbsoluteInterval::from_year) for more errors that could occur,
-    /// as this method uses it.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{DateTime, Duration, FixedOffset, Date, Utc};
-    /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
-    /// # use periodical::intervals::meta::BoundInclusivity;
-    /// # use periodical::time::NaiveDuration;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct DateFromYmdError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     DateFromYmdError(DateFromYmdError),
-    /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
-    /// #     ParseError(chrono::format::ParseError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<DateFromYmdError> for ExampleError {
-    /// #     fn from(value: DateFromYmdError) -> Self {
-    /// #         ExampleError::DateFromYmdError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<BoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: BoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::BoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<chrono::format::ParseError> for ExampleError {
-    /// #     fn from(value: chrono::format::ParseError) -> Self {
-    /// #         ExampleError::ParseError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
-    /// let year = BoundedAbsoluteInterval::year_before_naive_duration_from_naive_date(
-    ///     Date::from_ymd_opt(2026, 5, 5).ok_or(DateFromYmdError)?,
-    ///     NaiveDuration::Months(15),
-    ///     offset_tz,
-    /// )?;
-    ///
-    /// assert_eq!(year.from_time(), "2024-12-31 22:00:00Z".parse::<Timestamp>()?);
-    /// assert_eq!(year.from_inclusivity(), BoundInclusivity::Inclusive);
-    /// assert_eq!(year.to_time(), "2025-12-31 22:00:00Z".parse::<Timestamp>()?);
-    /// assert_eq!(year.to_inclusivity(), BoundInclusivity::Exclusive);
-    /// # Ok::<(), ExampleError>(())
-    /// ```
-    pub fn year_before_naive_duration_from_naive_date(
-        naive_date: Date,
-        naive_duration: CalendarAnchorOffset,
-        tz: TimeZone,
-    ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
-        Self::from_year(
-            checked_sub_naive_duration_to_naive_date(naive_date, naive_duration)
-                .ok_or(BoundedAbsoluteIntervalCreationError::DateOperationError)?
-                .year(),
-            tz,
-        )
-    }
-
-    /// Creates a new [`BoundedAbsoluteInterval`] of the year after a given [naive duration](NaiveDuration)
-    /// relative to today in the given timezone
-    ///
-    /// # Errors
-    ///
-    /// See [`year_after_naive_duration_from_naive_date`](BoundedAbsoluteInterval::year_after_naive_duration_from_naive_date)
-    /// for more details.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{Duration, FixedOffset};
-    /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
-    /// # use periodical::time::NaiveDuration;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<BoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: BoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::BoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
-    /// let year = BoundedAbsoluteInterval::year_after_naive_duration_from_today(
-    ///     NaiveDuration::Months(15),
-    ///     offset_tz,
-    /// )?;
-    /// # Ok::<(), ExampleError>(())
-    /// ```
-    pub fn year_after_naive_duration_from_today(
-        naive_duration: CalendarAnchorOffset,
-        tz: TimeZone,
-    ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
-        Self::year_after_naive_duration_from_naive_date(naive_date_today(&tz), naive_duration, tz)
-    }
-
-    /// Creates a new [`BoundedAbsoluteInterval`] of the year before a given [naive duration](NaiveDuration)
-    /// relative to today in the given timezone
-    ///
-    /// # Errors
-    ///
-    /// See [`year_before_naive_duration_from_naive_date`](BoundedAbsoluteInterval::year_before_naive_duration_from_naive_date)
-    /// for more details.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{Duration, FixedOffset};
-    /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
-    /// # use periodical::time::NaiveDuration;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<BoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: BoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::BoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
-    /// let year = BoundedAbsoluteInterval::year_before_naive_duration_from_today(
-    ///     NaiveDuration::Months(15),
-    ///     offset_tz,
-    /// )?;
-    /// # Ok::<(), ExampleError>(())
-    /// ```
-    pub fn year_before_naive_duration_from_today(
-        naive_duration: CalendarAnchorOffset,
-        tz: TimeZone,
-    ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
-        Self::year_before_naive_duration_from_naive_date(naive_date_today(&tz), naive_duration, tz)
-    }
-
-    /// Creates a new [`BoundedAbsoluteInterval`] of the current year in the given timezone
-    ///
-    /// # Errors
-    ///
-    /// See [`from_year`](BoundedAbsoluteInterval::from_year) for more details.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{Duration, FixedOffset};
-    /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<BoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: BoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::BoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
-    /// let year = BoundedAbsoluteInterval::this_year(offset_tz)?;
-    /// # Ok::<(), ExampleError>(())
-    /// ```
-    pub fn this_year(tz: TimeZone) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
-        Self::from_year(naive_date_today(&tz).year(), tz)
-    }
-
-    /// Creates a new [`BoundedAbsoluteInterval`] of the next year in the given timezone
-    ///
-    /// # Errors
-    ///
-    /// See [`from_year`](BoundedAbsoluteInterval::from_year) for more details.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{Duration, FixedOffset};
-    /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<BoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: BoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::BoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
-    /// let year = BoundedAbsoluteInterval::next_year(offset_tz)?;
-    /// # Ok::<(), ExampleError>(())
-    /// ```
-    pub fn next_year(tz: TimeZone) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
-        Self::year_after_naive_duration_from_today(CalendarAnchorOffset::Years(1), tz)
-    }
-
-    /// Creates a new [`BoundedAbsoluteInterval`] of the previous year in the given timezone
-    ///
-    /// # Errors
-    ///
-    /// See [`from_year`](BoundedAbsoluteInterval::from_year) for more details.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{Duration, FixedOffset};
-    /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     BoundedAbsoluteIntervalCreationError(BoundedAbsoluteIntervalCreationError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<BoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: BoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::BoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
-    /// let year = BoundedAbsoluteInterval::previous_year(offset_tz)?;
-    /// # Ok::<(), ExampleError>(())
-    /// ```
-    pub fn previous_year(tz: TimeZone) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
-        Self::year_before_naive_duration_from_today(CalendarAnchorOffset::Years(1), tz)
     }
 
     /// Returns the start time
@@ -3546,19 +194,20 @@ impl BoundedAbsoluteInterval {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Utc};
+    /// # use std::error::Error;
+    /// # use jiff::Timestamp;
     /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
-    /// let from_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
-    /// let to_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
+    /// let start = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
+    /// let end = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
     ///
-    /// let bounded_inclusivity = BoundedAbsoluteInterval::new(from_time, to_time);
+    /// let bounded_inclusivity = BoundedAbsoluteInterval::new(start, end);
     ///
-    /// assert_eq!(bounded_inclusivity.from_time(), from_time);
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// assert_eq!(bounded_inclusivity.start(), start);
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    pub fn from_time(&self) -> Timestamp {
-        self.from
+    pub fn start(&self) -> Timestamp {
+        self.start
     }
 
     /// Returns the end time
@@ -3566,19 +215,20 @@ impl BoundedAbsoluteInterval {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Utc};
+    /// # use std::error::Error;
+    /// # use jiff::Timestamp;
     /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
-    /// let from_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
-    /// let to_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
+    /// let start = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
+    /// let end = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
     ///
-    /// let bounded_inclusivity = BoundedAbsoluteInterval::new(from_time, to_time);
+    /// let bounded_inclusivity = BoundedAbsoluteInterval::new(start, end);
     ///
-    /// assert_eq!(bounded_inclusivity.to_time(), to_time);
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// assert_eq!(bounded_inclusivity.end(), end);
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    pub fn to_time(&self) -> Timestamp {
-        self.to
+    pub fn end(&self) -> Timestamp {
+        self.end
     }
 
     /// Returns the inclusivity of the start bound
@@ -3586,25 +236,26 @@ impl BoundedAbsoluteInterval {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Utc};
+    /// # use std::error::Error;
+    /// # use jiff::Timestamp;
     /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
     /// # use periodical::intervals::meta::BoundInclusivity;
-    /// let from_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
-    /// let to_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
+    /// let start = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
+    /// let end = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
     ///
     /// let bounded_interval = BoundedAbsoluteInterval::new_with_inclusivity(
-    ///     from_time,
+    ///     start,
     ///     BoundInclusivity::Exclusive,
-    ///     to_time,
+    ///     end,
     ///     BoundInclusivity::Exclusive,
     /// );
     ///
-    /// assert_eq!(bounded_interval.from_inclusivity(), BoundInclusivity::Exclusive);
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// assert_eq!(bounded_interval.start_inclusivity(), BoundInclusivity::Exclusive);
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    pub fn from_inclusivity(&self) -> BoundInclusivity {
-        self.from_inclusivity
+    pub fn start_inclusivity(&self) -> BoundInclusivity {
+        self.start_inclusivity
     }
 
     /// Returns the inclusivity of the end bound
@@ -3612,235 +263,302 @@ impl BoundedAbsoluteInterval {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Utc};
+    /// # use std::error::Error;
+    /// # use jiff::Timestamp;
     /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
     /// # use periodical::intervals::meta::BoundInclusivity;
-    /// let from_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
-    /// let to_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
+    /// let start = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
+    /// let end = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
     ///
     /// let bounded_interval = BoundedAbsoluteInterval::new_with_inclusivity(
-    ///     from_time,
+    ///     start,
     ///     BoundInclusivity::Exclusive,
-    ///     to_time,
+    ///     end,
     ///     BoundInclusivity::Exclusive,
     /// );
     ///
-    /// assert_eq!(bounded_interval.to_inclusivity(), BoundInclusivity::Exclusive);
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// assert_eq!(bounded_interval.end_inclusivity(), BoundInclusivity::Exclusive);
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    pub fn to_inclusivity(&self) -> BoundInclusivity {
-        self.to_inclusivity
+    pub fn end_inclusivity(&self) -> BoundInclusivity {
+        self.end_inclusivity
     }
 
-    /// Sets the from time without checking if it violates invariants
+    /// Sets the start time without checking if it violates invariants
     ///
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Utc};
+    /// # use std::error::Error;
+    /// # use jiff::Timestamp;
     /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
-    /// let from_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
-    /// let to_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
+    /// let start = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
+    /// let end = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
     ///
-    /// let mut bounded_interval = BoundedAbsoluteInterval::new(from_time, to_time);
+    /// let mut bounded_interval = BoundedAbsoluteInterval::new(start, end);
     ///
-    /// // New from is not in chronological order
-    /// let new_from_time = "2025-01-01 17:00:00Z".parse::<Timestamp>()?;
+    /// // New start is not in chronological order
+    /// let new_start = "2025-01-01 17:00:00Z".parse::<Timestamp>()?;
     ///
-    /// bounded_interval.unchecked_set_from(new_from_time);
+    /// bounded_interval.unchecked_set_start(new_start);
     ///
     /// // And yet is stays that way
-    /// assert_eq!(bounded_interval.from_time(), new_from_time);
-    /// assert_eq!(bounded_interval.to_time(), to_time);
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// assert_eq!(bounded_interval.start(), new_start);
+    /// assert_eq!(bounded_interval.end(), end);
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
-    pub fn unchecked_set_from(&mut self, new_from: Timestamp) {
-        self.from = new_from;
+    pub fn unchecked_set_start(&mut self, new_start: Timestamp) {
+        self.start = new_start;
     }
 
-    /// Sets the to time without checking if it violates invariants
+    /// Sets the end time without checking if it violates invariants
     ///
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Utc};
+    /// # use std::error::Error;
+    /// # use jiff::Timestamp;
     /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
-    /// let from_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
-    /// let to_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
+    /// let start = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
+    /// let end = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
     ///
-    /// let mut bounded_interval = BoundedAbsoluteInterval::new(from_time, to_time);
+    /// let mut bounded_interval = BoundedAbsoluteInterval::new(start, end);
     ///
-    /// // New to is not in chronological order
-    /// let new_to_time = "2025-01-01 06:00:00Z".parse::<Timestamp>()?;
+    /// // New end is not in chronological order
+    /// let new_end = "2025-01-01 06:00:00Z".parse::<Timestamp>()?;
     ///
-    /// bounded_interval.unchecked_set_to(new_to_time);
+    /// bounded_interval.unchecked_set_end(new_end);
     ///
     /// // And yet is stays that way
-    /// assert_eq!(bounded_interval.from_time(), from_time);
-    /// assert_eq!(bounded_interval.to_time(), new_to_time);
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// assert_eq!(bounded_interval.start(), start);
+    /// assert_eq!(bounded_interval.end(), new_end);
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
-    pub fn unchecked_set_to(&mut self, new_to: Timestamp) {
-        self.to = new_to;
+    pub fn unchecked_set_end(&mut self, new_end: Timestamp) {
+        self.end = new_end;
     }
 
-    /// Sets the from time
-    ///
-    /// Returns whether the operation was successful and the from time modified.
-    /// If the given new from time violates the invariants, the method simply returns `false`
-    /// without changing the from time.
+    /// Sets the start time
+    /// 
+    /// # Errors
+    /// 
+    /// Returns [`ChronologicalOrderViolation`](BoundedAbsoluteIntervalUpdateError::ChronologicalOrderViolation)
+    /// if the new start time is after the current end time.
+    /// 
+    /// Returns [`SameTimeDoublyInclusiveViolation`](BoundedAbsoluteIntervalUpdateError::SameTimeDoublyInclusiveViolation)
+    /// if the new start time would set it on the same time as the end time without the bound inclusivities
+    /// being both [`Inclusive`](BoundInclusivity::Inclusive).
     ///
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Utc};
+    /// # use std::error::Error;
+    /// # use jiff::Timestamp;
     /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
-    /// let from_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
-    /// let to_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
+    /// let start = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
+    /// let end = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
     ///
-    /// let mut bounded_interval = BoundedAbsoluteInterval::new(from_time, to_time);
+    /// let mut bounded_interval = BoundedAbsoluteInterval::new(start, end);
     ///
-    /// // New from is not in chronological order
-    /// let new_from_time = "2025-01-01 17:00:00Z".parse::<Timestamp>()?;
+    /// let new_start = "2025-01-01 05:00:00Z".parse::<Timestamp>()?;
     ///
-    /// let was_successful = bounded_interval.set_from(new_from_time);
+    /// bounded_interval.set_start(new_start)?;
     ///
-    /// // Therefore gets ignored
-    /// assert!(!was_successful);
-    /// assert_eq!(bounded_interval.from_time(), from_time);
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// assert_eq!(bounded_interval.start(), new_start);
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
-    pub fn set_from(&mut self, new_from: Timestamp) -> bool {
-        match new_from.cmp(&self.to) {
+    pub fn set_start(&mut self, new_start: Timestamp) -> Result<(), BoundedAbsoluteIntervalUpdateError> {
+        match new_start.cmp(&self.end) {
             Ordering::Less => {
-                self.unchecked_set_from(new_from);
-                true
+                self.unchecked_set_start(new_start);
+                Ok(())
             },
             Ordering::Equal => {
-                if self.from_inclusivity != BoundInclusivity::Inclusive
-                    || self.to_inclusivity != BoundInclusivity::Inclusive
+                if self.start_inclusivity != BoundInclusivity::Inclusive
+                    || self.end_inclusivity != BoundInclusivity::Inclusive
                 {
-                    return false;
+                    return Err(BoundedAbsoluteIntervalUpdateError::SameTimeDoublyInclusiveViolation);
                 }
 
-                self.unchecked_set_from(new_from);
-                true
+                self.unchecked_set_start(new_start);
+                Ok(())
             },
-            Ordering::Greater => false,
+            Ordering::Greater => Err(BoundedAbsoluteIntervalUpdateError::ChronologicalOrderViolation),
         }
     }
 
-    /// Sets the to time
+    /// Sets the end time
     ///
-    /// Returns whether the operation was successful and the to time modified.
-    /// If the given new to time violates the invariants, the method simply returns `false`
-    /// without changing the to time.
+    /// # Errors
+    /// 
+    /// Returns [`ChronologicalOrderViolation`](BoundedAbsoluteIntervalUpdateError::ChronologicalOrderViolation)
+    /// if the new end time is before the current start time.
+    /// 
+    /// Returns [`SameTimeDoublyInclusiveViolation`](BoundedAbsoluteIntervalUpdateError::SameTimeDoublyInclusiveViolation)
+    /// if the new end time would set it on the same time as the start time without the bound inclusivities
+    /// being both [`Inclusive`](BoundInclusivity::Inclusive).
     ///
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Utc};
+    /// # use std::error::Error;
+    /// # use jiff::Timestamp;
     /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
-    /// let from_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
-    /// let to_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
+    /// let start = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
+    /// let end = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
     ///
-    /// let mut bounded_interval = BoundedAbsoluteInterval::new(from_time, to_time);
+    /// let mut bounded_interval = BoundedAbsoluteInterval::new(start, end);
     ///
-    /// // New to is not in chronological order
-    /// let new_to_time = "2025-01-01 06:00:00Z".parse::<Timestamp>()?;
+    /// let new_end = "2025-01-01 18:00:00Z".parse::<Timestamp>()?;
     ///
-    /// let was_successful = bounded_interval.set_to(new_to_time);
+    /// bounded_interval.set_end(new_end)?;
     ///
-    /// // Therefore gets ignored
-    /// assert!(!was_successful);
-    /// assert_eq!(bounded_interval.to_time(), to_time);
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// assert_eq!(bounded_interval.end(), new_end);
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
-    pub fn set_to(&mut self, new_to: Timestamp) -> bool {
-        match self.from.cmp(&new_to) {
+    pub fn set_end(&mut self, new_end: Timestamp) -> Result<(), BoundedAbsoluteIntervalUpdateError> {
+        match self.start.cmp(&new_end) {
             Ordering::Less => {
-                self.unchecked_set_to(new_to);
-                true
+                self.unchecked_set_end(new_end);
+                Ok(())
             },
             Ordering::Equal => {
-                if self.from_inclusivity != BoundInclusivity::Inclusive
-                    || self.to_inclusivity != BoundInclusivity::Inclusive
+                if self.start_inclusivity != BoundInclusivity::Inclusive
+                    || self.end_inclusivity != BoundInclusivity::Inclusive
                 {
-                    return false;
+                    return Err(BoundedAbsoluteIntervalUpdateError::SameTimeDoublyInclusiveViolation);
                 }
 
-                self.unchecked_set_to(new_to);
-                true
+                self.unchecked_set_end(new_end);
+                Ok(())
             },
-            Ordering::Greater => false,
+            Ordering::Greater => Err(BoundedAbsoluteIntervalUpdateError::ChronologicalOrderViolation),
         }
     }
 
-    /// Sets the inclusivity of the start bound
-    ///
-    /// Returns whether the operation was successful and the start bound's inclusivity modified.
-    /// If the given new start bound inclusivity violates the invariants, the method simply returns `false`
-    /// without changing the start bound's inclusivity.
+    /// Sets the start bound's inclusivity without checking if it violates invariants
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// # use std::error::Error;
+    /// # use jiff::Timestamp;
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// let time = "2026-01-01 08:00:00Z".parse::<Timestamp>()?;
+    /// let mut bounded_interval = BoundedAbsoluteInterval::new(time, time);
+    /// 
+    /// // Violates the same time doubly inclusive invariant
+    /// bounded_interval.unchecked_set_start_inclusivity(BoundInclusivity::Exclusive);
+    /// 
+    /// // Yet stays that way
+    /// assert_eq!(bounded_interval.start_inclusivity(), BoundInclusivity::Exclusive);
+    /// assert_eq!(bounded_interval.end_inclusivity(), BoundInclusivity::Inclusive);
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    pub fn unchecked_set_start_inclusivity(&mut self, new_start_inclusivity: BoundInclusivity) {
+        self.start_inclusivity = new_start_inclusivity;
+    }
+
+    /// Sets the end bound's inclusivity without checking if it violates invariants
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// # use std::error::Error;
+    /// # use jiff::Timestamp;
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// let time = "2026-01-01 08:00:00Z".parse::<Timestamp>()?;
+    /// let mut bounded_interval = BoundedAbsoluteInterval::new(time, time);
+    /// 
+    /// // Violates the same time doubly inclusive invariant
+    /// bounded_interval.unchecked_set_end_inclusivity(BoundInclusivity::Exclusive);
+    /// 
+    /// // Yet stays that way
+    /// assert_eq!(bounded_interval.start_inclusivity(), BoundInclusivity::Inclusive);
+    /// assert_eq!(bounded_interval.end_inclusivity(), BoundInclusivity::Exclusive);
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    pub fn unchecked_set_end_inclusivity(&mut self, new_end_inclusivity: BoundInclusivity) {
+        self.end_inclusivity = new_end_inclusivity;
+    }
+
+    /// Sets the start bound's inclusivity
+    /// 
+    /// # Errors
+    /// 
+    /// Returns [`SameTimeDoublyInclusiveViolation`](BoundedAbsoluteIntervalUpdateError::SameTimeDoublyInclusiveViolation)
+    /// if the start and end are on the same time and the given new inclusivity
+    /// is not [`Inclusive`](BoundInclusivity::Inclusive).
     ///
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Utc};
+    /// # use std::error::Error;
+    /// # use jiff::Timestamp;
     /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
     /// # use periodical::intervals::meta::BoundInclusivity;
-    /// let time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
+    /// let mut bounded_interval = BoundedAbsoluteInterval::new(
+    ///     "2026-01-01 08:00:00Z".parse::<Timestamp>()?,
+    ///     "2026-01-01 16:00:00Z".parse::<Timestamp>()?,
+    /// );
+    /// 
+    /// bounded_interval.set_start_inclusivity(BoundInclusivity::Exclusive);
     ///
-    /// let mut bounded_interval = BoundedAbsoluteInterval::new(time, time);
-    ///
-    /// // Interval has same times, therefore cannot be other than doubly inclusive
-    /// let was_successful = bounded_interval.set_from_inclusivity(BoundInclusivity::Exclusive);
-    ///
-    /// // Therefore new inclusivity gets ignored
-    /// assert!(!was_successful);
-    /// assert_eq!(bounded_interval.from_inclusivity(), BoundInclusivity::Inclusive);
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// assert_eq!(bounded_interval.start_inclusivity(), BoundInclusivity::Exclusive);
+    /// assert_eq!(bounded_interval.end_inclusivity(), BoundInclusivity::Inclusive);
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
-    pub fn set_from_inclusivity(&mut self, new_inclusivity: BoundInclusivity) -> bool {
-        if self.from == self.to && new_inclusivity != BoundInclusivity::Inclusive {
-            return false;
+    pub fn set_start_inclusivity(
+        &mut self,
+        new_inclusivity: BoundInclusivity,
+    ) -> Result<(), BoundedAbsoluteIntervalUpdateError> {
+        if self.start == self.end && new_inclusivity != BoundInclusivity::Inclusive {
+            return Err(BoundedAbsoluteIntervalUpdateError::SameTimeDoublyInclusiveViolation);
         }
 
-        self.from_inclusivity = new_inclusivity;
-        true
+        self.unchecked_set_start_inclusivity(new_inclusivity);
+        Ok(())
     }
 
-    /// Sets the inclusivity of the end bound
-    ///
-    /// Returns whether the operation was successful and the end bound's inclusivity modified.
-    /// If the given new end bound inclusivity violates the invariants, the method simply returns `false`
-    /// without changing the end bound's inclusivity.
+    /// Sets the end bound's inclusivity
+    /// 
+    /// # Errors
+    /// 
+    /// Returns [`SameTimeDoublyInclusiveViolation`](BoundedAbsoluteIntervalUpdateError::SameTimeDoublyInclusiveViolation)
+    /// if the start and end are on the same time and the given new inclusivity
+    /// is not [`Inclusive`](BoundInclusivity::Inclusive).
     ///
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Utc};
+    /// # use std::error::Error;
+    /// # use jiff::Timestamp;
     /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
     /// # use periodical::intervals::meta::BoundInclusivity;
-    /// let time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
+    /// let mut bounded_interval = BoundedAbsoluteInterval::new(
+    ///     "2026-01-01 08:00:00Z".parse::<Timestamp>()?,
+    ///     "2026-01-01 16:00:00Z".parse::<Timestamp>()?,
+    /// );
+    /// 
+    /// bounded_interval.set_end_inclusivity(BoundInclusivity::Exclusive);
     ///
-    /// let mut bounded_interval = BoundedAbsoluteInterval::new(time, time);
-    ///
-    /// // Interval has same times, therefore cannot be other than doubly inclusive
-    /// let was_successful = bounded_interval.set_to_inclusivity(BoundInclusivity::Exclusive);
-    ///
-    /// // Therefore new inclusivity gets ignored
-    /// assert!(!was_successful);
-    /// assert_eq!(bounded_interval.to_inclusivity(), BoundInclusivity::Inclusive);
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// assert_eq!(bounded_interval.start_inclusivity(), BoundInclusivity::Inclusive);
+    /// assert_eq!(bounded_interval.end_inclusivity(), BoundInclusivity::Exclusive);
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
-    pub fn set_to_inclusivity(&mut self, new_inclusivity: BoundInclusivity) -> bool {
-        if self.from == self.to && new_inclusivity != BoundInclusivity::Inclusive {
-            return false;
+    pub fn set_end_inclusivity(
+        &mut self,
+        new_inclusivity: BoundInclusivity,
+    ) -> Result<(), BoundedAbsoluteIntervalUpdateError> {
+        if self.start == self.end && new_inclusivity != BoundInclusivity::Inclusive {
+            return Err(BoundedAbsoluteIntervalUpdateError::SameTimeDoublyInclusiveViolation);
         }
 
-        self.to_inclusivity = new_inclusivity;
-        true
+        self.unchecked_set_end_inclusivity(new_inclusivity);
+        Ok(())
     }
 }
 
@@ -3849,10 +567,10 @@ impl BoundedAbsoluteInterval {
 /// Those errors are mostly created by convenience methods, such as [`BoundedAbsoluteInterval::today`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum BoundedAbsoluteIntervalCreationError {
-    /// Start date could not be created as it was out of range
-    OutOfRangeStartDate,
-    /// End date could not be created as it was out of range
-    OutOfRangeEndDate,
+    /// Provided or computed start bound is out of range
+    OutOfRangeStart,
+    /// Provided or computed end bound is out of range
+    OutOfRangeEnd,
     /// Start time could not be created as positioned in a time gap
     ///
     /// Time gaps are often created by daylight savings time (DST), where a given duration can be skipped,
@@ -3878,8 +596,8 @@ pub enum BoundedAbsoluteIntervalCreationError {
 impl Display for BoundedAbsoluteIntervalCreationError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::OutOfRangeStartDate => write!(f, "Start date could not be created as it was out of range"),
-            Self::OutOfRangeEndDate => write!(f, "End date could not be created as it was out of range"),
+            Self::OutOfRangeStart => write!(f, "Provided or computed start bound is out of range"),
+            Self::OutOfRangeEnd => write!(f, "Provided or computed end bound is out of range"),
             Self::StartInTimeGap => write!(f, "Start time could not be created as positioned in a time gap"),
             Self::EndInTimeGap => write!(f, "End time could not be created as positioned in a time gap"),
             Self::DateOperationError => write!(f, "Something went wrong when computing a date"),
@@ -3888,6 +606,28 @@ impl Display for BoundedAbsoluteIntervalCreationError {
 }
 
 impl Error for BoundedAbsoluteIntervalCreationError {}
+
+/// Errors that can occur when updating a [`BoundedAbsoluteInterval`]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum BoundedAbsoluteIntervalUpdateError {
+    /// Update would violate the chronological order invariant
+    ChronologicalOrderViolation,
+    /// Update would violate the same time = doubly inclusive invariant
+    SameTimeDoublyInclusiveViolation,
+}
+
+impl Display for BoundedAbsoluteIntervalUpdateError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::ChronologicalOrderViolation => write!(f, "Update would violate the chronological order invariant"),
+            Self::SameTimeDoublyInclusiveViolation => {
+                write!(f, "Update would violate the same time = doubly inclusive invariant")
+            },
+        }
+    }
+}
+
+impl Error for BoundedAbsoluteIntervalUpdateError {}
 
 impl Interval for BoundedAbsoluteInterval {}
 
@@ -3906,59 +646,40 @@ impl HasRelativity for BoundedAbsoluteInterval {
 impl HasDuration for BoundedAbsoluteInterval {
     fn duration(&self) -> IntervalDuration {
         IntervalDuration::Finite(
-            self.to - self.from,
-            Epsilon::from((self.from_inclusivity(), self.to_inclusivity())),
+            self.end.duration_since(self.start).unsigned_abs(),
+            Epsilon::from((self.start_inclusivity(), self.end_inclusivity())),
         )
     }
 }
 
-impl HasAbsoluteBounds for BoundedAbsoluteInterval {
-    fn abs_bounds(&self) -> AbsoluteBounds {
-        AbsoluteBounds::unchecked_new(self.abs_start(), self.abs_end())
+impl HasAbsoluteBoundPair for BoundedAbsoluteInterval {
+    fn abs_bound_pair(&self) -> AbsoluteBoundPair {
+        AbsoluteBoundPair::unchecked_new(self.abs_start(), self.abs_end())
     }
 
     fn abs_start(&self) -> AbsoluteStartBound {
-        AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-            self.from,
-            self.from_inclusivity,
-        ))
+        AbsoluteFiniteBound::new_with_inclusivity(self.start, self.start_inclusivity).to_start_bound()
     }
 
     fn abs_end(&self) -> AbsoluteEndBound {
-        AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(self.to, self.to_inclusivity))
+        AbsoluteFiniteBound::new_with_inclusivity(self.end, self.end_inclusivity).to_end_bound()
     }
 }
 
 impl From<(Timestamp, Timestamp)> for BoundedAbsoluteInterval {
-    fn from((from, to): (Timestamp, Timestamp)) -> Self {
-        BoundedAbsoluteInterval::new(from, to)
+    fn from((start, end): (Timestamp, Timestamp)) -> Self {
+        BoundedAbsoluteInterval::new(start, end)
     }
 }
 
 impl From<((Timestamp, BoundInclusivity), (Timestamp, BoundInclusivity))> for BoundedAbsoluteInterval {
     fn from(
-        ((from, from_inclusivity), (to, to_inclusivity)): (
+        ((start, start_inclusivity), (end, end_inclusivity)): (
             (Timestamp, BoundInclusivity),
             (Timestamp, BoundInclusivity),
         ),
     ) -> Self {
-        BoundedAbsoluteInterval::new_with_inclusivity(from, from_inclusivity, to, to_inclusivity)
-    }
-}
-
-/// Converts `((Timestamp, bool), (Timestamp, bool))` into [`BoundedAbsoluteInterval`]
-///
-/// The booleans in the original structure are to be interpreted as _is it inclusive?_
-impl From<((Timestamp, bool), (Timestamp, bool))> for BoundedAbsoluteInterval {
-    fn from(
-        ((from, is_from_inclusive), (to, is_to_inclusive)): ((Timestamp, bool), (Timestamp, bool)),
-    ) -> Self {
-        BoundedAbsoluteInterval::new_with_inclusivity(
-            from,
-            BoundInclusivity::from(is_from_inclusive),
-            to,
-            BoundInclusivity::from(is_to_inclusive),
-        )
+        BoundedAbsoluteInterval::new_with_inclusivity(start, start_inclusivity, end, end_inclusivity)
     }
 }
 
@@ -3984,13 +705,13 @@ impl From<RangeInclusive<Timestamp>> for BoundedAbsoluteInterval {
     }
 }
 
-/// Errors that can occur when trying to convert [`AbsoluteBounds`] into [`BoundedAbsoluteInterval`]
+/// Errors that can occur when trying to convert [`AbsoluteBoundPair`] into [`BoundedAbsoluteInterval`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum BoundedAbsoluteIntervalFromAbsoluteBoundsError {
+pub enum BoundedAbsoluteIntervalFromAbsoluteBoundPairError {
     NotBoundedInterval,
 }
 
-impl Display for BoundedAbsoluteIntervalFromAbsoluteBoundsError {
+impl Display for BoundedAbsoluteIntervalFromAbsoluteBoundPairError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::NotBoundedInterval => write!(f, "Not a bounded interval"),
@@ -3998,12 +719,12 @@ impl Display for BoundedAbsoluteIntervalFromAbsoluteBoundsError {
     }
 }
 
-impl Error for BoundedAbsoluteIntervalFromAbsoluteBoundsError {}
+impl Error for BoundedAbsoluteIntervalFromAbsoluteBoundPairError {}
 
-impl TryFrom<AbsoluteBounds> for BoundedAbsoluteInterval {
-    type Error = BoundedAbsoluteIntervalFromAbsoluteBoundsError;
+impl TryFrom<AbsoluteBoundPair> for BoundedAbsoluteInterval {
+    type Error = BoundedAbsoluteIntervalFromAbsoluteBoundPairError;
 
-    fn try_from(value: AbsoluteBounds) -> Result<Self, Self::Error> {
+    fn try_from(value: AbsoluteBoundPair) -> Result<Self, Self::Error> {
         match (value.start(), value.end()) {
             (AbsoluteStartBound::Finite(finite_start), AbsoluteEndBound::Finite(finite_end)) => {
                 Ok(BoundedAbsoluteInterval::new_with_inclusivity(
