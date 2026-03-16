@@ -1,28 +1,44 @@
+//! Relative half-bounded interval
+//! 
+//! A half-bounded interval has a reference offset and an opening direction.
+//! 
+//! Similar to the other specific interval types, its [openness](Openness) cannot change.
+//! That is to say a half-bounded interval must remain a half-bounded interval.
+//! It cannot mutate from being a half-bounded interval to a bounded interval.
+//! 
+//! Instead, if you are looking for an relative interval that doesn't keep the [openness](Openness) invariant,
+//! see [`RelativeBoundPair`].
 
-/// A half-bounded relative interval
-///
-/// An interval with a set reference time and an [opening direction](OpeningDirection).
-/// Like all specific relative interval types, it conserves the invariant of its bounds being
-/// in chronological order[^chrono_order_invariant] and if the interval has a length of zero,
-/// they must be inclusive[^doubly_inclusive_invariant].
-///
-/// However, like the other specific interval types, it conserves an additional invariant:
-/// Its [openness](Openness) cannot change. That is to say a half-bounded interval must remain a half-bounded interval.
+use std::error::Error;
+use std::fmt::Display;
+use std::ops::{RangeFrom, RangeTo, RangeToInclusive};
+
+use jiff::SignedDuration;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
+use crate::intervals::relative::{
+    RelativeBoundPair, RelativeEndBound, RelativeFiniteBound, RelativeInterval, RelativeStartBound,
+    HasRelativeBoundPair,
+};
+use crate::intervals::meta::{
+    BoundInclusivity, Duration as IntervalDuration, HasBoundInclusivity, HasDuration, HasOpenness, HasRelativity, Interval, OpeningDirection, Openness, Relativity
+};
+
+/// Relative half-bounded interval
+/// 
+/// A half-bounded interval has a reference offset and an opening direction.
+/// 
+/// Similar to the other specific interval types, its [openness](Openness) cannot change.
+/// That is to say a half-bounded interval must remain a half-bounded interval.
 /// It cannot mutate from being a half-bounded interval to a bounded interval.
-///
-/// [^chrono_order_invariant]: This invariant is automatically guaranteed in this structure
-///     since it only has one bound.
-/// [^doubly_inclusive_invariant]: This invariant is automatically guaranteed in this structure
-///     since the reference time is finite and therefore cannot reach the opposite end of the half-bounded interval,
-///     since the opposite end is infinite.
-///
-/// Instead, if you are looking for a relative interval that doesn't keep the [openness](Openness) invariant,
-/// see [`RelativeBounds`].
+/// 
+/// Instead, if you are looking for an relative interval that doesn't keep the [openness](Openness) invariant,
+/// see [`RelativeBoundPair`].
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub struct HalfBoundedRelativeInterval {
-    reference_offset: SignedDuration,
+    reference: SignedDuration,
     opening_direction: OpeningDirection,
     reference_inclusivity: BoundInclusivity,
 }
@@ -33,22 +49,22 @@ impl HalfBoundedRelativeInterval {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::Duration;
+    /// # use jiff::SignedDuration;
     /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
     /// # use periodical::intervals::relative::HalfBoundedRelativeInterval;
     /// let half_bounded_interval = HalfBoundedRelativeInterval::new(
-    ///     Duration::hours(8),
+    ///     SignedDuration::from_hours(8),
     ///     OpeningDirection::ToPast,
     /// );
     ///
-    /// assert_eq!(half_bounded_interval.reference_offset(), Duration::hours(8));
+    /// assert_eq!(half_bounded_interval.reference(), SignedDuration::from_hours(8));
     /// assert_eq!(half_bounded_interval.reference_inclusivity(), BoundInclusivity::Inclusive);
     /// assert_eq!(half_bounded_interval.opening_direction(), OpeningDirection::ToPast);
     /// ```
     #[must_use]
-    pub fn new(reference_offset: SignedDuration, opening_direction: OpeningDirection) -> Self {
+    pub fn new(reference: SignedDuration, opening_direction: OpeningDirection) -> Self {
         HalfBoundedRelativeInterval {
-            reference_offset,
+            reference,
             opening_direction,
             reference_inclusivity: BoundInclusivity::default(),
         }
@@ -59,27 +75,27 @@ impl HalfBoundedRelativeInterval {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::Duration;
+    /// # use jiff::SignedDuration;
     /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
     /// # use periodical::intervals::relative::HalfBoundedRelativeInterval;
     /// let half_bounded_interval = HalfBoundedRelativeInterval::new_with_inclusivity(
-    ///     Duration::hours(8),
+    ///     SignedDuration::from_hours(8),
     ///     BoundInclusivity::Exclusive,
     ///     OpeningDirection::ToPast,
     /// );
     ///
-    /// assert_eq!(half_bounded_interval.reference_offset(), Duration::hours(8));
+    /// assert_eq!(half_bounded_interval.reference(), SignedDuration::from_hours(8));
     /// assert_eq!(half_bounded_interval.reference_inclusivity(), BoundInclusivity::Exclusive);
     /// assert_eq!(half_bounded_interval.opening_direction(), OpeningDirection::ToPast);
     /// ```
     #[must_use]
     pub fn new_with_inclusivity(
-        reference_offset: SignedDuration,
+        reference: SignedDuration,
         reference_time_inclusivity: BoundInclusivity,
         opening_direction: OpeningDirection,
     ) -> Self {
         HalfBoundedRelativeInterval {
-            reference_offset,
+            reference,
             opening_direction,
             reference_inclusivity: reference_time_inclusivity,
         }
@@ -90,19 +106,19 @@ impl HalfBoundedRelativeInterval {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::Duration;
+    /// # use jiff::SignedDuration;
     /// # use periodical::intervals::meta::OpeningDirection;
     /// # use periodical::intervals::relative::HalfBoundedRelativeInterval;
     /// let half_bounded_interval = HalfBoundedRelativeInterval::new(
-    ///     Duration::hours(8),
+    ///     SignedDuration::from_hours(8),
     ///     OpeningDirection::ToPast,
     /// );
     ///
-    /// assert_eq!(half_bounded_interval.reference_offset(), Duration::hours(8));
+    /// assert_eq!(half_bounded_interval.reference(), SignedDuration::from_hours(8));
     /// ```
     #[must_use]
-    pub fn reference_offset(&self) -> SignedDuration {
-        self.reference_offset
+    pub fn reference(&self) -> SignedDuration {
+        self.reference
     }
 
     /// Returns the opening direction
@@ -110,11 +126,11 @@ impl HalfBoundedRelativeInterval {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::Duration;
+    /// # use jiff::SignedDuration;
     /// # use periodical::intervals::meta::OpeningDirection;
     /// # use periodical::intervals::relative::HalfBoundedRelativeInterval;
     /// let half_bounded_interval = HalfBoundedRelativeInterval::new(
-    ///     Duration::hours(8),
+    ///     SignedDuration::from_hours(8),
     ///     OpeningDirection::ToPast,
     /// );
     ///
@@ -130,11 +146,11 @@ impl HalfBoundedRelativeInterval {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::Duration;
+    /// # use jiff::SignedDuration;
     /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
     /// # use periodical::intervals::relative::HalfBoundedRelativeInterval;
     /// let half_bounded_interval = HalfBoundedRelativeInterval::new_with_inclusivity(
-    ///     Duration::hours(8),
+    ///     SignedDuration::from_hours(8),
     ///     BoundInclusivity::Exclusive,
     ///     OpeningDirection::ToPast,
     /// );
@@ -151,20 +167,20 @@ impl HalfBoundedRelativeInterval {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::Duration;
+    /// # use jiff::SignedDuration;
     /// # use periodical::intervals::meta::OpeningDirection;
     /// # use periodical::intervals::relative::HalfBoundedRelativeInterval;
     /// let mut half_bounded_interval = HalfBoundedRelativeInterval::new(
-    ///     Duration::hours(8),
+    ///     SignedDuration::from_hours(8),
     ///     OpeningDirection::ToPast,
     /// );
     ///
-    /// half_bounded_interval.set_offset(Duration::hours(1));
+    /// half_bounded_interval.set_reference(SignedDuration::from_hours(1));
     ///
-    /// assert_eq!(half_bounded_interval.reference_offset(), Duration::hours(1));
+    /// assert_eq!(half_bounded_interval.reference(), SignedDuration::from_hours(1));
     /// ```
-    pub fn set_offset(&mut self, new_offset: SignedDuration) {
-        self.reference_offset = new_offset;
+    pub fn set_reference(&mut self, new_reference: SignedDuration) {
+        self.reference = new_reference;
     }
 
     /// Sets the inclusivity of the reference offset
@@ -172,11 +188,11 @@ impl HalfBoundedRelativeInterval {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::Duration;
+    /// # use jiff::SignedDuration;
     /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
     /// # use periodical::intervals::relative::HalfBoundedRelativeInterval;
     /// let mut half_bounded_interval = HalfBoundedRelativeInterval::new_with_inclusivity(
-    ///     Duration::hours(8),
+    ///     SignedDuration::from_hours(8),
     ///     BoundInclusivity::Exclusive,
     ///     OpeningDirection::ToPast,
     /// );
@@ -194,11 +210,11 @@ impl HalfBoundedRelativeInterval {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::Duration;
+    /// # use jiff::SignedDuration;
     /// # use periodical::intervals::meta::OpeningDirection;
     /// # use periodical::intervals::relative::HalfBoundedRelativeInterval;
     /// let mut half_bounded_interval = HalfBoundedRelativeInterval::new(
-    ///     Duration::hours(8),
+    ///     SignedDuration::from_hours(8),
     ///     OpeningDirection::ToPast,
     /// );
     ///
@@ -231,27 +247,27 @@ impl HasDuration for HalfBoundedRelativeInterval {
     }
 }
 
-impl HasRelativeBounds for HalfBoundedRelativeInterval {
-    fn rel_bounds(&self) -> RelativeBounds {
-        RelativeBounds::new(self.rel_start(), self.rel_end())
+impl HasRelativeBoundPair for HalfBoundedRelativeInterval {
+    fn rel_bound_pair(&self) -> RelativeBoundPair {
+        RelativeBoundPair::new(self.rel_start(), self.rel_end())
     }
 
     fn rel_start(&self) -> RelativeStartBound {
         match self.opening_direction {
             OpeningDirection::ToPast => RelativeStartBound::InfinitePast,
-            OpeningDirection::ToFuture => RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                self.reference_offset,
+            OpeningDirection::ToFuture => RelativeFiniteBound::new_with_inclusivity(
+                self.reference,
                 self.reference_inclusivity,
-            )),
+            ).to_start_bound(),
         }
     }
 
     fn rel_end(&self) -> RelativeEndBound {
         match self.opening_direction {
-            OpeningDirection::ToPast => RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                self.reference_offset,
+            OpeningDirection::ToPast => RelativeFiniteBound::new_with_inclusivity(
+                self.reference,
                 self.reference_inclusivity,
-            )),
+            ).to_end_bound(),
             OpeningDirection::ToFuture => RelativeEndBound::InfiniteFuture,
         }
     }
@@ -263,51 +279,9 @@ impl From<(SignedDuration, OpeningDirection)> for HalfBoundedRelativeInterval {
     }
 }
 
-/// Converts `(SignedDuration, bool)` into [`HalfBoundedRelativeInterval`]
-///
-/// The boolean is interpreted as _is it going to future?_
-impl From<(SignedDuration, bool)> for HalfBoundedRelativeInterval {
-    fn from((offset, goes_to_future): (SignedDuration, bool)) -> Self {
-        HalfBoundedRelativeInterval::new(offset, OpeningDirection::from(goes_to_future))
-    }
-}
-
 impl From<((SignedDuration, BoundInclusivity), OpeningDirection)> for HalfBoundedRelativeInterval {
     fn from(((offset, inclusivity), direction): ((SignedDuration, BoundInclusivity), OpeningDirection)) -> Self {
         HalfBoundedRelativeInterval::new_with_inclusivity(offset, inclusivity, direction)
-    }
-}
-
-/// Converts `((SignedDuration, BoundInclusivity), bool)` into [`HalfBoundedRelativeInterval`]
-///
-/// The boolean is interpreted as _is it going to future?_
-impl From<((SignedDuration, BoundInclusivity), bool)> for HalfBoundedRelativeInterval {
-    fn from(((offset, inclusivity), goes_to_future): ((SignedDuration, BoundInclusivity), bool)) -> Self {
-        HalfBoundedRelativeInterval::new_with_inclusivity(offset, inclusivity, OpeningDirection::from(goes_to_future))
-    }
-}
-
-/// Converts `((SignedDuration, bool), OpeningDirection)` into [`HalfBoundedRelativeInterval`]
-///
-/// The boolean is interpreted as _is it inclusive?_
-impl From<((SignedDuration, bool), OpeningDirection)> for HalfBoundedRelativeInterval {
-    fn from(((offset, is_inclusive), direction): ((SignedDuration, bool), OpeningDirection)) -> Self {
-        HalfBoundedRelativeInterval::new_with_inclusivity(offset, BoundInclusivity::from(is_inclusive), direction)
-    }
-}
-
-/// Converts `((SignedDuration, bool), bool)` into [`HalfBoundedRelativeInterval`]
-///
-/// The boolean of the first tuple element is interpreted as _is it inclusive?_
-///
-/// The boolean of the second tuple element is interpreted as _is it going to future?_
-impl From<((SignedDuration, bool), bool)> for HalfBoundedRelativeInterval {
-    fn from(((offset, is_inclusive), goes_to_future): ((SignedDuration, bool), bool)) -> Self {
-        HalfBoundedRelativeInterval::new_with_inclusivity(
-            offset,
-            BoundInclusivity::from(is_inclusive),
-            OpeningDirection::from(goes_to_future),
-        )
     }
 }
 
@@ -341,13 +315,13 @@ impl From<RangeToInclusive<SignedDuration>> for HalfBoundedRelativeInterval {
     }
 }
 
-/// Errors that can occur when trying to convert [`RelativeBounds`] into [`HalfBoundedRelativeInterval`]
+/// Errors that can occur when trying to convert [`RelativeBoundPair`] into [`HalfBoundedRelativeInterval`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum HalfBoundedRelativeIntervalFromRelativeBoundsError {
+pub enum HalfBoundedRelativeIntervalFromRelativeBoundPairError {
     NotHalfBoundedInterval,
 }
 
-impl Display for HalfBoundedRelativeIntervalFromRelativeBoundsError {
+impl Display for HalfBoundedRelativeIntervalFromRelativeBoundPairError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::NotHalfBoundedInterval => write!(f, "Not a half-bounded interval"),
@@ -355,12 +329,12 @@ impl Display for HalfBoundedRelativeIntervalFromRelativeBoundsError {
     }
 }
 
-impl Error for HalfBoundedRelativeIntervalFromRelativeBoundsError {}
+impl Error for HalfBoundedRelativeIntervalFromRelativeBoundPairError {}
 
-impl TryFrom<RelativeBounds> for HalfBoundedRelativeInterval {
-    type Error = HalfBoundedRelativeIntervalFromRelativeBoundsError;
+impl TryFrom<RelativeBoundPair> for HalfBoundedRelativeInterval {
+    type Error = HalfBoundedRelativeIntervalFromRelativeBoundPairError;
 
-    fn try_from(value: RelativeBounds) -> Result<Self, Self::Error> {
+    fn try_from(value: RelativeBoundPair) -> Result<Self, Self::Error> {
         match (value.start(), value.end()) {
             (RelativeStartBound::InfinitePast, RelativeEndBound::Finite(finite_end)) => {
                 Ok(HalfBoundedRelativeInterval::new_with_inclusivity(

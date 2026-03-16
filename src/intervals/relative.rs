@@ -4,28 +4,35 @@
 //!
 //! The most common relative interval objects you will encounter are
 //!
-//! - [`RelativeBounds`]
-//! - [`EmptiableRelativeBounds`]
+//! - [`RelativeBoundPair`]
+//! - [`EmptiableRelativeBoundPair`]
 //! - [`BoundedRelativeInterval`]
 //! - [`HalfBoundedRelativeInterval`]
 
+use std::cmp::Ordering;
+use std::error::Error;
+use std::fmt::Display;
+
+use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
 use crate::utils::{inline_docs, tests};
 
 pub mod bound;
 pub mod bounded_interval;
 pub mod bound_pair;
-pub mod end_bound;
 pub mod emptiable_bound_pair;
+// pub mod emptiable_interval;
+pub mod end_bound;
 pub mod finite_bound;
 pub mod half_bounded_interval;
 pub mod interval;
 pub mod start_bound;
 
 tests! {
+    mod bounded_interval_tests;
     mod bound_pair_tests;
     mod bound_tests;
-    mod bounded_interval_tests;
     mod emptiable_bound_pair_tests;
+    mod emptiable_interval_tests;
     mod end_bound_tests;
     mod finite_bound_tests;
     mod half_bounded_interval_tests;
@@ -34,11 +41,12 @@ tests! {
 }
 
 inline_docs! {
-    pub use bound::RelativeBound;
     pub use bounded_interval::BoundedRelativeInterval;
-    pub use bound_pair::{HasRelativeBounds, RelativeBounds};
+    pub use bound::RelativeBound;
+    pub use bound_pair::{HasRelativeBoundPair, RelativeBoundPair};
+    pub use emptiable_bound_pair::{HasEmptiableRelativeBoundPair, EmptiableRelativeBoundPair};
+    // pub use emptiable_interval::EmptiableRelativeInterval;
     pub use end_bound::RelativeEndBound;
-    pub use emptiable_bound_pair::{HasEmptiableRelativeBounds, EmptiableRelativeBounds};
     pub use finite_bound::RelativeFiniteBound;
     pub use half_bounded_interval::HalfBoundedRelativeInterval;
     pub use interval::RelativeInterval;

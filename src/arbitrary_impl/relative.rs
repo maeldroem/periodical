@@ -3,8 +3,8 @@
 use arbitrary::{Arbitrary, Error, Unstructured};
 use jiff::SignedDuration;
 
-use crate::intervals::meta::BoundInclusivity;
-use crate::intervals::relative::{RelativeBoundPair, RelativeEndBound, RelativeFiniteBound, RelativeStartBound};
+use crate::intervals::meta::{BoundInclusivity, OpeningDirection};
+use crate::intervals::relative::{BoundedRelativeInterval, HalfBoundedRelativeInterval, RelativeBoundPair, RelativeEndBound, RelativeFiniteBound, RelativeStartBound};
 
 impl<'a> Arbitrary<'a> for RelativeFiniteBound {
     fn arbitrary(u: &mut Unstructured<'a>) -> arbitrary::Result<Self> {
@@ -27,27 +27,44 @@ impl<'a> Arbitrary<'a> for RelativeBoundPair {
     }
 }
 
-/*
 impl<'a> Arbitrary<'a> for BoundedRelativeInterval {
     fn arbitrary(u: &mut Unstructured<'a>) -> arbitrary::Result<Self> {
-        let start_offset = Duration::arbitrary(u)?;
-        let length = Duration::arbitrary(u)?;
+        let signed_duration_range = SignedDuration::MIN.as_nanos()..=SignedDuration::MAX.as_nanos();
 
-        if length.is_zero() {
+        let start_offset = SignedDuration::try_from_nanos_i128(u.int_in_range(signed_duration_range.clone())?)
+            .ok_or(Error::IncorrectFormat)?;
+        let end_offset = SignedDuration::try_from_nanos_i128(u.int_in_range(signed_duration_range)?)
+            .ok_or(Error::IncorrectFormat)?;
+
+        if start_offset == end_offset {
             Ok(BoundedRelativeInterval::new_with_inclusivity(
                 start_offset,
                 BoundInclusivity::Inclusive,
-                length,
+                end_offset,
                 BoundInclusivity::Inclusive,
             ))
         } else {
             Ok(BoundedRelativeInterval::new_with_inclusivity(
                 start_offset,
                 BoundInclusivity::arbitrary(u)?,
-                length,
+                end_offset,
                 BoundInclusivity::arbitrary(u)?,
             ))
         }
     }
 }
-*/
+
+impl<'a> Arbitrary<'a> for HalfBoundedRelativeInterval {
+    fn arbitrary(u: &mut Unstructured<'a>) -> arbitrary::Result<Self> {
+        let signed_duration_range = SignedDuration::MIN.as_nanos()..=SignedDuration::MAX.as_nanos();
+
+        let reference_offset = SignedDuration::try_from_nanos_i128(u.int_in_range(signed_duration_range.clone())?)
+            .ok_or(Error::IncorrectFormat)?;
+        
+        Ok(HalfBoundedRelativeInterval::new_with_inclusivity(
+            reference_offset,
+            BoundInclusivity::arbitrary(u)?,
+            OpeningDirection::arbitrary(u)?,
+        ))
+    }
+}

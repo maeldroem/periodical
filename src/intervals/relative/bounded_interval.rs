@@ -1,22 +1,47 @@
+//! Relative bounded interval
+//! 
+//! A bounded interval has a start and end. Like all specific relative interval types, it conserves the invariant
+//! of its bounds being in chronological order and if the bounds have the same offset, they must be inclusive.
+//! 
+//! Similar to the other specific interval types, its [openness](Openness) cannot change.
+//! That is to say a bounded interval must remain a bounded interval.
+//! It cannot mutate from being a bounded interval to a half-bounded interval.
+//! 
+//! Instead, if you are looking for an relative interval that doesn't keep the [openness](Openness) invariant,
+//! see [`RelativeBoundPair`].
 
-/// A bounded relative interval
-///
-/// An interval with a set offset and length. Like all specific relative interval types, it conserves the invariant
-/// of its length cannot be negative, and if the length is 0, the bounds must be inclusive.
-///
-/// However, like the other specific interval types, it conserves an additional invariant:
-/// Its [openness](Openness) cannot change. That is to say a bounded interval must remain a bounded interval.
+use std::cmp::Ordering;
+use std::error::Error;
+use std::fmt::Display;
+use std::ops::{Range, RangeInclusive};
+use std::time::Duration as StdDuration;
+
+use jiff::SignedDuration;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
+use crate::intervals::meta::{BoundInclusivity, Duration as IntervalDuration, Epsilon, HasBoundInclusivity, HasDuration, HasOpenness, HasRelativity, Interval, Openness, Relativity};
+use crate::intervals::relative::{HasRelativeBoundPair, RelativeBoundPair, RelativeEndBound, RelativeFiniteBound, RelativeInterval, RelativeStartBound};
+
+/// Relative bounded interval
+/// 
+/// A bounded interval has a start offset and an end offset.
+/// Like all specific relative interval types, it conserves the invariant of its bounds being in chronological order
+/// and if the bounds have the same offset, they must be inclusive.
+/// 
+/// Similar to the other specific interval types, its [openness](Openness) cannot change.
+/// That is to say a bounded interval must remain a bounded interval.
 /// It cannot mutate from being a bounded interval to a half-bounded interval.
-///
-/// Instead, if you are looking for a relative interval that doesn't keep the [openness](Openness) invariant,
-/// see [`RelativeBounds`].
+/// 
+/// Instead, if you are looking for an relative interval that doesn't keep the [openness](Openness) invariant,
+/// see [`RelativeBoundPair`].
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub struct BoundedRelativeInterval {
-    offset: SignedDuration,
-    length: Duration,
-    from_inclusivity: BoundInclusivity,
-    to_inclusivity: BoundInclusivity,
+    start: SignedDuration,
+    end: SignedDuration,
+    start_inclusivity: BoundInclusivity,
+    end_inclusivity: BoundInclusivity,
 }
 
 impl BoundedRelativeInterval {
@@ -25,63 +50,88 @@ impl BoundedRelativeInterval {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::Duration;
+    /// # use jiff::SignedDuration;
     /// # use periodical::intervals::relative::BoundedRelativeInterval;
-    /// let offset = Duration::hours(2);
-    /// let length = Duration::hours(-5);
+    /// let start = SignedDuration::from_hours(2);
+    /// let end = SignedDuration::from_hours(-5);
     ///
-    /// // Even though the length is negative
-    /// let bounded_interval = BoundedRelativeInterval::unchecked_new(offset, length);
+    /// // Even though the end offset is before the start offset
+    /// let bounded_interval = BoundedRelativeInterval::unchecked_new(start, end);
     ///
     /// // It remains that way
-    /// assert_eq!(bounded_interval.offset(), offset);
-    /// assert_eq!(bounded_interval.length(), length);
+    /// assert_eq!(bounded_interval.start(), start);
+    /// assert_eq!(bounded_interval.end(), end);
     /// ```
     #[must_use]
-    pub fn unchecked_new(offset: SignedDuration, length: Duration) -> Self {
+    pub fn unchecked_new(start: SignedDuration, end: SignedDuration) -> Self {
         BoundedRelativeInterval {
-            offset,
-            length,
-            from_inclusivity: BoundInclusivity::default(),
-            to_inclusivity: BoundInclusivity::default(),
+            start,
+            end,
+            start_inclusivity: BoundInclusivity::default(),
+            end_inclusivity: BoundInclusivity::default(),
         }
     }
 
     /// Creates a new [`BoundedRelativeInterval`] with default bound inclusivities
     ///
-    /// If the length is negative, it assumes that the _end_ (offset + length) is the new offset,
-    /// and that the absolute value of the length is the new length.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the length is negative and `offset + length` underflows.
+    /// If the start offset is past the end offset, it swaps them.
     ///
     /// # Examples
     ///
     /// ```
-    /// # use chrono::Duration;
+    /// # use jiff::SignedDuration;
     /// # use periodical::intervals::relative::BoundedRelativeInterval;
-    /// let offset = Duration::hours(1);
-    /// let length = Duration::hours(-5);
+    /// let start = SignedDuration::from_hours(16);
+    /// let end = SignedDuration::from_hours(8);
     ///
-    /// let bounded_interval = BoundedRelativeInterval::new(offset, length);
+    /// // Offsets that are not in chronological order
+    /// let bounded_interval = BoundedRelativeInterval::new(start, end);
     ///
-    /// assert_eq!(bounded_interval.offset(), Duration::hours(-4));
-    /// assert_eq!(bounded_interval.length(), Duration::hours(5));
+    /// // Are swapped
+    /// assert_eq!(bounded_interval.start(), end);
+    /// assert_eq!(bounded_interval.end(), start);
     /// ```
     #[must_use]
-    pub fn new(mut offset: SignedDuration, mut length: Duration) -> Self {
-        if length < Duration::zero() {
-            offset += length;
-            length = length.abs();
+    pub fn new(mut start: SignedDuration, mut end: SignedDuration) -> Self {
+        if start > end {
+            std::mem::swap(&mut start, &mut end);
         }
 
-        BoundedRelativeInterval {
-            offset,
-            length,
-            from_inclusivity: BoundInclusivity::default(),
-            to_inclusivity: BoundInclusivity::default(),
-        }
+        Self::unchecked_new(start, end)
+    }
+
+    /// Creates a new [`BoundedRelativeInterval`] with default bound inclusivities
+    ///
+    /// # Errors
+    /// 
+    /// Returns [`BoundedRelativeIntervalCreationError`] if `start + length` overflows.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use std::time::Duration;
+    /// # use jiff::SignedDuration;
+    /// # use periodical::intervals::relative::BoundedRelativeInterval;
+    /// let start = SignedDuration::from_hours(-1);
+    /// let length = Duration::from_hours(5);
+    ///
+    /// let bounded_interval = BoundedRelativeInterval::new_with_length(start, length)?;
+    ///
+    /// assert_eq!(bounded_interval.start(), SignedDuration::from_hours(-1));
+    /// assert_eq!(bounded_interval.end(), SignedDuration::from_hours(4));
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    pub fn new_with_length(
+        start: SignedDuration,
+        length: StdDuration,
+    ) -> Result<Self, BoundedRelativeIntervalCreationError> {
+        Ok(BoundedRelativeInterval::unchecked_new(start, SignedDuration::from_nanos_i128(
+            start
+                .as_nanos()
+                .checked_add_unsigned(length.as_nanos())
+                .ok_or(BoundedRelativeIntervalCreationError::OutOfRangeEnd)?
+        )))
     }
 
     /// Creates a new [`BoundedRelativeInterval`] with the given bound inclusivities without checking
@@ -90,117 +140,167 @@ impl BoundedRelativeInterval {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::Duration;
+    /// # use jiff::SignedDuration;
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::relative::BoundedRelativeInterval;
-    /// // Length at 0, not doubly inclusive
+    /// // Not doubly inclusive
     /// let bounded_interval = BoundedRelativeInterval::unchecked_new_with_inclusivity(
-    ///     Duration::zero(),
+    ///     SignedDuration::ZERO,
     ///     BoundInclusivity::Inclusive,
-    ///     Duration::zero(),
+    ///     SignedDuration::ZERO,
     ///     BoundInclusivity::Exclusive,
     /// );
     ///
-    /// assert_eq!(bounded_interval.from_inclusivity(), BoundInclusivity::Inclusive);
-    /// assert_eq!(bounded_interval.to_inclusivity(), BoundInclusivity::Exclusive);
+    /// assert_eq!(bounded_interval.start_inclusivity(), BoundInclusivity::Inclusive);
+    /// assert_eq!(bounded_interval.end_inclusivity(), BoundInclusivity::Exclusive);
     /// ```
     #[must_use]
     pub fn unchecked_new_with_inclusivity(
-        offset: SignedDuration,
-        from_inclusivity: BoundInclusivity,
-        length: Duration,
-        to_inclusivity: BoundInclusivity,
+        start: SignedDuration,
+        start_inclusivity: BoundInclusivity,
+        end: SignedDuration,
+        end_inclusivity: BoundInclusivity,
     ) -> Self {
         BoundedRelativeInterval {
-            offset,
-            length,
-            from_inclusivity,
-            to_inclusivity,
+            start,
+            end,
+            start_inclusivity,
+            end_inclusivity,
         }
     }
 
     /// Creates a new [`BoundedRelativeInterval`] with the given bound inclusivities
     ///
-    /// If the length is 0, then the inclusivities will be set to inclusive.
+    /// If the given offsets are equal, then the inclusivities will be set to inclusive.
     ///
-    /// If the length is negative, it assumes that the _end_ (offset + length) is the new offset,
-    /// and that the absolute value of the length is the new length. The bound inclusivities are also swapped
+    /// If the start offset is past the end offset, it swaps them. The bound inclusivities are also swapped
     /// in this process.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the length is negative and `offset + length` underflows.
     ///
     /// # Examples
     ///
     /// ```
-    /// # use chrono::Duration;
+    /// # use jiff::SignedDuration;
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::relative::BoundedRelativeInterval;
-    /// // Length at 0, not doubly inclusive
+    /// 
+    /// // Same offset, not doubly inclusive
     /// let bounded_interval = BoundedRelativeInterval::new_with_inclusivity(
-    ///     Duration::hours(-5),
+    ///     SignedDuration::from_hours(5),
     ///     BoundInclusivity::Inclusive,
-    ///     Duration::zero(),
+    ///     SignedDuration::from_hours(5),
     ///     BoundInclusivity::Exclusive,
     /// );
     ///
     /// // Therefore gets reset to inclusive for both bounds
-    /// assert_eq!(bounded_interval.from_inclusivity(), BoundInclusivity::Inclusive);
-    /// assert_eq!(bounded_interval.to_inclusivity(), BoundInclusivity::Inclusive);
+    /// assert_eq!(bounded_interval.start_inclusivity(), BoundInclusivity::Inclusive);
+    /// assert_eq!(bounded_interval.end_inclusivity(), BoundInclusivity::Inclusive);
     /// ```
     #[must_use]
     pub fn new_with_inclusivity(
-        offset: SignedDuration,
-        from_inclusivity: BoundInclusivity,
-        length: Duration,
-        to_inclusivity: BoundInclusivity,
+        start: SignedDuration,
+        start_inclusivity: BoundInclusivity,
+        end: SignedDuration,
+        end_inclusivity: BoundInclusivity,
     ) -> Self {
-        match length.cmp(&Duration::zero()) {
+        match start.cmp(&end) {
             Ordering::Less => {
-                Self::unchecked_new_with_inclusivity(offset + length, to_inclusivity, length.abs(), from_inclusivity)
+                Self::unchecked_new_with_inclusivity(start, start_inclusivity, end, end_inclusivity)
             },
-            Ordering::Equal => Self::unchecked_new(offset, length),
-            Ordering::Greater => Self::unchecked_new_with_inclusivity(offset, from_inclusivity, length, to_inclusivity),
+            Ordering::Equal => Self::unchecked_new(start, end),
+            Ordering::Greater => {
+                Self::unchecked_new_with_inclusivity(end, end_inclusivity, start, start_inclusivity)
+            },
         }
     }
 
-    /// Returns the offset of the interval
-    ///
+    /// Creates a new [`BoundedRelativeInterval`] with the given bound inclusivities
+    /// 
+    /// If the length is zero, then the inclusivities will be set to inclusive.
+    /// 
+    /// # Errors
+    /// 
+    /// Returns [`OutOfRangeEnd`](BoundedRelativeIntervalCreationError::OutOfRangeEnd) if `start + length` overflows.
+    /// 
     /// # Examples
-    ///
+    /// 
     /// ```
-    /// # use chrono::Duration;
+    /// # use std::error::Error;
+    /// # use std::time::Duration;
+    /// # use jiff::SignedDuration;
     /// # use periodical::intervals::relative::BoundedRelativeInterval;
-    /// let bounded_interval = BoundedRelativeInterval::new(
-    ///     Duration::hours(1),
-    ///     Duration::hours(5),
-    /// );
-    ///
-    /// assert_eq!(bounded_interval.offset(), Duration::hours(1));
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// let bounded_interval = BoundedRelativeInterval::new_with_length_and_inclusivity(
+    ///     SignedDuration::from_hours(3),
+    ///     BoundInclusivity::Inclusive,
+    ///     Duration::from_hours(5),
+    ///     BoundInclusivity::Exclusive,
+    /// )?;
+    /// 
+    /// assert_eq!(bounded_interval.start(), SignedDuration::from_hours(3));
+    /// assert_eq!(bounded_interval.end(), SignedDuration::from_hours(8));
+    /// assert_eq!(bounded_interval.start_inclusivity(), BoundInclusivity::Inclusive);
+    /// assert_eq!(bounded_interval.end_inclusivity(), BoundInclusivity::Exclusive);
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
-    #[must_use]
-    pub fn offset(&self) -> SignedDuration {
-        self.offset
+    pub fn new_with_length_and_inclusivity(
+        start: SignedDuration,
+        start_inclusivity: BoundInclusivity,
+        length: StdDuration,
+        end_inclusivity: BoundInclusivity,
+    ) -> Result<Self, BoundedRelativeIntervalCreationError> {
+        if length.is_zero() {
+            return Ok(BoundedRelativeInterval::unchecked_new(start, start));
+        }
+
+        Ok(BoundedRelativeInterval::unchecked_new_with_inclusivity(
+            start,
+            start_inclusivity,
+            SignedDuration::from_nanos_i128(
+                start
+                    .as_nanos()
+                    .checked_add_unsigned(length.as_nanos())
+                    .ok_or(BoundedRelativeIntervalCreationError::OutOfRangeEnd)?
+            ),
+            end_inclusivity,
+        ))
     }
 
-    /// Returns the length of the interval
+    /// Returns the start offset
     ///
     /// # Examples
     ///
     /// ```
-    /// # use chrono::Duration;
+    /// # use jiff::SignedDuration;
     /// # use periodical::intervals::relative::BoundedRelativeInterval;
     /// let bounded_interval = BoundedRelativeInterval::new(
-    ///     Duration::hours(1),
-    ///     Duration::hours(5),
+    ///     SignedDuration::from_hours(1),
+    ///     SignedDuration::from_hours(5),
     /// );
     ///
-    /// assert_eq!(bounded_interval.length(), Duration::hours(5));
+    /// assert_eq!(bounded_interval.start(), SignedDuration::from_hours(1));
     /// ```
     #[must_use]
-    pub fn length(&self) -> Duration {
-        self.length
+    pub fn start(&self) -> SignedDuration {
+        self.start
+    }
+
+    /// Returns the end offset
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use jiff::SignedDuration;
+    /// # use periodical::intervals::relative::BoundedRelativeInterval;
+    /// let bounded_interval = BoundedRelativeInterval::new(
+    ///     SignedDuration::from_hours(1),
+    ///     SignedDuration::from_hours(5),
+    /// );
+    ///
+    /// assert_eq!(bounded_interval.end(), SignedDuration::from_hours(5));
+    /// ```
+    #[must_use]
+    pub fn end(&self) -> SignedDuration {
+        self.end
     }
 
     /// Returns the inclusivity of the start bound
@@ -208,21 +308,21 @@ impl BoundedRelativeInterval {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::Duration;
+    /// # use jiff::SignedDuration;
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::relative::BoundedRelativeInterval;
     /// let bounded_interval = BoundedRelativeInterval::new_with_inclusivity(
-    ///     Duration::hours(1),
+    ///     SignedDuration::from_hours(1),
     ///     BoundInclusivity::Inclusive,
-    ///     Duration::hours(5),
+    ///     SignedDuration::from_hours(5),
     ///     BoundInclusivity::Exclusive,
     /// );
     ///
-    /// assert_eq!(bounded_interval.from_inclusivity(), BoundInclusivity::Inclusive);
+    /// assert_eq!(bounded_interval.start_inclusivity(), BoundInclusivity::Inclusive);
     /// ```
     #[must_use]
-    pub fn from_inclusivity(&self) -> BoundInclusivity {
-        self.from_inclusivity
+    pub fn start_inclusivity(&self) -> BoundInclusivity {
+        self.start_inclusivity
     }
 
     /// Returns the inclusivity of the end bound
@@ -230,174 +330,444 @@ impl BoundedRelativeInterval {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::Duration;
+    /// # use jiff::SignedDuration;
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::relative::BoundedRelativeInterval;
     /// let bounded_interval = BoundedRelativeInterval::new_with_inclusivity(
-    ///     Duration::hours(1),
+    ///     SignedDuration::from_hours(1),
     ///     BoundInclusivity::Inclusive,
-    ///     Duration::hours(5),
+    ///     SignedDuration::from_hours(5),
     ///     BoundInclusivity::Exclusive,
     /// );
     ///
-    /// assert_eq!(bounded_interval.to_inclusivity(), BoundInclusivity::Exclusive);
+    /// assert_eq!(bounded_interval.end_inclusivity(), BoundInclusivity::Exclusive);
     /// ```
     #[must_use]
-    pub fn to_inclusivity(&self) -> BoundInclusivity {
-        self.to_inclusivity
+    pub fn end_inclusivity(&self) -> BoundInclusivity {
+        self.end_inclusivity
     }
 
-    /// Sets the offset
-    ///
+    /// Sets the start offset without checking if it violates invariants
+    /// 
     /// # Examples
-    ///
+    /// 
     /// ```
-    /// # use chrono::Duration;
+    /// # use jiff::SignedDuration;
     /// # use periodical::intervals::relative::BoundedRelativeInterval;
-    /// let mut bounded_interval = BoundedRelativeInterval::new(
-    ///     Duration::hours(1),
-    ///     Duration::hours(5),
-    /// );
-    ///
-    /// bounded_interval.set_offset(Duration::hours(2));
-    ///
-    /// assert_eq!(bounded_interval.offset(), Duration::hours(2));
+    /// let start_offset = SignedDuration::from_hours(1);
+    /// let end_offset = SignedDuration::from_hours(4);
+    /// 
+    /// let mut bounded_interval = BoundedRelativeInterval::new(start_offset, end_offset);
+    /// 
+    /// // New start is not in chronological order
+    /// let new_start_offset = SignedDuration::from_hours(10);
+    /// 
+    /// bounded_interval.unchecked_set_start(new_start_offset);
+    /// 
+    /// // And yet it stays that way
+    /// assert_eq!(bounded_interval.start(), new_start_offset);
+    /// assert_eq!(bounded_interval.end(), end_offset);
     /// ```
-    pub fn set_offset(&mut self, new_offset: SignedDuration) {
-        self.offset = new_offset;
+    pub fn unchecked_set_start(&mut self, new_start: SignedDuration) {
+        self.start = new_start;
     }
 
-    /// Sets the length without checking if it violates invariants
-    ///
+    /// Sets the end offset without checking if it violates invariants
+    /// 
     /// # Examples
-    ///
+    /// 
     /// ```
-    /// # use chrono::Duration;
+    /// # use jiff::SignedDuration;
     /// # use periodical::intervals::relative::BoundedRelativeInterval;
-    /// let mut bounded_interval = BoundedRelativeInterval::new(
-    ///     Duration::hours(1),
-    ///     Duration::hours(3),
-    /// );
-    ///
-    /// // Negative length
-    /// bounded_interval.unchecked_set_length(Duration::hours(-5));
-    ///
-    /// // Remains in the interval
-    /// assert_eq!(bounded_interval.length(), Duration::hours(-5));
+    /// let start_offset = SignedDuration::from_hours(1);
+    /// let end_offset = SignedDuration::from_hours(4);
+    /// 
+    /// let mut bounded_interval = BoundedRelativeInterval::new(start_offset, end_offset);
+    /// 
+    /// // New end is not in chronological order
+    /// let new_end_offset = SignedDuration::from_hours(-5);
+    /// 
+    /// bounded_interval.unchecked_set_end(new_end_offset);
+    /// 
+    /// // And yet it stays that way
+    /// assert_eq!(bounded_interval.start(), start_offset);
+    /// assert_eq!(bounded_interval.end(), new_end_offset);
     /// ```
-    pub fn unchecked_set_length(&mut self, new_length: Duration) {
-        self.length = new_length;
+    pub fn unchecked_set_end(&mut self, new_end: SignedDuration) {
+        self.end = new_end;
     }
 
-    /// Sets the length
-    ///
-    /// Returns whether the operation was successful and the length modified.
-    /// If the given new length violates the invariants, the method simply returns `false`
-    /// without changing the length.
-    ///
+    /// Sets the start
+    /// 
+    /// # Errors
+    /// 
+    /// Returns [`ChronologicalOrderViolation`](BoundedRelativeIntervalUpdateError::ChronologicalOrderViolation)
+    /// if the new start offset is after the current end offset.
+    /// 
+    /// Returns [`SameTimeDoublyInclusiveViolation`](BoundedRelativeIntervalUpdateError::SameTimeDoublyInclusiveViolation)
+    /// if the new start offset would set it on the same offset as the end offset without the bound inclusivities
+    /// being both [`Inclusive`](BoundInclusivity::Inclusive).
+    /// 
     /// # Examples
-    ///
+    /// 
     /// ```
-    /// # use chrono::Duration;
+    /// # use std::error::Error;
+    /// # use jiff::SignedDuration;
     /// # use periodical::intervals::relative::BoundedRelativeInterval;
-    /// let mut bounded_interval = BoundedRelativeInterval::new(
-    ///     Duration::hours(1),
-    ///     Duration::hours(3),
-    /// );
-    ///
-    /// // New length is negative
-    /// let was_successful = bounded_interval.set_length(Duration::hours(-5));
-    ///
-    /// // Therefore gets ignored
-    /// assert!(!was_successful);
-    /// assert_eq!(bounded_interval.length(), Duration::hours(3));
+    /// let start = SignedDuration::from_hours(2);
+    /// let end = SignedDuration::from_hours(5);
+    /// 
+    /// let mut bounded_interval = BoundedRelativeInterval::new(start, end);
+    /// 
+    /// let new_start = SignedDuration::from_hours(4);
+    /// 
+    /// bounded_interval.set_start(new_start)?;
+    /// 
+    /// assert_eq!(bounded_interval.start(), new_start);
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
-    pub fn set_length(&mut self, new_length: Duration) -> bool {
-        match new_length.cmp(&Duration::zero()) {
-            Ordering::Less => false,
+    pub fn set_start(&mut self, new_start: SignedDuration) -> Result<(), BoundedRelativeIntervalUpdateError> {
+        match new_start.cmp(&self.end) {
+            Ordering::Less => {
+                self.unchecked_set_start(new_start);
+                Ok(())
+            },
             Ordering::Equal => {
-                if self.from_inclusivity() != BoundInclusivity::Inclusive
-                    || self.to_inclusivity() != BoundInclusivity::Inclusive
+                if self.start_inclusivity != BoundInclusivity::Inclusive
+                    || self.end_inclusivity != BoundInclusivity::Inclusive
                 {
-                    return false;
+                    return Err(BoundedRelativeIntervalUpdateError::SameTimeDoublyInclusiveViolation);
                 }
 
-                self.unchecked_set_length(new_length);
-                true
+                self.unchecked_set_start(new_start);
+                Ok(())
             },
-            Ordering::Greater => {
-                self.unchecked_set_length(new_length);
-                true
-            },
+            Ordering::Greater => Err(BoundedRelativeIntervalUpdateError::ChronologicalOrderViolation),
         }
     }
 
-    /// Sets the inclusivity of the start bound
+    /// Sets the end
+    /// 
+    /// # Errors
+    /// 
+    /// Returns [`ChronologicalOrderViolation`](BoundedRelativeIntervalUpdateError::ChronologicalOrderViolation)
+    /// if the new end offset is before the current start offset.
+    /// 
+    /// Returns [`SameTimeDoublyInclusiveViolation`](BoundedRelativeIntervalUpdateError::SameTimeDoublyInclusiveViolation)
+    /// if the new end offset would set it on the same offset as the start offset without the bound inclusivities
+    /// being both [`Inclusive`](BoundInclusivity::Inclusive).
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// # use std::error::Error;
+    /// # use jiff::SignedDuration;
+    /// # use periodical::intervals::relative::BoundedRelativeInterval;
+    /// let start = SignedDuration::from_hours(2);
+    /// let end = SignedDuration::from_hours(5);
+    /// 
+    /// let mut bounded_interval = BoundedRelativeInterval::new(start, end);
+    /// 
+    /// let new_end = SignedDuration::from_hours(4);
+    /// 
+    /// bounded_interval.set_end(new_end)?;
+    /// 
+    /// assert_eq!(bounded_interval.end(), new_end);
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    pub fn set_end(&mut self, new_end: SignedDuration) -> Result<(), BoundedRelativeIntervalUpdateError> {
+        match self.start.cmp(&new_end) {
+            Ordering::Less => {
+                self.unchecked_set_end(new_end);
+                Ok(())
+            },
+            Ordering::Equal => {
+                if self.start_inclusivity != BoundInclusivity::Inclusive
+                    || self.end_inclusivity != BoundInclusivity::Inclusive
+                {
+                    return Err(BoundedRelativeIntervalUpdateError::SameTimeDoublyInclusiveViolation);
+                }
+
+                self.unchecked_set_end(new_end);
+                Ok(())
+            },
+            Ordering::Greater => Err(BoundedRelativeIntervalUpdateError::ChronologicalOrderViolation),
+        }
+    }
+
+    /// Sets the length starting from the start bound
     ///
-    /// Returns whether the operation was successful and the start bound's inclusivity modified.
-    /// If the given new start bound inclusivity violates the invariants, the method simply returns `false`
-    /// without changing the start bound's inclusivity.
+    /// # Errors
+    /// 
+    /// Returns [`SameTimeDoublyInclusiveViolation`](BoundedRelativeIntervalUpdateError::SameTimeDoublyInclusiveViolation)
+    /// if the given length is zero and the start and end bounds are not
+    /// both [`Inclusive`](BoundInclusivity::Inclusive).
+    /// 
+    /// Returns [`OutOfRange`](BoundedRelativeIntervalUpdateError::OutOfRange) if the given length
+    /// would result in an out-of-range end offset.
     ///
     /// # Examples
     ///
     /// ```
-    /// # use chrono::Duration;
-    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// # use std::error::Error;
+    /// # use std::time::Duration;
+    /// # use jiff::SignedDuration;
     /// # use periodical::intervals::relative::BoundedRelativeInterval;
     /// let mut bounded_interval = BoundedRelativeInterval::new(
-    ///     Duration::hours(5),
-    ///     Duration::zero(),
+    ///     SignedDuration::from_hours(2),
+    ///     SignedDuration::from_hours(5),
     /// );
     ///
-    /// // Length is 0, therefore interval cannot be other than doubly inclusive
-    /// let was_successful = bounded_interval.set_from_inclusivity(BoundInclusivity::Exclusive);
+    /// bounded_interval.set_length_from_start(Duration::from_hours(10))?;
     ///
-    /// // Therefore the new inclusivity gets ignored
-    /// assert!(!was_successful);
-    /// assert_eq!(bounded_interval.from_inclusivity(), BoundInclusivity::Inclusive);
+    /// assert_eq!(bounded_interval.start(), SignedDuration::from_hours(2));
+    /// assert_eq!(bounded_interval.end(), SignedDuration::from_hours(12));
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
-    pub fn set_from_inclusivity(&mut self, new_inclusivity: BoundInclusivity) -> bool {
-        if self.length.is_zero() && new_inclusivity != BoundInclusivity::Inclusive {
-            return false;
+    pub fn set_length_from_start(&mut self, new_length: StdDuration) -> Result<(), BoundedRelativeIntervalUpdateError> {
+        if new_length.is_zero()
+            && (
+                self.start_inclusivity != BoundInclusivity::Inclusive
+                || self.end_inclusivity != BoundInclusivity::Inclusive
+            )
+        {
+            return Err(BoundedRelativeIntervalUpdateError::SameTimeDoublyInclusiveViolation);
         }
 
-        self.from_inclusivity = new_inclusivity;
-        true
+        self.unchecked_set_end(
+            SignedDuration::try_from_nanos_i128(
+                self.start
+                    .as_nanos()
+                    .checked_add_unsigned(new_length.as_nanos())
+                    .ok_or(BoundedRelativeIntervalUpdateError::OutOfRange)?
+            )
+            .ok_or(BoundedRelativeIntervalUpdateError::OutOfRange)?
+        );
+
+        Ok(())
     }
 
-    /// Sets the inclusivity of the end bound
+    /// Sets the length starting from the end bound
     ///
-    /// Returns whether the operation was successful and the end bound's inclusivity modified.
-    /// If the given new end bound inclusivity violates the invariants, the method simply returns `false`
-    /// without changing the end bound's inclusivity.
+    /// # Errors
+    /// 
+    /// Returns [`SameTimeDoublyInclusiveViolation`](BoundedRelativeIntervalUpdateError::SameTimeDoublyInclusiveViolation)
+    /// if the given length is zero and the start and end bounds are not
+    /// both [`Inclusive`](BoundInclusivity::Inclusive).
+    /// 
+    /// Returns [`OutOfRange`](BoundedRelativeIntervalUpdateError::OutOfRange) if the given length
+    /// would result in an out-of-range start offset.
     ///
     /// # Examples
     ///
     /// ```
-    /// # use chrono::Duration;
-    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// # use std::error::Error;
+    /// # use std::time::Duration;
+    /// # use jiff::SignedDuration;
     /// # use periodical::intervals::relative::BoundedRelativeInterval;
     /// let mut bounded_interval = BoundedRelativeInterval::new(
-    ///     Duration::hours(5),
-    ///     Duration::zero(),
+    ///     SignedDuration::from_hours(2),
+    ///     SignedDuration::from_hours(5),
     /// );
     ///
-    /// // Length is 0, therefore interval cannot be other than doubly inclusive
-    /// let was_successful = bounded_interval.set_to_inclusivity(BoundInclusivity::Exclusive);
+    /// bounded_interval.set_length_from_end(Duration::from_hours(10))?;
     ///
-    /// // Therefore the new inclusivity gets ignored
-    /// assert!(!was_successful);
-    /// assert_eq!(bounded_interval.to_inclusivity(), BoundInclusivity::Inclusive);
+    /// assert_eq!(bounded_interval.start(), SignedDuration::from_hours(-5));
+    /// assert_eq!(bounded_interval.end(), SignedDuration::from_hours(5));
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
-    pub fn set_to_inclusivity(&mut self, new_inclusivity: BoundInclusivity) -> bool {
-        if self.length.is_zero() && new_inclusivity != BoundInclusivity::Inclusive {
-            return false;
+    pub fn set_length_from_end(&mut self, new_length: StdDuration) -> Result<(), BoundedRelativeIntervalUpdateError> {
+        if new_length.is_zero()
+            && (
+                self.start_inclusivity != BoundInclusivity::Inclusive
+                || self.end_inclusivity != BoundInclusivity::Inclusive
+            )
+        {
+            return Err(BoundedRelativeIntervalUpdateError::SameTimeDoublyInclusiveViolation);
         }
 
-        self.to_inclusivity = new_inclusivity;
-        true
+        self.unchecked_set_start(
+            SignedDuration::try_from_nanos_i128(
+                self.end
+                    .as_nanos()
+                    .checked_sub_unsigned(new_length.as_nanos())
+                    .ok_or(BoundedRelativeIntervalUpdateError::OutOfRange)?
+            )
+            .ok_or(BoundedRelativeIntervalUpdateError::OutOfRange)?
+        );
+
+        Ok(())
+    }
+
+    /// Sets the start bound's inclusivity without checking if it violates invariants
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// # use jiff::SignedDuration;
+    /// # use periodical::intervals::relative::BoundedRelativeInterval;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// let mut bounded_interval = BoundedRelativeInterval::new(
+    ///     SignedDuration::from_hours(5),
+    ///     SignedDuration::from_hours(5),
+    /// );
+    /// 
+    /// // Violates the same time doubly inclusive invariant
+    /// bounded_interval.unchecked_set_start_inclusivity(BoundInclusivity::Exclusive);
+    /// 
+    /// // Yet stays this way
+    /// assert_eq!(bounded_interval.start_inclusivity(), BoundInclusivity::Exclusive);
+    /// assert_eq!(bounded_interval.end_inclusivity(), BoundInclusivity::Inclusive);
+    /// ```
+    pub fn unchecked_set_start_inclusivity(&mut self, new_inclusivity: BoundInclusivity) {
+        self.start_inclusivity = new_inclusivity;
+    }
+
+    /// Sets the end bound's inclusivity without checking if it violates invariants
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// # use jiff::SignedDuration;
+    /// # use periodical::intervals::relative::BoundedRelativeInterval;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// let mut bounded_interval = BoundedRelativeInterval::new(
+    ///     SignedDuration::from_hours(5),
+    ///     SignedDuration::from_hours(5),
+    /// );
+    /// 
+    /// // Violates the same time doubly inclusive invariant
+    /// bounded_interval.unchecked_set_end_inclusivity(BoundInclusivity::Exclusive);
+    /// 
+    /// // Yet stays this way
+    /// assert_eq!(bounded_interval.start_inclusivity(), BoundInclusivity::Inclusive);
+    /// assert_eq!(bounded_interval.end_inclusivity(), BoundInclusivity::Exclusive);
+    /// ```
+    pub fn unchecked_set_end_inclusivity(&mut self, new_inclusivity: BoundInclusivity) {
+        self.end_inclusivity = new_inclusivity;
+    }
+
+    /// Sets the start bound's inclusivity
+    /// 
+    /// # Errors
+    /// 
+    /// Returns [`SameTimeDoublyInclusiveViolation`](BoundedRelativeIntervalUpdateError::SameTimeDoublyInclusiveViolation)
+    /// if the start and end are on the same offset and the given new inclusivity
+    /// is not [`Inclusive`](BoundInclusivity::Inclusive).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jiff::SignedDuration;
+    /// # use periodical::intervals::relative::BoundedRelativeInterval;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// let mut bounded_interval = BoundedRelativeInterval::new(
+    ///     SignedDuration::from_hours(5),
+    ///     SignedDuration::from_hours(10),
+    /// );
+    /// 
+    /// bounded_interval.set_start_inclusivity(BoundInclusivity::Exclusive);
+    ///
+    /// assert_eq!(bounded_interval.start_inclusivity(), BoundInclusivity::Exclusive);
+    /// assert_eq!(bounded_interval.end_inclusivity(), BoundInclusivity::Inclusive);
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    pub fn set_start_inclusivity(
+        &mut self,
+        new_inclusivity: BoundInclusivity,
+    ) -> Result<(), BoundedRelativeIntervalUpdateError> {
+        if self.start == self.end && new_inclusivity != BoundInclusivity::Inclusive {
+            return Err(BoundedRelativeIntervalUpdateError::SameTimeDoublyInclusiveViolation);
+        }
+
+        self.unchecked_set_start_inclusivity(new_inclusivity);
+        Ok(())
+    }
+
+    /// Sets the end bound's inclusivity
+    /// 
+    /// # Errors
+    /// 
+    /// Returns [`SameTimeDoublyInclusiveViolation`](BoundedRelativeIntervalUpdateError::SameTimeDoublyInclusiveViolation)
+    /// if the start and end are on the same offset and the given new inclusivity
+    /// is not [`Inclusive`](BoundInclusivity::Inclusive).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jiff::SignedDuration;
+    /// # use periodical::intervals::relative::BoundedRelativeInterval;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// let mut bounded_interval = BoundedRelativeInterval::new(
+    ///     SignedDuration::from_hours(5),
+    ///     SignedDuration::from_hours(10),
+    /// );
+    /// 
+    /// bounded_interval.set_end_inclusivity(BoundInclusivity::Exclusive);
+    ///
+    /// assert_eq!(bounded_interval.start_inclusivity(), BoundInclusivity::Inclusive);
+    /// assert_eq!(bounded_interval.end_inclusivity(), BoundInclusivity::Exclusive);
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    pub fn set_end_inclusivity(
+        &mut self,
+        new_inclusivity: BoundInclusivity,
+    ) -> Result<(), BoundedRelativeIntervalUpdateError> {
+        if self.start == self.end && new_inclusivity != BoundInclusivity::Inclusive {
+            return Err(BoundedRelativeIntervalUpdateError::SameTimeDoublyInclusiveViolation);
+        }
+
+        self.unchecked_set_end_inclusivity(new_inclusivity);
+        Ok(())
     }
 }
+
+/// Errors the can occur when creating a [`BoundedRelativeInterval`]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum BoundedRelativeIntervalCreationError {
+    /// Provided or computed start bound is out of range
+    OutOfRangeStart,
+    /// Provided or computed end bound is out of range
+    OutOfRangeEnd,
+}
+
+impl Display for BoundedRelativeIntervalCreationError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::OutOfRangeStart => write!(f, "Provided or computed start bound is out of range"),
+            Self::OutOfRangeEnd => write!(f, "Provided or computed end bound is out of range"),
+        }
+    }
+}
+
+impl Error for BoundedRelativeIntervalCreationError {}
+
+/// Errors that can occur when updating a [`BoundedRelativeInterval`]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum BoundedRelativeIntervalUpdateError {
+    /// Update would violate the chronological order invariant
+    ChronologicalOrderViolation,
+    /// Update would violate the same time = doubly inclusive invariant
+    SameTimeDoublyInclusiveViolation,
+    /// Given data would set a bound out of range
+    OutOfRange,
+}
+
+impl Display for BoundedRelativeIntervalUpdateError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::ChronologicalOrderViolation => write!(f, "Update would violate the chronological order invariant"),
+            Self::SameTimeDoublyInclusiveViolation => {
+                write!(f, "Update would violate the same time = doubly inclusive invariant")
+            },
+            Self::OutOfRange => write!(f, "Given data would set a bound out of range"),
+        }
+    }
+}
+
+impl Error for BoundedRelativeIntervalUpdateError {}
 
 impl Interval for BoundedRelativeInterval {}
 
@@ -416,65 +786,37 @@ impl HasRelativity for BoundedRelativeInterval {
 impl HasDuration for BoundedRelativeInterval {
     fn duration(&self) -> IntervalDuration {
         IntervalDuration::Finite(
-            self.length,
-            Epsilon::from((self.from_inclusivity(), self.to_inclusivity())),
+            self.end.saturating_sub(self.start).unsigned_abs(),
+            Epsilon::from((self.start_inclusivity(), self.end_inclusivity())),
         )
     }
 }
 
-impl HasRelativeBounds for BoundedRelativeInterval {
-    fn rel_bounds(&self) -> RelativeBounds {
-        RelativeBounds::new(self.rel_start(), self.rel_end())
+impl HasRelativeBoundPair for BoundedRelativeInterval {
+    fn rel_bound_pair(&self) -> RelativeBoundPair {
+        RelativeBoundPair::new(self.rel_start(), self.rel_end())
     }
 
     fn rel_start(&self) -> RelativeStartBound {
-        RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-            self.offset,
-            self.from_inclusivity,
-        ))
+        RelativeFiniteBound::new_with_inclusivity(self.start, self.start_inclusivity).to_start_bound()
     }
 
     fn rel_end(&self) -> RelativeEndBound {
-        RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-            self.offset + self.length,
-            self.to_inclusivity,
-        ))
+        RelativeFiniteBound::new_with_inclusivity(self.end, self.end_inclusivity).to_end_bound()
     }
 }
 
 impl From<(SignedDuration, SignedDuration)> for BoundedRelativeInterval {
-    fn from((from, to): (SignedDuration, SignedDuration)) -> Self {
-        BoundedRelativeInterval::new(from, to)
+    fn from((start, end): (SignedDuration, SignedDuration)) -> Self {
+        BoundedRelativeInterval::new(start, end)
     }
 }
 
 impl From<((SignedDuration, BoundInclusivity), (SignedDuration, BoundInclusivity))> for BoundedRelativeInterval {
     fn from(
-        ((from, from_inclusivity), (to, to_inclusivity)): ((SignedDuration, BoundInclusivity), (SignedDuration, BoundInclusivity)),
+        ((start, start_inclusivity), (end, end_inclusivity)): ((SignedDuration, BoundInclusivity), (SignedDuration, BoundInclusivity)),
     ) -> Self {
-        BoundedRelativeInterval::new_with_inclusivity(from, from_inclusivity, to, to_inclusivity)
-    }
-}
-
-/// Converts `((SignedDuration, bool), (SignedDuration, bool))` into [`BoundedRelativeInterval`]
-///
-/// The booleans in the original structure are to be interpreted as _is it inclusive?_
-impl From<((SignedDuration, bool), (SignedDuration, bool))> for BoundedRelativeInterval {
-    fn from(((from, is_from_inclusive), (to, is_to_inclusive)): ((SignedDuration, bool), (SignedDuration, bool))) -> Self {
-        BoundedRelativeInterval::new_with_inclusivity(
-            from,
-            if is_from_inclusive {
-                BoundInclusivity::Inclusive
-            } else {
-                BoundInclusivity::Exclusive
-            },
-            to,
-            if is_to_inclusive {
-                BoundInclusivity::Inclusive
-            } else {
-                BoundInclusivity::Exclusive
-            },
-        )
+        BoundedRelativeInterval::new_with_inclusivity(start, start_inclusivity, end, end_inclusivity)
     }
 }
 
@@ -500,13 +842,13 @@ impl From<RangeInclusive<SignedDuration>> for BoundedRelativeInterval {
     }
 }
 
-/// Errors that can occur when trying to convert [`RelativeBounds`] into [`BoundedRelativeInterval`]
+/// Errors that can occur when trying to convert [`RelativeBoundPair`] into [`BoundedRelativeInterval`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum BoundedRelativeIntervalFromRelativeBoundsError {
+pub enum BoundedRelativeIntervalFromRelativeBoundPairError {
     NotBoundedInterval,
 }
 
-impl Display for BoundedRelativeIntervalFromRelativeBoundsError {
+impl Display for BoundedRelativeIntervalFromRelativeBoundPairError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::NotBoundedInterval => write!(f, "Not a bounded interval"),
@@ -514,12 +856,12 @@ impl Display for BoundedRelativeIntervalFromRelativeBoundsError {
     }
 }
 
-impl Error for BoundedRelativeIntervalFromRelativeBoundsError {}
+impl Error for BoundedRelativeIntervalFromRelativeBoundPairError {}
 
-impl TryFrom<RelativeBounds> for BoundedRelativeInterval {
-    type Error = BoundedRelativeIntervalFromRelativeBoundsError;
+impl TryFrom<RelativeBoundPair> for BoundedRelativeInterval {
+    type Error = BoundedRelativeIntervalFromRelativeBoundPairError;
 
-    fn try_from(value: RelativeBounds) -> Result<Self, Self::Error> {
+    fn try_from(value: RelativeBoundPair) -> Result<Self, Self::Error> {
         match (value.start(), value.end()) {
             (RelativeStartBound::Finite(finite_start), RelativeEndBound::Finite(finite_end)) => {
                 Ok(BoundedRelativeInterval::new_with_inclusivity(

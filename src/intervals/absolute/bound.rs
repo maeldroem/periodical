@@ -14,7 +14,6 @@ use serde::{Deserialize, Serialize};
 
 use crate::intervals::absolute::{AbsoluteEndBound, AbsoluteStartBound};
 
-
 /// Enum for absolute start and end bounds
 ///
 /// Represents an absolute bound regardless of its source (start/end).
