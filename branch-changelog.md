@@ -25,6 +25,9 @@
 - [ ] Add convenience method `.try_from_range()` on `RelativeInterval`
 - [ ] Add convenience method `.try_from_range()` on `EmptiableRelativeInterval`
 - [ ] Add convenience methods on relative intervals similar to absolute intervals
+- [ ] Re-express tests to more compact syntaxes using newly available convenience methods,
+      such as `.to_start_bound()`, `.to_interval()`, etc.
+- [ ] Review tests to ensure usefulness
 
 # Changelog
 
@@ -88,22 +91,22 @@
 - [ ] Migrated `intervals::absolute`'s tests to jiff
   - [x] Migrated `bound_pair`'s tests to jiff
   - [x] Migrated `bound`'s tests to jiff
-  - [ ] Migrated `bounded_interval`'s tests to jiff
+  - [x] Migrated `bounded_interval`'s tests to jiff
   - [x] Migrated `emptiable_bound_pair`'s tests to jiff
   - [x] Migrated `end_bound`'s tests to jiff
   - [x] Migrated `finite_bound`'s tests to jiff
-  - [ ] Migrated `half_bounded_interval`'s tests to jiff
-  - [ ] Migrated `interval`'s tests to jiff
+  - [x] Migrated `half_bounded_interval`'s tests to jiff
+  - [x] Migrated `interval`'s tests to jiff
   - [x] Migrated `start_bound`'s tests to jiff
 - [ ] Migrated `intervals::relative`'s tests to jiff
   - [x] Migrated `bound_pair`'s tests to jiff
   - [x] Migrated `bound`'s tests to jiff
-  - [ ] Migrated `bounded_interval`'s tests to jiff
+  - [x] Migrated `bounded_interval`'s tests to jiff
   - [x] Migrated `emptiable_bound_pair`'s tests to jiff
   - [x] Migrated `end_bound`'s tests to jiff
   - [x] Migrated `finite_bound`'s tests to jiff
-  - [ ] Migrated `half_bounded_interval`'s tests to jiff
-  - [ ] Migrated `interval`'s tests to jiff
+  - [x] Migrated `half_bounded_interval`'s tests to jiff
+  - [x] Migrated `interval`'s tests to jiff
   - [x] Migrated `start_bound`'s tests to jiff
 - [x] Migrated `intervals::special`'s tests to jiff
 - [x] Migrated `intervals::meta`'s tests to jiff
