@@ -20,7 +20,7 @@ pub mod bound;
 pub mod bounded_interval;
 pub mod bound_pair;
 pub mod emptiable_bound_pair;
-// pub mod emptiable_interval;
+pub mod emptiable_interval;
 pub mod end_bound;
 pub mod finite_bound;
 pub mod half_bounded_interval;
@@ -49,7 +49,7 @@ inline_docs! {
     pub use bound_pair::{AbsoluteBoundPair, AbsoluteBoundPairFromEmptiableAbsoluteBoundPairError, HasAbsoluteBoundPair};
     pub use end_bound::AbsoluteEndBound;
     pub use emptiable_bound_pair::{HasEmptiableAbsoluteBoundPair, EmptiableAbsoluteBoundPair};
-    // pub use emptiable_interval::EmptiableAbsoluteInterval;
+    pub use emptiable_interval::EmptiableAbsoluteInterval;
     pub use finite_bound::{AbsoluteFiniteBound, AbsoluteFiniteBoundFromBoundError};
     pub use half_bounded_interval::HalfBoundedAbsoluteInterval;
     pub use interval::AbsoluteInterval;

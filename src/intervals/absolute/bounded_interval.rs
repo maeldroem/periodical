@@ -20,8 +20,7 @@ use jiff::Timestamp;
 use serde::{Deserialize, Serialize};
 
 use crate::intervals::absolute::{
-    AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteInterval, AbsoluteStartBound,
-    HasAbsoluteBoundPair,
+    AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteInterval, AbsoluteStartBound, EmptiableAbsoluteInterval, HasAbsoluteBoundPair
 };
 use crate::intervals::meta::{
     BoundInclusivity, Duration as IntervalDuration, Epsilon, HasBoundInclusivity, HasDuration, HasOpenness, HasRelativity, Interval, Openness, Relativity
@@ -559,6 +558,18 @@ impl BoundedAbsoluteInterval {
 
         self.unchecked_set_end_inclusivity(new_inclusivity);
         Ok(())
+    }
+
+    /// Wraps the interval in [`AbsoluteInterval`]
+    #[must_use]
+    pub fn to_interval(self) -> AbsoluteInterval {
+        AbsoluteInterval::from(self)
+    }
+
+    /// Wraps the interval in [`EmptiableAbsoluteInterval`]
+    #[must_use]
+    pub fn to_emptiable_interval(self) -> EmptiableAbsoluteInterval {
+        EmptiableAbsoluteInterval::from(self)
     }
 }
 

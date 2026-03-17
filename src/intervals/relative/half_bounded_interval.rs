@@ -18,8 +18,7 @@ use jiff::SignedDuration;
 use serde::{Deserialize, Serialize};
 
 use crate::intervals::relative::{
-    RelativeBoundPair, RelativeEndBound, RelativeFiniteBound, RelativeInterval, RelativeStartBound,
-    HasRelativeBoundPair,
+    EmptiableRelativeInterval, HasRelativeBoundPair, RelativeBoundPair, RelativeEndBound, RelativeFiniteBound, RelativeInterval, RelativeStartBound
 };
 use crate::intervals::meta::{
     BoundInclusivity, Duration as IntervalDuration, HasBoundInclusivity, HasDuration, HasOpenness, HasRelativity, Interval, OpeningDirection, Openness, Relativity
@@ -224,6 +223,18 @@ impl HalfBoundedRelativeInterval {
     /// ```
     pub fn set_opening_direction(&mut self, new_opening_direction: OpeningDirection) {
         self.opening_direction = new_opening_direction;
+    }
+
+    /// Wraps the interval in [`RelativeInterval`]
+    #[must_use]
+    pub fn to_interval(self) -> RelativeInterval {
+        RelativeInterval::from(self)
+    }
+
+    /// Wraps the interval in [`EmptiableRelativeInterval`]
+    #[must_use]
+    pub fn to_emptiable_interval(self) -> EmptiableRelativeInterval {
+        EmptiableRelativeInterval::from(self)
     }
 }
 

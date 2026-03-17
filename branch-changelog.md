@@ -8,6 +8,24 @@
 - Rename "bounds" (plural) to bound pair
 - Create migration guide/notes from 0.2 to 0.3
 
+## Scope creep tasks to do in the future
+
+- [ ] More conversions from specific intervals and bound pairs to other types
+  - [ ] By implementing `From`/`TryFrom` on types
+  - [ ] By implementing `to_x()` methods on types
+- [ ] Replaced conversion errors from single-variant enums to tag structs
+- [ ] (Internal) Replace `ExampleError` pattern by `Box<dyn Error>` to reduce hidden example size
+- [ ] Add tests on new/untested methods to increase code coverage
+- [ ] Add convenience method `.try_from_range()` on `BoundedAbsoluteInterval`
+- [ ] Add convenience method `.try_from_range()` on `HalfBoundedAbsoluteInterval`
+- [ ] Add convenience method `.try_from_range()` on `AbsoluteInterval`
+- [ ] Add convenience method `.try_from_range()` on `EmptiableAbsoluteInterval`
+- [ ] Add convenience method `.try_from_range()` on `BoundedRelativeInterval`
+- [ ] Add convenience method `.try_from_range()` on `HalfBoundedRelativeInterval`
+- [ ] Add convenience method `.try_from_range()` on `RelativeInterval`
+- [ ] Add convenience method `.try_from_range()` on `EmptiableRelativeInterval`
+- [ ] Add convenience methods on relative intervals similar to absolute intervals
+
 # Changelog
 
 ## Added
@@ -27,22 +45,13 @@
 - [x] Added convenience method `.to_end_bound()` to get an `AbsoluteEndBound` from an `AbsoluteFiniteBound`
 - [x] Added convenience method `.to_start_bound()` to get a `RelativeStartBound` from a `RelativeFiniteBound`
 - [x] Added convenience method `.to_end_bound()` to get a `RelativeEndBound` from a `RelativeFiniteBound`
-- [ ] Added convenience method `.try_from_range()` on `BoundedAbsoluteInterval`
-- [ ] Added convenience method `.try_from_range()` on `HalfBoundedAbsoluteInterval`
-- [ ] Added convenience method `.try_from_range()` on `AbsoluteInterval`
-- [ ] Added convenience method `.try_from_range()` on `EmptiableAbsoluteInterval`
-- [ ] Added convenience method `.try_from_range()` on `BoundedRelativeInterval`
-- [ ] Added convenience method `.try_from_range()` on `HalfBoundedRelativeInterval`
-- [ ] Added convenience method `.try_from_range()` on `RelativeInterval`
-- [ ] Added convenience method `.try_from_range()` on `EmptiableRelativeInterval`
-- [ ] Added convenience method `.to_interval()` on `BoundedAbsoluteInterval`
-- [ ] Added convenience method `.to_interval()` on `HalfBoundedAbsoluteInterval`
-- [ ] Added convenience method `.to_interval()` on `BoundedRelativeInterval`
-- [ ] Added convenience method `.to_interval()` on `HalfBoundedRelativeInterval`
-- [ ] Added a new `AbsoluteInterval` that doesn't allow for empty intervals
-- [ ] Added a new `RelativeInterval` that doesn't allow for empty intervals
-- [ ] Added method on `BoundedRelativeInterval` to create it from a start offset and length
-- [ ] Added tests on new methods to increase code coverage
+- [x] Added convenience method `.to_interval()` on `BoundedAbsoluteInterval`
+- [x] Added convenience method `.to_interval()` on `HalfBoundedAbsoluteInterval`
+- [x] Added convenience method `.to_interval()` on `BoundedRelativeInterval`
+- [x] Added convenience method `.to_interval()` on `HalfBoundedRelativeInterval`
+- [x] Added a new `AbsoluteInterval` that doesn't allow for empty intervals
+- [x] Added a new `RelativeInterval` that doesn't allow for empty intervals
+- [x] Added method on `BoundedRelativeInterval` to create it from a start offset and length
 
 ## Changed
 
@@ -72,11 +81,9 @@
 - [ ] Migrated `convenience::absolute` to jiff
   - [ ] Migrated `convenience::absolute::bounded_interval` to jiff
   - [ ] Migrated `convenience::absolute::half_bounded_interval` to jiff
-- [ ] Migrated `convenience::relative` to jiff
-  - [ ] Migrated `convenience::relative::bounded_interval` to jiff
-  - [ ] Migrated `convenience::relative::half_bounded_interval` to jiff
 - [x] Migrated `time` to jiff
 - [x] Migrated `ops` to jiff
+- [ ] Migrated `intervals::ops` to jiff
 
 - [ ] Migrated `intervals::absolute`'s tests to jiff
   - [x] Migrated `bound_pair`'s tests to jiff
@@ -104,11 +111,9 @@
 - [ ] Migrated `convenience::absolute`'s tests to jiff
   - [ ] Migrated `convenience::absolute::bounded_interval`'s tests to jiff
   - [ ] Migrated `convenience::absolute::half_bounded_interval`'s tests to jiff
-- [ ] Migrated `convenience::relative`'s tests to jiff
-  - [ ] Migrated `convenience::relative::bounded_interval`'s tests to jiff
-  - [ ] Migrated `convenience::relative::half_bounded_interval`'s tests to jiff
 - [x] Migrated `time`'s tests to jiff
 - [x] Migrated `ops`'s tests to jiff
+- [ ] Migrated `intervals::ops`'s tests to jiff
 
 - [x] Migrated `intervals::absolute`'s examples to jiff
   - [x] Migrated `bound_pair`'s examples to jiff
@@ -136,16 +141,14 @@
 - [ ] Migrated `convenience::absolute`'s examples to jiff
   - [ ] Migrated `convenience::absolute::bounded_interval`'s examples to jiff
   - [ ] Migrated `convenience::absolute::half_bounded_interval`'s examples to jiff
-- [ ] Migrated `convenience::relative`'s examples to jiff
-  - [ ] Migrated `convenience::relative::bounded_interval`'s examples to jiff
-  - [ ] Migrated `convenience::relative::half_bounded_interval`'s examples to jiff
 - [x] Migrated `ops`'s examples to jiff
 - [ ] Migrated `intervals`'s examples to jiff
+- [ ] Migrated `intervals::ops`'s examples to jiff
 
 - [x] Updated `time` tests to check new structures
 - [x] Finished `time` docs
 
-- [ ] Changed `BoundedRelativeInterval` to have a start and end offset
+- [x] Changed `BoundedRelativeInterval` to have a start and end offset
 
 - [ ] Renamed all occurrences of "from" and "to" to "start" and "end" respectively to avoid confusion
   and to make it easier to refer to ("start time" is more explicit than "from time")
@@ -157,16 +160,11 @@
 
 - [x] Split `absolute` and `relative` modules internally for better code management
 - [x] Split convenience methods for absolute intervals into the `convenience` module
-- [ ] Split convenience methods for relative intervals into the `convenience` module
 - [ ] Moved+Split `absolute_tests` to their new counterpart
 - [ ] Moved+Split `relative_tests` to their new counterpart
 
-- [ ] Renamed `AbsoluteInterval` to `EmptiableAbsoluteInterval`
-- [ ] Renamed `RelativeInterval` to `EmptiableRelativeInterval`
-
-- [ ] Replaced conversion errors from single-variant enums to tag structs
-
-- [ ] (Internal) Replace `ExampleError` pattern by `Box<dyn Error>` to reduce hidden example size
+- [x] Renamed `AbsoluteInterval` to `EmptiableAbsoluteInterval`
+- [x] Renamed `RelativeInterval` to `EmptiableRelativeInterval`
 
 ## Deprecated
 
