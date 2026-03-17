@@ -145,7 +145,7 @@
   - [ ] Migrated `convenience::absolute::bounded_interval`'s examples to jiff
   - [ ] Migrated `convenience::absolute::half_bounded_interval`'s examples to jiff
 - [x] Migrated `ops`'s examples to jiff
-- [ ] Migrated `intervals`'s examples to jiff
+- [x] Migrated `intervals`'s examples to jiff
 - [ ] Migrated `intervals::ops`'s examples to jiff
 
 - [x] Updated `time` tests to check new structures
@@ -163,8 +163,8 @@
 
 - [x] Split `absolute` and `relative` modules internally for better code management
 - [x] Split convenience methods for absolute intervals into the `convenience` module
-- [ ] Moved+Split `absolute_tests` to their new counterpart
-- [ ] Moved+Split `relative_tests` to their new counterpart
+- [x] Moved+Split `absolute_tests` to their new counterpart
+- [x] Moved+Split `relative_tests` to their new counterpart
 
 - [x] Renamed `AbsoluteInterval` to `EmptiableAbsoluteInterval`
 - [x] Renamed `RelativeInterval` to `EmptiableRelativeInterval`
