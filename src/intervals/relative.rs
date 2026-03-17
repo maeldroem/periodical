@@ -20,7 +20,7 @@ pub mod bound;
 pub mod bounded_interval;
 pub mod bound_pair;
 pub mod emptiable_bound_pair;
-// pub mod emptiable_interval;
+pub mod emptiable_interval;
 pub mod end_bound;
 pub mod finite_bound;
 pub mod half_bounded_interval;
@@ -45,7 +45,7 @@ inline_docs! {
     pub use bound::RelativeBound;
     pub use bound_pair::{HasRelativeBoundPair, RelativeBoundPair};
     pub use emptiable_bound_pair::{HasEmptiableRelativeBoundPair, EmptiableRelativeBoundPair};
-    // pub use emptiable_interval::EmptiableRelativeInterval;
+    pub use emptiable_interval::EmptiableRelativeInterval;
     pub use end_bound::RelativeEndBound;
     pub use finite_bound::RelativeFiniteBound;
     pub use half_bounded_interval::HalfBoundedRelativeInterval;

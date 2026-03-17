@@ -26,7 +26,7 @@ use jiff::SignedDuration;
 use serde::{Deserialize, Serialize};
 
 use crate::intervals::meta::{BoundInclusivity, Duration as IntervalDuration, HasDuration, HasOpenness, HasRelativity, Interval, OpeningDirection, Openness, Relativity};
-use crate::intervals::relative::{BoundedRelativeInterval, EmptiableRelativeBoundPair, HalfBoundedRelativeInterval, HasEmptiableRelativeBoundPair, HasRelativeBoundPair, RelativeBoundPair, RelativeEndBound, RelativeFiniteBound, RelativeStartBound};
+use crate::intervals::relative::{BoundedRelativeInterval, EmptiableRelativeBoundPair, EmptiableRelativeInterval, HalfBoundedRelativeInterval, HasEmptiableRelativeBoundPair, HasRelativeBoundPair, RelativeBoundPair, RelativeEndBound, RelativeFiniteBound, RelativeStartBound};
 use crate::intervals::special::UnboundedInterval;
 
 /// Relative interval
@@ -141,6 +141,12 @@ impl RelativeInterval {
     #[must_use]
     pub fn ord_by_start_and_inv_length(&self, other: &Self) -> Ordering {
         self.rel_bound_pair().ord_by_start_and_inv_length(&other.rel_bound_pair())
+    }
+
+    /// Wraps the interval in [`EmptiableRelativeInterval`]
+    #[must_use]
+    pub fn to_emptiable_interval(self) -> EmptiableRelativeInterval {
+        EmptiableRelativeInterval::from(self)
     }
 }
 

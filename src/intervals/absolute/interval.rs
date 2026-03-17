@@ -25,7 +25,7 @@ use jiff::Timestamp;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use crate::intervals::absolute::{AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, BoundedAbsoluteInterval, EmptiableAbsoluteBoundPair, HalfBoundedAbsoluteInterval, HasAbsoluteBoundPair, HasEmptiableAbsoluteBoundPair};
+use crate::intervals::absolute::{AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, BoundedAbsoluteInterval, EmptiableAbsoluteBoundPair, EmptiableAbsoluteInterval, HalfBoundedAbsoluteInterval, HasAbsoluteBoundPair, HasEmptiableAbsoluteBoundPair};
 use crate::intervals::meta::{BoundInclusivity, Duration as IntervalDuration, HasDuration, HasOpenness, HasRelativity, Interval, OpeningDirection, Openness, Relativity};
 use crate::intervals::special::UnboundedInterval;
 
@@ -141,6 +141,12 @@ impl AbsoluteInterval {
     #[must_use]
     pub fn ord_by_start_and_inv_length(&self, other: &Self) -> Ordering {
         self.abs_bound_pair().ord_by_start_and_inv_length(&other.abs_bound_pair())
+    }
+
+    /// Wraps the interval in [`EmptiableAbsoluteInterval`]
+    #[must_use]
+    pub fn to_emptiable_interval(self) -> EmptiableAbsoluteInterval {
+        EmptiableAbsoluteInterval::from(self)
     }
 }
 

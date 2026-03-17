@@ -21,7 +21,7 @@ use jiff::SignedDuration;
 use serde::{Deserialize, Serialize};
 
 use crate::intervals::meta::{BoundInclusivity, Duration as IntervalDuration, Epsilon, HasBoundInclusivity, HasDuration, HasOpenness, HasRelativity, Interval, Openness, Relativity};
-use crate::intervals::relative::{HasRelativeBoundPair, RelativeBoundPair, RelativeEndBound, RelativeFiniteBound, RelativeInterval, RelativeStartBound};
+use crate::intervals::relative::{EmptiableRelativeInterval, HasRelativeBoundPair, RelativeBoundPair, RelativeEndBound, RelativeFiniteBound, RelativeInterval, RelativeStartBound};
 
 /// Relative bounded interval
 /// 
@@ -721,6 +721,18 @@ impl BoundedRelativeInterval {
 
         self.unchecked_set_end_inclusivity(new_inclusivity);
         Ok(())
+    }
+
+    /// Wraps the interval in [`RelativeInterval`]
+    #[must_use]
+    pub fn to_interval(self) -> RelativeInterval {
+        RelativeInterval::from(self)
+    }
+
+    /// Wraps the interval in [`EmptiableRelativeInterval`]
+    #[must_use]
+    pub fn to_emptiable_interval(self) -> EmptiableRelativeInterval {
+        EmptiableRelativeInterval::from(self)
     }
 }
 

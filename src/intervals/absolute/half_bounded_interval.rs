@@ -18,8 +18,7 @@ use jiff::Timestamp;
 use serde::{Deserialize, Serialize};
 
 use crate::intervals::absolute::{
-    AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteInterval, AbsoluteStartBound,
-    HasAbsoluteBoundPair,
+    AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteInterval, AbsoluteStartBound, EmptiableAbsoluteInterval, HasAbsoluteBoundPair
 };
 use crate::intervals::meta::{
     BoundInclusivity, Duration as IntervalDuration, HasBoundInclusivity, HasDuration, HasOpenness, HasRelativity, Interval, OpeningDirection, Openness, Relativity
@@ -255,6 +254,18 @@ impl HalfBoundedAbsoluteInterval {
     /// ```
     pub fn set_opening_direction(&mut self, new_opening_direction: OpeningDirection) {
         self.opening_direction = new_opening_direction;
+    }
+
+    /// Wraps the interval in [`AbsoluteInterval`]
+    #[must_use]
+    pub fn to_interval(self) -> AbsoluteInterval {
+        AbsoluteInterval::from(self)
+    }
+
+    /// Wraps the interval in [`EmptiableAbsoluteInterval`]
+    #[must_use]
+    pub fn to_emptiable_interval(self) -> EmptiableAbsoluteInterval {
+        EmptiableAbsoluteInterval::from(self)
     }
 }
 
