@@ -88,7 +88,7 @@
 - [x] Migrated `ops` to jiff
 - [ ] Migrated `intervals::ops` to jiff
 
-- [ ] Migrated `intervals::absolute`'s tests to jiff
+- [x] Migrated `intervals::absolute`'s tests to jiff
   - [x] Migrated `bound_pair`'s tests to jiff
   - [x] Migrated `bound`'s tests to jiff
   - [x] Migrated `bounded_interval`'s tests to jiff
@@ -98,7 +98,7 @@
   - [x] Migrated `half_bounded_interval`'s tests to jiff
   - [x] Migrated `interval`'s tests to jiff
   - [x] Migrated `start_bound`'s tests to jiff
-- [ ] Migrated `intervals::relative`'s tests to jiff
+- [x] Migrated `intervals::relative`'s tests to jiff
   - [x] Migrated `bound_pair`'s tests to jiff
   - [x] Migrated `bound`'s tests to jiff
   - [x] Migrated `bounded_interval`'s tests to jiff
