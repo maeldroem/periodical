@@ -11,13 +11,13 @@
 //! Those specific intervals must conserve their invariants.
 //! A bounded interval must remain bounded, a half-bounded interval must remain half-bounded.
 //!
-//! All such intervals are can be interpreted of a pair of bounds, like [`AbsoluteBounds`][absolute::AbsoluteBounds]
-//! and [`RelativeBounds`][relative::RelativeBounds], but in practice, specific intervals only store the kind of data
-//! they absolutely need.
+//! All such intervals are can be interpreted of a pair of bounds, like [`AbsoluteBoundPair`](absolute::AbsoluteBoundPair)
+//! and [`RelativeBoundPair`][relative::RelativeBoundPair], but in practice, specific intervals only store
+//! the kind of data they absolutely need.
 //! Every interval can be converted to and created from a pair of bounds, though.
 //!
-//! They may also come in _emptiable_ variants, like [`EmptiableAbsoluteBounds`](absolute::EmptiableAbsoluteBounds)
-//! and [`EmptiableRelativeBounds`](relative::EmptiableRelativeBounds),
+//! They may also come in _emptiable_ variants, like [`EmptiableAbsoluteBoundPair`](absolute::EmptiableAbsoluteBoundPair)
+//! and [`EmptiableRelativeBoundPair`](relative::EmptiableRelativeBoundPair),
 //! that are similar to the previously mentioned pair of bounds, but support the representation
 //! of [empty intervals](special::EmptyInterval).
 //!
@@ -34,7 +34,7 @@
 //! regarding [openness](meta::Openness) of their bounds.
 //!
 //! A way to represent an individual bound, regardless of its _source_ (start/end) exists:
-//! [`AbsoluteBound`](absolute::AbsoluteBounds) and [`RelativeBound`](relative::RelativeBounds).
+//! [`AbsoluteBound`](absolute::AbsoluteBoundPair) and [`RelativeBound`](relative::RelativeBoundPair).
 //!
 //! While processing intervals through operations like unions and intersections can yield a different kind of interval,
 //! they never mutate themselves in order to represent this new state, as they have to conserve their invariant
@@ -70,33 +70,34 @@
 //! # Examples
 //!
 //! ```
-//! # use chrono::{DateTime, Utc};
+//! # use std::error::Error;
+//! # use jiff::Timestamp;
 //! # use periodical::intervals::absolute::{
-//! #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteInterval, AbsoluteStartBound,
+//! #     AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteInterval, AbsoluteStartBound,
 //! #     BoundedAbsoluteInterval,
 //! # };
-//! let from = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
-//! let to = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+//! let from = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
+//! let to = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
 //!
 //! // Creating an interval from a specific interval type
-//! let first_interval = AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(from, to));
+//! let first_interval = BoundedAbsoluteInterval::new(from, to).to_interval();
 //!
 //! // Creating a pair of bounds..
-//! let bounds_for_second_interval = AbsoluteBounds::new(
-//!     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(from)),
+//! let bounds_for_second_interval = AbsoluteBoundPair::new(
+//!     AbsoluteFiniteBound::new(from).to_start_bound(),
 //!     AbsoluteEndBound::InfiniteFuture,
 //! );
 //!
 //! // ..For creating an interval
 //! let second_interval = AbsoluteInterval::from(bounds_for_second_interval);
-//! # Ok::<(), chrono::format::ParseError>(())
+//! # Ok::<(), Box<dyn Error>>(())
 //! ```
 
 use crate::utils::tests;
 
 pub mod absolute;
 pub mod bound_position;
-pub mod convenience;
+// pub mod convenience;
 pub mod meta;
 pub mod ops;
 pub mod relative;
