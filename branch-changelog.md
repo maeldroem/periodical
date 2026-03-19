@@ -89,6 +89,23 @@
 - [x] Migrated `time` to jiff
 - [x] Migrated `ops` to jiff
 - [ ] Migrated `intervals::ops` to jiff
+  - [ ] Migrated `abridge` to jiff
+  - [ ] Migrated `bound_containment` to jiff
+  - [ ] Migrated `complement` to jiff
+  - [ ] Migrated `continuation` to jiff
+  - [ ] Migrated `cut` to jiff
+  - [ ] Migrated `extend` to jiff
+  - [ ] Migrated `fill_gap` to jiff
+  - [ ] Migrated `grow` to jiff
+  - [ ] Migrated `overlap` to jiff
+  - [ ] Migrated `point_containment` to jiff
+  - [ ] Migrated `precision` to jiff
+  - [ ] Migrated `relativity_conversion` to jiff
+  - [ ] Migrated `remove_overlap_or_gap` to jiff
+  - [ ] Migrated `remove_overlap` to jiff
+  - [ ] Migrated `set_ops` to jiff
+  - [ ] Migrated `shrink` to jiff
+  - [ ] Migrated `split` to jiff
 
 - [x] Migrated `intervals::absolute`'s tests to jiff
   - [x] Migrated `bound_pair`'s tests to jiff
@@ -119,6 +136,24 @@
 - [x] Migrated `time`'s tests to jiff
 - [x] Migrated `ops`'s tests to jiff
 - [ ] Migrated `intervals::ops`'s tests to jiff
+  - [ ] Migrated `abridge`'s tests to jiff
+  - [ ] Migrated `bound_containment`'s tests to jiff
+  - [x] Migrated `bound_ord`'s tests to jiff
+  - [ ] Migrated `complement`'s tests to jiff
+  - [ ] Migrated `continuation`'s tests to jiff
+  - [ ] Migrated `cut`'s tests to jiff
+  - [ ] Migrated `extend`'s tests to jiff
+  - [ ] Migrated `fill_gap`'s tests to jiff
+  - [ ] Migrated `grow`'s tests to jiff
+  - [ ] Migrated `overlap`'s tests to jiff
+  - [ ] Migrated `point_containment`'s tests to jiff
+  - [ ] Migrated `precision`'s tests to jiff
+  - [ ] Migrated `relativity_conversion`'s tests to jiff
+  - [ ] Migrated `remove_overlap_or_gap`'s tests to jiff
+  - [ ] Migrated `remove_overlap`'s tests to jiff
+  - [ ] Migrated `set_ops`'s tests to jiff
+  - [ ] Migrated `shrink`'s tests to jiff
+  - [ ] Migrated `split`'s tests to jiff
 
 - [x] Migrated `intervals::absolute`'s examples to jiff
   - [x] Migrated `bound_pair`'s examples to jiff
@@ -149,6 +184,25 @@
 - [x] Migrated `ops`'s examples to jiff
 - [x] Migrated `intervals`'s examples to jiff
 - [ ] Migrated `intervals::ops`'s examples to jiff
+  - [ ] Migrated `abridge`'s examples to jiff
+  - [ ] Migrated `bound_containment`'s examples to jiff
+  - [ ] Migrated `bound_ord`'s examples to jiff
+  - [ ] Migrated `bound_overlap_ambiguity`'s examples to jiff
+  - [ ] Migrated `complement`'s examples to jiff
+  - [ ] Migrated `continuation`'s examples to jiff
+  - [ ] Migrated `cut`'s examples to jiff
+  - [ ] Migrated `extend`'s examples to jiff
+  - [ ] Migrated `fill_gap`'s examples to jiff
+  - [ ] Migrated `grow`'s examples to jiff
+  - [ ] Migrated `overlap`'s examples to jiff
+  - [ ] Migrated `point_containment`'s examples to jiff
+  - [ ] Migrated `precision`'s examples to jiff
+  - [ ] Migrated `relativity_conversion`'s examples to jiff
+  - [ ] Migrated `remove_overlap_or_gap`'s examples to jiff
+  - [ ] Migrated `remove_overlap`'s examples to jiff
+  - [ ] Migrated `set_ops`'s examples to jiff
+  - [ ] Migrated `shrink`'s examples to jiff
+  - [ ] Migrated `split`'s examples to jiff
 
 - [x] Updated `time` tests to check new structures
 - [x] Finished `time` docs
