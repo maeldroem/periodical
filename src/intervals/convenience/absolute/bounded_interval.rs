@@ -27,7 +27,9 @@ impl BoundedAbsoluteInterval {
     ///
     /// ```
     /// # use std::error::Error;
+    /// # use jiff::Zoned;
     /// # use jiff::civil::Date;
+    /// # use jiff::tz::TimeZone;
     /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// let date = "2026-01-05".parse::<Date>()?;
@@ -87,6 +89,7 @@ impl BoundedAbsoluteInterval {
     /// 
     /// ```
     /// # use std::error::Error;
+    /// # use jiff::Zoned;
     /// # use jiff::civil::Date;
     /// # use jiff::tz::TimeZone;
     /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
@@ -147,6 +150,7 @@ impl BoundedAbsoluteInterval {
     /// 
     /// ```
     /// # use std::error::Error;
+    /// # use jiff::Zoned;
     /// # use jiff::civil::Date;
     /// # use jiff::tz::TimeZone;
     /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
@@ -160,12 +164,12 @@ impl BoundedAbsoluteInterval {
     /// 
     /// assert_eq!(
     ///     interval.start(),
-    ///     "2026-05-06 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     "2026-04-26 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     /// );
     /// assert_eq!(interval.start_inclusivity(), BoundInclusivity::Inclusive);
     /// assert_eq!(
     ///     interval.end(),
-    ///     "2026-05-07 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     "2026-04-27 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     /// );
     /// assert_eq!(interval.end_inclusivity(), BoundInclusivity::Exclusive);
     /// # Ok::<(), Box<dyn Error>>(())
@@ -451,6 +455,7 @@ impl BoundedAbsoluteInterval {
     ///
     /// ```
     /// # use std::error::Error;
+    /// # use jiff::Zoned;
     /// # use jiff::tz::TimeZone;
     /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
     /// # use periodical::intervals::meta::BoundInclusivity;
@@ -471,12 +476,12 @@ impl BoundedAbsoluteInterval {
     /// assert_eq!(interval.start_inclusivity(), BoundInclusivity::Inclusive);
     /// assert_eq!(
     ///     interval.end(),
-    ///     "2026-04-07 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     "2026-04-08 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     /// );
     /// assert_eq!(interval.end_inclusivity(), BoundInclusivity::Exclusive);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
-    pub fn from_inclusive_week_range<Tz>(
+    pub fn from_inclusive_week_range(
         start: OffsetIsoWeek,
         end: OffsetIsoWeek,
         tz: TimeZone,
@@ -525,7 +530,7 @@ impl BoundedAbsoluteInterval {
     /// assert_eq!(month.start_inclusivity(), BoundInclusivity::Inclusive);
     /// assert_eq!(
     ///     month.end(),
-    ///     "2026-05-31 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     "2026-06-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     /// );
     /// assert_eq!(month.end_inclusivity(), BoundInclusivity::Exclusive);
     /// # Ok::<(), Box<dyn Error>>(())
@@ -637,7 +642,7 @@ impl BoundedAbsoluteInterval {
     /// assert_eq!(interval.start_inclusivity(), BoundInclusivity::Inclusive);
     /// assert_eq!(
     ///     interval.end(),
-    ///     "2026-03-31 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     "2026-04-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     /// );
     /// assert_eq!(interval.end_inclusivity(), BoundInclusivity::Exclusive);
     /// # Ok::<(), Box<dyn Error>>(())
@@ -691,19 +696,19 @@ impl BoundedAbsoluteInterval {
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::time::CalendarAnchorOffset;
     /// let interval = BoundedAbsoluteInterval::month_before_duration_from_date(
-    ///     "2026-02-27".parse::<Date>()?,
+    ///     "2026-03-02".parse::<Date>()?,
     ///     CalendarAnchorOffset::Days(5),
     ///     TimeZone::get("Europe/Oslo")?,
     /// )?;
     /// 
     /// assert_eq!(
     ///     interval.start(),
-    ///     "2026-03-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     "2026-02-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     /// );
     /// assert_eq!(interval.start_inclusivity(), BoundInclusivity::Inclusive);
     /// assert_eq!(
     ///     interval.end(),
-    ///     "2026-03-31 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     "2026-03-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     /// );
     /// assert_eq!(interval.end_inclusivity(), BoundInclusivity::Exclusive);
     /// # Ok::<(), Box<dyn Error>>(())
@@ -797,8 +802,9 @@ impl BoundedAbsoluteInterval {
     ///
     /// ```
     /// # use std::error::Error;
+    /// # use jiff::tz::TimeZone;
     /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
-    /// let month = BoundedAbsoluteInterval::this_month(offset_tz)?;
+    /// let month = BoundedAbsoluteInterval::this_month(TimeZone::get("Europe/Oslo")?)?;
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn this_month(tz: TimeZone) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
@@ -988,7 +994,7 @@ impl BoundedAbsoluteInterval {
     ///     "2028-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     /// );
     /// assert_eq!(year.end_inclusivity(), BoundInclusivity::Exclusive);
-    /// # Ok::<(), ExampleError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn year_after_duration_from_date(
         date: Date,
@@ -1083,10 +1089,11 @@ impl BoundedAbsoluteInterval {
     ///
     /// ```
     /// # use std::error::Error;
+    /// # use jiff::tz::TimeZone;
     /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
     /// # use periodical::time::CalendarAnchorOffset;
     /// let year = BoundedAbsoluteInterval::year_after_duration_from_today(
-    ///     NaiveDuration::Months(15),
+    ///     CalendarAnchorOffset::Months(15),
     ///     TimeZone::get("Europe/Oslo")?,
     /// )?;
     /// # Ok::<(), Box<dyn Error>>(())
@@ -1110,10 +1117,11 @@ impl BoundedAbsoluteInterval {
     ///
     /// ```
     /// # use std::error::Error;
+    /// # use jiff::tz::TimeZone;
     /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
     /// # use periodical::time::CalendarAnchorOffset;
     /// let year = BoundedAbsoluteInterval::year_before_duration_from_today(
-    ///     NaiveDuration::Months(15),
+    ///     CalendarAnchorOffset::Months(15),
     ///     TimeZone::get("Europe/Oslo")?,
     /// )?;
     /// # Ok::<(), Box<dyn Error>>(())
