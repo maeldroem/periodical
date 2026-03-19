@@ -271,28 +271,19 @@ impl HalfBoundedAbsoluteInterval {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum HalfBoundedAbsoluteIntervalCreationError {
-    /// Reference date could not be created as it was out of range
-    OutOfRangeReferenceDate,
-    /// Reference time could not be created as positioned in a time gap
+    /// Reference could not be created as it was out of range
+    OutOfRangeReference,
+    /// Something went wrong when computing data for creating the interval
     ///
-    /// Time gaps are often created by daylight savings time (DST), where a given duration can be skipped,
-    /// therefore creating either a fold or a gap in time.
-    ReferenceTimeInTimeGap,
-    /// Something went wrong when computing a date
-    ///
-    /// This does not mean that the resulting date was out of range, but rather that something failed
-    /// in the process of calculating a date.
-    DateOperationError,
+    /// This can be caused by multiple factors, like numbers overflowing, input not respecting invariants, etc.
+    ComputationError,
 }
 
 impl Display for HalfBoundedAbsoluteIntervalCreationError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::OutOfRangeReferenceDate => write!(f, "Reference date could not be created as it was out of range"),
-            Self::ReferenceTimeInTimeGap => {
-                write!(f, "Reference time could not be created as positioned in a time gap")
-            },
-            Self::DateOperationError => write!(f, "Something went wrong when computing a date"),
+            Self::OutOfRangeReference => write!(f, "Reference could not be created as it was out of range"),
+            Self::ComputationError => write!(f, "Something went wrong when computing data for creating the interval"),
         }
     }
 }

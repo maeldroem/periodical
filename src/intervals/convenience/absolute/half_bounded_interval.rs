@@ -1,5 +1,13 @@
 //! Convenience methods for [`HalfBoundedAbsoluteInterval`]
 
+use jiff::Timestamp;
+use jiff::civil::Date;
+use jiff::tz::TimeZone;
+
+use crate::intervals::absolute::{HalfBoundedAbsoluteInterval, HalfBoundedAbsoluteIntervalCreationError};
+use crate::intervals::meta::{BoundInclusivity, OpeningDirection};
+use crate::time::{CalendarAnchorOffset, CalendarAnchorOffsetDateError, MonthInYear, OffsetIsoWeek, checked_add_calendar_anchor_offset_to_date, checked_sub_calendar_anchor_offset_to_date, date_today};
+
 impl HalfBoundedAbsoluteInterval {
     /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans from now on
     ///
@@ -38,86 +46,39 @@ impl HalfBoundedAbsoluteInterval {
     /// The start of the resulting interval is [inclusive](BoundInclusivity::Inclusive).
     ///
     /// # Errors
-    ///
-    /// Returns [`ReferenceTimeInTimeGap`](HalfBoundedAbsoluteIntervalCreationError::ReferenceTimeInTimeGap) if
-    /// the given date's start (midnight) is positioned inside a time gap[^1].
-    ///
-    /// [^1]: See [`MappedLocalTime::None`](chrono::offset::LocalResult::None)
+    /// 
+    /// Returns [`OutOfRangeReference`](HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReference)
+    /// if [`Date::to_zoned`] returns an error.
     ///
     /// # Examples
     ///
     /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{DateTime, Duration, FixedOffset, Date, Utc};
-    /// # use periodical::intervals::absolute::{HalfBoundedAbsoluteInterval, HalfBoundedAbsoluteIntervalCreationError};
+    /// # use std::error::Error;
+    /// # use jiff::Zoned;
+    /// # use jiff::civil::Date;
+    /// # use jiff::tz::TimeZone;
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
     /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct DateFromYmdError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     DateFromYmdError(DateFromYmdError),
-    /// #     HalfBoundedAbsoluteIntervalCreationError(HalfBoundedAbsoluteIntervalCreationError),
-    /// #     ParseError(chrono::format::ParseError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<DateFromYmdError> for ExampleError {
-    /// #     fn from(value: DateFromYmdError) -> Self {
-    /// #         ExampleError::DateFromYmdError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<HalfBoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: HalfBoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::HalfBoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<chrono::format::ParseError> for ExampleError {
-    /// #     fn from(value: chrono::format::ParseError) -> Self {
-    /// #         ExampleError::ParseError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
     /// let from_first_of_may = HalfBoundedAbsoluteInterval::since_date(
-    ///     Date::from_ymd_opt(2026, 5, 1).ok_or(DateFromYmdError)?,
-    ///     offset_tz,
+    ///     "2026-05-01".parse::<Date>()?,
+    ///     TimeZone::get("Europe/Oslo")?,
     /// )?;
     ///
-    /// assert_eq!(from_first_of_may.reference_time(), "2026-04-30 22:00:00Z".parse::<Timestamp>()?);
+    /// assert_eq!(
+    ///     from_first_of_may.reference(),
+    ///     "2026-05-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    /// );
     /// assert_eq!(from_first_of_may.reference_inclusivity(), BoundInclusivity::Inclusive);
     /// assert_eq!(from_first_of_may.opening_direction(), OpeningDirection::ToFuture);
-    /// # Ok::<(), ExampleError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn since_date(date: Date, tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
-        let reference_time = date
-            .and_time(NAIVE_TIME_MIDNIGHT)
-            .and_local_timezone(tz)
-            .earliest()
-            .ok_or(HalfBoundedAbsoluteIntervalCreationError::ReferenceTimeInTimeGap)?
-            .with_timezone(&Utc);
+        let reference = date
+            .to_zoned(tz)
+            .or(Err(HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReference))?
+            .timestamp();
 
-        Ok(Self::new(reference_time, OpeningDirection::ToFuture))
+        Ok(Self::new(reference, OpeningDirection::ToFuture))
     }
 
     /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans until the start of the given day in the given timezone
@@ -126,86 +87,39 @@ impl HalfBoundedAbsoluteInterval {
     ///
     /// # Errors
     ///
-    /// Returns [`ReferenceTimeInTimeGap`](HalfBoundedAbsoluteIntervalCreationError::ReferenceTimeInTimeGap) if
-    /// the given date's start (midnight) is positioned inside a time gap[^1].
-    ///
-    /// [^1]: See [`MappedLocalTime::None`](chrono::offset::LocalResult::None)
+    /// Returns [`OutOfRangeReference`](HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReference)
+    /// if [`Date::to_zoned`] returns an error.
     ///
     /// # Examples
     ///
     /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{DateTime, Duration, FixedOffset, Date, Utc};
-    /// # use periodical::intervals::absolute::{HalfBoundedAbsoluteInterval, HalfBoundedAbsoluteIntervalCreationError};
+    /// # use std::error::Error;
+    /// # use jiff::Zoned;
+    /// # use jiff::civil::Date;
+    /// # use jiff::tz::TimeZone;
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
     /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct DateFromYmdError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     DateFromYmdError(DateFromYmdError),
-    /// #     HalfBoundedAbsoluteIntervalCreationError(HalfBoundedAbsoluteIntervalCreationError),
-    /// #     ParseError(chrono::format::ParseError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<DateFromYmdError> for ExampleError {
-    /// #     fn from(value: DateFromYmdError) -> Self {
-    /// #         ExampleError::DateFromYmdError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<HalfBoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: HalfBoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::HalfBoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<chrono::format::ParseError> for ExampleError {
-    /// #     fn from(value: chrono::format::ParseError) -> Self {
-    /// #         ExampleError::ParseError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
     /// let until_first_of_may = HalfBoundedAbsoluteInterval::until_date(
-    ///     Date::from_ymd_opt(2026, 5, 1).ok_or(DateFromYmdError)?,
-    ///     offset_tz,
+    ///     "2026-05-01".parse::<Date>()?,
+    ///     TimeZone::get("Europe/Oslo")?,
     /// )?;
     ///
-    /// assert_eq!(until_first_of_may.reference_time(), "2026-04-30 22:00:00Z".parse::<Timestamp>()?);
+    /// assert_eq!(
+    ///     until_first_of_may.reference(),
+    ///     "2026-05-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    /// );
     /// assert_eq!(until_first_of_may.reference_inclusivity(), BoundInclusivity::Exclusive);
     /// assert_eq!(until_first_of_may.opening_direction(), OpeningDirection::ToPast);
-    /// # Ok::<(), ExampleError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn until_date(date: Date, tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
-        let reference_time = date
-            .and_time(NAIVE_TIME_MIDNIGHT)
-            .and_local_timezone(tz)
-            .earliest()
-            .ok_or(HalfBoundedAbsoluteIntervalCreationError::ReferenceTimeInTimeGap)?
-            .with_timezone(&Utc);
+        let reference = date
+            .to_zoned(tz)
+            .or(Err(HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReference))?
+            .timestamp();
 
         Ok(Self::new_with_inclusivity(
-            reference_time,
+            reference,
             BoundInclusivity::Exclusive,
             OpeningDirection::ToPast,
         ))
@@ -213,1404 +127,500 @@ impl HalfBoundedAbsoluteInterval {
 
     /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans since today in the given timezone
     ///
-    /// See [`since_date`](HalfBoundedAbsoluteInterval::since_date) for more details.
-    ///
     /// # Errors
     ///
-    /// See [`since_date`](HalfBoundedAbsoluteInterval::since_date) for more details.
+    /// Returns any error that [`since_date`](HalfBoundedAbsoluteInterval::since_date) may return.
     ///
     /// # Examples
     ///
     /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{Duration, FixedOffset};
-    /// # use periodical::intervals::absolute::{HalfBoundedAbsoluteInterval, HalfBoundedAbsoluteIntervalCreationError};
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     HalfBoundedAbsoluteIntervalCreationError(HalfBoundedAbsoluteIntervalCreationError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<HalfBoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: HalfBoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::HalfBoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
-    /// let since_today = HalfBoundedAbsoluteInterval::since_today(offset_tz)?;
-    /// # Ok::<(), ExampleError>(())
+    /// # use std::error::Error;
+    /// # use jiff::tz::TimeZone;
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
+    /// let since_today = HalfBoundedAbsoluteInterval::since_today(TimeZone::get("Europe/Oslo")?)?;
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn since_today(tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
-        Self::since_date(date_today(&tz), tz)
+        Self::since_date(date_today(tz.clone()), tz)
     }
 
     /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans until today in the given timezone
     ///
-    /// See [`until_date`](HalfBoundedAbsoluteInterval::until_date) for more details.
-    ///
     /// # Errors
     ///
-    /// See [`until_date`](HalfBoundedAbsoluteInterval::until_date) for more details.
+    /// Returns any error that [`until_date`](HalfBoundedAbsoluteInterval::until_date) may return.
     ///
     /// # Examples
     ///
     /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{Duration, FixedOffset};
-    /// # use periodical::intervals::absolute::{HalfBoundedAbsoluteInterval, HalfBoundedAbsoluteIntervalCreationError};
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     HalfBoundedAbsoluteIntervalCreationError(HalfBoundedAbsoluteIntervalCreationError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<HalfBoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: HalfBoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::HalfBoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
-    /// let until_today = HalfBoundedAbsoluteInterval::until_today(offset_tz)?;
-    /// # Ok::<(), ExampleError>(())
+    /// # use std::error::Error;
+    /// # use jiff::tz::TimeZone;
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
+    /// let until_today = HalfBoundedAbsoluteInterval::until_today(TimeZone::get("Europe/Oslo")?)?;
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn until_today(tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
-        Self::until_date(date_today(&tz), tz)
+        Self::until_date(date_today(tz.clone()), tz)
     }
 
     /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans since tomorrow in the given timezone
     ///
-    /// See [`since_date`](HalfBoundedAbsoluteInterval::since_date) for more details.
-    ///
     /// # Errors
     ///
-    /// Returns [`OutOfRangeReferenceDate`](HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate) if
-    /// [`checked_add_duration_to_date`] returns [`None`].
+    /// Returns [`ComputationError`](HalfBoundedAbsoluteIntervalCreationError::ComputationError)
+    /// if [`checked_add_calendar_anchor_offset_to_date`]
+    /// returns [`OffsetTooLarge`](CalendarAnchorOffsetDateError::OffsetTooLarge).
+    /// 
+    /// Returns [`OutOfRangeReference`](HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReference)
+    /// if [`checked_add_calendar_anchor_offset_to_date`]
+    /// returns [`OutOfRangeResult`](CalendarAnchorOffsetDateError::OutOfRangeResult).
     ///
-    /// See [`since_date`](HalfBoundedAbsoluteInterval::since_date) for more errors that could occur,
-    /// as this method uses it.
+    /// Returns any error that [`since_date`](HalfBoundedAbsoluteInterval::since_date) may return.
     ///
     /// # Examples
     ///
     /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{Duration, FixedOffset};
-    /// # use periodical::intervals::absolute::{HalfBoundedAbsoluteInterval, HalfBoundedAbsoluteIntervalCreationError};
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     HalfBoundedAbsoluteIntervalCreationError(HalfBoundedAbsoluteIntervalCreationError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<HalfBoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: HalfBoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::HalfBoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
-    /// let since_tomorrow = HalfBoundedAbsoluteInterval::since_tomorrow(offset_tz)?;
-    /// # Ok::<(), ExampleError>(())
+    /// # use std::error::Error;
+    /// # use jiff::tz::TimeZone;
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
+    /// let since_tomorrow = HalfBoundedAbsoluteInterval::since_tomorrow(TimeZone::get("Europe/Oslo")?)?;
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn since_tomorrow(tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
-        Self::since_date(
-            checked_add_duration_to_date(date_today(&tz), CalendarAnchorOffset::Days(1))
-                .ok_or(HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate)?,
-            tz,
-        )
+        let date = checked_add_calendar_anchor_offset_to_date(CalendarAnchorOffset::Days(1), date_today(tz.clone()))
+            .map_err(|err| match err {
+                CalendarAnchorOffsetDateError::OffsetTooLarge => {
+                    HalfBoundedAbsoluteIntervalCreationError::ComputationError
+                },
+                CalendarAnchorOffsetDateError::OutOfRangeResult => {
+                    HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReference
+                },
+            })?;
+
+        Self::since_date(date, tz)
     }
 
     /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans until tomorrow in the given timezone
+    ///
+    /// # Errors
+    ///
+    /// Returns [`ComputationError`](HalfBoundedAbsoluteIntervalCreationError::ComputationError)
+    /// if [`checked_add_calendar_anchor_offset_to_date`]
+    /// returns [`OffsetTooLarge`](CalendarAnchorOffsetDateError::OffsetTooLarge).
+    /// 
+    /// Returns [`OutOfRangeReference`](HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReference)
+    /// if [`checked_add_calendar_anchor_offset_to_date`]
+    /// returns [`OutOfRangeResult`](CalendarAnchorOffsetDateError::OutOfRangeResult).
+    ///
+    /// Returns any error that [`until_date`](HalfBoundedAbsoluteInterval::until_date) may return.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jiff::tz::TimeZone;
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
+    /// let until_tomorrow = HalfBoundedAbsoluteInterval::until_tomorrow(TimeZone::get("Europe/Oslo")?)?;
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    pub fn until_tomorrow(tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
+        let date = checked_add_calendar_anchor_offset_to_date(CalendarAnchorOffset::Days(1), date_today(tz.clone()))
+            .map_err(|err| match err {
+                CalendarAnchorOffsetDateError::OffsetTooLarge => {
+                    HalfBoundedAbsoluteIntervalCreationError::ComputationError
+                },
+                CalendarAnchorOffsetDateError::OutOfRangeResult => {
+                    HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReference
+                },
+            })?;
+
+        Self::until_date(date, tz)
+    }
+
+    /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans since yesterday in the given timezone
+    ///
+    /// # Errors
+    ///
+    /// Returns [`ComputationError`](HalfBoundedAbsoluteIntervalCreationError::ComputationError)
+    /// if [`checked_sub_calendar_anchor_offset_to_date`]
+    /// returns [`OffsetTooLarge`](CalendarAnchorOffsetDateError::OffsetTooLarge).
+    /// 
+    /// Returns [`OutOfRangeReference`](HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReference)
+    /// if [`checked_sub_calendar_anchor_offset_to_date`]
+    /// returns [`OutOfRangeResult`](CalendarAnchorOffsetDateError::OutOfRangeResult).
+    ///
+    /// Returns any error that [`since_date`](HalfBoundedAbsoluteInterval::since_date) may return.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jiff::tz::TimeZone;
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
+    /// let since_yesterday = HalfBoundedAbsoluteInterval::since_yesterday(TimeZone::get("Europe/Oslo")?)?;
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    pub fn since_yesterday(tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
+        let date = checked_sub_calendar_anchor_offset_to_date(CalendarAnchorOffset::Days(1), date_today(tz.clone()))
+            .map_err(|err| match err {
+                CalendarAnchorOffsetDateError::OffsetTooLarge => {
+                    HalfBoundedAbsoluteIntervalCreationError::ComputationError
+                },
+                CalendarAnchorOffsetDateError::OutOfRangeResult => {
+                    HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReference
+                },
+            })?;
+        
+        Self::since_date(date, tz)
+    }
+
+    /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans until yesterday in the given timezone
     ///
     /// See [`until_date`](HalfBoundedAbsoluteInterval::until_date) for more details.
     ///
     /// # Errors
     ///
-    /// Returns [`OutOfRangeReferenceDate`](HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate) if
-    /// [`checked_add_duration_to_date`] returns [`None`].
+    /// Returns [`ComputationError`](HalfBoundedAbsoluteIntervalCreationError::ComputationError)
+    /// if [`checked_sub_calendar_anchor_offset_to_date`]
+    /// returns [`OffsetTooLarge`](CalendarAnchorOffsetDateError::OffsetTooLarge).
+    /// 
+    /// Returns [`OutOfRangeReference`](HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReference)
+    /// if [`checked_sub_calendar_anchor_offset_to_date`]
+    /// returns [`OutOfRangeResult`](CalendarAnchorOffsetDateError::OutOfRangeResult).
     ///
-    /// See [`until_date`](HalfBoundedAbsoluteInterval::until_date) for more errors that could occur,
-    /// as this method uses it.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{Duration, FixedOffset};
-    /// # use periodical::intervals::absolute::{HalfBoundedAbsoluteInterval, HalfBoundedAbsoluteIntervalCreationError};
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     HalfBoundedAbsoluteIntervalCreationError(HalfBoundedAbsoluteIntervalCreationError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<HalfBoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: HalfBoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::HalfBoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
-    /// let until_tomorrow = HalfBoundedAbsoluteInterval::until_tomorrow(offset_tz)?;
-    /// # Ok::<(), ExampleError>(())
-    /// ```
-    pub fn until_tomorrow(tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
-        Self::until_date(
-            checked_add_duration_to_date(date_today(&tz), CalendarAnchorOffset::Days(1))
-                .ok_or(HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate)?,
-            tz,
-        )
-    }
-
-    /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans since yesterday in the given timezone
-    ///
-    /// See [`since_date`](HalfBoundedAbsoluteInterval::since_date) for more details.
-    ///
-    /// # Errors
-    ///
-    /// Returns [`OutOfRangeReferenceDate`](HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate) if
-    /// [`checked_sub_duration_to_date`] returns [`None`].
-    ///
-    /// See [`since_date`](HalfBoundedAbsoluteInterval::since_date) for more errors that could occur,
-    /// as this method uses it.
+    /// Returns any error that [`until_date`](HalfBoundedAbsoluteInterval::until_date) may return.
     ///
     /// # Examples
     ///
     /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{Duration, FixedOffset};
-    /// # use periodical::intervals::absolute::{HalfBoundedAbsoluteInterval, HalfBoundedAbsoluteIntervalCreationError};
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     HalfBoundedAbsoluteIntervalCreationError(HalfBoundedAbsoluteIntervalCreationError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<HalfBoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: HalfBoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::HalfBoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
-    /// let since_yesterday = HalfBoundedAbsoluteInterval::since_yesterday(offset_tz)?;
-    /// # Ok::<(), ExampleError>(())
-    /// ```
-    pub fn since_yesterday(tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
-        Self::since_date(
-            checked_sub_duration_to_date(date_today(&tz), CalendarAnchorOffset::Days(1))
-                .ok_or(HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate)?,
-            tz,
-        )
-    }
-
-    /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans until yesterday in the given timezone
-    ///
-    /// See [`since_date`](HalfBoundedAbsoluteInterval::since_date) for more details.
-    ///
-    /// # Errors
-    ///
-    /// Returns [`OutOfRangeReferenceDate`](HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate) if
-    /// [`checked_sub_duration_to_date`] returns [`None`].
-    ///
-    /// See [`since_date`](HalfBoundedAbsoluteInterval::since_date) for more errors that could occur,
-    /// as this method uses it.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{Duration, FixedOffset};
-    /// # use periodical::intervals::absolute::{HalfBoundedAbsoluteInterval, HalfBoundedAbsoluteIntervalCreationError};
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     HalfBoundedAbsoluteIntervalCreationError(HalfBoundedAbsoluteIntervalCreationError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<HalfBoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: HalfBoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::HalfBoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
-    /// let until_yesterday = HalfBoundedAbsoluteInterval::until_yesterday(offset_tz)?;
-    /// # Ok::<(), ExampleError>(())
+    /// # use std::error::Error;
+    /// # use jiff::tz::TimeZone;
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
+    /// let until_yesterday = HalfBoundedAbsoluteInterval::until_yesterday(TimeZone::get("Europe/Oslo")?)?;
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn until_yesterday(tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
-        Self::until_date(
-            checked_sub_duration_to_date(date_today(&tz), CalendarAnchorOffset::Days(1))
-                .ok_or(HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate)?,
-            tz,
-        )
+        let date = checked_sub_calendar_anchor_offset_to_date(CalendarAnchorOffset::Days(1), date_today(tz.clone()))
+            .map_err(|err| match err {
+                CalendarAnchorOffsetDateError::OffsetTooLarge => {
+                    HalfBoundedAbsoluteIntervalCreationError::ComputationError
+                },
+                CalendarAnchorOffsetDateError::OutOfRangeResult => {
+                    HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReference
+                },
+            })?;
+        
+        Self::until_date(date, tz)
     }
 
-    /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans since the given week in the given timezone
-    ///
-    /// See [`since_date`](HalfBoundedAbsoluteInterval::since_date) for more details.
+    /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans since the given [`OffsetIsoWeek`]
+    /// in the given timezone
     ///
     /// # Errors
     ///
-    /// Returns [`OutOfRangeReferenceDate`](HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate) if
+    /// Returns [`OutOfRangeReference`](HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReference) if
     /// the week's first day is out of range.
     ///
-    /// See [`since_date`](HalfBoundedAbsoluteInterval::since_date) for more errors that could occur,
-    /// as this method uses it.
+    /// Returns any error that [`since_date`](HalfBoundedAbsoluteInterval::since_date) may return.
     ///
     /// # Examples
     ///
     /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{DateTime, Duration, FixedOffset, Date, Utc, Weekday};
-    /// # use periodical::intervals::absolute::{HalfBoundedAbsoluteInterval, HalfBoundedAbsoluteIntervalCreationError};
+    /// # use std::error::Error;
+    /// # use jiff::Zoned;
+    /// # use jiff::tz::TimeZone;
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
     /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct DateFromYmdError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     DateFromYmdError(DateFromYmdError),
-    /// #     HalfBoundedAbsoluteIntervalCreationError(HalfBoundedAbsoluteIntervalCreationError),
-    /// #     ParseError(chrono::format::ParseError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<DateFromYmdError> for ExampleError {
-    /// #     fn from(value: DateFromYmdError) -> Self {
-    /// #         ExampleError::DateFromYmdError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<HalfBoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: HalfBoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::HalfBoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<chrono::format::ParseError> for ExampleError {
-    /// #     fn from(value: chrono::format::ParseError) -> Self {
-    /// #         ExampleError::ParseError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
+    /// # use periodical::time::OffsetIsoWeek;
     /// let interval = HalfBoundedAbsoluteInterval::since_week(
-    ///     Date::from_ymd_opt(2026, 5, 1).ok_or(DateFromYmdError)?.week(Weekday::Mon),
-    ///     offset_tz,
+    ///     OffsetIsoWeek::new(5, 2026)?,
+    ///     TimeZone::get("Europe/Oslo")?,
     /// )?;
     ///
-    /// assert_eq!(interval.reference_time(), "2026-04-26 22:00:00Z".parse::<Timestamp>()?);
+    /// assert_eq!(
+    ///     interval.reference(),
+    ///     "2026-01-26 00:00:00Z".parse::<Zoned>()?.timestamp(),
+    /// );
     /// assert_eq!(interval.reference_inclusivity(), BoundInclusivity::Inclusive);
     /// assert_eq!(interval.opening_direction(), OpeningDirection::ToFuture);
-    /// # Ok::<(), ExampleError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
-    pub fn since_week(week: NaiveWeek, tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
+    pub fn since_week(week: OffsetIsoWeek, tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
         Self::since_date(
-            week.checked_first_day()
-                .ok_or(HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate)?,
+            week.first_day().or(Err(HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReference))?,
             tz,
         )
     }
 
     /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans until the given week in the given timezone
     ///
-    /// See [`until_date`](HalfBoundedAbsoluteInterval::until_date) for more details.
-    ///
     /// # Errors
     ///
-    /// Returns [`OutOfRangeReferenceDate`](HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate) if
+    /// Returns [`OutOfRangeReference`](HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReference) if
     /// the week's first day is out of range.
     ///
-    /// See [`until_date`](HalfBoundedAbsoluteInterval::until_date) for more errors that could occur,
-    /// as this method uses it.
+    /// Returns any error that [`until_date`](HalfBoundedAbsoluteInterval::until_date) may return.
     ///
     /// # Examples
     ///
     /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{DateTime, Duration, FixedOffset, Date, Utc, Weekday};
-    /// # use periodical::intervals::absolute::{HalfBoundedAbsoluteInterval, HalfBoundedAbsoluteIntervalCreationError};
+    /// # use std::error::Error;
+    /// # use jiff::Zoned;
+    /// # use jiff::tz::TimeZone;
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
     /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct DateFromYmdError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     DateFromYmdError(DateFromYmdError),
-    /// #     HalfBoundedAbsoluteIntervalCreationError(HalfBoundedAbsoluteIntervalCreationError),
-    /// #     ParseError(chrono::format::ParseError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<DateFromYmdError> for ExampleError {
-    /// #     fn from(value: DateFromYmdError) -> Self {
-    /// #         ExampleError::DateFromYmdError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<HalfBoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: HalfBoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::HalfBoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<chrono::format::ParseError> for ExampleError {
-    /// #     fn from(value: chrono::format::ParseError) -> Self {
-    /// #         ExampleError::ParseError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
+    /// # use periodical::time::OffsetIsoWeek;
     /// let interval = HalfBoundedAbsoluteInterval::until_week(
-    ///     Date::from_ymd_opt(2026, 5, 1).ok_or(DateFromYmdError)?.week(Weekday::Mon),
-    ///     offset_tz,
+    ///     OffsetIsoWeek::new(5, 2026)?,
+    ///     TimeZone::get("Europe/Oslo")?,
     /// )?;
     ///
-    /// assert_eq!(interval.reference_time(), "2026-04-26 22:00:00Z".parse::<Timestamp>()?);
+    /// assert_eq!(
+    ///     interval.reference(),
+    ///     "2026-01-26 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    /// );
     /// assert_eq!(interval.reference_inclusivity(), BoundInclusivity::Exclusive);
     /// assert_eq!(interval.opening_direction(), OpeningDirection::ToPast);
-    /// # Ok::<(), ExampleError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
-    pub fn until_week(week: NaiveWeek, tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
+    pub fn until_week(week: OffsetIsoWeek, tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
         Self::until_date(
-            week.checked_first_day()
-                .ok_or(HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate)?,
+            week.first_day().or(Err(HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReference))?,
             tz,
         )
-    }
-
-    /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans since the current week in the given timezone
-    ///
-    /// See [`since_week`](HalfBoundedAbsoluteInterval::since_week) for more details.
-    ///
-    /// # Errors
-    ///
-    /// See [`since_week`](HalfBoundedAbsoluteInterval::since_week) for more details.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{Duration, FixedOffset, Weekday};
-    /// # use periodical::intervals::absolute::{HalfBoundedAbsoluteInterval, HalfBoundedAbsoluteIntervalCreationError};
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     HalfBoundedAbsoluteIntervalCreationError(HalfBoundedAbsoluteIntervalCreationError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<HalfBoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: HalfBoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::HalfBoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
-    /// let since_this_week = HalfBoundedAbsoluteInterval::since_this_week(Weekday::Mon, offset_tz)?;
-    /// # Ok::<(), ExampleError>(())
-    /// ```
-    pub fn since_this_week(week_start: Weekday, tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
-        Self::since_week(date_today(&tz).week(week_start), tz)
-    }
-
-    /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans until the current week in the given timezone
-    ///
-    /// See [`until_week`](HalfBoundedAbsoluteInterval::until_week) for more details.
-    ///
-    /// # Errors
-    ///
-    /// See [`until_week`](HalfBoundedAbsoluteInterval::until_week) for more details.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{Duration, FixedOffset, Weekday};
-    /// # use periodical::intervals::absolute::{HalfBoundedAbsoluteInterval, HalfBoundedAbsoluteIntervalCreationError};
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     HalfBoundedAbsoluteIntervalCreationError(HalfBoundedAbsoluteIntervalCreationError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<HalfBoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: HalfBoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::HalfBoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
-    /// let until_this_week = HalfBoundedAbsoluteInterval::until_this_week(Weekday::Mon, offset_tz)?;
-    /// # Ok::<(), ExampleError>(())
-    pub fn until_this_week(week_start: Weekday, tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
-        Self::until_week(date_today(&tz).week(week_start), tz)
-    }
-
-    /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans since the given ISO week in the given timezone
-    ///
-    /// See [`since_date`](HalfBoundedAbsoluteInterval::since_date) for more details.
-    ///
-    /// # Errors
-    ///
-    /// Returns [`OutOfRangeReferenceDate`](HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate) if
-    /// the week's first day is out of range.
-    ///
-    /// See [`since_date`](HalfBoundedAbsoluteInterval::since_date) for more errors that could occur,
-    /// as this method uses it.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{Datelike, DateTime, Duration, FixedOffset, Date, Utc, Weekday};
-    /// # use periodical::intervals::absolute::{HalfBoundedAbsoluteInterval, HalfBoundedAbsoluteIntervalCreationError};
-    /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct DateFromYmdError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     DateFromYmdError(DateFromYmdError),
-    /// #     HalfBoundedAbsoluteIntervalCreationError(HalfBoundedAbsoluteIntervalCreationError),
-    /// #     ParseError(chrono::format::ParseError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<DateFromYmdError> for ExampleError {
-    /// #     fn from(value: DateFromYmdError) -> Self {
-    /// #         ExampleError::DateFromYmdError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<HalfBoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: HalfBoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::HalfBoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<chrono::format::ParseError> for ExampleError {
-    /// #     fn from(value: chrono::format::ParseError) -> Self {
-    /// #         ExampleError::ParseError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
-    /// let interval = HalfBoundedAbsoluteInterval::since_iso_week(
-    ///     Date::from_ymd_opt(2026, 5, 1).ok_or(DateFromYmdError)?.iso_week(),
-    ///     offset_tz,
-    /// )?;
-    ///
-    /// assert_eq!(interval.reference_time(), "2026-04-26 22:00:00Z".parse::<Timestamp>()?);
-    /// assert_eq!(interval.reference_inclusivity(), BoundInclusivity::Inclusive);
-    /// assert_eq!(interval.opening_direction(), OpeningDirection::ToFuture);
-    /// # Ok::<(), ExampleError>(())
-    /// ```
-    pub fn since_iso_week(iso_week: IsoWeek, tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
-        Self::since_date(
-            Date::from_isoywd_opt(iso_week.year(), iso_week.week(), Weekday::Mon)
-                .ok_or(HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate)?,
-            tz,
-        )
-    }
-
-    /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans until the given ISO week in the given timezone
-    ///
-    /// See [`until_date`](HalfBoundedAbsoluteInterval::until_date) for more details.
-    ///
-    /// # Errors
-    ///
-    /// Returns [`OutOfRangeReferenceDate`](HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate) if
-    /// the week's first day is out of range.
-    ///
-    /// See [`until_date`](HalfBoundedAbsoluteInterval::until_date) for more errors that could occur,
-    /// as this method uses it.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{Datelike, DateTime, Duration, FixedOffset, Date, Utc, Weekday};
-    /// # use periodical::intervals::absolute::{HalfBoundedAbsoluteInterval, HalfBoundedAbsoluteIntervalCreationError};
-    /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct DateFromYmdError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     DateFromYmdError(DateFromYmdError),
-    /// #     HalfBoundedAbsoluteIntervalCreationError(HalfBoundedAbsoluteIntervalCreationError),
-    /// #     ParseError(chrono::format::ParseError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<DateFromYmdError> for ExampleError {
-    /// #     fn from(value: DateFromYmdError) -> Self {
-    /// #         ExampleError::DateFromYmdError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<HalfBoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: HalfBoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::HalfBoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<chrono::format::ParseError> for ExampleError {
-    /// #     fn from(value: chrono::format::ParseError) -> Self {
-    /// #         ExampleError::ParseError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
-    /// let interval = HalfBoundedAbsoluteInterval::until_iso_week(
-    ///     Date::from_ymd_opt(2026, 5, 1).ok_or(DateFromYmdError)?.iso_week(),
-    ///     offset_tz,
-    /// )?;
-    ///
-    /// assert_eq!(interval.reference_time(), "2026-04-26 22:00:00Z".parse::<Timestamp>()?);
-    /// assert_eq!(interval.reference_inclusivity(), BoundInclusivity::Exclusive);
-    /// assert_eq!(interval.opening_direction(), OpeningDirection::ToPast);
-    /// # Ok::<(), ExampleError>(())
-    /// ```
-    pub fn until_iso_week(iso_week: IsoWeek, tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
-        Self::until_date(
-            Date::from_isoywd_opt(iso_week.year(), iso_week.week(), Weekday::Mon)
-                .ok_or(HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate)?,
-            tz,
-        )
-    }
-
-    /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans since the current ISO week in the given timezone
-    ///
-    /// See [`since_iso_week`](HalfBoundedAbsoluteInterval::since_iso_week) for more details.
-    ///
-    /// # Errors
-    ///
-    /// See [`since_iso_week`](HalfBoundedAbsoluteInterval::since_iso_week) for more details.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{Duration, FixedOffset, Weekday};
-    /// # use periodical::intervals::absolute::{HalfBoundedAbsoluteInterval, HalfBoundedAbsoluteIntervalCreationError};
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     HalfBoundedAbsoluteIntervalCreationError(HalfBoundedAbsoluteIntervalCreationError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<HalfBoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: HalfBoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::HalfBoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
-    /// let since_this_iso_week = HalfBoundedAbsoluteInterval::since_this_iso_week(offset_tz)?;
-    /// # Ok::<(), ExampleError>(())
-    /// ```
-    pub fn since_this_iso_week(tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
-        Self::since_iso_week(date_today(&tz).iso_week(), tz)
-    }
-
-    /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans until the current ISO week in the given timezone
-    ///
-    /// See [`until_iso_week`](HalfBoundedAbsoluteInterval::until_iso_week) for more details.
-    ///
-    /// # Errors
-    ///
-    /// See [`until_iso_week`](HalfBoundedAbsoluteInterval::until_iso_week) for more details.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{Duration, FixedOffset, Weekday};
-    /// # use periodical::intervals::absolute::{HalfBoundedAbsoluteInterval, HalfBoundedAbsoluteIntervalCreationError};
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     HalfBoundedAbsoluteIntervalCreationError(HalfBoundedAbsoluteIntervalCreationError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<HalfBoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: HalfBoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::HalfBoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
-    /// let until_this_iso_week = HalfBoundedAbsoluteInterval::until_this_iso_week(offset_tz)?;
-    /// # Ok::<(), ExampleError>(())
-    /// ```
-    pub fn until_this_iso_week(tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
-        Self::until_iso_week(date_today(&tz).iso_week(), tz)
     }
 
     /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans since the given month in the given timezone
     ///
-    /// See [`since_date`](HalfBoundedAbsoluteInterval::since_date) for more details.
-    ///
     /// # Errors
     ///
-    /// Returns [`OutOfRangeReferenceDate`](HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate) if
+    /// Returns [`OutOfRangeReference`](HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReference) if
     /// the month's first day is out of range.
     ///
-    /// See [`since_date`](HalfBoundedAbsoluteInterval::since_date) for more errors that could occur,
-    /// as this method uses it.
+    /// Returns any error that [`since_date`](HalfBoundedAbsoluteInterval::since_date) may return.
     ///
     /// # Examples
     ///
     /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{DateTime, Duration, FixedOffset, Month, Utc};
-    /// # use periodical::intervals::absolute::{HalfBoundedAbsoluteInterval, HalfBoundedAbsoluteIntervalCreationError};
+    /// # use std::error::Error;
+    /// # use jiff::Zoned;
+    /// # use jiff::tz::TimeZone;
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
     /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
-    /// # use periodical::time::NaiveMonth;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     HalfBoundedAbsoluteIntervalCreationError(HalfBoundedAbsoluteIntervalCreationError),
-    /// #     ParseError(chrono::format::ParseError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<HalfBoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: HalfBoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::HalfBoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<chrono::format::ParseError> for ExampleError {
-    /// #     fn from(value: chrono::format::ParseError) -> Self {
-    /// #         ExampleError::ParseError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
+    /// # use periodical::time::Month;
     /// let since_month = HalfBoundedAbsoluteInterval::since_month(
-    ///     NaiveMonth::new(2026, Month::March),
-    ///     offset_tz,
+    ///     Month::March.with_year(2026),
+    ///     TimeZone::get("Europe/Oslo")?,
     /// )?;
     ///
-    /// assert_eq!(since_month.reference_time(), "2026-02-28 22:00:00Z".parse::<Timestamp>()?);
+    /// assert_eq!(
+    ///     since_month.reference(),
+    ///     "2026-03-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    /// );
     /// assert_eq!(since_month.reference_inclusivity(), BoundInclusivity::Inclusive);
     /// assert_eq!(since_month.opening_direction(), OpeningDirection::ToFuture);
-    /// # Ok::<(), ExampleError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn since_month(month: MonthInYear, tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
         Self::since_date(
-            month
-                .checked_first_day()
-                .ok_or(HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate)?,
+            month.first_day().or(Err(HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReference))?,
             tz,
         )
     }
 
     /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans until the given month in the given timezone
     ///
-    /// See [`until_date`](HalfBoundedAbsoluteInterval::until_date) for more details.
-    ///
     /// # Errors
     ///
-    /// Returns [`OutOfRangeReferenceDate`](HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate) if
+    /// Returns [`OutOfRangeReference`](HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReference) if
     /// the month's first day is out of range.
     ///
-    /// See [`until_date`](HalfBoundedAbsoluteInterval::until_date) for more errors that could occur,
-    /// as this method uses it.
+    /// Returns any error that [`until_date`](HalfBoundedAbsoluteInterval::until_date) may return.
     ///
     /// # Examples
     ///
     /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{DateTime, Duration, FixedOffset, Month, Utc};
-    /// # use periodical::intervals::absolute::{HalfBoundedAbsoluteInterval, HalfBoundedAbsoluteIntervalCreationError};
+    /// # use std::error::Error;
+    /// # use jiff::Zoned;
+    /// # use jiff::tz::TimeZone;
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
     /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
-    /// # use periodical::time::NaiveMonth;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     HalfBoundedAbsoluteIntervalCreationError(HalfBoundedAbsoluteIntervalCreationError),
-    /// #     ParseError(chrono::format::ParseError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<HalfBoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: HalfBoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::HalfBoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<chrono::format::ParseError> for ExampleError {
-    /// #     fn from(value: chrono::format::ParseError) -> Self {
-    /// #         ExampleError::ParseError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
+    /// # use periodical::time::Month;
     /// let until_month = HalfBoundedAbsoluteInterval::until_month(
-    ///     NaiveMonth::new(2026, Month::March),
-    ///     offset_tz,
+    ///     Month::March.with_year(2026),
+    ///     TimeZone::get("Europe/Oslo")?,
     /// )?;
     ///
-    /// assert_eq!(until_month.reference_time(), "2026-02-28 22:00:00Z".parse::<Timestamp>()?);
+    /// assert_eq!(
+    ///     until_month.reference(),
+    ///     "2026-03-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    /// );
     /// assert_eq!(until_month.reference_inclusivity(), BoundInclusivity::Exclusive);
     /// assert_eq!(until_month.opening_direction(), OpeningDirection::ToPast);
-    /// # Ok::<(), ExampleError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn until_month(month: MonthInYear, tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
         Self::until_date(
-            month
-                .checked_first_day()
-                .ok_or(HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate)?,
+            month.first_day().or(Err(HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReference))?,
             tz,
         )
     }
 
     /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans since the current month in the given timezone
     ///
-    /// See [`since_month`](HalfBoundedAbsoluteInterval::since_month) for more details.
-    ///
     /// # Errors
     ///
-    /// See [`since_month`](HalfBoundedAbsoluteInterval::since_month) for more details.
+    /// Returns [`ComputationError`](HalfBoundedAbsoluteIntervalCreationError::ComputationError) if
+    /// the corresponding [`MonthInYear`] could not be determined.
+    ///
+    /// Returns any error that [`since_month`](HalfBoundedAbsoluteInterval::since_month) may return.
     ///
     /// # Examples
     ///
     /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{Duration, FixedOffset, Weekday};
-    /// # use periodical::intervals::absolute::{HalfBoundedAbsoluteInterval, HalfBoundedAbsoluteIntervalCreationError};
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     HalfBoundedAbsoluteIntervalCreationError(HalfBoundedAbsoluteIntervalCreationError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<HalfBoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: HalfBoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::HalfBoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
-    /// let since_this_month = HalfBoundedAbsoluteInterval::since_this_month(offset_tz)?;
-    /// # Ok::<(), ExampleError>(())
+    /// # use std::error::Error;
+    /// # use jiff::tz::TimeZone;
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
+    /// let since_this_month = HalfBoundedAbsoluteInterval::since_this_month(TimeZone::get("Europe/Oslo")?)?;
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn since_this_month(tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
         Self::since_month(
-            MonthInYear::try_from(date_today(&tz))
-                .or(Err(HalfBoundedAbsoluteIntervalCreationError::DateOperationError))?,
+            MonthInYear::try_from(date_today(tz.clone()))
+                .or(Err(HalfBoundedAbsoluteIntervalCreationError::ComputationError))?,
             tz,
         )
     }
 
     /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans until the current month in the given timezone
     ///
-    /// See [`until_month`](HalfBoundedAbsoluteInterval::until_month) for more details.
-    ///
     /// # Errors
     ///
-    /// See [`until_month`](HalfBoundedAbsoluteInterval::until_month) for more details.
+    /// Returns [`ComputationError`](HalfBoundedAbsoluteIntervalCreationError::ComputationError) if
+    /// the corresponding [`MonthInYear`] could not be determined.
+    ///
+    /// Returns any error that [`until_month`](HalfBoundedAbsoluteInterval::until_month) may return.
     ///
     /// # Examples
     ///
     /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{Duration, FixedOffset, Weekday};
-    /// # use periodical::intervals::absolute::{HalfBoundedAbsoluteInterval, HalfBoundedAbsoluteIntervalCreationError};
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     HalfBoundedAbsoluteIntervalCreationError(HalfBoundedAbsoluteIntervalCreationError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<HalfBoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: HalfBoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::HalfBoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
-    /// let until_this_month = HalfBoundedAbsoluteInterval::until_this_month(offset_tz)?;
-    /// # Ok::<(), ExampleError>(())
+    /// # use std::error::Error;
+    /// # use jiff::tz::TimeZone;
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
+    /// let until_this_month = HalfBoundedAbsoluteInterval::until_this_month(TimeZone::get("Europe/Oslo")?)?;
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn until_this_month(tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
         Self::until_month(
-            MonthInYear::try_from(date_today(&tz))
-                .or(Err(HalfBoundedAbsoluteIntervalCreationError::DateOperationError))?,
+            MonthInYear::try_from(date_today(tz.clone()))
+                .or(Err(HalfBoundedAbsoluteIntervalCreationError::ComputationError))?,
             tz,
         )
     }
 
     /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans since the given year in the given timezone
     ///
-    /// See [`since_date`](HalfBoundedAbsoluteInterval::since_date) for more details.
-    ///
     /// # Errors
     ///
-    /// Returns [`OutOfRangeReferenceDate`](HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate) if
-    /// the year's first day is out of range.
+    /// Returns [`OutOfRangeReference`](HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReference) if
+    /// the year is out of range.
     ///
-    /// See [`since_date`](HalfBoundedAbsoluteInterval::since_date) for more errors that could occur,
-    /// as this method uses it.
+    /// Returns any error that [`since_date`](HalfBoundedAbsoluteInterval::since_date) may return.
     ///
     /// # Examples
     ///
     /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{DateTime, Duration, FixedOffset, Month, Utc};
-    /// # use periodical::intervals::absolute::{HalfBoundedAbsoluteInterval, HalfBoundedAbsoluteIntervalCreationError};
+    /// # use std::error::Error;
+    /// # use jiff::Zoned;
+    /// # use jiff::tz::TimeZone;
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
     /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     HalfBoundedAbsoluteIntervalCreationError(HalfBoundedAbsoluteIntervalCreationError),
-    /// #     ParseError(chrono::format::ParseError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<HalfBoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: HalfBoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::HalfBoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<chrono::format::ParseError> for ExampleError {
-    /// #     fn from(value: chrono::format::ParseError) -> Self {
-    /// #         ExampleError::ParseError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
     /// let since_year = HalfBoundedAbsoluteInterval::since_year(2026, offset_tz)?;
     ///
-    /// assert_eq!(since_year.reference_time(), "2025-12-31 22:00:00Z".parse::<Timestamp>()?);
+    /// assert_eq!(
+    ///     since_year.reference(),
+    ///     "2026-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    /// );
     /// assert_eq!(since_year.reference_inclusivity(), BoundInclusivity::Inclusive);
     /// assert_eq!(since_year.opening_direction(), OpeningDirection::ToFuture);
-    /// # Ok::<(), ExampleError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
-    pub fn since_year(year: i32, tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
+    pub fn since_year(year: i16, tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
         Self::since_date(
-            Date::from_yo_opt(year, 1).ok_or(HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate)?,
+            Date::new(year, 1, 1).or(Err(HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReference))?,
             tz,
         )
     }
 
     /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans until the given year in the given timezone
     ///
-    /// See [`until_date`](HalfBoundedAbsoluteInterval::until_date) for more details.
-    ///
     /// # Errors
     ///
-    /// Returns [`OutOfRangeReferenceDate`](HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate) if
-    /// the year's first day is out of range.
+    /// Returns [`OutOfRangeReference`](HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReference) if
+    /// the year is out of range.
     ///
-    /// See [`until_date`](HalfBoundedAbsoluteInterval::until_date) for more errors that could occur,
-    /// as this method uses it.
+    /// Returns any error that [`until_date`](HalfBoundedAbsoluteInterval::until_date) may return.
     ///
     /// # Examples
     ///
     /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{DateTime, Duration, FixedOffset, Month, Utc};
-    /// # use periodical::intervals::absolute::{HalfBoundedAbsoluteInterval, HalfBoundedAbsoluteIntervalCreationError};
+    /// # use std::error::Error;
+    /// # use jiff::Zoned;
+    /// # use jiff::tz::TimeZone;
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
     /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     HalfBoundedAbsoluteIntervalCreationError(HalfBoundedAbsoluteIntervalCreationError),
-    /// #     ParseError(chrono::format::ParseError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<HalfBoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: HalfBoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::HalfBoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<chrono::format::ParseError> for ExampleError {
-    /// #     fn from(value: chrono::format::ParseError) -> Self {
-    /// #         ExampleError::ParseError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
+    /// let since_year = HalfBoundedAbsoluteInterval::until_year(2026, offset_tz)?;
     ///
-    /// let until_year = HalfBoundedAbsoluteInterval::until_year(2026, offset_tz)?;
-    ///
-    /// assert_eq!(until_year.reference_time(), "2025-12-31 22:00:00Z".parse::<Timestamp>()?);
-    /// assert_eq!(until_year.reference_inclusivity(), BoundInclusivity::Exclusive);
-    /// assert_eq!(until_year.opening_direction(), OpeningDirection::ToPast);
-    /// # Ok::<(), ExampleError>(())
+    /// assert_eq!(
+    ///     until_year.reference(),
+    ///     "2026-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    /// );
+    /// assert_eq!(until_year.reference_inclusivity(), BoundInclusivity::Inclusive);
+    /// assert_eq!(until_year.opening_direction(), OpeningDirection::ToFuture);
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
-    pub fn until_year(year: i32, tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
+    pub fn until_year(year: i16, tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
         Self::until_date(
-            Date::from_yo_opt(year, 1).ok_or(HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate)?,
+            Date::new(year, 1, 1).or(Err(HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReference))?,
             tz,
         )
     }
 
     /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans since the current year in the given timezone
     ///
-    /// See [`since_year`](HalfBoundedAbsoluteInterval::since_year) for more details.
-    ///
     /// # Errors
     ///
-    /// See [`since_year`](HalfBoundedAbsoluteInterval::since_year) for more details.
+    /// Returns any error that [`since_year`](HalfBoundedAbsoluteInterval::since_year) may return.
     ///
     /// # Examples
     ///
     /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{Duration, FixedOffset, Weekday};
-    /// # use periodical::intervals::absolute::{HalfBoundedAbsoluteInterval, HalfBoundedAbsoluteIntervalCreationError};
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     HalfBoundedAbsoluteIntervalCreationError(HalfBoundedAbsoluteIntervalCreationError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<HalfBoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: HalfBoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::HalfBoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
-    /// let since_this_year = HalfBoundedAbsoluteInterval::since_this_year(offset_tz)?;
-    /// # Ok::<(), ExampleError>(())
+    /// # use std::error::Error;
+    /// # use jiff::tz::TimeZone;
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
+    /// let since_this_year = HalfBoundedAbsoluteInterval::since_this_year(TimeZone::get("Europe/Oslo")?)?;
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn since_this_year(tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
-        Self::since_year(date_today(&tz).year(), tz)
+        Self::since_year(date_today(tz.clone()).year(), tz)
     }
 
     /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans until the current year in the given timezone
     ///
-    /// See [`until_year`](HalfBoundedAbsoluteInterval::until_year) for more details.
-    ///
     /// # Errors
     ///
-    /// See [`until_year`](HalfBoundedAbsoluteInterval::until_year) for more details.
+    /// Returns any error that [`until_year`](HalfBoundedAbsoluteInterval::until_year) may return.
     ///
     /// # Examples
     ///
     /// ```
-    /// # use std::num::TryFromIntError;
-    /// # use chrono::{Duration, FixedOffset, Weekday};
-    /// # use periodical::intervals::absolute::{HalfBoundedAbsoluteInterval, HalfBoundedAbsoluteIntervalCreationError};
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FixedOffsetError;
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     TryFromIntError(TryFromIntError),
-    /// #     FixedOffsetError(FixedOffsetError),
-    /// #     HalfBoundedAbsoluteIntervalCreationError(HalfBoundedAbsoluteIntervalCreationError),
-    /// # }
-    /// #
-    /// # impl From<TryFromIntError> for ExampleError {
-    /// #     fn from(value: TryFromIntError) -> Self {
-    /// #         ExampleError::TryFromIntError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<FixedOffsetError> for ExampleError {
-    /// #     fn from(value: FixedOffsetError) -> Self {
-    /// #         ExampleError::FixedOffsetError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<HalfBoundedAbsoluteIntervalCreationError> for ExampleError {
-    /// #     fn from(value: HalfBoundedAbsoluteIntervalCreationError) -> Self {
-    /// #         ExampleError::HalfBoundedAbsoluteIntervalCreationError(value)
-    /// #     }
-    /// # }
-    /// // UTC+02:00
-    /// let offset_tz = FixedOffset::east_opt(Duration::hours(2).num_seconds().try_into()?).ok_or(FixedOffsetError)?;
-    ///
-    /// let since_this_year = HalfBoundedAbsoluteInterval::until_this_year(offset_tz)?;
-    /// # Ok::<(), ExampleError>(())
+    /// # use std::error::Error;
+    /// # use jiff::tz::TimeZone;
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
+    /// let until_this_year = HalfBoundedAbsoluteInterval::until_this_year(TimeZone::get("Europe/Oslo")?)?;
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn until_this_year(tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
-        Self::until_year(date_today(&tz).year(), tz)
+        Self::until_year(date_today(tz.clone()).year(), tz)
     }
 }
