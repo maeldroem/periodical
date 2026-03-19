@@ -109,8 +109,8 @@ impl HalfBoundedAbsoluteInterval {
     /// assert_eq!(from_first_of_may.opening_direction(), OpeningDirection::ToFuture);
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn since_date(naive_date: Date, tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
-        let reference_time = naive_date
+    pub fn since_date(date: Date, tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
+        let reference_time = date
             .and_time(NAIVE_TIME_MIDNIGHT)
             .and_local_timezone(tz)
             .earliest()
@@ -196,8 +196,8 @@ impl HalfBoundedAbsoluteInterval {
     /// assert_eq!(until_first_of_may.opening_direction(), OpeningDirection::ToPast);
     /// # Ok::<(), ExampleError>(())
     /// ```
-    pub fn until_date(naive_date: Date, tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
-        let reference_time = naive_date
+    pub fn until_date(date: Date, tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
+        let reference_time = date
             .and_time(NAIVE_TIME_MIDNIGHT)
             .and_local_timezone(tz)
             .earliest()
@@ -260,7 +260,7 @@ impl HalfBoundedAbsoluteInterval {
     /// # Ok::<(), ExampleError>(())
     /// ```
     pub fn since_today(tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
-        Self::since_date(naive_date_today(&tz), tz)
+        Self::since_date(date_today(&tz), tz)
     }
 
     /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans until today in the given timezone
@@ -312,7 +312,7 @@ impl HalfBoundedAbsoluteInterval {
     /// # Ok::<(), ExampleError>(())
     /// ```
     pub fn until_today(tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
-        Self::until_date(naive_date_today(&tz), tz)
+        Self::until_date(date_today(&tz), tz)
     }
 
     /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans since tomorrow in the given timezone
@@ -322,7 +322,7 @@ impl HalfBoundedAbsoluteInterval {
     /// # Errors
     ///
     /// Returns [`OutOfRangeReferenceDate`](HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate) if
-    /// [`checked_add_naive_duration_to_naive_date`] returns [`None`].
+    /// [`checked_add_duration_to_date`] returns [`None`].
     ///
     /// See [`since_date`](HalfBoundedAbsoluteInterval::since_date) for more errors that could occur,
     /// as this method uses it.
@@ -369,7 +369,7 @@ impl HalfBoundedAbsoluteInterval {
     /// ```
     pub fn since_tomorrow(tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
         Self::since_date(
-            checked_add_naive_duration_to_naive_date(naive_date_today(&tz), CalendarAnchorOffset::Days(1))
+            checked_add_duration_to_date(date_today(&tz), CalendarAnchorOffset::Days(1))
                 .ok_or(HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate)?,
             tz,
         )
@@ -382,7 +382,7 @@ impl HalfBoundedAbsoluteInterval {
     /// # Errors
     ///
     /// Returns [`OutOfRangeReferenceDate`](HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate) if
-    /// [`checked_add_naive_duration_to_naive_date`] returns [`None`].
+    /// [`checked_add_duration_to_date`] returns [`None`].
     ///
     /// See [`until_date`](HalfBoundedAbsoluteInterval::until_date) for more errors that could occur,
     /// as this method uses it.
@@ -429,7 +429,7 @@ impl HalfBoundedAbsoluteInterval {
     /// ```
     pub fn until_tomorrow(tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
         Self::until_date(
-            checked_add_naive_duration_to_naive_date(naive_date_today(&tz), CalendarAnchorOffset::Days(1))
+            checked_add_duration_to_date(date_today(&tz), CalendarAnchorOffset::Days(1))
                 .ok_or(HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate)?,
             tz,
         )
@@ -442,7 +442,7 @@ impl HalfBoundedAbsoluteInterval {
     /// # Errors
     ///
     /// Returns [`OutOfRangeReferenceDate`](HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate) if
-    /// [`checked_sub_naive_duration_to_naive_date`] returns [`None`].
+    /// [`checked_sub_duration_to_date`] returns [`None`].
     ///
     /// See [`since_date`](HalfBoundedAbsoluteInterval::since_date) for more errors that could occur,
     /// as this method uses it.
@@ -489,7 +489,7 @@ impl HalfBoundedAbsoluteInterval {
     /// ```
     pub fn since_yesterday(tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
         Self::since_date(
-            checked_sub_naive_duration_to_naive_date(naive_date_today(&tz), CalendarAnchorOffset::Days(1))
+            checked_sub_duration_to_date(date_today(&tz), CalendarAnchorOffset::Days(1))
                 .ok_or(HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate)?,
             tz,
         )
@@ -502,7 +502,7 @@ impl HalfBoundedAbsoluteInterval {
     /// # Errors
     ///
     /// Returns [`OutOfRangeReferenceDate`](HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate) if
-    /// [`checked_sub_naive_duration_to_naive_date`] returns [`None`].
+    /// [`checked_sub_duration_to_date`] returns [`None`].
     ///
     /// See [`since_date`](HalfBoundedAbsoluteInterval::since_date) for more errors that could occur,
     /// as this method uses it.
@@ -549,7 +549,7 @@ impl HalfBoundedAbsoluteInterval {
     /// ```
     pub fn until_yesterday(tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
         Self::until_date(
-            checked_sub_naive_duration_to_naive_date(naive_date_today(&tz), CalendarAnchorOffset::Days(1))
+            checked_sub_duration_to_date(date_today(&tz), CalendarAnchorOffset::Days(1))
                 .ok_or(HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReferenceDate)?,
             tz,
         )
@@ -774,7 +774,7 @@ impl HalfBoundedAbsoluteInterval {
     /// # Ok::<(), ExampleError>(())
     /// ```
     pub fn since_this_week(week_start: Weekday, tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
-        Self::since_week(naive_date_today(&tz).week(week_start), tz)
+        Self::since_week(date_today(&tz).week(week_start), tz)
     }
 
     /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans until the current week in the given timezone
@@ -825,7 +825,7 @@ impl HalfBoundedAbsoluteInterval {
     /// let until_this_week = HalfBoundedAbsoluteInterval::until_this_week(Weekday::Mon, offset_tz)?;
     /// # Ok::<(), ExampleError>(())
     pub fn until_this_week(week_start: Weekday, tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
-        Self::until_week(naive_date_today(&tz).week(week_start), tz)
+        Self::until_week(date_today(&tz).week(week_start), tz)
     }
 
     /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans since the given ISO week in the given timezone
@@ -1047,7 +1047,7 @@ impl HalfBoundedAbsoluteInterval {
     /// # Ok::<(), ExampleError>(())
     /// ```
     pub fn since_this_iso_week(tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
-        Self::since_iso_week(naive_date_today(&tz).iso_week(), tz)
+        Self::since_iso_week(date_today(&tz).iso_week(), tz)
     }
 
     /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans until the current ISO week in the given timezone
@@ -1099,7 +1099,7 @@ impl HalfBoundedAbsoluteInterval {
     /// # Ok::<(), ExampleError>(())
     /// ```
     pub fn until_this_iso_week(tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
-        Self::until_iso_week(naive_date_today(&tz).iso_week(), tz)
+        Self::until_iso_week(date_today(&tz).iso_week(), tz)
     }
 
     /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans since the given month in the given timezone
@@ -1306,7 +1306,7 @@ impl HalfBoundedAbsoluteInterval {
     /// ```
     pub fn since_this_month(tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
         Self::since_month(
-            MonthInYear::try_from(naive_date_today(&tz))
+            MonthInYear::try_from(date_today(&tz))
                 .or(Err(HalfBoundedAbsoluteIntervalCreationError::DateOperationError))?,
             tz,
         )
@@ -1362,7 +1362,7 @@ impl HalfBoundedAbsoluteInterval {
     /// ```
     pub fn until_this_month(tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
         Self::until_month(
-            MonthInYear::try_from(naive_date_today(&tz))
+            MonthInYear::try_from(date_today(&tz))
                 .or(Err(HalfBoundedAbsoluteIntervalCreationError::DateOperationError))?,
             tz,
         )
@@ -1559,7 +1559,7 @@ impl HalfBoundedAbsoluteInterval {
     /// # Ok::<(), ExampleError>(())
     /// ```
     pub fn since_this_year(tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
-        Self::since_year(naive_date_today(&tz).year(), tz)
+        Self::since_year(date_today(&tz).year(), tz)
     }
 
     /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans until the current year in the given timezone
@@ -1611,6 +1611,6 @@ impl HalfBoundedAbsoluteInterval {
     /// # Ok::<(), ExampleError>(())
     /// ```
     pub fn until_this_year(tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
-        Self::until_year(naive_date_today(&tz).year(), tz)
+        Self::until_year(date_today(&tz).year(), tz)
     }
 }

@@ -82,7 +82,7 @@
 - [x] Migrated `intervals::meta` to jiff
 - [x] Migrated `intervals::bound_position` to jiff
 - [ ] Migrated `convenience::absolute` to jiff
-  - [ ] Migrated `convenience::absolute::bounded_interval` to jiff
+  - [x] Migrated `convenience::absolute::bounded_interval` to jiff
   - [ ] Migrated `convenience::absolute::half_bounded_interval` to jiff
 - [x] Migrated `time` to jiff
 - [x] Migrated `ops` to jiff
