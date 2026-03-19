@@ -58,15 +58,15 @@ pub const DAYS_IN_LEAP_YEAR: u16 = 366;
 /// # Examples
 ///
 /// ```
-/// # use jiff::Error as JiffError;
+/// # use std::error::Error;
 /// # use jiff::tz::TimeZone;
-/// # use periodical::time::naive_date_today;
-/// let today_date = naive_date_today(&TimeZone::get("Europe/Oslo")?);
-/// # Ok::<(), JiffError>(())
+/// # use periodical::time::date_today;
+/// let today_date = date_today(TimeZone::get("Europe/Oslo")?);
+/// # Ok::<(), Box<dyn Error>>(())
 /// ```
 #[must_use]
-pub fn naive_date_today(tz: &TimeZone) -> Date {
-    tz.to_datetime(Timestamp::now()).date()
+pub fn date_today(tz: TimeZone) -> Date {
+    Timestamp::now().to_zoned(tz).date()
 }
 
 /// Returns the number of ISO weeks in a given year
@@ -118,6 +118,11 @@ pub struct OffsetIsoWeek {
 }
 
 impl OffsetIsoWeek {
+    /// No week start offset
+    /// 
+    /// With this offset (or lack thereof), an [`OffsetIsoWeek`] becomes equivalent to a regular ISO week.
+    pub const ISO_OFFSET: i8 = 0;
+
     /// Creates a new [`OffsetIsoWeek`] without an offset
     ///
     /// # Errors
@@ -136,7 +141,7 @@ impl OffsetIsoWeek {
     /// # Ok::<(), OffsetIsoWeekCreationError>(())
     /// ```
     pub fn new(week: u8, year: i16) -> Result<Self, OffsetIsoWeekCreationError> {
-        Self::new_with_offset(week, year, 0)
+        Self::new_with_offset(week, year, Self::ISO_OFFSET)
     }
 
     /// Creates a new [`OffsetIsoWeek`] with the given week start offset

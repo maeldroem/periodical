@@ -582,26 +582,10 @@ pub enum BoundedAbsoluteIntervalCreationError {
     OutOfRangeStart,
     /// Provided or computed end bound is out of range
     OutOfRangeEnd,
-    /// Start time could not be created as positioned in a time gap
+    /// Something went wrong when computing data for creating the interval
     ///
-    /// Time gaps are often created by daylight savings time (DST), where a given duration can be skipped,
-    /// therefore creating either a fold or a gap in time.
-    StartInTimeGap,
-    /// End time could not be created as positioned in a time gap
-    ///
-    /// Time gaps are often created by daylight savings time (DST), where a given duration can be skipped,
-    /// therefore creating either a fold or a gap in time.
-    EndInTimeGap,
-    /// Something went wrong when computing a date
-    ///
-    /// This does not mean that the resulting date was out of range, but rather that something failed
-    /// in the process of calculating a date.
-    ///
-    /// An example would be subtracting a large value from a date's year (`chrono` stores years in [`i32`]):
-    /// Removing `i64::from(i32::MAX + 10)` from [`i32::MAX`] can be represented by an [`i32`],
-    /// but the computation may use `.checked_sub(i32::try_from(x))`, which would fail as `i64::from(i32::MAX + 10)`
-    /// cannot be stored in an [`i32`].
-    DateOperationError,
+    /// This can be caused by multiple factors, like numbers overflowing, input not respecting invariants, etc.
+    ComputationError,
 }
 
 impl Display for BoundedAbsoluteIntervalCreationError {
@@ -609,9 +593,7 @@ impl Display for BoundedAbsoluteIntervalCreationError {
         match self {
             Self::OutOfRangeStart => write!(f, "Provided or computed start bound is out of range"),
             Self::OutOfRangeEnd => write!(f, "Provided or computed end bound is out of range"),
-            Self::StartInTimeGap => write!(f, "Start time could not be created as positioned in a time gap"),
-            Self::EndInTimeGap => write!(f, "End time could not be created as positioned in a time gap"),
-            Self::DateOperationError => write!(f, "Something went wrong when computing a date"),
+            Self::ComputationError => write!(f, "Something went wrong when computing data for creating the interval"),
         }
     }
 }

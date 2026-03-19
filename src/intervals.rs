@@ -97,7 +97,7 @@ use crate::utils::tests;
 
 pub mod absolute;
 pub mod bound_position;
-// pub mod convenience;
+pub mod convenience;
 pub mod meta;
 pub mod ops;
 pub mod relative;
