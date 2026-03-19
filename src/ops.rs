@@ -92,17 +92,17 @@ impl PrecisionMode {
 /// # use periodical::ops::{Precision, PrecisionMode};
 /// let round_to_nearest_five_mins = Precision::new(Duration::from_mins(5), PrecisionMode::ToNearest)?;
 ///
-/// let two_minutes_after_eight = "2025-01-01 08:02:11+01:00[Europe/Oslo]".parse::<Zoned>()?;
-/// let fourteen_minutes_after_ten = "2025-01-01 10:14:21+01:00[Europe/Oslo]".parse::<Zoned>()?;
+/// let two_minutes_after_eight = "2025-01-01 08:02:11[Europe/Oslo]".parse::<Zoned>()?;
+/// let fourteen_minutes_after_ten = "2025-01-01 10:14:21[Europe/Oslo]".parse::<Zoned>()?;
 ///
 /// assert_eq!(
 ///     round_to_nearest_five_mins.precise_time(&two_minutes_after_eight)?.unambiguous()?,
-///     "2025-01-01 08:00:00+01:00[Europe/Oslo]".parse::<Zoned>()?,
+///     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?,
 /// );
 ///
 /// assert_eq!(
 ///     round_to_nearest_five_mins.precise_time(&fourteen_minutes_after_ten)?.unambiguous()?,
-///     "2025-01-01 10:15:00+01:00[Europe/Oslo]".parse::<Zoned>()?,
+///     "2025-01-01 10:15:00[Europe/Oslo]".parse::<Zoned>()?,
 /// );
 /// # Ok::<(), Box<dyn Error>>(())
 /// ```
@@ -116,9 +116,9 @@ impl PrecisionMode {
 /// # use periodical::ops::{Precision, PrecisionMode};
 /// let round_up_every_35_mins = Precision::new(Duration::from_mins(35), PrecisionMode::ToFuture)?;
 ///
-/// let first_january_2025 = "2025-01-01 00:00:00+01:00[Europe/Oslo]".parse::<Zoned>()?;
-/// let two_minutes_after_eight = "2025-01-01 08:02:11+01:00[Europe/Oslo]".parse::<Zoned>()?;
-/// let fourteen_minutes_after_ten = "2025-01-01 10:14:21+01:00[Europe/Oslo]".parse::<Zoned>()?;
+/// let first_january_2025 = "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?;
+/// let two_minutes_after_eight = "2025-01-01 08:02:11[Europe/Oslo]".parse::<Zoned>()?;
+/// let fourteen_minutes_after_ten = "2025-01-01 10:14:21[Europe/Oslo]".parse::<Zoned>()?;
 ///
 /// // 13 * 35m = 07:35
 /// // 14 * 35m = 08:10
@@ -128,7 +128,7 @@ impl PrecisionMode {
 ///         &first_january_2025,
 ///         None,
 ///     )?,
-///     "2025-01-01 08:10:00+01:00[Europe/Oslo]".parse::<Zoned>()?,
+///     "2025-01-01 08:10:00[Europe/Oslo]".parse::<Zoned>()?,
 /// );
 ///
 /// // 17 * 35m = 09:55
@@ -139,7 +139,7 @@ impl PrecisionMode {
 ///         &first_january_2025,
 ///         None,
 ///     )?,
-///     "2025-01-01 10:30:00+01:00[Europe/Oslo]".parse::<Zoned>()?,
+///     "2025-01-01 10:30:00[Europe/Oslo]".parse::<Zoned>()?,
 /// );
 /// # Ok::<(), Box<dyn Error>>(())
 /// ```
@@ -384,11 +384,11 @@ impl Precision {
     /// # use jiff::Zoned;
     /// # use periodical::ops::{Precision, PrecisionMode};
     /// let precision = Precision::new(Duration::from_hours(2), PrecisionMode::ToFuture)?;
-    /// let time = "2026-01-01 07:52:46+01:00[Europe/Oslo]".parse::<Zoned>()?;
+    /// let time = "2026-01-01 07:52:46[Europe/Oslo]".parse::<Zoned>()?;
     /// 
     /// assert_eq!(
     ///     precision.precise_time(&time)?.unambiguous()?,
-    ///     "2026-01-01 08:00:00+01:00[Europe/Oslo]".parse::<Zoned>()?,
+    ///     "2026-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?,
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
@@ -401,12 +401,12 @@ impl Precision {
     /// # use jiff::Zoned;
     /// # use periodical::ops::{Precision, PrecisionMode};
     /// let precision = Precision::new(Duration::from_mins(30), PrecisionMode::ToFuture)?;
-    /// let ok_time = "2026-03-29 07:52:46+02:00[Europe/Oslo]".parse::<Zoned>()?;
-    /// let gap_time = "2026-03-29 01:55:34+01:00[Europe/Oslo]".parse::<Zoned>()?;
+    /// let ok_time = "2026-03-29 07:52:46[Europe/Oslo]".parse::<Zoned>()?;
+    /// let gap_time = "2026-03-29 01:55:34[Europe/Oslo]".parse::<Zoned>()?;
     /// 
     /// assert_eq!(
     ///     precision.precise_time(&ok_time)?.unambiguous()?,
-    ///     "2026-03-29 08:00:00+02:00[Europe/Oslo]".parse::<Zoned>()?,
+    ///     "2026-03-29 08:00:00[Europe/Oslo]".parse::<Zoned>()?,
     /// );
     /// 
     /// // since rounding 01:55:34 would end up at 02:00:00, which is when DST starts in this timezone,
@@ -416,7 +416,7 @@ impl Precision {
     /// assert_eq!(
     ///     precision.precise_time(&gap_time)?.compatible()?,
     ///     // first time after DST time gap
-    ///     "2026-03-29 03:00:00+02:00[Europe/Oslo]".parse::<Zoned>()?,
+    ///     "2026-03-29 03:00:00[Europe/Oslo]".parse::<Zoned>()?,
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
@@ -429,7 +429,7 @@ impl Precision {
     /// # use jiff::Zoned;
     /// # use periodical::ops::{Precision, PrecisionMode};
     /// let precision = Precision::new(Duration::from_mins(5), PrecisionMode::ToFuture)?;
-    /// let time = "2026-01-01 08:45:00+01:00[Europe/Oslo]".parse::<Zoned>()?;
+    /// let time = "2026-01-01 08:45:00[Europe/Oslo]".parse::<Zoned>()?;
     /// 
     /// assert_eq!(
     ///     precision.precise_time(&time)?.unambiguous()?,
@@ -496,12 +496,12 @@ impl Precision {
     /// # use jiff::Zoned;
     /// # use periodical::ops::{Precision, PrecisionMode};
     /// let precision = Precision::new(Duration::from_hours(2), PrecisionMode::ToFuture)?;
-    /// let time = "2026-03-29 07:55:02+02:00[Europe/Oslo]".parse::<Zoned>()?;
+    /// let time = "2026-03-29 07:55:02[Europe/Oslo]".parse::<Zoned>()?;
     /// let base = time.start_of_day()?;
     /// 
     /// assert_eq!(
     ///     precision.precise_time_with_base_time(&time, &base, None)?,
-    ///     "2026-03-29 09:00:00+02:00[Europe/Oslo]".parse::<Zoned>()?,
+    ///     "2026-03-29 09:00:00[Europe/Oslo]".parse::<Zoned>()?,
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
@@ -514,12 +514,12 @@ impl Precision {
     /// # use jiff::Zoned;
     /// # use periodical::ops::{Precision, PrecisionMode};
     /// let precision = Precision::new(Duration::from_mins(22), PrecisionMode::ToFuture)?;
-    /// let time = "2026-01-02 07:55:02+01:00[Europe/Oslo]".parse::<Zoned>()?;
-    /// let base = "2026-01-01 00:00:00+01:00[Europe/Oslo]".parse::<Zoned>()?;
+    /// let time = "2026-01-02 07:55:02[Europe/Oslo]".parse::<Zoned>()?;
+    /// let base = "2026-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?;
     /// 
     /// assert_eq!(
     ///     precision.precise_time_with_base_time(&time, &base, None)?,
-    ///     "2026-01-02 08:16:00+01:00[Europe/Oslo]".parse::<Zoned>()?,
+    ///     "2026-01-02 08:16:00[Europe/Oslo]".parse::<Zoned>()?,
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
