@@ -28,6 +28,8 @@
 - [ ] Re-express tests to more compact syntaxes using newly available convenience methods,
       such as `.to_start_bound()`, `.to_interval()`, etc.
 - [ ] Review tests to ensure usefulness
+- [ ] Add methods to get the `OffsetIsoWeek` of a given `Date`
+  - [ ] Then re-implement convenience methods like `this_week`, `until_this_week` on intervals
 
 # Changelog
 
@@ -81,9 +83,9 @@
 - [x] Migrated `intervals::special` to jiff
 - [x] Migrated `intervals::meta` to jiff
 - [x] Migrated `intervals::bound_position` to jiff
-- [ ] Migrated `convenience::absolute` to jiff
+- [x] Migrated `convenience::absolute` to jiff
   - [x] Migrated `convenience::absolute::bounded_interval` to jiff
-  - [ ] Migrated `convenience::absolute::half_bounded_interval` to jiff
+  - [x] Migrated `convenience::absolute::half_bounded_interval` to jiff
 - [x] Migrated `time` to jiff
 - [x] Migrated `ops` to jiff
 - [ ] Migrated `intervals::ops` to jiff
@@ -175,6 +177,7 @@
 
 - Removed `Display` implementations on intervals and related types in favor of more specialized
   formatting methods (WIP)
+- Removed convenience methods (+ related tests) that converted a `Date` to an `OffsetIsoWeek`
 
 ## Fixed
 

@@ -51,7 +51,7 @@ inline_docs! {
     pub use emptiable_bound_pair::{HasEmptiableAbsoluteBoundPair, EmptiableAbsoluteBoundPair};
     pub use emptiable_interval::EmptiableAbsoluteInterval;
     pub use finite_bound::{AbsoluteFiniteBound, AbsoluteFiniteBoundFromBoundError};
-    pub use half_bounded_interval::HalfBoundedAbsoluteInterval;
+    pub use half_bounded_interval::{HalfBoundedAbsoluteInterval, HalfBoundedAbsoluteIntervalCreationError};
     pub use interval::AbsoluteInterval;
     pub use start_bound::AbsoluteStartBound;
 }
