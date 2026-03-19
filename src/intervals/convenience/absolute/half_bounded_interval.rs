@@ -339,7 +339,7 @@ impl HalfBoundedAbsoluteInterval {
     ///
     /// assert_eq!(
     ///     interval.reference(),
-    ///     "2026-01-26 00:00:00Z".parse::<Zoned>()?.timestamp(),
+    ///     "2026-01-26 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     /// );
     /// assert_eq!(interval.reference_inclusivity(), BoundInclusivity::Inclusive);
     /// assert_eq!(interval.opening_direction(), OpeningDirection::ToFuture);
@@ -535,7 +535,7 @@ impl HalfBoundedAbsoluteInterval {
     /// # use jiff::tz::TimeZone;
     /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
     /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
-    /// let since_year = HalfBoundedAbsoluteInterval::since_year(2026, offset_tz)?;
+    /// let since_year = HalfBoundedAbsoluteInterval::since_year(2026, TimeZone::get("Europe/Oslo")?)?;
     ///
     /// assert_eq!(
     ///     since_year.reference(),
@@ -569,14 +569,14 @@ impl HalfBoundedAbsoluteInterval {
     /// # use jiff::tz::TimeZone;
     /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
     /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
-    /// let since_year = HalfBoundedAbsoluteInterval::until_year(2026, offset_tz)?;
+    /// let until_year = HalfBoundedAbsoluteInterval::until_year(2026, TimeZone::get("Europe/Oslo")?)?;
     ///
     /// assert_eq!(
     ///     until_year.reference(),
     ///     "2026-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     /// );
-    /// assert_eq!(until_year.reference_inclusivity(), BoundInclusivity::Inclusive);
-    /// assert_eq!(until_year.opening_direction(), OpeningDirection::ToFuture);
+    /// assert_eq!(until_year.reference_inclusivity(), BoundInclusivity::Exclusive);
+    /// assert_eq!(until_year.opening_direction(), OpeningDirection::ToPast);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn until_year(year: i16, tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {

@@ -113,9 +113,9 @@
 - [x] Migrated `intervals::special`'s tests to jiff
 - [x] Migrated `intervals::meta`'s tests to jiff
 - [x] Migrated `intervals::bound_position`'s tests to jiff
-- [ ] Migrated `convenience::absolute`'s tests to jiff
-  - [ ] Migrated `convenience::absolute::bounded_interval`'s tests to jiff
-  - [ ] Migrated `convenience::absolute::half_bounded_interval`'s tests to jiff
+- [x] Migrated `convenience::absolute`'s tests to jiff
+  - [x] Migrated `convenience::absolute::bounded_interval`'s tests to jiff
+  - [x] Migrated `convenience::absolute::half_bounded_interval`'s tests to jiff
 - [x] Migrated `time`'s tests to jiff
 - [x] Migrated `ops`'s tests to jiff
 - [ ] Migrated `intervals::ops`'s tests to jiff
@@ -143,9 +143,9 @@
 - [x] Migrated `intervals::special`'s examples to jiff
 - [x] Migrated `intervals::meta`'s examples to jiff
 - [x] Migrated `intervals::bound_position`'s examples to jiff
-- [ ] Migrated `convenience::absolute`'s examples to jiff
-  - [ ] Migrated `convenience::absolute::bounded_interval`'s examples to jiff
-  - [ ] Migrated `convenience::absolute::half_bounded_interval`'s examples to jiff
+- [x] Migrated `convenience::absolute`'s examples to jiff
+  - [x] Migrated `convenience::absolute::bounded_interval`'s examples to jiff
+  - [x] Migrated `convenience::absolute::half_bounded_interval`'s examples to jiff
 - [x] Migrated `ops`'s examples to jiff
 - [x] Migrated `intervals`'s examples to jiff
 - [ ] Migrated `intervals::ops`'s examples to jiff
