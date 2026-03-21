@@ -20,7 +20,7 @@
 
 use crate::utils::{inline_docs, tests};
 
-// pub mod abridge;
+pub mod abridge;
 // pub mod bound_containment;
 pub mod bound_ord;
 pub mod bound_overlap_ambiguity;
@@ -41,7 +41,7 @@ pub mod bound_overlap_ambiguity;
 // pub mod split;
 
 tests! {
-//     mod abridge_tests;
+    mod abridge_tests;
 //     mod bound_containment_tests;
     mod bound_ord_tests;
     mod bound_overlap_ambiguity_tests;
@@ -63,7 +63,7 @@ tests! {
 }
 
 inline_docs! {
-    // pub use abridge::Abridgable;
+    pub use abridge::Abridgable;
     // pub use bound_containment::{
     //     BoundContainmentPosition, BoundContainmentRule, BoundContainmentRuleSet, CanPositionBoundContainment,
     //     DEFAULT_BOUND_CONTAINMENT_RULES, DisambiguatedBoundContainmentPosition,
