@@ -1,13 +1,13 @@
-use chrono::Utc;
+use std::error::Error;
+
+use jiff::Zoned;
 
 use crate::intervals::absolute::{
-    AbsoluteBounds, AbsoluteEndBound, AbsoluteInterval, AbsoluteStartBound, BoundedAbsoluteInterval,
-    EmptiableAbsoluteBounds, HalfBoundedAbsoluteInterval,
+    AbsoluteBoundPair, AbsoluteEndBound, AbsoluteInterval, AbsoluteStartBound, BoundedAbsoluteInterval, EmptiableAbsoluteBoundPair, EmptiableAbsoluteInterval, HalfBoundedAbsoluteInterval
 };
 use crate::intervals::meta::{BoundInclusivity, OpeningDirection};
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 use crate::ops::ComplementResult;
-use crate::test_utils::date;
 
 use super::complement::*;
 
@@ -22,43 +22,51 @@ fn complement_of_empty_interval() {
 }
 
 #[test]
-fn complement_of_half_unbounded_interval() {
+fn complement_of_half_unbounded_interval() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        HalfBoundedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), OpeningDirection::ToFuture).complement(),
-        ComplementResult::Single(AbsoluteInterval::HalfBounded(
-            HalfBoundedAbsoluteInterval::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Exclusive,
-                OpeningDirection::ToPast,
-            )
+        HalfBoundedAbsoluteInterval::new(
+            "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+            OpeningDirection::ToFuture,
+        ).complement(),
+        ComplementResult::Single(HalfBoundedAbsoluteInterval::new_with_inclusivity(
+            "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+            BoundInclusivity::Exclusive,
+            OpeningDirection::ToPast,
         )),
     );
+
+    Ok(())
 }
 
 #[test]
-fn complement_of_bounded_interval() {
+fn complement_of_bounded_interval() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        BoundedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), date(&Utc, 2025, 1, 2)).complement(),
+        BoundedAbsoluteInterval::new(
+            "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+            "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+        ).complement(),
         ComplementResult::Split(
-            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
+            HalfBoundedAbsoluteInterval::new_with_inclusivity(
+                "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
                 OpeningDirection::ToPast,
-            )),
-            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
+            ),
+            HalfBoundedAbsoluteInterval::new_with_inclusivity(
+                "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
                 OpeningDirection::ToFuture,
-            )),
+            ),
         ),
     );
+
+    Ok(())
 }
 
 #[test]
-fn complement_of_emptiable_abs_bounds_empty() {
+fn complement_of_emptiable_abs_bound_pair_empty() {
     assert_eq!(
-        EmptiableAbsoluteBounds::Empty.complement(),
-        ComplementResult::Single(EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
+        EmptiableAbsoluteBoundPair::Empty.complement(),
+        ComplementResult::Single(EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::new(
             AbsoluteStartBound::InfinitePast,
             AbsoluteEndBound::InfiniteFuture,
         ))),
@@ -66,10 +74,10 @@ fn complement_of_emptiable_abs_bounds_empty() {
 }
 
 #[test]
-fn complement_of_abs_bounds_unbounded() {
+fn complement_of_abs_bound_pair_unbounded() {
     assert_eq!(
-        AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture).complement(),
-        ComplementResult::Single(EmptiableAbsoluteBounds::Empty),
+        AbsoluteBoundPair::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture).complement(),
+        ComplementResult::Single(EmptiableAbsoluteBoundPair::Empty),
     );
 }
 
@@ -77,58 +85,62 @@ fn complement_of_abs_bounds_unbounded() {
 fn complement_of_abs_interval_unbounded() {
     assert_eq!(
         AbsoluteInterval::Unbounded(UnboundedInterval).complement(),
-        ComplementResult::Single(AbsoluteInterval::Empty(EmptyInterval)),
+        ComplementResult::Single(EmptiableAbsoluteInterval::Empty(EmptyInterval)),
     );
 }
 
 #[test]
-fn complement_of_abs_interval_half_bounded() {
+fn complement_of_abs_interval_half_bounded() -> Result<(), Box<dyn Error>> {
     assert_eq!(
         AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
-            date(&Utc, 2025, 1, 1),
+            "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             BoundInclusivity::Exclusive,
             OpeningDirection::ToPast,
         ))
         .complement(),
-        ComplementResult::Single(AbsoluteInterval::HalfBounded(
+        ComplementResult::Single(EmptiableAbsoluteInterval::HalfBounded(
             HalfBoundedAbsoluteInterval::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
+                "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Inclusive,
                 OpeningDirection::ToFuture,
             )
         )),
     );
+
+    Ok(())
 }
 
 #[test]
-fn complement_of_abs_interval_bounded() {
+fn complement_of_abs_interval_bounded() -> Result<(), Box<dyn Error>> {
     assert_eq!(
         AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new_with_inclusivity(
-            date(&Utc, 2025, 1, 1),
+            "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             BoundInclusivity::Exclusive,
-            date(&Utc, 2025, 1, 2),
+            "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             BoundInclusivity::Exclusive,
         ))
         .complement(),
         ComplementResult::Split(
-            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
+            EmptiableAbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
+                "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Inclusive,
                 OpeningDirection::ToPast,
             )),
-            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
+            EmptiableAbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
+                "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Inclusive,
                 OpeningDirection::ToFuture,
             )),
         ),
     );
+
+    Ok(())
 }
 
 #[test]
 fn complement_of_abs_interval_empty() {
     assert_eq!(
-        AbsoluteInterval::Empty(EmptyInterval).complement(),
-        ComplementResult::Single(AbsoluteInterval::Unbounded(UnboundedInterval)),
+        EmptiableAbsoluteInterval::Empty(EmptyInterval).complement(),
+        ComplementResult::Single(EmptiableAbsoluteInterval::Unbounded(UnboundedInterval)),
     );
 }
