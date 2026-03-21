@@ -192,8 +192,8 @@
 - [ ] Migrated `intervals::ops`'s examples to jiff
   - [x] Migrated `abridge`'s examples to jiff
   - [x] Migrated `bound_containment`'s examples to jiff
-  - [ ] Migrated `bound_ord`'s examples to jiff
-  - [ ] Migrated `bound_overlap_ambiguity`'s examples to jiff
+  - [x] Migrated `bound_ord`'s examples to jiff
+  - [x] Migrated `bound_overlap_ambiguity`'s examples to jiff
   - [x] Migrated `complement`'s examples to jiff
   - [ ] Migrated `continuation`'s examples to jiff
   - [ ] Migrated `cut`'s examples to jiff

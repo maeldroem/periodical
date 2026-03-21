@@ -125,6 +125,17 @@ pub enum OpeningDirection {
     ToPast,
 }
 
+impl OpeningDirection {
+    /// Returns the opposite [`OpeningDirection`]
+    #[must_use]
+    pub fn opposite(&self) -> Self {
+        match self {
+            Self::ToFuture => OpeningDirection::ToPast,
+            Self::ToPast => OpeningDirection::ToFuture,
+        }
+    }
+}
+
 impl Display for OpeningDirection {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {

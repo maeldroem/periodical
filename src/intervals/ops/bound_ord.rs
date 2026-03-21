@@ -17,19 +17,20 @@
 //!
 //! ```
 //! # use std::cmp::Ordering;
-//! # use chrono::{DateTime, Utc};
-//! # use periodical::intervals::absolute::{AbsoluteFiniteBound, AbsoluteStartBound};
+//! # use std::error::Error;
+//! # use jiff::Zoned;
+//! # use periodical::intervals::absolute::AbsoluteFiniteBound;
 //! # use periodical::intervals::meta::BoundInclusivity;
 //! # use periodical::intervals::ops::bound_ord::PartialBoundOrd;
 //! # use periodical::intervals::ops::bound_overlap_ambiguity::BoundOverlapDisambiguationRuleSet;
-//! let ref_bound = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!     "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-//! ));
+//! let ref_bound = AbsoluteFiniteBound::new(
+//!     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//! ).to_start_bound();
 //!
-//! let compared_bound = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-//!     "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+//! let compared_bound = AbsoluteFiniteBound::new_with_inclusivity(
+//!     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 //!     BoundInclusivity::Exclusive,
-//! ));
+//! ).to_start_bound();
 //!
 //! // Only strict comparison when using Ord
 //! assert_eq!(compared_bound.cmp(&ref_bound), Ordering::Greater);
@@ -41,7 +42,7 @@
 //!     .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Lenient),
 //!     Ordering::Equal,
 //! );
-//! # Ok::<(), chrono::format::ParseError>(())
+//! # Ok::<(), Box<dyn Error>>(())
 //! ```
 
 use std::cmp::Ordering;
@@ -91,17 +92,18 @@ impl BoundOrdering {
     ///
     /// ```
     /// # use std::cmp::Ordering;
-    /// # use chrono::{DateTime, Utc};
+    /// # use std::error::Error;
+    /// # use jiff::Zoned;
     /// # use periodical::intervals::absolute::{AbsoluteFiniteBound, AbsoluteStartBound};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::bound_ord::PartialBoundOrd;
     /// # use periodical::intervals::ops::bound_overlap_ambiguity::BoundOverlapDisambiguationRuleSet;
     /// let ref_bound = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///     "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     /// ));
     ///
     /// let compared_bound = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-    ///     "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     BoundInclusivity::Exclusive,
     /// ));
     ///
@@ -111,7 +113,7 @@ impl BoundOrdering {
     ///     .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Lenient),
     ///     Ordering::Equal,
     /// );
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
     pub fn disambiguate_using_rule_set(self, rule_set: BoundOverlapDisambiguationRuleSet) -> Ordering {
@@ -135,7 +137,8 @@ impl BoundOrdering {
     ///
     /// ```
     /// # use std::cmp::Ordering;
-    /// # use chrono::{DateTime, Utc};
+    /// # use std::error::Error;
+    /// # use jiff::Zoned;
     /// # use periodical::intervals::absolute::{AbsoluteFiniteBound, AbsoluteStartBound};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::bound_ord::PartialBoundOrd;
@@ -143,20 +146,20 @@ impl BoundOrdering {
     /// #     BoundOverlapAmbiguity, BoundOverlapDisambiguationRuleSet, DisambiguatedBoundOverlap,
     /// # };
     /// let ref_bound = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///     "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     /// ));
     ///
     /// let compared_bound = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///     "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     /// ));
     ///
     /// let mut ref_bound_exclusive = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-    ///     "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     BoundInclusivity::Exclusive,
     /// ));
     ///
     /// let compared_bound_exclusive = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-    ///     "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     BoundInclusivity::Exclusive,
     /// ));
     ///
@@ -190,7 +193,7 @@ impl BoundOrdering {
     ///     .disambiguate_using(disambiguation_closure),
     ///     Ordering::Equal,
     /// );
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
     pub fn disambiguate_using<F>(self, f: F) -> Ordering
@@ -220,17 +223,18 @@ impl BoundOrdering {
 /// # Examples
 ///
 /// ```
-/// # use chrono::{DateTime, Utc};
+/// # use std::error::Error;
+/// # use jiff::Zoned;
 /// # use periodical::intervals::absolute::{AbsoluteFiniteBound, AbsoluteStartBound};
 /// # use periodical::intervals::meta::BoundInclusivity;
 /// # use periodical::intervals::ops::bound_ord::{BoundOrdering, PartialBoundOrd};
 /// # use periodical::intervals::ops::bound_overlap_ambiguity::BoundOverlapAmbiguity;
 /// let ref_bound = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-///     "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+///     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 /// ));
 ///
 /// let compared_bound = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-///     "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+///     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///     BoundInclusivity::Exclusive,
 /// ));
 ///
@@ -241,7 +245,7 @@ impl BoundOrdering {
 ///         BoundInclusivity::Exclusive,
 ///     ))),
 /// );
-/// # Ok::<(), chrono::format::ParseError>(())
+/// # Ok::<(), Box<dyn Error>>(())
 /// ```
 pub trait PartialBoundOrd<Rhs = Self> {
     /// Compares two bounds
@@ -251,17 +255,18 @@ pub trait PartialBoundOrd<Rhs = Self> {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Utc};
+    /// # use std::error::Error;
+    /// # use jiff::Zoned;
     /// # use periodical::intervals::absolute::{AbsoluteFiniteBound, AbsoluteStartBound};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::bound_ord::{BoundOrdering, PartialBoundOrd};
     /// # use periodical::intervals::ops::bound_overlap_ambiguity::BoundOverlapAmbiguity;
     /// let ref_bound = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///     "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     /// ));
     ///
     /// let compared_bound = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-    ///     "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     BoundInclusivity::Exclusive,
     /// ));
     ///
@@ -272,7 +277,7 @@ pub trait PartialBoundOrd<Rhs = Self> {
     ///         BoundInclusivity::Exclusive,
     ///     ))),
     /// );
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
     fn bound_cmp(&self, other: &Rhs) -> BoundOrdering;
@@ -282,7 +287,8 @@ pub trait PartialBoundOrd<Rhs = Self> {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Utc};
+    /// # use std::error::Error;
+    /// # use jiff::Zoned;
     /// # use periodical::intervals::absolute::{AbsoluteFiniteBound, AbsoluteStartBound};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::bound_ord::{BoundOrdering, PartialBoundOrd};
@@ -290,16 +296,16 @@ pub trait PartialBoundOrd<Rhs = Self> {
     /// #     BoundOverlapAmbiguity, BoundOverlapDisambiguationRuleSet,
     /// # };
     /// let ref_bound = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///     "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     /// ));
     ///
     /// let compared_bound = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-    ///     "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     BoundInclusivity::Exclusive,
     /// ));
     ///
     /// assert!(!compared_bound.bound_lt(&ref_bound, BoundOverlapDisambiguationRuleSet::Strict));
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
     fn bound_lt(&self, other: &Rhs, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
@@ -320,7 +326,8 @@ pub trait PartialBoundOrd<Rhs = Self> {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Utc};
+    /// # use std::error::Error;
+    /// # use jiff::Zoned;
     /// # use periodical::intervals::absolute::{AbsoluteFiniteBound, AbsoluteStartBound};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::bound_ord::{BoundOrdering, PartialBoundOrd};
@@ -328,16 +335,16 @@ pub trait PartialBoundOrd<Rhs = Self> {
     /// #     BoundOverlapAmbiguity, BoundOverlapDisambiguationRuleSet,
     /// # };
     /// let ref_bound = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///     "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     /// ));
     ///
     /// let compared_bound = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-    ///     "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     BoundInclusivity::Exclusive,
     /// ));
     ///
     /// assert!(!compared_bound.bound_le(&ref_bound, BoundOverlapDisambiguationRuleSet::Strict));
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
     fn bound_le(&self, other: &Rhs, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
@@ -358,7 +365,8 @@ pub trait PartialBoundOrd<Rhs = Self> {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Utc};
+    /// # use std::error::Error;
+    /// # use jiff::Zoned;
     /// # use periodical::intervals::absolute::{AbsoluteFiniteBound, AbsoluteStartBound};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::bound_ord::{BoundOrdering, PartialBoundOrd};
@@ -366,16 +374,16 @@ pub trait PartialBoundOrd<Rhs = Self> {
     /// #     BoundOverlapAmbiguity, BoundOverlapDisambiguationRuleSet,
     /// # };
     /// let ref_bound = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///     "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     /// ));
     ///
     /// let compared_bound = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-    ///     "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     BoundInclusivity::Exclusive,
     /// ));
     ///
     /// assert!(compared_bound.bound_gt(&ref_bound, BoundOverlapDisambiguationRuleSet::Strict));
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
     fn bound_gt(&self, other: &Rhs, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
@@ -396,7 +404,8 @@ pub trait PartialBoundOrd<Rhs = Self> {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Utc};
+    /// # use std::error::Error;
+    /// # use jiff::Zoned;
     /// # use periodical::intervals::absolute::{AbsoluteFiniteBound, AbsoluteStartBound};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::bound_ord::{BoundOrdering, PartialBoundOrd};
@@ -404,16 +413,16 @@ pub trait PartialBoundOrd<Rhs = Self> {
     /// #     BoundOverlapAmbiguity, BoundOverlapDisambiguationRuleSet,
     /// # };
     /// let ref_bound = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///     "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     /// ));
     ///
     /// let compared_bound = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-    ///     "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     BoundInclusivity::Exclusive,
     /// ));
     ///
     /// assert!(compared_bound.bound_ge(&ref_bound, BoundOverlapDisambiguationRuleSet::Strict));
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
     fn bound_ge(&self, other: &Rhs, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
