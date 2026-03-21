@@ -26,12 +26,12 @@ pub mod bound_ord;
 pub mod bound_overlap_ambiguity;
 pub mod complement;
 pub mod continuation;
-// pub mod cut;
+pub mod cut;
 // pub mod extend;
 // pub mod fill_gap;
 // pub mod grow;
 // pub mod overlap;
-// pub mod point_containment;
+pub mod point_containment;
 // pub mod precision;
 // pub mod relativity_conversion;
 // pub mod remove_overlap;
@@ -47,12 +47,12 @@ tests! {
     mod bound_overlap_ambiguity_tests;
     mod complement_tests;
     mod continuation_tests;
-//     mod cut_tests;
+    mod cut_tests;
 //     mod extend_tests;
 //     mod fill_gap_tests;
 //     mod grow_tests;
 //     mod overlap_tests;
-//     mod point_containment_tests;
+    mod point_containment_tests;
 //     mod precision_tests;
 //     mod relativity_conversion_tests;
 //     mod remove_overlap_or_gap_tests;
@@ -74,7 +74,7 @@ inline_docs! {
     };
     pub use complement::Complementable;
     pub use continuation::Continuable;
-    // pub use cut::{CutResult, CutType, Cuttable};
+    pub use cut::{CutResult, CutType, Cuttable};
     // pub use extend::Extensible;
     // pub use fill_gap::GapFillable;
     // pub use grow::{GrowableEndBound, GrowableStartBound};
@@ -82,10 +82,10 @@ inline_docs! {
     //     CanPositionOverlap, DEFAULT_OVERLAP_RULES, DisambiguatedOverlapPosition, OverlapPosition, OverlapRule,
     //     OverlapRuleSet,
     // };
-    // pub use point_containment::{
-    //     CanPositionPointContainment, DEFAULT_POINT_CONTAINMENT_RULES, DisambiguatedPointContainmentPosition,
-    //     PointContainmentPosition, PointContainmentRule, PointContainmentRuleSet,
-    // };
+    pub use point_containment::{
+        CanPositionPointContainment, DEFAULT_POINT_CONTAINMENT_RULES, DisambiguatedPointContainmentPosition,
+        PointContainmentPosition, PointContainmentRule, PointContainmentRuleSet,
+    };
     // pub use precision::PreciseAbsoluteInterval;
     // pub use relativity_conversion::{ToAbsolute, ToRelative};
     // pub use remove_overlap::{OverlapRemovable, OverlapRemovalResult};

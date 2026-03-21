@@ -38,6 +38,7 @@
 - [ ] Resolve all TODO comments
 - [ ] Add line width checker to the CI
 - [ ] Figure out a way to cargo fmt doc examples + enforce 80 char line width in examples
+- [ ] Bring documentation rate (docs.rs) to 100%
 
 # Changelog
 
@@ -101,12 +102,12 @@
   - [x] Migrated `bound_containment` to jiff
   - [x] Migrated `complement` to jiff
   - [x] Migrated `continuation` to jiff
-  - [ ] Migrated `cut` to jiff
+  - [x] Migrated `cut` to jiff
   - [ ] Migrated `extend` to jiff
   - [ ] Migrated `fill_gap` to jiff
   - [ ] Migrated `grow` to jiff
   - [ ] Migrated `overlap` to jiff
-  - [ ] Migrated `point_containment` to jiff
+  - [x] Migrated `point_containment` to jiff
   - [ ] Migrated `precision` to jiff
   - [ ] Migrated `relativity_conversion` to jiff
   - [ ] Migrated `remove_overlap_or_gap` to jiff
@@ -149,12 +150,12 @@
   - [x] Migrated `bound_ord`'s tests to jiff
   - [x] Migrated `complement`'s tests to jiff
   - [x] Migrated `continuation`'s tests to jiff
-  - [ ] Migrated `cut`'s tests to jiff
+  - [x] Migrated `cut`'s tests to jiff
   - [ ] Migrated `extend`'s tests to jiff
   - [ ] Migrated `fill_gap`'s tests to jiff
   - [ ] Migrated `grow`'s tests to jiff
   - [ ] Migrated `overlap`'s tests to jiff
-  - [ ] Migrated `point_containment`'s tests to jiff
+  - [x] Migrated `point_containment`'s tests to jiff
   - [ ] Migrated `precision`'s tests to jiff
   - [ ] Migrated `relativity_conversion`'s tests to jiff
   - [ ] Migrated `remove_overlap_or_gap`'s tests to jiff
@@ -198,12 +199,12 @@
   - [x] Migrated `bound_overlap_ambiguity`'s examples to jiff
   - [x] Migrated `complement`'s examples to jiff
   - [x] Migrated `continuation`'s examples to jiff
-  - [ ] Migrated `cut`'s examples to jiff
+  - [x] Migrated `cut`'s examples to jiff
   - [ ] Migrated `extend`'s examples to jiff
   - [ ] Migrated `fill_gap`'s examples to jiff
   - [ ] Migrated `grow`'s examples to jiff
   - [ ] Migrated `overlap`'s examples to jiff
-  - [ ] Migrated `point_containment`'s examples to jiff
+  - [x] Migrated `point_containment`'s examples to jiff
   - [ ] Migrated `precision`'s examples to jiff
   - [ ] Migrated `relativity_conversion`'s examples to jiff
   - [ ] Migrated `remove_overlap_or_gap`'s examples to jiff

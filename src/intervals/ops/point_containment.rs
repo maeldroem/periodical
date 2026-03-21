@@ -21,24 +21,23 @@
 //! # Examples
 //!
 //! ```
-//! # use chrono::{DateTime, Utc};
-//! # use periodical::intervals::absolute::{
-//! #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
-//! # };
+//! # use std::error::Error;
+//! # use jiff::Zoned;
+//! # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
 //! # use periodical::intervals::ops::point_containment::CanPositionPointContainment;
-//! let interval = AbsoluteBounds::new(
-//!     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-//!     )),
-//!     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-//!         "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
-//!     )),
+//! let interval = AbsoluteBoundPair::new(
+//!     AbsoluteFiniteBound::new(
+//!         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!     ).to_start_bound(),
+//!     AbsoluteFiniteBound::new(
+//!         "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!     ).to_end_bound(),
 //! );
 //!
-//! let point = "2025-01-01 10:00:00Z".parse::<DateTime<Utc>>()?;
+//! let point = "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?;
 //!
 //! assert!(interval.simple_contains_point(point));
-//! # Ok::<(), chrono::format::ParseError>(())
+//! # Ok::<(), Box<dyn Error>>(())
 //! ```
 
 use std::cmp::Ordering;
@@ -46,18 +45,18 @@ use std::convert::Infallible;
 
 #[cfg(feature = "arbitrary")]
 use arbitrary::Arbitrary;
-use chrono::{DateTime, Duration, Utc};
+use jiff::{SignedDuration, Timestamp};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 use crate::intervals::absolute::{
-    AbsoluteBounds, AbsoluteEndBound, AbsoluteInterval, AbsoluteStartBound, BoundedAbsoluteInterval,
-    EmptiableAbsoluteBounds, HalfBoundedAbsoluteInterval, HasAbsoluteBounds, HasEmptiableAbsoluteBounds,
+    AbsoluteBoundPair, AbsoluteEndBound, AbsoluteInterval, AbsoluteStartBound, BoundedAbsoluteInterval,
+    EmptiableAbsoluteBoundPair, HalfBoundedAbsoluteInterval, HasAbsoluteBoundPair, HasEmptiableAbsoluteBoundPair,
 };
 use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
 use crate::intervals::relative::{
-    BoundedRelativeInterval, EmptiableRelativeBounds, HalfBoundedRelativeInterval, HasEmptiableRelativeBounds,
-    HasRelativeBounds, RelativeBounds, RelativeEndBound, RelativeInterval, RelativeStartBound,
+    BoundedRelativeInterval, EmptiableRelativeBoundPair, HalfBoundedRelativeInterval, HasEmptiableRelativeBoundPair,
+    HasRelativeBoundPair, RelativeBoundPair, RelativeEndBound, RelativeInterval, RelativeStartBound,
 };
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 
@@ -461,54 +460,52 @@ pub fn deny_on_bounds_containment_rule_counts_as_contained(
 /// ## Fetching the disambiguated position of a point
 ///
 /// ```
-/// # use chrono::{DateTime, Utc};
-/// # use periodical::intervals::absolute::{
-/// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
-/// # };
+/// # use std::error::Error;
+/// # use jiff::Zoned;
+/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
 /// # use periodical::intervals::ops::point_containment::{
 /// #     CanPositionPointContainment, DisambiguatedPointContainmentPosition, PointContainmentRuleSet,
 /// # };
-/// let interval = AbsoluteBounds::new(
-///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-///     )),
-///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-///         "2025-01-01 10:00:00Z".parse::<DateTime<Utc>>()?,
-///     )),
+/// let interval = AbsoluteBoundPair::new(
+///     AbsoluteFiniteBound::new(
+///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///     ).to_start_bound(),
+///     AbsoluteFiniteBound::new(
+///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///     ).to_end_bound(),
 /// );
 ///
-/// let point = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+/// let point = "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?;
 ///
 /// assert_eq!(
 ///     interval.disambiguated_point_containment_position(point, PointContainmentRuleSet::Strict),
 ///     Ok(DisambiguatedPointContainmentPosition::OnStart),
 /// );
-/// # Ok::<(), chrono::format::ParseError>(())
+/// # Ok::<(), Box<dyn Error>>(())
 /// ```
 ///
 /// ## Checking if a point is contained in an interval
 ///
 /// ```
-/// # use chrono::{DateTime, Utc};
-/// # use periodical::intervals::absolute::{
-/// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
-/// # };
+/// # use std::error::Error;
+/// # use jiff::Zoned;
+/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
 /// # use periodical::intervals::ops::point_containment::{
 /// #     CanPositionPointContainment, DisambiguatedPointContainmentPosition, PointContainmentRuleSet,
 /// # };
-/// let interval = AbsoluteBounds::new(
-///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-///     )),
-///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-///         "2025-01-01 10:00:00Z".parse::<DateTime<Utc>>()?,
-///     )),
+/// let interval = AbsoluteBoundPair::new(
+///     AbsoluteFiniteBound::new(
+///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///     ).to_start_bound(),
+///     AbsoluteFiniteBound::new(
+///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///     ).to_end_bound(),
 /// );
 ///
-/// let point = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+/// let point = "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?;
 ///
 /// assert!(interval.simple_contains_point(point));
-/// # Ok::<(), chrono::format::ParseError>(())
+/// # Ok::<(), Box<dyn Error>>(())
 /// ```
 pub trait CanPositionPointContainment<P> {
     /// Error type if the point containment positioning failed
@@ -530,31 +527,30 @@ pub trait CanPositionPointContainment<P> {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Utc};
-    /// # use periodical::intervals::absolute::{
-    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
-    /// # };
+    /// # use std::error::Error;
+    /// # use jiff::Zoned;
+    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::point_containment::{
     /// #     CanPositionPointContainment, PointContainmentPosition,
     /// # };
-    /// let interval = AbsoluteBounds::new(
-    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-    ///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+    /// let interval = AbsoluteBoundPair::new(
+    ///     AbsoluteFiniteBound::new_with_inclusivity(
+    ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///         BoundInclusivity::Exclusive,
-    ///     )),
-    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 10:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     )),
+    ///     ).to_start_bound(),
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_end_bound(),
     /// );
     ///
-    /// let point = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let point = "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?;
     ///
     /// assert_eq!(
     ///     interval.point_containment_position(point),
     ///     Ok(PointContainmentPosition::OnStart(BoundInclusivity::Exclusive)),
     /// );
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     fn point_containment_position(&self, positionable: P) -> Result<PointContainmentPosition, Self::Error>;
 
@@ -571,29 +567,28 @@ pub trait CanPositionPointContainment<P> {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Utc};
-    /// # use periodical::intervals::absolute::{
-    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
-    /// # };
+    /// # use std::error::Error;
+    /// # use jiff::Zoned;
+    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
     /// # use periodical::intervals::ops::point_containment::{
     /// #     CanPositionPointContainment, DisambiguatedPointContainmentPosition, PointContainmentRuleSet,
     /// # };
-    /// let interval = AbsoluteBounds::new(
-    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     )),
-    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 10:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     )),
+    /// let interval = AbsoluteBoundPair::new(
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_start_bound(),
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_end_bound(),
     /// );
     ///
-    /// let point = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let point = "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?;
     ///
     /// assert_eq!(
     ///     interval.disambiguated_point_containment_position(point, PointContainmentRuleSet::Strict),
     ///     Ok(DisambiguatedPointContainmentPosition::OnStart),
     /// );
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     fn disambiguated_point_containment_position(
         &self,
@@ -615,24 +610,23 @@ pub trait CanPositionPointContainment<P> {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Utc};
-    /// # use periodical::intervals::absolute::{
-    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
-    /// # };
+    /// # use std::error::Error;
+    /// # use jiff::Zoned;
+    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
     /// # use periodical::intervals::ops::point_containment::CanPositionPointContainment;
-    /// let interval = AbsoluteBounds::new(
-    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     )),
-    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 10:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     )),
+    /// let interval = AbsoluteBoundPair::new(
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_start_bound(),
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_end_bound(),
     /// );
     ///
-    /// let point = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let point = "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?;
     ///
     /// assert!(interval.simple_contains_point(point));
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     ///
     /// # See also
@@ -667,30 +661,29 @@ pub trait CanPositionPointContainment<P> {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Utc};
-    /// # use periodical::intervals::absolute::{
-    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
-    /// # };
+    /// # use std::error::Error;
+    /// # use jiff::Zoned;
+    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
     /// # use periodical::intervals::ops::point_containment::{
     /// #     CanPositionPointContainment, PointContainmentRule, PointContainmentRuleSet,
     /// # };
-    /// let interval = AbsoluteBounds::new(
-    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     )),
-    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 10:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     )),
+    /// let interval = AbsoluteBoundPair::new(
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_start_bound(),
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_end_bound(),
     /// );
     ///
-    /// let point = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let point = "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?;
     ///
     /// assert!(interval.contains_point(
     ///     point,
     ///     PointContainmentRuleSet::Strict,
     ///     &[PointContainmentRule::AllowOnBounds],
     /// ));
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     ///
     /// # See also
@@ -728,22 +721,21 @@ pub trait CanPositionPointContainment<P> {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Utc};
-    /// # use periodical::intervals::absolute::{
-    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
-    /// # };
+    /// # use std::error::Error;
+    /// # use jiff::Zoned;
+    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::point_containment::{CanPositionPointContainment, PointContainmentPosition};
-    /// let interval = AbsoluteBounds::new(
-    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     )),
-    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 10:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     )),
+    /// let interval = AbsoluteBoundPair::new(
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_start_bound(),
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_end_bound(),
     /// );
     ///
-    /// let point = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let point = "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?;
     ///
     /// let containment_closure = |point_pos: PointContainmentPosition| -> bool {
     ///     matches!(
@@ -755,7 +747,7 @@ pub trait CanPositionPointContainment<P> {
     /// };
     ///
     /// assert!(!interval.contains_point_using(point, containment_closure));
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     ///
     /// # See also
@@ -789,24 +781,25 @@ pub trait CanPositionPointContainment<P> {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Utc};
+    /// # use std::error::Error;
+    /// # use jiff::Zoned;
     /// # use periodical::intervals::absolute::{
-    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+    /// #     AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
     /// # };
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::point_containment::{
     /// #     CanPositionPointContainment, DisambiguatedPointContainmentPosition, PointContainmentRuleSet,
     /// # };
-    /// let interval = AbsoluteBounds::new(
-    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     )),
-    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 10:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     )),
+    /// let interval = AbsoluteBoundPair::new(
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_start_bound(),
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_end_bound(),
     /// );
     ///
-    /// let point = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
+    /// let point = "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?;
     ///
     /// let containment_closure = |point_pos: DisambiguatedPointContainmentPosition| -> bool {
     ///     matches!(point_pos, DisambiguatedPointContainmentPosition::Inside)
@@ -817,7 +810,7 @@ pub trait CanPositionPointContainment<P> {
     ///     PointContainmentRuleSet::Strict,
     ///     containment_closure,
     /// ));
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     ///
     /// # See also
@@ -838,56 +831,56 @@ pub trait CanPositionPointContainment<P> {
     }
 }
 
-impl<P> CanPositionPointContainment<P> for AbsoluteBounds
+impl<P> CanPositionPointContainment<P> for AbsoluteBoundPair
 where
-    P: Into<DateTime<Utc>>,
+    P: Into<Timestamp>,
 {
     type Error = Infallible;
 
     fn point_containment_position(&self, positionable: P) -> Result<PointContainmentPosition, Self::Error> {
-        Ok(point_containment_position_abs_bounds(self, positionable.into()))
+        Ok(point_containment_position_abs_bound_pair(self, positionable.into()))
     }
 }
 
-impl<P> CanPositionPointContainment<P> for EmptiableAbsoluteBounds
+impl<P> CanPositionPointContainment<P> for EmptiableAbsoluteBoundPair
 where
-    P: Into<DateTime<Utc>>,
+    P: Into<Timestamp>,
 {
     type Error = Infallible;
 
     fn point_containment_position(&self, positionable: P) -> Result<PointContainmentPosition, Self::Error> {
-        let EmptiableAbsoluteBounds::Bound(bounds) = self else {
+        let EmptiableAbsoluteBoundPair::Bound(bounds) = self else {
             return Ok(PointContainmentPosition::Outside);
         };
 
-        Ok(point_containment_position_abs_bounds(bounds, positionable.into()))
+        Ok(point_containment_position_abs_bound_pair(bounds, positionable.into()))
     }
 }
 
 impl<P> CanPositionPointContainment<P> for AbsoluteInterval
 where
-    P: Into<DateTime<Utc>>,
+    P: Into<Timestamp>,
 {
     type Error = Infallible;
 
     fn point_containment_position(&self, positionable: P) -> Result<PointContainmentPosition, Self::Error> {
-        let EmptiableAbsoluteBounds::Bound(bounds) = self.emptiable_abs_bounds() else {
+        let EmptiableAbsoluteBoundPair::Bound(bounds) = self.emptiable_abs_bound_pair() else {
             return Ok(PointContainmentPosition::Outside);
         };
 
-        Ok(point_containment_position_abs_bounds(&bounds, positionable.into()))
+        Ok(point_containment_position_abs_bound_pair(&bounds, positionable.into()))
     }
 }
 
 impl<P> CanPositionPointContainment<P> for BoundedAbsoluteInterval
 where
-    P: Into<DateTime<Utc>>,
+    P: Into<Timestamp>,
 {
     type Error = Infallible;
 
     fn point_containment_position(&self, positionable: P) -> Result<PointContainmentPosition, Self::Error> {
-        Ok(point_containment_position_abs_bounds(
-            &self.abs_bounds(),
+        Ok(point_containment_position_abs_bound_pair(
+            &self.abs_bound_pair(),
             positionable.into(),
         ))
     }
@@ -895,68 +888,68 @@ where
 
 impl<P> CanPositionPointContainment<P> for HalfBoundedAbsoluteInterval
 where
-    P: Into<DateTime<Utc>>,
+    P: Into<Timestamp>,
 {
     type Error = Infallible;
 
     fn point_containment_position(&self, positionable: P) -> Result<PointContainmentPosition, Self::Error> {
-        Ok(point_containment_position_abs_bounds(
-            &self.abs_bounds(),
+        Ok(point_containment_position_abs_bound_pair(
+            &self.abs_bound_pair(),
             positionable.into(),
         ))
     }
 }
 
-impl<P> CanPositionPointContainment<P> for RelativeBounds
+impl<P> CanPositionPointContainment<P> for RelativeBoundPair
 where
-    P: Into<Duration>,
+    P: Into<SignedDuration>,
 {
     type Error = Infallible;
 
     fn point_containment_position(&self, positionable: P) -> Result<PointContainmentPosition, Self::Error> {
-        Ok(point_containment_position_rel_bounds(self, positionable.into()))
+        Ok(point_containment_position_rel_bound_pair(self, positionable.into()))
     }
 }
 
-impl<P> CanPositionPointContainment<P> for EmptiableRelativeBounds
+impl<P> CanPositionPointContainment<P> for EmptiableRelativeBoundPair
 where
-    P: Into<Duration>,
+    P: Into<SignedDuration>,
 {
     type Error = Infallible;
 
     fn point_containment_position(&self, positionable: P) -> Result<PointContainmentPosition, Self::Error> {
-        let EmptiableRelativeBounds::Bound(bounds) = self else {
+        let EmptiableRelativeBoundPair::Bound(bounds) = self else {
             return Ok(PointContainmentPosition::Outside);
         };
 
-        Ok(point_containment_position_rel_bounds(bounds, positionable.into()))
+        Ok(point_containment_position_rel_bound_pair(bounds, positionable.into()))
     }
 }
 
 impl<P> CanPositionPointContainment<P> for RelativeInterval
 where
-    P: Into<Duration>,
+    P: Into<SignedDuration>,
 {
     type Error = Infallible;
 
     fn point_containment_position(&self, positionable: P) -> Result<PointContainmentPosition, Self::Error> {
-        let EmptiableRelativeBounds::Bound(bounds) = self.emptiable_rel_bounds() else {
+        let EmptiableRelativeBoundPair::Bound(bounds) = self.emptiable_rel_bound_pair() else {
             return Ok(PointContainmentPosition::Outside);
         };
 
-        Ok(point_containment_position_rel_bounds(&bounds, positionable.into()))
+        Ok(point_containment_position_rel_bound_pair(&bounds, positionable.into()))
     }
 }
 
 impl<P> CanPositionPointContainment<P> for BoundedRelativeInterval
 where
-    P: Into<Duration>,
+    P: Into<SignedDuration>,
 {
     type Error = Infallible;
 
     fn point_containment_position(&self, positionable: P) -> Result<PointContainmentPosition, Self::Error> {
-        Ok(point_containment_position_rel_bounds(
-            &self.rel_bounds(),
+        Ok(point_containment_position_rel_bound_pair(
+            &self.rel_bound_pair(),
             positionable.into(),
         ))
     }
@@ -964,61 +957,59 @@ where
 
 impl<P> CanPositionPointContainment<P> for HalfBoundedRelativeInterval
 where
-    P: Into<Duration>,
+    P: Into<SignedDuration>,
 {
     type Error = Infallible;
 
     fn point_containment_position(&self, positionable: P) -> Result<PointContainmentPosition, Self::Error> {
-        Ok(point_containment_position_rel_bounds(
-            &self.rel_bounds(),
+        Ok(point_containment_position_rel_bound_pair(
+            &self.rel_bound_pair(),
             positionable.into(),
         ))
     }
 }
 
-// TODO: Find a way to implement these for P: Into<DateTime<Utc>> and P: Into<chrono::Duration>
-impl CanPositionPointContainment<DateTime<Utc>> for UnboundedInterval {
+impl CanPositionPointContainment<Timestamp> for UnboundedInterval {
     type Error = Infallible;
 
     fn point_containment_position(
         &self,
-        _positionable: DateTime<Utc>,
+        _positionable: Timestamp,
     ) -> Result<PointContainmentPosition, Self::Error> {
         Ok(PointContainmentPosition::Inside)
     }
 }
 
-impl CanPositionPointContainment<Duration> for UnboundedInterval {
+impl CanPositionPointContainment<SignedDuration> for UnboundedInterval {
     type Error = Infallible;
 
-    fn point_containment_position(&self, _positionable: Duration) -> Result<PointContainmentPosition, Self::Error> {
+    fn point_containment_position(&self, _positionable: SignedDuration) -> Result<PointContainmentPosition, Self::Error> {
         Ok(PointContainmentPosition::Inside)
     }
 }
 
-// TODO: Find a way to implement these for P: Into<DateTime<Utc>> and P: Into<chrono::Duration>
-impl CanPositionPointContainment<DateTime<Utc>> for EmptyInterval {
+impl CanPositionPointContainment<Timestamp> for EmptyInterval {
     type Error = Infallible;
 
     fn point_containment_position(
         &self,
-        _positionable: DateTime<Utc>,
+        _positionable: Timestamp,
     ) -> Result<PointContainmentPosition, Self::Error> {
         Ok(PointContainmentPosition::Outside)
     }
 }
 
-impl CanPositionPointContainment<Duration> for EmptyInterval {
+impl CanPositionPointContainment<SignedDuration> for EmptyInterval {
     type Error = Infallible;
 
-    fn point_containment_position(&self, _positionable: Duration) -> Result<PointContainmentPosition, Self::Error> {
+    fn point_containment_position(&self, _positionable: SignedDuration) -> Result<PointContainmentPosition, Self::Error> {
         Ok(PointContainmentPosition::Outside)
     }
 }
 
-/// Returns the [`PointContainmentPosition`] of the given time within the given [`AbsoluteBounds`]
+/// Returns the [`PointContainmentPosition`] of the given time within the given [`AbsoluteBoundPair`]
 #[must_use]
-pub fn point_containment_position_abs_bounds(bounds: &AbsoluteBounds, time: DateTime<Utc>) -> PointContainmentPosition {
+pub fn point_containment_position_abs_bound_pair(bounds: &AbsoluteBoundPair, time: Timestamp) -> PointContainmentPosition {
     type StartB = AbsoluteStartBound;
     type EndB = AbsoluteEndBound;
     type ContPos = PointContainmentPosition;
@@ -1047,9 +1038,9 @@ pub fn point_containment_position_abs_bounds(bounds: &AbsoluteBounds, time: Date
     }
 }
 
-/// Returns the [`PointContainmentPosition`] of the given offset within the given [`RelativeBounds`]
+/// Returns the [`PointContainmentPosition`] of the given offset within the given [`RelativeBoundPair`]
 #[must_use]
-pub fn point_containment_position_rel_bounds(bounds: &RelativeBounds, offset: Duration) -> PointContainmentPosition {
+pub fn point_containment_position_rel_bound_pair(bounds: &RelativeBoundPair, offset: SignedDuration) -> PointContainmentPosition {
     type StartB = RelativeStartBound;
     type EndB = RelativeEndBound;
     type ContPos = PointContainmentPosition;
