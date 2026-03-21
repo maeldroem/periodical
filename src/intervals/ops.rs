@@ -25,7 +25,7 @@ pub mod bound_containment;
 pub mod bound_ord;
 pub mod bound_overlap_ambiguity;
 pub mod complement;
-// pub mod continuation;
+pub mod continuation;
 // pub mod cut;
 // pub mod extend;
 // pub mod fill_gap;
@@ -46,7 +46,7 @@ tests! {
     mod bound_ord_tests;
     mod bound_overlap_ambiguity_tests;
     mod complement_tests;
-//     mod continuation_tests;
+    mod continuation_tests;
 //     mod cut_tests;
 //     mod extend_tests;
 //     mod fill_gap_tests;
@@ -73,6 +73,7 @@ inline_docs! {
         BoundOverlapAmbiguity, BoundOverlapDisambiguationRuleSet, DisambiguatedBoundOverlap,
     };
     pub use complement::Complementable;
+    pub use continuation::Continuable;
     // pub use cut::{CutResult, CutType, Cuttable};
     // pub use extend::Extensible;
     // pub use fill_gap::GapFillable;
