@@ -97,7 +97,7 @@
 - [ ] Migrated `intervals::ops` to jiff
   - [x] Migrated `abridge` to jiff
   - [x] Migrated `bound_containment` to jiff
-  - [ ] Migrated `complement` to jiff
+  - [x] Migrated `complement` to jiff
   - [ ] Migrated `continuation` to jiff
   - [ ] Migrated `cut` to jiff
   - [ ] Migrated `extend` to jiff
@@ -145,7 +145,7 @@
   - [x] Migrated `abridge`'s tests to jiff
   - [x] Migrated `bound_containment`'s tests to jiff
   - [x] Migrated `bound_ord`'s tests to jiff
-  - [ ] Migrated `complement`'s tests to jiff
+  - [x] Migrated `complement`'s tests to jiff
   - [ ] Migrated `continuation`'s tests to jiff
   - [ ] Migrated `cut`'s tests to jiff
   - [ ] Migrated `extend`'s tests to jiff
@@ -194,7 +194,7 @@
   - [x] Migrated `bound_containment`'s examples to jiff
   - [ ] Migrated `bound_ord`'s examples to jiff
   - [ ] Migrated `bound_overlap_ambiguity`'s examples to jiff
-  - [ ] Migrated `complement`'s examples to jiff
+  - [x] Migrated `complement`'s examples to jiff
   - [ ] Migrated `continuation`'s examples to jiff
   - [ ] Migrated `cut`'s examples to jiff
   - [ ] Migrated `extend`'s examples to jiff
