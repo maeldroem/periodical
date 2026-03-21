@@ -17,18 +17,29 @@
 //! See [`Abridgable`].
 
 use crate::intervals::absolute::{
-    AbsoluteBounds, AbsoluteEndBound, AbsoluteInterval, AbsoluteStartBound, BoundedAbsoluteInterval,
-    EmptiableAbsoluteBounds, HalfBoundedAbsoluteInterval, HasAbsoluteBounds, HasEmptiableAbsoluteBounds,
-    swap_absolute_bounds,
+    AbsoluteBoundPair, AbsoluteEndBound, AbsoluteInterval, AbsoluteStartBound, BoundedAbsoluteInterval, EmptiableAbsoluteBoundPair, EmptiableAbsoluteInterval, HalfBoundedAbsoluteInterval, HasAbsoluteBoundPair, HasEmptiableAbsoluteBoundPair, swap_absolute_bound_pair
 };
 use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
 use crate::intervals::ops::bound_ord::{BoundOrdering, PartialBoundOrd};
 use crate::intervals::ops::bound_overlap_ambiguity::BoundOverlapAmbiguity;
 use crate::intervals::relative::{
-    BoundedRelativeInterval, EmptiableRelativeBounds, HalfBoundedRelativeInterval, HasEmptiableRelativeBounds,
-    HasRelativeBounds, RelativeBounds, RelativeEndBound, RelativeInterval, RelativeStartBound, swap_relative_bounds,
+    BoundedRelativeInterval, EmptiableRelativeBoundPair, EmptiableRelativeInterval, HalfBoundedRelativeInterval, HasEmptiableRelativeBoundPair, HasRelativeBoundPair, RelativeBoundPair, RelativeEndBound, RelativeInterval, RelativeStartBound, swap_relative_bound_pair
 };
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
+
+macro_rules! abridge_impl_rhs_clone {
+    ($implementor:ty, $output:ty, [$($rhs:ty),*$(,)?] $(,)?) => {
+        $(
+            impl Abridgable<$rhs> for $implementor {
+                type Output = $output;
+
+                fn abridge(&self, rhs: &$rhs) -> Self::Output {
+                    Self::Output::from(rhs.clone())
+                }
+            }
+        )*
+    };
+}
 
 /// Capacity to abridge an interval with another
 ///
@@ -49,70 +60,72 @@ use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 /// ## Non-overlapping intervals
 ///
 /// ```
-/// # use chrono::{DateTime, Utc};
-/// # use periodical::intervals::absolute::{AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound};
+/// # use std::error::Error;
+/// # use jiff::Zoned;
+/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
 /// # use periodical::intervals::meta::BoundInclusivity;
 /// # use periodical::intervals::ops::abridge::Abridgable;
-/// let first_start_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
-/// let first_end_time = "2025-01-01 11:00:00Z".parse::<DateTime<Utc>>()?;
+/// let first_start_time = "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp();
+/// let first_end_time = "2025-01-01 11:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp();
 ///
-/// let first_interval = AbsoluteBounds::new(
-///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(first_start_time)),
-///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(first_end_time)),
+/// let first_interval = AbsoluteBoundPair::new(
+///     AbsoluteFiniteBound::new(first_start_time).to_start_bound(),
+///     AbsoluteFiniteBound::new(first_end_time).to_end_bound(),
 /// );
 ///
-/// let second_start_time = "2025-01-01 13:00:00Z".parse::<DateTime<Utc>>()?;
-/// let second_end_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+/// let second_start_time = "2025-01-01 13:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp();
+/// let second_end_time = "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp();
 ///
-/// let second_interval = AbsoluteBounds::new(
-///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(second_start_time)),
-///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(second_end_time)),
+/// let second_interval = AbsoluteBoundPair::new(
+///     AbsoluteFiniteBound::new(second_start_time).to_start_bound(),
+///     AbsoluteFiniteBound::new(second_end_time).to_end_bound(),
 /// );
 ///
 /// let abridged_interval = first_interval.abridge(&second_interval);
 ///
 /// // first interval:    [----]
-/// // second interval:           [----]  
+/// // second interval:           [----]
 /// // abridged interval:      (--)
 ///
 /// assert_eq!(
-///     *abridged_interval.clone().bound().expect("Empty abridged interval").start(),
-///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+///     abridged_interval.clone().bound().ok_or("Empty abridged interval")?.start(),
+///     AbsoluteFiniteBound::new_with_inclusivity(
 ///         first_end_time,
 ///         BoundInclusivity::Exclusive,
-///     )),
+///     ).to_start_bound(),
 /// );
 /// assert_eq!(
-///     *abridged_interval.clone().bound().expect("Empty abridged interval").end(),
-///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+///     abridged_interval.clone().bound().ok_or("Empty abridged interval")?.end(),
+///     AbsoluteFiniteBound::new_with_inclusivity(
 ///         second_start_time,
 ///         BoundInclusivity::Exclusive,
-///     )),
+///     ).to_end_bound(),
 /// );
-/// # Ok::<(), chrono::format::ParseError>(())
+/// # Ok::<(), Box<dyn Error>>(())
 /// ```
 ///
 /// ## Overlapping intervals
 ///
 /// ```
-/// # use chrono::{DateTime, Utc};
-/// # use periodical::intervals::absolute::{AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound};
+/// # use std::error::Error;
+/// # use jiff::Zoned;
+/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
 /// # use periodical::intervals::meta::BoundInclusivity;
 /// # use periodical::intervals::ops::abridge::Abridgable;
-/// let first_start_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
-/// let first_end_time = "2025-01-01 13:00:00Z".parse::<DateTime<Utc>>()?;
+/// let first_start_time = "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp();
+/// let first_end_time = "2025-01-01 13:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp();
 ///
-/// let first_interval = AbsoluteBounds::new(
-///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(first_start_time)),
-///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(first_end_time)),
+/// let first_interval = AbsoluteBoundPair::new(
+///     AbsoluteFiniteBound::new(first_start_time).to_start_bound(),
+///     AbsoluteFiniteBound::new(first_end_time).to_end_bound(),
 /// );
 ///
-/// let second_start_time = "2025-01-01 11:00:00Z".parse::<DateTime<Utc>>()?;
-/// let second_end_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+/// let second_start_time = "2025-01-01 11:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp();
+/// let second_end_time = "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp();
 ///
-/// let second_interval = AbsoluteBounds::new(
-///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(second_start_time)),
-///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(second_end_time)),
+/// let second_interval = AbsoluteBoundPair::new(
+///     AbsoluteFiniteBound::new(second_start_time).to_start_bound(),
+///     AbsoluteFiniteBound::new(second_end_time).to_end_bound(),
 /// );
 ///
 /// let abridged_interval = first_interval.abridge(&second_interval);
@@ -122,381 +135,246 @@ use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 /// // abridged interval:   [--]
 ///
 /// assert_eq!(
-///     *abridged_interval.clone().bound().expect("Empty abridged interval").start(),
-///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+///     abridged_interval.clone().bound().ok_or("Empty abridged interval")?.start(),
+///     AbsoluteFiniteBound::new_with_inclusivity(
 ///         second_start_time,
 ///         BoundInclusivity::Inclusive,
-///     )),
+///     ).to_start_bound(),
 /// );
 /// assert_eq!(
-///     *abridged_interval.clone().bound().expect("Empty abridged interval").end(),
-///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+///     abridged_interval.clone().bound().ok_or("Empty abridged interval")?.end(),
+///     AbsoluteFiniteBound::new_with_inclusivity(
 ///         first_end_time,
 ///         BoundInclusivity::Inclusive,
-///     )),
+///     ).to_end_bound(),
 /// );
-/// # Ok::<(), chrono::format::ParseError>(())
+/// # Ok::<(), Box<dyn Error>>(())
 /// ```
 ///
 /// ## Inclusive-Exclusive adjacent intervals
 ///
 /// ```
-/// # use chrono::{DateTime, Utc};
-/// # use periodical::intervals::absolute::{
-/// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, EmptiableAbsoluteBounds,
-/// # };
+/// # use std::error::Error;
+/// # use jiff::Zoned;
+/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound, EmptiableAbsoluteBoundPair};
 /// # use periodical::intervals::meta::BoundInclusivity;
 /// # use periodical::intervals::ops::abridge::Abridgable;
-/// let first_start_time = "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?;
-/// let first_end_time = "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?;
+/// let first_start_time = "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp();
+/// let first_end_time = "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp();
 ///
-/// let first_interval = AbsoluteBounds::new(
-///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(first_start_time)),
-///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(first_end_time)),
+/// let first_interval = AbsoluteBoundPair::new(
+///     AbsoluteFiniteBound::new(first_start_time).to_start_bound(),
+///     AbsoluteFiniteBound::new(first_end_time).to_end_bound(),
 /// );
 ///
-/// let second_start_time = "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?;
-/// let second_end_time = "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?;
+/// let second_start_time = "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp();
+/// let second_end_time = "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp();
 ///
-/// let second_interval = AbsoluteBounds::new(
-///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+/// let second_interval = AbsoluteBoundPair::new(
+///     AbsoluteFiniteBound::new_with_inclusivity(
 ///         second_start_time,
 ///         BoundInclusivity::Exclusive,
-///     )),
-///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(second_end_time)),
+///     ).to_start_bound(),
+///     AbsoluteFiniteBound::new(second_end_time).to_end_bound(),
 /// );
 ///
 /// let abridged_interval = first_interval.abridge(&second_interval);
 ///
 /// // first interval:    [----]
-/// // second interval:        (----]  
+/// // second interval:        (----]
 /// // abridged interval: empty interval
 ///
-/// assert_eq!(abridged_interval, EmptiableAbsoluteBounds::Empty);
-/// # Ok::<(), chrono::format::ParseError>(())
+/// assert_eq!(abridged_interval, EmptiableAbsoluteBoundPair::Empty);
+/// # Ok::<(), Box<dyn Error>>(())
 /// ```
 pub trait Abridgable<Rhs = Self> {
     /// Output type
     type Output;
 
-    /// Creates an abridged interval from the current one and given one
+    /// Creates an abridged interval
     ///
-    /// Instead of intersecting two intervals, this method takes the highest point of both intervals' lower bound
-    /// and the lowest point of both intervals' upper bound, then create an interval that spans those two points.
+    /// Instead of intersecting two intervals, this method takes the highest of both intervals' start and
+    /// the lowest of both intervals' end, then create an interval that spans those two points.
     ///
-    /// Regarding bound inclusivity, for each point we will get the bound inclusivity of the interval from which
-    /// the point was taken. If they were equal, we choose the most exclusive bound.
+    /// Regarding bound inclusivity, for each bound we will get the bound inclusivity of the interval from which
+    /// the bound was taken. If they were equal, we choose the most exclusive bound.
     ///
     /// If the intervals don't strictly overlap, the method returns the interval that spans the gap between the two
-    /// intervals. This sort of gap interval will have opposite bound inclusivities from the points it was created from.
+    /// intervals. This sort of gap interval will have opposite bound inclusivities from the bounds they were created
+    /// from.
+    /// 
+    /// If the highest start and lowest end are adjacent, one being inclusive and the other exclusive,
+    /// abridging returns an empty interval.
     ///
     /// If both intervals are empty, the method just returns an empty interval.
     ///
-    /// If one of the intervals is empty, the method just returns a clone of the other non-empty interval.
+    /// If one interval is empty, the method just returns a clone of the other non-empty interval.
     #[must_use]
     fn abridge(&self, rhs: &Rhs) -> Self::Output;
 }
 
-impl<Rhs> Abridgable<Rhs> for AbsoluteBounds
+impl<Rhs> Abridgable<Rhs> for AbsoluteBoundPair
 where
-    Rhs: HasEmptiableAbsoluteBounds,
+    Rhs: HasEmptiableAbsoluteBoundPair,
 {
-    type Output = EmptiableAbsoluteBounds;
+    type Output = EmptiableAbsoluteBoundPair;
 
     fn abridge(&self, rhs: &Rhs) -> Self::Output {
-        abridge_abs_bounds_with_emptiable_abs_bounds(&self.abs_bounds(), &rhs.emptiable_abs_bounds())
+        abridge_abs_bound_pair_with_emptiable_abs_bound_pair(&self.abs_bound_pair(), &rhs.emptiable_abs_bound_pair())
     }
 }
 
-impl<Rhs> Abridgable<Rhs> for EmptiableAbsoluteBounds
+impl<Rhs> Abridgable<Rhs> for EmptiableAbsoluteBoundPair
 where
-    Rhs: HasEmptiableAbsoluteBounds,
+    Rhs: HasEmptiableAbsoluteBoundPair,
 {
     type Output = Self;
 
     fn abridge(&self, rhs: &Rhs) -> Self::Output {
-        abridge_emptiable_abs_bounds(&self.emptiable_abs_bounds(), &rhs.emptiable_abs_bounds())
+        abridge_emptiable_abs_bound_pair(&self.emptiable_abs_bound_pair(), &rhs.emptiable_abs_bound_pair())
     }
 }
 
 impl<Rhs> Abridgable<Rhs> for AbsoluteInterval
 where
-    Rhs: HasEmptiableAbsoluteBounds,
+    Rhs: HasEmptiableAbsoluteBoundPair,
+{
+    type Output = EmptiableAbsoluteInterval;
+
+    fn abridge(&self, rhs: &Rhs) -> Self::Output {
+        Self::Output::from(self.abs_bound_pair().abridge(&rhs.emptiable_abs_bound_pair()))
+    }
+}
+
+impl<Rhs> Abridgable<Rhs> for EmptiableAbsoluteInterval
+where
+    Rhs: HasEmptiableAbsoluteBoundPair,
 {
     type Output = Self;
 
     fn abridge(&self, rhs: &Rhs) -> Self::Output {
-        Self::from(self.emptiable_abs_bounds().abridge(&rhs.emptiable_abs_bounds()))
+        Self::Output::from(self.emptiable_abs_bound_pair().abridge(&rhs.emptiable_abs_bound_pair()))
     }
 }
 
 impl<Rhs> Abridgable<Rhs> for BoundedAbsoluteInterval
 where
-    Rhs: HasEmptiableAbsoluteBounds,
+    Rhs: HasEmptiableAbsoluteBoundPair,
 {
-    type Output = AbsoluteInterval;
+    type Output = EmptiableAbsoluteInterval;
 
     fn abridge(&self, rhs: &Rhs) -> Self::Output {
-        AbsoluteInterval::from(abridge_emptiable_abs_bounds(
-            &self.emptiable_abs_bounds(),
-            &rhs.emptiable_abs_bounds(),
-        ))
+        Self::Output::from(self.abs_bound_pair().abridge(&rhs.emptiable_abs_bound_pair()))
     }
 }
 
 impl<Rhs> Abridgable<Rhs> for HalfBoundedAbsoluteInterval
 where
-    Rhs: HasEmptiableAbsoluteBounds,
+    Rhs: HasEmptiableAbsoluteBoundPair,
 {
-    type Output = AbsoluteInterval;
+    type Output = EmptiableAbsoluteInterval;
 
     fn abridge(&self, rhs: &Rhs) -> Self::Output {
-        AbsoluteInterval::from(abridge_emptiable_abs_bounds(
-            &self.emptiable_abs_bounds(),
-            &rhs.emptiable_abs_bounds(),
-        ))
+        Self::Output::from(self.abs_bound_pair().abridge(&rhs.emptiable_abs_bound_pair()))
     }
 }
 
-impl<Rhs> Abridgable<Rhs> for RelativeBounds
+impl<Rhs> Abridgable<Rhs> for RelativeBoundPair
 where
-    Rhs: HasEmptiableRelativeBounds,
+    Rhs: HasEmptiableRelativeBoundPair,
 {
-    type Output = EmptiableRelativeBounds;
+    type Output = EmptiableRelativeBoundPair;
 
     fn abridge(&self, rhs: &Rhs) -> Self::Output {
-        abridge_rel_bounds_with_emptiable_rel_bounds(&self.rel_bounds(), &rhs.emptiable_rel_bounds())
+        abridge_rel_bound_pair_with_emptiable_rel_bound_pair(&self.rel_bound_pair(), &rhs.emptiable_rel_bound_pair())
     }
 }
 
-impl<Rhs> Abridgable<Rhs> for EmptiableRelativeBounds
+impl<Rhs> Abridgable<Rhs> for EmptiableRelativeBoundPair
 where
-    Rhs: HasEmptiableRelativeBounds,
+    Rhs: HasEmptiableRelativeBoundPair,
 {
     type Output = Self;
 
     fn abridge(&self, rhs: &Rhs) -> Self::Output {
-        abridge_emptiable_rel_bounds(self, &rhs.emptiable_rel_bounds())
+        abridge_emptiable_rel_bound_pair(self, &rhs.emptiable_rel_bound_pair())
     }
 }
 
 impl<Rhs> Abridgable<Rhs> for RelativeInterval
 where
-    Rhs: HasEmptiableRelativeBounds,
+    Rhs: HasEmptiableRelativeBoundPair,
 {
-    type Output = Self;
+    type Output = EmptiableRelativeInterval;
 
     fn abridge(&self, rhs: &Rhs) -> Self::Output {
-        RelativeInterval::from(abridge_emptiable_rel_bounds(
-            &self.emptiable_rel_bounds(),
-            &rhs.emptiable_rel_bounds(),
-        ))
+        Self::Output::from(self.rel_bound_pair().abridge(&rhs.emptiable_rel_bound_pair()))
     }
 }
 
 impl<Rhs> Abridgable<Rhs> for BoundedRelativeInterval
 where
-    Rhs: HasEmptiableRelativeBounds,
+    Rhs: HasEmptiableRelativeBoundPair,
 {
-    type Output = RelativeInterval;
+    type Output = EmptiableRelativeInterval;
 
     fn abridge(&self, rhs: &Rhs) -> Self::Output {
-        RelativeInterval::from(abridge_emptiable_rel_bounds(
-            &self.emptiable_rel_bounds(),
-            &rhs.emptiable_rel_bounds(),
-        ))
+        Self::Output::from(self.rel_bound_pair().abridge(&rhs.emptiable_rel_bound_pair()))
     }
 }
 
 impl<Rhs> Abridgable<Rhs> for HalfBoundedRelativeInterval
 where
-    Rhs: HasEmptiableRelativeBounds,
+    Rhs: HasEmptiableRelativeBoundPair,
 {
-    type Output = RelativeInterval;
+    type Output = EmptiableRelativeInterval;
 
     fn abridge(&self, rhs: &Rhs) -> Self::Output {
-        RelativeInterval::from(abridge_emptiable_rel_bounds(
-            &self.emptiable_rel_bounds(),
-            &rhs.emptiable_rel_bounds(),
-        ))
+        Self::Output::from(self.rel_bound_pair().abridge(&rhs.emptiable_rel_bound_pair()))
     }
 }
 
-impl Abridgable<AbsoluteBounds> for UnboundedInterval {
-    type Output = AbsoluteInterval;
+abridge_impl_rhs_clone!(UnboundedInterval, AbsoluteInterval, [
+    AbsoluteBoundPair,
+    AbsoluteInterval,
+    BoundedAbsoluteInterval,
+    HalfBoundedAbsoluteInterval,
+]);
+abridge_impl_rhs_clone!(UnboundedInterval, EmptiableAbsoluteInterval, [
+    EmptiableAbsoluteBoundPair,
+    EmptiableAbsoluteInterval,
+]);
+abridge_impl_rhs_clone!(UnboundedInterval, RelativeInterval, [
+    RelativeBoundPair,
+    RelativeInterval,
+    BoundedRelativeInterval,
+    HalfBoundedRelativeInterval,
+]);
+abridge_impl_rhs_clone!(UnboundedInterval, EmptiableRelativeInterval, [
+    EmptiableRelativeBoundPair,
+    EmptiableRelativeInterval,
+]);
 
-    fn abridge(&self, rhs: &AbsoluteBounds) -> Self::Output {
-        AbsoluteInterval::from(rhs.clone())
-    }
-}
-
-impl Abridgable<EmptiableAbsoluteBounds> for UnboundedInterval {
-    type Output = AbsoluteInterval;
-
-    fn abridge(&self, rhs: &EmptiableAbsoluteBounds) -> Self::Output {
-        AbsoluteInterval::from(rhs.clone())
-    }
-}
-
-impl Abridgable<AbsoluteInterval> for UnboundedInterval {
-    type Output = AbsoluteInterval;
-
-    fn abridge(&self, rhs: &AbsoluteInterval) -> Self::Output {
-        rhs.clone()
-    }
-}
-
-impl Abridgable<BoundedAbsoluteInterval> for UnboundedInterval {
-    type Output = AbsoluteInterval;
-
-    fn abridge(&self, rhs: &BoundedAbsoluteInterval) -> Self::Output {
-        AbsoluteInterval::from(rhs.clone())
-    }
-}
-
-impl Abridgable<HalfBoundedAbsoluteInterval> for UnboundedInterval {
-    type Output = AbsoluteInterval;
-
-    fn abridge(&self, rhs: &HalfBoundedAbsoluteInterval) -> Self::Output {
-        AbsoluteInterval::from(rhs.clone())
-    }
-}
-
-impl Abridgable<RelativeBounds> for UnboundedInterval {
-    type Output = RelativeInterval;
-
-    fn abridge(&self, rhs: &RelativeBounds) -> Self::Output {
-        RelativeInterval::from(rhs.clone())
-    }
-}
-
-impl Abridgable<EmptiableRelativeBounds> for UnboundedInterval {
-    type Output = RelativeInterval;
-
-    fn abridge(&self, rhs: &EmptiableRelativeBounds) -> Self::Output {
-        RelativeInterval::from(rhs.clone())
-    }
-}
-
-impl Abridgable<RelativeInterval> for UnboundedInterval {
-    type Output = RelativeInterval;
-
-    fn abridge(&self, rhs: &RelativeInterval) -> Self::Output {
-        rhs.clone()
-    }
-}
-
-impl Abridgable<BoundedRelativeInterval> for UnboundedInterval {
-    type Output = RelativeInterval;
-
-    fn abridge(&self, rhs: &BoundedRelativeInterval) -> Self::Output {
-        RelativeInterval::from(rhs.clone())
-    }
-}
-
-impl Abridgable<HalfBoundedRelativeInterval> for UnboundedInterval {
-    type Output = RelativeInterval;
-
-    fn abridge(&self, rhs: &HalfBoundedRelativeInterval) -> Self::Output {
-        RelativeInterval::from(rhs.clone())
-    }
-}
-
-impl Abridgable<UnboundedInterval> for UnboundedInterval {
-    type Output = UnboundedInterval;
-
-    fn abridge(&self, _rhs: &UnboundedInterval) -> Self::Output {
-        *self
-    }
-}
-
-impl Abridgable<EmptyInterval> for UnboundedInterval {
-    type Output = EmptyInterval;
-
-    fn abridge(&self, rhs: &EmptyInterval) -> Self::Output {
-        *rhs
-    }
-}
-
-impl Abridgable<AbsoluteBounds> for EmptyInterval {
-    type Output = AbsoluteInterval;
-
-    fn abridge(&self, rhs: &AbsoluteBounds) -> Self::Output {
-        AbsoluteInterval::from(rhs.clone())
-    }
-}
-
-impl Abridgable<EmptiableAbsoluteBounds> for EmptyInterval {
-    type Output = AbsoluteInterval;
-
-    fn abridge(&self, rhs: &EmptiableAbsoluteBounds) -> Self::Output {
-        AbsoluteInterval::from(rhs.clone())
-    }
-}
-
-impl Abridgable<AbsoluteInterval> for EmptyInterval {
-    type Output = AbsoluteInterval;
-
-    fn abridge(&self, rhs: &AbsoluteInterval) -> Self::Output {
-        rhs.clone()
-    }
-}
-
-impl Abridgable<BoundedAbsoluteInterval> for EmptyInterval {
-    type Output = AbsoluteInterval;
-
-    fn abridge(&self, rhs: &BoundedAbsoluteInterval) -> Self::Output {
-        AbsoluteInterval::from(rhs.clone())
-    }
-}
-
-impl Abridgable<HalfBoundedAbsoluteInterval> for EmptyInterval {
-    type Output = AbsoluteInterval;
-
-    fn abridge(&self, rhs: &HalfBoundedAbsoluteInterval) -> Self::Output {
-        AbsoluteInterval::from(rhs.clone())
-    }
-}
-
-impl Abridgable<RelativeBounds> for EmptyInterval {
-    type Output = RelativeInterval;
-
-    fn abridge(&self, rhs: &RelativeBounds) -> Self::Output {
-        RelativeInterval::from(rhs.clone())
-    }
-}
-
-impl Abridgable<EmptiableRelativeBounds> for EmptyInterval {
-    type Output = RelativeInterval;
-
-    fn abridge(&self, rhs: &EmptiableRelativeBounds) -> Self::Output {
-        RelativeInterval::from(rhs.clone())
-    }
-}
-
-impl Abridgable<RelativeInterval> for EmptyInterval {
-    type Output = RelativeInterval;
-
-    fn abridge(&self, rhs: &RelativeInterval) -> Self::Output {
-        rhs.clone()
-    }
-}
-
-impl Abridgable<BoundedRelativeInterval> for EmptyInterval {
-    type Output = RelativeInterval;
-
-    fn abridge(&self, rhs: &BoundedRelativeInterval) -> Self::Output {
-        RelativeInterval::from(rhs.clone())
-    }
-}
-
-impl Abridgable<HalfBoundedRelativeInterval> for EmptyInterval {
-    type Output = RelativeInterval;
-
-    fn abridge(&self, rhs: &HalfBoundedRelativeInterval) -> Self::Output {
-        RelativeInterval::from(rhs.clone())
-    }
-}
+abridge_impl_rhs_clone!(EmptyInterval, AbsoluteInterval, [
+    AbsoluteBoundPair,
+    AbsoluteInterval,
+    BoundedAbsoluteInterval,
+    HalfBoundedAbsoluteInterval,
+]);
+abridge_impl_rhs_clone!(EmptyInterval, EmptiableAbsoluteInterval, [
+    EmptiableAbsoluteBoundPair,
+    EmptiableAbsoluteInterval,
+]);
+abridge_impl_rhs_clone!(EmptyInterval, RelativeInterval, [
+    RelativeBoundPair,
+    RelativeInterval,
+    BoundedRelativeInterval,
+    HalfBoundedRelativeInterval,
+]);
+abridge_impl_rhs_clone!(EmptyInterval, EmptiableRelativeInterval, [
+    EmptiableRelativeBoundPair,
+    EmptiableRelativeInterval,
+]);
 
 impl Abridgable<UnboundedInterval> for EmptyInterval {
     type Output = EmptyInterval;
@@ -514,9 +392,9 @@ impl Abridgable<EmptyInterval> for EmptyInterval {
     }
 }
 
-/// Abridges two [`AbsoluteBounds`]
+/// Abridges two [`AbsoluteBoundPair`]s
 #[must_use]
-pub fn abridge_abs_bounds(og_bounds: &AbsoluteBounds, other_bounds: &AbsoluteBounds) -> EmptiableAbsoluteBounds {
+pub fn abridge_abs_bound_pair(og_bounds: &AbsoluteBoundPair, other_bounds: &AbsoluteBoundPair) -> EmptiableAbsoluteBoundPair {
     let mut highest_start = match (og_bounds.abs_start(), other_bounds.abs_start()) {
         (AbsoluteStartBound::InfinitePast, bound @ AbsoluteStartBound::Finite(..))
         | (
@@ -540,7 +418,7 @@ pub fn abridge_abs_bounds(og_bounds: &AbsoluteBounds, other_bounds: &AbsoluteBou
     };
 
     match highest_start.bound_cmp(&lowest_end) {
-        BoundOrdering::Less => EmptiableAbsoluteBounds::Bound(AbsoluteBounds::unchecked_new(highest_start, lowest_end)),
+        BoundOrdering::Less => EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::unchecked_new(highest_start, lowest_end)),
         BoundOrdering::Equal(None) => {
             unreachable!("Comparing a start bound to an end bound can never result in the ambiguity being `None`");
         },
@@ -548,10 +426,10 @@ pub fn abridge_abs_bounds(og_bounds: &AbsoluteBounds, other_bounds: &AbsoluteBou
             if let BoundOverlapAmbiguity::EndStart(reference_inclusivity, compared_inclusivity) = ambiguity {
                 match (reference_inclusivity, compared_inclusivity) {
                     (BoundInclusivity::Inclusive, BoundInclusivity::Inclusive) => {
-                        EmptiableAbsoluteBounds::Bound(AbsoluteBounds::unchecked_new(highest_start, lowest_end))
+                        EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::unchecked_new(highest_start, lowest_end))
                     },
                     (BoundInclusivity::Inclusive, BoundInclusivity::Exclusive)
-                    | (BoundInclusivity::Exclusive, BoundInclusivity::Inclusive) => EmptiableAbsoluteBounds::Empty,
+                    | (BoundInclusivity::Exclusive, BoundInclusivity::Inclusive) => EmptiableAbsoluteBoundPair::Empty,
                     (BoundInclusivity::Exclusive, BoundInclusivity::Exclusive) => {
                         if let AbsoluteStartBound::Finite(ref mut finite_start) = highest_start {
                             finite_start.set_inclusivity(finite_start.inclusivity().opposite());
@@ -561,7 +439,7 @@ pub fn abridge_abs_bounds(og_bounds: &AbsoluteBounds, other_bounds: &AbsoluteBou
                             finite_end.set_inclusivity(finite_end.inclusivity().opposite());
                         }
 
-                        EmptiableAbsoluteBounds::Bound(AbsoluteBounds::unchecked_new(highest_start, lowest_end))
+                        EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::unchecked_new(highest_start, lowest_end))
                     },
                 }
             } else {
@@ -569,7 +447,7 @@ pub fn abridge_abs_bounds(og_bounds: &AbsoluteBounds, other_bounds: &AbsoluteBou
             }
         },
         BoundOrdering::Greater => {
-            swap_absolute_bounds(&mut highest_start, &mut lowest_end);
+            swap_absolute_bound_pair(&mut highest_start, &mut lowest_end);
 
             if let AbsoluteStartBound::Finite(ref mut finite_start) = highest_start {
                 finite_start.set_inclusivity(finite_start.inclusivity().opposite());
@@ -579,43 +457,43 @@ pub fn abridge_abs_bounds(og_bounds: &AbsoluteBounds, other_bounds: &AbsoluteBou
                 finite_end.set_inclusivity(finite_end.inclusivity().opposite());
             }
 
-            EmptiableAbsoluteBounds::Bound(AbsoluteBounds::unchecked_new(highest_start, lowest_end))
+            EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::unchecked_new(highest_start, lowest_end))
         },
     }
 }
 
-/// Abridges an [`AbsoluteBounds`] with an [`EmptiableAbsoluteBounds`]
+/// Abridges an [`AbsoluteBoundPair`] with an [`EmptiableAbsoluteBoundPair`]
 #[must_use]
-pub fn abridge_abs_bounds_with_emptiable_abs_bounds(
-    og_bounds: &AbsoluteBounds,
-    other_bounds: &EmptiableAbsoluteBounds,
-) -> EmptiableAbsoluteBounds {
-    let EmptiableAbsoluteBounds::Bound(other_non_empty_bounds) = other_bounds else {
-        return EmptiableAbsoluteBounds::Bound(og_bounds.clone());
+pub fn abridge_abs_bound_pair_with_emptiable_abs_bound_pair(
+    og_bounds: &AbsoluteBoundPair,
+    other_bounds: &EmptiableAbsoluteBoundPair,
+) -> EmptiableAbsoluteBoundPair {
+    let EmptiableAbsoluteBoundPair::Bound(other_non_empty_bounds) = other_bounds else {
+        return EmptiableAbsoluteBoundPair::Bound(og_bounds.clone());
     };
 
-    abridge_abs_bounds(og_bounds, other_non_empty_bounds)
+    abridge_abs_bound_pair(og_bounds, other_non_empty_bounds)
 }
 
-/// Abridges two [`EmptiableAbsoluteBounds`]
+/// Abridges two [`EmptiableAbsoluteBoundPair`]s
 #[must_use]
-pub fn abridge_emptiable_abs_bounds(
-    og_bounds: &EmptiableAbsoluteBounds,
-    other_bounds: &EmptiableAbsoluteBounds,
-) -> EmptiableAbsoluteBounds {
+pub fn abridge_emptiable_abs_bound_pair(
+    og_bounds: &EmptiableAbsoluteBoundPair,
+    other_bounds: &EmptiableAbsoluteBoundPair,
+) -> EmptiableAbsoluteBoundPair {
     match (og_bounds, other_bounds) {
-        (EmptiableAbsoluteBounds::Empty, EmptiableAbsoluteBounds::Empty) => EmptiableAbsoluteBounds::Empty,
-        (EmptiableAbsoluteBounds::Empty, bound @ EmptiableAbsoluteBounds::Bound(..))
-        | (bound @ EmptiableAbsoluteBounds::Bound(..), EmptiableAbsoluteBounds::Empty) => bound.clone(),
-        (EmptiableAbsoluteBounds::Bound(og_bounds), EmptiableAbsoluteBounds::Bound(other_bounds)) => {
-            abridge_abs_bounds(og_bounds, other_bounds)
+        (EmptiableAbsoluteBoundPair::Empty, EmptiableAbsoluteBoundPair::Empty) => EmptiableAbsoluteBoundPair::Empty,
+        (EmptiableAbsoluteBoundPair::Empty, bound @ EmptiableAbsoluteBoundPair::Bound(..))
+        | (bound @ EmptiableAbsoluteBoundPair::Bound(..), EmptiableAbsoluteBoundPair::Empty) => bound.clone(),
+        (EmptiableAbsoluteBoundPair::Bound(og_bounds), EmptiableAbsoluteBoundPair::Bound(other_bounds)) => {
+            abridge_abs_bound_pair(og_bounds, other_bounds)
         },
     }
 }
 
-/// Abridges two [`RelativeBounds`]
+/// Abridges two [`RelativeBoundPair`]s
 #[must_use]
-pub fn abridge_rel_bounds(og_bounds: &RelativeBounds, other_bounds: &RelativeBounds) -> EmptiableRelativeBounds {
+pub fn abridge_rel_bound_pair(og_bounds: &RelativeBoundPair, other_bounds: &RelativeBoundPair) -> EmptiableRelativeBoundPair {
     let mut highest_start = match (og_bounds.rel_start(), other_bounds.rel_start()) {
         (RelativeStartBound::InfinitePast, bound @ RelativeStartBound::Finite(..))
         | (
@@ -639,7 +517,7 @@ pub fn abridge_rel_bounds(og_bounds: &RelativeBounds, other_bounds: &RelativeBou
     };
 
     match highest_start.bound_cmp(&lowest_end) {
-        BoundOrdering::Less => EmptiableRelativeBounds::Bound(RelativeBounds::unchecked_new(highest_start, lowest_end)),
+        BoundOrdering::Less => EmptiableRelativeBoundPair::Bound(RelativeBoundPair::unchecked_new(highest_start, lowest_end)),
         BoundOrdering::Equal(None) => {
             unreachable!("Comparing a start bound to an end bound can never result in the ambiguity being `None`");
         },
@@ -647,10 +525,10 @@ pub fn abridge_rel_bounds(og_bounds: &RelativeBounds, other_bounds: &RelativeBou
             if let BoundOverlapAmbiguity::EndStart(reference_inclusivity, compared_inclusivity) = ambiguity {
                 match (reference_inclusivity, compared_inclusivity) {
                     (BoundInclusivity::Inclusive, BoundInclusivity::Inclusive) => {
-                        EmptiableRelativeBounds::Bound(RelativeBounds::unchecked_new(highest_start, lowest_end))
+                        EmptiableRelativeBoundPair::Bound(RelativeBoundPair::unchecked_new(highest_start, lowest_end))
                     },
                     (BoundInclusivity::Inclusive, BoundInclusivity::Exclusive)
-                    | (BoundInclusivity::Exclusive, BoundInclusivity::Inclusive) => EmptiableRelativeBounds::Empty,
+                    | (BoundInclusivity::Exclusive, BoundInclusivity::Inclusive) => EmptiableRelativeBoundPair::Empty,
                     (BoundInclusivity::Exclusive, BoundInclusivity::Exclusive) => {
                         if let RelativeStartBound::Finite(ref mut finite_start) = highest_start {
                             finite_start.set_inclusivity(finite_start.inclusivity().opposite());
@@ -660,7 +538,7 @@ pub fn abridge_rel_bounds(og_bounds: &RelativeBounds, other_bounds: &RelativeBou
                             finite_end.set_inclusivity(finite_end.inclusivity().opposite());
                         }
 
-                        EmptiableRelativeBounds::Bound(RelativeBounds::unchecked_new(highest_start, lowest_end))
+                        EmptiableRelativeBoundPair::Bound(RelativeBoundPair::unchecked_new(highest_start, lowest_end))
                     },
                 }
             } else {
@@ -668,7 +546,7 @@ pub fn abridge_rel_bounds(og_bounds: &RelativeBounds, other_bounds: &RelativeBou
             }
         },
         BoundOrdering::Greater => {
-            swap_relative_bounds(&mut highest_start, &mut lowest_end);
+            swap_relative_bound_pair(&mut highest_start, &mut lowest_end);
 
             if let RelativeStartBound::Finite(ref mut finite_start) = highest_start {
                 finite_start.set_inclusivity(finite_start.inclusivity().opposite());
@@ -678,36 +556,36 @@ pub fn abridge_rel_bounds(og_bounds: &RelativeBounds, other_bounds: &RelativeBou
                 finite_end.set_inclusivity(finite_end.inclusivity().opposite());
             }
 
-            EmptiableRelativeBounds::Bound(RelativeBounds::unchecked_new(highest_start, lowest_end))
+            EmptiableRelativeBoundPair::Bound(RelativeBoundPair::unchecked_new(highest_start, lowest_end))
         },
     }
 }
 
-/// Abridges an [`RelativeBounds`] with an [`EmptiableRelativeBounds`]
+/// Abridges an [`RelativeBoundPair`] with an [`EmptiableRelativeBoundPair`]
 #[must_use]
-pub fn abridge_rel_bounds_with_emptiable_rel_bounds(
-    og_bounds: &RelativeBounds,
-    other_bounds: &EmptiableRelativeBounds,
-) -> EmptiableRelativeBounds {
-    let EmptiableRelativeBounds::Bound(other_non_empty_bounds) = other_bounds else {
-        return EmptiableRelativeBounds::Bound(og_bounds.clone());
+pub fn abridge_rel_bound_pair_with_emptiable_rel_bound_pair(
+    og_bounds: &RelativeBoundPair,
+    other_bounds: &EmptiableRelativeBoundPair,
+) -> EmptiableRelativeBoundPair {
+    let EmptiableRelativeBoundPair::Bound(other_non_empty_bounds) = other_bounds else {
+        return EmptiableRelativeBoundPair::Bound(og_bounds.clone());
     };
 
-    abridge_rel_bounds(og_bounds, other_non_empty_bounds)
+    abridge_rel_bound_pair(og_bounds, other_non_empty_bounds)
 }
 
-/// Abridges two [`EmptiableRelativeBounds`]
+/// Abridges two [`EmptiableRelativeBoundPair`]s
 #[must_use]
-pub fn abridge_emptiable_rel_bounds(
-    og_bounds: &EmptiableRelativeBounds,
-    other_bounds: &EmptiableRelativeBounds,
-) -> EmptiableRelativeBounds {
+pub fn abridge_emptiable_rel_bound_pair(
+    og_bounds: &EmptiableRelativeBoundPair,
+    other_bounds: &EmptiableRelativeBoundPair,
+) -> EmptiableRelativeBoundPair {
     match (og_bounds, other_bounds) {
-        (EmptiableRelativeBounds::Empty, EmptiableRelativeBounds::Empty) => EmptiableRelativeBounds::Empty,
-        (EmptiableRelativeBounds::Empty, bound @ EmptiableRelativeBounds::Bound(..))
-        | (bound @ EmptiableRelativeBounds::Bound(..), EmptiableRelativeBounds::Empty) => bound.clone(),
-        (EmptiableRelativeBounds::Bound(og_bounds), EmptiableRelativeBounds::Bound(other_bounds)) => {
-            abridge_rel_bounds(og_bounds, other_bounds)
+        (EmptiableRelativeBoundPair::Empty, EmptiableRelativeBoundPair::Empty) => EmptiableRelativeBoundPair::Empty,
+        (EmptiableRelativeBoundPair::Empty, bound @ EmptiableRelativeBoundPair::Bound(..))
+        | (bound @ EmptiableRelativeBoundPair::Bound(..), EmptiableRelativeBoundPair::Empty) => bound.clone(),
+        (EmptiableRelativeBoundPair::Bound(og_bounds), EmptiableRelativeBoundPair::Bound(other_bounds)) => {
+            abridge_rel_bound_pair(og_bounds, other_bounds)
         },
     }
 }

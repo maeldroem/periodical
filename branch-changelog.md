@@ -30,6 +30,12 @@
 - [ ] Review tests to ensure usefulness
 - [ ] Add methods to get the `OffsetIsoWeek` of a given `Date`
   - [ ] Then re-implement convenience methods like `this_week`, `until_this_week` on intervals
+- [ ] Implement `Emptiable` on every interval, simply returning `false` for those who trivially are not empty
+- [ ] Interval operations now will mainly support operations between non-empty intervals,
+      but instead a new variant of each ops trait, `SomeOpsEmptiable` should be created, which would
+      support emptiable intervals (even full ones, but would return an emptiable interval)
+      except of course if the interval operation
+- [ ] Resolve all TODO comments
 
 # Changelog
 
@@ -89,7 +95,7 @@
 - [x] Migrated `time` to jiff
 - [x] Migrated `ops` to jiff
 - [ ] Migrated `intervals::ops` to jiff
-  - [ ] Migrated `abridge` to jiff
+  - [x] Migrated `abridge` to jiff
   - [ ] Migrated `bound_containment` to jiff
   - [ ] Migrated `complement` to jiff
   - [ ] Migrated `continuation` to jiff
@@ -136,7 +142,7 @@
 - [x] Migrated `time`'s tests to jiff
 - [x] Migrated `ops`'s tests to jiff
 - [ ] Migrated `intervals::ops`'s tests to jiff
-  - [ ] Migrated `abridge`'s tests to jiff
+  - [x] Migrated `abridge`'s tests to jiff
   - [ ] Migrated `bound_containment`'s tests to jiff
   - [x] Migrated `bound_ord`'s tests to jiff
   - [ ] Migrated `complement`'s tests to jiff
@@ -184,7 +190,7 @@
 - [x] Migrated `ops`'s examples to jiff
 - [x] Migrated `intervals`'s examples to jiff
 - [ ] Migrated `intervals::ops`'s examples to jiff
-  - [ ] Migrated `abridge`'s examples to jiff
+  - [x] Migrated `abridge`'s examples to jiff
   - [ ] Migrated `bound_containment`'s examples to jiff
   - [ ] Migrated `bound_ord`'s examples to jiff
   - [ ] Migrated `bound_overlap_ambiguity`'s examples to jiff
