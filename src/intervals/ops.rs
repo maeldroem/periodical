@@ -21,7 +21,7 @@
 use crate::utils::{inline_docs, tests};
 
 pub mod abridge;
-// pub mod bound_containment;
+pub mod bound_containment;
 pub mod bound_ord;
 pub mod bound_overlap_ambiguity;
 // pub mod complement;
@@ -42,7 +42,7 @@ pub mod bound_overlap_ambiguity;
 
 tests! {
     mod abridge_tests;
-//     mod bound_containment_tests;
+    mod bound_containment_tests;
     mod bound_ord_tests;
     mod bound_overlap_ambiguity_tests;
 //     mod complement_tests;
@@ -64,10 +64,10 @@ tests! {
 
 inline_docs! {
     pub use abridge::Abridgable;
-    // pub use bound_containment::{
-    //     BoundContainmentPosition, BoundContainmentRule, BoundContainmentRuleSet, CanPositionBoundContainment,
-    //     DEFAULT_BOUND_CONTAINMENT_RULES, DisambiguatedBoundContainmentPosition,
-    // };
+    pub use bound_containment::{
+        BoundContainmentPosition, BoundContainmentRule, BoundContainmentRuleSet, CanPositionBoundContainment,
+        DEFAULT_BOUND_CONTAINMENT_RULES, DisambiguatedBoundContainmentPosition,
+    };
     pub use bound_ord::{BoundOrdering, PartialBoundOrd};
     pub use bound_overlap_ambiguity::{
         BoundOverlapAmbiguity, BoundOverlapDisambiguationRuleSet, DisambiguatedBoundOverlap,
