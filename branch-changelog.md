@@ -36,6 +36,8 @@
       support emptiable intervals (even full ones, but would return an emptiable interval)
       except of course if the interval operation
 - [ ] Resolve all TODO comments
+- [ ] Add line width checker to the CI
+- [ ] Figure out a way to cargo fmt doc examples + enforce 80 char line width in examples
 
 # Changelog
 
@@ -98,7 +100,7 @@
   - [x] Migrated `abridge` to jiff
   - [x] Migrated `bound_containment` to jiff
   - [x] Migrated `complement` to jiff
-  - [ ] Migrated `continuation` to jiff
+  - [x] Migrated `continuation` to jiff
   - [ ] Migrated `cut` to jiff
   - [ ] Migrated `extend` to jiff
   - [ ] Migrated `fill_gap` to jiff
@@ -146,7 +148,7 @@
   - [x] Migrated `bound_containment`'s tests to jiff
   - [x] Migrated `bound_ord`'s tests to jiff
   - [x] Migrated `complement`'s tests to jiff
-  - [ ] Migrated `continuation`'s tests to jiff
+  - [x] Migrated `continuation`'s tests to jiff
   - [ ] Migrated `cut`'s tests to jiff
   - [ ] Migrated `extend`'s tests to jiff
   - [ ] Migrated `fill_gap`'s tests to jiff
@@ -195,7 +197,7 @@
   - [x] Migrated `bound_ord`'s examples to jiff
   - [x] Migrated `bound_overlap_ambiguity`'s examples to jiff
   - [x] Migrated `complement`'s examples to jiff
-  - [ ] Migrated `continuation`'s examples to jiff
+  - [x] Migrated `continuation`'s examples to jiff
   - [ ] Migrated `cut`'s examples to jiff
   - [ ] Migrated `extend`'s examples to jiff
   - [ ] Migrated `fill_gap`'s examples to jiff

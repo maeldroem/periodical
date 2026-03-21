@@ -12,17 +12,17 @@ use crate::ops::ComplementResult;
 use super::complement::*;
 
 #[test]
-fn complement_of_unbounded_interval() {
+fn unbounded_interval() {
     assert_eq!(UnboundedInterval.complement(), ComplementResult::Single(EmptyInterval));
 }
 
 #[test]
-fn complement_of_empty_interval() {
+fn empty_interval() {
     assert_eq!(EmptyInterval.complement(), ComplementResult::Single(UnboundedInterval));
 }
 
 #[test]
-fn complement_of_half_unbounded_interval() -> Result<(), Box<dyn Error>> {
+fn half_unbounded_interval() -> Result<(), Box<dyn Error>> {
     assert_eq!(
         HalfBoundedAbsoluteInterval::new(
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
@@ -39,7 +39,7 @@ fn complement_of_half_unbounded_interval() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
-fn complement_of_bounded_interval() -> Result<(), Box<dyn Error>> {
+fn bounded_interval() -> Result<(), Box<dyn Error>> {
     assert_eq!(
         BoundedAbsoluteInterval::new(
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
@@ -63,7 +63,7 @@ fn complement_of_bounded_interval() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
-fn complement_of_emptiable_abs_bound_pair_empty() {
+fn emptiable_abs_bound_pair_empty() {
     assert_eq!(
         EmptiableAbsoluteBoundPair::Empty.complement(),
         ComplementResult::Single(EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::new(
@@ -74,7 +74,7 @@ fn complement_of_emptiable_abs_bound_pair_empty() {
 }
 
 #[test]
-fn complement_of_abs_bound_pair_unbounded() {
+fn abs_bound_pair_unbounded() {
     assert_eq!(
         AbsoluteBoundPair::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture).complement(),
         ComplementResult::Single(EmptiableAbsoluteBoundPair::Empty),
@@ -82,7 +82,7 @@ fn complement_of_abs_bound_pair_unbounded() {
 }
 
 #[test]
-fn complement_of_abs_interval_unbounded() {
+fn abs_interval_unbounded() {
     assert_eq!(
         AbsoluteInterval::Unbounded(UnboundedInterval).complement(),
         ComplementResult::Single(EmptiableAbsoluteInterval::Empty(EmptyInterval)),
@@ -90,7 +90,7 @@ fn complement_of_abs_interval_unbounded() {
 }
 
 #[test]
-fn complement_of_abs_interval_half_bounded() -> Result<(), Box<dyn Error>> {
+fn abs_interval_half_bounded() -> Result<(), Box<dyn Error>> {
     assert_eq!(
         AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
@@ -111,7 +111,7 @@ fn complement_of_abs_interval_half_bounded() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
-fn complement_of_abs_interval_bounded() -> Result<(), Box<dyn Error>> {
+fn abs_interval_bounded() -> Result<(), Box<dyn Error>> {
     assert_eq!(
         AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new_with_inclusivity(
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
@@ -138,7 +138,7 @@ fn complement_of_abs_interval_bounded() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
-fn complement_of_abs_interval_empty() {
+fn abs_interval_empty() {
     assert_eq!(
         EmptiableAbsoluteInterval::Empty(EmptyInterval).complement(),
         ComplementResult::Single(EmptiableAbsoluteInterval::Unbounded(UnboundedInterval)),
