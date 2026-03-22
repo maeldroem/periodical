@@ -1,22 +1,23 @@
-use chrono::Utc;
+use std::error::Error;
+
+use jiff::Zoned;
 
 use crate::intervals::absolute::{
-    AbsoluteBounds, AbsoluteEndBound, AbsoluteInterval, AbsoluteStartBound, EmptiableAbsoluteBounds,
+    AbsoluteBoundPair, AbsoluteEndBound, AbsoluteInterval, AbsoluteStartBound, EmptiableAbsoluteBoundPair,
     HalfBoundedAbsoluteInterval,
 };
 use crate::intervals::meta::{BoundInclusivity, OpeningDirection};
-use crate::test_utils::date;
 
 use super::fill_gap::*;
 
 #[test]
-fn fill_gap_emptiable_abs_bounds_empty_abs_bounds_unbounded() {
+fn emptiable_abs_bound_pair_empty_abs_bound_pair_unbounded() {
     assert_eq!(
-        EmptiableAbsoluteBounds::Empty.fill_gap(&AbsoluteBounds::new(
+        EmptiableAbsoluteBoundPair::Empty.fill_gap(&AbsoluteBoundPair::new(
             AbsoluteStartBound::InfinitePast,
             AbsoluteEndBound::InfiniteFuture
         )),
-        Ok(EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
+        Ok(EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::new(
             AbsoluteStartBound::InfinitePast,
             AbsoluteEndBound::InfiniteFuture,
         ))),
@@ -24,11 +25,11 @@ fn fill_gap_emptiable_abs_bounds_empty_abs_bounds_unbounded() {
 }
 
 #[test]
-fn fill_gap_abs_bounds_unbounded_emptiable_abs_bounds_empty() {
+fn abs_bound_pair_unbounded_emptiable_abs_bound_pair_empty() {
     assert_eq!(
-        AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture)
-            .fill_gap(&EmptiableAbsoluteBounds::Empty),
-        Ok(AbsoluteBounds::new(
+        AbsoluteBoundPair::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture)
+            .fill_gap(&EmptiableAbsoluteBoundPair::Empty),
+        Ok(AbsoluteBoundPair::new(
             AbsoluteStartBound::InfinitePast,
             AbsoluteEndBound::InfiniteFuture
         )),
@@ -36,90 +37,100 @@ fn fill_gap_abs_bounds_unbounded_emptiable_abs_bounds_empty() {
 }
 
 #[test]
-fn fill_gap_emptiable_abs_bounds_empty_emptiable_abs_bounds_empty() {
+fn emptiable_abs_bound_pair_empty_emptiable_abs_bound_pair_empty() {
     assert_eq!(
-        EmptiableAbsoluteBounds::Empty.fill_gap(&EmptiableAbsoluteBounds::Empty),
-        Ok(EmptiableAbsoluteBounds::Empty),
+        EmptiableAbsoluteBoundPair::Empty.fill_gap(&EmptiableAbsoluteBoundPair::Empty),
+        Ok(EmptiableAbsoluteBoundPair::Empty),
     );
 }
 
 #[test]
-fn fill_gap_two_overlapping_half_bounded() {
+fn two_overlapping_half_bounded() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        HalfBoundedAbsoluteInterval::new(date(&Utc, 2025, 1, 2), OpeningDirection::ToPast).fill_gap(
-            &HalfBoundedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), OpeningDirection::ToFuture)
+        HalfBoundedAbsoluteInterval::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(), OpeningDirection::ToPast).fill_gap(
+            &HalfBoundedAbsoluteInterval::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(), OpeningDirection::ToFuture)
         ),
         Err(GapFillError::Overlap),
     );
+
+    Ok(())
 }
 
 #[test]
-fn fill_gap_two_non_overlapping_half_bounded() {
+fn two_non_overlapping_half_bounded() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        HalfBoundedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), OpeningDirection::ToPast).fill_gap(
-            &HalfBoundedAbsoluteInterval::new(date(&Utc, 2025, 1, 2), OpeningDirection::ToFuture)
+        HalfBoundedAbsoluteInterval::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(), OpeningDirection::ToPast).fill_gap(
+            &HalfBoundedAbsoluteInterval::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(), OpeningDirection::ToFuture)
         ),
         Ok(AbsoluteInterval::HalfBounded(
             HalfBoundedAbsoluteInterval::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
+                "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
                 OpeningDirection::ToPast,
             )
         )),
     );
+
+    Ok(())
 }
 
 #[test]
-fn fill_gap_two_strictly_adjacent_half_bounded() {
+fn two_strictly_adjacent_half_bounded() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        HalfBoundedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), OpeningDirection::ToPast).fill_gap(
-            &HalfBoundedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), OpeningDirection::ToFuture)
+        HalfBoundedAbsoluteInterval::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(), OpeningDirection::ToPast).fill_gap(
+            &HalfBoundedAbsoluteInterval::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(), OpeningDirection::ToFuture)
         ),
         Err(GapFillError::Overlap),
     );
+
+    Ok(())
 }
 
 #[test]
-fn fill_gap_two_leniently_adjacent_half_bounded() {
+fn two_leniently_adjacent_half_bounded() -> Result<(), Box<dyn Error>> {
     assert_eq!(
         HalfBoundedAbsoluteInterval::new_with_inclusivity(
-            date(&Utc, 2025, 1, 1),
+            "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             BoundInclusivity::Exclusive,
             OpeningDirection::ToPast,
         )
         .fill_gap(&HalfBoundedAbsoluteInterval::new(
-            date(&Utc, 2025, 1, 1),
+            "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             OpeningDirection::ToFuture
         )),
         Ok(AbsoluteInterval::HalfBounded(
             HalfBoundedAbsoluteInterval::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
+                "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
                 OpeningDirection::ToPast,
             )
         )),
     );
+
+    Ok(())
 }
 
 #[test]
-fn fill_gap_two_very_leniently_adjacent_half_bounded() {
+fn two_very_leniently_adjacent_half_bounded() -> Result<(), Box<dyn Error>> {
     assert_eq!(
         HalfBoundedAbsoluteInterval::new_with_inclusivity(
-            date(&Utc, 2025, 1, 1),
+            "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             BoundInclusivity::Exclusive,
             OpeningDirection::ToPast,
         )
         .fill_gap(&HalfBoundedAbsoluteInterval::new_with_inclusivity(
-            date(&Utc, 2025, 1, 1),
+            "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             BoundInclusivity::Exclusive,
             OpeningDirection::ToFuture,
         )),
         Ok(AbsoluteInterval::HalfBounded(
             HalfBoundedAbsoluteInterval::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
+                "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Inclusive,
                 OpeningDirection::ToPast,
             )
         )),
     );
+
+    Ok(())
 }
