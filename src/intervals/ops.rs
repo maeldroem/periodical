@@ -30,7 +30,7 @@ pub mod cut;
 pub mod extend;
 // pub mod fill_gap;
 pub mod grow;
-// pub mod overlap;
+pub mod overlap;
 pub mod point_containment;
 // pub mod precision;
 // pub mod relativity_conversion;
@@ -51,7 +51,7 @@ tests! {
     mod extend_tests;
     // mod fill_gap_tests;
     mod grow_tests;
-//     mod overlap_tests;
+    mod overlap_tests;
     mod point_containment_tests;
 //     mod precision_tests;
 //     mod relativity_conversion_tests;
@@ -78,10 +78,10 @@ inline_docs! {
     pub use extend::Extensible;
     // pub use fill_gap::GapFillable;
     pub use grow::{GrowableEndBound, GrowableStartBound};
-    // pub use overlap::{
-    //     CanPositionOverlap, DEFAULT_OVERLAP_RULES, DisambiguatedOverlapPosition, OverlapPosition, OverlapRule,
-    //     OverlapRuleSet,
-    // };
+    pub use overlap::{
+        CanPositionOverlap, DEFAULT_OVERLAP_RULES, DisambiguatedOverlapPosition, OverlapPosition, OverlapRule,
+        OverlapRuleSet,
+    };
     pub use point_containment::{
         CanPositionPointContainment, DEFAULT_POINT_CONTAINMENT_RULES, DisambiguatedPointContainmentPosition,
         PointContainmentPosition, PointContainmentRule, PointContainmentRuleSet,
