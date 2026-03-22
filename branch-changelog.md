@@ -103,7 +103,7 @@
   - [x] Migrated `complement` to jiff
   - [x] Migrated `continuation` to jiff
   - [x] Migrated `cut` to jiff
-  - [ ] Migrated `extend` to jiff
+  - [x] Migrated `extend` to jiff
   - [ ] Migrated `fill_gap` to jiff
   - [ ] Migrated `grow` to jiff
   - [ ] Migrated `overlap` to jiff
@@ -151,7 +151,7 @@
   - [x] Migrated `complement`'s tests to jiff
   - [x] Migrated `continuation`'s tests to jiff
   - [x] Migrated `cut`'s tests to jiff
-  - [ ] Migrated `extend`'s tests to jiff
+  - [x] Migrated `extend`'s tests to jiff
   - [ ] Migrated `fill_gap`'s tests to jiff
   - [ ] Migrated `grow`'s tests to jiff
   - [ ] Migrated `overlap`'s tests to jiff
@@ -200,7 +200,7 @@
   - [x] Migrated `complement`'s examples to jiff
   - [x] Migrated `continuation`'s examples to jiff
   - [x] Migrated `cut`'s examples to jiff
-  - [ ] Migrated `extend`'s examples to jiff
+  - [x] Migrated `extend`'s examples to jiff
   - [ ] Migrated `fill_gap`'s examples to jiff
   - [ ] Migrated `grow`'s examples to jiff
   - [ ] Migrated `overlap`'s examples to jiff
