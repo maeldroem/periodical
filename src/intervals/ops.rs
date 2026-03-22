@@ -27,7 +27,7 @@ pub mod bound_overlap_ambiguity;
 pub mod complement;
 pub mod continuation;
 pub mod cut;
-// pub mod extend;
+pub mod extend;
 // pub mod fill_gap;
 // pub mod grow;
 // pub mod overlap;
@@ -48,7 +48,7 @@ tests! {
     mod complement_tests;
     mod continuation_tests;
     mod cut_tests;
-//     mod extend_tests;
+    mod extend_tests;
 //     mod fill_gap_tests;
 //     mod grow_tests;
 //     mod overlap_tests;
@@ -75,7 +75,7 @@ inline_docs! {
     pub use complement::Complementable;
     pub use continuation::Continuable;
     pub use cut::{CutResult, CutType, Cuttable};
-    // pub use extend::Extensible;
+    pub use extend::Extensible;
     // pub use fill_gap::GapFillable;
     // pub use grow::{GrowableEndBound, GrowableStartBound};
     // pub use overlap::{
