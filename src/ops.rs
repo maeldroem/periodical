@@ -10,7 +10,7 @@ use std::fmt::Display;
 use std::time::Duration as StdDuration;
 
 use jiff::tz::{AmbiguousZoned, TimeZone};
-use jiff::{SignedDuration, Zoned};
+use jiff::{SignedDuration, Timestamp, Zoned};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
@@ -126,7 +126,6 @@ impl PrecisionMode {
 ///     round_up_every_35_mins.precise_time_with_base_time(
 ///         &two_minutes_after_eight,
 ///         &first_january_2025,
-///         None,
 ///     )?,
 ///     "2025-01-01 08:10:00[Europe/Oslo]".parse::<Zoned>()?,
 /// );
@@ -137,7 +136,6 @@ impl PrecisionMode {
 ///     round_up_every_35_mins.precise_time_with_base_time(
 ///         &fourteen_minutes_after_ten,
 ///         &first_january_2025,
-///         None,
 ///     )?,
 ///     "2025-01-01 10:30:00[Europe/Oslo]".parse::<Zoned>()?,
 /// );
@@ -439,13 +437,13 @@ impl Precision {
     /// ```
     ///
     /// [1]: https://en.wikipedia.org/w/index.php?title=Unix_time&useskin=vector
-    pub fn precise_time(&self, zoned_time: &Zoned) -> Result<AmbiguousZoned, PrecisionError> {
-        let utc_day_start = zoned_time
+    pub fn precise_time(&self, time: &Zoned) -> Result<AmbiguousZoned, PrecisionError> {
+        let utc_day_start = time
             .datetime()
             .start_of_day()
             .to_zoned(TimeZone::UTC)
             .or(Err(PrecisionError::OutOfRangeDate))?;
-        let duration_diff = zoned_time
+        let duration_diff = time
             .datetime()
             .to_zoned(TimeZone::UTC)
             .or(Err(PrecisionError::OutOfRangeDate))?
@@ -456,7 +454,7 @@ impl Precision {
             .or(Err(PrecisionError::OutOfRangeDate))?
             .datetime();
 
-        Ok(zoned_time.time_zone().to_ambiguous_zoned(precised_datetime))
+        Ok(time.time_zone().to_ambiguous_zoned(precised_datetime))
     }
 
     /// Applies the precision to the given time based on a given time base
@@ -471,11 +469,6 @@ impl Precision {
     /// rounding.
     /// 
     /// If instead you want rounding based on clock time, see [`precise_time`](Precision::precise_time).
-    /// 
-    /// This method takes an timezone as an argument. This timezone will be used to convert the given
-    /// time and base, as theoretically they could be in different timezones, which would lead to an ambiguous
-    /// computation. Since this timezone argument is optional, if [`None`] is provided, the timezone of
-    /// the given base time will be used.
     ///
     /// # Errors
     ///
@@ -500,7 +493,7 @@ impl Precision {
     /// let base = time.start_of_day()?;
     /// 
     /// assert_eq!(
-    ///     precision.precise_time_with_base_time(&time, &base, None)?,
+    ///     precision.precise_time_with_base_time(&time, &base)?,
     ///     "2026-03-29 09:00:00[Europe/Oslo]".parse::<Zoned>()?,
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
@@ -518,24 +511,22 @@ impl Precision {
     /// let base = "2026-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?;
     /// 
     /// assert_eq!(
-    ///     precision.precise_time_with_base_time(&time, &base, None)?,
+    ///     precision.precise_time_with_base_time(&time, &base)?,
     ///     "2026-01-02 08:16:00[Europe/Oslo]".parse::<Zoned>()?,
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     ///
     /// [1]: https://en.wikipedia.org/w/index.php?title=Unix_time&useskin=vector
-    pub fn precise_time_with_base_time(
+    pub fn precise_time_with_base_time<B>(
         &self,
         time: &Zoned,
-        base: &Zoned,
-        tz: Option<TimeZone>,
-    ) -> Result<Zoned, PrecisionError> {
-        let tz = tz.unwrap_or_else(|| base.time_zone().clone());
-        let time = time.with_time_zone(tz.clone());
-        let base = base.with_time_zone(tz);
-
-        dbg!(&time, &base);
+        base: B,
+    ) -> Result<Zoned, PrecisionError>
+    where
+        B: Into<Timestamp>,
+    {
+        let base = base.into().to_zoned(time.time_zone().clone());
 
         base
             .checked_add(self.precise_signed_duration(time.duration_since(&base))?)

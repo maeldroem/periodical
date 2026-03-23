@@ -39,6 +39,8 @@
 - [ ] Add line width checker to the CI
 - [ ] Figure out a way to cargo fmt doc examples + enforce 80 char line width in examples
 - [ ] Bring documentation rate (docs.rs) to 100%
+- [ ] Split `intervals::ops::precision` into absolute/relative interval/bound
+- [ ] Create and implement relative version of `intervals::ops::precision`
 
 # Changelog
 
@@ -108,7 +110,7 @@
   - [x] Migrated `grow` to jiff
   - [x] Migrated `overlap` to jiff
   - [x] Migrated `point_containment` to jiff
-  - [ ] Migrated `precision` to jiff
+  - [x] Migrated `precision` to jiff
   - [ ] Migrated `relativity_conversion` to jiff
   - [ ] Migrated `remove_overlap_or_gap` to jiff
   - [ ] Migrated `remove_overlap` to jiff
@@ -156,7 +158,7 @@
   - [x] Migrated `grow`'s tests to jiff
   - [x] Migrated `overlap`'s tests to jiff
   - [x] Migrated `point_containment`'s tests to jiff
-  - [ ] Migrated `precision`'s tests to jiff
+  - [x] Migrated `precision`'s tests to jiff
   - [ ] Migrated `relativity_conversion`'s tests to jiff
   - [ ] Migrated `remove_overlap_or_gap`'s tests to jiff
   - [ ] Migrated `remove_overlap`'s tests to jiff
@@ -205,7 +207,7 @@
   - [x] Migrated `grow`'s examples to jiff
   - [x] Migrated `overlap`'s examples to jiff
   - [x] Migrated `point_containment`'s examples to jiff
-  - [ ] Migrated `precision`'s examples to jiff
+  - [x] Migrated `precision`'s examples to jiff
   - [ ] Migrated `relativity_conversion`'s examples to jiff
   - [ ] Migrated `remove_overlap_or_gap`'s examples to jiff
   - [ ] Migrated `remove_overlap`'s examples to jiff

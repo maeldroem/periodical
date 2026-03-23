@@ -14,40 +14,44 @@
 //! # Examples
 //!
 //! ```
-//! # use chrono::{DateTime, Duration, Utc};
-//! # use periodical::ops::Precision;
-//! # use periodical::intervals::absolute::{
-//! #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
-//! # };
+//! # use std::error::Error;
+//! # use std::time::Duration;
+//! # use jiff::Zoned;
+//! # use jiff::tz::TimeZone;
+//! # use periodical::ops::{Precision, PrecisionMode};
+//! # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
 //! # use periodical::intervals::ops::precision::PreciseAbsoluteInterval;
-//! let interval = AbsoluteBounds::new(
-//!     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!         "2025-01-01 08:03:29.591Z".parse::<DateTime<Utc>>()?,
-//!     )),
-//!     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-//!         "2025-01-01 15:57:44.041Z".parse::<DateTime<Utc>>()?,
-//!     )),
+//! let interval = AbsoluteBoundPair::new(
+//!     AbsoluteFiniteBound::new(
+//!         "2025-01-01 08:03:29.591[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!     ).to_start_bound(),
+//!     AbsoluteFiniteBound::new(
+//!         "2025-01-01 15:57:44.041[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!     ).to_end_bound(),
 //! );
 //!
 //! assert_eq!(
-//!     interval.precise_interval(Precision::ToPast(Duration::minutes(5))),
-//!     Ok(AbsoluteBounds::new(
-//!         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
-//!         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 15:55:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
+//!     interval.precise_interval(
+//!         TimeZone::get("Europe/Oslo")?,
+//!         Precision::new(Duration::from_mins(5), PrecisionMode::ToPast)?,
+//!     ),
+//!     Ok(AbsoluteBoundPair::new(
+//!         AbsoluteFiniteBound::new(
+//!             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!         ).to_start_bound(),
+//!         AbsoluteFiniteBound::new(
+//!             "2025-01-01 15:55:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!         ).to_end_bound(),
 //!     )),
 //! );
-//! # Ok::<(), chrono::format::ParseError>(())
+//! # Ok::<(), Box<dyn Error>>(())
 //! ```
 
-use chrono::{DateTime, Utc};
+use jiff::Timestamp;
+use jiff::tz::TimeZone;
 
 use crate::intervals::absolute::{
-    AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteInterval, AbsoluteStartBound,
-    EmptiableAbsoluteBounds, HasEmptiableAbsoluteBounds,
+    AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteInterval, AbsoluteStartBound, EmptiableAbsoluteBoundPair, EmptiableAbsoluteInterval, HasAbsoluteBoundPair, HasEmptiableAbsoluteBoundPair
 };
 use crate::intervals::meta::HasBoundInclusivity;
 use crate::intervals::special::EmptyInterval;
@@ -60,33 +64,37 @@ use crate::ops::{Precision, PrecisionError};
 /// # Examples
 ///
 /// ```
-/// # use chrono::{DateTime, Duration, Utc};
-/// # use periodical::ops::Precision;
-/// # use periodical::intervals::absolute::{
-/// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
-/// # };
+/// # use std::error::Error;
+/// # use std::time::Duration;
+/// # use jiff::Zoned;
+/// # use jiff::tz::TimeZone;
+/// # use periodical::ops::{Precision, PrecisionMode};
+/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
 /// # use periodical::intervals::ops::precision::PreciseAbsoluteInterval;
-/// let interval = AbsoluteBounds::new(
-///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-///         "2025-01-01 08:03:29.591Z".parse::<DateTime<Utc>>()?,
-///     )),
-///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-///         "2025-01-01 15:57:44.041Z".parse::<DateTime<Utc>>()?,
-///     )),
+/// let interval = AbsoluteBoundPair::new(
+///     AbsoluteFiniteBound::new(
+///         "2025-01-01 08:03:29.591[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///     ).to_start_bound(),
+///     AbsoluteFiniteBound::new(
+///         "2025-01-01 15:57:44.041[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///     ).to_end_bound(),
 /// );
 ///
 /// assert_eq!(
-///     interval.precise_interval(Precision::ToPast(Duration::minutes(5))),
-///     Ok(AbsoluteBounds::new(
-///         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-///             "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-///         )),
-///         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-///             "2025-01-01 15:55:00Z".parse::<DateTime<Utc>>()?,
-///         )),
+///     interval.precise_interval(
+///         TimeZone::get("Europe/Oslo")?,
+///         Precision::new(Duration::from_mins(5), PrecisionMode::ToPast)?,
+///     ),
+///     Ok(AbsoluteBoundPair::new(
+///         AbsoluteFiniteBound::new(
+///             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///         ).to_start_bound(),
+///         AbsoluteFiniteBound::new(
+///             "2025-01-01 15:55:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///         ).to_end_bound(),
 ///     )),
 /// );
-/// # Ok::<(), chrono::format::ParseError>(())
+/// # Ok::<(), Box<dyn Error>>(())
 /// ```
 pub trait PreciseAbsoluteInterval {
     /// Output of methods precising an interval
@@ -97,40 +105,43 @@ pub trait PreciseAbsoluteInterval {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Duration, Utc};
-    /// # use periodical::ops::Precision;
-    /// # use periodical::intervals::absolute::{
-    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
-    /// # };
+    /// # use std::error::Error;
+    /// # use std::time::Duration;
+    /// # use jiff::Zoned;
+    /// # use jiff::tz::TimeZone;
+    /// # use periodical::ops::{Precision, PrecisionMode};
+    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
     /// # use periodical::intervals::ops::precision::PreciseAbsoluteInterval;
-    /// let interval = AbsoluteBounds::new(
-    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 08:03:29.591Z".parse::<DateTime<Utc>>()?,
-    ///     )),
-    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 15:57:44.041Z".parse::<DateTime<Utc>>()?,
-    ///     )),
+    /// let interval = AbsoluteBoundPair::new(
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 08:03:29.591[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_start_bound(),
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 15:57:44.041[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_end_bound(),
     /// );
     ///
     /// assert_eq!(
     ///     interval.precise_interval_with_different_precisions(
-    ///         Precision::ToPast(Duration::minutes(5)),
-    ///         Precision::ToFuture(Duration::minutes(5)),
+    ///         TimeZone::get("Europe/Oslo")?,
+    ///         Precision::new(Duration::from_mins(5), PrecisionMode::ToPast)?,
+    ///         Precision::new(Duration::from_mins(5), PrecisionMode::ToFuture)?,
     ///     ),
-    ///     Ok(AbsoluteBounds::new(
-    ///         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///             "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-    ///         )),
-    ///         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///             "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
-    ///         )),
+    ///     Ok(AbsoluteBoundPair::new(
+    ///         AbsoluteFiniteBound::new(
+    ///             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///         ).to_start_bound(),
+    ///         AbsoluteFiniteBound::new(
+    ///             "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///         ).to_end_bound(),
     ///     )),
     /// );
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
     fn precise_interval_with_different_precisions(
         &self,
+        tz: TimeZone,
         precision_start: Precision,
         precision_end: Precision,
     ) -> Self::PrecisedIntervalOutput;
@@ -140,37 +151,41 @@ pub trait PreciseAbsoluteInterval {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Duration, Utc};
-    /// # use periodical::ops::Precision;
-    /// # use periodical::intervals::absolute::{
-    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
-    /// # };
+    /// # use std::error::Error;
+    /// # use std::time::Duration;
+    /// # use jiff::Zoned;
+    /// # use jiff::tz::TimeZone;
+    /// # use periodical::ops::{Precision, PrecisionMode};
+    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
     /// # use periodical::intervals::ops::precision::PreciseAbsoluteInterval;
-    /// let interval = AbsoluteBounds::new(
-    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 08:03:29.591Z".parse::<DateTime<Utc>>()?,
-    ///     )),
-    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 15:57:44.041Z".parse::<DateTime<Utc>>()?,
-    ///     )),
+    /// let interval = AbsoluteBoundPair::new(
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 08:03:29.591[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_start_bound(),
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 15:57:44.041[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_end_bound(),
     /// );
     ///
     /// assert_eq!(
-    ///     interval.precise_interval(Precision::ToPast(Duration::minutes(5))),
-    ///     Ok(AbsoluteBounds::new(
-    ///         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///             "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-    ///         )),
-    ///         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///             "2025-01-01 15:55:00Z".parse::<DateTime<Utc>>()?,
-    ///         )),
+    ///     interval.precise_interval(
+    ///         TimeZone::get("Europe/Oslo")?,
+    ///         Precision::new(Duration::from_mins(5), PrecisionMode::ToPast)?,
+    ///     ),
+    ///     Ok(AbsoluteBoundPair::new(
+    ///         AbsoluteFiniteBound::new(
+    ///             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///         ).to_start_bound(),
+    ///         AbsoluteFiniteBound::new(
+    ///             "2025-01-01 15:55:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///         ).to_end_bound(),
     ///     )),
     /// );
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    fn precise_interval(&self, precision: Precision) -> Self::PrecisedIntervalOutput {
-        self.precise_interval_with_different_precisions(precision, precision)
+    fn precise_interval(&self, tz: TimeZone, precision: Precision) -> Self::PrecisedIntervalOutput {
+        self.precise_interval_with_different_precisions(tz, precision, precision)
     }
 
     /// Precises the start and end bounds with different precisions and base times for both of them
@@ -180,47 +195,52 @@ pub trait PreciseAbsoluteInterval {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Duration, Utc};
-    /// # use periodical::ops::Precision;
-    /// # use periodical::intervals::absolute::{
-    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
-    /// # };
+    /// # use std::error::Error;
+    /// # use std::time::Duration;
+    /// # use jiff::Zoned;
+    /// # use jiff::tz::TimeZone;
+    /// # use periodical::ops::{Precision, PrecisionMode};
+    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
     /// # use periodical::intervals::ops::precision::PreciseAbsoluteInterval;
-    /// let interval = AbsoluteBounds::new(
-    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 08:11:29.591Z".parse::<DateTime<Utc>>()?,
-    ///     )),
-    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 15:57:44.041Z".parse::<DateTime<Utc>>()?,
-    ///     )),
+    /// let interval = AbsoluteBoundPair::new(
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 08:11:29.591[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_start_bound(),
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 15:57:44.041[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_end_bound(),
     /// );
     ///
     /// assert_eq!(
     ///     interval.precise_interval_with_different_precisions_with_base_time(
-    ///         Precision::ToFuture(Duration::minutes(7)),
-    ///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-    ///         Precision::ToPast(Duration::minutes(7)),
-    ///         "2025-01-01 15:00:00Z".parse::<DateTime<Utc>>()?,
+    ///         TimeZone::get("Europe/Oslo")?,
+    ///         Precision::new(Duration::from_mins(7), PrecisionMode::ToFuture)?,
+    ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///         Precision::new(Duration::from_mins(7), PrecisionMode::ToPast)?,
+    ///         "2025-01-01 15:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ),
-    ///     Ok(AbsoluteBounds::new(
-    ///         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///             "2025-01-01 08:14:00Z".parse::<DateTime<Utc>>()?,
-    ///         )),
-    ///         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///             "2025-01-01 15:56:00Z".parse::<DateTime<Utc>>()?,
-    ///         )),
+    ///     Ok(AbsoluteBoundPair::new(
+    ///         AbsoluteFiniteBound::new(
+    ///             "2025-01-01 08:14:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///         ).to_start_bound(),
+    ///         AbsoluteFiniteBound::new(
+    ///             "2025-01-01 15:56:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///         ).to_end_bound(),
     ///     )),
     /// );
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    fn precise_interval_with_different_precisions_with_base_time(
+    fn precise_interval_with_different_precisions_with_base_time<D>(
         &self,
+        tz: TimeZone,
         precision_start: Precision,
-        base_start: DateTime<Utc>,
+        base_start: D,
         precision_end: Precision,
-        base_end: DateTime<Utc>,
-    ) -> Self::PrecisedIntervalOutput;
+        base_end: D,
+    ) -> Self::PrecisedIntervalOutput
+    where
+        D: Into<Timestamp>;
 
     /// Precises the start and end bound with the given precision and base time
     ///
@@ -229,106 +249,131 @@ pub trait PreciseAbsoluteInterval {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Duration, Utc};
-    /// # use periodical::ops::Precision;
-    /// # use periodical::intervals::absolute::{
-    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
-    /// # };
+    /// # use std::error::Error;
+    /// # use std::time::Duration;
+    /// # use jiff::Zoned;
+    /// # use jiff::tz::TimeZone;
+    /// # use periodical::ops::{Precision, PrecisionMode};
+    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
     /// # use periodical::intervals::ops::precision::PreciseAbsoluteInterval;
-    /// let interval = AbsoluteBounds::new(
-    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 08:11:29.591Z".parse::<DateTime<Utc>>()?,
-    ///     )),
-    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 15:57:44.041Z".parse::<DateTime<Utc>>()?,
-    ///     )),
+    /// let interval = AbsoluteBoundPair::new(
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 08:11:29.591[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_start_bound(),
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 15:57:44.041[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_end_bound(),
     /// );
     ///
     /// assert_eq!(
     ///     interval.precise_interval_with_base_time(
-    ///         Precision::ToFuture(Duration::minutes(7)),
-    ///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+    ///         TimeZone::get("Europe/Oslo")?,
+    ///         Precision::new(Duration::from_mins(7), PrecisionMode::ToFuture)?,
+    ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ),
-    ///     Ok(AbsoluteBounds::new(
-    ///         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///             "2025-01-01 08:14:00Z".parse::<DateTime<Utc>>()?,
-    ///         )),
-    ///         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///             "2025-01-01 16:03:00Z".parse::<DateTime<Utc>>()?,
-    ///         )),
+    ///     Ok(AbsoluteBoundPair::new(
+    ///         AbsoluteFiniteBound::new(
+    ///             "2025-01-01 08:14:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///         ).to_start_bound(),
+    ///         AbsoluteFiniteBound::new(
+    ///             "2025-01-01 16:03:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///         ).to_end_bound(),
     ///     )),
     /// );
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    fn precise_interval_with_base_time(
+    fn precise_interval_with_base_time<D>(
         &self,
+        tz: TimeZone,
         precision: Precision,
-        base: DateTime<Utc>,
-    ) -> Self::PrecisedIntervalOutput {
-        self.precise_interval_with_different_precisions_with_base_time(precision, base, precision, base)
+        base: D,
+    ) -> Self::PrecisedIntervalOutput
+    where
+        D: Into<Timestamp> + Clone,
+    {
+        self.precise_interval_with_different_precisions_with_base_time(tz, precision, base.clone(), precision, base)
     }
 }
 
-impl PreciseAbsoluteInterval for AbsoluteBounds {
+impl PreciseAbsoluteInterval for AbsoluteBoundPair {
     type PrecisedIntervalOutput = Result<Self, PrecisionError>;
 
     fn precise_interval_with_different_precisions(
         &self,
+        tz: TimeZone,
         precision_start: Precision,
         precision_end: Precision,
     ) -> Self::PrecisedIntervalOutput {
-        precise_abs_bounds(self, precision_start, precision_end)
+        precise_abs_bound_pair(self, tz, precision_start, precision_end)
     }
 
-    fn precise_interval_with_different_precisions_with_base_time(
+    fn precise_interval_with_different_precisions_with_base_time<D>(
         &self,
+        tz: TimeZone,
         precision_start: Precision,
-        base_start: DateTime<Utc>,
+        base_start: D,
         precision_end: Precision,
-        base_end: DateTime<Utc>,
-    ) -> Self::PrecisedIntervalOutput {
-        precise_abs_bounds_with_base_time(self, precision_start, base_start, precision_end, base_end)
+        base_end: D,
+    ) -> Self::PrecisedIntervalOutput
+    where
+        D: Into<Timestamp>,
+    {
+        precise_abs_bound_pair_with_base_time(
+            self,
+            tz,
+            precision_start,
+            base_start.into(),
+            precision_end,
+            base_end.into(),
+        )
     }
 }
 
-impl PreciseAbsoluteInterval for EmptiableAbsoluteBounds {
+impl PreciseAbsoluteInterval for EmptiableAbsoluteBoundPair {
     type PrecisedIntervalOutput = Result<Self, PrecisionError>;
 
     fn precise_interval_with_different_precisions(
         &self,
+        tz: TimeZone,
         start_precision: Precision,
         end_precision: Precision,
     ) -> Self::PrecisedIntervalOutput {
-        if let EmptiableAbsoluteBounds::Bound(abs_bounds) = self {
-            return Ok(EmptiableAbsoluteBounds::Bound(precise_abs_bounds(
-                abs_bounds,
+        if let EmptiableAbsoluteBoundPair::Bound(abs_bound_pair) = self {
+            return Ok(EmptiableAbsoluteBoundPair::Bound(precise_abs_bound_pair(
+                abs_bound_pair,
+                tz,
                 start_precision,
                 end_precision,
             )?));
         }
 
-        Ok(EmptiableAbsoluteBounds::Empty)
+        Ok(EmptiableAbsoluteBoundPair::Empty)
     }
 
-    fn precise_interval_with_different_precisions_with_base_time(
+    fn precise_interval_with_different_precisions_with_base_time<D>(
         &self,
+        tz: TimeZone,
         precision_start: Precision,
-        base_start: DateTime<Utc>,
+        base_start: D,
         precision_end: Precision,
-        base_end: DateTime<Utc>,
-    ) -> Self::PrecisedIntervalOutput {
-        if let EmptiableAbsoluteBounds::Bound(abs_bounds) = self {
-            return Ok(EmptiableAbsoluteBounds::Bound(precise_abs_bounds_with_base_time(
-                abs_bounds,
+        base_end: D,
+    ) -> Self::PrecisedIntervalOutput
+    where
+        D: Into<Timestamp>,
+    {
+        if let EmptiableAbsoluteBoundPair::Bound(abs_bound_pair) = self {
+            return Ok(EmptiableAbsoluteBoundPair::Bound(precise_abs_bound_pair_with_base_time(
+                abs_bound_pair,
+                tz,
                 precision_start,
-                base_start,
+                base_start.into(),
                 precision_end,
-                base_end,
+                base_end.into(),
             )?));
         }
 
-        Ok(EmptiableAbsoluteBounds::Empty)
+        Ok(EmptiableAbsoluteBoundPair::Empty)
     }
 }
 
@@ -337,38 +382,84 @@ impl PreciseAbsoluteInterval for AbsoluteInterval {
 
     fn precise_interval_with_different_precisions(
         &self,
+        tz: TimeZone,
         precision_start: Precision,
         precision_end: Precision,
     ) -> Self::PrecisedIntervalOutput {
-        if let EmptiableAbsoluteBounds::Bound(ref abs_bounds) = self.emptiable_abs_bounds() {
-            return Ok(AbsoluteInterval::from(precise_abs_bounds(
-                abs_bounds,
-                precision_start,
-                precision_end,
-            )?));
-        }
-
-        Ok(AbsoluteInterval::Empty(EmptyInterval))
+        Ok(AbsoluteInterval::from(precise_abs_bound_pair(
+            &self.abs_bound_pair(),
+            tz,
+            precision_start,
+            precision_end,
+        )?))
     }
 
-    fn precise_interval_with_different_precisions_with_base_time(
+    fn precise_interval_with_different_precisions_with_base_time<D>(
         &self,
+        tz: TimeZone,
         precision_start: Precision,
-        base_start: DateTime<Utc>,
+        base_start: D,
         precision_end: Precision,
-        base_end: DateTime<Utc>,
+        base_end: D,
+    ) -> Self::PrecisedIntervalOutput
+    where
+        D: Into<Timestamp>,
+    {
+        Ok(AbsoluteInterval::from(precise_abs_bound_pair_with_base_time(
+            &self.abs_bound_pair(),
+            tz,
+            precision_start,
+            base_start.into(),
+            precision_end,
+            base_end.into(),
+        )?))
+    }
+}
+
+impl PreciseAbsoluteInterval for EmptiableAbsoluteInterval {
+    type PrecisedIntervalOutput = Result<Self, PrecisionError>;
+
+    fn precise_interval_with_different_precisions(
+        &self,
+        tz: TimeZone,
+        precision_start: Precision,
+        precision_end: Precision,
     ) -> Self::PrecisedIntervalOutput {
-        if let EmptiableAbsoluteBounds::Bound(ref abs_bounds) = self.emptiable_abs_bounds() {
-            return Ok(AbsoluteInterval::from(precise_abs_bounds_with_base_time(
-                abs_bounds,
+        if let EmptiableAbsoluteBoundPair::Bound(ref abs_bound_pair) = self.emptiable_abs_bound_pair() {
+            return Ok(EmptiableAbsoluteInterval::from(precise_abs_bound_pair(
+                abs_bound_pair,
+                tz,
                 precision_start,
-                base_start,
                 precision_end,
-                base_end,
             )?));
         }
 
-        Ok(AbsoluteInterval::Empty(EmptyInterval))
+        Ok(EmptiableAbsoluteInterval::Empty(EmptyInterval))
+    }
+
+    fn precise_interval_with_different_precisions_with_base_time<D>(
+        &self,
+        tz: TimeZone,
+        precision_start: Precision,
+        base_start: D,
+        precision_end: Precision,
+        base_end: D,
+    ) -> Self::PrecisedIntervalOutput
+    where
+        D: Into<Timestamp>,
+    {
+        if let EmptiableAbsoluteBoundPair::Bound(ref abs_bound_pair) = self.emptiable_abs_bound_pair() {
+            return Ok(EmptiableAbsoluteInterval::from(precise_abs_bound_pair_with_base_time(
+                abs_bound_pair,
+                tz,
+                precision_start,
+                base_start.into(),
+                precision_end,
+                base_end.into(),
+            )?));
+        }
+
+        Ok(EmptiableAbsoluteInterval::Empty(EmptyInterval))
     }
 }
 
@@ -379,24 +470,30 @@ impl PreciseAbsoluteInterval for AbsoluteInterval {
 /// # Examples
 ///
 /// ```
-/// # use chrono::{DateTime, Duration, Utc};
-/// # use periodical::ops::Precision;
-/// # use periodical::intervals::absolute::{AbsoluteFiniteBound, AbsoluteStartBound};
+/// # use std::error::Error;
+/// # use std::time::Duration;
+/// # use jiff::Zoned;
+/// # use jiff::tz::TimeZone;
+/// # use periodical::ops::{Precision, PrecisionMode};
+/// # use periodical::intervals::absolute::AbsoluteFiniteBound;
 /// # use periodical::intervals::meta::BoundInclusivity;
 /// # use periodical::intervals::ops::precision::PreciseAbsoluteBound;
-/// let bound = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-///     "2025-01-01 08:24:41Z".parse::<DateTime<Utc>>()?,
+/// let bound = AbsoluteFiniteBound::new_with_inclusivity(
+///     "2025-01-01 08:24:41[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///     BoundInclusivity::Exclusive,
-/// ));
+/// ).to_start_bound();
 ///
 /// assert_eq!(
-///     bound.precise_bound(Precision::ToFuture(Duration::minutes(5))),
-///     Ok(AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-///         "2025-01-01 08:25:00Z".parse::<DateTime<Utc>>()?,
+///     bound.precise_bound(
+///         TimeZone::get("Europe/Oslo")?,
+///         Precision::new(Duration::from_mins(5), PrecisionMode::ToFuture)?,
+///     ),
+///     Ok(AbsoluteFiniteBound::new_with_inclusivity(
+///         "2025-01-01 08:25:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///         BoundInclusivity::Exclusive,
-///     ))),
+///     ).to_start_bound()),
 /// );
-/// # Ok::<(), chrono::format::ParseError>(())
+/// # Ok::<(), Box<dyn Error>>(())
 /// ```
 pub trait PreciseAbsoluteBound {
     type PrecisedBoundOutput;
@@ -408,27 +505,33 @@ pub trait PreciseAbsoluteBound {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Duration, Utc};
-    /// # use periodical::ops::Precision;
-    /// # use periodical::intervals::absolute::{AbsoluteFiniteBound, AbsoluteStartBound};
+    /// # use std::error::Error;
+    /// # use std::time::Duration;
+    /// # use jiff::Zoned;
+    /// # use jiff::tz::TimeZone;
+    /// # use periodical::ops::{Precision, PrecisionMode};
+    /// # use periodical::intervals::absolute::AbsoluteFiniteBound;
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::precision::PreciseAbsoluteBound;
-    /// let bound = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-    ///     "2025-01-01 08:24:41Z".parse::<DateTime<Utc>>()?,
+    /// let bound = AbsoluteFiniteBound::new_with_inclusivity(
+    ///     "2025-01-01 08:24:41[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     BoundInclusivity::Exclusive,
-    /// ));
+    /// ).to_start_bound();
     ///
     /// assert_eq!(
-    ///     bound.precise_bound(Precision::ToFuture(Duration::minutes(5))),
-    ///     Ok(AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-    ///         "2025-01-01 08:25:00Z".parse::<DateTime<Utc>>()?,
+    ///     bound.precise_bound(
+    ///         TimeZone::get("Europe/Oslo")?,
+    ///         Precision::new(Duration::from_mins(5), PrecisionMode::ToFuture)?,
+    ///     ),
+    ///     Ok(AbsoluteFiniteBound::new_with_inclusivity(
+    ///         "2025-01-01 08:25:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///         BoundInclusivity::Exclusive,
-    ///     ))),
+    ///     ).to_start_bound()),
     /// );
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    fn precise_bound(&self, precision: Precision) -> Self::PrecisedBoundOutput;
+    fn precise_bound(&self, tz: TimeZone, precision: Precision) -> Self::PrecisedBoundOutput;
 
     /// Precises the bound with the given precision and base time
     ///
@@ -437,81 +540,117 @@ pub trait PreciseAbsoluteBound {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Duration, Utc};
-    /// # use periodical::ops::Precision;
-    /// # use periodical::intervals::absolute::{AbsoluteFiniteBound, AbsoluteStartBound};
+    /// # use std::error::Error;
+    /// # use std::time::Duration;
+    /// # use jiff::Zoned;
+    /// # use jiff::tz::TimeZone;
+    /// # use periodical::ops::{Precision, PrecisionMode};
+    /// # use periodical::intervals::absolute::AbsoluteFiniteBound;
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::precision::PreciseAbsoluteBound;
-    /// let bound = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-    ///     "2025-01-01 08:24:41Z".parse::<DateTime<Utc>>()?,
+    /// let bound = AbsoluteFiniteBound::new_with_inclusivity(
+    ///     "2025-01-01 08:24:41[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     BoundInclusivity::Exclusive,
-    /// ));
+    /// ).to_start_bound();
     ///
     /// assert_eq!(
     ///     bound.precise_bound_with_base_time(
-    ///         Precision::ToFuture(Duration::minutes(7)),
-    ///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+    ///         TimeZone::get("Europe/Oslo")?,
+    ///         Precision::new(Duration::from_mins(7), PrecisionMode::ToFuture)?,
+    ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ),
-    ///     Ok(AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-    ///         "2025-01-01 08:28:00Z".parse::<DateTime<Utc>>()?,
+    ///     Ok(AbsoluteFiniteBound::new_with_inclusivity(
+    ///         "2025-01-01 08:28:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///         BoundInclusivity::Exclusive,
-    ///     ))),
+    ///     ).to_start_bound()),
     /// );
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    fn precise_bound_with_base_time(&self, precision: Precision, base: DateTime<Utc>) -> Self::PrecisedBoundOutput;
+    fn precise_bound_with_base_time<B>(
+        &self,
+        tz: TimeZone,
+        precision: Precision,
+        base: B,
+    ) -> Self::PrecisedBoundOutput
+    where
+        B: Into<Timestamp>;
 }
 
 impl PreciseAbsoluteBound for AbsoluteFiniteBound {
     type PrecisedBoundOutput = Result<Self, PrecisionError>;
 
-    fn precise_bound(&self, precision: Precision) -> Self::PrecisedBoundOutput {
-        precise_abs_finite_bound(self, precision)
+    fn precise_bound(&self, tz: TimeZone, precision: Precision) -> Self::PrecisedBoundOutput {
+        precise_abs_finite_bound(self, tz, precision)
     }
 
-    fn precise_bound_with_base_time(&self, precision: Precision, base: DateTime<Utc>) -> Self::PrecisedBoundOutput {
-        precise_abs_finite_bound_with_base_time(self, precision, base)
+    fn precise_bound_with_base_time<B>(
+        &self,
+        tz: TimeZone,
+        precision: Precision,
+        base: B,
+    ) -> Self::PrecisedBoundOutput
+    where
+        B: Into<Timestamp>,
+    {
+        precise_abs_finite_bound_with_base_time(self, tz, precision, base.into())
     }
 }
 
 impl PreciseAbsoluteBound for AbsoluteStartBound {
     type PrecisedBoundOutput = Result<Self, PrecisionError>;
 
-    fn precise_bound(&self, precision: Precision) -> Self::PrecisedBoundOutput {
-        precise_abs_start_bound(self, precision)
+    fn precise_bound(&self, tz: TimeZone, precision: Precision) -> Self::PrecisedBoundOutput {
+        precise_abs_start_bound(self, tz, precision)
     }
 
-    fn precise_bound_with_base_time(&self, precision: Precision, base: DateTime<Utc>) -> Self::PrecisedBoundOutput {
-        precise_abs_start_bound_with_base_time(self, precision, base)
+    fn precise_bound_with_base_time<B>(
+        &self,
+        tz: TimeZone,
+        precision: Precision,
+        base: B,
+    ) -> Self::PrecisedBoundOutput
+    where
+        B: Into<Timestamp>,
+    {
+        precise_abs_start_bound_with_base_time(self, tz, precision, base.into())
     }
 }
 
 impl PreciseAbsoluteBound for AbsoluteEndBound {
     type PrecisedBoundOutput = Result<Self, PrecisionError>;
 
-    fn precise_bound(&self, precision: Precision) -> Self::PrecisedBoundOutput {
-        precise_abs_end_bound(self, precision)
+    fn precise_bound(&self, tz: TimeZone, precision: Precision) -> Self::PrecisedBoundOutput {
+        precise_abs_end_bound(self, tz, precision)
     }
 
-    fn precise_bound_with_base_time(&self, precision: Precision, base: DateTime<Utc>) -> Self::PrecisedBoundOutput {
-        precise_abs_end_bound_with_base_time(self, precision, base)
+    fn precise_bound_with_base_time<B>(
+        &self,
+        tz: TimeZone,
+        precision: Precision,
+        base: B,
+    ) -> Self::PrecisedBoundOutput
+    where
+        B: Into<Timestamp>,
+    {
+        precise_abs_end_bound_with_base_time(self, tz, precision, base.into())
     }
 }
 
-/// Precises [`AbsoluteBounds`] with the given [`Precision`]s
+/// Precises [`AbsoluteBoundPair`] with the given [`Precision`]s
 ///
 /// # Errors
 ///
 /// See [`Precision::precise_time`]
-pub fn precise_abs_bounds(
-    bounds: &AbsoluteBounds,
+pub fn precise_abs_bound_pair(
+    bounds: &AbsoluteBoundPair,
+    tz: TimeZone,
     precision_start: Precision,
     precision_end: Precision,
-) -> Result<AbsoluteBounds, PrecisionError> {
-    Ok(AbsoluteBounds::new(
-        precise_abs_start_bound(bounds.start(), precision_start)?,
-        precise_abs_end_bound(bounds.end(), precision_end)?,
+) -> Result<AbsoluteBoundPair, PrecisionError> {
+    Ok(AbsoluteBoundPair::new(
+        precise_abs_start_bound(&bounds.start(), tz.clone(), precision_start)?,
+        precise_abs_end_bound(&bounds.end(), tz, precision_end)?,
     ))
 }
 
@@ -522,10 +661,15 @@ pub fn precise_abs_bounds(
 /// See [`Precision::precise_time`]
 pub fn precise_abs_finite_bound(
     bound: &AbsoluteFiniteBound,
+    tz: TimeZone,
     precision: Precision,
 ) -> Result<AbsoluteFiniteBound, PrecisionError> {
     Ok(AbsoluteFiniteBound::new_with_inclusivity(
-        precision.precise_time(bound.time())?,
+        precision
+            .precise_time(&bound.time().to_zoned(tz))?
+            .compatible()
+            .or(Err(PrecisionError::OutOfRangeDate))?
+            .timestamp(),
         bound.inclusivity(),
     ))
 }
@@ -537,12 +681,13 @@ pub fn precise_abs_finite_bound(
 /// See [`Precision::precise_time`]
 pub fn precise_abs_start_bound(
     bound: &AbsoluteStartBound,
+    tz: TimeZone,
     precision: Precision,
 ) -> Result<AbsoluteStartBound, PrecisionError> {
     match bound {
         AbsoluteStartBound::InfinitePast => Ok(*bound),
         AbsoluteStartBound::Finite(finite_bound) => {
-            precise_abs_finite_bound(finite_bound, precision).map(AbsoluteStartBound::Finite)
+            precise_abs_finite_bound(finite_bound, tz, precision).map(AbsoluteStartBound::Finite)
         },
     }
 }
@@ -554,31 +699,33 @@ pub fn precise_abs_start_bound(
 /// See [`Precision::precise_time`]
 pub fn precise_abs_end_bound(
     bound: &AbsoluteEndBound,
+    tz: TimeZone,
     precision: Precision,
 ) -> Result<AbsoluteEndBound, PrecisionError> {
     match bound {
         AbsoluteEndBound::InfiniteFuture => Ok(*bound),
         AbsoluteEndBound::Finite(finite_bound) => {
-            precise_abs_finite_bound(finite_bound, precision).map(AbsoluteEndBound::Finite)
+            precise_abs_finite_bound(finite_bound, tz, precision).map(AbsoluteEndBound::Finite)
         },
     }
 }
 
-/// Precises [`AbsoluteBounds`] with the given [`Precision`]s and base times
+/// Precises [`AbsoluteBoundPair`] with the given [`Precision`]s and base times
 ///
 /// # Errors
 ///
 /// See [`Precision::precise_time_with_base_time`]
-pub fn precise_abs_bounds_with_base_time(
-    bounds: &AbsoluteBounds,
+pub fn precise_abs_bound_pair_with_base_time(
+    bounds: &AbsoluteBoundPair,
+    tz: TimeZone,
     precision_start: Precision,
-    base_start: DateTime<Utc>,
+    base_start: Timestamp,
     precision_end: Precision,
-    base_end: DateTime<Utc>,
-) -> Result<AbsoluteBounds, PrecisionError> {
-    Ok(AbsoluteBounds::new(
-        precise_abs_start_bound_with_base_time(bounds.start(), precision_start, base_start)?,
-        precise_abs_end_bound_with_base_time(bounds.end(), precision_end, base_end)?,
+    base_end: Timestamp,
+) -> Result<AbsoluteBoundPair, PrecisionError> {
+    Ok(AbsoluteBoundPair::new(
+        precise_abs_start_bound_with_base_time(&bounds.start(), tz.clone(), precision_start, base_start)?,
+        precise_abs_end_bound_with_base_time(&bounds.end(), tz, precision_end, base_end)?,
     ))
 }
 
@@ -589,11 +736,14 @@ pub fn precise_abs_bounds_with_base_time(
 /// See [`Precision::precise_time_with_base_time`]
 pub fn precise_abs_finite_bound_with_base_time(
     bound: &AbsoluteFiniteBound,
+    tz: TimeZone,
     precision: Precision,
-    base: DateTime<Utc>,
+    base: Timestamp,
 ) -> Result<AbsoluteFiniteBound, PrecisionError> {
     Ok(AbsoluteFiniteBound::new_with_inclusivity(
-        precision.precise_time_with_base_time(bound.time(), base)?,
+        precision
+            .precise_time_with_base_time(&bound.time().to_zoned(tz), base)?
+            .timestamp(),
         bound.inclusivity(),
     ))
 }
@@ -605,13 +755,14 @@ pub fn precise_abs_finite_bound_with_base_time(
 /// See [`Precision::precise_time_with_base_time`]
 pub fn precise_abs_start_bound_with_base_time(
     bound: &AbsoluteStartBound,
+    tz: TimeZone,
     precision: Precision,
-    base: DateTime<Utc>,
+    base: Timestamp,
 ) -> Result<AbsoluteStartBound, PrecisionError> {
     match bound {
         AbsoluteStartBound::InfinitePast => Ok(*bound),
         AbsoluteStartBound::Finite(finite_bound) => {
-            precise_abs_finite_bound_with_base_time(finite_bound, precision, base).map(AbsoluteStartBound::Finite)
+            precise_abs_finite_bound_with_base_time(finite_bound, tz, precision, base).map(AbsoluteStartBound::Finite)
         },
     }
 }
@@ -623,13 +774,14 @@ pub fn precise_abs_start_bound_with_base_time(
 /// See [`Precision::precise_time_with_base_time`]
 pub fn precise_abs_end_bound_with_base_time(
     bound: &AbsoluteEndBound,
+    tz: TimeZone,
     precision: Precision,
-    base: DateTime<Utc>,
+    base: Timestamp,
 ) -> Result<AbsoluteEndBound, PrecisionError> {
     match bound {
         AbsoluteEndBound::InfiniteFuture => Ok(*bound),
         AbsoluteEndBound::Finite(finite_bound) => {
-            precise_abs_finite_bound_with_base_time(finite_bound, precision, base).map(AbsoluteEndBound::Finite)
+            precise_abs_finite_bound_with_base_time(finite_bound, tz, precision, base).map(AbsoluteEndBound::Finite)
         },
     }
 }
