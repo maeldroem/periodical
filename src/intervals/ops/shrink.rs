@@ -9,46 +9,43 @@
 //! # Examples
 //!
 //! ```
-//! # use chrono::{DateTime, Utc};
-//! # use periodical::intervals::absolute::{
-//! #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
-//! # };
+//! # use std::error::Error;
+//! # use jiff::Zoned;
+//! # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
 //! # use periodical::intervals::ops::shrink::ShrinkableStartBound;
-//! let interval = AbsoluteBounds::new(
-//!     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-//!     )),
-//!     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-//!         "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
-//!     )),
+//! let interval = AbsoluteBoundPair::new(
+//!     AbsoluteFiniteBound::new(
+//!         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!     ).to_start_bound(),
+//!     AbsoluteFiniteBound::new(
+//!         "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!     ).to_end_bound(),
 //! );
 //!
 //! let shrunk_interval = interval.shrink_start(
-//!     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!         "2025-01-01 10:00:00Z".parse::<DateTime<Utc>>()?,
-//!     ))
+//!     AbsoluteFiniteBound::new(
+//!         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!     ).to_start_bound()
 //! );
 //!
-//! assert_eq!(shrunk_interval, AbsoluteBounds::new(
-//!     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!         "2025-01-01 10:00:00Z".parse::<DateTime<Utc>>()?,
-//!     )),
-//!     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-//!         "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
-//!     )),
+//! assert_eq!(shrunk_interval, AbsoluteBoundPair::new(
+//!     AbsoluteFiniteBound::new(
+//!         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!     ).to_start_bound(),
+//!     AbsoluteFiniteBound::new(
+//!         "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!     ).to_end_bound(),
 //! ));
-//! # Ok::<(), chrono::format::ParseError>(())
+//! # Ok::<(), Box<dyn Error>>(())
 //! ```
 
 use std::cmp::Ordering;
 
 use crate::intervals::absolute::{
-    AbsoluteBounds, AbsoluteEndBound, AbsoluteInterval, AbsoluteStartBound, BoundedAbsoluteInterval,
-    EmptiableAbsoluteBounds, HalfBoundedAbsoluteInterval, HasAbsoluteBounds, HasEmptiableAbsoluteBounds,
+    AbsoluteBoundPair, AbsoluteEndBound, AbsoluteInterval, AbsoluteStartBound, BoundedAbsoluteInterval, EmptiableAbsoluteBoundPair, EmptiableAbsoluteInterval, HalfBoundedAbsoluteInterval, HasAbsoluteBoundPair, HasEmptiableAbsoluteBoundPair
 };
 use crate::intervals::relative::{
-    BoundedRelativeInterval, EmptiableRelativeBounds, HalfBoundedRelativeInterval, HasEmptiableRelativeBounds,
-    HasRelativeBounds, RelativeBounds, RelativeEndBound, RelativeInterval, RelativeStartBound,
+    BoundedRelativeInterval, EmptiableRelativeBoundPair, EmptiableRelativeInterval, HalfBoundedRelativeInterval, HasEmptiableRelativeBoundPair, HasRelativeBoundPair, RelativeBoundPair, RelativeEndBound, RelativeInterval, RelativeStartBound
 };
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 
@@ -68,35 +65,34 @@ pub trait ShrinkableStartBound<P> {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Utc};
-    /// # use periodical::intervals::absolute::{
-    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
-    /// # };
+    /// # use std::error::Error;
+    /// # use jiff::Zoned;
+    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
     /// # use periodical::intervals::ops::shrink::ShrinkableStartBound;
-    /// let interval = AbsoluteBounds::new(
-    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     )),
-    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     )),
+    /// let interval = AbsoluteBoundPair::new(
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_start_bound(),
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_end_bound(),
     /// );
     ///
     /// let shrunk_interval = interval.shrink_start(
-    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 10:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     ))
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_start_bound()
     /// );
     ///
-    /// assert_eq!(shrunk_interval, AbsoluteBounds::new(
-    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 10:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     )),
-    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     )),
+    /// assert_eq!(shrunk_interval, AbsoluteBoundPair::new(
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_start_bound(),
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_end_bound(),
     /// ));
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     fn shrink_start(&self, position: P) -> Self::Output;
 }
@@ -117,68 +113,67 @@ pub trait ShrinkableEndBound<P> {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Utc};
-    /// # use periodical::intervals::absolute::{
-    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
-    /// # };
+    /// # use std::error::Error;
+    /// # use jiff::Zoned;
+    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
     /// # use periodical::intervals::ops::shrink::ShrinkableEndBound;
-    /// let interval = AbsoluteBounds::new(
-    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     )),
-    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     )),
+    /// let interval = AbsoluteBoundPair::new(
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_start_bound(),
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_end_bound(),
     /// );
     ///
     /// let shrunk_interval = interval.shrink_end(
-    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     ))
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_end_bound()
     /// );
     ///
-    /// assert_eq!(shrunk_interval, AbsoluteBounds::new(
-    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     )),
-    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     )),
+    /// assert_eq!(shrunk_interval, AbsoluteBoundPair::new(
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_start_bound(),
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_end_bound(),
     /// ));
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     fn shrink_end(&self, position: P) -> Self::Output;
 }
 
-impl ShrinkableStartBound<AbsoluteStartBound> for AbsoluteBounds {
+impl ShrinkableStartBound<AbsoluteStartBound> for AbsoluteBoundPair {
     type Output = Self;
 
     fn shrink_start(&self, position: AbsoluteStartBound) -> Self::Output {
-        shrink_start_abs_bounds(self, position)
+        shrink_start_abs_bound_pair(self, position)
     }
 }
 
-impl ShrinkableEndBound<AbsoluteEndBound> for AbsoluteBounds {
+impl ShrinkableEndBound<AbsoluteEndBound> for AbsoluteBoundPair {
     type Output = Self;
 
     fn shrink_end(&self, position: AbsoluteEndBound) -> Self::Output {
-        shrink_end_abs_bounds(self, position)
+        shrink_end_abs_bound_pair(self, position)
     }
 }
 
-impl ShrinkableStartBound<AbsoluteStartBound> for EmptiableAbsoluteBounds {
+impl ShrinkableStartBound<AbsoluteStartBound> for EmptiableAbsoluteBoundPair {
     type Output = Self;
 
     fn shrink_start(&self, position: AbsoluteStartBound) -> Self::Output {
-        shrink_start_emptiable_abs_bounds(self, position)
+        shrink_start_emptiable_abs_bound_pair(self, position)
     }
 }
 
-impl ShrinkableEndBound<AbsoluteEndBound> for EmptiableAbsoluteBounds {
+impl ShrinkableEndBound<AbsoluteEndBound> for EmptiableAbsoluteBoundPair {
     type Output = Self;
 
     fn shrink_end(&self, position: AbsoluteEndBound) -> Self::Output {
-        shrink_end_emptiable_abs_bounds(self, position)
+        shrink_end_emptiable_abs_bound_pair(self, position)
     }
 }
 
@@ -186,8 +181,8 @@ impl ShrinkableStartBound<AbsoluteStartBound> for AbsoluteInterval {
     type Output = Self;
 
     fn shrink_start(&self, position: AbsoluteStartBound) -> Self::Output {
-        AbsoluteInterval::from(shrink_start_emptiable_abs_bounds(
-            &self.emptiable_abs_bounds(),
+        Self::Output::from(shrink_start_abs_bound_pair(
+            &self.abs_bound_pair(),
             position,
         ))
     }
@@ -197,7 +192,26 @@ impl ShrinkableEndBound<AbsoluteEndBound> for AbsoluteInterval {
     type Output = Self;
 
     fn shrink_end(&self, position: AbsoluteEndBound) -> Self::Output {
-        AbsoluteInterval::from(shrink_end_emptiable_abs_bounds(&self.emptiable_abs_bounds(), position))
+        Self::Output::from(shrink_end_abs_bound_pair(&self.abs_bound_pair(), position))
+    }
+}
+
+impl ShrinkableStartBound<AbsoluteStartBound> for EmptiableAbsoluteInterval {
+    type Output = Self;
+
+    fn shrink_start(&self, position: AbsoluteStartBound) -> Self::Output {
+        Self::Output::from(shrink_start_emptiable_abs_bound_pair(
+            &self.emptiable_abs_bound_pair(),
+            position,
+        ))
+    }
+}
+
+impl ShrinkableEndBound<AbsoluteEndBound> for EmptiableAbsoluteInterval {
+    type Output = Self;
+
+    fn shrink_end(&self, position: AbsoluteEndBound) -> Self::Output {
+        Self::Output::from(shrink_end_emptiable_abs_bound_pair(&self.emptiable_abs_bound_pair(), position))
     }
 }
 
@@ -205,8 +219,8 @@ impl ShrinkableStartBound<AbsoluteStartBound> for BoundedAbsoluteInterval {
     type Output = AbsoluteInterval;
 
     fn shrink_start(&self, position: AbsoluteStartBound) -> Self::Output {
-        AbsoluteInterval::from(shrink_start_emptiable_abs_bounds(
-            &self.emptiable_abs_bounds(),
+        Self::Output::from(shrink_start_abs_bound_pair(
+            &self.abs_bound_pair(),
             position,
         ))
     }
@@ -216,7 +230,7 @@ impl ShrinkableEndBound<AbsoluteEndBound> for BoundedAbsoluteInterval {
     type Output = AbsoluteInterval;
 
     fn shrink_end(&self, position: AbsoluteEndBound) -> Self::Output {
-        AbsoluteInterval::from(shrink_end_emptiable_abs_bounds(&self.emptiable_abs_bounds(), position))
+        Self::Output::from(shrink_end_abs_bound_pair(&self.abs_bound_pair(), position))
     }
 }
 
@@ -224,8 +238,8 @@ impl ShrinkableStartBound<AbsoluteStartBound> for HalfBoundedAbsoluteInterval {
     type Output = AbsoluteInterval;
 
     fn shrink_start(&self, position: AbsoluteStartBound) -> Self::Output {
-        AbsoluteInterval::from(shrink_start_emptiable_abs_bounds(
-            &self.emptiable_abs_bounds(),
+        Self::Output::from(shrink_start_abs_bound_pair(
+            &self.abs_bound_pair(),
             position,
         ))
     }
@@ -235,39 +249,39 @@ impl ShrinkableEndBound<AbsoluteEndBound> for HalfBoundedAbsoluteInterval {
     type Output = AbsoluteInterval;
 
     fn shrink_end(&self, position: AbsoluteEndBound) -> Self::Output {
-        AbsoluteInterval::from(shrink_end_emptiable_abs_bounds(&self.emptiable_abs_bounds(), position))
+        Self::Output::from(shrink_end_abs_bound_pair(&self.abs_bound_pair(), position))
     }
 }
 
-impl ShrinkableStartBound<RelativeStartBound> for RelativeBounds {
+impl ShrinkableStartBound<RelativeStartBound> for RelativeBoundPair {
     type Output = Self;
 
     fn shrink_start(&self, position: RelativeStartBound) -> Self::Output {
-        shrink_start_rel_bounds(self, position)
+        shrink_start_rel_bound_pair(self, position)
     }
 }
 
-impl ShrinkableEndBound<RelativeEndBound> for RelativeBounds {
+impl ShrinkableEndBound<RelativeEndBound> for RelativeBoundPair {
     type Output = Self;
 
     fn shrink_end(&self, position: RelativeEndBound) -> Self::Output {
-        shrink_end_rel_bounds(self, position)
+        shrink_end_rel_bound_pair(self, position)
     }
 }
 
-impl ShrinkableStartBound<RelativeStartBound> for EmptiableRelativeBounds {
+impl ShrinkableStartBound<RelativeStartBound> for EmptiableRelativeBoundPair {
     type Output = Self;
 
     fn shrink_start(&self, position: RelativeStartBound) -> Self::Output {
-        shrink_start_emptiable_rel_bounds(self, position)
+        shrink_start_emptiable_rel_bound_pair(self, position)
     }
 }
 
-impl ShrinkableEndBound<RelativeEndBound> for EmptiableRelativeBounds {
+impl ShrinkableEndBound<RelativeEndBound> for EmptiableRelativeBoundPair {
     type Output = Self;
 
     fn shrink_end(&self, position: RelativeEndBound) -> Self::Output {
-        shrink_end_emptiable_rel_bounds(self, position)
+        shrink_end_emptiable_rel_bound_pair(self, position)
     }
 }
 
@@ -275,8 +289,8 @@ impl ShrinkableStartBound<RelativeStartBound> for RelativeInterval {
     type Output = Self;
 
     fn shrink_start(&self, position: RelativeStartBound) -> Self::Output {
-        RelativeInterval::from(shrink_start_emptiable_rel_bounds(
-            &self.emptiable_rel_bounds(),
+        Self::Output::from(shrink_start_rel_bound_pair(
+            &self.rel_bound_pair(),
             position,
         ))
     }
@@ -286,7 +300,26 @@ impl ShrinkableEndBound<RelativeEndBound> for RelativeInterval {
     type Output = Self;
 
     fn shrink_end(&self, position: RelativeEndBound) -> Self::Output {
-        RelativeInterval::from(shrink_end_emptiable_rel_bounds(&self.emptiable_rel_bounds(), position))
+        Self::Output::from(shrink_end_rel_bound_pair(&self.rel_bound_pair(), position))
+    }
+}
+
+impl ShrinkableStartBound<RelativeStartBound> for EmptiableRelativeInterval {
+    type Output = Self;
+
+    fn shrink_start(&self, position: RelativeStartBound) -> Self::Output {
+        Self::Output::from(shrink_start_emptiable_rel_bound_pair(
+            &self.emptiable_rel_bound_pair(),
+            position,
+        ))
+    }
+}
+
+impl ShrinkableEndBound<RelativeEndBound> for EmptiableRelativeInterval {
+    type Output = Self;
+
+    fn shrink_end(&self, position: RelativeEndBound) -> Self::Output {
+        Self::Output::from(shrink_end_emptiable_rel_bound_pair(&self.emptiable_rel_bound_pair(), position))
     }
 }
 
@@ -294,8 +327,8 @@ impl ShrinkableStartBound<RelativeStartBound> for BoundedRelativeInterval {
     type Output = RelativeInterval;
 
     fn shrink_start(&self, position: RelativeStartBound) -> Self::Output {
-        RelativeInterval::from(shrink_start_emptiable_rel_bounds(
-            &self.emptiable_rel_bounds(),
+        Self::Output::from(shrink_start_rel_bound_pair(
+            &self.rel_bound_pair(),
             position,
         ))
     }
@@ -305,7 +338,7 @@ impl ShrinkableEndBound<RelativeEndBound> for BoundedRelativeInterval {
     type Output = RelativeInterval;
 
     fn shrink_end(&self, position: RelativeEndBound) -> Self::Output {
-        RelativeInterval::from(shrink_end_emptiable_rel_bounds(&self.emptiable_rel_bounds(), position))
+        Self::Output::from(shrink_end_rel_bound_pair(&self.rel_bound_pair(), position))
     }
 }
 
@@ -313,8 +346,8 @@ impl ShrinkableStartBound<RelativeStartBound> for HalfBoundedRelativeInterval {
     type Output = RelativeInterval;
 
     fn shrink_start(&self, position: RelativeStartBound) -> Self::Output {
-        RelativeInterval::from(shrink_start_emptiable_rel_bounds(
-            &self.emptiable_rel_bounds(),
+        Self::Output::from(shrink_start_rel_bound_pair(
+            &self.rel_bound_pair(),
             position,
         ))
     }
@@ -324,7 +357,7 @@ impl ShrinkableEndBound<RelativeEndBound> for HalfBoundedRelativeInterval {
     type Output = RelativeInterval;
 
     fn shrink_end(&self, position: RelativeEndBound) -> Self::Output {
-        RelativeInterval::from(shrink_end_emptiable_rel_bounds(&self.emptiable_rel_bounds(), position))
+        Self::Output::from(shrink_end_rel_bound_pair(&self.rel_bound_pair(), position))
     }
 }
 
@@ -332,8 +365,8 @@ impl ShrinkableStartBound<AbsoluteStartBound> for UnboundedInterval {
     type Output = AbsoluteInterval;
 
     fn shrink_start(&self, position: AbsoluteStartBound) -> Self::Output {
-        AbsoluteInterval::from(shrink_start_emptiable_abs_bounds(
-            &self.emptiable_abs_bounds(),
+        Self::Output::from(shrink_start_abs_bound_pair(
+            &self.abs_bound_pair(),
             position,
         ))
     }
@@ -343,7 +376,7 @@ impl ShrinkableEndBound<AbsoluteEndBound> for UnboundedInterval {
     type Output = AbsoluteInterval;
 
     fn shrink_end(&self, position: AbsoluteEndBound) -> Self::Output {
-        AbsoluteInterval::from(shrink_end_emptiable_abs_bounds(&self.emptiable_abs_bounds(), position))
+        Self::Output::from(shrink_end_abs_bound_pair(&self.abs_bound_pair(), position))
     }
 }
 
@@ -351,8 +384,8 @@ impl ShrinkableStartBound<RelativeStartBound> for UnboundedInterval {
     type Output = RelativeInterval;
 
     fn shrink_start(&self, position: RelativeStartBound) -> Self::Output {
-        RelativeInterval::from(shrink_start_emptiable_rel_bounds(
-            &self.emptiable_rel_bounds(),
+        Self::Output::from(shrink_start_rel_bound_pair(
+            &self.rel_bound_pair(),
             position,
         ))
     }
@@ -362,7 +395,7 @@ impl ShrinkableEndBound<RelativeEndBound> for UnboundedInterval {
     type Output = RelativeInterval;
 
     fn shrink_end(&self, position: RelativeEndBound) -> Self::Output {
-        RelativeInterval::from(shrink_end_emptiable_rel_bounds(&self.emptiable_rel_bounds(), position))
+        Self::Output::from(shrink_end_rel_bound_pair(&self.rel_bound_pair(), position))
     }
 }
 
@@ -398,11 +431,11 @@ impl ShrinkableEndBound<RelativeEndBound> for EmptyInterval {
     }
 }
 
-/// Shrinks the start bound of the given [`AbsoluteBounds`] to the given bound
+/// Shrinks the start bound of the given [`AbsoluteBoundPair`] to the given bound
 ///
 /// See [module documentation](crate::intervals::ops::shrink) for more information.
 #[must_use]
-pub fn shrink_start_abs_bounds(bounds: &AbsoluteBounds, at: AbsoluteStartBound) -> AbsoluteBounds {
+pub fn shrink_start_abs_bound_pair(bounds: &AbsoluteBoundPair, at: AbsoluteStartBound) -> AbsoluteBoundPair {
     let mut new_bounds = bounds.clone();
     let max_start = new_bounds.abs_start().max(at);
 
@@ -417,26 +450,26 @@ pub fn shrink_start_abs_bounds(bounds: &AbsoluteBounds, at: AbsoluteStartBound) 
     new_bounds
 }
 
-/// Shrinks the start bound of the given [`EmptiableAbsoluteBounds`] to the given bound
+/// Shrinks the start bound of the given [`EmptiableAbsoluteBoundPair`] to the given bound
 ///
 /// See [module documentation](crate::intervals::ops::shrink) for more information.
 #[must_use]
-pub fn shrink_start_emptiable_abs_bounds(
-    emptiable_bounds: &EmptiableAbsoluteBounds,
+pub fn shrink_start_emptiable_abs_bound_pair(
+    emptiable_bounds: &EmptiableAbsoluteBoundPair,
     at: AbsoluteStartBound,
-) -> EmptiableAbsoluteBounds {
-    let EmptiableAbsoluteBounds::Bound(bounds) = emptiable_bounds else {
+) -> EmptiableAbsoluteBoundPair {
+    let EmptiableAbsoluteBoundPair::Bound(bounds) = emptiable_bounds else {
         return emptiable_bounds.clone();
     };
 
-    EmptiableAbsoluteBounds::from(shrink_start_abs_bounds(bounds, at))
+    EmptiableAbsoluteBoundPair::from(shrink_start_abs_bound_pair(bounds, at))
 }
 
-/// Shrinks the end bound of the given [`AbsoluteBounds`] to the given bound
+/// Shrinks the end bound of the given [`AbsoluteBoundPair`] to the given bound
 ///
 /// See [module documentation](crate::intervals::ops::shrink) for more information.
 #[must_use]
-pub fn shrink_end_abs_bounds(bounds: &AbsoluteBounds, at: AbsoluteEndBound) -> AbsoluteBounds {
+pub fn shrink_end_abs_bound_pair(bounds: &AbsoluteBoundPair, at: AbsoluteEndBound) -> AbsoluteBoundPair {
     let mut new_bounds = bounds.clone();
     let min_end = new_bounds.abs_end().min(at);
 
@@ -451,26 +484,26 @@ pub fn shrink_end_abs_bounds(bounds: &AbsoluteBounds, at: AbsoluteEndBound) -> A
     new_bounds
 }
 
-/// Shrinks the end bound of the given [`EmptiableAbsoluteBounds`] to the given bound
+/// Shrinks the end bound of the given [`EmptiableAbsoluteBoundPair`] to the given bound
 ///
 /// See [module documentation](crate::intervals::ops::shrink) for more information.
 #[must_use]
-pub fn shrink_end_emptiable_abs_bounds(
-    emptiable_bounds: &EmptiableAbsoluteBounds,
+pub fn shrink_end_emptiable_abs_bound_pair(
+    emptiable_bounds: &EmptiableAbsoluteBoundPair,
     at: AbsoluteEndBound,
-) -> EmptiableAbsoluteBounds {
-    let EmptiableAbsoluteBounds::Bound(bounds) = emptiable_bounds else {
+) -> EmptiableAbsoluteBoundPair {
+    let EmptiableAbsoluteBoundPair::Bound(bounds) = emptiable_bounds else {
         return emptiable_bounds.clone();
     };
 
-    EmptiableAbsoluteBounds::from(shrink_end_abs_bounds(bounds, at))
+    EmptiableAbsoluteBoundPair::from(shrink_end_abs_bound_pair(bounds, at))
 }
 
-/// Shrinks the start bound of the given [`RelativeBounds`] to the given bound
+/// Shrinks the start bound of the given [`RelativeBoundPair`] to the given bound
 ///
 /// See [module documentation](crate::intervals::ops::shrink) for more information.
 #[must_use]
-pub fn shrink_start_rel_bounds(bounds: &RelativeBounds, at: RelativeStartBound) -> RelativeBounds {
+pub fn shrink_start_rel_bound_pair(bounds: &RelativeBoundPair, at: RelativeStartBound) -> RelativeBoundPair {
     let mut new_bounds = bounds.clone();
     let max_start = new_bounds.rel_start().max(at);
 
@@ -485,26 +518,26 @@ pub fn shrink_start_rel_bounds(bounds: &RelativeBounds, at: RelativeStartBound) 
     new_bounds
 }
 
-/// Shrinks the start bound of the given [`EmptiableRelativeBounds`] to the given bound
+/// Shrinks the start bound of the given [`EmptiableRelativeBoundPair`] to the given bound
 ///
 /// See [module documentation](crate::intervals::ops::shrink) for more information.
 #[must_use]
-pub fn shrink_start_emptiable_rel_bounds(
-    emptiable_bounds: &EmptiableRelativeBounds,
+pub fn shrink_start_emptiable_rel_bound_pair(
+    emptiable_bounds: &EmptiableRelativeBoundPair,
     at: RelativeStartBound,
-) -> EmptiableRelativeBounds {
-    let EmptiableRelativeBounds::Bound(bounds) = emptiable_bounds else {
+) -> EmptiableRelativeBoundPair {
+    let EmptiableRelativeBoundPair::Bound(bounds) = emptiable_bounds else {
         return emptiable_bounds.clone();
     };
 
-    EmptiableRelativeBounds::from(shrink_start_rel_bounds(bounds, at))
+    EmptiableRelativeBoundPair::from(shrink_start_rel_bound_pair(bounds, at))
 }
 
-/// Shrinks the end bound of the given [`RelativeBounds`] to the given bound
+/// Shrinks the end bound of the given [`RelativeBoundPair`] to the given bound
 ///
 /// See [module documentation](crate::intervals::ops::shrink) for more information.
 #[must_use]
-pub fn shrink_end_rel_bounds(bounds: &RelativeBounds, at: RelativeEndBound) -> RelativeBounds {
+pub fn shrink_end_rel_bound_pair(bounds: &RelativeBoundPair, at: RelativeEndBound) -> RelativeBoundPair {
     let mut new_bounds = bounds.clone();
     let min_end = new_bounds.rel_end().min(at);
 
@@ -519,17 +552,17 @@ pub fn shrink_end_rel_bounds(bounds: &RelativeBounds, at: RelativeEndBound) -> R
     new_bounds
 }
 
-/// Shrinks the end bound of the given [`EmptiableRelativeBounds`] to the given bound
+/// Shrinks the end bound of the given [`EmptiableRelativeBoundPair`] to the given bound
 ///
 /// See [module documentation](crate::intervals::ops::shrink) for more information.
 #[must_use]
-pub fn shrink_end_emptiable_rel_bounds(
-    emptiable_bounds: &EmptiableRelativeBounds,
+pub fn shrink_end_emptiable_rel_bound_pair(
+    emptiable_bounds: &EmptiableRelativeBoundPair,
     at: RelativeEndBound,
-) -> EmptiableRelativeBounds {
-    let EmptiableRelativeBounds::Bound(bounds) = emptiable_bounds else {
+) -> EmptiableRelativeBoundPair {
+    let EmptiableRelativeBoundPair::Bound(bounds) = emptiable_bounds else {
         return emptiable_bounds.clone();
     };
 
-    EmptiableRelativeBounds::from(shrink_end_rel_bounds(bounds, at))
+    EmptiableRelativeBoundPair::from(shrink_end_rel_bound_pair(bounds, at))
 }
