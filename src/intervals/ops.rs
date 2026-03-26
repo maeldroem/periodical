@@ -33,7 +33,7 @@ pub mod grow;
 pub mod overlap;
 pub mod point_containment;
 pub mod precision;
-// pub mod relativity_conversion;
+pub mod relativity_conversion;
 // pub mod remove_overlap;
 // pub mod remove_overlap_or_gap;
 // pub mod set_ops;
@@ -54,7 +54,7 @@ tests! {
     mod overlap_tests;
     mod point_containment_tests;
     mod precision_tests;
-//     mod relativity_conversion_tests;
+    mod relativity_conversion_tests;
 //     mod remove_overlap_or_gap_tests;
 //     mod remove_overlap_tests;
 //     mod set_ops_tests;
@@ -87,7 +87,7 @@ inline_docs! {
         PointContainmentPosition, PointContainmentRule, PointContainmentRuleSet,
     };
     pub use precision::PreciseAbsoluteInterval;
-    // pub use relativity_conversion::{ToAbsolute, ToRelative};
+    pub use relativity_conversion::{ToAbsolute, ToRelative};
     // pub use remove_overlap::{OverlapRemovable, OverlapRemovalResult};
     // pub use remove_overlap_or_gap::{OverlapOrGapRemovalResult, RemovableOverlapOrGap};
     // pub use set_ops::{Differentiable, Intersectable, SymmetricallyDifferentiable, Unitable};
