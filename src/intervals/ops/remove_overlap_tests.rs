@@ -13,31 +13,31 @@ mod overlap_removal_result {
     use super::*;
     
     #[test]
-    fn overlap_removal_result_is_single() {
+    fn is_single() {
         assert!(OverlapRemovalResult::Single(()).is_single());
         assert!(!OverlapRemovalResult::Split((), ()).is_single());
     }
     
     #[test]
-    fn overlap_removal_result_is_split() {
+    fn is_split() {
         assert!(!OverlapRemovalResult::Single(()).is_split());
         assert!(OverlapRemovalResult::Split((), ()).is_split());
     }
     
     #[test]
-    fn overlap_removal_result_single_opt() {
+    fn single_opt() {
         assert_eq!(OverlapRemovalResult::Single(10).single(), Some(10));
         assert_eq!(OverlapRemovalResult::Split(10, 20).single(), None);
     }
     
     #[test]
-    fn overlap_removal_result_split_opt() {
+    fn split_opt() {
         assert_eq!(OverlapRemovalResult::Single(10).split(), None);
         assert_eq!(OverlapRemovalResult::Split(10, 20).split(), Some((10, 20)));
     }
     
     #[test]
-    fn overlap_removal_result_map() {
+    fn map() {
         assert_eq!(
             OverlapRemovalResult::Single(10).map(|x| x + 10),
             OverlapRemovalResult::Single(20)
@@ -53,7 +53,7 @@ mod remove_overlap {
     use super::*;
     
     #[test]
-    fn remove_overlap_empty_empty() {
+    fn empty_empty() {
         assert_eq!(
             EmptiableAbsoluteBoundPair::Empty.remove_overlap(&EmptiableAbsoluteBoundPair::Empty),
             Ok(OverlapRemovalResult::Single(EmptiableAbsoluteBoundPair::Empty)),
@@ -61,7 +61,7 @@ mod remove_overlap {
     }
     
     #[test]
-    fn remove_overlap_empty_unbounded() {
+    fn empty_unbounded() {
         assert_eq!(
             EmptiableAbsoluteBoundPair::Empty.remove_overlap(&AbsoluteBoundPair::new(
                 AbsoluteStartBound::InfinitePast,
@@ -72,7 +72,7 @@ mod remove_overlap {
     }
     
     #[test]
-    fn remove_overlap_unbounded_empty() {
+    fn unbounded_empty() {
         assert_eq!(
             AbsoluteBoundPair::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture,)
                 .remove_overlap(&EmptiableAbsoluteBoundPair::Empty),
@@ -83,7 +83,7 @@ mod remove_overlap {
     }
     
     #[test]
-    fn remove_overlap_unbounded_unbounded() {
+    fn unbounded_unbounded() {
         assert_eq!(
             AbsoluteBoundPair::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture,).remove_overlap(
                 &AbsoluteBoundPair::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture,)
@@ -93,7 +93,7 @@ mod remove_overlap {
     }
     
     #[test]
-    fn remove_overlap_bounded_no_overlap() -> Result<(), Box<dyn Error>> {
+    fn bounded_no_overlap() -> Result<(), Box<dyn Error>> {
         assert_eq!(
             AbsoluteBoundPair::new(
                 AbsoluteStartBound::Finite(AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
@@ -110,7 +110,7 @@ mod remove_overlap {
     }
     
     #[test]
-    fn remove_overlap_bounded_adjacent_inclusive_inclusive() -> Result<(), Box<dyn Error>> {
+    fn bounded_adjacent_inclusive_inclusive() -> Result<(), Box<dyn Error>> {
         assert_eq!(
             AbsoluteBoundPair::new(
                 AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
@@ -150,7 +150,7 @@ mod remove_overlap {
     }
     
     #[test]
-    fn remove_overlap_bounded_adjacent_inclusive_exclusive() -> Result<(), Box<dyn Error>> {
+    fn bounded_adjacent_inclusive_exclusive() -> Result<(), Box<dyn Error>> {
         assert_eq!(
             AbsoluteBoundPair::new(
                 AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
@@ -179,7 +179,7 @@ mod remove_overlap {
     }
     
     #[test]
-    fn remove_overlap_bounded_adjacent_exclusive_inclusive() -> Result<(), Box<dyn Error>> {
+    fn bounded_adjacent_exclusive_inclusive() -> Result<(), Box<dyn Error>> {
         assert_eq!(
             AbsoluteBoundPair::new(
                 AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
@@ -208,7 +208,7 @@ mod remove_overlap {
     }
     
     #[test]
-    fn remove_overlap_bounded_adjacent_exclusive_exclusive() -> Result<(), Box<dyn Error>> {
+    fn bounded_adjacent_exclusive_exclusive() -> Result<(), Box<dyn Error>> {
         assert_eq!(
             AbsoluteBoundPair::new(
                 AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
@@ -237,7 +237,7 @@ mod remove_overlap {
     }
     
     #[test]
-    fn remove_overlap_bounded_overlap() -> Result<(), Box<dyn Error>> {
+    fn bounded_overlap() -> Result<(), Box<dyn Error>> {
         assert_eq!(
             AbsoluteBoundPair::new(
                 AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
@@ -277,7 +277,7 @@ mod remove_overlap {
     }
     
     #[test]
-    fn remove_overlap_bounded_on_unbounded() -> Result<(), Box<dyn Error>> {
+    fn bounded_on_unbounded() -> Result<(), Box<dyn Error>> {
         assert_eq!(
             AbsoluteBoundPair::new(
                 AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
@@ -300,7 +300,7 @@ mod remove_overlap {
     }
     
     #[test]
-    fn remove_overlap_unbounded_on_bounded() -> Result<(), Box<dyn Error>> {
+    fn unbounded_on_bounded() -> Result<(), Box<dyn Error>> {
         assert_eq!(
             AbsoluteBoundPair::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture,).remove_overlap(
                 &AbsoluteBoundPair::new(

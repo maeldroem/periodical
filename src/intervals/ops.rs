@@ -37,7 +37,7 @@ pub mod relativity_conversion;
 pub mod remove_overlap;
 // pub mod remove_overlap_or_gap;
 // pub mod set_ops;
-// pub mod shrink;
+pub mod shrink;
 // pub mod split;
 
 tests! {
@@ -55,10 +55,10 @@ tests! {
     mod point_containment_tests;
     mod precision_tests;
     mod relativity_conversion_tests;
-//     mod remove_overlap_or_gap_tests;
+    // mod remove_overlap_or_gap_tests;
     mod remove_overlap_tests;
 //     mod set_ops_tests;
-//     mod shrink_tests;
+    mod shrink_tests;
 //     mod split_tests;
 }
 
@@ -91,5 +91,5 @@ inline_docs! {
     pub use remove_overlap::{OverlapRemovable, OverlapRemovalResult};
     // pub use remove_overlap_or_gap::{OverlapOrGapRemovalResult, RemovableOverlapOrGap};
     // pub use set_ops::{Differentiable, Intersectable, SymmetricallyDifferentiable, Unitable};
-    // pub use shrink::{ShrinkableEndBound, ShrinkableStartBound};
+    pub use shrink::{ShrinkableEndBound, ShrinkableStartBound};
 }
