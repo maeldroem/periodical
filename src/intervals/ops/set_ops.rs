@@ -12,18 +12,17 @@ use super::extend::Extensible;
 use super::overlap::CanPositionOverlap;
 
 use crate::intervals::absolute::{
-    AbsoluteBounds, AbsoluteInterval, BoundedAbsoluteInterval, EmptiableAbsoluteBounds, HalfBoundedAbsoluteInterval,
-    HasAbsoluteBounds, HasEmptiableAbsoluteBounds,
+    AbsoluteBoundPair, AbsoluteInterval, BoundedAbsoluteInterval, EmptiableAbsoluteBoundPair, EmptiableAbsoluteInterval, HalfBoundedAbsoluteInterval, HasAbsoluteBoundPair, HasEmptiableAbsoluteBoundPair
 };
 use crate::intervals::meta::Interval;
+use crate::intervals::ops::Complementable;
 use crate::intervals::ops::overlap::{OverlapRule, OverlapRuleSet};
 use crate::intervals::ops::remove_overlap::{OverlapRemovable, OverlapRemovalErr, OverlapRemovalResult};
 use crate::intervals::relative::{
-    BoundedRelativeInterval, EmptiableRelativeBounds, HalfBoundedRelativeInterval, HasEmptiableRelativeBounds,
-    HasRelativeBounds, RelativeBounds, RelativeInterval,
+    BoundedRelativeInterval, EmptiableRelativeBoundPair, EmptiableRelativeInterval, HalfBoundedRelativeInterval, HasEmptiableRelativeBoundPair, HasRelativeBoundPair, RelativeBoundPair, RelativeInterval
 };
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
-use crate::ops::{DifferenceResult, IntersectionResult, SymmetricDifferenceResult, UnionResult};
+use crate::ops::{ComplementResult, DifferenceResult, IntersectionResult, SymmetricDifferenceResult, UnionResult};
 
 /// Capacity to unite an interval with another
 ///
@@ -32,76 +31,74 @@ use crate::ops::{DifferenceResult, IntersectionResult, SymmetricDifferenceResult
 /// ## Unitable intervals
 ///
 /// ```
-/// # use chrono::{DateTime, Utc};
+/// # use std::error::Error;
+/// # use jiff::Zoned;
 /// # use periodical::ops::UnionResult;
-/// # use periodical::intervals::absolute::{
-/// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
-/// # };
+/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
 /// # use periodical::intervals::ops::set_ops::Unitable;
-/// let first_interval = AbsoluteBounds::new(
-///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-///     )),
-///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-///         "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
-///     )),
+/// let first_interval = AbsoluteBoundPair::new(
+///     AbsoluteFiniteBound::new(
+///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///     ).to_start_bound(),
+///     AbsoluteFiniteBound::new(
+///         "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///     ).to_end_bound(),
 /// );
 ///
-/// let second_interval = AbsoluteBounds::new(
-///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-///         "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
-///     )),
-///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-///         "2025-01-01 18:00:00Z".parse::<DateTime<Utc>>()?,
-///     )),
+/// let second_interval = AbsoluteBoundPair::new(
+///     AbsoluteFiniteBound::new(
+///         "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///     ).to_start_bound(),
+///     AbsoluteFiniteBound::new(
+///         "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///     ).to_end_bound(),
 /// );
 ///
 /// assert_eq!(
 ///     first_interval.unite(&second_interval),
-///     UnionResult::United(AbsoluteBounds::new(
-///         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-///             "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-///         )),
-///         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-///             "2025-01-01 18:00:00Z".parse::<DateTime<Utc>>()?,
-///         )),
+///     UnionResult::United(AbsoluteBoundPair::new(
+///         AbsoluteFiniteBound::new(
+///             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///         ).to_start_bound(),
+///         AbsoluteFiniteBound::new(
+///             "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///         ).to_end_bound(),
 ///     )),
 /// );
-/// # Ok::<(), chrono::format::ParseError>(())
+/// # Ok::<(), Box<dyn Error>>(())
 /// ```
 ///
 /// ## Non-overlapping intervals
 ///
 /// ```
-/// # use chrono::{DateTime, Utc};
+/// # use std::error::Error;
+/// # use jiff::Zoned;
 /// # use periodical::ops::UnionResult;
-/// # use periodical::intervals::absolute::{
-/// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
-/// # };
+/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
 /// # use periodical::intervals::ops::set_ops::Unitable;
-/// let first_interval = AbsoluteBounds::new(
-///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-///     )),
-///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-///         "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
-///     )),
+/// let first_interval = AbsoluteBoundPair::new(
+///     AbsoluteFiniteBound::new(
+///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///     ).to_start_bound(),
+///     AbsoluteFiniteBound::new(
+///         "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///     ).to_end_bound(),
 /// );
 ///
-/// let second_interval = AbsoluteBounds::new(
-///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-///         "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
-///     )),
-///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-///         "2025-01-01 18:00:00Z".parse::<DateTime<Utc>>()?,
-///     )),
+/// let second_interval = AbsoluteBoundPair::new(
+///     AbsoluteFiniteBound::new(
+///         "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///     ).to_start_bound(),
+///     AbsoluteFiniteBound::new(
+///         "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///     ).to_end_bound(),
 /// );
 ///
 /// assert_eq!(
 ///     first_interval.unite(&second_interval),
 ///     UnionResult::Separate,
 /// );
-/// # Ok::<(), chrono::format::ParseError>(())
+/// # Ok::<(), Box<dyn Error>>(())
 /// ```
 pub trait Unitable<Rhs = Self> {
     /// Output type
@@ -112,42 +109,41 @@ pub trait Unitable<Rhs = Self> {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Utc};
+    /// # use std::error::Error;
+    /// # use jiff::Zoned;
     /// # use periodical::ops::UnionResult;
-    /// # use periodical::intervals::absolute::{
-    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
-    /// # };
+    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
     /// # use periodical::intervals::ops::set_ops::Unitable;
-    /// let first_interval = AbsoluteBounds::new(
-    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     )),
-    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     )),
+    /// let first_interval = AbsoluteBoundPair::new(
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_start_bound(),
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_end_bound(),
     /// );
     ///
-    /// let second_interval = AbsoluteBounds::new(
-    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     )),
-    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 18:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     )),
+    /// let second_interval = AbsoluteBoundPair::new(
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_start_bound(),
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_end_bound(),
     /// );
     ///
     /// assert_eq!(
     ///     first_interval.unite(&second_interval),
-    ///     UnionResult::United(AbsoluteBounds::new(
-    ///         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///             "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-    ///         )),
-    ///         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///             "2025-01-01 18:00:00Z".parse::<DateTime<Utc>>()?,
-    ///         )),
+    ///     UnionResult::United(AbsoluteBoundPair::new(
+    ///         AbsoluteFiniteBound::new(
+    ///             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///         ).to_start_bound(),
+    ///         AbsoluteFiniteBound::new(
+    ///             "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///         ).to_end_bound(),
     ///     )),
     /// );
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
     fn unite(&self, rhs: &Rhs) -> UnionResult<Self::Output>;
@@ -157,51 +153,50 @@ pub trait Unitable<Rhs = Self> {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Utc};
+    /// # use std::error::Error;
+    /// # use jiff::Zoned;
     /// # use periodical::ops::UnionResult;
-    /// # use periodical::intervals::absolute::{
-    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
-    /// # };
+    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
     /// # use periodical::intervals::ops::extend::Extensible;
     /// # use periodical::intervals::ops::set_ops::Unitable;
-    /// let first_interval = AbsoluteBounds::new(
-    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     )),
-    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     )),
+    /// let first_interval = AbsoluteBoundPair::new(
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_start_bound(),
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_end_bound(),
     /// );
     ///
-    /// let second_interval = AbsoluteBounds::new(
-    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     )),
-    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 18:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     )),
+    /// let second_interval = AbsoluteBoundPair::new(
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_start_bound(),
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_end_bound(),
     /// );
     ///
     /// let union_closure = |
-    ///     a: &AbsoluteBounds,
-    ///     b: &AbsoluteBounds,
-    /// | -> UnionResult<AbsoluteBounds> {
+    ///     a: &AbsoluteBoundPair,
+    ///     b: &AbsoluteBoundPair,
+    /// | -> UnionResult<AbsoluteBoundPair> {
     ///     // Always unite
     ///     UnionResult::United(a.extend(b))
     /// };
     ///
     /// assert_eq!(
     ///     first_interval.unite_with(&second_interval, union_closure),
-    ///     UnionResult::United(AbsoluteBounds::new(
-    ///         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///             "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-    ///         )),
-    ///         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///             "2025-01-01 18:00:00Z".parse::<DateTime<Utc>>()?,
-    ///         )),
+    ///     UnionResult::United(AbsoluteBoundPair::new(
+    ///         AbsoluteFiniteBound::new(
+    ///             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///         ).to_start_bound(),
+    ///         AbsoluteFiniteBound::new(
+    ///             "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///         ).to_end_bound(),
     ///     )),
     /// );
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
     fn unite_with<F>(&self, rhs: &Rhs, mut f: F) -> UnionResult<Self::Output>
@@ -212,118 +207,142 @@ pub trait Unitable<Rhs = Self> {
     }
 }
 
-impl<Rhs> Unitable<Rhs> for AbsoluteBounds
+impl<Rhs> Unitable<Rhs> for AbsoluteBoundPair
 where
-    Rhs: HasEmptiableAbsoluteBounds,
+    Rhs: HasEmptiableAbsoluteBoundPair,
 {
     type Output = Self;
 
     fn unite(&self, rhs: &Rhs) -> UnionResult<Self::Output> {
-        unite_abs_bounds_with_emptiable_abs_bounds(self, &rhs.emptiable_abs_bounds())
+        unite_abs_bound_pair_with_emptiable_abs_bound_pair(self, &rhs.emptiable_abs_bound_pair())
     }
 }
 
-impl<Rhs> Unitable<Rhs> for EmptiableAbsoluteBounds
+impl<Rhs> Unitable<Rhs> for EmptiableAbsoluteBoundPair
 where
-    Rhs: HasEmptiableAbsoluteBounds,
+    Rhs: HasEmptiableAbsoluteBoundPair,
 {
     type Output = Self;
 
     fn unite(&self, rhs: &Rhs) -> UnionResult<Self::Output> {
-        unite_emptiable_abs_bounds(self, &rhs.emptiable_abs_bounds())
+        unite_emptiable_abs_bound_pair(self, &rhs.emptiable_abs_bound_pair())
     }
 }
 
 impl<Rhs> Unitable<Rhs> for AbsoluteInterval
 where
-    Rhs: HasEmptiableAbsoluteBounds,
+    Rhs: HasEmptiableAbsoluteBoundPair,
 {
     type Output = Self;
 
     fn unite(&self, rhs: &Rhs) -> UnionResult<Self::Output> {
-        unite_emptiable_abs_bounds(&self.emptiable_abs_bounds(), &rhs.emptiable_abs_bounds())
-            .map_united(AbsoluteInterval::from)
+        unite_abs_bound_pair_with_emptiable_abs_bound_pair(&self.abs_bound_pair(), &rhs.emptiable_abs_bound_pair())
+            .map_united(Self::Output::from)
+    }
+}
+
+impl<Rhs> Unitable<Rhs> for EmptiableAbsoluteInterval
+where
+    Rhs: HasEmptiableAbsoluteBoundPair,
+{
+    type Output = Self;
+
+    fn unite(&self, rhs: &Rhs) -> UnionResult<Self::Output> {
+        unite_emptiable_abs_bound_pair(&self.emptiable_abs_bound_pair(), &rhs.emptiable_abs_bound_pair())
+            .map_united(Self::Output::from)
     }
 }
 
 impl<Rhs> Unitable<Rhs> for BoundedAbsoluteInterval
 where
-    Rhs: HasEmptiableAbsoluteBounds,
+    Rhs: HasEmptiableAbsoluteBoundPair,
 {
     type Output = AbsoluteInterval;
 
     fn unite(&self, rhs: &Rhs) -> UnionResult<Self::Output> {
-        unite_abs_bounds_with_emptiable_abs_bounds(&self.abs_bounds(), &rhs.emptiable_abs_bounds())
+        unite_abs_bound_pair_with_emptiable_abs_bound_pair(&self.abs_bound_pair(), &rhs.emptiable_abs_bound_pair())
             .map_united(AbsoluteInterval::from)
     }
 }
 
 impl<Rhs> Unitable<Rhs> for HalfBoundedAbsoluteInterval
 where
-    Rhs: HasEmptiableAbsoluteBounds,
+    Rhs: HasEmptiableAbsoluteBoundPair,
 {
     type Output = AbsoluteInterval;
 
     fn unite(&self, rhs: &Rhs) -> UnionResult<Self::Output> {
-        unite_abs_bounds_with_emptiable_abs_bounds(&self.abs_bounds(), &rhs.emptiable_abs_bounds())
+        unite_abs_bound_pair_with_emptiable_abs_bound_pair(&self.abs_bound_pair(), &rhs.emptiable_abs_bound_pair())
             .map_united(AbsoluteInterval::from)
     }
 }
 
-impl<Rhs> Unitable<Rhs> for RelativeBounds
+impl<Rhs> Unitable<Rhs> for RelativeBoundPair
 where
-    Rhs: HasEmptiableRelativeBounds,
+    Rhs: HasEmptiableRelativeBoundPair,
 {
     type Output = Self;
 
     fn unite(&self, rhs: &Rhs) -> UnionResult<Self::Output> {
-        unite_rel_bounds_with_emptiable_rel_bounds(self, &rhs.emptiable_rel_bounds())
+        unite_rel_bound_pair_with_emptiable_rel_bound_pair(self, &rhs.emptiable_rel_bound_pair())
     }
 }
 
-impl<Rhs> Unitable<Rhs> for EmptiableRelativeBounds
+impl<Rhs> Unitable<Rhs> for EmptiableRelativeBoundPair
 where
-    Rhs: HasEmptiableRelativeBounds,
+    Rhs: HasEmptiableRelativeBoundPair,
 {
     type Output = Self;
 
     fn unite(&self, rhs: &Rhs) -> UnionResult<Self::Output> {
-        unite_emptiable_rel_bounds(self, &rhs.emptiable_rel_bounds())
+        unite_emptiable_rel_bound_pair(self, &rhs.emptiable_rel_bound_pair())
     }
 }
 
 impl<Rhs> Unitable<Rhs> for RelativeInterval
 where
-    Rhs: HasEmptiableRelativeBounds,
+    Rhs: HasEmptiableRelativeBoundPair,
 {
     type Output = Self;
 
     fn unite(&self, rhs: &Rhs) -> UnionResult<Self::Output> {
-        unite_emptiable_rel_bounds(&self.emptiable_rel_bounds(), &rhs.emptiable_rel_bounds())
-            .map_united(RelativeInterval::from)
+        unite_rel_bound_pair_with_emptiable_rel_bound_pair(&self.rel_bound_pair(), &rhs.emptiable_rel_bound_pair())
+            .map_united(Self::Output::from)
+    }
+}
+
+impl<Rhs> Unitable<Rhs> for EmptiableRelativeInterval
+where
+    Rhs: HasEmptiableRelativeBoundPair,
+{
+    type Output = Self;
+
+    fn unite(&self, rhs: &Rhs) -> UnionResult<Self::Output> {
+        unite_emptiable_rel_bound_pair(&self.emptiable_rel_bound_pair(), &rhs.emptiable_rel_bound_pair())
+            .map_united(Self::Output::from)
     }
 }
 
 impl<Rhs> Unitable<Rhs> for BoundedRelativeInterval
 where
-    Rhs: HasEmptiableRelativeBounds,
+    Rhs: HasEmptiableRelativeBoundPair,
 {
     type Output = RelativeInterval;
 
     fn unite(&self, rhs: &Rhs) -> UnionResult<Self::Output> {
-        unite_rel_bounds_with_emptiable_rel_bounds(&self.rel_bounds(), &rhs.emptiable_rel_bounds())
+        unite_rel_bound_pair_with_emptiable_rel_bound_pair(&self.rel_bound_pair(), &rhs.emptiable_rel_bound_pair())
             .map_united(RelativeInterval::from)
     }
 }
 
 impl<Rhs> Unitable<Rhs> for HalfBoundedRelativeInterval
 where
-    Rhs: HasEmptiableRelativeBounds,
+    Rhs: HasEmptiableRelativeBoundPair,
 {
     type Output = RelativeInterval;
 
     fn unite(&self, rhs: &Rhs) -> UnionResult<Self::Output> {
-        unite_rel_bounds_with_emptiable_rel_bounds(&self.rel_bounds(), &rhs.emptiable_rel_bounds())
+        unite_rel_bound_pair_with_emptiable_rel_bound_pair(&self.rel_bound_pair(), &rhs.emptiable_rel_bound_pair())
             .map_united(RelativeInterval::from)
     }
 }
@@ -351,9 +370,9 @@ where
     }
 }
 
-/// Unites two [`AbsoluteBounds`]
+/// Unites two [`AbsoluteBoundPair`]
 #[must_use]
-pub fn unite_abs_bounds(a: &AbsoluteBounds, b: &AbsoluteBounds) -> UnionResult<AbsoluteBounds> {
+pub fn unite_abs_bound_pair(a: &AbsoluteBoundPair, b: &AbsoluteBoundPair) -> UnionResult<AbsoluteBoundPair> {
     // We use the lenient rule set with allow adjacency rule so that "touching" intervals are united together
     if !a.overlaps(b, OverlapRuleSet::Lenient, &[OverlapRule::AllowAdjacency]) {
         return UnionResult::Separate;
@@ -362,16 +381,16 @@ pub fn unite_abs_bounds(a: &AbsoluteBounds, b: &AbsoluteBounds) -> UnionResult<A
     UnionResult::United(a.extend(b))
 }
 
-/// Unites an [`AbsoluteBounds`] with an [`EmptiableAbsoluteBounds`]
+/// Unites an [`AbsoluteBoundPair`] with an [`EmptiableAbsoluteBoundPair`]
 ///
 /// Empty intervals are not positioned in time, and are always "outside", therefore cannot be united.
 ///
 /// See [`Unitable`] for more information.
 #[must_use]
-pub fn unite_abs_bounds_with_emptiable_abs_bounds(
-    a: &AbsoluteBounds,
-    b: &EmptiableAbsoluteBounds,
-) -> UnionResult<AbsoluteBounds> {
+pub fn unite_abs_bound_pair_with_emptiable_abs_bound_pair(
+    a: &AbsoluteBoundPair,
+    b: &EmptiableAbsoluteBoundPair,
+) -> UnionResult<AbsoluteBoundPair> {
     if !a.overlaps(b, OverlapRuleSet::Lenient, &[OverlapRule::AllowAdjacency]) {
         return UnionResult::Separate;
     }
@@ -379,16 +398,16 @@ pub fn unite_abs_bounds_with_emptiable_abs_bounds(
     UnionResult::United(a.extend(b))
 }
 
-/// Unites two [`EmptiableAbsoluteBounds`]
+/// Unites two [`EmptiableAbsoluteBoundPair`]
 ///
 /// Empty intervals are not positioned in time, and are always "outside", therefore cannot be united.
 ///
 /// See [`Unitable`] for more information.
 #[must_use]
-pub fn unite_emptiable_abs_bounds(
-    a: &EmptiableAbsoluteBounds,
-    b: &EmptiableAbsoluteBounds,
-) -> UnionResult<EmptiableAbsoluteBounds> {
+pub fn unite_emptiable_abs_bound_pair(
+    a: &EmptiableAbsoluteBoundPair,
+    b: &EmptiableAbsoluteBoundPair,
+) -> UnionResult<EmptiableAbsoluteBoundPair> {
     if !a.overlaps(b, OverlapRuleSet::Lenient, &[OverlapRule::AllowAdjacency]) {
         return UnionResult::Separate;
     }
@@ -396,11 +415,11 @@ pub fn unite_emptiable_abs_bounds(
     UnionResult::United(a.extend(b))
 }
 
-/// Unites two [`RelativeBounds`]
+/// Unites two [`RelativeBoundPair`]
 ///
 /// See [`Unitable`] for more information.
 #[must_use]
-pub fn unite_rel_bounds(a: &RelativeBounds, b: &RelativeBounds) -> UnionResult<RelativeBounds> {
+pub fn unite_rel_bound_pair(a: &RelativeBoundPair, b: &RelativeBoundPair) -> UnionResult<RelativeBoundPair> {
     if !a.overlaps(b, OverlapRuleSet::Lenient, &[OverlapRule::AllowAdjacency]) {
         return UnionResult::Separate;
     }
@@ -408,16 +427,16 @@ pub fn unite_rel_bounds(a: &RelativeBounds, b: &RelativeBounds) -> UnionResult<R
     UnionResult::United(a.extend(b))
 }
 
-/// Unites an [`RelativeBounds`] with an [`EmptiableRelativeBounds`]
+/// Unites an [`RelativeBoundPair`] with an [`EmptiableRelativeBoundPair`]
 ///
 /// Empty intervals are not positioned in time, and are always "outside", therefore cannot be united.
 ///
 /// See [`Unitable`] for more information.
 #[must_use]
-pub fn unite_rel_bounds_with_emptiable_rel_bounds(
-    a: &RelativeBounds,
-    b: &EmptiableRelativeBounds,
-) -> UnionResult<RelativeBounds> {
+pub fn unite_rel_bound_pair_with_emptiable_rel_bound_pair(
+    a: &RelativeBoundPair,
+    b: &EmptiableRelativeBoundPair,
+) -> UnionResult<RelativeBoundPair> {
     if !a.overlaps(b, OverlapRuleSet::Lenient, &[OverlapRule::AllowAdjacency]) {
         return UnionResult::Separate;
     }
@@ -425,16 +444,16 @@ pub fn unite_rel_bounds_with_emptiable_rel_bounds(
     UnionResult::United(a.extend(b))
 }
 
-/// Unites two [`EmptiableRelativeBounds`]
+/// Unites two [`EmptiableRelativeBoundPair`]
 ///
 /// Empty intervals are not positioned in time, and are always "outside", therefore cannot be united.
 ///
 /// See [`Unitable`] for more information.
 #[must_use]
-pub fn unite_emptiable_rel_bounds(
-    a: &EmptiableRelativeBounds,
-    b: &EmptiableRelativeBounds,
-) -> UnionResult<EmptiableRelativeBounds> {
+pub fn unite_emptiable_rel_bound_pair(
+    a: &EmptiableRelativeBoundPair,
+    b: &EmptiableRelativeBoundPair,
+) -> UnionResult<EmptiableRelativeBoundPair> {
     if !a.overlaps(b, OverlapRuleSet::Lenient, &[OverlapRule::AllowAdjacency]) {
         return UnionResult::Separate;
     }
@@ -449,76 +468,74 @@ pub fn unite_emptiable_rel_bounds(
 /// ## Intersectable intervals
 ///
 /// ```
-/// # use chrono::{DateTime, Utc};
+/// # use std::error::Error;
+/// # use jiff::Zoned;
 /// # use periodical::ops::IntersectionResult;
-/// # use periodical::intervals::absolute::{
-/// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
-/// # };
+/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
 /// # use periodical::intervals::ops::set_ops::Intersectable;
-/// let first_interval = AbsoluteBounds::new(
-///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-///     )),
-///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-///         "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
-///     )),
+/// let first_interval = AbsoluteBoundPair::new(
+///     AbsoluteFiniteBound::new(
+///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///     ).to_start_bound(),
+///     AbsoluteFiniteBound::new(
+///         "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///     ).to_end_bound(),
 /// );
 ///
-/// let second_interval = AbsoluteBounds::new(
-///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-///         "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
-///     )),
-///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-///         "2025-01-01 18:00:00Z".parse::<DateTime<Utc>>()?,
-///     )),
+/// let second_interval = AbsoluteBoundPair::new(
+///     AbsoluteFiniteBound::new(
+///         "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///     ).to_start_bound(),
+///     AbsoluteFiniteBound::new(
+///         "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///     ).to_end_bound(),
 /// );
 ///
 /// assert_eq!(
 ///     first_interval.intersect(&second_interval),
-///     IntersectionResult::Intersected(AbsoluteBounds::new(
-///         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-///             "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
-///         )),
-///         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-///             "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
-///         )),
+///     IntersectionResult::Intersected(AbsoluteBoundPair::new(
+///         AbsoluteFiniteBound::new(
+///             "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///         ).to_start_bound(),
+///         AbsoluteFiniteBound::new(
+///             "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///         ).to_end_bound(),
 ///     )),
 /// );
-/// # Ok::<(), chrono::format::ParseError>(())
+/// # Ok::<(), Box<dyn Error>>(())
 /// ```
 ///
 /// ## Non-overlapping intervals
 ///
 /// ```
-/// # use chrono::{DateTime, Utc};
+/// # use std::error::Error;
+/// # use jiff::Zoned;
 /// # use periodical::ops::IntersectionResult;
-/// # use periodical::intervals::absolute::{
-/// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
-/// # };
+/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
 /// # use periodical::intervals::ops::set_ops::Intersectable;
-/// let first_interval = AbsoluteBounds::new(
-///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-///     )),
-///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-///         "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
-///     )),
+/// let first_interval = AbsoluteBoundPair::new(
+///     AbsoluteFiniteBound::new(
+///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///     ).to_start_bound(),
+///     AbsoluteFiniteBound::new(
+///         "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///     ).to_end_bound(),
 /// );
 ///
-/// let second_interval = AbsoluteBounds::new(
-///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-///         "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
-///     )),
-///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-///         "2025-01-01 18:00:00Z".parse::<DateTime<Utc>>()?,
-///     )),
+/// let second_interval = AbsoluteBoundPair::new(
+///     AbsoluteFiniteBound::new(
+///         "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///     ).to_start_bound(),
+///     AbsoluteFiniteBound::new(
+///         "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///     ).to_end_bound(),
 /// );
 ///
 /// assert_eq!(
 ///     first_interval.intersect(&second_interval),
 ///     IntersectionResult::Separate,
 /// );
-/// # Ok::<(), chrono::format::ParseError>(())
+/// # Ok::<(), Box<dyn Error>>(())
 /// ```
 pub trait Intersectable<Rhs = Self> {
     /// Output type
@@ -529,42 +546,41 @@ pub trait Intersectable<Rhs = Self> {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Utc};
+    /// # use std::error::Error;
+    /// # use jiff::Zoned;
     /// # use periodical::ops::IntersectionResult;
-    /// # use periodical::intervals::absolute::{
-    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
-    /// # };
+    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
     /// # use periodical::intervals::ops::set_ops::Intersectable;
-    /// let first_interval = AbsoluteBounds::new(
-    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     )),
-    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     )),
+    /// let first_interval = AbsoluteBoundPair::new(
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_start_bound(),
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_end_bound(),
     /// );
     ///
-    /// let second_interval = AbsoluteBounds::new(
-    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     )),
-    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 18:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     )),
+    /// let second_interval = AbsoluteBoundPair::new(
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_start_bound(),
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_end_bound(),
     /// );
     ///
     /// assert_eq!(
     ///     first_interval.intersect(&second_interval),
-    ///     IntersectionResult::Intersected(AbsoluteBounds::new(
-    ///         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///             "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
-    ///         )),
-    ///         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///             "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
-    ///         )),
+    ///     IntersectionResult::Intersected(AbsoluteBoundPair::new(
+    ///         AbsoluteFiniteBound::new(
+    ///             "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///         ).to_start_bound(),
+    ///         AbsoluteFiniteBound::new(
+    ///             "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///         ).to_end_bound(),
     ///     )),
     /// );
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
     fn intersect(&self, rhs: &Rhs) -> IntersectionResult<Self::Output>;
@@ -574,38 +590,37 @@ pub trait Intersectable<Rhs = Self> {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Utc};
+    /// # use std::error::Error;
+    /// # use jiff::Zoned;
     /// # use periodical::ops::IntersectionResult;
-    /// # use periodical::intervals::absolute::{
-    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, EmptiableAbsoluteBounds,
-    /// # };
+    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound, EmptiableAbsoluteBoundPair};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::abridge::Abridgable;
     /// # use periodical::intervals::ops::set_ops::Intersectable;
-    /// let first_interval = AbsoluteBounds::new(
-    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     )),
-    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     )),
+    /// let first_interval = AbsoluteBoundPair::new(
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_start_bound(),
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_end_bound(),
     /// );
     ///
-    /// let second_interval = AbsoluteBounds::new(
-    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     )),
-    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 18:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     )),
+    /// let second_interval = AbsoluteBoundPair::new(
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_start_bound(),
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_end_bound(),
     /// );
     ///
     /// let intersection_closure = |
-    ///     a: &AbsoluteBounds,
-    ///     b: &AbsoluteBounds,
-    /// | -> IntersectionResult<AbsoluteBounds> {
+    ///     a: &AbsoluteBoundPair,
+    ///     b: &AbsoluteBoundPair,
+    /// | -> IntersectionResult<AbsoluteBoundPair> {
     ///     // Always abridge intervals
-    ///     if let EmptiableAbsoluteBounds::Bound(abridged) = a.abridge(b) {
+    ///     if let EmptiableAbsoluteBoundPair::Bound(abridged) = a.abridge(b) {
     ///         IntersectionResult::Intersected(abridged)
     ///     } else {
     ///         IntersectionResult::Separate
@@ -614,18 +629,18 @@ pub trait Intersectable<Rhs = Self> {
     ///
     /// assert_eq!(
     ///     first_interval.intersect_with(&second_interval, intersection_closure),
-    ///     IntersectionResult::Intersected(AbsoluteBounds::new(
-    ///         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-    ///             "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     IntersectionResult::Intersected(AbsoluteBoundPair::new(
+    ///         AbsoluteFiniteBound::new_with_inclusivity(
+    ///             "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///             BoundInclusivity::Exclusive,
-    ///         )),
-    ///         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-    ///             "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
+    ///         ).to_start_bound(),
+    ///         AbsoluteFiniteBound::new_with_inclusivity(
+    ///             "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///             BoundInclusivity::Exclusive,
-    ///         )),
+    ///         ).to_end_bound(),
     ///     )),
     /// );
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
     fn intersect_with<F>(&self, rhs: &Rhs, mut f: F) -> IntersectionResult<Self::Output>
@@ -636,135 +651,159 @@ pub trait Intersectable<Rhs = Self> {
     }
 }
 
-impl<Rhs> Intersectable<Rhs> for AbsoluteBounds
+impl<Rhs> Intersectable<Rhs> for AbsoluteBoundPair
 where
-    Rhs: HasEmptiableAbsoluteBounds,
+    Rhs: HasEmptiableAbsoluteBoundPair,
 {
     type Output = Self;
 
     fn intersect(&self, rhs: &Rhs) -> IntersectionResult<Self::Output> {
-        intersect_abs_bounds_with_emptiable_abs_bounds(self, &rhs.emptiable_abs_bounds())
+        intersect_abs_bound_pair_with_emptiable_abs_bound_pair(self, &rhs.emptiable_abs_bound_pair())
     }
 }
 
-impl<Rhs> Intersectable<Rhs> for EmptiableAbsoluteBounds
+impl<Rhs> Intersectable<Rhs> for EmptiableAbsoluteBoundPair
 where
-    Rhs: HasEmptiableAbsoluteBounds,
+    Rhs: HasEmptiableAbsoluteBoundPair,
 {
     type Output = Self;
 
     fn intersect(&self, rhs: &Rhs) -> IntersectionResult<Self::Output> {
-        intersect_emptiable_abs_bounds(self, &rhs.emptiable_abs_bounds())
+        intersect_emptiable_abs_bound_pair(self, &rhs.emptiable_abs_bound_pair())
     }
 }
 
 impl<Rhs> Intersectable<Rhs> for AbsoluteInterval
 where
-    Rhs: HasEmptiableAbsoluteBounds,
+    Rhs: HasEmptiableAbsoluteBoundPair,
 {
     type Output = Self;
 
     fn intersect(&self, rhs: &Rhs) -> IntersectionResult<Self::Output> {
-        intersect_emptiable_abs_bounds(&self.emptiable_abs_bounds(), &rhs.emptiable_abs_bounds())
-            .map_intersected(AbsoluteInterval::from)
+        intersect_abs_bound_pair_with_emptiable_abs_bound_pair(&self.abs_bound_pair(), &rhs.emptiable_abs_bound_pair())
+            .map_intersected(Self::Output::from)
+    }
+}
+
+impl<Rhs> Intersectable<Rhs> for EmptiableAbsoluteInterval
+where
+    Rhs: HasEmptiableAbsoluteBoundPair,
+{
+    type Output = Self;
+
+    fn intersect(&self, rhs: &Rhs) -> IntersectionResult<Self::Output> {
+        intersect_emptiable_abs_bound_pair(&self.emptiable_abs_bound_pair(), &rhs.emptiable_abs_bound_pair())
+            .map_intersected(Self::Output::from)
     }
 }
 
 impl<Rhs> Intersectable<Rhs> for BoundedAbsoluteInterval
 where
-    Rhs: HasEmptiableAbsoluteBounds,
+    Rhs: HasEmptiableAbsoluteBoundPair,
 {
     type Output = AbsoluteInterval;
 
     fn intersect(&self, rhs: &Rhs) -> IntersectionResult<Self::Output> {
-        intersect_abs_bounds_with_emptiable_abs_bounds(&self.abs_bounds(), &rhs.emptiable_abs_bounds())
+        intersect_abs_bound_pair_with_emptiable_abs_bound_pair(&self.abs_bound_pair(), &rhs.emptiable_abs_bound_pair())
             .map_intersected(AbsoluteInterval::from)
     }
 }
 
 impl<Rhs> Intersectable<Rhs> for HalfBoundedAbsoluteInterval
 where
-    Rhs: HasEmptiableAbsoluteBounds,
+    Rhs: HasEmptiableAbsoluteBoundPair,
 {
     type Output = AbsoluteInterval;
 
     fn intersect(&self, rhs: &Rhs) -> IntersectionResult<Self::Output> {
-        intersect_abs_bounds_with_emptiable_abs_bounds(&self.abs_bounds(), &rhs.emptiable_abs_bounds())
+        intersect_abs_bound_pair_with_emptiable_abs_bound_pair(&self.abs_bound_pair(), &rhs.emptiable_abs_bound_pair())
             .map_intersected(AbsoluteInterval::from)
     }
 }
 
-impl<Rhs> Intersectable<Rhs> for RelativeBounds
+impl<Rhs> Intersectable<Rhs> for RelativeBoundPair
 where
-    Rhs: HasEmptiableRelativeBounds,
+    Rhs: HasEmptiableRelativeBoundPair,
 {
     type Output = Self;
 
     fn intersect(&self, rhs: &Rhs) -> IntersectionResult<Self::Output> {
-        intersect_rel_bounds_with_emptiable_rel_bounds(self, &rhs.emptiable_rel_bounds())
+        intersect_rel_bound_pair_with_emptiable_rel_bound_pair(self, &rhs.emptiable_rel_bound_pair())
     }
 }
 
-impl<Rhs> Intersectable<Rhs> for EmptiableRelativeBounds
+impl<Rhs> Intersectable<Rhs> for EmptiableRelativeBoundPair
 where
-    Rhs: HasEmptiableRelativeBounds,
+    Rhs: HasEmptiableRelativeBoundPair,
 {
     type Output = Self;
 
     fn intersect(&self, rhs: &Rhs) -> IntersectionResult<Self::Output> {
-        intersect_emptiable_rel_bounds(self, &rhs.emptiable_rel_bounds())
+        intersect_emptiable_rel_bound_pair(self, &rhs.emptiable_rel_bound_pair())
     }
 }
 
 impl<Rhs> Intersectable<Rhs> for RelativeInterval
 where
-    Rhs: HasEmptiableRelativeBounds,
+    Rhs: HasEmptiableRelativeBoundPair,
 {
     type Output = Self;
 
     fn intersect(&self, rhs: &Rhs) -> IntersectionResult<Self::Output> {
-        intersect_emptiable_rel_bounds(&self.emptiable_rel_bounds(), &rhs.emptiable_rel_bounds())
-            .map_intersected(RelativeInterval::from)
+        intersect_rel_bound_pair_with_emptiable_rel_bound_pair(&self.rel_bound_pair(), &rhs.emptiable_rel_bound_pair())
+            .map_intersected(Self::Output::from)
+    }
+}
+
+impl<Rhs> Intersectable<Rhs> for EmptiableRelativeInterval
+where
+    Rhs: HasEmptiableRelativeBoundPair,
+{
+    type Output = Self;
+
+    fn intersect(&self, rhs: &Rhs) -> IntersectionResult<Self::Output> {
+        intersect_emptiable_rel_bound_pair(&self.emptiable_rel_bound_pair(), &rhs.emptiable_rel_bound_pair())
+            .map_intersected(Self::Output::from)
     }
 }
 
 impl<Rhs> Intersectable<Rhs> for BoundedRelativeInterval
 where
-    Rhs: HasEmptiableRelativeBounds,
+    Rhs: HasEmptiableRelativeBoundPair,
 {
     type Output = RelativeInterval;
 
     fn intersect(&self, rhs: &Rhs) -> IntersectionResult<Self::Output> {
-        intersect_rel_bounds_with_emptiable_rel_bounds(&self.rel_bounds(), &rhs.emptiable_rel_bounds())
+        intersect_rel_bound_pair_with_emptiable_rel_bound_pair(&self.rel_bound_pair(), &rhs.emptiable_rel_bound_pair())
             .map_intersected(RelativeInterval::from)
     }
 }
 
 impl<Rhs> Intersectable<Rhs> for HalfBoundedRelativeInterval
 where
-    Rhs: HasEmptiableRelativeBounds,
+    Rhs: HasEmptiableRelativeBoundPair,
 {
     type Output = RelativeInterval;
 
     fn intersect(&self, rhs: &Rhs) -> IntersectionResult<Self::Output> {
-        intersect_rel_bounds_with_emptiable_rel_bounds(&self.rel_bounds(), &rhs.emptiable_rel_bounds())
+        intersect_rel_bound_pair_with_emptiable_rel_bound_pair(&self.rel_bound_pair(), &rhs.emptiable_rel_bound_pair())
             .map_intersected(RelativeInterval::from)
     }
 }
 
-impl Intersectable<AbsoluteBounds> for UnboundedInterval {
+impl Intersectable<AbsoluteBoundPair> for UnboundedInterval {
     type Output = AbsoluteInterval;
 
-    fn intersect(&self, rhs: &AbsoluteBounds) -> IntersectionResult<Self::Output> {
-        intersect_abs_bounds(&self.abs_bounds(), &rhs.abs_bounds()).map_intersected(AbsoluteInterval::from)
+    fn intersect(&self, rhs: &AbsoluteBoundPair) -> IntersectionResult<Self::Output> {
+        intersect_abs_bound_pair(&self.abs_bound_pair(), &rhs.abs_bound_pair()).map_intersected(AbsoluteInterval::from)
     }
 }
 
-impl Intersectable<EmptiableAbsoluteBounds> for UnboundedInterval {
+impl Intersectable<EmptiableAbsoluteBoundPair> for UnboundedInterval {
     type Output = AbsoluteInterval;
 
-    fn intersect(&self, rhs: &EmptiableAbsoluteBounds) -> IntersectionResult<Self::Output> {
-        intersect_abs_bounds_with_emptiable_abs_bounds(&self.abs_bounds(), &rhs.emptiable_abs_bounds())
+    fn intersect(&self, rhs: &EmptiableAbsoluteBoundPair) -> IntersectionResult<Self::Output> {
+        intersect_abs_bound_pair_with_emptiable_abs_bound_pair(&self.abs_bound_pair(), &rhs.emptiable_abs_bound_pair())
             .map_intersected(AbsoluteInterval::from)
     }
 }
@@ -773,7 +812,7 @@ impl Intersectable<AbsoluteInterval> for UnboundedInterval {
     type Output = AbsoluteInterval;
 
     fn intersect(&self, rhs: &AbsoluteInterval) -> IntersectionResult<Self::Output> {
-        intersect_abs_bounds_with_emptiable_abs_bounds(&self.abs_bounds(), &rhs.emptiable_abs_bounds())
+        intersect_abs_bound_pair_with_emptiable_abs_bound_pair(&self.abs_bound_pair(), &rhs.emptiable_abs_bound_pair())
             .map_intersected(AbsoluteInterval::from)
     }
 }
@@ -782,7 +821,7 @@ impl Intersectable<BoundedAbsoluteInterval> for UnboundedInterval {
     type Output = AbsoluteInterval;
 
     fn intersect(&self, rhs: &BoundedAbsoluteInterval) -> IntersectionResult<Self::Output> {
-        intersect_abs_bounds(&self.abs_bounds(), &rhs.abs_bounds()).map_intersected(AbsoluteInterval::from)
+        intersect_abs_bound_pair(&self.abs_bound_pair(), &rhs.abs_bound_pair()).map_intersected(AbsoluteInterval::from)
     }
 }
 
@@ -790,23 +829,23 @@ impl Intersectable<HalfBoundedAbsoluteInterval> for UnboundedInterval {
     type Output = AbsoluteInterval;
 
     fn intersect(&self, rhs: &HalfBoundedAbsoluteInterval) -> IntersectionResult<Self::Output> {
-        intersect_abs_bounds(&self.abs_bounds(), &rhs.abs_bounds()).map_intersected(AbsoluteInterval::from)
+        intersect_abs_bound_pair(&self.abs_bound_pair(), &rhs.abs_bound_pair()).map_intersected(AbsoluteInterval::from)
     }
 }
 
-impl Intersectable<RelativeBounds> for UnboundedInterval {
+impl Intersectable<RelativeBoundPair> for UnboundedInterval {
     type Output = RelativeInterval;
 
-    fn intersect(&self, rhs: &RelativeBounds) -> IntersectionResult<Self::Output> {
-        intersect_rel_bounds(&self.rel_bounds(), &rhs.rel_bounds()).map_intersected(RelativeInterval::from)
+    fn intersect(&self, rhs: &RelativeBoundPair) -> IntersectionResult<Self::Output> {
+        intersect_rel_bound_pair(&self.rel_bound_pair(), &rhs.rel_bound_pair()).map_intersected(RelativeInterval::from)
     }
 }
 
-impl Intersectable<EmptiableRelativeBounds> for UnboundedInterval {
+impl Intersectable<EmptiableRelativeBoundPair> for UnboundedInterval {
     type Output = RelativeInterval;
 
-    fn intersect(&self, rhs: &EmptiableRelativeBounds) -> IntersectionResult<Self::Output> {
-        intersect_rel_bounds_with_emptiable_rel_bounds(&self.rel_bounds(), &rhs.emptiable_rel_bounds())
+    fn intersect(&self, rhs: &EmptiableRelativeBoundPair) -> IntersectionResult<Self::Output> {
+        intersect_rel_bound_pair_with_emptiable_rel_bound_pair(&self.rel_bound_pair(), &rhs.emptiable_rel_bound_pair())
             .map_intersected(RelativeInterval::from)
     }
 }
@@ -815,7 +854,7 @@ impl Intersectable<RelativeInterval> for UnboundedInterval {
     type Output = RelativeInterval;
 
     fn intersect(&self, rhs: &RelativeInterval) -> IntersectionResult<Self::Output> {
-        intersect_rel_bounds_with_emptiable_rel_bounds(&self.rel_bounds(), &rhs.emptiable_rel_bounds())
+        intersect_rel_bound_pair_with_emptiable_rel_bound_pair(&self.rel_bound_pair(), &rhs.emptiable_rel_bound_pair())
             .map_intersected(RelativeInterval::from)
     }
 }
@@ -824,7 +863,7 @@ impl Intersectable<BoundedRelativeInterval> for UnboundedInterval {
     type Output = RelativeInterval;
 
     fn intersect(&self, rhs: &BoundedRelativeInterval) -> IntersectionResult<Self::Output> {
-        intersect_rel_bounds(&self.rel_bounds(), &rhs.rel_bounds()).map_intersected(RelativeInterval::from)
+        intersect_rel_bound_pair(&self.rel_bound_pair(), &rhs.rel_bound_pair()).map_intersected(RelativeInterval::from)
     }
 }
 
@@ -832,7 +871,7 @@ impl Intersectable<HalfBoundedRelativeInterval> for UnboundedInterval {
     type Output = RelativeInterval;
 
     fn intersect(&self, rhs: &HalfBoundedRelativeInterval) -> IntersectionResult<Self::Output> {
-        intersect_rel_bounds(&self.rel_bounds(), &rhs.rel_bounds()).map_intersected(RelativeInterval::from)
+        intersect_rel_bound_pair(&self.rel_bound_pair(), &rhs.rel_bound_pair()).map_intersected(RelativeInterval::from)
     }
 }
 
@@ -865,15 +904,15 @@ where
     }
 }
 
-/// Intersects two [`AbsoluteBounds`]
+/// Intersects two [`AbsoluteBoundPair`]
 ///
 /// See [`Intersectable`] for more information.
 ///
 /// # Panics
 ///
-/// Panics if two strictly overlapping bounds, when abridged, returns [`EmptiableAbsoluteBounds::Empty`]
+/// Panics if two strictly overlapping bounds, when abridged, returns [`EmptiableAbsoluteBoundPair::Empty`]
 #[must_use]
-pub fn intersect_abs_bounds(a: &AbsoluteBounds, b: &AbsoluteBounds) -> IntersectionResult<AbsoluteBounds> {
+pub fn intersect_abs_bound_pair(a: &AbsoluteBoundPair, b: &AbsoluteBoundPair) -> IntersectionResult<AbsoluteBoundPair> {
     if !a.simple_overlaps(b) {
         return IntersectionResult::Separate;
     }
@@ -885,7 +924,7 @@ pub fn intersect_abs_bounds(a: &AbsoluteBounds, b: &AbsoluteBounds) -> Intersect
     )
 }
 
-/// Intersects an [`AbsoluteBounds`] with an [`EmptiableAbsoluteBounds`]
+/// Intersects an [`AbsoluteBoundPair`] with an [`EmptiableAbsoluteBoundPair`]
 ///
 /// Empty intervals are not positioned in time, and are always "outside", therefore cannot be intersected.
 ///
@@ -893,12 +932,12 @@ pub fn intersect_abs_bounds(a: &AbsoluteBounds, b: &AbsoluteBounds) -> Intersect
 ///
 /// # Panics
 ///
-/// Panics if two strictly overlapping bounds, when abridged, returns [`EmptiableAbsoluteBounds::Empty`]
+/// Panics if two strictly overlapping bounds, when abridged, returns [`EmptiableAbsoluteBoundPair::Empty`]
 #[must_use]
-pub fn intersect_abs_bounds_with_emptiable_abs_bounds(
-    a: &AbsoluteBounds,
-    b: &EmptiableAbsoluteBounds,
-) -> IntersectionResult<AbsoluteBounds> {
+pub fn intersect_abs_bound_pair_with_emptiable_abs_bound_pair(
+    a: &AbsoluteBoundPair,
+    b: &EmptiableAbsoluteBoundPair,
+) -> IntersectionResult<AbsoluteBoundPair> {
     if !a.simple_overlaps(b) {
         return IntersectionResult::Separate;
     }
@@ -910,16 +949,16 @@ pub fn intersect_abs_bounds_with_emptiable_abs_bounds(
     )
 }
 
-/// Intersects two [`EmptiableAbsoluteBounds`]
+/// Intersects two [`EmptiableAbsoluteBoundPair`]
 ///
 /// Empty intervals are not positioned in time, and are always "outside", therefore cannot be intersected.
 ///
 /// See [`Intersectable`] for more information.
 #[must_use]
-pub fn intersect_emptiable_abs_bounds(
-    a: &EmptiableAbsoluteBounds,
-    b: &EmptiableAbsoluteBounds,
-) -> IntersectionResult<EmptiableAbsoluteBounds> {
+pub fn intersect_emptiable_abs_bound_pair(
+    a: &EmptiableAbsoluteBoundPair,
+    b: &EmptiableAbsoluteBoundPair,
+) -> IntersectionResult<EmptiableAbsoluteBoundPair> {
     if !a.simple_overlaps(b) {
         return IntersectionResult::Separate;
     }
@@ -927,15 +966,15 @@ pub fn intersect_emptiable_abs_bounds(
     IntersectionResult::Intersected(a.abridge(b))
 }
 
-/// Intersects two [`RelativeBounds`]
+/// Intersects two [`RelativeBoundPair`]
 ///
 /// See [`Intersectable`] for more information.
 ///
 /// # Panics
 ///
-/// Panics if two strictly overlapping bounds, when abridged, returns [`EmptiableRelativeBounds::Empty`]
+/// Panics if two strictly overlapping bounds, when abridged, returns [`EmptiableRelativeBoundPair::Empty`]
 #[must_use]
-pub fn intersect_rel_bounds(a: &RelativeBounds, b: &RelativeBounds) -> IntersectionResult<RelativeBounds> {
+pub fn intersect_rel_bound_pair(a: &RelativeBoundPair, b: &RelativeBoundPair) -> IntersectionResult<RelativeBoundPair> {
     if !a.simple_overlaps(b) {
         return IntersectionResult::Separate;
     }
@@ -947,7 +986,7 @@ pub fn intersect_rel_bounds(a: &RelativeBounds, b: &RelativeBounds) -> Intersect
     )
 }
 
-/// Intersects an [`RelativeBounds`] with an [`EmptiableRelativeBounds`]
+/// Intersects an [`RelativeBoundPair`] with an [`EmptiableRelativeBoundPair`]
 ///
 /// Empty intervals are not positioned in time, and are always "outside", therefore cannot be intersected.
 ///
@@ -955,12 +994,12 @@ pub fn intersect_rel_bounds(a: &RelativeBounds, b: &RelativeBounds) -> Intersect
 ///
 /// # Panics
 ///
-/// Panics if two strictly overlapping bounds, when abridged, returns [`EmptiableRelativeBounds::Empty`]
+/// Panics if two strictly overlapping bounds, when abridged, returns [`EmptiableRelativeBoundPair::Empty`]
 #[must_use]
-pub fn intersect_rel_bounds_with_emptiable_rel_bounds(
-    a: &RelativeBounds,
-    b: &EmptiableRelativeBounds,
-) -> IntersectionResult<RelativeBounds> {
+pub fn intersect_rel_bound_pair_with_emptiable_rel_bound_pair(
+    a: &RelativeBoundPair,
+    b: &EmptiableRelativeBoundPair,
+) -> IntersectionResult<RelativeBoundPair> {
     if !a.simple_overlaps(b) {
         return IntersectionResult::Separate;
     }
@@ -972,16 +1011,16 @@ pub fn intersect_rel_bounds_with_emptiable_rel_bounds(
     )
 }
 
-/// Intersects two [`EmptiableRelativeBounds`]
+/// Intersects two [`EmptiableRelativeBoundPair`]
 ///
 /// Empty intervals are not positioned in time, and are always "outside", therefore cannot be intersected.
 ///
 /// See [`Intersectable`] for more information.
 #[must_use]
-pub fn intersect_emptiable_rel_bounds(
-    a: &EmptiableRelativeBounds,
-    b: &EmptiableRelativeBounds,
-) -> IntersectionResult<EmptiableRelativeBounds> {
+pub fn intersect_emptiable_rel_bound_pair(
+    a: &EmptiableRelativeBoundPair,
+    b: &EmptiableRelativeBoundPair,
+) -> IntersectionResult<EmptiableRelativeBoundPair> {
     if !a.simple_overlaps(b) {
         return IntersectionResult::Separate;
     }
@@ -1001,78 +1040,76 @@ pub fn intersect_emptiable_rel_bounds(
 /// ## Differentiating intervals
 ///
 /// ```
-/// # use chrono::{DateTime, Utc};
+/// # use std::error::Error;
+/// # use jiff::Zoned;
 /// # use periodical::ops::DifferenceResult;
-/// # use periodical::intervals::absolute::{
-/// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, EmptiableAbsoluteBounds,
-/// # };
+/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound, EmptiableAbsoluteBoundPair};
 /// # use periodical::intervals::meta::BoundInclusivity;
 /// # use periodical::intervals::ops::set_ops::Differentiable;
-/// let interval = AbsoluteBounds::new(
-///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-///     )),
-///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-///         "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
-///     )),
+/// let interval = AbsoluteBoundPair::new(
+///     AbsoluteFiniteBound::new(
+///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///     ).to_start_bound(),
+///     AbsoluteFiniteBound::new(
+///         "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///     ).to_end_bound(),
 /// );
 ///
-/// let remover = AbsoluteBounds::new(
-///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-///         "2025-01-01 10:00:00Z".parse::<DateTime<Utc>>()?,
-///     )),
-///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-///         "2025-01-01 18:00:00Z".parse::<DateTime<Utc>>()?,
-///     )),
+/// let remover = AbsoluteBoundPair::new(
+///     AbsoluteFiniteBound::new(
+///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///     ).to_start_bound(),
+///     AbsoluteFiniteBound::new(
+///         "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///     ).to_end_bound(),
 /// );
 ///
 /// assert_eq!(
 ///     interval.differentiate(&remover),
-///     DifferenceResult::Single(EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
-///         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-///             "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-///         )),
-///         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-///             "2025-01-01 10:00:00Z".parse::<DateTime<Utc>>()?,
+///     DifferenceResult::Single(EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::new(
+///         AbsoluteFiniteBound::new(
+///             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///         ).to_start_bound(),
+///         AbsoluteFiniteBound::new_with_inclusivity(
+///             "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///             BoundInclusivity::Exclusive,
-///         )),
+///         ).to_end_bound(),
 ///     ))),
 /// );
-/// # Ok::<(), chrono::format::ParseError>(())
+/// # Ok::<(), Box<dyn Error>>(())
 /// ```
 ///
 /// ## Non-overlapping intervals
 ///
 /// ```
-/// # use chrono::{DateTime, Utc};
+/// # use std::error::Error;
+/// # use jiff::Zoned;
 /// # use periodical::ops::DifferenceResult;
-/// # use periodical::intervals::absolute::{
-/// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, EmptiableAbsoluteBounds,
-/// # };
+/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound, EmptiableAbsoluteBoundPair};
 /// # use periodical::intervals::ops::set_ops::Differentiable;
-/// let interval = AbsoluteBounds::new(
-///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-///     )),
-///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-///         "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
-///     )),
+/// let interval = AbsoluteBoundPair::new(
+///     AbsoluteFiniteBound::new(
+///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///     ).to_start_bound(),
+///     AbsoluteFiniteBound::new(
+///         "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///     ).to_end_bound(),
 /// );
 ///
-/// let remover = AbsoluteBounds::new(
-///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-///         "2025-01-01 13:00:00Z".parse::<DateTime<Utc>>()?,
-///     )),
-///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-///         "2025-01-01 18:00:00Z".parse::<DateTime<Utc>>()?,
-///     )),
+/// let remover = AbsoluteBoundPair::new(
+///     AbsoluteFiniteBound::new(
+///         "2025-01-01 13:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///     ).to_start_bound(),
+///     AbsoluteFiniteBound::new(
+///         "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///     ).to_end_bound(),
 /// );
 ///
 /// assert_eq!(
 ///     interval.differentiate(&remover),
 ///     DifferenceResult::Separate,
 /// );
-/// # Ok::<(), chrono::format::ParseError>(())
+/// # Ok::<(), Box<dyn Error>>(())
 /// ```
 pub trait Differentiable<Rhs = Self> {
     /// Output type
@@ -1086,44 +1123,43 @@ pub trait Differentiable<Rhs = Self> {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Utc};
+    /// # use std::error::Error;
+    /// # use jiff::Zoned;
     /// # use periodical::ops::DifferenceResult;
-    /// # use periodical::intervals::absolute::{
-    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, EmptiableAbsoluteBounds,
-    /// # };
+    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound, EmptiableAbsoluteBoundPair};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::set_ops::Differentiable;
-    /// let interval = AbsoluteBounds::new(
-    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     )),
-    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     )),
+    /// let interval = AbsoluteBoundPair::new(
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_start_bound(),
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_end_bound(),
     /// );
     ///
-    /// let remover = AbsoluteBounds::new(
-    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 10:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     )),
-    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 18:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     )),
+    /// let remover = AbsoluteBoundPair::new(
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_start_bound(),
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_end_bound(),
     /// );
     ///
     /// assert_eq!(
     ///     interval.differentiate(&remover),
-    ///     DifferenceResult::Single(EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
-    ///         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///             "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-    ///         )),
-    ///         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-    ///             "2025-01-01 10:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     DifferenceResult::Single(EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::new(
+    ///         AbsoluteFiniteBound::new(
+    ///             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///         ).to_start_bound(),
+    ///         AbsoluteFiniteBound::new_with_inclusivity(
+    ///             "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///             BoundInclusivity::Exclusive,
-    ///         )),
+    ///         ).to_end_bound(),
     ///     ))),
     /// );
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
     fn differentiate(&self, rhs: &Rhs) -> DifferenceResult<Self::Output>;
@@ -1133,38 +1169,37 @@ pub trait Differentiable<Rhs = Self> {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Utc};
+    /// # use std::error::Error;
+    /// # use jiff::Zoned;
     /// # use periodical::ops::DifferenceResult;
-    /// # use periodical::intervals::absolute::{
-    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, EmptiableAbsoluteBounds,
-    /// # };
+    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound, EmptiableAbsoluteBoundPair};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::overlap::{CanPositionOverlap, DisambiguatedOverlapPosition, OverlapRuleSet};
     /// # use periodical::intervals::ops::remove_overlap::OverlapRemovable;
     /// # use periodical::intervals::ops::set_ops::Differentiable;
-    /// let interval = AbsoluteBounds::new(
-    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     )),
-    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     )),
+    /// let interval = AbsoluteBoundPair::new(
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_start_bound(),
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_end_bound(),
     /// );
     ///
-    /// let remover = AbsoluteBounds::new(
-    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 10:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     )),
-    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 18:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     )),
+    /// let remover = AbsoluteBoundPair::new(
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_start_bound(),
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_end_bound(),
     /// );
     ///
     /// // Only differentiate if it just crosses the other
     /// let difference_closure = |
-    ///     a: &AbsoluteBounds,
-    ///     b: &AbsoluteBounds,
-    /// | -> DifferenceResult<EmptiableAbsoluteBounds> {
+    ///     a: &AbsoluteBoundPair,
+    ///     b: &AbsoluteBoundPair,
+    /// | -> DifferenceResult<EmptiableAbsoluteBoundPair> {
     ///     match a.disambiguated_overlap_position(b, OverlapRuleSet::Strict) {
     ///         Ok(DisambiguatedOverlapPosition::CrossesStart | DisambiguatedOverlapPosition::CrossesEnd) => {
     ///             DifferenceResult::Single(
@@ -1181,17 +1216,17 @@ pub trait Differentiable<Rhs = Self> {
     ///
     /// assert_eq!(
     ///     interval.differentiate_with(&remover, difference_closure),
-    ///     DifferenceResult::Single(EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
-    ///         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///             "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-    ///         )),
-    ///         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-    ///             "2025-01-01 10:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     DifferenceResult::Single(EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::new(
+    ///         AbsoluteFiniteBound::new(
+    ///             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///         ).to_start_bound(),
+    ///         AbsoluteFiniteBound::new_with_inclusivity(
+    ///             "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///             BoundInclusivity::Exclusive,
-    ///         )),
+    ///         ).to_end_bound(),
     ///     ))),
     /// );
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
     fn differentiate_with<F>(&self, rhs: &Rhs, mut f: F) -> DifferenceResult<Self::Output>
@@ -1202,185 +1237,221 @@ pub trait Differentiable<Rhs = Self> {
     }
 }
 
-impl<Rhs> Differentiable<Rhs> for AbsoluteBounds
+impl<Rhs> Differentiable<Rhs> for AbsoluteBoundPair
 where
-    Rhs: HasEmptiableAbsoluteBounds,
+    Rhs: HasEmptiableAbsoluteBoundPair,
 {
-    type Output = EmptiableAbsoluteBounds;
+    type Output = EmptiableAbsoluteBoundPair;
 
     fn differentiate(&self, rhs: &Rhs) -> DifferenceResult<Self::Output> {
-        differentiate_abs_bounds_with_emptiable_abs_bounds(self, &rhs.emptiable_abs_bounds())
+        differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(self, &rhs.emptiable_abs_bound_pair())
     }
 }
 
-impl<Rhs> Differentiable<Rhs> for EmptiableAbsoluteBounds
+impl<Rhs> Differentiable<Rhs> for EmptiableAbsoluteBoundPair
 where
-    Rhs: HasEmptiableAbsoluteBounds,
+    Rhs: HasEmptiableAbsoluteBoundPair,
 {
     type Output = Self;
 
     fn differentiate(&self, rhs: &Rhs) -> DifferenceResult<Self::Output> {
-        differentiate_emptiable_abs_bounds(self, &rhs.emptiable_abs_bounds())
+        differentiate_emptiable_abs_bound_pair(self, &rhs.emptiable_abs_bound_pair())
     }
 }
 
 impl<Rhs> Differentiable<Rhs> for AbsoluteInterval
 where
-    Rhs: HasEmptiableAbsoluteBounds,
+    Rhs: HasEmptiableAbsoluteBoundPair,
+{
+    type Output = EmptiableAbsoluteInterval;
+
+    fn differentiate(&self, rhs: &Rhs) -> DifferenceResult<Self::Output> {
+        differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(&self.abs_bound_pair(), &rhs.emptiable_abs_bound_pair())
+            .map_difference(Self::Output::from)
+    }
+}
+
+impl<Rhs> Differentiable<Rhs> for EmptiableAbsoluteInterval
+where
+    Rhs: HasEmptiableAbsoluteBoundPair,
 {
     type Output = Self;
 
     fn differentiate(&self, rhs: &Rhs) -> DifferenceResult<Self::Output> {
-        differentiate_emptiable_abs_bounds(&self.emptiable_abs_bounds(), &rhs.emptiable_abs_bounds())
-            .map_difference(AbsoluteInterval::from)
+        differentiate_emptiable_abs_bound_pair(&self.emptiable_abs_bound_pair(), &rhs.emptiable_abs_bound_pair())
+            .map_difference(Self::Output::from)
     }
 }
 
 impl<Rhs> Differentiable<Rhs> for BoundedAbsoluteInterval
 where
-    Rhs: HasEmptiableAbsoluteBounds,
+    Rhs: HasEmptiableAbsoluteBoundPair,
 {
-    type Output = AbsoluteInterval;
+    type Output = EmptiableAbsoluteInterval;
 
     fn differentiate(&self, rhs: &Rhs) -> DifferenceResult<Self::Output> {
-        differentiate_abs_bounds_with_emptiable_abs_bounds(&self.abs_bounds(), &rhs.emptiable_abs_bounds())
-            .map_difference(AbsoluteInterval::from)
+        differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(&self.abs_bound_pair(), &rhs.emptiable_abs_bound_pair())
+            .map_difference(Self::Output::from)
     }
 }
 
 impl<Rhs> Differentiable<Rhs> for HalfBoundedAbsoluteInterval
 where
-    Rhs: HasEmptiableAbsoluteBounds,
+    Rhs: HasEmptiableAbsoluteBoundPair,
 {
-    type Output = AbsoluteInterval;
+    type Output = EmptiableAbsoluteInterval;
 
     fn differentiate(&self, rhs: &Rhs) -> DifferenceResult<Self::Output> {
-        differentiate_abs_bounds_with_emptiable_abs_bounds(&self.abs_bounds(), &rhs.emptiable_abs_bounds())
-            .map_difference(AbsoluteInterval::from)
+        differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(&self.abs_bound_pair(), &rhs.emptiable_abs_bound_pair())
+            .map_difference(Self::Output::from)
     }
 }
 
-impl<Rhs> Differentiable<Rhs> for RelativeBounds
+impl<Rhs> Differentiable<Rhs> for RelativeBoundPair
 where
-    Rhs: HasEmptiableRelativeBounds,
+    Rhs: HasEmptiableRelativeBoundPair,
 {
-    type Output = EmptiableRelativeBounds;
+    type Output = EmptiableRelativeBoundPair;
 
     fn differentiate(&self, rhs: &Rhs) -> DifferenceResult<Self::Output> {
-        differentiate_rel_bounds_with_emptiable_rel_bounds(self, &rhs.emptiable_rel_bounds())
+        differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(self, &rhs.emptiable_rel_bound_pair())
     }
 }
 
-impl<Rhs> Differentiable<Rhs> for EmptiableRelativeBounds
+impl<Rhs> Differentiable<Rhs> for EmptiableRelativeBoundPair
 where
-    Rhs: HasEmptiableRelativeBounds,
+    Rhs: HasEmptiableRelativeBoundPair,
 {
     type Output = Self;
 
     fn differentiate(&self, rhs: &Rhs) -> DifferenceResult<Self::Output> {
-        differentiate_emptiable_rel_bounds(self, &rhs.emptiable_rel_bounds())
+        differentiate_emptiable_rel_bound_pair(self, &rhs.emptiable_rel_bound_pair())
     }
 }
 
 impl<Rhs> Differentiable<Rhs> for RelativeInterval
 where
-    Rhs: HasEmptiableRelativeBounds,
+    Rhs: HasEmptiableRelativeBoundPair,
+{
+    type Output = EmptiableRelativeInterval;
+
+    fn differentiate(&self, rhs: &Rhs) -> DifferenceResult<Self::Output> {
+        differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(&self.rel_bound_pair(), &rhs.emptiable_rel_bound_pair())
+            .map_difference(Self::Output::from)
+    }
+}
+
+impl<Rhs> Differentiable<Rhs> for EmptiableRelativeInterval
+where
+    Rhs: HasEmptiableRelativeBoundPair,
 {
     type Output = Self;
 
     fn differentiate(&self, rhs: &Rhs) -> DifferenceResult<Self::Output> {
-        differentiate_emptiable_rel_bounds(&self.emptiable_rel_bounds(), &rhs.emptiable_rel_bounds())
-            .map_difference(RelativeInterval::from)
+        differentiate_emptiable_rel_bound_pair(&self.emptiable_rel_bound_pair(), &rhs.emptiable_rel_bound_pair())
+            .map_difference(Self::Output::from)
     }
 }
 
 impl<Rhs> Differentiable<Rhs> for BoundedRelativeInterval
 where
-    Rhs: HasEmptiableRelativeBounds,
+    Rhs: HasEmptiableRelativeBoundPair,
 {
-    type Output = RelativeInterval;
+    type Output = EmptiableRelativeInterval;
 
     fn differentiate(&self, rhs: &Rhs) -> DifferenceResult<Self::Output> {
-        differentiate_rel_bounds_with_emptiable_rel_bounds(&self.rel_bounds(), &rhs.emptiable_rel_bounds())
-            .map_difference(RelativeInterval::from)
+        differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(&self.rel_bound_pair(), &rhs.emptiable_rel_bound_pair())
+            .map_difference(Self::Output::from)
     }
 }
 
 impl<Rhs> Differentiable<Rhs> for HalfBoundedRelativeInterval
 where
-    Rhs: HasEmptiableRelativeBounds,
+    Rhs: HasEmptiableRelativeBoundPair,
 {
-    type Output = RelativeInterval;
+    type Output = EmptiableRelativeInterval;
 
     fn differentiate(&self, rhs: &Rhs) -> DifferenceResult<Self::Output> {
-        differentiate_rel_bounds_with_emptiable_rel_bounds(&self.rel_bounds(), &rhs.emptiable_rel_bounds())
-            .map_difference(RelativeInterval::from)
+        differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(&self.rel_bound_pair(), &rhs.emptiable_rel_bound_pair())
+            .map_difference(Self::Output::from)
     }
 }
 
-impl Differentiable<AbsoluteBounds> for UnboundedInterval {
-    type Output = AbsoluteInterval;
+impl Differentiable<AbsoluteBoundPair> for UnboundedInterval {
+    type Output = EmptiableAbsoluteInterval;
 
-    fn differentiate(&self, rhs: &AbsoluteBounds) -> DifferenceResult<Self::Output> {
-        differentiate_abs_bounds(&self.abs_bounds(), &rhs.abs_bounds()).map_difference(AbsoluteInterval::from)
+    fn differentiate(&self, rhs: &AbsoluteBoundPair) -> DifferenceResult<Self::Output> {
+        differentiate_abs_bound_pair(&self.abs_bound_pair(), &rhs.abs_bound_pair()).map_difference(Self::Output::from)
     }
 }
 
-impl Differentiable<EmptiableAbsoluteBounds> for UnboundedInterval {
-    type Output = AbsoluteInterval;
+impl Differentiable<EmptiableAbsoluteBoundPair> for UnboundedInterval {
+    type Output = EmptiableAbsoluteInterval;
 
-    fn differentiate(&self, rhs: &EmptiableAbsoluteBounds) -> DifferenceResult<Self::Output> {
-        differentiate_abs_bounds_with_emptiable_abs_bounds(&self.abs_bounds(), &rhs.emptiable_abs_bounds())
-            .map_difference(AbsoluteInterval::from)
+    fn differentiate(&self, rhs: &EmptiableAbsoluteBoundPair) -> DifferenceResult<Self::Output> {
+        differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(&self.abs_bound_pair(), &rhs.emptiable_abs_bound_pair())
+            .map_difference(Self::Output::from)
     }
 }
 
 impl Differentiable<BoundedAbsoluteInterval> for UnboundedInterval {
-    type Output = AbsoluteInterval;
+    type Output = HalfBoundedAbsoluteInterval;
 
     fn differentiate(&self, rhs: &BoundedAbsoluteInterval) -> DifferenceResult<Self::Output> {
-        differentiate_abs_bounds(&self.abs_bounds(), &rhs.abs_bounds()).map_difference(AbsoluteInterval::from)
+        match rhs.complement() {
+            ComplementResult::Single(single) => DifferenceResult::Single(single),
+            ComplementResult::Split(split_before, split_after) => DifferenceResult::Split(split_before, split_after),
+        }
     }
 }
 
 impl Differentiable<HalfBoundedAbsoluteInterval> for UnboundedInterval {
-    type Output = AbsoluteInterval;
+    type Output = HalfBoundedAbsoluteInterval;
 
     fn differentiate(&self, rhs: &HalfBoundedAbsoluteInterval) -> DifferenceResult<Self::Output> {
-        differentiate_abs_bounds(&self.abs_bounds(), &rhs.abs_bounds()).map_difference(AbsoluteInterval::from)
+        match rhs.complement() {
+            ComplementResult::Single(single) => DifferenceResult::Single(single),
+            ComplementResult::Split(split_before, split_after) => DifferenceResult::Split(split_before, split_after),
+        }
     }
 }
 
-impl Differentiable<RelativeBounds> for UnboundedInterval {
-    type Output = RelativeInterval;
+impl Differentiable<RelativeBoundPair> for UnboundedInterval {
+    type Output = EmptiableRelativeInterval;
 
-    fn differentiate(&self, rhs: &RelativeBounds) -> DifferenceResult<Self::Output> {
-        differentiate_rel_bounds(&self.rel_bounds(), &rhs.rel_bounds()).map_difference(RelativeInterval::from)
+    fn differentiate(&self, rhs: &RelativeBoundPair) -> DifferenceResult<Self::Output> {
+        differentiate_rel_bound_pair(&self.rel_bound_pair(), &rhs.rel_bound_pair()).map_difference(Self::Output::from)
     }
 }
 
-impl Differentiable<EmptiableRelativeBounds> for UnboundedInterval {
-    type Output = RelativeInterval;
+impl Differentiable<EmptiableRelativeBoundPair> for UnboundedInterval {
+    type Output = EmptiableRelativeInterval;
 
-    fn differentiate(&self, rhs: &EmptiableRelativeBounds) -> DifferenceResult<Self::Output> {
-        differentiate_rel_bounds_with_emptiable_rel_bounds(&self.rel_bounds(), &rhs.emptiable_rel_bounds())
-            .map_difference(RelativeInterval::from)
+    fn differentiate(&self, rhs: &EmptiableRelativeBoundPair) -> DifferenceResult<Self::Output> {
+        differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(&self.rel_bound_pair(), &rhs.emptiable_rel_bound_pair())
+            .map_difference(Self::Output::from)
     }
 }
 
 impl Differentiable<BoundedRelativeInterval> for UnboundedInterval {
-    type Output = RelativeInterval;
+    type Output = HalfBoundedRelativeInterval;
 
     fn differentiate(&self, rhs: &BoundedRelativeInterval) -> DifferenceResult<Self::Output> {
-        differentiate_rel_bounds(&self.rel_bounds(), &rhs.rel_bounds()).map_difference(RelativeInterval::from)
+        match rhs.complement() {
+            ComplementResult::Single(single) => DifferenceResult::Single(single),
+            ComplementResult::Split(split_before, split_after) => DifferenceResult::Split(split_before, split_after),
+        }
     }
 }
 
 impl Differentiable<HalfBoundedRelativeInterval> for UnboundedInterval {
-    type Output = RelativeInterval;
+    type Output = HalfBoundedRelativeInterval;
 
     fn differentiate(&self, rhs: &HalfBoundedRelativeInterval) -> DifferenceResult<Self::Output> {
-        differentiate_rel_bounds(&self.rel_bounds(), &rhs.rel_bounds()).map_difference(RelativeInterval::from)
+        match rhs.complement() {
+            ComplementResult::Single(single) => DifferenceResult::Single(single),
+            ComplementResult::Split(split_before, split_after) => DifferenceResult::Split(split_before, split_after),
+        }
     }
 }
 
@@ -1412,14 +1483,14 @@ where
     }
 }
 
-/// Differentiates an [`AbsoluteBounds`] with another one
+/// Differentiates an [`AbsoluteBoundPair`] with another one
 ///
 /// See [`Differentiable`] for more information.
 #[must_use]
-pub fn differentiate_abs_bounds(
-    og_bounds: &AbsoluteBounds,
-    other_bounds: &AbsoluteBounds,
-) -> DifferenceResult<EmptiableAbsoluteBounds> {
+pub fn differentiate_abs_bound_pair(
+    og_bounds: &AbsoluteBoundPair,
+    other_bounds: &AbsoluteBoundPair,
+) -> DifferenceResult<EmptiableAbsoluteBoundPair> {
     if !og_bounds.simple_overlaps(other_bounds) {
         return DifferenceResult::Separate;
     }
@@ -1433,48 +1504,48 @@ pub fn differentiate_abs_bounds(
     }
 }
 
-/// Differentiates an [`AbsoluteBounds`] with an [`EmptiableAbsoluteBounds`]
+/// Differentiates an [`AbsoluteBoundPair`] with an [`EmptiableAbsoluteBoundPair`]
 ///
 /// Empty intervals are not positioned in time, and are always "outside", therefore cannot be differentiated.
 ///
 /// See [`Differentiable`] for more information.
 #[must_use]
-pub fn differentiate_abs_bounds_with_emptiable_abs_bounds(
-    og_bounds: &AbsoluteBounds,
-    other_bounds: &EmptiableAbsoluteBounds,
-) -> DifferenceResult<EmptiableAbsoluteBounds> {
-    let EmptiableAbsoluteBounds::Bound(other_bounds) = other_bounds else {
+pub fn differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(
+    og_bounds: &AbsoluteBoundPair,
+    other_bounds: &EmptiableAbsoluteBoundPair,
+) -> DifferenceResult<EmptiableAbsoluteBoundPair> {
+    let EmptiableAbsoluteBoundPair::Bound(other_bounds) = other_bounds else {
         return DifferenceResult::Separate;
     };
 
-    differentiate_abs_bounds(og_bounds, other_bounds)
+    differentiate_abs_bound_pair(og_bounds, other_bounds)
 }
 
-/// Differentiates an [`EmptiableAbsoluteBounds`] with another one
+/// Differentiates an [`EmptiableAbsoluteBoundPair`] with another one
 ///
 /// Empty intervals are not positioned in time, and are always "outside", therefore cannot be differentiated.
 ///
 /// See [`Differentiable`] for more information.
 #[must_use]
-pub fn differentiate_emptiable_abs_bounds(
-    og_bounds: &EmptiableAbsoluteBounds,
-    other_bounds: &EmptiableAbsoluteBounds,
-) -> DifferenceResult<EmptiableAbsoluteBounds> {
-    let EmptiableAbsoluteBounds::Bound(og_bounds) = og_bounds else {
+pub fn differentiate_emptiable_abs_bound_pair(
+    og_bounds: &EmptiableAbsoluteBoundPair,
+    other_bounds: &EmptiableAbsoluteBoundPair,
+) -> DifferenceResult<EmptiableAbsoluteBoundPair> {
+    let EmptiableAbsoluteBoundPair::Bound(og_bounds) = og_bounds else {
         return DifferenceResult::Separate;
     };
 
-    differentiate_abs_bounds_with_emptiable_abs_bounds(og_bounds, other_bounds)
+    differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(og_bounds, other_bounds)
 }
 
-/// Differentiates an [`RelativeBounds`] with another one
+/// Differentiates an [`RelativeBoundPair`] with another one
 ///
 /// See [`Differentiable`] for more information.
 #[must_use]
-pub fn differentiate_rel_bounds(
-    og_bounds: &RelativeBounds,
-    other_bounds: &RelativeBounds,
-) -> DifferenceResult<EmptiableRelativeBounds> {
+pub fn differentiate_rel_bound_pair(
+    og_bounds: &RelativeBoundPair,
+    other_bounds: &RelativeBoundPair,
+) -> DifferenceResult<EmptiableRelativeBoundPair> {
     if !og_bounds.simple_overlaps(other_bounds) {
         return DifferenceResult::Separate;
     }
@@ -1488,38 +1559,38 @@ pub fn differentiate_rel_bounds(
     }
 }
 
-/// Differentiates an [`RelativeBounds`] with an [`EmptiableRelativeBounds`]
+/// Differentiates an [`RelativeBoundPair`] with an [`EmptiableRelativeBoundPair`]
 ///
 /// Empty intervals are not positioned in time, and are always "outside", therefore cannot be differentiated.
 ///
 /// See [`Differentiable`] for more information.
 #[must_use]
-pub fn differentiate_rel_bounds_with_emptiable_rel_bounds(
-    og_bounds: &RelativeBounds,
-    other_bounds: &EmptiableRelativeBounds,
-) -> DifferenceResult<EmptiableRelativeBounds> {
-    let EmptiableRelativeBounds::Bound(other_bounds) = other_bounds else {
+pub fn differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(
+    og_bounds: &RelativeBoundPair,
+    other_bounds: &EmptiableRelativeBoundPair,
+) -> DifferenceResult<EmptiableRelativeBoundPair> {
+    let EmptiableRelativeBoundPair::Bound(other_bounds) = other_bounds else {
         return DifferenceResult::Separate;
     };
 
-    differentiate_rel_bounds(og_bounds, other_bounds)
+    differentiate_rel_bound_pair(og_bounds, other_bounds)
 }
 
-/// Differentiates an [`EmptiableRelativeBounds`] with another one
+/// Differentiates an [`EmptiableRelativeBoundPair`] with another one
 ///
 /// Empty intervals are not positioned in time, and are always "outside", therefore cannot be differentiated.
 ///
 /// See [`Differentiable`] for more information.
 #[must_use]
-pub fn differentiate_emptiable_rel_bounds(
-    og_bounds: &EmptiableRelativeBounds,
-    other_bounds: &EmptiableRelativeBounds,
-) -> DifferenceResult<EmptiableRelativeBounds> {
-    let EmptiableRelativeBounds::Bound(og_bounds) = og_bounds else {
+pub fn differentiate_emptiable_rel_bound_pair(
+    og_bounds: &EmptiableRelativeBoundPair,
+    other_bounds: &EmptiableRelativeBoundPair,
+) -> DifferenceResult<EmptiableRelativeBoundPair> {
+    let EmptiableRelativeBoundPair::Bound(og_bounds) = og_bounds else {
         return DifferenceResult::Separate;
     };
 
-    differentiate_rel_bounds_with_emptiable_rel_bounds(og_bounds, other_bounds)
+    differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(og_bounds, other_bounds)
 }
 
 /// Capacity to symmetrically differentiate (a.k.a. XOR) an interval with another
@@ -1533,89 +1604,87 @@ pub fn differentiate_emptiable_rel_bounds(
 /// ## Symmetrically differentiable intervals
 ///
 /// ```
-/// # use chrono::{DateTime, Utc};
+/// # use std::error::Error;
+/// # use jiff::Zoned;
 /// # use periodical::ops::SymmetricDifferenceResult;
-/// # use periodical::intervals::absolute::{
-/// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, EmptiableAbsoluteBounds
-/// # };
+/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound, EmptiableAbsoluteBoundPair};
 /// # use periodical::intervals::meta::BoundInclusivity;
 /// # use periodical::intervals::ops::set_ops::SymmetricallyDifferentiable;
-/// let first_interval = AbsoluteBounds::new(
-///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-///     )),
-///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-///         "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
-///     )),
+/// let first_interval = AbsoluteBoundPair::new(
+///     AbsoluteFiniteBound::new(
+///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///     ).to_start_bound(),
+///     AbsoluteFiniteBound::new(
+///         "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///     ).to_end_bound(),
 /// );
 ///
-/// let second_interval = AbsoluteBounds::new(
-///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-///         "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
-///     )),
-///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-///         "2025-01-01 18:00:00Z".parse::<DateTime<Utc>>()?,
-///     )),
+/// let second_interval = AbsoluteBoundPair::new(
+///     AbsoluteFiniteBound::new(
+///         "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///     ).to_start_bound(),
+///     AbsoluteFiniteBound::new(
+///         "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///     ).to_end_bound(),
 /// );
 ///
 /// assert_eq!(
 ///     first_interval.symmetrically_differentiate(&second_interval),
 ///     SymmetricDifferenceResult::Split(
-///         EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
-///             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-///                 "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-///             )),
-///             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-///                 "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
+///         EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::new(
+///             AbsoluteFiniteBound::new(
+///                 "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///             ).to_start_bound(),
+///             AbsoluteFiniteBound::new_with_inclusivity(
+///                 "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///                 BoundInclusivity::Exclusive,
-///             )),
+///             ).to_end_bound(),
 ///         )),
-///         EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
-///             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-///                 "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
+///         EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::new(
+///             AbsoluteFiniteBound::new_with_inclusivity(
+///                 "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///                 BoundInclusivity::Exclusive,
-///             )),
-///             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-///                 "2025-01-01 18:00:00Z".parse::<DateTime<Utc>>()?,
-///             )),
+///             ).to_start_bound(),
+///             AbsoluteFiniteBound::new(
+///                 "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///             ).to_end_bound(),
 ///         )),
 ///     ),
 /// );
-/// # Ok::<(), chrono::format::ParseError>(())
+/// # Ok::<(), Box<dyn Error>>(())
 /// ```
 ///
 /// ## Non-overlapping intervals
 ///
 /// ```
-/// # use chrono::{DateTime, Utc};
+/// # use std::error::Error;
+/// # use jiff::Zoned;
 /// # use periodical::ops::SymmetricDifferenceResult;
-/// # use periodical::intervals::absolute::{
-/// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, EmptiableAbsoluteBounds
-/// # };
+/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound, EmptiableAbsoluteBoundPair};
 /// # use periodical::intervals::ops::set_ops::SymmetricallyDifferentiable;
-/// let first_interval = AbsoluteBounds::new(
-///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-///     )),
-///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-///         "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
-///     )),
+/// let first_interval = AbsoluteBoundPair::new(
+///     AbsoluteFiniteBound::new(
+///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///     ).to_start_bound(),
+///     AbsoluteFiniteBound::new(
+///         "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///     ).to_end_bound(),
 /// );
 ///
-/// let second_interval = AbsoluteBounds::new(
-///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-///         "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
-///     )),
-///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-///         "2025-01-01 18:00:00Z".parse::<DateTime<Utc>>()?,
-///     )),
+/// let second_interval = AbsoluteBoundPair::new(
+///     AbsoluteFiniteBound::new(
+///         "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///     ).to_start_bound(),
+///     AbsoluteFiniteBound::new(
+///         "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///     ).to_end_bound(),
 /// );
 ///
 /// assert_eq!(
 ///     first_interval.symmetrically_differentiate(&second_interval),
 ///     SymmetricDifferenceResult::Separate,
 /// );
-/// # Ok::<(), chrono::format::ParseError>(())
+/// # Ok::<(), Box<dyn Error>>(())
 /// ```
 pub trait SymmetricallyDifferentiable<Rhs = Self> {
     /// Output type
@@ -1626,55 +1695,54 @@ pub trait SymmetricallyDifferentiable<Rhs = Self> {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Utc};
+    /// # use std::error::Error;
+    /// # use jiff::Zoned;
     /// # use periodical::ops::SymmetricDifferenceResult;
-    /// # use periodical::intervals::absolute::{
-    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, EmptiableAbsoluteBounds
-    /// # };
+    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound, EmptiableAbsoluteBoundPair};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::set_ops::SymmetricallyDifferentiable;
-    /// let first_interval = AbsoluteBounds::new(
-    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     )),
-    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     )),
+    /// let first_interval = AbsoluteBoundPair::new(
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_start_bound(),
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_end_bound(),
     /// );
     ///
-    /// let second_interval = AbsoluteBounds::new(
-    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     )),
-    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 18:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     )),
+    /// let second_interval = AbsoluteBoundPair::new(
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_start_bound(),
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_end_bound(),
     /// );
     ///
     /// assert_eq!(
     ///     first_interval.symmetrically_differentiate(&second_interval),
     ///     SymmetricDifferenceResult::Split(
-    ///         EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
-    ///             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///                 "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-    ///             )),
-    ///             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-    ///                 "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
+    ///         AbsoluteBoundPair::new(
+    ///             AbsoluteFiniteBound::new(
+    ///                 "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///             ).to_start_bound(),
+    ///             AbsoluteFiniteBound::new_with_inclusivity(
+    ///                 "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///                 BoundInclusivity::Exclusive,
-    ///             )),
-    ///         )),
-    ///         EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
-    ///             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-    ///                 "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
+    ///             ).to_end_bound(),
+    ///         ).to_emptiable(),
+    ///         AbsoluteBoundPair::new(
+    ///             AbsoluteFiniteBound::new_with_inclusivity(
+    ///                 "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///                 BoundInclusivity::Exclusive,
-    ///             )),
-    ///             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///                 "2025-01-01 18:00:00Z".parse::<DateTime<Utc>>()?,
-    ///             )),
-    ///         )),
+    ///             ).to_start_bound(),
+    ///             AbsoluteFiniteBound::new(
+    ///                 "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///             ).to_end_bound(),
+    ///         ).to_emptiable(),
     ///     ),
     /// );
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
     fn symmetrically_differentiate(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output>;
@@ -1684,37 +1752,36 @@ pub trait SymmetricallyDifferentiable<Rhs = Self> {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Utc};
+    /// # use std::error::Error;
+    /// # use jiff::Zoned;
     /// # use periodical::ops::SymmetricDifferenceResult;
-    /// # use periodical::intervals::absolute::{
-    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, EmptiableAbsoluteBounds
-    /// # };
+    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound, EmptiableAbsoluteBoundPair};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::overlap::{CanPositionOverlap, DisambiguatedOverlapPosition, OverlapRuleSet};
     /// # use periodical::intervals::ops::set_ops::SymmetricallyDifferentiable;
-    /// let first_interval = AbsoluteBounds::new(
-    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     )),
-    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     )),
+    /// let first_interval = AbsoluteBoundPair::new(
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_start_bound(),
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_end_bound(),
     /// );
     ///
-    /// let second_interval = AbsoluteBounds::new(
-    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     )),
-    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 18:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     )),
+    /// let second_interval = AbsoluteBoundPair::new(
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_start_bound(),
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_end_bound(),
     /// );
     ///
     /// // Only symmetrical differentiate intervals that crosses
     /// let symmetric_difference_closure = |
-    ///     a: &AbsoluteBounds,
-    ///     b: &AbsoluteBounds,
-    /// | -> SymmetricDifferenceResult<EmptiableAbsoluteBounds> {
+    ///     a: &AbsoluteBoundPair,
+    ///     b: &AbsoluteBoundPair,
+    /// | -> SymmetricDifferenceResult<EmptiableAbsoluteBoundPair> {
     ///     match a.disambiguated_overlap_position(b, OverlapRuleSet::Strict) {
     ///         Ok(DisambiguatedOverlapPosition::CrossesStart | DisambiguatedOverlapPosition::CrossesEnd) => {
     ///             a.symmetrically_differentiate(b)
@@ -1726,27 +1793,27 @@ pub trait SymmetricallyDifferentiable<Rhs = Self> {
     /// assert_eq!(
     ///     first_interval.symmetrically_differentiate_with(&second_interval, symmetric_difference_closure),
     ///     SymmetricDifferenceResult::Split(
-    ///         EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
-    ///             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///                 "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-    ///             )),
-    ///             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-    ///                 "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
+    ///         AbsoluteBoundPair::new(
+    ///             AbsoluteFiniteBound::new(
+    ///                 "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///             ).to_start_bound(),
+    ///             AbsoluteFiniteBound::new_with_inclusivity(
+    ///                 "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///                 BoundInclusivity::Exclusive,
-    ///             )),
-    ///         )),
-    ///         EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
-    ///             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-    ///                 "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
+    ///             ).to_end_bound(),
+    ///         ).to_emptiable(),
+    ///         AbsoluteBoundPair::new(
+    ///             AbsoluteFiniteBound::new_with_inclusivity(
+    ///                 "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///                 BoundInclusivity::Exclusive,
-    ///             )),
-    ///             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///                 "2025-01-01 18:00:00Z".parse::<DateTime<Utc>>()?,
-    ///             )),
-    ///         )),
+    ///             ).to_start_bound(),
+    ///             AbsoluteFiniteBound::new(
+    ///                 "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///             ).to_end_bound(),
+    ///         ).to_emptiable(),
     ///     ),
     /// );
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
     fn symmetrically_differentiate_with<F>(&self, rhs: &Rhs, mut f: F) -> SymmetricDifferenceResult<Self::Output>
@@ -1757,231 +1824,275 @@ pub trait SymmetricallyDifferentiable<Rhs = Self> {
     }
 }
 
-impl<Rhs> SymmetricallyDifferentiable<Rhs> for AbsoluteBounds
+impl<Rhs> SymmetricallyDifferentiable<Rhs> for AbsoluteBoundPair
 where
-    Rhs: HasEmptiableAbsoluteBounds,
+    Rhs: HasEmptiableAbsoluteBoundPair,
 {
-    type Output = EmptiableAbsoluteBounds;
+    type Output = EmptiableAbsoluteBoundPair;
 
     fn symmetrically_differentiate(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
-        symmetrically_differentiate_abs_bounds_with_emptiable_abs_bounds(self, &rhs.emptiable_abs_bounds())
+        symmetrically_differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(self, &rhs.emptiable_abs_bound_pair())
     }
 }
 
-impl<Rhs> SymmetricallyDifferentiable<Rhs> for EmptiableAbsoluteBounds
+impl<Rhs> SymmetricallyDifferentiable<Rhs> for EmptiableAbsoluteBoundPair
 where
-    Rhs: HasEmptiableAbsoluteBounds,
+    Rhs: HasEmptiableAbsoluteBoundPair,
 {
     type Output = Self;
 
     fn symmetrically_differentiate(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
-        symmetrically_differentiate_emptiable_abs_bounds(self, &rhs.emptiable_abs_bounds())
+        symmetrically_differentiate_emptiable_abs_bound_pair(self, &rhs.emptiable_abs_bound_pair())
     }
 }
 
 impl<Rhs> SymmetricallyDifferentiable<Rhs> for AbsoluteInterval
 where
-    Rhs: HasEmptiableAbsoluteBounds,
+    Rhs: HasEmptiableAbsoluteBoundPair,
+{
+    type Output = EmptiableAbsoluteInterval;
+
+    fn symmetrically_differentiate(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
+        symmetrically_differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(&self.abs_bound_pair(), &rhs.emptiable_abs_bound_pair())
+            .map_symmetric_difference(Self::Output::from)
+    }
+}
+
+impl<Rhs> SymmetricallyDifferentiable<Rhs> for EmptiableAbsoluteInterval
+where
+    Rhs: HasEmptiableAbsoluteBoundPair,
 {
     type Output = Self;
 
     fn symmetrically_differentiate(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
-        symmetrically_differentiate_emptiable_abs_bounds(&self.emptiable_abs_bounds(), &rhs.emptiable_abs_bounds())
-            .map_symmetric_difference(AbsoluteInterval::from)
+        symmetrically_differentiate_emptiable_abs_bound_pair(&self.emptiable_abs_bound_pair(), &rhs.emptiable_abs_bound_pair())
+            .map_symmetric_difference(Self::Output::from)
     }
 }
 
 impl<Rhs> SymmetricallyDifferentiable<Rhs> for BoundedAbsoluteInterval
 where
-    Rhs: HasEmptiableAbsoluteBounds,
+    Rhs: HasEmptiableAbsoluteBoundPair,
 {
-    type Output = AbsoluteInterval;
+    type Output = EmptiableAbsoluteInterval;
 
     fn symmetrically_differentiate(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
-        symmetrically_differentiate_abs_bounds_with_emptiable_abs_bounds(
-            &self.abs_bounds(),
-            &rhs.emptiable_abs_bounds(),
+        symmetrically_differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(
+            &self.abs_bound_pair(),
+            &rhs.emptiable_abs_bound_pair(),
         )
-        .map_symmetric_difference(AbsoluteInterval::from)
+        .map_symmetric_difference(Self::Output::from)
     }
 }
 
 impl<Rhs> SymmetricallyDifferentiable<Rhs> for HalfBoundedAbsoluteInterval
 where
-    Rhs: HasEmptiableAbsoluteBounds,
+    Rhs: HasEmptiableAbsoluteBoundPair,
 {
-    type Output = AbsoluteInterval;
+    type Output = EmptiableAbsoluteInterval;
 
     fn symmetrically_differentiate(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
-        symmetrically_differentiate_abs_bounds_with_emptiable_abs_bounds(
-            &self.abs_bounds(),
-            &rhs.emptiable_abs_bounds(),
+        symmetrically_differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(
+            &self.abs_bound_pair(),
+            &rhs.emptiable_abs_bound_pair(),
         )
-        .map_symmetric_difference(AbsoluteInterval::from)
+        .map_symmetric_difference(Self::Output::from)
     }
 }
 
-impl<Rhs> SymmetricallyDifferentiable<Rhs> for RelativeBounds
+impl<Rhs> SymmetricallyDifferentiable<Rhs> for RelativeBoundPair
 where
-    Rhs: HasEmptiableRelativeBounds,
+    Rhs: HasEmptiableRelativeBoundPair,
 {
-    type Output = EmptiableRelativeBounds;
+    type Output = EmptiableRelativeBoundPair;
 
     fn symmetrically_differentiate(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
-        symmetrically_differentiate_rel_bounds_with_emptiable_rel_bounds(self, &rhs.emptiable_rel_bounds())
+        symmetrically_differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(self, &rhs.emptiable_rel_bound_pair())
     }
 }
 
-impl<Rhs> SymmetricallyDifferentiable<Rhs> for EmptiableRelativeBounds
+impl<Rhs> SymmetricallyDifferentiable<Rhs> for EmptiableRelativeBoundPair
 where
-    Rhs: HasEmptiableRelativeBounds,
+    Rhs: HasEmptiableRelativeBoundPair,
 {
     type Output = Self;
 
     fn symmetrically_differentiate(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
-        symmetrically_differentiate_emptiable_rel_bounds(self, &rhs.emptiable_rel_bounds())
+        symmetrically_differentiate_emptiable_rel_bound_pair(self, &rhs.emptiable_rel_bound_pair())
     }
 }
 
 impl<Rhs> SymmetricallyDifferentiable<Rhs> for RelativeInterval
 where
-    Rhs: HasEmptiableRelativeBounds,
+    Rhs: HasEmptiableRelativeBoundPair,
+{
+    type Output = EmptiableRelativeInterval;
+
+    fn symmetrically_differentiate(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
+        symmetrically_differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(&self.rel_bound_pair(), &rhs.emptiable_rel_bound_pair())
+            .map_symmetric_difference(Self::Output::from)
+    }
+}
+
+impl<Rhs> SymmetricallyDifferentiable<Rhs> for EmptiableRelativeInterval
+where
+    Rhs: HasEmptiableRelativeBoundPair,
 {
     type Output = Self;
 
     fn symmetrically_differentiate(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
-        symmetrically_differentiate_emptiable_rel_bounds(&self.emptiable_rel_bounds(), &rhs.emptiable_rel_bounds())
-            .map_symmetric_difference(RelativeInterval::from)
+        symmetrically_differentiate_emptiable_rel_bound_pair(&self.emptiable_rel_bound_pair(), &rhs.emptiable_rel_bound_pair())
+            .map_symmetric_difference(Self::Output::from)
     }
 }
 
 impl<Rhs> SymmetricallyDifferentiable<Rhs> for BoundedRelativeInterval
 where
-    Rhs: HasEmptiableRelativeBounds,
+    Rhs: HasEmptiableRelativeBoundPair,
 {
-    type Output = RelativeInterval;
+    type Output = EmptiableRelativeInterval;
 
     fn symmetrically_differentiate(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
-        symmetrically_differentiate_rel_bounds_with_emptiable_rel_bounds(
-            &self.rel_bounds(),
-            &rhs.emptiable_rel_bounds(),
+        symmetrically_differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(
+            &self.rel_bound_pair(),
+            &rhs.emptiable_rel_bound_pair(),
         )
-        .map_symmetric_difference(RelativeInterval::from)
+        .map_symmetric_difference(Self::Output::from)
     }
 }
 
 impl<Rhs> SymmetricallyDifferentiable<Rhs> for HalfBoundedRelativeInterval
 where
-    Rhs: HasEmptiableRelativeBounds,
+    Rhs: HasEmptiableRelativeBoundPair,
 {
-    type Output = RelativeInterval;
+    type Output = EmptiableRelativeInterval;
 
     fn symmetrically_differentiate(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
-        symmetrically_differentiate_rel_bounds_with_emptiable_rel_bounds(
-            &self.rel_bounds(),
-            &rhs.emptiable_rel_bounds(),
+        symmetrically_differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(
+            &self.rel_bound_pair(),
+            &rhs.emptiable_rel_bound_pair(),
         )
-        .map_symmetric_difference(RelativeInterval::from)
+        .map_symmetric_difference(Self::Output::from)
     }
 }
 
-impl SymmetricallyDifferentiable<AbsoluteBounds> for UnboundedInterval {
-    type Output = AbsoluteInterval;
+impl SymmetricallyDifferentiable<AbsoluteBoundPair> for UnboundedInterval {
+    type Output = EmptiableAbsoluteInterval;
 
-    fn symmetrically_differentiate(&self, rhs: &AbsoluteBounds) -> SymmetricDifferenceResult<Self::Output> {
-        symmetrically_differentiate_abs_bounds(&self.abs_bounds(), rhs).map_symmetric_difference(AbsoluteInterval::from)
+    fn symmetrically_differentiate(&self, rhs: &AbsoluteBoundPair) -> SymmetricDifferenceResult<Self::Output> {
+        symmetrically_differentiate_abs_bound_pair(&self.abs_bound_pair(), rhs).map_symmetric_difference(Self::Output::from)
     }
 }
 
-impl SymmetricallyDifferentiable<EmptiableAbsoluteBounds> for UnboundedInterval {
-    type Output = AbsoluteInterval;
+impl SymmetricallyDifferentiable<EmptiableAbsoluteBoundPair> for UnboundedInterval {
+    type Output = EmptiableAbsoluteInterval;
 
-    fn symmetrically_differentiate(&self, rhs: &EmptiableAbsoluteBounds) -> SymmetricDifferenceResult<Self::Output> {
-        symmetrically_differentiate_abs_bounds_with_emptiable_abs_bounds(&self.abs_bounds(), rhs)
-            .map_symmetric_difference(AbsoluteInterval::from)
+    fn symmetrically_differentiate(&self, rhs: &EmptiableAbsoluteBoundPair) -> SymmetricDifferenceResult<Self::Output> {
+        symmetrically_differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(&self.abs_bound_pair(), rhs)
+            .map_symmetric_difference(Self::Output::from)
     }
 }
 
 impl SymmetricallyDifferentiable<AbsoluteInterval> for UnboundedInterval {
-    type Output = AbsoluteInterval;
+    type Output = EmptiableAbsoluteInterval;
 
     fn symmetrically_differentiate(&self, rhs: &AbsoluteInterval) -> SymmetricDifferenceResult<Self::Output> {
-        symmetrically_differentiate_abs_bounds_with_emptiable_abs_bounds(
-            &self.abs_bounds(),
-            &rhs.emptiable_abs_bounds(),
+        symmetrically_differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(
+            &self.abs_bound_pair(),
+            &rhs.emptiable_abs_bound_pair(),
         )
-        .map_symmetric_difference(AbsoluteInterval::from)
+        .map_symmetric_difference(Self::Output::from)
     }
 }
 
 impl SymmetricallyDifferentiable<BoundedAbsoluteInterval> for UnboundedInterval {
-    type Output = AbsoluteInterval;
+    type Output = HalfBoundedAbsoluteInterval;
 
     fn symmetrically_differentiate(&self, rhs: &BoundedAbsoluteInterval) -> SymmetricDifferenceResult<Self::Output> {
-        symmetrically_differentiate_abs_bounds(&self.abs_bounds(), &rhs.abs_bounds())
-            .map_symmetric_difference(AbsoluteInterval::from)
+        match rhs.complement() {
+            ComplementResult::Single(single) => SymmetricDifferenceResult::Single(single),
+            ComplementResult::Split(split_before, split_after) => SymmetricDifferenceResult::Split(split_before, split_after),
+        }
     }
 }
 
 impl SymmetricallyDifferentiable<HalfBoundedAbsoluteInterval> for UnboundedInterval {
-    type Output = AbsoluteInterval;
+    type Output = HalfBoundedAbsoluteInterval;
 
     fn symmetrically_differentiate(
         &self,
         rhs: &HalfBoundedAbsoluteInterval,
     ) -> SymmetricDifferenceResult<Self::Output> {
-        symmetrically_differentiate_abs_bounds(&self.abs_bounds(), &rhs.abs_bounds())
-            .map_symmetric_difference(AbsoluteInterval::from)
+        match rhs.complement() {
+            ComplementResult::Single(single) => SymmetricDifferenceResult::Single(single),
+            ComplementResult::Split(split_before, split_after) => SymmetricDifferenceResult::Split(split_before, split_after),
+        }
     }
 }
 
-impl SymmetricallyDifferentiable<RelativeBounds> for UnboundedInterval {
-    type Output = RelativeInterval;
+impl SymmetricallyDifferentiable<RelativeBoundPair> for UnboundedInterval {
+    type Output = EmptiableRelativeInterval;
 
-    fn symmetrically_differentiate(&self, rhs: &RelativeBounds) -> SymmetricDifferenceResult<Self::Output> {
-        symmetrically_differentiate_rel_bounds(&self.rel_bounds(), rhs).map_symmetric_difference(RelativeInterval::from)
+    fn symmetrically_differentiate(&self, rhs: &RelativeBoundPair) -> SymmetricDifferenceResult<Self::Output> {
+        symmetrically_differentiate_rel_bound_pair(&self.rel_bound_pair(), rhs).map_symmetric_difference(Self::Output::from)
     }
 }
 
-impl SymmetricallyDifferentiable<EmptiableRelativeBounds> for UnboundedInterval {
-    type Output = RelativeInterval;
+impl SymmetricallyDifferentiable<EmptiableRelativeBoundPair> for UnboundedInterval {
+    type Output = EmptiableRelativeInterval;
 
-    fn symmetrically_differentiate(&self, rhs: &EmptiableRelativeBounds) -> SymmetricDifferenceResult<Self::Output> {
-        symmetrically_differentiate_rel_bounds_with_emptiable_rel_bounds(&self.rel_bounds(), rhs)
-            .map_symmetric_difference(RelativeInterval::from)
+    fn symmetrically_differentiate(&self, rhs: &EmptiableRelativeBoundPair) -> SymmetricDifferenceResult<Self::Output> {
+        symmetrically_differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(&self.rel_bound_pair(), rhs)
+            .map_symmetric_difference(Self::Output::from)
     }
 }
 
 impl SymmetricallyDifferentiable<RelativeInterval> for UnboundedInterval {
-    type Output = RelativeInterval;
+    type Output = EmptiableRelativeInterval;
 
     fn symmetrically_differentiate(&self, rhs: &RelativeInterval) -> SymmetricDifferenceResult<Self::Output> {
-        symmetrically_differentiate_rel_bounds_with_emptiable_rel_bounds(
-            &self.rel_bounds(),
-            &rhs.emptiable_rel_bounds(),
+        symmetrically_differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(
+            &self.rel_bound_pair(),
+            &rhs.emptiable_rel_bound_pair(),
         )
-        .map_symmetric_difference(RelativeInterval::from)
+        .map_symmetric_difference(Self::Output::from)
+    }
+}
+
+impl SymmetricallyDifferentiable<EmptiableRelativeInterval> for UnboundedInterval {
+    type Output = EmptiableRelativeInterval;
+
+    fn symmetrically_differentiate(&self, rhs: &EmptiableRelativeInterval) -> SymmetricDifferenceResult<Self::Output> {
+        symmetrically_differentiate_emptiable_rel_bound_pair(
+            &self.emptiable_rel_bound_pair(),
+            &rhs.emptiable_rel_bound_pair(),
+        )
+        .map_symmetric_difference(Self::Output::from)
     }
 }
 
 impl SymmetricallyDifferentiable<BoundedRelativeInterval> for UnboundedInterval {
-    type Output = RelativeInterval;
+    type Output = HalfBoundedRelativeInterval;
 
     fn symmetrically_differentiate(&self, rhs: &BoundedRelativeInterval) -> SymmetricDifferenceResult<Self::Output> {
-        symmetrically_differentiate_rel_bounds(&self.rel_bounds(), &rhs.rel_bounds())
-            .map_symmetric_difference(RelativeInterval::from)
+        match rhs.complement() {
+            ComplementResult::Single(single) => SymmetricDifferenceResult::Single(single),
+            ComplementResult::Split(split_before, split_after) => SymmetricDifferenceResult::Split(split_before, split_after),
+        }
     }
 }
 
 impl SymmetricallyDifferentiable<HalfBoundedRelativeInterval> for UnboundedInterval {
-    type Output = RelativeInterval;
+    type Output = HalfBoundedRelativeInterval;
 
     fn symmetrically_differentiate(
         &self,
         rhs: &HalfBoundedRelativeInterval,
     ) -> SymmetricDifferenceResult<Self::Output> {
-        symmetrically_differentiate_rel_bounds(&self.rel_bounds(), &rhs.rel_bounds())
-            .map_symmetric_difference(RelativeInterval::from)
+        match rhs.complement() {
+            ComplementResult::Single(single) => SymmetricDifferenceResult::Single(single),
+            ComplementResult::Split(split_before, split_after) => SymmetricDifferenceResult::Split(split_before, split_after),
+        }
     }
 }
 
@@ -2014,14 +2125,14 @@ where
     }
 }
 
-/// Symmetrically differentiates two [`AbsoluteBounds`]
+/// Symmetrically differentiates two [`AbsoluteBoundPair`]
 ///
 /// See [`SymmetricallyDifferentiable`] for more information.
 #[must_use]
-pub fn symmetrically_differentiate_abs_bounds(
-    a: &AbsoluteBounds,
-    b: &AbsoluteBounds,
-) -> SymmetricDifferenceResult<EmptiableAbsoluteBounds> {
+pub fn symmetrically_differentiate_abs_bound_pair(
+    a: &AbsoluteBoundPair,
+    b: &AbsoluteBoundPair,
+) -> SymmetricDifferenceResult<EmptiableAbsoluteBoundPair> {
     if !a.simple_overlaps(b) {
         return SymmetricDifferenceResult::Separate;
     }
@@ -2037,18 +2148,18 @@ pub fn symmetrically_differentiate_abs_bounds(
 
     match (diff_a_with_b, diff_b_with_a) {
         (
-            OverlapRemovalResult::Single(EmptiableAbsoluteBounds::Empty),
-            OverlapRemovalResult::Single(EmptiableAbsoluteBounds::Empty),
-        ) => SymmetricDifferenceResult::Single(EmptiableAbsoluteBounds::Empty),
-        (OverlapRemovalResult::Single(single_diff), OverlapRemovalResult::Single(EmptiableAbsoluteBounds::Empty))
-        | (OverlapRemovalResult::Single(EmptiableAbsoluteBounds::Empty), OverlapRemovalResult::Single(single_diff)) => {
+            OverlapRemovalResult::Single(EmptiableAbsoluteBoundPair::Empty),
+            OverlapRemovalResult::Single(EmptiableAbsoluteBoundPair::Empty),
+        ) => SymmetricDifferenceResult::Single(EmptiableAbsoluteBoundPair::Empty),
+        (OverlapRemovalResult::Single(single_diff), OverlapRemovalResult::Single(EmptiableAbsoluteBoundPair::Empty))
+        | (OverlapRemovalResult::Single(EmptiableAbsoluteBoundPair::Empty), OverlapRemovalResult::Single(single_diff)) => {
             SymmetricDifferenceResult::Single(single_diff)
         },
         (OverlapRemovalResult::Single(first_single_diff), OverlapRemovalResult::Single(second_single_diff)) => {
             SymmetricDifferenceResult::Split(first_single_diff, second_single_diff)
         },
-        (OverlapRemovalResult::Split(split1, split2), OverlapRemovalResult::Single(EmptiableAbsoluteBounds::Empty))
-        | (OverlapRemovalResult::Single(EmptiableAbsoluteBounds::Empty), OverlapRemovalResult::Split(split1, split2)) => {
+        (OverlapRemovalResult::Split(split1, split2), OverlapRemovalResult::Single(EmptiableAbsoluteBoundPair::Empty))
+        | (OverlapRemovalResult::Single(EmptiableAbsoluteBoundPair::Empty), OverlapRemovalResult::Split(split1, split2)) => {
             SymmetricDifferenceResult::Split(split1, split2)
         },
         (OverlapRemovalResult::Split(..), _) | (_, OverlapRemovalResult::Split(..)) => {
@@ -2060,48 +2171,48 @@ pub fn symmetrically_differentiate_abs_bounds(
     }
 }
 
-/// Symmetrically differentiates an [`AbsoluteBounds`] with an [`EmptiableAbsoluteBounds`]
+/// Symmetrically differentiates an [`AbsoluteBoundPair`] with an [`EmptiableAbsoluteBoundPair`]
 ///
 /// Empty intervals are not positioned in time, and are always "outside", therefore cannot be differentiated.
 ///
 /// See [`SymmetricallyDifferentiable`] for more information.
 #[must_use]
-pub fn symmetrically_differentiate_abs_bounds_with_emptiable_abs_bounds(
-    a: &AbsoluteBounds,
-    b: &EmptiableAbsoluteBounds,
-) -> SymmetricDifferenceResult<EmptiableAbsoluteBounds> {
-    let EmptiableAbsoluteBounds::Bound(b) = b else {
+pub fn symmetrically_differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(
+    a: &AbsoluteBoundPair,
+    b: &EmptiableAbsoluteBoundPair,
+) -> SymmetricDifferenceResult<EmptiableAbsoluteBoundPair> {
+    let EmptiableAbsoluteBoundPair::Bound(b) = b else {
         return SymmetricDifferenceResult::Separate;
     };
 
-    symmetrically_differentiate_abs_bounds(a, b)
+    symmetrically_differentiate_abs_bound_pair(a, b)
 }
 
-/// Symmetrically differentiates two [`EmptiableAbsoluteBounds`]
+/// Symmetrically differentiates two [`EmptiableAbsoluteBoundPair`]
 ///
 /// Empty intervals are not positioned in time, and are always "outside", therefore cannot be differentiated.
 ///
 /// See [`SymmetricallyDifferentiable`] for more information.
 #[must_use]
-pub fn symmetrically_differentiate_emptiable_abs_bounds(
-    a: &EmptiableAbsoluteBounds,
-    b: &EmptiableAbsoluteBounds,
-) -> SymmetricDifferenceResult<EmptiableAbsoluteBounds> {
-    let EmptiableAbsoluteBounds::Bound(a) = a else {
+pub fn symmetrically_differentiate_emptiable_abs_bound_pair(
+    a: &EmptiableAbsoluteBoundPair,
+    b: &EmptiableAbsoluteBoundPair,
+) -> SymmetricDifferenceResult<EmptiableAbsoluteBoundPair> {
+    let EmptiableAbsoluteBoundPair::Bound(a) = a else {
         return SymmetricDifferenceResult::Separate;
     };
 
-    symmetrically_differentiate_abs_bounds_with_emptiable_abs_bounds(a, b)
+    symmetrically_differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(a, b)
 }
 
-/// Symmetrically differentiates two [`RelativeBounds`]
+/// Symmetrically differentiates two [`RelativeBoundPair`]
 ///
 /// See [`SymmetricallyDifferentiable`] for more information.
 #[must_use]
-pub fn symmetrically_differentiate_rel_bounds(
-    a: &RelativeBounds,
-    b: &RelativeBounds,
-) -> SymmetricDifferenceResult<EmptiableRelativeBounds> {
+pub fn symmetrically_differentiate_rel_bound_pair(
+    a: &RelativeBoundPair,
+    b: &RelativeBoundPair,
+) -> SymmetricDifferenceResult<EmptiableRelativeBoundPair> {
     if !a.simple_overlaps(b) {
         return SymmetricDifferenceResult::Separate;
     }
@@ -2117,18 +2228,18 @@ pub fn symmetrically_differentiate_rel_bounds(
 
     match (diff_a_with_b, diff_b_with_a) {
         (
-            OverlapRemovalResult::Single(EmptiableRelativeBounds::Empty),
-            OverlapRemovalResult::Single(EmptiableRelativeBounds::Empty),
-        ) => SymmetricDifferenceResult::Single(EmptiableRelativeBounds::Empty),
-        (OverlapRemovalResult::Single(single_diff), OverlapRemovalResult::Single(EmptiableRelativeBounds::Empty))
-        | (OverlapRemovalResult::Single(EmptiableRelativeBounds::Empty), OverlapRemovalResult::Single(single_diff)) => {
+            OverlapRemovalResult::Single(EmptiableRelativeBoundPair::Empty),
+            OverlapRemovalResult::Single(EmptiableRelativeBoundPair::Empty),
+        ) => SymmetricDifferenceResult::Single(EmptiableRelativeBoundPair::Empty),
+        (OverlapRemovalResult::Single(single_diff), OverlapRemovalResult::Single(EmptiableRelativeBoundPair::Empty))
+        | (OverlapRemovalResult::Single(EmptiableRelativeBoundPair::Empty), OverlapRemovalResult::Single(single_diff)) => {
             SymmetricDifferenceResult::Single(single_diff)
         },
         (OverlapRemovalResult::Single(first_single_diff), OverlapRemovalResult::Single(second_single_diff)) => {
             SymmetricDifferenceResult::Split(first_single_diff, second_single_diff)
         },
-        (OverlapRemovalResult::Split(split1, split2), OverlapRemovalResult::Single(EmptiableRelativeBounds::Empty))
-        | (OverlapRemovalResult::Single(EmptiableRelativeBounds::Empty), OverlapRemovalResult::Split(split1, split2)) => {
+        (OverlapRemovalResult::Split(split1, split2), OverlapRemovalResult::Single(EmptiableRelativeBoundPair::Empty))
+        | (OverlapRemovalResult::Single(EmptiableRelativeBoundPair::Empty), OverlapRemovalResult::Split(split1, split2)) => {
             SymmetricDifferenceResult::Split(split1, split2)
         },
         (OverlapRemovalResult::Split(..), _) | (_, OverlapRemovalResult::Split(..)) => {
@@ -2140,36 +2251,36 @@ pub fn symmetrically_differentiate_rel_bounds(
     }
 }
 
-/// Symmetrically differentiates an [`RelativeBounds`] with an [`EmptiableRelativeBounds`]
+/// Symmetrically differentiates an [`RelativeBoundPair`] with an [`EmptiableRelativeBoundPair`]
 ///
 /// Empty intervals are not positioned in time, and are always "outside", therefore cannot be differentiated.
 ///
 /// See [`SymmetricallyDifferentiable`] for more information.
 #[must_use]
-pub fn symmetrically_differentiate_rel_bounds_with_emptiable_rel_bounds(
-    a: &RelativeBounds,
-    b: &EmptiableRelativeBounds,
-) -> SymmetricDifferenceResult<EmptiableRelativeBounds> {
-    let EmptiableRelativeBounds::Bound(b) = b else {
+pub fn symmetrically_differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(
+    a: &RelativeBoundPair,
+    b: &EmptiableRelativeBoundPair,
+) -> SymmetricDifferenceResult<EmptiableRelativeBoundPair> {
+    let EmptiableRelativeBoundPair::Bound(b) = b else {
         return SymmetricDifferenceResult::Separate;
     };
 
-    symmetrically_differentiate_rel_bounds(a, b)
+    symmetrically_differentiate_rel_bound_pair(a, b)
 }
 
-/// Symmetrically differentiates two [`EmptiableRelativeBounds`]
+/// Symmetrically differentiates two [`EmptiableRelativeBoundPair`]
 ///
 /// Empty intervals are not positioned in time, and are always "outside", therefore cannot be differentiated.
 ///
 /// See [`SymmetricallyDifferentiable`] for more information.
 #[must_use]
-pub fn symmetrically_differentiate_emptiable_rel_bounds(
-    a: &EmptiableRelativeBounds,
-    b: &EmptiableRelativeBounds,
-) -> SymmetricDifferenceResult<EmptiableRelativeBounds> {
-    let EmptiableRelativeBounds::Bound(a) = a else {
+pub fn symmetrically_differentiate_emptiable_rel_bound_pair(
+    a: &EmptiableRelativeBoundPair,
+    b: &EmptiableRelativeBoundPair,
+) -> SymmetricDifferenceResult<EmptiableRelativeBoundPair> {
+    let EmptiableRelativeBoundPair::Bound(a) = a else {
         return SymmetricDifferenceResult::Separate;
     };
 
-    symmetrically_differentiate_rel_bounds_with_emptiable_rel_bounds(a, b)
+    symmetrically_differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(a, b)
 }

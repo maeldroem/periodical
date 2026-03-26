@@ -1,989 +1,1070 @@
-use chrono::Utc;
+use std::error::Error;
+
+use jiff::Zoned;
 
 use crate::intervals::absolute::{
-    AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, EmptiableAbsoluteBounds,
+    AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, EmptiableAbsoluteBoundPair,
 };
 use crate::intervals::meta::BoundInclusivity;
 use crate::ops::{DifferenceResult, IntersectionResult, SymmetricDifferenceResult, UnionResult};
-use crate::test_utils::date;
 
 use super::set_ops::*;
 
-#[test]
-fn unite_empty_empty() {
-    assert_eq!(
-        EmptiableAbsoluteBounds::Empty.unite(&EmptiableAbsoluteBounds::Empty),
-        UnionResult::Separate,
-    );
-}
-
-#[test]
-fn unite_empty_unbounded() {
-    assert_eq!(
-        EmptiableAbsoluteBounds::Empty.unite(&AbsoluteBounds::new(
-            AbsoluteStartBound::InfinitePast,
-            AbsoluteEndBound::InfiniteFuture,
-        )),
-        UnionResult::Separate,
-    );
-}
-
-#[test]
-fn unite_unbounded_empty() {
-    assert_eq!(
-        AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture,)
-            .unite(&EmptiableAbsoluteBounds::Empty),
-        UnionResult::Separate,
-    );
-}
-
-#[test]
-fn unite_unbounded_unbounded() {
-    assert_eq!(
-        AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture,).unite(
-            &AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture,)
-        ),
-        UnionResult::United(AbsoluteBounds::new(
-            AbsoluteStartBound::InfinitePast,
-            AbsoluteEndBound::InfiniteFuture,
-        )),
-    );
-}
-
-#[test]
-fn unite_bounded_no_overlap() {
-    assert_eq!(
-        AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2))),
-        )
-        .unite(&AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 3))),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 4))),
-        )),
-        UnionResult::Separate,
-    );
-}
-
-#[test]
-fn unite_bounded_adjacent_inclusive_inclusive() {
-    assert_eq!(
-        AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Inclusive,
+mod unite {
+    use super::*;
+    
+    #[test]
+    fn empty_empty() {
+        assert_eq!(
+            EmptiableAbsoluteBoundPair::Empty.unite(&EmptiableAbsoluteBoundPair::Empty),
+            UnionResult::Separate,
+        );
+    }
+    
+    #[test]
+    fn empty_unbounded() {
+        assert_eq!(
+            EmptiableAbsoluteBoundPair::Empty.unite(&AbsoluteBoundPair::new(
+                AbsoluteStartBound::InfinitePast,
+                AbsoluteEndBound::InfiniteFuture,
             )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Inclusive,
+            UnionResult::Separate,
+        );
+    }
+    
+    #[test]
+    fn unbounded_empty() {
+        assert_eq!(
+            AbsoluteBoundPair::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture,)
+                .unite(&EmptiableAbsoluteBoundPair::Empty),
+            UnionResult::Separate,
+        );
+    }
+    
+    #[test]
+    fn unbounded_unbounded() {
+        assert_eq!(
+            AbsoluteBoundPair::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture,).unite(
+                &AbsoluteBoundPair::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture,)
+            ),
+            UnionResult::United(AbsoluteBoundPair::new(
+                AbsoluteStartBound::InfinitePast,
+                AbsoluteEndBound::InfiniteFuture,
             )),
-        )
-        .unite(&AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Inclusive,
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 3),
-                BoundInclusivity::Inclusive,
-            )),
-        )),
-        UnionResult::United(AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Inclusive,
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 3),
-                BoundInclusivity::Inclusive,
-            )),
-        )),
-    );
-}
-
-#[test]
-fn unite_bounded_adjacent_inclusive_exclusive() {
-    assert_eq!(
-        AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Inclusive,
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Inclusive,
-            )),
-        )
-        .unite(&AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Exclusive,
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 3),
-                BoundInclusivity::Inclusive,
-            )),
-        )),
-        UnionResult::United(AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Inclusive,
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 3),
-                BoundInclusivity::Inclusive,
-            )),
-        )),
-    );
-}
-
-#[test]
-fn unite_bounded_adjacent_exclusive_inclusive() {
-    assert_eq!(
-        AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Inclusive,
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Exclusive,
-            )),
-        )
-        .unite(&AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Inclusive,
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 3),
-                BoundInclusivity::Inclusive,
-            )),
-        )),
-        UnionResult::United(AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Inclusive,
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 3),
-                BoundInclusivity::Inclusive,
-            )),
-        )),
-    );
-}
-
-#[test]
-fn unite_bounded_adjacent_exclusive_exclusive() {
-    assert_eq!(
-        AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Inclusive,
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Exclusive,
-            )),
-        )
-        .unite(&AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Exclusive,
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 3),
-                BoundInclusivity::Inclusive,
-            )),
-        )),
-        UnionResult::Separate,
-    );
-}
-
-#[test]
-fn unite_bounded_clear_overlap() {
-    assert_eq!(
-        AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 3))),
-        )
-        .unite(&AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2))),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 4))),
-        )),
-        UnionResult::United(AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 4))),
-        )),
-    );
-}
-
-#[test]
-fn unite_bounded_on_unbounded() {
-    assert_eq!(
-        AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2))),
-        )
-        .unite(&AbsoluteBounds::new(
-            AbsoluteStartBound::InfinitePast,
-            AbsoluteEndBound::InfiniteFuture,
-        )),
-        UnionResult::United(AbsoluteBounds::new(
-            AbsoluteStartBound::InfinitePast,
-            AbsoluteEndBound::InfiniteFuture,
-        )),
-    );
-}
-
-#[test]
-fn unite_unbounded_on_bounded() {
-    assert_eq!(
-        AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture,).unite(
-            &AbsoluteBounds::new(
-                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
-                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2))),
+        );
+    }
+    
+    #[test]
+    fn bounded_no_overlap() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
             )
-        ),
-        UnionResult::United(AbsoluteBounds::new(
-            AbsoluteStartBound::InfinitePast,
-            AbsoluteEndBound::InfiniteFuture,
-        )),
-    );
-}
+            .unite(&AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new("2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new("2025-01-04 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+            )),
+            UnionResult::Separate,
+        );
 
-#[test]
-fn intersect_empty_empty() {
-    assert_eq!(
-        EmptiableAbsoluteBounds::Empty.intersect(&EmptiableAbsoluteBounds::Empty),
-        IntersectionResult::Separate,
-    );
-}
-
-#[test]
-fn intersect_empty_unbounded() {
-    assert_eq!(
-        EmptiableAbsoluteBounds::Empty.intersect(&AbsoluteBounds::new(
-            AbsoluteStartBound::InfinitePast,
-            AbsoluteEndBound::InfiniteFuture,
-        )),
-        IntersectionResult::Separate,
-    );
-}
-
-#[test]
-fn intersect_unbounded_empty() {
-    assert_eq!(
-        AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture,)
-            .intersect(&EmptiableAbsoluteBounds::Empty),
-        IntersectionResult::Separate,
-    );
-}
-
-#[test]
-fn intersect_unbounded_unbounded() {
-    assert_eq!(
-        AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture,).intersect(
-            &AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture,)
-        ),
-        IntersectionResult::Intersected(AbsoluteBounds::new(
-            AbsoluteStartBound::InfinitePast,
-            AbsoluteEndBound::InfiniteFuture,
-        )),
-    );
-}
-
-#[test]
-fn intersect_bounded_no_overlap() {
-    assert_eq!(
-        AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2))),
-        )
-        .intersect(&AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 3))),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 4))),
-        )),
-        IntersectionResult::Separate,
-    );
-}
-
-#[test]
-fn intersect_bounded_adjacent_inclusive_inclusive() {
-    assert_eq!(
-        AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Inclusive,
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Inclusive,
-            )),
-        )
-        .intersect(&AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Inclusive,
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 3),
-                BoundInclusivity::Inclusive,
-            )),
-        )),
-        IntersectionResult::Intersected(AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Inclusive,
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Inclusive,
-            )),
-        )),
-    );
-}
-
-#[test]
-fn intersect_bounded_adjacent_inclusive_exclusive() {
-    assert_eq!(
-        AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Inclusive,
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Inclusive,
-            )),
-        )
-        .intersect(&AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Exclusive,
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 3),
-                BoundInclusivity::Inclusive,
-            )),
-        )),
-        IntersectionResult::Separate,
-    );
-}
-
-#[test]
-fn intersect_bounded_adjacent_exclusive_inclusive() {
-    assert_eq!(
-        AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Inclusive,
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Exclusive,
-            )),
-        )
-        .intersect(&AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Inclusive,
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 3),
-                BoundInclusivity::Inclusive,
-            )),
-        )),
-        IntersectionResult::Separate,
-    );
-}
-
-#[test]
-fn intersect_bounded_adjacent_exclusive_exclusive() {
-    assert_eq!(
-        AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Inclusive,
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Exclusive,
-            )),
-        )
-        .intersect(&AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Exclusive,
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 3),
-                BoundInclusivity::Inclusive,
-            )),
-        )),
-        IntersectionResult::Separate,
-    );
-}
-
-#[test]
-fn intersect_bounded_clear_overlap() {
-    assert_eq!(
-        AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 3))),
-        )
-        .intersect(&AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2))),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 4))),
-        )),
-        IntersectionResult::Intersected(AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2))),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 3))),
-        )),
-    );
-}
-
-#[test]
-fn intersect_bounded_on_unbounded() {
-    assert_eq!(
-        AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2))),
-        )
-        .intersect(&AbsoluteBounds::new(
-            AbsoluteStartBound::InfinitePast,
-            AbsoluteEndBound::InfiniteFuture,
-        )),
-        IntersectionResult::Intersected(AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2))),
-        )),
-    );
-}
-
-#[test]
-fn intersect_unbounded_on_bounded() {
-    assert_eq!(
-        AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture,).intersect(
-            &AbsoluteBounds::new(
-                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
-                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2))),
+        Ok(())
+    }
+    
+    #[test]
+    fn bounded_adjacent_inclusive_inclusive() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
             )
-        ),
-        IntersectionResult::Intersected(AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2))),
-        )),
-    );
-}
+            .unite(&AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+            )),
+            UnionResult::United(AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+            )),
+        );
 
-#[test]
-fn difference_empty_empty() {
-    assert_eq!(
-        EmptiableAbsoluteBounds::Empty.differentiate(&EmptiableAbsoluteBounds::Empty),
-        DifferenceResult::Separate,
-    );
-}
-
-#[test]
-fn difference_empty_unbounded() {
-    assert_eq!(
-        EmptiableAbsoluteBounds::Empty.differentiate(&AbsoluteBounds::new(
-            AbsoluteStartBound::InfinitePast,
-            AbsoluteEndBound::InfiniteFuture,
-        )),
-        DifferenceResult::Separate,
-    );
-}
-
-#[test]
-fn difference_unbounded_empty() {
-    assert_eq!(
-        AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture,)
-            .differentiate(&EmptiableAbsoluteBounds::Empty),
-        DifferenceResult::Separate,
-    );
-}
-
-#[test]
-fn difference_unbounded_unbounded() {
-    assert_eq!(
-        AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture,).differentiate(
-            &AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture,)
-        ),
-        DifferenceResult::Single(EmptiableAbsoluteBounds::Empty),
-    );
-}
-
-#[test]
-fn difference_bounded_no_overlap() {
-    assert_eq!(
-        AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2))),
-        )
-        .differentiate(&AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 3))),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 4))),
-        )),
-        DifferenceResult::Separate,
-    );
-}
-
-#[test]
-fn difference_bounded_adjacent_inclusive_inclusive() {
-    assert_eq!(
-        AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Inclusive,
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Inclusive,
-            )),
-        )
-        .differentiate(&AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Inclusive,
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 3),
-                BoundInclusivity::Inclusive,
-            )),
-        )),
-        DifferenceResult::Single(EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Inclusive,
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Exclusive,
-            )),
-        ))),
-    );
-}
-
-#[test]
-fn difference_bounded_adjacent_inclusive_exclusive() {
-    assert_eq!(
-        AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Inclusive,
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Inclusive,
-            )),
-        )
-        .differentiate(&AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Exclusive,
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 3),
-                BoundInclusivity::Inclusive,
-            )),
-        )),
-        DifferenceResult::Separate,
-    );
-}
-
-#[test]
-fn difference_bounded_adjacent_exclusive_inclusive() {
-    assert_eq!(
-        AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Inclusive,
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Exclusive,
-            )),
-        )
-        .differentiate(&AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Inclusive,
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 3),
-                BoundInclusivity::Inclusive,
-            )),
-        )),
-        DifferenceResult::Separate,
-    );
-}
-
-#[test]
-fn difference_bounded_adjacent_exclusive_exclusive() {
-    assert_eq!(
-        AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Inclusive,
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Exclusive,
-            )),
-        )
-        .differentiate(&AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Exclusive,
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 3),
-                BoundInclusivity::Inclusive,
-            )),
-        )),
-        DifferenceResult::Separate,
-    );
-}
-
-#[test]
-fn difference_bounded_clear_overlap() {
-    assert_eq!(
-        AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 3))),
-        )
-        .differentiate(&AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2))),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 4))),
-        )),
-        DifferenceResult::Single(EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Exclusive,
-            )),
-        ))),
-    );
-}
-
-#[test]
-fn difference_bounded_on_unbounded() {
-    assert_eq!(
-        AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2))),
-        )
-        .differentiate(&AbsoluteBounds::new(
-            AbsoluteStartBound::InfinitePast,
-            AbsoluteEndBound::InfiniteFuture,
-        )),
-        DifferenceResult::Single(EmptiableAbsoluteBounds::Empty),
-    );
-}
-
-#[test]
-fn difference_unbounded_on_bounded() {
-    assert_eq!(
-        AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture,).differentiate(
-            &AbsoluteBounds::new(
-                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
-                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2))),
+        Ok(())
+    }
+    
+    #[test]
+    fn bounded_adjacent_inclusive_exclusive() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
             )
-        ),
-        DifferenceResult::Split(
-            EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
-                AbsoluteStartBound::InfinitePast,
-                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                )),
-            )),
-            EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
+            .unite(&AbsoluteBoundPair::new(
                 AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                )),
-                AbsoluteEndBound::InfiniteFuture,
-            )),
-        ),
-    );
-}
-
-#[test]
-fn sym_difference_empty_empty() {
-    assert_eq!(
-        EmptiableAbsoluteBounds::Empty.symmetrically_differentiate(&EmptiableAbsoluteBounds::Empty),
-        SymmetricDifferenceResult::Separate,
-    );
-}
-
-#[test]
-fn sym_difference_empty_unbounded() {
-    assert_eq!(
-        EmptiableAbsoluteBounds::Empty.symmetrically_differentiate(&AbsoluteBounds::new(
-            AbsoluteStartBound::InfinitePast,
-            AbsoluteEndBound::InfiniteFuture,
-        )),
-        SymmetricDifferenceResult::Separate,
-    );
-}
-
-#[test]
-fn sym_difference_unbounded_empty() {
-    assert_eq!(
-        AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture,)
-            .symmetrically_differentiate(&EmptiableAbsoluteBounds::Empty),
-        SymmetricDifferenceResult::Separate,
-    );
-}
-
-#[test]
-fn sym_difference_unbounded_unbounded() {
-    assert_eq!(
-        AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture,)
-            .symmetrically_differentiate(&AbsoluteBounds::new(
-                AbsoluteStartBound::InfinitePast,
-                AbsoluteEndBound::InfiniteFuture,
-            )),
-        SymmetricDifferenceResult::Single(EmptiableAbsoluteBounds::Empty),
-    );
-}
-
-#[test]
-fn sym_difference_bounded_no_overlap() {
-    assert_eq!(
-        AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2))),
-        )
-        .symmetrically_differentiate(&AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 3))),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 4))),
-        )),
-        SymmetricDifferenceResult::Separate,
-    );
-}
-
-#[test]
-fn sym_difference_bounded_adjacent_inclusive_inclusive() {
-    assert_eq!(
-        AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Inclusive,
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Inclusive,
-            )),
-        )
-        .symmetrically_differentiate(&AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Inclusive,
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 3),
-                BoundInclusivity::Inclusive,
-            )),
-        )),
-        SymmetricDifferenceResult::Split(
-            EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
-                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Inclusive,
-                )),
-                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                )),
-            )),
-            EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
-                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
+                    "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                 )),
                 AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 3),
+                    "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Inclusive,
                 )),
             )),
-        ),
-    );
-}
-
-#[test]
-fn sym_difference_bounded_adjacent_inclusive_exclusive() {
-    assert_eq!(
-        AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Inclusive,
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Inclusive,
-            )),
-        )
-        .symmetrically_differentiate(&AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Exclusive,
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 3),
-                BoundInclusivity::Inclusive,
-            )),
-        )),
-        SymmetricDifferenceResult::Separate,
-    );
-}
-
-#[test]
-fn sym_difference_bounded_adjacent_exclusive_inclusive() {
-    assert_eq!(
-        AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Inclusive,
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Exclusive,
-            )),
-        )
-        .symmetrically_differentiate(&AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Inclusive,
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 3),
-                BoundInclusivity::Inclusive,
-            )),
-        )),
-        SymmetricDifferenceResult::Separate,
-    );
-}
-
-#[test]
-fn sym_difference_bounded_adjacent_exclusive_exclusive() {
-    assert_eq!(
-        AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Inclusive,
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Exclusive,
-            )),
-        )
-        .symmetrically_differentiate(&AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Exclusive,
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 3),
-                BoundInclusivity::Inclusive,
-            )),
-        )),
-        SymmetricDifferenceResult::Separate,
-    );
-}
-
-#[test]
-fn sym_difference_bounded_clear_overlap() {
-    assert_eq!(
-        AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 3))),
-        )
-        .symmetrically_differentiate(&AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2))),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 4))),
-        )),
-        SymmetricDifferenceResult::Split(
-            EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
+            UnionResult::United(AbsoluteBoundPair::new(
                 AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
+                    "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Inclusive,
                 )),
                 AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                )),
-            )),
-            EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
-                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 3),
-                    BoundInclusivity::Exclusive,
-                )),
-                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 4),
+                    "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Inclusive,
                 )),
             )),
-        ),
-    );
-}
+        );
 
-#[test]
-fn sym_difference_bounded_on_unbounded() {
-    assert_eq!(
-        AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2))),
-        )
-        .symmetrically_differentiate(&AbsoluteBounds::new(
-            AbsoluteStartBound::InfinitePast,
-            AbsoluteEndBound::InfiniteFuture,
-        )),
-        SymmetricDifferenceResult::Split(
-            EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
-                AbsoluteStartBound::InfinitePast,
+        Ok(())
+    }
+    
+    #[test]
+    fn bounded_adjacent_exclusive_inclusive() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
                 AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
+                    "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
+                )),
+            )
+            .unite(&AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
                 )),
             )),
-            EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
+            UnionResult::United(AbsoluteBoundPair::new(
                 AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
+                    "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+            )),
+        );
+
+        Ok(())
+    }
+    
+    #[test]
+    fn bounded_adjacent_exclusive_exclusive() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                 )),
+            )
+            .unite(&AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Exclusive,
+                )),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+            )),
+            UnionResult::Separate,
+        );
+
+        Ok(())
+    }
+    
+    #[test]
+    fn bounded_clear_overlap() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new("2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+            )
+            .unite(&AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new("2025-01-04 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+            )),
+            UnionResult::United(AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new("2025-01-04 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+            )),
+        );
+
+        Ok(())
+    }
+    
+    #[test]
+    fn bounded_on_unbounded() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+            )
+            .unite(&AbsoluteBoundPair::new(
+                AbsoluteStartBound::InfinitePast,
                 AbsoluteEndBound::InfiniteFuture,
             )),
-        ),
-    );
-}
-
-#[test]
-fn sym_difference_unbounded_on_bounded() {
-    assert_eq!(
-        AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture,)
-            .symmetrically_differentiate(&AbsoluteBounds::new(
-                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
-                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2))),
-            )),
-        SymmetricDifferenceResult::Split(
-            EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
+            UnionResult::United(AbsoluteBoundPair::new(
                 AbsoluteStartBound::InfinitePast,
-                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
-                    BoundInclusivity::Exclusive,
-                )),
-            )),
-            EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
-                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
-                    BoundInclusivity::Exclusive,
-                )),
                 AbsoluteEndBound::InfiniteFuture,
             )),
-        ),
-    );
+        );
+
+        Ok(())
+    }
+    
+    #[test]
+    fn unbounded_on_bounded() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            AbsoluteBoundPair::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture,).unite(
+                &AbsoluteBoundPair::new(
+                    AbsoluteStartBound::Finite(AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+                    AbsoluteEndBound::Finite(AbsoluteFiniteBound::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+                )
+            ),
+            UnionResult::United(AbsoluteBoundPair::new(
+                AbsoluteStartBound::InfinitePast,
+                AbsoluteEndBound::InfiniteFuture,
+            )),
+        );
+
+        Ok(())
+    }
+}
+
+mod intersect {
+    use super::*;
+    
+    #[test]
+    fn empty_empty() {
+        assert_eq!(
+            EmptiableAbsoluteBoundPair::Empty.intersect(&EmptiableAbsoluteBoundPair::Empty),
+            IntersectionResult::Separate,
+        );
+    }
+    
+    #[test]
+    fn empty_unbounded() {
+        assert_eq!(
+            EmptiableAbsoluteBoundPair::Empty.intersect(&AbsoluteBoundPair::new(
+                AbsoluteStartBound::InfinitePast,
+                AbsoluteEndBound::InfiniteFuture,
+            )),
+            IntersectionResult::Separate,
+        );
+    }
+    
+    #[test]
+    fn unbounded_empty() {
+        assert_eq!(
+            AbsoluteBoundPair::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture,)
+                .intersect(&EmptiableAbsoluteBoundPair::Empty),
+            IntersectionResult::Separate,
+        );
+    }
+    
+    #[test]
+    fn unbounded_unbounded() {
+        assert_eq!(
+            AbsoluteBoundPair::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture,).intersect(
+                &AbsoluteBoundPair::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture,)
+            ),
+            IntersectionResult::Intersected(AbsoluteBoundPair::new(
+                AbsoluteStartBound::InfinitePast,
+                AbsoluteEndBound::InfiniteFuture,
+            )),
+        );
+    }
+    
+    #[test]
+    fn bounded_no_overlap() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+            )
+            .intersect(&AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new("2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new("2025-01-04 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+            )),
+            IntersectionResult::Separate,
+        );
+
+        Ok(())
+    }
+    
+    #[test]
+    fn bounded_adjacent_inclusive_inclusive() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+            )
+            .intersect(&AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+            )),
+            IntersectionResult::Intersected(AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+            )),
+        );
+
+        Ok(())
+    }
+    
+    #[test]
+    fn bounded_adjacent_inclusive_exclusive() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+            )
+            .intersect(&AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Exclusive,
+                )),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+            )),
+            IntersectionResult::Separate,
+        );
+
+        Ok(())
+    }
+    
+    #[test]
+    fn bounded_adjacent_exclusive_inclusive() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Exclusive,
+                )),
+            )
+            .intersect(&AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+            )),
+            IntersectionResult::Separate,
+        );
+
+        Ok(())
+    }
+    
+    #[test]
+    fn bounded_adjacent_exclusive_exclusive() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Exclusive,
+                )),
+            )
+            .intersect(&AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Exclusive,
+                )),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+            )),
+            IntersectionResult::Separate,
+        );
+
+        Ok(())
+    }
+    
+    #[test]
+    fn bounded_clear_overlap() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new("2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+            )
+            .intersect(&AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new("2025-01-04 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+            )),
+            IntersectionResult::Intersected(AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new("2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+            )),
+        );
+
+        Ok(())
+    }
+    
+    #[test]
+    fn bounded_on_unbounded() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+            )
+            .intersect(&AbsoluteBoundPair::new(
+                AbsoluteStartBound::InfinitePast,
+                AbsoluteEndBound::InfiniteFuture,
+            )),
+            IntersectionResult::Intersected(AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+            )),
+        );
+
+        Ok(())
+    }
+    
+    #[test]
+    fn unbounded_on_bounded() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            AbsoluteBoundPair::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture,).intersect(
+                &AbsoluteBoundPair::new(
+                    AbsoluteStartBound::Finite(AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+                    AbsoluteEndBound::Finite(AbsoluteFiniteBound::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+                )
+            ),
+            IntersectionResult::Intersected(AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+            )),
+        );
+
+        Ok(())
+    }
+}
+
+mod difference {
+    use super::*;
+    
+    #[test]
+    fn empty_empty() {
+        assert_eq!(
+            EmptiableAbsoluteBoundPair::Empty.differentiate(&EmptiableAbsoluteBoundPair::Empty),
+            DifferenceResult::Separate,
+        );
+    }
+    
+    #[test]
+    fn empty_unbounded() {
+        assert_eq!(
+            EmptiableAbsoluteBoundPair::Empty.differentiate(&AbsoluteBoundPair::new(
+                AbsoluteStartBound::InfinitePast,
+                AbsoluteEndBound::InfiniteFuture,
+            )),
+            DifferenceResult::Separate,
+        );
+    }
+    
+    #[test]
+    fn unbounded_empty() {
+        assert_eq!(
+            AbsoluteBoundPair::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture,)
+                .differentiate(&EmptiableAbsoluteBoundPair::Empty),
+            DifferenceResult::Separate,
+        );
+    }
+    
+    #[test]
+    fn unbounded_unbounded() {
+        assert_eq!(
+            AbsoluteBoundPair::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture,).differentiate(
+                &AbsoluteBoundPair::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture,)
+            ),
+            DifferenceResult::Single(EmptiableAbsoluteBoundPair::Empty),
+        );
+    }
+    
+    #[test]
+    fn bounded_no_overlap() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+            )
+            .differentiate(&AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new("2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new("2025-01-04 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+            )),
+            DifferenceResult::Separate,
+        );
+
+        Ok(())
+    }
+    
+    #[test]
+    fn bounded_adjacent_inclusive_inclusive() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+            )
+            .differentiate(&AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+            )),
+            DifferenceResult::Single(EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Exclusive,
+                )),
+            ))),
+        );
+
+        Ok(())
+    }
+    
+    #[test]
+    fn bounded_adjacent_inclusive_exclusive() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+            )
+            .differentiate(&AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Exclusive,
+                )),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+            )),
+            DifferenceResult::Separate,
+        );
+
+        Ok(())
+    }
+    
+    #[test]
+    fn bounded_adjacent_exclusive_inclusive() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Exclusive,
+                )),
+            )
+            .differentiate(&AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+            )),
+            DifferenceResult::Separate,
+        );
+
+        Ok(())
+    }
+    
+    #[test]
+    fn bounded_adjacent_exclusive_exclusive() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Exclusive,
+                )),
+            )
+            .differentiate(&AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Exclusive,
+                )),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+            )),
+            DifferenceResult::Separate,
+        );
+
+        Ok(())
+    }
+    
+    #[test]
+    fn bounded_clear_overlap() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new("2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+            )
+            .differentiate(&AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new("2025-01-04 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+            )),
+            DifferenceResult::Single(EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Exclusive,
+                )),
+            ))),
+        );
+
+        Ok(())
+    }
+    
+    #[test]
+    fn bounded_on_unbounded() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+            )
+            .differentiate(&AbsoluteBoundPair::new(
+                AbsoluteStartBound::InfinitePast,
+                AbsoluteEndBound::InfiniteFuture,
+            )),
+            DifferenceResult::Single(EmptiableAbsoluteBoundPair::Empty),
+        );
+
+        Ok(())
+    }
+    
+    #[test]
+    fn unbounded_on_bounded() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            AbsoluteBoundPair::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture,).differentiate(
+                &AbsoluteBoundPair::new(
+                    AbsoluteStartBound::Finite(AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+                    AbsoluteEndBound::Finite(AbsoluteFiniteBound::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+                )
+            ),
+            DifferenceResult::Split(
+                EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::new(
+                    AbsoluteStartBound::InfinitePast,
+                    AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                        "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                        BoundInclusivity::Exclusive,
+                    )),
+                )),
+                EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::new(
+                    AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                        "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                        BoundInclusivity::Exclusive,
+                    )),
+                    AbsoluteEndBound::InfiniteFuture,
+                )),
+            ),
+        );
+
+        Ok(())
+    }
+}
+
+mod sym_difference {
+    use super::*;
+    
+    #[test]
+    fn empty_empty() {
+        assert_eq!(
+            EmptiableAbsoluteBoundPair::Empty.symmetrically_differentiate(&EmptiableAbsoluteBoundPair::Empty),
+            SymmetricDifferenceResult::Separate,
+        );
+    }
+    
+    #[test]
+    fn empty_unbounded() {
+        assert_eq!(
+            EmptiableAbsoluteBoundPair::Empty.symmetrically_differentiate(&AbsoluteBoundPair::new(
+                AbsoluteStartBound::InfinitePast,
+                AbsoluteEndBound::InfiniteFuture,
+            )),
+            SymmetricDifferenceResult::Separate,
+        );
+    }
+    
+    #[test]
+    fn unbounded_empty() {
+        assert_eq!(
+            AbsoluteBoundPair::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture,)
+                .symmetrically_differentiate(&EmptiableAbsoluteBoundPair::Empty),
+            SymmetricDifferenceResult::Separate,
+        );
+    }
+    
+    #[test]
+    fn unbounded_unbounded() {
+        assert_eq!(
+            AbsoluteBoundPair::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture,)
+                .symmetrically_differentiate(&AbsoluteBoundPair::new(
+                    AbsoluteStartBound::InfinitePast,
+                    AbsoluteEndBound::InfiniteFuture,
+                )),
+            SymmetricDifferenceResult::Single(EmptiableAbsoluteBoundPair::Empty),
+        );
+    }
+    
+    #[test]
+    fn bounded_no_overlap() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+            )
+            .symmetrically_differentiate(&AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new("2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new("2025-01-04 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+            )),
+            SymmetricDifferenceResult::Separate,
+        );
+
+        Ok(())
+    }
+    
+    #[test]
+    fn bounded_adjacent_inclusive_inclusive() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+            )
+            .symmetrically_differentiate(&AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+            )),
+            SymmetricDifferenceResult::Split(
+                EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::new(
+                    AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                        "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                        BoundInclusivity::Inclusive,
+                    )),
+                    AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                        "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                        BoundInclusivity::Exclusive,
+                    )),
+                )),
+                EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::new(
+                    AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                        "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                        BoundInclusivity::Exclusive,
+                    )),
+                    AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                        "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                        BoundInclusivity::Inclusive,
+                    )),
+                )),
+            ),
+        );
+
+        Ok(())
+    }
+    
+    #[test]
+    fn bounded_adjacent_inclusive_exclusive() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+            )
+            .symmetrically_differentiate(&AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Exclusive,
+                )),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+            )),
+            SymmetricDifferenceResult::Separate,
+        );
+
+        Ok(())
+    }
+    
+    #[test]
+    fn bounded_adjacent_exclusive_inclusive() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Exclusive,
+                )),
+            )
+            .symmetrically_differentiate(&AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+            )),
+            SymmetricDifferenceResult::Separate,
+        );
+
+        Ok(())
+    }
+    
+    #[test]
+    fn bounded_adjacent_exclusive_exclusive() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Exclusive,
+                )),
+            )
+            .symmetrically_differentiate(&AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Exclusive,
+                )),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+            )),
+            SymmetricDifferenceResult::Separate,
+        );
+
+        Ok(())
+    }
+    
+    #[test]
+    fn bounded_clear_overlap() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new("2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+            )
+            .symmetrically_differentiate(&AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new("2025-01-04 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+            )),
+            SymmetricDifferenceResult::Split(
+                EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::new(
+                    AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                        "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                        BoundInclusivity::Inclusive,
+                    )),
+                    AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                        "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                        BoundInclusivity::Exclusive,
+                    )),
+                )),
+                EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::new(
+                    AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                        "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                        BoundInclusivity::Exclusive,
+                    )),
+                    AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                        "2025-01-04 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                        BoundInclusivity::Inclusive,
+                    )),
+                )),
+            ),
+        );
+
+        Ok(())
+    }
+    
+    #[test]
+    fn bounded_on_unbounded() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+            )
+            .symmetrically_differentiate(&AbsoluteBoundPair::new(
+                AbsoluteStartBound::InfinitePast,
+                AbsoluteEndBound::InfiniteFuture,
+            )),
+            SymmetricDifferenceResult::Split(
+                EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::new(
+                    AbsoluteStartBound::InfinitePast,
+                    AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                        "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                        BoundInclusivity::Exclusive,
+                    )),
+                )),
+                EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::new(
+                    AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                        "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                        BoundInclusivity::Exclusive,
+                    )),
+                    AbsoluteEndBound::InfiniteFuture,
+                )),
+            ),
+        );
+
+        Ok(())
+    }
+    
+    #[test]
+    fn unbounded_on_bounded() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            AbsoluteBoundPair::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture,)
+                .symmetrically_differentiate(&AbsoluteBoundPair::new(
+                    AbsoluteStartBound::Finite(AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+                    AbsoluteEndBound::Finite(AbsoluteFiniteBound::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+                )),
+            SymmetricDifferenceResult::Split(
+                EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::new(
+                    AbsoluteStartBound::InfinitePast,
+                    AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                        "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                        BoundInclusivity::Exclusive,
+                    )),
+                )),
+                EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::new(
+                    AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                        "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                        BoundInclusivity::Exclusive,
+                    )),
+                    AbsoluteEndBound::InfiniteFuture,
+                )),
+            ),
+        );
+
+        Ok(())
+    }
 }
