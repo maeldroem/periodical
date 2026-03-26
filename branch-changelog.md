@@ -41,6 +41,7 @@
 - [ ] Bring documentation rate (docs.rs) to 100%
 - [ ] Split `intervals::ops::precision` into absolute/relative interval/bound
 - [ ] Create and implement relative version of `intervals::ops::precision`
+- [ ] Renew docs
 
 # Changelog
 
@@ -111,7 +112,7 @@
   - [x] Migrated `overlap` to jiff
   - [x] Migrated `point_containment` to jiff
   - [x] Migrated `precision` to jiff
-  - [ ] Migrated `relativity_conversion` to jiff
+  - [x] Migrated `relativity_conversion` to jiff
   - [ ] Migrated `remove_overlap_or_gap` to jiff
   - [ ] Migrated `remove_overlap` to jiff
   - [ ] Migrated `set_ops` to jiff
@@ -159,7 +160,7 @@
   - [x] Migrated `overlap`'s tests to jiff
   - [x] Migrated `point_containment`'s tests to jiff
   - [x] Migrated `precision`'s tests to jiff
-  - [ ] Migrated `relativity_conversion`'s tests to jiff
+  - [x] Migrated `relativity_conversion`'s tests to jiff
   - [ ] Migrated `remove_overlap_or_gap`'s tests to jiff
   - [ ] Migrated `remove_overlap`'s tests to jiff
   - [ ] Migrated `set_ops`'s tests to jiff
@@ -208,7 +209,7 @@
   - [x] Migrated `overlap`'s examples to jiff
   - [x] Migrated `point_containment`'s examples to jiff
   - [x] Migrated `precision`'s examples to jiff
-  - [ ] Migrated `relativity_conversion`'s examples to jiff
+  - [x] Migrated `relativity_conversion`'s examples to jiff
   - [ ] Migrated `remove_overlap_or_gap`'s examples to jiff
   - [ ] Migrated `remove_overlap`'s examples to jiff
   - [ ] Migrated `set_ops`'s examples to jiff
