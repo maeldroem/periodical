@@ -113,7 +113,7 @@
   - [x] Migrated `point_containment` to jiff
   - [x] Migrated `precision` to jiff
   - [x] Migrated `relativity_conversion` to jiff
-  - [ ] Migrated `remove_overlap_or_gap` to jiff
+  - [x] Migrated `remove_overlap_or_gap` to jiff
   - [x] Migrated `remove_overlap` to jiff
   - [x] Migrated `set_ops` to jiff
   - [x] Migrated `shrink` to jiff
@@ -161,7 +161,7 @@
   - [x] Migrated `point_containment`'s tests to jiff
   - [x] Migrated `precision`'s tests to jiff
   - [x] Migrated `relativity_conversion`'s tests to jiff
-  - [ ] Migrated `remove_overlap_or_gap`'s tests to jiff
+  - [x] Migrated `remove_overlap_or_gap`'s tests to jiff
   - [x] Migrated `remove_overlap`'s tests to jiff
   - [x] Migrated `set_ops`'s tests to jiff
   - [x] Migrated `shrink`'s tests to jiff
@@ -210,7 +210,7 @@
   - [x] Migrated `point_containment`'s examples to jiff
   - [x] Migrated `precision`'s examples to jiff
   - [x] Migrated `relativity_conversion`'s examples to jiff
-  - [ ] Migrated `remove_overlap_or_gap`'s examples to jiff
+  - [x] Migrated `remove_overlap_or_gap`'s examples to jiff
   - [x] Migrated `remove_overlap`'s examples to jiff
   - [x] Migrated `set_ops`'s examples to jiff
   - [x] Migrated `shrink`'s examples to jiff
