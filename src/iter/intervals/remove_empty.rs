@@ -5,74 +5,73 @@
 //! # Examples
 //!
 //! ```
-//! # use chrono::{DateTime, Utc};
-//! # use periodical::intervals::absolute::{
-//! #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, EmptiableAbsoluteBounds,
-//! # };
+//! # use std::error::Error;
+//! # use jiff::Zoned;
+//! # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound, EmptiableAbsoluteBoundPair};
 //! # use periodical::iter::intervals::remove_empty::RemoveEmptyIntervalsIteratorDispatcher;
 //! let intervals = [
-//!     EmptiableAbsoluteBounds::Empty,
-//!     EmptiableAbsoluteBounds::Empty,
-//!     EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
-//!         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
-//!         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
-//!     )),
-//!     EmptiableAbsoluteBounds::Empty,
-//!     EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
-//!         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 13:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
-//!         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
-//!     )),
-//!     EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
-//!         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 15:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
-//!         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 18:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
-//!     )),
-//!     EmptiableAbsoluteBounds::Empty,
-//!     EmptiableAbsoluteBounds::Empty,
-//!     EmptiableAbsoluteBounds::Empty,
+//!     EmptiableAbsoluteBoundPair::Empty,
+//!     EmptiableAbsoluteBoundPair::Empty,
+//!     AbsoluteBoundPair::new(
+//!         AbsoluteFiniteBound::new(
+//!             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!         ).to_start_bound(),
+//!         AbsoluteFiniteBound::new(
+//!             "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!         ).to_end_bound(),
+//!     ).to_emptiable(),
+//!     EmptiableAbsoluteBoundPair::Empty,
+//!     AbsoluteBoundPair::new(
+//!         AbsoluteFiniteBound::new(
+//!             "2025-01-01 13:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!         ).to_start_bound(),
+//!         AbsoluteFiniteBound::new(
+//!             "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!         ).to_end_bound(),
+//!     ).to_emptiable(),
+//!     AbsoluteBoundPair::new(
+//!         AbsoluteFiniteBound::new(
+//!             "2025-01-01 15:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!         ).to_start_bound(),
+//!         AbsoluteFiniteBound::new(
+//!             "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!         ).to_end_bound(),
+//!     ).to_emptiable(),
+//!     EmptiableAbsoluteBoundPair::Empty,
+//!     EmptiableAbsoluteBoundPair::Empty,
+//!     EmptiableAbsoluteBoundPair::Empty,
 //! ];
 //!
 //! assert_eq!(
 //!     intervals.remove_empty_intervals().collect::<Vec<_>>(),
 //!     vec![
-//!         EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
-//!             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!                 "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-//!             )),
-//!             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-//!                 "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
-//!             )),
-//!         )),
-//!         EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
-//!             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!                 "2025-01-01 13:00:00Z".parse::<DateTime<Utc>>()?,
-//!             )),
-//!             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-//!                 "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
-//!             )),
-//!         )),
-//!         EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
-//!             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!                 "2025-01-01 15:00:00Z".parse::<DateTime<Utc>>()?,
-//!             )),
-//!             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-//!                 "2025-01-01 18:00:00Z".parse::<DateTime<Utc>>()?,
-//!             )),
-//!         )),
+//!         AbsoluteBoundPair::new(
+//!             AbsoluteFiniteBound::new(
+//!                 "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!             ).to_start_bound(),
+//!             AbsoluteFiniteBound::new(
+//!                 "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!             ).to_end_bound(),
+//!         ).to_emptiable(),
+//!         AbsoluteBoundPair::new(
+//!             AbsoluteFiniteBound::new(
+//!                 "2025-01-01 13:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!             ).to_start_bound(),
+//!             AbsoluteFiniteBound::new(
+//!                 "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!             ).to_end_bound(),
+//!         ).to_emptiable(),
+//!         AbsoluteBoundPair::new(
+//!             AbsoluteFiniteBound::new(
+//!                 "2025-01-01 15:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!             ).to_start_bound(),
+//!             AbsoluteFiniteBound::new(
+//!                 "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!             ).to_end_bound(),
+//!         ).to_emptiable(),
 //!     ],
 //! );
-//! # Ok::<(), chrono::format::ParseError>(())
+//! # Ok::<(), Box<dyn Error>>(())
 //! ```
 
 use crate::intervals::meta::Emptiable;
@@ -90,74 +89,73 @@ where
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Utc};
-    /// # use periodical::intervals::absolute::{
-    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, EmptiableAbsoluteBounds,
-    /// # };
+    /// # use std::error::Error;
+    /// # use jiff::Zoned;
+    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound, EmptiableAbsoluteBoundPair};
     /// # use periodical::iter::intervals::remove_empty::RemoveEmptyIntervalsIteratorDispatcher;
     /// let intervals = [
-    ///     EmptiableAbsoluteBounds::Empty,
-    ///     EmptiableAbsoluteBounds::Empty,
-    ///     EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
-    ///         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///             "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-    ///         )),
-    ///         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///             "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
-    ///         )),
-    ///     )),
-    ///     EmptiableAbsoluteBounds::Empty,
-    ///     EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
-    ///         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///             "2025-01-01 13:00:00Z".parse::<DateTime<Utc>>()?,
-    ///         )),
-    ///         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///             "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
-    ///         )),
-    ///     )),
-    ///     EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
-    ///         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///             "2025-01-01 15:00:00Z".parse::<DateTime<Utc>>()?,
-    ///         )),
-    ///         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///             "2025-01-01 18:00:00Z".parse::<DateTime<Utc>>()?,
-    ///         )),
-    ///     )),
-    ///     EmptiableAbsoluteBounds::Empty,
-    ///     EmptiableAbsoluteBounds::Empty,
-    ///     EmptiableAbsoluteBounds::Empty,
+    ///     EmptiableAbsoluteBoundPair::Empty,
+    ///     EmptiableAbsoluteBoundPair::Empty,
+    ///     AbsoluteBoundPair::new(
+    ///         AbsoluteFiniteBound::new(
+    ///             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///         ).to_start_bound(),
+    ///         AbsoluteFiniteBound::new(
+    ///             "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///         ).to_end_bound(),
+    ///     ).to_emptiable(),
+    ///     EmptiableAbsoluteBoundPair::Empty,
+    ///     AbsoluteBoundPair::new(
+    ///         AbsoluteFiniteBound::new(
+    ///             "2025-01-01 13:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///         ).to_start_bound(),
+    ///         AbsoluteFiniteBound::new(
+    ///             "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///         ).to_end_bound(),
+    ///     ).to_emptiable(),
+    ///     AbsoluteBoundPair::new(
+    ///         AbsoluteFiniteBound::new(
+    ///             "2025-01-01 15:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///         ).to_start_bound(),
+    ///         AbsoluteFiniteBound::new(
+    ///             "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///         ).to_end_bound(),
+    ///     ).to_emptiable(),
+    ///     EmptiableAbsoluteBoundPair::Empty,
+    ///     EmptiableAbsoluteBoundPair::Empty,
+    ///     EmptiableAbsoluteBoundPair::Empty,
     /// ];
     ///
     /// assert_eq!(
     ///     intervals.remove_empty_intervals().collect::<Vec<_>>(),
     ///     vec![
-    ///         EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
-    ///             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///                 "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-    ///             )),
-    ///             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///                 "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
-    ///             )),
-    ///         )),
-    ///         EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
-    ///             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///                 "2025-01-01 13:00:00Z".parse::<DateTime<Utc>>()?,
-    ///             )),
-    ///             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///                 "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
-    ///             )),
-    ///         )),
-    ///         EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
-    ///             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///                 "2025-01-01 15:00:00Z".parse::<DateTime<Utc>>()?,
-    ///             )),
-    ///             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///                 "2025-01-01 18:00:00Z".parse::<DateTime<Utc>>()?,
-    ///             )),
-    ///         )),
+    ///         AbsoluteBoundPair::new(
+    ///             AbsoluteFiniteBound::new(
+    ///                 "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///             ).to_start_bound(),
+    ///             AbsoluteFiniteBound::new(
+    ///                 "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///             ).to_end_bound(),
+    ///         ).to_emptiable(),
+    ///         AbsoluteBoundPair::new(
+    ///             AbsoluteFiniteBound::new(
+    ///                 "2025-01-01 13:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///             ).to_start_bound(),
+    ///             AbsoluteFiniteBound::new(
+    ///                 "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///             ).to_end_bound(),
+    ///         ).to_emptiable(),
+    ///         AbsoluteBoundPair::new(
+    ///             AbsoluteFiniteBound::new(
+    ///                 "2025-01-01 15:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///             ).to_start_bound(),
+    ///             AbsoluteFiniteBound::new(
+    ///                 "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///             ).to_end_bound(),
+    ///         ).to_emptiable(),
     ///     ],
     /// );
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     fn remove_empty_intervals(self) -> RemoveEmptyIntervals<Self::IntoIter> {
         RemoveEmptyIntervals::new(self.into_iter())

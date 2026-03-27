@@ -8,7 +8,7 @@
 - Rename "bounds" (plural) to bound pair
 - Create migration guide/notes from 0.2 to 0.3
 
-## Scope creep tasks to do in the future
+## Scope creep / To do in the future
 
 - [ ] More conversions from specific intervals and bound pairs to other types
   - [ ] By implementing `From`/`TryFrom` on types
@@ -44,6 +44,9 @@
 - [ ] Renew docs
 - [ ] Use macros to simplify repetitive simple impls
 - [ ] Use `orx_parallel` instead of `rayon` (better impl details + performance)
+- [ ] Make `Emptiable*Interval` have the same semantics as `Emptiable*Bounds` (i.e. one `Bound` variant,
+      one `Empty` variant)
+- [ ] Rename `{AbsoluteInterval, RelativeInterval}::to_emptiable_interval()` to `to_emptiable()`
 
 # Changelog
 

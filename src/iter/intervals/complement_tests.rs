@@ -10,7 +10,7 @@ use crate::ops::ComplementResult;
 use super::complement::*;
 
 #[test]
-fn create_complement_iter() -> Result<(), Box<dyn Error>> {
+fn create() -> Result<(), Box<dyn Error>> {
     let intervals = [
         AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
@@ -29,7 +29,7 @@ fn create_complement_iter() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
-fn complement_iter_run() -> Result<(), Box<dyn Error>> {
+fn run() -> Result<(), Box<dyn Error>> {
     let intervals = [
         AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
@@ -72,7 +72,7 @@ fn complement_iter_run() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
-fn complement_iter_run_reverse() -> Result<(), Box<dyn Error>> {
+fn run_reverse() -> Result<(), Box<dyn Error>> {
     let intervals = [
         AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
