@@ -11,13 +11,13 @@ use crate::intervals::absolute::{
 use crate::intervals::meta::BoundInclusivity;
 use crate::intervals::ops::cut::{CutResult, CutType, Cuttable};
 use crate::intervals::relative::BoundedRelativeInterval;
-use crate::time::{NAIVE_TIME_MIDNIGHT, NaiveDuration, checked_add_naive_duration_to_naive_date};
+use crate::time::{NAIVE_TIME_MIDNIGHT, CalendarAnchorOffset, checked_add_naive_duration_to_naive_date};
 
 /// Split by [`NaiveDuration`] iterator
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct NaiveDurationSplit<Tz> {
     remaining_interval: AbsoluteBounds,
-    naive_duration: NaiveDuration,
+    naive_duration: CalendarAnchorOffset,
     tz: Tz,
     exhausted: bool,
 }
@@ -27,7 +27,7 @@ where
     Tz: TimeZone + Clone,
 {
     #[must_use]
-    pub fn new<I>(interval: &I, naive_duration: NaiveDuration, tz: Tz) -> Self
+    pub fn new<I>(interval: &I, naive_duration: CalendarAnchorOffset, tz: Tz) -> Self
     where
         I: HasAbsoluteBounds,
     {
