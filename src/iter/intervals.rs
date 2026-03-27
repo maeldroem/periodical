@@ -16,7 +16,7 @@
 use crate::utils::tests;
 
 // pub mod bounds;
-// pub mod complement;
+pub mod complement;
 // pub mod layered_bounds;
 // pub mod layered_bounds_set_ops;
 // pub mod remove_empty;
@@ -24,11 +24,11 @@ use crate::utils::tests;
 // pub mod split;
 // pub mod united_bounds;
 
-// tests! {
+tests! {
     // mod bounds_tests;
-    // mod complement_tests;
+    mod complement_tests;
     // mod layered_bounds_tests;
     // mod remove_empty_tests;
     // mod split_tests;
     // mod united_bounds_tests;
-// }
+}
