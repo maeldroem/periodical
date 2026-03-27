@@ -122,7 +122,7 @@
   - [x] Migrated `split` to jiff
 - [ ] Migrated `intervals::iter::intervals` to jiff
   - [ ] Migrated `bounds` to jiff
-  - [ ] Migrated `complement` to jiff
+  - [x] Migrated `complement` to jiff
   - [ ] Migrated `layered_bounds` to jiff
   - [ ] Migrated `layered_bounds_set_ops` to jiff
     - [ ] Migrated `diff` to jiff
@@ -186,7 +186,7 @@
   - [x] Migrated `shrink`'s tests to jiff
 - [ ] Migrated `intervals::iter::intervals`'s tests to jiff
   - [ ] Migrated `bounds`'s tests to jiff
-  - [ ] Migrated `complement`'s tests to jiff
+  - [x] Migrated `complement`'s tests to jiff
   - [ ] Migrated `layered_bounds`'s tests to jiff
   - [ ] Migrated `layered_bounds_set_ops`'s tests to jiff
     - [ ] Migrated `diff`'s tests to jiff
@@ -252,7 +252,7 @@
   - [ ] Migrated `split`'s examples to jiff
 - [ ] Migrated `intervals::iter::intervals`'s examples to jiff
   - [ ] Migrated `bounds`'s examples to jiff
-  - [ ] Migrated `complement`'s examples to jiff
+  - [x] Migrated `complement`'s examples to jiff
   - [ ] Migrated `layered_bounds`'s examples to jiff
   - [ ] Migrated `layered_bounds_set_ops`'s examples to jiff
     - [ ] Migrated `diff`'s examples to jiff
