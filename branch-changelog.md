@@ -100,7 +100,7 @@
   - [x] Migrated `convenience::absolute::half_bounded_interval` to jiff
 - [x] Migrated `time` to jiff
 - [x] Migrated `ops` to jiff
-- [ ] Migrated `intervals::ops` to jiff
+- [x] Migrated `intervals::ops` to jiff
   - [x] Migrated `abridge` to jiff
   - [x] Migrated `bound_containment` to jiff
   - [x] Migrated `complement` to jiff
@@ -117,7 +117,7 @@
   - [x] Migrated `remove_overlap` to jiff
   - [x] Migrated `set_ops` to jiff
   - [x] Migrated `shrink` to jiff
-  - [ ] Migrated `split` to jiff
+  - [x] Migrated `split` to jiff
 
 - [x] Migrated `intervals::absolute`'s tests to jiff
   - [x] Migrated `bound_pair`'s tests to jiff
@@ -147,7 +147,7 @@
   - [x] Migrated `convenience::absolute::half_bounded_interval`'s tests to jiff
 - [x] Migrated `time`'s tests to jiff
 - [x] Migrated `ops`'s tests to jiff
-- [ ] Migrated `intervals::ops`'s tests to jiff
+- [x] Migrated `intervals::ops`'s tests to jiff
   - [x] Migrated `abridge`'s tests to jiff
   - [x] Migrated `bound_containment`'s tests to jiff
   - [x] Migrated `bound_ord`'s tests to jiff
@@ -165,7 +165,6 @@
   - [x] Migrated `remove_overlap`'s tests to jiff
   - [x] Migrated `set_ops`'s tests to jiff
   - [x] Migrated `shrink`'s tests to jiff
-  - [ ] Migrated `split`'s tests to jiff
 
 - [x] Migrated `intervals::absolute`'s examples to jiff
   - [x] Migrated `bound_pair`'s examples to jiff
@@ -195,7 +194,7 @@
   - [x] Migrated `convenience::absolute::half_bounded_interval`'s examples to jiff
 - [x] Migrated `ops`'s examples to jiff
 - [x] Migrated `intervals`'s examples to jiff
-- [ ] Migrated `intervals::ops`'s examples to jiff
+- [x] Migrated `intervals::ops`'s examples to jiff
   - [x] Migrated `abridge`'s examples to jiff
   - [x] Migrated `bound_containment`'s examples to jiff
   - [x] Migrated `bound_ord`'s examples to jiff
