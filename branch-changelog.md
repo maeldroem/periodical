@@ -284,7 +284,7 @@
 
 - [x] Changed `BoundedRelativeInterval` to have a start and end offset
 
-- [ ] Renamed all occurrences of "from" and "to" to "start" and "end" respectively to avoid confusion
+- [x] Renamed all occurrences of "from" and "to" to "start" and "end" respectively to avoid confusion
   and to make it easier to refer to ("start time" is more explicit than "from time")
 - [x] Renamed "bounds" to "bound pair"
 

@@ -29,7 +29,7 @@ fn interval_new_with_inclusivity() {
 }
 
 #[test]
-fn interval_set_reference_time() {
+fn interval_set_reference() {
     let mut interval = HalfBoundedRelativeInterval::new_with_inclusivity(
         SignedDuration::from_hours(1),
         BoundInclusivity::Exclusive,
@@ -49,7 +49,7 @@ fn interval_set_reference_time() {
 }
 
 #[test]
-fn interval_set_reference_time_inclusivity() {
+fn interval_set_reference_inclusivity() {
     let mut interval = HalfBoundedRelativeInterval::new_with_inclusivity(
         SignedDuration::from_hours(1),
         BoundInclusivity::Exclusive,

@@ -4,8 +4,8 @@
 //! and import common structures.
 
 pub use crate::intervals::absolute::{
-    AbsoluteBound, AbsoluteBounds, AbsoluteInterval, BoundedAbsoluteInterval, EmptiableAbsoluteBounds,
-    HalfBoundedAbsoluteInterval, HasAbsoluteBounds, HasEmptiableAbsoluteBounds,
+    AbsoluteBound, AbsoluteBoundPair, AbsoluteInterval, BoundedAbsoluteInterval, EmptiableAbsoluteBoundPair, EmptiableAbsoluteInterval,
+    HalfBoundedAbsoluteInterval, HasAbsoluteBoundPair, HasEmptiableAbsoluteBoundPair,
 };
 pub use crate::intervals::meta::{Emptiable, HasBoundInclusivity, HasDuration, HasOpenness, HasRelativity};
 pub use crate::intervals::ops::abridge::Abridgable;
@@ -31,8 +31,8 @@ pub use crate::intervals::ops::remove_overlap_or_gap::{OverlapOrGapRemovalResult
 pub use crate::intervals::ops::set_ops::{Differentiable, Intersectable, SymmetricallyDifferentiable, Unitable};
 pub use crate::intervals::ops::shrink::{ShrinkableEndBound, ShrinkableStartBound};
 pub use crate::intervals::relative::{
-    BoundedRelativeInterval, EmptiableRelativeBounds, HalfBoundedRelativeInterval, HasEmptiableRelativeBounds,
-    HasRelativeBounds, RelativeBound, RelativeBounds, RelativeInterval,
+    BoundedRelativeInterval, EmptiableRelativeBoundPair, EmptiableRelativeInterval, HalfBoundedRelativeInterval, HasEmptiableRelativeBoundPair,
+    HasRelativeBoundPair, RelativeBound, RelativeBoundPair, RelativeInterval,
 };
 pub use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 pub use crate::iter::intervals::bounds::{AbsoluteBoundsIteratorDispatcher, RelativeBoundsIteratorDispatcher};

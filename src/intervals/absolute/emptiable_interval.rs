@@ -283,20 +283,20 @@ impl
     )> for EmptiableAbsoluteInterval
 {
     fn from(
-        (from_opt, to_opt): (
+        (start_opt, end_opt): (
             Option<(Timestamp, BoundInclusivity)>,
             Option<(Timestamp, BoundInclusivity)>,
         ),
     ) -> Self {
-        match (from_opt, to_opt) {
-            (Some((from, from_inclusivity)), Some((to, to_inclusivity))) => EmptiableAbsoluteInterval::Bounded(
-                BoundedAbsoluteInterval::new_with_inclusivity(from, from_inclusivity, to, to_inclusivity),
+        match (start_opt, end_opt) {
+            (Some((start, start_inclusivity)), Some((end, end_inclusivity))) => EmptiableAbsoluteInterval::Bounded(
+                BoundedAbsoluteInterval::new_with_inclusivity(start, start_inclusivity, end, end_inclusivity),
             ),
-            (Some((from, from_inclusivity)), None) => EmptiableAbsoluteInterval::HalfBounded(
-                HalfBoundedAbsoluteInterval::new_with_inclusivity(from, from_inclusivity, OpeningDirection::ToFuture),
+            (Some((start, start_inclusivity)), None) => EmptiableAbsoluteInterval::HalfBounded(
+                HalfBoundedAbsoluteInterval::new_with_inclusivity(start, start_inclusivity, OpeningDirection::ToFuture),
             ),
-            (None, Some((to, to_inclusivity))) => EmptiableAbsoluteInterval::HalfBounded(
-                HalfBoundedAbsoluteInterval::new_with_inclusivity(to, to_inclusivity, OpeningDirection::ToPast),
+            (None, Some((end, end_inclusivity))) => EmptiableAbsoluteInterval::HalfBounded(
+                HalfBoundedAbsoluteInterval::new_with_inclusivity(end, end_inclusivity, OpeningDirection::ToPast),
             ),
             (None, None) => EmptiableAbsoluteInterval::Unbounded(UnboundedInterval),
         }
@@ -343,7 +343,7 @@ impl
     )> for EmptiableAbsoluteInterval
 {
     fn from(
-        (is_empty, from_opt, to_opt): (
+        (is_empty, start_opt, end_opt): (
             bool,
             Option<(Timestamp, BoundInclusivity)>,
             Option<(Timestamp, BoundInclusivity)>,
@@ -353,15 +353,15 @@ impl
             return EmptiableAbsoluteInterval::Empty(EmptyInterval);
         }
 
-        match (from_opt, to_opt) {
-            (Some((from, from_inclusivity)), Some((to, to_inclusivity))) => EmptiableAbsoluteInterval::Bounded(
-                BoundedAbsoluteInterval::new_with_inclusivity(from, from_inclusivity, to, to_inclusivity),
+        match (start_opt, end_opt) {
+            (Some((start, start_inclusivity)), Some((end, end_inclusivity))) => EmptiableAbsoluteInterval::Bounded(
+                BoundedAbsoluteInterval::new_with_inclusivity(start, start_inclusivity, end, end_inclusivity),
             ),
-            (Some((from, from_inclusivity)), None) => EmptiableAbsoluteInterval::HalfBounded(
-                HalfBoundedAbsoluteInterval::new_with_inclusivity(from, from_inclusivity, OpeningDirection::ToFuture),
+            (Some((start, start_inclusivity)), None) => EmptiableAbsoluteInterval::HalfBounded(
+                HalfBoundedAbsoluteInterval::new_with_inclusivity(start, start_inclusivity, OpeningDirection::ToFuture),
             ),
-            (None, Some((to, to_inclusivity))) => EmptiableAbsoluteInterval::HalfBounded(
-                HalfBoundedAbsoluteInterval::new_with_inclusivity(to, to_inclusivity, OpeningDirection::ToPast),
+            (None, Some((end, end_inclusivity))) => EmptiableAbsoluteInterval::HalfBounded(
+                HalfBoundedAbsoluteInterval::new_with_inclusivity(end, end_inclusivity, OpeningDirection::ToPast),
             ),
             (None, None) => EmptiableAbsoluteInterval::Unbounded(UnboundedInterval),
         }
