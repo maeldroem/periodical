@@ -140,7 +140,7 @@
     - [ ] Migrated `intersect` to jiff
     - [ ] Migrated `sym_diff` to jiff
     - [ ] Migrated `unite` to jiff
-  - [ ] Migrated `split` to jiff
+  - [x] Migrated `split` to jiff
   - [x] Migrated `united_bounds` to jiff
 
 - [x] Migrated `intervals::absolute`'s tests to jiff
@@ -204,7 +204,7 @@
     - [ ] Migrated `intersect`'s tests to jiff
     - [ ] Migrated `sym_diff`'s tests to jiff
     - [ ] Migrated `unite`'s tests to jiff
-  - [ ] Migrated `split`'s tests to jiff
+  - [x] Migrated `split`'s tests to jiff
   - [x] Migrated `united_bounds`'s tests to jiff
 
 - [x] Migrated `intervals::absolute`'s examples to jiff
@@ -270,7 +270,7 @@
     - [ ] Migrated `intersect`'s examples to jiff
     - [ ] Migrated `sym_diff`'s examples to jiff
     - [ ] Migrated `unite`'s examples to jiff
-  - [ ] Migrated `split`'s examples to jiff
+  - [x] Migrated `split`'s examples to jiff
   - [x] Migrated `united_bounds`'s examples to jiff
 
 - [x] Updated `time` tests to check new structures
