@@ -132,7 +132,7 @@
   - [x] Migrated `set_ops` to jiff
   - [x] Migrated `shrink` to jiff
   - [x] Migrated `split` to jiff
-- [ ] Migrated `intervals::iter::intervals` to jiff
+- [x] Migrated `intervals::iter::intervals` to jiff
   - [x] Migrated `bounds` to jiff
   - [x] Migrated `complement` to jiff
   - [x] Migrated `layered_bounds` to jiff
@@ -142,11 +142,11 @@
     - [x] Migrated `sym_diff` to jiff
     - [x] Migrated `unite` to jiff
   - [x] Migrated `remove_empty` to jiff
-  - [ ] Migrated `set_ops` to jiff
-    - [ ] Migrated `diff` to jiff
-    - [ ] Migrated `intersect` to jiff
-    - [ ] Migrated `sym_diff` to jiff
-    - [ ] Migrated `unite` to jiff
+  - [x] Migrated `set_ops` to jiff
+    - [x] Migrated `diff` to jiff
+    - [x] Migrated `intersect` to jiff
+    - [x] Migrated `sym_diff` to jiff
+    - [x] Migrated `unite` to jiff
   - [x] Migrated `split` to jiff
   - [x] Migrated `united_bounds` to jiff
 
@@ -196,7 +196,7 @@
   - [x] Migrated `remove_overlap`'s tests to jiff
   - [x] Migrated `set_ops`'s tests to jiff
   - [x] Migrated `shrink`'s tests to jiff
-- [ ] Migrated `intervals::iter::intervals`'s tests to jiff
+- [x] Migrated `intervals::iter::intervals`'s tests to jiff
   - [x] Migrated `bounds`'s tests to jiff
   - [x] Migrated `complement`'s tests to jiff
   - [x] Migrated `layered_bounds`'s tests to jiff
@@ -206,11 +206,11 @@
     - [x] Migrated `sym_diff`'s tests to jiff
     - [x] Migrated `unite`'s tests to jiff
   - [x] Migrated `remove_empty`'s tests to jiff
-  - [ ] Migrated `set_ops`'s tests to jiff
-    - [ ] Migrated `diff`'s tests to jiff
-    - [ ] Migrated `intersect`'s tests to jiff
-    - [ ] Migrated `sym_diff`'s tests to jiff
-    - [ ] Migrated `unite`'s tests to jiff
+  - [x] Migrated `set_ops`'s tests to jiff
+    - [x] Migrated `diff`'s tests to jiff
+    - [x] Migrated `intersect`'s tests to jiff
+    - [x] Migrated `sym_diff`'s tests to jiff
+    - [x] Migrated `unite`'s tests to jiff
   - [x] Migrated `split`'s tests to jiff
   - [x] Migrated `united_bounds`'s tests to jiff
 
@@ -261,8 +261,7 @@
   - [x] Migrated `remove_overlap`'s examples to jiff
   - [x] Migrated `set_ops`'s examples to jiff
   - [x] Migrated `shrink`'s examples to jiff
-  - [ ] Migrated `split`'s examples to jiff
-- [ ] Migrated `intervals::iter::intervals`'s examples to jiff
+- [x] Migrated `intervals::iter::intervals`'s examples to jiff
   - [x] Migrated `bounds`'s examples to jiff
   - [x] Migrated `complement`'s examples to jiff
   - [x] Migrated `layered_bounds`'s examples to jiff
@@ -272,11 +271,11 @@
     - [x] Migrated `sym_diff`'s examples to jiff
     - [x] Migrated `unite`'s examples to jiff
   - [x] Migrated `remove_empty`'s examples to jiff
-  - [ ] Migrated `set_ops`'s examples to jiff
-    - [ ] Migrated `diff`'s examples to jiff
-    - [ ] Migrated `intersect`'s examples to jiff
-    - [ ] Migrated `sym_diff`'s examples to jiff
-    - [ ] Migrated `unite`'s examples to jiff
+  - [x] Migrated `set_ops`'s examples to jiff
+    - [x] Migrated `diff`'s examples to jiff
+    - [x] Migrated `intersect`'s examples to jiff
+    - [x] Migrated `sym_diff`'s examples to jiff
+    - [x] Migrated `unite`'s examples to jiff
   - [x] Migrated `split`'s examples to jiff
   - [x] Migrated `united_bounds`'s examples to jiff
 

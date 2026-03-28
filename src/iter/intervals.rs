@@ -20,7 +20,7 @@ pub mod complement;
 pub mod layered_bounds;
 pub mod layered_bounds_set_ops;
 pub mod remove_empty;
-// pub mod set_ops;
+pub mod set_ops;
 // pub mod split;
 pub mod united_bounds;
 
