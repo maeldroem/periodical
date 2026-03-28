@@ -18,7 +18,7 @@ use crate::utils::tests;
 pub mod bounds;
 pub mod complement;
 pub mod layered_bounds;
-// pub mod layered_bounds_set_ops;
+pub mod layered_bounds_set_ops;
 pub mod remove_empty;
 // pub mod set_ops;
 // pub mod split;
