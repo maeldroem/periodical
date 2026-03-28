@@ -49,6 +49,13 @@
 - [ ] Rename `{AbsoluteInterval, RelativeInterval}::to_emptiable_interval()` to `to_emptiable()`
 - [ ] Replace requirements on `Timestamp` in arguments (like absolute intervals) by `Into<Timestamp>`
 - [ ] Split `iter::intervals::layered_bounds` into their common/absolute/relative parts
+- [ ] Replace ACK'd (search ACK) panics with a panic check that will output a proper panic message
+- [ ] Vec wrapper that has the invariant that all contained intervals should be consecutive (interval stack?)
+      (include possibility of adding a specific spacing required? negative/positive)
+- [ ] Method to check if one interval is consecutive compared to another
+- [ ] Rule enforcement system (given a set of preset or custom rules, check a set of intervals)
+      (add "recoverable" rules where actions can be take to adjust the interval or intervalS in order to satisfy
+      the rule)
 
 # Changelog
 
@@ -129,11 +136,11 @@
   - [x] Migrated `bounds` to jiff
   - [x] Migrated `complement` to jiff
   - [x] Migrated `layered_bounds` to jiff
-  - [ ] Migrated `layered_bounds_set_ops` to jiff
-    - [ ] Migrated `diff` to jiff
-    - [ ] Migrated `intersect` to jiff
-    - [ ] Migrated `sym_diff` to jiff
-    - [ ] Migrated `unite` to jiff
+  - [x] Migrated `layered_bounds_set_ops` to jiff
+    - [x] Migrated `diff` to jiff
+    - [x] Migrated `intersect` to jiff
+    - [x] Migrated `sym_diff` to jiff
+    - [x] Migrated `unite` to jiff
   - [x] Migrated `remove_empty` to jiff
   - [ ] Migrated `set_ops` to jiff
     - [ ] Migrated `diff` to jiff
@@ -193,11 +200,11 @@
   - [x] Migrated `bounds`'s tests to jiff
   - [x] Migrated `complement`'s tests to jiff
   - [x] Migrated `layered_bounds`'s tests to jiff
-  - [ ] Migrated `layered_bounds_set_ops`'s tests to jiff
-    - [ ] Migrated `diff`'s tests to jiff
-    - [ ] Migrated `intersect`'s tests to jiff
-    - [ ] Migrated `sym_diff`'s tests to jiff
-    - [ ] Migrated `unite`'s tests to jiff
+  - [x] Migrated `layered_bounds_set_ops`'s tests to jiff
+    - [x] Migrated `diff`'s tests to jiff
+    - [x] Migrated `intersect`'s tests to jiff
+    - [x] Migrated `sym_diff`'s tests to jiff
+    - [x] Migrated `unite`'s tests to jiff
   - [x] Migrated `remove_empty`'s tests to jiff
   - [ ] Migrated `set_ops`'s tests to jiff
     - [ ] Migrated `diff`'s tests to jiff
@@ -259,11 +266,11 @@
   - [x] Migrated `bounds`'s examples to jiff
   - [x] Migrated `complement`'s examples to jiff
   - [x] Migrated `layered_bounds`'s examples to jiff
-  - [ ] Migrated `layered_bounds_set_ops`'s examples to jiff
-    - [ ] Migrated `diff`'s examples to jiff
-    - [ ] Migrated `intersect`'s examples to jiff
-    - [ ] Migrated `sym_diff`'s examples to jiff
-    - [ ] Migrated `unite`'s examples to jiff
+  - [x] Migrated `layered_bounds_set_ops`'s examples to jiff
+    - [x] Migrated `diff`'s examples to jiff
+    - [x] Migrated `intersect`'s examples to jiff
+    - [x] Migrated `sym_diff`'s examples to jiff
+    - [x] Migrated `unite`'s examples to jiff
   - [x] Migrated `remove_empty`'s examples to jiff
   - [ ] Migrated `set_ops`'s examples to jiff
     - [ ] Migrated `diff`'s examples to jiff

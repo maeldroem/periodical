@@ -1,280 +1,289 @@
-use chrono::{Duration, Utc};
+use std::error::Error;
 
-use crate::intervals::absolute::{AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound};
+use jiff::{SignedDuration, Zoned};
+
+use crate::intervals::absolute::{AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound};
 use crate::intervals::meta::BoundInclusivity;
-use crate::intervals::relative::{RelativeBounds, RelativeEndBound, RelativeFiniteBound, RelativeStartBound};
+use crate::intervals::relative::{RelativeBoundPair, RelativeEndBound, RelativeFiniteBound, RelativeStartBound};
 use crate::iter::intervals::bounds::{AbsoluteBoundsIteratorDispatcher, RelativeBoundsIteratorDispatcher};
 use crate::iter::intervals::layered_bounds::{
     LayeredBoundsState, LayeredBoundsStateChangeAtAbsoluteBound, LayeredBoundsStateChangeAtRelativeBound,
 };
-use crate::test_utils::date;
 
 use super::diff::*;
 
-#[test]
-fn create_layered_abs_bounds_diff() {
-    let data = [
-        LayeredBoundsStateChangeAtAbsoluteBound::new(
-            LayeredBoundsState::NoLayers,
-            LayeredBoundsState::FirstLayer,
-            None,
-            Some(AbsoluteStartBound::InfinitePast),
-        ),
-        LayeredBoundsStateChangeAtAbsoluteBound::new(
-            LayeredBoundsState::FirstLayer,
-            LayeredBoundsState::SecondLayer,
-            Some(AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(
-                &Utc, 2025, 1, 1,
-            )))),
-            Some(AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Exclusive,
-            ))),
-        ),
-        LayeredBoundsStateChangeAtAbsoluteBound::new(
-            LayeredBoundsState::SecondLayer,
-            LayeredBoundsState::NoLayers,
-            Some(AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 5, 1),
-                BoundInclusivity::Exclusive,
-            ))),
-            Some(AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(
-                &Utc, 2025, 5, 1,
-            )))),
-        ),
-    ];
-
-    let _ = LayeredAbsoluteBoundsDifference::new(data.into_iter());
-}
-
-#[test]
-fn layered_abs_bounds_diff_run() {
-    // first layer:     [------2------]     [--6--] [8]
-    // second layer: [-1-] (-3-)  [-4-) [-5-]     [--7--]
-    let first_layer_data = [
-        // 2
-        AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 5))),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 25))),
-        ),
-        // 6
-        AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 2, 5))),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 2, 15))),
-        ),
-        // 8
-        AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 2, 17))),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 2, 23))),
-        ),
-    ];
-
-    let second_layer_data = [
-        // 1
-        AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 7))),
-        ),
-        // 3
-        AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 10),
-                BoundInclusivity::Exclusive,
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 15),
-                BoundInclusivity::Exclusive,
-            )),
-        ),
-        // 4
-        AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 20))),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 25),
-                BoundInclusivity::Exclusive,
-            )),
-        ),
-        // 5
-        AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 2, 1))),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 2, 5))),
-        ),
-        // 7
-        AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 2, 15))),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 2, 25))),
-        ),
-    ];
-
-    assert_eq!(
-        first_layer_data
-            .abs_bounds_iter()
-            .unite_bounds()
-            .layer(second_layer_data.abs_bounds_iter().unite_bounds())
-            .abs_difference_layered()
-            .collect::<Vec<_>>(),
-        vec![
-            AbsoluteBounds::new(
-                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 7),
+mod abs {
+    use super::*;
+    
+    #[test]
+    fn create() -> Result<(), Box<dyn Error>> {
+        let data = [
+            LayeredBoundsStateChangeAtAbsoluteBound::new(
+                LayeredBoundsState::NoLayers,
+                LayeredBoundsState::FirstLayer,
+                None,
+                Some(AbsoluteStartBound::InfinitePast),
+            ),
+            LayeredBoundsStateChangeAtAbsoluteBound::new(
+                LayeredBoundsState::FirstLayer,
+                LayeredBoundsState::SecondLayer,
+                Some(AbsoluteEndBound::Finite(AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()))),
+                Some(AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
-                )),
-                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 10))),
+                ))),
             ),
-            AbsoluteBounds::new(
-                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 15))),
-                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 20),
+            LayeredBoundsStateChangeAtAbsoluteBound::new(
+                LayeredBoundsState::SecondLayer,
+                LayeredBoundsState::NoLayers,
+                Some(AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-05-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
-                )),
+                ))),
+                Some(AbsoluteStartBound::Finite(AbsoluteFiniteBound::new("2025-05-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()))),
             ),
-            AbsoluteBounds::new(
-                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 25))),
-                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 25))),
+        ];
+    
+        let _ = LayeredAbsoluteBoundsDifference::new(data.into_iter());
+
+        Ok(())
+    }
+    
+    #[test]
+    fn run() -> Result<(), Box<dyn Error>> {
+        // first layer:     [------2------]     [--6--] [8]
+        // second layer: [-1-] (-3-)  [-4-) [-5-]     [--7--]
+        let first_layer_data = [
+            // 2
+            AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new("2025-01-05 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new("2025-01-25 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
             ),
-            AbsoluteBounds::new(
+            // 6
+            AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new("2025-02-05 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new("2025-02-15 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+            ),
+            // 8
+            AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new("2025-02-17 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new("2025-02-23 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+            ),
+        ];
+    
+        let second_layer_data = [
+            // 1
+            AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new("2025-01-07 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+            ),
+            // 3
+            AbsoluteBoundPair::new(
                 AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                    date(&Utc, 2025, 2, 5),
+                    "2025-01-10 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                 )),
                 AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                    date(&Utc, 2025, 2, 15),
+                    "2025-01-15 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                 )),
             ),
-        ],
-    );
+            // 4
+            AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new("2025-01-20 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-25 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Exclusive,
+                )),
+            ),
+            // 5
+            AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new("2025-02-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new("2025-02-05 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+            ),
+            // 7
+            AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new("2025-02-15 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new("2025-02-25 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+            ),
+        ];
+    
+        assert_eq!(
+            first_layer_data
+                .abs_bounds_iter()
+                .unite_bounds()
+                .layer(second_layer_data.abs_bounds_iter().unite_bounds())
+                .abs_difference_layered()
+                .collect::<Vec<_>>(),
+            vec![
+                AbsoluteBoundPair::new(
+                    AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                        "2025-01-07 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                        BoundInclusivity::Exclusive,
+                    )),
+                    AbsoluteEndBound::Finite(AbsoluteFiniteBound::new("2025-01-10 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+                ),
+                AbsoluteBoundPair::new(
+                    AbsoluteStartBound::Finite(AbsoluteFiniteBound::new("2025-01-15 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+                    AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                        "2025-01-20 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                        BoundInclusivity::Exclusive,
+                    )),
+                ),
+                AbsoluteBoundPair::new(
+                    AbsoluteStartBound::Finite(AbsoluteFiniteBound::new("2025-01-25 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+                    AbsoluteEndBound::Finite(AbsoluteFiniteBound::new("2025-01-25 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+                ),
+                AbsoluteBoundPair::new(
+                    AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                        "2025-02-05 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                        BoundInclusivity::Exclusive,
+                    )),
+                    AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                        "2025-02-15 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                        BoundInclusivity::Exclusive,
+                    )),
+                ),
+            ],
+        );
+
+        Ok(())
+    }
 }
 
-#[test]
-fn create_layered_rel_bounds_diff() {
-    let data = [
-        LayeredBoundsStateChangeAtRelativeBound::new(
-            LayeredBoundsState::NoLayers,
-            LayeredBoundsState::FirstLayer,
-            None,
-            Some(RelativeStartBound::InfinitePast),
-        ),
-        LayeredBoundsStateChangeAtRelativeBound::new(
-            LayeredBoundsState::FirstLayer,
-            LayeredBoundsState::SecondLayer,
-            Some(RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(101)))),
-            Some(RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                Duration::hours(101),
-                BoundInclusivity::Exclusive,
-            ))),
-        ),
-        LayeredBoundsStateChangeAtRelativeBound::new(
-            LayeredBoundsState::SecondLayer,
-            LayeredBoundsState::NoLayers,
-            Some(RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                Duration::hours(501),
-                BoundInclusivity::Exclusive,
-            ))),
-            Some(RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(
-                501,
-            )))),
-        ),
-    ];
-
-    let _ = LayeredRelativeBoundsDifference::new(data.into_iter());
-}
-
-#[test]
-fn layered_rel_bounds_diff_run() {
-    // first layer:     [------2------]     [--6--] [8]
-    // second layer: [-1-] (-3-)  [-4-) [-5-]     [--7--]
-    let first_layer_data = [
-        // 2
-        RelativeBounds::new(
-            RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(105))),
-            RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(125))),
-        ),
-        // 6
-        RelativeBounds::new(
-            RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(205))),
-            RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(215))),
-        ),
-        // 8
-        RelativeBounds::new(
-            RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(217))),
-            RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(223))),
-        ),
-    ];
-
-    let second_layer_data = [
-        // 1
-        RelativeBounds::new(
-            RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(101))),
-            RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(107))),
-        ),
-        // 3
-        RelativeBounds::new(
-            RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                Duration::hours(110),
-                BoundInclusivity::Exclusive,
-            )),
-            RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                Duration::hours(115),
-                BoundInclusivity::Exclusive,
-            )),
-        ),
-        // 4
-        RelativeBounds::new(
-            RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(120))),
-            RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                Duration::hours(125),
-                BoundInclusivity::Exclusive,
-            )),
-        ),
-        // 5
-        RelativeBounds::new(
-            RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(201))),
-            RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(205))),
-        ),
-        // 7
-        RelativeBounds::new(
-            RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(215))),
-            RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(225))),
-        ),
-    ];
-
-    assert_eq!(
-        first_layer_data
-            .rel_bounds_iter()
-            .unite_bounds()
-            .layer(second_layer_data.rel_bounds_iter().unite_bounds())
-            .rel_difference_layered()
-            .collect::<Vec<_>>(),
-        vec![
-            RelativeBounds::new(
-                RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                    Duration::hours(107),
+mod rel {
+    use super::*;
+    
+    #[test]
+    fn create() {
+        let data = [
+            LayeredBoundsStateChangeAtRelativeBound::new(
+                LayeredBoundsState::NoLayers,
+                LayeredBoundsState::FirstLayer,
+                None,
+                Some(RelativeStartBound::InfinitePast),
+            ),
+            LayeredBoundsStateChangeAtRelativeBound::new(
+                LayeredBoundsState::FirstLayer,
+                LayeredBoundsState::SecondLayer,
+                Some(RelativeEndBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(101)))),
+                Some(RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+                    SignedDuration::from_hours(101),
                     BoundInclusivity::Exclusive,
-                )),
-                RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(110))),
+                ))),
             ),
-            RelativeBounds::new(
-                RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(115))),
-                RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                    Duration::hours(120),
+            LayeredBoundsStateChangeAtRelativeBound::new(
+                LayeredBoundsState::SecondLayer,
+                LayeredBoundsState::NoLayers,
+                Some(RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+                    SignedDuration::from_hours(501),
                     BoundInclusivity::Exclusive,
-                )),
+                ))),
+                Some(RelativeStartBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(
+                    501,
+                )))),
             ),
-            RelativeBounds::new(
-                RelativeStartBound::Finite(RelativeFiniteBound::new(Duration::hours(125))),
-                RelativeEndBound::Finite(RelativeFiniteBound::new(Duration::hours(125))),
+        ];
+    
+        let _ = LayeredRelativeBoundsDifference::new(data.into_iter());
+    }
+    
+    #[test]
+    fn run() {
+        // first layer:     [------2------]     [--6--] [8]
+        // second layer: [-1-] (-3-)  [-4-) [-5-]     [--7--]
+        let first_layer_data = [
+            // 2
+            RelativeBoundPair::new(
+                RelativeStartBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(105))),
+                RelativeEndBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(125))),
             ),
-            RelativeBounds::new(
+            // 6
+            RelativeBoundPair::new(
+                RelativeStartBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(205))),
+                RelativeEndBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(215))),
+            ),
+            // 8
+            RelativeBoundPair::new(
+                RelativeStartBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(217))),
+                RelativeEndBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(223))),
+            ),
+        ];
+    
+        let second_layer_data = [
+            // 1
+            RelativeBoundPair::new(
+                RelativeStartBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(101))),
+                RelativeEndBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(107))),
+            ),
+            // 3
+            RelativeBoundPair::new(
                 RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                    Duration::hours(205),
+                    SignedDuration::from_hours(110),
                     BoundInclusivity::Exclusive,
                 )),
                 RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                    Duration::hours(215),
+                    SignedDuration::from_hours(115),
                     BoundInclusivity::Exclusive,
                 )),
             ),
-        ],
-    );
+            // 4
+            RelativeBoundPair::new(
+                RelativeStartBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(120))),
+                RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+                    SignedDuration::from_hours(125),
+                    BoundInclusivity::Exclusive,
+                )),
+            ),
+            // 5
+            RelativeBoundPair::new(
+                RelativeStartBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(201))),
+                RelativeEndBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(205))),
+            ),
+            // 7
+            RelativeBoundPair::new(
+                RelativeStartBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(215))),
+                RelativeEndBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(225))),
+            ),
+        ];
+    
+        assert_eq!(
+            first_layer_data
+                .rel_bounds_iter()
+                .unite_bounds()
+                .layer(second_layer_data.rel_bounds_iter().unite_bounds())
+                .rel_difference_layered()
+                .collect::<Vec<_>>(),
+            vec![
+                RelativeBoundPair::new(
+                    RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+                        SignedDuration::from_hours(107),
+                        BoundInclusivity::Exclusive,
+                    )),
+                    RelativeEndBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(110))),
+                ),
+                RelativeBoundPair::new(
+                    RelativeStartBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(115))),
+                    RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+                        SignedDuration::from_hours(120),
+                        BoundInclusivity::Exclusive,
+                    )),
+                ),
+                RelativeBoundPair::new(
+                    RelativeStartBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(125))),
+                    RelativeEndBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(125))),
+                ),
+                RelativeBoundPair::new(
+                    RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+                        SignedDuration::from_hours(205),
+                        BoundInclusivity::Exclusive,
+                    )),
+                    RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+                        SignedDuration::from_hours(215),
+                        BoundInclusivity::Exclusive,
+                    )),
+                ),
+            ],
+        );
+    }
 }

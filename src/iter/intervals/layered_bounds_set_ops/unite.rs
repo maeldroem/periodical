@@ -7,10 +7,9 @@
 //! # Examples
 //!
 //! ```
-//! # use chrono::{DateTime, Utc};
-//! # use periodical::intervals::absolute::{
-//! #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
-//! # };
+//! # use std::error::Error;
+//! # use jiff::Zoned;
+//! # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
 //! # use periodical::intervals::meta::BoundInclusivity;
 //! # use periodical::iter::intervals::bounds::AbsoluteBoundsIteratorDispatcher;
 //! # use periodical::iter::intervals::layered_bounds_set_ops::LayeredAbsoluteBoundsUnionIteratorDispatcher;
@@ -18,40 +17,40 @@
 //! #     LayeredAbsoluteBounds, LayeredBoundsState, LayeredBoundsStateChangeAtAbsoluteBound,
 //! # };
 //! let first_layer_intervals = [
-//!     AbsoluteBounds::new(
-//!         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
-//!         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
+//!     AbsoluteBoundPair::new(
+//!         AbsoluteFiniteBound::new(
+//!             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!         ).to_start_bound(),
+//!         AbsoluteFiniteBound::new(
+//!             "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!         ).to_end_bound(),
 //!     ),
-//!     AbsoluteBounds::new(
-//!         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 13:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
-//!         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
+//!     AbsoluteBoundPair::new(
+//!         AbsoluteFiniteBound::new(
+//!             "2025-01-01 13:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!         ).to_start_bound(),
+//!         AbsoluteFiniteBound::new(
+//!             "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!         ).to_end_bound(),
 //!     ),
 //! ];
 //!
 //! let second_layer_intervals = [
-//!     AbsoluteBounds::new(
-//!         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 07:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
-//!         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 11:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
+//!     AbsoluteBoundPair::new(
+//!         AbsoluteFiniteBound::new(
+//!             "2025-01-01 07:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!         ).to_start_bound(),
+//!         AbsoluteFiniteBound::new(
+//!             "2025-01-01 11:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!         ).to_end_bound(),
 //!     ),
-//!     AbsoluteBounds::new(
-//!         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
-//!         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 18:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
+//!     AbsoluteBoundPair::new(
+//!         AbsoluteFiniteBound::new(
+//!             "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!         ).to_start_bound(),
+//!         AbsoluteFiniteBound::new(
+//!             "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!         ).to_end_bound(),
 //!     ),
 //! ];
 //!
@@ -63,31 +62,31 @@
 //!         .abs_unite_layered()
 //!         .collect::<Vec<_>>(),
 //!     vec![
-//!         AbsoluteBounds::new(
-//!             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!                 "2025-01-01 07:00:00Z".parse::<DateTime<Utc>>()?,
-//!             )),
-//!             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-//!                 "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
-//!             )),
+//!         AbsoluteBoundPair::new(
+//!             AbsoluteFiniteBound::new(
+//!                 "2025-01-01 07:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!             ).to_start_bound(),
+//!             AbsoluteFiniteBound::new(
+//!                 "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!             ).to_end_bound(),
 //!         ),
-//!         AbsoluteBounds::new(
-//!             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!                 "2025-01-01 13:00:00Z".parse::<DateTime<Utc>>()?,
-//!             )),
-//!             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-//!                 "2025-01-01 18:00:00Z".parse::<DateTime<Utc>>()?,
-//!             )),
+//!         AbsoluteBoundPair::new(
+//!             AbsoluteFiniteBound::new(
+//!                 "2025-01-01 13:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!             ).to_start_bound(),
+//!             AbsoluteFiniteBound::new(
+//!                 "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!             ).to_end_bound(),
 //!         ),
 //!     ],
 //! );
-//! # Ok::<(), chrono::format::ParseError>(())
+//! # Ok::<(), Box<dyn Error>>(())
 //! ```
 
 use std::iter::FusedIterator;
 
-use crate::intervals::absolute::AbsoluteBounds;
-use crate::intervals::relative::RelativeBounds;
+use crate::intervals::absolute::AbsoluteBoundPair;
+use crate::intervals::relative::RelativeBoundPair;
 use crate::iter::intervals::layered_bounds::{
     LayeredBoundsState, LayeredBoundsStateChangeAtAbsoluteBound, LayeredBoundsStateChangeAtRelativeBound,
 };
@@ -130,7 +129,7 @@ impl<I> Iterator for LayeredAbsoluteBoundsUnion<I>
 where
     I: Iterator<Item = LayeredBoundsStateChangeAtAbsoluteBound>,
 {
-    type Item = AbsoluteBounds;
+    type Item = AbsoluteBoundPair;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.exhausted {
@@ -172,7 +171,7 @@ where
                     );
                 };
 
-                return Some(AbsoluteBounds::new(start, end));
+                return Some(AbsoluteBoundPair::new(start, end));
             }
         }
     }
@@ -248,7 +247,7 @@ impl<I> Iterator for LayeredRelativeBoundsUnion<I>
 where
     I: Iterator<Item = LayeredBoundsStateChangeAtRelativeBound>,
 {
-    type Item = RelativeBounds;
+    type Item = RelativeBoundPair;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.exhausted {
@@ -290,7 +289,7 @@ where
                     );
                 };
 
-                return Some(RelativeBounds::new(start, end));
+                return Some(RelativeBoundPair::new(start, end));
             }
         }
     }
