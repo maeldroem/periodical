@@ -8,48 +8,47 @@
 //! # Examples
 //!
 //! ```
-//! # use chrono::{DateTime, Utc};
-//! # use periodical::intervals::absolute::{
-//! #     AbsoluteBound, AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
-//! # };
+//! # use std::error::Error;
+//! # use jiff::Zoned;
+//! # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
 //! # use periodical::iter::intervals::bounds::AbsoluteBoundsIteratorDispatcher;
 //! let intervals = [
-//!     AbsoluteBounds::new(
-//!         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
-//!         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 11:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
+//!     AbsoluteBoundPair::new(
+//!         AbsoluteFiniteBound::new(
+//!             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!         ).to_start_bound(),
+//!         AbsoluteFiniteBound::new(
+//!             "2025-01-01 11:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!         ).to_end_bound(),
 //!     ),
-//!     AbsoluteBounds::new(
-//!         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
-//!         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
+//!     AbsoluteBoundPair::new(
+//!         AbsoluteFiniteBound::new(
+//!             "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!         ).to_start_bound(),
+//!         AbsoluteFiniteBound::new(
+//!             "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!         ).to_end_bound(),
 //!     ),
 //! ];
 //!
 //! assert_eq!(
 //!     intervals.abs_bounds_iter().collect::<Vec<_>>(),
 //!     vec![
-//!         AbsoluteBound::Start(AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-//!         ))),
-//!         AbsoluteBound::End(AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 11:00:00Z".parse::<DateTime<Utc>>()?,
-//!         ))),
-//!         AbsoluteBound::Start(AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
-//!         ))),
-//!         AbsoluteBound::End(AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
-//!         ))),
+//!         AbsoluteFiniteBound::new(
+//!             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!         ).to_start_bound().to_bound(),
+//!         AbsoluteFiniteBound::new(
+//!             "2025-01-01 11:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!         ).to_end_bound().to_bound(),
+//!         AbsoluteFiniteBound::new(
+//!             "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!         ).to_start_bound().to_bound(),
+//!         AbsoluteFiniteBound::new(
+//!             "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!         ).to_end_bound().to_bound(),
 //!     ],
 //! );
-//! # Ok::<(), chrono::format::ParseError>(())
+//! # Ok::<(), Box<dyn Error>>(())
 //! ```
 
 use std::iter::{FusedIterator, Peekable};
@@ -57,9 +56,9 @@ use std::iter::{FusedIterator, Peekable};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use crate::intervals::absolute::{AbsoluteBound, AbsoluteBounds};
+use crate::intervals::absolute::{AbsoluteBound, AbsoluteBoundPair};
 use crate::intervals::bound_position::BoundPosition;
-use crate::intervals::relative::{RelativeBound, RelativeBounds};
+use crate::intervals::relative::{RelativeBound, RelativeBoundPair};
 use crate::iter::intervals::layered_bounds::{LayeredAbsoluteBounds, LayeredRelativeBounds};
 use crate::iter::intervals::united_bounds::{AbsoluteUnitedBoundsIter, RelativeUnitedBoundsIter};
 
@@ -67,7 +66,7 @@ use crate::iter::intervals::united_bounds::{AbsoluteUnitedBoundsIter, RelativeUn
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub struct AbsoluteBoundsIter {
-    bounds: Vec<AbsoluteBounds>,
+    bounds: Vec<AbsoluteBoundPair>,
     position: BoundPosition,
     initd: bool, // whether the iterator was just initialized
     exhausted: bool,
@@ -78,7 +77,7 @@ impl AbsoluteBoundsIter {
     #[must_use]
     pub fn new<I>(iter: I) -> Self
     where
-        I: Iterator<Item = AbsoluteBounds>,
+        I: Iterator<Item = AbsoluteBoundPair>,
     {
         AbsoluteBoundsIter {
             bounds: iter.collect::<Vec<_>>(),
@@ -95,42 +94,41 @@ impl AbsoluteBoundsIter {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Utc};
-    /// # use periodical::intervals::absolute::{
-    /// #     AbsoluteBound, AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
-    /// # };
+    /// # use std::error::Error;
+    /// # use jiff::Zoned;
+    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
     /// # use periodical::iter::intervals::bounds::AbsoluteBoundsIteratorDispatcher;
     /// let intervals = [
-    ///     AbsoluteBounds::new(
-    ///         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///             "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-    ///         )),
-    ///         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///             "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
-    ///         )),
+    ///     AbsoluteBoundPair::new(
+    ///         AbsoluteFiniteBound::new(
+    ///             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///         ).to_start_bound(),
+    ///         AbsoluteFiniteBound::new(
+    ///             "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///         ).to_end_bound(),
     ///     ),
-    ///     AbsoluteBounds::new(
-    ///         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///             "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
-    ///         )),
-    ///         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///             "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
-    ///         )),
+    ///     AbsoluteBoundPair::new(
+    ///         AbsoluteFiniteBound::new(
+    ///             "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///         ).to_start_bound(),
+    ///         AbsoluteFiniteBound::new(
+    ///             "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///         ).to_end_bound(),
     ///     ),
     /// ];
     ///
     /// assert_eq!(
     ///     intervals.abs_bounds_iter().unite_bounds().collect::<Vec<_>>(),
     ///     vec![
-    ///         AbsoluteBound::Start(AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///             "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-    ///         ))),
-    ///         AbsoluteBound::End(AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///             "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
-    ///         ))),
+    ///         AbsoluteFiniteBound::new(
+    ///             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///         ).to_start_bound().to_bound(),
+    ///         AbsoluteFiniteBound::new(
+    ///             "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///         ).to_end_bound().to_bound(),
     ///     ],
     /// );
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
     pub fn unite_bounds(self) -> AbsoluteUnitedBoundsIter<Peekable<impl Iterator<Item = AbsoluteBound>>> {
@@ -157,53 +155,52 @@ impl AbsoluteBoundsIter {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Utc};
-    /// # use periodical::intervals::absolute::{
-    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
-    /// # };
+    /// # use std::error::Error;
+    /// # use jiff::Zoned;
+    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
     /// # use periodical::iter::intervals::bounds::AbsoluteBoundsIteratorDispatcher;
     /// let first_layer_intervals = [
-    ///     AbsoluteBounds::new(
-    ///         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///             "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-    ///         )),
-    ///         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///             "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
-    ///         )),
+    ///     AbsoluteBoundPair::new(
+    ///         AbsoluteFiniteBound::new(
+    ///             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///         ).to_start_bound(),
+    ///         AbsoluteFiniteBound::new(
+    ///             "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///         ).to_end_bound(),
     ///     ),
-    ///     AbsoluteBounds::new(
-    ///         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///             "2025-01-01 13:00:00Z".parse::<DateTime<Utc>>()?,
-    ///         )),
-    ///         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///             "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
-    ///         )),
+    ///     AbsoluteBoundPair::new(
+    ///         AbsoluteFiniteBound::new(
+    ///             "2025-01-01 13:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///         ).to_start_bound(),
+    ///         AbsoluteFiniteBound::new(
+    ///             "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///         ).to_end_bound(),
     ///     ),
     /// ];
     ///
     /// let second_layer_intervals = [
-    ///     AbsoluteBounds::new(
-    ///         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///             "2025-01-01 07:00:00Z".parse::<DateTime<Utc>>()?,
-    ///         )),
-    ///         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///             "2025-01-01 11:00:00Z".parse::<DateTime<Utc>>()?,
-    ///         )),
+    ///     AbsoluteBoundPair::new(
+    ///         AbsoluteFiniteBound::new(
+    ///             "2025-01-01 07:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///         ).to_start_bound(),
+    ///         AbsoluteFiniteBound::new(
+    ///             "2025-01-01 11:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///         ).to_end_bound(),
     ///     ),
-    ///     AbsoluteBounds::new(
-    ///         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///             "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
-    ///         )),
-    ///         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///             "2025-01-01 18:00:00Z".parse::<DateTime<Utc>>()?,
-    ///         )),
+    ///     AbsoluteBoundPair::new(
+    ///         AbsoluteFiniteBound::new(
+    ///             "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///         ).to_start_bound(),
+    ///         AbsoluteFiniteBound::new(
+    ///             "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///         ).to_end_bound(),
     ///     ),
     /// ];
     ///
     /// let layered_bounds = first_layer_intervals
     ///     .abs_bounds_iter()
     ///     .unchecked_layer(second_layer_intervals.abs_bounds_iter());
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
     pub fn unchecked_layer(
@@ -245,39 +242,39 @@ impl FusedIterator for AbsoluteBoundsIter {}
 
 impl ExactSizeIterator for AbsoluteBoundsIter {}
 
-impl FromIterator<AbsoluteBounds> for AbsoluteBoundsIter {
+impl FromIterator<AbsoluteBoundPair> for AbsoluteBoundsIter {
     fn from_iter<I>(iter: I) -> Self
     where
-        I: IntoIterator<Item = AbsoluteBounds>,
+        I: IntoIterator<Item = AbsoluteBoundPair>,
     {
         AbsoluteBoundsIter::new(iter.into_iter())
     }
 }
 
-impl Extend<AbsoluteBounds> for AbsoluteBoundsIter {
+impl Extend<AbsoluteBoundPair> for AbsoluteBoundsIter {
     fn extend<I>(&mut self, iter: I)
     where
-        I: IntoIterator<Item = AbsoluteBounds>,
+        I: IntoIterator<Item = AbsoluteBoundPair>,
     {
         self.bounds.extend(iter);
     }
 }
 
 /// Iterator dispatcher trait for [`AbsoluteBoundsIter`]
-pub trait AbsoluteBoundsIteratorDispatcher: IntoIterator<Item = AbsoluteBounds> + Sized {
+pub trait AbsoluteBoundsIteratorDispatcher: IntoIterator<Item = AbsoluteBoundPair> + Sized {
     /// Creates an [`AbsoluteBoundsIter`] from the collection
     fn abs_bounds_iter(self) -> AbsoluteBoundsIter {
         AbsoluteBoundsIter::new(self.into_iter())
     }
 }
 
-impl<I> AbsoluteBoundsIteratorDispatcher for I where I: IntoIterator<Item = AbsoluteBounds> + Sized {}
+impl<I> AbsoluteBoundsIteratorDispatcher for I where I: IntoIterator<Item = AbsoluteBoundPair> + Sized {}
 
 /// Iterator of [`RelativeBound`] from relative intervals
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub struct RelativeBoundsIter {
-    bounds: Vec<RelativeBounds>,
+    bounds: Vec<RelativeBoundPair>,
     position: BoundPosition,
     initd: bool, // whether the iterator was just initialized
     exhausted: bool,
@@ -288,7 +285,7 @@ impl RelativeBoundsIter {
     #[must_use]
     pub fn new<I>(iter: I) -> Self
     where
-        I: Iterator<Item = RelativeBounds>,
+        I: Iterator<Item = RelativeBoundPair>,
     {
         RelativeBoundsIter {
             bounds: iter.collect::<Vec<_>>(),
@@ -305,39 +302,37 @@ impl RelativeBoundsIter {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::Duration;
-    /// # use periodical::intervals::relative::{
-    /// #     RelativeBound, RelativeBounds, RelativeEndBound, RelativeFiniteBound, RelativeStartBound,
-    /// # };
+    /// # use jiff::SignedDuration;
+    /// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBound};
     /// # use periodical::iter::intervals::bounds::RelativeBoundsIteratorDispatcher;
     /// let intervals = [
-    ///     RelativeBounds::new(
-    ///         RelativeStartBound::Finite(RelativeFiniteBound::new(
-    ///             Duration::hours(8),
-    ///         )),
-    ///         RelativeEndBound::Finite(RelativeFiniteBound::new(
-    ///             Duration::hours(14),
-    ///         )),
+    ///     RelativeBoundPair::new(
+    ///         RelativeFiniteBound::new(
+    ///             SignedDuration::from_hours(8),
+    ///         ).to_start_bound(),
+    ///         RelativeFiniteBound::new(
+    ///             SignedDuration::from_hours(14),
+    ///         ).to_end_bound(),
     ///     ),
-    ///     RelativeBounds::new(
-    ///         RelativeStartBound::Finite(RelativeFiniteBound::new(
-    ///             Duration::hours(12),
-    ///         )),
-    ///         RelativeEndBound::Finite(RelativeFiniteBound::new(
-    ///             Duration::hours(16),
-    ///         )),
+    ///     RelativeBoundPair::new(
+    ///         RelativeFiniteBound::new(
+    ///             SignedDuration::from_hours(12),
+    ///         ).to_start_bound(),
+    ///         RelativeFiniteBound::new(
+    ///             SignedDuration::from_hours(16),
+    ///         ).to_end_bound(),
     ///     ),
     /// ];
     ///
     /// assert_eq!(
     ///     intervals.rel_bounds_iter().unite_bounds().collect::<Vec<_>>(),
     ///     vec![
-    ///         RelativeBound::Start(RelativeStartBound::Finite(RelativeFiniteBound::new(
-    ///             Duration::hours(8),
-    ///         ))),
-    ///         RelativeBound::End(RelativeEndBound::Finite(RelativeFiniteBound::new(
-    ///             Duration::hours(16),
-    ///         ))),
+    ///         RelativeFiniteBound::new(
+    ///             SignedDuration::from_hours(8),
+    ///         ).to_start_bound().to_bound(),
+    ///         RelativeFiniteBound::new(
+    ///             SignedDuration::from_hours(16),
+    ///         ).to_end_bound().to_bound(),
     ///     ],
     /// );
     /// ```
@@ -366,46 +361,44 @@ impl RelativeBoundsIter {
     /// # Examples
     ///
     /// ```
-    /// # use chrono::Duration;
-    /// # use periodical::intervals::relative::{
-    /// #     RelativeBounds, RelativeEndBound, RelativeFiniteBound, RelativeStartBound,
-    /// # };
+    /// # use jiff::SignedDuration;
+    /// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBound};
     /// # use periodical::iter::intervals::bounds::RelativeBoundsIteratorDispatcher;
     /// let first_layer_intervals = [
-    ///     RelativeBounds::new(
-    ///         RelativeStartBound::Finite(RelativeFiniteBound::new(
-    ///             Duration::hours(8),
-    ///         )),
-    ///         RelativeEndBound::Finite(RelativeFiniteBound::new(
-    ///             Duration::hours(12),
-    ///         )),
+    ///     RelativeBoundPair::new(
+    ///         RelativeFiniteBound::new(
+    ///             SignedDuration::from_hours(8),
+    ///         ).to_start_bound(),
+    ///         RelativeFiniteBound::new(
+    ///             SignedDuration::from_hours(12),
+    ///         ).to_end_bound(),
     ///     ),
-    ///     RelativeBounds::new(
-    ///         RelativeStartBound::Finite(RelativeFiniteBound::new(
-    ///             Duration::hours(13),
-    ///         )),
-    ///         RelativeEndBound::Finite(RelativeFiniteBound::new(
-    ///             Duration::hours(16),
-    ///         )),
+    ///     RelativeBoundPair::new(
+    ///         RelativeFiniteBound::new(
+    ///             SignedDuration::from_hours(13),
+    ///         ).to_start_bound(),
+    ///         RelativeFiniteBound::new(
+    ///             SignedDuration::from_hours(16),
+    ///         ).to_end_bound(),
     ///     ),
     /// ];
     ///
     /// let second_layer_intervals = [
-    ///     RelativeBounds::new(
-    ///         RelativeStartBound::Finite(RelativeFiniteBound::new(
-    ///             Duration::hours(7),
-    ///         )),
-    ///         RelativeEndBound::Finite(RelativeFiniteBound::new(
-    ///             Duration::hours(11),
-    ///         )),
+    ///     RelativeBoundPair::new(
+    ///         RelativeFiniteBound::new(
+    ///             SignedDuration::from_hours(7),
+    ///         ).to_start_bound(),
+    ///         RelativeFiniteBound::new(
+    ///             SignedDuration::from_hours(11),
+    ///         ).to_end_bound(),
     ///     ),
-    ///     RelativeBounds::new(
-    ///         RelativeStartBound::Finite(RelativeFiniteBound::new(
-    ///             Duration::hours(14),
-    ///         )),
-    ///         RelativeEndBound::Finite(RelativeFiniteBound::new(
-    ///             Duration::hours(18),
-    ///         )),
+    ///     RelativeBoundPair::new(
+    ///         RelativeFiniteBound::new(
+    ///             SignedDuration::from_hours(14),
+    ///         ).to_start_bound(),
+    ///         RelativeFiniteBound::new(
+    ///             SignedDuration::from_hours(18),
+    ///         ).to_end_bound(),
     ///     ),
     /// ];
     ///
@@ -453,30 +446,30 @@ impl FusedIterator for RelativeBoundsIter {}
 
 impl ExactSizeIterator for RelativeBoundsIter {}
 
-impl FromIterator<RelativeBounds> for RelativeBoundsIter {
+impl FromIterator<RelativeBoundPair> for RelativeBoundsIter {
     fn from_iter<I>(iter: I) -> Self
     where
-        I: IntoIterator<Item = RelativeBounds>,
+        I: IntoIterator<Item = RelativeBoundPair>,
     {
         RelativeBoundsIter::new(iter.into_iter())
     }
 }
 
-impl Extend<RelativeBounds> for RelativeBoundsIter {
+impl Extend<RelativeBoundPair> for RelativeBoundsIter {
     fn extend<I>(&mut self, iter: I)
     where
-        I: IntoIterator<Item = RelativeBounds>,
+        I: IntoIterator<Item = RelativeBoundPair>,
     {
         self.bounds.extend(iter);
     }
 }
 
 /// Iterator dispatcher trait for [`RelativeBoundsIter`]
-pub trait RelativeBoundsIteratorDispatcher: IntoIterator<Item = RelativeBounds> + Sized {
+pub trait RelativeBoundsIteratorDispatcher: IntoIterator<Item = RelativeBoundPair> + Sized {
     /// Creates an [`RelativeBoundsIter`] from the collection
     fn rel_bounds_iter(self) -> RelativeBoundsIter {
         RelativeBoundsIter::new(self.into_iter())
     }
 }
 
-impl<I> RelativeBoundsIteratorDispatcher for I where I: IntoIterator<Item = RelativeBounds> + Sized {}
+impl<I> RelativeBoundsIteratorDispatcher for I where I: IntoIterator<Item = RelativeBoundPair> + Sized {}
