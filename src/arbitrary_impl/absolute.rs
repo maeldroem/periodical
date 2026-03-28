@@ -60,11 +60,11 @@ impl<'a> Arbitrary<'a> for HalfBoundedAbsoluteInterval {
     fn arbitrary(u: &mut Unstructured<'a>) -> arbitrary::Result<Self> {
         let timestamp_range = Timestamp::MIN.as_nanosecond()..=Timestamp::MAX.as_nanosecond();
 
-        let reference_time = Timestamp::from_nanosecond(u.int_in_range(timestamp_range)?)
+        let reference = Timestamp::from_nanosecond(u.int_in_range(timestamp_range)?)
             .or(Err(Error::IncorrectFormat))?;
 
         Ok(HalfBoundedAbsoluteInterval::new_with_inclusivity(
-            reference_time,
+            reference,
             BoundInclusivity::arbitrary(u)?,
             OpeningDirection::arbitrary(u)?,
         ))

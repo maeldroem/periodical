@@ -90,13 +90,13 @@ impl HalfBoundedRelativeInterval {
     #[must_use]
     pub fn new_with_inclusivity(
         reference: SignedDuration,
-        reference_time_inclusivity: BoundInclusivity,
+        reference_inclusivity: BoundInclusivity,
         opening_direction: OpeningDirection,
     ) -> Self {
         HalfBoundedRelativeInterval {
             reference,
             opening_direction,
-            reference_inclusivity: reference_time_inclusivity,
+            reference_inclusivity,
         }
     }
 

@@ -20,7 +20,7 @@ macro_rules! to_absolute_impl_reflective {
             impl ToAbsolute for $implementor {
                 type AbsoluteType = Self;
 
-                fn to_absolute<D>(&self, _reference_time: D) -> Self::AbsoluteType
+                fn to_absolute<D>(&self, _reference: D) -> Self::AbsoluteType
                 where
                     D: Into<Timestamp>,
                 {
@@ -37,7 +37,7 @@ macro_rules! to_relative_impl_reflective {
             impl ToRelative for $implementor {
                 type RelativeType = Self;
 
-                fn to_relative<D>(&self, _reference_time: D) -> Self::RelativeType
+                fn to_relative<D>(&self, _reference: D) -> Self::RelativeType
                 where
                     D: Into<Timestamp>,
                 {
@@ -118,7 +118,7 @@ pub trait ToAbsolute {
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    fn to_absolute<D>(&self, reference_time: D) -> Self::AbsoluteType
+    fn to_absolute<D>(&self, reference: D) -> Self::AbsoluteType
     where
         D: Into<Timestamp>;
 }
@@ -140,18 +140,18 @@ to_absolute_impl_reflective!([
 impl ToAbsolute for RelativeFiniteBound {
     type AbsoluteType = AbsoluteFiniteBound;
 
-    fn to_absolute<D>(&self, reference_time: D) -> Self::AbsoluteType
+    fn to_absolute<D>(&self, reference: D) -> Self::AbsoluteType
     where
         D: Into<Timestamp>,
     {
-        AbsoluteFiniteBound::new_with_inclusivity(reference_time.into() + self.offset(), self.inclusivity())
+        AbsoluteFiniteBound::new_with_inclusivity(reference.into() + self.offset(), self.inclusivity())
     }
 }
 
 impl ToAbsolute for RelativeStartBound {
     type AbsoluteType = AbsoluteStartBound;
 
-    fn to_absolute<D>(&self, reference_time: D) -> Self::AbsoluteType
+    fn to_absolute<D>(&self, reference: D) -> Self::AbsoluteType
     where
         D: Into<Timestamp>,
     {
@@ -159,7 +159,7 @@ impl ToAbsolute for RelativeStartBound {
             RelativeStartBound::InfinitePast => AbsoluteStartBound::InfinitePast,
             RelativeStartBound::Finite(relative_finite) => {
                 AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                    reference_time.into() + relative_finite.offset(),
+                    reference.into() + relative_finite.offset(),
                     relative_finite.inclusivity(),
                 ))
             },
@@ -170,7 +170,7 @@ impl ToAbsolute for RelativeStartBound {
 impl ToAbsolute for RelativeEndBound {
     type AbsoluteType = AbsoluteEndBound;
 
-    fn to_absolute<D>(&self, reference_time: D) -> Self::AbsoluteType
+    fn to_absolute<D>(&self, reference: D) -> Self::AbsoluteType
     where
         D: Into<Timestamp>,
     {
@@ -178,7 +178,7 @@ impl ToAbsolute for RelativeEndBound {
             RelativeEndBound::InfiniteFuture => AbsoluteEndBound::InfiniteFuture,
             RelativeEndBound::Finite(relative_finite) => {
                 AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                    reference_time.into() + relative_finite.offset(),
+                    reference.into() + relative_finite.offset(),
                     relative_finite.inclusivity(),
                 ))
             },
@@ -189,15 +189,15 @@ impl ToAbsolute for RelativeEndBound {
 impl ToAbsolute for RelativeBoundPair {
     type AbsoluteType = AbsoluteBoundPair;
 
-    fn to_absolute<D>(&self, reference_time: D) -> Self::AbsoluteType
+    fn to_absolute<D>(&self, reference: D) -> Self::AbsoluteType
     where
         D: Into<Timestamp>,
     {
-        let reference_time = reference_time.into();
+        let reference = reference.into();
 
         AbsoluteBoundPair::new(
-            self.rel_start().to_absolute(reference_time),
-            self.rel_end().to_absolute(reference_time),
+            self.rel_start().to_absolute(reference),
+            self.rel_end().to_absolute(reference),
         )
     }
 }
@@ -205,13 +205,13 @@ impl ToAbsolute for RelativeBoundPair {
 impl ToAbsolute for EmptiableRelativeBoundPair {
     type AbsoluteType = EmptiableAbsoluteBoundPair;
 
-    fn to_absolute<D>(&self, reference_time: D) -> Self::AbsoluteType
+    fn to_absolute<D>(&self, reference: D) -> Self::AbsoluteType
     where
         D: Into<Timestamp>,
     {
         match self {
             Self::Empty => EmptiableAbsoluteBoundPair::Empty,
-            Self::Bound(abs_bound_pair) => EmptiableAbsoluteBoundPair::Bound(abs_bound_pair.to_absolute(reference_time)),
+            Self::Bound(abs_bound_pair) => EmptiableAbsoluteBoundPair::Bound(abs_bound_pair.to_absolute(reference)),
         }
     }
 }
@@ -219,16 +219,16 @@ impl ToAbsolute for EmptiableRelativeBoundPair {
 impl ToAbsolute for BoundedRelativeInterval {
     type AbsoluteType = BoundedAbsoluteInterval;
 
-    fn to_absolute<D>(&self, reference_time: D) -> Self::AbsoluteType
+    fn to_absolute<D>(&self, reference: D) -> Self::AbsoluteType
     where
         D: Into<Timestamp>,
     {
-        let reference_time = reference_time.into();
+        let reference = reference.into();
 
         BoundedAbsoluteInterval::unchecked_new_with_inclusivity(
-            reference_time + self.start(),
+            reference + self.start(),
             self.start_inclusivity(),
-            reference_time + self.end(),
+            reference + self.end(),
             self.end_inclusivity(),
         )
     }
@@ -237,12 +237,12 @@ impl ToAbsolute for BoundedRelativeInterval {
 impl ToAbsolute for HalfBoundedRelativeInterval {
     type AbsoluteType = HalfBoundedAbsoluteInterval;
 
-    fn to_absolute<D>(&self, reference_time: D) -> Self::AbsoluteType
+    fn to_absolute<D>(&self, reference: D) -> Self::AbsoluteType
     where
         D: Into<Timestamp>,
     {
         HalfBoundedAbsoluteInterval::new_with_inclusivity(
-            reference_time.into() + self.reference(),
+            reference.into() + self.reference(),
             self.reference_inclusivity(),
             self.opening_direction(),
         )
@@ -252,14 +252,14 @@ impl ToAbsolute for HalfBoundedRelativeInterval {
 impl ToAbsolute for RelativeInterval {
     type AbsoluteType = AbsoluteInterval;
 
-    fn to_absolute<D>(&self, reference_time: D) -> Self::AbsoluteType
+    fn to_absolute<D>(&self, reference: D) -> Self::AbsoluteType
     where
         D: Into<Timestamp>,
     {
         match self {
-            Self::Bounded(bounded) => AbsoluteInterval::Bounded(bounded.to_absolute(reference_time)),
-            Self::HalfBounded(half_bounded) => AbsoluteInterval::HalfBounded(half_bounded.to_absolute(reference_time)),
-            Self::Unbounded(unbounded) => AbsoluteInterval::Unbounded(unbounded.to_absolute(reference_time)),
+            Self::Bounded(bounded) => AbsoluteInterval::Bounded(bounded.to_absolute(reference)),
+            Self::HalfBounded(half_bounded) => AbsoluteInterval::HalfBounded(half_bounded.to_absolute(reference)),
+            Self::Unbounded(unbounded) => AbsoluteInterval::Unbounded(unbounded.to_absolute(reference)),
         }
     }
 }
@@ -267,15 +267,15 @@ impl ToAbsolute for RelativeInterval {
 impl ToAbsolute for EmptiableRelativeInterval {
     type AbsoluteType = EmptiableAbsoluteInterval;
 
-    fn to_absolute<D>(&self, reference_time: D) -> Self::AbsoluteType
+    fn to_absolute<D>(&self, reference: D) -> Self::AbsoluteType
     where
         D: Into<Timestamp>,
     {
         match self {
-            Self::Bounded(bounded) => EmptiableAbsoluteInterval::Bounded(bounded.to_absolute(reference_time)),
-            Self::HalfBounded(half_bounded) => EmptiableAbsoluteInterval::HalfBounded(half_bounded.to_absolute(reference_time)),
-            Self::Unbounded(unbounded) => EmptiableAbsoluteInterval::Unbounded(unbounded.to_absolute(reference_time)),
-            Self::Empty(empty) => EmptiableAbsoluteInterval::Empty(empty.to_absolute(reference_time)),
+            Self::Bounded(bounded) => EmptiableAbsoluteInterval::Bounded(bounded.to_absolute(reference)),
+            Self::HalfBounded(half_bounded) => EmptiableAbsoluteInterval::HalfBounded(half_bounded.to_absolute(reference)),
+            Self::Unbounded(unbounded) => EmptiableAbsoluteInterval::Unbounded(unbounded.to_absolute(reference)),
+            Self::Empty(empty) => EmptiableAbsoluteInterval::Empty(empty.to_absolute(reference)),
         }
     }
 }
@@ -350,7 +350,7 @@ pub trait ToRelative {
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    fn to_relative<D>(&self, reference_time: D) -> Self::RelativeType
+    fn to_relative<D>(&self, reference: D) -> Self::RelativeType
     where
         D: Into<Timestamp>;
 }
@@ -372,18 +372,18 @@ to_relative_impl_reflective!([
 impl ToRelative for AbsoluteFiniteBound {
     type RelativeType = RelativeFiniteBound;
 
-    fn to_relative<D>(&self, reference_time: D) -> Self::RelativeType
+    fn to_relative<D>(&self, reference: D) -> Self::RelativeType
     where
         D: Into<Timestamp>,
     {
-        RelativeFiniteBound::new_with_inclusivity(self.time().duration_since(reference_time.into()), self.inclusivity())
+        RelativeFiniteBound::new_with_inclusivity(self.time().duration_since(reference.into()), self.inclusivity())
     }
 }
 
 impl ToRelative for AbsoluteStartBound {
     type RelativeType = RelativeStartBound;
 
-    fn to_relative<D>(&self, reference_time: D) -> Self::RelativeType
+    fn to_relative<D>(&self, reference: D) -> Self::RelativeType
     where
         D: Into<Timestamp>,
     {
@@ -391,7 +391,7 @@ impl ToRelative for AbsoluteStartBound {
             AbsoluteStartBound::InfinitePast => RelativeStartBound::InfinitePast,
             AbsoluteStartBound::Finite(absolute_finite) => {
                 RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                    absolute_finite.time().duration_since(reference_time.into()),
+                    absolute_finite.time().duration_since(reference.into()),
                     absolute_finite.inclusivity(),
                 ))
             },
@@ -402,7 +402,7 @@ impl ToRelative for AbsoluteStartBound {
 impl ToRelative for AbsoluteEndBound {
     type RelativeType = RelativeEndBound;
 
-    fn to_relative<D>(&self, reference_time: D) -> Self::RelativeType
+    fn to_relative<D>(&self, reference: D) -> Self::RelativeType
     where
         D: Into<Timestamp>,
     {
@@ -410,7 +410,7 @@ impl ToRelative for AbsoluteEndBound {
             AbsoluteEndBound::InfiniteFuture => RelativeEndBound::InfiniteFuture,
             AbsoluteEndBound::Finite(absolute_finite) => {
                 RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                    absolute_finite.time().duration_since(reference_time.into()),
+                    absolute_finite.time().duration_since(reference.into()),
                     absolute_finite.inclusivity(),
                 ))
             },
@@ -421,15 +421,15 @@ impl ToRelative for AbsoluteEndBound {
 impl ToRelative for AbsoluteBoundPair {
     type RelativeType = RelativeBoundPair;
 
-    fn to_relative<D>(&self, reference_time: D) -> Self::RelativeType
+    fn to_relative<D>(&self, reference: D) -> Self::RelativeType
     where
         D: Into<Timestamp>,
     {
-        let reference_time = reference_time.into();
+        let reference = reference.into();
 
         RelativeBoundPair::new(
-            self.abs_start().to_relative(reference_time),
-            self.abs_end().to_relative(reference_time),
+            self.abs_start().to_relative(reference),
+            self.abs_end().to_relative(reference),
         )
     }
 }
@@ -437,13 +437,13 @@ impl ToRelative for AbsoluteBoundPair {
 impl ToRelative for EmptiableAbsoluteBoundPair {
     type RelativeType = EmptiableRelativeBoundPair;
 
-    fn to_relative<D>(&self, reference_time: D) -> Self::RelativeType
+    fn to_relative<D>(&self, reference: D) -> Self::RelativeType
     where
         D: Into<Timestamp>,
     {
         match self {
             Self::Empty => EmptiableRelativeBoundPair::Empty,
-            Self::Bound(abs_bound_pair) => EmptiableRelativeBoundPair::Bound(abs_bound_pair.to_relative(reference_time)),
+            Self::Bound(abs_bound_pair) => EmptiableRelativeBoundPair::Bound(abs_bound_pair.to_relative(reference)),
         }
     }
 }
@@ -451,16 +451,16 @@ impl ToRelative for EmptiableAbsoluteBoundPair {
 impl ToRelative for BoundedAbsoluteInterval {
     type RelativeType = BoundedRelativeInterval;
 
-    fn to_relative<D>(&self, reference_time: D) -> Self::RelativeType
+    fn to_relative<D>(&self, reference: D) -> Self::RelativeType
     where
         D: Into<Timestamp>,
     {
-        let reference_time = reference_time.into();
+        let reference = reference.into();
 
         BoundedRelativeInterval::new_with_inclusivity(
-            self.start().duration_since(reference_time),
+            self.start().duration_since(reference),
             self.start_inclusivity(),
-            self.end().duration_since(reference_time),
+            self.end().duration_since(reference),
             self.end_inclusivity(),
         )
     }
@@ -469,12 +469,12 @@ impl ToRelative for BoundedAbsoluteInterval {
 impl ToRelative for HalfBoundedAbsoluteInterval {
     type RelativeType = HalfBoundedRelativeInterval;
 
-    fn to_relative<D>(&self, reference_time: D) -> Self::RelativeType
+    fn to_relative<D>(&self, reference: D) -> Self::RelativeType
     where
         D: Into<Timestamp>,
     {
         HalfBoundedRelativeInterval::new_with_inclusivity(
-            self.reference().duration_since(reference_time.into()),
+            self.reference().duration_since(reference.into()),
             self.reference_inclusivity(),
             self.opening_direction(),
         )
@@ -484,14 +484,14 @@ impl ToRelative for HalfBoundedAbsoluteInterval {
 impl ToRelative for AbsoluteInterval {
     type RelativeType = RelativeInterval;
 
-    fn to_relative<D>(&self, reference_time: D) -> Self::RelativeType
+    fn to_relative<D>(&self, reference: D) -> Self::RelativeType
     where
         D: Into<Timestamp>,
     {
         match self {
-            Self::Bounded(bounded) => RelativeInterval::Bounded(bounded.to_relative(reference_time)),
-            Self::HalfBounded(half_bounded) => RelativeInterval::HalfBounded(half_bounded.to_relative(reference_time)),
-            Self::Unbounded(unbounded) => RelativeInterval::Unbounded(unbounded.to_relative(reference_time)),
+            Self::Bounded(bounded) => RelativeInterval::Bounded(bounded.to_relative(reference)),
+            Self::HalfBounded(half_bounded) => RelativeInterval::HalfBounded(half_bounded.to_relative(reference)),
+            Self::Unbounded(unbounded) => RelativeInterval::Unbounded(unbounded.to_relative(reference)),
         }
     }
 }
@@ -499,15 +499,15 @@ impl ToRelative for AbsoluteInterval {
 impl ToRelative for EmptiableAbsoluteInterval {
     type RelativeType = EmptiableRelativeInterval;
 
-    fn to_relative<D>(&self, reference_time: D) -> Self::RelativeType
+    fn to_relative<D>(&self, reference: D) -> Self::RelativeType
     where
         D: Into<Timestamp>,
     {
         match self {
-            Self::Bounded(bounded) => EmptiableRelativeInterval::Bounded(bounded.to_relative(reference_time)),
-            Self::HalfBounded(half_bounded) => EmptiableRelativeInterval::HalfBounded(half_bounded.to_relative(reference_time)),
-            Self::Unbounded(unbounded) => EmptiableRelativeInterval::Unbounded(unbounded.to_relative(reference_time)),
-            Self::Empty(empty) => EmptiableRelativeInterval::Empty(empty.to_relative(reference_time)),
+            Self::Bounded(bounded) => EmptiableRelativeInterval::Bounded(bounded.to_relative(reference)),
+            Self::HalfBounded(half_bounded) => EmptiableRelativeInterval::HalfBounded(half_bounded.to_relative(reference)),
+            Self::Unbounded(unbounded) => EmptiableRelativeInterval::Unbounded(unbounded.to_relative(reference)),
+            Self::Empty(empty) => EmptiableRelativeInterval::Empty(empty.to_relative(reference)),
         }
     }
 }
