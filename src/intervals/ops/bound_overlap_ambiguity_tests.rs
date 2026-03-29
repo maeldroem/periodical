@@ -1,6 +1,5 @@
-use crate::intervals::meta::BoundInclusivity;
-
 use super::bound_overlap_ambiguity::*;
+use crate::intervals::meta::BoundInclusivity;
 
 #[test]
 fn ambiguity_is_both_starts() {

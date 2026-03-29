@@ -1,10 +1,17 @@
 use jiff::SignedDuration;
 
-use crate::intervals::meta::{BoundInclusivity, OpeningDirection};
-use crate::intervals::relative::{BoundedRelativeInterval, EmptiableRelativeBoundPair, HalfBoundedRelativeInterval, RelativeBoundPair, RelativeEndBound, RelativeFiniteBound, RelativeStartBound};
-use crate::intervals::special::{EmptyInterval, UnboundedInterval};
-
 use super::emptiable_interval::*;
+use crate::intervals::meta::{BoundInclusivity, OpeningDirection};
+use crate::intervals::relative::{
+    BoundedRelativeInterval,
+    EmptiableRelativeBoundPair,
+    HalfBoundedRelativeInterval,
+    RelativeBoundPair,
+    RelativeEndBound,
+    RelativeFiniteBound,
+    RelativeStartBound,
+};
+use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 
 #[test]
 fn relative_interval_from_relative_bounds() {
@@ -80,7 +87,9 @@ fn relative_interval_from_opt_datetime_bound_inclusivity_pairs() {
 #[test]
 fn relative_interval_from_bool_and_two_opt_datetime_empty() {
     assert_eq!(
-        <EmptiableRelativeInterval as From<(bool, Option<SignedDuration>, Option<SignedDuration>)>>::from((true, None, None,)),
+        <EmptiableRelativeInterval as From<(bool, Option<SignedDuration>, Option<SignedDuration>)>>::from((
+            true, None, None,
+        )),
         EmptiableRelativeInterval::Empty(EmptyInterval),
     );
 }
@@ -88,8 +97,15 @@ fn relative_interval_from_bool_and_two_opt_datetime_empty() {
 #[test]
 fn relative_interval_from_bool_and_two_opt_datetime() {
     assert_eq!(
-        EmptiableRelativeInterval::from((false, Some(SignedDuration::from_hours(1)), Some(SignedDuration::from_hours(2)),)),
-        EmptiableRelativeInterval::Bounded(BoundedRelativeInterval::new(SignedDuration::from_hours(1), SignedDuration::from_hours(2))),
+        EmptiableRelativeInterval::from((
+            false,
+            Some(SignedDuration::from_hours(1)),
+            Some(SignedDuration::from_hours(2)),
+        )),
+        EmptiableRelativeInterval::Bounded(BoundedRelativeInterval::new(
+            SignedDuration::from_hours(1),
+            SignedDuration::from_hours(2)
+        )),
     );
 }
 

@@ -2,18 +2,22 @@ use std::error::Error;
 
 use jiff::SignedDuration;
 
-use crate::intervals::meta::{BoundInclusivity, OpeningDirection};
-use crate::intervals::relative::{HalfBoundedRelativeInterval, RelativeBoundPair, RelativeEndBound, RelativeFiniteBound, RelativeInterval, RelativeStartBound};
-use crate::intervals::special::UnboundedInterval;
-
 use super::bounded_interval::*;
+use crate::intervals::meta::{BoundInclusivity, OpeningDirection};
+use crate::intervals::relative::{
+    HalfBoundedRelativeInterval,
+    RelativeBoundPair,
+    RelativeEndBound,
+    RelativeFiniteBound,
+    RelativeInterval,
+    RelativeStartBound,
+};
+use crate::intervals::special::UnboundedInterval;
 
 #[test]
 fn unchecked_new_negative_len() {
-    let interval = BoundedRelativeInterval::unchecked_new(
-        SignedDuration::from_hours(1),
-        SignedDuration::from_hours(-5),
-    );
+    let interval =
+        BoundedRelativeInterval::unchecked_new(SignedDuration::from_hours(1), SignedDuration::from_hours(-5));
 
     assert_eq!(interval.start(), SignedDuration::from_hours(1));
     assert_eq!(interval.end(), SignedDuration::from_hours(-5));
@@ -248,7 +252,10 @@ fn try_from_relative_interval_correct() {
             SignedDuration::from_hours(1),
             SignedDuration::from_hours(2),
         ))),
-        Ok(BoundedRelativeInterval::new(SignedDuration::from_hours(1), SignedDuration::from_hours(2),)),
+        Ok(BoundedRelativeInterval::new(
+            SignedDuration::from_hours(1),
+            SignedDuration::from_hours(2),
+        )),
     );
 }
 

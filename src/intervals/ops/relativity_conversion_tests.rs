@@ -1,13 +1,11 @@
-
 use std::error::Error;
 
 use jiff::{SignedDuration, Zoned};
 
+use super::relativity_conversion::*;
 use crate::intervals::absolute::BoundedAbsoluteInterval;
 use crate::intervals::meta::BoundInclusivity;
 use crate::intervals::relative::BoundedRelativeInterval;
-
-use super::relativity_conversion::*;
 
 #[test]
 fn no_op_absolute_to_absolute() -> Result<(), Box<dyn Error>> {

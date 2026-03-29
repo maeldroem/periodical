@@ -2,11 +2,17 @@ use std::error::Error;
 
 use jiff::Timestamp;
 
-use crate::intervals::absolute::{AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteInterval, AbsoluteStartBound, HalfBoundedAbsoluteInterval};
+use super::bounded_interval::*;
+use crate::intervals::absolute::{
+    AbsoluteBoundPair,
+    AbsoluteEndBound,
+    AbsoluteFiniteBound,
+    AbsoluteInterval,
+    AbsoluteStartBound,
+    HalfBoundedAbsoluteInterval,
+};
 use crate::intervals::meta::{BoundInclusivity, OpeningDirection};
 use crate::intervals::special::UnboundedInterval;
-
-use super::bounded_interval::*;
 
 #[test]
 fn interval_unchecked_new() -> Result<(), Box<dyn Error>> {
@@ -25,7 +31,10 @@ fn interval_unchecked_new() -> Result<(), Box<dyn Error>> {
 
 #[test]
 fn interval_new_no_swap() -> Result<(), Box<dyn Error>> {
-    let interval = BoundedAbsoluteInterval::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?, "2025-01-02 00:00:00Z".parse::<Timestamp>()?);
+    let interval = BoundedAbsoluteInterval::new(
+        "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
+        "2025-01-02 00:00:00Z".parse::<Timestamp>()?,
+    );
 
     assert_eq!(interval.start(), "2025-01-01 00:00:00Z".parse::<Timestamp>()?);
     assert_eq!(interval.end(), "2025-01-02 00:00:00Z".parse::<Timestamp>()?);
@@ -37,7 +46,10 @@ fn interval_new_no_swap() -> Result<(), Box<dyn Error>> {
 
 #[test]
 fn interval_new_swap() -> Result<(), Box<dyn Error>> {
-    let interval = BoundedAbsoluteInterval::new("2025-01-02 00:00:00Z".parse::<Timestamp>()?, "2025-01-01 00:00:00Z".parse::<Timestamp>()?);
+    let interval = BoundedAbsoluteInterval::new(
+        "2025-01-02 00:00:00Z".parse::<Timestamp>()?,
+        "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
+    );
 
     assert_eq!(interval.start(), "2025-01-01 00:00:00Z".parse::<Timestamp>()?);
     assert_eq!(interval.end(), "2025-01-02 00:00:00Z".parse::<Timestamp>()?);
@@ -80,7 +92,6 @@ fn interval_new_with_inclusivity_swap() -> Result<(), Box<dyn Error>> {
 
     Ok(())
 }
-
 
 #[test]
 fn unchecked_set_start() -> Result<(), Box<dyn Error>> {
@@ -195,7 +206,10 @@ fn set_end_inclusivity() -> Result<(), Box<dyn Error>> {
 #[test]
 fn interval_from_datetime_pair_swap() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        BoundedAbsoluteInterval::from(("2025-01-02 00:00:00Z".parse::<Timestamp>()?, "2025-01-01 00:00:00Z".parse::<Timestamp>()?)),
+        BoundedAbsoluteInterval::from((
+            "2025-01-02 00:00:00Z".parse::<Timestamp>()?,
+            "2025-01-01 00:00:00Z".parse::<Timestamp>()?
+        )),
         BoundedAbsoluteInterval::new_with_inclusivity(
             "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
             BoundInclusivity::Inclusive,
@@ -211,8 +225,14 @@ fn interval_from_datetime_pair_swap() -> Result<(), Box<dyn Error>> {
 fn interval_from_pair_of_datetime_inclusivity_pairs_swap() -> Result<(), Box<dyn Error>> {
     assert_eq!(
         BoundedAbsoluteInterval::from((
-            ("2025-01-02 00:00:00Z".parse::<Timestamp>()?, BoundInclusivity::Exclusive),
-            ("2025-01-01 00:00:00Z".parse::<Timestamp>()?, BoundInclusivity::Inclusive),
+            (
+                "2025-01-02 00:00:00Z".parse::<Timestamp>()?,
+                BoundInclusivity::Exclusive
+            ),
+            (
+                "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
+                BoundInclusivity::Inclusive
+            ),
         )),
         BoundedAbsoluteInterval::new_with_inclusivity(
             "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
@@ -228,7 +248,9 @@ fn interval_from_pair_of_datetime_inclusivity_pairs_swap() -> Result<(), Box<dyn
 #[test]
 fn interval_from_range() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        BoundedAbsoluteInterval::from("2025-01-01 00:00:00Z".parse::<Timestamp>()?.."2025-01-02 00:00:00Z".parse::<Timestamp>()?),
+        BoundedAbsoluteInterval::from(
+            "2025-01-01 00:00:00Z".parse::<Timestamp>()?.."2025-01-02 00:00:00Z".parse::<Timestamp>()?
+        ),
         BoundedAbsoluteInterval::new_with_inclusivity(
             "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
             BoundInclusivity::Inclusive,
@@ -243,8 +265,13 @@ fn interval_from_range() -> Result<(), Box<dyn Error>> {
 #[test]
 fn interval_from_range_inclusive() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        BoundedAbsoluteInterval::from("2025-01-01 00:00:00Z".parse::<Timestamp>()?..="2025-01-02 00:00:00Z".parse::<Timestamp>()?),
-        BoundedAbsoluteInterval::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?, "2025-01-02 00:00:00Z".parse::<Timestamp>()?),
+        BoundedAbsoluteInterval::from(
+            "2025-01-01 00:00:00Z".parse::<Timestamp>()?..="2025-01-02 00:00:00Z".parse::<Timestamp>()?
+        ),
+        BoundedAbsoluteInterval::new(
+            "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
+            "2025-01-02 00:00:00Z".parse::<Timestamp>()?
+        ),
     );
 
     Ok(())

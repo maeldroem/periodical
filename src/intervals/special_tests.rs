@@ -3,19 +3,37 @@ use std::time::Duration as StdDuration;
 
 use jiff::{SignedDuration, Timestamp};
 
+use super::special::*;
 use crate::intervals::absolute::{
-    AbsoluteBoundPair, AbsoluteEndBound, AbsoluteInterval, AbsoluteStartBound, BoundedAbsoluteInterval,
-    EmptiableAbsoluteBoundPair, HasAbsoluteBoundPair, HasEmptiableAbsoluteBoundPair,
+    AbsoluteBoundPair,
+    AbsoluteEndBound,
+    AbsoluteInterval,
+    AbsoluteStartBound,
+    BoundedAbsoluteInterval,
+    EmptiableAbsoluteBoundPair,
+    HasAbsoluteBoundPair,
+    HasEmptiableAbsoluteBoundPair,
 };
 use crate::intervals::meta::{
-    Duration as IntervalDuration, Emptiable, Epsilon, HasDuration, HasOpenness, HasRelativity, Openness, Relativity,
+    Duration as IntervalDuration,
+    Emptiable,
+    Epsilon,
+    HasDuration,
+    HasOpenness,
+    HasRelativity,
+    Openness,
+    Relativity,
 };
 use crate::intervals::relative::{
-    BoundedRelativeInterval, EmptiableRelativeBoundPair, HasEmptiableRelativeBoundPair, HasRelativeBoundPair,
-    RelativeBoundPair, RelativeEndBound, RelativeInterval, RelativeStartBound,
+    BoundedRelativeInterval,
+    EmptiableRelativeBoundPair,
+    HasEmptiableRelativeBoundPair,
+    HasRelativeBoundPair,
+    RelativeBoundPair,
+    RelativeEndBound,
+    RelativeInterval,
+    RelativeStartBound,
 };
-
-use super::special::*;
 
 #[test]
 fn unbounded_interval_openness() {
@@ -127,7 +145,10 @@ fn empty_interval_duration() {
 
 #[test]
 fn empty_interval_emptiable_abs_bound_pair() {
-    assert_eq!(EmptyInterval.emptiable_abs_bound_pair(), EmptiableAbsoluteBoundPair::Empty);
+    assert_eq!(
+        EmptyInterval.emptiable_abs_bound_pair(),
+        EmptiableAbsoluteBoundPair::Empty
+    );
 }
 
 #[test]
@@ -142,7 +163,10 @@ fn empty_interval_partial_abs_end() {
 
 #[test]
 fn empty_interval_emptiable_rel_bound_pair() {
-    assert_eq!(EmptyInterval.emptiable_rel_bound_pair(), EmptiableRelativeBoundPair::Empty);
+    assert_eq!(
+        EmptyInterval.emptiable_rel_bound_pair(),
+        EmptiableRelativeBoundPair::Empty
+    );
 }
 
 #[test]

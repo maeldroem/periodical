@@ -4,9 +4,8 @@ use std::ops::Bound;
 
 use jiff::Timestamp;
 
-use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
-
 use super::finite_bound::*;
+use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
 
 #[test]
 fn new() -> Result<(), Box<dyn Error>> {
@@ -90,11 +89,11 @@ fn cmp_equal_time_different_inclusivities() -> Result<(), Box<dyn Error>> {
     let abs_finite_bound = [
         AbsoluteFiniteBound::new_with_inclusivity(
             "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-            BoundInclusivity::Exclusive
+            BoundInclusivity::Exclusive,
         ),
         AbsoluteFiniteBound::new_with_inclusivity(
             "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-            BoundInclusivity::Inclusive
+            BoundInclusivity::Inclusive,
         ),
     ];
 
@@ -128,7 +127,10 @@ fn from_timestamp() -> Result<(), Box<dyn Error>> {
 #[test]
 fn from_timestamp_inclusivity_pair() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        AbsoluteFiniteBound::from(("2025-01-01 00:00:00Z".parse::<Timestamp>()?, BoundInclusivity::Exclusive)),
+        AbsoluteFiniteBound::from((
+            "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
+            BoundInclusivity::Exclusive
+        )),
         AbsoluteFiniteBound::new_with_inclusivity(
             "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
             BoundInclusivity::Exclusive,

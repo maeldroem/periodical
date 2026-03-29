@@ -3,9 +3,12 @@ use std::error::Error;
 use jiff::Zoned;
 
 use super::point_containment::*;
-
 use crate::intervals::absolute::{
-    AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, EmptiableAbsoluteBoundPair,
+    AbsoluteBoundPair,
+    AbsoluteEndBound,
+    AbsoluteFiniteBound,
+    AbsoluteStartBound,
+    EmptiableAbsoluteBoundPair,
 };
 use crate::intervals::meta::BoundInclusivity;
 
@@ -448,7 +451,8 @@ fn time_outside_after() -> Result<(), Box<dyn Error>> {
 #[test]
 fn time_outside() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        EmptiableAbsoluteBoundPair::Empty.point_containment_position("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()),
+        EmptiableAbsoluteBoundPair::Empty
+            .point_containment_position("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()),
         Ok(PointContainmentPosition::Outside),
     );
 

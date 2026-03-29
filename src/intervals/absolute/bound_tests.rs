@@ -2,10 +2,9 @@ use std::error::Error;
 
 use jiff::Timestamp;
 
+use super::bound::*;
 use crate::intervals::absolute::{AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound};
 use crate::intervals::meta::BoundInclusivity;
-
-use super::bound::*;
 
 #[test]
 fn is_start() {
@@ -69,10 +68,14 @@ fn start_finite_opposite() -> Result<(), Box<dyn Error>> {
             .to_start_bound()
             .to_bound()
             .opposite(),
-        Some(AbsoluteFiniteBound::new_with_inclusivity(
-            "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-            BoundInclusivity::Exclusive,
-        ).to_end_bound().to_bound()),
+        Some(
+            AbsoluteFiniteBound::new_with_inclusivity(
+                "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
+                BoundInclusivity::Exclusive,
+            )
+            .to_end_bound()
+            .to_bound()
+        ),
     );
     Ok(())
 }
@@ -89,10 +92,14 @@ fn end_finite_opposite() -> Result<(), Box<dyn Error>> {
             .to_end_bound()
             .to_bound()
             .opposite(),
-        Some(AbsoluteFiniteBound::new_with_inclusivity(
-            "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-            BoundInclusivity::Exclusive,
-        ).to_start_bound().to_bound()),
+        Some(
+            AbsoluteFiniteBound::new_with_inclusivity(
+                "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
+                BoundInclusivity::Exclusive,
+            )
+            .to_start_bound()
+            .to_bound()
+        ),
     );
     Ok(())
 }

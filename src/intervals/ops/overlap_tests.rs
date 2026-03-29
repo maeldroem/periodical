@@ -1,11 +1,14 @@
-use super::overlap::*;
-
 use std::error::Error;
 
 use jiff::Zoned;
 
+use super::overlap::*;
 use crate::intervals::absolute::{
-    AbsoluteBoundPair, AbsoluteEndBound, AbsoluteStartBound, BoundedAbsoluteInterval, EmptiableAbsoluteBoundPair,
+    AbsoluteBoundPair,
+    AbsoluteEndBound,
+    AbsoluteStartBound,
+    BoundedAbsoluteInterval,
+    EmptiableAbsoluteBoundPair,
     HalfBoundedAbsoluteInterval,
 };
 use crate::intervals::meta::{BoundInclusivity, OpeningDirection};
@@ -133,9 +136,14 @@ mod overlap_position {
     #[test]
     fn half_bounded_equal() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            HalfBoundedAbsoluteInterval::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(), OpeningDirection::ToFuture).overlap_position(
-                &HalfBoundedAbsoluteInterval::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(), OpeningDirection::ToFuture)
-            ),
+            HalfBoundedAbsoluteInterval::new(
+                "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                OpeningDirection::ToFuture
+            )
+            .overlap_position(&HalfBoundedAbsoluteInterval::new(
+                "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                OpeningDirection::ToFuture
+            )),
             Ok(OverlapPosition::Equal(
                 Some(BoundOverlapAmbiguity::BothStarts(
                     BoundInclusivity::Inclusive,
@@ -210,8 +218,15 @@ mod disambiguated_overlap_position {
     #[test]
     fn strict_bounded_time_gap_before_other() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            BoundedAbsoluteInterval::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(), "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).disambiguated_overlap_position(
-                &BoundedAbsoluteInterval::new("2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(), "2025-01-04 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),),
+            BoundedAbsoluteInterval::new(
+                "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
+            )
+            .disambiguated_overlap_position(
+                &BoundedAbsoluteInterval::new(
+                    "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    "2025-01-04 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                ),
                 OverlapRuleSet::Strict,
             ),
             Ok(DisambiguatedOverlapPosition::OutsideBefore),
@@ -319,8 +334,15 @@ mod disambiguated_overlap_position {
     #[test]
     fn strict_bounded_time_gap_after_other() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            BoundedAbsoluteInterval::new("2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(), "2025-01-04 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).disambiguated_overlap_position(
-                &BoundedAbsoluteInterval::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(), "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()),
+            BoundedAbsoluteInterval::new(
+                "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                "2025-01-04 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
+            )
+            .disambiguated_overlap_position(
+                &BoundedAbsoluteInterval::new(
+                    "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
+                ),
                 OverlapRuleSet::Strict,
             ),
             Ok(DisambiguatedOverlapPosition::OutsideAfter),
@@ -1340,8 +1362,15 @@ mod disambiguated_overlap_position {
     #[test]
     fn lenient_bounded_time_gap_before_other() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            BoundedAbsoluteInterval::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(), "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).disambiguated_overlap_position(
-                &BoundedAbsoluteInterval::new("2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(), "2025-01-04 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),),
+            BoundedAbsoluteInterval::new(
+                "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
+            )
+            .disambiguated_overlap_position(
+                &BoundedAbsoluteInterval::new(
+                    "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    "2025-01-04 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                ),
                 OverlapRuleSet::Lenient,
             ),
             Ok(DisambiguatedOverlapPosition::OutsideBefore),
@@ -1449,8 +1478,15 @@ mod disambiguated_overlap_position {
     #[test]
     fn lenient_bounded_time_gap_after_other() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            BoundedAbsoluteInterval::new("2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(), "2025-01-04 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).disambiguated_overlap_position(
-                &BoundedAbsoluteInterval::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(), "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()),
+            BoundedAbsoluteInterval::new(
+                "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                "2025-01-04 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
+            )
+            .disambiguated_overlap_position(
+                &BoundedAbsoluteInterval::new(
+                    "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
+                ),
                 OverlapRuleSet::Lenient,
             ),
             Ok(DisambiguatedOverlapPosition::OutsideAfter),
@@ -2470,8 +2506,15 @@ mod disambiguated_overlap_position {
     #[test]
     fn very_lenient_bounded_time_gap_before_other() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            BoundedAbsoluteInterval::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(), "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).disambiguated_overlap_position(
-                &BoundedAbsoluteInterval::new("2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(), "2025-01-04 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),),
+            BoundedAbsoluteInterval::new(
+                "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
+            )
+            .disambiguated_overlap_position(
+                &BoundedAbsoluteInterval::new(
+                    "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    "2025-01-04 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                ),
                 OverlapRuleSet::VeryLenient,
             ),
             Ok(DisambiguatedOverlapPosition::OutsideBefore),
@@ -2579,8 +2622,15 @@ mod disambiguated_overlap_position {
     #[test]
     fn very_lenient_bounded_time_gap_after_other() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            BoundedAbsoluteInterval::new("2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(), "2025-01-04 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).disambiguated_overlap_position(
-                &BoundedAbsoluteInterval::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(), "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()),
+            BoundedAbsoluteInterval::new(
+                "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                "2025-01-04 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
+            )
+            .disambiguated_overlap_position(
+                &BoundedAbsoluteInterval::new(
+                    "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
+                ),
                 OverlapRuleSet::VeryLenient,
             ),
             Ok(DisambiguatedOverlapPosition::OutsideAfter),
@@ -3600,8 +3650,15 @@ mod disambiguated_overlap_position {
     #[test]
     fn continuous_to_future_bounded_time_gap_before_other() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            BoundedAbsoluteInterval::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(), "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).disambiguated_overlap_position(
-                &BoundedAbsoluteInterval::new("2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(), "2025-01-04 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),),
+            BoundedAbsoluteInterval::new(
+                "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
+            )
+            .disambiguated_overlap_position(
+                &BoundedAbsoluteInterval::new(
+                    "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    "2025-01-04 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                ),
                 OverlapRuleSet::ContinuousToFuture,
             ),
             Ok(DisambiguatedOverlapPosition::OutsideBefore),
@@ -3709,8 +3766,15 @@ mod disambiguated_overlap_position {
     #[test]
     fn continuous_to_future_bounded_time_gap_after_other() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            BoundedAbsoluteInterval::new("2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(), "2025-01-04 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).disambiguated_overlap_position(
-                &BoundedAbsoluteInterval::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(), "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()),
+            BoundedAbsoluteInterval::new(
+                "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                "2025-01-04 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
+            )
+            .disambiguated_overlap_position(
+                &BoundedAbsoluteInterval::new(
+                    "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
+                ),
                 OverlapRuleSet::ContinuousToFuture,
             ),
             Ok(DisambiguatedOverlapPosition::OutsideAfter),
@@ -4128,8 +4192,8 @@ mod disambiguated_overlap_position {
     }
 
     #[test]
-    fn continuous_to_future_bounded_equal_start_inclusive_inclusive_end_inclusive_inclusive() -> Result<(), Box<dyn Error>>
-    {
+    fn continuous_to_future_bounded_equal_start_inclusive_inclusive_end_inclusive_inclusive()
+    -> Result<(), Box<dyn Error>> {
         assert_eq!(
             BoundedAbsoluteInterval::new_with_inclusivity(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
@@ -4153,8 +4217,8 @@ mod disambiguated_overlap_position {
     }
 
     #[test]
-    fn continuous_to_future_bounded_equal_start_inclusive_inclusive_end_inclusive_exclusive() -> Result<(), Box<dyn Error>>
-    {
+    fn continuous_to_future_bounded_equal_start_inclusive_inclusive_end_inclusive_exclusive()
+    -> Result<(), Box<dyn Error>> {
         assert_eq!(
             BoundedAbsoluteInterval::new_with_inclusivity(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
@@ -4178,8 +4242,8 @@ mod disambiguated_overlap_position {
     }
 
     #[test]
-    fn continuous_to_future_bounded_equal_start_inclusive_inclusive_end_exclusive_inclusive() -> Result<(), Box<dyn Error>>
-    {
+    fn continuous_to_future_bounded_equal_start_inclusive_inclusive_end_exclusive_inclusive()
+    -> Result<(), Box<dyn Error>> {
         assert_eq!(
             BoundedAbsoluteInterval::new_with_inclusivity(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
@@ -4203,8 +4267,8 @@ mod disambiguated_overlap_position {
     }
 
     #[test]
-    fn continuous_to_future_bounded_equal_start_inclusive_inclusive_end_exclusive_exclusive() -> Result<(), Box<dyn Error>>
-    {
+    fn continuous_to_future_bounded_equal_start_inclusive_inclusive_end_exclusive_exclusive()
+    -> Result<(), Box<dyn Error>> {
         assert_eq!(
             BoundedAbsoluteInterval::new_with_inclusivity(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
@@ -4228,8 +4292,8 @@ mod disambiguated_overlap_position {
     }
 
     #[test]
-    fn continuous_to_future_bounded_equal_start_inclusive_exclusive_end_inclusive_inclusive() -> Result<(), Box<dyn Error>>
-    {
+    fn continuous_to_future_bounded_equal_start_inclusive_exclusive_end_inclusive_inclusive()
+    -> Result<(), Box<dyn Error>> {
         assert_eq!(
             BoundedAbsoluteInterval::new_with_inclusivity(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
@@ -4253,8 +4317,8 @@ mod disambiguated_overlap_position {
     }
 
     #[test]
-    fn continuous_to_future_bounded_equal_start_inclusive_exclusive_end_inclusive_exclusive() -> Result<(), Box<dyn Error>>
-    {
+    fn continuous_to_future_bounded_equal_start_inclusive_exclusive_end_inclusive_exclusive()
+    -> Result<(), Box<dyn Error>> {
         assert_eq!(
             BoundedAbsoluteInterval::new_with_inclusivity(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
@@ -4278,8 +4342,8 @@ mod disambiguated_overlap_position {
     }
 
     #[test]
-    fn continuous_to_future_bounded_equal_start_inclusive_exclusive_end_exclusive_inclusive() -> Result<(), Box<dyn Error>>
-    {
+    fn continuous_to_future_bounded_equal_start_inclusive_exclusive_end_exclusive_inclusive()
+    -> Result<(), Box<dyn Error>> {
         assert_eq!(
             BoundedAbsoluteInterval::new_with_inclusivity(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
@@ -4303,8 +4367,8 @@ mod disambiguated_overlap_position {
     }
 
     #[test]
-    fn continuous_to_future_bounded_equal_start_inclusive_exclusive_end_exclusive_exclusive() -> Result<(), Box<dyn Error>>
-    {
+    fn continuous_to_future_bounded_equal_start_inclusive_exclusive_end_exclusive_exclusive()
+    -> Result<(), Box<dyn Error>> {
         assert_eq!(
             BoundedAbsoluteInterval::new_with_inclusivity(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
@@ -4328,8 +4392,8 @@ mod disambiguated_overlap_position {
     }
 
     #[test]
-    fn continuous_to_future_bounded_equal_start_exclusive_inclusive_end_inclusive_inclusive() -> Result<(), Box<dyn Error>>
-    {
+    fn continuous_to_future_bounded_equal_start_exclusive_inclusive_end_inclusive_inclusive()
+    -> Result<(), Box<dyn Error>> {
         assert_eq!(
             BoundedAbsoluteInterval::new_with_inclusivity(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
@@ -4353,8 +4417,8 @@ mod disambiguated_overlap_position {
     }
 
     #[test]
-    fn continuous_to_future_bounded_equal_start_exclusive_inclusive_end_inclusive_exclusive() -> Result<(), Box<dyn Error>>
-    {
+    fn continuous_to_future_bounded_equal_start_exclusive_inclusive_end_inclusive_exclusive()
+    -> Result<(), Box<dyn Error>> {
         assert_eq!(
             BoundedAbsoluteInterval::new_with_inclusivity(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
@@ -4378,8 +4442,8 @@ mod disambiguated_overlap_position {
     }
 
     #[test]
-    fn continuous_to_future_bounded_equal_start_exclusive_inclusive_end_exclusive_inclusive() -> Result<(), Box<dyn Error>>
-    {
+    fn continuous_to_future_bounded_equal_start_exclusive_inclusive_end_exclusive_inclusive()
+    -> Result<(), Box<dyn Error>> {
         assert_eq!(
             BoundedAbsoluteInterval::new_with_inclusivity(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
@@ -4403,8 +4467,8 @@ mod disambiguated_overlap_position {
     }
 
     #[test]
-    fn continuous_to_future_bounded_equal_start_exclusive_inclusive_end_exclusive_exclusive() -> Result<(), Box<dyn Error>>
-    {
+    fn continuous_to_future_bounded_equal_start_exclusive_inclusive_end_exclusive_exclusive()
+    -> Result<(), Box<dyn Error>> {
         assert_eq!(
             BoundedAbsoluteInterval::new_with_inclusivity(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
@@ -4428,8 +4492,8 @@ mod disambiguated_overlap_position {
     }
 
     #[test]
-    fn continuous_to_future_bounded_equal_start_exclusive_exclusive_end_inclusive_inclusive() -> Result<(), Box<dyn Error>>
-    {
+    fn continuous_to_future_bounded_equal_start_exclusive_exclusive_end_inclusive_inclusive()
+    -> Result<(), Box<dyn Error>> {
         assert_eq!(
             BoundedAbsoluteInterval::new_with_inclusivity(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
@@ -4453,8 +4517,8 @@ mod disambiguated_overlap_position {
     }
 
     #[test]
-    fn continuous_to_future_bounded_equal_start_exclusive_exclusive_end_inclusive_exclusive() -> Result<(), Box<dyn Error>>
-    {
+    fn continuous_to_future_bounded_equal_start_exclusive_exclusive_end_inclusive_exclusive()
+    -> Result<(), Box<dyn Error>> {
         assert_eq!(
             BoundedAbsoluteInterval::new_with_inclusivity(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
@@ -4478,8 +4542,8 @@ mod disambiguated_overlap_position {
     }
 
     #[test]
-    fn continuous_to_future_bounded_equal_start_exclusive_exclusive_end_exclusive_inclusive() -> Result<(), Box<dyn Error>>
-    {
+    fn continuous_to_future_bounded_equal_start_exclusive_exclusive_end_exclusive_inclusive()
+    -> Result<(), Box<dyn Error>> {
         assert_eq!(
             BoundedAbsoluteInterval::new_with_inclusivity(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
@@ -4503,8 +4567,8 @@ mod disambiguated_overlap_position {
     }
 
     #[test]
-    fn continuous_to_future_bounded_equal_start_exclusive_exclusive_end_exclusive_exclusive() -> Result<(), Box<dyn Error>>
-    {
+    fn continuous_to_future_bounded_equal_start_exclusive_exclusive_end_exclusive_exclusive()
+    -> Result<(), Box<dyn Error>> {
         assert_eq!(
             BoundedAbsoluteInterval::new_with_inclusivity(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
@@ -4746,8 +4810,15 @@ mod disambiguated_overlap_position {
     #[test]
     fn continuous_to_past_bounded_time_gap_before_other() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            BoundedAbsoluteInterval::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(), "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).disambiguated_overlap_position(
-                &BoundedAbsoluteInterval::new("2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(), "2025-01-04 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),),
+            BoundedAbsoluteInterval::new(
+                "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
+            )
+            .disambiguated_overlap_position(
+                &BoundedAbsoluteInterval::new(
+                    "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    "2025-01-04 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                ),
                 OverlapRuleSet::ContinuousToPast,
             ),
             Ok(DisambiguatedOverlapPosition::OutsideBefore),
@@ -4855,8 +4926,15 @@ mod disambiguated_overlap_position {
     #[test]
     fn continuous_to_past_bounded_time_gap_after_other() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            BoundedAbsoluteInterval::new("2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(), "2025-01-04 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).disambiguated_overlap_position(
-                &BoundedAbsoluteInterval::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(), "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()),
+            BoundedAbsoluteInterval::new(
+                "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                "2025-01-04 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
+            )
+            .disambiguated_overlap_position(
+                &BoundedAbsoluteInterval::new(
+                    "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
+                ),
                 OverlapRuleSet::ContinuousToPast,
             ),
             Ok(DisambiguatedOverlapPosition::OutsideAfter),
@@ -5274,7 +5352,8 @@ mod disambiguated_overlap_position {
     }
 
     #[test]
-    fn continuous_to_past_bounded_equal_start_inclusive_inclusive_end_inclusive_inclusive() -> Result<(), Box<dyn Error>> {
+    fn continuous_to_past_bounded_equal_start_inclusive_inclusive_end_inclusive_inclusive() -> Result<(), Box<dyn Error>>
+    {
         assert_eq!(
             BoundedAbsoluteInterval::new_with_inclusivity(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
@@ -5298,7 +5377,8 @@ mod disambiguated_overlap_position {
     }
 
     #[test]
-    fn continuous_to_past_bounded_equal_start_inclusive_inclusive_end_inclusive_exclusive() -> Result<(), Box<dyn Error>> {
+    fn continuous_to_past_bounded_equal_start_inclusive_inclusive_end_inclusive_exclusive() -> Result<(), Box<dyn Error>>
+    {
         assert_eq!(
             BoundedAbsoluteInterval::new_with_inclusivity(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
@@ -5322,7 +5402,8 @@ mod disambiguated_overlap_position {
     }
 
     #[test]
-    fn continuous_to_past_bounded_equal_start_inclusive_inclusive_end_exclusive_inclusive() -> Result<(), Box<dyn Error>> {
+    fn continuous_to_past_bounded_equal_start_inclusive_inclusive_end_exclusive_inclusive() -> Result<(), Box<dyn Error>>
+    {
         assert_eq!(
             BoundedAbsoluteInterval::new_with_inclusivity(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
@@ -5346,7 +5427,8 @@ mod disambiguated_overlap_position {
     }
 
     #[test]
-    fn continuous_to_past_bounded_equal_start_inclusive_inclusive_end_exclusive_exclusive() -> Result<(), Box<dyn Error>> {
+    fn continuous_to_past_bounded_equal_start_inclusive_inclusive_end_exclusive_exclusive() -> Result<(), Box<dyn Error>>
+    {
         assert_eq!(
             BoundedAbsoluteInterval::new_with_inclusivity(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
@@ -5370,7 +5452,8 @@ mod disambiguated_overlap_position {
     }
 
     #[test]
-    fn continuous_to_past_bounded_equal_start_inclusive_exclusive_end_inclusive_inclusive() -> Result<(), Box<dyn Error>> {
+    fn continuous_to_past_bounded_equal_start_inclusive_exclusive_end_inclusive_inclusive() -> Result<(), Box<dyn Error>>
+    {
         assert_eq!(
             BoundedAbsoluteInterval::new_with_inclusivity(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
@@ -5394,7 +5477,8 @@ mod disambiguated_overlap_position {
     }
 
     #[test]
-    fn continuous_to_past_bounded_equal_start_inclusive_exclusive_end_inclusive_exclusive() -> Result<(), Box<dyn Error>> {
+    fn continuous_to_past_bounded_equal_start_inclusive_exclusive_end_inclusive_exclusive() -> Result<(), Box<dyn Error>>
+    {
         assert_eq!(
             BoundedAbsoluteInterval::new_with_inclusivity(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
@@ -5418,7 +5502,8 @@ mod disambiguated_overlap_position {
     }
 
     #[test]
-    fn continuous_to_past_bounded_equal_start_inclusive_exclusive_end_exclusive_inclusive() -> Result<(), Box<dyn Error>> {
+    fn continuous_to_past_bounded_equal_start_inclusive_exclusive_end_exclusive_inclusive() -> Result<(), Box<dyn Error>>
+    {
         assert_eq!(
             BoundedAbsoluteInterval::new_with_inclusivity(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
@@ -5442,7 +5527,8 @@ mod disambiguated_overlap_position {
     }
 
     #[test]
-    fn continuous_to_past_bounded_equal_start_inclusive_exclusive_end_exclusive_exclusive() -> Result<(), Box<dyn Error>> {
+    fn continuous_to_past_bounded_equal_start_inclusive_exclusive_end_exclusive_exclusive() -> Result<(), Box<dyn Error>>
+    {
         assert_eq!(
             BoundedAbsoluteInterval::new_with_inclusivity(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
@@ -5466,7 +5552,8 @@ mod disambiguated_overlap_position {
     }
 
     #[test]
-    fn continuous_to_past_bounded_equal_start_exclusive_inclusive_end_inclusive_inclusive() -> Result<(), Box<dyn Error>> {
+    fn continuous_to_past_bounded_equal_start_exclusive_inclusive_end_inclusive_inclusive() -> Result<(), Box<dyn Error>>
+    {
         assert_eq!(
             BoundedAbsoluteInterval::new_with_inclusivity(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
@@ -5490,7 +5577,8 @@ mod disambiguated_overlap_position {
     }
 
     #[test]
-    fn continuous_to_past_bounded_equal_start_exclusive_inclusive_end_inclusive_exclusive() -> Result<(), Box<dyn Error>> {
+    fn continuous_to_past_bounded_equal_start_exclusive_inclusive_end_inclusive_exclusive() -> Result<(), Box<dyn Error>>
+    {
         assert_eq!(
             BoundedAbsoluteInterval::new_with_inclusivity(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
@@ -5514,7 +5602,8 @@ mod disambiguated_overlap_position {
     }
 
     #[test]
-    fn continuous_to_past_bounded_equal_start_exclusive_inclusive_end_exclusive_inclusive() -> Result<(), Box<dyn Error>> {
+    fn continuous_to_past_bounded_equal_start_exclusive_inclusive_end_exclusive_inclusive() -> Result<(), Box<dyn Error>>
+    {
         assert_eq!(
             BoundedAbsoluteInterval::new_with_inclusivity(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
@@ -5538,7 +5627,8 @@ mod disambiguated_overlap_position {
     }
 
     #[test]
-    fn continuous_to_past_bounded_equal_start_exclusive_inclusive_end_exclusive_exclusive() -> Result<(), Box<dyn Error>> {
+    fn continuous_to_past_bounded_equal_start_exclusive_inclusive_end_exclusive_exclusive() -> Result<(), Box<dyn Error>>
+    {
         assert_eq!(
             BoundedAbsoluteInterval::new_with_inclusivity(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
@@ -5562,7 +5652,8 @@ mod disambiguated_overlap_position {
     }
 
     #[test]
-    fn continuous_to_past_bounded_equal_start_exclusive_exclusive_end_inclusive_inclusive() -> Result<(), Box<dyn Error>> {
+    fn continuous_to_past_bounded_equal_start_exclusive_exclusive_end_inclusive_inclusive() -> Result<(), Box<dyn Error>>
+    {
         assert_eq!(
             BoundedAbsoluteInterval::new_with_inclusivity(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
@@ -5586,7 +5677,8 @@ mod disambiguated_overlap_position {
     }
 
     #[test]
-    fn continuous_to_past_bounded_equal_start_exclusive_exclusive_end_inclusive_exclusive() -> Result<(), Box<dyn Error>> {
+    fn continuous_to_past_bounded_equal_start_exclusive_exclusive_end_inclusive_exclusive() -> Result<(), Box<dyn Error>>
+    {
         assert_eq!(
             BoundedAbsoluteInterval::new_with_inclusivity(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
@@ -5610,7 +5702,8 @@ mod disambiguated_overlap_position {
     }
 
     #[test]
-    fn continuous_to_past_bounded_equal_start_exclusive_exclusive_end_exclusive_inclusive() -> Result<(), Box<dyn Error>> {
+    fn continuous_to_past_bounded_equal_start_exclusive_exclusive_end_exclusive_inclusive() -> Result<(), Box<dyn Error>>
+    {
         assert_eq!(
             BoundedAbsoluteInterval::new_with_inclusivity(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
@@ -5634,7 +5727,8 @@ mod disambiguated_overlap_position {
     }
 
     #[test]
-    fn continuous_to_past_bounded_equal_start_exclusive_exclusive_end_exclusive_exclusive() -> Result<(), Box<dyn Error>> {
+    fn continuous_to_past_bounded_equal_start_exclusive_exclusive_end_exclusive_exclusive() -> Result<(), Box<dyn Error>>
+    {
         assert_eq!(
             BoundedAbsoluteInterval::new_with_inclusivity(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),

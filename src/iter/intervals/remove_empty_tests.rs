@@ -2,11 +2,15 @@ use std::error::Error;
 
 use jiff::Zoned;
 
-use crate::intervals::absolute::{AbsoluteInterval, BoundedAbsoluteInterval, EmptiableAbsoluteInterval, HalfBoundedAbsoluteInterval};
+use super::remove_empty::*;
+use crate::intervals::absolute::{
+    AbsoluteInterval,
+    BoundedAbsoluteInterval,
+    EmptiableAbsoluteInterval,
+    HalfBoundedAbsoluteInterval,
+};
 use crate::intervals::meta::OpeningDirection;
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
-
-use super::remove_empty::*;
 
 #[test]
 fn create() -> Result<(), Box<dyn Error>> {
@@ -15,12 +19,14 @@ fn create() -> Result<(), Box<dyn Error>> {
         AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-        )).to_emptiable_interval(),
+        ))
+        .to_emptiable_interval(),
         EmptiableAbsoluteInterval::Empty(EmptyInterval),
         AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new(
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             OpeningDirection::ToPast,
-        )).to_emptiable_interval(),
+        ))
+        .to_emptiable_interval(),
     ];
 
     intervals.remove_empty_intervals();
@@ -35,13 +41,15 @@ fn run() -> Result<(), Box<dyn Error>> {
         AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-        )).to_emptiable_interval(),
+        ))
+        .to_emptiable_interval(),
         EmptiableAbsoluteInterval::Empty(EmptyInterval),
         EmptiableAbsoluteInterval::Empty(EmptyInterval),
         AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new(
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             OpeningDirection::ToPast,
-        )).to_emptiable_interval(),
+        ))
+        .to_emptiable_interval(),
         EmptiableAbsoluteInterval::Empty(EmptyInterval),
     ];
 
@@ -52,11 +60,13 @@ fn run() -> Result<(), Box<dyn Error>> {
             AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
-            )).to_emptiable_interval(),
+            ))
+            .to_emptiable_interval(),
             AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 OpeningDirection::ToPast
-            )).to_emptiable_interval(),
+            ))
+            .to_emptiable_interval(),
         ],
     );
 
@@ -70,13 +80,15 @@ fn run_reverse() -> Result<(), Box<dyn Error>> {
         AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-        )).to_emptiable_interval(),
+        ))
+        .to_emptiable_interval(),
         EmptiableAbsoluteInterval::Empty(EmptyInterval),
         EmptiableAbsoluteInterval::Empty(EmptyInterval),
         AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new(
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             OpeningDirection::ToPast,
-        )).to_emptiable_interval(),
+        ))
+        .to_emptiable_interval(),
         EmptiableAbsoluteInterval::Empty(EmptyInterval),
     ];
 
@@ -86,11 +98,13 @@ fn run_reverse() -> Result<(), Box<dyn Error>> {
             AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 OpeningDirection::ToPast
-            )).to_emptiable_interval(),
+            ))
+            .to_emptiable_interval(),
             AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
-            )).to_emptiable_interval(),
+            ))
+            .to_emptiable_interval(),
             AbsoluteInterval::Unbounded(UnboundedInterval).to_emptiable_interval(),
         ],
     );
