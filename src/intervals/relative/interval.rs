@@ -16,8 +16,7 @@
 //!
 //! If you want to include
 //! [`EmptyInterval`](crate::intervals::special::EmptyInterval) as a possible
-//! variant,
-//! see [`EmptiableRelativeInterval`](crate::intervals::relative::EmptiableRelativeInterval).
+//! variant, see [`EmptiableRelativeInterval`].
 
 use std::cmp::Ordering;
 use std::error::Error;
@@ -73,8 +72,7 @@ use crate::intervals::special::UnboundedInterval;
 ///
 /// If you want to include
 /// [`EmptyInterval`](crate::intervals::special::EmptyInterval) as a possible
-/// variant,
-/// see [`EmptiableRelativeInterval`](crate::intervals::relative::EmptiableRelativeInterval).
+/// variant, see [`EmptiableRelativeInterval`].
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]

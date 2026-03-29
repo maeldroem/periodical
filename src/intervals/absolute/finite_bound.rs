@@ -3,12 +3,9 @@
 //! An absolute finite bound has two components: an absolute time, represented
 //! by a [`Timestamp`], and a [bound inclusivity](BoundInclusivity).
 //!
-//! Absolute finite bounds are usually converted into either an
-//! [`AbsoluteStartBound`](crate::intervals::absolute::AbsoluteStartBound)
+//! Absolute finite bounds are usually converted into either an [`AbsoluteStartBound`]
 //! through the [`to_start_bound`](AbsoluteFiniteBound::to_start_bound) method,
-//! or into an
-//! [`AbsoluteEndBound`](crate::intervals::absolute::AbsoluteEndBound) through
-//! the [`to_end_bound`](AbsoluteFiniteBound::to_end_bound) method.
+//! or into an [`AbsoluteEndBound`] through the [`to_end_bound`](AbsoluteFiniteBound::to_end_bound) method.
 
 use std::cmp::Ordering;
 use std::error::Error;

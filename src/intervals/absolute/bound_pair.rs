@@ -4,7 +4,7 @@
 //! [`AbsoluteEndBound`].
 //!
 //! Contrary to a specific interval type, it doesn't keep any
-//! [`Openness`](crate::intervals::meta::Openness)-related invariants, making it
+//! [`Openness`]-related invariants, making it
 //! useful for changing an interval's openness easily.
 //!
 //! Absolute bound pairs are also used for when, after a given operation, the
