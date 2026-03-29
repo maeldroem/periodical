@@ -1,16 +1,16 @@
 //! Union of a [layered bounds iterator](crate::iter::intervals::layered_bounds)
 //!
-//! Operates a [union] on a [layered bounds iterator](crate::iter::intervals::layered_bounds).
+//! Operates a [union] on a [layered bounds
+//! iterator](crate::iter::intervals::layered_bounds).
 //!
 //! [union]: https://en.wikipedia.org/w/index.php?title=Union_(set_theory)&oldid=1310613637
 //!
 //! # Examples
 //!
 //! ```
-//! # use chrono::{DateTime, Utc};
-//! # use periodical::intervals::absolute::{
-//! #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
-//! # };
+//! # use std::error::Error;
+//! # use jiff::Zoned;
+//! # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
 //! # use periodical::intervals::meta::BoundInclusivity;
 //! # use periodical::iter::intervals::bounds::AbsoluteBoundsIteratorDispatcher;
 //! # use periodical::iter::intervals::layered_bounds_set_ops::LayeredAbsoluteBoundsUnionIteratorDispatcher;
@@ -18,40 +18,40 @@
 //! #     LayeredAbsoluteBounds, LayeredBoundsState, LayeredBoundsStateChangeAtAbsoluteBound,
 //! # };
 //! let first_layer_intervals = [
-//!     AbsoluteBounds::new(
-//!         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
-//!         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
+//!     AbsoluteBoundPair::new(
+//!         AbsoluteFiniteBound::new(
+//!             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!         ).to_start_bound(),
+//!         AbsoluteFiniteBound::new(
+//!             "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!         ).to_end_bound(),
 //!     ),
-//!     AbsoluteBounds::new(
-//!         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 13:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
-//!         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
+//!     AbsoluteBoundPair::new(
+//!         AbsoluteFiniteBound::new(
+//!             "2025-01-01 13:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!         ).to_start_bound(),
+//!         AbsoluteFiniteBound::new(
+//!             "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!         ).to_end_bound(),
 //!     ),
 //! ];
 //!
 //! let second_layer_intervals = [
-//!     AbsoluteBounds::new(
-//!         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 07:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
-//!         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 11:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
+//!     AbsoluteBoundPair::new(
+//!         AbsoluteFiniteBound::new(
+//!             "2025-01-01 07:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!         ).to_start_bound(),
+//!         AbsoluteFiniteBound::new(
+//!             "2025-01-01 11:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!         ).to_end_bound(),
 //!     ),
-//!     AbsoluteBounds::new(
-//!         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
-//!         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 18:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
+//!     AbsoluteBoundPair::new(
+//!         AbsoluteFiniteBound::new(
+//!             "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!         ).to_start_bound(),
+//!         AbsoluteFiniteBound::new(
+//!             "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!         ).to_end_bound(),
 //!     ),
 //! ];
 //!
@@ -63,33 +63,35 @@
 //!         .abs_unite_layered()
 //!         .collect::<Vec<_>>(),
 //!     vec![
-//!         AbsoluteBounds::new(
-//!             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!                 "2025-01-01 07:00:00Z".parse::<DateTime<Utc>>()?,
-//!             )),
-//!             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-//!                 "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
-//!             )),
+//!         AbsoluteBoundPair::new(
+//!             AbsoluteFiniteBound::new(
+//!                 "2025-01-01 07:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!             ).to_start_bound(),
+//!             AbsoluteFiniteBound::new(
+//!                 "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!             ).to_end_bound(),
 //!         ),
-//!         AbsoluteBounds::new(
-//!             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!                 "2025-01-01 13:00:00Z".parse::<DateTime<Utc>>()?,
-//!             )),
-//!             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-//!                 "2025-01-01 18:00:00Z".parse::<DateTime<Utc>>()?,
-//!             )),
+//!         AbsoluteBoundPair::new(
+//!             AbsoluteFiniteBound::new(
+//!                 "2025-01-01 13:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!             ).to_start_bound(),
+//!             AbsoluteFiniteBound::new(
+//!                 "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!             ).to_end_bound(),
 //!         ),
 //!     ],
 //! );
-//! # Ok::<(), chrono::format::ParseError>(())
+//! # Ok::<(), Box<dyn Error>>(())
 //! ```
 
 use std::iter::FusedIterator;
 
-use crate::intervals::absolute::AbsoluteBounds;
-use crate::intervals::relative::RelativeBounds;
+use crate::intervals::absolute::AbsoluteBoundPair;
+use crate::intervals::relative::RelativeBoundPair;
 use crate::iter::intervals::layered_bounds::{
-    LayeredBoundsState, LayeredBoundsStateChangeAtAbsoluteBound, LayeredBoundsStateChangeAtRelativeBound,
+    LayeredBoundsState,
+    LayeredBoundsStateChangeAtAbsoluteBound,
+    LayeredBoundsStateChangeAtRelativeBound,
 };
 
 /// Union iterator
@@ -108,21 +110,28 @@ where
     ///
     /// # Input requirements
     ///
-    /// 1. The iterator **must return continuous [state changes](LayeredBoundsStateChangeAtAbsoluteBound)**
+    /// 1. The iterator **must return continuous [state
+    ///    changes](LayeredBoundsStateChangeAtAbsoluteBound)**
     /// 2. The state changes **must be in chronological order**
     ///
-    /// For more precision about requirement 1, _continuous state changes_ means that the first state change
+    /// For more precision about requirement 1, _continuous state changes_ means
+    /// that the first state change
     /// must have [`NoLayers`](LayeredBoundsState::NoLayers)
     /// as its [old state](LayeredBoundsStateChangeAtAbsoluteBound::old_state),
     /// the last change must have [`NoLayers`](LayeredBoundsState::NoLayers)
-    /// as its [new state](LayeredBoundsStateChangeAtAbsoluteBound::new_state), and all state changes must follow each
-    /// other, i.e. if one change transitions from state A to state B, the next change's old state must be the previous
-    /// change's new state: state B.
+    /// as its [new state](LayeredBoundsStateChangeAtAbsoluteBound::new_state),
+    /// and all state changes must follow each other, i.e. if one change
+    /// transitions from state A to state B, the next change's old state must be
+    /// the previous change's new state: state B.
     ///
-    /// All requirements are automatically guaranteed if the state changes are obtained from
+    /// All requirements are automatically guaranteed if the state changes are
+    /// obtained from
     /// [`LayeredAbsoluteBounds`](crate::iter::intervals::layered_bounds::LayeredAbsoluteBounds).
     pub fn new(iter: I) -> LayeredAbsoluteBoundsUnion<I> {
-        LayeredAbsoluteBoundsUnion { iter, exhausted: false }
+        LayeredAbsoluteBoundsUnion {
+            iter,
+            exhausted: false,
+        }
     }
 }
 
@@ -130,7 +139,7 @@ impl<I> Iterator for LayeredAbsoluteBoundsUnion<I>
 where
     I: Iterator<Item = LayeredBoundsStateChangeAtAbsoluteBound>,
 {
-    type Item = AbsoluteBounds;
+    type Item = AbsoluteBoundPair;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.exhausted {
@@ -172,7 +181,7 @@ where
                     );
                 };
 
-                return Some(AbsoluteBounds::new(start, end));
+                return Some(AbsoluteBoundPair::new(start, end));
             }
         }
     }
@@ -197,7 +206,9 @@ where
 {
     /// Operates a [union]
     ///
-    /// See [module documentation](crate::iter::intervals::layered_bounds_set_ops::unite) for more information.
+    /// See [module
+    /// documentation](crate::iter::intervals::layered_bounds_set_ops::unite)
+    /// for more information.
     ///
     /// [union]: https://en.wikipedia.org/w/index.php?title=Union_(set_theory)&oldid=1310613637
     fn abs_unite_layered(self) -> LayeredAbsoluteBoundsUnion<Self::IntoIter> {
@@ -226,21 +237,28 @@ where
     ///
     /// # Input requirements
     ///
-    /// 1. The iterator **must return continuous [state changes](LayeredBoundsStateChangeAtRelativeBound)**
+    /// 1. The iterator **must return continuous [state
+    ///    changes](LayeredBoundsStateChangeAtRelativeBound)**
     /// 2. The state changes **must be in chronological order**
     ///
-    /// For more precision about requirement 1, _continuous state changes_ means that the first state change
+    /// For more precision about requirement 1, _continuous state changes_ means
+    /// that the first state change
     /// must have [`NoLayers`](LayeredBoundsState::NoLayers)
     /// as its [old state](LayeredBoundsStateChangeAtRelativeBound::old_state),
     /// the last change must have [`NoLayers`](LayeredBoundsState::NoLayers)
-    /// as its [new state](LayeredBoundsStateChangeAtRelativeBound::new_state), and all state changes must follow each
-    /// other, i.e. if one change transitions from state A to state B, the next change's old state must be the previous
-    /// change's new state: state B.
+    /// as its [new state](LayeredBoundsStateChangeAtRelativeBound::new_state),
+    /// and all state changes must follow each other, i.e. if one change
+    /// transitions from state A to state B, the next change's old state must be
+    /// the previous change's new state: state B.
     ///
-    /// All requirements are automatically guaranteed if the state changes are obtained from
+    /// All requirements are automatically guaranteed if the state changes are
+    /// obtained from
     /// [`LayeredRelativeBounds`](crate::iter::intervals::layered_bounds::LayeredRelativeBounds).
     pub fn new(iter: I) -> LayeredRelativeBoundsUnion<I> {
-        LayeredRelativeBoundsUnion { iter, exhausted: false }
+        LayeredRelativeBoundsUnion {
+            iter,
+            exhausted: false,
+        }
     }
 }
 
@@ -248,7 +266,7 @@ impl<I> Iterator for LayeredRelativeBoundsUnion<I>
 where
     I: Iterator<Item = LayeredBoundsStateChangeAtRelativeBound>,
 {
-    type Item = RelativeBounds;
+    type Item = RelativeBoundPair;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.exhausted {
@@ -290,7 +308,7 @@ where
                     );
                 };
 
-                return Some(RelativeBounds::new(start, end));
+                return Some(RelativeBoundPair::new(start, end));
             }
         }
     }
@@ -315,7 +333,9 @@ where
 {
     /// Operates a [union]
     ///
-    /// See [module documentation](crate::iter::intervals::layered_bounds_set_ops::unite) for more information.
+    /// See [module
+    /// documentation](crate::iter::intervals::layered_bounds_set_ops::unite)
+    /// for more information.
     ///
     /// [union]: https://en.wikipedia.org/w/index.php?title=Union_(set_theory)&oldid=1310613637
     fn rel_unite_layered(self) -> LayeredRelativeBoundsUnion<Self::IntoIter> {

@@ -1,35 +1,51 @@
 //! Special intervals
 //!
-//! Includes intervals that are not absolute nor relative: [`UnboundedInterval`] and [`EmptyInterval`].
+//! Includes intervals that are not absolute nor relative: [`UnboundedInterval`]
+//! and [`EmptyInterval`].
 
 use std::error::Error;
 use std::fmt::Display;
 use std::ops::RangeFull;
+use std::time::Duration as StdDuration;
 
 #[cfg(feature = "arbitrary")]
 use arbitrary::Arbitrary;
-use chrono::Duration;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use crate::intervals::meta::{Epsilon, Interval};
-
 use super::absolute::{
-    AbsoluteBounds, AbsoluteEndBound, AbsoluteInterval, AbsoluteStartBound, EmptiableAbsoluteBounds, HasAbsoluteBounds,
-    HasEmptiableAbsoluteBounds,
+    AbsoluteBoundPair,
+    AbsoluteEndBound,
+    AbsoluteInterval,
+    AbsoluteStartBound,
+    EmptiableAbsoluteBoundPair,
+    HasAbsoluteBoundPair,
+    HasEmptiableAbsoluteBoundPair,
 };
 use super::meta::{
-    Duration as IntervalDuration, Emptiable, HasDuration, HasOpenness, HasRelativity, Openness, Relativity,
+    Duration as IntervalDuration,
+    Emptiable,
+    HasDuration,
+    HasOpenness,
+    HasRelativity,
+    Openness,
+    Relativity,
 };
 use super::relative::{
-    EmptiableRelativeBounds, HasEmptiableRelativeBounds, HasRelativeBounds, RelativeBounds, RelativeEndBound,
-    RelativeInterval, RelativeStartBound,
+    EmptiableRelativeBoundPair,
+    HasEmptiableRelativeBoundPair,
+    HasRelativeBoundPair,
+    RelativeBoundPair,
+    RelativeEndBound,
+    RelativeInterval,
+    RelativeStartBound,
 };
+use crate::intervals::meta::{Epsilon, Interval};
 
 /// An unbounded interval
 ///
-/// Interval without [relativity](Relativity) (not absolute nor relative) and without any bounds.
-/// Is equivalent to _time itself_ (all time), infinite duration.
+/// Interval without [`Relativity`] (not absolute nor relative) and without any
+/// bounds. Is equivalent to _time itself_ (all time), infinite duration.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
@@ -55,9 +71,9 @@ impl HasDuration for UnboundedInterval {
     }
 }
 
-impl HasAbsoluteBounds for UnboundedInterval {
-    fn abs_bounds(&self) -> AbsoluteBounds {
-        AbsoluteBounds::new(self.abs_start(), self.abs_end())
+impl HasAbsoluteBoundPair for UnboundedInterval {
+    fn abs_bound_pair(&self) -> AbsoluteBoundPair {
+        AbsoluteBoundPair::new(self.abs_start(), self.abs_end())
     }
 
     fn abs_start(&self) -> AbsoluteStartBound {
@@ -69,9 +85,9 @@ impl HasAbsoluteBounds for UnboundedInterval {
     }
 }
 
-impl HasRelativeBounds for UnboundedInterval {
-    fn rel_bounds(&self) -> RelativeBounds {
-        RelativeBounds::new(self.rel_start(), self.rel_end())
+impl HasRelativeBoundPair for UnboundedInterval {
+    fn rel_bound_pair(&self) -> RelativeBoundPair {
+        RelativeBoundPair::new(self.rel_start(), self.rel_end())
     }
 
     fn rel_start(&self) -> RelativeStartBound {
@@ -89,8 +105,8 @@ impl From<RangeFull> for UnboundedInterval {
     }
 }
 
-/// Error that can occur when trying to convert an [`AbsoluteInterval`] or [`RelativeInterval`]
-/// into an [`UnboundedInterval`]
+/// Error that can occur when trying to convert an [`AbsoluteInterval`] or
+/// [`RelativeInterval`] into an [`UnboundedInterval`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum UnboundedIntervalConversionErr {
     WrongVariant,
@@ -131,14 +147,17 @@ impl TryFrom<RelativeInterval> for UnboundedInterval {
 /// Empty interval
 ///
 /// Similar to the [empty set](https://en.wikipedia.org/wiki/Empty_set), this allows for still performing
-/// operations such as the complement of the interval without issues, but the difference between an empty set and
-/// and empty interval is that intervals are linked to time, therefore empty intervals are out of this time dimension.
+/// operations such as the complement of the interval without issues, but the
+/// difference between an empty set and and empty interval is that intervals are
+/// linked to time, therefore empty intervals are out of this time dimension.
 ///
-/// This means that, contrary to an empty set, an empty interval is **not** a subset of any interval.
-/// It simply represents the _lack_ of a time interval, like the complement of an unbounded interval.
+/// This means that, contrary to an empty set, an empty interval is **not** a
+/// subset of any interval. It simply represents the _lack_ of a time interval,
+/// like the complement of an unbounded interval.
 ///
-/// In regards to operations such as the overlap position, or union, since an empty interval has no defined place
-/// in time, it is always _outside_, _separate_ from the compared.
+/// In regards to operations such as the overlap position, or union, since an
+/// empty interval has no defined place in time, it is always _outside_,
+/// _separate_ from the compared.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
@@ -160,13 +179,13 @@ impl HasRelativity for EmptyInterval {
 
 impl HasDuration for EmptyInterval {
     fn duration(&self) -> IntervalDuration {
-        IntervalDuration::Finite(Duration::zero(), Epsilon::None)
+        IntervalDuration::Finite(StdDuration::ZERO, Epsilon::None)
     }
 }
 
-impl HasEmptiableAbsoluteBounds for EmptyInterval {
-    fn emptiable_abs_bounds(&self) -> EmptiableAbsoluteBounds {
-        EmptiableAbsoluteBounds::Empty
+impl HasEmptiableAbsoluteBoundPair for EmptyInterval {
+    fn emptiable_abs_bound_pair(&self) -> EmptiableAbsoluteBoundPair {
+        EmptiableAbsoluteBoundPair::Empty
     }
 
     fn partial_abs_start(&self) -> Option<AbsoluteStartBound> {
@@ -178,9 +197,9 @@ impl HasEmptiableAbsoluteBounds for EmptyInterval {
     }
 }
 
-impl HasEmptiableRelativeBounds for EmptyInterval {
-    fn emptiable_rel_bounds(&self) -> EmptiableRelativeBounds {
-        EmptiableRelativeBounds::Empty
+impl HasEmptiableRelativeBoundPair for EmptyInterval {
+    fn emptiable_rel_bound_pair(&self) -> EmptiableRelativeBoundPair {
+        EmptiableRelativeBoundPair::Empty
     }
 
     fn partial_rel_start(&self) -> Option<RelativeStartBound> {
@@ -198,14 +217,8 @@ impl Emptiable for EmptyInterval {
     }
 }
 
-impl From<()> for EmptyInterval {
-    fn from(_value: ()) -> Self {
-        EmptyInterval
-    }
-}
-
-/// Errors that can occur when trying to convert an [`AbsoluteInterval`] or [`RelativeInterval`]
-/// into an [`EmptyInterval`]
+/// Errors that can occur when trying to convert an [`AbsoluteInterval`] or
+/// [`RelativeInterval`] into an [`EmptyInterval`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum EmptyIntervalConversionErr {
     WrongVariant,
@@ -221,6 +234,8 @@ impl Display for EmptyIntervalConversionErr {
 
 impl Error for EmptyIntervalConversionErr {}
 
+/*
+IMPL TRY FROM ON Emptiable VARIANTS OF INTERVALS
 impl TryFrom<AbsoluteInterval> for EmptyInterval {
     type Error = EmptyIntervalConversionErr;
 
@@ -242,3 +257,4 @@ impl TryFrom<RelativeInterval> for EmptyInterval {
         }
     }
 }
+*/

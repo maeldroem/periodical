@@ -1,17 +1,19 @@
-use chrono::{Duration, Utc};
+use std::error::Error;
+use std::time::Duration as StdDuration;
+
+use jiff::{SignedDuration, Timestamp};
 
 use crate::intervals::absolute::{
-    AbsoluteBounds, AbsoluteEndBound, AbsoluteInterval, AbsoluteStartBound, BoundedAbsoluteInterval,
-    EmptiableAbsoluteBounds, HasAbsoluteBounds, HasEmptiableAbsoluteBounds,
+    AbsoluteBoundPair, AbsoluteEndBound, AbsoluteInterval, AbsoluteStartBound, BoundedAbsoluteInterval,
+    EmptiableAbsoluteBoundPair, HasAbsoluteBoundPair, HasEmptiableAbsoluteBoundPair,
 };
 use crate::intervals::meta::{
     Duration as IntervalDuration, Emptiable, Epsilon, HasDuration, HasOpenness, HasRelativity, Openness, Relativity,
 };
 use crate::intervals::relative::{
-    BoundedRelativeInterval, EmptiableRelativeBounds, HasEmptiableRelativeBounds, HasRelativeBounds, RelativeBounds,
-    RelativeEndBound, RelativeInterval, RelativeStartBound,
+    BoundedRelativeInterval, EmptiableRelativeBoundPair, HasEmptiableRelativeBoundPair, HasRelativeBoundPair,
+    RelativeBoundPair, RelativeEndBound, RelativeInterval, RelativeStartBound,
 };
-use crate::test_utils::date;
 
 use super::special::*;
 
@@ -31,10 +33,10 @@ fn unbounded_interval_duration() {
 }
 
 #[test]
-fn unbounded_interval_abs_bounds() {
+fn unbounded_interval_abs_bound_pair() {
     assert_eq!(
-        UnboundedInterval.abs_bounds(),
-        AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture),
+        UnboundedInterval.abs_bound_pair(),
+        AbsoluteBoundPair::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture),
     );
 }
 
@@ -49,10 +51,10 @@ fn unbounded_interval_abs_end() {
 }
 
 #[test]
-fn unbounded_interval_rel_bounds() {
+fn unbounded_interval_rel_bound_pair() {
     assert_eq!(
-        UnboundedInterval.rel_bounds(),
-        RelativeBounds::new(RelativeStartBound::InfinitePast, RelativeEndBound::InfiniteFuture),
+        UnboundedInterval.rel_bound_pair(),
+        RelativeBoundPair::new(RelativeStartBound::InfinitePast, RelativeEndBound::InfiniteFuture),
     );
 }
 
@@ -75,14 +77,15 @@ fn unbounded_interval_try_from_abs_interval_correct_variant() {
 }
 
 #[test]
-fn unbounded_interval_try_from_abs_interval_wrong_variant() {
+fn unbounded_interval_try_from_abs_interval_wrong_variant() -> Result<(), Box<dyn Error>> {
     assert_eq!(
         UnboundedInterval::try_from(AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
-            date(&Utc, 2025, 1, 1),
-            date(&Utc, 2025, 1, 2),
+            "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
+            "2025-01-02 00:00:00Z".parse::<Timestamp>()?,
         ))),
         Err(UnboundedIntervalConversionErr::WrongVariant),
     );
+    Ok(())
 }
 
 #[test]
@@ -97,8 +100,8 @@ fn unbounded_interval_try_from_rel_interval_correct_variant() {
 fn unbounded_interval_try_from_rel_interval_wrong_variant() {
     assert_eq!(
         UnboundedInterval::try_from(RelativeInterval::Bounded(BoundedRelativeInterval::new(
-            Duration::hours(1),
-            Duration::hours(5),
+            SignedDuration::from_hours(1),
+            SignedDuration::from_hours(5),
         ))),
         Err(UnboundedIntervalConversionErr::WrongVariant),
     );
@@ -118,13 +121,13 @@ fn empty_interval_relativity() {
 fn empty_interval_duration() {
     assert_eq!(
         EmptyInterval.duration(),
-        IntervalDuration::Finite(Duration::zero(), Epsilon::None)
+        IntervalDuration::Finite(StdDuration::ZERO, Epsilon::None)
     );
 }
 
 #[test]
-fn empty_interval_emptiable_abs_bounds() {
-    assert_eq!(EmptyInterval.emptiable_abs_bounds(), EmptiableAbsoluteBounds::Empty);
+fn empty_interval_emptiable_abs_bound_pair() {
+    assert_eq!(EmptyInterval.emptiable_abs_bound_pair(), EmptiableAbsoluteBoundPair::Empty);
 }
 
 #[test]
@@ -138,8 +141,8 @@ fn empty_interval_partial_abs_end() {
 }
 
 #[test]
-fn empty_interval_emptiable_rel_bounds() {
-    assert_eq!(EmptyInterval.emptiable_rel_bounds(), EmptiableRelativeBounds::Empty);
+fn empty_interval_emptiable_rel_bound_pair() {
+    assert_eq!(EmptyInterval.emptiable_rel_bound_pair(), EmptiableRelativeBoundPair::Empty);
 }
 
 #[test]
@@ -155,42 +158,4 @@ fn empty_interval_partial_rel_end() {
 #[test]
 fn empty_interval_is_empty() {
     assert!(EmptyInterval.is_empty());
-}
-
-#[test]
-fn empty_interval_try_from_abs_interval_correct_variant() {
-    assert_eq!(
-        EmptyInterval::try_from(AbsoluteInterval::Empty(EmptyInterval)),
-        Ok(EmptyInterval)
-    );
-}
-
-#[test]
-fn empty_interval_try_from_abs_interval_wrong_variant() {
-    assert_eq!(
-        EmptyInterval::try_from(AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
-            date(&Utc, 2025, 1, 1),
-            date(&Utc, 2025, 1, 2),
-        ))),
-        Err(EmptyIntervalConversionErr::WrongVariant),
-    );
-}
-
-#[test]
-fn empty_interval_try_from_rel_interval_correct_variant() {
-    assert_eq!(
-        EmptyInterval::try_from(RelativeInterval::Empty(EmptyInterval)),
-        Ok(EmptyInterval)
-    );
-}
-
-#[test]
-fn empty_interval_try_from_rel_interval_wrong_variant() {
-    assert_eq!(
-        EmptyInterval::try_from(RelativeInterval::Bounded(BoundedRelativeInterval::new(
-            Duration::hours(1),
-            Duration::hours(5),
-        ))),
-        Err(EmptyIntervalConversionErr::WrongVariant),
-    );
 }

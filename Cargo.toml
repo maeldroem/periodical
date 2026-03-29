@@ -22,13 +22,13 @@ resolver = "3"
 members = ["fuzz"]
 
 [workspace.dependencies]
-chrono = "0.4.42"
+jiff = "0.2.21"
 
 [features]
-serde = ["dep:serde", "chrono/serde"]
-arbitrary = ["dep:arbitrary", "chrono/arbitrary"]
+serde = ["dep:serde", "jiff/serde"]
+arbitrary = ["dep:arbitrary"]
 
 [dependencies]
 arbitrary = { version = "1.4.2", optional = true, features = ["derive"] }
-chrono = "0.4.42"
+jiff = "0.2.21"
 serde = { version = "1.0.225", optional = true, features = ["derive"] }

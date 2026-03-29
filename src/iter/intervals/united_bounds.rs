@@ -1,46 +1,46 @@
 //! United bounds iterators
 //!
-//! Iterators to unite a collection of bounds, assuring that the bounds are no longer overlapping.
+//! Iterators to unite a collection of bounds, assuring that the bounds are no
+//! longer overlapping.
 //!
 //! # Examples
 //!
 //! ```
-//! # use chrono::{DateTime, Utc};
-//! # use periodical::intervals::absolute::{
-//! #     AbsoluteBound, AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
-//! # };
+//! # use std::error::Error;
+//! # use jiff::Zoned;
+//! # use periodical::intervals::absolute::{AbsoluteBound, AbsoluteBoundPair, AbsoluteFiniteBound};
 //! # use periodical::iter::intervals::bounds::AbsoluteBoundsIteratorDispatcher;
 //! let intervals = [
-//!     AbsoluteBounds::new(
-//!         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
-//!         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
+//!     AbsoluteBoundPair::new(
+//!         AbsoluteFiniteBound::new(
+//!             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!         ).to_start_bound(),
+//!         AbsoluteFiniteBound::new(
+//!             "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!         ).to_end_bound(),
 //!     ),
-//!     AbsoluteBounds::new(
-//!         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
-//!         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
+//!     AbsoluteBoundPair::new(
+//!         AbsoluteFiniteBound::new(
+//!             "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!         ).to_start_bound(),
+//!         AbsoluteFiniteBound::new(
+//!             "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!         ).to_end_bound(),
 //!     ),
 //! ];
 //!
 //! assert_eq!(
 //!     intervals.abs_bounds_iter().unite_bounds().collect::<Vec<_>>(),
 //!     vec![
-//!         AbsoluteBound::Start(AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-//!         ))),
-//!         AbsoluteBound::End(AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
-//!         ))),
+//!         AbsoluteFiniteBound::new(
+//!             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!         ).to_start_bound().to_bound(),
+//!         AbsoluteFiniteBound::new(
+//!             "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!         ).to_end_bound().to_bound(),
 //!     ],
 //! );
-//! # Ok::<(), chrono::format::ParseError>(())
+//! # Ok::<(), Box<dyn Error>>(())
 //! ```
 
 use std::cmp::Ordering;
@@ -69,18 +69,21 @@ where
     /// # Input requirements
     ///
     /// 1. The bounds **must be sorted chronologically**
-    /// 2. The bounds **must be paired**, that means there should be an equal amount of
-    ///    [`Start`](AbsoluteBound::Start)s and [`End`](AbsoluteBound::End)s.
+    /// 2. The bounds **must be paired**, that means there should be an equal
+    ///    amount of [`Start`](AbsoluteBound::Start)s and
+    ///    [`End`](AbsoluteBound::End)s.
     ///
-    /// The responsibility of verifying those requirements are left to the caller
-    /// in order to prevent double-processing.
+    /// The responsibility of verifying those requirements are left to the
+    /// caller in order to prevent double-processing.
     ///
     /// Requirement 1 is automatically guaranteed if the iterator is created
     /// from [`AbsoluteBoundsIter::unite_bounds`](crate::iter::intervals::bounds::AbsoluteBoundsIter::unite_bounds).
     ///
-    /// Requirement 2 is automatically guaranteed if the bounds are obtained from
+    /// Requirement 2 is automatically guaranteed if the bounds are obtained
+    /// from
     /// a set of [intervals](crate::intervals::absolute::AbsoluteInterval)
-    /// or from [bound pairs](crate::intervals::absolute::AbsoluteBounds) and then processed through
+    /// or from [bound pairs](crate::intervals::absolute::AbsoluteBoundPair) and
+    /// then processed through
     /// [`AbsoluteBoundsIter`](crate::iter::intervals::bounds::AbsoluteBoundsIter).
     #[must_use]
     pub fn new(iter: I) -> AbsoluteUnitedBoundsIter<Peekable<I>> {
@@ -99,52 +102,51 @@ where
 {
     /// Layers this iterator with the given other [`AbsoluteUnitedBoundsIter`]
     ///
-    /// The given other [`AbsoluteUnitedBoundsIter`] acts at the second layer in the resulting
-    /// [`LayeredAbsoluteBounds`].
+    /// The given other [`AbsoluteUnitedBoundsIter`] acts at the second layer in
+    /// the resulting [`LayeredAbsoluteBounds`].
     ///
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Utc};
-    /// # use periodical::intervals::absolute::{
-    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
-    /// # };
+    /// # use std::error::Error;
+    /// # use jiff::Zoned;
+    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
     /// # use periodical::iter::intervals::bounds::AbsoluteBoundsIteratorDispatcher;
     /// let first_layer_intervals = [
-    ///     AbsoluteBounds::new(
-    ///         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///             "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-    ///         )),
-    ///         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///             "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
-    ///         )),
+    ///     AbsoluteBoundPair::new(
+    ///         AbsoluteFiniteBound::new(
+    ///             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///         ).to_start_bound(),
+    ///         AbsoluteFiniteBound::new(
+    ///             "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///         ).to_end_bound(),
     ///     ),
-    ///     AbsoluteBounds::new(
-    ///         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///             "2025-01-01 13:00:00Z".parse::<DateTime<Utc>>()?,
-    ///         )),
-    ///         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///             "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
-    ///         )),
+    ///     AbsoluteBoundPair::new(
+    ///         AbsoluteFiniteBound::new(
+    ///             "2025-01-01 13:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///         ).to_start_bound(),
+    ///         AbsoluteFiniteBound::new(
+    ///             "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///         ).to_end_bound(),
     ///     ),
     /// ];
     ///
     /// let second_layer_intervals = [
-    ///     AbsoluteBounds::new(
-    ///         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///             "2025-01-01 07:00:00Z".parse::<DateTime<Utc>>()?,
-    ///         )),
-    ///         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///             "2025-01-01 11:00:00Z".parse::<DateTime<Utc>>()?,
-    ///         )),
+    ///     AbsoluteBoundPair::new(
+    ///         AbsoluteFiniteBound::new(
+    ///             "2025-01-01 07:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///         ).to_start_bound(),
+    ///         AbsoluteFiniteBound::new(
+    ///             "2025-01-01 11:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///         ).to_end_bound(),
     ///     ),
-    ///     AbsoluteBounds::new(
-    ///         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///             "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
-    ///         )),
-    ///         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///             "2025-01-01 18:00:00Z".parse::<DateTime<Utc>>()?,
-    ///         )),
+    ///     AbsoluteBoundPair::new(
+    ///         AbsoluteFiniteBound::new(
+    ///             "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///         ).to_start_bound(),
+    ///         AbsoluteFiniteBound::new(
+    ///             "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///         ).to_end_bound(),
     ///     ),
     /// ];
     ///
@@ -152,7 +154,7 @@ where
     ///     .abs_bounds_iter()
     ///     .unite_bounds()
     ///     .layer(second_layer_intervals.abs_bounds_iter().unite_bounds());
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn layer<J>(
         self,
@@ -192,9 +194,10 @@ where
                         continue;
                     }
 
-                    // Since we already incremented the layer, the first counted start bound must be on layer 1
-                    // i.e. we were on the bottom layer (0) and it just was incremented to 1.
-                    // This technically also guards against start bounds that, after incrementing, remain
+                    // Since we already incremented the layer, the first counted start bound must be
+                    // on layer 1 i.e. we were on the bottom layer (0) and it
+                    // just was incremented to 1. This technically also guards
+                    // against start bounds that, after incrementing, remain
                     // on layer 0, but this impossible as it would required going in the negatives
                     // (and since we are using an unsigned number, you see where this is going)
                     if self.layer > 1 {
@@ -205,19 +208,22 @@ where
                     // ACK: Yes, this will panic if it attempts to go below 0
                     self.layer -= 1;
 
-                    // Since we already decremented the layer, the last counted end bound must be on layer 0
-                    // i.e. we were on the first layer (1) and it just was decremented to 0.
+                    // Since we already decremented the layer, the last counted end bound must be on
+                    // layer 0 i.e. we were on the first layer (1) and it just
+                    // was decremented to 0.
                     if self.layer > 0 {
                         continue;
                     }
 
                     // If the peeked value is a start bound that is adjacent to the current bound,
-                    // we don't return this end bound. Since the layer decrement already happened and we know it's
-                    // gonna be incremented again, we know that the layer will end up at 1, which is problematic
-                    // as it would be a layer number that makes the start bound considered as the first start bound
-                    // of a new interval.
-                    // In order to solve this, we set a variable that will tell the iterator to skip the next
-                    // start bound, like this end (and the following start) never happened.
+                    // we don't return this end bound. Since the layer decrement already happened
+                    // and we know it's gonna be incremented again, we know that
+                    // the layer will end up at 1, which is problematic
+                    // as it would be a layer number that makes the start bound considered as the
+                    // first start bound of a new interval.
+                    // In order to solve this, we set a variable that will tell the iterator to skip
+                    // the next start bound, like this end (and the following
+                    // start) never happened.
                     if self
                         .iter
                         .peek()
@@ -273,18 +279,21 @@ where
     /// # Input requirements
     ///
     /// 1. The bounds **must be sorted chronologically**
-    /// 2. The bounds **must be paired**, that means there should be an equal amount of
-    ///    [`Start`](RelativeBound::Start)s and [`End`](RelativeBound::End)s.
+    /// 2. The bounds **must be paired**, that means there should be an equal
+    ///    amount of [`Start`](RelativeBound::Start)s and
+    ///    [`End`](RelativeBound::End)s.
     ///
-    /// The responsibility of verifying those requirements are left to the caller
-    /// in order to prevent double-processing.
+    /// The responsibility of verifying those requirements are left to the
+    /// caller in order to prevent double-processing.
     ///
     /// Requirement 1 is automatically guaranteed if the iterator is created
     /// from [`RelativeBoundsIter::unite_bounds`](crate::iter::intervals::bounds::RelativeBoundsIter::unite_bounds).
     ///
-    /// Requirement 2 is automatically guaranteed if the bounds are obtained from
+    /// Requirement 2 is automatically guaranteed if the bounds are obtained
+    /// from
     /// a set of [intervals](crate::intervals::relative::RelativeInterval)
-    /// or from [bound pairs](crate::intervals::relative::RelativeBounds) and then processed through
+    /// or from [bound pairs](crate::intervals::relative::RelativeBoundPair) and
+    /// then processed through
     /// [`RelativeBoundsIter`](crate::iter::intervals::bounds::RelativeBoundsIter).
     #[must_use]
     pub fn new(iter: I) -> RelativeUnitedBoundsIter<Peekable<I>> {
@@ -304,52 +313,50 @@ where
 {
     /// Layers this iterator with the given other [`RelativeUnitedBoundsIter`]
     ///
-    /// The given other [`RelativeUnitedBoundsIter`] acts at the second layer in the resulting
-    /// [`LayeredRelativeBounds`].
+    /// The given other [`RelativeUnitedBoundsIter`] acts at the second layer in
+    /// the resulting [`LayeredRelativeBounds`].
     ///
     /// # Examples
     ///
     /// ```
-    /// # use chrono::Duration;
-    /// # use periodical::intervals::relative::{
-    /// #     RelativeBounds, RelativeEndBound, RelativeFiniteBound, RelativeStartBound,
-    /// # };
+    /// # use jiff::SignedDuration;
+    /// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBound};
     /// # use periodical::iter::intervals::bounds::RelativeBoundsIteratorDispatcher;
     /// let first_layer_intervals = [
-    ///     RelativeBounds::new(
-    ///         RelativeStartBound::Finite(RelativeFiniteBound::new(
-    ///             Duration::hours(8),
-    ///         )),
-    ///         RelativeEndBound::Finite(RelativeFiniteBound::new(
-    ///             Duration::hours(12),
-    ///         )),
+    ///     RelativeBoundPair::new(
+    ///         RelativeFiniteBound::new(
+    ///             SignedDuration::from_hours(8),
+    ///         ).to_start_bound(),
+    ///         RelativeFiniteBound::new(
+    ///             SignedDuration::from_hours(12),
+    ///         ).to_end_bound(),
     ///     ),
-    ///     RelativeBounds::new(
-    ///         RelativeStartBound::Finite(RelativeFiniteBound::new(
-    ///             Duration::hours(13),
-    ///         )),
-    ///         RelativeEndBound::Finite(RelativeFiniteBound::new(
-    ///             Duration::hours(16),
-    ///         )),
+    ///     RelativeBoundPair::new(
+    ///         RelativeFiniteBound::new(
+    ///             SignedDuration::from_hours(13),
+    ///         ).to_start_bound(),
+    ///         RelativeFiniteBound::new(
+    ///             SignedDuration::from_hours(16),
+    ///         ).to_end_bound(),
     ///     ),
     /// ];
     ///
     /// let second_layer_intervals = [
-    ///     RelativeBounds::new(
-    ///         RelativeStartBound::Finite(RelativeFiniteBound::new(
-    ///             Duration::hours(7),
-    ///         )),
-    ///         RelativeEndBound::Finite(RelativeFiniteBound::new(
-    ///             Duration::hours(11),
-    ///         )),
+    ///     RelativeBoundPair::new(
+    ///         RelativeFiniteBound::new(
+    ///             SignedDuration::from_hours(7),
+    ///         ).to_start_bound(),
+    ///         RelativeFiniteBound::new(
+    ///             SignedDuration::from_hours(11),
+    ///         ).to_end_bound(),
     ///     ),
-    ///     RelativeBounds::new(
-    ///         RelativeStartBound::Finite(RelativeFiniteBound::new(
-    ///             Duration::hours(14),
-    ///         )),
-    ///         RelativeEndBound::Finite(RelativeFiniteBound::new(
-    ///             Duration::hours(18),
-    ///         )),
+    ///     RelativeBoundPair::new(
+    ///         RelativeFiniteBound::new(
+    ///             SignedDuration::from_hours(14),
+    ///         ).to_start_bound(),
+    ///         RelativeFiniteBound::new(
+    ///             SignedDuration::from_hours(18),
+    ///         ).to_end_bound(),
     ///     ),
     /// ];
     ///
@@ -396,9 +403,10 @@ where
                         continue;
                     }
 
-                    // Since we already incremented the layer, the first counted start bound must be on layer 1
-                    // i.e. we were on the bottom layer (0) and it just was incremented to 1.
-                    // This technically also guards against start bounds that, after incrementing, remain
+                    // Since we already incremented the layer, the first counted start bound must be
+                    // on layer 1 i.e. we were on the bottom layer (0) and it
+                    // just was incremented to 1. This technically also guards
+                    // against start bounds that, after incrementing, remain
                     // on layer 0, but this impossible as it would required going in the negatives
                     // (and since we are using an unsigned number, you see where this is going)
                     if self.layer > 1 {
@@ -409,19 +417,22 @@ where
                     // ACK: Yes, this will panic if it attempts to go below 0
                     self.layer -= 1;
 
-                    // Since we already decremented the layer, the last counted end bound must be on layer 0
-                    // i.e. we were on the first layer (1) and it just was decremented to 0.
+                    // Since we already decremented the layer, the last counted end bound must be on
+                    // layer 0 i.e. we were on the first layer (1) and it just
+                    // was decremented to 0.
                     if self.layer > 0 {
                         continue;
                     }
 
                     // If the peeked value is a start bound that is adjacent to the current bound,
-                    // we don't return this end bound. Since the layer decrement already happened and we know it's
-                    // gonna be incremented again, we know that the layer will end up at 1, which is problematic
-                    // as it would be a layer number that makes the start bound considered as the first start bound
-                    // of a new interval.
-                    // In order to solve this, we set a variable that will tell the iterator to skip the next
-                    // start bound, like this end (and the following start) never happened.
+                    // we don't return this end bound. Since the layer decrement already happened
+                    // and we know it's gonna be incremented again, we know that
+                    // the layer will end up at 1, which is problematic
+                    // as it would be a layer number that makes the start bound considered as the
+                    // first start bound of a new interval.
+                    // In order to solve this, we set a variable that will tell the iterator to skip
+                    // the next start bound, like this end (and the following
+                    // start) never happened.
                     if self
                         .iter
                         .peek()

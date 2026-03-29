@@ -1,320 +1,345 @@
-use chrono::Utc;
+use std::error::Error;
+
+use jiff::Zoned;
 
 use crate::intervals::absolute::{
-    AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteInterval, AbsoluteStartBound,
-    EmptiableAbsoluteBounds, HalfBoundedAbsoluteInterval,
+    AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteInterval, AbsoluteStartBound,
+    EmptiableAbsoluteBoundPair, HalfBoundedAbsoluteInterval,
 };
 use crate::intervals::meta::{BoundInclusivity, OpeningDirection};
 use crate::intervals::special::UnboundedInterval;
-use crate::test_utils::date;
 
 use super::remove_overlap_or_gap::*;
 
-#[test]
-fn overlap_or_gap_removal_result_is_single() {
-    assert!(OverlapOrGapRemovalResult::Single(()).is_single());
-    assert!(!OverlapOrGapRemovalResult::Split((), ()).is_single());
+mod overlap_or_gap_removal_result {
+    use super::*;
+    
+    #[test]
+    fn is_single() {
+        assert!(OverlapOrGapRemovalResult::Single(()).is_single());
+        assert!(!OverlapOrGapRemovalResult::Split((), ()).is_single());
+    }
+    
+    #[test]
+    fn is_split() {
+        assert!(!OverlapOrGapRemovalResult::Single(()).is_split());
+        assert!(OverlapOrGapRemovalResult::Split((), ()).is_split());
+    }
+    
+    #[test]
+    fn single_opt() {
+        assert_eq!(OverlapOrGapRemovalResult::Single(10).single(), Some(10));
+        assert_eq!(OverlapOrGapRemovalResult::Split(10, 20).single(), None);
+    }
+    
+    #[test]
+    fn split_opt() {
+        assert_eq!(OverlapOrGapRemovalResult::Single(10).split(), None);
+        assert_eq!(OverlapOrGapRemovalResult::Split(10, 20).split(), Some((10, 20)));
+    }
+    
+    #[test]
+    fn map() {
+        assert_eq!(
+            OverlapOrGapRemovalResult::Single(10).map(|x| x + 10),
+            OverlapOrGapRemovalResult::Single(20)
+        );
+        assert_eq!(
+            OverlapOrGapRemovalResult::Split(10, 20).map(|x| x + 10),
+            OverlapOrGapRemovalResult::Split(20, 30)
+        );
+    }
 }
 
-#[test]
-fn overlap_or_gap_removal_result_is_split() {
-    assert!(!OverlapOrGapRemovalResult::Single(()).is_split());
-    assert!(OverlapOrGapRemovalResult::Split((), ()).is_split());
-}
+mod remove_overlap_or_gap {
+    use super::*;
+    
+    #[test]
+    fn empty_empty() {
+        assert_eq!(
+            EmptiableAbsoluteBoundPair::Empty.remove_overlap_or_gap(&EmptiableAbsoluteBoundPair::Empty),
+            OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBoundPair::Empty),
+        );
+    }
+    
+    #[test]
+    fn empty_unbounded() {
+        assert_eq!(
+            EmptiableAbsoluteBoundPair::Empty.remove_overlap_or_gap(&AbsoluteBoundPair::new(
+                AbsoluteStartBound::InfinitePast,
+                AbsoluteEndBound::InfiniteFuture,
+            )),
+            OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBoundPair::Empty),
+        );
+    }
+    
+    #[test]
+    fn unbounded_empty() {
+        assert_eq!(
+            AbsoluteBoundPair::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture)
+                .remove_overlap_or_gap(&EmptiableAbsoluteBoundPair::Empty),
+            OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::new(
+                AbsoluteStartBound::InfinitePast,
+                AbsoluteEndBound::InfiniteFuture
+            ))),
+        );
+    }
+    
+    #[test]
+    fn unbounded_unbounded() {
+        assert_eq!(
+            AbsoluteBoundPair::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture).remove_overlap_or_gap(
+                &AbsoluteBoundPair::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture,)
+            ),
+            OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBoundPair::Empty),
+        );
+    }
+    
+    #[test]
+    fn gap_between_bounded() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+            )
+            .remove_overlap_or_gap(&AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new("2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new("2025-01-04 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+            )),
+            OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Exclusive,
+                )),
+            ))),
+        );
 
-#[test]
-fn overlap_or_gap_removal_result_single_opt() {
-    assert_eq!(OverlapOrGapRemovalResult::Single(10).single(), Some(10));
-    assert_eq!(OverlapOrGapRemovalResult::Split(10, 20).single(), None);
-}
+        Ok(())
+    }
+    
+    #[test]
+    fn overlap_between_bounded() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new("2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+            )
+            .remove_overlap_or_gap(&AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new("2025-01-04 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+            )),
+            OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Exclusive,
+                )),
+            ))),
+        );
 
-#[test]
-fn overlap_or_gap_removal_result_split_opt() {
-    assert_eq!(OverlapOrGapRemovalResult::Single(10).split(), None);
-    assert_eq!(OverlapOrGapRemovalResult::Split(10, 20).split(), Some((10, 20)));
-}
+        Ok(())
+    }
+    
+    #[test]
+    fn bounded_adjacent_inclusive_inclusive() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+            )
+            .remove_overlap_or_gap(&AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+            )),
+            OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Exclusive,
+                )),
+            ))),
+        );
 
-#[test]
-fn overlap_or_gap_removal_result_map() {
-    assert_eq!(
-        OverlapOrGapRemovalResult::Single(10).map(|x| x + 10),
-        OverlapOrGapRemovalResult::Single(20)
-    );
-    assert_eq!(
-        OverlapOrGapRemovalResult::Split(10, 20).map(|x| x + 10),
-        OverlapOrGapRemovalResult::Split(20, 30)
-    );
-}
+        Ok(())
+    }
+    
+    #[test]
+    fn bounded_adjacent_inclusive_exclusive() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+            )
+            .remove_overlap_or_gap(&AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Exclusive,
+                )),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+            )),
+            OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+            ))),
+        );
 
-#[test]
-fn remove_overlap_or_gap_empty_empty() {
-    assert_eq!(
-        EmptiableAbsoluteBounds::Empty.remove_overlap_or_gap(&EmptiableAbsoluteBounds::Empty),
-        OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBounds::Empty),
-    );
-}
+        Ok(())
+    }
+    
+    #[test]
+    fn bounded_adjacent_exclusive_inclusive() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Exclusive,
+                )),
+            )
+            .remove_overlap_or_gap(&AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+            )),
+            OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Exclusive,
+                )),
+            ))),
+        );
 
-#[test]
-fn remove_overlap_or_gap_empty_unbounded() {
-    assert_eq!(
-        EmptiableAbsoluteBounds::Empty.remove_overlap_or_gap(&AbsoluteBounds::new(
-            AbsoluteStartBound::InfinitePast,
-            AbsoluteEndBound::InfiniteFuture,
-        )),
-        OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBounds::Empty),
-    );
-}
+        Ok(())
+    }
+    
+    #[test]
+    fn bounded_adjacent_exclusive_exclusive() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Exclusive,
+                )),
+            )
+            .remove_overlap_or_gap(&AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Exclusive,
+                )),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+            )),
+            OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+            ))),
+        );
 
-#[test]
-fn remove_overlap_or_gap_unbounded_empty() {
-    assert_eq!(
-        AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture)
-            .remove_overlap_or_gap(&EmptiableAbsoluteBounds::Empty),
-        OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
-            AbsoluteStartBound::InfinitePast,
-            AbsoluteEndBound::InfiniteFuture
-        ))),
-    );
-}
+        Ok(())
+    }
+    
+    #[test]
+    fn bounded_on_unbounded() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Exclusive,
+                )),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+            )
+            .remove_overlap_or_gap(&UnboundedInterval),
+            OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBoundPair::Empty),
+        );
 
-#[test]
-fn remove_overlap_or_gap_unbounded_unbounded() {
-    assert_eq!(
-        AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture).remove_overlap_or_gap(
-            &AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture,)
-        ),
-        OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBounds::Empty),
-    );
-}
+        Ok(())
+    }
+    
+    #[test]
+    fn unbounded_on_bounded() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            UnboundedInterval.remove_overlap_or_gap(&AbsoluteBoundPair::new(
+                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Exclusive,
+                )),
+                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                    "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                )),
+            )),
+            OverlapOrGapRemovalResult::Split(
+                AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
+                    "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Inclusive,
+                    OpeningDirection::ToPast,
+                )).to_emptiable_interval(),
+                AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
+                    "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                    BoundInclusivity::Exclusive,
+                    OpeningDirection::ToFuture,
+                )).to_emptiable_interval(),
+            ),
+        );
 
-#[test]
-fn remove_overlap_or_gap_gap_between_bounded() {
-    assert_eq!(
-        AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2))),
-        )
-        .remove_overlap_or_gap(&AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 3))),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 4))),
-        )),
-        OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 3),
-                BoundInclusivity::Exclusive,
-            )),
-        ))),
-    );
-}
-
-#[test]
-fn remove_overlap_or_gap_overlap_between_bounded() {
-    assert_eq!(
-        AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 3))),
-        )
-        .remove_overlap_or_gap(&AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2))),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 4))),
-        )),
-        OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Exclusive,
-            )),
-        ))),
-    );
-}
-
-#[test]
-fn remove_overlap_or_gap_bounded_adjacent_inclusive_inclusive() {
-    assert_eq!(
-        AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Inclusive,
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Inclusive,
-            )),
-        )
-        .remove_overlap_or_gap(&AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Inclusive,
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 3),
-                BoundInclusivity::Inclusive,
-            )),
-        )),
-        OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Inclusive,
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Exclusive,
-            )),
-        ))),
-    );
-}
-
-#[test]
-fn remove_overlap_or_gap_bounded_adjacent_inclusive_exclusive() {
-    assert_eq!(
-        AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Inclusive,
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Inclusive,
-            )),
-        )
-        .remove_overlap_or_gap(&AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Exclusive,
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 3),
-                BoundInclusivity::Inclusive,
-            )),
-        )),
-        OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Inclusive,
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Inclusive,
-            )),
-        ))),
-    );
-}
-
-#[test]
-fn remove_overlap_or_gap_bounded_adjacent_exclusive_inclusive() {
-    assert_eq!(
-        AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Inclusive,
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Exclusive,
-            )),
-        )
-        .remove_overlap_or_gap(&AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Inclusive,
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 3),
-                BoundInclusivity::Inclusive,
-            )),
-        )),
-        OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Inclusive,
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Exclusive,
-            )),
-        ))),
-    );
-}
-
-#[test]
-fn remove_overlap_or_gap_bounded_adjacent_exclusive_exclusive() {
-    assert_eq!(
-        AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Inclusive,
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Exclusive,
-            )),
-        )
-        .remove_overlap_or_gap(&AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Exclusive,
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 3),
-                BoundInclusivity::Inclusive,
-            )),
-        )),
-        OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Inclusive,
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Inclusive,
-            )),
-        ))),
-    );
-}
-
-#[test]
-fn remove_overlap_or_gap_bounded_on_unbounded() {
-    assert_eq!(
-        AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Exclusive,
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Inclusive,
-            )),
-        )
-        .remove_overlap_or_gap(&UnboundedInterval),
-        OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBounds::Empty),
-    );
-}
-
-#[test]
-fn remove_overlap_or_gap_unbounded_on_bounded() {
-    assert_eq!(
-        UnboundedInterval.remove_overlap_or_gap(&AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Exclusive,
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Inclusive,
-            )),
-        )),
-        OverlapOrGapRemovalResult::Split(
-            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
-                BoundInclusivity::Inclusive,
-                OpeningDirection::ToPast,
-            )),
-            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
-                BoundInclusivity::Exclusive,
-                OpeningDirection::ToFuture,
-            )),
-        ),
-    );
+        Ok(())
+    }
 }

@@ -5,12 +5,12 @@
 //! Practical approach for splitting an interval into common human naive durations, such as days and weeks.
 //! As explained in [`NaiveDuration`], days, weeks, etc. don't have a constant length.
 //!
-//! You can produce a [`NaiveDurationSplit`] iterator by calling
-//! [`split_by_naive_duration`](NaiveDurationSplittable::split_by_naive_duration) which will split the interval
+//! You can produce a [`CalendarAnchorOffsetSplit`] iterator by calling
+//! [`split_by_naive_duration`](CalendarAnchorOffsetSplittable::split_by_naive_duration) which will split the interval
 //! in chronological order.
 //!
-//! You can also produce a [`NaiveDurationRSplit`] iterator by calling
-//! [`rsplit_by_naive_duration`](NaiveDurationSplittable::rsplit_by_naive_duration) which will split the interval
+//! You can also produce a [`CalendarAnchorOffsetRSplit`] iterator by calling
+//! [`rsplit_by_naive_duration`](CalendarAnchorOffsetSplittable::rsplit_by_naive_duration) which will split the interval
 //! in reverse chronological order.
 //!
 //! # Splitting by [`BoundedRelativeInterval`]
@@ -29,29 +29,30 @@
 
 use std::cmp::Ordering;
 
-use chrono::TimeZone;
+use jiff::Timestamp;
+use jiff::tz::TimeZone;
 
-use crate::intervals::absolute::{BoundedAbsoluteInterval, HalfBoundedAbsoluteInterval, HasAbsoluteBounds};
-use crate::iter::intervals::split::NaiveDurationSplit;
-use crate::time::NaiveDuration;
+use crate::intervals::absolute::{BoundedAbsoluteInterval, HalfBoundedAbsoluteInterval, HasAbsoluteBoundPair};
+use crate::iter::intervals::split::CalendarAnchorOffsetSplit;
+use crate::time::CalendarAnchorOffset;
 
-/// A [`NaiveDurationSplit`]'s result
+/// A [`CalendarAnchorOffsetSplit`]'s result
 ///
 /// Depending on the interval being split, it can result in different kinds of splits.
 ///
 /// This enum groups them in one common structure so that it gives the caller the freedom to choose
 /// which to keep and which to filter out without having to consult the contained interval's data.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub enum NaiveDurationSplitResult {
+pub enum CalendarAnchorOffsetSplitResult {
     /// Infinite split
     ///
     /// This is the result of splitting a
     /// [`HalfBoundedAbsoluteInterval`](crate::intervals::absolute::HalfBoundedAbsoluteInterval).
     ///
     /// If we have a half-bounded interval, with its opening direction being
-    /// [`ToPast`](crate::intervals::meta::OpeningDirection::ToPast), then the [`NaiveDurationSplit`] iterator
+    /// [`ToPast`](crate::intervals::meta::OpeningDirection::ToPast), then the [`CalendarAnchorOffsetSplit`] iterator
     /// will produce such a result spanning from the relevant time extremity, here minus infinity, to the closest
-    /// relevant representable point in time, in this case, [`NaiveDate::MIN`].
+    /// relevant representable point in time, in this case, [`Timestamp::MIN`].
     Infinite(HalfBoundedAbsoluteInterval),
     /// Full split
     ///
@@ -63,34 +64,35 @@ pub enum NaiveDurationSplitResult {
     Partial(BoundedAbsoluteInterval),
 }
 
-impl NaiveDurationSplitResult {
-    /// Returns the content of the [`Infinite`](NaiveDurationSplitResult::Infinite) variant
+impl CalendarAnchorOffsetSplitResult {
+    /// Returns the content of the [`Infinite`](CalendarAnchorOffsetSplitResult::Infinite) variant
     ///
-    /// Consumes `self` and puts the content of the [`Infinite`](NaiveDurationSplitResult::Infinite) variant
+    /// Consumes `self` and puts the content of the [`Infinite`](CalendarAnchorOffsetSplitResult::Infinite) variant
     /// in an [`Option`]. If instead `self` is another variant, the method returns [`None`].
     ///
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Utc};
+    /// # use std::error::Error;
+    /// # use jiff::Zoned;
     /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, HalfBoundedAbsoluteInterval};
     /// # use periodical::intervals::meta::OpeningDirection;
-    /// # use periodical::intervals::ops::split::NaiveDurationSplitResult;
+    /// # use periodical::intervals::ops::split::CalendarAnchorOffsetSplitResult;
     /// let infinite_split = HalfBoundedAbsoluteInterval::new(
-    ///     "2026-01-01 00:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     "2026-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     OpeningDirection::ToPast,
     /// );
-    /// let infinite_result = NaiveDurationSplitResult::Infinite(infinite_split.clone());
+    /// let infinite_result = CalendarAnchorOffsetSplitResult::Infinite(infinite_split.clone());
     ///
     /// let full_split = BoundedAbsoluteInterval::new(
-    ///     "2026-01-01 00:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     "2026-01-02 00:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     "2026-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     "2026-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     /// );
-    /// let full_result = NaiveDurationSplitResult::Full(full_split);
+    /// let full_result = CalendarAnchorOffsetSplitResult::Full(full_split);
     ///
     /// assert_eq!(infinite_result.infinite(), Some(infinite_split));
     /// assert_eq!(full_result.infinite(), None);
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
     pub fn infinite(self) -> Option<HalfBoundedAbsoluteInterval> {
@@ -100,33 +102,34 @@ impl NaiveDurationSplitResult {
         }
     }
 
-    /// Returns the content of the [`Full`](NaiveDurationSplitResult::Full) variant
+    /// Returns the content of the [`Full`](CalendarAnchorOffsetSplitResult::Full) variant
     ///
-    /// Consumes `self` and puts the content of the [`Full`](NaiveDurationSplitResult::Full) variant
+    /// Consumes `self` and puts the content of the [`Full`](CalendarAnchorOffsetSplitResult::Full) variant
     /// in an [`Option`]. If instead `self` is another variant, the method returns [`None`].
     ///
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Utc};
+    /// # use std::error::Error;
+    /// # use jiff::Zoned;
     /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, HalfBoundedAbsoluteInterval};
     /// # use periodical::intervals::meta::OpeningDirection;
-    /// # use periodical::intervals::ops::split::NaiveDurationSplitResult;
+    /// # use periodical::intervals::ops::split::CalendarAnchorOffsetSplitResult;
     /// let full_split = BoundedAbsoluteInterval::new(
-    ///     "2026-01-01 00:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     "2026-01-02 00:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     "2026-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     "2026-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     /// );
-    /// let full_result = NaiveDurationSplitResult::Full(full_split.clone());
+    /// let full_result = CalendarAnchorOffsetSplitResult::Full(full_split.clone());
     ///
     /// let infinite_split = HalfBoundedAbsoluteInterval::new(
-    ///     "2026-01-01 00:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     "2026-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     OpeningDirection::ToPast,
     /// );
-    /// let infinite_result = NaiveDurationSplitResult::Infinite(infinite_split);
+    /// let infinite_result = CalendarAnchorOffsetSplitResult::Infinite(infinite_split);
     ///
     /// assert_eq!(full_result.full(), Some(full_split));
     /// assert_eq!(infinite_result.full(), None);
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
     pub fn full(self) -> Option<BoundedAbsoluteInterval> {
@@ -136,33 +139,34 @@ impl NaiveDurationSplitResult {
         }
     }
 
-    /// Returns the content of the [`Partial`](NaiveDurationSplitResult::Partial) variant
+    /// Returns the content of the [`Partial`](CalendarAnchorOffsetSplitResult::Partial) variant
     ///
-    /// Consumes `self` and puts the content of the [`Partial`](NaiveDurationSplitResult::Partial) variant
+    /// Consumes `self` and puts the content of the [`Partial`](CalendarAnchorOffsetSplitResult::Partial) variant
     /// in an [`Option`]. If instead `self` is another variant, the method returns [`None`].
     ///
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Utc};
+    /// # use std::error::Error;
+    /// # use jiff::Zoned;
     /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, HalfBoundedAbsoluteInterval};
     /// # use periodical::intervals::meta::OpeningDirection;
-    /// # use periodical::intervals::ops::split::NaiveDurationSplitResult;
+    /// # use periodical::intervals::ops::split::CalendarAnchorOffsetSplitResult;
     /// let partial_split = BoundedAbsoluteInterval::new(
-    ///     "2026-01-01 00:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     "2026-01-02 00:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     "2026-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     "2026-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     /// );
-    /// let partial_result = NaiveDurationSplitResult::Partial(partial_split.clone());
+    /// let partial_result = CalendarAnchorOffsetSplitResult::Partial(partial_split.clone());
     ///
     /// let infinite_split = HalfBoundedAbsoluteInterval::new(
-    ///     "2026-01-01 00:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     "2026-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     OpeningDirection::ToPast,
     /// );
-    /// let infinite_result = NaiveDurationSplitResult::Infinite(infinite_split);
+    /// let infinite_result = CalendarAnchorOffsetSplitResult::Infinite(infinite_split);
     ///
     /// assert_eq!(partial_result.partial(), Some(partial_split));
     /// assert_eq!(infinite_result.partial(), None);
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
     pub fn partial(self) -> Option<BoundedAbsoluteInterval> {
@@ -172,90 +176,93 @@ impl NaiveDurationSplitResult {
         }
     }
 
-    /// Returns whether it is of the [`Infinite`](NaiveDurationSplitResult::Infinite) variant
+    /// Returns whether it is of the [`Infinite`](CalendarAnchorOffsetSplitResult::Infinite) variant
     ///
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Utc};
+    /// # use std::error::Error;
+    /// # use jiff::Zoned;
     /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, HalfBoundedAbsoluteInterval};
     /// # use periodical::intervals::meta::OpeningDirection;
-    /// # use periodical::intervals::ops::split::NaiveDurationSplitResult;
+    /// # use periodical::intervals::ops::split::CalendarAnchorOffsetSplitResult;
     /// let infinite_split = HalfBoundedAbsoluteInterval::new(
-    ///     "2026-01-01 00:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     "2026-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     OpeningDirection::ToPast,
     /// );
-    /// let infinite_result = NaiveDurationSplitResult::Infinite(infinite_split);
+    /// let infinite_result = CalendarAnchorOffsetSplitResult::Infinite(infinite_split);
     ///
     /// let full_split = BoundedAbsoluteInterval::new(
-    ///     "2026-01-01 00:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     "2026-01-02 00:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     "2026-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     "2026-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     /// );
-    /// let full_result = NaiveDurationSplitResult::Full(full_split);
+    /// let full_result = CalendarAnchorOffsetSplitResult::Full(full_split);
     ///
     /// assert!(infinite_result.is_infinite());
     /// assert!(!full_result.is_infinite());
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
     pub fn is_infinite(&self) -> bool {
         matches!(self, Self::Infinite(_))
     }
 
-    /// Returns whether it is of the [`Full`](NaiveDurationSplitResult::Full) variant
+    /// Returns whether it is of the [`Full`](CalendarAnchorOffsetSplitResult::Full) variant
     ///
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Utc};
+    /// # use std::error::Error;
+    /// # use jiff::Zoned;
     /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, HalfBoundedAbsoluteInterval};
     /// # use periodical::intervals::meta::OpeningDirection;
-    /// # use periodical::intervals::ops::split::NaiveDurationSplitResult;
+    /// # use periodical::intervals::ops::split::CalendarAnchorOffsetSplitResult;
     /// let full_split = BoundedAbsoluteInterval::new(
-    ///     "2026-01-01 00:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     "2026-01-02 00:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     "2026-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     "2026-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     /// );
-    /// let full_result = NaiveDurationSplitResult::Full(full_split);
+    /// let full_result = CalendarAnchorOffsetSplitResult::Full(full_split);
     ///
     /// let infinite_split = HalfBoundedAbsoluteInterval::new(
-    ///     "2026-01-01 00:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     "2026-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     OpeningDirection::ToPast,
     /// );
-    /// let infinite_result = NaiveDurationSplitResult::Infinite(infinite_split);
+    /// let infinite_result = CalendarAnchorOffsetSplitResult::Infinite(infinite_split);
     ///
     /// assert!(full_result.is_full());
     /// assert!(!infinite_result.is_full());
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
     pub fn is_full(&self) -> bool {
         matches!(self, Self::Full(_))
     }
 
-    /// Returns whether it is of the [`Full`](NaiveDurationSplitResult::Full) variant
+    /// Returns whether it is of the [`Full`](CalendarAnchorOffsetSplitResult::Full) variant
     ///
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Utc};
+    /// # use std::error::Error;
+    /// # use jiff::Zoned;
     /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, HalfBoundedAbsoluteInterval};
     /// # use periodical::intervals::meta::OpeningDirection;
-    /// # use periodical::intervals::ops::split::NaiveDurationSplitResult;
+    /// # use periodical::intervals::ops::split::CalendarAnchorOffsetSplitResult;
     /// let partial_split = BoundedAbsoluteInterval::new(
-    ///     "2026-01-01 00:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     "2026-01-02 00:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     "2026-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     "2026-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     /// );
-    /// let partial_result = NaiveDurationSplitResult::Partial(partial_split);
+    /// let partial_result = CalendarAnchorOffsetSplitResult::Partial(partial_split);
     ///
     /// let infinite_split = HalfBoundedAbsoluteInterval::new(
-    ///     "2026-01-01 00:00:00Z".parse::<DateTime<Utc>>()?,
+    ///     "2026-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     OpeningDirection::ToPast,
     /// );
-    /// let infinite_result = NaiveDurationSplitResult::Infinite(infinite_split);
+    /// let infinite_result = CalendarAnchorOffsetSplitResult::Infinite(infinite_split);
     ///
     /// assert!(partial_result.is_partial());
     /// assert!(!infinite_result.is_partial());
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
     pub fn is_partial(&self) -> bool {
@@ -263,13 +270,13 @@ impl NaiveDurationSplitResult {
     }
 }
 
-impl PartialOrd for NaiveDurationSplitResult {
+impl PartialOrd for CalendarAnchorOffsetSplitResult {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl Ord for NaiveDurationSplitResult {
+impl Ord for CalendarAnchorOffsetSplitResult {
     fn cmp(&self, other: &Self) -> Ordering {
         match (self, other) {
             (Self::Infinite(_), Self::Infinite(_))
@@ -281,28 +288,21 @@ impl Ord for NaiveDurationSplitResult {
     }
 }
 
-/// Dispatcher trait for the [`NaiveDurationSplit`] and [`NaiveDurationRSplit`] iterators
-pub trait NaiveDurationSplittable
+/// Dispatcher trait for the [`CalendarAnchorOffsetSplit`] and [`CalendarAnchorOffsetRSplit`] iterators
+pub trait CalendarAnchorOffsetSplittable
 where
     Self: Sized,
 {
-    fn split_by_naive_duration<Tz>(self, naive_duration: NaiveDuration, tz: Tz) -> NaiveDurationSplit<Tz>
-    where
-        Tz: TimeZone;
+    fn split_by_calendar_anchor_offset(self, calendar_anchor_offset: CalendarAnchorOffset, tz: TimeZone) -> CalendarAnchorOffsetSplit;
 
-    // fn rsplit_by_naive_duration<Tz>(self, naive_duration: NaiveDuration, tz: Tz) -> NaiveDurationRSplit<Tz>
-    // where
-    //     Tz: TimeZone,
+    // fn rsplit_by_calendar_anchor_offset(self, calendar_anchor_offset: CalendarAnchorOffset, tz: TimeZone) -> CalendarAnchorOffsetRSplit;
 }
 
-impl<T> NaiveDurationSplittable for T
+impl<T> CalendarAnchorOffsetSplittable for T
 where
-    T: HasAbsoluteBounds,
+    T: HasAbsoluteBoundPair,
 {
-    fn split_by_naive_duration<Tz>(self, naive_duration: NaiveDuration, tz: Tz) -> NaiveDurationSplit<Tz>
-    where
-        Tz: TimeZone,
-    {
-        NaiveDurationSplit::new(&self, naive_duration, tz)
+    fn split_by_calendar_anchor_offset(self, calendar_anchor_offset: CalendarAnchorOffset, tz: TimeZone) -> CalendarAnchorOffsetSplit {
+        CalendarAnchorOffsetSplit::new(&self, calendar_anchor_offset, tz)
     }
 }

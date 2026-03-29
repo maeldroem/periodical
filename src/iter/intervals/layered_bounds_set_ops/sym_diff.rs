@@ -1,16 +1,17 @@
-//! Symmetric difference of a [layered bounds iterator](crate::iter::intervals::layered_bounds)
+//! Symmetric difference of a [layered bounds
+//! iterator](crate::iter::intervals::layered_bounds)
 //!
-//! Operates a [symmetric difference] on a [layered bounds iterator](crate::iter::intervals::layered_bounds).
+//! Operates a [symmetric difference] on a [layered bounds
+//! iterator](crate::iter::intervals::layered_bounds).
 //!
 //! [symmetric difference]: https://en.wikipedia.org/w/index.php?title=Symmetric_difference&oldid=1311741596
 //!
 //! # Examples
 //!
 //! ```
-//! # use chrono::{DateTime, Utc};
-//! # use periodical::intervals::absolute::{
-//! #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
-//! # };
+//! # use std::error::Error;
+//! # use jiff::Zoned;
+//! # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
 //! # use periodical::intervals::meta::BoundInclusivity;
 //! # use periodical::iter::intervals::bounds::AbsoluteBoundsIteratorDispatcher;
 //! # use periodical::iter::intervals::layered_bounds_set_ops::{
@@ -20,40 +21,40 @@
 //! #     LayeredAbsoluteBounds, LayeredBoundsState, LayeredBoundsStateChangeAtAbsoluteBound,
 //! # };
 //! let first_layer_intervals = [
-//!     AbsoluteBounds::new(
-//!         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
-//!         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
+//!     AbsoluteBoundPair::new(
+//!         AbsoluteFiniteBound::new(
+//!             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!         ).to_start_bound(),
+//!         AbsoluteFiniteBound::new(
+//!             "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!         ).to_end_bound(),
 //!     ),
-//!     AbsoluteBounds::new(
-//!         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 13:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
-//!         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
+//!     AbsoluteBoundPair::new(
+//!         AbsoluteFiniteBound::new(
+//!             "2025-01-01 13:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!         ).to_start_bound(),
+//!         AbsoluteFiniteBound::new(
+//!             "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!         ).to_end_bound(),
 //!     ),
 //! ];
 //!
 //! let second_layer_intervals = [
-//!     AbsoluteBounds::new(
-//!         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 07:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
-//!         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 11:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
+//!     AbsoluteBoundPair::new(
+//!         AbsoluteFiniteBound::new(
+//!             "2025-01-01 07:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!         ).to_start_bound(),
+//!         AbsoluteFiniteBound::new(
+//!             "2025-01-01 11:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!         ).to_end_bound(),
 //!     ),
-//!     AbsoluteBounds::new(
-//!         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
-//!         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 18:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
+//!     AbsoluteBoundPair::new(
+//!         AbsoluteFiniteBound::new(
+//!             "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!         ).to_start_bound(),
+//!         AbsoluteFiniteBound::new(
+//!             "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!         ).to_end_bound(),
 //!     ),
 //! ];
 //!
@@ -65,53 +66,55 @@
 //!         .abs_symmetric_difference_layered()
 //!         .collect::<Vec<_>>(),
 //!     vec![
-//!         AbsoluteBounds::new(
-//!             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!                 "2025-01-01 07:00:00Z".parse::<DateTime<Utc>>()?,
-//!             )),
-//!             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-//!                 "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+//!         AbsoluteBoundPair::new(
+//!             AbsoluteFiniteBound::new(
+//!                 "2025-01-01 07:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!             ).to_start_bound(),
+//!             AbsoluteFiniteBound::new_with_inclusivity(
+//!                 "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 //!                 BoundInclusivity::Exclusive,
-//!             )),
+//!             ).to_end_bound(),
 //!         ),
-//!         AbsoluteBounds::new(
-//!             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-//!                 "2025-01-01 11:00:00Z".parse::<DateTime<Utc>>()?,
+//!         AbsoluteBoundPair::new(
+//!             AbsoluteFiniteBound::new_with_inclusivity(
+//!                 "2025-01-01 11:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 //!                 BoundInclusivity::Exclusive
-//!             )),
-//!             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-//!                 "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
-//!             )),
+//!             ).to_start_bound(),
+//!             AbsoluteFiniteBound::new(
+//!                 "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!             ).to_end_bound(),
 //!         ),
-//!         AbsoluteBounds::new(
-//!             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!                 "2025-01-01 13:00:00Z".parse::<DateTime<Utc>>()?,
-//!             )),
-//!             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-//!                 "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
+//!         AbsoluteBoundPair::new(
+//!             AbsoluteFiniteBound::new(
+//!                 "2025-01-01 13:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!             ).to_start_bound(),
+//!             AbsoluteFiniteBound::new_with_inclusivity(
+//!                 "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 //!                 BoundInclusivity::Exclusive,
-//!             )),
+//!             ).to_end_bound(),
 //!         ),
-//!         AbsoluteBounds::new(
-//!             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-//!                 "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
+//!         AbsoluteBoundPair::new(
+//!             AbsoluteFiniteBound::new_with_inclusivity(
+//!                 "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 //!                 BoundInclusivity::Exclusive
-//!             )),
-//!             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-//!                 "2025-01-01 18:00:00Z".parse::<DateTime<Utc>>()?,
-//!             )),
+//!             ).to_start_bound(),
+//!             AbsoluteFiniteBound::new(
+//!                 "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!             ).to_end_bound(),
 //!         ),
 //!     ],
 //! );
-//! # Ok::<(), chrono::format::ParseError>(())
+//! # Ok::<(), Box<dyn Error>>(())
 //! ```
 
 use std::iter::FusedIterator;
 
-use crate::intervals::absolute::AbsoluteBounds;
-use crate::intervals::relative::RelativeBounds;
+use crate::intervals::absolute::AbsoluteBoundPair;
+use crate::intervals::relative::RelativeBoundPair;
 use crate::iter::intervals::layered_bounds::{
-    LayeredBoundsState, LayeredBoundsStateChangeAtAbsoluteBound, LayeredBoundsStateChangeAtRelativeBound,
+    LayeredBoundsState,
+    LayeredBoundsStateChangeAtAbsoluteBound,
+    LayeredBoundsStateChangeAtRelativeBound,
 };
 
 /// Symmetric difference iterator
@@ -130,21 +133,28 @@ where
     ///
     /// # Input requirements
     ///
-    /// 1. The iterator **must return continuous [state changes](LayeredBoundsStateChangeAtAbsoluteBound)**
+    /// 1. The iterator **must return continuous [state
+    ///    changes](LayeredBoundsStateChangeAtAbsoluteBound)**
     /// 2. The state changes **must be in chronological order**
     ///
-    /// For more precision about requirement 1, _continuous state changes_ means that the first state change
+    /// For more precision about requirement 1, _continuous state changes_ means
+    /// that the first state change
     /// must have [`NoLayers`](LayeredBoundsState::NoLayers)
     /// as its [old state](LayeredBoundsStateChangeAtAbsoluteBound::old_state),
     /// the last change must have [`NoLayers`](LayeredBoundsState::NoLayers)
-    /// as its [new state](LayeredBoundsStateChangeAtAbsoluteBound::new_state), and all state changes must follow each
-    /// other, i.e. if one change transitions from state A to state B, the next change's old state must be the previous
-    /// change's new state: state B.
+    /// as its [new state](LayeredBoundsStateChangeAtAbsoluteBound::new_state),
+    /// and all state changes must follow each other, i.e. if one change
+    /// transitions from state A to state B, the next change's old state must be
+    /// the previous change's new state: state B.
     ///
-    /// All requirements are automatically guaranteed if the state changes are obtained from
+    /// All requirements are automatically guaranteed if the state changes are
+    /// obtained from
     /// [`LayeredAbsoluteBounds`](crate::iter::intervals::layered_bounds::LayeredAbsoluteBounds).
     pub fn new(iter: I) -> LayeredAbsoluteBoundsSymmetricDifference<I> {
-        LayeredAbsoluteBoundsSymmetricDifference { iter, exhausted: false }
+        LayeredAbsoluteBoundsSymmetricDifference {
+            iter,
+            exhausted: false,
+        }
     }
 }
 
@@ -152,7 +162,7 @@ impl<I> Iterator for LayeredAbsoluteBoundsSymmetricDifference<I>
 where
     I: Iterator<Item = LayeredBoundsStateChangeAtAbsoluteBound>,
 {
-    type Item = AbsoluteBounds;
+    type Item = AbsoluteBoundPair;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.exhausted {
@@ -184,8 +194,8 @@ where
                     );
                 };
 
-                // State can transition from FirstLayer to SecondLayer, but in a symmetric difference,
-                // those should be united
+                // State can transition from FirstLayer to SecondLayer, but in a symmetric
+                // difference, those should be united
                 if matches!(
                     next.new_state(),
                     LayeredBoundsState::FirstLayer | LayeredBoundsState::SecondLayer
@@ -202,7 +212,7 @@ where
                     );
                 };
 
-                return Some(AbsoluteBounds::new(start, end));
+                return Some(AbsoluteBoundPair::new(start, end));
             }
         }
     }
@@ -224,7 +234,9 @@ where
 {
     /// Operates a [symmetric difference]
     ///
-    /// See [module documentation](crate::iter::intervals::layered_bounds_set_ops::sym_diff) for more information.
+    /// See [module
+    /// documentation](crate::iter::intervals::layered_bounds_set_ops::sym_diff)
+    /// for more information.
     ///
     /// [intersection]: https://en.wikipedia.org/w/index.php?title=Symmetric_difference&oldid=1311741596
     fn abs_symmetric_difference_layered(self) -> LayeredAbsoluteBoundsSymmetricDifference<Self::IntoIter> {
@@ -253,21 +265,28 @@ where
     ///
     /// # Input requirements
     ///
-    /// 1. The iterator **must return continuous [state changes](LayeredBoundsStateChangeAtRelativeBound)**
+    /// 1. The iterator **must return continuous [state
+    ///    changes](LayeredBoundsStateChangeAtRelativeBound)**
     /// 2. The state changes **must be in chronological order**
     ///
-    /// For more precision about requirement 1, _continuous state changes_ means that the first state change
+    /// For more precision about requirement 1, _continuous state changes_ means
+    /// that the first state change
     /// must have [`NoLayers`](LayeredBoundsState::NoLayers)
     /// as its [old state](LayeredBoundsStateChangeAtRelativeBound::old_state),
     /// the last change must have [`NoLayers`](LayeredBoundsState::NoLayers)
-    /// as its [new state](LayeredBoundsStateChangeAtRelativeBound::new_state), and all state changes must follow each
-    /// other, i.e. if one change transitions from state A to state B, the next change's old state must be the previous
-    /// change's new state: state B.
+    /// as its [new state](LayeredBoundsStateChangeAtRelativeBound::new_state),
+    /// and all state changes must follow each other, i.e. if one change
+    /// transitions from state A to state B, the next change's old state must be
+    /// the previous change's new state: state B.
     ///
-    /// All requirements are automatically guaranteed if the state changes are obtained from
+    /// All requirements are automatically guaranteed if the state changes are
+    /// obtained from
     /// [`LayeredRelativeBounds`](crate::iter::intervals::layered_bounds::LayeredRelativeBounds).
     pub fn new(iter: I) -> LayeredRelativeBoundsSymmetricDifference<I> {
-        LayeredRelativeBoundsSymmetricDifference { iter, exhausted: false }
+        LayeredRelativeBoundsSymmetricDifference {
+            iter,
+            exhausted: false,
+        }
     }
 }
 
@@ -275,7 +294,7 @@ impl<I> Iterator for LayeredRelativeBoundsSymmetricDifference<I>
 where
     I: Iterator<Item = LayeredBoundsStateChangeAtRelativeBound>,
 {
-    type Item = RelativeBounds;
+    type Item = RelativeBoundPair;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.exhausted {
@@ -307,8 +326,8 @@ where
                     );
                 };
 
-                // State can transition from FirstLayer to SecondLayer, but in a symmetric difference,
-                // those should be united
+                // State can transition from FirstLayer to SecondLayer, but in a symmetric
+                // difference, those should be united
                 if matches!(
                     next.new_state(),
                     LayeredBoundsState::FirstLayer | LayeredBoundsState::SecondLayer
@@ -325,7 +344,7 @@ where
                     );
                 };
 
-                return Some(RelativeBounds::new(start, end));
+                return Some(RelativeBoundPair::new(start, end));
             }
         }
     }
@@ -347,7 +366,9 @@ where
 {
     /// Operates a [symmetric difference]
     ///
-    /// See [module documentation](crate::iter::intervals::layered_bounds_set_ops::sym_diff) for more information.
+    /// See [module
+    /// documentation](crate::iter::intervals::layered_bounds_set_ops::sym_diff)
+    /// for more information.
     ///
     /// [intersection]: https://en.wikipedia.org/w/index.php?title=Symmetric_difference&oldid=1311741596
     fn rel_symmetric_difference_layered(self) -> LayeredRelativeBoundsSymmetricDifference<Self::IntoIter> {

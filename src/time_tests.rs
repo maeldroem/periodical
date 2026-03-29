@@ -1,659 +1,733 @@
 use std::cmp::Ordering;
-
-use chrono::{Month, NaiveDate, Weekday};
+use std::error::Error;
 
 use super::time::*;
 
-#[test]
-fn naive_month_checked_first_day() {
-    assert_eq!(
-        NaiveMonth::new(2026, Month::April).checked_first_day().unwrap(),
-        NaiveDate::from_ymd_opt(2026, 4, 1).unwrap(),
-    );
+use jiff::civil::{Date, Weekday};
+
+mod iso_weeks_in_year_fn {
+    use super::*;
+
+    #[test]
+    fn short_year() -> Result<(), Box<dyn Error>> {
+        [2025, 2024, 2023, 2022, 2021, 2019, 2018, 2017, 2016, 2014, 2013, 2012, 2011, 2010]
+            .into_iter()
+            .try_for_each(|year| {
+                assert_eq!(
+                    iso_weeks_in_year(year)?,
+                    ISO_WEEKS_IN_SHORT_YEAR,
+                    "Expecting short ISO year for year {year}",
+                );
+                Ok(())
+            })
+    }
+
+    #[test]
+    fn long_year() -> Result<(), Box<dyn Error>> {
+        [2026, 2020, 2015, 2009]
+            .into_iter()
+            .try_for_each(|year| {
+                assert_eq!(
+                    iso_weeks_in_year(year)?,
+                    ISO_WEEKS_IN_LONG_YEAR,
+                    "Expecting long ISO year for year {year}",
+                );
+                Ok(())
+            })
+    }
 }
 
-#[test]
-fn naive_month_checked_last_day() {
-    assert_eq!(
-        NaiveMonth::new(2026, Month::April).checked_last_day().unwrap(),
-        NaiveDate::from_ymd_opt(2026, 4, 30).unwrap(),
-    );
+mod offset_iso_week {
+    use super::*;
+
+    #[test]
+    fn new_without_offset() -> Result<(), Box<dyn Error>> {
+        let iso_week = OffsetIsoWeek::new(5, 2026)?;
+        assert_eq!(iso_week.first_day()?, "2026-01-26".parse::<Date>()?);
+        assert_eq!(iso_week.last_day()?, "2026-02-01".parse::<Date>()?);
+        Ok(())
+    }
+
+    #[test]
+    fn new_with_offset_sunday() -> Result<(), Box<dyn Error>> {
+        let offset_iso_week = OffsetIsoWeek::new_with_offset(5, 2026, -1)?;
+        assert_eq!(offset_iso_week.first_day()?, "2026-01-25".parse::<Date>()?);
+        assert_eq!(offset_iso_week.last_day()?, "2026-01-31".parse::<Date>()?);
+        Ok(())
+    }
+
+    #[test]
+    fn new_with_offset_wednesday() -> Result<(), Box<dyn Error>> {
+        let offset_iso_week = OffsetIsoWeek::new_with_offset(5, 2026, 2)?;
+        assert_eq!(offset_iso_week.first_day()?, "2026-01-28".parse::<Date>()?);
+        assert_eq!(offset_iso_week.last_day()?, "2026-02-03".parse::<Date>()?);
+        Ok(())
+    }
 }
 
-#[test]
-fn naive_month_ord() {
-    assert_eq!(
-        NaiveMonth::new(2026, Month::January).cmp(&NaiveMonth::new(2026, Month::January)),
-        Ordering::Equal,
-    );
-    assert_eq!(
-        NaiveMonth::new(2025, Month::January).cmp(&NaiveMonth::new(2027, Month::January)),
-        Ordering::Less,
-    );
-    assert_eq!(
-        NaiveMonth::new(2027, Month::January).cmp(&NaiveMonth::new(2025, Month::January)),
-        Ordering::Greater,
-    );
-    assert_eq!(
-        NaiveMonth::new(2026, Month::February).cmp(&NaiveMonth::new(2026, Month::November)),
-        Ordering::Less,
-    );
-    assert_eq!(
-        NaiveMonth::new(2026, Month::November).cmp(&NaiveMonth::new(2026, Month::February)),
-        Ordering::Greater,
-    );
+mod month {
+    use super::*;
+
+    #[test]
+    fn try_from_zero_offset() {
+        assert_eq!(Month::try_from_zero_offset(4), Ok(Month::May));
+    }
+
+    #[test]
+    fn try_from_zero_offset_out_of_range() {
+        assert_eq!(Month::try_from_zero_offset(12), Err(MonthTryFromNumberError));
+    }
+
+    #[test]
+    fn try_from_one_offset() {
+        assert_eq!(Month::try_from_one_offset(5), Ok(Month::May));
+    }
+
+    #[test]
+    fn try_from_one_offset_zero() {
+        assert_eq!(Month::try_from_one_offset(0), Err(MonthTryFromNumberError));
+    }
+
+    #[test]
+    fn try_from_one_offset_out_of_range() {
+        assert_eq!(Month::try_from_one_offset(13), Err(MonthTryFromNumberError));
+    }
 }
 
-#[test]
-fn naive_duration_days_is_zero() {
-    assert!(!NaiveDuration::Days(1).is_zero());
-    assert!(NaiveDuration::Days(0).is_zero());
-    assert!(!NaiveDuration::Days(-1).is_zero());
+mod month_in_year {
+    use super::*;
+
+    #[test]
+    fn month_first_and_last_days() -> Result<(), Box<dyn Error>> {
+        let month = MonthInYear::new(Month::May, 2026);
+        assert_eq!(month.first_day()?, "2026-05-01".parse::<Date>()?);
+        assert_eq!(month.last_day()?, "2026-05-31".parse::<Date>()?);
+        Ok(())
+    }
 }
 
-#[test]
-fn naive_duration_weeks_is_zero() {
-    assert!(!NaiveDuration::Weeks(Weekday::Mon, 1).is_zero());
-    assert!(NaiveDuration::Weeks(Weekday::Mon, 0).is_zero());
-    assert!(!NaiveDuration::Weeks(Weekday::Mon, -1).is_zero());
-}
+mod calendar_anchor_offset {
+    use super::*;
 
-#[test]
-fn naive_duration_months_is_zero() {
-    assert!(!NaiveDuration::Months(1).is_zero());
-    assert!(NaiveDuration::Months(0).is_zero());
-    assert!(!NaiveDuration::Months(-1).is_zero());
-}
+    #[test]
+    fn calendar_anchor_offset_days_is_zero() {
+        assert!(!CalendarAnchorOffset::Days(1).is_zero());
+        assert!(CalendarAnchorOffset::Days(0).is_zero());
+        assert!(!CalendarAnchorOffset::Days(-1).is_zero());
+    }
 
-#[test]
-fn naive_duration_years_is_zero() {
-    assert!(!NaiveDuration::Years(1).is_zero());
-    assert!(NaiveDuration::Years(0).is_zero());
-    assert!(!NaiveDuration::Years(-1).is_zero());
-}
+    #[test]
+    fn calendar_anchor_offset_weeks_is_zero() {
+        assert!(!CalendarAnchorOffset::Weeks(1, Weekday::Monday).is_zero());
+        assert!(CalendarAnchorOffset::Weeks(0, Weekday::Monday).is_zero());
+        assert!(!CalendarAnchorOffset::Weeks(-1, Weekday::Monday).is_zero());
+    }
 
-#[test]
-fn naive_duration_days_is_positive() {
-    assert!(NaiveDuration::Days(1).is_positive());
-    assert!(!NaiveDuration::Days(0).is_positive());
-    assert!(!NaiveDuration::Days(-1).is_positive());
-}
+    #[test]
+    fn calendar_anchor_offset_months_is_zero() {
+        assert!(!CalendarAnchorOffset::Months(1).is_zero());
+        assert!(CalendarAnchorOffset::Months(0).is_zero());
+        assert!(!CalendarAnchorOffset::Months(-1).is_zero());
+    }
 
-#[test]
-fn naive_duration_weeks_is_positive() {
-    assert!(NaiveDuration::Weeks(Weekday::Mon, 1).is_positive());
-    assert!(!NaiveDuration::Weeks(Weekday::Mon, 0).is_positive());
-    assert!(!NaiveDuration::Weeks(Weekday::Mon, -1).is_positive());
-}
+    #[test]
+    fn calendar_anchor_offset_years_is_zero() {
+        assert!(!CalendarAnchorOffset::Years(1).is_zero());
+        assert!(CalendarAnchorOffset::Years(0).is_zero());
+        assert!(!CalendarAnchorOffset::Years(-1).is_zero());
+    }
 
-#[test]
-fn naive_duration_months_is_positive() {
-    assert!(NaiveDuration::Months(1).is_positive());
-    assert!(!NaiveDuration::Months(0).is_positive());
-    assert!(!NaiveDuration::Months(-1).is_positive());
-}
+    #[test]
+    fn calendar_anchor_offset_days_is_positive() {
+        assert!(CalendarAnchorOffset::Days(1).is_positive());
+        assert!(!CalendarAnchorOffset::Days(0).is_positive());
+        assert!(!CalendarAnchorOffset::Days(-1).is_positive());
+    }
 
-#[test]
-fn naive_duration_years_is_positive() {
-    assert!(NaiveDuration::Years(1).is_positive());
-    assert!(!NaiveDuration::Years(0).is_positive());
-    assert!(!NaiveDuration::Years(-1).is_positive());
-}
+    #[test]
+    fn calendar_anchor_offset_weeks_is_positive() {
+        assert!(CalendarAnchorOffset::Weeks(1, Weekday::Monday).is_positive());
+        assert!(!CalendarAnchorOffset::Weeks(0, Weekday::Monday).is_positive());
+        assert!(!CalendarAnchorOffset::Weeks(-1, Weekday::Monday).is_positive());
+    }
 
-#[test]
-fn naive_duration_days_is_negative() {
-    assert!(!NaiveDuration::Days(1).is_negative());
-    assert!(!NaiveDuration::Days(0).is_negative());
-    assert!(NaiveDuration::Days(-1).is_negative());
-}
+    #[test]
+    fn calendar_anchor_offset_months_is_positive() {
+        assert!(CalendarAnchorOffset::Months(1).is_positive());
+        assert!(!CalendarAnchorOffset::Months(0).is_positive());
+        assert!(!CalendarAnchorOffset::Months(-1).is_positive());
+    }
 
-#[test]
-fn naive_duration_weeks_is_negative() {
-    assert!(!NaiveDuration::Weeks(Weekday::Mon, 1).is_negative());
-    assert!(!NaiveDuration::Weeks(Weekday::Mon, 0).is_negative());
-    assert!(NaiveDuration::Weeks(Weekday::Mon, -1).is_negative());
-}
+    #[test]
+    fn calendar_anchor_offset_years_is_positive() {
+        assert!(CalendarAnchorOffset::Years(1).is_positive());
+        assert!(!CalendarAnchorOffset::Years(0).is_positive());
+        assert!(!CalendarAnchorOffset::Years(-1).is_positive());
+    }
 
-#[test]
-fn naive_duration_months_is_negative() {
-    assert!(!NaiveDuration::Months(1).is_negative());
-    assert!(!NaiveDuration::Months(0).is_negative());
-    assert!(NaiveDuration::Months(-1).is_negative());
-}
+    #[test]
+    fn calendar_anchor_offset_days_is_negative() {
+        assert!(!CalendarAnchorOffset::Days(1).is_negative());
+        assert!(!CalendarAnchorOffset::Days(0).is_negative());
+        assert!(CalendarAnchorOffset::Days(-1).is_negative());
+    }
 
-#[test]
-fn naive_duration_years_is_negative() {
-    assert!(!NaiveDuration::Years(1).is_negative());
-    assert!(!NaiveDuration::Years(0).is_negative());
-    assert!(NaiveDuration::Years(-1).is_negative());
-}
+    #[test]
+    fn calendar_anchor_offset_weeks_is_negative() {
+        assert!(!CalendarAnchorOffset::Weeks(1, Weekday::Monday).is_negative());
+        assert!(!CalendarAnchorOffset::Weeks(0, Weekday::Monday).is_negative());
+        assert!(CalendarAnchorOffset::Weeks(-1, Weekday::Monday).is_negative());
+    }
 
-#[test]
-fn naive_duration_cant_compare_different_units() {
-    assert_eq!(
-        NaiveDuration::Days(1).partial_cmp(&NaiveDuration::Weeks(Weekday::Mon, 1)),
-        None
-    );
-    assert_eq!(NaiveDuration::Days(1).partial_cmp(&NaiveDuration::Months(1)), None);
-    assert_eq!(NaiveDuration::Days(1).partial_cmp(&NaiveDuration::Years(1)), None);
-    assert_eq!(
-        NaiveDuration::Weeks(Weekday::Mon, 1).partial_cmp(&NaiveDuration::Days(1)),
-        None
-    );
-    assert_eq!(
-        NaiveDuration::Weeks(Weekday::Mon, 1).partial_cmp(&NaiveDuration::Months(1)),
-        None
-    );
-    assert_eq!(
-        NaiveDuration::Weeks(Weekday::Mon, 1).partial_cmp(&NaiveDuration::Years(1)),
-        None
-    );
-    assert_eq!(NaiveDuration::Months(1).partial_cmp(&NaiveDuration::Days(1)), None);
-    assert_eq!(
-        NaiveDuration::Months(1).partial_cmp(&NaiveDuration::Weeks(Weekday::Mon, 1)),
-        None
-    );
-    assert_eq!(NaiveDuration::Months(1).partial_cmp(&NaiveDuration::Years(1)), None);
-    assert_eq!(NaiveDuration::Years(1).partial_cmp(&NaiveDuration::Days(1)), None);
-    assert_eq!(
-        NaiveDuration::Years(1).partial_cmp(&NaiveDuration::Weeks(Weekday::Mon, 1)),
-        None
-    );
-    assert_eq!(NaiveDuration::Years(1).partial_cmp(&NaiveDuration::Months(1)), None);
-}
+    #[test]
+    fn calendar_anchor_offset_months_is_negative() {
+        assert!(!CalendarAnchorOffset::Months(1).is_negative());
+        assert!(!CalendarAnchorOffset::Months(0).is_negative());
+        assert!(CalendarAnchorOffset::Months(-1).is_negative());
+    }
 
-#[test]
-fn naive_duration_compare_days() {
-    assert_eq!(
-        NaiveDuration::Days(1).partial_cmp(&NaiveDuration::Days(0)),
-        Some(Ordering::Greater)
-    );
-    assert_eq!(
-        NaiveDuration::Days(0).partial_cmp(&NaiveDuration::Days(1)),
-        Some(Ordering::Less)
-    );
-    assert_eq!(
-        NaiveDuration::Days(0).partial_cmp(&NaiveDuration::Days(0)),
-        Some(Ordering::Equal)
-    );
-}
+    #[test]
+    fn calendar_anchor_offset_years_is_negative() {
+        assert!(!CalendarAnchorOffset::Years(1).is_negative());
+        assert!(!CalendarAnchorOffset::Years(0).is_negative());
+        assert!(CalendarAnchorOffset::Years(-1).is_negative());
+    }
 
-#[test]
-fn naive_duration_compare_weeks_same_ref_day() {
-    assert_eq!(
-        NaiveDuration::Weeks(Weekday::Mon, 1).partial_cmp(&NaiveDuration::Weeks(Weekday::Mon, 0)),
-        Some(Ordering::Greater),
-    );
-    assert_eq!(
-        NaiveDuration::Weeks(Weekday::Mon, 0).partial_cmp(&NaiveDuration::Weeks(Weekday::Mon, 1)),
-        Some(Ordering::Less),
-    );
-    assert_eq!(
-        NaiveDuration::Weeks(Weekday::Mon, 0).partial_cmp(&NaiveDuration::Weeks(Weekday::Mon, 0)),
-        Some(Ordering::Equal),
-    );
-}
+    #[test]
+    fn calendar_anchor_offset_cant_compare_different_units() {
+        assert_eq!(
+            CalendarAnchorOffset::Days(1).partial_cmp(&CalendarAnchorOffset::Weeks(1, Weekday::Monday)),
+            None
+        );
+        assert_eq!(CalendarAnchorOffset::Days(1).partial_cmp(&CalendarAnchorOffset::Months(1)), None);
+        assert_eq!(CalendarAnchorOffset::Days(1).partial_cmp(&CalendarAnchorOffset::Years(1)), None);
+        assert_eq!(
+            CalendarAnchorOffset::Weeks(1, Weekday::Monday).partial_cmp(&CalendarAnchorOffset::Days(1)),
+            None
+        );
+        assert_eq!(
+            CalendarAnchorOffset::Weeks(1, Weekday::Monday).partial_cmp(&CalendarAnchorOffset::Months(1)),
+            None
+        );
+        assert_eq!(
+            CalendarAnchorOffset::Weeks(1, Weekday::Monday).partial_cmp(&CalendarAnchorOffset::Years(1)),
+            None
+        );
+        assert_eq!(CalendarAnchorOffset::Months(1).partial_cmp(&CalendarAnchorOffset::Days(1)), None);
+        assert_eq!(
+            CalendarAnchorOffset::Months(1).partial_cmp(&CalendarAnchorOffset::Weeks(1, Weekday::Monday)),
+            None
+        );
+        assert_eq!(CalendarAnchorOffset::Months(1).partial_cmp(&CalendarAnchorOffset::Years(1)), None);
+        assert_eq!(CalendarAnchorOffset::Years(1).partial_cmp(&CalendarAnchorOffset::Days(1)), None);
+        assert_eq!(
+            CalendarAnchorOffset::Years(1).partial_cmp(&CalendarAnchorOffset::Weeks(1, Weekday::Monday)),
+            None
+        );
+        assert_eq!(CalendarAnchorOffset::Years(1).partial_cmp(&CalendarAnchorOffset::Months(1)), None);
+    }
 
-#[test]
-fn naive_duration_compare_weeks_different_ref_day() {
-    assert_eq!(
-        NaiveDuration::Weeks(Weekday::Mon, 1).partial_cmp(&NaiveDuration::Weeks(Weekday::Sun, 0)),
-        Some(Ordering::Greater),
-    );
-    assert_eq!(
-        NaiveDuration::Weeks(Weekday::Mon, 0).partial_cmp(&NaiveDuration::Weeks(Weekday::Sun, 1)),
-        Some(Ordering::Less),
-    );
-    assert_eq!(
-        NaiveDuration::Weeks(Weekday::Mon, 0).partial_cmp(&NaiveDuration::Weeks(Weekday::Sun, 0)),
-        Some(Ordering::Equal),
-    );
-}
+    #[test]
+    fn calendar_anchor_offset_compare_days() {
+        assert_eq!(
+            CalendarAnchorOffset::Days(1).partial_cmp(&CalendarAnchorOffset::Days(0)),
+            Some(Ordering::Greater)
+        );
+        assert_eq!(
+            CalendarAnchorOffset::Days(0).partial_cmp(&CalendarAnchorOffset::Days(1)),
+            Some(Ordering::Less)
+        );
+        assert_eq!(
+            CalendarAnchorOffset::Days(0).partial_cmp(&CalendarAnchorOffset::Days(0)),
+            Some(Ordering::Equal)
+        );
+    }
 
-#[test]
-fn naive_duration_compare_months() {
-    assert_eq!(
-        NaiveDuration::Months(1).partial_cmp(&NaiveDuration::Months(0)),
-        Some(Ordering::Greater)
-    );
-    assert_eq!(
-        NaiveDuration::Months(0).partial_cmp(&NaiveDuration::Months(1)),
-        Some(Ordering::Less)
-    );
-    assert_eq!(
-        NaiveDuration::Months(0).partial_cmp(&NaiveDuration::Months(0)),
-        Some(Ordering::Equal)
-    );
-}
+    #[test]
+    fn calendar_anchor_offset_compare_weeks_same_ref_day() {
+        assert_eq!(
+            CalendarAnchorOffset::Weeks(1, Weekday::Monday)
+                .partial_cmp(&CalendarAnchorOffset::Weeks(0, Weekday::Monday)),
+            Some(Ordering::Greater),
+        );
+        assert_eq!(
+            CalendarAnchorOffset::Weeks(0, Weekday::Monday)
+                .partial_cmp(&CalendarAnchorOffset::Weeks(1, Weekday::Monday)),
+            Some(Ordering::Less),
+        );
+        assert_eq!(
+            CalendarAnchorOffset::Weeks(0, Weekday::Monday)
+                .partial_cmp(&CalendarAnchorOffset::Weeks(0, Weekday::Monday)),
+            Some(Ordering::Equal),
+        );
+    }
 
-#[test]
-fn naive_duration_compare_years() {
-    assert_eq!(
-        NaiveDuration::Years(1).partial_cmp(&NaiveDuration::Years(0)),
-        Some(Ordering::Greater)
-    );
-    assert_eq!(
-        NaiveDuration::Years(0).partial_cmp(&NaiveDuration::Years(1)),
-        Some(Ordering::Less)
-    );
-    assert_eq!(
-        NaiveDuration::Years(0).partial_cmp(&NaiveDuration::Years(0)),
-        Some(Ordering::Equal)
-    );
-}
+    #[test]
+    fn calendar_anchor_offset_compare_weeks_different_ref_day() {
+        assert_eq!(
+            CalendarAnchorOffset::Weeks(1, Weekday::Monday)
+                .partial_cmp(&CalendarAnchorOffset::Weeks(0, Weekday::Sunday)),
+            Some(Ordering::Greater),
+        );
+        assert_eq!(
+            CalendarAnchorOffset::Weeks(0, Weekday::Monday)
+                .partial_cmp(&CalendarAnchorOffset::Weeks(1, Weekday::Sunday)),
+            Some(Ordering::Less),
+        );
+        assert_eq!(
+            CalendarAnchorOffset::Weeks(0, Weekday::Monday)
+                .partial_cmp(&CalendarAnchorOffset::Weeks(0, Weekday::Sunday)),
+            Some(Ordering::Equal),
+        );
+    }
 
-#[test]
-fn checked_add_naive_duration_to_naive_date_zero_days() {
-    let naive_date = NaiveDate::from_ymd_opt(2026, 5, 1).unwrap();
+    #[test]
+    fn calendar_anchor_offset_compare_months() {
+        assert_eq!(
+            CalendarAnchorOffset::Months(1).partial_cmp(&CalendarAnchorOffset::Months(0)),
+            Some(Ordering::Greater)
+        );
+        assert_eq!(
+            CalendarAnchorOffset::Months(0).partial_cmp(&CalendarAnchorOffset::Months(1)),
+            Some(Ordering::Less)
+        );
+        assert_eq!(
+            CalendarAnchorOffset::Months(0).partial_cmp(&CalendarAnchorOffset::Months(0)),
+            Some(Ordering::Equal)
+        );
+    }
 
-    assert_eq!(
-        checked_add_naive_duration_to_naive_date(naive_date, NaiveDuration::Days(0)).unwrap(),
-        naive_date,
-    );
-}
+    #[test]
+    fn calendar_anchor_offset_compare_years() {
+        assert_eq!(
+            CalendarAnchorOffset::Years(1).partial_cmp(&CalendarAnchorOffset::Years(0)),
+            Some(Ordering::Greater)
+        );
+        assert_eq!(
+            CalendarAnchorOffset::Years(0).partial_cmp(&CalendarAnchorOffset::Years(1)),
+            Some(Ordering::Less)
+        );
+        assert_eq!(
+            CalendarAnchorOffset::Years(0).partial_cmp(&CalendarAnchorOffset::Years(0)),
+            Some(Ordering::Equal)
+        );
+    }
 
-#[test]
-fn checked_add_naive_duration_to_naive_date_positive_days() {
-    assert_eq!(
-        checked_add_naive_duration_to_naive_date(
-            NaiveDate::from_ymd_opt(2026, 5, 1).unwrap(),
-            NaiveDuration::Days(420),
-        )
-        .unwrap(),
-        NaiveDate::from_ymd_opt(2027, 6, 25).unwrap(),
-    );
-}
+    #[test]
+    fn checked_add_calendar_anchor_offset_to_date_zero_days() -> Result<(), Box<dyn Error>> {
+        let date = "2026-05-01".parse::<Date>()?;
 
-#[test]
-fn checked_add_naive_duration_to_naive_date_negative_days() {
-    assert_eq!(
-        checked_add_naive_duration_to_naive_date(
-            NaiveDate::from_ymd_opt(2026, 5, 1).unwrap(),
-            NaiveDuration::Days(-420),
-        )
-        .unwrap(),
-        NaiveDate::from_ymd_opt(2025, 3, 7).unwrap(),
-    );
-}
+        assert_eq!(
+            checked_add_calendar_anchor_offset_to_date(CalendarAnchorOffset::Days(0), date)?,
+            date,
+        );
+        Ok(())
+    }
 
-#[test]
-fn checked_add_naive_duration_to_naive_date_zero_weeks_monday_ref() {
-    // Per `checked_add_naive_duration_to_naive_date`'s doc, adding weeks to get a day
-    // returns the first day of the week.
-    assert_eq!(
-        checked_add_naive_duration_to_naive_date(
-            NaiveDate::from_ymd_opt(2026, 5, 1).unwrap(),
-            NaiveDuration::Weeks(Weekday::Mon, 0),
-        )
-        .unwrap(),
-        NaiveDate::from_ymd_opt(2026, 4, 27).unwrap(),
-    );
-}
+    #[test]
+    fn checked_add_calendar_anchor_offset_to_date_positive_days() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            checked_add_calendar_anchor_offset_to_date(
+                CalendarAnchorOffset::Days(420),
+                "2026-05-01".parse::<Date>()?,
+            )?,
+            "2027-06-25".parse::<Date>()?,
+        );
+        Ok(())
+    }
 
-#[test]
-fn checked_add_naive_duration_to_naive_date_zero_weeks_sunday_ref() {
-    assert_eq!(
-        checked_add_naive_duration_to_naive_date(
-            NaiveDate::from_ymd_opt(2026, 5, 1).unwrap(),
-            NaiveDuration::Weeks(Weekday::Sun, 0),
-        )
-        .unwrap(),
-        NaiveDate::from_ymd_opt(2026, 4, 26).unwrap(),
-    );
-}
+    #[test]
+    fn checked_add_calendar_anchor_offset_to_date_negative_days() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            checked_add_calendar_anchor_offset_to_date(
+                CalendarAnchorOffset::Days(-420),
+                "2026-05-01".parse::<Date>()?,
+            )?,
+            "2025-03-07".parse::<Date>()?,
+        );
+        Ok(())
+    }
 
-#[test]
-fn checked_add_naive_duration_to_naive_date_zero_weeks_monday_ref_on_sunday() {
-    assert_eq!(
-        checked_add_naive_duration_to_naive_date(
-            NaiveDate::from_ymd_opt(2026, 2, 8).unwrap(),
-            NaiveDuration::Weeks(Weekday::Mon, 0),
-        )
-        .unwrap(),
-        NaiveDate::from_ymd_opt(2026, 2, 2).unwrap(),
-    );
-}
+    #[test]
+    fn checked_add_calendar_anchor_offset_to_date_zero_weeks_monday_ref() -> Result<(), Box<dyn Error>> {
+        // Per `checked_add_calendar_anchor_offset_to_date`'s doc, adding weeks to get a day
+        // returns the first day of the week.
+        assert_eq!(
+            checked_add_calendar_anchor_offset_to_date(
+                CalendarAnchorOffset::Weeks(0, Weekday::Monday),
+                "2026-05-01".parse::<Date>()?,
+            )?,
+            "2026-04-27".parse::<Date>()?,
+        );
+        Ok(())
+    }
 
-#[test]
-fn checked_add_naive_duration_to_naive_date_zero_weeks_sunday_ref_on_sunday() {
-    assert_eq!(
-        checked_add_naive_duration_to_naive_date(
-            NaiveDate::from_ymd_opt(2026, 2, 8).unwrap(),
-            NaiveDuration::Weeks(Weekday::Sun, 0),
-        )
-        .unwrap(),
-        NaiveDate::from_ymd_opt(2026, 2, 8).unwrap(),
-    );
-}
+    #[test]
+    fn checked_add_calendar_anchor_offset_to_date_zero_weeks_sunday_ref() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            checked_add_calendar_anchor_offset_to_date(
+                CalendarAnchorOffset::Weeks(0, Weekday::Sunday),
+                "2026-05-01".parse::<Date>()?,
+            )?,
+            "2026-04-26".parse::<Date>()?,
+        );
+        Ok(())
+    }
 
-#[test]
-fn checked_add_naive_duration_to_naive_date_positive_weeks() {
-    assert_eq!(
-        checked_add_naive_duration_to_naive_date(
-            NaiveDate::from_ymd_opt(2026, 5, 1).unwrap(),
-            NaiveDuration::Weeks(Weekday::Mon, 15),
-        )
-        .unwrap(),
-        NaiveDate::from_ymd_opt(2026, 8, 10).unwrap(),
-    );
-}
+    #[test]
+    fn checked_add_calendar_anchor_offset_to_date_zero_weeks_monday_ref_on_sunday() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            checked_add_calendar_anchor_offset_to_date(
+                CalendarAnchorOffset::Weeks(0, Weekday::Monday),
+                "2026-02-08".parse::<Date>()?,
+            )?,
+            "2026-02-02".parse::<Date>()?,
+        );
+        Ok(())
+    }
 
-#[test]
-fn checked_add_naive_duration_to_naive_date_negative_weeks() {
-    assert_eq!(
-        checked_add_naive_duration_to_naive_date(
-            NaiveDate::from_ymd_opt(2026, 5, 1).unwrap(),
-            NaiveDuration::Weeks(Weekday::Mon, -10),
-        )
-        .unwrap(),
-        NaiveDate::from_ymd_opt(2026, 2, 16).unwrap(),
-    );
-}
+    #[test]
+    fn checked_add_calendar_anchor_offset_to_date_zero_weeks_sunday_ref_on_sunday() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            checked_add_calendar_anchor_offset_to_date(
+                CalendarAnchorOffset::Weeks(0, Weekday::Sunday),
+                "2026-02-08".parse::<Date>()?,
+            )?,
+            "2026-02-08".parse::<Date>()?,
+        );
+        Ok(())
+    }
 
-#[test]
-fn checked_add_naive_duration_to_naive_date_zero_months() {
-    // Per `checked_add_naive_duration_to_naive_date`'s doc, adding months to get a day
-    // returns the first day of the month.
-    assert_eq!(
-        checked_add_naive_duration_to_naive_date(
-            NaiveDate::from_ymd_opt(2026, 5, 20).unwrap(),
-            NaiveDuration::Months(0),
-        )
-        .unwrap(),
-        NaiveDate::from_ymd_opt(2026, 5, 1).unwrap(),
-    );
-}
+    #[test]
+    fn checked_add_calendar_anchor_offset_to_date_positive_weeks() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            checked_add_calendar_anchor_offset_to_date(
+                CalendarAnchorOffset::Weeks(15, Weekday::Monday),
+                "2026-05-01".parse::<Date>()?,
+            )?,
+            "2026-08-10".parse::<Date>()?,
+        );
+        Ok(())
+    }
 
-#[test]
-fn checked_add_naive_duration_to_naive_date_positive_months_no_extra_year() {
-    assert_eq!(
-        checked_add_naive_duration_to_naive_date(
-            NaiveDate::from_ymd_opt(2026, 5, 20).unwrap(),
-            NaiveDuration::Months(30),
-        )
-        .unwrap(),
-        NaiveDate::from_ymd_opt(2028, 11, 1).unwrap(),
-    );
-}
+    #[test]
+    fn checked_add_calendar_anchor_offset_to_date_negative_weeks() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            checked_add_calendar_anchor_offset_to_date(
+                CalendarAnchorOffset::Weeks(-10, Weekday::Monday),
+                "2026-05-01".parse::<Date>()?,
+            )?,
+            "2026-02-16".parse::<Date>()?,
+        );
+        Ok(())
+    }
 
-#[test]
-fn checked_add_naive_duration_to_naive_date_positive_months_extra_year() {
-    assert_eq!(
-        checked_add_naive_duration_to_naive_date(
-            NaiveDate::from_ymd_opt(2026, 10, 20).unwrap(),
-            NaiveDuration::Months(30),
-        )
-        .unwrap(),
-        NaiveDate::from_ymd_opt(2029, 4, 1).unwrap(),
-    );
-}
+    #[test]
+    fn checked_add_calendar_anchor_offset_to_date_zero_months() -> Result<(), Box<dyn Error>> {
+        // Per `checked_add_calendar_anchor_offset_to_date`'s doc, adding months to get a day
+        // returns the first day of the month.
+        assert_eq!(
+            checked_add_calendar_anchor_offset_to_date(
+                CalendarAnchorOffset::Months(0),
+                "2026-05-20".parse::<Date>()?,
+            )?,
+            "2026-05-01".parse::<Date>()?,
+        );
+        Ok(())
+    }
 
-#[test]
-fn checked_add_naive_duration_to_naive_date_negative_months_no_extra_year() {
-    assert_eq!(
-        checked_add_naive_duration_to_naive_date(
-            NaiveDate::from_ymd_opt(2026, 8, 20).unwrap(),
-            NaiveDuration::Months(-30),
-        )
-        .unwrap(),
-        NaiveDate::from_ymd_opt(2024, 2, 1).unwrap(),
-    );
-}
+    #[test]
+    fn checked_add_calendar_anchor_offset_to_date_positive_months_no_extra_year() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            checked_add_calendar_anchor_offset_to_date(
+                CalendarAnchorOffset::Months(30),
+                "2026-05-20".parse::<Date>()?,
+            )?,
+            "2028-11-01".parse::<Date>()?,
+        );
+        Ok(())
+    }
 
-#[test]
-fn checked_add_naive_duration_to_naive_date_negative_months_extra_year() {
-    assert_eq!(
-        checked_add_naive_duration_to_naive_date(
-            NaiveDate::from_ymd_opt(2026, 5, 20).unwrap(),
-            NaiveDuration::Months(-30),
-        )
-        .unwrap(),
-        NaiveDate::from_ymd_opt(2023, 11, 1).unwrap(),
-    );
-}
+    #[test]
+    fn checked_add_calendar_anchor_offset_to_date_positive_months_extra_year() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            checked_add_calendar_anchor_offset_to_date(
+                CalendarAnchorOffset::Months(30),
+                "2026-10-20".parse::<Date>()?,
+            )?,
+            "2029-04-01".parse::<Date>()?,
+        );
+        Ok(())
+    }
 
-#[test]
-fn checked_add_naive_duration_to_naive_date_zero_years() {
-    // Per `checked_add_naive_duration_to_naive_date`'s doc, adding years to get a day
-    // returns the first day of the year.
-    assert_eq!(
-        checked_add_naive_duration_to_naive_date(
-            NaiveDate::from_ymd_opt(2026, 5, 20).unwrap(),
-            NaiveDuration::Years(0),
-        )
-        .unwrap(),
-        NaiveDate::from_ymd_opt(2026, 1, 1).unwrap(),
-    );
-}
+    #[test]
+    fn checked_add_calendar_anchor_offset_to_date_negative_months_no_extra_year() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            checked_add_calendar_anchor_offset_to_date(
+                CalendarAnchorOffset::Months(-30),
+                "2026-08-20".parse::<Date>()?,
+            )?,
+            "2024-02-01".parse::<Date>()?,
+        );
+        Ok(())
+    }
 
-#[test]
-fn checked_add_naive_duration_to_naive_date_positive_years() {
-    assert_eq!(
-        checked_add_naive_duration_to_naive_date(
-            NaiveDate::from_ymd_opt(2026, 5, 20).unwrap(),
-            NaiveDuration::Years(10),
-        )
-        .unwrap(),
-        NaiveDate::from_ymd_opt(2036, 1, 1).unwrap(),
-    );
-}
+    #[test]
+    fn checked_add_calendar_anchor_offset_to_date_negative_months_extra_year() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            checked_add_calendar_anchor_offset_to_date(
+                CalendarAnchorOffset::Months(-30),
+                "2026-05-20".parse::<Date>()?,
+            )?,
+            "2023-11-01".parse::<Date>()?,
+        );
+        Ok(())
+    }
 
-#[test]
-fn checked_add_naive_duration_to_naive_date_negative_years() {
-    assert_eq!(
-        checked_add_naive_duration_to_naive_date(
-            NaiveDate::from_ymd_opt(2026, 5, 20).unwrap(),
-            NaiveDuration::Years(-10),
-        )
-        .unwrap(),
-        NaiveDate::from_ymd_opt(2016, 1, 1).unwrap(),
-    );
-}
+    #[test]
+    fn checked_add_calendar_anchor_offset_to_date_zero_years() -> Result<(), Box<dyn Error>> {
+        // Per `checked_add_calendar_anchor_offset_to_date`'s doc, adding years to get a day
+        // returns the first day of the year.
+        assert_eq!(
+            checked_add_calendar_anchor_offset_to_date(
+                CalendarAnchorOffset::Years(0),
+                "2026-05-20".parse::<Date>()?,
+            )?,
+            "2026-01-01".parse::<Date>()?,
+        );
+        Ok(())
+    }
 
-#[test]
-fn checked_sub_naive_duration_to_naive_date_zero_days() {
-    let naive_date = NaiveDate::from_ymd_opt(2026, 5, 1).unwrap();
+    #[test]
+    fn checked_add_calendar_anchor_offset_to_date_positive_years() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            checked_add_calendar_anchor_offset_to_date(
+                CalendarAnchorOffset::Years(10),
+                "2026-05-20".parse::<Date>()?,
+            )?,
+            "2036-01-01".parse::<Date>()?,
+        );
+        Ok(())
+    }
 
-    assert_eq!(
-        checked_sub_naive_duration_to_naive_date(naive_date, NaiveDuration::Days(0)).unwrap(),
-        naive_date,
-    );
-}
+    #[test]
+    fn checked_add_calendar_anchor_offset_to_date_negative_years() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            checked_add_calendar_anchor_offset_to_date(
+                CalendarAnchorOffset::Years(-10),
+                "2026-05-20".parse::<Date>()?,
+            )?,
+            "2016-01-01".parse::<Date>()?,
+        );
+        Ok(())
+    }
 
-#[test]
-fn checked_sub_naive_duration_to_naive_date_positive_days() {
-    assert_eq!(
-        checked_sub_naive_duration_to_naive_date(
-            NaiveDate::from_ymd_opt(2026, 5, 1).unwrap(),
-            NaiveDuration::Days(420),
-        )
-        .unwrap(),
-        NaiveDate::from_ymd_opt(2025, 3, 7).unwrap(),
-    );
-}
+    #[test]
+    fn checked_sub_calendar_anchor_offset_to_date_zero_days() -> Result<(), Box<dyn Error>> {
+        let date = "2026-05-01".parse::<Date>()?;
 
-#[test]
-fn checked_sub_naive_duration_to_naive_date_negative_days() {
-    assert_eq!(
-        checked_sub_naive_duration_to_naive_date(
-            NaiveDate::from_ymd_opt(2026, 5, 1).unwrap(),
-            NaiveDuration::Days(-420),
-        )
-        .unwrap(),
-        NaiveDate::from_ymd_opt(2027, 6, 25).unwrap(),
-    );
-}
+        assert_eq!(
+            checked_sub_calendar_anchor_offset_to_date(CalendarAnchorOffset::Days(0), date)?,
+            date,
+        );
+        Ok(())
+    }
 
-#[test]
-fn checked_sub_naive_duration_to_naive_date_zero_weeks_monday_ref() {
-    // Per `checked_sub_naive_duration_to_naive_date`'s doc, subtracting weeks to get a day
-    // returns the first day of the week.
-    assert_eq!(
-        checked_sub_naive_duration_to_naive_date(
-            NaiveDate::from_ymd_opt(2026, 5, 1).unwrap(),
-            NaiveDuration::Weeks(Weekday::Mon, 0),
-        )
-        .unwrap(),
-        NaiveDate::from_ymd_opt(2026, 4, 27).unwrap(),
-    );
-}
+    #[test]
+    fn checked_sub_calendar_anchor_offset_to_date_positive_days() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            checked_sub_calendar_anchor_offset_to_date(
+                CalendarAnchorOffset::Days(420),
+                "2026-05-01".parse::<Date>()?,
+            )?,
+            "2025-03-07".parse::<Date>()?,
+        );
+        Ok(())
+    }
 
-#[test]
-fn checked_sub_naive_duration_to_naive_date_zero_weeks_sunday_ref() {
-    assert_eq!(
-        checked_sub_naive_duration_to_naive_date(
-            NaiveDate::from_ymd_opt(2026, 5, 1).unwrap(),
-            NaiveDuration::Weeks(Weekday::Sun, 0),
-        )
-        .unwrap(),
-        NaiveDate::from_ymd_opt(2026, 4, 26).unwrap(),
-    );
-}
+    #[test]
+    fn checked_sub_calendar_anchor_offset_to_date_negative_days() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            checked_sub_calendar_anchor_offset_to_date(
+                CalendarAnchorOffset::Days(-420),
+                "2026-05-01".parse::<Date>()?,
+            )?,
+            "2027-06-25".parse::<Date>()?,
+        );
+        Ok(())
+    }
 
-#[test]
-fn checked_sub_naive_duration_to_naive_date_zero_weeks_monday_ref_on_sunday() {
-    assert_eq!(
-        checked_sub_naive_duration_to_naive_date(
-            NaiveDate::from_ymd_opt(2026, 2, 8).unwrap(),
-            NaiveDuration::Weeks(Weekday::Mon, 0),
-        )
-        .unwrap(),
-        NaiveDate::from_ymd_opt(2026, 2, 2).unwrap(),
-    );
-}
+    #[test]
+    fn checked_sub_calendar_anchor_offset_to_date_zero_weeks_monday_ref() -> Result<(), Box<dyn Error>> {
+        // Per `checked_sub_calendar_anchor_offset_to_date`'s doc, subtracting weeks to get a day
+        // returns the first day of the week.
+        assert_eq!(
+            checked_sub_calendar_anchor_offset_to_date(
+                CalendarAnchorOffset::Weeks(0, Weekday::Monday),
+                "2026-05-01".parse::<Date>()?,
+            )?,
+            "2026-04-27".parse::<Date>()?,
+        );
+        Ok(())
+    }
 
-#[test]
-fn checked_sub_naive_duration_to_naive_date_zero_weeks_sunday_ref_on_sunday() {
-    assert_eq!(
-        checked_sub_naive_duration_to_naive_date(
-            NaiveDate::from_ymd_opt(2026, 2, 8).unwrap(),
-            NaiveDuration::Weeks(Weekday::Sun, 0),
-        )
-        .unwrap(),
-        NaiveDate::from_ymd_opt(2026, 2, 8).unwrap(),
-    );
-}
+    #[test]
+    fn checked_sub_calendar_anchor_offset_to_date_zero_weeks_sunday_ref() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            checked_sub_calendar_anchor_offset_to_date(
+                CalendarAnchorOffset::Weeks(0, Weekday::Sunday),
+                "2026-05-01".parse::<Date>()?,
+            )?,
+            "2026-04-26".parse::<Date>()?,
+        );
+        Ok(())
+    }
 
-#[test]
-fn checked_sub_naive_duration_to_naive_date_positive_weeks() {
-    assert_eq!(
-        checked_sub_naive_duration_to_naive_date(
-            NaiveDate::from_ymd_opt(2026, 5, 1).unwrap(),
-            NaiveDuration::Weeks(Weekday::Mon, 15),
-        )
-        .unwrap(),
-        NaiveDate::from_ymd_opt(2026, 1, 12).unwrap(),
-    );
-}
+    #[test]
+    fn checked_sub_calendar_anchor_offset_to_date_zero_weeks_monday_ref_on_sunday() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            checked_sub_calendar_anchor_offset_to_date(
+                CalendarAnchorOffset::Weeks(0, Weekday::Monday),
+                "2026-02-08".parse::<Date>()?,
+            )?,
+            "2026-02-02".parse::<Date>()?,
+        );
+        Ok(())
+    }
 
-#[test]
-fn checked_sub_naive_duration_to_naive_date_negative_weeks() {
-    assert_eq!(
-        checked_sub_naive_duration_to_naive_date(
-            NaiveDate::from_ymd_opt(2026, 5, 1).unwrap(),
-            NaiveDuration::Weeks(Weekday::Mon, -10),
-        )
-        .unwrap(),
-        NaiveDate::from_ymd_opt(2026, 7, 6).unwrap(),
-    );
-}
+    #[test]
+    fn checked_sub_calendar_anchor_offset_to_date_zero_weeks_sunday_ref_on_sunday() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            checked_sub_calendar_anchor_offset_to_date(
+                CalendarAnchorOffset::Weeks(0, Weekday::Sunday),
+                "2026-02-08".parse::<Date>()?,
+            )?,
+            "2026-02-08".parse::<Date>()?,
+        );
+        Ok(())
+    }
 
-#[test]
-fn checked_sub_naive_duration_to_naive_date_zero_months() {
-    // Per `checked_sub_naive_duration_to_naive_date`'s doc, subtracting months to get a day
-    // returns the first day of the month.
-    assert_eq!(
-        checked_sub_naive_duration_to_naive_date(
-            NaiveDate::from_ymd_opt(2026, 5, 20).unwrap(),
-            NaiveDuration::Months(0),
-        )
-        .unwrap(),
-        NaiveDate::from_ymd_opt(2026, 5, 1).unwrap(),
-    );
-}
+    #[test]
+    fn checked_sub_calendar_anchor_offset_to_date_positive_weeks() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            checked_sub_calendar_anchor_offset_to_date(
+                CalendarAnchorOffset::Weeks(15, Weekday::Monday),
+                "2026-05-01".parse::<Date>()?,
+            )?,
+            "2026-01-12".parse::<Date>()?,
+        );
+        Ok(())
+    }
 
-#[test]
-fn checked_sub_naive_duration_to_naive_date_positive_months_no_extra_year() {
-    assert_eq!(
-        checked_sub_naive_duration_to_naive_date(
-            NaiveDate::from_ymd_opt(2026, 8, 20).unwrap(),
-            NaiveDuration::Months(30),
-        )
-        .unwrap(),
-        NaiveDate::from_ymd_opt(2024, 2, 1).unwrap(),
-    );
-}
+    #[test]
+    fn checked_sub_calendar_anchor_offset_to_date_negative_weeks() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            checked_sub_calendar_anchor_offset_to_date(
+                CalendarAnchorOffset::Weeks(-10, Weekday::Monday),
+                "2026-05-01".parse::<Date>()?,
+            )?,
+            "2026-07-06".parse::<Date>()?,
+        );
+        Ok(())
+    }
 
-#[test]
-fn checked_sub_naive_duration_to_naive_date_positive_months_extra_year() {
-    assert_eq!(
-        checked_sub_naive_duration_to_naive_date(
-            NaiveDate::from_ymd_opt(2026, 5, 20).unwrap(),
-            NaiveDuration::Months(30),
-        )
-        .unwrap(),
-        NaiveDate::from_ymd_opt(2023, 11, 1).unwrap(),
-    );
-}
+    #[test]
+    fn checked_sub_calendar_anchor_offset_to_date_zero_months() -> Result<(), Box<dyn Error>> {
+        // Per `checked_sub_calendar_anchor_offset_to_date`'s doc, subtracting months to get a day
+        // returns the first day of the month.
+        assert_eq!(
+            checked_sub_calendar_anchor_offset_to_date(
+                CalendarAnchorOffset::Months(0),
+                "2026-05-20".parse::<Date>()?,
+            )?,
+            "2026-05-01".parse::<Date>()?,
+        );
+        Ok(())
+    }
 
-#[test]
-fn checked_sub_naive_duration_to_naive_date_negative_months_no_extra_year() {
-    assert_eq!(
-        checked_sub_naive_duration_to_naive_date(
-            NaiveDate::from_ymd_opt(2026, 10, 20).unwrap(),
-            NaiveDuration::Months(-30),
-        )
-        .unwrap(),
-        NaiveDate::from_ymd_opt(2029, 4, 1).unwrap(),
-    );
-}
+    #[test]
+    fn checked_sub_calendar_anchor_offset_to_date_positive_months_no_extra_year() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            checked_sub_calendar_anchor_offset_to_date(
+                CalendarAnchorOffset::Months(30),
+                "2026-08-20".parse::<Date>()?,
+            )?,
+            "2024-02-01".parse::<Date>()?,
+        );
+        Ok(())
+    }
 
-#[test]
-fn checked_sub_naive_duration_to_naive_date_negative_months_extra_year() {
-    assert_eq!(
-        checked_sub_naive_duration_to_naive_date(
-            NaiveDate::from_ymd_opt(2026, 5, 20).unwrap(),
-            NaiveDuration::Months(-30),
-        )
-        .unwrap(),
-        NaiveDate::from_ymd_opt(2028, 11, 1).unwrap(),
-    );
-}
+    #[test]
+    fn checked_sub_calendar_anchor_offset_to_date_positive_months_extra_year() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            checked_sub_calendar_anchor_offset_to_date(
+                CalendarAnchorOffset::Months(30),
+                "2026-05-20".parse::<Date>()?,
+            )?,
+            "2023-11-01".parse::<Date>()?,
+        );
+        Ok(())
+    }
 
-#[test]
-fn checked_sub_naive_duration_to_naive_date_zero_years() {
-    // Per `checked_sub_naive_duration_to_naive_date`'s doc, adding years to get a day
-    // returns the first day of the year.
-    assert_eq!(
-        checked_sub_naive_duration_to_naive_date(
-            NaiveDate::from_ymd_opt(2026, 5, 20).unwrap(),
-            NaiveDuration::Years(0),
-        )
-        .unwrap(),
-        NaiveDate::from_ymd_opt(2026, 1, 1).unwrap(),
-    );
-}
+    #[test]
+    fn checked_sub_calendar_anchor_offset_to_date_negative_months_no_extra_year() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            checked_sub_calendar_anchor_offset_to_date(
+                CalendarAnchorOffset::Months(-30),
+                "2026-10-20".parse::<Date>()?,
+            )?,
+            "2029-04-01".parse::<Date>()?,
+        );
+        Ok(())
+    }
 
-#[test]
-fn checked_sub_naive_duration_to_naive_date_positive_years() {
-    assert_eq!(
-        checked_sub_naive_duration_to_naive_date(
-            NaiveDate::from_ymd_opt(2026, 5, 20).unwrap(),
-            NaiveDuration::Years(10),
-        )
-        .unwrap(),
-        NaiveDate::from_ymd_opt(2016, 1, 1).unwrap(),
-    );
-}
+    #[test]
+    fn checked_sub_calendar_anchor_offset_to_date_negative_months_extra_year() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            checked_sub_calendar_anchor_offset_to_date(
+                CalendarAnchorOffset::Months(-30),
+                "2026-05-20".parse::<Date>()?,
+            )?,
+            "2028-11-01".parse::<Date>()?,
+        );
+        Ok(())
+    }
 
-#[test]
-fn checked_sub_naive_duration_to_naive_date_negative_years() {
-    assert_eq!(
-        checked_sub_naive_duration_to_naive_date(
-            NaiveDate::from_ymd_opt(2026, 5, 20).unwrap(),
-            NaiveDuration::Years(-10),
-        )
-        .unwrap(),
-        NaiveDate::from_ymd_opt(2036, 1, 1).unwrap(),
-    );
+    #[test]
+    fn checked_sub_calendar_anchor_offset_to_date_zero_years() -> Result<(), Box<dyn Error>> {
+        // Per `checked_sub_calendar_anchor_offset_to_date`'s doc, adding years to get a day
+        // returns the first day of the year.
+        assert_eq!(
+            checked_sub_calendar_anchor_offset_to_date(
+                CalendarAnchorOffset::Years(0),
+                "2026-05-20".parse::<Date>()?,
+            )?,
+            "2026-01-01".parse::<Date>()?,
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn checked_sub_calendar_anchor_offset_to_date_positive_years() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            checked_sub_calendar_anchor_offset_to_date(
+                CalendarAnchorOffset::Years(10),
+                "2026-05-20".parse::<Date>()?,
+            )?,
+            "2016-01-01".parse::<Date>()?,
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn checked_sub_calendar_anchor_offset_to_date_negative_years() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            checked_sub_calendar_anchor_offset_to_date(
+                CalendarAnchorOffset::Years(-10),
+                "2026-05-20".parse::<Date>()?,
+            )?,
+            "2036-01-01".parse::<Date>()?,
+        );
+        Ok(())
+    }
 }

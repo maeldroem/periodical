@@ -1,189 +1,217 @@
-use chrono::Utc;
+use std::error::Error;
+
+use jiff::Zoned;
 
 use crate::intervals::absolute::{
-    AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteInterval, AbsoluteStartBound,
-    BoundedAbsoluteInterval, EmptiableAbsoluteBounds, HalfBoundedAbsoluteInterval,
+    AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, BoundedAbsoluteInterval, EmptiableAbsoluteBoundPair, EmptiableAbsoluteInterval, HalfBoundedAbsoluteInterval
 };
 use crate::intervals::meta::{BoundInclusivity, OpeningDirection};
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
-use crate::test_utils::date;
 
 use super::continuation::*;
 
 #[test]
 fn past_continuation_unbounded_interval() {
-    assert_eq!(UnboundedInterval.past_continuation(), EmptyInterval,);
+    assert_eq!(UnboundedInterval.past_continuation(), EmptyInterval);
 }
 
 #[test]
 fn future_continuation_unbounded_interval() {
-    assert_eq!(UnboundedInterval.future_continuation(), EmptyInterval,);
+    assert_eq!(UnboundedInterval.future_continuation(), EmptyInterval);
 }
 
 #[test]
 fn past_continuation_empty_interval() {
-    assert_eq!(EmptyInterval.past_continuation(), EmptyInterval,);
+    assert_eq!(EmptyInterval.past_continuation(), EmptyInterval);
 }
 
 #[test]
 fn future_continuation_empty_interval() {
-    assert_eq!(EmptyInterval.future_continuation(), EmptyInterval,);
+    assert_eq!(EmptyInterval.future_continuation(), EmptyInterval);
 }
 
 #[test]
-fn past_continuation_half_bounded_to_past_interval() {
+fn past_continuation_half_bounded_to_past_interval() -> Result<(), Box<dyn Error>> {
     assert_eq!(
         HalfBoundedAbsoluteInterval::new_with_inclusivity(
-            date(&Utc, 2025, 1, 1),
+            "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             BoundInclusivity::Exclusive,
             OpeningDirection::ToPast,
         )
         .past_continuation(),
-        AbsoluteInterval::Empty(EmptyInterval),
+        EmptiableAbsoluteInterval::Empty(EmptyInterval),
     );
+
+    Ok(())
 }
 
 #[test]
-fn future_continuation_half_bounded_to_past_interval() {
+fn future_continuation_half_bounded_to_past_interval() -> Result<(), Box<dyn Error>> {
     assert_eq!(
         HalfBoundedAbsoluteInterval::new_with_inclusivity(
-            date(&Utc, 2025, 1, 1),
+            "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             BoundInclusivity::Exclusive,
             OpeningDirection::ToPast,
         )
         .future_continuation(),
-        AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
-            date(&Utc, 2025, 1, 1),
+        EmptiableAbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
+            "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             BoundInclusivity::Inclusive,
             OpeningDirection::ToFuture,
         )),
     );
+
+    Ok(())
 }
 
 #[test]
-fn past_continuation_half_bounded_to_future_interval() {
+fn past_continuation_half_bounded_to_future_interval() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        HalfBoundedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), OpeningDirection::ToFuture,).past_continuation(),
-        AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
-            date(&Utc, 2025, 1, 1),
+        HalfBoundedAbsoluteInterval::new(
+            "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+            OpeningDirection::ToFuture,
+        ).past_continuation(),
+        EmptiableAbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
+            "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             BoundInclusivity::Exclusive,
             OpeningDirection::ToPast,
         )),
     );
+
+    Ok(())
 }
 
 #[test]
-fn future_continuation_half_bounded_to_future_interval() {
+fn future_continuation_half_bounded_to_future_interval() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        HalfBoundedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), OpeningDirection::ToFuture,).future_continuation(),
-        AbsoluteInterval::Empty(EmptyInterval),
+        HalfBoundedAbsoluteInterval::new(
+            "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+            OpeningDirection::ToFuture,
+        ).future_continuation(),
+        EmptiableAbsoluteInterval::Empty(EmptyInterval),
     );
+
+    Ok(())
 }
 
 #[test]
-fn past_continuation_bounded_interval() {
+fn past_continuation_bounded_interval() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        BoundedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), date(&Utc, 2025, 1, 2)).past_continuation(),
-        AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
-            date(&Utc, 2025, 1, 1),
+        BoundedAbsoluteInterval::new(
+            "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+            "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+        ).past_continuation(),
+        HalfBoundedAbsoluteInterval::new_with_inclusivity(
+            "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             BoundInclusivity::Exclusive,
             OpeningDirection::ToPast,
-        )),
+        ),
     );
+
+    Ok(())
 }
 
 #[test]
-fn future_continuation_bounded_interval() {
+fn future_continuation_bounded_interval() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        BoundedAbsoluteInterval::new(date(&Utc, 2025, 1, 1), date(&Utc, 2025, 1, 2)).future_continuation(),
-        AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
-            date(&Utc, 2025, 1, 2),
+        BoundedAbsoluteInterval::new(
+            "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+            "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+        ).future_continuation(),
+        HalfBoundedAbsoluteInterval::new_with_inclusivity(
+            "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             BoundInclusivity::Exclusive,
             OpeningDirection::ToFuture,
-        )),
+        ),
     );
+
+    Ok(())
 }
 
 #[test]
 fn past_continuation_abs_bounds_unbounded() {
     assert_eq!(
-        AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture).past_continuation(),
-        EmptiableAbsoluteBounds::Empty,
+        AbsoluteBoundPair::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture).past_continuation(),
+        EmptiableAbsoluteBoundPair::Empty,
     );
 }
 
 #[test]
 fn future_continuation_abs_bounds_unbounded() {
     assert_eq!(
-        AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture).future_continuation(),
-        EmptiableAbsoluteBounds::Empty,
+        AbsoluteBoundPair::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture).future_continuation(),
+        EmptiableAbsoluteBoundPair::Empty,
     );
 }
 
 #[test]
-fn past_continuation_abs_bounds_bounded() {
+fn past_continuation_abs_bounds_bounded() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2))),
+        AbsoluteBoundPair::new(
+            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
         )
         .past_continuation(),
-        EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
+        EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::new(
             AbsoluteStartBound::InfinitePast,
             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
+                "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
             )),
         )),
     );
+
+    Ok(())
 }
 
 #[test]
-fn future_continuation_abs_bounds_bounded() {
+fn future_continuation_abs_bounds_bounded() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        AbsoluteBounds::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 1))),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(date(&Utc, 2025, 1, 2))),
+        AbsoluteBoundPair::new(
+            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
+            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())),
         )
         .future_continuation(),
-        EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
+        EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
+                "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
             )),
             AbsoluteEndBound::InfiniteFuture,
         )),
     );
+
+    Ok(())
 }
 
 #[test]
 fn past_continuation_abs_interval_unbounded() {
     assert_eq!(
-        AbsoluteInterval::Unbounded(UnboundedInterval).past_continuation(),
-        AbsoluteInterval::Empty(EmptyInterval),
+        EmptiableAbsoluteInterval::Unbounded(UnboundedInterval).past_continuation(),
+        EmptiableAbsoluteInterval::Empty(EmptyInterval),
     );
 }
 
 #[test]
 fn future_continuation_abs_interval_unbounded() {
     assert_eq!(
-        AbsoluteInterval::Unbounded(UnboundedInterval).future_continuation(),
-        AbsoluteInterval::Empty(EmptyInterval),
+        EmptiableAbsoluteInterval::Unbounded(UnboundedInterval).future_continuation(),
+        EmptiableAbsoluteInterval::Empty(EmptyInterval),
     );
 }
 
 #[test]
 fn past_continuation_abs_interval_empty() {
     assert_eq!(
-        AbsoluteInterval::Empty(EmptyInterval).past_continuation(),
-        AbsoluteInterval::Empty(EmptyInterval),
+        EmptiableAbsoluteInterval::Empty(EmptyInterval).past_continuation(),
+        EmptiableAbsoluteInterval::Empty(EmptyInterval),
     );
 }
 
 #[test]
 fn future_continuation_abs_interval_empty() {
     assert_eq!(
-        AbsoluteInterval::Empty(EmptyInterval).future_continuation(),
-        AbsoluteInterval::Empty(EmptyInterval),
+        EmptiableAbsoluteInterval::Empty(EmptyInterval).future_continuation(),
+        EmptiableAbsoluteInterval::Empty(EmptyInterval),
     );
 }

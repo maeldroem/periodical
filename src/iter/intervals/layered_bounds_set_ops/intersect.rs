@@ -1,16 +1,17 @@
-//! Intersection of a [layered bounds iterator](crate::iter::intervals::layered_bounds)
+//! Intersection of a [layered bounds
+//! iterator](crate::iter::intervals::layered_bounds)
 //!
-//! Operates an [intersection] on a [layered bounds iterator](crate::iter::intervals::layered_bounds).
+//! Operates an [intersection] on a [layered bounds
+//! iterator](crate::iter::intervals::layered_bounds).
 //!
 //! [intersection]: https://en.wikipedia.org/w/index.php?title=Intersection_(set_theory)&oldid=1191979994
 //!
 //! # Examples
 //!
 //! ```
-//! # use chrono::{DateTime, Utc};
-//! # use periodical::intervals::absolute::{
-//! #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
-//! # };
+//! # use std::error::Error;
+//! # use jiff::Zoned;
+//! # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
 //! # use periodical::intervals::meta::BoundInclusivity;
 //! # use periodical::iter::intervals::bounds::AbsoluteBoundsIteratorDispatcher;
 //! # use periodical::iter::intervals::layered_bounds_set_ops::LayeredAbsoluteBoundsIntersectionIteratorDispatcher;
@@ -18,40 +19,40 @@
 //! #     LayeredAbsoluteBounds, LayeredBoundsState, LayeredBoundsStateChangeAtAbsoluteBound,
 //! # };
 //! let first_layer_intervals = [
-//!     AbsoluteBounds::new(
-//!         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
-//!         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
+//!     AbsoluteBoundPair::new(
+//!         AbsoluteFiniteBound::new(
+//!             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!         ).to_start_bound(),
+//!         AbsoluteFiniteBound::new(
+//!             "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!         ).to_end_bound(),
 //!     ),
-//!     AbsoluteBounds::new(
-//!         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 13:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
-//!         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
+//!     AbsoluteBoundPair::new(
+//!         AbsoluteFiniteBound::new(
+//!             "2025-01-01 13:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!         ).to_start_bound(),
+//!         AbsoluteFiniteBound::new(
+//!             "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!         ).to_end_bound(),
 //!     ),
 //! ];
 //!
 //! let second_layer_intervals = [
-//!     AbsoluteBounds::new(
-//!         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 07:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
-//!         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 11:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
+//!     AbsoluteBoundPair::new(
+//!         AbsoluteFiniteBound::new(
+//!             "2025-01-01 07:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!         ).to_start_bound(),
+//!         AbsoluteFiniteBound::new(
+//!             "2025-01-01 11:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!         ).to_end_bound(),
 //!     ),
-//!     AbsoluteBounds::new(
-//!         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
-//!         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 18:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
+//!     AbsoluteBoundPair::new(
+//!         AbsoluteFiniteBound::new(
+//!             "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!         ).to_start_bound(),
+//!         AbsoluteFiniteBound::new(
+//!             "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!         ).to_end_bound(),
 //!     ),
 //! ];
 //!
@@ -63,33 +64,35 @@
 //!         .abs_intersect_layered()
 //!         .collect::<Vec<_>>(),
 //!     vec![
-//!         AbsoluteBounds::new(
-//!             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!                 "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-//!             )),
-//!             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-//!                 "2025-01-01 11:00:00Z".parse::<DateTime<Utc>>()?,
-//!             )),
+//!         AbsoluteBoundPair::new(
+//!             AbsoluteFiniteBound::new(
+//!                 "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!             ).to_start_bound(),
+//!             AbsoluteFiniteBound::new(
+//!                 "2025-01-01 11:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!             ).to_end_bound(),
 //!         ),
-//!         AbsoluteBounds::new(
-//!             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!                 "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
-//!             )),
-//!             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-//!                 "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
-//!             )),
+//!         AbsoluteBoundPair::new(
+//!             AbsoluteFiniteBound::new(
+//!                 "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!             ).to_start_bound(),
+//!             AbsoluteFiniteBound::new(
+//!                 "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!             ).to_end_bound(),
 //!         ),
 //!     ],
 //! );
-//! # Ok::<(), chrono::format::ParseError>(())
+//! # Ok::<(), Box<dyn Error>>(())
 //! ```
 
 use std::iter::FusedIterator;
 
-use crate::intervals::absolute::AbsoluteBounds;
-use crate::intervals::relative::RelativeBounds;
+use crate::intervals::absolute::AbsoluteBoundPair;
+use crate::intervals::relative::RelativeBoundPair;
 use crate::iter::intervals::layered_bounds::{
-    LayeredBoundsState, LayeredBoundsStateChangeAtAbsoluteBound, LayeredBoundsStateChangeAtRelativeBound,
+    LayeredBoundsState,
+    LayeredBoundsStateChangeAtAbsoluteBound,
+    LayeredBoundsStateChangeAtRelativeBound,
 };
 
 /// Intersection iterator
@@ -108,21 +111,28 @@ where
     ///
     /// # Input requirements
     ///
-    /// 1. The iterator **must return continuous [state changes](LayeredBoundsStateChangeAtAbsoluteBound)**
+    /// 1. The iterator **must return continuous [state
+    ///    changes](LayeredBoundsStateChangeAtAbsoluteBound)**
     /// 2. The state changes **must be in chronological order**
     ///
-    /// For more precision about requirement 1, _continuous state changes_ means that the first state change
+    /// For more precision about requirement 1, _continuous state changes_ means
+    /// that the first state change
     /// must have [`NoLayers`](LayeredBoundsState::NoLayers)
     /// as its [old state](LayeredBoundsStateChangeAtAbsoluteBound::old_state),
     /// the last change must have [`NoLayers`](LayeredBoundsState::NoLayers)
-    /// as its [new state](LayeredBoundsStateChangeAtAbsoluteBound::new_state), and all state changes must follow each
-    /// other, i.e. if one change transitions from state A to state B, the next change's old state must be the previous
-    /// change's new state: state B.
+    /// as its [new state](LayeredBoundsStateChangeAtAbsoluteBound::new_state),
+    /// and all state changes must follow each other, i.e. if one change
+    /// transitions from state A to state B, the next change's old state must be
+    /// the previous change's new state: state B.
     ///
-    /// All requirements are automatically guaranteed if the state changes are obtained from
+    /// All requirements are automatically guaranteed if the state changes are
+    /// obtained from
     /// [`LayeredAbsoluteBounds`](crate::iter::intervals::layered_bounds::LayeredAbsoluteBounds).
     pub fn new(iter: I) -> LayeredAbsoluteBoundsIntersection<I> {
-        LayeredAbsoluteBoundsIntersection { iter, exhausted: false }
+        LayeredAbsoluteBoundsIntersection {
+            iter,
+            exhausted: false,
+        }
     }
 }
 
@@ -130,7 +140,7 @@ impl<I> Iterator for LayeredAbsoluteBoundsIntersection<I>
 where
     I: Iterator<Item = LayeredBoundsStateChangeAtAbsoluteBound>,
 {
-    type Item = AbsoluteBounds;
+    type Item = AbsoluteBoundPair;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.exhausted {
@@ -166,7 +176,7 @@ where
                 );
             };
 
-            return Some(AbsoluteBounds::new(start, end));
+            return Some(AbsoluteBoundPair::new(start, end));
         }
     }
 
@@ -187,7 +197,9 @@ where
 {
     /// Operates an [intersection]
     ///
-    /// See [module documentation](crate::iter::intervals::layered_bounds_set_ops::intersect) for more information.
+    /// See [module
+    /// documentation](crate::iter::intervals::layered_bounds_set_ops::intersect)
+    /// for more information.
     ///
     /// [intersection]: https://en.wikipedia.org/w/index.php?title=Intersection_(set_theory)&oldid=1191979994
     fn abs_intersect_layered(self) -> LayeredAbsoluteBoundsIntersection<Self::IntoIter> {
@@ -216,21 +228,28 @@ where
     ///
     /// # Input requirements
     ///
-    /// 1. The iterator **must return continuous [state changes](LayeredBoundsStateChangeAtRelativeBound)**
+    /// 1. The iterator **must return continuous [state
+    ///    changes](LayeredBoundsStateChangeAtRelativeBound)**
     /// 2. The state changes **must be in chronological order**
     ///
-    /// For more precision about requirement 1, _continuous state changes_ means that the first state change
+    /// For more precision about requirement 1, _continuous state changes_ means
+    /// that the first state change
     /// must have [`NoLayers`](LayeredBoundsState::NoLayers)
     /// as its [old state](LayeredBoundsStateChangeAtRelativeBound::old_state),
     /// the last change must have [`NoLayers`](LayeredBoundsState::NoLayers)
-    /// as its [new state](LayeredBoundsStateChangeAtRelativeBound::new_state), and all state changes must follow each
-    /// other, i.e. if one change transitions from state A to state B, the next change's old state must be the previous
-    /// change's new state: state B.
+    /// as its [new state](LayeredBoundsStateChangeAtRelativeBound::new_state),
+    /// and all state changes must follow each other, i.e. if one change
+    /// transitions from state A to state B, the next change's old state must be
+    /// the previous change's new state: state B.
     ///
-    /// All requirements are automatically guaranteed if the state changes are obtained from
+    /// All requirements are automatically guaranteed if the state changes are
+    /// obtained from
     /// [`LayeredRelativeBounds`](crate::iter::intervals::layered_bounds::LayeredRelativeBounds).
     pub fn new(iter: I) -> LayeredRelativeBoundsIntersection<I> {
-        LayeredRelativeBoundsIntersection { iter, exhausted: false }
+        LayeredRelativeBoundsIntersection {
+            iter,
+            exhausted: false,
+        }
     }
 }
 
@@ -238,7 +257,7 @@ impl<I> Iterator for LayeredRelativeBoundsIntersection<I>
 where
     I: Iterator<Item = LayeredBoundsStateChangeAtRelativeBound>,
 {
-    type Item = RelativeBounds;
+    type Item = RelativeBoundPair;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.exhausted {
@@ -274,7 +293,7 @@ where
                 );
             };
 
-            return Some(RelativeBounds::new(start, end));
+            return Some(RelativeBoundPair::new(start, end));
         }
     }
 
@@ -295,7 +314,9 @@ where
 {
     /// Operates an [intersection]
     ///
-    /// See [module documentation](crate::iter::intervals::layered_bounds_set_ops::intersect) for more information.
+    /// See [module
+    /// documentation](crate::iter::intervals::layered_bounds_set_ops::intersect)
+    /// for more information.
     ///
     /// [intersection]: https://en.wikipedia.org/w/index.php?title=Intersection_(set_theory)&oldid=1191979994
     fn rel_intersect_layered(self) -> LayeredRelativeBoundsIntersection<Self::IntoIter> {

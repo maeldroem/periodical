@@ -1,15 +1,16 @@
-use chrono::Utc;
+use std::error::Error;
+
+use jiff::Zoned;
 
 use super::point_containment::*;
 
 use crate::intervals::absolute::{
-    AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, EmptiableAbsoluteBounds,
+    AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, EmptiableAbsoluteBoundPair,
 };
 use crate::intervals::meta::BoundInclusivity;
-use crate::test_utils::date;
 
 #[test]
-fn point_containment_position_strip() {
+fn position_strip() {
     assert_eq!(
         PointContainmentPosition::OutsideBefore.strip(),
         DisambiguatedPointContainmentPosition::OutsideBefore
@@ -37,7 +38,7 @@ fn point_containment_position_strip() {
 }
 
 #[test]
-fn point_containment_position_strict_disambiguation_outside_before() {
+fn position_strict_disambiguation_outside_before() {
     assert_eq!(
         PointContainmentPosition::OutsideBefore.disambiguate_using_rule_set(PointContainmentRuleSet::Strict),
         DisambiguatedPointContainmentPosition::OutsideBefore,
@@ -45,7 +46,7 @@ fn point_containment_position_strict_disambiguation_outside_before() {
 }
 
 #[test]
-fn point_containment_position_strict_disambiguation_outside_after() {
+fn position_strict_disambiguation_outside_after() {
     assert_eq!(
         PointContainmentPosition::OutsideAfter.disambiguate_using_rule_set(PointContainmentRuleSet::Strict),
         DisambiguatedPointContainmentPosition::OutsideAfter,
@@ -53,7 +54,7 @@ fn point_containment_position_strict_disambiguation_outside_after() {
 }
 
 #[test]
-fn point_containment_position_strict_disambiguation_outside() {
+fn position_strict_disambiguation_outside() {
     assert_eq!(
         PointContainmentPosition::Outside.disambiguate_using_rule_set(PointContainmentRuleSet::Strict),
         DisambiguatedPointContainmentPosition::Outside,
@@ -61,7 +62,7 @@ fn point_containment_position_strict_disambiguation_outside() {
 }
 
 #[test]
-fn point_containment_position_strict_disambiguation_on_start_inclusive() {
+fn position_strict_disambiguation_on_start_inclusive() {
     assert_eq!(
         PointContainmentPosition::OnStart(BoundInclusivity::Inclusive)
             .disambiguate_using_rule_set(PointContainmentRuleSet::Strict),
@@ -70,7 +71,7 @@ fn point_containment_position_strict_disambiguation_on_start_inclusive() {
 }
 
 #[test]
-fn point_containment_position_strict_disambiguation_on_start_exclusive() {
+fn position_strict_disambiguation_on_start_exclusive() {
     assert_eq!(
         PointContainmentPosition::OnStart(BoundInclusivity::Exclusive)
             .disambiguate_using_rule_set(PointContainmentRuleSet::Strict),
@@ -79,7 +80,7 @@ fn point_containment_position_strict_disambiguation_on_start_exclusive() {
 }
 
 #[test]
-fn point_containment_position_strict_disambiguation_on_end_inclusive() {
+fn position_strict_disambiguation_on_end_inclusive() {
     assert_eq!(
         PointContainmentPosition::OnEnd(BoundInclusivity::Inclusive)
             .disambiguate_using_rule_set(PointContainmentRuleSet::Strict),
@@ -88,7 +89,7 @@ fn point_containment_position_strict_disambiguation_on_end_inclusive() {
 }
 
 #[test]
-fn point_containment_position_strict_disambiguation_on_end_exclusive() {
+fn position_strict_disambiguation_on_end_exclusive() {
     assert_eq!(
         PointContainmentPosition::OnEnd(BoundInclusivity::Exclusive)
             .disambiguate_using_rule_set(PointContainmentRuleSet::Strict),
@@ -97,7 +98,7 @@ fn point_containment_position_strict_disambiguation_on_end_exclusive() {
 }
 
 #[test]
-fn point_containment_position_strict_disambiguation_inside() {
+fn position_strict_disambiguation_inside() {
     assert_eq!(
         PointContainmentPosition::Inside.disambiguate_using_rule_set(PointContainmentRuleSet::Strict),
         DisambiguatedPointContainmentPosition::Inside,
@@ -105,7 +106,7 @@ fn point_containment_position_strict_disambiguation_inside() {
 }
 
 #[test]
-fn point_containment_position_lenient_disambiguation_outside_before() {
+fn position_lenient_disambiguation_outside_before() {
     assert_eq!(
         PointContainmentPosition::OutsideBefore.disambiguate_using_rule_set(PointContainmentRuleSet::Lenient),
         DisambiguatedPointContainmentPosition::OutsideBefore,
@@ -113,7 +114,7 @@ fn point_containment_position_lenient_disambiguation_outside_before() {
 }
 
 #[test]
-fn point_containment_position_lenient_disambiguation_outside_after() {
+fn position_lenient_disambiguation_outside_after() {
     assert_eq!(
         PointContainmentPosition::OutsideAfter.disambiguate_using_rule_set(PointContainmentRuleSet::Lenient),
         DisambiguatedPointContainmentPosition::OutsideAfter,
@@ -121,7 +122,7 @@ fn point_containment_position_lenient_disambiguation_outside_after() {
 }
 
 #[test]
-fn point_containment_position_lenient_disambiguation_outside() {
+fn position_lenient_disambiguation_outside() {
     assert_eq!(
         PointContainmentPosition::Outside.disambiguate_using_rule_set(PointContainmentRuleSet::Lenient),
         DisambiguatedPointContainmentPosition::Outside,
@@ -129,7 +130,7 @@ fn point_containment_position_lenient_disambiguation_outside() {
 }
 
 #[test]
-fn point_containment_position_lenient_disambiguation_on_start_inclusive() {
+fn position_lenient_disambiguation_on_start_inclusive() {
     assert_eq!(
         PointContainmentPosition::OnStart(BoundInclusivity::Inclusive)
             .disambiguate_using_rule_set(PointContainmentRuleSet::Lenient),
@@ -138,7 +139,7 @@ fn point_containment_position_lenient_disambiguation_on_start_inclusive() {
 }
 
 #[test]
-fn point_containment_position_lenient_disambiguation_on_start_exclusive() {
+fn position_lenient_disambiguation_on_start_exclusive() {
     assert_eq!(
         PointContainmentPosition::OnStart(BoundInclusivity::Exclusive)
             .disambiguate_using_rule_set(PointContainmentRuleSet::Lenient),
@@ -147,7 +148,7 @@ fn point_containment_position_lenient_disambiguation_on_start_exclusive() {
 }
 
 #[test]
-fn point_containment_position_lenient_disambiguation_on_end_inclusive() {
+fn position_lenient_disambiguation_on_end_inclusive() {
     assert_eq!(
         PointContainmentPosition::OnEnd(BoundInclusivity::Inclusive)
             .disambiguate_using_rule_set(PointContainmentRuleSet::Lenient),
@@ -156,7 +157,7 @@ fn point_containment_position_lenient_disambiguation_on_end_inclusive() {
 }
 
 #[test]
-fn point_containment_position_lenient_disambiguation_on_end_exclusive() {
+fn position_lenient_disambiguation_on_end_exclusive() {
     assert_eq!(
         PointContainmentPosition::OnEnd(BoundInclusivity::Exclusive)
             .disambiguate_using_rule_set(PointContainmentRuleSet::Lenient),
@@ -165,7 +166,7 @@ fn point_containment_position_lenient_disambiguation_on_end_exclusive() {
 }
 
 #[test]
-fn point_containment_position_lenient_disambiguation_inside() {
+fn position_lenient_disambiguation_inside() {
     assert_eq!(
         PointContainmentPosition::Inside.disambiguate_using_rule_set(PointContainmentRuleSet::Lenient),
         DisambiguatedPointContainmentPosition::Inside,
@@ -173,367 +174,383 @@ fn point_containment_position_lenient_disambiguation_inside() {
 }
 
 #[test]
-fn point_containment_rule_counts_as_contained_allow_on_start_true_on_start() {
+fn rule_counts_as_contained_allow_on_start_true_on_start() {
     assert!(
         PointContainmentRule::AllowOnStart.counts_as_contained(true, DisambiguatedPointContainmentPosition::OnStart)
     );
 }
 
 #[test]
-fn point_containment_rule_counts_as_contained_allow_on_start_true_on_end() {
+fn rule_counts_as_contained_allow_on_start_true_on_end() {
     assert!(PointContainmentRule::AllowOnStart.counts_as_contained(true, DisambiguatedPointContainmentPosition::OnEnd));
 }
 
 #[test]
-fn point_containment_rule_counts_as_contained_allow_on_start_true_outside() {
+fn rule_counts_as_contained_allow_on_start_true_outside() {
     assert!(
         PointContainmentRule::AllowOnStart.counts_as_contained(true, DisambiguatedPointContainmentPosition::Outside)
     );
 }
 
 #[test]
-fn point_containment_rule_counts_as_contained_allow_on_start_false_on_start() {
+fn rule_counts_as_contained_allow_on_start_false_on_start() {
     assert!(
         PointContainmentRule::AllowOnStart.counts_as_contained(false, DisambiguatedPointContainmentPosition::OnStart)
     );
 }
 
 #[test]
-fn point_containment_rule_counts_as_contained_allow_on_start_false_on_end() {
+fn rule_counts_as_contained_allow_on_start_false_on_end() {
     assert!(
         !PointContainmentRule::AllowOnStart.counts_as_contained(false, DisambiguatedPointContainmentPosition::OnEnd)
     );
 }
 
 #[test]
-fn point_containment_rule_counts_as_contained_allow_on_start_false_outside() {
+fn rule_counts_as_contained_allow_on_start_false_outside() {
     assert!(
         !PointContainmentRule::AllowOnStart.counts_as_contained(false, DisambiguatedPointContainmentPosition::Outside)
     );
 }
 
 #[test]
-fn point_containment_rule_counts_as_contained_allow_on_end_true_on_start() {
+fn rule_counts_as_contained_allow_on_end_true_on_start() {
     assert!(PointContainmentRule::AllowOnEnd.counts_as_contained(true, DisambiguatedPointContainmentPosition::OnStart));
 }
 
 #[test]
-fn point_containment_rule_counts_as_contained_allow_on_end_true_on_end() {
+fn rule_counts_as_contained_allow_on_end_true_on_end() {
     assert!(PointContainmentRule::AllowOnEnd.counts_as_contained(true, DisambiguatedPointContainmentPosition::OnEnd));
 }
 
 #[test]
-fn point_containment_rule_counts_as_contained_allow_on_end_true_outside() {
+fn rule_counts_as_contained_allow_on_end_true_outside() {
     assert!(PointContainmentRule::AllowOnEnd.counts_as_contained(true, DisambiguatedPointContainmentPosition::Outside));
 }
 
 #[test]
-fn point_containment_rule_counts_as_contained_allow_on_end_false_on_start() {
+fn rule_counts_as_contained_allow_on_end_false_on_start() {
     assert!(
         !PointContainmentRule::AllowOnEnd.counts_as_contained(false, DisambiguatedPointContainmentPosition::OnStart)
     );
 }
 
 #[test]
-fn point_containment_rule_counts_as_contained_allow_on_end_false_on_end() {
+fn rule_counts_as_contained_allow_on_end_false_on_end() {
     assert!(PointContainmentRule::AllowOnEnd.counts_as_contained(false, DisambiguatedPointContainmentPosition::OnEnd));
 }
 
 #[test]
-fn point_containment_rule_counts_as_contained_allow_on_end_false_outside() {
+fn rule_counts_as_contained_allow_on_end_false_outside() {
     assert!(
         !PointContainmentRule::AllowOnEnd.counts_as_contained(false, DisambiguatedPointContainmentPosition::Outside)
     );
 }
 
 #[test]
-fn point_containment_rule_counts_as_contained_allow_on_bounds_true_on_start() {
+fn rule_counts_as_contained_allow_on_bounds_true_on_start() {
     assert!(
         PointContainmentRule::AllowOnBounds.counts_as_contained(true, DisambiguatedPointContainmentPosition::OnStart)
     );
 }
 
 #[test]
-fn point_containment_rule_counts_as_contained_allow_on_bounds_true_on_end() {
+fn rule_counts_as_contained_allow_on_bounds_true_on_end() {
     assert!(
         PointContainmentRule::AllowOnBounds.counts_as_contained(true, DisambiguatedPointContainmentPosition::OnEnd)
     );
 }
 
 #[test]
-fn point_containment_rule_counts_as_contained_allow_on_bounds_true_outside() {
+fn rule_counts_as_contained_allow_on_bounds_true_outside() {
     assert!(
         PointContainmentRule::AllowOnBounds.counts_as_contained(true, DisambiguatedPointContainmentPosition::Outside)
     );
 }
 
 #[test]
-fn point_containment_rule_counts_as_contained_allow_on_bounds_false_on_start() {
+fn rule_counts_as_contained_allow_on_bounds_false_on_start() {
     assert!(
         PointContainmentRule::AllowOnBounds.counts_as_contained(false, DisambiguatedPointContainmentPosition::OnStart)
     );
 }
 
 #[test]
-fn point_containment_rule_counts_as_contained_allow_on_bounds_false_on_end() {
+fn rule_counts_as_contained_allow_on_bounds_false_on_end() {
     assert!(
         PointContainmentRule::AllowOnBounds.counts_as_contained(false, DisambiguatedPointContainmentPosition::OnEnd)
     );
 }
 
 #[test]
-fn point_containment_rule_counts_as_contained_allow_on_bounds_false_outside() {
+fn rule_counts_as_contained_allow_on_bounds_false_outside() {
     assert!(
         !PointContainmentRule::AllowOnBounds.counts_as_contained(false, DisambiguatedPointContainmentPosition::Outside)
     );
 }
 
 #[test]
-fn point_containment_rule_counts_as_contained_deny_on_start_true_on_start() {
+fn rule_counts_as_contained_deny_on_start_true_on_start() {
     assert!(
         !PointContainmentRule::DenyOnStart.counts_as_contained(true, DisambiguatedPointContainmentPosition::OnStart)
     );
 }
 
 #[test]
-fn point_containment_rule_counts_as_contained_deny_on_start_true_on_end() {
+fn rule_counts_as_contained_deny_on_start_true_on_end() {
     assert!(PointContainmentRule::DenyOnStart.counts_as_contained(true, DisambiguatedPointContainmentPosition::OnEnd));
 }
 
 #[test]
-fn point_containment_rule_counts_as_contained_deny_on_start_true_outside() {
+fn rule_counts_as_contained_deny_on_start_true_outside() {
     assert!(
         PointContainmentRule::DenyOnStart.counts_as_contained(true, DisambiguatedPointContainmentPosition::Outside)
     );
 }
 
 #[test]
-fn point_containment_rule_counts_as_contained_deny_on_start_false_on_start() {
+fn rule_counts_as_contained_deny_on_start_false_on_start() {
     assert!(
         !PointContainmentRule::DenyOnStart.counts_as_contained(false, DisambiguatedPointContainmentPosition::OnStart)
     );
 }
 
 #[test]
-fn point_containment_rule_counts_as_contained_deny_on_start_false_on_end() {
+fn rule_counts_as_contained_deny_on_start_false_on_end() {
     assert!(
         !PointContainmentRule::DenyOnStart.counts_as_contained(false, DisambiguatedPointContainmentPosition::OnEnd)
     );
 }
 
 #[test]
-fn point_containment_rule_counts_as_contained_deny_on_start_false_outside() {
+fn rule_counts_as_contained_deny_on_start_false_outside() {
     assert!(
         !PointContainmentRule::DenyOnStart.counts_as_contained(false, DisambiguatedPointContainmentPosition::Outside)
     );
 }
 
 #[test]
-fn point_containment_rule_counts_as_contained_deny_on_end_true_on_start() {
+fn rule_counts_as_contained_deny_on_end_true_on_start() {
     assert!(PointContainmentRule::DenyOnEnd.counts_as_contained(true, DisambiguatedPointContainmentPosition::OnStart));
 }
 
 #[test]
-fn point_containment_rule_counts_as_contained_deny_on_end_true_on_end() {
+fn rule_counts_as_contained_deny_on_end_true_on_end() {
     assert!(!PointContainmentRule::DenyOnEnd.counts_as_contained(true, DisambiguatedPointContainmentPosition::OnEnd));
 }
 
 #[test]
-fn point_containment_rule_counts_as_contained_deny_on_end_true_outside() {
+fn rule_counts_as_contained_deny_on_end_true_outside() {
     assert!(PointContainmentRule::DenyOnEnd.counts_as_contained(true, DisambiguatedPointContainmentPosition::Outside));
 }
 
 #[test]
-fn point_containment_rule_counts_as_contained_deny_on_end_false_on_start() {
+fn rule_counts_as_contained_deny_on_end_false_on_start() {
     assert!(
         !PointContainmentRule::DenyOnEnd.counts_as_contained(false, DisambiguatedPointContainmentPosition::OnStart)
     );
 }
 
 #[test]
-fn point_containment_rule_counts_as_contained_deny_on_end_false_on_end() {
+fn rule_counts_as_contained_deny_on_end_false_on_end() {
     assert!(!PointContainmentRule::DenyOnEnd.counts_as_contained(false, DisambiguatedPointContainmentPosition::OnEnd));
 }
 
 #[test]
-fn point_containment_rule_counts_as_contained_deny_on_end_false_outside() {
+fn rule_counts_as_contained_deny_on_end_false_outside() {
     assert!(
         !PointContainmentRule::DenyOnEnd.counts_as_contained(false, DisambiguatedPointContainmentPosition::Outside)
     );
 }
 
 #[test]
-fn point_containment_rule_counts_as_contained_deny_on_bounds_true_on_start() {
+fn rule_counts_as_contained_deny_on_bounds_true_on_start() {
     assert!(
         !PointContainmentRule::DenyOnBounds.counts_as_contained(true, DisambiguatedPointContainmentPosition::OnStart)
     );
 }
 
 #[test]
-fn point_containment_rule_counts_as_contained_deny_on_bounds_true_on_end() {
+fn rule_counts_as_contained_deny_on_bounds_true_on_end() {
     assert!(
         !PointContainmentRule::DenyOnBounds.counts_as_contained(true, DisambiguatedPointContainmentPosition::OnEnd)
     );
 }
 
 #[test]
-fn point_containment_rule_counts_as_contained_deny_on_bounds_true_outside() {
+fn rule_counts_as_contained_deny_on_bounds_true_outside() {
     assert!(
         PointContainmentRule::DenyOnBounds.counts_as_contained(true, DisambiguatedPointContainmentPosition::Outside)
     );
 }
 
 #[test]
-fn point_containment_rule_counts_as_contained_deny_on_bounds_false_on_start() {
+fn rule_counts_as_contained_deny_on_bounds_false_on_start() {
     assert!(
         !PointContainmentRule::DenyOnBounds.counts_as_contained(false, DisambiguatedPointContainmentPosition::OnStart)
     );
 }
 
 #[test]
-fn point_containment_rule_counts_as_contained_deny_on_bounds_false_on_end() {
+fn rule_counts_as_contained_deny_on_bounds_false_on_end() {
     assert!(
         !PointContainmentRule::DenyOnBounds.counts_as_contained(false, DisambiguatedPointContainmentPosition::OnEnd)
     );
 }
 
 #[test]
-fn point_containment_rule_counts_as_contained_deny_on_bounds_false_outside() {
+fn rule_counts_as_contained_deny_on_bounds_false_outside() {
     assert!(
         !PointContainmentRule::DenyOnBounds.counts_as_contained(false, DisambiguatedPointContainmentPosition::Outside)
     );
 }
 
 #[test]
-fn point_containment_time_outside_before() {
+fn time_outside_before() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        AbsoluteBounds::new(
+        AbsoluteBoundPair::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
+                "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Inclusive,
             )),
             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 3),
+                "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Inclusive,
             )),
         )
-        .point_containment_position(date(&Utc, 2025, 1, 1)),
+        .point_containment_position("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()),
         Ok(PointContainmentPosition::OutsideBefore),
     );
+
+    Ok(())
 }
 
 #[test]
-fn point_containment_time_outside_after() {
+fn time_outside_after() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        AbsoluteBounds::new(
+        AbsoluteBoundPair::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
+                "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Inclusive,
             )),
             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 3),
+                "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Inclusive,
             )),
         )
-        .point_containment_position(date(&Utc, 2025, 1, 4)),
+        .point_containment_position("2025-01-04 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()),
         Ok(PointContainmentPosition::OutsideAfter),
     );
+
+    Ok(())
 }
 
 #[test]
-fn point_containment_time_outside() {
+fn time_outside() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        EmptiableAbsoluteBounds::Empty.point_containment_position(date(&Utc, 2025, 1, 1)),
+        EmptiableAbsoluteBoundPair::Empty.point_containment_position("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()),
         Ok(PointContainmentPosition::Outside),
     );
+
+    Ok(())
 }
 
 #[test]
-fn point_containment_time_on_start_inclusive() {
+fn time_on_start_inclusive() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        AbsoluteBounds::new(
+        AbsoluteBoundPair::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
+                "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Inclusive,
             )),
             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 3),
+                "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Inclusive,
             )),
         )
-        .point_containment_position(date(&Utc, 2025, 1, 2)),
+        .point_containment_position("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()),
         Ok(PointContainmentPosition::OnStart(BoundInclusivity::Inclusive)),
     );
+
+    Ok(())
 }
 
 #[test]
-fn point_containment_time_on_start_exclusive() {
+fn time_on_start_exclusive() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        AbsoluteBounds::new(
+        AbsoluteBoundPair::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
+                "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
             )),
             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 3),
+                "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Inclusive,
             )),
         )
-        .point_containment_position(date(&Utc, 2025, 1, 2)),
+        .point_containment_position("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()),
         Ok(PointContainmentPosition::OnStart(BoundInclusivity::Exclusive)),
     );
+
+    Ok(())
 }
 
 #[test]
-fn point_containment_time_on_end_inclusive() {
+fn time_on_end_inclusive() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        AbsoluteBounds::new(
+        AbsoluteBoundPair::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
+                "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Inclusive,
             )),
             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 3),
+                "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Inclusive,
             )),
         )
-        .point_containment_position(date(&Utc, 2025, 1, 3)),
+        .point_containment_position("2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()),
         Ok(PointContainmentPosition::OnEnd(BoundInclusivity::Inclusive)),
     );
+
+    Ok(())
 }
 
 #[test]
-fn point_containment_time_on_end_exclusive() {
+fn time_on_end_exclusive() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        AbsoluteBounds::new(
+        AbsoluteBoundPair::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 2),
+                "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Inclusive,
             )),
             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 3),
+                "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
             )),
         )
-        .point_containment_position(date(&Utc, 2025, 1, 3)),
+        .point_containment_position("2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()),
         Ok(PointContainmentPosition::OnEnd(BoundInclusivity::Exclusive)),
     );
+
+    Ok(())
 }
 
 #[test]
-fn point_containment_time_inside() {
+fn time_inside() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        AbsoluteBounds::new(
+        AbsoluteBoundPair::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 1),
+                "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Inclusive,
             )),
             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                date(&Utc, 2025, 1, 3),
+                "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Inclusive,
             )),
         )
-        .point_containment_position(date(&Utc, 2025, 1, 2)),
+        .point_containment_position("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()),
         Ok(PointContainmentPosition::Inside),
     );
+
+    Ok(())
 }

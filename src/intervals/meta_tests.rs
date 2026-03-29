@@ -1,3 +1,5 @@
+use std::time::Duration as StdDuration;
+
 use super::meta::*;
 
 #[test]
@@ -33,64 +35,64 @@ fn epsilon_has_epsilon_on_end() {
 #[test]
 fn epsilon_interpret_as_duration_bound_specific_none() {
     assert_eq!(
-        Epsilon::None.interpret_as_duration_bound_specific(chrono::Duration::seconds(1), chrono::Duration::seconds(2)),
-        Ok(chrono::Duration::zero()),
+        Epsilon::None.interpret_as_duration_bound_specific(StdDuration::from_secs(1), StdDuration::from_secs(2)),
+        Ok(StdDuration::ZERO),
     );
 }
 
 #[test]
 fn epsilon_interpret_as_duration_bound_specific_start() {
     assert_eq!(
-        Epsilon::Start.interpret_as_duration_bound_specific(chrono::Duration::seconds(1), chrono::Duration::seconds(2)),
-        Ok(chrono::Duration::seconds(1)),
+        Epsilon::Start.interpret_as_duration_bound_specific(StdDuration::from_secs(1), StdDuration::from_secs(2)),
+        Ok(StdDuration::from_secs(1)),
     );
 }
 
 #[test]
 fn epsilon_interpret_as_duration_bound_specific_end() {
     assert_eq!(
-        Epsilon::End.interpret_as_duration_bound_specific(chrono::Duration::seconds(1), chrono::Duration::seconds(2)),
-        Ok(chrono::Duration::seconds(2)),
+        Epsilon::End.interpret_as_duration_bound_specific(StdDuration::from_secs(1), StdDuration::from_secs(2)),
+        Ok(StdDuration::from_secs(2)),
     );
 }
 
 #[test]
 fn epsilon_interpret_as_duration_bound_specific_both() {
     assert_eq!(
-        Epsilon::Both.interpret_as_duration_bound_specific(chrono::Duration::seconds(1), chrono::Duration::seconds(2)),
-        Ok(chrono::Duration::seconds(3)),
+        Epsilon::Both.interpret_as_duration_bound_specific(StdDuration::from_secs(1), StdDuration::from_secs(2)),
+        Ok(StdDuration::from_secs(3)),
     );
 }
 
 #[test]
 fn epsilon_interpret_as_duration_none() {
     assert_eq!(
-        Epsilon::None.interpret_as_duration(chrono::Duration::seconds(1)),
-        Ok(chrono::Duration::zero())
+        Epsilon::None.interpret_as_duration(StdDuration::from_secs(1)),
+        Ok(StdDuration::ZERO)
     );
 }
 
 #[test]
 fn epsilon_interpret_as_duration_start() {
     assert_eq!(
-        Epsilon::Start.interpret_as_duration(chrono::Duration::seconds(1)),
-        Ok(chrono::Duration::seconds(1))
+        Epsilon::Start.interpret_as_duration(StdDuration::from_secs(1)),
+        Ok(StdDuration::from_secs(1))
     );
 }
 
 #[test]
 fn epsilon_interpret_as_duration_end() {
     assert_eq!(
-        Epsilon::End.interpret_as_duration(chrono::Duration::seconds(1)),
-        Ok(chrono::Duration::seconds(1))
+        Epsilon::End.interpret_as_duration(StdDuration::from_secs(1)),
+        Ok(StdDuration::from_secs(1))
     );
 }
 
 #[test]
 fn epsilon_interpret_as_duration_both() {
     assert_eq!(
-        Epsilon::Both.interpret_as_duration(chrono::Duration::seconds(1)),
-        Ok(chrono::Duration::seconds(2))
+        Epsilon::Both.interpret_as_duration(StdDuration::from_secs(1)),
+        Ok(StdDuration::from_secs(2))
     );
 }
 
@@ -148,15 +150,15 @@ fn epsilon_from_bool_pair_true_true() {
 
 #[test]
 fn interval_duration_is_finite() {
-    assert!(Duration::Finite(chrono::Duration::zero(), Epsilon::None).is_finite());
+    assert!(Duration::Finite(StdDuration::ZERO, Epsilon::None).is_finite());
     assert!(!Duration::Infinite.is_finite());
 }
 
 #[test]
 fn interval_duration_finite() {
     assert_eq!(
-        Duration::Finite(chrono::Duration::hours(2), Epsilon::End).finite(),
-        Some((chrono::Duration::hours(2), Epsilon::End)),
+        Duration::Finite(StdDuration::from_hours(2), Epsilon::End).finite(),
+        Some((StdDuration::from_hours(2), Epsilon::End)),
     );
     assert_eq!(Duration::Infinite.finite(), None);
 }
@@ -164,16 +166,16 @@ fn interval_duration_finite() {
 #[test]
 fn interval_duration_finite_interpret_duration_on_finite() {
     assert_eq!(
-        Duration::Finite(chrono::Duration::hours(1), Epsilon::End)
-            .finite_interpret_epsilon(chrono::Duration::seconds(1)),
-        Some(chrono::Duration::minutes(59) + chrono::Duration::seconds(59)),
+        Duration::Finite(StdDuration::from_hours(1), Epsilon::End)
+            .finite_interpret_epsilon(StdDuration::from_secs(1)),
+        Some(StdDuration::from_mins(59) + StdDuration::from_secs(59)),
     );
 }
 
 #[test]
 fn interval_duration_finite_interpret_duration_on_infinite() {
     assert_eq!(
-        Duration::Infinite.finite_interpret_epsilon(chrono::Duration::seconds(1)),
+        Duration::Infinite.finite_interpret_epsilon(StdDuration::from_secs(1)),
         None,
     );
 }
@@ -181,17 +183,17 @@ fn interval_duration_finite_interpret_duration_on_infinite() {
 #[test]
 fn interval_duration_finite_interpret_duration_on_finite_large_epsilon() {
     assert_eq!(
-        Duration::Finite(chrono::Duration::hours(1), Epsilon::Start)
-            .finite_interpret_epsilon(chrono::Duration::hours(2)),
-        Some(chrono::Duration::zero()),
+        Duration::Finite(StdDuration::from_hours(1), Epsilon::Start)
+            .finite_interpret_epsilon(StdDuration::from_hours(2)),
+        Some(StdDuration::ZERO),
     );
 }
 
 #[test]
 fn interval_duration_finite_strip_epsilon_finite() {
     assert_eq!(
-        Duration::Finite(chrono::Duration::hours(2), Epsilon::Both).finite_strip_epsilon(),
-        Some(chrono::Duration::hours(2)),
+        Duration::Finite(StdDuration::from_hours(2), Epsilon::Both).finite_strip_epsilon(),
+        Some(StdDuration::from_hours(2)),
     );
 }
 
@@ -203,16 +205,16 @@ fn interval_duration_finite_strip_epsilon_infinite() {
 #[test]
 fn interval_duration_from_duration() {
     assert_eq!(
-        Duration::from(chrono::Duration::zero()),
-        Duration::Finite(chrono::Duration::zero(), Epsilon::default())
+        Duration::from(StdDuration::ZERO),
+        Duration::Finite(StdDuration::ZERO, Epsilon::default())
     );
 }
 
 #[test]
 fn interval_duration_from_duration_and_epsilon() {
     assert_eq!(
-        Duration::from((chrono::Duration::hours(2), Epsilon::End)),
-        Duration::Finite(chrono::Duration::hours(2), Epsilon::End),
+        Duration::from((StdDuration::from_hours(2), Epsilon::End)),
+        Duration::Finite(StdDuration::from_hours(2), Epsilon::End),
     );
 }
 

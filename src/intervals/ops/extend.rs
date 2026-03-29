@@ -1,332 +1,381 @@
 //! Interval extension up to another interval
 //!
-//! Extends an interval up to another. The process takes the lowest start bound of the two intervals
-//! and the highest end bound of the two intervals, then creates a new interval spanning those two points.
+//! Extends an interval up to another. The process takes the lowest start bound
+//! of the two intervals and the highest end bound of the two intervals, then
+//! creates a new interval spanning those two points.
 //!
-//! Regarding bound inclusivity, for each point we will get the bound inclusivity of the interval from which
-//! the point was taken. If they were equal, we choose the most inclusive bound.
+//! Regarding bound inclusivity, for each point we will get the bound
+//! inclusivity of the interval from which the point was taken. If they were
+//! equal, we choose the most inclusive bound.
 //!
 //! # Examples
 //!
 //! ```
-//! # use chrono::{DateTime, Utc};
-//! # use periodical::intervals::absolute::{
-//! #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, EmptiableAbsoluteBounds,
-//! # };
+//! # use std::error::Error;
+//! # use jiff::Zoned;
+//! # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
 //! # use periodical::intervals::ops::Extensible;
-//! let first_interval = AbsoluteBounds::new(
-//!     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-//!     )),
-//!     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-//!         "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
-//!     )),
+//! let first_interval = AbsoluteBoundPair::new(
+//!     AbsoluteFiniteBound::new(
+//!         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!     ).to_start_bound(),
+//!     AbsoluteFiniteBound::new(
+//!         "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!     ).to_end_bound(),
 //! );
 //!
-//! let second_interval = AbsoluteBounds::new(
-//!     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!         "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
-//!     )),
-//!     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-//!         "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
-//!     )),
+//! let second_interval = AbsoluteBoundPair::new(
+//!     AbsoluteFiniteBound::new(
+//!         "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!     ).to_start_bound(),
+//!     AbsoluteFiniteBound::new(
+//!         "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!     ).to_end_bound(),
 //! );
 //!
 //! assert_eq!(
 //!     first_interval.extend(&second_interval),
-//!     AbsoluteBounds::new(
-//!         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
-//!         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
+//!     AbsoluteBoundPair::new(
+//!         AbsoluteFiniteBound::new(
+//!             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!         ).to_start_bound(),
+//!         AbsoluteFiniteBound::new(
+//!             "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!         ).to_end_bound(),
 //!     ),
 //! );
-//! # Ok::<(), chrono::format::ParseError>(())
+//! # Ok::<(), Box<dyn Error>>(())
 //! ```
 
 use crate::intervals::absolute::{
-    AbsoluteBounds, AbsoluteEndBound, AbsoluteInterval, AbsoluteStartBound, BoundedAbsoluteInterval,
-    EmptiableAbsoluteBounds, HalfBoundedAbsoluteInterval, HasAbsoluteBounds, HasEmptiableAbsoluteBounds,
+    AbsoluteBoundPair,
+    AbsoluteEndBound,
+    AbsoluteInterval,
+    AbsoluteStartBound,
+    BoundedAbsoluteInterval,
+    EmptiableAbsoluteBoundPair,
+    EmptiableAbsoluteInterval,
+    HalfBoundedAbsoluteInterval,
+    HasAbsoluteBoundPair,
+    HasEmptiableAbsoluteBoundPair,
 };
 use crate::intervals::relative::{
-    BoundedRelativeInterval, EmptiableRelativeBounds, HalfBoundedRelativeInterval, HasEmptiableRelativeBounds,
-    HasRelativeBounds, RelativeBounds, RelativeEndBound, RelativeInterval, RelativeStartBound,
+    BoundedRelativeInterval,
+    EmptiableRelativeBoundPair,
+    EmptiableRelativeInterval,
+    HalfBoundedRelativeInterval,
+    HasEmptiableRelativeBoundPair,
+    HasRelativeBoundPair,
+    RelativeBoundPair,
+    RelativeEndBound,
+    RelativeInterval,
+    RelativeStartBound,
 };
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 
 /// Capacity to extend an interval up to another
 ///
-/// Extends an interval up to another. The process takes the lowest start bound of the two intervals
-/// and the highest end bound of the two intervals, then creates a new interval spanning those two points.
+/// Extends an interval up to another. The process takes the lowest start bound
+/// of the two intervals and the highest end bound of the two intervals, then
+/// creates a new interval spanning those two points.
 ///
-/// Regarding bound inclusivity, for each point we will get the bound inclusivity of the interval from which
-/// the point was taken. If they were equal, we choose the most inclusive bound.
+/// Regarding bound inclusivity, for each point we will get the bound
+/// inclusivity of the interval from which the point was taken. If they were
+/// equal, we choose the most inclusive bound.
 pub trait Extensible<Rhs = Self> {
     /// Output type
     type Output;
 
     /// Creates an extended interval from the current one and given one
     ///
-    /// Extends an interval up to another. The process takes the lowest start bound of the two intervals
-    /// and the highest end bound of the two intervals, then creates a new interval spanning those two points.
+    /// Extends an interval up to another. The process takes the lowest start
+    /// bound of the two intervals and the highest end bound of the two
+    /// intervals, then creates a new interval spanning those two points.
     ///
-    /// Regarding bound inclusivity, for each point we will get the bound inclusivity of the interval from which
-    /// the point was taken. If they were equal, we choose the most inclusive bound.
+    /// Regarding bound inclusivity, for each point we will get the bound
+    /// inclusivity of the interval from which the point was taken. If they
+    /// were equal, we choose the most inclusive bound.
     ///
     /// If both intervals are empty, the method just returns an empty interval.
     ///
-    /// If one of the intervals is empty, the method just return a clone of the other non-empty interval.
+    /// If one of the intervals is empty, the method just return a clone of the
+    /// other non-empty interval.
     ///
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Utc};
-    /// # use periodical::intervals::absolute::{
-    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, EmptiableAbsoluteBounds,
-    /// # };
+    /// # use std::error::Error;
+    /// # use jiff::Zoned;
+    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
     /// # use periodical::intervals::ops::Extensible;
-    /// let first_interval = AbsoluteBounds::new(
-    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     )),
-    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     )),
+    /// let first_interval = AbsoluteBoundPair::new(
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_start_bound(),
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_end_bound(),
     /// );
     ///
-    /// let second_interval = AbsoluteBounds::new(
-    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     )),
-    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     )),
+    /// let second_interval = AbsoluteBoundPair::new(
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_start_bound(),
+    ///     AbsoluteFiniteBound::new(
+    ///         "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     ).to_end_bound(),
     /// );
     ///
     /// assert_eq!(
     ///     first_interval.extend(&second_interval),
-    ///     AbsoluteBounds::new(
-    ///         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///             "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-    ///         )),
-    ///         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///             "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
-    ///         )),
+    ///     AbsoluteBoundPair::new(
+    ///         AbsoluteFiniteBound::new(
+    ///             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///         ).to_start_bound(),
+    ///         AbsoluteFiniteBound::new(
+    ///             "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///         ).to_end_bound(),
     ///     ),
     /// );
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
     fn extend(&self, rhs: &Rhs) -> Self::Output;
 }
 
-impl<Rhs> Extensible<Rhs> for AbsoluteBounds
+impl<Rhs> Extensible<Rhs> for AbsoluteBoundPair
 where
-    Rhs: HasEmptiableAbsoluteBounds,
+    Rhs: HasEmptiableAbsoluteBoundPair,
 {
     type Output = Self;
 
     fn extend(&self, rhs: &Rhs) -> Self::Output {
-        extend_abs_bounds_with_emptiable_abs_bounds(&self.abs_bounds(), &rhs.emptiable_abs_bounds())
+        extend_abs_bound_pair_with_emptiable_abs_bound_pair(&self.abs_bound_pair(), &rhs.emptiable_abs_bound_pair())
     }
 }
 
-impl<Rhs> Extensible<Rhs> for EmptiableAbsoluteBounds
+impl<Rhs> Extensible<Rhs> for EmptiableAbsoluteBoundPair
 where
-    Rhs: HasEmptiableAbsoluteBounds,
+    Rhs: HasEmptiableAbsoluteBoundPair,
 {
     type Output = Self;
 
     fn extend(&self, rhs: &Rhs) -> Self::Output {
-        extend_emptiable_abs_bounds(&self.emptiable_abs_bounds(), &rhs.emptiable_abs_bounds())
+        extend_emptiable_abs_bound_pair(&self.emptiable_abs_bound_pair(), &rhs.emptiable_abs_bound_pair())
     }
 }
 
 impl<Rhs> Extensible<Rhs> for AbsoluteInterval
 where
-    Rhs: HasEmptiableAbsoluteBounds,
+    Rhs: HasEmptiableAbsoluteBoundPair,
 {
     type Output = Self;
 
     fn extend(&self, rhs: &Rhs) -> Self::Output {
-        AbsoluteInterval::from(extend_emptiable_abs_bounds(
-            &self.emptiable_abs_bounds(),
-            &rhs.emptiable_abs_bounds(),
+        Self::Output::from(extend_abs_bound_pair_with_emptiable_abs_bound_pair(
+            &self.abs_bound_pair(),
+            &rhs.emptiable_abs_bound_pair(),
+        ))
+    }
+}
+
+impl<Rhs> Extensible<Rhs> for EmptiableAbsoluteInterval
+where
+    Rhs: HasEmptiableAbsoluteBoundPair,
+{
+    type Output = Self;
+
+    fn extend(&self, rhs: &Rhs) -> Self::Output {
+        Self::Output::from(extend_emptiable_abs_bound_pair(
+            &self.emptiable_abs_bound_pair(),
+            &rhs.emptiable_abs_bound_pair(),
         ))
     }
 }
 
 impl<Rhs> Extensible<Rhs> for BoundedAbsoluteInterval
 where
-    Rhs: HasEmptiableAbsoluteBounds,
+    Rhs: HasEmptiableAbsoluteBoundPair,
 {
     type Output = AbsoluteInterval;
 
     fn extend(&self, rhs: &Rhs) -> Self::Output {
-        AbsoluteInterval::from(extend_abs_bounds_with_emptiable_abs_bounds(
-            &self.abs_bounds(),
-            &rhs.emptiable_abs_bounds(),
+        Self::Output::from(extend_abs_bound_pair_with_emptiable_abs_bound_pair(
+            &self.abs_bound_pair(),
+            &rhs.emptiable_abs_bound_pair(),
         ))
     }
 }
 
 impl<Rhs> Extensible<Rhs> for HalfBoundedAbsoluteInterval
 where
-    Rhs: HasEmptiableAbsoluteBounds,
+    Rhs: HasEmptiableAbsoluteBoundPair,
 {
     type Output = AbsoluteInterval;
 
     fn extend(&self, rhs: &Rhs) -> Self::Output {
-        AbsoluteInterval::from(extend_abs_bounds_with_emptiable_abs_bounds(
-            &self.abs_bounds(),
-            &rhs.emptiable_abs_bounds(),
+        Self::Output::from(extend_abs_bound_pair_with_emptiable_abs_bound_pair(
+            &self.abs_bound_pair(),
+            &rhs.emptiable_abs_bound_pair(),
         ))
     }
 }
 
-impl<Rhs> Extensible<Rhs> for RelativeBounds
+impl<Rhs> Extensible<Rhs> for RelativeBoundPair
 where
-    Rhs: HasEmptiableRelativeBounds,
+    Rhs: HasEmptiableRelativeBoundPair,
 {
     type Output = Self;
 
     fn extend(&self, rhs: &Rhs) -> Self::Output {
-        extend_rel_bounds_with_emptiable_rel_bounds(&self.rel_bounds(), &rhs.emptiable_rel_bounds())
+        extend_rel_bound_pair_with_emptiable_rel_bound_pair(&self.rel_bound_pair(), &rhs.emptiable_rel_bound_pair())
     }
 }
 
-impl<Rhs> Extensible<Rhs> for EmptiableRelativeBounds
+impl<Rhs> Extensible<Rhs> for EmptiableRelativeBoundPair
 where
-    Rhs: HasEmptiableRelativeBounds,
+    Rhs: HasEmptiableRelativeBoundPair,
 {
     type Output = Self;
 
     fn extend(&self, rhs: &Rhs) -> Self::Output {
-        extend_emptiable_rel_bounds(&self.emptiable_rel_bounds(), &rhs.emptiable_rel_bounds())
+        extend_emptiable_rel_bound_pair(&self.emptiable_rel_bound_pair(), &rhs.emptiable_rel_bound_pair())
     }
 }
 
 impl<Rhs> Extensible<Rhs> for RelativeInterval
 where
-    Rhs: HasEmptiableRelativeBounds,
+    Rhs: HasEmptiableRelativeBoundPair,
 {
     type Output = Self;
 
     fn extend(&self, rhs: &Rhs) -> Self::Output {
-        RelativeInterval::from(extend_emptiable_rel_bounds(
-            &self.emptiable_rel_bounds(),
-            &rhs.emptiable_rel_bounds(),
+        Self::Output::from(extend_rel_bound_pair_with_emptiable_rel_bound_pair(
+            &self.rel_bound_pair(),
+            &rhs.emptiable_rel_bound_pair(),
+        ))
+    }
+}
+
+impl<Rhs> Extensible<Rhs> for EmptiableRelativeInterval
+where
+    Rhs: HasEmptiableRelativeBoundPair,
+{
+    type Output = Self;
+
+    fn extend(&self, rhs: &Rhs) -> Self::Output {
+        Self::Output::from(extend_emptiable_rel_bound_pair(
+            &self.emptiable_rel_bound_pair(),
+            &rhs.emptiable_rel_bound_pair(),
         ))
     }
 }
 
 impl<Rhs> Extensible<Rhs> for BoundedRelativeInterval
 where
-    Rhs: HasEmptiableRelativeBounds,
+    Rhs: HasEmptiableRelativeBoundPair,
 {
     type Output = RelativeInterval;
 
     fn extend(&self, rhs: &Rhs) -> Self::Output {
-        RelativeInterval::from(extend_rel_bounds_with_emptiable_rel_bounds(
-            &self.rel_bounds(),
-            &rhs.emptiable_rel_bounds(),
+        Self::Output::from(extend_rel_bound_pair_with_emptiable_rel_bound_pair(
+            &self.rel_bound_pair(),
+            &rhs.emptiable_rel_bound_pair(),
         ))
     }
 }
 
 impl<Rhs> Extensible<Rhs> for HalfBoundedRelativeInterval
 where
-    Rhs: HasEmptiableRelativeBounds,
+    Rhs: HasEmptiableRelativeBoundPair,
 {
     type Output = RelativeInterval;
 
     fn extend(&self, rhs: &Rhs) -> Self::Output {
-        RelativeInterval::from(extend_rel_bounds_with_emptiable_rel_bounds(
-            &self.rel_bounds(),
-            &rhs.emptiable_rel_bounds(),
+        Self::Output::from(extend_rel_bound_pair_with_emptiable_rel_bound_pair(
+            &self.rel_bound_pair(),
+            &rhs.emptiable_rel_bound_pair(),
         ))
     }
 }
 
-impl Extensible<AbsoluteBounds> for UnboundedInterval {
-    type Output = AbsoluteInterval;
+impl Extensible<AbsoluteBoundPair> for UnboundedInterval {
+    type Output = UnboundedInterval;
 
-    fn extend(&self, _rhs: &AbsoluteBounds) -> Self::Output {
-        AbsoluteInterval::from(*self)
+    fn extend(&self, _rhs: &AbsoluteBoundPair) -> Self::Output {
+        *self
     }
 }
 
-impl Extensible<EmptiableAbsoluteBounds> for UnboundedInterval {
-    type Output = AbsoluteInterval;
+impl Extensible<EmptiableAbsoluteBoundPair> for UnboundedInterval {
+    type Output = UnboundedInterval;
 
-    fn extend(&self, _rhs: &EmptiableAbsoluteBounds) -> Self::Output {
-        AbsoluteInterval::from(*self)
+    fn extend(&self, _rhs: &EmptiableAbsoluteBoundPair) -> Self::Output {
+        *self
     }
 }
 
 impl Extensible<AbsoluteInterval> for UnboundedInterval {
-    type Output = AbsoluteInterval;
+    type Output = UnboundedInterval;
 
     fn extend(&self, _rhs: &AbsoluteInterval) -> Self::Output {
-        AbsoluteInterval::from(*self)
+        *self
     }
 }
 
 impl Extensible<BoundedAbsoluteInterval> for UnboundedInterval {
-    type Output = AbsoluteInterval;
+    type Output = UnboundedInterval;
 
     fn extend(&self, _rhs: &BoundedAbsoluteInterval) -> Self::Output {
-        AbsoluteInterval::from(*self)
+        *self
     }
 }
 
 impl Extensible<HalfBoundedAbsoluteInterval> for UnboundedInterval {
-    type Output = AbsoluteInterval;
+    type Output = UnboundedInterval;
 
     fn extend(&self, _rhs: &HalfBoundedAbsoluteInterval) -> Self::Output {
-        AbsoluteInterval::from(*self)
+        *self
     }
 }
 
-impl Extensible<RelativeBounds> for UnboundedInterval {
-    type Output = RelativeInterval;
+impl Extensible<RelativeBoundPair> for UnboundedInterval {
+    type Output = UnboundedInterval;
 
-    fn extend(&self, _rhs: &RelativeBounds) -> Self::Output {
-        RelativeInterval::from(*self)
+    fn extend(&self, _rhs: &RelativeBoundPair) -> Self::Output {
+        *self
     }
 }
 
-impl Extensible<EmptiableRelativeBounds> for UnboundedInterval {
-    type Output = RelativeInterval;
+impl Extensible<EmptiableRelativeBoundPair> for UnboundedInterval {
+    type Output = UnboundedInterval;
 
-    fn extend(&self, _rhs: &EmptiableRelativeBounds) -> Self::Output {
-        RelativeInterval::from(*self)
+    fn extend(&self, _rhs: &EmptiableRelativeBoundPair) -> Self::Output {
+        *self
     }
 }
 
 impl Extensible<RelativeInterval> for UnboundedInterval {
-    type Output = RelativeInterval;
+    type Output = UnboundedInterval;
 
     fn extend(&self, _rhs: &RelativeInterval) -> Self::Output {
-        RelativeInterval::from(*self)
+        *self
     }
 }
 
 impl Extensible<BoundedRelativeInterval> for UnboundedInterval {
-    type Output = RelativeInterval;
+    type Output = UnboundedInterval;
 
     fn extend(&self, _rhs: &BoundedRelativeInterval) -> Self::Output {
-        RelativeInterval::from(*self)
+        *self
     }
 }
 
 impl Extensible<HalfBoundedRelativeInterval> for UnboundedInterval {
-    type Output = RelativeInterval;
+    type Output = UnboundedInterval;
 
     fn extend(&self, _rhs: &HalfBoundedRelativeInterval) -> Self::Output {
-        RelativeInterval::from(*self)
+        *self
     }
 }
 
@@ -346,19 +395,19 @@ impl Extensible<EmptyInterval> for UnboundedInterval {
     }
 }
 
-impl Extensible<AbsoluteBounds> for EmptyInterval {
-    type Output = AbsoluteInterval;
+impl Extensible<AbsoluteBoundPair> for EmptyInterval {
+    type Output = AbsoluteBoundPair;
 
-    fn extend(&self, rhs: &AbsoluteBounds) -> Self::Output {
-        AbsoluteInterval::from(rhs.clone())
+    fn extend(&self, rhs: &AbsoluteBoundPair) -> Self::Output {
+        rhs.clone()
     }
 }
 
-impl Extensible<EmptiableAbsoluteBounds> for EmptyInterval {
-    type Output = AbsoluteInterval;
+impl Extensible<EmptiableAbsoluteBoundPair> for EmptyInterval {
+    type Output = EmptiableAbsoluteBoundPair;
 
-    fn extend(&self, rhs: &EmptiableAbsoluteBounds) -> Self::Output {
-        AbsoluteInterval::from(rhs.clone())
+    fn extend(&self, rhs: &EmptiableAbsoluteBoundPair) -> Self::Output {
+        rhs.clone()
     }
 }
 
@@ -371,34 +420,34 @@ impl Extensible<AbsoluteInterval> for EmptyInterval {
 }
 
 impl Extensible<BoundedAbsoluteInterval> for EmptyInterval {
-    type Output = AbsoluteInterval;
+    type Output = BoundedAbsoluteInterval;
 
     fn extend(&self, rhs: &BoundedAbsoluteInterval) -> Self::Output {
-        AbsoluteInterval::from(rhs.clone())
+        rhs.clone()
     }
 }
 
 impl Extensible<HalfBoundedAbsoluteInterval> for EmptyInterval {
-    type Output = AbsoluteInterval;
+    type Output = HalfBoundedAbsoluteInterval;
 
     fn extend(&self, rhs: &HalfBoundedAbsoluteInterval) -> Self::Output {
-        AbsoluteInterval::from(rhs.clone())
+        rhs.clone()
     }
 }
 
-impl Extensible<RelativeBounds> for EmptyInterval {
-    type Output = RelativeInterval;
+impl Extensible<RelativeBoundPair> for EmptyInterval {
+    type Output = RelativeBoundPair;
 
-    fn extend(&self, rhs: &RelativeBounds) -> Self::Output {
-        RelativeInterval::from(rhs.clone())
+    fn extend(&self, rhs: &RelativeBoundPair) -> Self::Output {
+        rhs.clone()
     }
 }
 
-impl Extensible<EmptiableRelativeBounds> for EmptyInterval {
-    type Output = RelativeInterval;
+impl Extensible<EmptiableRelativeBoundPair> for EmptyInterval {
+    type Output = EmptiableRelativeBoundPair;
 
-    fn extend(&self, rhs: &EmptiableRelativeBounds) -> Self::Output {
-        RelativeInterval::from(rhs.clone())
+    fn extend(&self, rhs: &EmptiableRelativeBoundPair) -> Self::Output {
+        rhs.clone()
     }
 }
 
@@ -411,18 +460,18 @@ impl Extensible<RelativeInterval> for EmptyInterval {
 }
 
 impl Extensible<BoundedRelativeInterval> for EmptyInterval {
-    type Output = RelativeInterval;
+    type Output = BoundedRelativeInterval;
 
     fn extend(&self, rhs: &BoundedRelativeInterval) -> Self::Output {
-        RelativeInterval::from(rhs.clone())
+        rhs.clone()
     }
 }
 
 impl Extensible<HalfBoundedRelativeInterval> for EmptyInterval {
-    type Output = RelativeInterval;
+    type Output = HalfBoundedRelativeInterval;
 
     fn extend(&self, rhs: &HalfBoundedRelativeInterval) -> Self::Output {
-        RelativeInterval::from(rhs.clone())
+        rhs.clone()
     }
 }
 
@@ -442,11 +491,11 @@ impl Extensible<EmptyInterval> for EmptyInterval {
     }
 }
 
-/// Extends two [`AbsoluteBounds`]
+/// Extends two [`AbsoluteBoundPair`]
 ///
 /// See [module documentation](crate::intervals::ops::extend) for more info.
 #[must_use]
-pub fn extend_abs_bounds(og_bounds: &AbsoluteBounds, other_bounds: &AbsoluteBounds) -> AbsoluteBounds {
+pub fn extend_abs_bound_pair(og_bounds: &AbsoluteBoundPair, other_bounds: &AbsoluteBoundPair) -> AbsoluteBoundPair {
     let new_start_bound = match (og_bounds.abs_start(), other_bounds.abs_start()) {
         (bound @ AbsoluteStartBound::InfinitePast, _) | (_, bound @ AbsoluteStartBound::InfinitePast) => bound,
         (og_bound @ AbsoluteStartBound::Finite(..), other_bound @ AbsoluteStartBound::Finite(..)) => {
@@ -461,47 +510,47 @@ pub fn extend_abs_bounds(og_bounds: &AbsoluteBounds, other_bounds: &AbsoluteBoun
         },
     };
 
-    AbsoluteBounds::new(new_start_bound, new_end_bound)
+    AbsoluteBoundPair::new(new_start_bound, new_end_bound)
 }
 
-/// Extends an [`AbsoluteBounds`] with an [`EmptiableAbsoluteBounds`]
+/// Extends an [`AbsoluteBoundPair`] with an [`EmptiableAbsoluteBoundPair`]
 ///
 /// See [module documentation](crate::intervals::ops::extend) for more info.
 #[must_use]
-pub fn extend_abs_bounds_with_emptiable_abs_bounds(
-    og_bounds: &AbsoluteBounds,
-    other_bounds: &EmptiableAbsoluteBounds,
-) -> AbsoluteBounds {
-    let EmptiableAbsoluteBounds::Bound(other_non_empty_bounds) = other_bounds else {
+pub fn extend_abs_bound_pair_with_emptiable_abs_bound_pair(
+    og_bounds: &AbsoluteBoundPair,
+    other_bounds: &EmptiableAbsoluteBoundPair,
+) -> AbsoluteBoundPair {
+    let EmptiableAbsoluteBoundPair::Bound(other_non_empty_bounds) = other_bounds else {
         return og_bounds.clone();
     };
 
-    extend_abs_bounds(og_bounds, other_non_empty_bounds)
+    extend_abs_bound_pair(og_bounds, other_non_empty_bounds)
 }
 
-/// Extends two [`EmptiableAbsoluteBounds`]
+/// Extends two [`EmptiableAbsoluteBoundPair`]
 ///
 /// See [module documentation](crate::intervals::ops::extend) for more info.
 #[must_use]
-pub fn extend_emptiable_abs_bounds(
-    og_bounds: &EmptiableAbsoluteBounds,
-    other_bounds: &EmptiableAbsoluteBounds,
-) -> EmptiableAbsoluteBounds {
+pub fn extend_emptiable_abs_bound_pair(
+    og_bounds: &EmptiableAbsoluteBoundPair,
+    other_bounds: &EmptiableAbsoluteBoundPair,
+) -> EmptiableAbsoluteBoundPair {
     match (og_bounds, other_bounds) {
-        (EmptiableAbsoluteBounds::Empty, EmptiableAbsoluteBounds::Empty) => EmptiableAbsoluteBounds::Empty,
-        (EmptiableAbsoluteBounds::Empty, bound @ EmptiableAbsoluteBounds::Bound(..))
-        | (bound @ EmptiableAbsoluteBounds::Bound(..), EmptiableAbsoluteBounds::Empty) => bound.clone(),
-        (EmptiableAbsoluteBounds::Bound(og_bounds), EmptiableAbsoluteBounds::Bound(other_bounds)) => {
-            EmptiableAbsoluteBounds::Bound(og_bounds.extend(other_bounds))
+        (EmptiableAbsoluteBoundPair::Empty, EmptiableAbsoluteBoundPair::Empty) => EmptiableAbsoluteBoundPair::Empty,
+        (EmptiableAbsoluteBoundPair::Empty, bound @ EmptiableAbsoluteBoundPair::Bound(..))
+        | (bound @ EmptiableAbsoluteBoundPair::Bound(..), EmptiableAbsoluteBoundPair::Empty) => bound.clone(),
+        (EmptiableAbsoluteBoundPair::Bound(og_bounds), EmptiableAbsoluteBoundPair::Bound(other_bounds)) => {
+            EmptiableAbsoluteBoundPair::Bound(og_bounds.extend(other_bounds))
         },
     }
 }
 
-/// Extends two [`RelativeBounds`]
+/// Extends two [`RelativeBoundPair`]
 ///
 /// See [module documentation](crate::intervals::ops::extend) for more info.
 #[must_use]
-pub fn extend_rel_bounds(og_bounds: &RelativeBounds, other_bounds: &RelativeBounds) -> RelativeBounds {
+pub fn extend_rel_bound_pair(og_bounds: &RelativeBoundPair, other_bounds: &RelativeBoundPair) -> RelativeBoundPair {
     let new_start_bound = match (og_bounds.rel_start(), other_bounds.rel_start()) {
         (bound @ RelativeStartBound::InfinitePast, _) | (_, bound @ RelativeStartBound::InfinitePast) => bound,
         (og_bound @ RelativeStartBound::Finite(..), other_bound @ RelativeStartBound::Finite(..)) => {
@@ -516,38 +565,38 @@ pub fn extend_rel_bounds(og_bounds: &RelativeBounds, other_bounds: &RelativeBoun
         },
     };
 
-    RelativeBounds::new(new_start_bound, new_end_bound)
+    RelativeBoundPair::new(new_start_bound, new_end_bound)
 }
 
-/// Extends an [`RelativeBounds`] with an [`EmptiableRelativeBounds`]
+/// Extends an [`RelativeBoundPair`] with an [`EmptiableRelativeBoundPair`]
 ///
 /// See [module documentation](crate::intervals::ops::extend) for more info.
 #[must_use]
-pub fn extend_rel_bounds_with_emptiable_rel_bounds(
-    og_bounds: &RelativeBounds,
-    other_bounds: &EmptiableRelativeBounds,
-) -> RelativeBounds {
-    let EmptiableRelativeBounds::Bound(other_non_empty_bounds) = other_bounds else {
+pub fn extend_rel_bound_pair_with_emptiable_rel_bound_pair(
+    og_bounds: &RelativeBoundPair,
+    other_bounds: &EmptiableRelativeBoundPair,
+) -> RelativeBoundPair {
+    let EmptiableRelativeBoundPair::Bound(other_non_empty_bounds) = other_bounds else {
         return og_bounds.clone();
     };
 
-    extend_rel_bounds(og_bounds, other_non_empty_bounds)
+    extend_rel_bound_pair(og_bounds, other_non_empty_bounds)
 }
 
-/// Extends two [`EmptiableRelativeBounds`]
+/// Extends two [`EmptiableRelativeBoundPair`]
 ///
 /// See [module documentation](crate::intervals::ops::extend) for more info.
 #[must_use]
-pub fn extend_emptiable_rel_bounds(
-    og_bounds: &EmptiableRelativeBounds,
-    other_bounds: &EmptiableRelativeBounds,
-) -> EmptiableRelativeBounds {
+pub fn extend_emptiable_rel_bound_pair(
+    og_bounds: &EmptiableRelativeBoundPair,
+    other_bounds: &EmptiableRelativeBoundPair,
+) -> EmptiableRelativeBoundPair {
     match (og_bounds, other_bounds) {
-        (EmptiableRelativeBounds::Empty, EmptiableRelativeBounds::Empty) => EmptiableRelativeBounds::Empty,
-        (EmptiableRelativeBounds::Empty, bound @ EmptiableRelativeBounds::Bound(..))
-        | (bound @ EmptiableRelativeBounds::Bound(..), EmptiableRelativeBounds::Empty) => bound.clone(),
-        (EmptiableRelativeBounds::Bound(og_bounds), EmptiableRelativeBounds::Bound(other_bounds)) => {
-            EmptiableRelativeBounds::Bound(og_bounds.extend(other_bounds))
+        (EmptiableRelativeBoundPair::Empty, EmptiableRelativeBoundPair::Empty) => EmptiableRelativeBoundPair::Empty,
+        (EmptiableRelativeBoundPair::Empty, bound @ EmptiableRelativeBoundPair::Bound(..))
+        | (bound @ EmptiableRelativeBoundPair::Bound(..), EmptiableRelativeBoundPair::Empty) => bound.clone(),
+        (EmptiableRelativeBoundPair::Bound(og_bounds), EmptiableRelativeBoundPair::Bound(other_bounds)) => {
+            EmptiableRelativeBoundPair::Bound(og_bounds.extend(other_bounds))
         },
     }
 }

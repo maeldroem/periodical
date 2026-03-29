@@ -1,3 +1,4 @@
-//! Manual implementations of the [`Arbitrary`](arbitrary::Arbitrary) trait
+//! [`Arbitrary`](arbitrary::Arbitrary) implementations
 
-mod intervals;
+mod absolute;
+mod relative;

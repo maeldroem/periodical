@@ -23,6 +23,6 @@ fuzz_target!(|bounded_interval: BoundedAbsoluteInterval| {
 
     assert_eq!(
         abridgment_2nd_degree_complements,
-        AbsoluteInterval::from(bounded_interval)
+        EmptiableAbsoluteInterval::from(bounded_interval)
     );
 });
