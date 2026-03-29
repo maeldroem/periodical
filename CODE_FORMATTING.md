@@ -42,7 +42,7 @@ While 120 characters may seem like a lot, most IDEs, if fullscreen, even with a 
 are able to fit 120 characters into view, even on screens with some scaling.
 
 This line width limit should be enforced only for source code and comments. Code examples within code documentation
-must not exceed 80 characters per line, as those examples are often displayed in smaller windows/embeds,
+must not exceed 100 characters per line, as those examples are often displayed in smaller windows/embeds,
 and we want to avoid readers having to use horizontal scrolling.
 
 For [VSCode](https://code.visualstudio.com/) and its derivatives, such as [VSCodium](https://vscodium.com/), go to
@@ -53,12 +53,12 @@ In this file, change the `editor.rulers` property to the following:
 
 ```json
     "editor.rulers": [
-        80,
+        100,
         120
     ],
 ```
 
-(The 80 characters ruler is optional)
+(The 100 characters ruler is optional)
 
 ### Newline
 
