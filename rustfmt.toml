@@ -1,5 +1,5 @@
 comment_width = 120
-doc_comment_code_block_width = 80
+doc_comment_code_block_width = 100
 float_literal_trailing_zero = "Always"
 format_code_in_doc_comments = true
 format_macro_matchers = true
