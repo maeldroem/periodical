@@ -1,7 +1,6 @@
+use super::bound_containment::*;
 use crate::intervals::meta::BoundInclusivity;
 use crate::intervals::ops::bound_overlap_ambiguity::BoundOverlapAmbiguity;
-
-use super::bound_containment::*;
 
 #[test]
 fn strip_bound_position() {

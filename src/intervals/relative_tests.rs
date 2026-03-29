@@ -1,8 +1,7 @@
 use jiff::SignedDuration;
 
-use crate::intervals::meta::BoundInclusivity;
-
 use super::relative::*;
+use crate::intervals::meta::BoundInclusivity;
 
 #[test]
 fn relative_start_bound_inf_relative_end_bound_inf_swap() {

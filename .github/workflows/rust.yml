@@ -53,6 +53,24 @@ jobs:
         run: cargo clippy -q
       - name: Cargo fmt check
         run: cargo +nightly fmt -q --check
+      - name: Cargo fmt check on unit tests
+        run: cargo +nightly fmt -q --check -- **/*_tests.rs
+  docs:
+    runs-on: ubuntu-latest
+    needs: [building]
+    steps:
+      - uses: actions/checkout@v6
+      - name: Cache dependencies
+        uses: actions/cache@v5
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-deps-${{ hashFiles('Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-deps-
+      - name: Check docs
+        run: |
+          cargo doc --message-format json-diagnostic-short \
+          | jq -se 'any(.[]; .reason == "compiler-message" and (.message.level == "warning" or .message.level == "error")) | not'
   testing:
     runs-on: ubuntu-latest
     needs: [building]

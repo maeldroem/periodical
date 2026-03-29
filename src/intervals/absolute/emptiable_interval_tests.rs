@@ -2,11 +2,18 @@ use std::error::Error;
 
 use jiff::Timestamp;
 
-use crate::intervals::absolute::{AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, BoundedAbsoluteInterval, EmptiableAbsoluteBoundPair, HalfBoundedAbsoluteInterval};
+use super::emptiable_interval::*;
+use crate::intervals::absolute::{
+    AbsoluteBoundPair,
+    AbsoluteEndBound,
+    AbsoluteFiniteBound,
+    AbsoluteStartBound,
+    BoundedAbsoluteInterval,
+    EmptiableAbsoluteBoundPair,
+    HalfBoundedAbsoluteInterval,
+};
 use crate::intervals::meta::{BoundInclusivity, OpeningDirection};
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
-
-use super::emptiable_interval::*;
 
 #[test]
 fn from_absolute_bounds() -> Result<(), Box<dyn Error>> {
@@ -73,8 +80,14 @@ fn from_opt_datetime_pair_half_bounded() -> Result<(), Box<dyn Error>> {
 fn from_opt_datetime_bound_inclusivity_pairs() -> Result<(), Box<dyn Error>> {
     assert_eq!(
         EmptiableAbsoluteInterval::from((
-            Some(("2025-01-01 00:00:00Z".parse::<Timestamp>()?, BoundInclusivity::Exclusive)),
-            Some(("2025-01-02 00:00:00Z".parse::<Timestamp>()?, BoundInclusivity::Exclusive)),
+            Some((
+                "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
+                BoundInclusivity::Exclusive
+            )),
+            Some((
+                "2025-01-02 00:00:00Z".parse::<Timestamp>()?,
+                BoundInclusivity::Exclusive
+            )),
         )),
         EmptiableAbsoluteInterval::Bounded(BoundedAbsoluteInterval::new_with_inclusivity(
             "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
@@ -98,7 +111,11 @@ fn from_bool_and_two_opt_datetime_empty() {
 #[test]
 fn from_bool_and_two_opt_datetime() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        EmptiableAbsoluteInterval::from((false, Some("2025-01-01 00:00:00Z".parse::<Timestamp>()?), Some("2025-01-02 00:00:00Z".parse::<Timestamp>()?),)),
+        EmptiableAbsoluteInterval::from((
+            false,
+            Some("2025-01-01 00:00:00Z".parse::<Timestamp>()?),
+            Some("2025-01-02 00:00:00Z".parse::<Timestamp>()?),
+        )),
         EmptiableAbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
             "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
             "2025-01-02 00:00:00Z".parse::<Timestamp>()?
@@ -125,8 +142,14 @@ fn from_bool_and_two_opt_datetime_bound_inclusivity() -> Result<(), Box<dyn Erro
     assert_eq!(
         EmptiableAbsoluteInterval::from((
             false,
-            Some(("2025-01-01 00:00:00Z".parse::<Timestamp>()?, BoundInclusivity::Exclusive)),
-            Some(("2025-01-02 00:00:00Z".parse::<Timestamp>()?, BoundInclusivity::Exclusive)),
+            Some((
+                "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
+                BoundInclusivity::Exclusive
+            )),
+            Some((
+                "2025-01-02 00:00:00Z".parse::<Timestamp>()?,
+                BoundInclusivity::Exclusive
+            )),
         )),
         EmptiableAbsoluteInterval::Bounded(BoundedAbsoluteInterval::new_with_inclusivity(
             "2025-01-01 00:00:00Z".parse::<Timestamp>()?,

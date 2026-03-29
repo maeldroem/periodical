@@ -2,10 +2,9 @@ use std::error::Error;
 
 use jiff::{SignedDuration, Timestamp};
 
+use super::bound_position::*;
 use crate::intervals::absolute::{AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound};
 use crate::intervals::relative::{RelativeBoundPair, RelativeEndBound, RelativeFiniteBound, RelativeStartBound};
-
-use super::bound_position::*;
 
 #[test]
 fn default_bound_position() {
@@ -42,9 +41,10 @@ fn get_abs_bound_of_start_inside() -> Result<(), Box<dyn Error>> {
 
     assert_eq!(
         BoundPosition::Start(2).get_abs_bound(data.iter()),
-        Some(AbsoluteStartBound::Finite(
-            AbsoluteFiniteBound::new("2025-05-01 00:00:00Z".parse::<Timestamp>()?)
-        ).to_bound()),
+        Some(
+            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new("2025-05-01 00:00:00Z".parse::<Timestamp>()?))
+                .to_bound()
+        ),
     );
     Ok(())
 }
@@ -91,9 +91,11 @@ fn get_abs_bound_of_end_inside() -> Result<(), Box<dyn Error>> {
 
     assert_eq!(
         BoundPosition::End(2).get_abs_bound(data.iter()),
-        Some(AbsoluteFiniteBound::new(
-            "2025-05-04 00:00:00Z".parse::<Timestamp>()?
-        ).to_end_bound().to_bound()),
+        Some(
+            AbsoluteFiniteBound::new("2025-05-04 00:00:00Z".parse::<Timestamp>()?)
+                .to_end_bound()
+                .to_bound()
+        ),
     );
     Ok(())
 }
@@ -140,7 +142,11 @@ fn get_rel_bound_of_start_inside() {
 
     assert_eq!(
         BoundPosition::Start(2).get_rel_bound(data.iter()),
-        Some(RelativeFiniteBound::new(SignedDuration::from_hours(51)).to_start_bound().to_bound()),
+        Some(
+            RelativeFiniteBound::new(SignedDuration::from_hours(51))
+                .to_start_bound()
+                .to_bound()
+        ),
     );
 }
 
@@ -185,7 +191,11 @@ fn get_rel_bound_of_end_inside() {
 
     assert_eq!(
         BoundPosition::End(2).get_rel_bound(data.iter()),
-        Some(RelativeFiniteBound::new(SignedDuration::from_hours(54)).to_end_bound().to_bound()),
+        Some(
+            RelativeFiniteBound::new(SignedDuration::from_hours(54))
+                .to_end_bound()
+                .to_bound()
+        ),
     );
 }
 

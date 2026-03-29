@@ -2,13 +2,16 @@ use std::error::Error;
 
 use jiff::Zoned;
 
+use super::fill_gap::*;
 use crate::intervals::absolute::{
-    AbsoluteBoundPair, AbsoluteEndBound, AbsoluteInterval, AbsoluteStartBound, EmptiableAbsoluteBoundPair,
+    AbsoluteBoundPair,
+    AbsoluteEndBound,
+    AbsoluteInterval,
+    AbsoluteStartBound,
+    EmptiableAbsoluteBoundPair,
     HalfBoundedAbsoluteInterval,
 };
 use crate::intervals::meta::{BoundInclusivity, OpeningDirection};
-
-use super::fill_gap::*;
 
 #[test]
 fn emptiable_abs_bound_pair_empty_abs_bound_pair_unbounded() {
@@ -47,9 +50,14 @@ fn emptiable_abs_bound_pair_empty_emptiable_abs_bound_pair_empty() {
 #[test]
 fn two_overlapping_half_bounded() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        HalfBoundedAbsoluteInterval::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(), OpeningDirection::ToPast).fill_gap(
-            &HalfBoundedAbsoluteInterval::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(), OpeningDirection::ToFuture)
-        ),
+        HalfBoundedAbsoluteInterval::new(
+            "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+            OpeningDirection::ToPast
+        )
+        .fill_gap(&HalfBoundedAbsoluteInterval::new(
+            "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+            OpeningDirection::ToFuture
+        )),
         Err(GapFillError::Overlap),
     );
 
@@ -59,9 +67,14 @@ fn two_overlapping_half_bounded() -> Result<(), Box<dyn Error>> {
 #[test]
 fn two_non_overlapping_half_bounded() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        HalfBoundedAbsoluteInterval::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(), OpeningDirection::ToPast).fill_gap(
-            &HalfBoundedAbsoluteInterval::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(), OpeningDirection::ToFuture)
-        ),
+        HalfBoundedAbsoluteInterval::new(
+            "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+            OpeningDirection::ToPast
+        )
+        .fill_gap(&HalfBoundedAbsoluteInterval::new(
+            "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+            OpeningDirection::ToFuture
+        )),
         Ok(AbsoluteInterval::HalfBounded(
             HalfBoundedAbsoluteInterval::new_with_inclusivity(
                 "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
@@ -77,9 +90,14 @@ fn two_non_overlapping_half_bounded() -> Result<(), Box<dyn Error>> {
 #[test]
 fn two_strictly_adjacent_half_bounded() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        HalfBoundedAbsoluteInterval::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(), OpeningDirection::ToPast).fill_gap(
-            &HalfBoundedAbsoluteInterval::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(), OpeningDirection::ToFuture)
-        ),
+        HalfBoundedAbsoluteInterval::new(
+            "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+            OpeningDirection::ToPast
+        )
+        .fill_gap(&HalfBoundedAbsoluteInterval::new(
+            "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+            OpeningDirection::ToFuture
+        )),
         Err(GapFillError::Overlap),
     );
 

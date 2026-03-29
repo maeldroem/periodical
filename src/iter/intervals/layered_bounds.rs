@@ -1176,7 +1176,7 @@ where
     /// a set of [intervals](crate::intervals::absolute::AbsoluteInterval)
     /// or from [bound pairs](crate::intervals::absolute::AbsoluteBoundPair) and
     /// then processed through
-    /// [`AbsoluteBoundPairIter`](crate::iter::intervals::bounds::AbsoluteBoundPairIter).
+    /// [`AbsoluteBoundsIter`](crate::iter::intervals::bounds::AbsoluteBoundsIter).
     #[must_use]
     pub fn new(first_layer_iter: I1, second_layer_iter: I2) -> LayeredAbsoluteBounds<Peekable<I1>, Peekable<I2>> {
         LayeredAbsoluteBounds {
@@ -2047,7 +2047,7 @@ where
     /// a set of [intervals](crate::intervals::relative::RelativeInterval)
     /// or from [bound pairs](crate::intervals::relative::RelativeBoundPair) and
     /// then processed through
-    /// [`RelativeBoundPairIter`](crate::iter::intervals::bounds::RelativeBoundPairIter).
+    /// [`RelativeBoundsIter`](crate::iter::intervals::bounds::RelativeBoundsIter).
     #[must_use]
     pub fn new(first_layer_iter: I1, second_layer_iter: I2) -> LayeredRelativeBounds<Peekable<I1>, Peekable<I2>> {
         LayeredRelativeBounds {

@@ -2,15 +2,22 @@ use std::error::Error;
 
 use jiff::Timestamp;
 
-use crate::intervals::absolute::{AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteInterval, AbsoluteStartBound, BoundedAbsoluteInterval};
+use super::half_bounded_interval::*;
+use crate::intervals::absolute::{
+    AbsoluteBoundPair,
+    AbsoluteEndBound,
+    AbsoluteFiniteBound,
+    AbsoluteInterval,
+    AbsoluteStartBound,
+    BoundedAbsoluteInterval,
+};
 use crate::intervals::meta::{BoundInclusivity, OpeningDirection};
 use crate::intervals::special::UnboundedInterval;
 
-use super::half_bounded_interval::*;
-
 #[test]
 fn new() -> Result<(), Box<dyn Error>> {
-    let interval = HalfBoundedAbsoluteInterval::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?, OpeningDirection::ToFuture);
+    let interval =
+        HalfBoundedAbsoluteInterval::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?, OpeningDirection::ToFuture);
 
     assert_eq!(interval.reference(), "2025-01-01 00:00:00Z".parse::<Timestamp>()?);
     assert_eq!(interval.opening_direction(), OpeningDirection::ToFuture);
@@ -114,7 +121,10 @@ fn from_datetime_opening_direction_pair() -> Result<(), Box<dyn Error>> {
 fn from_pair_of_datetime_bound_inclusivity_pair_and_opening_direction() -> Result<(), Box<dyn Error>> {
     assert_eq!(
         HalfBoundedAbsoluteInterval::from((
-            ("2025-01-01 00:00:00Z".parse::<Timestamp>()?, BoundInclusivity::Exclusive),
+            (
+                "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
+                BoundInclusivity::Exclusive
+            ),
             OpeningDirection::ToPast
         )),
         HalfBoundedAbsoluteInterval::new_with_inclusivity(

@@ -4,11 +4,8 @@
 //! [`SignedDuration`], and a [bound inclusivity](BoundInclusivity).
 //!
 //! Relative finite bounds are usually converted into either an
-//! [`RelativeStartBound`](crate::intervals::relative::RelativeStartBound)
-//! through the [`to_start_bound`](RelativeFiniteBound::to_start_bound) method,
-//! or into an
-//! [`RelativeEndBound`](crate::intervals::relative::RelativeEndBound) through
-//! the [`to_end_bound`](RelativeFiniteBound::to_end_bound) method.
+//! [`RelativeStartBound`] through the [`to_start_bound`](RelativeFiniteBound::to_start_bound) method,
+//! or into an [`RelativeEndBound`] through the [`to_end_bound`](RelativeFiniteBound::to_end_bound) method.
 
 use std::cmp::Ordering;
 use std::error::Error;

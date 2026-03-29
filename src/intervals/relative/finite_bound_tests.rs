@@ -3,9 +3,8 @@ use std::ops::Bound;
 
 use jiff::SignedDuration;
 
-use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
-
 use super::finite_bound::*;
+use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
 
 #[test]
 fn new() {
@@ -17,10 +16,8 @@ fn new() {
 
 #[test]
 fn new_with_inclusivity() {
-    let rel_finite_bound = RelativeFiniteBound::new_with_inclusivity(
-        SignedDuration::from_hours(1),
-        BoundInclusivity::Exclusive,
-    );
+    let rel_finite_bound =
+        RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive);
 
     assert_eq!(rel_finite_bound.offset(), SignedDuration::from_hours(1));
     assert_eq!(rel_finite_bound.inclusivity(), BoundInclusivity::Exclusive);
@@ -37,10 +34,8 @@ fn set_offset() {
 
 #[test]
 fn set_inclusivity() {
-    let mut rel_finite_bound = RelativeFiniteBound::new_with_inclusivity(
-        SignedDuration::from_hours(1),
-        BoundInclusivity::Exclusive,
-    );
+    let mut rel_finite_bound =
+        RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive);
 
     rel_finite_bound.set_inclusivity(BoundInclusivity::Inclusive);
 
@@ -49,10 +44,8 @@ fn set_inclusivity() {
 
 #[test]
 fn inclusivity() {
-    let rel_finite_bound = RelativeFiniteBound::new_with_inclusivity(
-        SignedDuration::from_hours(1),
-        BoundInclusivity::Exclusive,
-    );
+    let rel_finite_bound =
+        RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive);
 
     assert_eq!(rel_finite_bound.inclusivity(), BoundInclusivity::Exclusive);
 }

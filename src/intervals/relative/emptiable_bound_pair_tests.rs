@@ -1,8 +1,7 @@
 use jiff::SignedDuration;
 
-use crate::intervals::relative::{RelativeBoundPair, RelativeEndBound, RelativeFiniteBound, RelativeStartBound};
-
 use super::emptiable_bound_pair::*;
+use crate::intervals::relative::{RelativeBoundPair, RelativeEndBound, RelativeFiniteBound, RelativeStartBound};
 
 #[test]
 fn bound_bound() {
@@ -12,10 +11,7 @@ fn bound_bound() {
     );
     let emptiable_bound_pair = bound_pair.clone().to_emptiable();
 
-    assert_eq!(
-        emptiable_bound_pair.bound(),
-        Some(bound_pair),
-    );
+    assert_eq!(emptiable_bound_pair.bound(), Some(bound_pair),);
 }
 
 #[test]
