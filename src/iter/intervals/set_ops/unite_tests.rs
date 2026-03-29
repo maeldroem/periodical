@@ -215,6 +215,7 @@ fn acc_union_with_run() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
+#[allow(clippy::too_many_lines)]
 #[test]
 fn peer_union_run() -> Result<(), Box<dyn Error>> {
     // [-1-] [3] [---4---)
