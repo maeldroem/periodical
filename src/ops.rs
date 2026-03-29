@@ -98,18 +98,23 @@ impl PrecisionMode {
 /// # use std::time::Duration;
 /// # use jiff::Zoned;
 /// # use periodical::ops::{Precision, PrecisionMode};
-/// let round_to_nearest_five_mins = Precision::new(Duration::from_mins(5), PrecisionMode::ToNearest)?;
+/// let round_to_nearest_five_mins =
+///     Precision::new(Duration::from_mins(5), PrecisionMode::ToNearest)?;
 ///
 /// let two_minutes_after_eight = "2025-01-01 08:02:11[Europe/Oslo]".parse::<Zoned>()?;
 /// let fourteen_minutes_after_ten = "2025-01-01 10:14:21[Europe/Oslo]".parse::<Zoned>()?;
 ///
 /// assert_eq!(
-///     round_to_nearest_five_mins.precise_time(&two_minutes_after_eight)?.unambiguous()?,
+///     round_to_nearest_five_mins
+///         .precise_time(&two_minutes_after_eight)?
+///         .unambiguous()?,
 ///     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?,
 /// );
 ///
 /// assert_eq!(
-///     round_to_nearest_five_mins.precise_time(&fourteen_minutes_after_ten)?.unambiguous()?,
+///     round_to_nearest_five_mins
+///         .precise_time(&fourteen_minutes_after_ten)?
+///         .unambiguous()?,
 ///     "2025-01-01 10:15:00[Europe/Oslo]".parse::<Zoned>()?,
 /// );
 /// # Ok::<(), Box<dyn Error>>(())
@@ -131,20 +136,16 @@ impl PrecisionMode {
 /// // 13 * 35m = 07:35
 /// // 14 * 35m = 08:10
 /// assert_eq!(
-///     round_up_every_35_mins.precise_time_with_base_time(
-///         &two_minutes_after_eight,
-///         &first_january_2025,
-///     )?,
+///     round_up_every_35_mins
+///         .precise_time_with_base_time(&two_minutes_after_eight, &first_january_2025,)?,
 ///     "2025-01-01 08:10:00[Europe/Oslo]".parse::<Zoned>()?,
 /// );
 ///
 /// // 17 * 35m = 09:55
 /// // 18 * 35m = 10:30
 /// assert_eq!(
-///     round_up_every_35_mins.precise_time_with_base_time(
-///         &fourteen_minutes_after_ten,
-///         &first_january_2025,
-///     )?,
+///     round_up_every_35_mins
+///         .precise_time_with_base_time(&fourteen_minutes_after_ten, &first_january_2025,)?,
 ///     "2025-01-01 10:30:00[Europe/Oslo]".parse::<Zoned>()?,
 /// );
 /// # Ok::<(), Box<dyn Error>>(())
@@ -448,10 +449,7 @@ impl Precision {
     /// let precision = Precision::new(Duration::from_mins(5), PrecisionMode::ToFuture)?;
     /// let time = "2026-01-01 08:45:00[Europe/Oslo]".parse::<Zoned>()?;
     ///
-    /// assert_eq!(
-    ///     precision.precise_time(&time)?.unambiguous()?,
-    ///     time,
-    /// );
+    /// assert_eq!(precision.precise_time(&time)?.unambiguous()?, time,);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     ///
@@ -804,7 +802,10 @@ impl<C> ComplementResult<C> {
     ///
     /// ```
     /// # use periodical::ops::ComplementResult;
-    /// assert_eq!(ComplementResult::<u8>::Split(10, 20).split(), Some((10, 20)));
+    /// assert_eq!(
+    ///     ComplementResult::<u8>::Split(10, 20).split(),
+    ///     Some((10, 20))
+    /// );
     /// assert_eq!(ComplementResult::<u8>::Single(10).split(), None);
     /// ```
     #[must_use]
@@ -984,10 +985,7 @@ impl<I> IntersectionResult<I> {
     ///     IntersectionResult::<u8>::Intersected(10).intersected(),
     ///     Some(10),
     /// );
-    /// assert_eq!(
-    ///     IntersectionResult::<u8>::Separate.intersected(),
-    ///     None,
-    /// );
+    /// assert_eq!(IntersectionResult::<u8>::Separate.intersected(), None,);
     /// ```
     #[must_use]
     pub fn intersected(self) -> Option<I> {
@@ -1128,7 +1126,10 @@ impl<D> DifferenceResult<D> {
     ///
     /// ```
     /// # use periodical::ops::DifferenceResult;
-    /// assert_eq!(DifferenceResult::<u8>::Split(10, 20).split(), Some((10, 20)));
+    /// assert_eq!(
+    ///     DifferenceResult::<u8>::Split(10, 20).split(),
+    ///     Some((10, 20))
+    /// );
     /// assert_eq!(DifferenceResult::<u8>::Single(10).split(), None);
     /// assert_eq!(DifferenceResult::<u8>::Separate.split(), None);
     /// ```
@@ -1267,10 +1268,7 @@ impl<D> SymmetricDifferenceResult<D> {
     ///     SymmetricDifferenceResult::<u8>::Split(10, 20).single(),
     ///     None,
     /// );
-    /// assert_eq!(
-    ///     SymmetricDifferenceResult::<u8>::Separate.single(),
-    ///     None,
-    /// );
+    /// assert_eq!(SymmetricDifferenceResult::<u8>::Separate.single(), None,);
     /// ```
     #[must_use]
     pub fn single(self) -> Option<D> {
@@ -1296,14 +1294,8 @@ impl<D> SymmetricDifferenceResult<D> {
     ///     SymmetricDifferenceResult::<u8>::Split(10, 20).split(),
     ///     Some((10, 20)),
     /// );
-    /// assert_eq!(
-    ///     SymmetricDifferenceResult::<u8>::Single(10).split(),
-    ///     None,
-    /// );
-    /// assert_eq!(
-    ///     SymmetricDifferenceResult::<u8>::Separate.split(),
-    ///     None,
-    /// );
+    /// assert_eq!(SymmetricDifferenceResult::<u8>::Single(10).split(), None,);
+    /// assert_eq!(SymmetricDifferenceResult::<u8>::Separate.split(), None,);
     /// ```
     #[must_use]
     pub fn split(self) -> Option<(D, D)> {

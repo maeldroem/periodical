@@ -16,27 +16,45 @@
 //! # use periodical::intervals::ops::shrink::ShrinkableStartBound;
 //! let interval = AbsoluteBoundPair::new(
 //!     AbsoluteFiniteBound::new(
-//!         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!     ).to_start_bound(),
+//!         "2025-01-01 08:00:00[Europe/Oslo]"
+//!             .parse::<Zoned>()?
+//!             .timestamp(),
+//!     )
+//!     .to_start_bound(),
 //!     AbsoluteFiniteBound::new(
-//!         "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!     ).to_end_bound(),
+//!         "2025-01-01 14:00:00[Europe/Oslo]"
+//!             .parse::<Zoned>()?
+//!             .timestamp(),
+//!     )
+//!     .to_end_bound(),
 //! );
 //!
 //! let shrunk_interval = interval.shrink_start(
 //!     AbsoluteFiniteBound::new(
-//!         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!     ).to_start_bound()
+//!         "2025-01-01 10:00:00[Europe/Oslo]"
+//!             .parse::<Zoned>()?
+//!             .timestamp(),
+//!     )
+//!     .to_start_bound(),
 //! );
 //!
-//! assert_eq!(shrunk_interval, AbsoluteBoundPair::new(
-//!     AbsoluteFiniteBound::new(
-//!         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!     ).to_start_bound(),
-//!     AbsoluteFiniteBound::new(
-//!         "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!     ).to_end_bound(),
-//! ));
+//! assert_eq!(
+//!     shrunk_interval,
+//!     AbsoluteBoundPair::new(
+//!         AbsoluteFiniteBound::new(
+//!             "2025-01-01 10:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_start_bound(),
+//!         AbsoluteFiniteBound::new(
+//!             "2025-01-01 14:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_end_bound(),
+//!     )
+//! );
 //! # Ok::<(), Box<dyn Error>>(())
 //! ```
 
@@ -92,27 +110,45 @@ pub trait ShrinkableStartBound<P> {
     /// # use periodical::intervals::ops::shrink::ShrinkableStartBound;
     /// let interval = AbsoluteBoundPair::new(
     ///     AbsoluteFiniteBound::new(
-    ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_start_bound(),
+    ///         "2025-01-01 08:00:00[Europe/Oslo]"
+    ///             .parse::<Zoned>()?
+    ///             .timestamp(),
+    ///     )
+    ///     .to_start_bound(),
     ///     AbsoluteFiniteBound::new(
-    ///         "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_end_bound(),
+    ///         "2025-01-01 14:00:00[Europe/Oslo]"
+    ///             .parse::<Zoned>()?
+    ///             .timestamp(),
+    ///     )
+    ///     .to_end_bound(),
     /// );
     ///
     /// let shrunk_interval = interval.shrink_start(
     ///     AbsoluteFiniteBound::new(
-    ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_start_bound()
+    ///         "2025-01-01 10:00:00[Europe/Oslo]"
+    ///             .parse::<Zoned>()?
+    ///             .timestamp(),
+    ///     )
+    ///     .to_start_bound(),
     /// );
     ///
-    /// assert_eq!(shrunk_interval, AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new(
-    ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_start_bound(),
-    ///     AbsoluteFiniteBound::new(
-    ///         "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_end_bound(),
-    /// ));
+    /// assert_eq!(
+    ///     shrunk_interval,
+    ///     AbsoluteBoundPair::new(
+    ///         AbsoluteFiniteBound::new(
+    ///             "2025-01-01 10:00:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
+    ///         )
+    ///         .to_start_bound(),
+    ///         AbsoluteFiniteBound::new(
+    ///             "2025-01-01 14:00:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
+    ///         )
+    ///         .to_end_bound(),
+    ///     )
+    /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     fn shrink_start(&self, position: P) -> Self::Output;
@@ -142,27 +178,45 @@ pub trait ShrinkableEndBound<P> {
     /// # use periodical::intervals::ops::shrink::ShrinkableEndBound;
     /// let interval = AbsoluteBoundPair::new(
     ///     AbsoluteFiniteBound::new(
-    ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_start_bound(),
+    ///         "2025-01-01 08:00:00[Europe/Oslo]"
+    ///             .parse::<Zoned>()?
+    ///             .timestamp(),
+    ///     )
+    ///     .to_start_bound(),
     ///     AbsoluteFiniteBound::new(
-    ///         "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_end_bound(),
+    ///         "2025-01-01 14:00:00[Europe/Oslo]"
+    ///             .parse::<Zoned>()?
+    ///             .timestamp(),
+    ///     )
+    ///     .to_end_bound(),
     /// );
     ///
     /// let shrunk_interval = interval.shrink_end(
     ///     AbsoluteFiniteBound::new(
-    ///         "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_end_bound()
+    ///         "2025-01-01 12:00:00[Europe/Oslo]"
+    ///             .parse::<Zoned>()?
+    ///             .timestamp(),
+    ///     )
+    ///     .to_end_bound(),
     /// );
     ///
-    /// assert_eq!(shrunk_interval, AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new(
-    ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_start_bound(),
-    ///     AbsoluteFiniteBound::new(
-    ///         "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_end_bound(),
-    /// ));
+    /// assert_eq!(
+    ///     shrunk_interval,
+    ///     AbsoluteBoundPair::new(
+    ///         AbsoluteFiniteBound::new(
+    ///             "2025-01-01 08:00:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
+    ///         )
+    ///         .to_start_bound(),
+    ///         AbsoluteFiniteBound::new(
+    ///             "2025-01-01 12:00:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
+    ///         )
+    ///         .to_end_bound(),
+    ///     )
+    /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     fn shrink_end(&self, position: P) -> Self::Output;

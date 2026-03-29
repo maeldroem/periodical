@@ -154,10 +154,7 @@ impl AbsoluteBoundPair {
     /// );
     /// assert_eq!(
     ///     bounds.end(),
-    ///     AbsoluteFiniteBound::new_with_inclusivity(
-    ///         end,
-    ///         BoundInclusivity::Exclusive,
-    ///     ).to_end_bound(),
+    ///     AbsoluteFiniteBound::new_with_inclusivity(end, BoundInclusivity::Exclusive,).to_end_bound(),
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```

@@ -16,27 +16,45 @@
 //! # use periodical::intervals::ops::grow::GrowableStartBound;
 //! let interval = AbsoluteBoundPair::new(
 //!     AbsoluteFiniteBound::new(
-//!         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!     ).to_start_bound(),
+//!         "2025-01-01 10:00:00[Europe/Oslo]"
+//!             .parse::<Zoned>()?
+//!             .timestamp(),
+//!     )
+//!     .to_start_bound(),
 //!     AbsoluteFiniteBound::new(
-//!         "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!     ).to_end_bound(),
+//!         "2025-01-01 14:00:00[Europe/Oslo]"
+//!             .parse::<Zoned>()?
+//!             .timestamp(),
+//!     )
+//!     .to_end_bound(),
 //! );
 //!
 //! let grown_interval = interval.grow_start(
 //!     AbsoluteFiniteBound::new(
-//!         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!     ).to_start_bound()
+//!         "2025-01-01 08:00:00[Europe/Oslo]"
+//!             .parse::<Zoned>()?
+//!             .timestamp(),
+//!     )
+//!     .to_start_bound(),
 //! );
 //!
-//! assert_eq!(grown_interval, AbsoluteBoundPair::new(
-//!     AbsoluteFiniteBound::new(
-//!         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!     ).to_start_bound(),
-//!     AbsoluteFiniteBound::new(
-//!         "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!     ).to_end_bound(),
-//! ));
+//! assert_eq!(
+//!     grown_interval,
+//!     AbsoluteBoundPair::new(
+//!         AbsoluteFiniteBound::new(
+//!             "2025-01-01 08:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_start_bound(),
+//!         AbsoluteFiniteBound::new(
+//!             "2025-01-01 14:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_end_bound(),
+//!     )
+//! );
 //! # Ok::<(), Box<dyn Error>>(())
 //! ```
 
@@ -90,27 +108,45 @@ pub trait GrowableStartBound<P> {
     /// # use periodical::intervals::ops::grow::GrowableStartBound;
     /// let interval = AbsoluteBoundPair::new(
     ///     AbsoluteFiniteBound::new(
-    ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_start_bound(),
+    ///         "2025-01-01 10:00:00[Europe/Oslo]"
+    ///             .parse::<Zoned>()?
+    ///             .timestamp(),
+    ///     )
+    ///     .to_start_bound(),
     ///     AbsoluteFiniteBound::new(
-    ///         "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_end_bound(),
+    ///         "2025-01-01 14:00:00[Europe/Oslo]"
+    ///             .parse::<Zoned>()?
+    ///             .timestamp(),
+    ///     )
+    ///     .to_end_bound(),
     /// );
     ///
     /// let grown_interval = interval.grow_start(
     ///     AbsoluteFiniteBound::new(
-    ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_start_bound()
+    ///         "2025-01-01 08:00:00[Europe/Oslo]"
+    ///             .parse::<Zoned>()?
+    ///             .timestamp(),
+    ///     )
+    ///     .to_start_bound(),
     /// );
     ///
-    /// assert_eq!(grown_interval, AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new(
-    ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_start_bound(),
-    ///     AbsoluteFiniteBound::new(
-    ///         "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_end_bound(),
-    /// ));
+    /// assert_eq!(
+    ///     grown_interval,
+    ///     AbsoluteBoundPair::new(
+    ///         AbsoluteFiniteBound::new(
+    ///             "2025-01-01 08:00:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
+    ///         )
+    ///         .to_start_bound(),
+    ///         AbsoluteFiniteBound::new(
+    ///             "2025-01-01 14:00:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
+    ///         )
+    ///         .to_end_bound(),
+    ///     )
+    /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     fn grow_start(&self, position: P) -> Self::Output;
@@ -140,27 +176,45 @@ pub trait GrowableEndBound<P> {
     /// # use periodical::intervals::ops::grow::GrowableEndBound;
     /// let interval = AbsoluteBoundPair::new(
     ///     AbsoluteFiniteBound::new(
-    ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_start_bound(),
+    ///         "2025-01-01 10:00:00[Europe/Oslo]"
+    ///             .parse::<Zoned>()?
+    ///             .timestamp(),
+    ///     )
+    ///     .to_start_bound(),
     ///     AbsoluteFiniteBound::new(
-    ///         "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_end_bound(),
+    ///         "2025-01-01 14:00:00[Europe/Oslo]"
+    ///             .parse::<Zoned>()?
+    ///             .timestamp(),
+    ///     )
+    ///     .to_end_bound(),
     /// );
     ///
     /// let grown_interval = interval.grow_end(
     ///     AbsoluteFiniteBound::new(
-    ///         "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_end_bound()
+    ///         "2025-01-01 16:00:00[Europe/Oslo]"
+    ///             .parse::<Zoned>()?
+    ///             .timestamp(),
+    ///     )
+    ///     .to_end_bound(),
     /// );
     ///
-    /// assert_eq!(grown_interval, AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new(
-    ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_start_bound(),
-    ///     AbsoluteFiniteBound::new(
-    ///         "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_end_bound(),
-    /// ));
+    /// assert_eq!(
+    ///     grown_interval,
+    ///     AbsoluteBoundPair::new(
+    ///         AbsoluteFiniteBound::new(
+    ///             "2025-01-01 10:00:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
+    ///         )
+    ///         .to_start_bound(),
+    ///         AbsoluteFiniteBound::new(
+    ///             "2025-01-01 16:00:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
+    ///         )
+    ///         .to_end_bound(),
+    ///     )
+    /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     fn grow_end(&self, position: P) -> Self::Output;

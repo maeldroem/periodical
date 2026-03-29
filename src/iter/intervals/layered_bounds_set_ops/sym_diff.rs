@@ -23,38 +23,62 @@
 //! let first_layer_intervals = [
 //!     AbsoluteBoundPair::new(
 //!         AbsoluteFiniteBound::new(
-//!             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!         ).to_start_bound(),
+//!             "2025-01-01 08:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_start_bound(),
 //!         AbsoluteFiniteBound::new(
-//!             "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!         ).to_end_bound(),
+//!             "2025-01-01 12:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_end_bound(),
 //!     ),
 //!     AbsoluteBoundPair::new(
 //!         AbsoluteFiniteBound::new(
-//!             "2025-01-01 13:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!         ).to_start_bound(),
+//!             "2025-01-01 13:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_start_bound(),
 //!         AbsoluteFiniteBound::new(
-//!             "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!         ).to_end_bound(),
+//!             "2025-01-01 16:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_end_bound(),
 //!     ),
 //! ];
 //!
 //! let second_layer_intervals = [
 //!     AbsoluteBoundPair::new(
 //!         AbsoluteFiniteBound::new(
-//!             "2025-01-01 07:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!         ).to_start_bound(),
+//!             "2025-01-01 07:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_start_bound(),
 //!         AbsoluteFiniteBound::new(
-//!             "2025-01-01 11:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!         ).to_end_bound(),
+//!             "2025-01-01 11:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_end_bound(),
 //!     ),
 //!     AbsoluteBoundPair::new(
 //!         AbsoluteFiniteBound::new(
-//!             "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!         ).to_start_bound(),
+//!             "2025-01-01 14:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_start_bound(),
 //!         AbsoluteFiniteBound::new(
-//!             "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!         ).to_end_bound(),
+//!             "2025-01-01 18:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_end_bound(),
 //!     ),
 //! ];
 //!
@@ -68,39 +92,63 @@
 //!     vec![
 //!         AbsoluteBoundPair::new(
 //!             AbsoluteFiniteBound::new(
-//!                 "2025-01-01 07:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!             ).to_start_bound(),
+//!                 "2025-01-01 07:00:00[Europe/Oslo]"
+//!                     .parse::<Zoned>()?
+//!                     .timestamp(),
+//!             )
+//!             .to_start_bound(),
 //!             AbsoluteFiniteBound::new_with_inclusivity(
-//!                 "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!                 "2025-01-01 08:00:00[Europe/Oslo]"
+//!                     .parse::<Zoned>()?
+//!                     .timestamp(),
 //!                 BoundInclusivity::Exclusive,
-//!             ).to_end_bound(),
+//!             )
+//!             .to_end_bound(),
 //!         ),
 //!         AbsoluteBoundPair::new(
 //!             AbsoluteFiniteBound::new_with_inclusivity(
-//!                 "2025-01-01 11:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!                 "2025-01-01 11:00:00[Europe/Oslo]"
+//!                     .parse::<Zoned>()?
+//!                     .timestamp(),
 //!                 BoundInclusivity::Exclusive
-//!             ).to_start_bound(),
+//!             )
+//!             .to_start_bound(),
 //!             AbsoluteFiniteBound::new(
-//!                 "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!             ).to_end_bound(),
+//!                 "2025-01-01 12:00:00[Europe/Oslo]"
+//!                     .parse::<Zoned>()?
+//!                     .timestamp(),
+//!             )
+//!             .to_end_bound(),
 //!         ),
 //!         AbsoluteBoundPair::new(
 //!             AbsoluteFiniteBound::new(
-//!                 "2025-01-01 13:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!             ).to_start_bound(),
+//!                 "2025-01-01 13:00:00[Europe/Oslo]"
+//!                     .parse::<Zoned>()?
+//!                     .timestamp(),
+//!             )
+//!             .to_start_bound(),
 //!             AbsoluteFiniteBound::new_with_inclusivity(
-//!                 "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!                 "2025-01-01 14:00:00[Europe/Oslo]"
+//!                     .parse::<Zoned>()?
+//!                     .timestamp(),
 //!                 BoundInclusivity::Exclusive,
-//!             ).to_end_bound(),
+//!             )
+//!             .to_end_bound(),
 //!         ),
 //!         AbsoluteBoundPair::new(
 //!             AbsoluteFiniteBound::new_with_inclusivity(
-//!                 "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!                 "2025-01-01 16:00:00[Europe/Oslo]"
+//!                     .parse::<Zoned>()?
+//!                     .timestamp(),
 //!                 BoundInclusivity::Exclusive
-//!             ).to_start_bound(),
+//!             )
+//!             .to_start_bound(),
 //!             AbsoluteFiniteBound::new(
-//!                 "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!             ).to_end_bound(),
+//!                 "2025-01-01 18:00:00[Europe/Oslo]"
+//!                     .parse::<Zoned>()?
+//!                     .timestamp(),
+//!             )
+//!             .to_end_bound(),
 //!         ),
 //!     ],
 //! );
@@ -133,8 +181,7 @@ where
     ///
     /// # Input requirements
     ///
-    /// 1. The iterator **must return continuous [state
-    ///    changes](LayeredBoundsStateChangeAtAbsoluteBound)**
+    /// 1. The iterator **must return continuous [state changes](LayeredBoundsStateChangeAtAbsoluteBound)**
     /// 2. The state changes **must be in chronological order**
     ///
     /// For more precision about requirement 1, _continuous state changes_ means
@@ -189,8 +236,8 @@ where
             loop {
                 let Some(next) = self.iter.next() else {
                     unreachable!(
-                        "The input requirements guarantee that the given iterator \
-                        cannot end on an active state such as `FirstLayer` or `SecondLayer`"
+                        "The input requirements guarantee that the given iterator cannot end on an active state such \
+                         as `FirstLayer` or `SecondLayer`"
                     );
                 };
 
@@ -205,10 +252,10 @@ where
 
                 let Some(end) = next.old_state_end() else {
                     unreachable!(
-                        "We can infer the guarantee that the state change following one that transitions \
-                        to `FirstLayer` or `SecondLayer` must contain an end to the old state, \
-                        given that the input requirements guarantee that the given iterator cannot end \
-                        on an active state such as `FirstLayer` or `SecondLayer`"
+                        "We can infer the guarantee that the state change following one that transitions to \
+                         `FirstLayer` or `SecondLayer` must contain an end to the old state, given that the input \
+                         requirements guarantee that the given iterator cannot end on an active state such as \
+                         `FirstLayer` or `SecondLayer`"
                     );
                 };
 
@@ -265,8 +312,7 @@ where
     ///
     /// # Input requirements
     ///
-    /// 1. The iterator **must return continuous [state
-    ///    changes](LayeredBoundsStateChangeAtRelativeBound)**
+    /// 1. The iterator **must return continuous [state changes](LayeredBoundsStateChangeAtRelativeBound)**
     /// 2. The state changes **must be in chronological order**
     ///
     /// For more precision about requirement 1, _continuous state changes_ means
@@ -321,8 +367,8 @@ where
             loop {
                 let Some(next) = self.iter.next() else {
                     unreachable!(
-                        "The input requirements guarantee that the given iterator \
-                        cannot end on an active state such as `FirstLayer` or `SecondLayer`"
+                        "The input requirements guarantee that the given iterator cannot end on an active state such \
+                         as `FirstLayer` or `SecondLayer`"
                     );
                 };
 
@@ -337,10 +383,10 @@ where
 
                 let Some(end) = next.old_state_end() else {
                     unreachable!(
-                        "We can infer the guarantee that the state change following one that transitions \
-                        to `FirstLayer` or `SecondLayer` must contain an end to the old state, \
-                        given that the input requirements guarantee that the given iterator cannot end \
-                        on an active state such as `FirstLayer` or `SecondLayer`"
+                        "We can infer the guarantee that the state change following one that transitions to \
+                         `FirstLayer` or `SecondLayer` must contain an end to the old state, given that the input \
+                         requirements guarantee that the given iterator cannot end on an active state such as \
+                         `FirstLayer` or `SecondLayer`"
                     );
                 };
 

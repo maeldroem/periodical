@@ -186,8 +186,8 @@ impl Display for RelativeFiniteBoundFromBoundError {
             Self::IsUnbounded => {
                 write!(
                     f,
-                    "The given bound was of the `Unbounded` variant, \
-                    and therefore could not be converted to an `RelativeFiniteBound`"
+                    "The given bound was of the `Unbounded` variant, and therefore could not be converted to an \
+                     `RelativeFiniteBound`"
                 )
             },
         }

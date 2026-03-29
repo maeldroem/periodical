@@ -241,11 +241,15 @@ impl BoundOrdering {
 /// # use periodical::intervals::ops::bound_ord::{BoundOrdering, PartialBoundOrd};
 /// # use periodical::intervals::ops::bound_overlap_ambiguity::BoundOverlapAmbiguity;
 /// let ref_bound = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-///     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///     "2025-01-01 08:00:00[Europe/Oslo]"
+///         .parse::<Zoned>()?
+///         .timestamp(),
 /// ));
 ///
 /// let compared_bound = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-///     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///     "2025-01-01 08:00:00[Europe/Oslo]"
+///         .parse::<Zoned>()?
+///         .timestamp(),
 ///     BoundInclusivity::Exclusive,
 /// ));
 ///
@@ -273,11 +277,15 @@ pub trait PartialBoundOrd<Rhs = Self> {
     /// # use periodical::intervals::ops::bound_ord::{BoundOrdering, PartialBoundOrd};
     /// # use periodical::intervals::ops::bound_overlap_ambiguity::BoundOverlapAmbiguity;
     /// let ref_bound = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     "2025-01-01 08:00:00[Europe/Oslo]"
+    ///         .parse::<Zoned>()?
+    ///         .timestamp(),
     /// ));
     ///
     /// let compared_bound = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-    ///     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     "2025-01-01 08:00:00[Europe/Oslo]"
+    ///         .parse::<Zoned>()?
+    ///         .timestamp(),
     ///     BoundInclusivity::Exclusive,
     /// ));
     ///
@@ -308,11 +316,15 @@ pub trait PartialBoundOrd<Rhs = Self> {
     /// #     BoundOverlapAmbiguity, BoundOverlapDisambiguationRuleSet,
     /// # };
     /// let ref_bound = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     "2025-01-01 08:00:00[Europe/Oslo]"
+    ///         .parse::<Zoned>()?
+    ///         .timestamp(),
     /// ));
     ///
     /// let compared_bound = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-    ///     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     "2025-01-01 08:00:00[Europe/Oslo]"
+    ///         .parse::<Zoned>()?
+    ///         .timestamp(),
     ///     BoundInclusivity::Exclusive,
     /// ));
     ///
@@ -348,11 +360,15 @@ pub trait PartialBoundOrd<Rhs = Self> {
     /// #     BoundOverlapAmbiguity, BoundOverlapDisambiguationRuleSet,
     /// # };
     /// let ref_bound = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     "2025-01-01 08:00:00[Europe/Oslo]"
+    ///         .parse::<Zoned>()?
+    ///         .timestamp(),
     /// ));
     ///
     /// let compared_bound = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-    ///     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     "2025-01-01 08:00:00[Europe/Oslo]"
+    ///         .parse::<Zoned>()?
+    ///         .timestamp(),
     ///     BoundInclusivity::Exclusive,
     /// ));
     ///
@@ -388,11 +404,15 @@ pub trait PartialBoundOrd<Rhs = Self> {
     /// #     BoundOverlapAmbiguity, BoundOverlapDisambiguationRuleSet,
     /// # };
     /// let ref_bound = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     "2025-01-01 08:00:00[Europe/Oslo]"
+    ///         .parse::<Zoned>()?
+    ///         .timestamp(),
     /// ));
     ///
     /// let compared_bound = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-    ///     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     "2025-01-01 08:00:00[Europe/Oslo]"
+    ///         .parse::<Zoned>()?
+    ///         .timestamp(),
     ///     BoundInclusivity::Exclusive,
     /// ));
     ///
@@ -428,11 +448,15 @@ pub trait PartialBoundOrd<Rhs = Self> {
     /// #     BoundOverlapAmbiguity, BoundOverlapDisambiguationRuleSet,
     /// # };
     /// let ref_bound = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     "2025-01-01 08:00:00[Europe/Oslo]"
+    ///         .parse::<Zoned>()?
+    ///         .timestamp(),
     /// ));
     ///
     /// let compared_bound = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-    ///     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     "2025-01-01 08:00:00[Europe/Oslo]"
+    ///         .parse::<Zoned>()?
+    ///         .timestamp(),
     ///     BoundInclusivity::Exclusive,
     /// ));
     ///

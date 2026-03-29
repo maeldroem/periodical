@@ -69,9 +69,8 @@ where
     /// # Input requirements
     ///
     /// 1. The bounds **must be sorted chronologically**
-    /// 2. The bounds **must be paired**, that means there should be an equal
-    ///    amount of [`Start`](AbsoluteBound::Start)s and
-    ///    [`End`](AbsoluteBound::End)s.
+    /// 2. The bounds **must be paired**, that means there should be an equal amount of [`Start`](AbsoluteBound::Start)s
+    ///    and [`End`](AbsoluteBound::End)s.
     ///
     /// The responsibility of verifying those requirements are left to the
     /// caller in order to prevent double-processing.
@@ -115,38 +114,62 @@ where
     /// let first_layer_intervals = [
     ///     AbsoluteBoundPair::new(
     ///         AbsoluteFiniteBound::new(
-    ///             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///         ).to_start_bound(),
+    ///             "2025-01-01 08:00:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
+    ///         )
+    ///         .to_start_bound(),
     ///         AbsoluteFiniteBound::new(
-    ///             "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///         ).to_end_bound(),
+    ///             "2025-01-01 12:00:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
+    ///         )
+    ///         .to_end_bound(),
     ///     ),
     ///     AbsoluteBoundPair::new(
     ///         AbsoluteFiniteBound::new(
-    ///             "2025-01-01 13:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///         ).to_start_bound(),
+    ///             "2025-01-01 13:00:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
+    ///         )
+    ///         .to_start_bound(),
     ///         AbsoluteFiniteBound::new(
-    ///             "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///         ).to_end_bound(),
+    ///             "2025-01-01 16:00:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
+    ///         )
+    ///         .to_end_bound(),
     ///     ),
     /// ];
     ///
     /// let second_layer_intervals = [
     ///     AbsoluteBoundPair::new(
     ///         AbsoluteFiniteBound::new(
-    ///             "2025-01-01 07:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///         ).to_start_bound(),
+    ///             "2025-01-01 07:00:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
+    ///         )
+    ///         .to_start_bound(),
     ///         AbsoluteFiniteBound::new(
-    ///             "2025-01-01 11:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///         ).to_end_bound(),
+    ///             "2025-01-01 11:00:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
+    ///         )
+    ///         .to_end_bound(),
     ///     ),
     ///     AbsoluteBoundPair::new(
     ///         AbsoluteFiniteBound::new(
-    ///             "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///         ).to_start_bound(),
+    ///             "2025-01-01 14:00:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
+    ///         )
+    ///         .to_start_bound(),
     ///         AbsoluteFiniteBound::new(
-    ///             "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///         ).to_end_bound(),
+    ///             "2025-01-01 18:00:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
+    ///         )
+    ///         .to_end_bound(),
     ///     ),
     /// ];
     ///
@@ -279,9 +302,8 @@ where
     /// # Input requirements
     ///
     /// 1. The bounds **must be sorted chronologically**
-    /// 2. The bounds **must be paired**, that means there should be an equal
-    ///    amount of [`Start`](RelativeBound::Start)s and
-    ///    [`End`](RelativeBound::End)s.
+    /// 2. The bounds **must be paired**, that means there should be an equal amount of [`Start`](RelativeBound::Start)s
+    ///    and [`End`](RelativeBound::End)s.
     ///
     /// The responsibility of verifying those requirements are left to the
     /// caller in order to prevent double-processing.
@@ -324,39 +346,23 @@ where
     /// # use periodical::iter::intervals::bounds::RelativeBoundsIteratorDispatcher;
     /// let first_layer_intervals = [
     ///     RelativeBoundPair::new(
-    ///         RelativeFiniteBound::new(
-    ///             SignedDuration::from_hours(8),
-    ///         ).to_start_bound(),
-    ///         RelativeFiniteBound::new(
-    ///             SignedDuration::from_hours(12),
-    ///         ).to_end_bound(),
+    ///         RelativeFiniteBound::new(SignedDuration::from_hours(8)).to_start_bound(),
+    ///         RelativeFiniteBound::new(SignedDuration::from_hours(12)).to_end_bound(),
     ///     ),
     ///     RelativeBoundPair::new(
-    ///         RelativeFiniteBound::new(
-    ///             SignedDuration::from_hours(13),
-    ///         ).to_start_bound(),
-    ///         RelativeFiniteBound::new(
-    ///             SignedDuration::from_hours(16),
-    ///         ).to_end_bound(),
+    ///         RelativeFiniteBound::new(SignedDuration::from_hours(13)).to_start_bound(),
+    ///         RelativeFiniteBound::new(SignedDuration::from_hours(16)).to_end_bound(),
     ///     ),
     /// ];
     ///
     /// let second_layer_intervals = [
     ///     RelativeBoundPair::new(
-    ///         RelativeFiniteBound::new(
-    ///             SignedDuration::from_hours(7),
-    ///         ).to_start_bound(),
-    ///         RelativeFiniteBound::new(
-    ///             SignedDuration::from_hours(11),
-    ///         ).to_end_bound(),
+    ///         RelativeFiniteBound::new(SignedDuration::from_hours(7)).to_start_bound(),
+    ///         RelativeFiniteBound::new(SignedDuration::from_hours(11)).to_end_bound(),
     ///     ),
     ///     RelativeBoundPair::new(
-    ///         RelativeFiniteBound::new(
-    ///             SignedDuration::from_hours(14),
-    ///         ).to_start_bound(),
-    ///         RelativeFiniteBound::new(
-    ///             SignedDuration::from_hours(18),
-    ///         ).to_end_bound(),
+    ///         RelativeFiniteBound::new(SignedDuration::from_hours(14)).to_start_bound(),
+    ///         RelativeFiniteBound::new(SignedDuration::from_hours(18)).to_end_bound(),
     ///     ),
     /// ];
     ///

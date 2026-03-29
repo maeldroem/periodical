@@ -81,23 +81,29 @@ macro_rules! to_relative_impl_reflective {
 /// # use periodical::intervals::ops::relativity_conversion::ToAbsolute;
 /// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBound};
 /// let rel_interval = RelativeBoundPair::new(
-///     RelativeFiniteBound::new(
-///         SignedDuration::from_hours(8),
-///     ).to_start_bound(),
-///     RelativeFiniteBound::new(
-///         SignedDuration::from_hours(16),
-///     ).to_end_bound(),
+///     RelativeFiniteBound::new(SignedDuration::from_hours(8)).to_start_bound(),
+///     RelativeFiniteBound::new(SignedDuration::from_hours(16)).to_end_bound(),
 /// );
 ///
 /// assert_eq!(
-///     rel_interval.to_absolute("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()),
+///     rel_interval.to_absolute(
+///         "2025-01-01 00:00:00[Europe/Oslo]"
+///             .parse::<Zoned>()?
+///             .timestamp()
+///     ),
 ///     AbsoluteBoundPair::new(
 ///         AbsoluteFiniteBound::new(
-///             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-///         ).to_start_bound(),
+///             "2025-01-01 08:00:00[Europe/Oslo]"
+///                 .parse::<Zoned>()?
+///                 .timestamp(),
+///         )
+///         .to_start_bound(),
 ///         AbsoluteFiniteBound::new(
-///             "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-///         ).to_end_bound(),
+///             "2025-01-01 16:00:00[Europe/Oslo]"
+///                 .parse::<Zoned>()?
+///                 .timestamp(),
+///         )
+///         .to_end_bound(),
 ///     ),
 /// );
 /// # Ok::<(), Box<dyn Error>>(())
@@ -116,23 +122,29 @@ pub trait ToAbsolute {
     /// # use periodical::intervals::ops::relativity_conversion::ToAbsolute;
     /// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBound};
     /// let rel_interval = RelativeBoundPair::new(
-    ///     RelativeFiniteBound::new(
-    ///         SignedDuration::from_hours(8),
-    ///     ).to_start_bound(),
-    ///     RelativeFiniteBound::new(
-    ///         SignedDuration::from_hours(16),
-    ///     ).to_end_bound(),
+    ///     RelativeFiniteBound::new(SignedDuration::from_hours(8)).to_start_bound(),
+    ///     RelativeFiniteBound::new(SignedDuration::from_hours(16)).to_end_bound(),
     /// );
     ///
     /// assert_eq!(
-    ///     rel_interval.to_absolute("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()),
+    ///     rel_interval.to_absolute(
+    ///         "2025-01-01 00:00:00[Europe/Oslo]"
+    ///             .parse::<Zoned>()?
+    ///             .timestamp()
+    ///     ),
     ///     AbsoluteBoundPair::new(
     ///         AbsoluteFiniteBound::new(
-    ///             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///         ).to_start_bound(),
+    ///             "2025-01-01 08:00:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
+    ///         )
+    ///         .to_start_bound(),
     ///         AbsoluteFiniteBound::new(
-    ///             "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///         ).to_end_bound(),
+    ///             "2025-01-01 16:00:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
+    ///         )
+    ///         .to_end_bound(),
     ///     ),
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
@@ -317,22 +329,28 @@ impl ToAbsolute for EmptiableRelativeInterval {
 /// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBound};
 /// let abs_interval = AbsoluteBoundPair::new(
 ///     AbsoluteFiniteBound::new(
-///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-///     ).to_start_bound(),
+///         "2025-01-01 08:00:00[Europe/Oslo]"
+///             .parse::<Zoned>()?
+///             .timestamp(),
+///     )
+///     .to_start_bound(),
 ///     AbsoluteFiniteBound::new(
-///         "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-///     ).to_end_bound(),
+///         "2025-01-01 16:00:00[Europe/Oslo]"
+///             .parse::<Zoned>()?
+///             .timestamp(),
+///     )
+///     .to_end_bound(),
 /// );
 ///
 /// assert_eq!(
-///     abs_interval.to_relative("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()),
+///     abs_interval.to_relative(
+///         "2025-01-01 00:00:00[Europe/Oslo]"
+///             .parse::<Zoned>()?
+///             .timestamp()
+///     ),
 ///     RelativeBoundPair::new(
-///         RelativeFiniteBound::new(
-///             SignedDuration::from_hours(8),
-///         ).to_start_bound(),
-///         RelativeFiniteBound::new(
-///             SignedDuration::from_hours(16),
-///         ).to_end_bound(),
+///         RelativeFiniteBound::new(SignedDuration::from_hours(8),).to_start_bound(),
+///         RelativeFiniteBound::new(SignedDuration::from_hours(16),).to_end_bound(),
 ///     ),
 /// );
 /// # Ok::<(), Box<dyn Error>>(())
@@ -352,22 +370,28 @@ pub trait ToRelative {
     /// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBound};
     /// let abs_interval = AbsoluteBoundPair::new(
     ///     AbsoluteFiniteBound::new(
-    ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_start_bound(),
+    ///         "2025-01-01 08:00:00[Europe/Oslo]"
+    ///             .parse::<Zoned>()?
+    ///             .timestamp(),
+    ///     )
+    ///     .to_start_bound(),
     ///     AbsoluteFiniteBound::new(
-    ///         "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_end_bound(),
+    ///         "2025-01-01 16:00:00[Europe/Oslo]"
+    ///             .parse::<Zoned>()?
+    ///             .timestamp(),
+    ///     )
+    ///     .to_end_bound(),
     /// );
     ///
     /// assert_eq!(
-    ///     abs_interval.to_relative("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()),
+    ///     abs_interval.to_relative(
+    ///         "2025-01-01 00:00:00[Europe/Oslo]"
+    ///             .parse::<Zoned>()?
+    ///             .timestamp()
+    ///     ),
     ///     RelativeBoundPair::new(
-    ///         RelativeFiniteBound::new(
-    ///             SignedDuration::from_hours(8),
-    ///         ).to_start_bound(),
-    ///         RelativeFiniteBound::new(
-    ///             SignedDuration::from_hours(16),
-    ///         ).to_end_bound(),
+    ///         RelativeFiniteBound::new(SignedDuration::from_hours(8),).to_start_bound(),
+    ///         RelativeFiniteBound::new(SignedDuration::from_hours(16),).to_end_bound(),
     ///     ),
     /// );
     /// # Ok::<(), Box<dyn Error>>(())

@@ -52,6 +52,7 @@ Edit your `~/.gitconfig` to include the following.
 	rs = restore
 	rb = rebase
 	p = push
+	prb = pull --rebase
 	pf = push --force-with-lease
 	pt = push --tags
     # Creates a branch and switches to it
@@ -114,11 +115,7 @@ In order to enforce that, merges from any branch into `dev` should be done by us
 following [the commit rules](#commits).
 
 When the `dev` branch has reached a stable state, usually after making sure all tests are passing, it can be merged
-into `main`.
-This merge should be squashed first so that `main` remains linear and could be extracted as its own product.
-
-To do that, use `git merge --squash --no-ff` and when committing, provide a meaningful message and description, in
-accordance to [the commit rules](#commits).
+into `main` through a detailed PR.
 
 Now, when you start working on a new thing, you should branch off `dev` and should name it by following the syntax
 `<type>/<name>`, where `<type>` is the most relevant choice out of the list below, and where `<name>` is
@@ -215,3 +212,19 @@ But there's also additional rules on coding that you should generally follow.
 
 Warnings should be considered like errors, even if it's a warning with low priority, such as warnings from the
 `pedantic` group of lints of `clippy`. Warnings shouldn't be ignored and should be resolved as much as possible.
+
+## When working on a branch
+
+Sometimes it can be hard to track all your changes on one branch, especially for when you reach the end and need
+to write a changelog and a description.
+
+Some people use AI to generate a description of their changes, but in the process you lose information about intent
+of changes, personal notes you may have, ideas, etc.
+
+In order to remediate to that problem use a "branch notes" markdown file. I recommend `branch-changelog.md`,
+but the actual name and format is left to your discretion.
+
+In this file, feel free to write and track your progress for the branch, but try to clean it once the PR is opened
+and the notes moved to the PR's description.
+
+The file can be pushed to the repository, allowing for keeping track of your notes across devices.

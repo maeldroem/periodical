@@ -2,8 +2,12 @@
 
 This file defines the rules of Rust code formatting to follow in this repository.
 
-To format your code, use `cargo fmt`. This command uses the rules set by the `rustfmt.toml` file. If you are unsure
-of how one rule works or what it defines, check out [configurations for rustfmt](https://github.com/rust-lang/rustfmt/blob/master/Configurations.md).
+To format your code, use `cargo +nightly fmt`. This command uses the rules set by the `rustfmt.toml` file.
+If you are unsure of how one rule works or what it defines,
+check out [configurations for rustfmt](https://rust-lang.github.io/rustfmt).
+
+The reason the cargo command uses the nightly toolchain is that a lot of very useful formatting rules are
+unfortunately still not stabilized. To install the nightly toolchain, run `rustup toolchain install nightly`.
 
 More specific rules about how to write the code itself are defined by [Clippy](https://doc.rust-lang.org/stable/clippy/index.html), which you can run by using `cargo clippy`. Its configuration is located in the `Cargo.toml` file. If you
 are unsure of how one rule works or what it defines, check out [the interactive list of clippy lints](https://rust-lang.github.io/rust-clippy/master/index.html).
@@ -32,7 +36,14 @@ For [VSCode](https://code.visualstudio.com/) and its derivatives, such as [VSCod
 Under `imports`, check `Rust-analyzer > Imports > Granularity: Enforce` and set
 `Rust-analyzer > Imports > Granularity: Group` to `module`.
 
-### 120-characters line/ruler
+### 120-characters line width limit
+
+While 120 characters may seem like a lot, most IDEs, if fullscreen, even with a code minimap or explorer open,
+are able to fit 120 characters into view, even on screens with some scaling.
+
+This line width limit should be enforced only for source code and comments. Code examples within code documentation
+must not exceed 100 characters per line, as those examples are often displayed in smaller windows/embeds,
+and we want to avoid readers having to use horizontal scrolling.
 
 For [VSCode](https://code.visualstudio.com/) and its derivatives, such as [VSCodium](https://vscodium.com/), go to
 `Settings` (`Ctrl+,` / gear in the bottom left), and in the `Text Editor` section, no subsection, find `Rulers`, then
@@ -42,16 +53,18 @@ In this file, change the `editor.rulers` property to the following:
 
 ```json
     "editor.rulers": [
+        100,
         120
     ],
 ```
+
+(The 100 characters ruler is optional)
 
 ### Newline
 
 For [VSCode](https://code.visualstudio.com/) and its derivatives, such as [VSCodium](https://vscodium.com/), go to
 `Settings` (`Ctrl+,` / gear in the bottom left), and in the `Text Editor` section, `Files` subsection,
 find `Eol`, and set it to `\n`, then find `Insert Final Newline` and check it.
-
 
 ## Additional rules
 
@@ -76,13 +89,13 @@ can be transformed simply by adding type aliases:
 
 ```rs
 // Acronym
-type SVLTNTTS = SomeVeryLongTypeNameThatTakesSpace;
+type Svltntts = SomeVeryLongTypeNameThatTakesSpace;
 // Or abbreviation
 type LongType = SomeVeryLongTypeNameThatTakesSpace;
 
 match something {
-    SVLTNTTS::A => {},
-    SVLTNTTS::B => {},
+    Svltntts::A => {},
+    Svltntts::B => {},
     LongType::C => {},
     LongType::D => {},
 }
@@ -102,7 +115,7 @@ let mng = ...;
 
 ### Follow Rust API Guidelines
 
-See [the Rust API Guidelines Checklist](https://rust-lang.github.io/api-guidelines/checklist.html)
+See [the Rust API Guidelines Checklist](https://rust-lang.github.io/api-guidelines/checklist.html).
 
 ### File structure
 
@@ -270,3 +283,66 @@ mod shiny;
 #[cfg(test)]
 mod shiny_tests;
 ```
+
+### Unit tests should be granular
+
+The number of unit tests for a given module can rapidly grow, leading to unit tests being ordered arbitrarily.
+
+In order to avoid that, we recommend that your unit tests should be modularized in relevant smaller units.
+For example, if we want to test such a trait:
+
+```rs
+trait MyTrait {
+    fn foo() {…}
+
+    fn bar() {…}
+}
+```
+
+that is implemented on `Abc` and `Xyz`, then ideally the test suite should be split in a similar manner to:
+
+```rs
+// MyTrait test suite
+
+use your_things::*;
+
+mod foo {
+    use super::*;
+
+    mod abc {
+        use super::*;
+    }
+
+    mod xyz {
+        use super::*;
+    }
+}
+
+mod bar {
+    mod abc {
+        use super::*;
+    }
+
+    mod xyz {
+        use super::*;
+    }
+}
+```
+
+### Unit tests should not repeat tested item's name
+
+If the aforementioned rule is followed, instead of naming your test `my_trait_foo_abc_scenario_one`, it will be
+possible to identify it through the modules it is in.
+
+In this case, `my_trait_foo_abc_scenario_one` will be in a file called `my_trait_tests.rs`, within the `abc` module
+inside of the `foo` module. Then we rename the test unit to `scenario_one`
+
+When the tests are run, you will see that it will be identified as `my_trait_tests::foo::abc::scenario_one`
+instead of `my_trait_tests::my_trait_foo_abc_scenario_one`.
+
+This allows for running test suites more granularly when testing behaviors:
+running `cargo test my_trait_tests::foo::abc` instead of `cargo test my_trait_tests::my_trait_foo_abc_scenario_one`,
+which can be subject to matching unwanted tests (as the `cargo test` argument is matched as a substring, not prefix).
+
+Overall it also improves readability (no repeated information) and programmers can fold relevant modules that
+they are not touching instead of having to filter all test units.

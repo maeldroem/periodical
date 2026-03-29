@@ -71,14 +71,18 @@ impl HalfBoundedAbsoluteInterval {
     /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
     /// let ref_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     ///
-    /// let half_bounded_interval = HalfBoundedAbsoluteInterval::new(
-    ///     ref_time,
-    ///     OpeningDirection::ToPast,
-    /// );
+    /// let half_bounded_interval =
+    ///     HalfBoundedAbsoluteInterval::new(ref_time, OpeningDirection::ToPast);
     ///
     /// assert_eq!(half_bounded_interval.reference(), ref_time);
-    /// assert_eq!(half_bounded_interval.reference_inclusivity(), BoundInclusivity::Inclusive);
-    /// assert_eq!(half_bounded_interval.opening_direction(), OpeningDirection::ToPast);
+    /// assert_eq!(
+    ///     half_bounded_interval.reference_inclusivity(),
+    ///     BoundInclusivity::Inclusive
+    /// );
+    /// assert_eq!(
+    ///     half_bounded_interval.opening_direction(),
+    ///     OpeningDirection::ToPast
+    /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
@@ -109,8 +113,14 @@ impl HalfBoundedAbsoluteInterval {
     /// );
     ///
     /// assert_eq!(half_bounded_interval.reference(), ref_time);
-    /// assert_eq!(half_bounded_interval.reference_inclusivity(), BoundInclusivity::Exclusive);
-    /// assert_eq!(half_bounded_interval.opening_direction(), OpeningDirection::ToFuture);
+    /// assert_eq!(
+    ///     half_bounded_interval.reference_inclusivity(),
+    ///     BoundInclusivity::Exclusive
+    /// );
+    /// assert_eq!(
+    ///     half_bounded_interval.opening_direction(),
+    ///     OpeningDirection::ToFuture
+    /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
@@ -137,10 +147,8 @@ impl HalfBoundedAbsoluteInterval {
     /// # use periodical::intervals::meta::OpeningDirection;
     /// let ref_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     ///
-    /// let half_bounded_interval = HalfBoundedAbsoluteInterval::new(
-    ///     ref_time,
-    ///     OpeningDirection::ToPast,
-    /// );
+    /// let half_bounded_interval =
+    ///     HalfBoundedAbsoluteInterval::new(ref_time, OpeningDirection::ToPast);
     ///
     /// assert_eq!(half_bounded_interval.reference(), ref_time);
     /// # Ok::<(), Box<dyn Error>>(())
@@ -161,12 +169,13 @@ impl HalfBoundedAbsoluteInterval {
     /// # use periodical::intervals::meta::OpeningDirection;
     /// let ref_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     ///
-    /// let half_bounded_interval = HalfBoundedAbsoluteInterval::new(
-    ///     ref_time,
-    ///     OpeningDirection::ToPast,
-    /// );
+    /// let half_bounded_interval =
+    ///     HalfBoundedAbsoluteInterval::new(ref_time, OpeningDirection::ToPast);
     ///
-    /// assert_eq!(half_bounded_interval.opening_direction(), OpeningDirection::ToPast);
+    /// assert_eq!(
+    ///     half_bounded_interval.opening_direction(),
+    ///     OpeningDirection::ToPast
+    /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
@@ -189,7 +198,10 @@ impl HalfBoundedAbsoluteInterval {
     ///     OpeningDirection::ToFuture,
     /// );
     ///
-    /// assert_eq!(half_bounded_interval.reference_inclusivity(), BoundInclusivity::Exclusive);
+    /// assert_eq!(
+    ///     half_bounded_interval.reference_inclusivity(),
+    ///     BoundInclusivity::Exclusive
+    /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
@@ -208,10 +220,8 @@ impl HalfBoundedAbsoluteInterval {
     /// # use periodical::intervals::meta::OpeningDirection;
     /// let ref_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     ///
-    /// let mut half_bounded_interval = HalfBoundedAbsoluteInterval::new(
-    ///     ref_time,
-    ///     OpeningDirection::ToFuture,
-    /// );
+    /// let mut half_bounded_interval =
+    ///     HalfBoundedAbsoluteInterval::new(ref_time, OpeningDirection::ToFuture);
     ///
     /// let new_ref_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
     ///
@@ -235,14 +245,15 @@ impl HalfBoundedAbsoluteInterval {
     /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
     /// let ref_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     ///
-    /// let mut half_bounded_interval = HalfBoundedAbsoluteInterval::new(
-    ///     ref_time,
-    ///     OpeningDirection::ToFuture,
-    /// );
+    /// let mut half_bounded_interval =
+    ///     HalfBoundedAbsoluteInterval::new(ref_time, OpeningDirection::ToFuture);
     ///
     /// half_bounded_interval.set_reference_inclusivity(BoundInclusivity::Exclusive);
     ///
-    /// assert_eq!(half_bounded_interval.reference_inclusivity(), BoundInclusivity::Exclusive);
+    /// assert_eq!(
+    ///     half_bounded_interval.reference_inclusivity(),
+    ///     BoundInclusivity::Exclusive
+    /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn set_reference_inclusivity(&mut self, new_inclusivity: BoundInclusivity) {
@@ -260,14 +271,15 @@ impl HalfBoundedAbsoluteInterval {
     /// # use periodical::intervals::meta::OpeningDirection;
     /// let ref_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     ///
-    /// let mut half_bounded_interval = HalfBoundedAbsoluteInterval::new(
-    ///     ref_time,
-    ///     OpeningDirection::ToFuture,
-    /// );
+    /// let mut half_bounded_interval =
+    ///     HalfBoundedAbsoluteInterval::new(ref_time, OpeningDirection::ToFuture);
     ///
     /// half_bounded_interval.set_opening_direction(OpeningDirection::ToPast);
     ///
-    /// assert_eq!(half_bounded_interval.opening_direction(), OpeningDirection::ToPast);
+    /// assert_eq!(
+    ///     half_bounded_interval.opening_direction(),
+    ///     OpeningDirection::ToPast
+    /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn set_opening_direction(&mut self, new_opening_direction: OpeningDirection) {

@@ -55,9 +55,8 @@ impl RelativeEndBound {
     /// # use jiff::SignedDuration;
     /// # use periodical::intervals::relative::{RelativeEndBound, RelativeFiniteBound};
     /// let infinite_end_bound = RelativeEndBound::InfiniteFuture;
-    /// let finite_end_bound = RelativeEndBound::Finite(
-    ///     RelativeFiniteBound::new(SignedDuration::from_hours(1))
-    /// );
+    /// let finite_end_bound =
+    ///     RelativeEndBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(1)));
     ///
     /// assert!(finite_end_bound.is_finite());
     /// assert!(!infinite_end_bound.is_finite());
@@ -76,9 +75,8 @@ impl RelativeEndBound {
     /// # use jiff::SignedDuration;
     /// # use periodical::intervals::relative::{RelativeEndBound, RelativeFiniteBound};
     /// let infinite_end_bound = RelativeEndBound::InfiniteFuture;
-    /// let finite_end_bound = RelativeEndBound::Finite(
-    ///     RelativeFiniteBound::new(SignedDuration::from_hours(1))
-    /// );
+    /// let finite_end_bound =
+    ///     RelativeEndBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(1)));
     ///
     /// assert!(infinite_end_bound.is_infinite_future());
     /// assert!(!finite_end_bound.is_infinite_future());
@@ -100,9 +98,8 @@ impl RelativeEndBound {
     /// # use jiff::SignedDuration;
     /// # use periodical::intervals::relative::{RelativeEndBound, RelativeFiniteBound};
     /// let infinite_end_bound = RelativeEndBound::InfiniteFuture;
-    /// let finite_end_bound = RelativeEndBound::Finite(
-    ///     RelativeFiniteBound::new(SignedDuration::from_hours(1))
-    /// );
+    /// let finite_end_bound =
+    ///     RelativeEndBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(1)));
     ///
     /// assert_eq!(
     ///     finite_end_bound.finite(),
@@ -148,12 +145,9 @@ impl RelativeEndBound {
     /// # }
     /// #
     /// # impl Error for FiniteBoundExpectedError {}
-    /// let end_first_shift = RelativeEndBound::Finite(
-    ///     RelativeFiniteBound::new(SignedDuration::from_hours(1))
-    /// );
-    /// let break_start = end_first_shift
-    ///     .opposite()
-    ///     .ok_or(FiniteBoundExpectedError)?;
+    /// let end_first_shift =
+    ///     RelativeEndBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(1)));
+    /// let break_start = end_first_shift.opposite().ok_or(FiniteBoundExpectedError)?;
     ///
     /// assert_eq!(
     ///     break_start.finite(),

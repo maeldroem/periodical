@@ -38,12 +38,8 @@ impl RelativeBound {
     /// let start_offset = SignedDuration::from_hours(8);
     /// let end_offset = SignedDuration::from_hours(16);
     ///
-    /// let start = RelativeBound::Start(
-    ///     RelativeFiniteBound::new(start_offset).to_start_bound()
-    /// );
-    /// let end = RelativeBound::End(
-    ///     RelativeFiniteBound::new(end_offset).to_end_bound()
-    /// );
+    /// let start = RelativeBound::Start(RelativeFiniteBound::new(start_offset).to_start_bound());
+    /// let end = RelativeBound::End(RelativeFiniteBound::new(end_offset).to_end_bound());
     ///
     /// assert!(start.is_start());
     /// assert!(!end.is_start());
@@ -63,12 +59,8 @@ impl RelativeBound {
     /// let start_offset = SignedDuration::from_hours(8);
     /// let end_offset = SignedDuration::from_hours(16);
     ///
-    /// let start = RelativeBound::Start(
-    ///     RelativeFiniteBound::new(start_offset).to_start_bound()
-    /// );
-    /// let end = RelativeBound::End(
-    ///     RelativeFiniteBound::new(end_offset).to_end_bound()
-    /// );
+    /// let start = RelativeBound::Start(RelativeFiniteBound::new(start_offset).to_start_bound());
+    /// let end = RelativeBound::End(RelativeFiniteBound::new(end_offset).to_end_bound());
     ///
     /// assert!(end.is_end());
     /// assert!(!start.is_end());
@@ -92,21 +84,14 @@ impl RelativeBound {
     /// let start_offset = SignedDuration::from_hours(8);
     /// let end_offset = SignedDuration::from_hours(16);
     ///
-    /// let start = RelativeBound::Start(
-    ///     RelativeFiniteBound::new(start_offset).to_start_bound()
-    /// );
-    /// let end = RelativeBound::End(
-    ///     RelativeFiniteBound::new(end_offset).to_end_bound()
-    /// );
+    /// let start = RelativeBound::Start(RelativeFiniteBound::new(start_offset).to_start_bound());
+    /// let end = RelativeBound::End(RelativeFiniteBound::new(end_offset).to_end_bound());
     ///
     /// assert_eq!(
     ///     start.start(),
     ///     Some(RelativeFiniteBound::new(start_offset).to_start_bound()),
     /// );
-    /// assert_eq!(
-    ///     end.start(),
-    ///     None,
-    /// );
+    /// assert_eq!(end.start(), None,);
     /// ```
     #[must_use]
     pub fn start(self) -> Option<RelativeStartBound> {
@@ -130,21 +115,14 @@ impl RelativeBound {
     /// let start_offset = SignedDuration::from_hours(8);
     /// let end_offset = SignedDuration::from_hours(16);
     ///
-    /// let start = RelativeBound::Start(
-    ///     RelativeFiniteBound::new(start_offset).to_start_bound()
-    /// );
-    /// let end = RelativeBound::End(
-    ///     RelativeFiniteBound::new(end_offset).to_end_bound()
-    /// );
+    /// let start = RelativeBound::Start(RelativeFiniteBound::new(start_offset).to_start_bound());
+    /// let end = RelativeBound::End(RelativeFiniteBound::new(end_offset).to_end_bound());
     ///
     /// assert_eq!(
     ///     end.end(),
     ///     Some(RelativeFiniteBound::new(end_offset).to_end_bound()),
     /// );
-    /// assert_eq!(
-    ///     start.end(),
-    ///     None,
-    /// );
+    /// assert_eq!(start.end(), None,);
     /// ```
     #[must_use]
     pub fn end(self) -> Option<RelativeEndBound> {

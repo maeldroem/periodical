@@ -26,11 +26,17 @@
 //! # use periodical::intervals::ops::cut::{CutResult, Cuttable, CutType};
 //! let interval = AbsoluteBoundPair::new(
 //!     AbsoluteFiniteBound::new(
-//!         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!     ).to_start_bound(),
+//!         "2025-01-01 08:00:00[Europe/Oslo]"
+//!             .parse::<Zoned>()?
+//!             .timestamp(),
+//!     )
+//!     .to_start_bound(),
 //!     AbsoluteFiniteBound::new(
-//!         "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!     ).to_end_bound(),
+//!         "2025-01-01 16:00:00[Europe/Oslo]"
+//!             .parse::<Zoned>()?
+//!             .timestamp(),
+//!     )
+//!     .to_end_bound(),
 //! );
 //!
 //! let cut_type = CutType::new(BoundInclusivity::Exclusive, BoundInclusivity::Exclusive);
@@ -41,21 +47,33 @@
 //!     CutResult::Cut(
 //!         AbsoluteBoundPair::new(
 //!             AbsoluteFiniteBound::new(
-//!                 "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
-//!             ).to_start_bound(),
+//!                 "2025-01-01 08:00:00[Europe/Oslo]"
+//!                     .parse::<Zoned>()?
+//!                     .timestamp()
+//!             )
+//!             .to_start_bound(),
 //!             AbsoluteFiniteBound::new_with_inclusivity(
-//!                 "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!                 "2025-01-01 12:00:00[Europe/Oslo]"
+//!                     .parse::<Zoned>()?
+//!                     .timestamp(),
 //!                 BoundInclusivity::Exclusive,
-//!             ).to_end_bound(),
+//!             )
+//!             .to_end_bound(),
 //!         ),
 //!         AbsoluteBoundPair::new(
 //!             AbsoluteFiniteBound::new_with_inclusivity(
-//!                 "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!                 "2025-01-01 12:00:00[Europe/Oslo]"
+//!                     .parse::<Zoned>()?
+//!                     .timestamp(),
 //!                 BoundInclusivity::Exclusive,
-//!             ).to_start_bound(),
+//!             )
+//!             .to_start_bound(),
 //!             AbsoluteFiniteBound::new(
-//!                 "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!             ).to_end_bound(),
+//!                 "2025-01-01 16:00:00[Europe/Oslo]"
+//!                     .parse::<Zoned>()?
+//!                     .timestamp(),
+//!             )
+//!             .to_end_bound(),
 //!         ),
 //!     ),
 //! );
@@ -72,11 +90,17 @@
 //! # use periodical::intervals::ops::cut::{CutResult, Cuttable, CutType};
 //! let interval = AbsoluteBoundPair::new(
 //!     AbsoluteFiniteBound::new(
-//!         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!     ).to_start_bound(),
+//!         "2025-01-01 08:00:00[Europe/Oslo]"
+//!             .parse::<Zoned>()?
+//!             .timestamp(),
+//!     )
+//!     .to_start_bound(),
 //!     AbsoluteFiniteBound::new(
-//!         "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!     ).to_end_bound(),
+//!         "2025-01-01 16:00:00[Europe/Oslo]"
+//!             .parse::<Zoned>()?
+//!             .timestamp(),
+//!     )
+//!     .to_end_bound(),
 //! );
 //!
 //! let cut_type = CutType::new(BoundInclusivity::Exclusive, BoundInclusivity::Inclusive);
@@ -87,20 +111,32 @@
 //!     CutResult::Cut(
 //!         AbsoluteBoundPair::new(
 //!             AbsoluteFiniteBound::new(
-//!                 "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
-//!             ).to_start_bound(),
+//!                 "2025-01-01 08:00:00[Europe/Oslo]"
+//!                     .parse::<Zoned>()?
+//!                     .timestamp()
+//!             )
+//!             .to_start_bound(),
 //!             AbsoluteFiniteBound::new_with_inclusivity(
-//!                 "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!                 "2025-01-01 16:00:00[Europe/Oslo]"
+//!                     .parse::<Zoned>()?
+//!                     .timestamp(),
 //!                 BoundInclusivity::Exclusive,
-//!             ).to_end_bound(),
+//!             )
+//!             .to_end_bound(),
 //!         ),
 //!         AbsoluteBoundPair::new(
 //!             AbsoluteFiniteBound::new(
-//!                 "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!             ).to_start_bound(),
+//!                 "2025-01-01 16:00:00[Europe/Oslo]"
+//!                     .parse::<Zoned>()?
+//!                     .timestamp(),
+//!             )
+//!             .to_start_bound(),
 //!             AbsoluteFiniteBound::new(
-//!                 "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!             ).to_end_bound(),
+//!                 "2025-01-01 16:00:00[Europe/Oslo]"
+//!                     .parse::<Zoned>()?
+//!                     .timestamp(),
+//!             )
+//!             .to_end_bound(),
 //!         ),
 //!     ),
 //! );
@@ -117,20 +153,23 @@
 //! # use periodical::intervals::ops::cut::{CutResult, Cuttable, CutType};
 //! let interval = AbsoluteBoundPair::new(
 //!     AbsoluteFiniteBound::new(
-//!         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!     ).to_start_bound(),
+//!         "2025-01-01 08:00:00[Europe/Oslo]"
+//!             .parse::<Zoned>()?
+//!             .timestamp(),
+//!     )
+//!     .to_start_bound(),
 //!     AbsoluteFiniteBound::new(
-//!         "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!     ).to_end_bound(),
+//!         "2025-01-01 16:00:00[Europe/Oslo]"
+//!             .parse::<Zoned>()?
+//!             .timestamp(),
+//!     )
+//!     .to_end_bound(),
 //! );
 //!
 //! let cut_type = CutType::new(BoundInclusivity::Exclusive, BoundInclusivity::Exclusive);
 //! let at = "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?;
 //!
-//! assert_eq!(
-//!     interval.cut_at(at, cut_type),
-//!     CutResult::Uncut,
-//! );
+//! assert_eq!(interval.cut_at(at, cut_type), CutResult::Uncut,);
 //! # Ok::<(), Box<dyn Error>>(())
 //! ```
 
@@ -206,7 +245,10 @@ impl CutType {
     /// # use periodical::intervals::ops::cut::CutType;
     /// let cut_type = CutType::new(BoundInclusivity::Inclusive, BoundInclusivity::Exclusive);
     ///
-    /// assert_eq!(cut_type.past_bound_inclusivity(), BoundInclusivity::Inclusive);
+    /// assert_eq!(
+    ///     cut_type.past_bound_inclusivity(),
+    ///     BoundInclusivity::Inclusive
+    /// );
     /// ```
     #[must_use]
     pub fn past_bound_inclusivity(&self) -> BoundInclusivity {
@@ -222,7 +264,10 @@ impl CutType {
     /// # use periodical::intervals::ops::cut::CutType;
     /// let cut_type = CutType::new(BoundInclusivity::Inclusive, BoundInclusivity::Exclusive);
     ///
-    /// assert_eq!(cut_type.future_bound_inclusivity(), BoundInclusivity::Exclusive);
+    /// assert_eq!(
+    ///     cut_type.future_bound_inclusivity(),
+    ///     BoundInclusivity::Exclusive
+    /// );
     /// ```
     #[must_use]
     pub fn future_bound_inclusivity(&self) -> BoundInclusivity {
@@ -380,11 +425,17 @@ impl<T> CutResult<T> {
 /// # use periodical::intervals::ops::cut::{CutResult, Cuttable, CutType};
 /// let interval = AbsoluteBoundPair::new(
 ///     AbsoluteFiniteBound::new(
-///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-///     ).to_start_bound(),
+///         "2025-01-01 08:00:00[Europe/Oslo]"
+///             .parse::<Zoned>()?
+///             .timestamp(),
+///     )
+///     .to_start_bound(),
 ///     AbsoluteFiniteBound::new(
-///         "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-///     ).to_end_bound(),
+///         "2025-01-01 16:00:00[Europe/Oslo]"
+///             .parse::<Zoned>()?
+///             .timestamp(),
+///     )
+///     .to_end_bound(),
 /// );
 ///
 /// let cut_type = CutType::new(BoundInclusivity::Exclusive, BoundInclusivity::Exclusive);
@@ -395,21 +446,33 @@ impl<T> CutResult<T> {
 ///     CutResult::Cut(
 ///         AbsoluteBoundPair::new(
 ///             AbsoluteFiniteBound::new(
-///                 "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
-///             ).to_start_bound(),
+///                 "2025-01-01 08:00:00[Europe/Oslo]"
+///                     .parse::<Zoned>()?
+///                     .timestamp()
+///             )
+///             .to_start_bound(),
 ///             AbsoluteFiniteBound::new_with_inclusivity(
-///                 "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///                 "2025-01-01 12:00:00[Europe/Oslo]"
+///                     .parse::<Zoned>()?
+///                     .timestamp(),
 ///                 BoundInclusivity::Exclusive,
-///             ).to_end_bound(),
+///             )
+///             .to_end_bound(),
 ///         ),
 ///         AbsoluteBoundPair::new(
 ///             AbsoluteFiniteBound::new_with_inclusivity(
-///                 "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///                 "2025-01-01 12:00:00[Europe/Oslo]"
+///                     .parse::<Zoned>()?
+///                     .timestamp(),
 ///                 BoundInclusivity::Exclusive,
-///             ).to_start_bound(),
+///             )
+///             .to_start_bound(),
 ///             AbsoluteFiniteBound::new(
-///                 "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-///             ).to_end_bound(),
+///                 "2025-01-01 16:00:00[Europe/Oslo]"
+///                     .parse::<Zoned>()?
+///                     .timestamp(),
+///             )
+///             .to_end_bound(),
 ///         ),
 ///     ),
 /// );
@@ -426,11 +489,17 @@ impl<T> CutResult<T> {
 /// # use periodical::intervals::ops::cut::{CutResult, Cuttable, CutType};
 /// let interval = AbsoluteBoundPair::new(
 ///     AbsoluteFiniteBound::new(
-///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-///     ).to_start_bound(),
+///         "2025-01-01 08:00:00[Europe/Oslo]"
+///             .parse::<Zoned>()?
+///             .timestamp(),
+///     )
+///     .to_start_bound(),
 ///     AbsoluteFiniteBound::new(
-///         "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-///     ).to_end_bound(),
+///         "2025-01-01 16:00:00[Europe/Oslo]"
+///             .parse::<Zoned>()?
+///             .timestamp(),
+///     )
+///     .to_end_bound(),
 /// );
 ///
 /// let cut_type = CutType::new(BoundInclusivity::Exclusive, BoundInclusivity::Inclusive);
@@ -441,20 +510,32 @@ impl<T> CutResult<T> {
 ///     CutResult::Cut(
 ///         AbsoluteBoundPair::new(
 ///             AbsoluteFiniteBound::new(
-///                 "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
-///             ).to_start_bound(),
+///                 "2025-01-01 08:00:00[Europe/Oslo]"
+///                     .parse::<Zoned>()?
+///                     .timestamp()
+///             )
+///             .to_start_bound(),
 ///             AbsoluteFiniteBound::new_with_inclusivity(
-///                 "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///                 "2025-01-01 16:00:00[Europe/Oslo]"
+///                     .parse::<Zoned>()?
+///                     .timestamp(),
 ///                 BoundInclusivity::Exclusive,
-///             ).to_end_bound(),
+///             )
+///             .to_end_bound(),
 ///         ),
 ///         AbsoluteBoundPair::new(
 ///             AbsoluteFiniteBound::new(
-///                 "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-///             ).to_start_bound(),
+///                 "2025-01-01 16:00:00[Europe/Oslo]"
+///                     .parse::<Zoned>()?
+///                     .timestamp(),
+///             )
+///             .to_start_bound(),
 ///             AbsoluteFiniteBound::new(
-///                 "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-///             ).to_end_bound(),
+///                 "2025-01-01 16:00:00[Europe/Oslo]"
+///                     .parse::<Zoned>()?
+///                     .timestamp(),
+///             )
+///             .to_end_bound(),
 ///         ),
 ///     ),
 /// );
@@ -471,20 +552,23 @@ impl<T> CutResult<T> {
 /// # use periodical::intervals::ops::cut::{CutResult, Cuttable, CutType};
 /// let interval = AbsoluteBoundPair::new(
 ///     AbsoluteFiniteBound::new(
-///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-///     ).to_start_bound(),
+///         "2025-01-01 08:00:00[Europe/Oslo]"
+///             .parse::<Zoned>()?
+///             .timestamp(),
+///     )
+///     .to_start_bound(),
 ///     AbsoluteFiniteBound::new(
-///         "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-///     ).to_end_bound(),
+///         "2025-01-01 16:00:00[Europe/Oslo]"
+///             .parse::<Zoned>()?
+///             .timestamp(),
+///     )
+///     .to_end_bound(),
 /// );
 ///
 /// let cut_type = CutType::new(BoundInclusivity::Exclusive, BoundInclusivity::Exclusive);
 /// let at = "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?;
 ///
-/// assert_eq!(
-///     interval.cut_at(at, cut_type),
-///     CutResult::Uncut,
-/// );
+/// assert_eq!(interval.cut_at(at, cut_type), CutResult::Uncut,);
 /// # Ok::<(), Box<dyn Error>>(())
 /// ```
 pub trait Cuttable<P> {
@@ -503,11 +587,17 @@ pub trait Cuttable<P> {
     /// # use periodical::intervals::ops::cut::{CutResult, Cuttable, CutType};
     /// let interval = AbsoluteBoundPair::new(
     ///     AbsoluteFiniteBound::new(
-    ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_start_bound(),
+    ///         "2025-01-01 08:00:00[Europe/Oslo]"
+    ///             .parse::<Zoned>()?
+    ///             .timestamp(),
+    ///     )
+    ///     .to_start_bound(),
     ///     AbsoluteFiniteBound::new(
-    ///         "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_end_bound(),
+    ///         "2025-01-01 16:00:00[Europe/Oslo]"
+    ///             .parse::<Zoned>()?
+    ///             .timestamp(),
+    ///     )
+    ///     .to_end_bound(),
     /// );
     ///
     /// let cut_type = CutType::new(BoundInclusivity::Exclusive, BoundInclusivity::Exclusive);
@@ -518,21 +608,33 @@ pub trait Cuttable<P> {
     ///     CutResult::Cut(
     ///         AbsoluteBoundPair::new(
     ///             AbsoluteFiniteBound::new(
-    ///                 "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
-    ///             ).to_start_bound(),
+    ///                 "2025-01-01 08:00:00[Europe/Oslo]"
+    ///                     .parse::<Zoned>()?
+    ///                     .timestamp()
+    ///             )
+    ///             .to_start_bound(),
     ///             AbsoluteFiniteBound::new_with_inclusivity(
-    ///                 "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///                 "2025-01-01 12:00:00[Europe/Oslo]"
+    ///                     .parse::<Zoned>()?
+    ///                     .timestamp(),
     ///                 BoundInclusivity::Exclusive,
-    ///             ).to_end_bound(),
+    ///             )
+    ///             .to_end_bound(),
     ///         ),
     ///         AbsoluteBoundPair::new(
     ///             AbsoluteFiniteBound::new_with_inclusivity(
-    ///                 "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///                 "2025-01-01 12:00:00[Europe/Oslo]"
+    ///                     .parse::<Zoned>()?
+    ///                     .timestamp(),
     ///                 BoundInclusivity::Exclusive,
-    ///             ).to_start_bound(),
+    ///             )
+    ///             .to_start_bound(),
     ///             AbsoluteFiniteBound::new(
-    ///                 "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///             ).to_end_bound(),
+    ///                 "2025-01-01 16:00:00[Europe/Oslo]"
+    ///                     .parse::<Zoned>()?
+    ///                     .timestamp(),
+    ///             )
+    ///             .to_end_bound(),
     ///         ),
     ///     ),
     /// );

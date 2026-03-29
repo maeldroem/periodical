@@ -24,38 +24,62 @@
 //! let first_layer_intervals = [
 //!     AbsoluteBoundPair::new(
 //!         AbsoluteFiniteBound::new(
-//!             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!         ).to_start_bound(),
+//!             "2025-01-01 08:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_start_bound(),
 //!         AbsoluteFiniteBound::new(
-//!             "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!         ).to_end_bound(),
+//!             "2025-01-01 12:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_end_bound(),
 //!     ),
 //!     AbsoluteBoundPair::new(
 //!         AbsoluteFiniteBound::new(
-//!             "2025-01-01 13:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!         ).to_start_bound(),
+//!             "2025-01-01 13:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_start_bound(),
 //!         AbsoluteFiniteBound::new(
-//!             "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!         ).to_end_bound(),
+//!             "2025-01-01 16:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_end_bound(),
 //!     ),
 //! ];
 //!
 //! let second_layer_intervals = [
 //!     AbsoluteBoundPair::new(
 //!         AbsoluteFiniteBound::new(
-//!             "2025-01-01 07:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!         ).to_start_bound(),
+//!             "2025-01-01 07:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_start_bound(),
 //!         AbsoluteFiniteBound::new(
-//!             "2025-01-01 11:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!         ).to_end_bound(),
+//!             "2025-01-01 11:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_end_bound(),
 //!     ),
 //!     AbsoluteBoundPair::new(
 //!         AbsoluteFiniteBound::new(
-//!             "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!         ).to_start_bound(),
+//!             "2025-01-01 14:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_start_bound(),
 //!         AbsoluteFiniteBound::new(
-//!             "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!         ).to_end_bound(),
+//!             "2025-01-01 18:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_end_bound(),
 //!     ),
 //! ];
 //!
@@ -69,90 +93,170 @@
 //!         LayeredBoundsStateChangeAtAbsoluteBound::new(
 //!             LayeredBoundsState::NoLayers,
 //!             LayeredBoundsState::SecondLayer,
-//!             Some(AbsoluteFiniteBound::new_with_inclusivity(
-//!                 "2025-01-01 07:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!                 BoundInclusivity::Exclusive,
-//!             ).to_end_bound()),
-//!             Some(AbsoluteFiniteBound::new(
-//!                 "2025-01-01 07:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!             ).to_start_bound()),
+//!             Some(
+//!                 AbsoluteFiniteBound::new_with_inclusivity(
+//!                     "2025-01-01 07:00:00[Europe/Oslo]"
+//!                         .parse::<Zoned>()?
+//!                         .timestamp(),
+//!                     BoundInclusivity::Exclusive,
+//!                 )
+//!                 .to_end_bound()
+//!             ),
+//!             Some(
+//!                 AbsoluteFiniteBound::new(
+//!                     "2025-01-01 07:00:00[Europe/Oslo]"
+//!                         .parse::<Zoned>()?
+//!                         .timestamp(),
+//!                 )
+//!                 .to_start_bound()
+//!             ),
 //!         ),
 //!         LayeredBoundsStateChangeAtAbsoluteBound::new(
 //!             LayeredBoundsState::SecondLayer,
 //!             LayeredBoundsState::BothLayers,
-//!             Some(AbsoluteFiniteBound::new_with_inclusivity(
-//!                 "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!                 BoundInclusivity::Exclusive,
-//!             ).to_end_bound()),
-//!             Some(AbsoluteFiniteBound::new(
-//!                 "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!             ).to_start_bound()),
+//!             Some(
+//!                 AbsoluteFiniteBound::new_with_inclusivity(
+//!                     "2025-01-01 08:00:00[Europe/Oslo]"
+//!                         .parse::<Zoned>()?
+//!                         .timestamp(),
+//!                     BoundInclusivity::Exclusive,
+//!                 )
+//!                 .to_end_bound()
+//!             ),
+//!             Some(
+//!                 AbsoluteFiniteBound::new(
+//!                     "2025-01-01 08:00:00[Europe/Oslo]"
+//!                         .parse::<Zoned>()?
+//!                         .timestamp(),
+//!                 )
+//!                 .to_start_bound()
+//!             ),
 //!         ),
 //!         LayeredBoundsStateChangeAtAbsoluteBound::new(
 //!             LayeredBoundsState::BothLayers,
 //!             LayeredBoundsState::FirstLayer,
-//!             Some(AbsoluteFiniteBound::new(
-//!                 "2025-01-01 11:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!             ).to_end_bound()),
-//!             Some(AbsoluteFiniteBound::new_with_inclusivity(
-//!                 "2025-01-01 11:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!                 BoundInclusivity::Exclusive,
-//!             ).to_start_bound()),
+//!             Some(
+//!                 AbsoluteFiniteBound::new(
+//!                     "2025-01-01 11:00:00[Europe/Oslo]"
+//!                         .parse::<Zoned>()?
+//!                         .timestamp(),
+//!                 )
+//!                 .to_end_bound()
+//!             ),
+//!             Some(
+//!                 AbsoluteFiniteBound::new_with_inclusivity(
+//!                     "2025-01-01 11:00:00[Europe/Oslo]"
+//!                         .parse::<Zoned>()?
+//!                         .timestamp(),
+//!                     BoundInclusivity::Exclusive,
+//!                 )
+//!                 .to_start_bound()
+//!             ),
 //!         ),
 //!         LayeredBoundsStateChangeAtAbsoluteBound::new(
 //!             LayeredBoundsState::FirstLayer,
 //!             LayeredBoundsState::NoLayers,
-//!             Some(AbsoluteFiniteBound::new(
-//!                 "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!             ).to_end_bound()),
-//!             Some(AbsoluteFiniteBound::new_with_inclusivity(
-//!                 "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!                 BoundInclusivity::Exclusive,
-//!             ).to_start_bound()),
+//!             Some(
+//!                 AbsoluteFiniteBound::new(
+//!                     "2025-01-01 12:00:00[Europe/Oslo]"
+//!                         .parse::<Zoned>()?
+//!                         .timestamp(),
+//!                 )
+//!                 .to_end_bound()
+//!             ),
+//!             Some(
+//!                 AbsoluteFiniteBound::new_with_inclusivity(
+//!                     "2025-01-01 12:00:00[Europe/Oslo]"
+//!                         .parse::<Zoned>()?
+//!                         .timestamp(),
+//!                     BoundInclusivity::Exclusive,
+//!                 )
+//!                 .to_start_bound()
+//!             ),
 //!         ),
 //!         LayeredBoundsStateChangeAtAbsoluteBound::new(
 //!             LayeredBoundsState::NoLayers,
 //!             LayeredBoundsState::FirstLayer,
-//!             Some(AbsoluteFiniteBound::new_with_inclusivity(
-//!                 "2025-01-01 13:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!                 BoundInclusivity::Exclusive,
-//!             ).to_end_bound()),
-//!             Some(AbsoluteFiniteBound::new(
-//!                 "2025-01-01 13:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!             ).to_start_bound()),
+//!             Some(
+//!                 AbsoluteFiniteBound::new_with_inclusivity(
+//!                     "2025-01-01 13:00:00[Europe/Oslo]"
+//!                         .parse::<Zoned>()?
+//!                         .timestamp(),
+//!                     BoundInclusivity::Exclusive,
+//!                 )
+//!                 .to_end_bound()
+//!             ),
+//!             Some(
+//!                 AbsoluteFiniteBound::new(
+//!                     "2025-01-01 13:00:00[Europe/Oslo]"
+//!                         .parse::<Zoned>()?
+//!                         .timestamp(),
+//!                 )
+//!                 .to_start_bound()
+//!             ),
 //!         ),
 //!         LayeredBoundsStateChangeAtAbsoluteBound::new(
 //!             LayeredBoundsState::FirstLayer,
 //!             LayeredBoundsState::BothLayers,
-//!             Some(AbsoluteFiniteBound::new_with_inclusivity(
-//!                 "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!                 BoundInclusivity::Exclusive,
-//!             ).to_end_bound()),
-//!             Some(AbsoluteFiniteBound::new(
-//!                 "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!             ).to_start_bound()),
+//!             Some(
+//!                 AbsoluteFiniteBound::new_with_inclusivity(
+//!                     "2025-01-01 14:00:00[Europe/Oslo]"
+//!                         .parse::<Zoned>()?
+//!                         .timestamp(),
+//!                     BoundInclusivity::Exclusive,
+//!                 )
+//!                 .to_end_bound()
+//!             ),
+//!             Some(
+//!                 AbsoluteFiniteBound::new(
+//!                     "2025-01-01 14:00:00[Europe/Oslo]"
+//!                         .parse::<Zoned>()?
+//!                         .timestamp(),
+//!                 )
+//!                 .to_start_bound()
+//!             ),
 //!         ),
 //!         LayeredBoundsStateChangeAtAbsoluteBound::new(
 //!             LayeredBoundsState::BothLayers,
 //!             LayeredBoundsState::SecondLayer,
-//!             Some(AbsoluteFiniteBound::new(
-//!                 "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!             ).to_end_bound()),
-//!             Some(AbsoluteFiniteBound::new_with_inclusivity(
-//!                 "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!                 BoundInclusivity::Exclusive,
-//!             ).to_start_bound()),
+//!             Some(
+//!                 AbsoluteFiniteBound::new(
+//!                     "2025-01-01 16:00:00[Europe/Oslo]"
+//!                         .parse::<Zoned>()?
+//!                         .timestamp(),
+//!                 )
+//!                 .to_end_bound()
+//!             ),
+//!             Some(
+//!                 AbsoluteFiniteBound::new_with_inclusivity(
+//!                     "2025-01-01 16:00:00[Europe/Oslo]"
+//!                         .parse::<Zoned>()?
+//!                         .timestamp(),
+//!                     BoundInclusivity::Exclusive,
+//!                 )
+//!                 .to_start_bound()
+//!             ),
 //!         ),
 //!         LayeredBoundsStateChangeAtAbsoluteBound::new(
 //!             LayeredBoundsState::SecondLayer,
 //!             LayeredBoundsState::NoLayers,
-//!             Some(AbsoluteFiniteBound::new(
-//!                 "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!             ).to_end_bound()),
-//!             Some(AbsoluteFiniteBound::new_with_inclusivity(
-//!                 "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!                 BoundInclusivity::Exclusive,
-//!             ).to_start_bound()),
+//!             Some(
+//!                 AbsoluteFiniteBound::new(
+//!                     "2025-01-01 18:00:00[Europe/Oslo]"
+//!                         .parse::<Zoned>()?
+//!                         .timestamp(),
+//!                 )
+//!                 .to_end_bound()
+//!             ),
+//!             Some(
+//!                 AbsoluteFiniteBound::new_with_inclusivity(
+//!                     "2025-01-01 18:00:00[Europe/Oslo]"
+//!                         .parse::<Zoned>()?
+//!                         .timestamp(),
+//!                     BoundInclusivity::Exclusive,
+//!                 )
+//!                 .to_start_bound()
+//!             ),
 //!         ),
 //!     ],
 //! );
@@ -309,13 +413,23 @@ impl LayeredBoundsStateChangeAtAbsoluteBound {
     /// let change = LayeredBoundsStateChangeAtAbsoluteBound::new(
     ///     LayeredBoundsState::NoLayers,
     ///     LayeredBoundsState::FirstLayer,
-    ///     Some(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_end_bound()),
-    ///     Some(AbsoluteFiniteBound::new_with_inclusivity(
-    ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///         BoundInclusivity::Exclusive,
-    ///     ).to_start_bound()),
+    ///     Some(
+    ///         AbsoluteFiniteBound::new(
+    ///             "2025-01-01 08:00:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
+    ///         )
+    ///         .to_end_bound(),
+    ///     ),
+    ///     Some(
+    ///         AbsoluteFiniteBound::new_with_inclusivity(
+    ///             "2025-01-01 08:00:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
+    ///             BoundInclusivity::Exclusive,
+    ///         )
+    ///         .to_start_bound(),
+    ///     ),
     /// );
     ///
     /// assert_eq!(change.old_state(), LayeredBoundsState::NoLayers);
@@ -341,13 +455,23 @@ impl LayeredBoundsStateChangeAtAbsoluteBound {
     /// let change = LayeredBoundsStateChangeAtAbsoluteBound::new(
     ///     LayeredBoundsState::NoLayers,
     ///     LayeredBoundsState::FirstLayer,
-    ///     Some(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_end_bound()),
-    ///     Some(AbsoluteFiniteBound::new_with_inclusivity(
-    ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///         BoundInclusivity::Exclusive,
-    ///     ).to_start_bound()),
+    ///     Some(
+    ///         AbsoluteFiniteBound::new(
+    ///             "2025-01-01 08:00:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
+    ///         )
+    ///         .to_end_bound(),
+    ///     ),
+    ///     Some(
+    ///         AbsoluteFiniteBound::new_with_inclusivity(
+    ///             "2025-01-01 08:00:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
+    ///             BoundInclusivity::Exclusive,
+    ///         )
+    ///         .to_start_bound(),
+    ///     ),
     /// );
     ///
     /// assert_eq!(change.new_state(), LayeredBoundsState::FirstLayer);
@@ -380,20 +504,35 @@ impl LayeredBoundsStateChangeAtAbsoluteBound {
     /// let change = LayeredBoundsStateChangeAtAbsoluteBound::new(
     ///     LayeredBoundsState::NoLayers,
     ///     LayeredBoundsState::FirstLayer,
-    ///     Some(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_end_bound()),
-    ///     Some(AbsoluteFiniteBound::new_with_inclusivity(
-    ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///         BoundInclusivity::Exclusive,
-    ///     ).to_start_bound()),
+    ///     Some(
+    ///         AbsoluteFiniteBound::new(
+    ///             "2025-01-01 08:00:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
+    ///         )
+    ///         .to_end_bound(),
+    ///     ),
+    ///     Some(
+    ///         AbsoluteFiniteBound::new_with_inclusivity(
+    ///             "2025-01-01 08:00:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
+    ///             BoundInclusivity::Exclusive,
+    ///         )
+    ///         .to_start_bound(),
+    ///     ),
     /// );
     ///
     /// assert_eq!(
     ///     change.old_state_end(),
-    ///     Some(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_end_bound()),
+    ///     Some(
+    ///         AbsoluteFiniteBound::new(
+    ///             "2025-01-01 08:00:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
+    ///         )
+    ///         .to_end_bound()
+    ///     ),
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
@@ -424,21 +563,36 @@ impl LayeredBoundsStateChangeAtAbsoluteBound {
     /// let change = LayeredBoundsStateChangeAtAbsoluteBound::new(
     ///     LayeredBoundsState::NoLayers,
     ///     LayeredBoundsState::FirstLayer,
-    ///     Some(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_end_bound()),
-    ///     Some(AbsoluteFiniteBound::new_with_inclusivity(
-    ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///         BoundInclusivity::Exclusive,
-    ///     ).to_start_bound()),
+    ///     Some(
+    ///         AbsoluteFiniteBound::new(
+    ///             "2025-01-01 08:00:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
+    ///         )
+    ///         .to_end_bound(),
+    ///     ),
+    ///     Some(
+    ///         AbsoluteFiniteBound::new_with_inclusivity(
+    ///             "2025-01-01 08:00:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
+    ///             BoundInclusivity::Exclusive,
+    ///         )
+    ///         .to_start_bound(),
+    ///     ),
     /// );
     ///
     /// assert_eq!(
     ///     change.new_state_start(),
-    ///     Some(AbsoluteFiniteBound::new_with_inclusivity(
-    ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///         BoundInclusivity::Exclusive,
-    ///     ).to_start_bound()),
+    ///     Some(
+    ///         AbsoluteFiniteBound::new_with_inclusivity(
+    ///             "2025-01-01 08:00:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
+    ///             BoundInclusivity::Exclusive,
+    ///         )
+    ///         .to_start_bound()
+    ///     ),
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
@@ -500,13 +654,14 @@ impl LayeredBoundsStateChangeAtRelativeBound {
     /// let change = LayeredBoundsStateChangeAtRelativeBound::new(
     ///     LayeredBoundsState::NoLayers,
     ///     LayeredBoundsState::FirstLayer,
-    ///     Some(RelativeFiniteBound::new(
-    ///         SignedDuration::from_hours(8),
-    ///     ).to_end_bound()),
-    ///     Some(RelativeFiniteBound::new_with_inclusivity(
-    ///         SignedDuration::from_hours(8),
-    ///         BoundInclusivity::Exclusive,
-    ///     ).to_start_bound()),
+    ///     Some(RelativeFiniteBound::new(SignedDuration::from_hours(8)).to_end_bound()),
+    ///     Some(
+    ///         RelativeFiniteBound::new_with_inclusivity(
+    ///             SignedDuration::from_hours(8),
+    ///             BoundInclusivity::Exclusive,
+    ///         )
+    ///         .to_start_bound(),
+    ///     ),
     /// );
     ///
     /// assert_eq!(change.old_state(), LayeredBoundsState::NoLayers);
@@ -530,13 +685,14 @@ impl LayeredBoundsStateChangeAtRelativeBound {
     /// let change = LayeredBoundsStateChangeAtRelativeBound::new(
     ///     LayeredBoundsState::NoLayers,
     ///     LayeredBoundsState::FirstLayer,
-    ///     Some(RelativeFiniteBound::new(
-    ///         SignedDuration::from_hours(8),
-    ///     ).to_end_bound()),
-    ///     Some(RelativeFiniteBound::new_with_inclusivity(
-    ///         SignedDuration::from_hours(8),
-    ///         BoundInclusivity::Exclusive,
-    ///     ).to_start_bound()),
+    ///     Some(RelativeFiniteBound::new(SignedDuration::from_hours(8)).to_end_bound()),
+    ///     Some(
+    ///         RelativeFiniteBound::new_with_inclusivity(
+    ///             SignedDuration::from_hours(8),
+    ///             BoundInclusivity::Exclusive,
+    ///         )
+    ///         .to_start_bound(),
+    ///     ),
     /// );
     ///
     /// assert_eq!(change.new_state(), LayeredBoundsState::FirstLayer);
@@ -567,20 +723,19 @@ impl LayeredBoundsStateChangeAtRelativeBound {
     /// let change = LayeredBoundsStateChangeAtRelativeBound::new(
     ///     LayeredBoundsState::NoLayers,
     ///     LayeredBoundsState::FirstLayer,
-    ///     Some(RelativeFiniteBound::new(
-    ///         SignedDuration::from_hours(8),
-    ///     ).to_end_bound()),
-    ///     Some(RelativeFiniteBound::new_with_inclusivity(
-    ///         SignedDuration::from_hours(8),
-    ///         BoundInclusivity::Exclusive,
-    ///     ).to_start_bound()),
+    ///     Some(RelativeFiniteBound::new(SignedDuration::from_hours(8)).to_end_bound()),
+    ///     Some(
+    ///         RelativeFiniteBound::new_with_inclusivity(
+    ///             SignedDuration::from_hours(8),
+    ///             BoundInclusivity::Exclusive,
+    ///         )
+    ///         .to_start_bound(),
+    ///     ),
     /// );
     ///
     /// assert_eq!(
     ///     change.old_state_end(),
-    ///     Some(RelativeFiniteBound::new(
-    ///         SignedDuration::from_hours(8),
-    ///     ).to_end_bound()),
+    ///     Some(RelativeFiniteBound::new(SignedDuration::from_hours(8),).to_end_bound()),
     /// );
     /// ```
     #[must_use]
@@ -609,21 +764,25 @@ impl LayeredBoundsStateChangeAtRelativeBound {
     /// let change = LayeredBoundsStateChangeAtRelativeBound::new(
     ///     LayeredBoundsState::NoLayers,
     ///     LayeredBoundsState::FirstLayer,
-    ///     Some(RelativeFiniteBound::new(
-    ///         SignedDuration::from_hours(8),
-    ///     ).to_end_bound()),
-    ///     Some(RelativeFiniteBound::new_with_inclusivity(
-    ///         SignedDuration::from_hours(8),
-    ///         BoundInclusivity::Exclusive,
-    ///     ).to_start_bound()),
+    ///     Some(RelativeFiniteBound::new(SignedDuration::from_hours(8)).to_end_bound()),
+    ///     Some(
+    ///         RelativeFiniteBound::new_with_inclusivity(
+    ///             SignedDuration::from_hours(8),
+    ///             BoundInclusivity::Exclusive,
+    ///         )
+    ///         .to_start_bound(),
+    ///     ),
     /// );
     ///
     /// assert_eq!(
     ///     change.new_state_start(),
-    ///     Some(RelativeFiniteBound::new_with_inclusivity(
-    ///         SignedDuration::from_hours(8),
-    ///         BoundInclusivity::Exclusive,
-    ///     ).to_start_bound()),
+    ///     Some(
+    ///         RelativeFiniteBound::new_with_inclusivity(
+    ///             SignedDuration::from_hours(8),
+    ///             BoundInclusivity::Exclusive,
+    ///         )
+    ///         .to_start_bound()
+    ///     ),
     /// );
     /// ```
     #[must_use]
@@ -651,38 +810,62 @@ impl LayeredBoundsStateChangeAtRelativeBound {
 /// let first_layer_intervals = [
 ///     AbsoluteBoundPair::new(
 ///         AbsoluteFiniteBound::new(
-///             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-///         ).to_start_bound(),
+///             "2025-01-01 08:00:00[Europe/Oslo]"
+///                 .parse::<Zoned>()?
+///                 .timestamp(),
+///         )
+///         .to_start_bound(),
 ///         AbsoluteFiniteBound::new(
-///             "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-///         ).to_end_bound(),
+///             "2025-01-01 12:00:00[Europe/Oslo]"
+///                 .parse::<Zoned>()?
+///                 .timestamp(),
+///         )
+///         .to_end_bound(),
 ///     ),
 ///     AbsoluteBoundPair::new(
 ///         AbsoluteFiniteBound::new(
-///             "2025-01-01 13:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-///         ).to_start_bound(),
+///             "2025-01-01 13:00:00[Europe/Oslo]"
+///                 .parse::<Zoned>()?
+///                 .timestamp(),
+///         )
+///         .to_start_bound(),
 ///         AbsoluteFiniteBound::new(
-///             "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-///         ).to_end_bound(),
+///             "2025-01-01 16:00:00[Europe/Oslo]"
+///                 .parse::<Zoned>()?
+///                 .timestamp(),
+///         )
+///         .to_end_bound(),
 ///     ),
 /// ];
 ///
 /// let second_layer_intervals = [
 ///     AbsoluteBoundPair::new(
 ///         AbsoluteFiniteBound::new(
-///             "2025-01-01 07:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-///         ).to_start_bound(),
+///             "2025-01-01 07:00:00[Europe/Oslo]"
+///                 .parse::<Zoned>()?
+///                 .timestamp(),
+///         )
+///         .to_start_bound(),
 ///         AbsoluteFiniteBound::new(
-///             "2025-01-01 11:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-///         ).to_end_bound(),
+///             "2025-01-01 11:00:00[Europe/Oslo]"
+///                 .parse::<Zoned>()?
+///                 .timestamp(),
+///         )
+///         .to_end_bound(),
 ///     ),
 ///     AbsoluteBoundPair::new(
 ///         AbsoluteFiniteBound::new(
-///             "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-///         ).to_start_bound(),
+///             "2025-01-01 14:00:00[Europe/Oslo]"
+///                 .parse::<Zoned>()?
+///                 .timestamp(),
+///         )
+///         .to_start_bound(),
 ///         AbsoluteFiniteBound::new(
-///             "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-///         ).to_end_bound(),
+///             "2025-01-01 18:00:00[Europe/Oslo]"
+///                 .parse::<Zoned>()?
+///                 .timestamp(),
+///         )
+///         .to_end_bound(),
 ///     ),
 /// ];
 ///
@@ -696,90 +879,170 @@ impl LayeredBoundsStateChangeAtRelativeBound {
 ///         LayeredBoundsStateChangeAtAbsoluteBound::new(
 ///             LayeredBoundsState::NoLayers,
 ///             LayeredBoundsState::SecondLayer,
-///             Some(AbsoluteFiniteBound::new_with_inclusivity(
-///                 "2025-01-01 07:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-///                 BoundInclusivity::Exclusive,
-///             ).to_end_bound()),
-///             Some(AbsoluteFiniteBound::new(
-///                 "2025-01-01 07:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-///             ).to_start_bound()),
+///             Some(
+///                 AbsoluteFiniteBound::new_with_inclusivity(
+///                     "2025-01-01 07:00:00[Europe/Oslo]"
+///                         .parse::<Zoned>()?
+///                         .timestamp(),
+///                     BoundInclusivity::Exclusive,
+///                 )
+///                 .to_end_bound()
+///             ),
+///             Some(
+///                 AbsoluteFiniteBound::new(
+///                     "2025-01-01 07:00:00[Europe/Oslo]"
+///                         .parse::<Zoned>()?
+///                         .timestamp(),
+///                 )
+///                 .to_start_bound()
+///             ),
 ///         ),
 ///         LayeredBoundsStateChangeAtAbsoluteBound::new(
 ///             LayeredBoundsState::SecondLayer,
 ///             LayeredBoundsState::BothLayers,
-///             Some(AbsoluteFiniteBound::new_with_inclusivity(
-///                 "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-///                 BoundInclusivity::Exclusive,
-///             ).to_end_bound()),
-///             Some(AbsoluteFiniteBound::new(
-///                 "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-///             ).to_start_bound()),
+///             Some(
+///                 AbsoluteFiniteBound::new_with_inclusivity(
+///                     "2025-01-01 08:00:00[Europe/Oslo]"
+///                         .parse::<Zoned>()?
+///                         .timestamp(),
+///                     BoundInclusivity::Exclusive,
+///                 )
+///                 .to_end_bound()
+///             ),
+///             Some(
+///                 AbsoluteFiniteBound::new(
+///                     "2025-01-01 08:00:00[Europe/Oslo]"
+///                         .parse::<Zoned>()?
+///                         .timestamp(),
+///                 )
+///                 .to_start_bound()
+///             ),
 ///         ),
 ///         LayeredBoundsStateChangeAtAbsoluteBound::new(
 ///             LayeredBoundsState::BothLayers,
 ///             LayeredBoundsState::FirstLayer,
-///             Some(AbsoluteFiniteBound::new(
-///                 "2025-01-01 11:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-///             ).to_end_bound()),
-///             Some(AbsoluteFiniteBound::new_with_inclusivity(
-///                 "2025-01-01 11:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-///                 BoundInclusivity::Exclusive,
-///             ).to_start_bound()),
+///             Some(
+///                 AbsoluteFiniteBound::new(
+///                     "2025-01-01 11:00:00[Europe/Oslo]"
+///                         .parse::<Zoned>()?
+///                         .timestamp(),
+///                 )
+///                 .to_end_bound()
+///             ),
+///             Some(
+///                 AbsoluteFiniteBound::new_with_inclusivity(
+///                     "2025-01-01 11:00:00[Europe/Oslo]"
+///                         .parse::<Zoned>()?
+///                         .timestamp(),
+///                     BoundInclusivity::Exclusive,
+///                 )
+///                 .to_start_bound()
+///             ),
 ///         ),
 ///         LayeredBoundsStateChangeAtAbsoluteBound::new(
 ///             LayeredBoundsState::FirstLayer,
 ///             LayeredBoundsState::NoLayers,
-///             Some(AbsoluteFiniteBound::new(
-///                 "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-///             ).to_end_bound()),
-///             Some(AbsoluteFiniteBound::new_with_inclusivity(
-///                 "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-///                 BoundInclusivity::Exclusive,
-///             ).to_start_bound()),
+///             Some(
+///                 AbsoluteFiniteBound::new(
+///                     "2025-01-01 12:00:00[Europe/Oslo]"
+///                         .parse::<Zoned>()?
+///                         .timestamp(),
+///                 )
+///                 .to_end_bound()
+///             ),
+///             Some(
+///                 AbsoluteFiniteBound::new_with_inclusivity(
+///                     "2025-01-01 12:00:00[Europe/Oslo]"
+///                         .parse::<Zoned>()?
+///                         .timestamp(),
+///                     BoundInclusivity::Exclusive,
+///                 )
+///                 .to_start_bound()
+///             ),
 ///         ),
 ///         LayeredBoundsStateChangeAtAbsoluteBound::new(
 ///             LayeredBoundsState::NoLayers,
 ///             LayeredBoundsState::FirstLayer,
-///             Some(AbsoluteFiniteBound::new_with_inclusivity(
-///                 "2025-01-01 13:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-///                 BoundInclusivity::Exclusive,
-///             ).to_end_bound()),
-///             Some(AbsoluteFiniteBound::new(
-///                 "2025-01-01 13:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-///             ).to_start_bound()),
+///             Some(
+///                 AbsoluteFiniteBound::new_with_inclusivity(
+///                     "2025-01-01 13:00:00[Europe/Oslo]"
+///                         .parse::<Zoned>()?
+///                         .timestamp(),
+///                     BoundInclusivity::Exclusive,
+///                 )
+///                 .to_end_bound()
+///             ),
+///             Some(
+///                 AbsoluteFiniteBound::new(
+///                     "2025-01-01 13:00:00[Europe/Oslo]"
+///                         .parse::<Zoned>()?
+///                         .timestamp(),
+///                 )
+///                 .to_start_bound()
+///             ),
 ///         ),
 ///         LayeredBoundsStateChangeAtAbsoluteBound::new(
 ///             LayeredBoundsState::FirstLayer,
 ///             LayeredBoundsState::BothLayers,
-///             Some(AbsoluteFiniteBound::new_with_inclusivity(
-///                 "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-///                 BoundInclusivity::Exclusive,
-///             ).to_end_bound()),
-///             Some(AbsoluteFiniteBound::new(
-///                 "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-///             ).to_start_bound()),
+///             Some(
+///                 AbsoluteFiniteBound::new_with_inclusivity(
+///                     "2025-01-01 14:00:00[Europe/Oslo]"
+///                         .parse::<Zoned>()?
+///                         .timestamp(),
+///                     BoundInclusivity::Exclusive,
+///                 )
+///                 .to_end_bound()
+///             ),
+///             Some(
+///                 AbsoluteFiniteBound::new(
+///                     "2025-01-01 14:00:00[Europe/Oslo]"
+///                         .parse::<Zoned>()?
+///                         .timestamp(),
+///                 )
+///                 .to_start_bound()
+///             ),
 ///         ),
 ///         LayeredBoundsStateChangeAtAbsoluteBound::new(
 ///             LayeredBoundsState::BothLayers,
 ///             LayeredBoundsState::SecondLayer,
-///             Some(AbsoluteFiniteBound::new(
-///                 "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-///             ).to_end_bound()),
-///             Some(AbsoluteFiniteBound::new_with_inclusivity(
-///                 "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-///                 BoundInclusivity::Exclusive,
-///             ).to_start_bound()),
+///             Some(
+///                 AbsoluteFiniteBound::new(
+///                     "2025-01-01 16:00:00[Europe/Oslo]"
+///                         .parse::<Zoned>()?
+///                         .timestamp(),
+///                 )
+///                 .to_end_bound()
+///             ),
+///             Some(
+///                 AbsoluteFiniteBound::new_with_inclusivity(
+///                     "2025-01-01 16:00:00[Europe/Oslo]"
+///                         .parse::<Zoned>()?
+///                         .timestamp(),
+///                     BoundInclusivity::Exclusive,
+///                 )
+///                 .to_start_bound()
+///             ),
 ///         ),
 ///         LayeredBoundsStateChangeAtAbsoluteBound::new(
 ///             LayeredBoundsState::SecondLayer,
 ///             LayeredBoundsState::NoLayers,
-///             Some(AbsoluteFiniteBound::new(
-///                 "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-///             ).to_end_bound()),
-///             Some(AbsoluteFiniteBound::new_with_inclusivity(
-///                 "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-///                 BoundInclusivity::Exclusive,
-///             ).to_start_bound()),
+///             Some(
+///                 AbsoluteFiniteBound::new(
+///                     "2025-01-01 18:00:00[Europe/Oslo]"
+///                         .parse::<Zoned>()?
+///                         .timestamp(),
+///                 )
+///                 .to_end_bound()
+///             ),
+///             Some(
+///                 AbsoluteFiniteBound::new_with_inclusivity(
+///                     "2025-01-01 18:00:00[Europe/Oslo]"
+///                         .parse::<Zoned>()?
+///                         .timestamp(),
+///                     BoundInclusivity::Exclusive,
+///                 )
+///                 .to_start_bound()
+///             ),
 ///         ),
 ///     ],
 /// );
@@ -812,38 +1075,62 @@ impl<I1, I2> LayeredAbsoluteBounds<I1, I2> {
     /// let first_layer_intervals = [
     ///     AbsoluteBoundPair::new(
     ///         AbsoluteFiniteBound::new(
-    ///             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///         ).to_start_bound(),
+    ///             "2025-01-01 08:00:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
+    ///         )
+    ///         .to_start_bound(),
     ///         AbsoluteFiniteBound::new(
-    ///             "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///         ).to_end_bound(),
+    ///             "2025-01-01 12:00:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
+    ///         )
+    ///         .to_end_bound(),
     ///     ),
     ///     AbsoluteBoundPair::new(
     ///         AbsoluteFiniteBound::new(
-    ///             "2025-01-01 13:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///         ).to_start_bound(),
+    ///             "2025-01-01 13:00:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
+    ///         )
+    ///         .to_start_bound(),
     ///         AbsoluteFiniteBound::new(
-    ///             "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///         ).to_end_bound(),
+    ///             "2025-01-01 16:00:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
+    ///         )
+    ///         .to_end_bound(),
     ///     ),
     /// ];
     ///
     /// let second_layer_intervals = [
     ///     AbsoluteBoundPair::new(
     ///         AbsoluteFiniteBound::new(
-    ///             "2025-01-01 07:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///         ).to_start_bound(),
+    ///             "2025-01-01 07:00:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
+    ///         )
+    ///         .to_start_bound(),
     ///         AbsoluteFiniteBound::new(
-    ///             "2025-01-01 11:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///         ).to_end_bound(),
+    ///             "2025-01-01 11:00:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
+    ///         )
+    ///         .to_end_bound(),
     ///     ),
     ///     AbsoluteBoundPair::new(
     ///         AbsoluteFiniteBound::new(
-    ///             "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///         ).to_start_bound(),
+    ///             "2025-01-01 14:00:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
+    ///         )
+    ///         .to_start_bound(),
     ///         AbsoluteFiniteBound::new(
-    ///             "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///         ).to_end_bound(),
+    ///             "2025-01-01 18:00:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
+    ///         )
+    ///         .to_end_bound(),
     ///     ),
     /// ];
     ///
@@ -874,9 +1161,8 @@ where
     ///
     /// 1. The bounds in each layer iterator **must be sorted chronologically**
     /// 2. The bounds in each layer iterator **must not be overlapping**
-    /// 3. The bounds in each layer iterator **must be paired**, that means
-    ///    there should be an equal amount of [`Start`](AbsoluteBound::Start)s
-    ///    and [`End`](AbsoluteBound::End)s.
+    /// 3. The bounds in each layer iterator **must be paired**, that means there should be an equal amount of
+    ///    [`Start`](AbsoluteBound::Start)s and [`End`](AbsoluteBound::End)s.
     ///
     /// The responsibility of verifying those requirements are left to the
     /// caller in order to prevent double-processing.
@@ -1028,10 +1314,8 @@ where
 ///
 /// Shouldn't panic but could if one of the following is true:
 ///
-/// 1. The peeked start bound of the first layer didn't equal the value returned
-///    by `next()` on the first layer
-/// 2. The value returned by `next()` on the first layer wasn't of the
-///    [`Start`](AbsoluteBound::Start) variant
+/// 1. The peeked start bound of the first layer didn't equal the value returned by `next()` on the first layer
+/// 2. The value returned by `next()` on the first layer wasn't of the [`Start`](AbsoluteBound::Start) variant
 #[must_use]
 pub fn layered_abs_bounds_change_start_first_layer(
     old_state: LayeredBoundsState,
@@ -1065,10 +1349,8 @@ pub fn layered_abs_bounds_change_start_first_layer(
 ///
 /// Shouldn't panic but could if one of the following is true:
 ///
-/// 1. The peeked end bound of the first layer didn't equal the value returned
-///    by `next()` on the first layer
-/// 2. The value returned by `next()` on the first layer wasn't of the
-///    [`End`](AbsoluteBound::End) variant
+/// 1. The peeked end bound of the first layer didn't equal the value returned by `next()` on the first layer
+/// 2. The value returned by `next()` on the first layer wasn't of the [`End`](AbsoluteBound::End) variant
 #[must_use]
 pub fn layered_abs_bounds_change_end_first_layer(
     old_state: LayeredBoundsState,
@@ -1097,10 +1379,8 @@ pub fn layered_abs_bounds_change_end_first_layer(
 ///
 /// Shouldn't panic but could if one of the following is true:
 ///
-/// 1. The peeked start bound of the second layer didn't equal the value
-///    returned by `next()` on the second layer
-/// 2. The value returned by `next()` on the second layer wasn't of the
-///    [`Start`](AbsoluteBound::Start) variant
+/// 1. The peeked start bound of the second layer didn't equal the value returned by `next()` on the second layer
+/// 2. The value returned by `next()` on the second layer wasn't of the [`Start`](AbsoluteBound::Start) variant
 #[must_use]
 pub fn layered_abs_bounds_change_start_second_layer(
     old_state: LayeredBoundsState,
@@ -1134,10 +1414,8 @@ pub fn layered_abs_bounds_change_start_second_layer(
 ///
 /// Shouldn't panic but could if one of the following is true:
 ///
-/// 1. The peeked end bound of the second layer didn't equal the value returned
-///    by `next()` on the second layer
-/// 2. The value returned by `next()` on the second layer wasn't of the
-///    [`End`](AbsoluteBound::End) variant
+/// 1. The peeked end bound of the second layer didn't equal the value returned by `next()` on the second layer
+/// 2. The value returned by `next()` on the second layer wasn't of the [`End`](AbsoluteBound::End) variant
 #[must_use]
 pub fn layered_abs_bounds_change_end_second_layer(
     old_state: LayeredBoundsState,
@@ -1171,10 +1449,8 @@ pub fn layered_abs_bounds_change_end_second_layer(
 ///
 /// Shouldn't panic but could if one of the following is true:
 ///
-/// 1. The peeked value of a layer wasn't equal to the value returned by calling
-///    `next()` on that layer
-/// 2. The value returned by `next()` on the layer wasn't of the expected
-///    variant
+/// 1. The peeked value of a layer wasn't equal to the value returned by calling `next()` on that layer
+/// 2. The value returned by `next()` on the layer wasn't of the expected variant
 #[must_use]
 pub fn layered_abs_bounds_change_start_start(
     old_state: LayeredBoundsState,
@@ -1253,12 +1529,9 @@ pub fn layered_abs_bounds_change_start_start(
 ///
 /// Shouldn't panic but could if one of the following is true:
 ///
-/// 1. The peeked value of a layer wasn't equal to the value returned by calling
-///    `next()` on that layer
-/// 2. The value returned by `next()` on the layer wasn't of the expected
-///    variant
-/// 3. The comparison between [`AbsoluteStartBound`] and [`AbsoluteEndBound`]
-///    returned [`None`]
+/// 1. The peeked value of a layer wasn't equal to the value returned by calling `next()` on that layer
+/// 2. The value returned by `next()` on the layer wasn't of the expected variant
+/// 3. The comparison between [`AbsoluteStartBound`] and [`AbsoluteEndBound`] returned [`None`]
 #[must_use]
 pub fn layered_abs_bounds_change_start_end(
     old_state: LayeredBoundsState,
@@ -1375,12 +1648,9 @@ pub fn layered_abs_bounds_change_start_end(
 ///
 /// Shouldn't panic but could if one of the following is true:
 ///
-/// 1. The peeked value of a layer wasn't equal to the value returned by calling
-///    `next()` on that layer
-/// 2. The value returned by `next()` on the layer wasn't of the expected
-///    variant
-/// 3. The comparison between [`AbsoluteEndBound`] and [`AbsoluteStartBound`]
-///    returned [`None`]
+/// 1. The peeked value of a layer wasn't equal to the value returned by calling `next()` on that layer
+/// 2. The value returned by `next()` on the layer wasn't of the expected variant
+/// 3. The comparison between [`AbsoluteEndBound`] and [`AbsoluteStartBound`] returned [`None`]
 #[must_use]
 pub fn layered_abs_bounds_change_end_start(
     old_state: LayeredBoundsState,
@@ -1491,10 +1761,8 @@ pub fn layered_abs_bounds_change_end_start(
 ///
 /// Shouldn't panic but could if one of the following is true:
 ///
-/// 1. The peeked value of a layer wasn't equal to the value returned by calling
-///    `next()` on that layer
-/// 2. The value returned by `next()` on the layer wasn't of the expected
-///    variant
+/// 1. The peeked value of a layer wasn't equal to the value returned by calling `next()` on that layer
+/// 2. The value returned by `next()` on the layer wasn't of the expected variant
 #[must_use]
 pub fn layered_abs_bounds_change_end_end(
     old_state: LayeredBoundsState,
@@ -1567,39 +1835,23 @@ pub fn layered_abs_bounds_change_end_end(
 /// # };
 /// let first_layer_intervals = [
 ///     RelativeBoundPair::new(
-///         RelativeFiniteBound::new(
-///             SignedDuration::from_hours(8),
-///         ).to_start_bound(),
-///         RelativeFiniteBound::new(
-///             SignedDuration::from_hours(12),
-///         ).to_end_bound(),
+///         RelativeFiniteBound::new(SignedDuration::from_hours(8)).to_start_bound(),
+///         RelativeFiniteBound::new(SignedDuration::from_hours(12)).to_end_bound(),
 ///     ),
 ///     RelativeBoundPair::new(
-///         RelativeFiniteBound::new(
-///             SignedDuration::from_hours(13),
-///         ).to_start_bound(),
-///         RelativeFiniteBound::new(
-///             SignedDuration::from_hours(16),
-///         ).to_end_bound(),
+///         RelativeFiniteBound::new(SignedDuration::from_hours(13)).to_start_bound(),
+///         RelativeFiniteBound::new(SignedDuration::from_hours(16)).to_end_bound(),
 ///     ),
 /// ];
 ///
 /// let second_layer_intervals = [
 ///     RelativeBoundPair::new(
-///         RelativeFiniteBound::new(
-///             SignedDuration::from_hours(7),
-///         ).to_start_bound(),
-///         RelativeFiniteBound::new(
-///             SignedDuration::from_hours(11),
-///         ).to_end_bound(),
+///         RelativeFiniteBound::new(SignedDuration::from_hours(7)).to_start_bound(),
+///         RelativeFiniteBound::new(SignedDuration::from_hours(11)).to_end_bound(),
 ///     ),
 ///     RelativeBoundPair::new(
-///         RelativeFiniteBound::new(
-///             SignedDuration::from_hours(14),
-///         ).to_start_bound(),
-///         RelativeFiniteBound::new(
-///             SignedDuration::from_hours(18),
-///         ).to_end_bound(),
+///         RelativeFiniteBound::new(SignedDuration::from_hours(14)).to_start_bound(),
+///         RelativeFiniteBound::new(SignedDuration::from_hours(18)).to_end_bound(),
 ///     ),
 /// ];
 ///
@@ -1613,90 +1865,98 @@ pub fn layered_abs_bounds_change_end_end(
 ///         LayeredBoundsStateChangeAtRelativeBound::new(
 ///             LayeredBoundsState::NoLayers,
 ///             LayeredBoundsState::SecondLayer,
-///             Some(RelativeFiniteBound::new_with_inclusivity(
-///                 SignedDuration::from_hours(7),
-///                 BoundInclusivity::Exclusive,
-///             ).to_end_bound()),
-///             Some(RelativeFiniteBound::new(
-///                 SignedDuration::from_hours(7),
-///             ).to_start_bound()),
+///             Some(
+///                 RelativeFiniteBound::new_with_inclusivity(
+///                     SignedDuration::from_hours(7),
+///                     BoundInclusivity::Exclusive,
+///                 )
+///                 .to_end_bound()
+///             ),
+///             Some(RelativeFiniteBound::new(SignedDuration::from_hours(7),).to_start_bound()),
 ///         ),
 ///         LayeredBoundsStateChangeAtRelativeBound::new(
 ///             LayeredBoundsState::SecondLayer,
 ///             LayeredBoundsState::BothLayers,
-///             Some(RelativeFiniteBound::new_with_inclusivity(
-///                 SignedDuration::from_hours(8),
-///                 BoundInclusivity::Exclusive,
-///             ).to_end_bound()),
-///             Some(RelativeFiniteBound::new(
-///                 SignedDuration::from_hours(8),
-///             ).to_start_bound()),
+///             Some(
+///                 RelativeFiniteBound::new_with_inclusivity(
+///                     SignedDuration::from_hours(8),
+///                     BoundInclusivity::Exclusive,
+///                 )
+///                 .to_end_bound()
+///             ),
+///             Some(RelativeFiniteBound::new(SignedDuration::from_hours(8),).to_start_bound()),
 ///         ),
 ///         LayeredBoundsStateChangeAtRelativeBound::new(
 ///             LayeredBoundsState::BothLayers,
 ///             LayeredBoundsState::FirstLayer,
-///             Some(RelativeFiniteBound::new(
-///                 SignedDuration::from_hours(11),
-///             ).to_end_bound()),
-///             Some(RelativeFiniteBound::new_with_inclusivity(
-///                 SignedDuration::from_hours(11),
-///                 BoundInclusivity::Exclusive,
-///             ).to_start_bound()),
+///             Some(RelativeFiniteBound::new(SignedDuration::from_hours(11),).to_end_bound()),
+///             Some(
+///                 RelativeFiniteBound::new_with_inclusivity(
+///                     SignedDuration::from_hours(11),
+///                     BoundInclusivity::Exclusive,
+///                 )
+///                 .to_start_bound()
+///             ),
 ///         ),
 ///         LayeredBoundsStateChangeAtRelativeBound::new(
 ///             LayeredBoundsState::FirstLayer,
 ///             LayeredBoundsState::NoLayers,
-///             Some(RelativeFiniteBound::new(
-///                 SignedDuration::from_hours(12),
-///             ).to_end_bound()),
-///             Some(RelativeFiniteBound::new_with_inclusivity(
-///                 SignedDuration::from_hours(12),
-///                 BoundInclusivity::Exclusive,
-///             ).to_start_bound()),
+///             Some(RelativeFiniteBound::new(SignedDuration::from_hours(12),).to_end_bound()),
+///             Some(
+///                 RelativeFiniteBound::new_with_inclusivity(
+///                     SignedDuration::from_hours(12),
+///                     BoundInclusivity::Exclusive,
+///                 )
+///                 .to_start_bound()
+///             ),
 ///         ),
 ///         LayeredBoundsStateChangeAtRelativeBound::new(
 ///             LayeredBoundsState::NoLayers,
 ///             LayeredBoundsState::FirstLayer,
-///             Some(RelativeFiniteBound::new_with_inclusivity(
-///                 SignedDuration::from_hours(13),
-///                 BoundInclusivity::Exclusive,
-///             ).to_end_bound()),
-///             Some(RelativeFiniteBound::new(
-///                 SignedDuration::from_hours(13),
-///             ).to_start_bound()),
+///             Some(
+///                 RelativeFiniteBound::new_with_inclusivity(
+///                     SignedDuration::from_hours(13),
+///                     BoundInclusivity::Exclusive,
+///                 )
+///                 .to_end_bound()
+///             ),
+///             Some(RelativeFiniteBound::new(SignedDuration::from_hours(13),).to_start_bound()),
 ///         ),
 ///         LayeredBoundsStateChangeAtRelativeBound::new(
 ///             LayeredBoundsState::FirstLayer,
 ///             LayeredBoundsState::BothLayers,
-///             Some(RelativeFiniteBound::new_with_inclusivity(
-///                 SignedDuration::from_hours(14),
-///                 BoundInclusivity::Exclusive,
-///             ).to_end_bound()),
-///             Some(RelativeFiniteBound::new(
-///                 SignedDuration::from_hours(14),
-///             ).to_start_bound()),
+///             Some(
+///                 RelativeFiniteBound::new_with_inclusivity(
+///                     SignedDuration::from_hours(14),
+///                     BoundInclusivity::Exclusive,
+///                 )
+///                 .to_end_bound()
+///             ),
+///             Some(RelativeFiniteBound::new(SignedDuration::from_hours(14),).to_start_bound()),
 ///         ),
 ///         LayeredBoundsStateChangeAtRelativeBound::new(
 ///             LayeredBoundsState::BothLayers,
 ///             LayeredBoundsState::SecondLayer,
-///             Some(RelativeFiniteBound::new(
-///                 SignedDuration::from_hours(16),
-///             ).to_end_bound()),
-///             Some(RelativeFiniteBound::new_with_inclusivity(
-///                 SignedDuration::from_hours(16),
-///                 BoundInclusivity::Exclusive,
-///             ).to_start_bound()),
+///             Some(RelativeFiniteBound::new(SignedDuration::from_hours(16),).to_end_bound()),
+///             Some(
+///                 RelativeFiniteBound::new_with_inclusivity(
+///                     SignedDuration::from_hours(16),
+///                     BoundInclusivity::Exclusive,
+///                 )
+///                 .to_start_bound()
+///             ),
 ///         ),
 ///         LayeredBoundsStateChangeAtRelativeBound::new(
 ///             LayeredBoundsState::SecondLayer,
 ///             LayeredBoundsState::NoLayers,
-///             Some(RelativeFiniteBound::new(
-///                 SignedDuration::from_hours(18),
-///             ).to_end_bound()),
-///             Some(RelativeFiniteBound::new_with_inclusivity(
-///                 SignedDuration::from_hours(18),
-///                 BoundInclusivity::Exclusive,
-///             ).to_start_bound()),
+///             Some(RelativeFiniteBound::new(SignedDuration::from_hours(18),).to_end_bound()),
+///             Some(
+///                 RelativeFiniteBound::new_with_inclusivity(
+///                     SignedDuration::from_hours(18),
+///                     BoundInclusivity::Exclusive,
+///                 )
+///                 .to_start_bound()
+///             ),
 ///         ),
 ///     ],
 /// );
@@ -1726,39 +1986,23 @@ impl<I1, I2> LayeredRelativeBounds<I1, I2> {
     /// # };
     /// let first_layer_intervals = [
     ///     RelativeBoundPair::new(
-    ///         RelativeFiniteBound::new(
-    ///             SignedDuration::from_hours(8),
-    ///         ).to_start_bound(),
-    ///         RelativeFiniteBound::new(
-    ///             SignedDuration::from_hours(12),
-    ///         ).to_end_bound(),
+    ///         RelativeFiniteBound::new(SignedDuration::from_hours(8)).to_start_bound(),
+    ///         RelativeFiniteBound::new(SignedDuration::from_hours(12)).to_end_bound(),
     ///     ),
     ///     RelativeBoundPair::new(
-    ///         RelativeFiniteBound::new(
-    ///             SignedDuration::from_hours(13),
-    ///         ).to_start_bound(),
-    ///         RelativeFiniteBound::new(
-    ///             SignedDuration::from_hours(16),
-    ///         ).to_end_bound(),
+    ///         RelativeFiniteBound::new(SignedDuration::from_hours(13)).to_start_bound(),
+    ///         RelativeFiniteBound::new(SignedDuration::from_hours(16)).to_end_bound(),
     ///     ),
     /// ];
     ///
     /// let second_layer_intervals = [
     ///     RelativeBoundPair::new(
-    ///         RelativeFiniteBound::new(
-    ///             SignedDuration::from_hours(7),
-    ///         ).to_start_bound(),
-    ///         RelativeFiniteBound::new(
-    ///             SignedDuration::from_hours(11),
-    ///         ).to_end_bound(),
+    ///         RelativeFiniteBound::new(SignedDuration::from_hours(7)).to_start_bound(),
+    ///         RelativeFiniteBound::new(SignedDuration::from_hours(11)).to_end_bound(),
     ///     ),
     ///     RelativeBoundPair::new(
-    ///         RelativeFiniteBound::new(
-    ///             SignedDuration::from_hours(14),
-    ///         ).to_start_bound(),
-    ///         RelativeFiniteBound::new(
-    ///             SignedDuration::from_hours(18),
-    ///         ).to_end_bound(),
+    ///         RelativeFiniteBound::new(SignedDuration::from_hours(14)).to_start_bound(),
+    ///         RelativeFiniteBound::new(SignedDuration::from_hours(18)).to_end_bound(),
     ///     ),
     /// ];
     ///
@@ -1788,9 +2032,8 @@ where
     ///
     /// 1. The bounds in each layer iterator **must be sorted chronologically**
     /// 2. The bounds in each layer iterator **must not be overlapping**
-    /// 3. The bounds in each layer iterator **must be paired**, that means
-    ///    there should be an equal amount of [`Start`](RelativeBound::Start)s
-    ///    and [`End`](RelativeBound::End)s.
+    /// 3. The bounds in each layer iterator **must be paired**, that means there should be an equal amount of
+    ///    [`Start`](RelativeBound::Start)s and [`End`](RelativeBound::End)s.
     ///
     /// The responsibility of verifying those requirements are left to the
     /// caller in order to prevent double-processing.
@@ -1942,10 +2185,8 @@ where
 ///
 /// Shouldn't panic but could if one of the following is true:
 ///
-/// 1. The peeked start bound of the first layer didn't equal the value returned
-///    by `next()` on the first layer
-/// 2. The value returned by `next()` on the first layer wasn't of the
-///    [`Start`](RelativeBound::Start) variant
+/// 1. The peeked start bound of the first layer didn't equal the value returned by `next()` on the first layer
+/// 2. The value returned by `next()` on the first layer wasn't of the [`Start`](RelativeBound::Start) variant
 #[must_use]
 pub fn layered_rel_bounds_change_start_first_layer(
     old_state: LayeredBoundsState,
@@ -1979,10 +2220,8 @@ pub fn layered_rel_bounds_change_start_first_layer(
 ///
 /// Shouldn't panic but could if one of the following is true:
 ///
-/// 1. The peeked end bound of the first layer didn't equal the value returned
-///    by `next()` on the first layer
-/// 2. The value returned by `next()` on the first layer wasn't of the
-///    [`End`](RelativeBound::End) variant
+/// 1. The peeked end bound of the first layer didn't equal the value returned by `next()` on the first layer
+/// 2. The value returned by `next()` on the first layer wasn't of the [`End`](RelativeBound::End) variant
 #[must_use]
 pub fn layered_rel_bounds_change_end_first_layer(
     old_state: LayeredBoundsState,
@@ -2011,10 +2250,8 @@ pub fn layered_rel_bounds_change_end_first_layer(
 ///
 /// Shouldn't panic but could if one of the following is true:
 ///
-/// 1. The peeked start bound of the second layer didn't equal the value
-///    returned by `next()` on the second layer
-/// 2. The value returned by `next()` on the second layer wasn't of the
-///    [`Start`](RelativeBound::Start) variant
+/// 1. The peeked start bound of the second layer didn't equal the value returned by `next()` on the second layer
+/// 2. The value returned by `next()` on the second layer wasn't of the [`Start`](RelativeBound::Start) variant
 #[must_use]
 pub fn layered_rel_bounds_change_start_second_layer(
     old_state: LayeredBoundsState,
@@ -2048,10 +2285,8 @@ pub fn layered_rel_bounds_change_start_second_layer(
 ///
 /// Shouldn't panic but could if one of the following is true:
 ///
-/// 1. The peeked end bound of the second layer didn't equal the value returned
-///    by `next()` on the second layer
-/// 2. The value returned by `next()` on the second layer wasn't of the
-///    [`End`](RelativeBound::End) variant
+/// 1. The peeked end bound of the second layer didn't equal the value returned by `next()` on the second layer
+/// 2. The value returned by `next()` on the second layer wasn't of the [`End`](RelativeBound::End) variant
 #[must_use]
 pub fn layered_rel_bounds_change_end_second_layer(
     old_state: LayeredBoundsState,
@@ -2085,10 +2320,8 @@ pub fn layered_rel_bounds_change_end_second_layer(
 ///
 /// Shouldn't panic but could if one of the following is true:
 ///
-/// 1. The peeked value of a layer wasn't equal to the value returned by calling
-///    `next()` on that layer
-/// 2. The value returned by `next()` on the layer wasn't of the expected
-///    variant
+/// 1. The peeked value of a layer wasn't equal to the value returned by calling `next()` on that layer
+/// 2. The value returned by `next()` on the layer wasn't of the expected variant
 #[must_use]
 pub fn layered_rel_bounds_change_start_start(
     old_state: LayeredBoundsState,
@@ -2167,12 +2400,9 @@ pub fn layered_rel_bounds_change_start_start(
 ///
 /// Shouldn't panic but could if one of the following is true:
 ///
-/// 1. The peeked value of a layer wasn't equal to the value returned by calling
-///    `next()` on that layer
-/// 2. The value returned by `next()` on the layer wasn't of the expected
-///    variant
-/// 3. The comparison between [`RelativeStartBound`] and [`RelativeEndBound`]
-///    returned [`None`]
+/// 1. The peeked value of a layer wasn't equal to the value returned by calling `next()` on that layer
+/// 2. The value returned by `next()` on the layer wasn't of the expected variant
+/// 3. The comparison between [`RelativeStartBound`] and [`RelativeEndBound`] returned [`None`]
 #[must_use]
 pub fn layered_rel_bounds_change_start_end(
     old_state: LayeredBoundsState,
@@ -2289,12 +2519,9 @@ pub fn layered_rel_bounds_change_start_end(
 ///
 /// Shouldn't panic but could if one of the following is true:
 ///
-/// 1. The peeked value of a layer wasn't equal to the value returned by calling
-///    `next()` on that layer
-/// 2. The value returned by `next()` on the layer wasn't of the expected
-///    variant
-/// 3. The comparison between [`RelativeEndBound`] and [`RelativeStartBound`]
-///    returned [`None`]
+/// 1. The peeked value of a layer wasn't equal to the value returned by calling `next()` on that layer
+/// 2. The value returned by `next()` on the layer wasn't of the expected variant
+/// 3. The comparison between [`RelativeEndBound`] and [`RelativeStartBound`] returned [`None`]
 #[must_use]
 pub fn layered_rel_bounds_change_end_start(
     old_state: LayeredBoundsState,
@@ -2405,10 +2632,8 @@ pub fn layered_rel_bounds_change_end_start(
 ///
 /// Shouldn't panic but could if one of the following is true:
 ///
-/// 1. The peeked value of a layer wasn't equal to the value returned by calling
-///    `next()` on that layer
-/// 2. The value returned by `next()` on the layer wasn't of the expected
-///    variant
+/// 1. The peeked value of a layer wasn't equal to the value returned by calling `next()` on that layer
+/// 2. The value returned by `next()` on the layer wasn't of the expected variant
 #[must_use]
 pub fn layered_rel_bounds_change_end_end(
     old_state: LayeredBoundsState,
