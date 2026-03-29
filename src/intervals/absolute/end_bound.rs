@@ -105,7 +105,10 @@ impl AbsoluteEndBound {
     /// let time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     /// let finite_end_bound = AbsoluteFiniteBound::new(time).to_end_bound();
     ///
-    /// assert_eq!(finite_end_bound.finite(), Some(AbsoluteFiniteBound::new(time)));
+    /// assert_eq!(
+    ///     finite_end_bound.finite(),
+    ///     Some(AbsoluteFiniteBound::new(time))
+    /// );
     /// assert_eq!(infinite_end_bound.finite(), None);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
@@ -150,9 +153,7 @@ impl AbsoluteEndBound {
     /// let time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     ///
     /// let end_first_shift = AbsoluteFiniteBound::new(time).to_end_bound();
-    /// let break_start = end_first_shift
-    ///     .opposite()
-    ///     .ok_or(FiniteBoundExpectedError)?;
+    /// let break_start = end_first_shift.opposite().ok_or(FiniteBoundExpectedError)?;
     ///
     /// assert_eq!(
     ///     break_start.finite(),

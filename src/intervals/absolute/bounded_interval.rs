@@ -147,8 +147,14 @@ impl BoundedAbsoluteInterval {
     ///     BoundInclusivity::Exclusive,
     /// );
     ///
-    /// assert_eq!(bounded_interval.start_inclusivity(), BoundInclusivity::Inclusive);
-    /// assert_eq!(bounded_interval.end_inclusivity(), BoundInclusivity::Exclusive);
+    /// assert_eq!(
+    ///     bounded_interval.start_inclusivity(),
+    ///     BoundInclusivity::Inclusive
+    /// );
+    /// assert_eq!(
+    ///     bounded_interval.end_inclusivity(),
+    ///     BoundInclusivity::Exclusive
+    /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
@@ -194,8 +200,14 @@ impl BoundedAbsoluteInterval {
     /// );
     ///
     /// // Therefore gets reset to inclusive for both bounds
-    /// assert_eq!(bounded_interval.start_inclusivity(), BoundInclusivity::Inclusive);
-    /// assert_eq!(bounded_interval.end_inclusivity(), BoundInclusivity::Inclusive);
+    /// assert_eq!(
+    ///     bounded_interval.start_inclusivity(),
+    ///     BoundInclusivity::Inclusive
+    /// );
+    /// assert_eq!(
+    ///     bounded_interval.end_inclusivity(),
+    ///     BoundInclusivity::Inclusive
+    /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
@@ -273,7 +285,10 @@ impl BoundedAbsoluteInterval {
     ///     BoundInclusivity::Exclusive,
     /// );
     ///
-    /// assert_eq!(bounded_interval.start_inclusivity(), BoundInclusivity::Exclusive);
+    /// assert_eq!(
+    ///     bounded_interval.start_inclusivity(),
+    ///     BoundInclusivity::Exclusive
+    /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
@@ -300,7 +315,10 @@ impl BoundedAbsoluteInterval {
     ///     BoundInclusivity::Exclusive,
     /// );
     ///
-    /// assert_eq!(bounded_interval.end_inclusivity(), BoundInclusivity::Exclusive);
+    /// assert_eq!(
+    ///     bounded_interval.end_inclusivity(),
+    ///     BoundInclusivity::Exclusive
+    /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
@@ -479,8 +497,14 @@ impl BoundedAbsoluteInterval {
     /// bounded_interval.unchecked_set_start_inclusivity(BoundInclusivity::Exclusive);
     ///
     /// // Yet stays that way
-    /// assert_eq!(bounded_interval.start_inclusivity(), BoundInclusivity::Exclusive);
-    /// assert_eq!(bounded_interval.end_inclusivity(), BoundInclusivity::Inclusive);
+    /// assert_eq!(
+    ///     bounded_interval.start_inclusivity(),
+    ///     BoundInclusivity::Exclusive
+    /// );
+    /// assert_eq!(
+    ///     bounded_interval.end_inclusivity(),
+    ///     BoundInclusivity::Inclusive
+    /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn unchecked_set_start_inclusivity(&mut self, new_start_inclusivity: BoundInclusivity) {
@@ -504,8 +528,14 @@ impl BoundedAbsoluteInterval {
     /// bounded_interval.unchecked_set_end_inclusivity(BoundInclusivity::Exclusive);
     ///
     /// // Yet stays that way
-    /// assert_eq!(bounded_interval.start_inclusivity(), BoundInclusivity::Inclusive);
-    /// assert_eq!(bounded_interval.end_inclusivity(), BoundInclusivity::Exclusive);
+    /// assert_eq!(
+    ///     bounded_interval.start_inclusivity(),
+    ///     BoundInclusivity::Inclusive
+    /// );
+    /// assert_eq!(
+    ///     bounded_interval.end_inclusivity(),
+    ///     BoundInclusivity::Exclusive
+    /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn unchecked_set_end_inclusivity(&mut self, new_end_inclusivity: BoundInclusivity) {
@@ -534,8 +564,14 @@ impl BoundedAbsoluteInterval {
     ///
     /// bounded_interval.set_start_inclusivity(BoundInclusivity::Exclusive);
     ///
-    /// assert_eq!(bounded_interval.start_inclusivity(), BoundInclusivity::Exclusive);
-    /// assert_eq!(bounded_interval.end_inclusivity(), BoundInclusivity::Inclusive);
+    /// assert_eq!(
+    ///     bounded_interval.start_inclusivity(),
+    ///     BoundInclusivity::Exclusive
+    /// );
+    /// assert_eq!(
+    ///     bounded_interval.end_inclusivity(),
+    ///     BoundInclusivity::Inclusive
+    /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn set_start_inclusivity(
@@ -572,8 +608,14 @@ impl BoundedAbsoluteInterval {
     ///
     /// bounded_interval.set_end_inclusivity(BoundInclusivity::Exclusive);
     ///
-    /// assert_eq!(bounded_interval.start_inclusivity(), BoundInclusivity::Inclusive);
-    /// assert_eq!(bounded_interval.end_inclusivity(), BoundInclusivity::Exclusive);
+    /// assert_eq!(
+    ///     bounded_interval.start_inclusivity(),
+    ///     BoundInclusivity::Inclusive
+    /// );
+    /// assert_eq!(
+    ///     bounded_interval.end_inclusivity(),
+    ///     BoundInclusivity::Exclusive
+    /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn set_end_inclusivity(

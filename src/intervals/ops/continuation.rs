@@ -20,11 +20,17 @@
 //! # use periodical::intervals::ops::continuation::Continuable;
 //! let interval = AbsoluteBoundPair::new(
 //!     AbsoluteFiniteBound::new(
-//!         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!     ).to_start_bound(),
+//!         "2025-01-01 08:00:00[Europe/Oslo]"
+//!             .parse::<Zoned>()?
+//!             .timestamp(),
+//!     )
+//!     .to_start_bound(),
 //!     AbsoluteFiniteBound::new(
-//!         "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!     ).to_end_bound(),
+//!         "2025-01-01 16:00:00[Europe/Oslo]"
+//!             .parse::<Zoned>()?
+//!             .timestamp(),
+//!     )
+//!     .to_end_bound(),
 //! );
 //!
 //! assert_eq!(
@@ -32,20 +38,28 @@
 //!     AbsoluteBoundPair::new(
 //!         AbsoluteStartBound::InfinitePast,
 //!         AbsoluteFiniteBound::new_with_inclusivity(
-//!             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!             "2025-01-01 08:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
 //!             BoundInclusivity::Exclusive,
-//!         ).to_end_bound(),
-//!     ).to_emptiable(),
+//!         )
+//!         .to_end_bound(),
+//!     )
+//!     .to_emptiable(),
 //! );
 //! assert_eq!(
 //!     interval.future_continuation(),
 //!     AbsoluteBoundPair::new(
 //!         AbsoluteFiniteBound::new_with_inclusivity(
-//!             "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!             "2025-01-01 16:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
 //!             BoundInclusivity::Exclusive,
-//!         ).to_start_bound(),
+//!         )
+//!         .to_start_bound(),
 //!         AbsoluteEndBound::InfiniteFuture,
-//!     ).to_emptiable(),
+//!     )
+//!     .to_emptiable(),
 //! );
 //! # Ok::<(), Box<dyn Error>>(())
 //! ```
@@ -101,11 +115,17 @@ use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 /// # use periodical::intervals::ops::continuation::Continuable;
 /// let interval = AbsoluteBoundPair::new(
 ///     AbsoluteFiniteBound::new(
-///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-///     ).to_start_bound(),
+///         "2025-01-01 08:00:00[Europe/Oslo]"
+///             .parse::<Zoned>()?
+///             .timestamp(),
+///     )
+///     .to_start_bound(),
 ///     AbsoluteFiniteBound::new(
-///         "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-///     ).to_end_bound(),
+///         "2025-01-01 16:00:00[Europe/Oslo]"
+///             .parse::<Zoned>()?
+///             .timestamp(),
+///     )
+///     .to_end_bound(),
 /// );
 ///
 /// assert_eq!(
@@ -113,20 +133,28 @@ use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 ///     AbsoluteBoundPair::new(
 ///         AbsoluteStartBound::InfinitePast,
 ///         AbsoluteFiniteBound::new_with_inclusivity(
-///             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///             "2025-01-01 08:00:00[Europe/Oslo]"
+///                 .parse::<Zoned>()?
+///                 .timestamp(),
 ///             BoundInclusivity::Exclusive,
-///         ).to_end_bound(),
-///     ).to_emptiable(),
+///         )
+///         .to_end_bound(),
+///     )
+///     .to_emptiable(),
 /// );
 /// assert_eq!(
 ///     interval.future_continuation(),
 ///     AbsoluteBoundPair::new(
 ///         AbsoluteFiniteBound::new_with_inclusivity(
-///             "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///             "2025-01-01 16:00:00[Europe/Oslo]"
+///                 .parse::<Zoned>()?
+///                 .timestamp(),
 ///             BoundInclusivity::Exclusive,
-///         ).to_start_bound(),
+///         )
+///         .to_start_bound(),
 ///         AbsoluteEndBound::InfiniteFuture,
-///     ).to_emptiable(),
+///     )
+///     .to_emptiable(),
 /// );
 /// # Ok::<(), Box<dyn Error>>(())
 /// ```
@@ -148,11 +176,17 @@ pub trait Continuable {
     /// # use periodical::intervals::ops::continuation::Continuable;
     /// let interval = AbsoluteBoundPair::new(
     ///     AbsoluteFiniteBound::new(
-    ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_start_bound(),
+    ///         "2025-01-01 08:00:00[Europe/Oslo]"
+    ///             .parse::<Zoned>()?
+    ///             .timestamp(),
+    ///     )
+    ///     .to_start_bound(),
     ///     AbsoluteFiniteBound::new(
-    ///         "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_end_bound(),
+    ///         "2025-01-01 16:00:00[Europe/Oslo]"
+    ///             .parse::<Zoned>()?
+    ///             .timestamp(),
+    ///     )
+    ///     .to_end_bound(),
     /// );
     ///
     /// assert_eq!(
@@ -160,10 +194,14 @@ pub trait Continuable {
     ///     AbsoluteBoundPair::new(
     ///         AbsoluteStartBound::InfinitePast,
     ///         AbsoluteFiniteBound::new_with_inclusivity(
-    ///             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///             "2025-01-01 08:00:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
     ///             BoundInclusivity::Exclusive,
-    ///         ).to_end_bound(),
-    ///     ).to_emptiable(),
+    ///         )
+    ///         .to_end_bound(),
+    ///     )
+    ///     .to_emptiable(),
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
@@ -184,22 +222,32 @@ pub trait Continuable {
     /// # use periodical::intervals::ops::continuation::Continuable;
     /// let interval = AbsoluteBoundPair::new(
     ///     AbsoluteFiniteBound::new(
-    ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_start_bound(),
+    ///         "2025-01-01 08:00:00[Europe/Oslo]"
+    ///             .parse::<Zoned>()?
+    ///             .timestamp(),
+    ///     )
+    ///     .to_start_bound(),
     ///     AbsoluteFiniteBound::new(
-    ///         "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_end_bound(),
+    ///         "2025-01-01 16:00:00[Europe/Oslo]"
+    ///             .parse::<Zoned>()?
+    ///             .timestamp(),
+    ///     )
+    ///     .to_end_bound(),
     /// );
     ///
     /// assert_eq!(
     ///     interval.future_continuation(),
     ///     AbsoluteBoundPair::new(
     ///         AbsoluteFiniteBound::new_with_inclusivity(
-    ///             "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///             "2025-01-01 16:00:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
     ///             BoundInclusivity::Exclusive,
-    ///         ).to_start_bound(),
+    ///         )
+    ///         .to_start_bound(),
     ///         AbsoluteEndBound::InfiniteFuture,
-    ///     ).to_emptiable(),
+    ///     )
+    ///     .to_emptiable(),
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```

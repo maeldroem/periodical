@@ -33,8 +33,7 @@
 //! When coming from an interval, they have the following invariants:
 //!
 //! 1. The start and end must be in chronological order
-//! 2. If both points are at the same position, their [bound
-//!    inclusivities](meta::BoundInclusivity) can only be
+//! 2. If both points are at the same position, their [bound inclusivities](meta::BoundInclusivity) can only be
 //!    [inclusive](meta::BoundInclusivity::Inclusive)
 //!
 //! Bounds can be modified however you want, as they don't need to conserve

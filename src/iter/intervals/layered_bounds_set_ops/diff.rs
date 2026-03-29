@@ -122,8 +122,7 @@ where
     ///
     /// # Input requirements
     ///
-    /// 1. The iterator **must return continuous [state
-    ///    changes](LayeredBoundsStateChangeAtAbsoluteBound)**
+    /// 1. The iterator **must return continuous [state changes](LayeredBoundsStateChangeAtAbsoluteBound)**
     /// 2. The state changes **must be in chronological order**
     ///
     /// For more precision about requirement 1, _continuous state changes_ means
@@ -174,16 +173,16 @@ where
 
             let Some(next) = self.iter.next() else {
                 unreachable!(
-                    "The input requirements guarantee that the given iterator \
-                    cannot end on an active state such as `FirstLayer`"
+                    "The input requirements guarantee that the given iterator cannot end on an active state such as \
+                     `FirstLayer`"
                 );
             };
 
             let Some(end) = next.old_state_end() else {
                 unreachable!(
                     "We can infer the guarantee that the state change following one that transitions to `FirstLayer` \
-                    must contain an end to the old state, given that the input requirements guarantee \
-                    that the given iterator cannot end on an active state such as `FirstLayer`"
+                     must contain an end to the old state, given that the input requirements guarantee that the given \
+                     iterator cannot end on an active state such as `FirstLayer`"
                 );
             };
 
@@ -243,8 +242,7 @@ where
     ///
     /// # Input requirements
     ///
-    /// 1. The iterator **must return continuous [state
-    ///    changes](LayeredBoundsStateChangeAtRelativeBound)**
+    /// 1. The iterator **must return continuous [state changes](LayeredBoundsStateChangeAtRelativeBound)**
     /// 2. The state changes **must be in chronological order**
     ///
     /// For more precision about requirement 1, _continuous state changes_ means
@@ -295,16 +293,16 @@ where
 
             let Some(next) = self.iter.next() else {
                 unreachable!(
-                    "The input requirements guarantee that the given iterator \
-                    cannot end on an active state such as `FirstLayer`"
+                    "The input requirements guarantee that the given iterator cannot end on an active state such as \
+                     `FirstLayer`"
                 );
             };
 
             let Some(end) = next.old_state_end() else {
                 unreachable!(
                     "We can infer the guarantee that the state change following one that transitions to `FirstLayer` \
-                    must contain an end to the old state, given that the input requirements guarantee \
-                    that the given iterator cannot end on an active state such as `FirstLayer`"
+                     must contain an end to the old state, given that the input requirements guarantee that the given \
+                     iterator cannot end on an active state such as `FirstLayer`"
                 );
             };
 

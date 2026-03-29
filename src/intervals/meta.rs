@@ -257,19 +257,23 @@ impl Epsilon {
     /// let end_epsilon_duration = std::time::Duration::from_secs(2);
     ///
     /// assert_eq!(
-    ///     Epsilon::None.interpret_as_duration_bound_specific(start_epsilon_duration, end_epsilon_duration),
+    ///     Epsilon::None
+    ///         .interpret_as_duration_bound_specific(start_epsilon_duration, end_epsilon_duration),
     ///     Ok(std::time::Duration::ZERO),
     /// );
     /// assert_eq!(
-    ///     Epsilon::Start.interpret_as_duration_bound_specific(start_epsilon_duration, end_epsilon_duration),
+    ///     Epsilon::Start
+    ///         .interpret_as_duration_bound_specific(start_epsilon_duration, end_epsilon_duration),
     ///     Ok(start_epsilon_duration),
     /// );
     /// assert_eq!(
-    ///     Epsilon::End.interpret_as_duration_bound_specific(start_epsilon_duration, end_epsilon_duration),
+    ///     Epsilon::End
+    ///         .interpret_as_duration_bound_specific(start_epsilon_duration, end_epsilon_duration),
     ///     Ok(end_epsilon_duration),
     /// );
     /// assert_eq!(
-    ///     Epsilon::Both.interpret_as_duration_bound_specific(start_epsilon_duration, end_epsilon_duration),
+    ///     Epsilon::Both
+    ///         .interpret_as_duration_bound_specific(start_epsilon_duration, end_epsilon_duration),
     ///     Ok(start_epsilon_duration + end_epsilon_duration)
     /// );
     /// ```

@@ -31,11 +31,17 @@
 //! # use periodical::intervals::ops::point_containment::CanPositionPointContainment;
 //! let interval = AbsoluteBoundPair::new(
 //!     AbsoluteFiniteBound::new(
-//!         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!     ).to_start_bound(),
+//!         "2025-01-01 08:00:00[Europe/Oslo]"
+//!             .parse::<Zoned>()?
+//!             .timestamp(),
+//!     )
+//!     .to_start_bound(),
 //!     AbsoluteFiniteBound::new(
-//!         "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!     ).to_end_bound(),
+//!         "2025-01-01 12:00:00[Europe/Oslo]"
+//!             .parse::<Zoned>()?
+//!             .timestamp(),
+//!     )
+//!     .to_end_bound(),
 //! );
 //!
 //! let point = "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?;
@@ -190,20 +196,21 @@ impl PointContainmentPosition {
     /// #     DisambiguatedPointContainmentPosition, PointContainmentPosition,
     /// # };
     /// // Weird disambiguation closure: only on start/end if exclusive
-    /// let disambiguation_closure = |pos: PointContainmentPosition| -> DisambiguatedPointContainmentPosition {
-    ///     type Pos = PointContainmentPosition;
-    ///     type DisambiguatedPos = DisambiguatedPointContainmentPosition;
-    ///     match pos {
-    ///         Pos::OutsideBefore => DisambiguatedPos::OutsideBefore,
-    ///         Pos::OutsideAfter => DisambiguatedPos::OutsideAfter,
-    ///         Pos::Outside => DisambiguatedPos::Outside,
-    ///         Pos::OnStart(BoundInclusivity::Inclusive) => DisambiguatedPos::OutsideBefore,
-    ///         Pos::OnStart(BoundInclusivity::Exclusive) => DisambiguatedPos::OnStart,
-    ///         Pos::OnEnd(BoundInclusivity::Inclusive) => DisambiguatedPos::OutsideAfter,
-    ///         Pos::OnEnd(BoundInclusivity::Exclusive) => DisambiguatedPos::OnEnd,
-    ///         Pos::Inside => DisambiguatedPos::Inside,
-    ///     }
-    /// };
+    /// let disambiguation_closure =
+    ///     |pos: PointContainmentPosition| -> DisambiguatedPointContainmentPosition {
+    ///         type Pos = PointContainmentPosition;
+    ///         type DisambiguatedPos = DisambiguatedPointContainmentPosition;
+    ///         match pos {
+    ///             Pos::OutsideBefore => DisambiguatedPos::OutsideBefore,
+    ///             Pos::OutsideAfter => DisambiguatedPos::OutsideAfter,
+    ///             Pos::Outside => DisambiguatedPos::Outside,
+    ///             Pos::OnStart(BoundInclusivity::Inclusive) => DisambiguatedPos::OutsideBefore,
+    ///             Pos::OnStart(BoundInclusivity::Exclusive) => DisambiguatedPos::OnStart,
+    ///             Pos::OnEnd(BoundInclusivity::Inclusive) => DisambiguatedPos::OutsideAfter,
+    ///             Pos::OnEnd(BoundInclusivity::Exclusive) => DisambiguatedPos::OnEnd,
+    ///             Pos::Inside => DisambiguatedPos::Inside,
+    ///         }
+    ///     };
     ///
     /// assert_eq!(
     ///     PointContainmentPosition::OnStart(BoundInclusivity::Inclusive)
@@ -574,19 +581,27 @@ pub trait CanPositionPointContainment<P> {
     /// # };
     /// let interval = AbsoluteBoundPair::new(
     ///     AbsoluteFiniteBound::new_with_inclusivity(
-    ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///         "2025-01-01 08:00:00[Europe/Oslo]"
+    ///             .parse::<Zoned>()?
+    ///             .timestamp(),
     ///         BoundInclusivity::Exclusive,
-    ///     ).to_start_bound(),
+    ///     )
+    ///     .to_start_bound(),
     ///     AbsoluteFiniteBound::new(
-    ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_end_bound(),
+    ///         "2025-01-01 10:00:00[Europe/Oslo]"
+    ///             .parse::<Zoned>()?
+    ///             .timestamp(),
+    ///     )
+    ///     .to_end_bound(),
     /// );
     ///
     /// let point = "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?;
     ///
     /// assert_eq!(
     ///     interval.point_containment_position(point),
-    ///     Ok(PointContainmentPosition::OnStart(BoundInclusivity::Exclusive)),
+    ///     Ok(PointContainmentPosition::OnStart(
+    ///         BoundInclusivity::Exclusive
+    ///     )),
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
@@ -657,11 +672,17 @@ pub trait CanPositionPointContainment<P> {
     /// # use periodical::intervals::ops::point_containment::CanPositionPointContainment;
     /// let interval = AbsoluteBoundPair::new(
     ///     AbsoluteFiniteBound::new(
-    ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_start_bound(),
+    ///         "2025-01-01 08:00:00[Europe/Oslo]"
+    ///             .parse::<Zoned>()?
+    ///             .timestamp(),
+    ///     )
+    ///     .to_start_bound(),
     ///     AbsoluteFiniteBound::new(
-    ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_end_bound(),
+    ///         "2025-01-01 10:00:00[Europe/Oslo]"
+    ///             .parse::<Zoned>()?
+    ///             .timestamp(),
+    ///     )
+    ///     .to_end_bound(),
     /// );
     ///
     /// let point = "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?;
@@ -712,11 +733,17 @@ pub trait CanPositionPointContainment<P> {
     /// # };
     /// let interval = AbsoluteBoundPair::new(
     ///     AbsoluteFiniteBound::new(
-    ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_start_bound(),
+    ///         "2025-01-01 08:00:00[Europe/Oslo]"
+    ///             .parse::<Zoned>()?
+    ///             .timestamp(),
+    ///     )
+    ///     .to_start_bound(),
     ///     AbsoluteFiniteBound::new(
-    ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_end_bound(),
+    ///         "2025-01-01 10:00:00[Europe/Oslo]"
+    ///             .parse::<Zoned>()?
+    ///             .timestamp(),
+    ///     )
+    ///     .to_end_bound(),
     /// );
     ///
     /// let point = "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?;

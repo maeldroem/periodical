@@ -31,20 +31,32 @@
 //! # use periodical::intervals::ops::overlap::CanPositionOverlap;
 //! let first_interval = AbsoluteBoundPair::new(
 //!     AbsoluteFiniteBound::new(
-//!         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!     ).to_start_bound(),
+//!         "2025-01-01 08:00:00[Europe/Oslo]"
+//!             .parse::<Zoned>()?
+//!             .timestamp(),
+//!     )
+//!     .to_start_bound(),
 //!     AbsoluteFiniteBound::new(
-//!         "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!     ).to_end_bound(),
+//!         "2025-01-01 14:00:00[Europe/Oslo]"
+//!             .parse::<Zoned>()?
+//!             .timestamp(),
+//!     )
+//!     .to_end_bound(),
 //! );
 //!
 //! let second_interval = AbsoluteBoundPair::new(
 //!     AbsoluteFiniteBound::new(
-//!         "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!     ).to_start_bound(),
+//!         "2025-01-01 12:00:00[Europe/Oslo]"
+//!             .parse::<Zoned>()?
+//!             .timestamp(),
+//!     )
+//!     .to_start_bound(),
 //!     AbsoluteFiniteBound::new(
-//!         "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!     ).to_end_bound(),
+//!         "2025-01-01 16:00:00[Europe/Oslo]"
+//!             .parse::<Zoned>()?
+//!             .timestamp(),
+//!     )
+//!     .to_end_bound(),
 //! );
 //!
 //! assert!(first_interval.simple_overlaps(&second_interval));
@@ -558,8 +570,8 @@ pub fn overlap_position_disambiguation(
         Op::Equal(None, Some(_)) => {
             unreachable!(
                 "When there is a bound ambiguity for an equal position for comparing two half-bounded intervals, \
-                which produces a single bound ambiguity, the bound ambiguity is never stored in the second element \
-                of the `OverlapPosition::Equal` variant"
+                 which produces a single bound ambiguity, the bound ambiguity is never stored in the second element \
+                 of the `OverlapPosition::Equal` variant"
             );
         },
         Op::Equal(Some(start_ambiguity), Some(end_ambiguity)) => {
@@ -625,8 +637,8 @@ pub fn overlap_position_bound_ambiguity_disambiguation_equal_half_bounded(
         BoundOverlapAmbiguity::StartEnd(..) | BoundOverlapAmbiguity::EndStart(..) => {
             unreachable!(
                 "When there is a bound ambiguity for an equal position for comparing two half-bounded intervals, \
-                which produces a single bound ambiguity, the bound ambiguity is always either BothStarts or \
-                BothEnds, but never StartEnd nor EndStart"
+                 which produces a single bound ambiguity, the bound ambiguity is always either BothStarts or \
+                 BothEnds, but never StartEnd nor EndStart"
             );
         },
     }
@@ -1067,20 +1079,32 @@ pub trait CanPositionOverlap<Rhs = Self> {
     /// # use periodical::intervals::ops::overlap:: CanPositionOverlap;
     /// let compared_interval = AbsoluteBoundPair::new(
     ///     AbsoluteFiniteBound::new(
-    ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_start_bound(),
+    ///         "2025-01-01 08:00:00[Europe/Oslo]"
+    ///             .parse::<Zoned>()?
+    ///             .timestamp(),
+    ///     )
+    ///     .to_start_bound(),
     ///     AbsoluteFiniteBound::new(
-    ///         "2025-01-01 11:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_end_bound(),
+    ///         "2025-01-01 11:00:00[Europe/Oslo]"
+    ///             .parse::<Zoned>()?
+    ///             .timestamp(),
+    ///     )
+    ///     .to_end_bound(),
     /// );
     ///
     /// let reference_interval = AbsoluteBoundPair::new(
     ///     AbsoluteFiniteBound::new(
-    ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_start_bound(),
+    ///         "2025-01-01 10:00:00[Europe/Oslo]"
+    ///             .parse::<Zoned>()?
+    ///             .timestamp(),
+    ///     )
+    ///     .to_start_bound(),
     ///     AbsoluteFiniteBound::new(
-    ///         "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_end_bound(),
+    ///         "2025-01-01 12:00:00[Europe/Oslo]"
+    ///             .parse::<Zoned>()?
+    ///             .timestamp(),
+    ///     )
+    ///     .to_end_bound(),
     /// );
     ///
     /// assert!(compared_interval.simple_overlaps(&reference_interval));
@@ -1190,22 +1214,34 @@ pub trait CanPositionOverlap<Rhs = Self> {
     /// # use periodical::intervals::ops::overlap::{CanPositionOverlap, OverlapPosition};
     /// let compared_interval = AbsoluteBoundPair::new(
     ///     AbsoluteFiniteBound::new(
-    ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_start_bound(),
+    ///         "2025-01-01 08:00:00[Europe/Oslo]"
+    ///             .parse::<Zoned>()?
+    ///             .timestamp(),
+    ///     )
+    ///     .to_start_bound(),
     ///     AbsoluteFiniteBound::new_with_inclusivity(
-    ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///         "2025-01-01 10:00:00[Europe/Oslo]"
+    ///             .parse::<Zoned>()?
+    ///             .timestamp(),
     ///         BoundInclusivity::Exclusive,
-    ///     ).to_end_bound(),
+    ///     )
+    ///     .to_end_bound(),
     /// );
     ///
     /// let reference_interval = AbsoluteBoundPair::new(
     ///     AbsoluteFiniteBound::new_with_inclusivity(
-    ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///         "2025-01-01 10:00:00[Europe/Oslo]"
+    ///             .parse::<Zoned>()?
+    ///             .timestamp(),
     ///         BoundInclusivity::Exclusive,
-    ///     ).to_start_bound(),
+    ///     )
+    ///     .to_start_bound(),
     ///     AbsoluteFiniteBound::new(
-    ///         "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_end_bound(),
+    ///         "2025-01-01 12:00:00[Europe/Oslo]"
+    ///             .parse::<Zoned>()?
+    ///             .timestamp(),
+    ///     )
+    ///     .to_end_bound(),
     /// );
     ///
     /// let overlap_closure = |pos: OverlapPosition| -> bool {
@@ -1214,8 +1250,7 @@ pub trait CanPositionOverlap<Rhs = Self> {
     ///         OverlapPosition::EndsOnStart(BoundOverlapAmbiguity::EndStart(
     ///             BoundInclusivity::Exclusive,
     ///             BoundInclusivity::Exclusive,
-    ///         ))
-    ///         | OverlapPosition::StartsOnEnd(BoundOverlapAmbiguity::StartEnd(
+    ///         )) | OverlapPosition::StartsOnEnd(BoundOverlapAmbiguity::StartEnd(
     ///             BoundInclusivity::Exclusive,
     ///             BoundInclusivity::Exclusive,
     ///         )),

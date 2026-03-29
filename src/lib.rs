@@ -61,10 +61,8 @@
 //!
 //! # Crate features
 //!
-//! - `serde` provides serialization and deserialization of all common
-//!   `periodical` structures
-//! - `arbitrary` provides a way of generating structured data from unstructured
-//!   data, useful for fuzzing
+//! - `serde` provides serialization and deserialization of all common `periodical` structures
+//! - `arbitrary` provides a way of generating structured data from unstructured data, useful for fuzzing
 
 pub mod intervals;
 pub mod iter;

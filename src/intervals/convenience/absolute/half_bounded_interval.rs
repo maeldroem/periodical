@@ -78,10 +78,18 @@ impl HalfBoundedAbsoluteInterval {
     ///
     /// assert_eq!(
     ///     from_first_of_may.reference(),
-    ///     "2026-05-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     "2026-05-01 00:00:00[Europe/Oslo]"
+    ///         .parse::<Zoned>()?
+    ///         .timestamp(),
     /// );
-    /// assert_eq!(from_first_of_may.reference_inclusivity(), BoundInclusivity::Inclusive);
-    /// assert_eq!(from_first_of_may.opening_direction(), OpeningDirection::ToFuture);
+    /// assert_eq!(
+    ///     from_first_of_may.reference_inclusivity(),
+    ///     BoundInclusivity::Inclusive
+    /// );
+    /// assert_eq!(
+    ///     from_first_of_may.opening_direction(),
+    ///     OpeningDirection::ToFuture
+    /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn since_date(date: Date, tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
@@ -120,10 +128,18 @@ impl HalfBoundedAbsoluteInterval {
     ///
     /// assert_eq!(
     ///     until_first_of_may.reference(),
-    ///     "2026-05-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     "2026-05-01 00:00:00[Europe/Oslo]"
+    ///         .parse::<Zoned>()?
+    ///         .timestamp(),
     /// );
-    /// assert_eq!(until_first_of_may.reference_inclusivity(), BoundInclusivity::Exclusive);
-    /// assert_eq!(until_first_of_may.opening_direction(), OpeningDirection::ToPast);
+    /// assert_eq!(
+    ///     until_first_of_may.reference_inclusivity(),
+    ///     BoundInclusivity::Exclusive
+    /// );
+    /// assert_eq!(
+    ///     until_first_of_may.opening_direction(),
+    ///     OpeningDirection::ToPast
+    /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn until_date(date: Date, tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
@@ -203,7 +219,8 @@ impl HalfBoundedAbsoluteInterval {
     /// # use std::error::Error;
     /// # use jiff::tz::TimeZone;
     /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
-    /// let since_tomorrow = HalfBoundedAbsoluteInterval::since_tomorrow(TimeZone::get("Europe/Oslo")?)?;
+    /// let since_tomorrow =
+    ///     HalfBoundedAbsoluteInterval::since_tomorrow(TimeZone::get("Europe/Oslo")?)?;
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn since_tomorrow(tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
@@ -242,7 +259,8 @@ impl HalfBoundedAbsoluteInterval {
     /// # use std::error::Error;
     /// # use jiff::tz::TimeZone;
     /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
-    /// let until_tomorrow = HalfBoundedAbsoluteInterval::until_tomorrow(TimeZone::get("Europe/Oslo")?)?;
+    /// let until_tomorrow =
+    ///     HalfBoundedAbsoluteInterval::until_tomorrow(TimeZone::get("Europe/Oslo")?)?;
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn until_tomorrow(tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
@@ -281,7 +299,8 @@ impl HalfBoundedAbsoluteInterval {
     /// # use std::error::Error;
     /// # use jiff::tz::TimeZone;
     /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
-    /// let since_yesterday = HalfBoundedAbsoluteInterval::since_yesterday(TimeZone::get("Europe/Oslo")?)?;
+    /// let since_yesterday =
+    ///     HalfBoundedAbsoluteInterval::since_yesterday(TimeZone::get("Europe/Oslo")?)?;
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn since_yesterday(tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
@@ -323,7 +342,8 @@ impl HalfBoundedAbsoluteInterval {
     /// # use std::error::Error;
     /// # use jiff::tz::TimeZone;
     /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
-    /// let until_yesterday = HalfBoundedAbsoluteInterval::until_yesterday(TimeZone::get("Europe/Oslo")?)?;
+    /// let until_yesterday =
+    ///     HalfBoundedAbsoluteInterval::until_yesterday(TimeZone::get("Europe/Oslo")?)?;
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn until_yesterday(tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
@@ -367,9 +387,14 @@ impl HalfBoundedAbsoluteInterval {
     ///
     /// assert_eq!(
     ///     interval.reference(),
-    ///     "2026-01-26 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     "2026-01-26 00:00:00[Europe/Oslo]"
+    ///         .parse::<Zoned>()?
+    ///         .timestamp(),
     /// );
-    /// assert_eq!(interval.reference_inclusivity(), BoundInclusivity::Inclusive);
+    /// assert_eq!(
+    ///     interval.reference_inclusivity(),
+    ///     BoundInclusivity::Inclusive
+    /// );
     /// assert_eq!(interval.opening_direction(), OpeningDirection::ToFuture);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
@@ -408,9 +433,14 @@ impl HalfBoundedAbsoluteInterval {
     ///
     /// assert_eq!(
     ///     interval.reference(),
-    ///     "2026-01-26 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     "2026-01-26 00:00:00[Europe/Oslo]"
+    ///         .parse::<Zoned>()?
+    ///         .timestamp(),
     /// );
-    /// assert_eq!(interval.reference_inclusivity(), BoundInclusivity::Exclusive);
+    /// assert_eq!(
+    ///     interval.reference_inclusivity(),
+    ///     BoundInclusivity::Exclusive
+    /// );
     /// assert_eq!(interval.opening_direction(), OpeningDirection::ToPast);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
@@ -449,9 +479,14 @@ impl HalfBoundedAbsoluteInterval {
     ///
     /// assert_eq!(
     ///     since_month.reference(),
-    ///     "2026-03-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     "2026-03-01 00:00:00[Europe/Oslo]"
+    ///         .parse::<Zoned>()?
+    ///         .timestamp(),
     /// );
-    /// assert_eq!(since_month.reference_inclusivity(), BoundInclusivity::Inclusive);
+    /// assert_eq!(
+    ///     since_month.reference_inclusivity(),
+    ///     BoundInclusivity::Inclusive
+    /// );
     /// assert_eq!(since_month.opening_direction(), OpeningDirection::ToFuture);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
@@ -491,9 +526,14 @@ impl HalfBoundedAbsoluteInterval {
     ///
     /// assert_eq!(
     ///     until_month.reference(),
-    ///     "2026-03-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     "2026-03-01 00:00:00[Europe/Oslo]"
+    ///         .parse::<Zoned>()?
+    ///         .timestamp(),
     /// );
-    /// assert_eq!(until_month.reference_inclusivity(), BoundInclusivity::Exclusive);
+    /// assert_eq!(
+    ///     until_month.reference_inclusivity(),
+    ///     BoundInclusivity::Exclusive
+    /// );
     /// assert_eq!(until_month.opening_direction(), OpeningDirection::ToPast);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
@@ -523,7 +563,8 @@ impl HalfBoundedAbsoluteInterval {
     /// # use std::error::Error;
     /// # use jiff::tz::TimeZone;
     /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
-    /// let since_this_month = HalfBoundedAbsoluteInterval::since_this_month(TimeZone::get("Europe/Oslo")?)?;
+    /// let since_this_month =
+    ///     HalfBoundedAbsoluteInterval::since_this_month(TimeZone::get("Europe/Oslo")?)?;
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn since_this_month(tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
@@ -551,7 +592,8 @@ impl HalfBoundedAbsoluteInterval {
     /// # use std::error::Error;
     /// # use jiff::tz::TimeZone;
     /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
-    /// let until_this_month = HalfBoundedAbsoluteInterval::until_this_month(TimeZone::get("Europe/Oslo")?)?;
+    /// let until_this_month =
+    ///     HalfBoundedAbsoluteInterval::until_this_month(TimeZone::get("Europe/Oslo")?)?;
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn until_this_month(tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
@@ -585,9 +627,14 @@ impl HalfBoundedAbsoluteInterval {
     ///
     /// assert_eq!(
     ///     since_year.reference(),
-    ///     "2026-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     "2026-01-01 00:00:00[Europe/Oslo]"
+    ///         .parse::<Zoned>()?
+    ///         .timestamp(),
     /// );
-    /// assert_eq!(since_year.reference_inclusivity(), BoundInclusivity::Inclusive);
+    /// assert_eq!(
+    ///     since_year.reference_inclusivity(),
+    ///     BoundInclusivity::Inclusive
+    /// );
     /// assert_eq!(since_year.opening_direction(), OpeningDirection::ToFuture);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
@@ -621,9 +668,14 @@ impl HalfBoundedAbsoluteInterval {
     ///
     /// assert_eq!(
     ///     until_year.reference(),
-    ///     "2026-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     "2026-01-01 00:00:00[Europe/Oslo]"
+    ///         .parse::<Zoned>()?
+    ///         .timestamp(),
     /// );
-    /// assert_eq!(until_year.reference_inclusivity(), BoundInclusivity::Exclusive);
+    /// assert_eq!(
+    ///     until_year.reference_inclusivity(),
+    ///     BoundInclusivity::Exclusive
+    /// );
     /// assert_eq!(until_year.opening_direction(), OpeningDirection::ToPast);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
@@ -648,7 +700,8 @@ impl HalfBoundedAbsoluteInterval {
     /// # use std::error::Error;
     /// # use jiff::tz::TimeZone;
     /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
-    /// let since_this_year = HalfBoundedAbsoluteInterval::since_this_year(TimeZone::get("Europe/Oslo")?)?;
+    /// let since_this_year =
+    ///     HalfBoundedAbsoluteInterval::since_this_year(TimeZone::get("Europe/Oslo")?)?;
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn since_this_year(tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
@@ -669,7 +722,8 @@ impl HalfBoundedAbsoluteInterval {
     /// # use std::error::Error;
     /// # use jiff::tz::TimeZone;
     /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
-    /// let until_this_year = HalfBoundedAbsoluteInterval::until_this_year(TimeZone::get("Europe/Oslo")?)?;
+    /// let until_this_year =
+    ///     HalfBoundedAbsoluteInterval::until_this_year(TimeZone::get("Europe/Oslo")?)?;
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn until_this_year(tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
