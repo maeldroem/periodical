@@ -78,7 +78,8 @@ use crate::ops::SymmetricDifferenceResult;
 
 /// Peer symmetric difference iterator for intervals using predefined rules
 ///
-/// Operates a [symmetric difference] on peers, that is to say, we operate the intersection on every pair of intervals.
+/// Operates a [symmetric difference] on peers, that is to say, we operate the
+/// intersection on every pair of intervals.
 ///
 /// Uses [`SymmetricallyDifferentiable`] under the hood.
 ///
@@ -143,8 +144,8 @@ where
     }
 }
 
-// TODO: If a reverse Peekable becomes standard or when we'll import a crate that does that,
-// implement DoubleEndedIterator for PeerSymmetricDifference
+// TODO: If a reverse Peekable becomes standard or when we'll import a crate
+// that does that, implement DoubleEndedIterator for PeerSymmetricDifference
 
 impl<'a, I, T, U> FusedIterator for PeerSymmetricDifference<Peekable<I>>
 where
@@ -160,10 +161,11 @@ where
     Self::IntoIter: Iterator<Item = &'a T>,
     T: 'a + SymmetricallyDifferentiable<Output = U> + Into<U> + Clone,
 {
-    /// Symmetrically differentiates peer intervals of the iterator using the default overlap rules
+    /// Symmetrically differentiates peer intervals of the iterator using the
+    /// default overlap rules
     ///
-    /// Operates a [symmetric difference] on peers, that is to say, we operate the intersection on every pair
-    /// of intervals.
+    /// Operates a [symmetric difference] on peers, that is to say, we operate
+    /// the intersection on every pair of intervals.
     ///
     /// Uses [`SymmetricallyDifferentiable`] under the hood.
     ///
@@ -183,7 +185,8 @@ where
 
 /// Peer symmetric difference iterator for intervals using the given closure
 ///
-/// Operates a [symmetric difference] on peers, that is to say, we operate the intersection on every pair of intervals.
+/// Operates a [symmetric difference] on peers, that is to say, we operate the
+/// intersection on every pair of intervals.
 ///
 /// Uses [`SymmetricallyDifferentiable`] under the hood.
 ///
@@ -252,8 +255,8 @@ where
     }
 }
 
-// TODO: If a reverse Peekable becomes standard or when we'll import a crate that does that,
-// implement DoubleEndedIterator for PeerSymmetricDifferenceWith
+// TODO: If a reverse Peekable becomes standard or when we'll import a crate
+// that does that, implement DoubleEndedIterator for PeerSymmetricDifferenceWith
 
 impl<'a, I, T, U, F> FusedIterator for PeerSymmetricDifferenceWith<Peekable<I>, F>
 where
@@ -271,10 +274,11 @@ where
     T: 'a + Into<U> + Clone,
     F: FnMut(&T, &T) -> SymmetricDifferenceResult<U>,
 {
-    /// Symmetrically differentiates peer intervals of the iterator using the given closure
+    /// Symmetrically differentiates peer intervals of the iterator using the
+    /// given closure
     ///
-    /// Operates a [symmetric difference] on peers, that is to say, we operate the intersection on every pair
-    /// of intervals.
+    /// Operates a [symmetric difference] on peers, that is to say, we operate
+    /// the intersection on every pair of intervals.
     ///
     /// Uses [`SymmetricallyDifferentiable`] under the hood.
     ///

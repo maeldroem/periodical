@@ -1,7 +1,8 @@
 //! Relative start bound
-//! 
-//! Represents the start bound of a relative interval. It can either be finite, in which case
-//! it will contain an [`RelativeFiniteBound`], or represent an open start bound through
+//!
+//! Represents the start bound of a relative interval. It can either be finite,
+//! in which case it will contain an [`RelativeFiniteBound`], or represent an
+//! open start bound through
 //! the [`InfinitePast`](RelativeStartBound::InfinitePast) variant.
 
 use std::cmp::Ordering;
@@ -15,17 +16,21 @@ use serde::{Deserialize, Serialize};
 
 use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
 use crate::intervals::ops::bound_overlap_ambiguity::{
-    BoundOverlapAmbiguity, BoundOverlapDisambiguationRuleSet, DisambiguatedBoundOverlap,
+    BoundOverlapAmbiguity,
+    BoundOverlapDisambiguationRuleSet,
+    DisambiguatedBoundOverlap,
 };
 use crate::intervals::relative::{RelativeBound, RelativeEndBound, RelativeFiniteBound};
 
 /// A relative start bound
 ///
-/// Represents the start bound of an interval, may it be infinitely in the past or at a precise offset,
-/// in which case it contains an [`RelativeFiniteBound`].
+/// Represents the start bound of an interval, may it be infinitely in the past
+/// or at a precise offset, in which case it contains an
+/// [`RelativeFiniteBound`].
 ///
-/// Contrary to specific relative interval types, both [`RelativeStartBound`] and [`RelativeEndBound`] use an offset,
-/// and not an offset for the start and a length for the end.
+/// Contrary to specific relative interval types, both [`RelativeStartBound`]
+/// and [`RelativeEndBound`] use an offset, and not an offset for the start and
+/// a length for the end.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
@@ -41,7 +46,8 @@ impl RelativeStartBound {
         RelativeBound::from(self)
     }
 
-    /// Returns whether it is of the [`Finite`](RelativeStartBound::Finite) variant
+    /// Returns whether it is of the [`Finite`](RelativeStartBound::Finite)
+    /// variant
     ///
     /// # Examples
     ///
@@ -61,7 +67,8 @@ impl RelativeStartBound {
         matches!(self, Self::Finite(_))
     }
 
-    /// Returns whether it is of the [`InfinitePast`](RelativeStartBound::InfinitePast) variant
+    /// Returns whether it is of the
+    /// [`InfinitePast`](RelativeStartBound::InfinitePast) variant
     ///
     /// # Examples
     ///
@@ -81,10 +88,12 @@ impl RelativeStartBound {
         matches!(self, Self::InfinitePast)
     }
 
-    /// Returns the content of the [`Finite`](RelativeStartBound::Finite) variant
+    /// Returns the content of the [`Finite`](RelativeStartBound::Finite)
+    /// variant
     ///
-    /// Consumes `self` and puts the content of the [`Finite`](RelativeStartBound::Finite) variant
-    /// in an [`Option`]. If instead `self` is another variant, the method returns [`None`].
+    /// Consumes `self` and puts the content of the
+    /// [`Finite`](RelativeStartBound::Finite) variant in an [`Option`]. If
+    /// instead `self` is another variant, the method returns [`None`].
     ///
     /// # Examples
     ///
@@ -112,12 +121,14 @@ impl RelativeStartBound {
 
     /// Returns the opposite [`RelativeEndBound`]
     ///
-    /// If the [`RelativeStartBound`] is of the [`InfinitePast`](RelativeStartBound::InfinitePast) variant,
-    /// then the method returns [`None`].
-    /// Otherwise, if the [`RelativeStartBound`] is finite, then an [`RelativeEndBound`] is created
-    /// with the same time, but the opposite [`BoundInclusivity`].
+    /// If the [`RelativeStartBound`] is of the
+    /// [`InfinitePast`](RelativeStartBound::InfinitePast) variant, then the
+    /// method returns [`None`]. Otherwise, if the [`RelativeStartBound`] is
+    /// finite, then an [`RelativeEndBound`] is created with the same time,
+    /// but the opposite [`BoundInclusivity`].
     ///
-    /// This is used for example for determining the last point in time before this bound begins.
+    /// This is used for example for determining the last point in time before
+    /// this bound begins.
     ///
     /// # Examples
     ///
@@ -143,7 +154,7 @@ impl RelativeStartBound {
     /// let break_end_before_shift = start_second_part_my_shift
     ///     .opposite()
     ///     .ok_or(FiniteBoundExpectedError)?;
-    /// 
+    ///
     /// assert_eq!(
     ///     break_end_before_shift.finite(),
     ///     Some(RelativeFiniteBound::new_with_inclusivity(
@@ -156,10 +167,10 @@ impl RelativeStartBound {
     #[must_use]
     pub fn opposite(&self) -> Option<RelativeEndBound> {
         match self {
-            Self::Finite(finite) => Some(RelativeFiniteBound::new_with_inclusivity(
-                finite.offset(),
-                finite.inclusivity().opposite(),
-            ).to_end_bound()),
+            Self::Finite(finite) => Some(
+                RelativeFiniteBound::new_with_inclusivity(finite.offset(), finite.inclusivity().opposite())
+                    .to_end_bound(),
+            ),
             Self::InfinitePast => None,
         }
     }
@@ -176,7 +187,8 @@ impl PartialEq<RelativeEndBound> for RelativeStartBound {
                 inclusivity: end_inclusivity,
             }) = other
         {
-            // If the offsets are equal, anything other than double inclusive bounds is invalid
+            // If the offsets are equal, anything other than double inclusive bounds is
+            // invalid
             start_offset == end_offset
                 && *start_inclusivity == BoundInclusivity::Inclusive
                 && *end_inclusivity == BoundInclusivity::Inclusive

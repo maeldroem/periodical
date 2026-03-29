@@ -1,29 +1,50 @@
 //! Interval abridging
 //!
-//! Abridging is similar to the inverse of [`Extensible`](crate::intervals::ops::extend::Extensible).
-//! That is to say it will take the _highest_ start bound and link it to the _lowest_ end bound.
+//! Abridging is similar to the inverse of
+//! [`Extensible`](crate::intervals::ops::extend::Extensible). That is to say it
+//! will take the _highest_ start bound and link it to the _lowest_ end bound.
 //!
-//! If the highest start and the lowest end are equal and both are inclusive or exclusive, it returns a bound
-//! of this instant.
+//! If the highest start and the lowest end are equal and both are inclusive or
+//! exclusive, it returns a bound of this instant.
 //!
-//! However, if the highest start and lowest end are adjacent, one being inclusive and the other exclusive,
-//! abridging returns an empty interval.
+//! However, if the highest start and lowest end are adjacent, one being
+//! inclusive and the other exclusive, abridging returns an empty interval.
 //!
-//! The terms _highest_ and _lowest_ are to be interpreted as _highest_ being towards future,
-//! _lowest_ being towards past.
+//! The terms _highest_ and _lowest_ are to be interpreted as _highest_ being
+//! towards future, _lowest_ being towards past.
 //!
 //! # Examples
 //!
 //! See [`Abridgable`].
 
 use crate::intervals::absolute::{
-    AbsoluteBoundPair, AbsoluteEndBound, AbsoluteInterval, AbsoluteStartBound, BoundedAbsoluteInterval, EmptiableAbsoluteBoundPair, EmptiableAbsoluteInterval, HalfBoundedAbsoluteInterval, HasAbsoluteBoundPair, HasEmptiableAbsoluteBoundPair, swap_absolute_bound_pair
+    AbsoluteBoundPair,
+    AbsoluteEndBound,
+    AbsoluteInterval,
+    AbsoluteStartBound,
+    BoundedAbsoluteInterval,
+    EmptiableAbsoluteBoundPair,
+    EmptiableAbsoluteInterval,
+    HalfBoundedAbsoluteInterval,
+    HasAbsoluteBoundPair,
+    HasEmptiableAbsoluteBoundPair,
+    swap_absolute_bound_pair,
 };
 use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
 use crate::intervals::ops::bound_ord::{BoundOrdering, PartialBoundOrd};
 use crate::intervals::ops::bound_overlap_ambiguity::BoundOverlapAmbiguity;
 use crate::intervals::relative::{
-    BoundedRelativeInterval, EmptiableRelativeBoundPair, EmptiableRelativeInterval, HalfBoundedRelativeInterval, HasEmptiableRelativeBoundPair, HasRelativeBoundPair, RelativeBoundPair, RelativeEndBound, RelativeInterval, RelativeStartBound, swap_relative_bound_pair
+    BoundedRelativeInterval,
+    EmptiableRelativeBoundPair,
+    EmptiableRelativeInterval,
+    HalfBoundedRelativeInterval,
+    HasEmptiableRelativeBoundPair,
+    HasRelativeBoundPair,
+    RelativeBoundPair,
+    RelativeEndBound,
+    RelativeInterval,
+    RelativeStartBound,
+    swap_relative_bound_pair,
 };
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 
@@ -43,17 +64,18 @@ macro_rules! abridge_impl_rhs_clone {
 
 /// Capacity to abridge an interval with another
 ///
-/// Abridging is similar to the inverse of [`Extensible`](crate::intervals::ops::extend::Extensible).
-/// That is to say it will take the _highest_ start bound and link it to the _lowest_ end bound.
+/// Abridging is similar to the inverse of
+/// [`Extensible`](crate::intervals::ops::extend::Extensible). That is to say it
+/// will take the _highest_ start bound and link it to the _lowest_ end bound.
 ///
-/// If the highest start and the lowest end are equal and both are inclusive or exclusive, it returns a bound
-/// of this instant.
+/// If the highest start and the lowest end are equal and both are inclusive or
+/// exclusive, it returns a bound of this instant.
 ///
-/// However, if the highest start and lowest end are adjacent, one being inclusive and the other exclusive,
-/// abridging returns an empty interval.
+/// However, if the highest start and lowest end are adjacent, one being
+/// inclusive and the other exclusive, abridging returns an empty interval.
 ///
-/// The terms _highest_ and _lowest_ are to be interpreted as _highest_ being towards future,
-/// _lowest_ being towards past.
+/// The terms _highest_ and _lowest_ are to be interpreted as _highest_ being
+/// towards future, _lowest_ being towards past.
 ///
 /// # Examples
 ///
@@ -193,22 +215,26 @@ pub trait Abridgable<Rhs = Self> {
 
     /// Creates an abridged interval
     ///
-    /// Instead of intersecting two intervals, this method takes the highest of both intervals' start and
-    /// the lowest of both intervals' end, then create an interval that spans those two points.
+    /// Instead of intersecting two intervals, this method takes the highest of
+    /// both intervals' start and the lowest of both intervals' end, then
+    /// create an interval that spans those two points.
     ///
-    /// Regarding bound inclusivity, for each bound we will get the bound inclusivity of the interval from which
-    /// the bound was taken. If they were equal, we choose the most exclusive bound.
+    /// Regarding bound inclusivity, for each bound we will get the bound
+    /// inclusivity of the interval from which the bound was taken. If they
+    /// were equal, we choose the most exclusive bound.
     ///
-    /// If the intervals don't strictly overlap, the method returns the interval that spans the gap between the two
-    /// intervals. This sort of gap interval will have opposite bound inclusivities from the bounds they were created
-    /// from.
-    /// 
-    /// If the highest start and lowest end are adjacent, one being inclusive and the other exclusive,
-    /// abridging returns an empty interval.
+    /// If the intervals don't strictly overlap, the method returns the interval
+    /// that spans the gap between the two intervals. This sort of gap
+    /// interval will have opposite bound inclusivities from the bounds they
+    /// were created from.
+    ///
+    /// If the highest start and lowest end are adjacent, one being inclusive
+    /// and the other exclusive, abridging returns an empty interval.
     ///
     /// If both intervals are empty, the method just returns an empty interval.
     ///
-    /// If one interval is empty, the method just returns a clone of the other non-empty interval.
+    /// If one interval is empty, the method just returns a clone of the other
+    /// non-empty interval.
     #[must_use]
     fn abridge(&self, rhs: &Rhs) -> Self::Output;
 }
@@ -334,47 +360,67 @@ where
     }
 }
 
-abridge_impl_rhs_clone!(UnboundedInterval, AbsoluteInterval, [
-    AbsoluteBoundPair,
+abridge_impl_rhs_clone!(
+    UnboundedInterval,
     AbsoluteInterval,
-    BoundedAbsoluteInterval,
-    HalfBoundedAbsoluteInterval,
-]);
-abridge_impl_rhs_clone!(UnboundedInterval, EmptiableAbsoluteInterval, [
-    EmptiableAbsoluteBoundPair,
+    [
+        AbsoluteBoundPair,
+        AbsoluteInterval,
+        BoundedAbsoluteInterval,
+        HalfBoundedAbsoluteInterval,
+    ]
+);
+abridge_impl_rhs_clone!(
+    UnboundedInterval,
     EmptiableAbsoluteInterval,
-]);
-abridge_impl_rhs_clone!(UnboundedInterval, RelativeInterval, [
-    RelativeBoundPair,
+    [EmptiableAbsoluteBoundPair, EmptiableAbsoluteInterval,]
+);
+abridge_impl_rhs_clone!(
+    UnboundedInterval,
     RelativeInterval,
-    BoundedRelativeInterval,
-    HalfBoundedRelativeInterval,
-]);
-abridge_impl_rhs_clone!(UnboundedInterval, EmptiableRelativeInterval, [
-    EmptiableRelativeBoundPair,
+    [
+        RelativeBoundPair,
+        RelativeInterval,
+        BoundedRelativeInterval,
+        HalfBoundedRelativeInterval,
+    ]
+);
+abridge_impl_rhs_clone!(
+    UnboundedInterval,
     EmptiableRelativeInterval,
-]);
+    [EmptiableRelativeBoundPair, EmptiableRelativeInterval,]
+);
 
-abridge_impl_rhs_clone!(EmptyInterval, AbsoluteInterval, [
-    AbsoluteBoundPair,
+abridge_impl_rhs_clone!(
+    EmptyInterval,
     AbsoluteInterval,
-    BoundedAbsoluteInterval,
-    HalfBoundedAbsoluteInterval,
-]);
-abridge_impl_rhs_clone!(EmptyInterval, EmptiableAbsoluteInterval, [
-    EmptiableAbsoluteBoundPair,
+    [
+        AbsoluteBoundPair,
+        AbsoluteInterval,
+        BoundedAbsoluteInterval,
+        HalfBoundedAbsoluteInterval,
+    ]
+);
+abridge_impl_rhs_clone!(
+    EmptyInterval,
     EmptiableAbsoluteInterval,
-]);
-abridge_impl_rhs_clone!(EmptyInterval, RelativeInterval, [
-    RelativeBoundPair,
+    [EmptiableAbsoluteBoundPair, EmptiableAbsoluteInterval,]
+);
+abridge_impl_rhs_clone!(
+    EmptyInterval,
     RelativeInterval,
-    BoundedRelativeInterval,
-    HalfBoundedRelativeInterval,
-]);
-abridge_impl_rhs_clone!(EmptyInterval, EmptiableRelativeInterval, [
-    EmptiableRelativeBoundPair,
+    [
+        RelativeBoundPair,
+        RelativeInterval,
+        BoundedRelativeInterval,
+        HalfBoundedRelativeInterval,
+    ]
+);
+abridge_impl_rhs_clone!(
+    EmptyInterval,
     EmptiableRelativeInterval,
-]);
+    [EmptiableRelativeBoundPair, EmptiableRelativeInterval,]
+);
 
 impl Abridgable<UnboundedInterval> for EmptyInterval {
     type Output = EmptyInterval;
@@ -394,7 +440,10 @@ impl Abridgable<EmptyInterval> for EmptyInterval {
 
 /// Abridges two [`AbsoluteBoundPair`]s
 #[must_use]
-pub fn abridge_abs_bound_pair(og_bounds: &AbsoluteBoundPair, other_bounds: &AbsoluteBoundPair) -> EmptiableAbsoluteBoundPair {
+pub fn abridge_abs_bound_pair(
+    og_bounds: &AbsoluteBoundPair,
+    other_bounds: &AbsoluteBoundPair,
+) -> EmptiableAbsoluteBoundPair {
     let mut highest_start = match (og_bounds.abs_start(), other_bounds.abs_start()) {
         (AbsoluteStartBound::InfinitePast, bound @ AbsoluteStartBound::Finite(..))
         | (
@@ -418,7 +467,9 @@ pub fn abridge_abs_bound_pair(og_bounds: &AbsoluteBoundPair, other_bounds: &Abso
     };
 
     match highest_start.bound_cmp(&lowest_end) {
-        BoundOrdering::Less => EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::unchecked_new(highest_start, lowest_end)),
+        BoundOrdering::Less => {
+            EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::unchecked_new(highest_start, lowest_end))
+        },
         BoundOrdering::Equal(None) => {
             unreachable!("Comparing a start bound to an end bound can never result in the ambiguity being `None`");
         },
@@ -493,7 +544,10 @@ pub fn abridge_emptiable_abs_bound_pair(
 
 /// Abridges two [`RelativeBoundPair`]s
 #[must_use]
-pub fn abridge_rel_bound_pair(og_bounds: &RelativeBoundPair, other_bounds: &RelativeBoundPair) -> EmptiableRelativeBoundPair {
+pub fn abridge_rel_bound_pair(
+    og_bounds: &RelativeBoundPair,
+    other_bounds: &RelativeBoundPair,
+) -> EmptiableRelativeBoundPair {
     let mut highest_start = match (og_bounds.rel_start(), other_bounds.rel_start()) {
         (RelativeStartBound::InfinitePast, bound @ RelativeStartBound::Finite(..))
         | (
@@ -517,7 +571,9 @@ pub fn abridge_rel_bound_pair(og_bounds: &RelativeBoundPair, other_bounds: &Rela
     };
 
     match highest_start.bound_cmp(&lowest_end) {
-        BoundOrdering::Less => EmptiableRelativeBoundPair::Bound(RelativeBoundPair::unchecked_new(highest_start, lowest_end)),
+        BoundOrdering::Less => {
+            EmptiableRelativeBoundPair::Bound(RelativeBoundPair::unchecked_new(highest_start, lowest_end))
+        },
         BoundOrdering::Equal(None) => {
             unreachable!("Comparing a start bound to an end bound can never result in the ambiguity being `None`");
         },

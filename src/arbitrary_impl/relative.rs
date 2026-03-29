@@ -1,10 +1,18 @@
-//! [`Arbitrary`] implementations for items within the [`relative`](crate::intervals::relative) module
+//! [`Arbitrary`] implementations for items within the
+//! [`relative`](crate::intervals::relative) module
 
 use arbitrary::{Arbitrary, Error, Unstructured};
 use jiff::SignedDuration;
 
 use crate::intervals::meta::{BoundInclusivity, OpeningDirection};
-use crate::intervals::relative::{BoundedRelativeInterval, HalfBoundedRelativeInterval, RelativeBoundPair, RelativeEndBound, RelativeFiniteBound, RelativeStartBound};
+use crate::intervals::relative::{
+    BoundedRelativeInterval,
+    HalfBoundedRelativeInterval,
+    RelativeBoundPair,
+    RelativeEndBound,
+    RelativeFiniteBound,
+    RelativeStartBound,
+};
 
 impl<'a> Arbitrary<'a> for RelativeFiniteBound {
     fn arbitrary(u: &mut Unstructured<'a>) -> arbitrary::Result<Self> {
@@ -12,7 +20,10 @@ impl<'a> Arbitrary<'a> for RelativeFiniteBound {
         let signed_duration = SignedDuration::try_from_nanos_i128(u.int_in_range(signed_duration_range)?)
             .ok_or(Error::IncorrectFormat)?;
 
-        Ok(Self::new_with_inclusivity(signed_duration, BoundInclusivity::arbitrary(u)?))
+        Ok(Self::new_with_inclusivity(
+            signed_duration,
+            BoundInclusivity::arbitrary(u)?,
+        ))
     }
 }
 
@@ -60,7 +71,7 @@ impl<'a> Arbitrary<'a> for HalfBoundedRelativeInterval {
 
         let reference_offset = SignedDuration::try_from_nanos_i128(u.int_in_range(signed_duration_range.clone())?)
             .ok_or(Error::IncorrectFormat)?;
-        
+
         Ok(HalfBoundedRelativeInterval::new_with_inclusivity(
             reference_offset,
             BoundInclusivity::arbitrary(u)?,

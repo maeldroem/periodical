@@ -1,7 +1,8 @@
 //! Complement of an interval
 //!
-//! Returns the [complementary] intervals of a given interval using [`ComplementResult`] to store the result.
-//! 
+//! Returns the [complementary] intervals of a given interval using
+//! [`ComplementResult`] to store the result.
+//!
 //! [complementary]: https://en.wikipedia.org/w/index.php?title=Complement_(set_theory)&oldid=1272128427
 //!
 //! # Examples
@@ -47,11 +48,31 @@
 //! ```
 
 use crate::intervals::absolute::{
-    AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteInterval, AbsoluteStartBound, BoundedAbsoluteInterval, EmptiableAbsoluteBoundPair, EmptiableAbsoluteInterval, HalfBoundedAbsoluteInterval, HasAbsoluteBoundPair, HasEmptiableAbsoluteBoundPair
+    AbsoluteBoundPair,
+    AbsoluteEndBound,
+    AbsoluteFiniteBound,
+    AbsoluteInterval,
+    AbsoluteStartBound,
+    BoundedAbsoluteInterval,
+    EmptiableAbsoluteBoundPair,
+    EmptiableAbsoluteInterval,
+    HalfBoundedAbsoluteInterval,
+    HasAbsoluteBoundPair,
+    HasEmptiableAbsoluteBoundPair,
 };
 use crate::intervals::meta::{HasBoundInclusivity, OpeningDirection};
 use crate::intervals::relative::{
-    BoundedRelativeInterval, EmptiableRelativeBoundPair, EmptiableRelativeInterval, HalfBoundedRelativeInterval, HasEmptiableRelativeBoundPair, HasRelativeBoundPair, RelativeBoundPair, RelativeEndBound, RelativeFiniteBound, RelativeInterval, RelativeStartBound
+    BoundedRelativeInterval,
+    EmptiableRelativeBoundPair,
+    EmptiableRelativeInterval,
+    HalfBoundedRelativeInterval,
+    HasEmptiableRelativeBoundPair,
+    HasRelativeBoundPair,
+    RelativeBoundPair,
+    RelativeEndBound,
+    RelativeFiniteBound,
+    RelativeInterval,
+    RelativeStartBound,
 };
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 use crate::ops::ComplementResult;
@@ -290,7 +311,7 @@ pub fn complement_bounded_abs_interval(
         interval.start_inclusivity().opposite(),
         OpeningDirection::ToPast,
     );
-    
+
     let since_end = HalfBoundedAbsoluteInterval::new_with_inclusivity(
         interval.end(),
         interval.end_inclusivity().opposite(),
@@ -381,7 +402,7 @@ pub fn complement_bounded_rel_interval(
         interval.start_inclusivity().opposite(),
         OpeningDirection::ToPast,
     );
-    
+
     let since_end = HalfBoundedRelativeInterval::new_with_inclusivity(
         interval.end(),
         interval.end_inclusivity().opposite(),
@@ -401,4 +422,3 @@ pub fn complement_half_bounded_rel_interval(
         interval.opening_direction().opposite(),
     ))
 }
-

@@ -62,7 +62,8 @@ use crate::ops::IntersectionResult;
 
 /// Peer intersection iterator for intervals using predefined rules
 ///
-/// Operates an [intersection] on peers, that is to say, we operate the intersection on every pair of intervals.
+/// Operates an [intersection] on peers, that is to say, we operate the
+/// intersection on every pair of intervals.
 ///
 /// Uses [`Intersectable`] under the hood.
 ///
@@ -124,8 +125,8 @@ where
     }
 }
 
-// TODO: If a reverse Peekable becomes standard or when we'll import a crate that does that,
-// implement DoubleEndedIterator for PeerIntersection
+// TODO: If a reverse Peekable becomes standard or when we'll import a crate
+// that does that, implement DoubleEndedIterator for PeerIntersection
 
 impl<'a, I, T, U> FusedIterator for PeerIntersection<Peekable<I>>
 where
@@ -141,9 +142,11 @@ where
     Self::IntoIter: Iterator<Item = &'a T>,
     T: 'a + Intersectable<Output = U> + Into<U> + Clone,
 {
-    /// Intersects peer intervals of the iterator using the default overlap rules
+    /// Intersects peer intervals of the iterator using the default overlap
+    /// rules
     ///
-    /// Operates an [intersection] on peers, that is to say, we operate the intersection on every pair of intervals.
+    /// Operates an [intersection] on peers, that is to say, we operate the
+    /// intersection on every pair of intervals.
     ///
     /// Uses [`Intersectable`] under the hood.
     ///
@@ -163,7 +166,8 @@ where
 
 /// Peer intersection iterator for intervals using the given closure
 ///
-/// Operates an [intersection] on peers, that is to say, we operate the intersection on every pair of intervals.
+/// Operates an [intersection] on peers, that is to say, we operate the
+/// intersection on every pair of intervals.
 ///
 /// Uses [`Intersectable`] under the hood.
 ///
@@ -229,8 +233,8 @@ where
     }
 }
 
-// TODO: If a reverse Peekable becomes standard or when we'll import a crate that does that,
-// implement DoubleEndedIterator for PeerIntersectionWith
+// TODO: If a reverse Peekable becomes standard or when we'll import a crate
+// that does that, implement DoubleEndedIterator for PeerIntersectionWith
 
 impl<'a, I, T, U, F> FusedIterator for PeerIntersectionWith<Peekable<I>, F>
 where
@@ -250,7 +254,8 @@ where
 {
     /// Intersects peer intervals of the iterator using the given closure
     ///
-    /// Operates an [intersection] on peers, that is to say, we operate the intersection on every pair of intervals.
+    /// Operates an [intersection] on peers, that is to say, we operate the
+    /// intersection on every pair of intervals.
     ///
     /// Uses [`Intersectable`] under the hood.
     ///

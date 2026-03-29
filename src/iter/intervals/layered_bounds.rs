@@ -1,10 +1,13 @@
 //! Layered bounds iterator
 //!
-//! Iterator used for tracking layer changes between two sets of bounds, interpreted as two separate _layers_.
+//! Iterator used for tracking layer changes between two sets of bounds,
+//! interpreted as two separate _layers_.
 //!
-//! This iterator is very useful for [set operations](crate::iter::intervals::layered_bounds_set_ops) but also
-//! for making the process of dealing with bounds flexible, as layered bounds iterator return changes
-//! in the [`LayeredBoundsState`] using either [`LayeredBoundsStateChangeAtAbsoluteBound`] for absolute bounds,
+//! This iterator is very useful for [set
+//! operations](crate::iter::intervals::layered_bounds_set_ops) but also
+//! for making the process of dealing with bounds flexible, as layered bounds
+//! iterator return changes in the [`LayeredBoundsState`] using either
+//! [`LayeredBoundsStateChangeAtAbsoluteBound`] for absolute bounds,
 //! or [`LayeredBoundsStateChangeAtRelativeBound`] for relative bounds.
 //!
 //! # Examples
@@ -255,11 +258,14 @@ impl Sub for LayeredBoundsState {
 
 /// State change of a [`LayeredAbsoluteBounds`]
 ///
-/// This state change is situated using absolute bounds: [`AbsoluteStartBound`] and [`AbsoluteEndBound`].
+/// This state change is situated using absolute bounds: [`AbsoluteStartBound`]
+/// and [`AbsoluteEndBound`].
 ///
-/// A state change represents a point in the iterator where the [`LayeredBoundsState`] changes.
-/// It also stores with it _when_ the change happened, more precisely, when the old state ends, given by
-/// [`old_state_end`](LayeredBoundsStateChangeAtAbsoluteBound::old_state_end), and when the new state begins,
+/// A state change represents a point in the iterator where the
+/// [`LayeredBoundsState`] changes. It also stores with it _when_ the change
+/// happened, more precisely, when the old state ends, given by
+/// [`old_state_end`](LayeredBoundsStateChangeAtAbsoluteBound::old_state_end),
+/// and when the new state begins,
 /// given by [`new_state_start`](LayeredBoundsStateChangeAtAbsoluteBound::new_state_start).
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
@@ -354,10 +360,12 @@ impl LayeredBoundsStateChangeAtAbsoluteBound {
 
     /// Returns the end of the old state
     ///
-    /// Returns an [`AbsoluteEndBound`] wrapped in an [`Option`] that corresponds to the end of the old state.
+    /// Returns an [`AbsoluteEndBound`] wrapped in an [`Option`] that
+    /// corresponds to the end of the old state.
     ///
-    /// It is wrapped in an [`Option`] as the change can happen at [`AbsoluteStartBound::InfinitePast`],
-    /// therefore there is nothing that can be positioned _before_ infinite past.
+    /// It is wrapped in an [`Option`] as the change can happen at
+    /// [`AbsoluteStartBound::InfinitePast`], therefore there is nothing
+    /// that can be positioned _before_ infinite past.
     ///
     /// # Examples
     ///
@@ -396,10 +404,12 @@ impl LayeredBoundsStateChangeAtAbsoluteBound {
 
     /// Returns the start of the new state
     ///
-    /// Returns an [`AbsoluteStartBound`] wrapped in an [`Option`] that corresponds to the start of the new state.
+    /// Returns an [`AbsoluteStartBound`] wrapped in an [`Option`] that
+    /// corresponds to the start of the new state.
     ///
-    /// It is wrapped in an [`Option`] as the change can happen at [`AbsoluteEndBound::InfiniteFuture`],
-    /// therefore there is nothing that can be positioned _after_ infinite future.
+    /// It is wrapped in an [`Option`] as the change can happen at
+    /// [`AbsoluteEndBound::InfiniteFuture`], therefore there is nothing
+    /// that can be positioned _after_ infinite future.
     ///
     /// # Examples
     ///
@@ -440,11 +450,14 @@ impl LayeredBoundsStateChangeAtAbsoluteBound {
 
 /// State change of a [`LayeredRelativeBounds`]
 ///
-/// This state change is situated using relative bounds: [`RelativeStartBound`] and [`RelativeEndBound`].
+/// This state change is situated using relative bounds: [`RelativeStartBound`]
+/// and [`RelativeEndBound`].
 ///
-/// A state change represents a point in the iterator where the [`LayeredBoundsState`] changes.
-/// It also stores with it _when_ the change happened, more precisely, when the old state ends, given by
-/// [`old_state_end`](LayeredBoundsStateChangeAtRelativeBound::old_state_end), and when the new state begins,
+/// A state change represents a point in the iterator where the
+/// [`LayeredBoundsState`] changes. It also stores with it _when_ the change
+/// happened, more precisely, when the old state ends, given by
+/// [`old_state_end`](LayeredBoundsStateChangeAtRelativeBound::old_state_end),
+/// and when the new state begins,
 /// given by [`new_state_start`](LayeredBoundsStateChangeAtRelativeBound::new_state_start).
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
@@ -535,10 +548,12 @@ impl LayeredBoundsStateChangeAtRelativeBound {
 
     /// Returns the end of the old state
     ///
-    /// Returns an [`RelativeEndBound`] wrapped in an [`Option`] that corresponds to the end of the old state.
+    /// Returns an [`RelativeEndBound`] wrapped in an [`Option`] that
+    /// corresponds to the end of the old state.
     ///
-    /// It is wrapped in an [`Option`] as the change can happen at [`RelativeStartBound::InfinitePast`],
-    /// therefore there is nothing that can be positioned _before_ infinite past.
+    /// It is wrapped in an [`Option`] as the change can happen at
+    /// [`RelativeStartBound::InfinitePast`], therefore there is nothing
+    /// that can be positioned _before_ infinite past.
     ///
     /// # Examples
     ///
@@ -575,10 +590,12 @@ impl LayeredBoundsStateChangeAtRelativeBound {
 
     /// Returns the start of the new state
     ///
-    /// Returns an [`RelativeStartBound`] wrapped in an [`Option`] that corresponds to the start of the new state.
+    /// Returns an [`RelativeStartBound`] wrapped in an [`Option`] that
+    /// corresponds to the start of the new state.
     ///
-    /// It is wrapped in an [`Option`] as the change can happen at [`RelativeEndBound::InfiniteFuture`],
-    /// therefore there is nothing that can be positioned _after_ infinite future.
+    /// It is wrapped in an [`Option`] as the change can happen at
+    /// [`RelativeEndBound::InfiniteFuture`], therefore there is nothing
+    /// that can be positioned _after_ infinite future.
     ///
     /// # Examples
     ///
@@ -617,8 +634,8 @@ impl LayeredBoundsStateChangeAtRelativeBound {
 
 /// Iterator tracking which layers of absolute bounds are active
 ///
-/// Tracks the layers by using a [`LayeredBoundsState`] and outputs a [`LayeredBoundsStateChangeAtAbsoluteBound`]
-/// when this state changes.
+/// Tracks the layers by using a [`LayeredBoundsState`] and outputs a
+/// [`LayeredBoundsStateChangeAtAbsoluteBound`] when this state changes.
 ///
 /// # Examples
 ///
@@ -857,18 +874,22 @@ where
     ///
     /// 1. The bounds in each layer iterator **must be sorted chronologically**
     /// 2. The bounds in each layer iterator **must not be overlapping**
-    /// 3. The bounds in each layer iterator **must be paired**, that means there should be an equal amount of
-    ///    [`Start`](AbsoluteBound::Start)s and [`End`](AbsoluteBound::End)s.
+    /// 3. The bounds in each layer iterator **must be paired**, that means
+    ///    there should be an equal amount of [`Start`](AbsoluteBound::Start)s
+    ///    and [`End`](AbsoluteBound::End)s.
     ///
-    /// The responsibility of verifying those requirements are left to the caller
-    /// in order to prevent double-processing.
+    /// The responsibility of verifying those requirements are left to the
+    /// caller in order to prevent double-processing.
     ///
-    /// Requirements 1 and 2 are automatically guaranteed if the bounds are obtained from
+    /// Requirements 1 and 2 are automatically guaranteed if the bounds are
+    /// obtained from
     /// [`AbsoluteUnitedBoundsIter`](crate::iter::intervals::united_bounds::AbsoluteUnitedBoundsIter).
     ///
-    /// Requirement 3 is automatically guaranteed if the bounds are obtained from
+    /// Requirement 3 is automatically guaranteed if the bounds are obtained
+    /// from
     /// a set of [intervals](crate::intervals::absolute::AbsoluteInterval)
-    /// or from [bound pairs](crate::intervals::absolute::AbsoluteBoundPair) and then processed through
+    /// or from [bound pairs](crate::intervals::absolute::AbsoluteBoundPair) and
+    /// then processed through
     /// [`AbsoluteBoundPairIter`](crate::iter::intervals::bounds::AbsoluteBoundPairIter).
     #[must_use]
     pub fn new(first_layer_iter: I1, second_layer_iter: I2) -> LayeredAbsoluteBounds<Peekable<I1>, Peekable<I2>> {
@@ -1000,15 +1021,17 @@ where
 
 /// Computes the state change - first layer peeked, start bound
 ///
-/// Computes the [`LayeredBoundsStateChangeAtAbsoluteBound`] when only the first layer has a peeked value
-/// and is a start bound.
+/// Computes the [`LayeredBoundsStateChangeAtAbsoluteBound`] when only the first
+/// layer has a peeked value and is a start bound.
 ///
 /// # Panics
 ///
 /// Shouldn't panic but could if one of the following is true:
 ///
-/// 1. The peeked start bound of the first layer didn't equal the value returned by `next()` on the first layer
-/// 2. The value returned by `next()` on the first layer wasn't of the [`Start`](AbsoluteBound::Start) variant
+/// 1. The peeked start bound of the first layer didn't equal the value returned
+///    by `next()` on the first layer
+/// 2. The value returned by `next()` on the first layer wasn't of the
+///    [`Start`](AbsoluteBound::Start) variant
 #[must_use]
 pub fn layered_abs_bounds_change_start_first_layer(
     old_state: LayeredBoundsState,
@@ -1035,15 +1058,17 @@ pub fn layered_abs_bounds_change_start_first_layer(
 
 /// Computes the state change - first layer peeked, end bound
 ///
-/// Computes the [`LayeredBoundsStateChangeAtAbsoluteBound`] when only the first layer has a peeked value
-/// and is an end bound.
+/// Computes the [`LayeredBoundsStateChangeAtAbsoluteBound`] when only the first
+/// layer has a peeked value and is an end bound.
 ///
 /// # Panics
 ///
 /// Shouldn't panic but could if one of the following is true:
 ///
-/// 1. The peeked end bound of the first layer didn't equal the value returned by `next()` on the first layer
-/// 2. The value returned by `next()` on the first layer wasn't of the [`End`](AbsoluteBound::End) variant
+/// 1. The peeked end bound of the first layer didn't equal the value returned
+///    by `next()` on the first layer
+/// 2. The value returned by `next()` on the first layer wasn't of the
+///    [`End`](AbsoluteBound::End) variant
 #[must_use]
 pub fn layered_abs_bounds_change_end_first_layer(
     old_state: LayeredBoundsState,
@@ -1065,15 +1090,17 @@ pub fn layered_abs_bounds_change_end_first_layer(
 
 /// Computes the state change - second layer peeked, start bound
 ///
-/// Computes the [`LayeredBoundsStateChangeAtAbsoluteBound`] when only the second layer has a peeked value
-/// and is a start bound.
+/// Computes the [`LayeredBoundsStateChangeAtAbsoluteBound`] when only the
+/// second layer has a peeked value and is a start bound.
 ///
 /// # Panics
 ///
 /// Shouldn't panic but could if one of the following is true:
 ///
-/// 1. The peeked start bound of the second layer didn't equal the value returned by `next()` on the second layer
-/// 2. The value returned by `next()` on the second layer wasn't of the [`Start`](AbsoluteBound::Start) variant
+/// 1. The peeked start bound of the second layer didn't equal the value
+///    returned by `next()` on the second layer
+/// 2. The value returned by `next()` on the second layer wasn't of the
+///    [`Start`](AbsoluteBound::Start) variant
 #[must_use]
 pub fn layered_abs_bounds_change_start_second_layer(
     old_state: LayeredBoundsState,
@@ -1100,15 +1127,17 @@ pub fn layered_abs_bounds_change_start_second_layer(
 
 /// Computes the state change - second layer peeked, end bound
 ///
-/// Computes the [`LayeredBoundsStateChangeAtAbsoluteBound`] when only the second layer has a peeked value
-/// and is an end bound.
+/// Computes the [`LayeredBoundsStateChangeAtAbsoluteBound`] when only the
+/// second layer has a peeked value and is an end bound.
 ///
 /// # Panics
 ///
 /// Shouldn't panic but could if one of the following is true:
 ///
-/// 1. The peeked end bound of the second layer didn't equal the value returned by `next()` on the second layer
-/// 2. The value returned by `next()` on the second layer wasn't of the [`End`](AbsoluteBound::End) variant
+/// 1. The peeked end bound of the second layer didn't equal the value returned
+///    by `next()` on the second layer
+/// 2. The value returned by `next()` on the second layer wasn't of the
+///    [`End`](AbsoluteBound::End) variant
 #[must_use]
 pub fn layered_abs_bounds_change_end_second_layer(
     old_state: LayeredBoundsState,
@@ -1135,15 +1164,17 @@ pub fn layered_abs_bounds_change_end_second_layer(
 
 /// Computes the state change - both layers peeked, both start bounds
 ///
-/// Computes the [`LayeredBoundsStateChangeAtAbsoluteBound`] when both layers have a peeked value
-/// and both are start bounds.
+/// Computes the [`LayeredBoundsStateChangeAtAbsoluteBound`] when both layers
+/// have a peeked value and both are start bounds.
 ///
 /// # Panics
 ///
 /// Shouldn't panic but could if one of the following is true:
 ///
-/// 1. The peeked value of a layer wasn't equal to the value returned by calling `next()` on that layer
-/// 2. The value returned by `next()` on the layer wasn't of the expected variant
+/// 1. The peeked value of a layer wasn't equal to the value returned by calling
+///    `next()` on that layer
+/// 2. The value returned by `next()` on the layer wasn't of the expected
+///    variant
 #[must_use]
 pub fn layered_abs_bounds_change_start_start(
     old_state: LayeredBoundsState,
@@ -1183,7 +1214,8 @@ pub fn layered_abs_bounds_change_start_start(
 
             *state_mut = (*state_mut).add(LayeredBoundsState::BothLayers);
 
-            // We use the first layer's bound but that doesn't matter as bounds from both layers are equal
+            // We use the first layer's bound but that doesn't matter as bounds from both
+            // layers are equal
             Change::new(
                 old_state,
                 *state_mut,
@@ -1210,18 +1242,23 @@ pub fn layered_abs_bounds_change_start_start(
     }
 }
 
-/// Computes the state change - both layers peeked, first layer start bound, second layer end bound
+/// Computes the state change - both layers peeked, first layer start bound,
+/// second layer end bound
 ///
-/// Computes the [`LayeredBoundsStateChangeAtAbsoluteBound`] when both layers have a peeked value
-/// and the first layer is a start bound and the second layer is an end bound.
+/// Computes the [`LayeredBoundsStateChangeAtAbsoluteBound`] when both layers
+/// have a peeked value and the first layer is a start bound and the second
+/// layer is an end bound.
 ///
 /// # Panics
 ///
 /// Shouldn't panic but could if one of the following is true:
 ///
-/// 1. The peeked value of a layer wasn't equal to the value returned by calling `next()` on that layer
-/// 2. The value returned by `next()` on the layer wasn't of the expected variant
-/// 3. The comparison between [`AbsoluteStartBound`] and [`AbsoluteEndBound`] returned [`None`]
+/// 1. The peeked value of a layer wasn't equal to the value returned by calling
+///    `next()` on that layer
+/// 2. The value returned by `next()` on the layer wasn't of the expected
+///    variant
+/// 3. The comparison between [`AbsoluteStartBound`] and [`AbsoluteEndBound`]
+///    returned [`None`]
 #[must_use]
 pub fn layered_abs_bounds_change_start_end(
     old_state: LayeredBoundsState,
@@ -1283,8 +1320,8 @@ pub fn layered_abs_bounds_change_start_end(
                 let mut start_of_first_layer = finite_first_layer_start; // Copy
                 start_of_first_layer.set_inclusivity(BoundInclusivity::Exclusive);
 
-                // Since the queued result will always be emptied before any of this logic is run again,
-                // we can safely modify `state_mut` here.
+                // Since the queued result will always be emptied before any of this logic is
+                // run again, we can safely modify `state_mut` here.
                 *state_mut = LayeredBoundsState::FirstLayer;
 
                 *queued_result_mut = Some(Change::new(
@@ -1327,18 +1364,23 @@ pub fn layered_abs_bounds_change_start_end(
     }
 }
 
-/// Computes the state change - both layers peeked, first layer end bound, second layer start bound
+/// Computes the state change - both layers peeked, first layer end bound,
+/// second layer start bound
 ///
-/// Computes the [`LayeredBoundsStateChangeAtAbsoluteBound`] when both layers have a peeked value
-/// and the first layer is an end bound and the second layer is a start bound.
+/// Computes the [`LayeredBoundsStateChangeAtAbsoluteBound`] when both layers
+/// have a peeked value and the first layer is an end bound and the second layer
+/// is a start bound.
 ///
 /// # Panics
 ///
 /// Shouldn't panic but could if one of the following is true:
 ///
-/// 1. The peeked value of a layer wasn't equal to the value returned by calling `next()` on that layer
-/// 2. The value returned by `next()` on the layer wasn't of the expected variant
-/// 3. The comparison between [`AbsoluteEndBound`] and [`AbsoluteStartBound`] returned [`None`]
+/// 1. The peeked value of a layer wasn't equal to the value returned by calling
+///    `next()` on that layer
+/// 2. The value returned by `next()` on the layer wasn't of the expected
+///    variant
+/// 3. The comparison between [`AbsoluteEndBound`] and [`AbsoluteStartBound`]
+///    returned [`None`]
 #[must_use]
 pub fn layered_abs_bounds_change_end_start(
     old_state: LayeredBoundsState,
@@ -1395,8 +1437,8 @@ pub fn layered_abs_bounds_change_end_start(
                 let mut start_of_second_layer = finite_second_layer_start; // Copy
                 start_of_second_layer.set_inclusivity(BoundInclusivity::Exclusive);
 
-                // Since the queued result will always be emptied before any of this logic is run again,
-                // we can safely modify `state_mut` here.
+                // Since the queued result will always be emptied before any of this logic is
+                // run again, we can safely modify `state_mut` here.
                 *state_mut = LayeredBoundsState::SecondLayer;
 
                 *queued_result_mut = Some(Change::new(
@@ -1439,17 +1481,20 @@ pub fn layered_abs_bounds_change_end_start(
     }
 }
 
-/// Computes the state change - both layers peeked, first layer end bound, second layer start bound
+/// Computes the state change - both layers peeked, first layer end bound,
+/// second layer start bound
 ///
-/// Computes the [`LayeredBoundsStateChangeAtAbsoluteBound`] when both layers have a peeked value
-/// and both are end bounds.
+/// Computes the [`LayeredBoundsStateChangeAtAbsoluteBound`] when both layers
+/// have a peeked value and both are end bounds.
 ///
 /// # Panics
 ///
 /// Shouldn't panic but could if one of the following is true:
 ///
-/// 1. The peeked value of a layer wasn't equal to the value returned by calling `next()` on that layer
-/// 2. The value returned by `next()` on the layer wasn't of the expected variant
+/// 1. The peeked value of a layer wasn't equal to the value returned by calling
+///    `next()` on that layer
+/// 2. The value returned by `next()` on the layer wasn't of the expected
+///    variant
 #[must_use]
 pub fn layered_abs_bounds_change_end_end(
     old_state: LayeredBoundsState,
@@ -1507,8 +1552,8 @@ pub fn layered_abs_bounds_change_end_end(
 
 /// Iterator tracking which layers of relative bounds are active
 ///
-/// Tracks the layers by using a [`LayeredBoundsState`] and outputs a [`LayeredBoundsStateChangeAtRelativeBound`]
-/// when this state changes.
+/// Tracks the layers by using a [`LayeredBoundsState`] and outputs a
+/// [`LayeredBoundsStateChangeAtRelativeBound`] when this state changes.
 ///
 /// # Examples
 ///
@@ -1743,18 +1788,22 @@ where
     ///
     /// 1. The bounds in each layer iterator **must be sorted chronologically**
     /// 2. The bounds in each layer iterator **must not be overlapping**
-    /// 3. The bounds in each layer iterator **must be paired**, that means there should be an equal amount of
-    ///    [`Start`](RelativeBound::Start)s and [`End`](RelativeBound::End)s.
+    /// 3. The bounds in each layer iterator **must be paired**, that means
+    ///    there should be an equal amount of [`Start`](RelativeBound::Start)s
+    ///    and [`End`](RelativeBound::End)s.
     ///
-    /// The responsibility of verifying those requirements are left to the caller
-    /// in order to prevent double-processing.
+    /// The responsibility of verifying those requirements are left to the
+    /// caller in order to prevent double-processing.
     ///
-    /// Requirements 1 and 2 are automatically guaranteed if the bounds are obtained from
+    /// Requirements 1 and 2 are automatically guaranteed if the bounds are
+    /// obtained from
     /// [`RelativeUnitedBoundsIter`](crate::iter::intervals::united_bounds::RelativeUnitedBoundsIter).
     ///
-    /// Requirement 3 is automatically guaranteed if the bounds are obtained from
+    /// Requirement 3 is automatically guaranteed if the bounds are obtained
+    /// from
     /// a set of [intervals](crate::intervals::relative::RelativeInterval)
-    /// or from [bound pairs](crate::intervals::relative::RelativeBoundPair) and then processed through
+    /// or from [bound pairs](crate::intervals::relative::RelativeBoundPair) and
+    /// then processed through
     /// [`RelativeBoundPairIter`](crate::iter::intervals::bounds::RelativeBoundPairIter).
     #[must_use]
     pub fn new(first_layer_iter: I1, second_layer_iter: I2) -> LayeredRelativeBounds<Peekable<I1>, Peekable<I2>> {
@@ -1886,15 +1935,17 @@ where
 
 /// Computes the state change - first layer peeked, start bound
 ///
-/// Computes the [`LayeredBoundsStateChangeAtRelativeBound`] when only the first layer has a peeked value
-/// and is a start bound.
+/// Computes the [`LayeredBoundsStateChangeAtRelativeBound`] when only the first
+/// layer has a peeked value and is a start bound.
 ///
 /// # Panics
 ///
 /// Shouldn't panic but could if one of the following is true:
 ///
-/// 1. The peeked start bound of the first layer didn't equal the value returned by `next()` on the first layer
-/// 2. The value returned by `next()` on the first layer wasn't of the [`Start`](RelativeBound::Start) variant
+/// 1. The peeked start bound of the first layer didn't equal the value returned
+///    by `next()` on the first layer
+/// 2. The value returned by `next()` on the first layer wasn't of the
+///    [`Start`](RelativeBound::Start) variant
 #[must_use]
 pub fn layered_rel_bounds_change_start_first_layer(
     old_state: LayeredBoundsState,
@@ -1921,15 +1972,17 @@ pub fn layered_rel_bounds_change_start_first_layer(
 
 /// Computes the state change - first layer peeked, end bound
 ///
-/// Computes the [`LayeredBoundsStateChangeAtRelativeBound`] when only the first layer has a peeked value
-/// and is an end bound.
+/// Computes the [`LayeredBoundsStateChangeAtRelativeBound`] when only the first
+/// layer has a peeked value and is an end bound.
 ///
 /// # Panics
 ///
 /// Shouldn't panic but could if one of the following is true:
 ///
-/// 1. The peeked end bound of the first layer didn't equal the value returned by `next()` on the first layer
-/// 2. The value returned by `next()` on the first layer wasn't of the [`End`](RelativeBound::End) variant
+/// 1. The peeked end bound of the first layer didn't equal the value returned
+///    by `next()` on the first layer
+/// 2. The value returned by `next()` on the first layer wasn't of the
+///    [`End`](RelativeBound::End) variant
 #[must_use]
 pub fn layered_rel_bounds_change_end_first_layer(
     old_state: LayeredBoundsState,
@@ -1951,15 +2004,17 @@ pub fn layered_rel_bounds_change_end_first_layer(
 
 /// Computes the state change - second layer peeked, start bound
 ///
-/// Computes the [`LayeredBoundsStateChangeAtRelativeBound`] when only the second layer has a peeked value
-/// and is a start bound.
+/// Computes the [`LayeredBoundsStateChangeAtRelativeBound`] when only the
+/// second layer has a peeked value and is a start bound.
 ///
 /// # Panics
 ///
 /// Shouldn't panic but could if one of the following is true:
 ///
-/// 1. The peeked start bound of the second layer didn't equal the value returned by `next()` on the second layer
-/// 2. The value returned by `next()` on the second layer wasn't of the [`Start`](RelativeBound::Start) variant
+/// 1. The peeked start bound of the second layer didn't equal the value
+///    returned by `next()` on the second layer
+/// 2. The value returned by `next()` on the second layer wasn't of the
+///    [`Start`](RelativeBound::Start) variant
 #[must_use]
 pub fn layered_rel_bounds_change_start_second_layer(
     old_state: LayeredBoundsState,
@@ -1986,15 +2041,17 @@ pub fn layered_rel_bounds_change_start_second_layer(
 
 /// Computes the state change - second layer peeked, end bound
 ///
-/// Computes the [`LayeredBoundsStateChangeAtRelativeBound`] when only the second layer has a peeked value
-/// and is an end bound.
+/// Computes the [`LayeredBoundsStateChangeAtRelativeBound`] when only the
+/// second layer has a peeked value and is an end bound.
 ///
 /// # Panics
 ///
 /// Shouldn't panic but could if one of the following is true:
 ///
-/// 1. The peeked end bound of the second layer didn't equal the value returned by `next()` on the second layer
-/// 2. The value returned by `next()` on the second layer wasn't of the [`End`](RelativeBound::End) variant
+/// 1. The peeked end bound of the second layer didn't equal the value returned
+///    by `next()` on the second layer
+/// 2. The value returned by `next()` on the second layer wasn't of the
+///    [`End`](RelativeBound::End) variant
 #[must_use]
 pub fn layered_rel_bounds_change_end_second_layer(
     old_state: LayeredBoundsState,
@@ -2021,15 +2078,17 @@ pub fn layered_rel_bounds_change_end_second_layer(
 
 /// Computes the state change - both layers peeked, both start bounds
 ///
-/// Computes the [`LayeredBoundsStateChangeAtRelativeBound`] when both layers have a peeked value
-/// and both are start bounds.
+/// Computes the [`LayeredBoundsStateChangeAtRelativeBound`] when both layers
+/// have a peeked value and both are start bounds.
 ///
 /// # Panics
 ///
 /// Shouldn't panic but could if one of the following is true:
 ///
-/// 1. The peeked value of a layer wasn't equal to the value returned by calling `next()` on that layer
-/// 2. The value returned by `next()` on the layer wasn't of the expected variant
+/// 1. The peeked value of a layer wasn't equal to the value returned by calling
+///    `next()` on that layer
+/// 2. The value returned by `next()` on the layer wasn't of the expected
+///    variant
 #[must_use]
 pub fn layered_rel_bounds_change_start_start(
     old_state: LayeredBoundsState,
@@ -2069,7 +2128,8 @@ pub fn layered_rel_bounds_change_start_start(
 
             *state_mut = (*state_mut).add(LayeredBoundsState::BothLayers);
 
-            // We use the first layer's bound but that doesn't matter as bounds from both layers are equal
+            // We use the first layer's bound but that doesn't matter as bounds from both
+            // layers are equal
             Change::new(
                 old_state,
                 *state_mut,
@@ -2096,18 +2156,23 @@ pub fn layered_rel_bounds_change_start_start(
     }
 }
 
-/// Computes the state change - both layers peeked, first layer start bound, second layer end bound
+/// Computes the state change - both layers peeked, first layer start bound,
+/// second layer end bound
 ///
-/// Computes the [`LayeredBoundsStateChangeAtRelativeBound`] when both layers have a peeked value
-/// and the first layer is a start bound and the second layer is an end bound.
+/// Computes the [`LayeredBoundsStateChangeAtRelativeBound`] when both layers
+/// have a peeked value and the first layer is a start bound and the second
+/// layer is an end bound.
 ///
 /// # Panics
 ///
 /// Shouldn't panic but could if one of the following is true:
 ///
-/// 1. The peeked value of a layer wasn't equal to the value returned by calling `next()` on that layer
-/// 2. The value returned by `next()` on the layer wasn't of the expected variant
-/// 3. The comparison between [`RelativeStartBound`] and [`RelativeEndBound`] returned [`None`]
+/// 1. The peeked value of a layer wasn't equal to the value returned by calling
+///    `next()` on that layer
+/// 2. The value returned by `next()` on the layer wasn't of the expected
+///    variant
+/// 3. The comparison between [`RelativeStartBound`] and [`RelativeEndBound`]
+///    returned [`None`]
 #[must_use]
 pub fn layered_rel_bounds_change_start_end(
     old_state: LayeredBoundsState,
@@ -2169,8 +2234,8 @@ pub fn layered_rel_bounds_change_start_end(
                 let mut start_of_first_layer = finite_first_layer_start; // Copy
                 start_of_first_layer.set_inclusivity(BoundInclusivity::Exclusive);
 
-                // Since the queued result will always be emptied before any of this logic is run again,
-                // we can safely modify `state_mut` here.
+                // Since the queued result will always be emptied before any of this logic is
+                // run again, we can safely modify `state_mut` here.
                 *state_mut = LayeredBoundsState::FirstLayer;
 
                 *queued_result_mut = Some(Change::new(
@@ -2213,18 +2278,23 @@ pub fn layered_rel_bounds_change_start_end(
     }
 }
 
-/// Computes the state change - both layers peeked, first layer end bound, second layer start bound
+/// Computes the state change - both layers peeked, first layer end bound,
+/// second layer start bound
 ///
-/// Computes the [`LayeredBoundsStateChangeAtRelativeBound`] when both layers have a peeked value
-/// and the first layer is an end bound and the second layer is a start bound.
+/// Computes the [`LayeredBoundsStateChangeAtRelativeBound`] when both layers
+/// have a peeked value and the first layer is an end bound and the second layer
+/// is a start bound.
 ///
 /// # Panics
 ///
 /// Shouldn't panic but could if one of the following is true:
 ///
-/// 1. The peeked value of a layer wasn't equal to the value returned by calling `next()` on that layer
-/// 2. The value returned by `next()` on the layer wasn't of the expected variant
-/// 3. The comparison between [`RelativeEndBound`] and [`RelativeStartBound`] returned [`None`]
+/// 1. The peeked value of a layer wasn't equal to the value returned by calling
+///    `next()` on that layer
+/// 2. The value returned by `next()` on the layer wasn't of the expected
+///    variant
+/// 3. The comparison between [`RelativeEndBound`] and [`RelativeStartBound`]
+///    returned [`None`]
 #[must_use]
 pub fn layered_rel_bounds_change_end_start(
     old_state: LayeredBoundsState,
@@ -2281,8 +2351,8 @@ pub fn layered_rel_bounds_change_end_start(
                 let mut start_of_second_layer = finite_second_layer_start; // Copy
                 start_of_second_layer.set_inclusivity(BoundInclusivity::Exclusive);
 
-                // Since the queued result will always be emptied before any of this logic is run again,
-                // we can safely modify `state_mut` here.
+                // Since the queued result will always be emptied before any of this logic is
+                // run again, we can safely modify `state_mut` here.
                 *state_mut = LayeredBoundsState::SecondLayer;
 
                 *queued_result_mut = Some(Change::new(
@@ -2325,17 +2395,20 @@ pub fn layered_rel_bounds_change_end_start(
     }
 }
 
-/// Computes the state change - both layers peeked, first layer end bound, second layer start bound
+/// Computes the state change - both layers peeked, first layer end bound,
+/// second layer start bound
 ///
-/// Computes the [`LayeredBoundsStateChangeAtRelativeBound`] when both layers have a peeked value
-/// and both are end bounds.
+/// Computes the [`LayeredBoundsStateChangeAtRelativeBound`] when both layers
+/// have a peeked value and both are end bounds.
 ///
 /// # Panics
 ///
 /// Shouldn't panic but could if one of the following is true:
 ///
-/// 1. The peeked value of a layer wasn't equal to the value returned by calling `next()` on that layer
-/// 2. The value returned by `next()` on the layer wasn't of the expected variant
+/// 1. The peeked value of a layer wasn't equal to the value returned by calling
+///    `next()` on that layer
+/// 2. The value returned by `next()` on the layer wasn't of the expected
+///    variant
 #[must_use]
 pub fn layered_rel_bounds_change_end_end(
     old_state: LayeredBoundsState,

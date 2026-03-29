@@ -2,8 +2,9 @@
 //!
 //! Iterator that runs over the bounds of a set of intervals.
 //!
-//! Remember, this iterator **does not** sort the intervals' bound. This means that the bounds output by the iterator
-//! are in the same order than the intervals.
+//! Remember, this iterator **does not** sort the intervals' bound. This means
+//! that the bounds output by the iterator are in the same order than the
+//! intervals.
 //!
 //! # Examples
 //!
@@ -89,7 +90,8 @@ impl AbsoluteBoundsIter {
 
     /// Unites the bounds
     ///
-    /// Collects the bounds, sorts them and creates an [`AbsoluteUnitedBoundsIter`] from them.
+    /// Collects the bounds, sorts them and creates an
+    /// [`AbsoluteUnitedBoundsIter`] from them.
     ///
     /// # Examples
     ///
@@ -138,19 +140,25 @@ impl AbsoluteBoundsIter {
         AbsoluteUnitedBoundsIter::new(bounds.into_iter())
     }
 
-    /// Creates a [`LayeredAbsoluteBounds`] without checking if it violates invariants
+    /// Creates a [`LayeredAbsoluteBounds`] without checking if it violates
+    /// invariants
     ///
-    /// Combines the current iterator and the given other iterator into a [`LayeredAbsoluteBounds`] without
-    /// checking if any of them violate invariants.
+    /// Combines the current iterator and the given other iterator into a
+    /// [`LayeredAbsoluteBounds`] without checking if any of them violate
+    /// invariants.
     ///
-    /// It is possible to use this method safely, for example in order to avoid going
-    /// through an [`AbsoluteUnitedBoundsIter`] between each use
-    /// of [set operations on layered bounds iterators](crate::iter::intervals::layered_bounds_set_ops),
-    /// especially if the operation guarantees that there are no overlapping intervals left.
+    /// It is possible to use this method safely, for example in order to avoid
+    /// going through an [`AbsoluteUnitedBoundsIter`] between each use
+    /// of [set operations on layered bounds
+    /// iterators](crate::iter::intervals::layered_bounds_set_ops),
+    /// especially if the operation guarantees that there are no overlapping
+    /// intervals left.
     ///
-    /// To make sure you use this method in a safe manner, double-check that this iterator,
-    /// acting as the first layer, and the given iterator, acting as the second layer, don't violate
-    /// the input requirements laid out by [`LayeredAbsoluteBounds`], see [`LayeredAbsoluteBounds::new`].
+    /// To make sure you use this method in a safe manner, double-check that
+    /// this iterator, acting as the first layer, and the given iterator,
+    /// acting as the second layer, don't violate the input requirements
+    /// laid out by [`LayeredAbsoluteBounds`], see
+    /// [`LayeredAbsoluteBounds::new`].
     ///
     /// # Examples
     ///
@@ -297,7 +305,8 @@ impl RelativeBoundsIter {
 
     /// Unites the bounds
     ///
-    /// Collects the bounds, sorts them and creates an [`RelativeUnitedBoundsIter`] from them.
+    /// Collects the bounds, sorts them and creates an
+    /// [`RelativeUnitedBoundsIter`] from them.
     ///
     /// # Examples
     ///
@@ -344,19 +353,25 @@ impl RelativeBoundsIter {
         RelativeUnitedBoundsIter::new(bounds.into_iter())
     }
 
-    /// Creates a [`LayeredRelativeBounds`] without checking if it violates invariants
+    /// Creates a [`LayeredRelativeBounds`] without checking if it violates
+    /// invariants
     ///
-    /// Combines the current iterator and the given other iterator into a [`LayeredRelativeBounds`] without
-    /// checking if any of them violate invariants.
+    /// Combines the current iterator and the given other iterator into a
+    /// [`LayeredRelativeBounds`] without checking if any of them violate
+    /// invariants.
     ///
-    /// It is possible to use this method safely, for example in order to avoid going
-    /// through an [`RelativeUnitedBoundsIter`] between each use
-    /// of [set operations on layered bounds iterators](crate::iter::intervals::layered_bounds_set_ops),
-    /// especially if the operation guarantees that there are no overlapping intervals left.
+    /// It is possible to use this method safely, for example in order to avoid
+    /// going through an [`RelativeUnitedBoundsIter`] between each use
+    /// of [set operations on layered bounds
+    /// iterators](crate::iter::intervals::layered_bounds_set_ops),
+    /// especially if the operation guarantees that there are no overlapping
+    /// intervals left.
     ///
-    /// To make sure you use this method in a safe manner, double-check that this iterator,
-    /// acting as the first layer, and the given iterator, acting as the second layer, don't violate
-    /// the input requirements laid out by [`LayeredRelativeBounds`], see [`LayeredRelativeBounds::new`].
+    /// To make sure you use this method in a safe manner, double-check that
+    /// this iterator, acting as the first layer, and the given iterator,
+    /// acting as the second layer, don't violate the input requirements
+    /// laid out by [`LayeredRelativeBounds`], see
+    /// [`LayeredRelativeBounds::new`].
     ///
     /// # Examples
     ///

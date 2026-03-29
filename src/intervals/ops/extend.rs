@@ -1,10 +1,12 @@
 //! Interval extension up to another interval
 //!
-//! Extends an interval up to another. The process takes the lowest start bound of the two intervals
-//! and the highest end bound of the two intervals, then creates a new interval spanning those two points.
+//! Extends an interval up to another. The process takes the lowest start bound
+//! of the two intervals and the highest end bound of the two intervals, then
+//! creates a new interval spanning those two points.
 //!
-//! Regarding bound inclusivity, for each point we will get the bound inclusivity of the interval from which
-//! the point was taken. If they were equal, we choose the most inclusive bound.
+//! Regarding bound inclusivity, for each point we will get the bound
+//! inclusivity of the interval from which the point was taken. If they were
+//! equal, we choose the most inclusive bound.
 //!
 //! # Examples
 //!
@@ -46,35 +48,58 @@
 //! ```
 
 use crate::intervals::absolute::{
-    AbsoluteBoundPair, AbsoluteEndBound, AbsoluteInterval, AbsoluteStartBound, BoundedAbsoluteInterval, EmptiableAbsoluteBoundPair, EmptiableAbsoluteInterval, HalfBoundedAbsoluteInterval, HasAbsoluteBoundPair, HasEmptiableAbsoluteBoundPair
+    AbsoluteBoundPair,
+    AbsoluteEndBound,
+    AbsoluteInterval,
+    AbsoluteStartBound,
+    BoundedAbsoluteInterval,
+    EmptiableAbsoluteBoundPair,
+    EmptiableAbsoluteInterval,
+    HalfBoundedAbsoluteInterval,
+    HasAbsoluteBoundPair,
+    HasEmptiableAbsoluteBoundPair,
 };
 use crate::intervals::relative::{
-    BoundedRelativeInterval, EmptiableRelativeBoundPair, EmptiableRelativeInterval, HalfBoundedRelativeInterval, HasEmptiableRelativeBoundPair, HasRelativeBoundPair, RelativeBoundPair, RelativeEndBound, RelativeInterval, RelativeStartBound
+    BoundedRelativeInterval,
+    EmptiableRelativeBoundPair,
+    EmptiableRelativeInterval,
+    HalfBoundedRelativeInterval,
+    HasEmptiableRelativeBoundPair,
+    HasRelativeBoundPair,
+    RelativeBoundPair,
+    RelativeEndBound,
+    RelativeInterval,
+    RelativeStartBound,
 };
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 
 /// Capacity to extend an interval up to another
 ///
-/// Extends an interval up to another. The process takes the lowest start bound of the two intervals
-/// and the highest end bound of the two intervals, then creates a new interval spanning those two points.
+/// Extends an interval up to another. The process takes the lowest start bound
+/// of the two intervals and the highest end bound of the two intervals, then
+/// creates a new interval spanning those two points.
 ///
-/// Regarding bound inclusivity, for each point we will get the bound inclusivity of the interval from which
-/// the point was taken. If they were equal, we choose the most inclusive bound.
+/// Regarding bound inclusivity, for each point we will get the bound
+/// inclusivity of the interval from which the point was taken. If they were
+/// equal, we choose the most inclusive bound.
 pub trait Extensible<Rhs = Self> {
     /// Output type
     type Output;
 
     /// Creates an extended interval from the current one and given one
     ///
-    /// Extends an interval up to another. The process takes the lowest start bound of the two intervals
-    /// and the highest end bound of the two intervals, then creates a new interval spanning those two points.
+    /// Extends an interval up to another. The process takes the lowest start
+    /// bound of the two intervals and the highest end bound of the two
+    /// intervals, then creates a new interval spanning those two points.
     ///
-    /// Regarding bound inclusivity, for each point we will get the bound inclusivity of the interval from which
-    /// the point was taken. If they were equal, we choose the most inclusive bound.
+    /// Regarding bound inclusivity, for each point we will get the bound
+    /// inclusivity of the interval from which the point was taken. If they
+    /// were equal, we choose the most inclusive bound.
     ///
     /// If both intervals are empty, the method just returns an empty interval.
     ///
-    /// If one of the intervals is empty, the method just return a clone of the other non-empty interval.
+    /// If one of the intervals is empty, the method just return a clone of the
+    /// other non-empty interval.
     ///
     /// # Examples
     ///

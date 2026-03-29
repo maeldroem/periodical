@@ -78,8 +78,9 @@ use crate::ops::DifferenceResult;
 
 /// Peer difference iterator for intervals using predefined rules
 ///
-/// Operates a [difference] on peers, that is to say, we operate the difference on every pair of intervals,
-/// using the intervals in the same order of as difference's operands: the first element of the pair is the _removed_,
+/// Operates a [difference] on peers, that is to say, we operate the difference
+/// on every pair of intervals, using the intervals in the same order of as
+/// difference's operands: the first element of the pair is the _removed_,
 /// the second element of the pair is the _remover_.
 ///
 /// Uses [`Differentiable`] under the hood.
@@ -145,8 +146,8 @@ where
     }
 }
 
-// TODO: If a reverse Peekable becomes standard or when we'll import a crate that does that,
-// implement DoubleEndedIterator for PeerDifference
+// TODO: If a reverse Peekable becomes standard or when we'll import a crate
+// that does that, implement DoubleEndedIterator for PeerDifference
 
 impl<'a, I, T, U> FusedIterator for PeerDifference<Peekable<I>>
 where
@@ -162,10 +163,12 @@ where
     Self::IntoIter: Iterator<Item = &'a T>,
     T: 'a + Differentiable<Output = U> + Into<U> + Clone,
 {
-    /// Differentiates peer intervals of the iterator using the default overlap rules
+    /// Differentiates peer intervals of the iterator using the default overlap
+    /// rules
     ///
-    /// Operates a [difference] on peers, that is to say, we operate the difference on every pair of intervals,
-    /// using the intervals in the same order of as difference's operands: the first element of the pair is
+    /// Operates a [difference] on peers, that is to say, we operate the
+    /// difference on every pair of intervals, using the intervals in the
+    /// same order of as difference's operands: the first element of the pair is
     /// the _removed_, the second element of the pair is the _remover_.
     ///
     /// Uses [`Differentiable`] under the hood.
@@ -186,8 +189,9 @@ where
 
 /// Peer difference iterator for intervals using the given closure
 ///
-/// Operates a [difference] on peers, that is to say, we operate the difference on every pair of intervals,
-/// using the intervals in the same order of as difference's operands: the first element of the pair is the _removed_,
+/// Operates a [difference] on peers, that is to say, we operate the difference
+/// on every pair of intervals, using the intervals in the same order of as
+/// difference's operands: the first element of the pair is the _removed_,
 /// the second element of the pair is the _remover_.
 ///
 /// Uses [`Differentiable`] under the hood.
@@ -255,8 +259,8 @@ where
     }
 }
 
-// TODO: If a reverse Peekable becomes standard or when we'll import a crate that does that,
-// implement DoubleEndedIterator for PeerDifferenceWith
+// TODO: If a reverse Peekable becomes standard or when we'll import a crate
+// that does that, implement DoubleEndedIterator for PeerDifferenceWith
 
 impl<'a, I, T, U, F> FusedIterator for PeerDifferenceWith<Peekable<I>, F>
 where
@@ -276,8 +280,9 @@ where
 {
     /// Differentiates peer intervals of the iterator using the given closure
     ///
-    /// Operates a [difference] on peers, that is to say, we operate the difference on every pair of intervals,
-    /// using the intervals in the same order of as difference's operands: the first element of the pair is
+    /// Operates a [difference] on peers, that is to say, we operate the
+    /// difference on every pair of intervals, using the intervals in the
+    /// same order of as difference's operands: the first element of the pair is
     /// the _removed_, the second element of the pair is the _remover_.
     ///
     /// Uses [`Differentiable`] under the hood.

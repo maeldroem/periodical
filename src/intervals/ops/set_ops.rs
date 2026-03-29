@@ -10,16 +10,29 @@
 use super::abridge::Abridgable;
 use super::extend::Extensible;
 use super::overlap::CanPositionOverlap;
-
 use crate::intervals::absolute::{
-    AbsoluteBoundPair, AbsoluteInterval, BoundedAbsoluteInterval, EmptiableAbsoluteBoundPair, EmptiableAbsoluteInterval, HalfBoundedAbsoluteInterval, HasAbsoluteBoundPair, HasEmptiableAbsoluteBoundPair
+    AbsoluteBoundPair,
+    AbsoluteInterval,
+    BoundedAbsoluteInterval,
+    EmptiableAbsoluteBoundPair,
+    EmptiableAbsoluteInterval,
+    HalfBoundedAbsoluteInterval,
+    HasAbsoluteBoundPair,
+    HasEmptiableAbsoluteBoundPair,
 };
 use crate::intervals::meta::Interval;
 use crate::intervals::ops::Complementable;
 use crate::intervals::ops::overlap::{OverlapRule, OverlapRuleSet};
 use crate::intervals::ops::remove_overlap::{OverlapRemovable, OverlapRemovalErr, OverlapRemovalResult};
 use crate::intervals::relative::{
-    BoundedRelativeInterval, EmptiableRelativeBoundPair, EmptiableRelativeInterval, HalfBoundedRelativeInterval, HasEmptiableRelativeBoundPair, HasRelativeBoundPair, RelativeBoundPair, RelativeInterval
+    BoundedRelativeInterval,
+    EmptiableRelativeBoundPair,
+    EmptiableRelativeInterval,
+    HalfBoundedRelativeInterval,
+    HasEmptiableRelativeBoundPair,
+    HasRelativeBoundPair,
+    RelativeBoundPair,
+    RelativeInterval,
 };
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 use crate::ops::{ComplementResult, DifferenceResult, IntersectionResult, SymmetricDifferenceResult, UnionResult};
@@ -373,7 +386,8 @@ where
 /// Unites two [`AbsoluteBoundPair`]
 #[must_use]
 pub fn unite_abs_bound_pair(a: &AbsoluteBoundPair, b: &AbsoluteBoundPair) -> UnionResult<AbsoluteBoundPair> {
-    // We use the lenient rule set with allow adjacency rule so that "touching" intervals are united together
+    // We use the lenient rule set with allow adjacency rule so that "touching"
+    // intervals are united together
     if !a.overlaps(b, OverlapRuleSet::Lenient, &[OverlapRule::AllowAdjacency]) {
         return UnionResult::Separate;
     }
@@ -383,7 +397,8 @@ pub fn unite_abs_bound_pair(a: &AbsoluteBoundPair, b: &AbsoluteBoundPair) -> Uni
 
 /// Unites an [`AbsoluteBoundPair`] with an [`EmptiableAbsoluteBoundPair`]
 ///
-/// Empty intervals are not positioned in time, and are always "outside", therefore cannot be united.
+/// Empty intervals are not positioned in time, and are always "outside",
+/// therefore cannot be united.
 ///
 /// See [`Unitable`] for more information.
 #[must_use]
@@ -400,7 +415,8 @@ pub fn unite_abs_bound_pair_with_emptiable_abs_bound_pair(
 
 /// Unites two [`EmptiableAbsoluteBoundPair`]
 ///
-/// Empty intervals are not positioned in time, and are always "outside", therefore cannot be united.
+/// Empty intervals are not positioned in time, and are always "outside",
+/// therefore cannot be united.
 ///
 /// See [`Unitable`] for more information.
 #[must_use]
@@ -429,7 +445,8 @@ pub fn unite_rel_bound_pair(a: &RelativeBoundPair, b: &RelativeBoundPair) -> Uni
 
 /// Unites an [`RelativeBoundPair`] with an [`EmptiableRelativeBoundPair`]
 ///
-/// Empty intervals are not positioned in time, and are always "outside", therefore cannot be united.
+/// Empty intervals are not positioned in time, and are always "outside",
+/// therefore cannot be united.
 ///
 /// See [`Unitable`] for more information.
 #[must_use]
@@ -446,7 +463,8 @@ pub fn unite_rel_bound_pair_with_emptiable_rel_bound_pair(
 
 /// Unites two [`EmptiableRelativeBoundPair`]
 ///
-/// Empty intervals are not positioned in time, and are always "outside", therefore cannot be united.
+/// Empty intervals are not positioned in time, and are always "outside",
+/// therefore cannot be united.
 ///
 /// See [`Unitable`] for more information.
 #[must_use]
@@ -910,7 +928,8 @@ where
 ///
 /// # Panics
 ///
-/// Panics if two strictly overlapping bounds, when abridged, returns [`EmptiableAbsoluteBoundPair::Empty`]
+/// Panics if two strictly overlapping bounds, when abridged, returns
+/// [`EmptiableAbsoluteBoundPair::Empty`]
 #[must_use]
 pub fn intersect_abs_bound_pair(a: &AbsoluteBoundPair, b: &AbsoluteBoundPair) -> IntersectionResult<AbsoluteBoundPair> {
     if !a.simple_overlaps(b) {
@@ -926,13 +945,15 @@ pub fn intersect_abs_bound_pair(a: &AbsoluteBoundPair, b: &AbsoluteBoundPair) ->
 
 /// Intersects an [`AbsoluteBoundPair`] with an [`EmptiableAbsoluteBoundPair`]
 ///
-/// Empty intervals are not positioned in time, and are always "outside", therefore cannot be intersected.
+/// Empty intervals are not positioned in time, and are always "outside",
+/// therefore cannot be intersected.
 ///
 /// See [`Intersectable`] for more information.
 ///
 /// # Panics
 ///
-/// Panics if two strictly overlapping bounds, when abridged, returns [`EmptiableAbsoluteBoundPair::Empty`]
+/// Panics if two strictly overlapping bounds, when abridged, returns
+/// [`EmptiableAbsoluteBoundPair::Empty`]
 #[must_use]
 pub fn intersect_abs_bound_pair_with_emptiable_abs_bound_pair(
     a: &AbsoluteBoundPair,
@@ -951,7 +972,8 @@ pub fn intersect_abs_bound_pair_with_emptiable_abs_bound_pair(
 
 /// Intersects two [`EmptiableAbsoluteBoundPair`]
 ///
-/// Empty intervals are not positioned in time, and are always "outside", therefore cannot be intersected.
+/// Empty intervals are not positioned in time, and are always "outside",
+/// therefore cannot be intersected.
 ///
 /// See [`Intersectable`] for more information.
 #[must_use]
@@ -972,7 +994,8 @@ pub fn intersect_emptiable_abs_bound_pair(
 ///
 /// # Panics
 ///
-/// Panics if two strictly overlapping bounds, when abridged, returns [`EmptiableRelativeBoundPair::Empty`]
+/// Panics if two strictly overlapping bounds, when abridged, returns
+/// [`EmptiableRelativeBoundPair::Empty`]
 #[must_use]
 pub fn intersect_rel_bound_pair(a: &RelativeBoundPair, b: &RelativeBoundPair) -> IntersectionResult<RelativeBoundPair> {
     if !a.simple_overlaps(b) {
@@ -988,13 +1011,15 @@ pub fn intersect_rel_bound_pair(a: &RelativeBoundPair, b: &RelativeBoundPair) ->
 
 /// Intersects an [`RelativeBoundPair`] with an [`EmptiableRelativeBoundPair`]
 ///
-/// Empty intervals are not positioned in time, and are always "outside", therefore cannot be intersected.
+/// Empty intervals are not positioned in time, and are always "outside",
+/// therefore cannot be intersected.
 ///
 /// See [`Intersectable`] for more information.
 ///
 /// # Panics
 ///
-/// Panics if two strictly overlapping bounds, when abridged, returns [`EmptiableRelativeBoundPair::Empty`]
+/// Panics if two strictly overlapping bounds, when abridged, returns
+/// [`EmptiableRelativeBoundPair::Empty`]
 #[must_use]
 pub fn intersect_rel_bound_pair_with_emptiable_rel_bound_pair(
     a: &RelativeBoundPair,
@@ -1013,7 +1038,8 @@ pub fn intersect_rel_bound_pair_with_emptiable_rel_bound_pair(
 
 /// Intersects two [`EmptiableRelativeBoundPair`]
 ///
-/// Empty intervals are not positioned in time, and are always "outside", therefore cannot be intersected.
+/// Empty intervals are not positioned in time, and are always "outside",
+/// therefore cannot be intersected.
 ///
 /// See [`Intersectable`] for more information.
 #[must_use]
@@ -1030,8 +1056,9 @@ pub fn intersect_emptiable_rel_bound_pair(
 
 /// Capacity to differentiate an interval with another
 ///
-/// _Differentiate_, in this context, means the finding the [set difference] of an interval with another,
-/// the latter being used as the _remover_ of the former.
+/// _Differentiate_, in this context, means the finding the [set difference] of
+/// an interval with another, the latter being used as the _remover_ of the
+/// former.
 ///
 /// [set difference]: https://en.wikipedia.org/w/index.php?title=Complement_(set_theory)&oldid=1272128427#Relative_complement
 ///
@@ -1115,10 +1142,11 @@ pub trait Differentiable<Rhs = Self> {
     /// Output type
     type Output;
 
-    /// Differentiates the interval with the given one using default overlap rules
+    /// Differentiates the interval with the given one using default overlap
+    /// rules
     ///
-    /// `self` is the one differentiated by the given other interval: same operand order as the mathematical
-    /// expression for a set difference.
+    /// `self` is the one differentiated by the given other interval: same
+    /// operand order as the mathematical expression for a set difference.
     ///
     /// # Examples
     ///
@@ -1266,8 +1294,11 @@ where
     type Output = EmptiableAbsoluteInterval;
 
     fn differentiate(&self, rhs: &Rhs) -> DifferenceResult<Self::Output> {
-        differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(&self.abs_bound_pair(), &rhs.emptiable_abs_bound_pair())
-            .map_difference(Self::Output::from)
+        differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(
+            &self.abs_bound_pair(),
+            &rhs.emptiable_abs_bound_pair(),
+        )
+        .map_difference(Self::Output::from)
     }
 }
 
@@ -1290,8 +1321,11 @@ where
     type Output = EmptiableAbsoluteInterval;
 
     fn differentiate(&self, rhs: &Rhs) -> DifferenceResult<Self::Output> {
-        differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(&self.abs_bound_pair(), &rhs.emptiable_abs_bound_pair())
-            .map_difference(Self::Output::from)
+        differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(
+            &self.abs_bound_pair(),
+            &rhs.emptiable_abs_bound_pair(),
+        )
+        .map_difference(Self::Output::from)
     }
 }
 
@@ -1302,8 +1336,11 @@ where
     type Output = EmptiableAbsoluteInterval;
 
     fn differentiate(&self, rhs: &Rhs) -> DifferenceResult<Self::Output> {
-        differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(&self.abs_bound_pair(), &rhs.emptiable_abs_bound_pair())
-            .map_difference(Self::Output::from)
+        differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(
+            &self.abs_bound_pair(),
+            &rhs.emptiable_abs_bound_pair(),
+        )
+        .map_difference(Self::Output::from)
     }
 }
 
@@ -1336,8 +1373,11 @@ where
     type Output = EmptiableRelativeInterval;
 
     fn differentiate(&self, rhs: &Rhs) -> DifferenceResult<Self::Output> {
-        differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(&self.rel_bound_pair(), &rhs.emptiable_rel_bound_pair())
-            .map_difference(Self::Output::from)
+        differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(
+            &self.rel_bound_pair(),
+            &rhs.emptiable_rel_bound_pair(),
+        )
+        .map_difference(Self::Output::from)
     }
 }
 
@@ -1360,8 +1400,11 @@ where
     type Output = EmptiableRelativeInterval;
 
     fn differentiate(&self, rhs: &Rhs) -> DifferenceResult<Self::Output> {
-        differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(&self.rel_bound_pair(), &rhs.emptiable_rel_bound_pair())
-            .map_difference(Self::Output::from)
+        differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(
+            &self.rel_bound_pair(),
+            &rhs.emptiable_rel_bound_pair(),
+        )
+        .map_difference(Self::Output::from)
     }
 }
 
@@ -1372,8 +1415,11 @@ where
     type Output = EmptiableRelativeInterval;
 
     fn differentiate(&self, rhs: &Rhs) -> DifferenceResult<Self::Output> {
-        differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(&self.rel_bound_pair(), &rhs.emptiable_rel_bound_pair())
-            .map_difference(Self::Output::from)
+        differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(
+            &self.rel_bound_pair(),
+            &rhs.emptiable_rel_bound_pair(),
+        )
+        .map_difference(Self::Output::from)
     }
 }
 
@@ -1389,8 +1435,11 @@ impl Differentiable<EmptiableAbsoluteBoundPair> for UnboundedInterval {
     type Output = EmptiableAbsoluteInterval;
 
     fn differentiate(&self, rhs: &EmptiableAbsoluteBoundPair) -> DifferenceResult<Self::Output> {
-        differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(&self.abs_bound_pair(), &rhs.emptiable_abs_bound_pair())
-            .map_difference(Self::Output::from)
+        differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(
+            &self.abs_bound_pair(),
+            &rhs.emptiable_abs_bound_pair(),
+        )
+        .map_difference(Self::Output::from)
     }
 }
 
@@ -1428,8 +1477,11 @@ impl Differentiable<EmptiableRelativeBoundPair> for UnboundedInterval {
     type Output = EmptiableRelativeInterval;
 
     fn differentiate(&self, rhs: &EmptiableRelativeBoundPair) -> DifferenceResult<Self::Output> {
-        differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(&self.rel_bound_pair(), &rhs.emptiable_rel_bound_pair())
-            .map_difference(Self::Output::from)
+        differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(
+            &self.rel_bound_pair(),
+            &rhs.emptiable_rel_bound_pair(),
+        )
+        .map_difference(Self::Output::from)
     }
 }
 
@@ -1504,9 +1556,11 @@ pub fn differentiate_abs_bound_pair(
     }
 }
 
-/// Differentiates an [`AbsoluteBoundPair`] with an [`EmptiableAbsoluteBoundPair`]
+/// Differentiates an [`AbsoluteBoundPair`] with an
+/// [`EmptiableAbsoluteBoundPair`]
 ///
-/// Empty intervals are not positioned in time, and are always "outside", therefore cannot be differentiated.
+/// Empty intervals are not positioned in time, and are always "outside",
+/// therefore cannot be differentiated.
 ///
 /// See [`Differentiable`] for more information.
 #[must_use]
@@ -1523,7 +1577,8 @@ pub fn differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(
 
 /// Differentiates an [`EmptiableAbsoluteBoundPair`] with another one
 ///
-/// Empty intervals are not positioned in time, and are always "outside", therefore cannot be differentiated.
+/// Empty intervals are not positioned in time, and are always "outside",
+/// therefore cannot be differentiated.
 ///
 /// See [`Differentiable`] for more information.
 #[must_use]
@@ -1559,9 +1614,11 @@ pub fn differentiate_rel_bound_pair(
     }
 }
 
-/// Differentiates an [`RelativeBoundPair`] with an [`EmptiableRelativeBoundPair`]
+/// Differentiates an [`RelativeBoundPair`] with an
+/// [`EmptiableRelativeBoundPair`]
 ///
-/// Empty intervals are not positioned in time, and are always "outside", therefore cannot be differentiated.
+/// Empty intervals are not positioned in time, and are always "outside",
+/// therefore cannot be differentiated.
 ///
 /// See [`Differentiable`] for more information.
 #[must_use]
@@ -1578,7 +1635,8 @@ pub fn differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(
 
 /// Differentiates an [`EmptiableRelativeBoundPair`] with another one
 ///
-/// Empty intervals are not positioned in time, and are always "outside", therefore cannot be differentiated.
+/// Empty intervals are not positioned in time, and are always "outside",
+/// therefore cannot be differentiated.
 ///
 /// See [`Differentiable`] for more information.
 #[must_use]
@@ -1593,7 +1651,8 @@ pub fn differentiate_emptiable_rel_bound_pair(
     differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(og_bounds, other_bounds)
 }
 
-/// Capacity to symmetrically differentiate (a.k.a. XOR) an interval with another
+/// Capacity to symmetrically differentiate (a.k.a. XOR) an interval with
+/// another
 ///
 /// Creates a [symmetric difference] between the two given intervals.
 ///
@@ -1690,7 +1749,8 @@ pub trait SymmetricallyDifferentiable<Rhs = Self> {
     /// Output type
     type Output;
 
-    /// Symmetrically differentiates the two intervals using the default overlap rules
+    /// Symmetrically differentiates the two intervals using the default overlap
+    /// rules
     ///
     /// # Examples
     ///
@@ -1853,8 +1913,11 @@ where
     type Output = EmptiableAbsoluteInterval;
 
     fn symmetrically_differentiate(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
-        symmetrically_differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(&self.abs_bound_pair(), &rhs.emptiable_abs_bound_pair())
-            .map_symmetric_difference(Self::Output::from)
+        symmetrically_differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(
+            &self.abs_bound_pair(),
+            &rhs.emptiable_abs_bound_pair(),
+        )
+        .map_symmetric_difference(Self::Output::from)
     }
 }
 
@@ -1865,8 +1928,11 @@ where
     type Output = Self;
 
     fn symmetrically_differentiate(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
-        symmetrically_differentiate_emptiable_abs_bound_pair(&self.emptiable_abs_bound_pair(), &rhs.emptiable_abs_bound_pair())
-            .map_symmetric_difference(Self::Output::from)
+        symmetrically_differentiate_emptiable_abs_bound_pair(
+            &self.emptiable_abs_bound_pair(),
+            &rhs.emptiable_abs_bound_pair(),
+        )
+        .map_symmetric_difference(Self::Output::from)
     }
 }
 
@@ -1929,8 +1995,11 @@ where
     type Output = EmptiableRelativeInterval;
 
     fn symmetrically_differentiate(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
-        symmetrically_differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(&self.rel_bound_pair(), &rhs.emptiable_rel_bound_pair())
-            .map_symmetric_difference(Self::Output::from)
+        symmetrically_differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(
+            &self.rel_bound_pair(),
+            &rhs.emptiable_rel_bound_pair(),
+        )
+        .map_symmetric_difference(Self::Output::from)
     }
 }
 
@@ -1941,8 +2010,11 @@ where
     type Output = Self;
 
     fn symmetrically_differentiate(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
-        symmetrically_differentiate_emptiable_rel_bound_pair(&self.emptiable_rel_bound_pair(), &rhs.emptiable_rel_bound_pair())
-            .map_symmetric_difference(Self::Output::from)
+        symmetrically_differentiate_emptiable_rel_bound_pair(
+            &self.emptiable_rel_bound_pair(),
+            &rhs.emptiable_rel_bound_pair(),
+        )
+        .map_symmetric_difference(Self::Output::from)
     }
 }
 
@@ -1980,7 +2052,8 @@ impl SymmetricallyDifferentiable<AbsoluteBoundPair> for UnboundedInterval {
     type Output = EmptiableAbsoluteInterval;
 
     fn symmetrically_differentiate(&self, rhs: &AbsoluteBoundPair) -> SymmetricDifferenceResult<Self::Output> {
-        symmetrically_differentiate_abs_bound_pair(&self.abs_bound_pair(), rhs).map_symmetric_difference(Self::Output::from)
+        symmetrically_differentiate_abs_bound_pair(&self.abs_bound_pair(), rhs)
+            .map_symmetric_difference(Self::Output::from)
     }
 }
 
@@ -2011,7 +2084,9 @@ impl SymmetricallyDifferentiable<BoundedAbsoluteInterval> for UnboundedInterval 
     fn symmetrically_differentiate(&self, rhs: &BoundedAbsoluteInterval) -> SymmetricDifferenceResult<Self::Output> {
         match rhs.complement() {
             ComplementResult::Single(single) => SymmetricDifferenceResult::Single(single),
-            ComplementResult::Split(split_before, split_after) => SymmetricDifferenceResult::Split(split_before, split_after),
+            ComplementResult::Split(split_before, split_after) => {
+                SymmetricDifferenceResult::Split(split_before, split_after)
+            },
         }
     }
 }
@@ -2025,7 +2100,9 @@ impl SymmetricallyDifferentiable<HalfBoundedAbsoluteInterval> for UnboundedInter
     ) -> SymmetricDifferenceResult<Self::Output> {
         match rhs.complement() {
             ComplementResult::Single(single) => SymmetricDifferenceResult::Single(single),
-            ComplementResult::Split(split_before, split_after) => SymmetricDifferenceResult::Split(split_before, split_after),
+            ComplementResult::Split(split_before, split_after) => {
+                SymmetricDifferenceResult::Split(split_before, split_after)
+            },
         }
     }
 }
@@ -2034,7 +2111,8 @@ impl SymmetricallyDifferentiable<RelativeBoundPair> for UnboundedInterval {
     type Output = EmptiableRelativeInterval;
 
     fn symmetrically_differentiate(&self, rhs: &RelativeBoundPair) -> SymmetricDifferenceResult<Self::Output> {
-        symmetrically_differentiate_rel_bound_pair(&self.rel_bound_pair(), rhs).map_symmetric_difference(Self::Output::from)
+        symmetrically_differentiate_rel_bound_pair(&self.rel_bound_pair(), rhs)
+            .map_symmetric_difference(Self::Output::from)
     }
 }
 
@@ -2077,7 +2155,9 @@ impl SymmetricallyDifferentiable<BoundedRelativeInterval> for UnboundedInterval 
     fn symmetrically_differentiate(&self, rhs: &BoundedRelativeInterval) -> SymmetricDifferenceResult<Self::Output> {
         match rhs.complement() {
             ComplementResult::Single(single) => SymmetricDifferenceResult::Single(single),
-            ComplementResult::Split(split_before, split_after) => SymmetricDifferenceResult::Split(split_before, split_after),
+            ComplementResult::Split(split_before, split_after) => {
+                SymmetricDifferenceResult::Split(split_before, split_after)
+            },
         }
     }
 }
@@ -2091,7 +2171,9 @@ impl SymmetricallyDifferentiable<HalfBoundedRelativeInterval> for UnboundedInter
     ) -> SymmetricDifferenceResult<Self::Output> {
         match rhs.complement() {
             ComplementResult::Single(single) => SymmetricDifferenceResult::Single(single),
-            ComplementResult::Split(split_before, split_after) => SymmetricDifferenceResult::Split(split_before, split_after),
+            ComplementResult::Split(split_before, split_after) => {
+                SymmetricDifferenceResult::Split(split_before, split_after)
+            },
         }
     }
 }
@@ -2108,7 +2190,8 @@ impl SymmetricallyDifferentiable<EmptyInterval> for UnboundedInterval {
     type Output = ();
 
     fn symmetrically_differentiate(&self, _rhs: &EmptyInterval) -> SymmetricDifferenceResult<Self::Output> {
-        // An empty interval is nowhere, and therefore cannot be differentiated with anything
+        // An empty interval is nowhere, and therefore cannot be differentiated with
+        // anything
         SymmetricDifferenceResult::Separate
     }
 }
@@ -2120,7 +2203,8 @@ where
     type Output = ();
 
     fn symmetrically_differentiate(&self, _rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
-        // An empty interval is nowhere, and therefore cannot be differentiated with anything
+        // An empty interval is nowhere, and therefore cannot be differentiated with
+        // anything
         SymmetricDifferenceResult::Separate
     }
 }
@@ -2151,17 +2235,25 @@ pub fn symmetrically_differentiate_abs_bound_pair(
             OverlapRemovalResult::Single(EmptiableAbsoluteBoundPair::Empty),
             OverlapRemovalResult::Single(EmptiableAbsoluteBoundPair::Empty),
         ) => SymmetricDifferenceResult::Single(EmptiableAbsoluteBoundPair::Empty),
-        (OverlapRemovalResult::Single(single_diff), OverlapRemovalResult::Single(EmptiableAbsoluteBoundPair::Empty))
-        | (OverlapRemovalResult::Single(EmptiableAbsoluteBoundPair::Empty), OverlapRemovalResult::Single(single_diff)) => {
-            SymmetricDifferenceResult::Single(single_diff)
-        },
+        (
+            OverlapRemovalResult::Single(single_diff),
+            OverlapRemovalResult::Single(EmptiableAbsoluteBoundPair::Empty),
+        )
+        | (
+            OverlapRemovalResult::Single(EmptiableAbsoluteBoundPair::Empty),
+            OverlapRemovalResult::Single(single_diff),
+        ) => SymmetricDifferenceResult::Single(single_diff),
         (OverlapRemovalResult::Single(first_single_diff), OverlapRemovalResult::Single(second_single_diff)) => {
             SymmetricDifferenceResult::Split(first_single_diff, second_single_diff)
         },
-        (OverlapRemovalResult::Split(split1, split2), OverlapRemovalResult::Single(EmptiableAbsoluteBoundPair::Empty))
-        | (OverlapRemovalResult::Single(EmptiableAbsoluteBoundPair::Empty), OverlapRemovalResult::Split(split1, split2)) => {
-            SymmetricDifferenceResult::Split(split1, split2)
-        },
+        (
+            OverlapRemovalResult::Split(split1, split2),
+            OverlapRemovalResult::Single(EmptiableAbsoluteBoundPair::Empty),
+        )
+        | (
+            OverlapRemovalResult::Single(EmptiableAbsoluteBoundPair::Empty),
+            OverlapRemovalResult::Split(split1, split2),
+        ) => SymmetricDifferenceResult::Split(split1, split2),
         (OverlapRemovalResult::Split(..), _) | (_, OverlapRemovalResult::Split(..)) => {
             unreachable!(
                 "No possible interval configuration exist where A \\ B (A diff B) returns a `Split` result, \
@@ -2171,9 +2263,11 @@ pub fn symmetrically_differentiate_abs_bound_pair(
     }
 }
 
-/// Symmetrically differentiates an [`AbsoluteBoundPair`] with an [`EmptiableAbsoluteBoundPair`]
+/// Symmetrically differentiates an [`AbsoluteBoundPair`] with an
+/// [`EmptiableAbsoluteBoundPair`]
 ///
-/// Empty intervals are not positioned in time, and are always "outside", therefore cannot be differentiated.
+/// Empty intervals are not positioned in time, and are always "outside",
+/// therefore cannot be differentiated.
 ///
 /// See [`SymmetricallyDifferentiable`] for more information.
 #[must_use]
@@ -2190,7 +2284,8 @@ pub fn symmetrically_differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(
 
 /// Symmetrically differentiates two [`EmptiableAbsoluteBoundPair`]
 ///
-/// Empty intervals are not positioned in time, and are always "outside", therefore cannot be differentiated.
+/// Empty intervals are not positioned in time, and are always "outside",
+/// therefore cannot be differentiated.
 ///
 /// See [`SymmetricallyDifferentiable`] for more information.
 #[must_use]
@@ -2231,17 +2326,25 @@ pub fn symmetrically_differentiate_rel_bound_pair(
             OverlapRemovalResult::Single(EmptiableRelativeBoundPair::Empty),
             OverlapRemovalResult::Single(EmptiableRelativeBoundPair::Empty),
         ) => SymmetricDifferenceResult::Single(EmptiableRelativeBoundPair::Empty),
-        (OverlapRemovalResult::Single(single_diff), OverlapRemovalResult::Single(EmptiableRelativeBoundPair::Empty))
-        | (OverlapRemovalResult::Single(EmptiableRelativeBoundPair::Empty), OverlapRemovalResult::Single(single_diff)) => {
-            SymmetricDifferenceResult::Single(single_diff)
-        },
+        (
+            OverlapRemovalResult::Single(single_diff),
+            OverlapRemovalResult::Single(EmptiableRelativeBoundPair::Empty),
+        )
+        | (
+            OverlapRemovalResult::Single(EmptiableRelativeBoundPair::Empty),
+            OverlapRemovalResult::Single(single_diff),
+        ) => SymmetricDifferenceResult::Single(single_diff),
         (OverlapRemovalResult::Single(first_single_diff), OverlapRemovalResult::Single(second_single_diff)) => {
             SymmetricDifferenceResult::Split(first_single_diff, second_single_diff)
         },
-        (OverlapRemovalResult::Split(split1, split2), OverlapRemovalResult::Single(EmptiableRelativeBoundPair::Empty))
-        | (OverlapRemovalResult::Single(EmptiableRelativeBoundPair::Empty), OverlapRemovalResult::Split(split1, split2)) => {
-            SymmetricDifferenceResult::Split(split1, split2)
-        },
+        (
+            OverlapRemovalResult::Split(split1, split2),
+            OverlapRemovalResult::Single(EmptiableRelativeBoundPair::Empty),
+        )
+        | (
+            OverlapRemovalResult::Single(EmptiableRelativeBoundPair::Empty),
+            OverlapRemovalResult::Split(split1, split2),
+        ) => SymmetricDifferenceResult::Split(split1, split2),
         (OverlapRemovalResult::Split(..), _) | (_, OverlapRemovalResult::Split(..)) => {
             unreachable!(
                 "No possible interval configuration exist where A \\ B (A diff B) returns a `Split` result, \
@@ -2251,9 +2354,11 @@ pub fn symmetrically_differentiate_rel_bound_pair(
     }
 }
 
-/// Symmetrically differentiates an [`RelativeBoundPair`] with an [`EmptiableRelativeBoundPair`]
+/// Symmetrically differentiates an [`RelativeBoundPair`] with an
+/// [`EmptiableRelativeBoundPair`]
 ///
-/// Empty intervals are not positioned in time, and are always "outside", therefore cannot be differentiated.
+/// Empty intervals are not positioned in time, and are always "outside",
+/// therefore cannot be differentiated.
 ///
 /// See [`SymmetricallyDifferentiable`] for more information.
 #[must_use]
@@ -2270,7 +2375,8 @@ pub fn symmetrically_differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(
 
 /// Symmetrically differentiates two [`EmptiableRelativeBoundPair`]
 ///
-/// Empty intervals are not positioned in time, and are always "outside", therefore cannot be differentiated.
+/// Empty intervals are not positioned in time, and are always "outside",
+/// therefore cannot be differentiated.
 ///
 /// See [`SymmetricallyDifferentiable`] for more information.
 #[must_use]

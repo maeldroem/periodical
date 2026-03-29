@@ -1,9 +1,11 @@
-//! Difference of a [layered bounds iterator](crate::iter::intervals::layered_bounds)
+//! Difference of a [layered bounds
+//! iterator](crate::iter::intervals::layered_bounds)
 //!
-//! Operates a [set difference] on a [layered bounds iterator](crate::iter::intervals::layered_bounds).
-//! The first layer acts like the first operand in a classical set difference, while the second layer acts
-//! like the second operand. In other words, the first layer are the _removed_ while the second layer
-//! are the _removers_.
+//! Operates a [set difference] on a [layered bounds
+//! iterator](crate::iter::intervals::layered_bounds). The first layer acts like
+//! the first operand in a classical set difference, while the second layer acts
+//! like the second operand. In other words, the first layer are the _removed_
+//! while the second layer are the _removers_.
 //!
 //! [set difference]: https://en.wikipedia.org/w/index.php?title=Complement_(set_theory)&oldid=1272128427#Relative_complement
 //!
@@ -95,15 +97,17 @@ use std::iter::FusedIterator;
 use crate::intervals::absolute::AbsoluteBoundPair;
 use crate::intervals::relative::RelativeBoundPair;
 use crate::iter::intervals::layered_bounds::{
-    LayeredBoundsState, LayeredBoundsStateChangeAtAbsoluteBound, LayeredBoundsStateChangeAtRelativeBound,
+    LayeredBoundsState,
+    LayeredBoundsStateChangeAtAbsoluteBound,
+    LayeredBoundsStateChangeAtRelativeBound,
 };
 
 /// Difference iterator
 /// for [`LayeredAbsoluteBounds`](crate::iter::intervals::layered_bounds::LayeredAbsoluteBounds)
 ///
-/// The first layer acts like the first operand in a classical set difference, while the second layer acts
-/// like the second operand. In other words, the first layer are the _removed_ while the second layer
-/// are the _removers_.
+/// The first layer acts like the first operand in a classical set difference,
+/// while the second layer acts like the second operand. In other words, the
+/// first layer are the _removed_ while the second layer are the _removers_.
 #[derive(Debug, Clone, Hash)]
 pub struct LayeredAbsoluteBoundsDifference<I> {
     iter: I,
@@ -118,21 +122,28 @@ where
     ///
     /// # Input requirements
     ///
-    /// 1. The iterator **must return continuous [state changes](LayeredBoundsStateChangeAtAbsoluteBound)**
+    /// 1. The iterator **must return continuous [state
+    ///    changes](LayeredBoundsStateChangeAtAbsoluteBound)**
     /// 2. The state changes **must be in chronological order**
     ///
-    /// For more precision about requirement 1, _continuous state changes_ means that the first state change
+    /// For more precision about requirement 1, _continuous state changes_ means
+    /// that the first state change
     /// must have [`NoLayers`](LayeredBoundsState::NoLayers)
     /// as its [old state](LayeredBoundsStateChangeAtAbsoluteBound::old_state),
     /// the last change must have [`NoLayers`](LayeredBoundsState::NoLayers)
-    /// as its [new state](LayeredBoundsStateChangeAtAbsoluteBound::new_state), and all state changes must follow each
-    /// other, i.e. if one change transitions from state A to state B, the next change's old state must be the previous
-    /// change's new state: state B.
+    /// as its [new state](LayeredBoundsStateChangeAtAbsoluteBound::new_state),
+    /// and all state changes must follow each other, i.e. if one change
+    /// transitions from state A to state B, the next change's old state must be
+    /// the previous change's new state: state B.
     ///
-    /// All requirements are automatically guaranteed if the state changes are obtained from
+    /// All requirements are automatically guaranteed if the state changes are
+    /// obtained from
     /// [`LayeredAbsoluteBounds`](crate::iter::intervals::layered_bounds::LayeredAbsoluteBounds).
     pub fn new(iter: I) -> LayeredAbsoluteBoundsDifference<I> {
-        LayeredAbsoluteBoundsDifference { iter, exhausted: false }
+        LayeredAbsoluteBoundsDifference {
+            iter,
+            exhausted: false,
+        }
     }
 }
 
@@ -197,7 +208,9 @@ where
 {
     /// Operates a [set difference]
     ///
-    /// See [module documentation](crate::iter::intervals::layered_bounds_set_ops::diff) for more information.
+    /// See [module
+    /// documentation](crate::iter::intervals::layered_bounds_set_ops::diff) for
+    /// more information.
     ///
     /// [set difference]: https://en.wikipedia.org/w/index.php?title=Complement_(set_theory)&oldid=1272128427#Relative_complement
     fn abs_difference_layered(self) -> LayeredAbsoluteBoundsDifference<Self::IntoIter> {
@@ -213,9 +226,9 @@ impl<I> LayeredAbsoluteBoundsDifferenceIteratorDispatcher for I where
 /// Difference iterator
 /// for [`LayeredRelativeBounds`](crate::iter::intervals::layered_bounds::LayeredRelativeBounds)
 ///
-/// The first layer acts like the first operand in a classical set difference, while the second layer acts
-/// like the second operand. In other words, the first layer are the _removed_ while the second layer
-/// are the _removers_.
+/// The first layer acts like the first operand in a classical set difference,
+/// while the second layer acts like the second operand. In other words, the
+/// first layer are the _removed_ while the second layer are the _removers_.
 #[derive(Debug, Clone, Hash)]
 pub struct LayeredRelativeBoundsDifference<I> {
     iter: I,
@@ -230,21 +243,28 @@ where
     ///
     /// # Input requirements
     ///
-    /// 1. The iterator **must return continuous [state changes](LayeredBoundsStateChangeAtRelativeBound)**
+    /// 1. The iterator **must return continuous [state
+    ///    changes](LayeredBoundsStateChangeAtRelativeBound)**
     /// 2. The state changes **must be in chronological order**
     ///
-    /// For more precision about requirement 1, _continuous state changes_ means that the first state change
+    /// For more precision about requirement 1, _continuous state changes_ means
+    /// that the first state change
     /// must have [`NoLayers`](LayeredBoundsState::NoLayers)
     /// as its [old state](LayeredBoundsStateChangeAtRelativeBound::old_state),
     /// the last change must have [`NoLayers`](LayeredBoundsState::NoLayers)
-    /// as its [new state](LayeredBoundsStateChangeAtRelativeBound::new_state), and all state changes must follow each
-    /// other, i.e. if one change transitions from state A to state B, the next change's old state must be the previous
-    /// change's new state: state B.
+    /// as its [new state](LayeredBoundsStateChangeAtRelativeBound::new_state),
+    /// and all state changes must follow each other, i.e. if one change
+    /// transitions from state A to state B, the next change's old state must be
+    /// the previous change's new state: state B.
     ///
-    /// All requirements are automatically guaranteed if the state changes are obtained from
+    /// All requirements are automatically guaranteed if the state changes are
+    /// obtained from
     /// [`LayeredRelativeBounds`](crate::iter::intervals::layered_bounds::LayeredRelativeBounds).
     pub fn new(iter: I) -> LayeredRelativeBoundsDifference<I> {
-        LayeredRelativeBoundsDifference { iter, exhausted: false }
+        LayeredRelativeBoundsDifference {
+            iter,
+            exhausted: false,
+        }
     }
 }
 
@@ -309,7 +329,9 @@ where
 {
     /// Operates a [set difference]
     ///
-    /// See [module documentation](crate::iter::intervals::layered_bounds_set_ops::diff) for more information.
+    /// See [module
+    /// documentation](crate::iter::intervals::layered_bounds_set_ops::diff) for
+    /// more information.
     ///
     /// [set difference]: https://en.wikipedia.org/w/index.php?title=Complement_(set_theory)&oldid=1272128427#Relative_complement
     fn rel_difference_layered(self) -> LayeredRelativeBoundsDifference<Self::IntoIter> {

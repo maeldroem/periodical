@@ -1,13 +1,16 @@
 //! Precision change for intervals and bounds
 //!
-//! This module is in charge of handling the act of changing the precision of intervals and bounds: (re-)_precising_.
+//! This module is in charge of handling the act of changing the precision of
+//! intervals and bounds: (re-)_precising_.
 //!
 //! Precising intervals and bounds works differently depending
 //! on their [`Relativity`](crate::intervals::meta::Relativity).
 //!
-//! For absolute structures, [`PreciseAbsoluteInterval`] handles intervals, [`PreciseAbsoluteBound`] handles bounds.
+//! For absolute structures, [`PreciseAbsoluteInterval`] handles intervals,
+//! [`PreciseAbsoluteBound`] handles bounds.
 //!
-//! For relative structures, the sibling traits do not exist as of version `0.1`, but are planned for future versions.
+//! For relative structures, the sibling traits do not exist as of version
+//! `0.1`, but are planned for future versions.
 //!
 //! The precision itself is defined by [`Precision`].
 //!
@@ -51,7 +54,15 @@ use jiff::Timestamp;
 use jiff::tz::TimeZone;
 
 use crate::intervals::absolute::{
-    AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteInterval, AbsoluteStartBound, EmptiableAbsoluteBoundPair, EmptiableAbsoluteInterval, HasAbsoluteBoundPair, HasEmptiableAbsoluteBoundPair
+    AbsoluteBoundPair,
+    AbsoluteEndBound,
+    AbsoluteFiniteBound,
+    AbsoluteInterval,
+    AbsoluteStartBound,
+    EmptiableAbsoluteBoundPair,
+    EmptiableAbsoluteInterval,
+    HasAbsoluteBoundPair,
+    HasEmptiableAbsoluteBoundPair,
 };
 use crate::intervals::meta::HasBoundInclusivity;
 use crate::intervals::special::EmptyInterval;
@@ -188,7 +199,8 @@ pub trait PreciseAbsoluteInterval {
         self.precise_interval_with_different_precisions(tz, precision, precision)
     }
 
-    /// Precises the start and end bounds with different precisions and base times for both of them
+    /// Precises the start and end bounds with different precisions and base
+    /// times for both of them
     ///
     /// See [`Precision::precise_time_with_base_time`] for more information.
     ///
@@ -363,14 +375,16 @@ impl PreciseAbsoluteInterval for EmptiableAbsoluteBoundPair {
         D: Into<Timestamp>,
     {
         if let EmptiableAbsoluteBoundPair::Bound(abs_bound_pair) = self {
-            return Ok(EmptiableAbsoluteBoundPair::Bound(precise_abs_bound_pair_with_base_time(
-                abs_bound_pair,
-                tz,
-                precision_start,
-                base_start.into(),
-                precision_end,
-                base_end.into(),
-            )?));
+            return Ok(EmptiableAbsoluteBoundPair::Bound(
+                precise_abs_bound_pair_with_base_time(
+                    abs_bound_pair,
+                    tz,
+                    precision_start,
+                    base_start.into(),
+                    precision_end,
+                    base_end.into(),
+                )?,
+            ));
         }
 
         Ok(EmptiableAbsoluteBoundPair::Empty)
@@ -567,12 +581,7 @@ pub trait PreciseAbsoluteBound {
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    fn precise_bound_with_base_time<B>(
-        &self,
-        tz: TimeZone,
-        precision: Precision,
-        base: B,
-    ) -> Self::PrecisedBoundOutput
+    fn precise_bound_with_base_time<B>(&self, tz: TimeZone, precision: Precision, base: B) -> Self::PrecisedBoundOutput
     where
         B: Into<Timestamp>;
 }
@@ -584,12 +593,7 @@ impl PreciseAbsoluteBound for AbsoluteFiniteBound {
         precise_abs_finite_bound(self, tz, precision)
     }
 
-    fn precise_bound_with_base_time<B>(
-        &self,
-        tz: TimeZone,
-        precision: Precision,
-        base: B,
-    ) -> Self::PrecisedBoundOutput
+    fn precise_bound_with_base_time<B>(&self, tz: TimeZone, precision: Precision, base: B) -> Self::PrecisedBoundOutput
     where
         B: Into<Timestamp>,
     {
@@ -604,12 +608,7 @@ impl PreciseAbsoluteBound for AbsoluteStartBound {
         precise_abs_start_bound(self, tz, precision)
     }
 
-    fn precise_bound_with_base_time<B>(
-        &self,
-        tz: TimeZone,
-        precision: Precision,
-        base: B,
-    ) -> Self::PrecisedBoundOutput
+    fn precise_bound_with_base_time<B>(&self, tz: TimeZone, precision: Precision, base: B) -> Self::PrecisedBoundOutput
     where
         B: Into<Timestamp>,
     {
@@ -624,12 +623,7 @@ impl PreciseAbsoluteBound for AbsoluteEndBound {
         precise_abs_end_bound(self, tz, precision)
     }
 
-    fn precise_bound_with_base_time<B>(
-        &self,
-        tz: TimeZone,
-        precision: Precision,
-        base: B,
-    ) -> Self::PrecisedBoundOutput
+    fn precise_bound_with_base_time<B>(&self, tz: TimeZone, precision: Precision, base: B) -> Self::PrecisedBoundOutput
     where
         B: Into<Timestamp>,
     {

@@ -1,6 +1,7 @@
 //! Special intervals
 //!
-//! Includes intervals that are not absolute nor relative: [`UnboundedInterval`] and [`EmptyInterval`].
+//! Includes intervals that are not absolute nor relative: [`UnboundedInterval`]
+//! and [`EmptyInterval`].
 
 use std::error::Error;
 use std::fmt::Display;
@@ -12,24 +13,39 @@ use arbitrary::Arbitrary;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use crate::intervals::meta::{Epsilon, Interval};
-
 use super::absolute::{
-    AbsoluteBoundPair, AbsoluteEndBound, AbsoluteInterval, AbsoluteStartBound, EmptiableAbsoluteBoundPair,
-    HasAbsoluteBoundPair, HasEmptiableAbsoluteBoundPair,
+    AbsoluteBoundPair,
+    AbsoluteEndBound,
+    AbsoluteInterval,
+    AbsoluteStartBound,
+    EmptiableAbsoluteBoundPair,
+    HasAbsoluteBoundPair,
+    HasEmptiableAbsoluteBoundPair,
 };
 use super::meta::{
-    Duration as IntervalDuration, Emptiable, HasDuration, HasOpenness, HasRelativity, Openness, Relativity,
+    Duration as IntervalDuration,
+    Emptiable,
+    HasDuration,
+    HasOpenness,
+    HasRelativity,
+    Openness,
+    Relativity,
 };
 use super::relative::{
-    EmptiableRelativeBoundPair, HasEmptiableRelativeBoundPair, HasRelativeBoundPair, RelativeBoundPair,
-    RelativeEndBound, RelativeInterval, RelativeStartBound,
+    EmptiableRelativeBoundPair,
+    HasEmptiableRelativeBoundPair,
+    HasRelativeBoundPair,
+    RelativeBoundPair,
+    RelativeEndBound,
+    RelativeInterval,
+    RelativeStartBound,
 };
+use crate::intervals::meta::{Epsilon, Interval};
 
 /// An unbounded interval
 ///
-/// Interval without [`Relativity`] (not absolute nor relative) and without any bounds.
-/// Is equivalent to _time itself_ (all time), infinite duration.
+/// Interval without [`Relativity`] (not absolute nor relative) and without any
+/// bounds. Is equivalent to _time itself_ (all time), infinite duration.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
@@ -89,8 +105,8 @@ impl From<RangeFull> for UnboundedInterval {
     }
 }
 
-/// Error that can occur when trying to convert an [`AbsoluteInterval`] or [`RelativeInterval`]
-/// into an [`UnboundedInterval`]
+/// Error that can occur when trying to convert an [`AbsoluteInterval`] or
+/// [`RelativeInterval`] into an [`UnboundedInterval`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum UnboundedIntervalConversionErr {
     WrongVariant,
@@ -131,14 +147,17 @@ impl TryFrom<RelativeInterval> for UnboundedInterval {
 /// Empty interval
 ///
 /// Similar to the [empty set](https://en.wikipedia.org/wiki/Empty_set), this allows for still performing
-/// operations such as the complement of the interval without issues, but the difference between an empty set and
-/// and empty interval is that intervals are linked to time, therefore empty intervals are out of this time dimension.
+/// operations such as the complement of the interval without issues, but the
+/// difference between an empty set and and empty interval is that intervals are
+/// linked to time, therefore empty intervals are out of this time dimension.
 ///
-/// This means that, contrary to an empty set, an empty interval is **not** a subset of any interval.
-/// It simply represents the _lack_ of a time interval, like the complement of an unbounded interval.
+/// This means that, contrary to an empty set, an empty interval is **not** a
+/// subset of any interval. It simply represents the _lack_ of a time interval,
+/// like the complement of an unbounded interval.
 ///
-/// In regards to operations such as the overlap position, or union, since an empty interval has no defined place
-/// in time, it is always _outside_, _separate_ from the compared.
+/// In regards to operations such as the overlap position, or union, since an
+/// empty interval has no defined place in time, it is always _outside_,
+/// _separate_ from the compared.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
@@ -198,8 +217,8 @@ impl Emptiable for EmptyInterval {
     }
 }
 
-/// Errors that can occur when trying to convert an [`AbsoluteInterval`] or [`RelativeInterval`]
-/// into an [`EmptyInterval`]
+/// Errors that can occur when trying to convert an [`AbsoluteInterval`] or
+/// [`RelativeInterval`] into an [`EmptyInterval`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum EmptyIntervalConversionErr {
     WrongVariant,

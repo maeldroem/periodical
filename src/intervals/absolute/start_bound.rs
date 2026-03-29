@@ -1,7 +1,8 @@
 //! Absolute start bound
-//! 
-//! Represents the start bound of an absolute interval. It can either be finite, in which case
-//! it will contain an [`AbsoluteFiniteBound`], or represent an open start bound through
+//!
+//! Represents the start bound of an absolute interval. It can either be finite,
+//! in which case it will contain an [`AbsoluteFiniteBound`], or represent an
+//! open start bound through
 //! the [`InfinitePast`](AbsoluteStartBound::InfinitePast) variant.
 
 use std::cmp::Ordering;
@@ -16,13 +17,16 @@ use serde::{Deserialize, Serialize};
 use crate::intervals::absolute::{AbsoluteBound, AbsoluteEndBound, AbsoluteFiniteBound};
 use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
 use crate::intervals::ops::bound_overlap_ambiguity::{
-    BoundOverlapAmbiguity, BoundOverlapDisambiguationRuleSet, DisambiguatedBoundOverlap,
+    BoundOverlapAmbiguity,
+    BoundOverlapDisambiguationRuleSet,
+    DisambiguatedBoundOverlap,
 };
 
 /// An absolute start bound
 ///
-/// Represents the start bound of an interval, may it be infinitely in the past or at a precise point in time,
-/// in which case it contains an [`AbsoluteFiniteBound`].
+/// Represents the start bound of an interval, may it be infinitely in the past
+/// or at a precise point in time, in which case it contains an
+/// [`AbsoluteFiniteBound`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
@@ -38,7 +42,8 @@ impl AbsoluteStartBound {
         AbsoluteBound::from(self)
     }
 
-    /// Returns whether it is of the [`Finite`](AbsoluteStartBound::Finite) variant
+    /// Returns whether it is of the [`Finite`](AbsoluteStartBound::Finite)
+    /// variant
     ///
     /// # Examples
     ///
@@ -60,7 +65,8 @@ impl AbsoluteStartBound {
         matches!(self, Self::Finite(_))
     }
 
-    /// Returns whether it is of the [`InfinitePast`](AbsoluteStartBound::InfinitePast) variant
+    /// Returns whether it is of the
+    /// [`InfinitePast`](AbsoluteStartBound::InfinitePast) variant
     ///
     /// # Examples
     ///
@@ -82,10 +88,12 @@ impl AbsoluteStartBound {
         matches!(self, Self::InfinitePast)
     }
 
-    /// Returns the content of the [`Finite`](AbsoluteStartBound::Finite) variant
+    /// Returns the content of the [`Finite`](AbsoluteStartBound::Finite)
+    /// variant
     ///
-    /// Consumes `self` and puts the content of the [`Finite`](AbsoluteStartBound::Finite) variant
-    /// in an [`Option`]. If instead `self` is another variant, the method returns [`None`].
+    /// Consumes `self` and puts the content of the
+    /// [`Finite`](AbsoluteStartBound::Finite) variant in an [`Option`]. If
+    /// instead `self` is another variant, the method returns [`None`].
     ///
     /// # Examples
     ///
@@ -112,12 +120,14 @@ impl AbsoluteStartBound {
 
     /// Returns the opposite [`AbsoluteEndBound`]
     ///
-    /// If the [`AbsoluteStartBound`] is of the [`InfinitePast`](AbsoluteStartBound::InfinitePast) variant,
-    /// then the method returns [`None`].
-    /// Otherwise, if the [`AbsoluteStartBound`] is finite, then an [`AbsoluteEndBound`] is created
-    /// with the same time, but the opposite [`BoundInclusivity`].
+    /// If the [`AbsoluteStartBound`] is of the
+    /// [`InfinitePast`](AbsoluteStartBound::InfinitePast) variant, then the
+    /// method returns [`None`]. Otherwise, if the [`AbsoluteStartBound`] is
+    /// finite, then an [`AbsoluteEndBound`] is created with the same time,
+    /// but the opposite [`BoundInclusivity`].
     ///
-    /// This is used for example for determining the last point in time before this bound begins.
+    /// This is used for example for determining the last point in time before
+    /// this bound begins.
     ///
     /// # Examples
     ///
@@ -143,7 +153,7 @@ impl AbsoluteStartBound {
     /// let break_end_before_shift = start_second_part_my_shift
     ///     .opposite()
     ///     .ok_or(FiniteBoundExpectedError)?;
-    /// 
+    ///
     /// assert_eq!(
     ///     break_end_before_shift.finite(),
     ///     Some(AbsoluteFiniteBound::new_with_inclusivity(
@@ -156,10 +166,10 @@ impl AbsoluteStartBound {
     #[must_use]
     pub fn opposite(&self) -> Option<AbsoluteEndBound> {
         match self {
-            Self::Finite(finite) => Some(AbsoluteFiniteBound::new_with_inclusivity(
-                finite.time(),
-                finite.inclusivity().opposite(),
-            ).to_end_bound()),
+            Self::Finite(finite) => Some(
+                AbsoluteFiniteBound::new_with_inclusivity(finite.time(), finite.inclusivity().opposite())
+                    .to_end_bound(),
+            ),
             Self::InfinitePast => None,
         }
     }
@@ -176,7 +186,8 @@ impl PartialEq<AbsoluteEndBound> for AbsoluteStartBound {
                 inclusivity: end_inclusivity,
             }) = other
         {
-            // If the times are equal, anything other than double inclusive bounds is invalid
+            // If the times are equal, anything other than double inclusive bounds is
+            // invalid
             start_time == end_time
                 && *start_inclusivity == BoundInclusivity::Inclusive
                 && *end_inclusivity == BoundInclusivity::Inclusive

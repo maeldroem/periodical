@@ -1,14 +1,14 @@
 //! Absolute finite bound
-//! 
-//! An absolute finite bound has two components: an absolute time, represented by a [`Timestamp`],
-//! and a [bound inclusivity](BoundInclusivity).
-//! 
+//!
+//! An absolute finite bound has two components: an absolute time, represented
+//! by a [`Timestamp`], and a [bound inclusivity](BoundInclusivity).
+//!
 //! Absolute finite bounds are usually converted into either an
-//! [`AbsoluteStartBound`](crate::intervals::absolute::AbsoluteStartBound) through the
-//! [`to_start_bound`](AbsoluteFiniteBound::to_start_bound) method,
+//! [`AbsoluteStartBound`](crate::intervals::absolute::AbsoluteStartBound)
+//! through the [`to_start_bound`](AbsoluteFiniteBound::to_start_bound) method,
 //! or into an
-//! [`AbsoluteEndBound`](crate::intervals::absolute::AbsoluteEndBound) through the
-//! [`to_end_bound`](AbsoluteFiniteBound::to_end_bound) method.
+//! [`AbsoluteEndBound`](crate::intervals::absolute::AbsoluteEndBound) through
+//! the [`to_end_bound`](AbsoluteFiniteBound::to_end_bound) method.
 
 use std::cmp::Ordering;
 use std::error::Error;
@@ -24,11 +24,13 @@ use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
 
 /// An absolute finite bound
 ///
-/// Contains a time and an ambiguous [`BoundInclusivity`]: if it is [`Exclusive`](BoundInclusivity::Exclusive),
-/// then we additionally need the _source_ (whether it acts as the start or end of an interval) in order to know
-/// what this bound truly encompasses.
+/// Contains a time and an ambiguous [`BoundInclusivity`]: if it is
+/// [`Exclusive`](BoundInclusivity::Exclusive), then we additionally need the
+/// _source_ (whether it acts as the start or end of an interval) in order to
+/// know what this bound truly encompasses.
 ///
-/// This is why when comparing finite bounds, only its position (for absolute bounds, its time) is used.
+/// This is why when comparing finite bounds, only its position (for absolute
+/// bounds, its time) is used.
 ///
 /// # Examples
 ///
@@ -65,16 +67,21 @@ pub struct AbsoluteFiniteBound {
 impl AbsoluteFiniteBound {
     /// Creates a new [`AbsoluteFiniteBound`] using the given time
     ///
-    /// This creates a finite bound using the [default `BoundInclusivity`](BoundInclusivity::default).
+    /// This creates a finite bound using the [default
+    /// `BoundInclusivity`](BoundInclusivity::default).
     #[must_use]
     pub fn new(time: Timestamp) -> Self {
         Self::new_with_inclusivity(time, BoundInclusivity::default())
     }
 
-    /// Creates a new [`AbsoluteFiniteBound`] using the given time and [`BoundInclusivity`]
+    /// Creates a new [`AbsoluteFiniteBound`] using the given time and
+    /// [`BoundInclusivity`]
     #[must_use]
     pub fn new_with_inclusivity(time: Timestamp, inclusivity: BoundInclusivity) -> Self {
-        AbsoluteFiniteBound { time, inclusivity }
+        AbsoluteFiniteBound {
+            time,
+            inclusivity,
+        }
     }
 
     /// Returns the time
@@ -181,7 +188,8 @@ impl From<(Timestamp, BoundInclusivity)> for AbsoluteFiniteBound {
     }
 }
 
-/// Errors that can occur when trying to convert a [`Bound<Timestamp>`] into an [`AbsoluteFiniteBound`]
+/// Errors that can occur when trying to convert a [`Bound<Timestamp>`] into an
+/// [`AbsoluteFiniteBound`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum AbsoluteFiniteBoundFromBoundError {
     /// The given bound was of the [`Unbounded`](Bound::Unbounded) variant

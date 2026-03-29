@@ -1,4 +1,5 @@
-//! Periodical is a time interval management crate that makes dealing with time intervals consistent and reliable.
+//! Periodical is a time interval management crate that makes dealing with time
+//! intervals consistent and reliable.
 //!
 //! # Features
 //!
@@ -17,43 +18,53 @@
 //!
 //! # Basic usage
 //!
-//! Most of the time, you will want to import the global prelude by using `use periodical::prelude::*;`.
+//! Most of the time, you will want to import the global prelude by using `use
+//! periodical::prelude::*;`.
 //!
-//! The global prelude brings common traits into scope, making the methods described by the traits available.
-//! It also imports common structures, like [`AbsoluteInterval`](intervals::absolute::AbsoluteInterval)
+//! The global prelude brings common traits into scope, making the methods
+//! described by the traits available. It also imports common structures, like
+//! [`AbsoluteInterval`](intervals::absolute::AbsoluteInterval)
 //! and [`RelativeInterval`](intervals::relative::RelativeInterval).
 //!
 //! # Use cases
 //!
-//! The most common use case is related to handling schedules: availabilities, shifts, holidays, active periods, etc.
-//! are all part of that category.
+//! The most common use case is related to handling schedules: availabilities,
+//! shifts, holidays, active periods, etc. are all part of that category.
 //!
-//! Finding the set difference of a collection of intervals, or finding the kind of overlap between intervals
-//! are all useful tools made easy through the usage of `periodical`!
+//! Finding the set difference of a collection of intervals, or finding the kind
+//! of overlap between intervals are all useful tools made easy through the
+//! usage of `periodical`!
 //!
-//! Tracking tasks or other time-dependent things is also a good use case for `periodical`:
-//! Its dependency on `chrono` allows for high-precision tracking, and those times can be rounded
-//! to different precisions thanks to `periodical`.
-//! This change of time precision is common in professional contexts where time spent on a task may be rounded
-//! to the nearest 5/15/30/60 minutes or on predefined _time anchors_ throughout the day.
+//! Tracking tasks or other time-dependent things is also a good use case for
+//! `periodical`: Its dependency on `chrono` allows for high-precision tracking,
+//! and those times can be rounded to different precisions thanks to
+//! `periodical`. This change of time precision is common in professional
+//! contexts where time spent on a task may be rounded to the nearest 5/15/30/60
+//! minutes or on predefined _time anchors_ throughout the day.
 //!
-//! Periodicity can be taken advantage on in scheduling: it allows for expressing schedules declaratively,
-//! meaning that instead of defining each interval through large periods of time, you can instead define it
+//! Periodicity can be taken advantage on in scheduling: it allows for
+//! expressing schedules declaratively, meaning that instead of defining each
+//! interval through large periods of time, you can instead define it
 //! in terms of how the intervals should be placed.
 //!
-//! For a textual example, the classical imperative scheduling would be "I have a shift on 2026-02-02 from 08:00
-//! to 16:00, I have a shift on 2026-02-03 from 09:00 to 17:00, I have a shift on 2026-02-05 from 08:00 to 16:00, [..]"
-//! whereas the declarative way is similar to "I have a shift from 08:00 to 16:00 every work day except on
-//! holidays and vacations. On tuesdays I instead have my shifts from 09:00 to 17:00.".
+//! For a textual example, the classical imperative scheduling would be "I have
+//! a shift on 2026-02-02 from 08:00 to 16:00, I have a shift on 2026-02-03 from
+//! 09:00 to 17:00, I have a shift on 2026-02-05 from 08:00 to 16:00, [..]"
+//! whereas the declarative way is similar to "I have a shift from 08:00 to
+//! 16:00 every work day except on holidays and vacations. On tuesdays I instead
+//! have my shifts from 09:00 to 17:00.".
 //!
-//! This gives multiple advantages: You can define complex and long schedules easily, have a human-readable
-//! representation that can easily be updated, and has a representation that takes up less space compared to
-//! the imperative way.
+//! This gives multiple advantages: You can define complex and long schedules
+//! easily, have a human-readable representation that can easily be updated, and
+//! has a representation that takes up less space compared to the imperative
+//! way.
 //!
 //! # Crate features
 //!
-//! - `serde` provides serialization and deserialization of all common `periodical` structures
-//! - `arbitrary` provides a way of generating structured data from unstructured data, useful for fuzzing
+//! - `serde` provides serialization and deserialization of all common
+//!   `periodical` structures
+//! - `arbitrary` provides a way of generating structured data from unstructured
+//!   data, useful for fuzzing
 
 pub mod intervals;
 pub mod iter;

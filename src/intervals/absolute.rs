@@ -1,6 +1,7 @@
 //! Absolute intervals
 //!
-//! Absolute intervals are pinned to time, that is to say they have a start datetime and an end datetime.
+//! Absolute intervals are pinned to time, that is to say they have a start
+//! datetime and an end datetime.
 //!
 //! The most common absolute interval objects you will encounter are
 //!
@@ -17,8 +18,8 @@ use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
 use crate::utils::{inline_docs, tests};
 
 pub mod bound;
-pub mod bounded_interval;
 pub mod bound_pair;
+pub mod bounded_interval;
 pub mod emptiable_bound_pair;
 pub mod emptiable_interval;
 pub mod end_bound;
@@ -58,7 +59,8 @@ inline_docs! {
 
 /// Swaps an absolute start bound with an absolute end bound
 ///
-/// This method is primarily used in the case where a start bound and an end bound are not in chronological order.
+/// This method is primarily used in the case where a start bound and an end
+/// bound are not in chronological order.
 ///
 /// # Examples
 ///
@@ -79,10 +81,12 @@ inline_docs! {
 /// # Ok::<(), Box<dyn Error>>(())
 /// ```
 pub fn swap_absolute_bound_pair(start: &mut AbsoluteStartBound, end: &mut AbsoluteEndBound) {
-    // We temporarily reborrow start and end for the match arms so that when a pattern matches, they move out of their
-    // temporary scope and we can use the original mutable references without guard patterns shenanigans.
-    // When destructuring, however, the scope of the reborrowed value extends up to where it is used within the body,
-    // So we always finish our business with the reborrowed values first before accessing the original ones.
+    // We temporarily reborrow start and end for the match arms so that when a
+    // pattern matches, they move out of their temporary scope and we can use
+    // the original mutable references without guard patterns shenanigans.
+    // When destructuring, however, the scope of the reborrowed value extends up to
+    // where it is used within the body, So we always finish our business with
+    // the reborrowed values first before accessing the original ones.
     match (&mut *start, &mut *end) {
         (AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture) => {},
         (AbsoluteStartBound::InfinitePast, AbsoluteEndBound::Finite(finite_end)) => {
@@ -99,12 +103,14 @@ pub fn swap_absolute_bound_pair(start: &mut AbsoluteStartBound, end: &mut Absolu
     }
 }
 
-/// Possible problems that can prevent creating an interval from the given start and end bounds
+/// Possible problems that can prevent creating an interval from the given start
+/// and end bounds
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum AbsoluteBoundPairCheckForIntervalCreationError {
     /// Start bound is past the end bound
     StartPastEnd,
-    /// Both bounds are on the same time but don't have only inclusive bound inclusivities
+    /// Both bounds are on the same time but don't have only inclusive bound
+    /// inclusivities
     SameTimeButNotDoublyInclusive,
 }
 
@@ -124,17 +130,22 @@ impl Error for AbsoluteBoundPairCheckForIntervalCreationError {}
 
 /// Checks if the given start and end bound are ready for creating an interval
 ///
-/// This method is used as part of [`prepare_absolute_bound_pair_for_interval_creation`], which is used by
-/// [`AbsoluteBoundPair::new`], but also in other places where we want to make sure that a start and end bound
-/// are ready to be used as part of the interval without using methods like [`AbsoluteBoundPair::new`] that
-/// already go through this process.
+/// This method is used as part of
+/// [`prepare_absolute_bound_pair_for_interval_creation`], which is used by
+/// [`AbsoluteBoundPair::new`], but also in other places where we want to make
+/// sure that a start and end bound are ready to be used as part of the interval
+/// without using methods like [`AbsoluteBoundPair::new`] that already go
+/// through this process.
 ///
 /// # Errors
 ///
 /// If the start bound is past the end bound,
-/// it returns [`StartPastEnd`](AbsoluteBoundPairCheckForIntervalCreationError::StartPastEnd).
+/// it returns
+/// [`StartPastEnd`](AbsoluteBoundPairCheckForIntervalCreationError::StartPastEnd).
 ///
-/// If both bounds have the same time, but at least one of them has an exclusive bound inclusivity, it returns
+///
+/// If both bounds have the same time, but at least one of them has an exclusive
+/// bound inclusivity, it returns
 /// [`SameTimeButNotDoublyInclusive`](AbsoluteBoundPairCheckForIntervalCreationError::SameTimeButNotDoublyInclusive).
 ///
 /// # Examples
@@ -186,10 +197,13 @@ pub fn check_absolute_bound_pair_for_interval_creation(
 
 /// Prepares a start and end bound for being used as part of an interval
 ///
-/// If some problems are present, see [`check_absolute_bound_pair_for_interval_creation`], it resolves them automatically
-/// by modifying the passed mutable references for the start and end bound.
+/// If some problems are present, see
+/// [`check_absolute_bound_pair_for_interval_creation`], it resolves them
+/// automatically by modifying the passed mutable references for the start and
+/// end bound.
 ///
-/// The returned boolean indicates whether a change was operated in order to fix the given bounds.
+/// The returned boolean indicates whether a change was operated in order to fix
+/// the given bounds.
 ///
 /// # Examples
 ///

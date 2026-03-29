@@ -2,9 +2,10 @@
 //!
 //! Shrinks an interval up to a given point.
 //!
-//! To more explicitly shrink an interval, the trait for shrinking is actually two traits.
-//! One for shrinking the start bound of an interval, [`ShrinkableStartBound`],
-//! and one for shrinking the end bound of an interval, [`ShrinkableEndBound`].
+//! To more explicitly shrink an interval, the trait for shrinking is actually
+//! two traits. One for shrinking the start bound of an interval,
+//! [`ShrinkableStartBound`], and one for shrinking the end bound of an
+//! interval, [`ShrinkableEndBound`].
 //!
 //! # Examples
 //!
@@ -42,10 +43,28 @@
 use std::cmp::Ordering;
 
 use crate::intervals::absolute::{
-    AbsoluteBoundPair, AbsoluteEndBound, AbsoluteInterval, AbsoluteStartBound, BoundedAbsoluteInterval, EmptiableAbsoluteBoundPair, EmptiableAbsoluteInterval, HalfBoundedAbsoluteInterval, HasAbsoluteBoundPair, HasEmptiableAbsoluteBoundPair
+    AbsoluteBoundPair,
+    AbsoluteEndBound,
+    AbsoluteInterval,
+    AbsoluteStartBound,
+    BoundedAbsoluteInterval,
+    EmptiableAbsoluteBoundPair,
+    EmptiableAbsoluteInterval,
+    HalfBoundedAbsoluteInterval,
+    HasAbsoluteBoundPair,
+    HasEmptiableAbsoluteBoundPair,
 };
 use crate::intervals::relative::{
-    BoundedRelativeInterval, EmptiableRelativeBoundPair, EmptiableRelativeInterval, HalfBoundedRelativeInterval, HasEmptiableRelativeBoundPair, HasRelativeBoundPair, RelativeBoundPair, RelativeEndBound, RelativeInterval, RelativeStartBound
+    BoundedRelativeInterval,
+    EmptiableRelativeBoundPair,
+    EmptiableRelativeInterval,
+    HalfBoundedRelativeInterval,
+    HasEmptiableRelativeBoundPair,
+    HasRelativeBoundPair,
+    RelativeBoundPair,
+    RelativeEndBound,
+    RelativeInterval,
+    RelativeStartBound,
 };
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 
@@ -59,8 +78,10 @@ pub trait ShrinkableStartBound<P> {
 
     /// Shrinks the start bound of the given interval up to the given bound
     ///
-    /// This method creates a version of the interval where the start bound is more in the future than the original one.
-    /// Of course, it only happens if the passed new start bound is actually more in the future than the original one.
+    /// This method creates a version of the interval where the start bound is
+    /// more in the future than the original one. Of course, it only happens
+    /// if the passed new start bound is actually more in the future than the
+    /// original one.
     ///
     /// # Examples
     ///
@@ -107,8 +128,10 @@ pub trait ShrinkableEndBound<P> {
 
     /// Shrinks the end bound of the given interval up to the given bound
     ///
-    /// This method creates a version of the interval where the end bound is more in the past than the original one.
-    /// Of course, it only happens if the passed new end bound is actually more in the past than the original one.
+    /// This method creates a version of the interval where the end bound is
+    /// more in the past than the original one. Of course, it only happens
+    /// if the passed new end bound is actually more in the past than the
+    /// original one.
     ///
     /// # Examples
     ///
@@ -181,10 +204,7 @@ impl ShrinkableStartBound<AbsoluteStartBound> for AbsoluteInterval {
     type Output = Self;
 
     fn shrink_start(&self, position: AbsoluteStartBound) -> Self::Output {
-        Self::Output::from(shrink_start_abs_bound_pair(
-            &self.abs_bound_pair(),
-            position,
-        ))
+        Self::Output::from(shrink_start_abs_bound_pair(&self.abs_bound_pair(), position))
     }
 }
 
@@ -211,7 +231,10 @@ impl ShrinkableEndBound<AbsoluteEndBound> for EmptiableAbsoluteInterval {
     type Output = Self;
 
     fn shrink_end(&self, position: AbsoluteEndBound) -> Self::Output {
-        Self::Output::from(shrink_end_emptiable_abs_bound_pair(&self.emptiable_abs_bound_pair(), position))
+        Self::Output::from(shrink_end_emptiable_abs_bound_pair(
+            &self.emptiable_abs_bound_pair(),
+            position,
+        ))
     }
 }
 
@@ -219,10 +242,7 @@ impl ShrinkableStartBound<AbsoluteStartBound> for BoundedAbsoluteInterval {
     type Output = AbsoluteInterval;
 
     fn shrink_start(&self, position: AbsoluteStartBound) -> Self::Output {
-        Self::Output::from(shrink_start_abs_bound_pair(
-            &self.abs_bound_pair(),
-            position,
-        ))
+        Self::Output::from(shrink_start_abs_bound_pair(&self.abs_bound_pair(), position))
     }
 }
 
@@ -238,10 +258,7 @@ impl ShrinkableStartBound<AbsoluteStartBound> for HalfBoundedAbsoluteInterval {
     type Output = AbsoluteInterval;
 
     fn shrink_start(&self, position: AbsoluteStartBound) -> Self::Output {
-        Self::Output::from(shrink_start_abs_bound_pair(
-            &self.abs_bound_pair(),
-            position,
-        ))
+        Self::Output::from(shrink_start_abs_bound_pair(&self.abs_bound_pair(), position))
     }
 }
 
@@ -289,10 +306,7 @@ impl ShrinkableStartBound<RelativeStartBound> for RelativeInterval {
     type Output = Self;
 
     fn shrink_start(&self, position: RelativeStartBound) -> Self::Output {
-        Self::Output::from(shrink_start_rel_bound_pair(
-            &self.rel_bound_pair(),
-            position,
-        ))
+        Self::Output::from(shrink_start_rel_bound_pair(&self.rel_bound_pair(), position))
     }
 }
 
@@ -319,7 +333,10 @@ impl ShrinkableEndBound<RelativeEndBound> for EmptiableRelativeInterval {
     type Output = Self;
 
     fn shrink_end(&self, position: RelativeEndBound) -> Self::Output {
-        Self::Output::from(shrink_end_emptiable_rel_bound_pair(&self.emptiable_rel_bound_pair(), position))
+        Self::Output::from(shrink_end_emptiable_rel_bound_pair(
+            &self.emptiable_rel_bound_pair(),
+            position,
+        ))
     }
 }
 
@@ -327,10 +344,7 @@ impl ShrinkableStartBound<RelativeStartBound> for BoundedRelativeInterval {
     type Output = RelativeInterval;
 
     fn shrink_start(&self, position: RelativeStartBound) -> Self::Output {
-        Self::Output::from(shrink_start_rel_bound_pair(
-            &self.rel_bound_pair(),
-            position,
-        ))
+        Self::Output::from(shrink_start_rel_bound_pair(&self.rel_bound_pair(), position))
     }
 }
 
@@ -346,10 +360,7 @@ impl ShrinkableStartBound<RelativeStartBound> for HalfBoundedRelativeInterval {
     type Output = RelativeInterval;
 
     fn shrink_start(&self, position: RelativeStartBound) -> Self::Output {
-        Self::Output::from(shrink_start_rel_bound_pair(
-            &self.rel_bound_pair(),
-            position,
-        ))
+        Self::Output::from(shrink_start_rel_bound_pair(&self.rel_bound_pair(), position))
     }
 }
 
@@ -365,10 +376,7 @@ impl ShrinkableStartBound<AbsoluteStartBound> for UnboundedInterval {
     type Output = AbsoluteInterval;
 
     fn shrink_start(&self, position: AbsoluteStartBound) -> Self::Output {
-        Self::Output::from(shrink_start_abs_bound_pair(
-            &self.abs_bound_pair(),
-            position,
-        ))
+        Self::Output::from(shrink_start_abs_bound_pair(&self.abs_bound_pair(), position))
     }
 }
 
@@ -384,10 +392,7 @@ impl ShrinkableStartBound<RelativeStartBound> for UnboundedInterval {
     type Output = RelativeInterval;
 
     fn shrink_start(&self, position: RelativeStartBound) -> Self::Output {
-        Self::Output::from(shrink_start_rel_bound_pair(
-            &self.rel_bound_pair(),
-            position,
-        ))
+        Self::Output::from(shrink_start_rel_bound_pair(&self.rel_bound_pair(), position))
     }
 }
 
@@ -431,9 +436,11 @@ impl ShrinkableEndBound<RelativeEndBound> for EmptyInterval {
     }
 }
 
-/// Shrinks the start bound of the given [`AbsoluteBoundPair`] to the given bound
+/// Shrinks the start bound of the given [`AbsoluteBoundPair`] to the given
+/// bound
 ///
-/// See [module documentation](crate::intervals::ops::shrink) for more information.
+/// See [module documentation](crate::intervals::ops::shrink) for more
+/// information.
 #[must_use]
 pub fn shrink_start_abs_bound_pair(bounds: &AbsoluteBoundPair, at: AbsoluteStartBound) -> AbsoluteBoundPair {
     let mut new_bounds = bounds.clone();
@@ -450,9 +457,11 @@ pub fn shrink_start_abs_bound_pair(bounds: &AbsoluteBoundPair, at: AbsoluteStart
     new_bounds
 }
 
-/// Shrinks the start bound of the given [`EmptiableAbsoluteBoundPair`] to the given bound
+/// Shrinks the start bound of the given [`EmptiableAbsoluteBoundPair`] to the
+/// given bound
 ///
-/// See [module documentation](crate::intervals::ops::shrink) for more information.
+/// See [module documentation](crate::intervals::ops::shrink) for more
+/// information.
 #[must_use]
 pub fn shrink_start_emptiable_abs_bound_pair(
     emptiable_bounds: &EmptiableAbsoluteBoundPair,
@@ -467,7 +476,8 @@ pub fn shrink_start_emptiable_abs_bound_pair(
 
 /// Shrinks the end bound of the given [`AbsoluteBoundPair`] to the given bound
 ///
-/// See [module documentation](crate::intervals::ops::shrink) for more information.
+/// See [module documentation](crate::intervals::ops::shrink) for more
+/// information.
 #[must_use]
 pub fn shrink_end_abs_bound_pair(bounds: &AbsoluteBoundPair, at: AbsoluteEndBound) -> AbsoluteBoundPair {
     let mut new_bounds = bounds.clone();
@@ -484,9 +494,11 @@ pub fn shrink_end_abs_bound_pair(bounds: &AbsoluteBoundPair, at: AbsoluteEndBoun
     new_bounds
 }
 
-/// Shrinks the end bound of the given [`EmptiableAbsoluteBoundPair`] to the given bound
+/// Shrinks the end bound of the given [`EmptiableAbsoluteBoundPair`] to the
+/// given bound
 ///
-/// See [module documentation](crate::intervals::ops::shrink) for more information.
+/// See [module documentation](crate::intervals::ops::shrink) for more
+/// information.
 #[must_use]
 pub fn shrink_end_emptiable_abs_bound_pair(
     emptiable_bounds: &EmptiableAbsoluteBoundPair,
@@ -499,9 +511,11 @@ pub fn shrink_end_emptiable_abs_bound_pair(
     EmptiableAbsoluteBoundPair::from(shrink_end_abs_bound_pair(bounds, at))
 }
 
-/// Shrinks the start bound of the given [`RelativeBoundPair`] to the given bound
+/// Shrinks the start bound of the given [`RelativeBoundPair`] to the given
+/// bound
 ///
-/// See [module documentation](crate::intervals::ops::shrink) for more information.
+/// See [module documentation](crate::intervals::ops::shrink) for more
+/// information.
 #[must_use]
 pub fn shrink_start_rel_bound_pair(bounds: &RelativeBoundPair, at: RelativeStartBound) -> RelativeBoundPair {
     let mut new_bounds = bounds.clone();
@@ -518,9 +532,11 @@ pub fn shrink_start_rel_bound_pair(bounds: &RelativeBoundPair, at: RelativeStart
     new_bounds
 }
 
-/// Shrinks the start bound of the given [`EmptiableRelativeBoundPair`] to the given bound
+/// Shrinks the start bound of the given [`EmptiableRelativeBoundPair`] to the
+/// given bound
 ///
-/// See [module documentation](crate::intervals::ops::shrink) for more information.
+/// See [module documentation](crate::intervals::ops::shrink) for more
+/// information.
 #[must_use]
 pub fn shrink_start_emptiable_rel_bound_pair(
     emptiable_bounds: &EmptiableRelativeBoundPair,
@@ -535,7 +551,8 @@ pub fn shrink_start_emptiable_rel_bound_pair(
 
 /// Shrinks the end bound of the given [`RelativeBoundPair`] to the given bound
 ///
-/// See [module documentation](crate::intervals::ops::shrink) for more information.
+/// See [module documentation](crate::intervals::ops::shrink) for more
+/// information.
 #[must_use]
 pub fn shrink_end_rel_bound_pair(bounds: &RelativeBoundPair, at: RelativeEndBound) -> RelativeBoundPair {
     let mut new_bounds = bounds.clone();
@@ -552,9 +569,11 @@ pub fn shrink_end_rel_bound_pair(bounds: &RelativeBoundPair, at: RelativeEndBoun
     new_bounds
 }
 
-/// Shrinks the end bound of the given [`EmptiableRelativeBoundPair`] to the given bound
+/// Shrinks the end bound of the given [`EmptiableRelativeBoundPair`] to the
+/// given bound
 ///
-/// See [module documentation](crate::intervals::ops::shrink) for more information.
+/// See [module documentation](crate::intervals::ops::shrink) for more
+/// information.
 #[must_use]
 pub fn shrink_end_emptiable_rel_bound_pair(
     emptiable_bounds: &EmptiableRelativeBoundPair,

@@ -1,17 +1,22 @@
 //! Absolute interval
-//! 
+//!
 //! Represents any form of specific absolute intervals,
 //! besides [`EmptyInterval`](crate::intervals::special::EmptyInterval).
-//! That includes [`BoundedAbsoluteInterval`], [`HalfBoundedAbsoluteInterval`], and [`UnboundedInterval`].
-//! 
-//! The contained intervals conserve the [openness](Openness) invariant, but the chosen variant can change.
-//! Compared to [`AbsoluteBoundPair`], thanks to the variants we know exactly the kind of interval that is stored
-//! without needing to check inner data.
-//! 
-//! Usually this structure is for dealing with absolute intervals as a single type in a way that conserves
-//! the [openness](Openness) invariant, contrary to [`AbsoluteBoundPair`].
-//! 
-//! If you want to include [`EmptyInterval`](crate::intervals::special::EmptyInterval) as a possible variant,
+//! That includes [`BoundedAbsoluteInterval`], [`HalfBoundedAbsoluteInterval`],
+//! and [`UnboundedInterval`].
+//!
+//! The contained intervals conserve the [openness](Openness) invariant, but the
+//! chosen variant can change. Compared to [`AbsoluteBoundPair`], thanks to the
+//! variants we know exactly the kind of interval that is stored without needing
+//! to check inner data.
+//!
+//! Usually this structure is for dealing with absolute intervals as a single
+//! type in a way that conserves the [openness](Openness) invariant, contrary to
+//! [`AbsoluteBoundPair`].
+//!
+//! If you want to include
+//! [`EmptyInterval`](crate::intervals::special::EmptyInterval) as a possible
+//! variant,
 //! see [`EmptiableAbsoluteInterval`](crate::intervals::absolute::EmptiableAbsoluteInterval).
 
 use std::cmp::Ordering;
@@ -25,24 +30,50 @@ use jiff::Timestamp;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use crate::intervals::absolute::{AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, BoundedAbsoluteInterval, EmptiableAbsoluteBoundPair, EmptiableAbsoluteInterval, HalfBoundedAbsoluteInterval, HasAbsoluteBoundPair, HasEmptiableAbsoluteBoundPair};
-use crate::intervals::meta::{BoundInclusivity, Duration as IntervalDuration, HasDuration, HasOpenness, HasRelativity, Interval, OpeningDirection, Openness, Relativity};
+use crate::intervals::absolute::{
+    AbsoluteBoundPair,
+    AbsoluteEndBound,
+    AbsoluteFiniteBound,
+    AbsoluteStartBound,
+    BoundedAbsoluteInterval,
+    EmptiableAbsoluteBoundPair,
+    EmptiableAbsoluteInterval,
+    HalfBoundedAbsoluteInterval,
+    HasAbsoluteBoundPair,
+    HasEmptiableAbsoluteBoundPair,
+};
+use crate::intervals::meta::{
+    BoundInclusivity,
+    Duration as IntervalDuration,
+    HasDuration,
+    HasOpenness,
+    HasRelativity,
+    Interval,
+    OpeningDirection,
+    Openness,
+    Relativity,
+};
 use crate::intervals::special::UnboundedInterval;
 
 /// Absolute interval
-/// 
+///
 /// Represents any form of specific absolute intervals,
 /// besides [`EmptyInterval`](crate::intervals::special::EmptyInterval).
-/// That includes [`BoundedAbsoluteInterval`], [`HalfBoundedAbsoluteInterval`], and [`UnboundedInterval`].
-/// 
-/// The contained intervals conserve the [openness](Openness) invariant, but the chosen variant can change.
-/// Compared to [`AbsoluteBoundPair`], thanks to the variants we know exactly the kind of interval that is stored
-/// without needing to check inner data.
-/// 
-/// Usually this structure is for dealing with absolute intervals as a single type in a way that conserves
-/// the [openness](Openness) invariant, contrary to [`AbsoluteBoundPair`].
-/// 
-/// If you want to include [`EmptyInterval`](crate::intervals::special::EmptyInterval) as a possible variant,
+/// That includes [`BoundedAbsoluteInterval`], [`HalfBoundedAbsoluteInterval`],
+/// and [`UnboundedInterval`].
+///
+/// The contained intervals conserve the [openness](Openness) invariant, but the
+/// chosen variant can change. Compared to [`AbsoluteBoundPair`], thanks to the
+/// variants we know exactly the kind of interval that is stored without needing
+/// to check inner data.
+///
+/// Usually this structure is for dealing with absolute intervals as a single
+/// type in a way that conserves the [openness](Openness) invariant, contrary to
+/// [`AbsoluteBoundPair`].
+///
+/// If you want to include
+/// [`EmptyInterval`](crate::intervals::special::EmptyInterval) as a possible
+/// variant,
 /// see [`EmptiableAbsoluteInterval`](crate::intervals::absolute::EmptiableAbsoluteInterval).
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
@@ -124,12 +155,14 @@ impl AbsoluteInterval {
         }
     }
 
-    /// Compares two [`AbsoluteInterval`], but if they have the same start, order by decreasing length
+    /// Compares two [`AbsoluteInterval`], but if they have the same start,
+    /// order by decreasing length
     ///
-    /// Uses [`EmptiableAbsoluteBoundPair::ord_by_start_and_inv_length`] under the hood.
+    /// Uses [`EmptiableAbsoluteBoundPair::ord_by_start_and_inv_length`] under
+    /// the hood.
     ///
-    /// Don't rely on this method for checking for equality of start, as it will produce other [`Ordering`]s if their
-    /// lengths don't match too.
+    /// Don't rely on this method for checking for equality of start, as it will
+    /// produce other [`Ordering`]s if their lengths don't match too.
     ///
     /// # Examples
     ///
@@ -140,7 +173,8 @@ impl AbsoluteInterval {
     /// ```
     #[must_use]
     pub fn ord_by_start_and_inv_length(&self, other: &Self) -> Ordering {
-        self.abs_bound_pair().ord_by_start_and_inv_length(&other.abs_bound_pair())
+        self.abs_bound_pair()
+            .ord_by_start_and_inv_length(&other.abs_bound_pair())
     }
 
     /// Wraps the interval in [`EmptiableAbsoluteInterval`]
@@ -245,20 +279,28 @@ impl From<AbsoluteBoundPair> for AbsoluteInterval {
 
         match (value.abs_start(), value.abs_end()) {
             (StartB::InfinitePast, EndB::InfiniteFuture) => AbsoluteInterval::Unbounded(UnboundedInterval),
-            (StartB::InfinitePast, EndB::Finite(AbsoluteFiniteBound { time, inclusivity })) => {
-                AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
+            (
+                StartB::InfinitePast,
+                EndB::Finite(AbsoluteFiniteBound {
                     time,
                     inclusivity,
-                    OpeningDirection::ToPast,
-                ))
-            },
-            (StartB::Finite(AbsoluteFiniteBound { time, inclusivity }), EndB::InfiniteFuture) => {
-                AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
+                }),
+            ) => AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
+                time,
+                inclusivity,
+                OpeningDirection::ToPast,
+            )),
+            (
+                StartB::Finite(AbsoluteFiniteBound {
                     time,
                     inclusivity,
-                    OpeningDirection::ToFuture,
-                ))
-            },
+                }),
+                EndB::InfiniteFuture,
+            ) => AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
+                time,
+                inclusivity,
+                OpeningDirection::ToFuture,
+            )),
             (
                 StartB::Finite(AbsoluteFiniteBound {
                     time: start_time,
@@ -280,7 +322,8 @@ impl From<AbsoluteBoundPair> for AbsoluteInterval {
 
 /// Converts `(Option<Timestamp>, Option<Timestamp>)` into [`AbsoluteInterval`]
 ///
-/// The first tuple element represents the start bound, the second element represents the end bound.
+/// The first tuple element represents the start bound, the second element
+/// represents the end bound.
 impl From<(Option<Timestamp>, Option<Timestamp>)> for AbsoluteInterval {
     fn from((start_opt, end_opt): (Option<Timestamp>, Option<Timestamp>)) -> Self {
         match (start_opt, end_opt) {
@@ -296,10 +339,11 @@ impl From<(Option<Timestamp>, Option<Timestamp>)> for AbsoluteInterval {
     }
 }
 
-/// Converts `(Option<(Timestamp, BoundInclusivity)>, Option<(Timestamp, BoundInclusivity)>)`
-/// into [`AbsoluteInterval`]
+/// Converts `(Option<(Timestamp, BoundInclusivity)>, Option<(Timestamp,
+/// BoundInclusivity)>)` into [`AbsoluteInterval`]
 ///
-/// The first tuple element represents the start bound, the second element represents the end bound.
+/// The first tuple element represents the start bound, the second element
+/// represents the end bound.
 impl
     From<(
         Option<(Timestamp, BoundInclusivity)>,
@@ -332,7 +376,10 @@ pub struct AbsoluteIntervalFromEmptiableAbsoluteBoundPairError;
 
 impl Display for AbsoluteIntervalFromEmptiableAbsoluteBoundPairError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Failed to convert the emptiable absolute bound pair into an absolute interval")
+        write!(
+            f,
+            "Failed to convert the emptiable absolute bound pair into an absolute interval"
+        )
     }
 }
 
@@ -347,21 +394,27 @@ impl TryFrom<EmptiableAbsoluteBoundPair> for AbsoluteInterval {
 
         match (value.partial_abs_start(), value.partial_abs_end()) {
             (None, _) | (_, None) => Err(AbsoluteIntervalFromEmptiableAbsoluteBoundPairError),
-            (Some(StartB::InfinitePast), Some(EndB::InfiniteFuture)) => Ok(AbsoluteInterval::Unbounded(UnboundedInterval)),
-            (Some(StartB::InfinitePast), Some(EndB::Finite(AbsoluteFiniteBound { time, inclusivity }))) => {
-                Ok(AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
+            (Some(StartB::InfinitePast), Some(EndB::InfiniteFuture)) => {
+                Ok(AbsoluteInterval::Unbounded(UnboundedInterval))
+            },
+            (
+                Some(StartB::InfinitePast),
+                Some(EndB::Finite(AbsoluteFiniteBound {
                     time,
                     inclusivity,
-                    OpeningDirection::ToPast,
-                )))
-            },
-            (Some(StartB::Finite(AbsoluteFiniteBound { time, inclusivity })), Some(EndB::InfiniteFuture)) => {
-                Ok(AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
+                })),
+            ) => Ok(AbsoluteInterval::HalfBounded(
+                HalfBoundedAbsoluteInterval::new_with_inclusivity(time, inclusivity, OpeningDirection::ToPast),
+            )),
+            (
+                Some(StartB::Finite(AbsoluteFiniteBound {
                     time,
                     inclusivity,
-                    OpeningDirection::ToFuture,
-                )))
-            },
+                })),
+                Some(EndB::InfiniteFuture),
+            ) => Ok(AbsoluteInterval::HalfBounded(
+                HalfBoundedAbsoluteInterval::new_with_inclusivity(time, inclusivity, OpeningDirection::ToFuture),
+            )),
             (
                 Some(StartB::Finite(AbsoluteFiniteBound {
                     time: start_time,
@@ -371,12 +424,14 @@ impl TryFrom<EmptiableAbsoluteBoundPair> for AbsoluteInterval {
                     time: end_time,
                     inclusivity: end_inclusivity,
                 })),
-            ) => Ok(AbsoluteInterval::Bounded(BoundedAbsoluteInterval::unchecked_new_with_inclusivity(
-                start_time,
-                start_inclusivity,
-                end_time,
-                end_inclusivity,
-            ))),
+            ) => Ok(AbsoluteInterval::Bounded(
+                BoundedAbsoluteInterval::unchecked_new_with_inclusivity(
+                    start_time,
+                    start_inclusivity,
+                    end_time,
+                    end_inclusivity,
+                ),
+            )),
         }
     }
 }

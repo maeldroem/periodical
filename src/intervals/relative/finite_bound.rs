@@ -1,14 +1,14 @@
 //! Relative finite bound
-//! 
-//! A relative finite bound has two components: an offset, represented by a [`SignedDuration`],
-//! and a [bound inclusivity](BoundInclusivity).
-//! 
+//!
+//! A relative finite bound has two components: an offset, represented by a
+//! [`SignedDuration`], and a [bound inclusivity](BoundInclusivity).
+//!
 //! Relative finite bounds are usually converted into either an
-//! [`RelativeStartBound`](crate::intervals::relative::RelativeStartBound) through the
-//! [`to_start_bound`](RelativeFiniteBound::to_start_bound) method,
+//! [`RelativeStartBound`](crate::intervals::relative::RelativeStartBound)
+//! through the [`to_start_bound`](RelativeFiniteBound::to_start_bound) method,
 //! or into an
-//! [`RelativeEndBound`](crate::intervals::relative::RelativeEndBound) through the
-//! [`to_end_bound`](RelativeFiniteBound::to_end_bound) method.
+//! [`RelativeEndBound`](crate::intervals::relative::RelativeEndBound) through
+//! the [`to_end_bound`](RelativeFiniteBound::to_end_bound) method.
 
 use std::cmp::Ordering;
 use std::error::Error;
@@ -25,10 +25,12 @@ use crate::intervals::relative::{RelativeEndBound, RelativeStartBound};
 /// A relative finite bound
 ///
 /// Contains an offset [`SignedDuration`] and an ambiguous [`BoundInclusivity`]:
-/// if it is [`Exclusive`](BoundInclusivity::Exclusive), then we additionally need the _source_
-/// (whether it acts as the start or end of an interval) in order to know what this bound truly encompasses.
+/// if it is [`Exclusive`](BoundInclusivity::Exclusive), then we additionally
+/// need the _source_ (whether it acts as the start or end of an interval) in
+/// order to know what this bound truly encompasses.
 ///
-/// This is why when comparing finite bounds, only its position (for relative bounds, its offset) is used.
+/// This is why when comparing finite bounds, only its position (for relative
+/// bounds, its offset) is used.
 ///
 /// # Examples
 ///
@@ -61,16 +63,21 @@ pub struct RelativeFiniteBound {
 impl RelativeFiniteBound {
     /// Creates a new [`RelativeFiniteBound`] using the given offset
     ///
-    /// This creates a finite bound using the [default `BoundInclusivity`](BoundInclusivity::default)
+    /// This creates a finite bound using the [default
+    /// `BoundInclusivity`](BoundInclusivity::default)
     #[must_use]
     pub fn new(offset: SignedDuration) -> Self {
         Self::new_with_inclusivity(offset, BoundInclusivity::default())
     }
 
-    /// Creates a new [`RelativeFiniteBound`] using the given offset and [`BoundInclusivity`]
+    /// Creates a new [`RelativeFiniteBound`] using the given offset and
+    /// [`BoundInclusivity`]
     #[must_use]
     pub fn new_with_inclusivity(offset: SignedDuration, inclusivity: BoundInclusivity) -> Self {
-        RelativeFiniteBound { offset, inclusivity }
+        RelativeFiniteBound {
+            offset,
+            inclusivity,
+        }
     }
 
     /// Returns the offset
@@ -165,7 +172,8 @@ impl From<(SignedDuration, BoundInclusivity)> for RelativeFiniteBound {
     }
 }
 
-/// Errors that can occur when trying to convert a [`Bound<SignedDuration>`] into an [`RelativeFiniteBound`]
+/// Errors that can occur when trying to convert a [`Bound<SignedDuration>`]
+/// into an [`RelativeFiniteBound`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum RelativeFiniteBoundFromBoundError {
     /// The given bound was of the [`Unbounded`](Bound::Unbounded) variant

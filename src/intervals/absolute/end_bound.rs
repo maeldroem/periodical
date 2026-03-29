@@ -1,7 +1,8 @@
 //! Absolute end bound
-//! 
-//! Represents the end bound of an absolute interval. It can either be finite, in which case
-//! it will contain an [`AbsoluteFiniteBound`], or represent an open end bound through
+//!
+//! Represents the end bound of an absolute interval. It can either be finite,
+//! in which case it will contain an [`AbsoluteFiniteBound`], or represent an
+//! open end bound through
 //! the [`InfiniteFuture`](AbsoluteEndBound::InfiniteFuture) variant.
 
 use std::cmp::Ordering;
@@ -16,13 +17,16 @@ use serde::{Deserialize, Serialize};
 use crate::intervals::absolute::{AbsoluteBound, AbsoluteFiniteBound, AbsoluteStartBound};
 use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
 use crate::intervals::ops::bound_overlap_ambiguity::{
-    BoundOverlapAmbiguity, BoundOverlapDisambiguationRuleSet, DisambiguatedBoundOverlap,
+    BoundOverlapAmbiguity,
+    BoundOverlapDisambiguationRuleSet,
+    DisambiguatedBoundOverlap,
 };
 
 /// An absolute end bound
 ///
-/// Represents the end bound of an interval, may it be infinitely in the future or at a precise point in time,
-/// in which case it contains an [`AbsoluteFiniteBound`].
+/// Represents the end bound of an interval, may it be infinitely in the future
+/// or at a precise point in time, in which case it contains an
+/// [`AbsoluteFiniteBound`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
@@ -38,7 +42,8 @@ impl AbsoluteEndBound {
         AbsoluteBound::from(self)
     }
 
-    /// Returns whether it is of the [`Finite`](AbsoluteEndBound::Finite) variant
+    /// Returns whether it is of the [`Finite`](AbsoluteEndBound::Finite)
+    /// variant
     ///
     /// # Examples
     ///
@@ -60,7 +65,8 @@ impl AbsoluteEndBound {
         matches!(self, Self::Finite(_))
     }
 
-    /// Returns whether it is of the [`InfiniteFuture`](AbsoluteEndBound::InfiniteFuture) variant
+    /// Returns whether it is of the
+    /// [`InfiniteFuture`](AbsoluteEndBound::InfiniteFuture) variant
     ///
     /// # Examples
     ///
@@ -84,8 +90,9 @@ impl AbsoluteEndBound {
 
     /// Returns the content of the [`Finite`](AbsoluteEndBound::Finite) variant
     ///
-    /// Consumes `self` and puts the content of the [`Finite`](AbsoluteEndBound::Finite) variant
-    /// in an [`Option`]. If instead `self` is another variant, the method returns [`None`].
+    /// Consumes `self` and puts the content of the
+    /// [`Finite`](AbsoluteEndBound::Finite) variant in an [`Option`]. If
+    /// instead `self` is another variant, the method returns [`None`].
     ///
     /// # Examples
     ///
@@ -112,12 +119,15 @@ impl AbsoluteEndBound {
 
     /// Returns the opposite [`AbsoluteStartBound`]
     ///
-    /// If the [`AbsoluteEndBound`] is of the [`InfiniteFuture`](AbsoluteEndBound::InfiniteFuture) variant,
+    /// If the [`AbsoluteEndBound`] is of the
+    /// [`InfiniteFuture`](AbsoluteEndBound::InfiniteFuture) variant,
     /// then the method returns [`None`].
-    /// Otherwise, if the [`AbsoluteEndBound`] is finite, then an [`AbsoluteStartBound`] is created
-    /// with the same time, but the opposite [`BoundInclusivity`].
+    /// Otherwise, if the [`AbsoluteEndBound`] is finite, then an
+    /// [`AbsoluteStartBound`] is created with the same time, but the
+    /// opposite [`BoundInclusivity`].
     ///
-    /// This is used for example for determining the first point in time after this bound ends.
+    /// This is used for example for determining the first point in time after
+    /// this bound ends.
     ///
     /// # Examples
     ///
@@ -143,7 +153,7 @@ impl AbsoluteEndBound {
     /// let break_start = end_first_shift
     ///     .opposite()
     ///     .ok_or(FiniteBoundExpectedError)?;
-    /// 
+    ///
     /// assert_eq!(
     ///     break_start.finite(),
     ///     Some(AbsoluteFiniteBound::new_with_inclusivity(
@@ -156,10 +166,10 @@ impl AbsoluteEndBound {
     #[must_use]
     pub fn opposite(&self) -> Option<AbsoluteStartBound> {
         match self {
-            Self::Finite(finite) => Some(AbsoluteFiniteBound::new_with_inclusivity(
-                finite.time(),
-                finite.inclusivity().opposite(),
-            ).to_start_bound()),
+            Self::Finite(finite) => Some(
+                AbsoluteFiniteBound::new_with_inclusivity(finite.time(), finite.inclusivity().opposite())
+                    .to_start_bound(),
+            ),
             Self::InfiniteFuture => None,
         }
     }

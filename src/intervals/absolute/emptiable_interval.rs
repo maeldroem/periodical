@@ -1,17 +1,21 @@
 //! Absolute emptiable interval
-//! 
-//! Represents any form of specific absolute intervals, including [`EmptyInterval`].
-//! That includes [`BoundedAbsoluteInterval`], [`HalfBoundedAbsoluteInterval`], [`UnboundedInterval`],
+//!
+//! Represents any form of specific absolute intervals, including
+//! [`EmptyInterval`]. That includes [`BoundedAbsoluteInterval`],
+//! [`HalfBoundedAbsoluteInterval`], [`UnboundedInterval`],
 //! and [`EmptyInterval`].
-//! 
-//! The contained intervals conserve the [openness](Openness) invariant, but the chosen variant can change.
-//! Compared to [`AbsoluteBoundPair`], thanks to the variants we know exactly the kind of interval that is stored
-//! without needing to check inner data.
-//! 
-//! Usually this structure is for dealing with absolute intervals as a single type in a way that conserves
-//! the [openness](Openness) invariant, contrary to [`AbsoluteBoundPair`].
-//! 
-//! If you want to exclude [`EmptyInterval`] as a possible variant, see [`AbsoluteInterval`].
+//!
+//! The contained intervals conserve the [openness](Openness) invariant, but the
+//! chosen variant can change. Compared to [`AbsoluteBoundPair`], thanks to the
+//! variants we know exactly the kind of interval that is stored without needing
+//! to check inner data.
+//!
+//! Usually this structure is for dealing with absolute intervals as a single
+//! type in a way that conserves the [openness](Openness) invariant, contrary to
+//! [`AbsoluteBoundPair`].
+//!
+//! If you want to exclude [`EmptyInterval`] as a possible variant, see
+//! [`AbsoluteInterval`].
 
 use std::cmp::Ordering;
 
@@ -21,8 +25,30 @@ use jiff::Timestamp;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use crate::intervals::absolute::{AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteInterval, AbsoluteStartBound, BoundedAbsoluteInterval, EmptiableAbsoluteBoundPair, HalfBoundedAbsoluteInterval, HasAbsoluteBoundPair, HasEmptiableAbsoluteBoundPair};
-use crate::intervals::meta::{BoundInclusivity, Duration as IntervalDuration, Emptiable, HasDuration, HasOpenness, HasRelativity, Interval, OpeningDirection, Openness, Relativity};
+use crate::intervals::absolute::{
+    AbsoluteBoundPair,
+    AbsoluteEndBound,
+    AbsoluteFiniteBound,
+    AbsoluteInterval,
+    AbsoluteStartBound,
+    BoundedAbsoluteInterval,
+    EmptiableAbsoluteBoundPair,
+    HalfBoundedAbsoluteInterval,
+    HasAbsoluteBoundPair,
+    HasEmptiableAbsoluteBoundPair,
+};
+use crate::intervals::meta::{
+    BoundInclusivity,
+    Duration as IntervalDuration,
+    Emptiable,
+    HasDuration,
+    HasOpenness,
+    HasRelativity,
+    Interval,
+    OpeningDirection,
+    Openness,
+    Relativity,
+};
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -36,12 +62,14 @@ pub enum EmptiableAbsoluteInterval {
 }
 
 impl EmptiableAbsoluteInterval {
-    /// Compares two [`AbsoluteInterval`], but if they have the same start, order by decreasing length
+    /// Compares two [`AbsoluteInterval`], but if they have the same start,
+    /// order by decreasing length
     ///
-    /// Uses [`EmptiableAbsoluteBoundPair::ord_by_start_and_inv_length`] under the hood.
+    /// Uses [`EmptiableAbsoluteBoundPair::ord_by_start_and_inv_length`] under
+    /// the hood.
     ///
-    /// Don't rely on this method for checking for equality of start, as it will produce other [`Ordering`]s if their
-    /// lengths don't match too.
+    /// Don't rely on this method for checking for equality of start, as it will
+    /// produce other [`Ordering`]s if their lengths don't match too.
     ///
     /// # Examples
     ///
@@ -170,20 +198,28 @@ impl From<AbsoluteBoundPair> for EmptiableAbsoluteInterval {
 
         match (value.abs_start(), value.abs_end()) {
             (StartB::InfinitePast, EndB::InfiniteFuture) => EmptiableAbsoluteInterval::Unbounded(UnboundedInterval),
-            (StartB::InfinitePast, EndB::Finite(AbsoluteFiniteBound { time, inclusivity })) => {
-                EmptiableAbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
+            (
+                StartB::InfinitePast,
+                EndB::Finite(AbsoluteFiniteBound {
                     time,
                     inclusivity,
-                    OpeningDirection::ToPast,
-                ))
-            },
-            (StartB::Finite(AbsoluteFiniteBound { time, inclusivity }), EndB::InfiniteFuture) => {
-                EmptiableAbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
+                }),
+            ) => EmptiableAbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
+                time,
+                inclusivity,
+                OpeningDirection::ToPast,
+            )),
+            (
+                StartB::Finite(AbsoluteFiniteBound {
                     time,
                     inclusivity,
-                    OpeningDirection::ToFuture,
-                ))
-            },
+                }),
+                EndB::InfiniteFuture,
+            ) => EmptiableAbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
+                time,
+                inclusivity,
+                OpeningDirection::ToFuture,
+            )),
             (
                 StartB::Finite(AbsoluteFiniteBound {
                     time: start_time,
@@ -210,21 +246,31 @@ impl From<EmptiableAbsoluteBoundPair> for EmptiableAbsoluteInterval {
 
         match (value.partial_abs_start(), value.partial_abs_end()) {
             (None, _) | (_, None) => EmptiableAbsoluteInterval::Empty(EmptyInterval),
-            (Some(StartB::InfinitePast), Some(EndB::InfiniteFuture)) => EmptiableAbsoluteInterval::Unbounded(UnboundedInterval),
-            (Some(StartB::InfinitePast), Some(EndB::Finite(AbsoluteFiniteBound { time, inclusivity }))) => {
-                EmptiableAbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
+            (Some(StartB::InfinitePast), Some(EndB::InfiniteFuture)) => {
+                EmptiableAbsoluteInterval::Unbounded(UnboundedInterval)
+            },
+            (
+                Some(StartB::InfinitePast),
+                Some(EndB::Finite(AbsoluteFiniteBound {
                     time,
                     inclusivity,
-                    OpeningDirection::ToPast,
-                ))
-            },
-            (Some(StartB::Finite(AbsoluteFiniteBound { time, inclusivity })), Some(EndB::InfiniteFuture)) => {
-                EmptiableAbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
+                })),
+            ) => EmptiableAbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
+                time,
+                inclusivity,
+                OpeningDirection::ToPast,
+            )),
+            (
+                Some(StartB::Finite(AbsoluteFiniteBound {
                     time,
                     inclusivity,
-                    OpeningDirection::ToFuture,
-                ))
-            },
+                })),
+                Some(EndB::InfiniteFuture),
+            ) => EmptiableAbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
+                time,
+                inclusivity,
+                OpeningDirection::ToFuture,
+            )),
             (
                 Some(StartB::Finite(AbsoluteFiniteBound {
                     time: start_time,
@@ -256,14 +302,16 @@ impl From<AbsoluteInterval> for EmptiableAbsoluteInterval {
 
 /// Converts `(Option<Timestamp>, Option<Timestamp>)` into [`AbsoluteInterval`]
 ///
-/// The first tuple element represents the start bound, the second element represents the end bound.
+/// The first tuple element represents the start bound, the second element
+/// represents the end bound.
 impl From<(Option<Timestamp>, Option<Timestamp>)> for EmptiableAbsoluteInterval {
     fn from((from_opt, to_opt): (Option<Timestamp>, Option<Timestamp>)) -> Self {
         match (from_opt, to_opt) {
             (Some(from), Some(to)) => EmptiableAbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(from, to)),
-            (Some(from), None) => {
-                EmptiableAbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new(from, OpeningDirection::ToFuture))
-            },
+            (Some(from), None) => EmptiableAbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new(
+                from,
+                OpeningDirection::ToFuture,
+            )),
             (None, Some(to)) => {
                 EmptiableAbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new(to, OpeningDirection::ToPast))
             },
@@ -272,10 +320,11 @@ impl From<(Option<Timestamp>, Option<Timestamp>)> for EmptiableAbsoluteInterval 
     }
 }
 
-/// Converts `(Option<(Timestamp, BoundInclusivity)>, Option<(Timestamp, BoundInclusivity)>)`
-/// into [`AbsoluteInterval`]
+/// Converts `(Option<(Timestamp, BoundInclusivity)>, Option<(Timestamp,
+/// BoundInclusivity)>)` into [`AbsoluteInterval`]
 ///
-/// The first tuple element represents the start bound, the second element represents the end bound.
+/// The first tuple element represents the start bound, the second element
+/// represents the end bound.
 impl
     From<(
         Option<(Timestamp, BoundInclusivity)>,
@@ -303,9 +352,11 @@ impl
     }
 }
 
-/// Converts `(bool, Option<Timestamp>, Option<Timestamp>)` into [`AbsoluteInterval`]
+/// Converts `(bool, Option<Timestamp>, Option<Timestamp>)` into
+/// [`AbsoluteInterval`]
 ///
-/// The second tuple element represents the start bound, the third element represents the end bound.
+/// The second tuple element represents the start bound, the third element
+/// represents the end bound.
 ///
 /// The first boolean indicates whether the interval is an [`EmptyInterval`].
 /// If it is set to `true`, the next elements are ignored altogether.
@@ -317,9 +368,10 @@ impl From<(bool, Option<Timestamp>, Option<Timestamp>)> for EmptiableAbsoluteInt
 
         match (from_opt, to_opt) {
             (Some(from), Some(to)) => EmptiableAbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(from, to)),
-            (Some(from), None) => {
-                EmptiableAbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new(from, OpeningDirection::ToFuture))
-            },
+            (Some(from), None) => EmptiableAbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new(
+                from,
+                OpeningDirection::ToFuture,
+            )),
             (None, Some(to)) => {
                 EmptiableAbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new(to, OpeningDirection::ToPast))
             },
@@ -328,10 +380,11 @@ impl From<(bool, Option<Timestamp>, Option<Timestamp>)> for EmptiableAbsoluteInt
     }
 }
 
-/// Converts `(bool, Option<(Timestamp, BoundInclusivity)>, Option<(Timestamp, BoundInclusivity)>)`
-/// into [`AbsoluteInterval`]
+/// Converts `(bool, Option<(Timestamp, BoundInclusivity)>, Option<(Timestamp,
+/// BoundInclusivity)>)` into [`AbsoluteInterval`]
 ///
-/// The second tuple element represents the start bound, the third element represents the end bound.
+/// The second tuple element represents the start bound, the third element
+/// represents the end bound.
 ///
 /// The first boolean indicates whether the interval is an [`EmptyInterval`].
 /// If it is set to `true`, the next elements are ignored altogether.

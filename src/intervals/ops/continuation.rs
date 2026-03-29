@@ -1,10 +1,12 @@
 //! Continuation intervals, both towards past and future, of a given interval
 //!
-//! A continuation interval is similar to a [complement](crate::intervals::ops::complement),
-//! but with the explicit purpose of finding which interval, following a direction time,
-//! _continues_ before/after the given one.
+//! A continuation interval is similar to a
+//! [complement](crate::intervals::ops::complement), but with the explicit
+//! purpose of finding which interval, following a direction time, _continues_
+//! before/after the given one.
 //!
-//! Contrary to complements, an empty interval doesn't possess any continuation intervals.
+//! Contrary to complements, an empty interval doesn't possess any continuation
+//! intervals.
 //!
 //! # Examples
 //!
@@ -49,21 +51,43 @@
 //! ```
 
 use crate::intervals::absolute::{
-    AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteInterval, AbsoluteStartBound, BoundedAbsoluteInterval, EmptiableAbsoluteBoundPair, EmptiableAbsoluteInterval, HalfBoundedAbsoluteInterval, HasAbsoluteBoundPair, HasEmptiableAbsoluteBoundPair
+    AbsoluteBoundPair,
+    AbsoluteEndBound,
+    AbsoluteFiniteBound,
+    AbsoluteInterval,
+    AbsoluteStartBound,
+    BoundedAbsoluteInterval,
+    EmptiableAbsoluteBoundPair,
+    EmptiableAbsoluteInterval,
+    HalfBoundedAbsoluteInterval,
+    HasAbsoluteBoundPair,
+    HasEmptiableAbsoluteBoundPair,
 };
 use crate::intervals::meta::{HasBoundInclusivity, OpeningDirection};
 use crate::intervals::relative::{
-    BoundedRelativeInterval, EmptiableRelativeBoundPair, EmptiableRelativeInterval, HalfBoundedRelativeInterval, HasEmptiableRelativeBoundPair, HasRelativeBoundPair, RelativeBoundPair, RelativeEndBound, RelativeFiniteBound, RelativeInterval, RelativeStartBound
+    BoundedRelativeInterval,
+    EmptiableRelativeBoundPair,
+    EmptiableRelativeInterval,
+    HalfBoundedRelativeInterval,
+    HasEmptiableRelativeBoundPair,
+    HasRelativeBoundPair,
+    RelativeBoundPair,
+    RelativeEndBound,
+    RelativeFiniteBound,
+    RelativeInterval,
+    RelativeStartBound,
 };
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 
 /// Capacity to get the past and future continuations of a given interval
 ///
-/// A continuation interval is similar to a [complement](crate::intervals::ops::complement),
-/// but with the explicit purpose of finding which interval, following a direction time,
-/// _continues_ before/after the given one.
+/// A continuation interval is similar to a
+/// [complement](crate::intervals::ops::complement), but with the explicit
+/// purpose of finding which interval, following a direction time, _continues_
+/// before/after the given one.
 ///
-/// Contrary to complements, an empty interval doesn't possess any continuation intervals.
+/// Contrary to complements, an empty interval doesn't possess any continuation
+/// intervals.
 ///
 /// # Examples
 ///
@@ -223,11 +247,15 @@ impl Continuable for EmptiableAbsoluteInterval {
     type Output = Self;
 
     fn past_continuation(&self) -> Self::Output {
-        Self::Output::from(past_continuation_emptiable_abs_bound_pair(&self.emptiable_abs_bound_pair()))
+        Self::Output::from(past_continuation_emptiable_abs_bound_pair(
+            &self.emptiable_abs_bound_pair(),
+        ))
     }
 
     fn future_continuation(&self) -> Self::Output {
-        Self::Output::from(future_continuation_emptiable_abs_bound_pair(&self.emptiable_abs_bound_pair()))
+        Self::Output::from(future_continuation_emptiable_abs_bound_pair(
+            &self.emptiable_abs_bound_pair(),
+        ))
     }
 }
 
@@ -295,11 +323,15 @@ impl Continuable for EmptiableRelativeInterval {
     type Output = Self;
 
     fn past_continuation(&self) -> Self::Output {
-        Self::Output::from(past_continuation_emptiable_rel_bound_pair(&self.emptiable_rel_bound_pair()))
+        Self::Output::from(past_continuation_emptiable_rel_bound_pair(
+            &self.emptiable_rel_bound_pair(),
+        ))
     }
 
     fn future_continuation(&self) -> Self::Output {
-        Self::Output::from(future_continuation_emptiable_rel_bound_pair(&self.emptiable_rel_bound_pair()))
+        Self::Output::from(future_continuation_emptiable_rel_bound_pair(
+            &self.emptiable_rel_bound_pair(),
+        ))
     }
 }
 
@@ -410,7 +442,7 @@ pub fn future_continuation_emptiable_abs_bound_pair(bounds: &EmptiableAbsoluteBo
 }
 
 /// Returns the past continuation of the given [`BoundedAbsoluteInterval`]
-/// 
+///
 /// See [module documentation](self) for more info.
 #[must_use]
 pub fn past_continuation_bounded_abs_interval(interval: &BoundedAbsoluteInterval) -> HalfBoundedAbsoluteInterval {
@@ -422,7 +454,7 @@ pub fn past_continuation_bounded_abs_interval(interval: &BoundedAbsoluteInterval
 }
 
 /// Returns the future continuation of the given [`BoundedAbsoluteInterval`]
-/// 
+///
 /// See [module documentation](self) for more info.
 #[must_use]
 pub fn future_continuation_bounded_abs_interval(interval: &BoundedAbsoluteInterval) -> HalfBoundedAbsoluteInterval {
@@ -492,7 +524,7 @@ pub fn future_continuation_emptiable_rel_bound_pair(bounds: &EmptiableRelativeBo
 }
 
 /// Returns the past continuation of the given [`BoundedRelativeInterval`]
-/// 
+///
 /// See [module documentation](self) for more info.
 #[must_use]
 pub fn past_continuation_bounded_rel_interval(interval: &BoundedRelativeInterval) -> HalfBoundedRelativeInterval {
@@ -504,7 +536,7 @@ pub fn past_continuation_bounded_rel_interval(interval: &BoundedRelativeInterval
 }
 
 /// Returns the future continuation of the given [`BoundedRelativeInterval`]
-/// 
+///
 /// See [module documentation](self) for more info.
 #[must_use]
 pub fn future_continuation_bounded_rel_interval(interval: &BoundedRelativeInterval) -> HalfBoundedRelativeInterval {

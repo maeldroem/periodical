@@ -1,4 +1,5 @@
-//! Set operations iterators created from [layered bounds iterators](crate::iter::intervals::layered_bounds)
+//! Set operations iterators created from [layered bounds
+//! iterators](crate::iter::intervals::layered_bounds)
 //!
 //! - [Uniting a layered bounds iterator](unite)
 //! - [Intersected a layered bounds iterator](intersect)
