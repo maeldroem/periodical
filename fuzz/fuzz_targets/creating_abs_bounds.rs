@@ -6,5 +6,5 @@ use periodical::prelude::*;
 
 fuzz_target!(|data: (AbsoluteStartBound, AbsoluteEndBound)| {
     let (start, end) = data;
-    let _ = AbsoluteBounds::new(start, end);
+    let _ = AbsoluteBoundPair::new(start, end);
 });
