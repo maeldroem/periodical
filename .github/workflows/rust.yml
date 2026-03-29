@@ -48,7 +48,7 @@ jobs:
           restore-keys: ${{ runner.os }}-rustup-nightly-toolchain-
       - if: ${{ steps.cache-nightly-toolchain.outputs.cache-hit != 'true' }}
         name: Install nightly toolchain
-        run: rustup toolchain install --no-update --no-self-update nightly
+        run: rustup toolchain install --no-update --no-self-update -c rustfmt,cargo-fmt nightly
       - name: Clippy
         run: cargo clippy --verbose
       - name: Cargo fmt check
