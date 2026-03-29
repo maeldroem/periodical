@@ -2,9 +2,8 @@ use std::error::Error;
 
 use jiff::Timestamp;
 
-use crate::intervals::absolute::{AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound};
-
 use super::emptiable_bound_pair::*;
+use crate::intervals::absolute::{AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound};
 
 #[test]
 fn bound_bound() -> Result<(), Box<dyn Error>> {
@@ -14,10 +13,7 @@ fn bound_bound() -> Result<(), Box<dyn Error>> {
     );
     let emptiable_bound_pair = bound_pair.clone().to_emptiable();
 
-    assert_eq!(
-        emptiable_bound_pair.bound(),
-        Some(bound_pair),
-    );
+    assert_eq!(emptiable_bound_pair.bound(), Some(bound_pair),);
     Ok(())
 }
 

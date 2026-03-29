@@ -2,10 +2,14 @@ use std::cmp::Ordering;
 
 use jiff::SignedDuration;
 
-use crate::intervals::meta::BoundInclusivity;
-use crate::intervals::relative::{EmptiableRelativeBoundPair, RelativeEndBound, RelativeFiniteBound, RelativeStartBound};
-
 use super::bound_pair::*;
+use crate::intervals::meta::BoundInclusivity;
+use crate::intervals::relative::{
+    EmptiableRelativeBoundPair,
+    RelativeEndBound,
+    RelativeFiniteBound,
+    RelativeStartBound,
+};
 
 #[test]
 fn unchecked_new() {
@@ -37,117 +41,85 @@ fn new_should_swap() {
 
 #[test]
 fn new_from_same_times_exclusive_bounds() {
-    let start = RelativeFiniteBound::new_with_inclusivity(
-        SignedDuration::from_hours(1),
-        BoundInclusivity::Exclusive,
-    ).to_start_bound();
-    let end = RelativeFiniteBound::new_with_inclusivity(
-        SignedDuration::from_hours(1),
-        BoundInclusivity::Exclusive,
-    ).to_end_bound();
+    let start = RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+        .to_start_bound();
+    let end = RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+        .to_end_bound();
 
     let rel_bounds = RelativeBoundPair::new(start, end);
 
     assert_eq!(
         rel_bounds.rel_start(),
-        RelativeFiniteBound::new_with_inclusivity(
-            SignedDuration::from_hours(1),
-            BoundInclusivity::Inclusive,
-        ).to_start_bound(),
+        RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Inclusive,)
+            .to_start_bound(),
     );
     assert_eq!(
         rel_bounds.rel_end(),
-        RelativeFiniteBound::new_with_inclusivity(
-            SignedDuration::from_hours(1),
-            BoundInclusivity::Inclusive,
-        ).to_end_bound(),
+        RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Inclusive,)
+            .to_end_bound(),
     );
 }
 
 #[test]
 fn new_from_same_times_inclusive_exclusive_bounds() {
-    let start = RelativeFiniteBound::new_with_inclusivity(
-        SignedDuration::from_hours(1),
-        BoundInclusivity::Inclusive,
-    ).to_start_bound();
-    let end = RelativeFiniteBound::new_with_inclusivity(
-        SignedDuration::from_hours(1),
-        BoundInclusivity::Exclusive,
-    ).to_end_bound();
+    let start = RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Inclusive)
+        .to_start_bound();
+    let end = RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+        .to_end_bound();
 
     let rel_bounds = RelativeBoundPair::new(start, end);
 
     assert_eq!(
         rel_bounds.rel_start(),
-        RelativeFiniteBound::new_with_inclusivity(
-            SignedDuration::from_hours(1),
-            BoundInclusivity::Inclusive,
-        ).to_start_bound(),
+        RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Inclusive,)
+            .to_start_bound(),
     );
     assert_eq!(
         rel_bounds.rel_end(),
-        RelativeFiniteBound::new_with_inclusivity(
-            SignedDuration::from_hours(1),
-            BoundInclusivity::Inclusive,
-        ).to_end_bound(),
+        RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Inclusive,)
+            .to_end_bound(),
     );
 }
 
 #[test]
 fn new_from_same_times_exclusive_inclusive_bounds() {
-    let start = RelativeFiniteBound::new_with_inclusivity(
-        SignedDuration::from_hours(1),
-        BoundInclusivity::Exclusive,
-    ).to_start_bound();
-    let end = RelativeFiniteBound::new_with_inclusivity(
-        SignedDuration::from_hours(1),
-        BoundInclusivity::Inclusive,
-    ).to_end_bound();
+    let start = RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+        .to_start_bound();
+    let end = RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Inclusive)
+        .to_end_bound();
 
     let rel_bounds = RelativeBoundPair::new(start, end);
 
     assert_eq!(
         rel_bounds.rel_start(),
-        RelativeFiniteBound::new_with_inclusivity(
-            SignedDuration::from_hours(1),
-            BoundInclusivity::Inclusive,
-        ).to_start_bound(),
+        RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Inclusive,)
+            .to_start_bound(),
     );
     assert_eq!(
         rel_bounds.rel_end(),
-        RelativeFiniteBound::new_with_inclusivity(
-            SignedDuration::from_hours(1),
-            BoundInclusivity::Inclusive,
-        ).to_end_bound(),
+        RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Inclusive,)
+            .to_end_bound(),
     );
 }
 
 #[test]
 fn new_from_same_times_inclusive_bounds() {
-    let start = RelativeFiniteBound::new_with_inclusivity(
-        SignedDuration::from_hours(1),
-        BoundInclusivity::Inclusive,
-    ).to_start_bound();
-    let end = RelativeFiniteBound::new_with_inclusivity(
-        SignedDuration::from_hours(1),
-        BoundInclusivity::Inclusive,
-    ).to_end_bound();
+    let start = RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Inclusive)
+        .to_start_bound();
+    let end = RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Inclusive)
+        .to_end_bound();
 
     let rel_bounds = RelativeBoundPair::new(start, end);
 
     assert_eq!(
         rel_bounds.rel_start(),
-        RelativeFiniteBound::new_with_inclusivity(
-            SignedDuration::from_hours(1),
-            BoundInclusivity::Inclusive,
-        ).to_start_bound(),
+        RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Inclusive,)
+            .to_start_bound(),
     );
     assert_eq!(
         rel_bounds.rel_end(),
-        RelativeFiniteBound::new_with_inclusivity(
-            SignedDuration::from_hours(1),
-            BoundInclusivity::Inclusive,
-        ).to_end_bound(),
+        RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Inclusive,)
+            .to_end_bound(),
     );
 }
 
@@ -310,17 +282,13 @@ fn half_bounded_to_future_to_future_before_first_cmp() {
 #[test]
 fn half_bounded_to_future_to_future_same_time_exclusive_bounds_cmp() {
     let a = RelativeBoundPair::new(
-        RelativeFiniteBound::new_with_inclusivity(
-            SignedDuration::from_hours(1),
-            BoundInclusivity::Exclusive,
-        ).to_start_bound(),
+        RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+            .to_start_bound(),
         RelativeEndBound::InfiniteFuture,
     );
     let b = RelativeBoundPair::new(
-        RelativeFiniteBound::new_with_inclusivity(
-            SignedDuration::from_hours(1),
-            BoundInclusivity::Exclusive,
-        ).to_start_bound(),
+        RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+            .to_start_bound(),
         RelativeEndBound::InfiniteFuture,
     );
 
@@ -330,17 +298,13 @@ fn half_bounded_to_future_to_future_same_time_exclusive_bounds_cmp() {
 #[test]
 fn half_bounded_to_future_to_future_same_time_exclusive_inclusive_bounds_cmp() {
     let a = RelativeBoundPair::new(
-        RelativeFiniteBound::new_with_inclusivity(
-            SignedDuration::from_hours(1),
-            BoundInclusivity::Exclusive,
-        ).to_start_bound(),
+        RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+            .to_start_bound(),
         RelativeEndBound::InfiniteFuture,
     );
     let b = RelativeBoundPair::new(
-        RelativeFiniteBound::new_with_inclusivity(
-            SignedDuration::from_hours(1),
-            BoundInclusivity::Inclusive,
-        ).to_start_bound(),
+        RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Inclusive)
+            .to_start_bound(),
         RelativeEndBound::InfiniteFuture,
     );
 
@@ -350,17 +314,13 @@ fn half_bounded_to_future_to_future_same_time_exclusive_inclusive_bounds_cmp() {
 #[test]
 fn half_bounded_to_future_to_future_same_time_inclusive_exclusive_bounds_cmp() {
     let a = RelativeBoundPair::new(
-        RelativeFiniteBound::new_with_inclusivity(
-            SignedDuration::from_hours(1),
-            BoundInclusivity::Inclusive,
-        ).to_start_bound(),
+        RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Inclusive)
+            .to_start_bound(),
         RelativeEndBound::InfiniteFuture,
     );
     let b = RelativeBoundPair::new(
-        RelativeFiniteBound::new_with_inclusivity(
-            SignedDuration::from_hours(1),
-            BoundInclusivity::Exclusive,
-        ).to_start_bound(),
+        RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+            .to_start_bound(),
         RelativeEndBound::InfiniteFuture,
     );
 
@@ -370,17 +330,13 @@ fn half_bounded_to_future_to_future_same_time_inclusive_exclusive_bounds_cmp() {
 #[test]
 fn half_bounded_to_future_to_future_same_time_inclusive_bounds_cmp() {
     let a = RelativeBoundPair::new(
-        RelativeFiniteBound::new_with_inclusivity(
-            SignedDuration::from_hours(1),
-            BoundInclusivity::Inclusive,
-        ).to_start_bound(),
+        RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Inclusive)
+            .to_start_bound(),
         RelativeEndBound::InfiniteFuture,
     );
     let b = RelativeBoundPair::new(
-        RelativeFiniteBound::new_with_inclusivity(
-            SignedDuration::from_hours(1),
-            BoundInclusivity::Inclusive,
-        ).to_start_bound(),
+        RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Inclusive)
+            .to_start_bound(),
         RelativeEndBound::InfiniteFuture,
     );
 
@@ -418,18 +374,14 @@ fn half_bounded_to_future_to_past_after_first_cmp() {
 #[test]
 fn half_bounded_to_future_to_past_same_time_exclusive_bounds_cmp() {
     let a = RelativeBoundPair::new(
-        RelativeFiniteBound::new_with_inclusivity(
-            SignedDuration::from_hours(1),
-            BoundInclusivity::Exclusive,
-        ).to_start_bound(),
+        RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+            .to_start_bound(),
         RelativeEndBound::InfiniteFuture,
     );
     let b = RelativeBoundPair::new(
         RelativeStartBound::InfinitePast,
-        RelativeFiniteBound::new_with_inclusivity(
-            SignedDuration::from_hours(1),
-            BoundInclusivity::Exclusive,
-        ).to_end_bound(),
+        RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+            .to_end_bound(),
     );
 
     assert_eq!(a.cmp(&b), Ordering::Greater);
@@ -438,18 +390,14 @@ fn half_bounded_to_future_to_past_same_time_exclusive_bounds_cmp() {
 #[test]
 fn half_bounded_to_future_to_past_same_time_exclusive_inclusive_bounds_cmp() {
     let a = RelativeBoundPair::new(
-        RelativeFiniteBound::new_with_inclusivity(
-            SignedDuration::from_hours(1),
-            BoundInclusivity::Exclusive,
-        ).to_start_bound(),
+        RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+            .to_start_bound(),
         RelativeEndBound::InfiniteFuture,
     );
     let b = RelativeBoundPair::new(
         RelativeStartBound::InfinitePast,
-        RelativeFiniteBound::new_with_inclusivity(
-            SignedDuration::from_hours(1),
-            BoundInclusivity::Inclusive,
-        ).to_end_bound(),
+        RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Inclusive)
+            .to_end_bound(),
     );
 
     assert_eq!(a.cmp(&b), Ordering::Greater);
@@ -458,18 +406,14 @@ fn half_bounded_to_future_to_past_same_time_exclusive_inclusive_bounds_cmp() {
 #[test]
 fn half_bounded_to_future_to_past_same_time_inclusive_exclusive_bounds_cmp() {
     let a = RelativeBoundPair::new(
-        RelativeFiniteBound::new_with_inclusivity(
-            SignedDuration::from_hours(1),
-            BoundInclusivity::Inclusive,
-        ).to_start_bound(),
+        RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Inclusive)
+            .to_start_bound(),
         RelativeEndBound::InfiniteFuture,
     );
     let b = RelativeBoundPair::new(
         RelativeStartBound::InfinitePast,
-        RelativeFiniteBound::new_with_inclusivity(
-            SignedDuration::from_hours(1),
-            BoundInclusivity::Exclusive,
-        ).to_end_bound(),
+        RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+            .to_end_bound(),
     );
 
     assert_eq!(a.cmp(&b), Ordering::Greater);
@@ -478,18 +422,14 @@ fn half_bounded_to_future_to_past_same_time_inclusive_exclusive_bounds_cmp() {
 #[test]
 fn half_bounded_to_future_to_past_same_time_inclusive_bounds_cmp() {
     let a = RelativeBoundPair::new(
-        RelativeFiniteBound::new_with_inclusivity(
-            SignedDuration::from_hours(1),
-            BoundInclusivity::Inclusive,
-        ).to_start_bound(),
+        RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Inclusive)
+            .to_start_bound(),
         RelativeEndBound::InfiniteFuture,
     );
     let b = RelativeBoundPair::new(
         RelativeStartBound::InfinitePast,
-        RelativeFiniteBound::new_with_inclusivity(
-            SignedDuration::from_hours(1),
-            BoundInclusivity::Inclusive,
-        ).to_end_bound(),
+        RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Inclusive)
+            .to_end_bound(),
     );
 
     assert_eq!(a.cmp(&b), Ordering::Greater);
@@ -526,10 +466,9 @@ fn half_bounded_to_future_bounded_starts_after_first_cmp() {
 #[test]
 fn try_from_emptiable_correct_variant() {
     assert_eq!(
-        RelativeBoundPair::try_from(RelativeBoundPair::new(
-            RelativeStartBound::InfinitePast,
-            RelativeEndBound::InfiniteFuture,
-        ).to_emptiable()),
+        RelativeBoundPair::try_from(
+            RelativeBoundPair::new(RelativeStartBound::InfinitePast, RelativeEndBound::InfiniteFuture,).to_emptiable()
+        ),
         Ok(RelativeBoundPair::new(
             RelativeStartBound::InfinitePast,
             RelativeEndBound::InfiniteFuture,

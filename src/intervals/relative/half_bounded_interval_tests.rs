@@ -1,10 +1,16 @@
 use jiff::SignedDuration;
 
-use crate::intervals::meta::{BoundInclusivity, OpeningDirection};
-use crate::intervals::relative::{BoundedRelativeInterval, RelativeBoundPair, RelativeEndBound, RelativeFiniteBound, RelativeInterval, RelativeStartBound};
-use crate::intervals::special::UnboundedInterval;
-
 use super::half_bounded_interval::*;
+use crate::intervals::meta::{BoundInclusivity, OpeningDirection};
+use crate::intervals::relative::{
+    BoundedRelativeInterval,
+    RelativeBoundPair,
+    RelativeEndBound,
+    RelativeFiniteBound,
+    RelativeInterval,
+    RelativeStartBound,
+};
+use crate::intervals::special::UnboundedInterval;
 
 #[test]
 fn interval_new() {

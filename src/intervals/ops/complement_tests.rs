@@ -2,14 +2,20 @@ use std::error::Error;
 
 use jiff::Zoned;
 
+use super::complement::*;
 use crate::intervals::absolute::{
-    AbsoluteBoundPair, AbsoluteEndBound, AbsoluteInterval, AbsoluteStartBound, BoundedAbsoluteInterval, EmptiableAbsoluteBoundPair, EmptiableAbsoluteInterval, HalfBoundedAbsoluteInterval
+    AbsoluteBoundPair,
+    AbsoluteEndBound,
+    AbsoluteInterval,
+    AbsoluteStartBound,
+    BoundedAbsoluteInterval,
+    EmptiableAbsoluteBoundPair,
+    EmptiableAbsoluteInterval,
+    HalfBoundedAbsoluteInterval,
 };
 use crate::intervals::meta::{BoundInclusivity, OpeningDirection};
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 use crate::ops::ComplementResult;
-
-use super::complement::*;
 
 #[test]
 fn unbounded_interval() {
@@ -27,7 +33,8 @@ fn half_unbounded_interval() -> Result<(), Box<dyn Error>> {
         HalfBoundedAbsoluteInterval::new(
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             OpeningDirection::ToFuture,
-        ).complement(),
+        )
+        .complement(),
         ComplementResult::Single(HalfBoundedAbsoluteInterval::new_with_inclusivity(
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             BoundInclusivity::Exclusive,
@@ -44,7 +51,8 @@ fn bounded_interval() -> Result<(), Box<dyn Error>> {
         BoundedAbsoluteInterval::new(
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-        ).complement(),
+        )
+        .complement(),
         ComplementResult::Split(
             HalfBoundedAbsoluteInterval::new_with_inclusivity(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),

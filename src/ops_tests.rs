@@ -1,10 +1,10 @@
 use std::error::Error;
 use std::time::Duration;
 
-use crate::ops::*;
-
-use jiff::{SignedDuration, Zoned};
 use jiff::tz::TimeZone;
+use jiff::{SignedDuration, Zoned};
+
+use crate::ops::*;
 
 mod precision {
     use super::*;
@@ -78,7 +78,7 @@ mod precision {
                 Precision::unchecked_new(Duration::ZERO, PrecisionMode::ToNearest),
             );
         }
-    
+
         #[test]
         fn precision_mode_with_precision_parity_with_precision_new() {
             assert_eq!(
@@ -106,31 +106,31 @@ mod precision {
                 Precision::new(Duration::ZERO, PrecisionMode::ToNearest),
             );
         }
-    
+
         #[test]
         fn precision_unchecked_new_accepts_precision_zero() {
             let _ = Precision::unchecked_new(Duration::ZERO, PrecisionMode::ToFuture);
             let _ = Precision::unchecked_new(Duration::ZERO, PrecisionMode::ToPast);
             let _ = Precision::unchecked_new(Duration::ZERO, PrecisionMode::ToNearest);
         }
-    
+
         #[test]
         fn precision_new_rejects_precision_zero() {
             assert!(Precision::new(Duration::ZERO, PrecisionMode::ToFuture).is_err());
             assert!(Precision::new(Duration::ZERO, PrecisionMode::ToPast).is_err());
             assert!(Precision::new(Duration::ZERO, PrecisionMode::ToNearest).is_err());
         }
-    
+
         #[test]
         fn precision_new_accepts_non_zero_precisions() {
             assert!(Precision::new(Duration::from_nanos(1), PrecisionMode::ToFuture).is_ok());
             assert!(Precision::new(Duration::from_nanos(1), PrecisionMode::ToPast).is_ok());
             assert!(Precision::new(Duration::from_nanos(1), PrecisionMode::ToNearest).is_ok());
-            
+
             assert!(Precision::new(Duration::from_mins(15), PrecisionMode::ToFuture).is_ok());
             assert!(Precision::new(Duration::from_mins(15), PrecisionMode::ToPast).is_ok());
             assert!(Precision::new(Duration::from_mins(15), PrecisionMode::ToNearest).is_ok());
-            
+
             assert!(Precision::new(Duration::MAX, PrecisionMode::ToFuture).is_ok());
             assert!(Precision::new(Duration::MAX, PrecisionMode::ToPast).is_ok());
             assert!(Precision::new(Duration::MAX, PrecisionMode::ToNearest).is_ok());
@@ -143,12 +143,11 @@ mod precision {
         #[test]
         fn to_future_zero() {
             assert_eq!(
-                Precision::unchecked_new(U_DUR_FIVE_MS, PrecisionMode::ToFuture)
-                    .precise_unsigned_nanos(0),
+                Precision::unchecked_new(U_DUR_FIVE_MS, PrecisionMode::ToFuture).precise_unsigned_nanos(0),
                 0,
             );
         }
-    
+
         #[test]
         fn to_future_non_zero() {
             assert_eq!(
@@ -157,7 +156,7 @@ mod precision {
                 U_NANOS_UP_FIVE_MS,
             );
         }
-    
+
         #[test]
         fn to_future_non_zero_on_anchor() {
             assert_eq!(
@@ -166,16 +165,15 @@ mod precision {
                 U_NANOS_UP_FIVE_MS,
             );
         }
-    
+
         #[test]
         fn to_past_zero() {
             assert_eq!(
-                Precision::unchecked_new(U_DUR_FIVE_MS, PrecisionMode::ToPast)
-                    .precise_unsigned_nanos(0),
+                Precision::unchecked_new(U_DUR_FIVE_MS, PrecisionMode::ToPast).precise_unsigned_nanos(0),
                 0,
             );
         }
-    
+
         #[test]
         fn to_past_non_zero() {
             assert_eq!(
@@ -184,7 +182,7 @@ mod precision {
                 U_NANOS_DOWN_FIVE_MS,
             );
         }
-    
+
         #[test]
         fn to_past_non_zero_on_anchor() {
             assert_eq!(
@@ -193,16 +191,15 @@ mod precision {
                 U_NANOS_UP_FIVE_MS,
             );
         }
-    
+
         #[test]
         fn to_nearest_zero() {
             assert_eq!(
-                Precision::unchecked_new(U_DUR_FIVE_MS, PrecisionMode::ToNearest)
-                    .precise_unsigned_nanos(0),
+                Precision::unchecked_new(U_DUR_FIVE_MS, PrecisionMode::ToNearest).precise_unsigned_nanos(0),
                 0,
             );
         }
-    
+
         #[test]
         fn to_nearest_non_zero_to_future() {
             assert_eq!(
@@ -211,7 +208,7 @@ mod precision {
                 U_NANOS_UP_FIVE_MS,
             );
         }
-    
+
         #[test]
         fn to_nearest_non_zero_to_past() {
             assert_eq!(
@@ -220,7 +217,7 @@ mod precision {
                 U_NANOS_DOWN_FIVE_MS,
             );
         }
-    
+
         #[test]
         fn to_nearest_non_zero_tie() {
             assert_eq!(
@@ -229,7 +226,7 @@ mod precision {
                 U_NANOS_UP_FIVE_MS,
             );
         }
-        
+
         #[test]
         fn to_nearest_non_zero_on_anchor() {
             assert_eq!(
@@ -246,8 +243,7 @@ mod precision {
         #[test]
         fn to_future_zero() {
             assert_eq!(
-                Precision::unchecked_new(U_DUR_FIVE_MS, PrecisionMode::ToFuture)
-                    .precise_signed_nanos(0),
+                Precision::unchecked_new(U_DUR_FIVE_MS, PrecisionMode::ToFuture).precise_signed_nanos(0),
                 0,
             );
         }
@@ -291,8 +287,7 @@ mod precision {
         #[test]
         fn to_past_zero() {
             assert_eq!(
-                Precision::unchecked_new(U_DUR_FIVE_MS, PrecisionMode::ToPast)
-                    .precise_signed_nanos(0),
+                Precision::unchecked_new(U_DUR_FIVE_MS, PrecisionMode::ToPast).precise_signed_nanos(0),
                 0,
             );
         }
@@ -336,8 +331,7 @@ mod precision {
         #[test]
         fn to_nearest_zero() {
             assert_eq!(
-                Precision::unchecked_new(U_DUR_FIVE_MS, PrecisionMode::ToNearest)
-                    .precise_signed_nanos(0),
+                Precision::unchecked_new(U_DUR_FIVE_MS, PrecisionMode::ToNearest).precise_signed_nanos(0),
                 0,
             );
         }
@@ -421,13 +415,12 @@ mod precision {
         #[test]
         fn to_future_zero() -> Result<(), Box<dyn Error>> {
             assert_eq!(
-                Precision::unchecked_new(U_DUR_FIVE_MINS, PrecisionMode::ToFuture)
-                    .precise_duration(Duration::ZERO)?,
+                Precision::unchecked_new(U_DUR_FIVE_MINS, PrecisionMode::ToFuture).precise_duration(Duration::ZERO)?,
                 Duration::ZERO,
             );
             Ok(())
         }
-    
+
         #[test]
         fn to_future_non_zero() -> Result<(), Box<dyn Error>> {
             assert_eq!(
@@ -437,7 +430,7 @@ mod precision {
             );
             Ok(())
         }
-    
+
         #[test]
         fn to_future_non_zero_on_anchor() -> Result<(), Box<dyn Error>> {
             assert_eq!(
@@ -447,17 +440,16 @@ mod precision {
             );
             Ok(())
         }
-    
+
         #[test]
         fn to_past_zero() -> Result<(), Box<dyn Error>> {
             assert_eq!(
-                Precision::unchecked_new(U_DUR_FIVE_MINS, PrecisionMode::ToPast)
-                    .precise_duration(Duration::ZERO)?,
+                Precision::unchecked_new(U_DUR_FIVE_MINS, PrecisionMode::ToPast).precise_duration(Duration::ZERO)?,
                 Duration::ZERO,
             );
             Ok(())
         }
-    
+
         #[test]
         fn to_past_non_zero() -> Result<(), Box<dyn Error>> {
             assert_eq!(
@@ -467,7 +459,7 @@ mod precision {
             );
             Ok(())
         }
-    
+
         #[test]
         fn to_past_non_zero_on_anchor() -> Result<(), Box<dyn Error>> {
             assert_eq!(
@@ -477,17 +469,16 @@ mod precision {
             );
             Ok(())
         }
-    
+
         #[test]
         fn to_nearest_zero() -> Result<(), Box<dyn Error>> {
             assert_eq!(
-                Precision::unchecked_new(U_DUR_FIVE_MINS, PrecisionMode::ToNearest)
-                    .precise_duration(Duration::ZERO)?,
+                Precision::unchecked_new(U_DUR_FIVE_MINS, PrecisionMode::ToNearest).precise_duration(Duration::ZERO)?,
                 Duration::ZERO,
             );
             Ok(())
         }
-    
+
         #[test]
         fn to_nearest_non_zero_to_future() -> Result<(), Box<dyn Error>> {
             assert_eq!(
@@ -497,7 +488,7 @@ mod precision {
             );
             Ok(())
         }
-    
+
         #[test]
         fn to_nearest_non_zero_to_past() -> Result<(), Box<dyn Error>> {
             assert_eq!(
@@ -507,7 +498,7 @@ mod precision {
             );
             Ok(())
         }
-    
+
         #[test]
         fn to_nearest_non_zero_tie() -> Result<(), Box<dyn Error>> {
             assert_eq!(
@@ -517,7 +508,7 @@ mod precision {
             );
             Ok(())
         }
-        
+
         #[test]
         fn to_nearest_non_zero_on_anchor() -> Result<(), Box<dyn Error>> {
             assert_eq!(
@@ -848,25 +839,25 @@ mod running_result {
         assert!(RunningResult::<()>::Running(()).is_running());
         assert!(!RunningResult::<()>::Done(()).is_running());
     }
-    
+
     #[test]
     fn is_done() {
         assert!(!RunningResult::<()>::Running(()).is_done());
         assert!(RunningResult::<()>::Done(()).is_done());
     }
-    
+
     #[test]
     fn running_opt() {
         assert_eq!(RunningResult::<u8>::Running(10).running(), Some(10));
         assert_eq!(RunningResult::<u8>::Done(10).running(), None);
     }
-    
+
     #[test]
     fn done_opt() {
         assert_eq!(RunningResult::<u8>::Running(10).done(), None);
         assert_eq!(RunningResult::<u8>::Done(10).done(), Some(10));
     }
-    
+
     #[test]
     fn map_running() {
         assert_eq!(
@@ -874,7 +865,7 @@ mod running_result {
             RunningResult::<u8>::Running(20)
         );
     }
-    
+
     #[test]
     fn map_done() {
         assert_eq!(
@@ -892,25 +883,25 @@ mod complement_result {
         assert!(ComplementResult::<()>::Single(()).is_single());
         assert!(!ComplementResult::<()>::Split((), ()).is_single());
     }
-    
+
     #[test]
     fn is_split() {
         assert!(!ComplementResult::<()>::Single(()).is_split());
         assert!(ComplementResult::<()>::Split((), ()).is_split());
     }
-    
+
     #[test]
     fn single_opt() {
         assert_eq!(ComplementResult::<u8>::Single(10).single(), Some(10));
         assert_eq!(ComplementResult::<u8>::Split(10, 20).single(), None);
     }
-    
+
     #[test]
     fn split_opt() {
         assert_eq!(ComplementResult::<u8>::Single(10).split(), None);
         assert_eq!(ComplementResult::<u8>::Split(10, 20).split(), Some((10, 20)));
     }
-    
+
     #[test]
     fn map() {
         assert_eq!(
@@ -932,19 +923,19 @@ mod union_result {
         assert!(UnionResult::<()>::United(()).is_united());
         assert!(!UnionResult::<()>::Separate.is_united());
     }
-    
+
     #[test]
     fn is_separate() {
         assert!(!UnionResult::<()>::United(()).is_separate());
         assert!(UnionResult::<()>::Separate.is_separate());
     }
-    
+
     #[test]
     fn united_opt() {
         assert_eq!(UnionResult::<u8>::United(10).united(), Some(10));
         assert_eq!(UnionResult::<u8>::Separate.united(), None);
     }
-    
+
     #[test]
     fn map_united() {
         assert_eq!(
@@ -962,19 +953,19 @@ mod intersection_result {
         assert!(IntersectionResult::<()>::Intersected(()).is_intersected());
         assert!(!IntersectionResult::<()>::Separate.is_intersected());
     }
-    
+
     #[test]
     fn is_separate() {
         assert!(!IntersectionResult::<()>::Intersected(()).is_separate());
         assert!(IntersectionResult::<()>::Separate.is_separate());
     }
-    
+
     #[test]
     fn intersected_opt() {
         assert_eq!(IntersectionResult::<u8>::Intersected(10).intersected(), Some(10));
         assert_eq!(IntersectionResult::<u8>::Separate.intersected(), None);
     }
-    
+
     #[test]
     fn map_intersected() {
         assert_eq!(
@@ -993,35 +984,35 @@ mod difference_result {
         assert!(!DifferenceResult::<()>::Split((), ()).is_difference_single());
         assert!(!DifferenceResult::<()>::Separate.is_difference_single());
     }
-    
+
     #[test]
     fn is_split() {
         assert!(!DifferenceResult::<()>::Single(()).is_difference_split());
         assert!(DifferenceResult::<()>::Split((), ()).is_difference_split());
         assert!(!DifferenceResult::<()>::Separate.is_difference_split());
     }
-    
+
     #[test]
     fn is_separate() {
         assert!(!DifferenceResult::<()>::Single(()).is_separate());
         assert!(!DifferenceResult::<()>::Split((), ()).is_separate());
         assert!(DifferenceResult::<()>::Separate.is_separate());
     }
-    
+
     #[test]
     fn shrunk_opt() {
         assert_eq!(DifferenceResult::<u8>::Single(10).single(), Some(10));
         assert_eq!(DifferenceResult::<u8>::Split(10, 20).single(), None);
         assert_eq!(DifferenceResult::<u8>::Separate.single(), None);
     }
-    
+
     #[test]
     fn split_opt() {
         assert_eq!(DifferenceResult::<u8>::Single(10).split(), None);
         assert_eq!(DifferenceResult::<u8>::Split(10, 20).split(), Some((10, 20)));
         assert_eq!(DifferenceResult::<u8>::Separate.split(), None);
     }
-    
+
     #[test]
     fn map_difference() {
         assert_eq!(
@@ -1044,42 +1035,42 @@ mod sym_difference_result {
         assert!(SymmetricDifferenceResult::<()>::Split((), ()).is_symmetric_difference());
         assert!(!SymmetricDifferenceResult::<()>::Separate.is_symmetric_difference());
     }
-    
+
     #[test]
     fn is_shrunk() {
         assert!(SymmetricDifferenceResult::<()>::Single(()).is_single());
         assert!(!SymmetricDifferenceResult::<()>::Split((), ()).is_single());
         assert!(!SymmetricDifferenceResult::<()>::Separate.is_single());
     }
-    
+
     #[test]
     fn is_split() {
         assert!(!SymmetricDifferenceResult::<()>::Single(()).is_split());
         assert!(SymmetricDifferenceResult::<()>::Split((), ()).is_split());
         assert!(!SymmetricDifferenceResult::<()>::Separate.is_split());
     }
-    
+
     #[test]
     fn is_separate() {
         assert!(!SymmetricDifferenceResult::<()>::Single(()).is_separate());
         assert!(!SymmetricDifferenceResult::<()>::Split((), ()).is_separate());
         assert!(SymmetricDifferenceResult::<()>::Separate.is_separate());
     }
-    
+
     #[test]
     fn shrunk_opt() {
         assert_eq!(SymmetricDifferenceResult::<u8>::Single(10).single(), Some(10));
         assert_eq!(SymmetricDifferenceResult::<u8>::Split(10, 20).single(), None);
         assert_eq!(SymmetricDifferenceResult::<u8>::Separate.single(), None);
     }
-    
+
     #[test]
     fn split_opt() {
         assert_eq!(SymmetricDifferenceResult::<u8>::Single(10).split(), None);
         assert_eq!(SymmetricDifferenceResult::<u8>::Split(10, 20).split(), Some((10, 20)));
         assert_eq!(SymmetricDifferenceResult::<u8>::Separate.split(), None);
     }
-    
+
     #[test]
     fn map_symmetric_difference() {
         assert_eq!(

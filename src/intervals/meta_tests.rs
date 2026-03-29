@@ -166,8 +166,7 @@ fn interval_duration_finite() {
 #[test]
 fn interval_duration_finite_interpret_duration_on_finite() {
     assert_eq!(
-        Duration::Finite(StdDuration::from_hours(1), Epsilon::End)
-            .finite_interpret_epsilon(StdDuration::from_secs(1)),
+        Duration::Finite(StdDuration::from_hours(1), Epsilon::End).finite_interpret_epsilon(StdDuration::from_secs(1)),
         Some(StdDuration::from_mins(59) + StdDuration::from_secs(59)),
     );
 }

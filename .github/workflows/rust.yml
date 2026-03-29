@@ -53,6 +53,8 @@ jobs:
         run: cargo clippy -q
       - name: Cargo fmt check
         run: cargo +nightly fmt -q --check
+      - name: Cargo fmt check on unit tests
+        run: cargo +nightly fmt -q --check -- **/*_tests.rs
   testing:
     runs-on: ubuntu-latest
     needs: [building]
