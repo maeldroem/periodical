@@ -54,12 +54,14 @@ fn run() -> Result<(), Box<dyn Error>> {
                     "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                     OpeningDirection::ToPast,
-                )).to_emptiable(),
+                ))
+                .to_emptiable(),
                 AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
                     "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                     OpeningDirection::ToFuture,
-                )).to_emptiable(),
+                ))
+                .to_emptiable(),
             ),
             ComplementResult::Single(EmptiableAbsoluteInterval::Empty(EmptyInterval)),
             ComplementResult::Single(
@@ -67,8 +69,9 @@ fn run() -> Result<(), Box<dyn Error>> {
                     "2025-01-05 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                     OpeningDirection::ToPast,
-                )
-            ).to_emptiable()),
+                ))
+                .to_emptiable()
+            ),
         ],
     );
 
@@ -97,20 +100,23 @@ fn run_reverse() -> Result<(), Box<dyn Error>> {
                     "2025-01-05 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                     OpeningDirection::ToPast,
-                )
-            ).to_emptiable()),
+                ))
+                .to_emptiable()
+            ),
             ComplementResult::Single(EmptiableAbsoluteInterval::Empty(EmptyInterval)),
             ComplementResult::Split(
                 AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
                     "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                     OpeningDirection::ToPast,
-                )).to_emptiable(),
+                ))
+                .to_emptiable(),
                 AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
                     "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                     OpeningDirection::ToFuture,
-                )).to_emptiable(),
+                ))
+                .to_emptiable(),
             ),
         ],
     );

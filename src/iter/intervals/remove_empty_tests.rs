@@ -19,12 +19,14 @@ fn create() -> Result<(), Box<dyn Error>> {
         AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-        )).to_emptiable(),
+        ))
+        .to_emptiable(),
         EmptiableAbsoluteInterval::Empty(EmptyInterval),
         AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new(
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             OpeningDirection::ToPast,
-        )).to_emptiable(),
+        ))
+        .to_emptiable(),
     ];
 
     intervals.remove_empty_intervals();
@@ -39,13 +41,15 @@ fn run() -> Result<(), Box<dyn Error>> {
         AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-        )).to_emptiable(),
+        ))
+        .to_emptiable(),
         EmptiableAbsoluteInterval::Empty(EmptyInterval),
         EmptiableAbsoluteInterval::Empty(EmptyInterval),
         AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new(
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             OpeningDirection::ToPast,
-        )).to_emptiable(),
+        ))
+        .to_emptiable(),
         EmptiableAbsoluteInterval::Empty(EmptyInterval),
     ];
 
@@ -56,11 +60,13 @@ fn run() -> Result<(), Box<dyn Error>> {
             AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
-            )).to_emptiable(),
+            ))
+            .to_emptiable(),
             AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 OpeningDirection::ToPast
-            )).to_emptiable(),
+            ))
+            .to_emptiable(),
         ],
     );
 
@@ -74,13 +80,15 @@ fn run_reverse() -> Result<(), Box<dyn Error>> {
         AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-        )).to_emptiable(),
+        ))
+        .to_emptiable(),
         EmptiableAbsoluteInterval::Empty(EmptyInterval),
         EmptiableAbsoluteInterval::Empty(EmptyInterval),
         AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new(
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             OpeningDirection::ToPast,
-        )).to_emptiable(),
+        ))
+        .to_emptiable(),
         EmptiableAbsoluteInterval::Empty(EmptyInterval),
     ];
 
@@ -90,11 +98,13 @@ fn run_reverse() -> Result<(), Box<dyn Error>> {
             AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 OpeningDirection::ToPast
-            )).to_emptiable(),
+            ))
+            .to_emptiable(),
             AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
-            )).to_emptiable(),
+            ))
+            .to_emptiable(),
             AbsoluteInterval::Unbounded(UnboundedInterval).to_emptiable(),
         ],
     );

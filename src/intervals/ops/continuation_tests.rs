@@ -4,7 +4,15 @@ use jiff::Zoned;
 
 use super::continuation::*;
 use crate::intervals::absolute::{
-    AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, BoundedAbsoluteInterval, EmptiableAbsoluteBoundPair, EmptiableAbsoluteInterval, HalfBoundedAbsoluteInterval, AbsoluteInterval
+    AbsoluteBoundPair,
+    AbsoluteEndBound,
+    AbsoluteFiniteBound,
+    AbsoluteInterval,
+    AbsoluteStartBound,
+    BoundedAbsoluteInterval,
+    EmptiableAbsoluteBoundPair,
+    EmptiableAbsoluteInterval,
+    HalfBoundedAbsoluteInterval,
 };
 use crate::intervals::meta::{BoundInclusivity, OpeningDirection};
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
@@ -53,11 +61,13 @@ fn future_continuation_half_bounded_to_past_interval() -> Result<(), Box<dyn Err
             OpeningDirection::ToPast,
         )
         .future_continuation(),
-        EmptiableAbsoluteInterval::Bound(AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
-            "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-            BoundInclusivity::Inclusive,
-            OpeningDirection::ToFuture,
-        ))),
+        EmptiableAbsoluteInterval::Bound(AbsoluteInterval::HalfBounded(
+            HalfBoundedAbsoluteInterval::new_with_inclusivity(
+                "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                BoundInclusivity::Inclusive,
+                OpeningDirection::ToFuture,
+            )
+        )),
     );
 
     Ok(())
@@ -69,12 +79,15 @@ fn past_continuation_half_bounded_to_future_interval() -> Result<(), Box<dyn Err
         HalfBoundedAbsoluteInterval::new(
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             OpeningDirection::ToFuture,
-        ).past_continuation(),
-        EmptiableAbsoluteInterval::Bound(AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
-            "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-            BoundInclusivity::Exclusive,
-            OpeningDirection::ToPast,
-        ))),
+        )
+        .past_continuation(),
+        EmptiableAbsoluteInterval::Bound(AbsoluteInterval::HalfBounded(
+            HalfBoundedAbsoluteInterval::new_with_inclusivity(
+                "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                BoundInclusivity::Exclusive,
+                OpeningDirection::ToPast,
+            )
+        )),
     );
 
     Ok(())
