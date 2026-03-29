@@ -52,6 +52,7 @@ Edit your `~/.gitconfig` to include the following.
 	rs = restore
 	rb = rebase
 	p = push
+	prb = pull --rebase
 	pf = push --force-with-lease
 	pt = push --tags
     # Creates a branch and switches to it
@@ -114,11 +115,7 @@ In order to enforce that, merges from any branch into `dev` should be done by us
 following [the commit rules](#commits).
 
 When the `dev` branch has reached a stable state, usually after making sure all tests are passing, it can be merged
-into `main`.
-This merge should be squashed first so that `main` remains linear and could be extracted as its own product.
-
-To do that, use `git merge --squash --no-ff` and when committing, provide a meaningful message and description, in
-accordance to [the commit rules](#commits).
+into `main` through a detailed PR.
 
 Now, when you start working on a new thing, you should branch off `dev` and should name it by following the syntax
 `<type>/<name>`, where `<type>` is the most relevant choice out of the list below, and where `<name>` is
