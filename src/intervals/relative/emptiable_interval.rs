@@ -74,7 +74,8 @@ impl EmptiableRelativeInterval {
     /// let interval = BoundedRelativeInterval::new(
     ///     SignedDuration::from_hours(8),
     ///     SignedDuration::from_hours(16),
-    /// ).to_interval();
+    /// )
+    /// .to_interval();
     ///
     /// let bound_emptiable_interval = EmptiableRelativeInterval::Bound(interval.clone());
     /// let empty_emptiable_interval = EmptiableRelativeInterval::Empty(EmptyInterval);

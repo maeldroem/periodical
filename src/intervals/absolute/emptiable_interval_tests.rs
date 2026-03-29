@@ -26,11 +26,13 @@ fn from_absolute_bounds() -> Result<(), Box<dyn Error>> {
             )),
             AbsoluteEndBound::InfiniteFuture,
         )),
-        EmptiableAbsoluteInterval::Bound(AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
-            "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-            BoundInclusivity::Exclusive,
-            OpeningDirection::ToFuture,
-        ))),
+        EmptiableAbsoluteInterval::Bound(AbsoluteInterval::HalfBounded(
+            HalfBoundedAbsoluteInterval::new_with_inclusivity(
+                "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
+                BoundInclusivity::Exclusive,
+                OpeningDirection::ToFuture,
+            )
+        )),
     );
 
     Ok(())
@@ -46,11 +48,13 @@ fn from_emptiable_absolute_bounds() -> Result<(), Box<dyn Error>> {
             )),
             AbsoluteEndBound::InfiniteFuture,
         ))),
-        EmptiableAbsoluteInterval::Bound(AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
-            "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-            BoundInclusivity::Exclusive,
-            OpeningDirection::ToFuture,
-        ))),
+        EmptiableAbsoluteInterval::Bound(AbsoluteInterval::HalfBounded(
+            HalfBoundedAbsoluteInterval::new_with_inclusivity(
+                "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
+                BoundInclusivity::Exclusive,
+                OpeningDirection::ToFuture,
+            )
+        )),
     );
 
     Ok(())
@@ -90,12 +94,14 @@ fn from_opt_datetime_bound_inclusivity_pairs() -> Result<(), Box<dyn Error>> {
                 BoundInclusivity::Exclusive
             )),
         )),
-        EmptiableAbsoluteInterval::Bound(AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new_with_inclusivity(
-            "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-            BoundInclusivity::Exclusive,
-            "2025-01-02 00:00:00Z".parse::<Timestamp>()?,
-            BoundInclusivity::Exclusive,
-        ))),
+        EmptiableAbsoluteInterval::Bound(AbsoluteInterval::Bounded(
+            BoundedAbsoluteInterval::new_with_inclusivity(
+                "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
+                BoundInclusivity::Exclusive,
+                "2025-01-02 00:00:00Z".parse::<Timestamp>()?,
+                BoundInclusivity::Exclusive,
+            )
+        )),
     );
 
     Ok(())
@@ -112,7 +118,11 @@ fn from_bool_and_two_opt_datetime_empty() {
 #[test]
 fn from_bool_and_two_opt_datetime() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        EmptiableAbsoluteInterval::from((false, Some("2025-01-01 00:00:00Z".parse::<Timestamp>()?), Some("2025-01-02 00:00:00Z".parse::<Timestamp>()?),)),
+        EmptiableAbsoluteInterval::from((
+            false,
+            Some("2025-01-01 00:00:00Z".parse::<Timestamp>()?),
+            Some("2025-01-02 00:00:00Z".parse::<Timestamp>()?),
+        )),
         EmptiableAbsoluteInterval::Bound(AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
             "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
             "2025-01-02 00:00:00Z".parse::<Timestamp>()?
@@ -148,12 +158,14 @@ fn from_bool_and_two_opt_datetime_bound_inclusivity() -> Result<(), Box<dyn Erro
                 BoundInclusivity::Exclusive
             )),
         )),
-        EmptiableAbsoluteInterval::Bound(AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new_with_inclusivity(
-            "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-            BoundInclusivity::Exclusive,
-            "2025-01-02 00:00:00Z".parse::<Timestamp>()?,
-            BoundInclusivity::Exclusive,
-        ))),
+        EmptiableAbsoluteInterval::Bound(AbsoluteInterval::Bounded(
+            BoundedAbsoluteInterval::new_with_inclusivity(
+                "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
+                BoundInclusivity::Exclusive,
+                "2025-01-02 00:00:00Z".parse::<Timestamp>()?,
+                BoundInclusivity::Exclusive,
+            )
+        )),
     );
 
     Ok(())
