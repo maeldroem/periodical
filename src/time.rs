@@ -1,11 +1,13 @@
 //! Time-related values and structures
 //!
-//! This module contains constants referring to various time-related data such as days in a week,
-//! the number of ISO weeks in a _long year_, etc.
+//! This module contains constants referring to various time-related data such
+//! as days in a week, the number of ISO weeks in a _long year_, etc.
 //!
-//! It also contains structures to represent [offset ISO weeks](OffsetIsoWeek), [individual months](Month),
-//! [a month within a year](MonthInYear), but also [calendar anchor offsets](CalendarAnchorOffset),
-//! which is used for representing _naive_ durations anchored to their calendar unit (e.g. ISO week, month).
+//! It also contains structures to represent [offset ISO weeks](OffsetIsoWeek),
+//! [individual months](Month), [a month within a year](MonthInYear), but also
+//! [calendar anchor offsets](CalendarAnchorOffset), which is used for
+//! representing _naive_ durations anchored to their calendar unit (e.g. ISO
+//! week, month).
 
 use std::cmp::Ordering;
 use std::error::Error;
@@ -19,7 +21,8 @@ use jiff::{Error as JiffError, Span, Timestamp};
 ///
 /// A _week_ here is interpreted as a duration.
 ///
-/// _Anchored_ ISO weeks and traditionally-numbered weeks may contain different amounts of days.
+/// _Anchored_ ISO weeks and traditionally-numbered weeks may contain different
+/// amounts of days.
 pub const DAYS_IN_WEEK: u8 = 7;
 
 /// Amount of ISO weeks in a short year
@@ -73,7 +76,8 @@ pub fn date_today(tz: TimeZone) -> Date {
 ///
 /// # Errors
 ///
-/// If the year is out of range, the corresponding [`Error`](JiffError) is returned.
+/// If the year is out of range, the corresponding [`Error`](JiffError) is
+/// returned.
 ///
 /// # Examples
 ///
@@ -102,14 +106,16 @@ pub fn iso_weeks_in_year(year: i16) -> Result<u8, JiffError> {
 ///
 /// Represents an ISO week with an offset in the range of `-6..=6`.
 ///
-/// This structure is particularly useful for representing whole ISO weeks in general,
-/// but also useful for representing weeks starting on weekdays other than monday.
+/// This structure is particularly useful for representing whole ISO weeks in
+/// general, but also useful for representing weeks starting on weekdays other
+/// than monday.
 ///
-/// This avoids the use of traditional week numbering, which varies wildly across regions and may introduce
-/// weeks that are less than 7 days long.
+/// This avoids the use of traditional week numbering, which varies wildly
+/// across regions and may introduce weeks that are less than 7 days long.
 ///
-/// If one wishes to keep the ISO week numbering system but have weeks starting on sunday,
-/// one can create an [`OffsetIsoWeek`] with an offset of `-1` (Monday = `0`).
+/// If one wishes to keep the ISO week numbering system but have weeks starting
+/// on sunday, one can create an [`OffsetIsoWeek`] with an offset of `-1`
+/// (Monday = `0`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct OffsetIsoWeek {
     week: u8,
@@ -119,19 +125,21 @@ pub struct OffsetIsoWeek {
 
 impl OffsetIsoWeek {
     /// No week start offset
-    /// 
-    /// With this offset (or lack thereof), an [`OffsetIsoWeek`] becomes equivalent to a regular ISO week.
+    ///
+    /// With this offset (or lack thereof), an [`OffsetIsoWeek`] becomes
+    /// equivalent to a regular ISO week.
     pub const ISO_OFFSET: i8 = 0;
 
     /// Creates a new [`OffsetIsoWeek`] without an offset
     ///
     /// # Errors
     ///
-    /// Returns [`OutOfRangeYear`](OffsetIsoWeekCreationError::OutOfRangeYear) if the given year
-    /// is out of the range that [`Date`] can support.
+    /// Returns [`OutOfRangeYear`](OffsetIsoWeekCreationError::OutOfRangeYear)
+    /// if the given year is out of the range that [`Date`] can support.
     ///
-    /// Returns [`OutOfRangeWeek`](OffsetIsoWeekCreationError::OutOfRangeWeek) if the given week
-    /// is 0 or is greater than the amount of ISO weeks that year.
+    /// Returns [`OutOfRangeWeek`](OffsetIsoWeekCreationError::OutOfRangeWeek)
+    /// if the given week is 0 or is greater than the amount of ISO weeks
+    /// that year.
     ///
     /// # Examples
     ///
@@ -148,11 +156,12 @@ impl OffsetIsoWeek {
     ///
     /// # Errors
     ///
-    /// Returns [`OutOfRangeYear`](OffsetIsoWeekCreationError::OutOfRangeYear) if the given year
-    /// is out of the range that [`Date`] can support.
+    /// Returns [`OutOfRangeYear`](OffsetIsoWeekCreationError::OutOfRangeYear)
+    /// if the given year is out of the range that [`Date`] can support.
     ///
-    /// Returns [`OutOfRangeWeek`](OffsetIsoWeekCreationError::OutOfRangeWeek) if the given week
-    /// is 0 or is greater than the amount of ISO weeks that year.
+    /// Returns [`OutOfRangeWeek`](OffsetIsoWeekCreationError::OutOfRangeWeek)
+    /// if the given week is 0 or is greater than the amount of ISO weeks
+    /// that year.
     ///
     /// Returns [`OutOfRangeOffset`](OffsetIsoWeekCreationError::OutOfRangeOffset) if the given offset
     /// is less than `-6` or greater than `6`.
@@ -204,8 +213,9 @@ impl OffsetIsoWeek {
     ///
     /// # Errors
     ///
-    /// Returns [`OffsetIsoWeekDateError`] if something went wrong during computation,
-    /// usually due to the computation resulting in an out-of-range date.
+    /// Returns [`OffsetIsoWeekDateError`] if something went wrong during
+    /// computation, usually due to the computation resulting in an
+    /// out-of-range date.
     ///
     /// # Examples
     ///
@@ -265,8 +275,9 @@ impl OffsetIsoWeek {
     ///
     /// # Errors
     ///
-    /// Returns [`OffsetIsoWeekDateError`] if something went wrong during computation,
-    /// usually due to the computation resulting in an out-of-range date.
+    /// Returns [`OffsetIsoWeekDateError`] if something went wrong during
+    /// computation, usually due to the computation resulting in an
+    /// out-of-range date.
     ///
     /// # Examples
     ///
@@ -343,7 +354,8 @@ impl Display for OffsetIsoWeekCreationError {
 
 impl Error for OffsetIsoWeekCreationError {}
 
-/// Error produced by methods attempting to convert an [`OffsetIsoWeek`] to a [`Date`]
+/// Error produced by methods attempting to convert an [`OffsetIsoWeek`] to a
+/// [`Date`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct OffsetIsoWeekDateError;
 
@@ -412,7 +424,8 @@ impl Month {
     ///
     /// # Errors
     ///
-    /// Returns [`MonthTryFromNumberError`] if the number is 0 or is greater than 12.
+    /// Returns [`MonthTryFromNumberError`] if the number is 0 or is greater
+    /// than 12.
     ///
     /// ```
     /// # use periodical::time::{Month, MonthTryFromNumberError};
@@ -425,7 +438,8 @@ impl Month {
 
     /// Associates a year to the [`Month`]
     ///
-    /// Converts the [`Month`] to a [`MonthInYear`], consuming `self` in the process.
+    /// Converts the [`Month`] to a [`MonthInYear`], consuming `self` in the
+    /// process.
     ///
     /// Equivalent to [`MonthInYear::new`].
     ///
@@ -502,7 +516,10 @@ impl MonthInYear {
     /// Creates a new [`MonthInYear`] from the given year and month
     #[must_use]
     pub fn new(month: Month, year: i16) -> Self {
-        Self { year, month }
+        Self {
+            year,
+            month,
+        }
     }
 
     /// Returns the year
@@ -521,12 +538,13 @@ impl MonthInYear {
     ///
     /// # Errors
     ///
-    /// Returns [`OutOfRangeMonth`](MonthInYearDateError::OutOfRangeMonth) if conversion of
-    /// the [1-offset month number](Month::one_offset_number) fails to be converted to [`i8`],
-    /// which should reasonably never happen.
+    /// Returns [`OutOfRangeMonth`](MonthInYearDateError::OutOfRangeMonth) if
+    /// conversion of the [1-offset month number](Month::one_offset_number)
+    /// fails to be converted to [`i8`], which should reasonably never
+    /// happen.
     ///
-    /// Returns [`OutOfRangeYear`](MonthInYearDateError::OutOfRangeYear) if the stored year
-    /// is out of range for a [`Date`].
+    /// Returns [`OutOfRangeYear`](MonthInYearDateError::OutOfRangeYear) if the
+    /// stored year is out of range for a [`Date`].
     ///
     /// # Examples
     ///
@@ -570,12 +588,13 @@ impl MonthInYear {
     ///
     /// # Errors
     ///
-    /// Returns [`OutOfRangeMonth`](MonthInYearDateError::OutOfRangeMonth) if conversion of
-    /// the [1-offset month number](Month::one_offset_number) fails to be converted to [`i8`],
-    /// which should reasonably never happen.
+    /// Returns [`OutOfRangeMonth`](MonthInYearDateError::OutOfRangeMonth) if
+    /// conversion of the [1-offset month number](Month::one_offset_number)
+    /// fails to be converted to [`i8`], which should reasonably never
+    /// happen.
     ///
-    /// Returns [`OutOfRangeYear`](MonthInYearDateError::OutOfRangeYear) if the stored year
-    /// is out of range for a [`Date`].
+    /// Returns [`OutOfRangeYear`](MonthInYearDateError::OutOfRangeYear) if the
+    /// stored year is out of range for a [`Date`].
     ///
     /// # Examples
     ///
@@ -658,32 +677,35 @@ impl TryFrom<Date> for MonthInYear {
 ///
 /// # What is a calendar anchor
 ///
-/// A _calendar anchor_ is any subdivision of the Gregorian calendar, e.g. days, weeks, months, years.
+/// A _calendar anchor_ is any subdivision of the Gregorian calendar, e.g. days,
+/// weeks, months, years.
 ///
-/// As other naive units, it is not a precise amount, rather an abstract value that we often use
-/// in common speech.
+/// As other naive units, it is not a precise amount, rather an abstract value
+/// that we often use in common speech.
 ///
-/// The goal of this structure is to represent calendar offsets that can be applied to naive structures
-/// such as [`Date`s](Date).
+/// The goal of this structure is to represent calendar offsets that can be
+/// applied to naive structures such as [`Date`s](Date).
 ///
 /// # Why can't calendar anchor offsets be combined in one value?
 ///
-/// The reason [`CalendarAnchorOffset`]s can't be combined into one structure (as in you can't add
-/// two instances together) as the order in which they are applied to a naive structure such as [`Date`]
-/// matters.
+/// The reason [`CalendarAnchorOffset`]s can't be combined into one structure
+/// (as in you can't add two instances together) as the order in which they are
+/// applied to a naive structure such as [`Date`] matters.
 ///
 /// # How it works
 ///
-/// A calendar anchor offset is very different from how [`Span`]s work, as it interprets calendar offsets
-/// by the absolute position of its anchor.
+/// A calendar anchor offset is very different from how [`Span`]s work, as it
+/// interprets calendar offsets by the absolute position of its anchor.
 ///
-/// The _absolute position_ of a calendar anchor is based on where the anchors are placed in the calendar,
-/// rather than their actual duration.
-/// Therefore, a week is not equal to 7 days, it instead represents "What is the nth week compared to X".
+/// The _absolute position_ of a calendar anchor is based on where the anchors
+/// are placed in the calendar, rather than their actual duration.
+/// Therefore, a week is not equal to 7 days, it instead represents "What is the
+/// nth week compared to X".
 ///
-/// For example, if we want the month that happens in 2 months when observing the calendar,
-/// and the current date is `2026-04-15`, then it would return June of 2026, as if we only observe the month
-/// on the calendar, it is the second month that happens from this month (April of 2026).
+/// For example, if we want the month that happens in 2 months when observing
+/// the calendar, and the current date is `2026-04-15`, then it would return
+/// June of 2026, as if we only observe the month on the calendar, it is the
+/// second month that happens from this month (April of 2026).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum CalendarAnchorOffset {
     /// N days calendar anchor offset
@@ -692,7 +714,8 @@ pub enum CalendarAnchorOffset {
     Weeks(i64, Weekday),
     /// N ISO weeks calendar anchor offset
     ///
-    /// Equivalent to [`CalendarAnchorOffset::Weeks`] using [monday](Weekday::Monday) as the week start.
+    /// Equivalent to [`CalendarAnchorOffset::Weeks`] using
+    /// [monday](Weekday::Monday) as the week start.
     IsoWeeks(i64),
     /// N months calendar anchor offset
     Months(i64),
@@ -703,8 +726,9 @@ pub enum CalendarAnchorOffset {
 impl CalendarAnchorOffset {
     /// Whether the calendar offset duration is zero
     ///
-    /// This does **not** mean that after applying the [`CalendarAnchorOffset`] to another naive structure
-    /// will result in the same value as the original naive structure.
+    /// This does **not** mean that after applying the [`CalendarAnchorOffset`]
+    /// to another naive structure will result in the same value as the
+    /// original naive structure.
     #[must_use]
     pub fn is_zero(&self) -> bool {
         match self {
@@ -715,8 +739,9 @@ impl CalendarAnchorOffset {
 
     /// Whether the stored naive duration is positive (`> 0`)
     ///
-    /// This does **not** mean that after applying the [`CalendarAnchorOffset`] to another naive structure
-    /// will result in a value greater than the original naive structure.
+    /// This does **not** mean that after applying the [`CalendarAnchorOffset`]
+    /// to another naive structure will result in a value greater than the
+    /// original naive structure.
     #[must_use]
     pub fn is_positive(&self) -> bool {
         match self {
@@ -727,8 +752,9 @@ impl CalendarAnchorOffset {
 
     /// Whether the stored naive duration is negative (`< 0`)
     ///
-    /// This does **not** mean that after applying the [`CalendarAnchorOffset`] to another naive structure
-    /// will result in a value less than the original naive structure.
+    /// This does **not** mean that after applying the [`CalendarAnchorOffset`]
+    /// to another naive structure will result in a value less than the
+    /// original naive structure.
     #[must_use]
     pub fn is_negative(&self) -> bool {
         match self {
@@ -752,18 +778,21 @@ impl PartialOrd for CalendarAnchorOffset {
 
 /// Checked addition of a calendar week offset to a [`Date`]
 ///
-/// This operations results in a [`Date`] on the start of the week, regardless of the week offset.
+/// This operations results in a [`Date`] on the start of the week, regardless
+/// of the week offset.
 ///
-/// This means that if you provide a week offset of `1` with a week start on [monday](Weekday::Monday),
-/// and the given date is `2026-03-01` (a sunday), the resulting date will be `2026-03-02`,
-/// as it is the first day of the next week compared to the given date's week.
+/// This means that if you provide a week offset of `1` with a week start on
+/// [monday](Weekday::Monday), and the given date is `2026-03-01` (a sunday),
+/// the resulting date will be `2026-03-02`, as it is the first day of the next
+/// week compared to the given date's week.
 ///
-/// This method is mostly used by [`checked_add_calendar_anchor_offset_to_date`].
+/// This method is mostly used by
+/// [`checked_add_calendar_anchor_offset_to_date`].
 ///
 /// # Errors
 ///
-/// Returns [`OffsetTooLarge`](CalendarAnchorOffsetDateError::OffsetTooLarge) if the provided week offset
-/// cannot fit in a [`Span`].
+/// Returns [`OffsetTooLarge`](CalendarAnchorOffsetDateError::OffsetTooLarge) if
+/// the provided week offset cannot fit in a [`Span`].
 ///
 /// Returns [`OutOfRangeResult`](CalendarAnchorOffsetDateError::OutOfRangeResult) if the computed result
 /// is out of range for a [`Date`].
@@ -821,18 +850,21 @@ pub fn checked_add_calendar_week_offset_to_date(
 
 /// Checked subtraction of a calendar week offset to a [`Date`]
 ///
-/// This operations results in a [`Date`] on the start of the week, regardless of the week offset.
+/// This operations results in a [`Date`] on the start of the week, regardless
+/// of the week offset.
 ///
-/// This means that if you provide a week offset of `1` with a week start on [monday](Weekday::Monday),
-/// and the given date is `2026-03-08` (a sunday), the resulting date will be `2026-03-02`,
-/// as it is the first day of the previous week compared to the given date's week.
+/// This means that if you provide a week offset of `1` with a week start on
+/// [monday](Weekday::Monday), and the given date is `2026-03-08` (a sunday),
+/// the resulting date will be `2026-03-02`, as it is the first day of the
+/// previous week compared to the given date's week.
 ///
-/// This method is mostly used by [`checked_sub_calendar_anchor_offset_to_date`].
+/// This method is mostly used by
+/// [`checked_sub_calendar_anchor_offset_to_date`].
 ///
 /// # Errors
 ///
-/// Returns [`OffsetTooLarge`](CalendarAnchorOffsetDateError::OffsetTooLarge) if the provided week offset
-/// cannot fit in a [`Span`].
+/// Returns [`OffsetTooLarge`](CalendarAnchorOffsetDateError::OffsetTooLarge) if
+/// the provided week offset cannot fit in a [`Span`].
 ///
 /// Returns [`OutOfRangeResult`](CalendarAnchorOffsetDateError::OutOfRangeResult) if the computed result
 /// is out of range for a [`Date`].
@@ -890,12 +922,14 @@ pub fn checked_sub_calendar_week_offset_to_date(
 
 /// Checked addition of a [`CalendarAnchorOffset`] to a [`Date`]
 ///
-/// This operation results in a [`Date`] on the start of anchor (e.g. day, week, month).
+/// This operation results in a [`Date`] on the start of anchor (e.g. day, week,
+/// month).
 ///
 /// # Errors
 ///
-/// Returns [`OffsetTooLarge`](CalendarAnchorOffsetDateError::OffsetTooLarge) if the provided
-/// [`CalendarAnchorOffset`] contains an offset too large to fit in a [`Span`].
+/// Returns [`OffsetTooLarge`](CalendarAnchorOffsetDateError::OffsetTooLarge) if
+/// the provided [`CalendarAnchorOffset`] contains an offset too large to fit in
+/// a [`Span`].
 ///
 /// Returns [`OutOfRangeResult`](CalendarAnchorOffsetDateError::OutOfRangeResult) if the computed result
 /// is out of range for a [`Date`].
@@ -1048,12 +1082,14 @@ pub fn checked_add_calendar_anchor_offset_to_date(
 
 /// Checked subtraction of a [`CalendarAnchorOffset`] to a [`Date`]
 ///
-/// This operation results in a [`Date`] on the start of anchor (e.g. day, week, month).
+/// This operation results in a [`Date`] on the start of anchor (e.g. day, week,
+/// month).
 ///
 /// # Errors
 ///
-/// Returns [`OffsetTooLarge`](CalendarAnchorOffsetDateError::OffsetTooLarge) if the provided
-/// [`CalendarAnchorOffset`] contains an offset too large to fit in a [`Span`].
+/// Returns [`OffsetTooLarge`](CalendarAnchorOffsetDateError::OffsetTooLarge) if
+/// the provided [`CalendarAnchorOffset`] contains an offset too large to fit in
+/// a [`Span`].
 ///
 /// Returns [`OutOfRangeResult`](CalendarAnchorOffsetDateError::OutOfRangeResult) if the computed result
 /// is out of range for a [`Date`].
@@ -1204,7 +1240,8 @@ pub fn checked_sub_calendar_anchor_offset_to_date(
     }
 }
 
-/// Errors produced by methods converting a [`CalendarAnchorOffset`] to a [`Date`]
+/// Errors produced by methods converting a [`CalendarAnchorOffset`] to a
+/// [`Date`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum CalendarAnchorOffsetDateError {
     OffsetTooLarge,

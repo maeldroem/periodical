@@ -1,6 +1,7 @@
 //! Interval iterators
 //!
-//! This module contains various iterators to deal with intervals. With those iterators, you can...
+//! This module contains various iterators to deal with intervals. With those
+//! iterators, you can...
 //!
 //! - [Retrieve bounds from intervals](bounds)
 //! - [Unite bounds](united_bounds)
@@ -10,8 +11,8 @@
 //! - [Retrieve the complements of intervals](complement)
 //! - [Remove empty intervals from a collection](remove_empty)
 //!
-//! Most iterators have a public `new` method, but most of them come with input requirements.
-//! Make sure your input meet those requirements.
+//! Most iterators have a public `new` method, but most of them come with input
+//! requirements. Make sure your input meet those requirements.
 
 use crate::utils::tests;
 

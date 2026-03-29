@@ -6,20 +6,31 @@ use jiff::tz::TimeZone;
 
 use crate::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError};
 use crate::intervals::meta::BoundInclusivity;
-use crate::time::{CalendarAnchorOffset, CalendarAnchorOffsetDateError, MonthInYear, OffsetIsoWeek, checked_add_calendar_anchor_offset_to_date, checked_sub_calendar_anchor_offset_to_date, date_today};
+use crate::time::{
+    CalendarAnchorOffset,
+    CalendarAnchorOffsetDateError,
+    MonthInYear,
+    OffsetIsoWeek,
+    checked_add_calendar_anchor_offset_to_date,
+    checked_sub_calendar_anchor_offset_to_date,
+    date_today,
+};
 
 impl BoundedAbsoluteInterval {
-    /// Creates a new [`BoundedAbsoluteInterval`] of the date in the given timezone
-    /// 
-    /// If you wish to create a [`BoundedAbsoluteInterval`] of a date to which an offset is applied,
-    /// consider using [`checked_add_calendar_anchor_offset_to_date`] or [`checked_sub_calendar_anchor_offset_to_date`]
-    /// before using this method to get the interval.
+    /// Creates a new [`BoundedAbsoluteInterval`] of the date in the given
+    /// timezone
+    ///
+    /// If you wish to create a [`BoundedAbsoluteInterval`] of a date to which
+    /// an offset is applied, consider using
+    /// [`checked_add_calendar_anchor_offset_to_date`] or
+    /// [`checked_sub_calendar_anchor_offset_to_date`] before using this
+    /// method to get the interval.
     ///
     /// # Errors
     ///
     /// Returns [`ComputationError`](BoundedAbsoluteIntervalCreationError::ComputationError) if
     /// the conversion method [`Date::to_zoned`] failed.
-    /// 
+    ///
     /// Returns [`OutOfRangeEnd`](BoundedAbsoluteIntervalCreationError::OutOfRangeEnd) if the day after
     /// the given date is out of range.
     ///
@@ -48,8 +59,9 @@ impl BoundedAbsoluteInterval {
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn from_date(date: Date, tz: TimeZone) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
-        // Date::to_zoned already selects the earliest point in time for that particular date,
-        // already handling cases where midnight doesn't exist because of a time gap.
+        // Date::to_zoned already selects the earliest point in time for that particular
+        // date, already handling cases where midnight doesn't exist because of
+        // a time gap.
         let start = date
             .to_zoned(tz.clone())
             .or(Err(BoundedAbsoluteIntervalCreationError::ComputationError))?
@@ -70,23 +82,24 @@ impl BoundedAbsoluteInterval {
         ))
     }
 
-    /// Creates a new [`BoundedAbsoluteInterval`] of the day after a given [`CalendarAnchorOffset`]
-    /// relative to the given date
-    /// 
+    /// Creates a new [`BoundedAbsoluteInterval`] of the day after a given
+    /// [`CalendarAnchorOffset`] relative to the given date
+    ///
     /// # Errors
-    /// 
+    ///
     /// Returns [`ComputationError`](BoundedAbsoluteIntervalCreationError::ComputationError)
     /// if [`checked_add_calendar_anchor_offset_to_date`]
     /// returns [`OffsetTooLarge`](CalendarAnchorOffsetDateError::OffsetTooLarge).
-    /// 
+    ///
     /// Returns [`OutOfRangeStart`](BoundedAbsoluteIntervalCreationError::OutOfRangeStart)
     /// if [`checked_add_calendar_anchor_offset_to_date`]
     /// returns [`OutOfRangeResult`](CalendarAnchorOffsetDateError::OutOfRangeResult).
-    /// 
-    /// Returns any error that [`from_date`](BoundedAbsoluteInterval::from_date) may return.
-    /// 
+    ///
+    /// Returns any error that [`from_date`](BoundedAbsoluteInterval::from_date)
+    /// may return.
+    ///
     /// # Examples
-    /// 
+    ///
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
@@ -100,7 +113,7 @@ impl BoundedAbsoluteInterval {
     ///     CalendarAnchorOffset::Days(5),
     ///     TimeZone::get("Europe/Oslo")?,
     /// )?;
-    /// 
+    ///
     /// assert_eq!(
     ///     interval.start(),
     ///     "2026-05-06 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
@@ -118,36 +131,35 @@ impl BoundedAbsoluteInterval {
         calendar_anchor_offset: CalendarAnchorOffset,
         tz: TimeZone,
     ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
-        let date = checked_add_calendar_anchor_offset_to_date(calendar_anchor_offset, date)
-            .map_err(|err| match err {
-                CalendarAnchorOffsetDateError::OffsetTooLarge => {
-                    BoundedAbsoluteIntervalCreationError::ComputationError
-                },
+        let date =
+            checked_add_calendar_anchor_offset_to_date(calendar_anchor_offset, date).map_err(|err| match err {
+                CalendarAnchorOffsetDateError::OffsetTooLarge => BoundedAbsoluteIntervalCreationError::ComputationError,
                 CalendarAnchorOffsetDateError::OutOfRangeResult => {
                     BoundedAbsoluteIntervalCreationError::OutOfRangeStart
                 },
             })?;
-        
+
         Self::from_date(date, tz)
     }
 
-    /// Creates a new [`BoundedAbsoluteInterval`] of the day before a given [`CalendarAnchorOffset`]
-    /// relative to the given date
-    /// 
+    /// Creates a new [`BoundedAbsoluteInterval`] of the day before a given
+    /// [`CalendarAnchorOffset`] relative to the given date
+    ///
     /// # Errors
-    /// 
+    ///
     /// Returns [`ComputationError`](BoundedAbsoluteIntervalCreationError::ComputationError)
     /// if [`checked_sub_calendar_anchor_offset_to_date`]
     /// returns [`OffsetTooLarge`](CalendarAnchorOffsetDateError::OffsetTooLarge).
-    /// 
+    ///
     /// Returns [`OutOfRangeStart`](BoundedAbsoluteIntervalCreationError::OutOfRangeStart)
     /// if [`checked_sub_calendar_anchor_offset_to_date`]
     /// returns [`OutOfRangeResult`](CalendarAnchorOffsetDateError::OutOfRangeResult).
-    /// 
-    /// Returns any error that [`from_date`](BoundedAbsoluteInterval::from_date) may return.
-    /// 
+    ///
+    /// Returns any error that [`from_date`](BoundedAbsoluteInterval::from_date)
+    /// may return.
+    ///
     /// # Examples
-    /// 
+    ///
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
@@ -161,7 +173,7 @@ impl BoundedAbsoluteInterval {
     ///     CalendarAnchorOffset::Days(5),
     ///     TimeZone::get("Europe/Oslo")?,
     /// )?;
-    /// 
+    ///
     /// assert_eq!(
     ///     interval.start(),
     ///     "2026-04-26 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
@@ -179,25 +191,24 @@ impl BoundedAbsoluteInterval {
         calendar_anchor_offset: CalendarAnchorOffset,
         tz: TimeZone,
     ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
-        let date = checked_sub_calendar_anchor_offset_to_date(calendar_anchor_offset, date)
-            .map_err(|err| match err {
-                CalendarAnchorOffsetDateError::OffsetTooLarge => {
-                    BoundedAbsoluteIntervalCreationError::ComputationError
-                },
+        let date =
+            checked_sub_calendar_anchor_offset_to_date(calendar_anchor_offset, date).map_err(|err| match err {
+                CalendarAnchorOffsetDateError::OffsetTooLarge => BoundedAbsoluteIntervalCreationError::ComputationError,
                 CalendarAnchorOffsetDateError::OutOfRangeResult => {
                     BoundedAbsoluteIntervalCreationError::OutOfRangeStart
                 },
             })?;
-        
+
         Self::from_date(date, tz)
     }
 
-    /// Creates a new [`BoundedAbsoluteInterval`] of the day after a given [`CalendarAnchorOffset`]
-    /// relative to today in the given timezone
+    /// Creates a new [`BoundedAbsoluteInterval`] of the day after a given
+    /// [`CalendarAnchorOffset`] relative to today in the given timezone
     ///
     /// # Errors
-    /// 
-    /// Returns any error that [`day_after_duration_from_date`](BoundedAbsoluteInterval::day_after_duration_from_date)
+    ///
+    /// Returns any error that
+    /// [`day_after_duration_from_date`](BoundedAbsoluteInterval::day_after_duration_from_date)
     /// may return.
     ///
     /// # Examples
@@ -220,12 +231,14 @@ impl BoundedAbsoluteInterval {
         Self::day_after_duration_from_date(date_today(tz.clone()), calendar_anchor_offset, tz)
     }
 
-    /// Creates a new [`BoundedAbsoluteInterval`] of the day before a given [`CalendarAnchorOffset`]
-    /// relative to today in the given timezone
+    /// Creates a new [`BoundedAbsoluteInterval`] of the day before a given
+    /// [`CalendarAnchorOffset`] relative to today in the given timezone
     ///
     /// # Errors
-    /// 
-    /// Returns any error that [`day_before_duration_from_date`](BoundedAbsoluteInterval::day_before_duration_from_date) may return.
+    ///
+    /// Returns any error that
+    /// [`day_before_duration_from_date`](BoundedAbsoluteInterval::day_before_duration_from_date)
+    /// may return.
     ///
     /// # Examples
     ///
@@ -247,14 +260,16 @@ impl BoundedAbsoluteInterval {
         Self::day_before_duration_from_date(date_today(tz.clone()), calendar_anchor_offset, tz)
     }
 
-    /// Returns the current day in the given [`TimeZone`] as a [`BoundedAbsoluteInterval`]
+    /// Returns the current day in the given [`TimeZone`] as a
+    /// [`BoundedAbsoluteInterval`]
     ///
     /// # Errors
     ///
     /// Returns [`ComputationError`](BoundedAbsoluteIntervalCreationError::ComputationError)
     /// if [`checked_sub_calendar_anchor_offset_to_date`] returns an error.
-    /// 
-    /// Returns any error that [`from_date`](BoundedAbsoluteInterval::from_date) may return.
+    ///
+    /// Returns any error that [`from_date`](BoundedAbsoluteInterval::from_date)
+    /// may return.
     ///
     /// # Examples
     ///
@@ -269,7 +284,8 @@ impl BoundedAbsoluteInterval {
         Self::from_date(date_today(tz.clone()), tz)
     }
 
-    /// Creates a new [`BoundedAbsoluteInterval`] of tomorrow in the given timezone
+    /// Creates a new [`BoundedAbsoluteInterval`] of tomorrow in the given
+    /// timezone
     ///
     /// # Errors
     ///
@@ -289,7 +305,8 @@ impl BoundedAbsoluteInterval {
         Self::day_after_duration_from_today(CalendarAnchorOffset::Days(1), tz)
     }
 
-    /// Creates a new [`BoundedAbsoluteInterval`] of yesterday in the given timezone
+    /// Creates a new [`BoundedAbsoluteInterval`] of yesterday in the given
+    /// timezone
     ///
     /// # Errors
     ///
@@ -309,15 +326,16 @@ impl BoundedAbsoluteInterval {
         Self::day_before_duration_from_today(CalendarAnchorOffset::Days(1), tz)
     }
 
-    /// Creates a new [`BoundedAbsoluteInterval`] from the inclusive date range in the given timezone
+    /// Creates a new [`BoundedAbsoluteInterval`] from the inclusive date range
+    /// in the given timezone
     ///
     /// If the given dates are not in chronological order, they are swapped.
     ///
     /// # Errors
-    /// 
+    ///
     /// Returns [`ComputationError`](BoundedAbsoluteIntervalCreationError::ComputationError)
     /// if [`Date::to_zoned`] returned an error.
-    /// 
+    ///
     /// Returns [`OutOfRangeEnd`](BoundedAbsoluteIntervalCreationError::OutOfRangeEnd) if the day after
     /// the given end date is out of range.
     ///
@@ -377,7 +395,8 @@ impl BoundedAbsoluteInterval {
         ))
     }
 
-    /// Creates a new [`BoundedAbsoluteInterval`] from the [`OffsetIsoWeek`] in the given timezone
+    /// Creates a new [`BoundedAbsoluteInterval`] from the [`OffsetIsoWeek`] in
+    /// the given timezone
     ///
     /// # Errors
     ///
@@ -387,7 +406,8 @@ impl BoundedAbsoluteInterval {
     /// Returns [`OutOfRangeEnd`](BoundedAbsoluteIntervalCreationError::OutOfRangeEnd) if
     /// the week's last day is out of range.
     ///
-    /// Returns any error that [`from_inclusive_date_range`](BoundedAbsoluteInterval::from_inclusive_date_range)
+    /// Returns any error that
+    /// [`from_inclusive_date_range`](BoundedAbsoluteInterval::from_inclusive_date_range)
     /// may return.
     ///
     /// # Examples
@@ -416,27 +436,26 @@ impl BoundedAbsoluteInterval {
     /// assert_eq!(week_interval.end_inclusivity(), BoundInclusivity::Exclusive);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
-    pub fn from_week(
-        week: OffsetIsoWeek,
-        tz: TimeZone,
-    ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
+    pub fn from_week(week: OffsetIsoWeek, tz: TimeZone) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
         Self::from_inclusive_date_range(
-            week.first_day().or(Err(BoundedAbsoluteIntervalCreationError::OutOfRangeStart))?,
-            week.last_day().or(Err(BoundedAbsoluteIntervalCreationError::OutOfRangeEnd))?,
+            week.first_day()
+                .or(Err(BoundedAbsoluteIntervalCreationError::OutOfRangeStart))?,
+            week.last_day()
+                .or(Err(BoundedAbsoluteIntervalCreationError::OutOfRangeEnd))?,
             tz,
         )
     }
 
-    /// Creates a new [`BoundedAbsoluteInterval`] from the provided inclusive [`OffsetIsoWeek`] range
-    /// in the given timezone
+    /// Creates a new [`BoundedAbsoluteInterval`] from the provided inclusive
+    /// [`OffsetIsoWeek`] range in the given timezone
     ///
-    /// If the given start week's first day is before the given end week's last day,
-    /// the given end week's last day will be used as the start and the given start week's first day
-    /// will be used as the end[^1].
+    /// If the given start week's first day is before the given end week's last
+    /// day, the given end week's last day will be used as the start and the
+    /// given start week's first day will be used as the end[^1].
     ///
-    /// Note that the given start/end weeks can have different start days, so the resulting interval may not
-    /// always be a multiple of 7 days.
-    /// 
+    /// Note that the given start/end weeks can have different start days, so
+    /// the resulting interval may not always be a multiple of 7 days.
+    ///
     /// [^1]: Swapping the weeks instead of the days would result in confusing intervals by creating larger intervals
     /// than expected.
     ///
@@ -448,7 +467,8 @@ impl BoundedAbsoluteInterval {
     /// Returns [`OutOfRangeEnd`](BoundedAbsoluteIntervalCreationError::OutOfRangeEnd) if
     /// the end week's last day is out of range.
     ///
-    /// Returns any error that [`from_inclusive_date_range`](BoundedAbsoluteInterval::from_inclusive_date_range)
+    /// Returns any error that
+    /// [`from_inclusive_date_range`](BoundedAbsoluteInterval::from_inclusive_date_range)
     /// may return.
     ///
     /// # Examples
@@ -486,8 +506,12 @@ impl BoundedAbsoluteInterval {
         end: OffsetIsoWeek,
         tz: TimeZone,
     ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
-        let mut start_day = start.first_day().or(Err(BoundedAbsoluteIntervalCreationError::OutOfRangeStart))?;
-        let mut end_day = end.last_day().or(Err(BoundedAbsoluteIntervalCreationError::OutOfRangeEnd))?;
+        let mut start_day = start
+            .first_day()
+            .or(Err(BoundedAbsoluteIntervalCreationError::OutOfRangeStart))?;
+        let mut end_day = end
+            .last_day()
+            .or(Err(BoundedAbsoluteIntervalCreationError::OutOfRangeEnd))?;
 
         if start_day > end_day {
             std::mem::swap(&mut start_day, &mut end_day);
@@ -496,7 +520,8 @@ impl BoundedAbsoluteInterval {
         Self::from_inclusive_date_range(start_day, end_day, tz)
     }
 
-    /// Creates a new [`BoundedAbsoluteInterval`] of the given month in the given timezone
+    /// Creates a new [`BoundedAbsoluteInterval`] of the given month in the
+    /// given timezone
     ///
     /// # Errors
     ///
@@ -506,7 +531,8 @@ impl BoundedAbsoluteInterval {
     /// Returns [`OutOfRangeEnd`](BoundedAbsoluteIntervalCreationError::OutOfRangeEnd) if
     /// the last day of the month is out of range.
     ///
-    /// Returns any error that [`from_inclusive_date_range`](BoundedAbsoluteInterval::from_inclusive_date_range)
+    /// Returns any error that
+    /// [`from_inclusive_date_range`](BoundedAbsoluteInterval::from_inclusive_date_range)
     /// may return.
     ///
     /// # Examples
@@ -537,13 +563,18 @@ impl BoundedAbsoluteInterval {
     /// ```
     pub fn from_month(month: MonthInYear, tz: TimeZone) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
         Self::from_inclusive_date_range(
-            month.first_day().or(Err(BoundedAbsoluteIntervalCreationError::OutOfRangeStart))?,
-            month.last_day().or(Err(BoundedAbsoluteIntervalCreationError::OutOfRangeEnd))?,
+            month
+                .first_day()
+                .or(Err(BoundedAbsoluteIntervalCreationError::OutOfRangeStart))?,
+            month
+                .last_day()
+                .or(Err(BoundedAbsoluteIntervalCreationError::OutOfRangeEnd))?,
             tz,
         )
     }
 
-    /// Creates a new [`BoundedAbsoluteInterval`] from the inclusive month range in the given timezone
+    /// Creates a new [`BoundedAbsoluteInterval`] from the inclusive month range
+    /// in the given timezone
     ///
     /// If the given months are not in chronological order, they are swapped.
     ///
@@ -555,7 +586,8 @@ impl BoundedAbsoluteInterval {
     /// Returns [`OutOfRangeEnd`](BoundedAbsoluteIntervalCreationError::OutOfRangeEnd) if
     /// the end month's last day is out of range.
     ///
-    /// Returns any error that [`from_inclusive_date_range`](BoundedAbsoluteInterval::from_inclusive_date_range)
+    /// Returns any error that
+    /// [`from_inclusive_date_range`](BoundedAbsoluteInterval::from_inclusive_date_range)
     /// may return.
     ///
     /// # Examples
@@ -595,32 +627,37 @@ impl BoundedAbsoluteInterval {
         }
 
         Self::from_inclusive_date_range(
-            start.first_day().or(Err(BoundedAbsoluteIntervalCreationError::OutOfRangeStart))?,
-            end.last_day().or(Err(BoundedAbsoluteIntervalCreationError::OutOfRangeEnd))?,
+            start
+                .first_day()
+                .or(Err(BoundedAbsoluteIntervalCreationError::OutOfRangeStart))?,
+            end.last_day()
+                .or(Err(BoundedAbsoluteIntervalCreationError::OutOfRangeEnd))?,
             tz,
         )
     }
 
-    /// Creates a new [`BoundedAbsoluteInterval`] of the month after a given [`CalendarAnchorOffset`]
-    /// relative to the given date in the given timezone
-    /// 
+    /// Creates a new [`BoundedAbsoluteInterval`] of the month after a given
+    /// [`CalendarAnchorOffset`] relative to the given date in the given
+    /// timezone
+    ///
     /// # Errors
-    /// 
+    ///
     /// Returns [`ComputationError`](BoundedAbsoluteIntervalCreationError::ComputationError)
     /// if [`checked_add_calendar_anchor_offset_to_date`]
     /// returns [`OffsetTooLarge`](CalendarAnchorOffsetDateError::OffsetTooLarge).
-    /// 
+    ///
     /// Returns [`OutOfRangeStart`](BoundedAbsoluteIntervalCreationError::OutOfRangeStart)
     /// if [`checked_add_calendar_anchor_offset_to_date`]
     /// returns [`OutOfRangeResult`](CalendarAnchorOffsetDateError::OutOfRangeResult).
-    /// 
+    ///
     /// Returns [`ComputationError`](BoundedAbsoluteIntervalCreationError::ComputationError) if
     /// conversion of [`Date`] to a [`MonthInYear`] failed.
-    /// 
-    /// Returns any error that [`from_month`](BoundedAbsoluteInterval::from_month) may return.
-    /// 
+    ///
+    /// Returns any error that
+    /// [`from_month`](BoundedAbsoluteInterval::from_month) may return.
+    ///
     /// # Examples
-    /// 
+    ///
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
@@ -634,7 +671,7 @@ impl BoundedAbsoluteInterval {
     ///     CalendarAnchorOffset::Days(5),
     ///     TimeZone::get("Europe/Oslo")?,
     /// )?;
-    /// 
+    ///
     /// assert_eq!(
     ///     interval.start(),
     ///     "2026-03-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
@@ -652,41 +689,41 @@ impl BoundedAbsoluteInterval {
         calendar_anchor_offset: CalendarAnchorOffset,
         tz: TimeZone,
     ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
-        let date = checked_add_calendar_anchor_offset_to_date(calendar_anchor_offset, date)
-            .map_err(|err| match err {
-                CalendarAnchorOffsetDateError::OffsetTooLarge => {
-                    BoundedAbsoluteIntervalCreationError::ComputationError
-                },
+        let date =
+            checked_add_calendar_anchor_offset_to_date(calendar_anchor_offset, date).map_err(|err| match err {
+                CalendarAnchorOffsetDateError::OffsetTooLarge => BoundedAbsoluteIntervalCreationError::ComputationError,
                 CalendarAnchorOffsetDateError::OutOfRangeResult => {
                     BoundedAbsoluteIntervalCreationError::OutOfRangeStart
                 },
             })?;
-        
+
         let month = MonthInYear::try_from(date).or(Err(BoundedAbsoluteIntervalCreationError::ComputationError))?;
 
         Self::from_month(month, tz)
     }
 
-    /// Creates a new [`BoundedAbsoluteInterval`] of the month before a given [`CalendarAnchorOffset`]
-    /// relative to the given date in the given timezone
-    /// 
+    /// Creates a new [`BoundedAbsoluteInterval`] of the month before a given
+    /// [`CalendarAnchorOffset`] relative to the given date in the given
+    /// timezone
+    ///
     /// # Errors
-    /// 
+    ///
     /// Returns [`ComputationError`](BoundedAbsoluteIntervalCreationError::ComputationError)
     /// if [`checked_sub_calendar_anchor_offset_to_date`]
     /// returns [`OffsetTooLarge`](CalendarAnchorOffsetDateError::OffsetTooLarge).
-    /// 
+    ///
     /// Returns [`OutOfRangeStart`](BoundedAbsoluteIntervalCreationError::OutOfRangeStart)
     /// if [`checked_sub_calendar_anchor_offset_to_date`]
     /// returns [`OutOfRangeResult`](CalendarAnchorOffsetDateError::OutOfRangeResult).
-    /// 
+    ///
     /// Returns [`ComputationError`](BoundedAbsoluteIntervalCreationError::ComputationError) if
     /// conversion of [`Date`] to a [`MonthInYear`] failed.
-    /// 
-    /// Returns any error that [`from_month`](BoundedAbsoluteInterval::from_month) may return.
-    /// 
+    ///
+    /// Returns any error that
+    /// [`from_month`](BoundedAbsoluteInterval::from_month) may return.
+    ///
     /// # Examples
-    /// 
+    ///
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
@@ -700,7 +737,7 @@ impl BoundedAbsoluteInterval {
     ///     CalendarAnchorOffset::Days(5),
     ///     TimeZone::get("Europe/Oslo")?,
     /// )?;
-    /// 
+    ///
     /// assert_eq!(
     ///     interval.start(),
     ///     "2026-02-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
@@ -718,27 +755,26 @@ impl BoundedAbsoluteInterval {
         calendar_anchor_offset: CalendarAnchorOffset,
         tz: TimeZone,
     ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
-        let date = checked_sub_calendar_anchor_offset_to_date(calendar_anchor_offset, date)
-            .map_err(|err| match err {
-                CalendarAnchorOffsetDateError::OffsetTooLarge => {
-                    BoundedAbsoluteIntervalCreationError::ComputationError
-                },
+        let date =
+            checked_sub_calendar_anchor_offset_to_date(calendar_anchor_offset, date).map_err(|err| match err {
+                CalendarAnchorOffsetDateError::OffsetTooLarge => BoundedAbsoluteIntervalCreationError::ComputationError,
                 CalendarAnchorOffsetDateError::OutOfRangeResult => {
                     BoundedAbsoluteIntervalCreationError::OutOfRangeStart
                 },
             })?;
-        
+
         let month = MonthInYear::try_from(date).or(Err(BoundedAbsoluteIntervalCreationError::ComputationError))?;
 
         Self::from_month(month, tz)
     }
 
-    /// Creates a new [`BoundedAbsoluteInterval`] of the month after a given [`CalendarAnchorOffset`]
-    /// relative to today in the given timezone
+    /// Creates a new [`BoundedAbsoluteInterval`] of the month after a given
+    /// [`CalendarAnchorOffset`] relative to today in the given timezone
     ///
     /// # Errors
-    /// 
-    /// Returns any error that [`month_after_duration_from_date`](BoundedAbsoluteInterval::month_after_duration_from_date)
+    ///
+    /// Returns any error that
+    /// [`month_after_duration_from_date`](BoundedAbsoluteInterval::month_after_duration_from_date)
     /// may return.
     ///
     /// # Examples
@@ -761,12 +797,13 @@ impl BoundedAbsoluteInterval {
         Self::month_after_duration_from_date(date_today(tz.clone()), calendar_anchor_offset, tz)
     }
 
-    /// Creates a new [`BoundedAbsoluteInterval`] of the month before a given [`CalendarAnchorOffset`]
-    /// relative to today in the given timezone
+    /// Creates a new [`BoundedAbsoluteInterval`] of the month before a given
+    /// [`CalendarAnchorOffset`] relative to today in the given timezone
     ///
     /// # Errors
-    /// 
-    /// Returns any error that [`month_before_duration_from_date`](BoundedAbsoluteInterval::month_before_duration_from_date)
+    ///
+    /// Returns any error that
+    /// [`month_before_duration_from_date`](BoundedAbsoluteInterval::month_before_duration_from_date)
     /// may return.
     ///
     /// # Examples
@@ -789,14 +826,16 @@ impl BoundedAbsoluteInterval {
         Self::month_before_duration_from_date(date_today(tz.clone()), calendar_anchor_offset, tz)
     }
 
-    /// Creates a new [`BoundedAbsoluteInterval`] of the current month in the given timezone
+    /// Creates a new [`BoundedAbsoluteInterval`] of the current month in the
+    /// given timezone
     ///
     /// # Errors
     ///
     /// Returns [`ComputationError`](BoundedAbsoluteIntervalCreationError::ComputationError) if
     /// conversion of today's [`Date`] to a [`MonthInYear`] failed.
     ///
-    /// Return any error that [`from_month`](BoundedAbsoluteInterval::from_month) may return.
+    /// Return any error that
+    /// [`from_month`](BoundedAbsoluteInterval::from_month) may return.
     ///
     /// # Examples
     ///
@@ -814,11 +853,13 @@ impl BoundedAbsoluteInterval {
         Self::from_month(month, tz)
     }
 
-    /// Creates a new [`BoundedAbsoluteInterval`] of the next month in the given timezone
+    /// Creates a new [`BoundedAbsoluteInterval`] of the next month in the given
+    /// timezone
     ///
     /// # Errors
     ///
-    /// Returns any error that [`month_after_duration_from_today`](BoundedAbsoluteInterval::month_after_duration_from_today)
+    /// Returns any error that
+    /// [`month_after_duration_from_today`](BoundedAbsoluteInterval::month_after_duration_from_today)
     /// may return.
     ///
     /// # Examples
@@ -834,11 +875,13 @@ impl BoundedAbsoluteInterval {
         Self::month_after_duration_from_today(CalendarAnchorOffset::Months(1), tz)
     }
 
-    /// Creates a new [`BoundedAbsoluteInterval`] of the previous month in the given timezone
+    /// Creates a new [`BoundedAbsoluteInterval`] of the previous month in the
+    /// given timezone
     ///
     /// # Errors
     ///
-    /// Returns any error that [`month_before_duration_from_today`](BoundedAbsoluteInterval::month_before_duration_from_today)
+    /// Returns any error that
+    /// [`month_before_duration_from_today`](BoundedAbsoluteInterval::month_before_duration_from_today)
     /// may return.
     ///
     /// # Examples
@@ -854,14 +897,16 @@ impl BoundedAbsoluteInterval {
         Self::month_before_duration_from_today(CalendarAnchorOffset::Months(1), tz)
     }
 
-    /// Creates a new [`BoundedAbsoluteInterval`] from the given year in the given timezone
+    /// Creates a new [`BoundedAbsoluteInterval`] from the given year in the
+    /// given timezone
     ///
     /// # Errors
     ///
     /// Returns [`OutOfRangeStart`](BoundedAbsoluteIntervalCreationError::OutOfRangeStart) if
     /// the year's first day is out of range.
     ///
-    /// Returns any error that [`from_inclusive_date_range`](BoundedAbsoluteInterval::from_inclusive_date_range)
+    /// Returns any error that
+    /// [`from_inclusive_date_range`](BoundedAbsoluteInterval::from_inclusive_date_range)
     /// may return.
     ///
     /// # Examples
@@ -893,7 +938,8 @@ impl BoundedAbsoluteInterval {
         Self::from_inclusive_date_range(first_day_of_year, last_day_of_year, tz)
     }
 
-    /// Creates a new [`BoundedAbsoluteInterval`] from the provided inclusive year range in the given timezone
+    /// Creates a new [`BoundedAbsoluteInterval`] from the provided inclusive
+    /// year range in the given timezone
     ///
     /// If the given years are not in chronological order, they are swapped.
     ///
@@ -905,7 +951,8 @@ impl BoundedAbsoluteInterval {
     /// Returns [`OutOfRangeEnd`](BoundedAbsoluteIntervalCreationError::OutOfRangeEnd) if
     /// the last day of the end year is out of range.
     ///
-    /// Returns any error that [`from_inclusive_date_range`](BoundedAbsoluteInterval::from_inclusive_date_range)
+    /// Returns any error that
+    /// [`from_inclusive_date_range`](BoundedAbsoluteInterval::from_inclusive_date_range)
     /// may return.
     ///
     /// # Examples
@@ -943,8 +990,8 @@ impl BoundedAbsoluteInterval {
             std::mem::swap(&mut start_year, &mut end_year);
         }
 
-        let first_day_of_start_year = Date::new(start_year, 1, 1)
-            .or(Err(BoundedAbsoluteIntervalCreationError::OutOfRangeStart))?;
+        let first_day_of_start_year =
+            Date::new(start_year, 1, 1).or(Err(BoundedAbsoluteIntervalCreationError::OutOfRangeStart))?;
 
         let last_day_of_end_year = Date::new(end_year, 1, 1)
             .or(Err(BoundedAbsoluteIntervalCreationError::OutOfRangeEnd))?
@@ -953,20 +1000,22 @@ impl BoundedAbsoluteInterval {
         Self::from_inclusive_date_range(first_day_of_start_year, last_day_of_end_year, tz)
     }
 
-    /// Creates a new [`BoundedAbsoluteInterval`] of the year after a given [`CalendarAnchorOffset`]
-    /// relative to the given date in the given timezone
+    /// Creates a new [`BoundedAbsoluteInterval`] of the year after a given
+    /// [`CalendarAnchorOffset`] relative to the given date in the given
+    /// timezone
     ///
     /// # Errors
     ///
     /// Returns [`ComputationError`](BoundedAbsoluteIntervalCreationError::ComputationError)
     /// if [`checked_add_calendar_anchor_offset_to_date`]
     /// returns [`OffsetTooLarge`](CalendarAnchorOffsetDateError::OffsetTooLarge).
-    /// 
+    ///
     /// Returns [`OutOfRangeStart`](BoundedAbsoluteIntervalCreationError::OutOfRangeStart)
     /// if [`checked_add_calendar_anchor_offset_to_date`]
     /// returns [`OutOfRangeResult`](CalendarAnchorOffsetDateError::OutOfRangeResult).
     ///
-    /// Returns any error that [`from_year`](BoundedAbsoluteInterval::from_year) may return.
+    /// Returns any error that [`from_year`](BoundedAbsoluteInterval::from_year)
+    /// may return.
     ///
     /// # Examples
     ///
@@ -1003,9 +1052,7 @@ impl BoundedAbsoluteInterval {
     ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
         let year = checked_add_calendar_anchor_offset_to_date(calendar_anchor_offset, date)
             .map_err(|err| match err {
-                CalendarAnchorOffsetDateError::OffsetTooLarge => {
-                    BoundedAbsoluteIntervalCreationError::ComputationError
-                },
+                CalendarAnchorOffsetDateError::OffsetTooLarge => BoundedAbsoluteIntervalCreationError::ComputationError,
                 CalendarAnchorOffsetDateError::OutOfRangeResult => {
                     BoundedAbsoluteIntervalCreationError::OutOfRangeStart
                 },
@@ -1015,20 +1062,22 @@ impl BoundedAbsoluteInterval {
         Self::from_year(year, tz)
     }
 
-    /// Creates a new [`BoundedAbsoluteInterval`] of the year before a given [`CalendarAnchorOffset`]
-    /// relative to the given date in the given timezone
+    /// Creates a new [`BoundedAbsoluteInterval`] of the year before a given
+    /// [`CalendarAnchorOffset`] relative to the given date in the given
+    /// timezone
     ///
     /// # Errors
     ///
     /// Returns [`ComputationError`](BoundedAbsoluteIntervalCreationError::ComputationError)
     /// if [`checked_sub_calendar_anchor_offset_to_date`]
     /// returns [`OffsetTooLarge`](CalendarAnchorOffsetDateError::OffsetTooLarge).
-    /// 
+    ///
     /// Returns [`OutOfRangeStart`](BoundedAbsoluteIntervalCreationError::OutOfRangeStart)
     /// if [`checked_sub_calendar_anchor_offset_to_date`]
     /// returns [`OutOfRangeResult`](CalendarAnchorOffsetDateError::OutOfRangeResult).
     ///
-    /// Returns any error that [`from_year`](BoundedAbsoluteInterval::from_year) may return.
+    /// Returns any error that [`from_year`](BoundedAbsoluteInterval::from_year)
+    /// may return.
     ///
     /// # Examples
     ///
@@ -1065,9 +1114,7 @@ impl BoundedAbsoluteInterval {
     ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
         let year = checked_sub_calendar_anchor_offset_to_date(calendar_anchor_offset, date)
             .map_err(|err| match err {
-                CalendarAnchorOffsetDateError::OffsetTooLarge => {
-                    BoundedAbsoluteIntervalCreationError::ComputationError
-                },
+                CalendarAnchorOffsetDateError::OffsetTooLarge => BoundedAbsoluteIntervalCreationError::ComputationError,
                 CalendarAnchorOffsetDateError::OutOfRangeResult => {
                     BoundedAbsoluteIntervalCreationError::OutOfRangeStart
                 },
@@ -1077,12 +1124,13 @@ impl BoundedAbsoluteInterval {
         Self::from_year(year, tz)
     }
 
-    /// Creates a new [`BoundedAbsoluteInterval`] of the year after a given [`CalendarAnchorOffset`]
-    /// relative to today in the given timezone
+    /// Creates a new [`BoundedAbsoluteInterval`] of the year after a given
+    /// [`CalendarAnchorOffset`] relative to today in the given timezone
     ///
     /// # Errors
     ///
-    /// Returns any error that [`year_after_duration_from_date`](BoundedAbsoluteInterval::year_after_duration_from_date)
+    /// Returns any error that
+    /// [`year_after_duration_from_date`](BoundedAbsoluteInterval::year_after_duration_from_date)
     /// may return.
     ///
     /// # Examples
@@ -1105,12 +1153,13 @@ impl BoundedAbsoluteInterval {
         Self::year_after_duration_from_date(date_today(tz.clone()), duration, tz)
     }
 
-    /// Creates a new [`BoundedAbsoluteInterval`] of the year before a given [`CalendarAnchorOffset`]
-    /// relative to today in the given timezone
+    /// Creates a new [`BoundedAbsoluteInterval`] of the year before a given
+    /// [`CalendarAnchorOffset`] relative to today in the given timezone
     ///
     /// # Errors
     ///
-    /// Returns any error that [`year_before_duration_from_date`](BoundedAbsoluteInterval::year_before_duration_from_date)
+    /// Returns any error that
+    /// [`year_before_duration_from_date`](BoundedAbsoluteInterval::year_before_duration_from_date)
     /// may return.
     ///
     /// # Examples
@@ -1133,11 +1182,13 @@ impl BoundedAbsoluteInterval {
         Self::year_before_duration_from_date(date_today(tz.clone()), duration, tz)
     }
 
-    /// Creates a new [`BoundedAbsoluteInterval`] of the current year in the given timezone
+    /// Creates a new [`BoundedAbsoluteInterval`] of the current year in the
+    /// given timezone
     ///
     /// # Errors
     ///
-    /// Returns any error that [`from_year`](BoundedAbsoluteInterval::from_year) may return.
+    /// Returns any error that [`from_year`](BoundedAbsoluteInterval::from_year)
+    /// may return.
     ///
     /// # Examples
     ///
@@ -1152,11 +1203,13 @@ impl BoundedAbsoluteInterval {
         Self::from_year(date_today(tz.clone()).year(), tz)
     }
 
-    /// Creates a new [`BoundedAbsoluteInterval`] of the next year in the given timezone
+    /// Creates a new [`BoundedAbsoluteInterval`] of the next year in the given
+    /// timezone
     ///
     /// # Errors
     ///
-    /// Returns any error that [`year_after_duration_from_today`](BoundedAbsoluteInterval::year_after_duration_from_today)
+    /// Returns any error that
+    /// [`year_after_duration_from_today`](BoundedAbsoluteInterval::year_after_duration_from_today)
     /// may return.
     ///
     /// # Examples
@@ -1172,11 +1225,13 @@ impl BoundedAbsoluteInterval {
         Self::year_after_duration_from_today(CalendarAnchorOffset::Years(1), tz)
     }
 
-    /// Creates a new [`BoundedAbsoluteInterval`] of the previous year in the given timezone
+    /// Creates a new [`BoundedAbsoluteInterval`] of the previous year in the
+    /// given timezone
     ///
     /// # Errors
     ///
-    /// Returns any error that [`year_before_duration_from_today`](BoundedAbsoluteInterval::year_before_duration_from_today)
+    /// Returns any error that
+    /// [`year_before_duration_from_today`](BoundedAbsoluteInterval::year_before_duration_from_today)
     /// may return.
     ///
     /// # Examples

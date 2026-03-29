@@ -1,6 +1,7 @@
 //! Interval metadata
 //!
-//! Contains information about intervals such as [`Relativity`], [`Openness`], [`OpeningDirection`], and more.
+//! Contains information about intervals such as [`Relativity`], [`Openness`],
+//! [`OpeningDirection`], and more.
 
 use std::error::Error;
 use std::fmt::Display;
@@ -15,12 +16,15 @@ use serde::{Deserialize, Serialize};
 ///
 /// All intervals implement this trait.
 ///
-/// This trait is used for restricting parameters to intervals when the parameter itself is not important, but want
-/// to avoid implementing the method on non-interval types.
+/// This trait is used for restricting parameters to intervals when the
+/// parameter itself is not important, but want to avoid implementing the method
+/// on non-interval types.
 ///
-/// For example, extending an [`UnboundedInterval`](crate::intervals::special::UnboundedInterval)
-/// with any other interval will produce an [`UnboundedInterval`](crate::intervals::special::UnboundedInterval)
-/// anyways, but we don't want to allow calls like `unbounded_interval.extend(3)`,
+/// For example, extending an
+/// [`UnboundedInterval`](crate::intervals::special::UnboundedInterval) with any
+/// other interval will produce an
+/// [`UnboundedInterval`](crate::intervals::special::UnboundedInterval) anyways,
+/// but we don't want to allow calls like `unbounded_interval.extend(3)`,
 /// so this trait is used to restrict this parameter to interval types only.
 pub trait Interval {}
 
@@ -33,7 +37,8 @@ pub trait Interval {}
 pub enum Openness {
     /// Defined start and end bounds
     Bounded,
-    /// One of the bounds is known, but the interval continues to infinity in one direction
+    /// One of the bounds is known, but the interval continues to infinity in
+    /// one direction
     HalfBounded,
     /// Covers the entire time
     Unbounded,
@@ -56,7 +61,8 @@ impl Display for Openness {
 
 /// Possession of [`Openness`]
 ///
-/// This trait should be implemented by all intervals supporting the concept of [`Openness`].
+/// This trait should be implemented by all intervals supporting the concept of
+/// [`Openness`].
 pub trait HasOpenness {
     /// Returns the [`Openness`] of the interval
     #[must_use]
@@ -76,20 +82,24 @@ pub enum Relativity {
     Absolute,
     /// Interval lives in relative time
     ///
-    /// This means that it uses [`SignedDuration`](jiff::SignedDuration)s, also known as offsets.
+    /// This means that it uses [`SignedDuration`](jiff::SignedDuration)s, also
+    /// known as offsets.
     ///
-    /// For example, if you compare and absolute interval to a point in time, e.g. this day compared to this year's
-    /// 1st of January at midnight, you will end up with a relative interval.
+    /// For example, if you compare and absolute interval to a point in time,
+    /// e.g. this day compared to this year's 1st of January at midnight,
+    /// you will end up with a relative interval.
     Relative,
     /// Interval isn't bound to relativity
     ///
-    /// This means the interval uses a concept rather than representing itself through a time frame.
+    /// This means the interval uses a concept rather than representing itself
+    /// through a time frame.
     ///
-    /// It is used by intervals such as [`UnboundedInterval`](crate::intervals::special::UnboundedInterval)
+    /// It is used by intervals such as
+    /// [`UnboundedInterval`](crate::intervals::special::UnboundedInterval)
     /// and [`EmptyInterval`](crate::intervals::special::EmptyInterval).
     ///
-    /// The variant is called "Any" as those special intervals can be interpreted in both absolute and relative
-    /// time frames.
+    /// The variant is called "Any" as those special intervals can be
+    /// interpreted in both absolute and relative time frames.
     Any,
 }
 
@@ -105,7 +115,8 @@ impl Display for Relativity {
 
 /// Possession of [`Relativity`]
 ///
-/// This trait should be implemented by all interval supporting the concept of [`Relativity`].
+/// This trait should be implemented by all interval supporting the concept of
+/// [`Relativity`].
 pub trait HasRelativity {
     /// Returns the [`Relativity`] of the interval
     #[must_use]
@@ -160,7 +171,8 @@ impl From<bool> for OpeningDirection {
 
 /// Infinitesimal duration variation of an interval
 ///
-/// Represents the infinitesimal duration variation(s) created by [exclusive bounds](BoundInclusivity::Exclusive).
+/// Represents the infinitesimal duration variation(s) created by [exclusive
+/// bounds](BoundInclusivity::Exclusive).
 ///
 /// An infinitesimal duration is represented by an epsilon sign, hence the name.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
@@ -227,12 +239,15 @@ impl Epsilon {
         matches!(self, Self::End | Self::Both)
     }
 
-    /// Interprets the epsilon as a specific duration using different duration interpretations per bound
+    /// Interprets the epsilon as a specific duration using different duration
+    /// interpretations per bound
     ///
     /// # Errors
     ///
     /// If `start_epsilon_duration` + `end_epsilon_duration` overflows,
-    /// the method returns [`DurationOverflow`](EpsilonInterpretationDurationError::DurationOverflow).
+    /// the method returns
+    /// [`DurationOverflow`](EpsilonInterpretationDurationError::DurationOverflow).
+    ///
     ///
     /// # Examples
     ///
@@ -278,7 +293,9 @@ impl Epsilon {
     /// # Errors
     ///
     /// If `epsilon_duration * 2` overflows,
-    /// the method returns [`DurationOverflow`](EpsilonInterpretationDurationError::DurationOverflow).
+    /// the method returns
+    /// [`DurationOverflow`](EpsilonInterpretationDurationError::DurationOverflow).
+    ///
     ///
     /// # Examples
     ///
@@ -324,8 +341,9 @@ impl Display for Epsilon {
 
 /// Converts `(BoundInclusivity, BoundInclusivity)` into [`Epsilon`]
 ///
-/// The tuple elements represent the start bound inclusivity and end bound inclusivity, respectively.
-/// Exclusive bounds, [`BoundInclusivity::Exclusive`], create an epsilon.
+/// The tuple elements represent the start bound inclusivity and end bound
+/// inclusivity, respectively. Exclusive bounds,
+/// [`BoundInclusivity::Exclusive`], create an epsilon.
 impl From<(BoundInclusivity, BoundInclusivity)> for Epsilon {
     fn from((start_inclusivity, end_inclusivity): (BoundInclusivity, BoundInclusivity)) -> Self {
         match (start_inclusivity, end_inclusivity) {
@@ -370,11 +388,13 @@ impl Display for EpsilonInterpretationDurationError {
 impl Error for EpsilonInterpretationDurationError {}
 
 /// Interval duration
-/// 
-/// Represents the duration of an interval. It can either be [`Infinite`](Duration::Infinite),
-/// or [`Finite`](Duration::Finite), in which case the duration is stored as a standard [`Duration`](StdDuration)
-/// and an [`Epsilon`], which serves to represent infinitesimal duration variations created by the use
-/// of [exclusive bounds](BoundInclusivity::Exclusive).
+///
+/// Represents the duration of an interval. It can either be
+/// [`Infinite`](Duration::Infinite), or [`Finite`](Duration::Finite), in which
+/// case the duration is stored as a standard [`Duration`](StdDuration)
+/// and an [`Epsilon`], which serves to represent infinitesimal duration
+/// variations created by the use of [exclusive
+/// bounds](BoundInclusivity::Exclusive).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
@@ -401,8 +421,9 @@ impl Duration {
 
     /// Returns the content of the [`Finite`](Duration::Finite) variant
     ///
-    /// Consumes `self` and puts the content of the [`Finite`](Duration::Finite) variant
-    /// in an [`Option`]. If instead `self` is another variant, the method returns [`None`].
+    /// Consumes `self` and puts the content of the [`Finite`](Duration::Finite)
+    /// variant in an [`Option`]. If instead `self` is another variant, the
+    /// method returns [`None`].
     ///
     /// # Examples
     ///
@@ -422,17 +443,21 @@ impl Duration {
         }
     }
 
-    /// Returns the content of the [`Finite`](Duration::Finite) variant and subtracts interpreted epsilon duration
-    /// from it
+    /// Returns the content of the [`Finite`](Duration::Finite) variant and
+    /// subtracts interpreted epsilon duration from it
     ///
-    /// Consumes `self`, then uses the content of the [`Finite`](Duration::Finite) variant to compute the final
-    /// interpreted duration, using [`Epsilon::interpret_as_duration`] under the hood,
-    /// and puts the result in an [`Option`]. If instead `self` is another variant, the method returns [`None`].
+    /// Consumes `self`, then uses the content of the
+    /// [`Finite`](Duration::Finite) variant to compute the final
+    /// interpreted duration, using [`Epsilon::interpret_as_duration`] under the
+    /// hood, and puts the result in an [`Option`]. If instead `self` is
+    /// another variant, the method returns [`None`].
     ///
-    /// If [`Epsilon::interpret_as_duration`] returns an [`Err`], then the method returns [`None`].
+    /// If [`Epsilon::interpret_as_duration`] returns an [`Err`], then the
+    /// method returns [`None`].
     ///
-    /// If the duration is small or if the interpreted [`Epsilon`]\(s) are larger than the duration, resulting
-    /// in a negative duration, the duration defaults to [an empty duration](StdDuration::ZERO).
+    /// If the duration is small or if the interpreted [`Epsilon`]\(s) are
+    /// larger than the duration, resulting in a negative duration, the
+    /// duration defaults to [an empty duration](StdDuration::ZERO).
     ///
     /// # Examples
     ///
@@ -464,12 +489,13 @@ impl Duration {
         Some(duration.checked_sub(interpreted_epsilon).unwrap_or(StdDuration::ZERO))
     }
 
-    /// Returns the [`std::time::Duration`] of the [`Finite`](Duration::Finite) variant
-    /// and strips the epsilon duration
+    /// Returns the [`std::time::Duration`] of the [`Finite`](Duration::Finite)
+    /// variant and strips the epsilon duration
     ///
-    /// Consumes `self`, then simply returns the [`std::time::Duration`] stored in the [`Finite`](Duration::Finite)
-    /// variant, without using the stored [`Epsilon`]. Puts the result in an [`Option`].
-    /// If instead `self` is another variant, the method returns [`None`].
+    /// Consumes `self`, then simply returns the [`std::time::Duration`] stored
+    /// in the [`Finite`](Duration::Finite) variant, without using the
+    /// stored [`Epsilon`]. Puts the result in an [`Option`]. If instead
+    /// `self` is another variant, the method returns [`None`].
     ///
     /// # Examples
     ///
@@ -501,7 +527,8 @@ impl From<(StdDuration, Epsilon)> for Duration {
 
 /// Possession of [`Duration`]
 ///
-/// This trait should be implements by all intervals supporting the concept of [`Duration`].
+/// This trait should be implements by all intervals supporting the concept of
+/// [`Duration`].
 pub trait HasDuration {
     /// Returns the [`Duration`] of the interval
     fn duration(&self) -> Duration;
@@ -517,9 +544,10 @@ pub enum BoundInclusivity {
     Inclusive,
     /// Excludes the point described by the bound
     ///
-    /// An exclusive bound inclusivity means that virtually anything except the described point given by the bound
-    /// is included.
-    /// Of course, in the context of an interval it also possesses a dimension of _direction_.
+    /// An exclusive bound inclusivity means that virtually anything except the
+    /// described point given by the bound is included.
+    /// Of course, in the context of an interval it also possesses a dimension
+    /// of _direction_.
     ///
     /// Learn more about the directionality of bound inclusivity
     /// in the [documentation of the `intervals` module](crate::intervals).
@@ -561,7 +589,8 @@ impl From<bool> for BoundInclusivity {
 
 /// Possession of [`BoundInclusivity`]
 ///
-/// This trait should be implemented by all interval bounds supporting the concept of [`BoundInclusivity`].
+/// This trait should be implemented by all interval bounds supporting the
+/// concept of [`BoundInclusivity`].
 pub trait HasBoundInclusivity {
     /// Returns the [`BoundInclusivity`] of the bound
     #[must_use]

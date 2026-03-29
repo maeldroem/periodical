@@ -1,6 +1,7 @@
 //! United bounds iterators
 //!
-//! Iterators to unite a collection of bounds, assuring that the bounds are no longer overlapping.
+//! Iterators to unite a collection of bounds, assuring that the bounds are no
+//! longer overlapping.
 //!
 //! # Examples
 //!
@@ -68,18 +69,21 @@ where
     /// # Input requirements
     ///
     /// 1. The bounds **must be sorted chronologically**
-    /// 2. The bounds **must be paired**, that means there should be an equal amount of
-    ///    [`Start`](AbsoluteBound::Start)s and [`End`](AbsoluteBound::End)s.
+    /// 2. The bounds **must be paired**, that means there should be an equal
+    ///    amount of [`Start`](AbsoluteBound::Start)s and
+    ///    [`End`](AbsoluteBound::End)s.
     ///
-    /// The responsibility of verifying those requirements are left to the caller
-    /// in order to prevent double-processing.
+    /// The responsibility of verifying those requirements are left to the
+    /// caller in order to prevent double-processing.
     ///
     /// Requirement 1 is automatically guaranteed if the iterator is created
     /// from [`AbsoluteBoundsIter::unite_bounds`](crate::iter::intervals::bounds::AbsoluteBoundsIter::unite_bounds).
     ///
-    /// Requirement 2 is automatically guaranteed if the bounds are obtained from
+    /// Requirement 2 is automatically guaranteed if the bounds are obtained
+    /// from
     /// a set of [intervals](crate::intervals::absolute::AbsoluteInterval)
-    /// or from [bound pairs](crate::intervals::absolute::AbsoluteBoundPair) and then processed through
+    /// or from [bound pairs](crate::intervals::absolute::AbsoluteBoundPair) and
+    /// then processed through
     /// [`AbsoluteBoundsIter`](crate::iter::intervals::bounds::AbsoluteBoundsIter).
     #[must_use]
     pub fn new(iter: I) -> AbsoluteUnitedBoundsIter<Peekable<I>> {
@@ -98,8 +102,8 @@ where
 {
     /// Layers this iterator with the given other [`AbsoluteUnitedBoundsIter`]
     ///
-    /// The given other [`AbsoluteUnitedBoundsIter`] acts at the second layer in the resulting
-    /// [`LayeredAbsoluteBounds`].
+    /// The given other [`AbsoluteUnitedBoundsIter`] acts at the second layer in
+    /// the resulting [`LayeredAbsoluteBounds`].
     ///
     /// # Examples
     ///
@@ -190,9 +194,10 @@ where
                         continue;
                     }
 
-                    // Since we already incremented the layer, the first counted start bound must be on layer 1
-                    // i.e. we were on the bottom layer (0) and it just was incremented to 1.
-                    // This technically also guards against start bounds that, after incrementing, remain
+                    // Since we already incremented the layer, the first counted start bound must be
+                    // on layer 1 i.e. we were on the bottom layer (0) and it
+                    // just was incremented to 1. This technically also guards
+                    // against start bounds that, after incrementing, remain
                     // on layer 0, but this impossible as it would required going in the negatives
                     // (and since we are using an unsigned number, you see where this is going)
                     if self.layer > 1 {
@@ -203,19 +208,22 @@ where
                     // ACK: Yes, this will panic if it attempts to go below 0
                     self.layer -= 1;
 
-                    // Since we already decremented the layer, the last counted end bound must be on layer 0
-                    // i.e. we were on the first layer (1) and it just was decremented to 0.
+                    // Since we already decremented the layer, the last counted end bound must be on
+                    // layer 0 i.e. we were on the first layer (1) and it just
+                    // was decremented to 0.
                     if self.layer > 0 {
                         continue;
                     }
 
                     // If the peeked value is a start bound that is adjacent to the current bound,
-                    // we don't return this end bound. Since the layer decrement already happened and we know it's
-                    // gonna be incremented again, we know that the layer will end up at 1, which is problematic
-                    // as it would be a layer number that makes the start bound considered as the first start bound
-                    // of a new interval.
-                    // In order to solve this, we set a variable that will tell the iterator to skip the next
-                    // start bound, like this end (and the following start) never happened.
+                    // we don't return this end bound. Since the layer decrement already happened
+                    // and we know it's gonna be incremented again, we know that
+                    // the layer will end up at 1, which is problematic
+                    // as it would be a layer number that makes the start bound considered as the
+                    // first start bound of a new interval.
+                    // In order to solve this, we set a variable that will tell the iterator to skip
+                    // the next start bound, like this end (and the following
+                    // start) never happened.
                     if self
                         .iter
                         .peek()
@@ -271,18 +279,21 @@ where
     /// # Input requirements
     ///
     /// 1. The bounds **must be sorted chronologically**
-    /// 2. The bounds **must be paired**, that means there should be an equal amount of
-    ///    [`Start`](RelativeBound::Start)s and [`End`](RelativeBound::End)s.
+    /// 2. The bounds **must be paired**, that means there should be an equal
+    ///    amount of [`Start`](RelativeBound::Start)s and
+    ///    [`End`](RelativeBound::End)s.
     ///
-    /// The responsibility of verifying those requirements are left to the caller
-    /// in order to prevent double-processing.
+    /// The responsibility of verifying those requirements are left to the
+    /// caller in order to prevent double-processing.
     ///
     /// Requirement 1 is automatically guaranteed if the iterator is created
     /// from [`RelativeBoundsIter::unite_bounds`](crate::iter::intervals::bounds::RelativeBoundsIter::unite_bounds).
     ///
-    /// Requirement 2 is automatically guaranteed if the bounds are obtained from
+    /// Requirement 2 is automatically guaranteed if the bounds are obtained
+    /// from
     /// a set of [intervals](crate::intervals::relative::RelativeInterval)
-    /// or from [bound pairs](crate::intervals::relative::RelativeBoundPair) and then processed through
+    /// or from [bound pairs](crate::intervals::relative::RelativeBoundPair) and
+    /// then processed through
     /// [`RelativeBoundsIter`](crate::iter::intervals::bounds::RelativeBoundsIter).
     #[must_use]
     pub fn new(iter: I) -> RelativeUnitedBoundsIter<Peekable<I>> {
@@ -302,8 +313,8 @@ where
 {
     /// Layers this iterator with the given other [`RelativeUnitedBoundsIter`]
     ///
-    /// The given other [`RelativeUnitedBoundsIter`] acts at the second layer in the resulting
-    /// [`LayeredRelativeBounds`].
+    /// The given other [`RelativeUnitedBoundsIter`] acts at the second layer in
+    /// the resulting [`LayeredRelativeBounds`].
     ///
     /// # Examples
     ///
@@ -392,9 +403,10 @@ where
                         continue;
                     }
 
-                    // Since we already incremented the layer, the first counted start bound must be on layer 1
-                    // i.e. we were on the bottom layer (0) and it just was incremented to 1.
-                    // This technically also guards against start bounds that, after incrementing, remain
+                    // Since we already incremented the layer, the first counted start bound must be
+                    // on layer 1 i.e. we were on the bottom layer (0) and it
+                    // just was incremented to 1. This technically also guards
+                    // against start bounds that, after incrementing, remain
                     // on layer 0, but this impossible as it would required going in the negatives
                     // (and since we are using an unsigned number, you see where this is going)
                     if self.layer > 1 {
@@ -405,19 +417,22 @@ where
                     // ACK: Yes, this will panic if it attempts to go below 0
                     self.layer -= 1;
 
-                    // Since we already decremented the layer, the last counted end bound must be on layer 0
-                    // i.e. we were on the first layer (1) and it just was decremented to 0.
+                    // Since we already decremented the layer, the last counted end bound must be on
+                    // layer 0 i.e. we were on the first layer (1) and it just
+                    // was decremented to 0.
                     if self.layer > 0 {
                         continue;
                     }
 
                     // If the peeked value is a start bound that is adjacent to the current bound,
-                    // we don't return this end bound. Since the layer decrement already happened and we know it's
-                    // gonna be incremented again, we know that the layer will end up at 1, which is problematic
-                    // as it would be a layer number that makes the start bound considered as the first start bound
-                    // of a new interval.
-                    // In order to solve this, we set a variable that will tell the iterator to skip the next
-                    // start bound, like this end (and the following start) never happened.
+                    // we don't return this end bound. Since the layer decrement already happened
+                    // and we know it's gonna be incremented again, we know that
+                    // the layer will end up at 1, which is problematic
+                    // as it would be a layer number that makes the start bound considered as the
+                    // first start bound of a new interval.
+                    // In order to solve this, we set a variable that will tell the iterator to skip
+                    // the next start bound, like this end (and the following
+                    // start) never happened.
                     if self
                         .iter
                         .peek()

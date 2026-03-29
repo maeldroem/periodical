@@ -1,16 +1,21 @@
-//! [Partial ordering](PartialOrd) for bounds with support for [bound overlap ambiguity](BoundOverlapAmbiguity)
+//! [Partial ordering](PartialOrd) for bounds with support for [bound overlap
+//! ambiguity](BoundOverlapAmbiguity)
 //!
-//! Allows for partial ordering of bounds with support for [`BoundOverlapAmbiguity`],
-//! which in turn allows for more precise treatment of those ambiguities.
+//! Allows for partial ordering of bounds with support for
+//! [`BoundOverlapAmbiguity`], which in turn allows for more precise treatment
+//! of those ambiguities.
 //!
-//! When using [`PartialOrd`] on bounds instead of [`PartialBoundOrd`], only the result
-//! of bound overlap disambiguation using [the strict rule set](BoundOverlapDisambiguationRuleSet::Strict)
-//! is returned, whereas [`PartialBoundOrd`] exposes the ambiguity and therefore makes it
-//! possible to use other [`BoundOverlapDisambiguationRuleSet`]s or simply treat them in a custom way.
+//! When using [`PartialOrd`] on bounds instead of [`PartialBoundOrd`], only the
+//! result of bound overlap disambiguation using [the strict rule
+//! set](BoundOverlapDisambiguationRuleSet::Strict) is returned, whereas
+//! [`PartialBoundOrd`] exposes the ambiguity and therefore makes it possible to
+//! use other [`BoundOverlapDisambiguationRuleSet`]s or simply treat them in a
+//! custom way.
 //!
-//! Using [`PartialBoundOrd`] will result in a [`BoundOrdering`], that you can then disambiguate
-//! into a classical [`Ordering`] using either [stripping](BoundOrdering::strip)
-//! (getting rid of the ambiguities without resolving them), [rule sets](BoundOverlapDisambiguationRuleSet),
+//! Using [`PartialBoundOrd`] will result in a [`BoundOrdering`], that you can
+//! then disambiguate into a classical [`Ordering`] using either
+//! [stripping](BoundOrdering::strip) (getting rid of the ambiguities without
+//! resolving them), [rule sets](BoundOverlapDisambiguationRuleSet),
 //! or a [custom closure](BoundOrdering::disambiguate_using).
 //!
 //! # Examples
@@ -55,14 +60,17 @@ use serde::{Deserialize, Serialize};
 use crate::intervals::absolute::{AbsoluteBound, AbsoluteEndBound, AbsoluteStartBound};
 use crate::intervals::meta::HasBoundInclusivity;
 use crate::intervals::ops::bound_overlap_ambiguity::{
-    BoundOverlapAmbiguity, BoundOverlapDisambiguationRuleSet, DisambiguatedBoundOverlap,
+    BoundOverlapAmbiguity,
+    BoundOverlapDisambiguationRuleSet,
+    DisambiguatedBoundOverlap,
 };
 use crate::intervals::relative::{RelativeBound, RelativeEndBound, RelativeStartBound};
 
 /// [`Ordering`] for bounds with support for [`BoundOverlapAmbiguity`]
 ///
-/// Similar structure to the standard [`Ordering`], but with support for [`BoundOverlapAmbiguity`]
-/// when the bounds are equal in position (time/offset).
+/// Similar structure to the standard [`Ordering`], but with support for
+/// [`BoundOverlapAmbiguity`] when the bounds are equal in position
+/// (time/offset).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
@@ -75,8 +83,8 @@ pub enum BoundOrdering {
 impl BoundOrdering {
     /// Strips the ambiguity info from [`BoundOrdering`]
     ///
-    /// Gets rid of the stored [`BoundOverlapAmbiguity`], without resolving it, just ignoring it,
-    /// resulting in an [`Ordering`].
+    /// Gets rid of the stored [`BoundOverlapAmbiguity`], without resolving it,
+    /// just ignoring it, resulting in an [`Ordering`].
     #[must_use]
     pub fn strip(self) -> Ordering {
         match self {
@@ -86,7 +94,8 @@ impl BoundOrdering {
         }
     }
 
-    /// Disambiguates a [`BoundOrdering`] using a [`BoundOverlapDisambiguationRuleSet`]
+    /// Disambiguates a [`BoundOrdering`] using a
+    /// [`BoundOverlapDisambiguationRuleSet`]
     ///
     /// # Examples
     ///
@@ -131,7 +140,8 @@ impl BoundOrdering {
 
     /// Disambiguates a [`BoundOrdering`] using the given closure
     ///
-    /// Uses the given closure in order to resolve any [`BoundOverlapAmbiguity`] into a [`DisambiguatedBoundOverlap`].
+    /// Uses the given closure in order to resolve any [`BoundOverlapAmbiguity`]
+    /// into a [`DisambiguatedBoundOverlap`].
     ///
     /// # Examples
     ///
@@ -215,10 +225,11 @@ impl BoundOrdering {
 
 /// Partial bound ordering
 ///
-/// This trait allows for partially ordering bounds, taking into account [`BoundOverlapAmbiguity`]
-/// when bounds have the same position (time/offset).
+/// This trait allows for partially ordering bounds, taking into account
+/// [`BoundOverlapAmbiguity`] when bounds have the same position (time/offset).
 ///
-/// This is a partial order as we want to allow for comparing two different bound types.
+/// This is a partial order as we want to allow for comparing two different
+/// bound types.
 ///
 /// # Examples
 ///
@@ -282,7 +293,8 @@ pub trait PartialBoundOrd<Rhs = Self> {
     #[must_use]
     fn bound_cmp(&self, other: &Rhs) -> BoundOrdering;
 
-    /// Returns whether `self` is less than the given other bound using the given rule set
+    /// Returns whether `self` is less than the given other bound using the
+    /// given rule set
     ///
     /// # Examples
     ///
@@ -321,7 +333,8 @@ pub trait PartialBoundOrd<Rhs = Self> {
         }
     }
 
-    /// Returns whether `self` is less than or equal to the given other bound using the given rule set
+    /// Returns whether `self` is less than or equal to the given other bound
+    /// using the given rule set
     ///
     /// # Examples
     ///
@@ -360,7 +373,8 @@ pub trait PartialBoundOrd<Rhs = Self> {
         }
     }
 
-    /// Returns whether `self` is greater than the given other bound using the given rule set
+    /// Returns whether `self` is greater than the given other bound using the
+    /// given rule set
     ///
     /// # Examples
     ///
@@ -399,7 +413,8 @@ pub trait PartialBoundOrd<Rhs = Self> {
         }
     }
 
-    /// Returns whether `self` is greater than or equal to the given other bound using the given rule set
+    /// Returns whether `self` is greater than or equal to the given other bound
+    /// using the given rule set
     ///
     /// # Examples
     ///

@@ -1,8 +1,8 @@
 //! Absolute bound representation
-//! 
+//!
 //! Represents an absolute bound regardless of its source (start/end).
-//! This is particularly useful for representing absolute bounds of an interval as a single type,
-//! while still conserving its source.
+//! This is particularly useful for representing absolute bounds of an interval
+//! as a single type, while still conserving its source.
 
 use std::cmp::Ordering;
 use std::hash::{Hash, Hasher};
@@ -17,8 +17,8 @@ use crate::intervals::absolute::{AbsoluteEndBound, AbsoluteStartBound};
 /// Enum for absolute start and end bounds
 ///
 /// Represents an absolute bound regardless of its source (start/end).
-/// This is particularly useful for representing absolute bounds of an interval as a single type,
-/// while still conserving its source.
+/// This is particularly useful for representing absolute bounds of an interval
+/// as a single type, while still conserving its source.
 #[derive(Debug, Clone, Copy)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
@@ -84,8 +84,9 @@ impl AbsoluteBound {
 
     /// Returns the content of the [`Start`](AbsoluteBound::Start) variant
     ///
-    /// Consumes `self` and puts the content of the [`Start`](AbsoluteBound::Start) variant
-    /// in an [`Option`]. If instead `self` is another variant, the method returns [`None`].
+    /// Consumes `self` and puts the content of the
+    /// [`Start`](AbsoluteBound::Start) variant in an [`Option`]. If instead
+    /// `self` is another variant, the method returns [`None`].
     ///
     /// # Examples
     ///
@@ -125,8 +126,9 @@ impl AbsoluteBound {
 
     /// Returns the content of the [`End`](AbsoluteBound::End) variant
     ///
-    /// Consumes `self` and puts the content of the [`End`](AbsoluteBound::End) variant
-    /// in an [`Option`]. If instead `self` is another variant, the method returns [`None`].
+    /// Consumes `self` and puts the content of the [`End`](AbsoluteBound::End)
+    /// variant in an [`Option`]. If instead `self` is another variant, the
+    /// method returns [`None`].
     ///
     /// # Examples
     ///
@@ -167,7 +169,8 @@ impl AbsoluteBound {
     /// Returns the opposite bound type with the opposite inclusivity
     ///
     /// Simply use [`AbsoluteStartBound::opposite`] for start bounds,
-    /// and [`AbsoluteEndBound::opposite`] for end bounds, and then wraps the result in [`AbsoluteBound`].
+    /// and [`AbsoluteEndBound::opposite`] for end bounds, and then wraps the
+    /// result in [`AbsoluteBound`].
     ///
     /// If the bound is infinite, the method returns [`None`].
     ///
@@ -223,11 +226,13 @@ impl Ord for AbsoluteBound {
             (AbsoluteBound::Start(og_start), AbsoluteBound::Start(other_start)) => og_start.cmp(other_start),
             (AbsoluteBound::End(og_end), AbsoluteBound::End(other_end)) => og_end.cmp(other_end),
             (AbsoluteBound::Start(og_start), AbsoluteBound::End(other_end)) => {
-                // Partial ordering between two different bounds should not fail, but we provide a default just in case
+                // Partial ordering between two different bounds should not fail, but we provide
+                // a default just in case
                 og_start.partial_cmp(other_end).unwrap_or(Ordering::Equal)
             },
             (AbsoluteBound::End(og_end), AbsoluteBound::Start(other_start)) => {
-                // Partial ordering between two different bounds should not fail, but we provide a default just in case
+                // Partial ordering between two different bounds should not fail, but we provide
+                // a default just in case
                 og_end.partial_cmp(other_start).unwrap_or(Ordering::Equal)
             },
         }

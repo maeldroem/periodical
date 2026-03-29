@@ -1,14 +1,16 @@
 //! Absolute bounded interval
-//! 
-//! A bounded interval has a start and end. Like all specific absolute interval types, it conserves the invariant
-//! of its bounds being in chronological order and if the bounds have the same time, they must be inclusive.
-//! 
-//! Similar to the other specific interval types, its [openness](Openness) cannot change.
-//! That is to say a bounded interval must remain a bounded interval.
-//! It cannot mutate from being a bounded interval to a half-bounded interval.
-//! 
-//! Instead, if you are looking for an absolute interval that doesn't keep the [openness](Openness) invariant,
-//! see [`AbsoluteBoundPair`].
+//!
+//! A bounded interval has a start and end. Like all specific absolute interval
+//! types, it conserves the invariant of its bounds being in chronological order
+//! and if the bounds have the same time, they must be inclusive.
+//!
+//! Similar to the other specific interval types, its [openness](Openness)
+//! cannot change. That is to say a bounded interval must remain a bounded
+//! interval. It cannot mutate from being a bounded interval to a half-bounded
+//! interval.
+//!
+//! Instead, if you are looking for an absolute interval that doesn't keep the
+//! [openness](Openness) invariant, see [`AbsoluteBoundPair`].
 
 use std::cmp::Ordering;
 use std::error::Error;
@@ -20,23 +22,40 @@ use jiff::Timestamp;
 use serde::{Deserialize, Serialize};
 
 use crate::intervals::absolute::{
-    AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteInterval, AbsoluteStartBound, EmptiableAbsoluteInterval, HasAbsoluteBoundPair
+    AbsoluteBoundPair,
+    AbsoluteEndBound,
+    AbsoluteFiniteBound,
+    AbsoluteInterval,
+    AbsoluteStartBound,
+    EmptiableAbsoluteInterval,
+    HasAbsoluteBoundPair,
 };
 use crate::intervals::meta::{
-    BoundInclusivity, Duration as IntervalDuration, Epsilon, HasBoundInclusivity, HasDuration, HasOpenness, HasRelativity, Interval, Openness, Relativity
+    BoundInclusivity,
+    Duration as IntervalDuration,
+    Epsilon,
+    HasBoundInclusivity,
+    HasDuration,
+    HasOpenness,
+    HasRelativity,
+    Interval,
+    Openness,
+    Relativity,
 };
 
 /// A bounded absolute interval
-/// 
-/// A bounded interval has a start and end. Like all specific absolute interval types, it conserves the invariant
-/// of its bounds being in chronological order and if the bounds have the same time, they must be inclusive.
-/// 
-/// Similar to the other specific interval types, its [openness](Openness) cannot change.
-/// That is to say a bounded interval must remain a bounded interval.
-/// It cannot mutate from being a bounded interval to a half-bounded interval.
-/// 
-/// Instead, if you are looking for an absolute interval that doesn't keep the [openness](Openness) invariant,
-/// see [`AbsoluteBoundPair`].
+///
+/// A bounded interval has a start and end. Like all specific absolute interval
+/// types, it conserves the invariant of its bounds being in chronological order
+/// and if the bounds have the same time, they must be inclusive.
+///
+/// Similar to the other specific interval types, its [openness](Openness)
+/// cannot change. That is to say a bounded interval must remain a bounded
+/// interval. It cannot mutate from being a bounded interval to a half-bounded
+/// interval.
+///
+/// Instead, if you are looking for an absolute interval that doesn't keep the
+/// [openness](Openness) invariant, see [`AbsoluteBoundPair`].
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub struct BoundedAbsoluteInterval {
@@ -47,7 +66,8 @@ pub struct BoundedAbsoluteInterval {
 }
 
 impl BoundedAbsoluteInterval {
-    /// Creates a new [`BoundedAbsoluteInterval`] without checking if it violates the invariants
+    /// Creates a new [`BoundedAbsoluteInterval`] without checking if it
+    /// violates the invariants
     ///
     /// # Examples
     ///
@@ -76,7 +96,8 @@ impl BoundedAbsoluteInterval {
         }
     }
 
-    /// Creates a new [`BoundedAbsoluteInterval`] with default bound inclusivities
+    /// Creates a new [`BoundedAbsoluteInterval`] with default bound
+    /// inclusivities
     ///
     /// If the start time is past the end time, it swaps them.
     ///
@@ -106,8 +127,8 @@ impl BoundedAbsoluteInterval {
         Self::unchecked_new(start, end)
     }
 
-    /// Creates a new [`BoundedAbsoluteInterval`] with the given bound inclusivities without checking
-    /// if it violates invariants
+    /// Creates a new [`BoundedAbsoluteInterval`] with the given bound
+    /// inclusivities without checking if it violates invariants
     ///
     /// # Examples
     ///
@@ -145,12 +166,15 @@ impl BoundedAbsoluteInterval {
         }
     }
 
-    /// Creates a new [`BoundedAbsoluteInterval`] with the given bound inclusivities
+    /// Creates a new [`BoundedAbsoluteInterval`] with the given bound
+    /// inclusivities
     ///
-    /// If the given times are not in chronological order, we swap them so they are in chronological order.
+    /// If the given times are not in chronological order, we swap them so they
+    /// are in chronological order.
     ///
-    /// If the given times are equal but have bound inclusivities other than inclusive,
-    /// we set them to [`Inclusive`](BoundInclusivity::Inclusive).
+    /// If the given times are equal but have bound inclusivities other than
+    /// inclusive, we set them to
+    /// [`Inclusive`](BoundInclusivity::Inclusive).
     ///
     /// # Examples
     ///
@@ -339,15 +363,16 @@ impl BoundedAbsoluteInterval {
     }
 
     /// Sets the start time
-    /// 
+    ///
     /// # Errors
-    /// 
+    ///
     /// Returns [`ChronologicalOrderViolation`](BoundedAbsoluteIntervalUpdateError::ChronologicalOrderViolation)
     /// if the new start time is after the current end time.
-    /// 
+    ///
     /// Returns [`SameTimeDoublyInclusiveViolation`](BoundedAbsoluteIntervalUpdateError::SameTimeDoublyInclusiveViolation)
-    /// if the new start time would set it on the same time as the end time without the bound inclusivities
-    /// being both [`Inclusive`](BoundInclusivity::Inclusive).
+    /// if the new start time would set it on the same time as the end time
+    /// without the bound inclusivities being both
+    /// [`Inclusive`](BoundInclusivity::Inclusive).
     ///
     /// # Examples
     ///
@@ -390,13 +415,14 @@ impl BoundedAbsoluteInterval {
     /// Sets the end time
     ///
     /// # Errors
-    /// 
+    ///
     /// Returns [`ChronologicalOrderViolation`](BoundedAbsoluteIntervalUpdateError::ChronologicalOrderViolation)
     /// if the new end time is before the current start time.
-    /// 
+    ///
     /// Returns [`SameTimeDoublyInclusiveViolation`](BoundedAbsoluteIntervalUpdateError::SameTimeDoublyInclusiveViolation)
-    /// if the new end time would set it on the same time as the start time without the bound inclusivities
-    /// being both [`Inclusive`](BoundInclusivity::Inclusive).
+    /// if the new end time would set it on the same time as the start time
+    /// without the bound inclusivities being both
+    /// [`Inclusive`](BoundInclusivity::Inclusive).
     ///
     /// # Examples
     ///
@@ -436,10 +462,11 @@ impl BoundedAbsoluteInterval {
         }
     }
 
-    /// Sets the start bound's inclusivity without checking if it violates invariants
-    /// 
+    /// Sets the start bound's inclusivity without checking if it violates
+    /// invariants
+    ///
     /// # Examples
-    /// 
+    ///
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Timestamp;
@@ -447,10 +474,10 @@ impl BoundedAbsoluteInterval {
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// let time = "2026-01-01 08:00:00Z".parse::<Timestamp>()?;
     /// let mut bounded_interval = BoundedAbsoluteInterval::new(time, time);
-    /// 
+    ///
     /// // Violates the same time doubly inclusive invariant
     /// bounded_interval.unchecked_set_start_inclusivity(BoundInclusivity::Exclusive);
-    /// 
+    ///
     /// // Yet stays that way
     /// assert_eq!(bounded_interval.start_inclusivity(), BoundInclusivity::Exclusive);
     /// assert_eq!(bounded_interval.end_inclusivity(), BoundInclusivity::Inclusive);
@@ -460,10 +487,11 @@ impl BoundedAbsoluteInterval {
         self.start_inclusivity = new_start_inclusivity;
     }
 
-    /// Sets the end bound's inclusivity without checking if it violates invariants
-    /// 
+    /// Sets the end bound's inclusivity without checking if it violates
+    /// invariants
+    ///
     /// # Examples
-    /// 
+    ///
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Timestamp;
@@ -471,10 +499,10 @@ impl BoundedAbsoluteInterval {
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// let time = "2026-01-01 08:00:00Z".parse::<Timestamp>()?;
     /// let mut bounded_interval = BoundedAbsoluteInterval::new(time, time);
-    /// 
+    ///
     /// // Violates the same time doubly inclusive invariant
     /// bounded_interval.unchecked_set_end_inclusivity(BoundInclusivity::Exclusive);
-    /// 
+    ///
     /// // Yet stays that way
     /// assert_eq!(bounded_interval.start_inclusivity(), BoundInclusivity::Inclusive);
     /// assert_eq!(bounded_interval.end_inclusivity(), BoundInclusivity::Exclusive);
@@ -485,9 +513,9 @@ impl BoundedAbsoluteInterval {
     }
 
     /// Sets the start bound's inclusivity
-    /// 
+    ///
     /// # Errors
-    /// 
+    ///
     /// Returns [`SameTimeDoublyInclusiveViolation`](BoundedAbsoluteIntervalUpdateError::SameTimeDoublyInclusiveViolation)
     /// if the start and end are on the same time and the given new inclusivity
     /// is not [`Inclusive`](BoundInclusivity::Inclusive).
@@ -503,7 +531,7 @@ impl BoundedAbsoluteInterval {
     ///     "2026-01-01 08:00:00Z".parse::<Timestamp>()?,
     ///     "2026-01-01 16:00:00Z".parse::<Timestamp>()?,
     /// );
-    /// 
+    ///
     /// bounded_interval.set_start_inclusivity(BoundInclusivity::Exclusive);
     ///
     /// assert_eq!(bounded_interval.start_inclusivity(), BoundInclusivity::Exclusive);
@@ -523,9 +551,9 @@ impl BoundedAbsoluteInterval {
     }
 
     /// Sets the end bound's inclusivity
-    /// 
+    ///
     /// # Errors
-    /// 
+    ///
     /// Returns [`SameTimeDoublyInclusiveViolation`](BoundedAbsoluteIntervalUpdateError::SameTimeDoublyInclusiveViolation)
     /// if the start and end are on the same time and the given new inclusivity
     /// is not [`Inclusive`](BoundInclusivity::Inclusive).
@@ -541,7 +569,7 @@ impl BoundedAbsoluteInterval {
     ///     "2026-01-01 08:00:00Z".parse::<Timestamp>()?,
     ///     "2026-01-01 16:00:00Z".parse::<Timestamp>()?,
     /// );
-    /// 
+    ///
     /// bounded_interval.set_end_inclusivity(BoundInclusivity::Exclusive);
     ///
     /// assert_eq!(bounded_interval.start_inclusivity(), BoundInclusivity::Inclusive);
@@ -575,7 +603,8 @@ impl BoundedAbsoluteInterval {
 
 /// Errors that can occur when creating a new [`BoundedAbsoluteInterval`]
 ///
-/// Those errors are mostly created by convenience methods, such as [`BoundedAbsoluteInterval::today`].
+/// Those errors are mostly created by convenience methods, such as
+/// [`BoundedAbsoluteInterval::today`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum BoundedAbsoluteIntervalCreationError {
     /// Provided or computed start bound is out of range
@@ -584,7 +613,8 @@ pub enum BoundedAbsoluteIntervalCreationError {
     OutOfRangeEnd,
     /// Something went wrong when computing data for creating the interval
     ///
-    /// This can be caused by multiple factors, like numbers overflowing, input not respecting invariants, etc.
+    /// This can be caused by multiple factors, like numbers overflowing, input
+    /// not respecting invariants, etc.
     ComputationError,
 }
 
@@ -698,7 +728,8 @@ impl From<RangeInclusive<Timestamp>> for BoundedAbsoluteInterval {
     }
 }
 
-/// Errors that can occur when trying to convert [`AbsoluteBoundPair`] into [`BoundedAbsoluteInterval`]
+/// Errors that can occur when trying to convert [`AbsoluteBoundPair`] into
+/// [`BoundedAbsoluteInterval`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum BoundedAbsoluteIntervalFromAbsoluteBoundPairError {
     NotBoundedInterval,
@@ -732,7 +763,8 @@ impl TryFrom<AbsoluteBoundPair> for BoundedAbsoluteInterval {
     }
 }
 
-/// Errors that can occur when trying to convert [`AbsoluteInterval`] into [`BoundedAbsoluteInterval`]
+/// Errors that can occur when trying to convert [`AbsoluteInterval`] into
+/// [`BoundedAbsoluteInterval`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum BoundedAbsoluteIntervalFromAbsoluteIntervalError {
     WrongVariant,

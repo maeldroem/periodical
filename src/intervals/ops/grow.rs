@@ -2,9 +2,10 @@
 //!
 //! Grows an interval up to a given point.
 //!
-//! To more explicitly grow an interval, the trait for growth is actually two traits.
-//! One for growing the start bound of an interval, [`GrowableStartBound`],
-//! and one for growing the end bound of an interval, [`GrowableEndBound`].
+//! To more explicitly grow an interval, the trait for growth is actually two
+//! traits. One for growing the start bound of an interval,
+//! [`GrowableStartBound`], and one for growing the end bound of an interval,
+//! [`GrowableEndBound`].
 //!
 //! # Examples
 //!
@@ -40,10 +41,28 @@
 //! ```
 
 use crate::intervals::absolute::{
-    AbsoluteBoundPair, AbsoluteEndBound, AbsoluteInterval, AbsoluteStartBound, BoundedAbsoluteInterval, EmptiableAbsoluteBoundPair, EmptiableAbsoluteInterval, HalfBoundedAbsoluteInterval, HasAbsoluteBoundPair, HasEmptiableAbsoluteBoundPair
+    AbsoluteBoundPair,
+    AbsoluteEndBound,
+    AbsoluteInterval,
+    AbsoluteStartBound,
+    BoundedAbsoluteInterval,
+    EmptiableAbsoluteBoundPair,
+    EmptiableAbsoluteInterval,
+    HalfBoundedAbsoluteInterval,
+    HasAbsoluteBoundPair,
+    HasEmptiableAbsoluteBoundPair,
 };
 use crate::intervals::relative::{
-    BoundedRelativeInterval, EmptiableRelativeBoundPair, EmptiableRelativeInterval, HalfBoundedRelativeInterval, HasEmptiableRelativeBoundPair, HasRelativeBoundPair, RelativeBoundPair, RelativeEndBound, RelativeInterval, RelativeStartBound
+    BoundedRelativeInterval,
+    EmptiableRelativeBoundPair,
+    EmptiableRelativeInterval,
+    HalfBoundedRelativeInterval,
+    HasEmptiableRelativeBoundPair,
+    HasRelativeBoundPair,
+    RelativeBoundPair,
+    RelativeEndBound,
+    RelativeInterval,
+    RelativeStartBound,
 };
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 
@@ -57,8 +76,10 @@ pub trait GrowableStartBound<P> {
 
     /// Grows the start bound of the given interval up to the given bound
     ///
-    /// This method creates a version of the interval where the start bound is more in the past than the original one.
-    /// Of course, it only happens if the passed new start bound is actually more in the past than the original one.
+    /// This method creates a version of the interval where the start bound is
+    /// more in the past than the original one. Of course, it only happens
+    /// if the passed new start bound is actually more in the past than the
+    /// original one.
     ///
     /// # Examples
     ///
@@ -105,8 +126,10 @@ pub trait GrowableEndBound<P> {
 
     /// Grows the end of the given interval up to the given bound
     ///
-    /// This method creates a version of the interval where the end bound is more in the future than the original one.
-    /// Of course, it only happens if the passed new end bound is actually more in the future than the original one.
+    /// This method creates a version of the interval where the end bound is
+    /// more in the future than the original one. Of course, it only happens
+    /// if the passed new end bound is actually more in the future than the
+    /// original one.
     ///
     /// # Examples
     ///
@@ -195,7 +218,10 @@ impl GrowableStartBound<AbsoluteStartBound> for EmptiableAbsoluteInterval {
     type Output = Self;
 
     fn grow_start(&self, position: AbsoluteStartBound) -> Self::Output {
-        Self::Output::from(grow_start_emptiable_abs_bound_pair(&self.emptiable_abs_bound_pair(), position))
+        Self::Output::from(grow_start_emptiable_abs_bound_pair(
+            &self.emptiable_abs_bound_pair(),
+            position,
+        ))
     }
 }
 
@@ -203,7 +229,10 @@ impl GrowableEndBound<AbsoluteEndBound> for EmptiableAbsoluteInterval {
     type Output = Self;
 
     fn grow_end(&self, position: AbsoluteEndBound) -> Self::Output {
-        Self::Output::from(grow_end_emptiable_abs_bound_pair(&self.emptiable_abs_bound_pair(), position))
+        Self::Output::from(grow_end_emptiable_abs_bound_pair(
+            &self.emptiable_abs_bound_pair(),
+            position,
+        ))
     }
 }
 
@@ -291,7 +320,10 @@ impl GrowableStartBound<RelativeStartBound> for EmptiableRelativeInterval {
     type Output = Self;
 
     fn grow_start(&self, position: RelativeStartBound) -> Self::Output {
-        Self::Output::from(grow_start_emptiable_rel_bound_pair(&self.emptiable_rel_bound_pair(), position))
+        Self::Output::from(grow_start_emptiable_rel_bound_pair(
+            &self.emptiable_rel_bound_pair(),
+            position,
+        ))
     }
 }
 
@@ -299,7 +331,10 @@ impl GrowableEndBound<RelativeEndBound> for EmptiableRelativeInterval {
     type Output = Self;
 
     fn grow_end(&self, position: RelativeEndBound) -> Self::Output {
-        Self::Output::from(grow_end_emptiable_rel_bound_pair(&self.emptiable_rel_bound_pair(), position))
+        Self::Output::from(grow_end_emptiable_rel_bound_pair(
+            &self.emptiable_rel_bound_pair(),
+            position,
+        ))
     }
 }
 

@@ -1,13 +1,16 @@
 //! Absolute bound pair
-//! 
-//! Represents a pair composed of an [`AbsoluteStartBound`] and an [`AbsoluteEndBound`].
-//! 
-//! Contrary to a specific interval type, it doesn't keep any [`Openness`](crate::intervals::meta::Openness)-related
-//! invariants, making it useful for changing an interval's openness easily.
-//! 
-//! Absolute bound pairs are also used for when, after a given operation, the openness of the resulting interval
-//! can't be guaranteed at compile-time. This also gives the opportunity for the caller to make a choice
-//! of whether to include/exclude the resulting interval on an openness-related basis.
+//!
+//! Represents a pair composed of an [`AbsoluteStartBound`] and an
+//! [`AbsoluteEndBound`].
+//!
+//! Contrary to a specific interval type, it doesn't keep any
+//! [`Openness`](crate::intervals::meta::Openness)-related invariants, making it
+//! useful for changing an interval's openness easily.
+//!
+//! Absolute bound pairs are also used for when, after a given operation, the
+//! openness of the resulting interval can't be guaranteed at compile-time. This
+//! also gives the opportunity for the caller to make a choice of whether to
+//! include/exclude the resulting interval on an openness-related basis.
 
 use std::cmp::Ordering;
 use std::error::Error;
@@ -19,12 +22,22 @@ use jiff::Timestamp;
 use serde::{Deserialize, Serialize};
 
 use crate::intervals::absolute::{
-    AbsoluteEndBound, AbsoluteStartBound, EmptiableAbsoluteBoundPair, check_absolute_bound_pair_for_interval_creation,
+    AbsoluteEndBound,
+    AbsoluteStartBound,
+    EmptiableAbsoluteBoundPair,
+    check_absolute_bound_pair_for_interval_creation,
     prepare_absolute_bound_pair_for_interval_creation,
 };
 use crate::intervals::meta::{
-    Duration as IntervalDuration, Epsilon, HasBoundInclusivity, HasDuration, HasOpenness, HasRelativity, Interval,
-    Openness, Relativity
+    Duration as IntervalDuration,
+    Epsilon,
+    HasBoundInclusivity,
+    HasDuration,
+    HasOpenness,
+    HasRelativity,
+    Interval,
+    Openness,
+    Relativity,
 };
 
 /// Possession of a **non-empty** absolute bound pair
@@ -43,9 +56,9 @@ pub trait HasAbsoluteBoundPair {
 }
 
 /// Pair of [`AbsoluteStartBound`] and [`AbsoluteEndBound`]
-/// 
-/// [`AbsoluteBoundPair`] should be used when you want a non-empty interval which don't need to conserve
-/// a given [`Openness`].
+///
+/// [`AbsoluteBoundPair`] should be used when you want a non-empty interval
+/// which don't need to conserve a given [`Openness`].
 ///
 /// # Invariants
 ///
@@ -60,7 +73,8 @@ pub struct AbsoluteBoundPair {
 }
 
 impl AbsoluteBoundPair {
-    /// Creates a new [`AbsoluteBoundPair`] without checking if it violates invariants
+    /// Creates a new [`AbsoluteBoundPair`] without checking if it violates
+    /// invariants
     ///
     /// # Examples
     ///
@@ -83,13 +97,16 @@ impl AbsoluteBoundPair {
     /// ```
     #[must_use]
     pub fn unchecked_new(start: AbsoluteStartBound, end: AbsoluteEndBound) -> Self {
-        AbsoluteBoundPair { start, end }
+        AbsoluteBoundPair {
+            start,
+            end,
+        }
     }
 
     /// Creates a new [`AbsoluteBoundPair`]
     ///
-    /// Uses [`prepare_absolute_bound_pair_for_interval_creation`] under the hood for making sure the bounds respect
-    /// the invariants.
+    /// Uses [`prepare_absolute_bound_pair_for_interval_creation`] under the
+    /// hood for making sure the bounds respect the invariants.
     ///
     /// # Examples
     ///
@@ -118,9 +135,9 @@ impl AbsoluteBoundPair {
     }
 
     /// Creates an [`AbsoluteBoundPair`] from a [`Timestamp`] range
-    /// 
+    ///
     /// # Examples
-    /// 
+    ///
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Timestamp;
@@ -128,9 +145,9 @@ impl AbsoluteBoundPair {
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// let start = "2026-01-01 00:00:00Z".parse::<Timestamp>()?;
     /// let end = "2026-05-01 00:00:00Z".parse::<Timestamp>()?;
-    /// 
+    ///
     /// let bounds = AbsoluteBoundPair::from_range(start..end);
-    /// 
+    ///
     /// assert_eq!(
     ///     bounds.start(),
     ///     AbsoluteFiniteBound::new(start).to_start_bound(),
@@ -273,9 +290,9 @@ impl AbsoluteBoundPair {
 
     /// Sets the start bound
     ///
-    /// Returns whether the operation was successful and the start bound modified.
-    /// If the given new start bound violates the invariants, the method simply returns `false`
-    /// without changing the start bound.
+    /// Returns whether the operation was successful and the start bound
+    /// modified. If the given new start bound violates the invariants, the
+    /// method simply returns `false` without changing the start bound.
     ///
     /// # Examples
     ///
@@ -315,8 +332,8 @@ impl AbsoluteBoundPair {
     /// Sets the end bound
     ///
     /// Returns whether the operation was successful and the end bound modified.
-    /// If the given new end bound violates the invariants, the method simply returns `false`
-    /// without changing the end bound.
+    /// If the given new end bound violates the invariants, the method simply
+    /// returns `false` without changing the end bound.
     ///
     /// # Examples
     ///
@@ -353,10 +370,11 @@ impl AbsoluteBoundPair {
         }
     }
 
-    /// Compares two [`AbsoluteBoundPair`], but if they have the same start, order by decreasing length
+    /// Compares two [`AbsoluteBoundPair`], but if they have the same start,
+    /// order by decreasing length
     ///
-    /// Don't rely on this method for checking for equality of start, as it will produce other [`Ordering`]s if their
-    /// lengths don't match too.
+    /// Don't rely on this method for checking for equality of start, as it will
+    /// produce other [`Ordering`]s if their lengths don't match too.
     ///
     /// # Examples
     ///
@@ -430,14 +448,16 @@ impl PartialOrd for AbsoluteBoundPair {
 
 impl Ord for AbsoluteBoundPair {
     fn cmp(&self, other: &Self) -> Ordering {
-        // using the comparison of self.end and other.end as a way to disambiguate when the two starts are equal
-        // leads to side-effects, like when we store absolute bound pair inside a BTreeSet, then if we use `range()`,
+        // using the comparison of self.end and other.end as a way to disambiguate when
+        // the two starts are equal leads to side-effects, like when we store
+        // absolute bound pair inside a BTreeSet, then if we use `range()`,
         // one can be considered out of the range when it shouldn't.
         self.start.cmp(&other.start)
     }
 }
 
-/// Errors that can occur when trying to convert [`EmptiableAbsoluteBoundPair`] into [`AbsoluteBoundPair`]
+/// Errors that can occur when trying to convert [`EmptiableAbsoluteBoundPair`]
+/// into [`AbsoluteBoundPair`]
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum AbsoluteBoundPairFromEmptiableAbsoluteBoundPairError {
     EmptyVariant,

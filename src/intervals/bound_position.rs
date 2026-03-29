@@ -1,7 +1,8 @@
 //! Bound positioning within a collection of intervals
 //!
-//! This module contains [`BoundPosition`], which allows for tracking bounds across a collection of intervals.
-//! This is used by iterators in this crate, but can also be used in other places to share a bound position.
+//! This module contains [`BoundPosition`], which allows for tracking bounds
+//! across a collection of intervals. This is used by iterators in this crate,
+//! but can also be used in other places to share a bound position.
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -11,16 +12,16 @@ use crate::intervals::relative::{HasRelativeBoundPair, RelativeBound};
 
 /// Type and index of the positioned bound
 ///
-/// This enumerator contains variants for describing the type of the positioned bound,
-/// and inside those variants we find a [`usize`] describing the index of the interval
-/// containing the positioned bound.
+/// This enumerator contains variants for describing the type of the positioned
+/// bound, and inside those variants we find a [`usize`] describing the index of
+/// the interval containing the positioned bound.
 ///
 /// <div class="warning">
 /// **Warning**
 ///
 /// This object could be subject to change in future versions,
-/// for example by switching to a structure containing a field for the bound type (Start/End),
-/// and a field for the interval index.
+/// for example by switching to a structure containing a field for the bound
+/// type (Start/End), and a field for the interval index.
 /// </div>
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
@@ -30,11 +31,10 @@ pub enum BoundPosition {
 }
 
 impl BoundPosition {
-    /// Minimum bound position
-    pub const MIN: Self = BoundPosition::Start(usize::MIN);
-
     /// Maximum bound position
     pub const MAX: Self = BoundPosition::End(usize::MAX);
+    /// Minimum bound position
+    pub const MIN: Self = BoundPosition::Start(usize::MIN);
 
     /// Returns the interval index
     #[must_use]
@@ -94,10 +94,7 @@ impl BoundPosition {
                 .into_iter()
                 .nth(*i)
                 .map(|bounds| bounds.abs_start().to_bound()),
-            Self::End(i) => abs_bounds
-                .into_iter()
-                .nth(*i)
-                .map(|bounds| bounds.abs_end().to_bound()),
+            Self::End(i) => abs_bounds.into_iter().nth(*i).map(|bounds| bounds.abs_end().to_bound()),
         }
     }
 
@@ -149,10 +146,7 @@ impl BoundPosition {
                 .into_iter()
                 .nth(*i)
                 .map(|bounds| bounds.rel_start().to_bound()),
-            Self::End(i) => rel_bounds
-                .into_iter()
-                .nth(*i)
-                .map(|bounds| bounds.rel_end().to_bound()),
+            Self::End(i) => rel_bounds.into_iter().nth(*i).map(|bounds| bounds.rel_end().to_bound()),
         }
     }
 
@@ -169,7 +163,6 @@ impl BoundPosition {
     ///
     /// assert_eq!(bound_position, BoundPosition::Start(7));
     /// ```
-    ///
     pub fn add_interval_index(&mut self, count: usize) -> bool {
         match self {
             Self::Start(i) | Self::End(i) => {

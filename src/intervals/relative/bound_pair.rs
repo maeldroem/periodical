@@ -1,13 +1,16 @@
 //! Relative bound pair
-//! 
-//! Represents a pair composed of a [`RelativeStartBound`] and a [`RelativeEndBound`].
-//! 
-//! Contrary to a specific interval type, it doesn't keep any [`Openness`](crate::intervals::meta::Openness)-related
-//! invariants, making it useful for changing an interval's openness easily.
-//! 
-//! Relative bound pairs are also used for when, after a given operation, the openness of the resulting interval
-//! can't be guaranteed at compile-time. This also gives the opportunity for the caller to make a choice
-//! of whether to include/exclude the resulting interval on an openness-related basis.
+//!
+//! Represents a pair composed of a [`RelativeStartBound`] and a
+//! [`RelativeEndBound`].
+//!
+//! Contrary to a specific interval type, it doesn't keep any
+//! [`Openness`](crate::intervals::meta::Openness)-related invariants, making it
+//! useful for changing an interval's openness easily.
+//!
+//! Relative bound pairs are also used for when, after a given operation, the
+//! openness of the resulting interval can't be guaranteed at compile-time. This
+//! also gives the opportunity for the caller to make a choice of whether to
+//! include/exclude the resulting interval on an openness-related basis.
 
 use std::cmp::Ordering;
 use std::error::Error;
@@ -18,13 +21,23 @@ use jiff::SignedDuration;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use crate::intervals::relative::{
-    RelativeEndBound, RelativeStartBound, EmptiableRelativeBoundPair, check_relative_bound_pair_for_interval_creation,
-    prepare_relative_bound_pair_for_interval_creation,
-};
 use crate::intervals::meta::{
-    Duration as IntervalDuration, Epsilon, HasBoundInclusivity, HasDuration, HasOpenness, HasRelativity, Interval,
-    Openness, Relativity
+    Duration as IntervalDuration,
+    Epsilon,
+    HasBoundInclusivity,
+    HasDuration,
+    HasOpenness,
+    HasRelativity,
+    Interval,
+    Openness,
+    Relativity,
+};
+use crate::intervals::relative::{
+    EmptiableRelativeBoundPair,
+    RelativeEndBound,
+    RelativeStartBound,
+    check_relative_bound_pair_for_interval_creation,
+    prepare_relative_bound_pair_for_interval_creation,
 };
 
 /// Possession of non-empty relative bound pair
@@ -44,9 +57,9 @@ pub trait HasRelativeBoundPair {
 
 /// Pair of [`RelativeStartBound`] and [`RelativeEndBound`]
 ///
-/// [`RelativeBoundPair`] should be used when you want a non-empty interval which don't need to conserve
-/// a given [`Openness`].
-/// 
+/// [`RelativeBoundPair`] should be used when you want a non-empty interval
+/// which don't need to conserve a given [`Openness`].
+///
 /// # Invariants
 ///
 /// 1. The bounds are in chronological order
@@ -60,7 +73,8 @@ pub struct RelativeBoundPair {
 }
 
 impl RelativeBoundPair {
-    /// Creates a new [`RelativeBoundPair`] without checking if it violates invariants
+    /// Creates a new [`RelativeBoundPair`] without checking if it violates
+    /// invariants
     ///
     /// # Examples
     ///
@@ -81,13 +95,16 @@ impl RelativeBoundPair {
     /// ```
     #[must_use]
     pub fn unchecked_new(start: RelativeStartBound, end: RelativeEndBound) -> Self {
-        RelativeBoundPair { start, end }
+        RelativeBoundPair {
+            start,
+            end,
+        }
     }
 
     /// Creates a new [`RelativeBoundPair`]
     ///
-    /// Uses [`prepare_relative_bound_pair_for_interval_creation`] under the hood for making sure the bounds respect
-    /// the invariants.
+    /// Uses [`prepare_relative_bound_pair_for_interval_creation`] under the
+    /// hood for making sure the bounds respect the invariants.
     ///
     /// # Examples
     ///
@@ -114,18 +131,18 @@ impl RelativeBoundPair {
     }
 
     /// Creates an [`RelativeBoundPair`] from a [`SignedDuration`] range
-    /// 
+    ///
     /// # Examples
-    /// 
+    ///
     /// ```
     /// # use jiff::SignedDuration;
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBound};
     /// let start = SignedDuration::from_hours(-5);
     /// let end = SignedDuration::from_hours(20);
-    /// 
+    ///
     /// let bounds = RelativeBoundPair::from_range(start..end);
-    /// 
+    ///
     /// assert_eq!(
     ///     bounds.start(),
     ///     RelativeFiniteBound::new(start).to_start_bound(),
@@ -259,9 +276,9 @@ impl RelativeBoundPair {
 
     /// Sets the start bound
     ///
-    /// Returns whether the operation was successful and the start bound modified.
-    /// If the given new start bound violates the invariants, the method simply returns `false`
-    /// without changing the start bound.
+    /// Returns whether the operation was successful and the start bound
+    /// modified. If the given new start bound violates the invariants, the
+    /// method simply returns `false` without changing the start bound.
     ///
     /// # Examples
     ///
@@ -299,8 +316,8 @@ impl RelativeBoundPair {
     /// Sets the end bound
     ///
     /// Returns whether the operation was successful and the end bound modified.
-    /// If the given new end bound violates the invariants, the method simply returns `false`
-    /// without changing the end bound.
+    /// If the given new end bound violates the invariants, the method simply
+    /// returns `false` without changing the end bound.
     ///
     /// # Examples
     ///
@@ -335,10 +352,11 @@ impl RelativeBoundPair {
         }
     }
 
-    /// Compares two [`RelativeBoundPair`], but if they have the same start, order by decreasing length
+    /// Compares two [`RelativeBoundPair`], but if they have the same start,
+    /// order by decreasing length
     ///
-    /// Don't rely on this method for checking for equality of start, as it will produce other [`Ordering`]s if their
-    /// lengths don't match too.
+    /// Don't rely on this method for checking for equality of start, as it will
+    /// produce other [`Ordering`]s if their lengths don't match too.
     ///
     /// # Examples
     ///
@@ -379,10 +397,7 @@ impl HasDuration for RelativeBoundPair {
             (RelativeStartBound::InfinitePast, _) | (_, RelativeEndBound::InfiniteFuture) => IntervalDuration::Infinite,
             (RelativeStartBound::Finite(finite_start), RelativeEndBound::Finite(finite_end)) => {
                 IntervalDuration::Finite(
-                    finite_end
-                        .offset()
-                        .saturating_sub(finite_start.offset())
-                        .unsigned_abs(),
+                    finite_end.offset().saturating_sub(finite_start.offset()).unsigned_abs(),
                     Epsilon::from((finite_start.inclusivity(), finite_end.inclusivity())),
                 )
             },
@@ -415,14 +430,16 @@ impl PartialOrd for RelativeBoundPair {
 
 impl Ord for RelativeBoundPair {
     fn cmp(&self, other: &Self) -> Ordering {
-        // using the comparison of self.end and other.end as a way to disambiguate when the two starts are equal
-        // leads to side-effects, like when we store absolute bounds inside a BTreeSet, then if we use `range()`,
+        // using the comparison of self.end and other.end as a way to disambiguate when
+        // the two starts are equal leads to side-effects, like when we store
+        // absolute bounds inside a BTreeSet, then if we use `range()`,
         // one can be considered out of the range when it shouldn't.
         self.start.cmp(&other.start)
     }
 }
 
-/// Errors that can occur when trying to convert [`EmptiableRelativeBoundPair`] into [`RelativeBoundPair`]
+/// Errors that can occur when trying to convert [`EmptiableRelativeBoundPair`]
+/// into [`RelativeBoundPair`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum RelativeBoundPairFromEmptiableRelativeBoundPairError {
     EmptyVariant,
@@ -450,4 +467,3 @@ impl TryFrom<EmptiableRelativeBoundPair> for RelativeBoundPair {
         }
     }
 }
-

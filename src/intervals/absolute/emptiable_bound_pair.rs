@@ -1,7 +1,8 @@
 //! Emptiable absolute bound pair
-//! 
-//! Similar to [absolute bound pair](crate::intervals::absolute::bound_pair), but has the extra
-//! ability of being able to represent an [empty interval](crate::intervals::special::EmptyInterval).
+//!
+//! Similar to [absolute bound pair](crate::intervals::absolute::bound_pair),
+//! but has the extra ability of being able to represent an [empty
+//! interval](crate::intervals::special::EmptyInterval).
 
 use std::cmp::Ordering;
 use std::time::Duration;
@@ -13,7 +14,14 @@ use serde::{Deserialize, Serialize};
 
 use crate::intervals::absolute::{AbsoluteBoundPair, AbsoluteEndBound, AbsoluteStartBound, HasAbsoluteBoundPair};
 use crate::intervals::meta::{
-    Duration as IntervalDuration, Emptiable, Epsilon, HasDuration, HasOpenness, HasRelativity, Interval, Openness,
+    Duration as IntervalDuration,
+    Emptiable,
+    Epsilon,
+    HasDuration,
+    HasOpenness,
+    HasRelativity,
+    Interval,
+    Openness,
     Relativity,
 };
 
@@ -23,17 +31,20 @@ pub trait HasEmptiableAbsoluteBoundPair {
     #[must_use]
     fn emptiable_abs_bound_pair(&self) -> EmptiableAbsoluteBoundPair;
 
-    /// Returns [the absolute start bound](AbsoluteStartBound) of the object, if applicable
+    /// Returns [the absolute start bound](AbsoluteStartBound) of the object, if
+    /// applicable
     #[must_use]
     fn partial_abs_start(&self) -> Option<AbsoluteStartBound>;
 
-    /// Returns [the absolute end bound](AbsoluteEndBound) of the object, if applicable
+    /// Returns [the absolute end bound](AbsoluteEndBound) of the object, if
+    /// applicable
     #[must_use]
     fn partial_abs_end(&self) -> Option<AbsoluteEndBound>;
 }
 
-/// All implementors of [`HasAbsoluteBoundPair`] implement [`HasEmptiableAbsoluteBoundPair`].
-/// This could change in the future to separate emptiable from non-emptiable bound pairs.
+/// All implementors of [`HasAbsoluteBoundPair`] implement
+/// [`HasEmptiableAbsoluteBoundPair`]. This could change in the future to
+/// separate emptiable from non-emptiable bound pairs.
 impl<T> HasEmptiableAbsoluteBoundPair for T
 where
     T: HasAbsoluteBoundPair,
@@ -54,7 +65,8 @@ where
 /// Enum containing [`AbsoluteBoundPair`] but with support for
 /// [empty intervals](crate::intervals::special::EmptyInterval)
 ///
-/// For more information, check [`AbsoluteBoundPair`], [`EmptyInterval`](crate::intervals::special::EmptyInterval),
+/// For more information, check [`AbsoluteBoundPair`],
+/// [`EmptyInterval`](crate::intervals::special::EmptyInterval),
 /// or [`crate::intervals` module documentation](crate::intervals).
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
@@ -65,10 +77,13 @@ pub enum EmptiableAbsoluteBoundPair {
 }
 
 impl EmptiableAbsoluteBoundPair {
-    /// Returns the content of the [`Bound`](EmptiableAbsoluteBoundPair::Bound) variant
+    /// Returns the content of the [`Bound`](EmptiableAbsoluteBoundPair::Bound)
+    /// variant
     ///
-    /// Consumes `self` and puts the content of the [`Bound`](EmptiableAbsoluteBoundPair::Bound) variant
-    /// in an [`Option`]. If instead `self` is another variant, the method returns [`None`].
+    /// Consumes `self` and puts the content of the
+    /// [`Bound`](EmptiableAbsoluteBoundPair::Bound) variant
+    /// in an [`Option`]. If instead `self` is another variant, the method
+    /// returns [`None`].
     ///
     /// # Examples
     ///
@@ -95,15 +110,17 @@ impl EmptiableAbsoluteBoundPair {
         }
     }
 
-    /// Compares two [`EmptiableAbsoluteBoundPair`], but if they have the same start, order by decreasing length
+    /// Compares two [`EmptiableAbsoluteBoundPair`], but if they have the same
+    /// start, order by decreasing length
     ///
-    /// Uses [`AbsoluteBoundPair::ord_by_start_and_inv_length`] under the hood for
-    /// the [`Bound`](EmptiableAbsoluteBoundPair::Bound) variants and [`EmptiableAbsoluteBoundPair::cmp`]
-    /// for the [`Empty`](EmptiableAbsoluteBoundPair::Empty) variants (which will just place all empty bounds before
-    /// any bound bounds).
+    /// Uses [`AbsoluteBoundPair::ord_by_start_and_inv_length`] under the hood
+    /// for the [`Bound`](EmptiableAbsoluteBoundPair::Bound) variants and
+    /// [`EmptiableAbsoluteBoundPair::cmp`]
+    /// for the [`Empty`](EmptiableAbsoluteBoundPair::Empty) variants (which
+    /// will just place all empty bounds before any bound bounds).
     ///
-    /// Don't rely on this method for checking for equality of start, as it will produce other [`Ordering`]s if their
-    /// lengths don't match too.
+    /// Don't rely on this method for checking for equality of start, as it will
+    /// produce other [`Ordering`]s if their lengths don't match too.
     ///
     /// # Examples
     ///
@@ -115,9 +132,10 @@ impl EmptiableAbsoluteBoundPair {
     #[must_use]
     pub fn ord_by_start_and_inv_length(&self, other: &Self) -> Ordering {
         match (self, other) {
-            (EmptiableAbsoluteBoundPair::Bound(og_abs_bound_pair), EmptiableAbsoluteBoundPair::Bound(other_abs_bound_pair)) => {
-                og_abs_bound_pair.ord_by_start_and_inv_length(other_abs_bound_pair)
-            },
+            (
+                EmptiableAbsoluteBoundPair::Bound(og_abs_bound_pair),
+                EmptiableAbsoluteBoundPair::Bound(other_abs_bound_pair),
+            ) => og_abs_bound_pair.ord_by_start_and_inv_length(other_abs_bound_pair),
             _ => self.cmp(other),
         }
     }
@@ -187,9 +205,10 @@ impl Ord for EmptiableAbsoluteBoundPair {
             (EmptiableAbsoluteBoundPair::Empty, EmptiableAbsoluteBoundPair::Empty) => Ordering::Equal,
             (EmptiableAbsoluteBoundPair::Empty, EmptiableAbsoluteBoundPair::Bound(_)) => Ordering::Less,
             (EmptiableAbsoluteBoundPair::Bound(_), EmptiableAbsoluteBoundPair::Empty) => Ordering::Greater,
-            (EmptiableAbsoluteBoundPair::Bound(og_abs_bound_pair), EmptiableAbsoluteBoundPair::Bound(other_abs_bound_pair)) => {
-                og_abs_bound_pair.cmp(other_abs_bound_pair)
-            },
+            (
+                EmptiableAbsoluteBoundPair::Bound(og_abs_bound_pair),
+                EmptiableAbsoluteBoundPair::Bound(other_abs_bound_pair),
+            ) => og_abs_bound_pair.cmp(other_abs_bound_pair),
         }
     }
 }
@@ -199,4 +218,3 @@ impl From<AbsoluteBoundPair> for EmptiableAbsoluteBoundPair {
         EmptiableAbsoluteBoundPair::Bound(value)
     }
 }
-

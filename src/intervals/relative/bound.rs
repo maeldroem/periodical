@@ -1,8 +1,8 @@
 //! Relative bound representation
-//! 
+//!
 //! Represents a relative bound regardless of its source (start/end).
-//! This is particularly useful for representing relative bounds of an interval as a single type,
-//! while still conserving its source.
+//! This is particularly useful for representing relative bounds of an interval
+//! as a single type, while still conserving its source.
 
 use std::cmp::Ordering;
 use std::hash::{Hash, Hasher};
@@ -17,8 +17,8 @@ use crate::intervals::relative::{RelativeEndBound, RelativeStartBound};
 /// Enum for relative start and end bounds
 ///
 /// Represents a relative bound regardless of its source (start/end).
-/// This is particularly useful for representing relative bounds of an interval as a single type,
-/// while still conserving its source.
+/// This is particularly useful for representing relative bounds of an interval
+/// as a single type, while still conserving its source.
 #[derive(Debug, Clone, Copy)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
@@ -80,8 +80,9 @@ impl RelativeBound {
 
     /// Returns the content of the [`Start`](RelativeBound::Start) variant
     ///
-    /// Consumes `self` and puts the content of the [`Start`](RelativeBound::Start) variant
-    /// in an [`Option`]. If instead `self` is another variant, the method returns [`None`].
+    /// Consumes `self` and puts the content of the
+    /// [`Start`](RelativeBound::Start) variant in an [`Option`]. If instead
+    /// `self` is another variant, the method returns [`None`].
     ///
     /// # Examples
     ///
@@ -117,8 +118,9 @@ impl RelativeBound {
 
     /// Returns the content of the [`End`](RelativeBound::End) variant
     ///
-    /// Consumes `self` and puts the content of the [`End`](RelativeBound::End) variant
-    /// in an [`Option`]. If instead `self` is another variant, the method returns [`None`].
+    /// Consumes `self` and puts the content of the [`End`](RelativeBound::End)
+    /// variant in an [`Option`]. If instead `self` is another variant, the
+    /// method returns [`None`].
     ///
     /// # Examples
     ///
@@ -155,7 +157,8 @@ impl RelativeBound {
     /// Returns the opposite bound type with the opposite inclusivity
     ///
     /// Simply use [`RelativeStartBound::opposite`] for start bounds,
-    /// and [`RelativeEndBound::opposite`] for end bounds, and then wraps the result in [`RelativeBound`].
+    /// and [`RelativeEndBound::opposite`] for end bounds, and then wraps the
+    /// result in [`RelativeBound`].
     ///
     /// If the bound is infinite, the method returns [`None`].
     ///
@@ -211,11 +214,13 @@ impl Ord for RelativeBound {
             (RelativeBound::Start(og_start), RelativeBound::Start(other_start)) => og_start.cmp(other_start),
             (RelativeBound::End(og_end), RelativeBound::End(other_end)) => og_end.cmp(other_end),
             (RelativeBound::Start(og_start), RelativeBound::End(other_end)) => {
-                // Partial ordering between two different bounds should not fail, but we provide a default just in case
+                // Partial ordering between two different bounds should not fail, but we provide
+                // a default just in case
                 og_start.partial_cmp(other_end).unwrap_or(Ordering::Equal)
             },
             (RelativeBound::End(og_end), RelativeBound::Start(other_start)) => {
-                // Partial ordering between two different bounds should not fail, but we provide a default just in case
+                // Partial ordering between two different bounds should not fail, but we provide
+                // a default just in case
                 og_end.partial_cmp(other_start).unwrap_or(Ordering::Equal)
             },
         }

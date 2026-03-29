@@ -1,21 +1,25 @@
 //! Interval point containment positioning
 //!
-//! Given an interval and a point, positions the given point within the interval,
-//! represented by [`PointContainmentPosition`].
+//! Given an interval and a point, positions the given point within the
+//! interval, represented by [`PointContainmentPosition`].
 //!
-//! Since a point can fall on an [exclusive](BoundInclusivity::Exclusive) bound, this creates an ambiguity
-//! that needs to be resolved.
+//! Since a point can fall on an [exclusive](BoundInclusivity::Exclusive) bound,
+//! this creates an ambiguity that needs to be resolved.
 //!
-//! Using [`CanPositionPointContainment`] will return a [`PointContainmentPosition`],
-//! which will then need to be disambiguated in order to obtain a concrete diagnostic of the containment.
+//! Using [`CanPositionPointContainment`] will return a
+//! [`PointContainmentPosition`], which will then need to be disambiguated in
+//! order to obtain a concrete diagnostic of the containment.
 //!
-//! You can disambiguate a [`PointContainmentPosition`] using a [`PointContainmentRuleSet`] or a custom closure
+//! You can disambiguate a [`PointContainmentPosition`] using a
+//! [`PointContainmentRuleSet`] or a custom closure
 //! by using [`PointContainmentPosition::disambiguate_using`].
 //!
-//! A disambiguated [`PointContainmentPosition`] is represented by [`DisambiguatedPointContainmentPosition`].
+//! A disambiguated [`PointContainmentPosition`] is represented by
+//! [`DisambiguatedPointContainmentPosition`].
 //!
-//! Once disambiguated, the point containment position can be converted into a boolean decision of whether
-//! the point is contained within the interval using [`PointContainmentRule`]s
+//! Once disambiguated, the point containment position can be converted into a
+//! boolean decision of whether the point is contained within the interval using
+//! [`PointContainmentRule`]s
 //! with [`CanPositionPointContainment::contains_point`].
 //!
 //! # Examples
@@ -50,13 +54,27 @@ use jiff::{SignedDuration, Timestamp};
 use serde::{Deserialize, Serialize};
 
 use crate::intervals::absolute::{
-    AbsoluteBoundPair, AbsoluteEndBound, AbsoluteInterval, AbsoluteStartBound, BoundedAbsoluteInterval,
-    EmptiableAbsoluteBoundPair, HalfBoundedAbsoluteInterval, HasAbsoluteBoundPair, HasEmptiableAbsoluteBoundPair,
+    AbsoluteBoundPair,
+    AbsoluteEndBound,
+    AbsoluteInterval,
+    AbsoluteStartBound,
+    BoundedAbsoluteInterval,
+    EmptiableAbsoluteBoundPair,
+    HalfBoundedAbsoluteInterval,
+    HasAbsoluteBoundPair,
+    HasEmptiableAbsoluteBoundPair,
 };
 use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
 use crate::intervals::relative::{
-    BoundedRelativeInterval, EmptiableRelativeBoundPair, HalfBoundedRelativeInterval, HasEmptiableRelativeBoundPair,
-    HasRelativeBoundPair, RelativeBoundPair, RelativeEndBound, RelativeInterval, RelativeStartBound,
+    BoundedRelativeInterval,
+    EmptiableRelativeBoundPair,
+    HalfBoundedRelativeInterval,
+    HasEmptiableRelativeBoundPair,
+    HasRelativeBoundPair,
+    RelativeBoundPair,
+    RelativeEndBound,
+    RelativeInterval,
+    RelativeStartBound,
 };
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 
@@ -65,11 +83,13 @@ use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 /// Defines where the point was found relative to the interval.
 ///
 /// When [`point_position`](CanPositionPointContainment::point_containment_position) evaluates
-/// the point containment position, it ignores the [inclusivities](BoundInclusivity) of the interval
-/// and simply takes into account the position of its bounds.
+/// the point containment position, it ignores the
+/// [inclusivities](BoundInclusivity) of the interval and simply takes into
+/// account the position of its bounds.
 ///
-/// If the point falls on one of those bounds, the [`BoundInclusivity`] of the bound is recorded within the variant,
-/// which is only possible for [`OnStart`](PointContainmentPosition::OnStart)
+/// If the point falls on one of those bounds, the [`BoundInclusivity`] of the
+/// bound is recorded within the variant, which is only possible for
+/// [`OnStart`](PointContainmentPosition::OnStart)
 /// and [`OnEnd`](PointContainmentPosition::OnEnd).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
@@ -85,13 +105,15 @@ pub enum PointContainmentPosition {
     Outside,
     /// Compared point is exactly on the start of the interval
     ///
-    /// Since the point falls on a bound from the interval, it creates an ambiguity,
-    /// hence the stored [`BoundInclusivity`] of the interval's start.
+    /// Since the point falls on a bound from the interval, it creates an
+    /// ambiguity, hence the stored [`BoundInclusivity`] of the interval's
+    /// start.
     OnStart(BoundInclusivity),
     /// Compared point is exactly on the end of the interval
     ///
-    /// Since the point falls on a bound from the interval, it creates an ambiguity,
-    /// hence the stored [`BoundInclusivity`] of the interval's end.
+    /// Since the point falls on a bound from the interval, it creates an
+    /// ambiguity, hence the stored [`BoundInclusivity`] of the interval's
+    /// end.
     OnEnd(BoundInclusivity),
     /// Compared point is within the interval
     Inside,
@@ -100,7 +122,8 @@ pub enum PointContainmentPosition {
 impl PointContainmentPosition {
     /// Strips information about ambiguities and conserves the variant
     ///
-    /// **Careful!** This method discards data about bound inclusivity and cannot be recovered after conversion.
+    /// **Careful!** This method discards data about bound inclusivity and
+    /// cannot be recovered after conversion.
     ///
     /// # Examples
     ///
@@ -128,7 +151,8 @@ impl PointContainmentPosition {
 
     /// Disambiguates using a [`PointContainmentRuleSet`]
     ///
-    /// **Careful!** This method discards data about bound inclusivity and cannot be recovered after conversion.
+    /// **Careful!** This method discards data about bound inclusivity and
+    /// cannot be recovered after conversion.
     ///
     /// # Examples
     ///
@@ -203,7 +227,8 @@ impl PointContainmentPosition {
 
 /// Disambiguated [`PointContainmentPosition`]
 ///
-/// Indicates where the point is situated compared to the interval without any ambiguity.
+/// Indicates where the point is situated compared to the interval without any
+/// ambiguity.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
@@ -224,29 +249,33 @@ pub enum DisambiguatedPointContainmentPosition {
 
 /// Rule sets for disambiguating a [`PointContainmentPosition`]
 ///
-/// See [`contains_point`](CanPositionPointContainment::contains_point) for more.
+/// See [`contains_point`](CanPositionPointContainment::contains_point) for
+/// more.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum PointContainmentRuleSet {
     /// Strict rule set
     ///
-    /// Mathematical interpretation of bounds, so the point needs to fall on an inclusive bound in order to be counted
-    /// as contained.
+    /// Mathematical interpretation of bounds, so the point needs to fall on an
+    /// inclusive bound in order to be counted as contained.
     #[default]
     Strict,
     /// Lenient rule set
     ///
-    /// If the point falls on a bound, it counts as contained, regardless of the [`BoundInclusivity`].
+    /// If the point falls on a bound, it counts as contained, regardless of the
+    /// [`BoundInclusivity`].
     Lenient,
 }
 
 impl PointContainmentRuleSet {
     /// Disambiguates a [`PointContainmentPosition`] according to the rule set
     ///
-    /// **Careful!** This method discards data about bound inclusivity and cannot be recovered after conversion.
+    /// **Careful!** This method discards data about bound inclusivity and
+    /// cannot be recovered after conversion.
     ///
-    /// Preferably use [`PointContainmentPosition::disambiguate_using_rule_set`] instead.
+    /// Preferably use [`PointContainmentPosition::disambiguate_using_rule_set`]
+    /// instead.
     ///
     /// # Examples
     ///
@@ -280,9 +309,11 @@ impl PointContainmentRuleSet {
     }
 }
 
-/// Disambiguates a [`PointContainmentPosition`] using [the strict rule set](PointContainmentRuleSet::Strict)
+/// Disambiguates a [`PointContainmentPosition`] using [the strict rule
+/// set](PointContainmentRuleSet::Strict)
 ///
-/// See [module documentation](crate::intervals::ops::point_containment) for more information.
+/// See [module documentation](crate::intervals::ops::point_containment) for
+/// more information.
 #[must_use]
 pub fn strict_containment_rule_set_disambiguation(
     containment_position: PointContainmentPosition,
@@ -303,9 +334,11 @@ pub fn strict_containment_rule_set_disambiguation(
     }
 }
 
-/// Disambiguates a [`PointContainmentPosition`] using [the lenient rule set](PointContainmentRuleSet::Lenient)
+/// Disambiguates a [`PointContainmentPosition`] using [the lenient rule
+/// set](PointContainmentRuleSet::Lenient)
 ///
-/// See [module documentation](crate::intervals::ops::point_containment) for more information.
+/// See [module documentation](crate::intervals::ops::point_containment) for
+/// more information.
 #[must_use]
 pub fn lenient_containment_rule_set_disambiguation(
     containment_position: PointContainmentPosition,
@@ -345,8 +378,9 @@ pub enum PointContainmentRule {
 impl PointContainmentRule {
     /// Returns the next state of the running containment decision
     ///
-    /// This method takes the running containment decision and the [`DisambiguatedPointContainmentPosition`]
-    /// and returns the next state of the running containment decision.
+    /// This method takes the running containment decision and the
+    /// [`DisambiguatedPointContainmentPosition`] and returns the next state
+    /// of the running containment decision.
     #[must_use]
     pub fn counts_as_contained(&self, running: bool, disambiguated_pos: DisambiguatedPointContainmentPosition) -> bool {
         match self {
@@ -360,14 +394,16 @@ impl PointContainmentRule {
     }
 }
 
-/// Checks all the given rules and returns the final boolean regarding containment
+/// Checks all the given rules and returns the final boolean regarding
+/// containment
 ///
-/// Iterates over the given rules and [fold](Iterator::fold) them with [`PointContainmentRule::counts_as_contained`]
-/// in order to get the final boolean regarding whether the point is considered contained by the interval.
+/// Iterates over the given rules and [fold](Iterator::fold) them with
+/// [`PointContainmentRule::counts_as_contained`] in order to get the final
+/// boolean regarding whether the point is considered contained by the interval.
 ///
 /// This method also contains the common logic of considering
-/// the [`Inside`](DisambiguatedPointContainmentPosition::Inside) [`DisambiguatedPointContainmentPosition`]
-/// as containment of the point.
+/// the [`Inside`](DisambiguatedPointContainmentPosition::Inside)
+/// [`DisambiguatedPointContainmentPosition`] as containment of the point.
 #[must_use]
 pub fn check_point_containment_rules<'a, RI>(
     disambiguated_pos: DisambiguatedPointContainmentPosition,
@@ -515,14 +551,16 @@ pub trait CanPositionPointContainment<P> {
     ///
     /// # Bound inclusivity
     ///
-    /// When checking the containment position, the interval's bound inclusivities are considered as inclusive.
-    /// Then, on cases where the result could be ambiguous, we store the inclusivity of the bound inside
+    /// When checking the containment position, the interval's bound
+    /// inclusivities are considered as inclusive. Then, on cases where the
+    /// result could be ambiguous, we store the inclusivity of the bound inside
     /// the [`PointContainmentPosition`] variant.
     ///
     /// # Errors
     ///
     /// If this process is fallible in a given implementor,
-    /// they can use the associated type [`Error`](CanPositionPointContainment::Error).
+    /// they can use the associated type
+    /// [`Error`](CanPositionPointContainment::Error).
     ///
     /// # Examples
     ///
@@ -557,12 +595,14 @@ pub trait CanPositionPointContainment<P> {
     /// Returns the [`DisambiguatedPointContainmentPosition`] of the given point
     /// using the given [rule set](PointContainmentRuleSet)
     ///
-    /// See [`CanPositionPointContainment::point_containment_position`] for more details about containment position.
+    /// See [`CanPositionPointContainment::point_containment_position`] for more
+    /// details about containment position.
     ///
     /// # Errors
     ///
     /// If this process is fallible in a given implementor,
-    /// they can use the associated type [`Error`](CanPositionPointContainment::Error).
+    /// they can use the associated type
+    /// [`Error`](CanPositionPointContainment::Error).
     ///
     /// # Examples
     ///
@@ -599,13 +639,14 @@ pub trait CanPositionPointContainment<P> {
             .map(|containment_position| rule_set.disambiguate(containment_position))
     }
 
-    /// Returns whether the given point is contained in the interval using predetermined rules
+    /// Returns whether the given point is contained in the interval using
+    /// predetermined rules
     ///
     /// Uses the [default rule set](PointContainmentRuleSet::default)
     /// with [default rules](DEFAULT_POINT_CONTAINMENT_RULES).
     ///
-    /// The rule set has been chosen because they are the closest to how we mathematically
-    /// and humanly interpret containment.
+    /// The rule set has been chosen because they are the closest to how we
+    /// mathematically and humanly interpret containment.
     ///
     /// # Examples
     ///
@@ -650,11 +691,13 @@ pub trait CanPositionPointContainment<P> {
     ///
     /// Uses [`disambiguated_point_containment_position`] under the hood.
     ///
-    /// If this aforementioned method returns an [`Err`], then this method returns `false`.
-    /// If it returns [`Ok`], then the [`PointContainmentRule`]s are checked.
+    /// If this aforementioned method returns an [`Err`], then this method
+    /// returns `false`. If it returns [`Ok`], then the
+    /// [`PointContainmentRule`]s are checked.
     ///
-    /// This method returns `true` only if all provided [`PointContainmentRule`]s are respected.
-    /// This part of the process uses [`PointContainmentRule::counts_as_contained`].
+    /// This method returns `true` only if all provided
+    /// [`PointContainmentRule`]s are respected. This part of the process
+    /// uses [`PointContainmentRule::counts_as_contained`].
     ///
     /// [`disambiguated_point_containment_position`]: CanPositionPointContainment::disambiguated_point_containment_position
     ///
@@ -688,7 +731,8 @@ pub trait CanPositionPointContainment<P> {
     ///
     /// # See also
     ///
-    /// If you are looking for the simplest way of checking for point containment,
+    /// If you are looking for the simplest way of checking for point
+    /// containment,
     /// see [`simple_contains_point`](CanPositionPointContainment::simple_contains_point).
     ///
     /// If you are looking for more control over what counts as contained,
@@ -708,13 +752,15 @@ pub trait CanPositionPointContainment<P> {
             .unwrap_or(false)
     }
 
-    /// Returns whether the given point is contained in the interval using the given closure
+    /// Returns whether the given point is contained in the interval using the
+    /// given closure
     ///
     /// Uses [`point_containment_position`](CanPositionPointContainment::point_containment_position) under the hood.
     ///
-    /// If this aforementioned method returns an [`Err`], then this method returns `false`.
-    /// If it returns [`Ok`], then the provided closure is in charge of determining
-    /// whether the [`PointContainmentPosition`] given by
+    /// If this aforementioned method returns an [`Err`], then this method
+    /// returns `false`. If it returns [`Ok`], then the provided closure is
+    /// in charge of determining whether the [`PointContainmentPosition`]
+    /// given by
     /// [`point_containment_position`](CanPositionPointContainment::point_containment_position) counts as
     /// the passed point being contained in the interval.
     ///
@@ -752,11 +798,12 @@ pub trait CanPositionPointContainment<P> {
     ///
     /// # See also
     ///
-    /// If you are looking for control over what's considered as contained but still want
-    /// predetermined [`DisambiguatedPointContainmentPosition`]s,
+    /// If you are looking for control over what's considered as contained but
+    /// still want predetermined [`DisambiguatedPointContainmentPosition`]s,
     /// see [`contains_point_using_disambiguated`](CanPositionPointContainment::contains_point_using_disambiguated).
     ///
-    /// If you are looking for predetermined decisions on what's considered as contained,
+    /// If you are looking for predetermined decisions on what's considered as
+    /// contained,
     /// see [`contains_point`](CanPositionPointContainment::contains_point).
     #[must_use]
     fn contains_point_using<F>(&self, positionable: P, f: F) -> bool
@@ -766,15 +813,17 @@ pub trait CanPositionPointContainment<P> {
         self.point_containment_position(positionable).map(f).unwrap_or(false)
     }
 
-    /// Returns whether the given point is contained in the interval using the given closure
-    /// with a disambiguated position
+    /// Returns whether the given point is contained in the interval using the
+    /// given closure with a disambiguated position
     ///
     /// Uses [`disambiguated_point_containment_position`] under the hood.
     ///
-    /// If this aforementioned method returns an [`Err`], then this method returns `false`.
-    /// If it returns [`Ok`], then the provided function is in charge of determining
-    /// whether the [`DisambiguatedPointContainmentPosition`] given by [`disambiguated_point_containment_position`]
-    /// counts as contained or not.
+    /// If this aforementioned method returns an [`Err`], then this method
+    /// returns `false`. If it returns [`Ok`], then the provided function is
+    /// in charge of determining whether the
+    /// [`DisambiguatedPointContainmentPosition`] given by
+    /// [`disambiguated_point_containment_position`] counts as contained or
+    /// not.
     ///
     /// [`disambiguated_point_containment_position`]: CanPositionPointContainment::disambiguated_point_containment_position
     ///
@@ -815,10 +864,12 @@ pub trait CanPositionPointContainment<P> {
     ///
     /// # See also
     ///
-    /// If you are looking for more granular control over what's considered as contained,
+    /// If you are looking for more granular control over what's considered as
+    /// contained,
     /// see [`contains_point_using`](CanPositionPointContainment::contains_point_using).
     ///
-    /// If you are looking for predetermined decisions on what's considered as contained,
+    /// If you are looking for predetermined decisions on what's considered as
+    /// contained,
     /// see [`simple_contains_point`](CanPositionPointContainment::simple_contains_point).
     #[must_use]
     fn contains_point_using_disambiguated<F>(&self, positionable: P, rule_set: PointContainmentRuleSet, f: F) -> bool
@@ -972,10 +1023,7 @@ where
 impl CanPositionPointContainment<Timestamp> for UnboundedInterval {
     type Error = Infallible;
 
-    fn point_containment_position(
-        &self,
-        _positionable: Timestamp,
-    ) -> Result<PointContainmentPosition, Self::Error> {
+    fn point_containment_position(&self, _positionable: Timestamp) -> Result<PointContainmentPosition, Self::Error> {
         Ok(PointContainmentPosition::Inside)
     }
 }
@@ -983,7 +1031,10 @@ impl CanPositionPointContainment<Timestamp> for UnboundedInterval {
 impl CanPositionPointContainment<SignedDuration> for UnboundedInterval {
     type Error = Infallible;
 
-    fn point_containment_position(&self, _positionable: SignedDuration) -> Result<PointContainmentPosition, Self::Error> {
+    fn point_containment_position(
+        &self,
+        _positionable: SignedDuration,
+    ) -> Result<PointContainmentPosition, Self::Error> {
         Ok(PointContainmentPosition::Inside)
     }
 }
@@ -991,10 +1042,7 @@ impl CanPositionPointContainment<SignedDuration> for UnboundedInterval {
 impl CanPositionPointContainment<Timestamp> for EmptyInterval {
     type Error = Infallible;
 
-    fn point_containment_position(
-        &self,
-        _positionable: Timestamp,
-    ) -> Result<PointContainmentPosition, Self::Error> {
+    fn point_containment_position(&self, _positionable: Timestamp) -> Result<PointContainmentPosition, Self::Error> {
         Ok(PointContainmentPosition::Outside)
     }
 }
@@ -1002,14 +1050,21 @@ impl CanPositionPointContainment<Timestamp> for EmptyInterval {
 impl CanPositionPointContainment<SignedDuration> for EmptyInterval {
     type Error = Infallible;
 
-    fn point_containment_position(&self, _positionable: SignedDuration) -> Result<PointContainmentPosition, Self::Error> {
+    fn point_containment_position(
+        &self,
+        _positionable: SignedDuration,
+    ) -> Result<PointContainmentPosition, Self::Error> {
         Ok(PointContainmentPosition::Outside)
     }
 }
 
-/// Returns the [`PointContainmentPosition`] of the given time within the given [`AbsoluteBoundPair`]
+/// Returns the [`PointContainmentPosition`] of the given time within the given
+/// [`AbsoluteBoundPair`]
 #[must_use]
-pub fn point_containment_position_abs_bound_pair(bounds: &AbsoluteBoundPair, time: Timestamp) -> PointContainmentPosition {
+pub fn point_containment_position_abs_bound_pair(
+    bounds: &AbsoluteBoundPair,
+    time: Timestamp,
+) -> PointContainmentPosition {
     type StartB = AbsoluteStartBound;
     type EndB = AbsoluteEndBound;
     type ContPos = PointContainmentPosition;
@@ -1038,9 +1093,13 @@ pub fn point_containment_position_abs_bound_pair(bounds: &AbsoluteBoundPair, tim
     }
 }
 
-/// Returns the [`PointContainmentPosition`] of the given offset within the given [`RelativeBoundPair`]
+/// Returns the [`PointContainmentPosition`] of the given offset within the
+/// given [`RelativeBoundPair`]
 #[must_use]
-pub fn point_containment_position_rel_bound_pair(bounds: &RelativeBoundPair, offset: SignedDuration) -> PointContainmentPosition {
+pub fn point_containment_position_rel_bound_pair(
+    bounds: &RelativeBoundPair,
+    offset: SignedDuration,
+) -> PointContainmentPosition {
     type StartB = RelativeStartBound;
     type EndB = RelativeEndBound;
     type ContPos = PointContainmentPosition;

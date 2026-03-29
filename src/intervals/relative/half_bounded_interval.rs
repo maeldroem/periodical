@@ -1,13 +1,14 @@
 //! Relative half-bounded interval
-//! 
+//!
 //! A half-bounded interval has a reference offset and an opening direction.
-//! 
-//! Similar to the other specific interval types, its [openness](Openness) cannot change.
-//! That is to say a half-bounded interval must remain a half-bounded interval.
-//! It cannot mutate from being a half-bounded interval to a bounded interval.
-//! 
-//! Instead, if you are looking for an relative interval that doesn't keep the [openness](Openness) invariant,
-//! see [`RelativeBoundPair`].
+//!
+//! Similar to the other specific interval types, its [openness](Openness)
+//! cannot change. That is to say a half-bounded interval must remain a
+//! half-bounded interval. It cannot mutate from being a half-bounded interval
+//! to a bounded interval.
+//!
+//! Instead, if you are looking for an relative interval that doesn't keep the
+//! [openness](Openness) invariant, see [`RelativeBoundPair`].
 
 use std::error::Error;
 use std::fmt::Display;
@@ -17,23 +18,39 @@ use jiff::SignedDuration;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use crate::intervals::relative::{
-    EmptiableRelativeInterval, HasRelativeBoundPair, RelativeBoundPair, RelativeEndBound, RelativeFiniteBound, RelativeInterval, RelativeStartBound
-};
 use crate::intervals::meta::{
-    BoundInclusivity, Duration as IntervalDuration, HasBoundInclusivity, HasDuration, HasOpenness, HasRelativity, Interval, OpeningDirection, Openness, Relativity
+    BoundInclusivity,
+    Duration as IntervalDuration,
+    HasBoundInclusivity,
+    HasDuration,
+    HasOpenness,
+    HasRelativity,
+    Interval,
+    OpeningDirection,
+    Openness,
+    Relativity,
+};
+use crate::intervals::relative::{
+    EmptiableRelativeInterval,
+    HasRelativeBoundPair,
+    RelativeBoundPair,
+    RelativeEndBound,
+    RelativeFiniteBound,
+    RelativeInterval,
+    RelativeStartBound,
 };
 
 /// Relative half-bounded interval
-/// 
+///
 /// A half-bounded interval has a reference offset and an opening direction.
-/// 
-/// Similar to the other specific interval types, its [openness](Openness) cannot change.
-/// That is to say a half-bounded interval must remain a half-bounded interval.
-/// It cannot mutate from being a half-bounded interval to a bounded interval.
-/// 
-/// Instead, if you are looking for an relative interval that doesn't keep the [openness](Openness) invariant,
-/// see [`RelativeBoundPair`].
+///
+/// Similar to the other specific interval types, its [openness](Openness)
+/// cannot change. That is to say a half-bounded interval must remain a
+/// half-bounded interval. It cannot mutate from being a half-bounded interval
+/// to a bounded interval.
+///
+/// Instead, if you are looking for an relative interval that doesn't keep the
+/// [openness](Openness) invariant, see [`RelativeBoundPair`].
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub struct HalfBoundedRelativeInterval {
@@ -69,7 +86,8 @@ impl HalfBoundedRelativeInterval {
         }
     }
 
-    /// Creates a new [`HalfBoundedRelativeInterval`] with the given bound inclusivities
+    /// Creates a new [`HalfBoundedRelativeInterval`] with the given bound
+    /// inclusivities
     ///
     /// # Examples
     ///
@@ -266,19 +284,17 @@ impl HasRelativeBoundPair for HalfBoundedRelativeInterval {
     fn rel_start(&self) -> RelativeStartBound {
         match self.opening_direction {
             OpeningDirection::ToPast => RelativeStartBound::InfinitePast,
-            OpeningDirection::ToFuture => RelativeFiniteBound::new_with_inclusivity(
-                self.reference,
-                self.reference_inclusivity,
-            ).to_start_bound(),
+            OpeningDirection::ToFuture => {
+                RelativeFiniteBound::new_with_inclusivity(self.reference, self.reference_inclusivity).to_start_bound()
+            },
         }
     }
 
     fn rel_end(&self) -> RelativeEndBound {
         match self.opening_direction {
-            OpeningDirection::ToPast => RelativeFiniteBound::new_with_inclusivity(
-                self.reference,
-                self.reference_inclusivity,
-            ).to_end_bound(),
+            OpeningDirection::ToPast => {
+                RelativeFiniteBound::new_with_inclusivity(self.reference, self.reference_inclusivity).to_end_bound()
+            },
             OpeningDirection::ToFuture => RelativeEndBound::InfiniteFuture,
         }
     }
@@ -326,7 +342,8 @@ impl From<RangeToInclusive<SignedDuration>> for HalfBoundedRelativeInterval {
     }
 }
 
-/// Errors that can occur when trying to convert [`RelativeBoundPair`] into [`HalfBoundedRelativeInterval`]
+/// Errors that can occur when trying to convert [`RelativeBoundPair`] into
+/// [`HalfBoundedRelativeInterval`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum HalfBoundedRelativeIntervalFromRelativeBoundPairError {
     NotHalfBoundedInterval,
@@ -366,7 +383,8 @@ impl TryFrom<RelativeBoundPair> for HalfBoundedRelativeInterval {
     }
 }
 
-/// Errors that can occur when trying to convert [`RelativeInterval`] into [`HalfBoundedRelativeInterval`]
+/// Errors that can occur when trying to convert [`RelativeInterval`] into
+/// [`HalfBoundedRelativeInterval`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum HalfBoundedRelativeIntervalFromRelativeIntervalError {
     WrongVariant,

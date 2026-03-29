@@ -1,8 +1,8 @@
 //! Fill gaps between non-overlapping intervals
 //!
-//! Use [`GapFillable::fill_gap`] to fill gaps between non-overlapping intervals.
-//! This operation takes the first interval, provided by `self`, and extends it so that it fills the gap
-//! up to the second interval.
+//! Use [`GapFillable::fill_gap`] to fill gaps between non-overlapping
+//! intervals. This operation takes the first interval, provided by `self`, and
+//! extends it so that it fills the gap up to the second interval.
 //!
 //! # Examples
 //!
@@ -47,13 +47,32 @@
 
 use super::grow::{GrowableEndBound, GrowableStartBound};
 use super::overlap::{CanPositionOverlap, DisambiguatedOverlapPosition, OverlapRuleSet};
-
 use crate::intervals::absolute::{
-    AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteInterval, AbsoluteStartBound, BoundedAbsoluteInterval, EmptiableAbsoluteBoundPair, EmptiableAbsoluteInterval, HalfBoundedAbsoluteInterval, HasAbsoluteBoundPair, HasEmptiableAbsoluteBoundPair
+    AbsoluteBoundPair,
+    AbsoluteEndBound,
+    AbsoluteFiniteBound,
+    AbsoluteInterval,
+    AbsoluteStartBound,
+    BoundedAbsoluteInterval,
+    EmptiableAbsoluteBoundPair,
+    EmptiableAbsoluteInterval,
+    HalfBoundedAbsoluteInterval,
+    HasAbsoluteBoundPair,
+    HasEmptiableAbsoluteBoundPair,
 };
 use crate::intervals::meta::{HasBoundInclusivity, Interval};
 use crate::intervals::relative::{
-    BoundedRelativeInterval, EmptiableRelativeBoundPair, EmptiableRelativeInterval, HalfBoundedRelativeInterval, HasEmptiableRelativeBoundPair, HasRelativeBoundPair, RelativeBoundPair, RelativeEndBound, RelativeFiniteBound, RelativeInterval, RelativeStartBound
+    BoundedRelativeInterval,
+    EmptiableRelativeBoundPair,
+    EmptiableRelativeInterval,
+    HalfBoundedRelativeInterval,
+    HasEmptiableRelativeBoundPair,
+    HasRelativeBoundPair,
+    RelativeBoundPair,
+    RelativeEndBound,
+    RelativeFiniteBound,
+    RelativeInterval,
+    RelativeStartBound,
 };
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 
@@ -66,7 +85,8 @@ pub enum GapFillError {
 
 /// Capacity to fill gaps between non-overlapping intervals
 ///
-/// Filling a gap returns a copy of the first interval, given by `self`, that fills the gap up to the second interval.
+/// Filling a gap returns a copy of the first interval, given by `self`, that
+/// fills the gap up to the second interval.
 pub trait GapFillable<Rhs = Self> {
     /// Output type
     type Output;
@@ -77,7 +97,8 @@ pub trait GapFillable<Rhs = Self> {
     ///
     /// # Errors
     ///
-    /// If the two intervals are overlapping, it result in [`GapFillError::Overlap`].
+    /// If the two intervals are overlapping, it result in
+    /// [`GapFillError::Overlap`].
     ///
     /// # Examples
     ///
@@ -284,14 +305,18 @@ where
     }
 }
 
-/// Extends an [`AbsoluteBoundPair`] to fill the gap up to the other [`AbsoluteBoundPair`]
+/// Extends an [`AbsoluteBoundPair`] to fill the gap up to the other
+/// [`AbsoluteBoundPair`]
 ///
 /// See [module documentation](self) for more info.
 ///
 /// # Errors
 ///
 /// If the given bounds overlap, it results in [`GapFillError::Overlap`]
-pub fn fill_gap_abs_bound_pair(a: &AbsoluteBoundPair, b: &AbsoluteBoundPair) -> Result<AbsoluteBoundPair, GapFillError> {
+pub fn fill_gap_abs_bound_pair(
+    a: &AbsoluteBoundPair,
+    b: &AbsoluteBoundPair,
+) -> Result<AbsoluteBoundPair, GapFillError> {
     type Dop = DisambiguatedOverlapPosition;
 
     let Ok(overlap_position) = a.disambiguated_overlap_position(b, OverlapRuleSet::Strict);
@@ -332,7 +357,8 @@ pub fn fill_gap_abs_bound_pair(a: &AbsoluteBoundPair, b: &AbsoluteBoundPair) -> 
     }
 }
 
-/// Extends an [`AbsoluteBoundPair`] to fill the gap up to the other [`EmptiableAbsoluteBoundPair`]
+/// Extends an [`AbsoluteBoundPair`] to fill the gap up to the other
+/// [`EmptiableAbsoluteBoundPair`]
 ///
 /// See [module documentation](self) for more info.
 ///
@@ -350,7 +376,8 @@ pub fn fill_gap_abs_bound_pair_with_emptiable_abs_bound_pair(
     fill_gap_abs_bound_pair(a, b_abs_bound_pair)
 }
 
-/// Extends an [`EmptiableAbsoluteBoundPair`] to fill the gap up to the other [`EmptiableAbsoluteBoundPair`]
+/// Extends an [`EmptiableAbsoluteBoundPair`] to fill the gap up to the other
+/// [`EmptiableAbsoluteBoundPair`]
 ///
 /// See [module documentation](self) for more info.
 ///
@@ -368,14 +395,18 @@ pub fn fill_gap_emptiable_abs_bound_pair(
     fill_gap_abs_bound_pair_with_emptiable_abs_bound_pair(a_abs_bound_pair, b).map(EmptiableAbsoluteBoundPair::from)
 }
 
-/// Extends a [`RelativeBoundPair`] to fill the gap up to the other [`RelativeBoundPair`]
+/// Extends a [`RelativeBoundPair`] to fill the gap up to the other
+/// [`RelativeBoundPair`]
 ///
 /// See [module documentation](self) for more info.
 ///
 /// # Errors
 ///
 /// If the given bounds overlap, it results in [`GapFillError::Overlap`]
-pub fn fill_gap_rel_bound_pair(a: &RelativeBoundPair, b: &RelativeBoundPair) -> Result<RelativeBoundPair, GapFillError> {
+pub fn fill_gap_rel_bound_pair(
+    a: &RelativeBoundPair,
+    b: &RelativeBoundPair,
+) -> Result<RelativeBoundPair, GapFillError> {
     type Dop = DisambiguatedOverlapPosition;
 
     let Ok(overlap_position) = a.disambiguated_overlap_position(b, OverlapRuleSet::Strict);
@@ -416,7 +447,8 @@ pub fn fill_gap_rel_bound_pair(a: &RelativeBoundPair, b: &RelativeBoundPair) -> 
     }
 }
 
-/// Extends a [`RelativeBoundPair`] to fill the gap up to the other [`EmptiableRelativeBoundPair`]
+/// Extends a [`RelativeBoundPair`] to fill the gap up to the other
+/// [`EmptiableRelativeBoundPair`]
 ///
 /// See [module documentation](self) for more info.
 ///
@@ -434,7 +466,8 @@ pub fn fill_gap_rel_bound_pair_with_emptiable_rel_bound_pair(
     fill_gap_rel_bound_pair(a, b_rel_bound_pair)
 }
 
-/// Extends an [`EmptiableRelativeBoundPair`] to fill the gap up to the other [`EmptiableRelativeBoundPair`]
+/// Extends an [`EmptiableRelativeBoundPair`] to fill the gap up to the other
+/// [`EmptiableRelativeBoundPair`]
 ///
 /// See [module documentation](self) for more info.
 ///

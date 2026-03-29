@@ -1,6 +1,7 @@
 //! Iterator to remove empty intervals
 //!
-//! This iterator uses the [`Emptiable`] trait to determine what is considered an empty interval.
+//! This iterator uses the [`Emptiable`] trait to determine what is considered
+//! an empty interval.
 //!
 //! # Examples
 //!
@@ -171,7 +172,8 @@ where
 
 /// Empty interval removal iterator
 ///
-/// Uses the trait [`Emptiable`] in order to determine what is an empty interval.
+/// Uses the trait [`Emptiable`] in order to determine what is an empty
+/// interval.
 #[derive(Debug, Clone, Hash)]
 pub struct RemoveEmptyIntervals<I> {
     iter: I,
@@ -185,7 +187,9 @@ where
     /// Creates a new [`RemoveEmptyIntervals`]
     #[must_use]
     pub fn new(iter: I) -> Self {
-        RemoveEmptyIntervals { iter }
+        RemoveEmptyIntervals {
+            iter,
+        }
     }
 }
 

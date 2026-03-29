@@ -1,14 +1,15 @@
 //! Interval cutting
 //!
-//! Cutting an interval results in two split intervals, if the position of the cut is within the interval, that is.
-//! The type of gap created by the cut is chosen by the given [`CutType`], which describes the new inclusivities
+//! Cutting an interval results in two split intervals, if the position of the
+//! cut is within the interval, that is. The type of gap created by the cut is
+//! chosen by the given [`CutType`], which describes the new inclusivities
 //! of the now-split intervals for where the cut has occurred.
 //!
-//! Cutting an interval at a start/end will work only if the actual bound is inclusive and the [`CutType`]
-//! also defines that this part of the cut should be inclusive, resulting in an interval representing
-//! a single point in time.
-//! If those requirements are not met, the operation will result in [`CutResult::Uncut`], as cutting
-//! would create an illegal interval.
+//! Cutting an interval at a start/end will work only if the actual bound is
+//! inclusive and the [`CutType`] also defines that this part of the cut should
+//! be inclusive, resulting in an interval representing a single point in time.
+//! If those requirements are not met, the operation will result in
+//! [`CutResult::Uncut`], as cutting would create an illegal interval.
 //!
 //! If you are looking to make a "cut" with a non-zero duration gap,
 //! see [`Differentiable`](crate::intervals::ops::set_ops::Differentiable).
@@ -140,13 +141,34 @@ use jiff::{SignedDuration, Timestamp};
 use serde::{Deserialize, Serialize};
 
 use super::point_containment::CanPositionPointContainment;
-
 use crate::intervals::absolute::{
-    AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteInterval, AbsoluteStartBound, BoundedAbsoluteInterval, EmptiableAbsoluteBoundPair, EmptiableAbsoluteInterval, HalfBoundedAbsoluteInterval, HasAbsoluteBoundPair, HasEmptiableAbsoluteBoundPair, check_absolute_bound_pair_for_interval_creation
+    AbsoluteBoundPair,
+    AbsoluteEndBound,
+    AbsoluteFiniteBound,
+    AbsoluteInterval,
+    AbsoluteStartBound,
+    BoundedAbsoluteInterval,
+    EmptiableAbsoluteBoundPair,
+    EmptiableAbsoluteInterval,
+    HalfBoundedAbsoluteInterval,
+    HasAbsoluteBoundPair,
+    HasEmptiableAbsoluteBoundPair,
+    check_absolute_bound_pair_for_interval_creation,
 };
 use crate::intervals::meta::BoundInclusivity;
 use crate::intervals::relative::{
-    BoundedRelativeInterval, EmptiableRelativeBoundPair, EmptiableRelativeInterval, HalfBoundedRelativeInterval, HasEmptiableRelativeBoundPair, HasRelativeBoundPair, RelativeBoundPair, RelativeEndBound, RelativeFiniteBound, RelativeInterval, RelativeStartBound, check_relative_bound_pair_for_interval_creation
+    BoundedRelativeInterval,
+    EmptiableRelativeBoundPair,
+    EmptiableRelativeInterval,
+    HalfBoundedRelativeInterval,
+    HasEmptiableRelativeBoundPair,
+    HasRelativeBoundPair,
+    RelativeBoundPair,
+    RelativeEndBound,
+    RelativeFiniteBound,
+    RelativeInterval,
+    RelativeStartBound,
+    check_relative_bound_pair_for_interval_creation,
 };
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 
@@ -154,12 +176,15 @@ use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 ///
 /// Describes what [`BoundInclusivity`]s should be put at the place of the cut.
 ///
-/// The first element describes the [`BoundInclusivity`] to put on the past part of the cut,
-/// the second element describes the [`BoundInclusivity`] to put on the future part of the cut.
+/// The first element describes the [`BoundInclusivity`] to put on the past part
+/// of the cut, the second element describes the [`BoundInclusivity`] to put on
+/// the future part of the cut.
 ///
-/// For example, `CutType::new(BoundInclusivity::Inclusive, BoundInclusivity::Exclusive)`,
-/// will cut an interval such that the first cut part will end with an inclusive bound at the position
-/// given to [`Cuttable::cut_at`], and the second part will start with an exclusive bound at the same position.
+/// For example, `CutType::new(BoundInclusivity::Inclusive,
+/// BoundInclusivity::Exclusive)`, will cut an interval such that the first cut
+/// part will end with an inclusive bound at the position
+/// given to [`Cuttable::cut_at`], and the second part will start with an
+/// exclusive bound at the same position.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
@@ -236,13 +261,15 @@ impl From<(BoundInclusivity, BoundInclusivity)> for CutType {
 pub enum CutResult<T> {
     /// Uncut result
     ///
-    /// The cutting point is either outside the given interval, or would have created an illegal interval.
+    /// The cutting point is either outside the given interval, or would have
+    /// created an illegal interval.
     Uncut,
     /// Cut result
     ///
     /// The cut was successful, the variant contains the two cut parts.
     ///
-    /// The cut parts are always in chronological order, since a single interval can't be described backwards.
+    /// The cut parts are always in chronological order, since a single interval
+    /// can't be described backwards.
     Cut(T, T),
 }
 
@@ -277,8 +304,9 @@ impl<T> CutResult<T> {
 
     /// Returns the content of the [`Cut`](CutResult::Cut) variant
     ///
-    /// Consumes `self` and puts the content of the [`Cut`](CutResult::Cut) variant
-    /// in an [`Option`]. If instead `self` is another variant, the method returns [`None`].
+    /// Consumes `self` and puts the content of the [`Cut`](CutResult::Cut)
+    /// variant in an [`Option`]. If instead `self` is another variant, the
+    /// method returns [`None`].
     ///
     /// # Examples
     ///
@@ -323,17 +351,19 @@ impl<T> CutResult<T> {
 
 /// Capacity to cut an interval
 ///
-/// The generic type parameter `P` corresponds to the type used for positioning the cut.
+/// The generic type parameter `P` corresponds to the type used for positioning
+/// the cut.
 ///
-/// Cutting an interval results in two split intervals, if the position of the cut is within the interval, that is.
-/// The type of gap created by the cut is chosen by the given [`CutType`], which describes the new inclusivities
+/// Cutting an interval results in two split intervals, if the position of the
+/// cut is within the interval, that is. The type of gap created by the cut is
+/// chosen by the given [`CutType`], which describes the new inclusivities
 /// of the now-split intervals for where the cut has occurred.
 ///
-/// Cutting an interval at a start/end point will work only if the actual bound is inclusive and the [`CutType`]
-/// also defines that this part of the cut should be inclusive, resulting in an interval representing
-/// a single point in time.
-/// If those requirements are not met, the operation will result in [`CutResult::Uncut`], as cutting
-/// would create an illegal interval.
+/// Cutting an interval at a start/end point will work only if the actual bound
+/// is inclusive and the [`CutType`] also defines that this part of the cut
+/// should be inclusive, resulting in an interval representing a single point in
+/// time. If those requirements are not met, the operation will result in
+/// [`CutResult::Uncut`], as cutting would create an illegal interval.
 ///
 /// If you are looking to make a "cut" with a non-zero duration gap,
 /// see [`Differentiable`](crate::intervals::ops::set_ops::Differentiable).
@@ -687,7 +717,11 @@ impl Cuttable<SignedDuration> for EmptyInterval {
 ///
 /// See [module documentation](self) for more info.
 #[must_use]
-pub fn cut_abs_bound_pair(bounds: &AbsoluteBoundPair, at: Timestamp, cut_type: CutType) -> CutResult<AbsoluteBoundPair> {
+pub fn cut_abs_bound_pair(
+    bounds: &AbsoluteBoundPair,
+    at: Timestamp,
+    cut_type: CutType,
+) -> CutResult<AbsoluteBoundPair> {
     if !bounds.simple_contains_point(at) {
         return CutResult::Uncut;
     }
@@ -737,12 +771,16 @@ pub fn cut_emptiable_abs_bound_pair(
         return CutResult::Uncut;
     };
 
-    cut_abs_bound_pair(non_empty_bounds, at, cut_type)
-        .map_cut(|c1, c2| (EmptiableAbsoluteBoundPair::from(c1), EmptiableAbsoluteBoundPair::from(c2)))
+    cut_abs_bound_pair(non_empty_bounds, at, cut_type).map_cut(|c1, c2| {
+        (
+            EmptiableAbsoluteBoundPair::from(c1),
+            EmptiableAbsoluteBoundPair::from(c2),
+        )
+    })
 }
 
 /// Cuts a [`BoundedAbsoluteInterval`] with a [`Timestamp`]
-/// 
+///
 /// See [module documentation](self) for more info.
 #[must_use]
 pub fn cut_bounded_abs_interval(
@@ -754,15 +792,10 @@ pub fn cut_bounded_abs_interval(
         return CutResult::Uncut;
     }
 
-    let past_cut_end = AbsoluteFiniteBound::new_with_inclusivity(
-        at,
-        cut_type.past_bound_inclusivity(),
-    ).to_end_bound();
+    let past_cut_end = AbsoluteFiniteBound::new_with_inclusivity(at, cut_type.past_bound_inclusivity()).to_end_bound();
 
-    let future_cut_start = AbsoluteFiniteBound::new_with_inclusivity(
-        at,
-        cut_type.future_bound_inclusivity(),
-    ).to_start_bound();
+    let future_cut_start =
+        AbsoluteFiniteBound::new_with_inclusivity(at, cut_type.future_bound_inclusivity()).to_start_bound();
 
     if check_absolute_bound_pair_for_interval_creation(&interval.abs_start(), &past_cut_end).is_err()
         || check_absolute_bound_pair_for_interval_creation(&future_cut_start, &interval.abs_end()).is_err()
@@ -791,7 +824,11 @@ pub fn cut_bounded_abs_interval(
 ///
 /// See [module documentation](self) for more info.
 #[must_use]
-pub fn cut_rel_bound_pair(bounds: &RelativeBoundPair, at: SignedDuration, cut_type: CutType) -> CutResult<RelativeBoundPair> {
+pub fn cut_rel_bound_pair(
+    bounds: &RelativeBoundPair,
+    at: SignedDuration,
+    cut_type: CutType,
+) -> CutResult<RelativeBoundPair> {
     if !bounds.simple_contains_point(at) {
         return CutResult::Uncut;
     }
@@ -841,13 +878,16 @@ pub fn cut_emptiable_rel_bound_pair(
         return CutResult::Uncut;
     };
 
-    cut_rel_bound_pair(non_empty_bounds, at, cut_type)
-        .map_cut(|c1, c2| (EmptiableRelativeBoundPair::from(c1), EmptiableRelativeBoundPair::from(c2)))
+    cut_rel_bound_pair(non_empty_bounds, at, cut_type).map_cut(|c1, c2| {
+        (
+            EmptiableRelativeBoundPair::from(c1),
+            EmptiableRelativeBoundPair::from(c2),
+        )
+    })
 }
 
-
 /// Cuts a [`BoundedRelativeInterval`] with a [`Timestamp`]
-/// 
+///
 /// See [module documentation](self) for more info.
 #[must_use]
 pub fn cut_bounded_rel_interval(
@@ -859,15 +899,10 @@ pub fn cut_bounded_rel_interval(
         return CutResult::Uncut;
     }
 
-    let past_cut_end = RelativeFiniteBound::new_with_inclusivity(
-        at,
-        cut_type.past_bound_inclusivity(),
-    ).to_end_bound();
+    let past_cut_end = RelativeFiniteBound::new_with_inclusivity(at, cut_type.past_bound_inclusivity()).to_end_bound();
 
-    let future_cut_start = RelativeFiniteBound::new_with_inclusivity(
-        at,
-        cut_type.future_bound_inclusivity(),
-    ).to_start_bound();
+    let future_cut_start =
+        RelativeFiniteBound::new_with_inclusivity(at, cut_type.future_bound_inclusivity()).to_start_bound();
 
     if check_relative_bound_pair_for_interval_creation(&interval.rel_start(), &past_cut_end).is_err()
         || check_relative_bound_pair_for_interval_creation(&future_cut_start, &interval.rel_end()).is_err()

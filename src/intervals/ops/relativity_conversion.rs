@@ -1,16 +1,35 @@
 //! Relativity conversion
 //!
 //! Conversion from absolute to relative is defined by [`ToRelative`].
-//! Its opposite, conversion from relative to absolute, is defined by [`ToAbsolute`].
+//! Its opposite, conversion from relative to absolute, is defined by
+//! [`ToAbsolute`].
 
 use jiff::Timestamp;
 
 use crate::intervals::absolute::{
-    AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteInterval, AbsoluteStartBound, BoundedAbsoluteInterval, EmptiableAbsoluteBoundPair, EmptiableAbsoluteInterval, HalfBoundedAbsoluteInterval, HasAbsoluteBoundPair
+    AbsoluteBoundPair,
+    AbsoluteEndBound,
+    AbsoluteFiniteBound,
+    AbsoluteInterval,
+    AbsoluteStartBound,
+    BoundedAbsoluteInterval,
+    EmptiableAbsoluteBoundPair,
+    EmptiableAbsoluteInterval,
+    HalfBoundedAbsoluteInterval,
+    HasAbsoluteBoundPair,
 };
 use crate::intervals::meta::HasBoundInclusivity;
 use crate::intervals::relative::{
-    BoundedRelativeInterval, EmptiableRelativeBoundPair, EmptiableRelativeInterval, HalfBoundedRelativeInterval, HasRelativeBoundPair, RelativeBoundPair, RelativeEndBound, RelativeFiniteBound, RelativeInterval, RelativeStartBound
+    BoundedRelativeInterval,
+    EmptiableRelativeBoundPair,
+    EmptiableRelativeInterval,
+    HalfBoundedRelativeInterval,
+    HasRelativeBoundPair,
+    RelativeBoundPair,
+    RelativeEndBound,
+    RelativeFiniteBound,
+    RelativeInterval,
+    RelativeStartBound,
 };
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 
@@ -50,7 +69,8 @@ macro_rules! to_relative_impl_reflective {
 
 /// Conversion into absolute
 ///
-/// This trait is reflexive: absolute structures should implement [`ToAbsolute`].
+/// This trait is reflexive: absolute structures should implement
+/// [`ToAbsolute`].
 ///
 /// # Examples
 ///
@@ -273,7 +293,9 @@ impl ToAbsolute for EmptiableRelativeInterval {
     {
         match self {
             Self::Bounded(bounded) => EmptiableAbsoluteInterval::Bounded(bounded.to_absolute(reference)),
-            Self::HalfBounded(half_bounded) => EmptiableAbsoluteInterval::HalfBounded(half_bounded.to_absolute(reference)),
+            Self::HalfBounded(half_bounded) => {
+                EmptiableAbsoluteInterval::HalfBounded(half_bounded.to_absolute(reference))
+            },
             Self::Unbounded(unbounded) => EmptiableAbsoluteInterval::Unbounded(unbounded.to_absolute(reference)),
             Self::Empty(empty) => EmptiableAbsoluteInterval::Empty(empty.to_absolute(reference)),
         }
@@ -282,7 +304,8 @@ impl ToAbsolute for EmptiableRelativeInterval {
 
 /// Conversion into relative
 ///
-/// This trait is reflexive: relative structures should implement [`ToRelative`].
+/// This trait is reflexive: relative structures should implement
+/// [`ToRelative`].
 ///
 /// # Examples
 ///
@@ -505,7 +528,9 @@ impl ToRelative for EmptiableAbsoluteInterval {
     {
         match self {
             Self::Bounded(bounded) => EmptiableRelativeInterval::Bounded(bounded.to_relative(reference)),
-            Self::HalfBounded(half_bounded) => EmptiableRelativeInterval::HalfBounded(half_bounded.to_relative(reference)),
+            Self::HalfBounded(half_bounded) => {
+                EmptiableRelativeInterval::HalfBounded(half_bounded.to_relative(reference))
+            },
             Self::Unbounded(unbounded) => EmptiableRelativeInterval::Unbounded(unbounded.to_relative(reference)),
             Self::Empty(empty) => EmptiableRelativeInterval::Empty(empty.to_relative(reference)),
         }

@@ -1,8 +1,10 @@
 //! Complement iterator
 //!
-//! Iterator that returns the [`ComplementResult`] of every interval from the interval.
+//! Iterator that returns the [`ComplementResult`] of every interval from the
+//! interval.
 //!
-//! The iterator uses [`Complementable`] to get the complements of the intervals.
+//! The iterator uses [`Complementable`] to get the complements of the
+//! intervals.
 //!
 //! # Examples
 //!
@@ -108,7 +110,9 @@ where
     I::Item: Complementable,
 {
     pub fn new(iter: I) -> Self {
-        ComplementIter { iter }
+        ComplementIter {
+            iter,
+        }
     }
 }
 

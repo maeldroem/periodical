@@ -1,13 +1,14 @@
 //! Absolute half-bounded interval
-//! 
+//!
 //! A half-bounded interval has a reference time and an opening direction.
-//! 
-//! Similar to the other specific interval types, its [openness](Openness) cannot change.
-//! That is to say a half-bounded interval must remain a half-bounded interval.
-//! It cannot mutate from being a half-bounded interval to a bounded interval.
-//! 
-//! Instead, if you are looking for an absolute interval that doesn't keep the [openness](Openness) invariant,
-//! see [`AbsoluteBoundPair`].
+//!
+//! Similar to the other specific interval types, its [openness](Openness)
+//! cannot change. That is to say a half-bounded interval must remain a
+//! half-bounded interval. It cannot mutate from being a half-bounded interval
+//! to a bounded interval.
+//!
+//! Instead, if you are looking for an absolute interval that doesn't keep the
+//! [openness](Openness) invariant, see [`AbsoluteBoundPair`].
 
 use std::error::Error;
 use std::fmt::Display;
@@ -18,22 +19,38 @@ use jiff::Timestamp;
 use serde::{Deserialize, Serialize};
 
 use crate::intervals::absolute::{
-    AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteInterval, AbsoluteStartBound, EmptiableAbsoluteInterval, HasAbsoluteBoundPair
+    AbsoluteBoundPair,
+    AbsoluteEndBound,
+    AbsoluteFiniteBound,
+    AbsoluteInterval,
+    AbsoluteStartBound,
+    EmptiableAbsoluteInterval,
+    HasAbsoluteBoundPair,
 };
 use crate::intervals::meta::{
-    BoundInclusivity, Duration as IntervalDuration, HasBoundInclusivity, HasDuration, HasOpenness, HasRelativity, Interval, OpeningDirection, Openness, Relativity
+    BoundInclusivity,
+    Duration as IntervalDuration,
+    HasBoundInclusivity,
+    HasDuration,
+    HasOpenness,
+    HasRelativity,
+    Interval,
+    OpeningDirection,
+    Openness,
+    Relativity,
 };
 
 /// A half-bounded absolute interval
-/// 
+///
 /// A half-bounded interval has a reference time and an opening direction.
-/// 
-/// Similar to the other specific interval types, its [openness](Openness) cannot change.
-/// That is to say a half-bounded interval must remain a half-bounded interval.
-/// It cannot mutate from being a half-bounded interval to a bounded interval.
-/// 
-/// Instead, if you are looking for an absolute interval that doesn't keep the [openness](Openness) invariant,
-/// see [`AbsoluteBoundPair`].
+///
+/// Similar to the other specific interval types, its [openness](Openness)
+/// cannot change. That is to say a half-bounded interval must remain a
+/// half-bounded interval. It cannot mutate from being a half-bounded interval
+/// to a bounded interval.
+///
+/// Instead, if you are looking for an absolute interval that doesn't keep the
+/// [openness](Openness) invariant, see [`AbsoluteBoundPair`].
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub struct HalfBoundedAbsoluteInterval {
@@ -73,7 +90,8 @@ impl HalfBoundedAbsoluteInterval {
         }
     }
 
-    /// Creates a new [`HalfBoundedAbsoluteInterval`] with the given bound inclusivities
+    /// Creates a new [`HalfBoundedAbsoluteInterval`] with the given bound
+    /// inclusivities
     ///
     /// # Examples
     ///
@@ -275,7 +293,8 @@ pub enum HalfBoundedAbsoluteIntervalCreationError {
     OutOfRangeReference,
     /// Something went wrong when computing data for creating the interval
     ///
-    /// This can be caused by multiple factors, like numbers overflowing, input not respecting invariants, etc.
+    /// This can be caused by multiple factors, like numbers overflowing, input
+    /// not respecting invariants, etc.
     ComputationError,
 }
 
@@ -318,19 +337,17 @@ impl HasAbsoluteBoundPair for HalfBoundedAbsoluteInterval {
     fn abs_start(&self) -> AbsoluteStartBound {
         match self.opening_direction {
             OpeningDirection::ToPast => AbsoluteStartBound::InfinitePast,
-            OpeningDirection::ToFuture => AbsoluteFiniteBound::new_with_inclusivity(
-                self.reference,
-                self.reference_inclusivity,
-            ).to_start_bound(),
+            OpeningDirection::ToFuture => {
+                AbsoluteFiniteBound::new_with_inclusivity(self.reference, self.reference_inclusivity).to_start_bound()
+            },
         }
     }
 
     fn abs_end(&self) -> AbsoluteEndBound {
         match self.opening_direction {
-            OpeningDirection::ToPast => AbsoluteFiniteBound::new_with_inclusivity(
-                self.reference,
-                self.reference_inclusivity,
-            ).to_end_bound(),
+            OpeningDirection::ToPast => {
+                AbsoluteFiniteBound::new_with_inclusivity(self.reference, self.reference_inclusivity).to_end_bound()
+            },
             OpeningDirection::ToFuture => AbsoluteEndBound::InfiniteFuture,
         }
     }
@@ -378,7 +395,8 @@ impl From<RangeToInclusive<Timestamp>> for HalfBoundedAbsoluteInterval {
     }
 }
 
-/// Errors that can occur when trying to convert [`AbsoluteBoundPair`] into [`HalfBoundedAbsoluteInterval`]
+/// Errors that can occur when trying to convert [`AbsoluteBoundPair`] into
+/// [`HalfBoundedAbsoluteInterval`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum HalfBoundedAbsoluteIntervalFromAbsoluteBoundPairError {
     NotHalfBoundedInterval,
@@ -418,7 +436,8 @@ impl TryFrom<AbsoluteBoundPair> for HalfBoundedAbsoluteInterval {
     }
 }
 
-/// Errors that can occur when trying to convert [`AbsoluteInterval`] into [`HalfBoundedAbsoluteInterval`]
+/// Errors that can occur when trying to convert [`AbsoluteInterval`] into
+/// [`HalfBoundedAbsoluteInterval`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum HalfBoundedAbsoluteIntervalFromAbsoluteIntervalError {
     WrongVariant,
