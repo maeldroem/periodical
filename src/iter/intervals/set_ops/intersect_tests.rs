@@ -15,6 +15,7 @@ use crate::intervals::ops::abridge::Abridgable;
 use crate::intervals::ops::overlap::{CanPositionOverlap, DEFAULT_OVERLAP_RULES, OverlapRuleSet};
 use crate::ops::IntersectionResult;
 
+#[allow(clippy::too_many_lines)]
 #[test]
 fn peer_intersection_run() -> Result<(), Box<dyn Error>> {
     // [--1--]   (-4-)(--5--)    [-7-]
@@ -157,6 +158,7 @@ fn peer_intersection_run() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
+#[allow(clippy::too_many_lines)]
 #[test]
 fn peer_intersection_with_run() -> Result<(), Box<dyn Error>> {
     // [--1--]   (-4-)(--5--)    [-7-]

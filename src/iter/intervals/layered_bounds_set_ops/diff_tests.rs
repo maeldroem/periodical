@@ -54,6 +54,7 @@ mod abs {
         Ok(())
     }
 
+    #[allow(clippy::too_many_lines)]
     #[test]
     fn run() -> Result<(), Box<dyn Error>> {
         // first layer:     [------2------]     [--6--] [8]

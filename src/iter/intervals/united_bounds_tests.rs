@@ -154,6 +154,7 @@ mod abs_united_bounds {
         Ok(())
     }
 
+    #[allow(clippy::too_many_lines)]
     #[test]
     fn run_from_abs_bounds_iter() -> Result<(), Box<dyn Error>> {
         let data = [
