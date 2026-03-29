@@ -177,7 +177,7 @@ impl AbsoluteInterval {
 
     /// Wraps the interval in [`EmptiableAbsoluteInterval`]
     #[must_use]
-    pub fn to_emptiable_interval(self) -> EmptiableAbsoluteInterval {
+    pub fn to_emptiable(self) -> EmptiableAbsoluteInterval {
         EmptiableAbsoluteInterval::from(self)
     }
 }

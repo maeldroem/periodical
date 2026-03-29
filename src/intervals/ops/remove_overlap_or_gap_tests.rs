@@ -357,14 +357,12 @@ mod remove_overlap_or_gap {
                     "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Inclusive,
                     OpeningDirection::ToPast,
-                ))
-                .to_emptiable_interval(),
+                )).to_emptiable(),
                 AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
                     "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                     OpeningDirection::ToFuture,
-                ))
-                .to_emptiable_interval(),
+                )).to_emptiable(),
             ),
         );
 
