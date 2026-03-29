@@ -48,11 +48,11 @@ jobs:
           restore-keys: ${{ runner.os }}-rustup-nightly-toolchain-
       - if: ${{ steps.cache-nightly-toolchain.outputs.cache-hit != 'true' }}
         name: Install nightly toolchain
-        run: rustup toolchain install --no-self-update nightly-1.96.0
+        run: rustup toolchain install --no-self-update nightly
       - name: Clippy
         run: cargo clippy --verbose
       - name: Cargo fmt check
-        run: cargo +nightly-1.96.0 fmt --check
+        run: cargo +nightly fmt --check
   testing:
     runs-on: ubuntu-latest
     needs: [building]
