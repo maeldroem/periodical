@@ -149,10 +149,7 @@ impl RelativeBoundPair {
     /// );
     /// assert_eq!(
     ///     bounds.end(),
-    ///     RelativeFiniteBound::new_with_inclusivity(
-    ///         end,
-    ///         BoundInclusivity::Exclusive,
-    ///     ).to_end_bound(),
+    ///     RelativeFiniteBound::new_with_inclusivity(end, BoundInclusivity::Exclusive,).to_end_bound(),
     /// );
     /// ```
     #[must_use]

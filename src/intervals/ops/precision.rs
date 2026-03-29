@@ -26,11 +26,17 @@
 //! # use periodical::intervals::ops::precision::PreciseAbsoluteInterval;
 //! let interval = AbsoluteBoundPair::new(
 //!     AbsoluteFiniteBound::new(
-//!         "2025-01-01 08:03:29.591[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!     ).to_start_bound(),
+//!         "2025-01-01 08:03:29.591[Europe/Oslo]"
+//!             .parse::<Zoned>()?
+//!             .timestamp(),
+//!     )
+//!     .to_start_bound(),
 //!     AbsoluteFiniteBound::new(
-//!         "2025-01-01 15:57:44.041[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!     ).to_end_bound(),
+//!         "2025-01-01 15:57:44.041[Europe/Oslo]"
+//!             .parse::<Zoned>()?
+//!             .timestamp(),
+//!     )
+//!     .to_end_bound(),
 //! );
 //!
 //! assert_eq!(
@@ -40,11 +46,17 @@
 //!     ),
 //!     Ok(AbsoluteBoundPair::new(
 //!         AbsoluteFiniteBound::new(
-//!             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!         ).to_start_bound(),
+//!             "2025-01-01 08:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_start_bound(),
 //!         AbsoluteFiniteBound::new(
-//!             "2025-01-01 15:55:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!         ).to_end_bound(),
+//!             "2025-01-01 15:55:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_end_bound(),
 //!     )),
 //! );
 //! # Ok::<(), Box<dyn Error>>(())
@@ -84,11 +96,17 @@ use crate::ops::{Precision, PrecisionError};
 /// # use periodical::intervals::ops::precision::PreciseAbsoluteInterval;
 /// let interval = AbsoluteBoundPair::new(
 ///     AbsoluteFiniteBound::new(
-///         "2025-01-01 08:03:29.591[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-///     ).to_start_bound(),
+///         "2025-01-01 08:03:29.591[Europe/Oslo]"
+///             .parse::<Zoned>()?
+///             .timestamp(),
+///     )
+///     .to_start_bound(),
 ///     AbsoluteFiniteBound::new(
-///         "2025-01-01 15:57:44.041[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-///     ).to_end_bound(),
+///         "2025-01-01 15:57:44.041[Europe/Oslo]"
+///             .parse::<Zoned>()?
+///             .timestamp(),
+///     )
+///     .to_end_bound(),
 /// );
 ///
 /// assert_eq!(
@@ -98,11 +116,17 @@ use crate::ops::{Precision, PrecisionError};
 ///     ),
 ///     Ok(AbsoluteBoundPair::new(
 ///         AbsoluteFiniteBound::new(
-///             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-///         ).to_start_bound(),
+///             "2025-01-01 08:00:00[Europe/Oslo]"
+///                 .parse::<Zoned>()?
+///                 .timestamp(),
+///         )
+///         .to_start_bound(),
 ///         AbsoluteFiniteBound::new(
-///             "2025-01-01 15:55:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-///         ).to_end_bound(),
+///             "2025-01-01 15:55:00[Europe/Oslo]"
+///                 .parse::<Zoned>()?
+///                 .timestamp(),
+///         )
+///         .to_end_bound(),
 ///     )),
 /// );
 /// # Ok::<(), Box<dyn Error>>(())
@@ -125,11 +149,17 @@ pub trait PreciseAbsoluteInterval {
     /// # use periodical::intervals::ops::precision::PreciseAbsoluteInterval;
     /// let interval = AbsoluteBoundPair::new(
     ///     AbsoluteFiniteBound::new(
-    ///         "2025-01-01 08:03:29.591[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_start_bound(),
+    ///         "2025-01-01 08:03:29.591[Europe/Oslo]"
+    ///             .parse::<Zoned>()?
+    ///             .timestamp(),
+    ///     )
+    ///     .to_start_bound(),
     ///     AbsoluteFiniteBound::new(
-    ///         "2025-01-01 15:57:44.041[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_end_bound(),
+    ///         "2025-01-01 15:57:44.041[Europe/Oslo]"
+    ///             .parse::<Zoned>()?
+    ///             .timestamp(),
+    ///     )
+    ///     .to_end_bound(),
     /// );
     ///
     /// assert_eq!(
@@ -140,11 +170,17 @@ pub trait PreciseAbsoluteInterval {
     ///     ),
     ///     Ok(AbsoluteBoundPair::new(
     ///         AbsoluteFiniteBound::new(
-    ///             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///         ).to_start_bound(),
+    ///             "2025-01-01 08:00:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
+    ///         )
+    ///         .to_start_bound(),
     ///         AbsoluteFiniteBound::new(
-    ///             "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///         ).to_end_bound(),
+    ///             "2025-01-01 16:00:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
+    ///         )
+    ///         .to_end_bound(),
     ///     )),
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
@@ -171,11 +207,17 @@ pub trait PreciseAbsoluteInterval {
     /// # use periodical::intervals::ops::precision::PreciseAbsoluteInterval;
     /// let interval = AbsoluteBoundPair::new(
     ///     AbsoluteFiniteBound::new(
-    ///         "2025-01-01 08:03:29.591[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_start_bound(),
+    ///         "2025-01-01 08:03:29.591[Europe/Oslo]"
+    ///             .parse::<Zoned>()?
+    ///             .timestamp(),
+    ///     )
+    ///     .to_start_bound(),
     ///     AbsoluteFiniteBound::new(
-    ///         "2025-01-01 15:57:44.041[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_end_bound(),
+    ///         "2025-01-01 15:57:44.041[Europe/Oslo]"
+    ///             .parse::<Zoned>()?
+    ///             .timestamp(),
+    ///     )
+    ///     .to_end_bound(),
     /// );
     ///
     /// assert_eq!(
@@ -185,11 +227,17 @@ pub trait PreciseAbsoluteInterval {
     ///     ),
     ///     Ok(AbsoluteBoundPair::new(
     ///         AbsoluteFiniteBound::new(
-    ///             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///         ).to_start_bound(),
+    ///             "2025-01-01 08:00:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
+    ///         )
+    ///         .to_start_bound(),
     ///         AbsoluteFiniteBound::new(
-    ///             "2025-01-01 15:55:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///         ).to_end_bound(),
+    ///             "2025-01-01 15:55:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
+    ///         )
+    ///         .to_end_bound(),
     ///     )),
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
@@ -216,28 +264,44 @@ pub trait PreciseAbsoluteInterval {
     /// # use periodical::intervals::ops::precision::PreciseAbsoluteInterval;
     /// let interval = AbsoluteBoundPair::new(
     ///     AbsoluteFiniteBound::new(
-    ///         "2025-01-01 08:11:29.591[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_start_bound(),
+    ///         "2025-01-01 08:11:29.591[Europe/Oslo]"
+    ///             .parse::<Zoned>()?
+    ///             .timestamp(),
+    ///     )
+    ///     .to_start_bound(),
     ///     AbsoluteFiniteBound::new(
-    ///         "2025-01-01 15:57:44.041[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_end_bound(),
+    ///         "2025-01-01 15:57:44.041[Europe/Oslo]"
+    ///             .parse::<Zoned>()?
+    ///             .timestamp(),
+    ///     )
+    ///     .to_end_bound(),
     /// );
     ///
     /// assert_eq!(
     ///     interval.precise_interval_with_different_precisions_with_base_time(
     ///         TimeZone::get("Europe/Oslo")?,
     ///         Precision::new(Duration::from_mins(7), PrecisionMode::ToFuture)?,
-    ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///         "2025-01-01 08:00:00[Europe/Oslo]"
+    ///             .parse::<Zoned>()?
+    ///             .timestamp(),
     ///         Precision::new(Duration::from_mins(7), PrecisionMode::ToPast)?,
-    ///         "2025-01-01 15:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///         "2025-01-01 15:00:00[Europe/Oslo]"
+    ///             .parse::<Zoned>()?
+    ///             .timestamp(),
     ///     ),
     ///     Ok(AbsoluteBoundPair::new(
     ///         AbsoluteFiniteBound::new(
-    ///             "2025-01-01 08:14:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///         ).to_start_bound(),
+    ///             "2025-01-01 08:14:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
+    ///         )
+    ///         .to_start_bound(),
     ///         AbsoluteFiniteBound::new(
-    ///             "2025-01-01 15:56:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///         ).to_end_bound(),
+    ///             "2025-01-01 15:56:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
+    ///         )
+    ///         .to_end_bound(),
     ///     )),
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
@@ -270,26 +334,40 @@ pub trait PreciseAbsoluteInterval {
     /// # use periodical::intervals::ops::precision::PreciseAbsoluteInterval;
     /// let interval = AbsoluteBoundPair::new(
     ///     AbsoluteFiniteBound::new(
-    ///         "2025-01-01 08:11:29.591[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_start_bound(),
+    ///         "2025-01-01 08:11:29.591[Europe/Oslo]"
+    ///             .parse::<Zoned>()?
+    ///             .timestamp(),
+    ///     )
+    ///     .to_start_bound(),
     ///     AbsoluteFiniteBound::new(
-    ///         "2025-01-01 15:57:44.041[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_end_bound(),
+    ///         "2025-01-01 15:57:44.041[Europe/Oslo]"
+    ///             .parse::<Zoned>()?
+    ///             .timestamp(),
+    ///     )
+    ///     .to_end_bound(),
     /// );
     ///
     /// assert_eq!(
     ///     interval.precise_interval_with_base_time(
     ///         TimeZone::get("Europe/Oslo")?,
     ///         Precision::new(Duration::from_mins(7), PrecisionMode::ToFuture)?,
-    ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///         "2025-01-01 08:00:00[Europe/Oslo]"
+    ///             .parse::<Zoned>()?
+    ///             .timestamp(),
     ///     ),
     ///     Ok(AbsoluteBoundPair::new(
     ///         AbsoluteFiniteBound::new(
-    ///             "2025-01-01 08:14:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///         ).to_start_bound(),
+    ///             "2025-01-01 08:14:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
+    ///         )
+    ///         .to_start_bound(),
     ///         AbsoluteFiniteBound::new(
-    ///             "2025-01-01 16:03:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///         ).to_end_bound(),
+    ///             "2025-01-01 16:03:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
+    ///         )
+    ///         .to_end_bound(),
     ///     )),
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
@@ -493,9 +571,12 @@ impl PreciseAbsoluteInterval for EmptiableAbsoluteInterval {
 /// # use periodical::intervals::meta::BoundInclusivity;
 /// # use periodical::intervals::ops::precision::PreciseAbsoluteBound;
 /// let bound = AbsoluteFiniteBound::new_with_inclusivity(
-///     "2025-01-01 08:24:41[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///     "2025-01-01 08:24:41[Europe/Oslo]"
+///         .parse::<Zoned>()?
+///         .timestamp(),
 ///     BoundInclusivity::Exclusive,
-/// ).to_start_bound();
+/// )
+/// .to_start_bound();
 ///
 /// assert_eq!(
 ///     bound.precise_bound(
@@ -503,9 +584,12 @@ impl PreciseAbsoluteInterval for EmptiableAbsoluteInterval {
 ///         Precision::new(Duration::from_mins(5), PrecisionMode::ToFuture)?,
 ///     ),
 ///     Ok(AbsoluteFiniteBound::new_with_inclusivity(
-///         "2025-01-01 08:25:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///         "2025-01-01 08:25:00[Europe/Oslo]"
+///             .parse::<Zoned>()?
+///             .timestamp(),
 ///         BoundInclusivity::Exclusive,
-///     ).to_start_bound()),
+///     )
+///     .to_start_bound()),
 /// );
 /// # Ok::<(), Box<dyn Error>>(())
 /// ```
@@ -528,9 +612,12 @@ pub trait PreciseAbsoluteBound {
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::precision::PreciseAbsoluteBound;
     /// let bound = AbsoluteFiniteBound::new_with_inclusivity(
-    ///     "2025-01-01 08:24:41[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     "2025-01-01 08:24:41[Europe/Oslo]"
+    ///         .parse::<Zoned>()?
+    ///         .timestamp(),
     ///     BoundInclusivity::Exclusive,
-    /// ).to_start_bound();
+    /// )
+    /// .to_start_bound();
     ///
     /// assert_eq!(
     ///     bound.precise_bound(
@@ -538,9 +625,12 @@ pub trait PreciseAbsoluteBound {
     ///         Precision::new(Duration::from_mins(5), PrecisionMode::ToFuture)?,
     ///     ),
     ///     Ok(AbsoluteFiniteBound::new_with_inclusivity(
-    ///         "2025-01-01 08:25:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///         "2025-01-01 08:25:00[Europe/Oslo]"
+    ///             .parse::<Zoned>()?
+    ///             .timestamp(),
     ///         BoundInclusivity::Exclusive,
-    ///     ).to_start_bound()),
+    ///     )
+    ///     .to_start_bound()),
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
@@ -563,20 +653,28 @@ pub trait PreciseAbsoluteBound {
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::precision::PreciseAbsoluteBound;
     /// let bound = AbsoluteFiniteBound::new_with_inclusivity(
-    ///     "2025-01-01 08:24:41[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     "2025-01-01 08:24:41[Europe/Oslo]"
+    ///         .parse::<Zoned>()?
+    ///         .timestamp(),
     ///     BoundInclusivity::Exclusive,
-    /// ).to_start_bound();
+    /// )
+    /// .to_start_bound();
     ///
     /// assert_eq!(
     ///     bound.precise_bound_with_base_time(
     ///         TimeZone::get("Europe/Oslo")?,
     ///         Precision::new(Duration::from_mins(7), PrecisionMode::ToFuture)?,
-    ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///         "2025-01-01 08:00:00[Europe/Oslo]"
+    ///             .parse::<Zoned>()?
+    ///             .timestamp(),
     ///     ),
     ///     Ok(AbsoluteFiniteBound::new_with_inclusivity(
-    ///         "2025-01-01 08:28:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///         "2025-01-01 08:28:00[Europe/Oslo]"
+    ///             .parse::<Zoned>()?
+    ///             .timestamp(),
     ///         BoundInclusivity::Exclusive,
-    ///     ).to_start_bound()),
+    ///     )
+    ///     .to_start_bound()),
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```

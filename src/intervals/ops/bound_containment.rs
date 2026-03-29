@@ -530,13 +530,20 @@ pub fn deny_on_bounds_containment_rule_counts_as_contained(
 /// #     CanPositionBoundContainment, DisambiguatedBoundContainmentPosition,
 /// # };
 /// let interval = BoundedAbsoluteInterval::new(
-///     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-///     "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///     "2025-01-01 08:00:00[Europe/Oslo]"
+///         .parse::<Zoned>()?
+///         .timestamp(),
+///     "2025-01-01 16:00:00[Europe/Oslo]"
+///         .parse::<Zoned>()?
+///         .timestamp(),
 /// );
 ///
 /// let bound = AbsoluteFiniteBound::new(
-///     "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
-/// ).to_start_bound();
+///     "2025-01-01 10:00:00[Europe/Oslo]"
+///         .parse::<Zoned>()?
+///         .timestamp(),
+/// )
+/// .to_start_bound();
 ///
 /// assert!(interval.simple_contains_bound(&bound));
 /// # Ok::<(), Box<dyn Error>>(())
@@ -635,13 +642,20 @@ pub trait CanPositionBoundContainment<B> {
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::bound_containment::CanPositionBoundContainment;
     /// let interval = BoundedAbsoluteInterval::new(
-    ///     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     "2025-01-01 08:00:00[Europe/Oslo]"
+    ///         .parse::<Zoned>()?
+    ///         .timestamp(),
+    ///     "2025-01-01 16:00:00[Europe/Oslo]"
+    ///         .parse::<Zoned>()?
+    ///         .timestamp(),
     /// );
     ///
     /// let bound = AbsoluteFiniteBound::new(
-    ///     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    /// ).to_start_bound();
+    ///     "2025-01-01 08:00:00[Europe/Oslo]"
+    ///         .parse::<Zoned>()?
+    ///         .timestamp(),
+    /// )
+    /// .to_start_bound();
     ///
     /// assert!(interval.simple_contains_bound(&bound));
     /// # Ok::<(), Box<dyn Error>>(())
@@ -671,19 +685,26 @@ pub trait CanPositionBoundContainment<B> {
     /// #     BoundContainmentRule, BoundContainmentRuleSet, CanPositionBoundContainment,
     /// # };
     /// let interval = BoundedAbsoluteInterval::new(
-    ///     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     "2025-01-01 08:00:00[Europe/Oslo]"
+    ///         .parse::<Zoned>()?
+    ///         .timestamp(),
+    ///     "2025-01-01 16:00:00[Europe/Oslo]"
+    ///         .parse::<Zoned>()?
+    ///         .timestamp(),
     /// );
     ///
     /// let bound = AbsoluteFiniteBound::new_with_inclusivity(
-    ///     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     "2025-01-01 08:00:00[Europe/Oslo]"
+    ///         .parse::<Zoned>()?
+    ///         .timestamp(),
     ///     BoundInclusivity::Exclusive,
-    /// ).to_start_bound();
+    /// )
+    /// .to_start_bound();
     ///
     /// let is_contained = interval.contains_bound(
     ///     &bound,
     ///     BoundContainmentRuleSet::Lenient,
-    ///     &[BoundContainmentRule::AllowOnStart]
+    ///     &[BoundContainmentRule::AllowOnStart],
     /// );
     ///
     /// assert!(is_contained);
@@ -708,18 +729,22 @@ pub trait CanPositionBoundContainment<B> {
     /// # use periodical::intervals::absolute::{AbsoluteFiniteBound, BoundedAbsoluteInterval};
     /// # use periodical::intervals::ops::bound_containment::CanPositionBoundContainment;
     /// let interval = BoundedAbsoluteInterval::new(
-    ///     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     "2025-01-01 08:00:00[Europe/Oslo]"
+    ///         .parse::<Zoned>()?
+    ///         .timestamp(),
+    ///     "2025-01-01 16:00:00[Europe/Oslo]"
+    ///         .parse::<Zoned>()?
+    ///         .timestamp(),
     /// );
     ///
     /// let bound = AbsoluteFiniteBound::new(
-    ///     "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
-    /// ).to_start_bound();
+    ///     "2025-01-01 10:00:00[Europe/Oslo]"
+    ///         .parse::<Zoned>()?
+    ///         .timestamp(),
+    /// )
+    /// .to_start_bound();
     ///
-    /// let is_contained = interval.contains_bound_using(
-    ///     &bound,
-    ///     |_bound| false
-    /// );
+    /// let is_contained = interval.contains_bound_using(&bound, |_bound| false);
     ///
     /// assert!(!is_contained);
     /// # Ok::<(), Box<dyn Error>>(())
@@ -745,18 +770,25 @@ pub trait CanPositionBoundContainment<B> {
     /// #     BoundContainmentRuleSet, CanPositionBoundContainment,
     /// # };
     /// let interval = BoundedAbsoluteInterval::new(
-    ///     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///     "2025-01-01 08:00:00[Europe/Oslo]"
+    ///         .parse::<Zoned>()?
+    ///         .timestamp(),
+    ///     "2025-01-01 16:00:00[Europe/Oslo]"
+    ///         .parse::<Zoned>()?
+    ///         .timestamp(),
     /// );
     ///
     /// let bound = AbsoluteFiniteBound::new(
-    ///     "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
-    /// ).to_start_bound();
+    ///     "2025-01-01 10:00:00[Europe/Oslo]"
+    ///         .parse::<Zoned>()?
+    ///         .timestamp(),
+    /// )
+    /// .to_start_bound();
     ///
     /// let is_contained = interval.contains_bound_using_simple(
     ///     &bound,
     ///     BoundContainmentRuleSet::Lenient,
-    ///     |_disambiguated_bound| false
+    ///     |_disambiguated_bound| false,
     /// );
     ///
     /// assert!(!is_contained);

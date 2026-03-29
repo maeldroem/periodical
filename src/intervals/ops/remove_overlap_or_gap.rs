@@ -100,8 +100,14 @@ impl<T> OverlapOrGapRemovalResult<T> {
     ///
     /// ```
     /// # use periodical::intervals::ops::remove_overlap_or_gap::OverlapOrGapRemovalResult;
-    /// assert_eq!(OverlapOrGapRemovalResult::<u8>::Single(10).single(), Some(10));
-    /// assert_eq!(OverlapOrGapRemovalResult::<u8>::Split(10, 20).single(), None);
+    /// assert_eq!(
+    ///     OverlapOrGapRemovalResult::<u8>::Single(10).single(),
+    ///     Some(10)
+    /// );
+    /// assert_eq!(
+    ///     OverlapOrGapRemovalResult::<u8>::Split(10, 20).single(),
+    ///     None
+    /// );
     /// ```
     #[must_use]
     pub fn single(self) -> Option<T> {
@@ -123,7 +129,10 @@ impl<T> OverlapOrGapRemovalResult<T> {
     ///
     /// ```
     /// # use periodical::intervals::ops::remove_overlap_or_gap::OverlapOrGapRemovalResult;
-    /// assert_eq!(OverlapOrGapRemovalResult::<u8>::Split(10, 20).split(), Some((10, 20)));
+    /// assert_eq!(
+    ///     OverlapOrGapRemovalResult::<u8>::Split(10, 20).split(),
+    ///     Some((10, 20))
+    /// );
     /// assert_eq!(OverlapOrGapRemovalResult::<u8>::Single(10).split(), None);
     /// ```
     #[must_use]
@@ -619,8 +628,8 @@ pub fn remove_overlap_or_gap_abs_bound_pair(
         Dop::OutsideBefore => {
             let AbsoluteStartBound::Finite(finite_bound) = b.abs_start() else {
                 unreachable!(
-                    "If the start of the compared bounds is `InfinitePast`, \
-                    then it is impossible that the overlap was `OutsideBefore`"
+                    "If the start of the compared bounds is `InfinitePast`, then it is impossible that the overlap \
+                     was `OutsideBefore`"
                 );
             };
 
@@ -634,8 +643,8 @@ pub fn remove_overlap_or_gap_abs_bound_pair(
         Dop::OutsideAfter => {
             let AbsoluteEndBound::Finite(finite_bound) = b.abs_end() else {
                 unreachable!(
-                    "If the end of the compared bounds is `InfiniteFuture`, \
-                    then it is impossible that the overlap was `OutsideAfter`"
+                    "If the end of the compared bounds is `InfiniteFuture`, then it is impossible that the overlap \
+                     was `OutsideAfter`"
                 );
             };
 
@@ -649,8 +658,8 @@ pub fn remove_overlap_or_gap_abs_bound_pair(
         Dop::EndsOnStart => {
             let AbsoluteStartBound::Finite(finite_bound) = b.abs_start() else {
                 unreachable!(
-                    "If the start of the compared bounds is `InfinitePast`, \
-                    then it is impossible that the overlap was `EndsOnStart`"
+                    "If the start of the compared bounds is `InfinitePast`, then it is impossible that the overlap \
+                     was `EndsOnStart`"
                 );
             };
 
@@ -664,8 +673,8 @@ pub fn remove_overlap_or_gap_abs_bound_pair(
         Dop::StartsOnEnd => {
             let AbsoluteEndBound::Finite(finite_bound) = b.abs_end() else {
                 unreachable!(
-                    "If the end of the compared bounds is `InfiniteFuture`, \
-                    then it is impossible that the overlap was `StartsOnEnd`"
+                    "If the end of the compared bounds is `InfiniteFuture`, then it is impossible that the overlap \
+                     was `StartsOnEnd`"
                 );
             };
 
@@ -679,8 +688,8 @@ pub fn remove_overlap_or_gap_abs_bound_pair(
         Dop::CrossesStart => {
             let AbsoluteStartBound::Finite(finite_bound) = b.abs_start() else {
                 unreachable!(
-                    "If the start of the compared bounds is `InfinitePast`, \
-                    then it is impossible that the overlap was `CrossesStart`"
+                    "If the start of the compared bounds is `InfinitePast`, then it is impossible that the overlap \
+                     was `CrossesStart`"
                 );
             };
 
@@ -694,8 +703,8 @@ pub fn remove_overlap_or_gap_abs_bound_pair(
         Dop::CrossesEnd => {
             let AbsoluteEndBound::Finite(finite_bound) = b.abs_end() else {
                 unreachable!(
-                    "If the end of the compared bounds is `InfiniteFuture`, \
-                    then it is impossible that the overlap was `CrossesEnd`"
+                    "If the end of the compared bounds is `InfiniteFuture`, then it is impossible that the overlap \
+                     was `CrossesEnd`"
                 );
             };
 
@@ -772,8 +781,8 @@ pub fn remove_overlap_or_gap_rel_bound_pair(
         Dop::OutsideBefore => {
             let RelativeStartBound::Finite(finite_bound) = b.rel_start() else {
                 unreachable!(
-                    "If the start of the compared bounds is `InfinitePast`, \
-                    then it is impossible that the overlap was `OutsideBefore`"
+                    "If the start of the compared bounds is `InfinitePast`, then it is impossible that the overlap \
+                     was `OutsideBefore`"
                 );
             };
 
@@ -787,8 +796,8 @@ pub fn remove_overlap_or_gap_rel_bound_pair(
         Dop::OutsideAfter => {
             let RelativeEndBound::Finite(finite_bound) = b.rel_end() else {
                 unreachable!(
-                    "If the end of the compared bounds is `InfiniteFuture`, \
-                    then it is impossible that the overlap was `OutsideAfter`"
+                    "If the end of the compared bounds is `InfiniteFuture`, then it is impossible that the overlap \
+                     was `OutsideAfter`"
                 );
             };
 
@@ -802,8 +811,8 @@ pub fn remove_overlap_or_gap_rel_bound_pair(
         Dop::EndsOnStart => {
             let RelativeStartBound::Finite(finite_bound) = b.rel_start() else {
                 unreachable!(
-                    "If the start of the compared bounds is `InfinitePast`, \
-                    then it is impossible that the overlap was `EndsOnStart`"
+                    "If the start of the compared bounds is `InfinitePast`, then it is impossible that the overlap \
+                     was `EndsOnStart`"
                 );
             };
 
@@ -817,8 +826,8 @@ pub fn remove_overlap_or_gap_rel_bound_pair(
         Dop::StartsOnEnd => {
             let RelativeEndBound::Finite(finite_bound) = b.rel_end() else {
                 unreachable!(
-                    "If the end of the compared bounds is `InfiniteFuture`, \
-                    then it is impossible that the overlap was `StartsOnEnd`"
+                    "If the end of the compared bounds is `InfiniteFuture`, then it is impossible that the overlap \
+                     was `StartsOnEnd`"
                 );
             };
 
@@ -832,8 +841,8 @@ pub fn remove_overlap_or_gap_rel_bound_pair(
         Dop::CrossesStart => {
             let RelativeStartBound::Finite(finite_bound) = b.rel_start() else {
                 unreachable!(
-                    "If the start of the compared bounds is `InfinitePast`, \
-                    then it is impossible that the overlap was `CrossesStart`"
+                    "If the start of the compared bounds is `InfinitePast`, then it is impossible that the overlap \
+                     was `CrossesStart`"
                 );
             };
 
@@ -847,8 +856,8 @@ pub fn remove_overlap_or_gap_rel_bound_pair(
         Dop::CrossesEnd => {
             let RelativeEndBound::Finite(finite_bound) = b.rel_end() else {
                 unreachable!(
-                    "If the end of the compared bounds is `InfiniteFuture`, \
-                    then it is impossible that the overlap was `CrossesEnd`"
+                    "If the end of the compared bounds is `InfiniteFuture`, then it is impossible that the overlap \
+                     was `CrossesEnd`"
                 );
             };
 

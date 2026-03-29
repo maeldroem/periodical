@@ -87,16 +87,24 @@ macro_rules! abridge_impl_rhs_clone {
 /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
 /// # use periodical::intervals::meta::BoundInclusivity;
 /// # use periodical::intervals::ops::abridge::Abridgable;
-/// let first_start_time = "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp();
-/// let first_end_time = "2025-01-01 11:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp();
+/// let first_start_time = "2025-01-01 08:00:00[Europe/Oslo]"
+///     .parse::<Zoned>()?
+///     .timestamp();
+/// let first_end_time = "2025-01-01 11:00:00[Europe/Oslo]"
+///     .parse::<Zoned>()?
+///     .timestamp();
 ///
 /// let first_interval = AbsoluteBoundPair::new(
 ///     AbsoluteFiniteBound::new(first_start_time).to_start_bound(),
 ///     AbsoluteFiniteBound::new(first_end_time).to_end_bound(),
 /// );
 ///
-/// let second_start_time = "2025-01-01 13:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp();
-/// let second_end_time = "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp();
+/// let second_start_time = "2025-01-01 13:00:00[Europe/Oslo]"
+///     .parse::<Zoned>()?
+///     .timestamp();
+/// let second_end_time = "2025-01-01 16:00:00[Europe/Oslo]"
+///     .parse::<Zoned>()?
+///     .timestamp();
 ///
 /// let second_interval = AbsoluteBoundPair::new(
 ///     AbsoluteFiniteBound::new(second_start_time).to_start_bound(),
@@ -110,18 +118,22 @@ macro_rules! abridge_impl_rhs_clone {
 /// // abridged interval:      (--)
 ///
 /// assert_eq!(
-///     abridged_interval.clone().bound().ok_or("Empty abridged interval")?.start(),
-///     AbsoluteFiniteBound::new_with_inclusivity(
-///         first_end_time,
-///         BoundInclusivity::Exclusive,
-///     ).to_start_bound(),
+///     abridged_interval
+///         .clone()
+///         .bound()
+///         .ok_or("Empty abridged interval")?
+///         .start(),
+///     AbsoluteFiniteBound::new_with_inclusivity(first_end_time, BoundInclusivity::Exclusive,)
+///         .to_start_bound(),
 /// );
 /// assert_eq!(
-///     abridged_interval.clone().bound().ok_or("Empty abridged interval")?.end(),
-///     AbsoluteFiniteBound::new_with_inclusivity(
-///         second_start_time,
-///         BoundInclusivity::Exclusive,
-///     ).to_end_bound(),
+///     abridged_interval
+///         .clone()
+///         .bound()
+///         .ok_or("Empty abridged interval")?
+///         .end(),
+///     AbsoluteFiniteBound::new_with_inclusivity(second_start_time, BoundInclusivity::Exclusive,)
+///         .to_end_bound(),
 /// );
 /// # Ok::<(), Box<dyn Error>>(())
 /// ```
@@ -134,16 +146,24 @@ macro_rules! abridge_impl_rhs_clone {
 /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
 /// # use periodical::intervals::meta::BoundInclusivity;
 /// # use periodical::intervals::ops::abridge::Abridgable;
-/// let first_start_time = "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp();
-/// let first_end_time = "2025-01-01 13:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp();
+/// let first_start_time = "2025-01-01 08:00:00[Europe/Oslo]"
+///     .parse::<Zoned>()?
+///     .timestamp();
+/// let first_end_time = "2025-01-01 13:00:00[Europe/Oslo]"
+///     .parse::<Zoned>()?
+///     .timestamp();
 ///
 /// let first_interval = AbsoluteBoundPair::new(
 ///     AbsoluteFiniteBound::new(first_start_time).to_start_bound(),
 ///     AbsoluteFiniteBound::new(first_end_time).to_end_bound(),
 /// );
 ///
-/// let second_start_time = "2025-01-01 11:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp();
-/// let second_end_time = "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp();
+/// let second_start_time = "2025-01-01 11:00:00[Europe/Oslo]"
+///     .parse::<Zoned>()?
+///     .timestamp();
+/// let second_end_time = "2025-01-01 16:00:00[Europe/Oslo]"
+///     .parse::<Zoned>()?
+///     .timestamp();
 ///
 /// let second_interval = AbsoluteBoundPair::new(
 ///     AbsoluteFiniteBound::new(second_start_time).to_start_bound(),
@@ -153,22 +173,26 @@ macro_rules! abridge_impl_rhs_clone {
 /// let abridged_interval = first_interval.abridge(&second_interval);
 ///
 /// // first interval:    [----]
-/// // second interval:     [----]  
+/// // second interval:     [----]
 /// // abridged interval:   [--]
 ///
 /// assert_eq!(
-///     abridged_interval.clone().bound().ok_or("Empty abridged interval")?.start(),
-///     AbsoluteFiniteBound::new_with_inclusivity(
-///         second_start_time,
-///         BoundInclusivity::Inclusive,
-///     ).to_start_bound(),
+///     abridged_interval
+///         .clone()
+///         .bound()
+///         .ok_or("Empty abridged interval")?
+///         .start(),
+///     AbsoluteFiniteBound::new_with_inclusivity(second_start_time, BoundInclusivity::Inclusive,)
+///         .to_start_bound(),
 /// );
 /// assert_eq!(
-///     abridged_interval.clone().bound().ok_or("Empty abridged interval")?.end(),
-///     AbsoluteFiniteBound::new_with_inclusivity(
-///         first_end_time,
-///         BoundInclusivity::Inclusive,
-///     ).to_end_bound(),
+///     abridged_interval
+///         .clone()
+///         .bound()
+///         .ok_or("Empty abridged interval")?
+///         .end(),
+///     AbsoluteFiniteBound::new_with_inclusivity(first_end_time, BoundInclusivity::Inclusive,)
+///         .to_end_bound(),
 /// );
 /// # Ok::<(), Box<dyn Error>>(())
 /// ```

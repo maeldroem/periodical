@@ -16,19 +16,31 @@
 //! let intervals = [
 //!     AbsoluteBoundPair::new(
 //!         AbsoluteFiniteBound::new(
-//!             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!         ).to_start_bound(),
+//!             "2025-01-01 08:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_start_bound(),
 //!         AbsoluteFiniteBound::new(
-//!             "2025-01-01 11:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!         ).to_end_bound(),
+//!             "2025-01-01 11:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_end_bound(),
 //!     ),
 //!     AbsoluteBoundPair::new(
 //!         AbsoluteFiniteBound::new(
-//!             "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!         ).to_start_bound(),
+//!             "2025-01-01 12:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_start_bound(),
 //!         AbsoluteFiniteBound::new(
-//!             "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!         ).to_end_bound(),
+//!             "2025-01-01 16:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_end_bound(),
 //!     ),
 //! ];
 //!
@@ -36,17 +48,33 @@
 //!     intervals.abs_bounds_iter().collect::<Vec<_>>(),
 //!     vec![
 //!         AbsoluteFiniteBound::new(
-//!             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!         ).to_start_bound().to_bound(),
+//!             "2025-01-01 08:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_start_bound()
+//!         .to_bound(),
 //!         AbsoluteFiniteBound::new(
-//!             "2025-01-01 11:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!         ).to_end_bound().to_bound(),
+//!             "2025-01-01 11:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_end_bound()
+//!         .to_bound(),
 //!         AbsoluteFiniteBound::new(
-//!             "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!         ).to_start_bound().to_bound(),
+//!             "2025-01-01 12:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_start_bound()
+//!         .to_bound(),
 //!         AbsoluteFiniteBound::new(
-//!             "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!         ).to_end_bound().to_bound(),
+//!             "2025-01-01 16:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_end_bound()
+//!         .to_bound(),
 //!     ],
 //! );
 //! # Ok::<(), Box<dyn Error>>(())
@@ -103,31 +131,54 @@ impl AbsoluteBoundsIter {
     /// let intervals = [
     ///     AbsoluteBoundPair::new(
     ///         AbsoluteFiniteBound::new(
-    ///             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///         ).to_start_bound(),
+    ///             "2025-01-01 08:00:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
+    ///         )
+    ///         .to_start_bound(),
     ///         AbsoluteFiniteBound::new(
-    ///             "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///         ).to_end_bound(),
+    ///             "2025-01-01 14:00:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
+    ///         )
+    ///         .to_end_bound(),
     ///     ),
     ///     AbsoluteBoundPair::new(
     ///         AbsoluteFiniteBound::new(
-    ///             "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///         ).to_start_bound(),
+    ///             "2025-01-01 12:00:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
+    ///         )
+    ///         .to_start_bound(),
     ///         AbsoluteFiniteBound::new(
-    ///             "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///         ).to_end_bound(),
+    ///             "2025-01-01 16:00:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
+    ///         )
+    ///         .to_end_bound(),
     ///     ),
     /// ];
     ///
     /// assert_eq!(
-    ///     intervals.abs_bounds_iter().unite_bounds().collect::<Vec<_>>(),
+    ///     intervals
+    ///         .abs_bounds_iter()
+    ///         .unite_bounds()
+    ///         .collect::<Vec<_>>(),
     ///     vec![
     ///         AbsoluteFiniteBound::new(
-    ///             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///         ).to_start_bound().to_bound(),
+    ///             "2025-01-01 08:00:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
+    ///         )
+    ///         .to_start_bound()
+    ///         .to_bound(),
     ///         AbsoluteFiniteBound::new(
-    ///             "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///         ).to_end_bound().to_bound(),
+    ///             "2025-01-01 16:00:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
+    ///         )
+    ///         .to_end_bound()
+    ///         .to_bound(),
     ///     ],
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
@@ -170,38 +221,62 @@ impl AbsoluteBoundsIter {
     /// let first_layer_intervals = [
     ///     AbsoluteBoundPair::new(
     ///         AbsoluteFiniteBound::new(
-    ///             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///         ).to_start_bound(),
+    ///             "2025-01-01 08:00:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
+    ///         )
+    ///         .to_start_bound(),
     ///         AbsoluteFiniteBound::new(
-    ///             "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///         ).to_end_bound(),
+    ///             "2025-01-01 12:00:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
+    ///         )
+    ///         .to_end_bound(),
     ///     ),
     ///     AbsoluteBoundPair::new(
     ///         AbsoluteFiniteBound::new(
-    ///             "2025-01-01 13:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///         ).to_start_bound(),
+    ///             "2025-01-01 13:00:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
+    ///         )
+    ///         .to_start_bound(),
     ///         AbsoluteFiniteBound::new(
-    ///             "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///         ).to_end_bound(),
+    ///             "2025-01-01 16:00:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
+    ///         )
+    ///         .to_end_bound(),
     ///     ),
     /// ];
     ///
     /// let second_layer_intervals = [
     ///     AbsoluteBoundPair::new(
     ///         AbsoluteFiniteBound::new(
-    ///             "2025-01-01 07:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///         ).to_start_bound(),
+    ///             "2025-01-01 07:00:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
+    ///         )
+    ///         .to_start_bound(),
     ///         AbsoluteFiniteBound::new(
-    ///             "2025-01-01 11:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///         ).to_end_bound(),
+    ///             "2025-01-01 11:00:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
+    ///         )
+    ///         .to_end_bound(),
     ///     ),
     ///     AbsoluteBoundPair::new(
     ///         AbsoluteFiniteBound::new(
-    ///             "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///         ).to_start_bound(),
+    ///             "2025-01-01 14:00:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
+    ///         )
+    ///         .to_start_bound(),
     ///         AbsoluteFiniteBound::new(
-    ///             "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///         ).to_end_bound(),
+    ///             "2025-01-01 18:00:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
+    ///         )
+    ///         .to_end_bound(),
     ///     ),
     /// ];
     ///
@@ -316,32 +391,27 @@ impl RelativeBoundsIter {
     /// # use periodical::iter::intervals::bounds::RelativeBoundsIteratorDispatcher;
     /// let intervals = [
     ///     RelativeBoundPair::new(
-    ///         RelativeFiniteBound::new(
-    ///             SignedDuration::from_hours(8),
-    ///         ).to_start_bound(),
-    ///         RelativeFiniteBound::new(
-    ///             SignedDuration::from_hours(14),
-    ///         ).to_end_bound(),
+    ///         RelativeFiniteBound::new(SignedDuration::from_hours(8)).to_start_bound(),
+    ///         RelativeFiniteBound::new(SignedDuration::from_hours(14)).to_end_bound(),
     ///     ),
     ///     RelativeBoundPair::new(
-    ///         RelativeFiniteBound::new(
-    ///             SignedDuration::from_hours(12),
-    ///         ).to_start_bound(),
-    ///         RelativeFiniteBound::new(
-    ///             SignedDuration::from_hours(16),
-    ///         ).to_end_bound(),
+    ///         RelativeFiniteBound::new(SignedDuration::from_hours(12)).to_start_bound(),
+    ///         RelativeFiniteBound::new(SignedDuration::from_hours(16)).to_end_bound(),
     ///     ),
     /// ];
     ///
     /// assert_eq!(
-    ///     intervals.rel_bounds_iter().unite_bounds().collect::<Vec<_>>(),
+    ///     intervals
+    ///         .rel_bounds_iter()
+    ///         .unite_bounds()
+    ///         .collect::<Vec<_>>(),
     ///     vec![
-    ///         RelativeFiniteBound::new(
-    ///             SignedDuration::from_hours(8),
-    ///         ).to_start_bound().to_bound(),
-    ///         RelativeFiniteBound::new(
-    ///             SignedDuration::from_hours(16),
-    ///         ).to_end_bound().to_bound(),
+    ///         RelativeFiniteBound::new(SignedDuration::from_hours(8),)
+    ///             .to_start_bound()
+    ///             .to_bound(),
+    ///         RelativeFiniteBound::new(SignedDuration::from_hours(16),)
+    ///             .to_end_bound()
+    ///             .to_bound(),
     ///     ],
     /// );
     /// ```
@@ -381,39 +451,23 @@ impl RelativeBoundsIter {
     /// # use periodical::iter::intervals::bounds::RelativeBoundsIteratorDispatcher;
     /// let first_layer_intervals = [
     ///     RelativeBoundPair::new(
-    ///         RelativeFiniteBound::new(
-    ///             SignedDuration::from_hours(8),
-    ///         ).to_start_bound(),
-    ///         RelativeFiniteBound::new(
-    ///             SignedDuration::from_hours(12),
-    ///         ).to_end_bound(),
+    ///         RelativeFiniteBound::new(SignedDuration::from_hours(8)).to_start_bound(),
+    ///         RelativeFiniteBound::new(SignedDuration::from_hours(12)).to_end_bound(),
     ///     ),
     ///     RelativeBoundPair::new(
-    ///         RelativeFiniteBound::new(
-    ///             SignedDuration::from_hours(13),
-    ///         ).to_start_bound(),
-    ///         RelativeFiniteBound::new(
-    ///             SignedDuration::from_hours(16),
-    ///         ).to_end_bound(),
+    ///         RelativeFiniteBound::new(SignedDuration::from_hours(13)).to_start_bound(),
+    ///         RelativeFiniteBound::new(SignedDuration::from_hours(16)).to_end_bound(),
     ///     ),
     /// ];
     ///
     /// let second_layer_intervals = [
     ///     RelativeBoundPair::new(
-    ///         RelativeFiniteBound::new(
-    ///             SignedDuration::from_hours(7),
-    ///         ).to_start_bound(),
-    ///         RelativeFiniteBound::new(
-    ///             SignedDuration::from_hours(11),
-    ///         ).to_end_bound(),
+    ///         RelativeFiniteBound::new(SignedDuration::from_hours(7)).to_start_bound(),
+    ///         RelativeFiniteBound::new(SignedDuration::from_hours(11)).to_end_bound(),
     ///     ),
     ///     RelativeBoundPair::new(
-    ///         RelativeFiniteBound::new(
-    ///             SignedDuration::from_hours(14),
-    ///         ).to_start_bound(),
-    ///         RelativeFiniteBound::new(
-    ///             SignedDuration::from_hours(18),
-    ///         ).to_end_bound(),
+    ///         RelativeFiniteBound::new(SignedDuration::from_hours(14)).to_start_bound(),
+    ///         RelativeFiniteBound::new(SignedDuration::from_hours(18)).to_end_bound(),
     ///     ),
     /// ];
     ///

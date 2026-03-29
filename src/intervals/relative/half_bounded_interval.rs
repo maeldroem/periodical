@@ -68,14 +68,21 @@ impl HalfBoundedRelativeInterval {
     /// # use jiff::SignedDuration;
     /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
     /// # use periodical::intervals::relative::HalfBoundedRelativeInterval;
-    /// let half_bounded_interval = HalfBoundedRelativeInterval::new(
-    ///     SignedDuration::from_hours(8),
-    ///     OpeningDirection::ToPast,
-    /// );
+    /// let half_bounded_interval =
+    ///     HalfBoundedRelativeInterval::new(SignedDuration::from_hours(8), OpeningDirection::ToPast);
     ///
-    /// assert_eq!(half_bounded_interval.reference(), SignedDuration::from_hours(8));
-    /// assert_eq!(half_bounded_interval.reference_inclusivity(), BoundInclusivity::Inclusive);
-    /// assert_eq!(half_bounded_interval.opening_direction(), OpeningDirection::ToPast);
+    /// assert_eq!(
+    ///     half_bounded_interval.reference(),
+    ///     SignedDuration::from_hours(8)
+    /// );
+    /// assert_eq!(
+    ///     half_bounded_interval.reference_inclusivity(),
+    ///     BoundInclusivity::Inclusive
+    /// );
+    /// assert_eq!(
+    ///     half_bounded_interval.opening_direction(),
+    ///     OpeningDirection::ToPast
+    /// );
     /// ```
     #[must_use]
     pub fn new(reference: SignedDuration, opening_direction: OpeningDirection) -> Self {
@@ -101,9 +108,18 @@ impl HalfBoundedRelativeInterval {
     ///     OpeningDirection::ToPast,
     /// );
     ///
-    /// assert_eq!(half_bounded_interval.reference(), SignedDuration::from_hours(8));
-    /// assert_eq!(half_bounded_interval.reference_inclusivity(), BoundInclusivity::Exclusive);
-    /// assert_eq!(half_bounded_interval.opening_direction(), OpeningDirection::ToPast);
+    /// assert_eq!(
+    ///     half_bounded_interval.reference(),
+    ///     SignedDuration::from_hours(8)
+    /// );
+    /// assert_eq!(
+    ///     half_bounded_interval.reference_inclusivity(),
+    ///     BoundInclusivity::Exclusive
+    /// );
+    /// assert_eq!(
+    ///     half_bounded_interval.opening_direction(),
+    ///     OpeningDirection::ToPast
+    /// );
     /// ```
     #[must_use]
     pub fn new_with_inclusivity(
@@ -126,12 +142,13 @@ impl HalfBoundedRelativeInterval {
     /// # use jiff::SignedDuration;
     /// # use periodical::intervals::meta::OpeningDirection;
     /// # use periodical::intervals::relative::HalfBoundedRelativeInterval;
-    /// let half_bounded_interval = HalfBoundedRelativeInterval::new(
-    ///     SignedDuration::from_hours(8),
-    ///     OpeningDirection::ToPast,
-    /// );
+    /// let half_bounded_interval =
+    ///     HalfBoundedRelativeInterval::new(SignedDuration::from_hours(8), OpeningDirection::ToPast);
     ///
-    /// assert_eq!(half_bounded_interval.reference(), SignedDuration::from_hours(8));
+    /// assert_eq!(
+    ///     half_bounded_interval.reference(),
+    ///     SignedDuration::from_hours(8)
+    /// );
     /// ```
     #[must_use]
     pub fn reference(&self) -> SignedDuration {
@@ -146,12 +163,13 @@ impl HalfBoundedRelativeInterval {
     /// # use jiff::SignedDuration;
     /// # use periodical::intervals::meta::OpeningDirection;
     /// # use periodical::intervals::relative::HalfBoundedRelativeInterval;
-    /// let half_bounded_interval = HalfBoundedRelativeInterval::new(
-    ///     SignedDuration::from_hours(8),
-    ///     OpeningDirection::ToPast,
-    /// );
+    /// let half_bounded_interval =
+    ///     HalfBoundedRelativeInterval::new(SignedDuration::from_hours(8), OpeningDirection::ToPast);
     ///
-    /// assert_eq!(half_bounded_interval.opening_direction(), OpeningDirection::ToPast);
+    /// assert_eq!(
+    ///     half_bounded_interval.opening_direction(),
+    ///     OpeningDirection::ToPast
+    /// );
     /// ```
     #[must_use]
     pub fn opening_direction(&self) -> OpeningDirection {
@@ -172,7 +190,10 @@ impl HalfBoundedRelativeInterval {
     ///     OpeningDirection::ToPast,
     /// );
     ///
-    /// assert_eq!(half_bounded_interval.reference_inclusivity(), BoundInclusivity::Exclusive);
+    /// assert_eq!(
+    ///     half_bounded_interval.reference_inclusivity(),
+    ///     BoundInclusivity::Exclusive
+    /// );
     /// ```
     #[must_use]
     pub fn reference_inclusivity(&self) -> BoundInclusivity {
@@ -187,14 +208,15 @@ impl HalfBoundedRelativeInterval {
     /// # use jiff::SignedDuration;
     /// # use periodical::intervals::meta::OpeningDirection;
     /// # use periodical::intervals::relative::HalfBoundedRelativeInterval;
-    /// let mut half_bounded_interval = HalfBoundedRelativeInterval::new(
-    ///     SignedDuration::from_hours(8),
-    ///     OpeningDirection::ToPast,
-    /// );
+    /// let mut half_bounded_interval =
+    ///     HalfBoundedRelativeInterval::new(SignedDuration::from_hours(8), OpeningDirection::ToPast);
     ///
     /// half_bounded_interval.set_reference(SignedDuration::from_hours(1));
     ///
-    /// assert_eq!(half_bounded_interval.reference(), SignedDuration::from_hours(1));
+    /// assert_eq!(
+    ///     half_bounded_interval.reference(),
+    ///     SignedDuration::from_hours(1)
+    /// );
     /// ```
     pub fn set_reference(&mut self, new_reference: SignedDuration) {
         self.reference = new_reference;
@@ -216,7 +238,10 @@ impl HalfBoundedRelativeInterval {
     ///
     /// half_bounded_interval.set_reference_inclusivity(BoundInclusivity::Inclusive);
     ///
-    /// assert_eq!(half_bounded_interval.reference_inclusivity(), BoundInclusivity::Inclusive);
+    /// assert_eq!(
+    ///     half_bounded_interval.reference_inclusivity(),
+    ///     BoundInclusivity::Inclusive
+    /// );
     /// ```
     pub fn set_reference_inclusivity(&mut self, new_inclusivity: BoundInclusivity) {
         self.reference_inclusivity = new_inclusivity;
@@ -230,14 +255,15 @@ impl HalfBoundedRelativeInterval {
     /// # use jiff::SignedDuration;
     /// # use periodical::intervals::meta::OpeningDirection;
     /// # use periodical::intervals::relative::HalfBoundedRelativeInterval;
-    /// let mut half_bounded_interval = HalfBoundedRelativeInterval::new(
-    ///     SignedDuration::from_hours(8),
-    ///     OpeningDirection::ToPast,
-    /// );
+    /// let mut half_bounded_interval =
+    ///     HalfBoundedRelativeInterval::new(SignedDuration::from_hours(8), OpeningDirection::ToPast);
     ///
     /// half_bounded_interval.set_opening_direction(OpeningDirection::ToFuture);
     ///
-    /// assert_eq!(half_bounded_interval.opening_direction(), OpeningDirection::ToFuture);
+    /// assert_eq!(
+    ///     half_bounded_interval.opening_direction(),
+    ///     OpeningDirection::ToFuture
+    /// );
     /// ```
     pub fn set_opening_direction(&mut self, new_opening_direction: OpeningDirection) {
         self.opening_direction = new_opening_direction;

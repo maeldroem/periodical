@@ -110,8 +110,7 @@ where
     ///
     /// # Input requirements
     ///
-    /// 1. The iterator **must return continuous [state
-    ///    changes](LayeredBoundsStateChangeAtAbsoluteBound)**
+    /// 1. The iterator **must return continuous [state changes](LayeredBoundsStateChangeAtAbsoluteBound)**
     /// 2. The state changes **must be in chronological order**
     ///
     /// For more precision about requirement 1, _continuous state changes_ means
@@ -163,9 +162,9 @@ where
             loop {
                 let Some(next) = self.iter.next() else {
                     unreachable!(
-                        "Since the input requirements state that the state changes need to be continuous, \
-                        and since we already stopped at a state that is not `NoLayers`, we can expect \
-                        the next elements to exist until a state change that transitions to `NoLayers` is returned"
+                        "Since the input requirements state that the state changes need to be continuous, and since \
+                         we already stopped at a state that is not `NoLayers`, we can expect the next elements to \
+                         exist until a state change that transitions to `NoLayers` is returned"
                     );
                 };
 
@@ -175,9 +174,9 @@ where
 
                 let Some(end) = next.old_state_end() else {
                     unreachable!(
-                        "Since the input requirements state that the state changes need to be continuous, \
-                        we can expect the next state change which transitions to `NoLayers` to contain \
-                        the change's old state's end"
+                        "Since the input requirements state that the state changes need to be continuous, we can \
+                         expect the next state change which transitions to `NoLayers` to contain the change's old \
+                         state's end"
                     );
                 };
 
@@ -237,8 +236,7 @@ where
     ///
     /// # Input requirements
     ///
-    /// 1. The iterator **must return continuous [state
-    ///    changes](LayeredBoundsStateChangeAtRelativeBound)**
+    /// 1. The iterator **must return continuous [state changes](LayeredBoundsStateChangeAtRelativeBound)**
     /// 2. The state changes **must be in chronological order**
     ///
     /// For more precision about requirement 1, _continuous state changes_ means
@@ -290,9 +288,9 @@ where
             loop {
                 let Some(next) = self.iter.next() else {
                     unreachable!(
-                        "Since the input requirements state that the state changes need to be continuous, \
-                        and since we already stopped at a state that is not `NoLayers`, we can expect \
-                        the next elements to exist until a state change that transitions to `NoLayers` is returned"
+                        "Since the input requirements state that the state changes need to be continuous, and since \
+                         we already stopped at a state that is not `NoLayers`, we can expect the next elements to \
+                         exist until a state change that transitions to `NoLayers` is returned"
                     );
                 };
 
@@ -302,9 +300,9 @@ where
 
                 let Some(end) = next.old_state_end() else {
                     unreachable!(
-                        "Since the input requirements state that the state changes need to be continuous, \
-                        we can expect the next state change which transitions to `NoLayers` to contain \
-                        the change's old state's end"
+                        "Since the input requirements state that the state changes need to be continuous, we can \
+                         expect the next state change which transitions to `NoLayers` to contain the change's old \
+                         state's end"
                     );
                 };
 

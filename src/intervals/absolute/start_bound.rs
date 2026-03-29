@@ -106,7 +106,10 @@ impl AbsoluteStartBound {
     /// let time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     /// let finite_start_bound = AbsoluteFiniteBound::new(time).to_start_bound();
     ///
-    /// assert_eq!(finite_start_bound.finite(), Some(AbsoluteFiniteBound::new(time)));
+    /// assert_eq!(
+    ///     finite_start_bound.finite(),
+    ///     Some(AbsoluteFiniteBound::new(time))
+    /// );
     /// assert_eq!(infinite_start_bound.finite(), None);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```

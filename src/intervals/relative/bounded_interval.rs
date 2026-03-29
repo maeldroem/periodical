@@ -181,8 +181,14 @@ impl BoundedRelativeInterval {
     ///     BoundInclusivity::Exclusive,
     /// );
     ///
-    /// assert_eq!(bounded_interval.start_inclusivity(), BoundInclusivity::Inclusive);
-    /// assert_eq!(bounded_interval.end_inclusivity(), BoundInclusivity::Exclusive);
+    /// assert_eq!(
+    ///     bounded_interval.start_inclusivity(),
+    ///     BoundInclusivity::Inclusive
+    /// );
+    /// assert_eq!(
+    ///     bounded_interval.end_inclusivity(),
+    ///     BoundInclusivity::Exclusive
+    /// );
     /// ```
     #[must_use]
     pub fn unchecked_new_with_inclusivity(
@@ -224,8 +230,14 @@ impl BoundedRelativeInterval {
     /// );
     ///
     /// // Therefore gets reset to inclusive for both bounds
-    /// assert_eq!(bounded_interval.start_inclusivity(), BoundInclusivity::Inclusive);
-    /// assert_eq!(bounded_interval.end_inclusivity(), BoundInclusivity::Inclusive);
+    /// assert_eq!(
+    ///     bounded_interval.start_inclusivity(),
+    ///     BoundInclusivity::Inclusive
+    /// );
+    /// assert_eq!(
+    ///     bounded_interval.end_inclusivity(),
+    ///     BoundInclusivity::Inclusive
+    /// );
     /// ```
     #[must_use]
     pub fn new_with_inclusivity(
@@ -267,8 +279,14 @@ impl BoundedRelativeInterval {
     ///
     /// assert_eq!(bounded_interval.start(), SignedDuration::from_hours(3));
     /// assert_eq!(bounded_interval.end(), SignedDuration::from_hours(8));
-    /// assert_eq!(bounded_interval.start_inclusivity(), BoundInclusivity::Inclusive);
-    /// assert_eq!(bounded_interval.end_inclusivity(), BoundInclusivity::Exclusive);
+    /// assert_eq!(
+    ///     bounded_interval.start_inclusivity(),
+    ///     BoundInclusivity::Inclusive
+    /// );
+    /// assert_eq!(
+    ///     bounded_interval.end_inclusivity(),
+    ///     BoundInclusivity::Exclusive
+    /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn new_with_length_and_inclusivity(
@@ -301,10 +319,8 @@ impl BoundedRelativeInterval {
     /// ```
     /// # use jiff::SignedDuration;
     /// # use periodical::intervals::relative::BoundedRelativeInterval;
-    /// let bounded_interval = BoundedRelativeInterval::new(
-    ///     SignedDuration::from_hours(1),
-    ///     SignedDuration::from_hours(5),
-    /// );
+    /// let bounded_interval =
+    ///     BoundedRelativeInterval::new(SignedDuration::from_hours(1), SignedDuration::from_hours(5));
     ///
     /// assert_eq!(bounded_interval.start(), SignedDuration::from_hours(1));
     /// ```
@@ -320,10 +336,8 @@ impl BoundedRelativeInterval {
     /// ```
     /// # use jiff::SignedDuration;
     /// # use periodical::intervals::relative::BoundedRelativeInterval;
-    /// let bounded_interval = BoundedRelativeInterval::new(
-    ///     SignedDuration::from_hours(1),
-    ///     SignedDuration::from_hours(5),
-    /// );
+    /// let bounded_interval =
+    ///     BoundedRelativeInterval::new(SignedDuration::from_hours(1), SignedDuration::from_hours(5));
     ///
     /// assert_eq!(bounded_interval.end(), SignedDuration::from_hours(5));
     /// ```
@@ -347,7 +361,10 @@ impl BoundedRelativeInterval {
     ///     BoundInclusivity::Exclusive,
     /// );
     ///
-    /// assert_eq!(bounded_interval.start_inclusivity(), BoundInclusivity::Inclusive);
+    /// assert_eq!(
+    ///     bounded_interval.start_inclusivity(),
+    ///     BoundInclusivity::Inclusive
+    /// );
     /// ```
     #[must_use]
     pub fn start_inclusivity(&self) -> BoundInclusivity {
@@ -369,7 +386,10 @@ impl BoundedRelativeInterval {
     ///     BoundInclusivity::Exclusive,
     /// );
     ///
-    /// assert_eq!(bounded_interval.end_inclusivity(), BoundInclusivity::Exclusive);
+    /// assert_eq!(
+    ///     bounded_interval.end_inclusivity(),
+    ///     BoundInclusivity::Exclusive
+    /// );
     /// ```
     #[must_use]
     pub fn end_inclusivity(&self) -> BoundInclusivity {
@@ -544,10 +564,8 @@ impl BoundedRelativeInterval {
     /// # use std::time::Duration;
     /// # use jiff::SignedDuration;
     /// # use periodical::intervals::relative::BoundedRelativeInterval;
-    /// let mut bounded_interval = BoundedRelativeInterval::new(
-    ///     SignedDuration::from_hours(2),
-    ///     SignedDuration::from_hours(5),
-    /// );
+    /// let mut bounded_interval =
+    ///     BoundedRelativeInterval::new(SignedDuration::from_hours(2), SignedDuration::from_hours(5));
     ///
     /// bounded_interval.set_length_from_start(Duration::from_hours(10))?;
     ///
@@ -594,10 +612,8 @@ impl BoundedRelativeInterval {
     /// # use std::time::Duration;
     /// # use jiff::SignedDuration;
     /// # use periodical::intervals::relative::BoundedRelativeInterval;
-    /// let mut bounded_interval = BoundedRelativeInterval::new(
-    ///     SignedDuration::from_hours(2),
-    ///     SignedDuration::from_hours(5),
-    /// );
+    /// let mut bounded_interval =
+    ///     BoundedRelativeInterval::new(SignedDuration::from_hours(2), SignedDuration::from_hours(5));
     ///
     /// bounded_interval.set_length_from_end(Duration::from_hours(10))?;
     ///
@@ -635,17 +651,21 @@ impl BoundedRelativeInterval {
     /// # use jiff::SignedDuration;
     /// # use periodical::intervals::relative::BoundedRelativeInterval;
     /// # use periodical::intervals::meta::BoundInclusivity;
-    /// let mut bounded_interval = BoundedRelativeInterval::new(
-    ///     SignedDuration::from_hours(5),
-    ///     SignedDuration::from_hours(5),
-    /// );
+    /// let mut bounded_interval =
+    ///     BoundedRelativeInterval::new(SignedDuration::from_hours(5), SignedDuration::from_hours(5));
     ///
     /// // Violates the same time doubly inclusive invariant
     /// bounded_interval.unchecked_set_start_inclusivity(BoundInclusivity::Exclusive);
     ///
     /// // Yet stays this way
-    /// assert_eq!(bounded_interval.start_inclusivity(), BoundInclusivity::Exclusive);
-    /// assert_eq!(bounded_interval.end_inclusivity(), BoundInclusivity::Inclusive);
+    /// assert_eq!(
+    ///     bounded_interval.start_inclusivity(),
+    ///     BoundInclusivity::Exclusive
+    /// );
+    /// assert_eq!(
+    ///     bounded_interval.end_inclusivity(),
+    ///     BoundInclusivity::Inclusive
+    /// );
     /// ```
     pub fn unchecked_set_start_inclusivity(&mut self, new_inclusivity: BoundInclusivity) {
         self.start_inclusivity = new_inclusivity;
@@ -660,17 +680,21 @@ impl BoundedRelativeInterval {
     /// # use jiff::SignedDuration;
     /// # use periodical::intervals::relative::BoundedRelativeInterval;
     /// # use periodical::intervals::meta::BoundInclusivity;
-    /// let mut bounded_interval = BoundedRelativeInterval::new(
-    ///     SignedDuration::from_hours(5),
-    ///     SignedDuration::from_hours(5),
-    /// );
+    /// let mut bounded_interval =
+    ///     BoundedRelativeInterval::new(SignedDuration::from_hours(5), SignedDuration::from_hours(5));
     ///
     /// // Violates the same time doubly inclusive invariant
     /// bounded_interval.unchecked_set_end_inclusivity(BoundInclusivity::Exclusive);
     ///
     /// // Yet stays this way
-    /// assert_eq!(bounded_interval.start_inclusivity(), BoundInclusivity::Inclusive);
-    /// assert_eq!(bounded_interval.end_inclusivity(), BoundInclusivity::Exclusive);
+    /// assert_eq!(
+    ///     bounded_interval.start_inclusivity(),
+    ///     BoundInclusivity::Inclusive
+    /// );
+    /// assert_eq!(
+    ///     bounded_interval.end_inclusivity(),
+    ///     BoundInclusivity::Exclusive
+    /// );
     /// ```
     pub fn unchecked_set_end_inclusivity(&mut self, new_inclusivity: BoundInclusivity) {
         self.end_inclusivity = new_inclusivity;
@@ -698,8 +722,14 @@ impl BoundedRelativeInterval {
     ///
     /// bounded_interval.set_start_inclusivity(BoundInclusivity::Exclusive);
     ///
-    /// assert_eq!(bounded_interval.start_inclusivity(), BoundInclusivity::Exclusive);
-    /// assert_eq!(bounded_interval.end_inclusivity(), BoundInclusivity::Inclusive);
+    /// assert_eq!(
+    ///     bounded_interval.start_inclusivity(),
+    ///     BoundInclusivity::Exclusive
+    /// );
+    /// assert_eq!(
+    ///     bounded_interval.end_inclusivity(),
+    ///     BoundInclusivity::Inclusive
+    /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn set_start_inclusivity(
@@ -736,8 +766,14 @@ impl BoundedRelativeInterval {
     ///
     /// bounded_interval.set_end_inclusivity(BoundInclusivity::Exclusive);
     ///
-    /// assert_eq!(bounded_interval.start_inclusivity(), BoundInclusivity::Inclusive);
-    /// assert_eq!(bounded_interval.end_inclusivity(), BoundInclusivity::Exclusive);
+    /// assert_eq!(
+    ///     bounded_interval.start_inclusivity(),
+    ///     BoundInclusivity::Inclusive
+    /// );
+    /// assert_eq!(
+    ///     bounded_interval.end_inclusivity(),
+    ///     BoundInclusivity::Exclusive
+    /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn set_end_inclusivity(

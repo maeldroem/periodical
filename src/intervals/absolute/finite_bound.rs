@@ -202,8 +202,8 @@ impl Display for AbsoluteFiniteBoundFromBoundError {
             Self::IsUnbounded => {
                 write!(
                     f,
-                    "The given bound was of the `Unbounded` variant, \
-                    and therefore could not be converted to an `AbsoluteFiniteBound`"
+                    "The given bound was of the `Unbounded` variant, and therefore could not be converted to an \
+                     `AbsoluteFiniteBound`"
                 )
             },
         }

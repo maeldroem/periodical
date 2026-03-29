@@ -20,19 +20,31 @@
 //! let intervals = [
 //!     AbsoluteBoundPair::new(
 //!         AbsoluteFiniteBound::new(
-//!             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!         ).to_start_bound(),
+//!             "2025-01-01 08:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_start_bound(),
 //!         AbsoluteFiniteBound::new(
-//!             "2025-01-01 11:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!         ).to_end_bound(),
+//!             "2025-01-01 11:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_end_bound(),
 //!     ),
 //!     AbsoluteBoundPair::new(
 //!         AbsoluteFiniteBound::new(
-//!             "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!         ).to_start_bound(),
+//!             "2025-01-01 12:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_start_bound(),
 //!         AbsoluteFiniteBound::new(
-//!             "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!         ).to_end_bound(),
+//!             "2025-01-01 16:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_end_bound(),
 //!     ),
 //! ];
 //!
@@ -43,33 +55,49 @@
 //!             AbsoluteBoundPair::new(
 //!                 AbsoluteStartBound::InfinitePast,
 //!                 AbsoluteFiniteBound::new_with_inclusivity(
-//!                     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!                     "2025-01-01 08:00:00[Europe/Oslo]"
+//!                         .parse::<Zoned>()?
+//!                         .timestamp(),
 //!                     BoundInclusivity::Exclusive,
-//!                 ).to_end_bound(),
-//!             ).to_emptiable(),
+//!                 )
+//!                 .to_end_bound(),
+//!             )
+//!             .to_emptiable(),
 //!             AbsoluteBoundPair::new(
 //!                 AbsoluteFiniteBound::new_with_inclusivity(
-//!                     "2025-01-01 11:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!                     "2025-01-01 11:00:00[Europe/Oslo]"
+//!                         .parse::<Zoned>()?
+//!                         .timestamp(),
 //!                     BoundInclusivity::Exclusive,
-//!                 ).to_start_bound(),
+//!                 )
+//!                 .to_start_bound(),
 //!                 AbsoluteEndBound::InfiniteFuture,
-//!             ).to_emptiable(),
+//!             )
+//!             .to_emptiable(),
 //!         ),
 //!         ComplementResult::Split(
 //!             AbsoluteBoundPair::new(
 //!                 AbsoluteStartBound::InfinitePast,
 //!                 AbsoluteFiniteBound::new_with_inclusivity(
-//!                     "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!                     "2025-01-01 12:00:00[Europe/Oslo]"
+//!                         .parse::<Zoned>()?
+//!                         .timestamp(),
 //!                     BoundInclusivity::Exclusive,
-//!                 ).to_end_bound(),
-//!             ).to_emptiable(),
+//!                 )
+//!                 .to_end_bound(),
+//!             )
+//!             .to_emptiable(),
 //!             AbsoluteBoundPair::new(
 //!                 AbsoluteFiniteBound::new_with_inclusivity(
-//!                     "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!                     "2025-01-01 16:00:00[Europe/Oslo]"
+//!                         .parse::<Zoned>()?
+//!                         .timestamp(),
 //!                     BoundInclusivity::Exclusive,
-//!                 ).to_start_bound(),
+//!                 )
+//!                 .to_start_bound(),
 //!                 AbsoluteEndBound::InfiniteFuture,
-//!             ).to_emptiable(),
+//!             )
+//!             .to_emptiable(),
 //!         ),
 //!     ],
 //! );
