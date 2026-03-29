@@ -79,7 +79,7 @@ impl EmptiableAbsoluteInterval {
     ///     "2026-01-01 16:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
-    /// );
+    /// ).to_interval();
     ///
     /// let bound_emptiable_interval = EmptiableAbsoluteInterval::Bound(interval.clone());
     /// let empty_emptiable_interval = EmptiableAbsoluteInterval::Empty(EmptyInterval);

@@ -67,14 +67,14 @@ impl EmptiableRelativeInterval {
     ///
     /// ```
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::absolute::{
-    /// #     EmptiableRelativeInterval, AbsoluteInterval, BoundedAbsoluteInterval,
+    /// # use periodical::intervals::relative::{
+    /// #     EmptiableRelativeInterval, RelativeInterval, BoundedRelativeInterval,
     /// # };
     /// # use periodical::intervals::special::EmptyInterval;
-    /// let interval = BoundedAbsoluteInterval::new(
+    /// let interval = BoundedRelativeInterval::new(
     ///     SignedDuration::from_hours(8),
     ///     SignedDuration::from_hours(16),
-    /// );
+    /// ).to_interval();
     ///
     /// let bound_emptiable_interval = EmptiableRelativeInterval::Bound(interval.clone());
     /// let empty_emptiable_interval = EmptiableRelativeInterval::Empty(EmptyInterval);

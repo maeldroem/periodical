@@ -10,8 +10,8 @@
 
 ## Changed
 
-- [ ] Renamed `AbsoluteInterval::to_emptiable_interval` to `to_emptiable`
-- [ ] Renamed `RelativeInterval::to_emptiable_interval` to `to_emptiable`
+- [x] Renamed `AbsoluteInterval::to_emptiable_interval` to `to_emptiable`
+- [x] Renamed `RelativeInterval::to_emptiable_interval` to `to_emptiable`
 - [x] `EmptiableAbsoluteInterval` has the same semantics as `EmptiableAbsoluteBoundPair`:
       two variants: `Bound`, `Empty`.
 - [x] `EmptiableRelativeInterval` has the same semantics as `EmptiableRelativeBoundPair`:
