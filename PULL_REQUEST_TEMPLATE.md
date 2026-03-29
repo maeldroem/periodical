@@ -4,7 +4,8 @@ Link relevant issues and PRs here!
 
 Explain the motivation for this PR and what it does/solves
 
-# Changelog
+<details>
+<summary><h1>Changelog</h1></summary>
 
 Remove the sections that don't apply to your PR
 
@@ -31,3 +32,5 @@ Remove the sections that don't apply to your PR
 ## Security
 
 - Vulnerabilities you've fixed (add relevant CVE and any other relevant info/links)
+
+</details>
