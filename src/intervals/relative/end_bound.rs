@@ -253,6 +253,24 @@ impl From<RelativeFiniteBound> for RelativeEndBound {
     }
 }
 
+impl From<Option<SignedDuration>> for RelativeEndBound {
+    fn from(value: Option<SignedDuration>) -> Self {
+        match value {
+            Some(offset) => Self::Finite(RelativeFiniteBound::from(offset)),
+            None => Self::InfiniteFuture,
+        }
+    }
+}
+
+impl From<Option<(SignedDuration, BoundInclusivity)>> for RelativeEndBound {
+    fn from(value: Option<(SignedDuration, BoundInclusivity)>) -> Self {
+        match value {
+            Some((offset, inclusivity)) => Self::Finite(RelativeFiniteBound::new_with_inclusivity(offset, inclusivity)),
+            None => Self::InfiniteFuture,
+        }
+    }
+}
+
 impl From<Bound<SignedDuration>> for RelativeEndBound {
     fn from(bound: Bound<SignedDuration>) -> Self {
         match bound {

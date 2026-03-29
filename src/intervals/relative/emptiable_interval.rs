@@ -33,7 +33,6 @@ use crate::intervals::meta::{
     HasOpenness,
     HasRelativity,
     Interval,
-    OpeningDirection,
     Openness,
     Relativity,
 };
@@ -45,7 +44,6 @@ use crate::intervals::relative::{
     HasRelativeBoundPair,
     RelativeBoundPair,
     RelativeEndBound,
-    RelativeFiniteBound,
     RelativeInterval,
     RelativeStartBound,
 };
@@ -55,13 +53,43 @@ use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum EmptiableRelativeInterval {
-    Bounded(BoundedRelativeInterval),
-    HalfBounded(HalfBoundedRelativeInterval),
-    Unbounded(UnboundedInterval),
+    Bound(RelativeInterval),
     Empty(EmptyInterval),
 }
 
 impl EmptiableRelativeInterval {
+    /// Returns the content of the [`Bound`](EmptiableRelativeInterval::Bound) variant
+    ///
+    /// Consumes `self` and puts the content of the [`Bound`](EmptiableRelativeInterval::Bound) variant
+    /// in an [`Option`]. If instead `self` is another variant, the method returns [`None`]
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use jiff::SignedDuration;
+    /// # use periodical::intervals::absolute::{
+    /// #     EmptiableRelativeInterval, AbsoluteInterval, BoundedAbsoluteInterval,
+    /// # };
+    /// # use periodical::intervals::special::EmptyInterval;
+    /// let interval = BoundedAbsoluteInterval::new(
+    ///     SignedDuration::from_hours(8),
+    ///     SignedDuration::from_hours(16),
+    /// );
+    ///
+    /// let bound_emptiable_interval = EmptiableRelativeInterval::Bound(interval.clone());
+    /// let empty_emptiable_interval = EmptiableRelativeInterval::Empty(EmptyInterval);
+    ///
+    /// assert_eq!(bound_emptiable_interval.bound(), Some(interval));
+    /// assert_eq!(empty_emptiable_interval.bound(), None);
+    /// ```
+    #[must_use]
+    pub fn bound(self) -> Option<RelativeInterval> {
+        match self {
+            Self::Bound(interval) => Some(interval),
+            Self::Empty(_) => None,
+        }
+    }
+
     /// Compares two [`RelativeInterval`], but if they have the same start,
     /// order by decreasing length
     ///
@@ -90,10 +118,8 @@ impl Interval for EmptiableRelativeInterval {}
 impl HasDuration for EmptiableRelativeInterval {
     fn duration(&self) -> IntervalDuration {
         match self {
-            Self::Bounded(interval) => interval.duration(),
-            Self::HalfBounded(interval) => interval.duration(),
-            Self::Unbounded(interval) => interval.duration(),
-            Self::Empty(interval) => interval.duration(),
+            Self::Bound(interval) => interval.duration(),
+            Self::Empty(empty) => empty.duration(),
         }
     }
 }
@@ -101,10 +127,8 @@ impl HasDuration for EmptiableRelativeInterval {
 impl HasRelativity for EmptiableRelativeInterval {
     fn relativity(&self) -> Relativity {
         match self {
-            Self::Bounded(interval) => interval.relativity(),
-            Self::HalfBounded(interval) => interval.relativity(),
-            Self::Unbounded(interval) => interval.relativity(),
-            Self::Empty(interval) => interval.relativity(),
+            Self::Bound(interval) => interval.relativity(),
+            Self::Empty(empty) => empty.relativity(),
         }
     }
 }
@@ -112,10 +136,8 @@ impl HasRelativity for EmptiableRelativeInterval {
 impl HasOpenness for EmptiableRelativeInterval {
     fn openness(&self) -> Openness {
         match self {
-            Self::Bounded(interval) => interval.openness(),
-            Self::HalfBounded(interval) => interval.openness(),
-            Self::Unbounded(interval) => interval.openness(),
-            Self::Empty(interval) => interval.openness(),
+            Self::Bound(interval) => interval.openness(),
+            Self::Empty(empty) => empty.openness(),
         }
     }
 }
@@ -123,28 +145,22 @@ impl HasOpenness for EmptiableRelativeInterval {
 impl HasEmptiableRelativeBoundPair for EmptiableRelativeInterval {
     fn emptiable_rel_bound_pair(&self) -> EmptiableRelativeBoundPair {
         match self {
-            Self::Bounded(interval) => EmptiableRelativeBoundPair::from(interval.rel_bound_pair()),
-            Self::HalfBounded(interval) => EmptiableRelativeBoundPair::from(interval.rel_bound_pair()),
-            Self::Unbounded(interval) => EmptiableRelativeBoundPair::from(interval.rel_bound_pair()),
+            Self::Bound(interval) => EmptiableRelativeBoundPair::from(interval.rel_bound_pair()),
             Self::Empty(interval) => interval.emptiable_rel_bound_pair(),
         }
     }
 
     fn partial_rel_start(&self) -> Option<RelativeStartBound> {
         match self {
-            Self::Bounded(interval) => interval.partial_rel_start(),
-            Self::HalfBounded(interval) => interval.partial_rel_start(),
-            Self::Unbounded(interval) => interval.partial_rel_start(),
-            Self::Empty(interval) => interval.partial_rel_start(),
+            Self::Bound(interval) => interval.partial_rel_start(),
+            Self::Empty(empty) => empty.partial_rel_start(),
         }
     }
 
     fn partial_rel_end(&self) -> Option<RelativeEndBound> {
         match self {
-            Self::Bounded(interval) => interval.partial_rel_end(),
-            Self::HalfBounded(interval) => interval.partial_rel_end(),
-            Self::Unbounded(interval) => interval.partial_rel_end(),
-            Self::Empty(interval) => interval.partial_rel_end(),
+            Self::Bound(interval) => interval.partial_rel_end(),
+            Self::Empty(empty) => empty.partial_rel_end(),
         }
     }
 }
@@ -169,19 +185,19 @@ impl Ord for EmptiableRelativeInterval {
 
 impl From<BoundedRelativeInterval> for EmptiableRelativeInterval {
     fn from(value: BoundedRelativeInterval) -> Self {
-        EmptiableRelativeInterval::Bounded(value)
+        EmptiableRelativeInterval::Bound(value.to_interval())
     }
 }
 
 impl From<HalfBoundedRelativeInterval> for EmptiableRelativeInterval {
     fn from(value: HalfBoundedRelativeInterval) -> Self {
-        EmptiableRelativeInterval::HalfBounded(value)
+        EmptiableRelativeInterval::Bound(value.to_interval())
     }
 }
 
 impl From<UnboundedInterval> for EmptiableRelativeInterval {
     fn from(value: UnboundedInterval) -> Self {
-        EmptiableRelativeInterval::Unbounded(value)
+        EmptiableRelativeInterval::Bound(RelativeInterval::Unbounded(value))
     }
 }
 
@@ -193,131 +209,32 @@ impl From<EmptyInterval> for EmptiableRelativeInterval {
 
 impl From<RelativeBoundPair> for EmptiableRelativeInterval {
     fn from(value: RelativeBoundPair) -> Self {
-        type StartB = RelativeStartBound;
-        type EndB = RelativeEndBound;
-
-        match (value.rel_start(), value.rel_end()) {
-            (StartB::InfinitePast, EndB::InfiniteFuture) => EmptiableRelativeInterval::Unbounded(UnboundedInterval),
-            (
-                StartB::InfinitePast,
-                EndB::Finite(RelativeFiniteBound {
-                    offset,
-                    inclusivity,
-                }),
-            ) => EmptiableRelativeInterval::HalfBounded(HalfBoundedRelativeInterval::new_with_inclusivity(
-                offset,
-                inclusivity,
-                OpeningDirection::ToPast,
-            )),
-            (
-                StartB::Finite(RelativeFiniteBound {
-                    offset,
-                    inclusivity,
-                }),
-                EndB::InfiniteFuture,
-            ) => EmptiableRelativeInterval::HalfBounded(HalfBoundedRelativeInterval::new_with_inclusivity(
-                offset,
-                inclusivity,
-                OpeningDirection::ToFuture,
-            )),
-            (
-                StartB::Finite(RelativeFiniteBound {
-                    offset: start_offset,
-                    inclusivity: start_inclusivity,
-                }),
-                EndB::Finite(RelativeFiniteBound {
-                    offset: end_offset,
-                    inclusivity: end_inclusivity,
-                }),
-            ) => EmptiableRelativeInterval::Bounded(BoundedRelativeInterval::unchecked_new_with_inclusivity(
-                start_offset,
-                start_inclusivity,
-                end_offset,
-                end_inclusivity,
-            )),
-        }
+        EmptiableRelativeInterval::Bound(RelativeInterval::from(value))
     }
 }
 
 impl From<EmptiableRelativeBoundPair> for EmptiableRelativeInterval {
     fn from(value: EmptiableRelativeBoundPair) -> Self {
-        type StartB = RelativeStartBound;
-        type EndB = RelativeEndBound;
-
-        match (value.partial_rel_start(), value.partial_rel_end()) {
-            (None, _) | (_, None) => EmptiableRelativeInterval::Empty(EmptyInterval),
-            (Some(StartB::InfinitePast), Some(EndB::InfiniteFuture)) => {
-                EmptiableRelativeInterval::Unbounded(UnboundedInterval)
-            },
-            (
-                Some(StartB::InfinitePast),
-                Some(EndB::Finite(RelativeFiniteBound {
-                    offset,
-                    inclusivity,
-                })),
-            ) => EmptiableRelativeInterval::HalfBounded(HalfBoundedRelativeInterval::new_with_inclusivity(
-                offset,
-                inclusivity,
-                OpeningDirection::ToPast,
-            )),
-            (
-                Some(StartB::Finite(RelativeFiniteBound {
-                    offset,
-                    inclusivity,
-                })),
-                Some(EndB::InfiniteFuture),
-            ) => EmptiableRelativeInterval::HalfBounded(HalfBoundedRelativeInterval::new_with_inclusivity(
-                offset,
-                inclusivity,
-                OpeningDirection::ToFuture,
-            )),
-            (
-                Some(StartB::Finite(RelativeFiniteBound {
-                    offset: start_offset,
-                    inclusivity: start_inclusivity,
-                })),
-                Some(EndB::Finite(RelativeFiniteBound {
-                    offset: end_offset,
-                    inclusivity: end_inclusivity,
-                })),
-            ) => EmptiableRelativeInterval::Bounded(BoundedRelativeInterval::unchecked_new_with_inclusivity(
-                start_offset,
-                start_inclusivity,
-                end_offset,
-                end_inclusivity,
-            )),
+        match value.bound() {
+            Some(rel_bound_pair) => Self::from(rel_bound_pair),
+            None => Self::Empty(EmptyInterval),
         }
     }
 }
 
 impl From<RelativeInterval> for EmptiableRelativeInterval {
     fn from(value: RelativeInterval) -> Self {
-        match value {
-            RelativeInterval::Bounded(bounded) => EmptiableRelativeInterval::Bounded(bounded),
-            RelativeInterval::HalfBounded(half_bounded) => EmptiableRelativeInterval::HalfBounded(half_bounded),
-            RelativeInterval::Unbounded(unbounded) => EmptiableRelativeInterval::Unbounded(unbounded),
-        }
+        Self::Bound(value)
     }
 }
 
-/// Converts `(Option<SignedDuration>, Option<SignedDuration>)` into
-/// [`RelativeInterval`]
+/// Converts `(Option<SignedDuration>, Option<SignedDuration>)` into [`RelativeInterval`]
 ///
 /// The first tuple element represents the start bound, the second element
 /// represents the end bound.
 impl From<(Option<SignedDuration>, Option<SignedDuration>)> for EmptiableRelativeInterval {
     fn from((from_opt, to_opt): (Option<SignedDuration>, Option<SignedDuration>)) -> Self {
-        match (from_opt, to_opt) {
-            (Some(from), Some(to)) => EmptiableRelativeInterval::Bounded(BoundedRelativeInterval::new(from, to)),
-            (Some(from), None) => EmptiableRelativeInterval::HalfBounded(HalfBoundedRelativeInterval::new(
-                from,
-                OpeningDirection::ToFuture,
-            )),
-            (None, Some(to)) => {
-                EmptiableRelativeInterval::HalfBounded(HalfBoundedRelativeInterval::new(to, OpeningDirection::ToPast))
-            },
-            (None, None) => EmptiableRelativeInterval::Unbounded(UnboundedInterval),
-        }
+        Self::from(RelativeBoundPair::from((from_opt, to_opt)).to_emptiable())
     }
 }
 
@@ -333,23 +250,25 @@ impl
     )> for EmptiableRelativeInterval
 {
     fn from(
-        (start_opt, end_opt): (
+        value: (
             Option<(SignedDuration, BoundInclusivity)>,
             Option<(SignedDuration, BoundInclusivity)>,
         ),
     ) -> Self {
-        match (start_opt, end_opt) {
-            (Some((start, start_inclusivity)), Some((end, end_inclusivity))) => EmptiableRelativeInterval::Bounded(
-                BoundedRelativeInterval::new_with_inclusivity(start, start_inclusivity, end, end_inclusivity),
-            ),
-            (Some((start, start_inclusivity)), None) => EmptiableRelativeInterval::HalfBounded(
-                HalfBoundedRelativeInterval::new_with_inclusivity(start, start_inclusivity, OpeningDirection::ToFuture),
-            ),
-            (None, Some((end, end_inclusivity))) => EmptiableRelativeInterval::HalfBounded(
-                HalfBoundedRelativeInterval::new_with_inclusivity(end, end_inclusivity, OpeningDirection::ToPast),
-            ),
-            (None, None) => EmptiableRelativeInterval::Unbounded(UnboundedInterval),
-        }
+        Self::from(RelativeBoundPair::from(value))
+    }
+}
+
+/// Converts `(bool, RelativeStartBound, RelativeEndBound)` into [`EmptiableRelativeInterval`]
+///
+/// The second tuple element represents the start bound, the third element
+/// represents the end bound.
+///
+/// The first boolean indicates whether the interval is an empty interval.
+/// If it is set to `true`, the next elements are ignored altogether.
+impl From<(bool, RelativeStartBound, RelativeEndBound)> for EmptiableRelativeInterval {
+    fn from(value: (bool, RelativeStartBound, RelativeEndBound)) -> Self {
+        Self::from(EmptiableRelativeBoundPair::from(value))
     }
 }
 
@@ -362,22 +281,8 @@ impl
 /// The first boolean indicates whether the interval is an [`EmptyInterval`].
 /// If it is set to `true`, the next elements are ignored altogether.
 impl From<(bool, Option<SignedDuration>, Option<SignedDuration>)> for EmptiableRelativeInterval {
-    fn from((is_empty, from_opt, to_opt): (bool, Option<SignedDuration>, Option<SignedDuration>)) -> Self {
-        if is_empty {
-            return EmptiableRelativeInterval::Empty(EmptyInterval);
-        }
-
-        match (from_opt, to_opt) {
-            (Some(from), Some(to)) => EmptiableRelativeInterval::Bounded(BoundedRelativeInterval::new(from, to)),
-            (Some(from), None) => EmptiableRelativeInterval::HalfBounded(HalfBoundedRelativeInterval::new(
-                from,
-                OpeningDirection::ToFuture,
-            )),
-            (None, Some(to)) => {
-                EmptiableRelativeInterval::HalfBounded(HalfBoundedRelativeInterval::new(to, OpeningDirection::ToPast))
-            },
-            (None, None) => EmptiableRelativeInterval::Unbounded(UnboundedInterval),
-        }
+    fn from(value: (bool, Option<SignedDuration>, Option<SignedDuration>)) -> Self {
+        Self::from(EmptiableRelativeBoundPair::from(value))
     }
 }
 
@@ -397,28 +302,13 @@ impl
     )> for EmptiableRelativeInterval
 {
     fn from(
-        (is_empty, start_opt, end_opt): (
+        value: (
             bool,
             Option<(SignedDuration, BoundInclusivity)>,
             Option<(SignedDuration, BoundInclusivity)>,
         ),
     ) -> Self {
-        if is_empty {
-            return EmptiableRelativeInterval::Empty(EmptyInterval);
-        }
-
-        match (start_opt, end_opt) {
-            (Some((start, start_inclusivity)), Some((end, end_inclusivity))) => EmptiableRelativeInterval::Bounded(
-                BoundedRelativeInterval::new_with_inclusivity(start, start_inclusivity, end, end_inclusivity),
-            ),
-            (Some((start, start_inclusivity)), None) => EmptiableRelativeInterval::HalfBounded(
-                HalfBoundedRelativeInterval::new_with_inclusivity(start, start_inclusivity, OpeningDirection::ToFuture),
-            ),
-            (None, Some((end, end_inclusivity))) => EmptiableRelativeInterval::HalfBounded(
-                HalfBoundedRelativeInterval::new_with_inclusivity(end, end_inclusivity, OpeningDirection::ToPast),
-            ),
-            (None, None) => EmptiableRelativeInterval::Unbounded(UnboundedInterval),
-        }
+        Self::from(EmptiableRelativeBoundPair::from(value))
     }
 }
 

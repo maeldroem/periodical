@@ -9,10 +9,12 @@ use std::time::Duration;
 
 #[cfg(feature = "arbitrary")]
 use arbitrary::Arbitrary;
+use jiff::SignedDuration;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 use crate::intervals::meta::{
+    BoundInclusivity,
     Duration as IntervalDuration,
     Emptiable,
     Epsilon,
@@ -72,8 +74,8 @@ where
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum EmptiableRelativeBoundPair {
-    Empty,
     Bound(RelativeBoundPair),
+    Empty,
 }
 
 impl EmptiableRelativeBoundPair {
@@ -210,6 +212,67 @@ impl Ord for EmptiableRelativeBoundPair {
                 EmptiableRelativeBoundPair::Bound(other_rel_bound_pair),
             ) => og_rel_bound_pair.cmp(other_rel_bound_pair),
         }
+    }
+}
+
+/// Converts `(bool, RelativeStartBound, RelativeEndBound)` into [`EmptiableRelativeBoundPair`]
+///
+/// The second tuple element represents the start bound, the third element
+/// represents the end bound.
+///
+/// The first boolean indicates whether the interval is an empty interval.
+/// If it is set to `true`, the next elements are ignored altogether.
+impl From<(bool, RelativeStartBound, RelativeEndBound)> for EmptiableRelativeBoundPair {
+    fn from((is_empty, start, end): (bool, RelativeStartBound, RelativeEndBound)) -> Self {
+        if is_empty {
+            return Self::Empty;
+        }
+
+        Self::from(RelativeBoundPair::new(start, end))
+    }
+}
+
+/// Converts `(bool, Option<SignedDuration>, Option<SignedDuration>)` into
+/// [`EmptiableRelativeBoundPair`]
+///
+/// The second tuple element represents the start bound, the third element
+/// represents the end bound.
+///
+/// The first boolean indicates whether the interval is an empty interval.
+/// If it is set to `true`, the next elements are ignored altogether.
+impl From<(bool, Option<SignedDuration>, Option<SignedDuration>)> for EmptiableRelativeBoundPair {
+    fn from((is_empty, start_opt, end_opt): (bool, Option<SignedDuration>, Option<SignedDuration>)) -> Self {
+        let start = RelativeStartBound::from(start_opt);
+        let end = RelativeEndBound::from(end_opt);
+        Self::from((is_empty, start, end))
+    }
+}
+
+/// Converts `(bool, Option<(SignedDuration, BoundInclusivity)>, Option<(SignedDuration, BoundInclusivity)>)`
+/// into [`RelativeInterval`]
+///
+/// The second tuple element represents the start bound, the third element
+/// represents the end bound.
+///
+/// The first boolean indicates whether the interval is an empty interval.
+/// If it is set to `true`, the next elements are ignored altogether.
+impl
+    From<(
+        bool,
+        Option<(SignedDuration, BoundInclusivity)>,
+        Option<(SignedDuration, BoundInclusivity)>,
+    )> for EmptiableRelativeBoundPair
+{
+    fn from(
+        (is_empty, start_opt, end_opt): (
+            bool,
+            Option<(SignedDuration, BoundInclusivity)>,
+            Option<(SignedDuration, BoundInclusivity)>,
+        ),
+    ) -> Self {
+        let start = RelativeStartBound::from(start_opt);
+        let end = RelativeEndBound::from(end_opt);
+        Self::from((is_empty, start, end))
     }
 }
 

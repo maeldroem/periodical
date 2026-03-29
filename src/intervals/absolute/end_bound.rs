@@ -259,6 +259,26 @@ impl From<AbsoluteFiniteBound> for AbsoluteEndBound {
     }
 }
 
+impl From<Option<Timestamp>> for AbsoluteEndBound {
+    fn from(value: Option<Timestamp>) -> Self {
+        match value {
+            Some(timestamp) => Self::Finite(AbsoluteFiniteBound::from(timestamp)),
+            None => Self::InfiniteFuture,
+        }
+    }
+}
+
+impl From<Option<(Timestamp, BoundInclusivity)>> for AbsoluteEndBound {
+    fn from(value: Option<(Timestamp, BoundInclusivity)>) -> Self {
+        match value {
+            Some((timestamp, inclusivity)) => {
+                Self::Finite(AbsoluteFiniteBound::new_with_inclusivity(timestamp, inclusivity))
+            },
+            None => Self::InfiniteFuture,
+        }
+    }
+}
+
 impl From<Bound<Timestamp>> for AbsoluteEndBound {
     fn from(bound: Bound<Timestamp>) -> Self {
         match bound {
