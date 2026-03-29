@@ -1,17 +1,10 @@
 use jiff::SignedDuration;
 
-use super::emptiable_interval::*;
 use crate::intervals::meta::{BoundInclusivity, OpeningDirection};
-use crate::intervals::relative::{
-    BoundedRelativeInterval,
-    EmptiableRelativeBoundPair,
-    HalfBoundedRelativeInterval,
-    RelativeBoundPair,
-    RelativeEndBound,
-    RelativeFiniteBound,
-    RelativeStartBound,
-};
+use crate::intervals::relative::{BoundedRelativeInterval, EmptiableRelativeBoundPair, HalfBoundedRelativeInterval, RelativeBoundPair, RelativeEndBound, RelativeFiniteBound, RelativeStartBound, RelativeInterval};
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
+
+use super::emptiable_interval::*;
 
 #[test]
 fn relative_interval_from_relative_bounds() {
@@ -23,11 +16,11 @@ fn relative_interval_from_relative_bounds() {
             )),
             RelativeEndBound::InfiniteFuture,
         )),
-        EmptiableRelativeInterval::HalfBounded(HalfBoundedRelativeInterval::new_with_inclusivity(
+        EmptiableRelativeInterval::Bound(RelativeInterval::HalfBounded(HalfBoundedRelativeInterval::new_with_inclusivity(
             SignedDuration::from_hours(1),
             BoundInclusivity::Exclusive,
             OpeningDirection::ToFuture,
-        )),
+        ))),
     );
 }
 
@@ -41,11 +34,11 @@ fn relative_interval_from_emptiable_relative_bounds() {
             )),
             RelativeEndBound::InfiniteFuture,
         ))),
-        EmptiableRelativeInterval::HalfBounded(HalfBoundedRelativeInterval::new_with_inclusivity(
+        EmptiableRelativeInterval::Bound(RelativeInterval::HalfBounded(HalfBoundedRelativeInterval::new_with_inclusivity(
             SignedDuration::from_hours(1),
             BoundInclusivity::Exclusive,
             OpeningDirection::ToFuture,
-        )),
+        ))),
     );
 }
 
@@ -53,7 +46,7 @@ fn relative_interval_from_emptiable_relative_bounds() {
 fn relative_interval_from_opt_datetime_pair_unbounded() {
     assert_eq!(
         <EmptiableRelativeInterval as From<(Option<SignedDuration>, Option<SignedDuration>)>>::from((None, None)),
-        EmptiableRelativeInterval::Unbounded(UnboundedInterval),
+        EmptiableRelativeInterval::Bound(RelativeInterval::Unbounded(UnboundedInterval)),
     );
 }
 
@@ -61,10 +54,10 @@ fn relative_interval_from_opt_datetime_pair_unbounded() {
 fn relative_interval_from_opt_datetime_pair_half_bounded() {
     assert_eq!(
         EmptiableRelativeInterval::from((None, Some(SignedDuration::from_hours(1)))),
-        EmptiableRelativeInterval::HalfBounded(HalfBoundedRelativeInterval::new(
+        EmptiableRelativeInterval::Bound(RelativeInterval::HalfBounded(HalfBoundedRelativeInterval::new(
             SignedDuration::from_hours(1),
             OpeningDirection::ToPast,
-        )),
+        ))),
     );
 }
 
@@ -75,12 +68,12 @@ fn relative_interval_from_opt_datetime_bound_inclusivity_pairs() {
             Some((SignedDuration::from_hours(1), BoundInclusivity::Exclusive)),
             Some((SignedDuration::from_hours(2), BoundInclusivity::Exclusive)),
         )),
-        EmptiableRelativeInterval::Bounded(BoundedRelativeInterval::new_with_inclusivity(
+        EmptiableRelativeInterval::Bound(RelativeInterval::Bounded(BoundedRelativeInterval::new_with_inclusivity(
             SignedDuration::from_hours(1),
             BoundInclusivity::Exclusive,
             SignedDuration::from_hours(2),
             BoundInclusivity::Exclusive,
-        )),
+        ))),
     );
 }
 
@@ -97,15 +90,8 @@ fn relative_interval_from_bool_and_two_opt_datetime_empty() {
 #[test]
 fn relative_interval_from_bool_and_two_opt_datetime() {
     assert_eq!(
-        EmptiableRelativeInterval::from((
-            false,
-            Some(SignedDuration::from_hours(1)),
-            Some(SignedDuration::from_hours(2)),
-        )),
-        EmptiableRelativeInterval::Bounded(BoundedRelativeInterval::new(
-            SignedDuration::from_hours(1),
-            SignedDuration::from_hours(2)
-        )),
+        EmptiableRelativeInterval::from((false, Some(SignedDuration::from_hours(1)), Some(SignedDuration::from_hours(2)),)),
+        EmptiableRelativeInterval::Bound(RelativeInterval::Bounded(BoundedRelativeInterval::new(SignedDuration::from_hours(1), SignedDuration::from_hours(2)))),
     );
 }
 
@@ -129,11 +115,11 @@ fn relative_interval_from_bool_and_two_opt_datetime_bound_inclusivity() {
             Some((SignedDuration::from_hours(1), BoundInclusivity::Exclusive)),
             Some((SignedDuration::from_hours(2), BoundInclusivity::Exclusive)),
         )),
-        EmptiableRelativeInterval::Bounded(BoundedRelativeInterval::new_with_inclusivity(
+        EmptiableRelativeInterval::Bound(RelativeInterval::Bounded(BoundedRelativeInterval::new_with_inclusivity(
             SignedDuration::from_hours(1),
             BoundInclusivity::Exclusive,
             SignedDuration::from_hours(2),
             BoundInclusivity::Exclusive,
-        )),
+        ))),
     );
 }

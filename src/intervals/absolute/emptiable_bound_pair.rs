@@ -9,11 +9,13 @@ use std::time::Duration;
 
 #[cfg(feature = "arbitrary")]
 use arbitrary::Arbitrary;
+use jiff::Timestamp;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 use crate::intervals::absolute::{AbsoluteBoundPair, AbsoluteEndBound, AbsoluteStartBound, HasAbsoluteBoundPair};
 use crate::intervals::meta::{
+    BoundInclusivity,
     Duration as IntervalDuration,
     Emptiable,
     Epsilon,
@@ -72,8 +74,8 @@ where
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum EmptiableAbsoluteBoundPair {
-    Empty,
     Bound(AbsoluteBoundPair),
+    Empty,
 }
 
 impl EmptiableAbsoluteBoundPair {
@@ -210,6 +212,67 @@ impl Ord for EmptiableAbsoluteBoundPair {
                 EmptiableAbsoluteBoundPair::Bound(other_abs_bound_pair),
             ) => og_abs_bound_pair.cmp(other_abs_bound_pair),
         }
+    }
+}
+
+/// Converts `(bool, AbsoluteStartBound, AbsoluteEndBound)` into [`EmptiableAbsoluteBoundPair`]
+///
+/// The second tuple element represents the start bound, the third element
+/// represents the end bound.
+///
+/// The first boolean indicates whether the interval is an empty interval.
+/// If it is set to `true`, the next elements are ignored altogether.
+impl From<(bool, AbsoluteStartBound, AbsoluteEndBound)> for EmptiableAbsoluteBoundPair {
+    fn from((is_empty, start, end): (bool, AbsoluteStartBound, AbsoluteEndBound)) -> Self {
+        if is_empty {
+            return Self::Empty;
+        }
+
+        Self::from(AbsoluteBoundPair::new(start, end))
+    }
+}
+
+/// Converts `(bool, Option<Timestamp>, Option<Timestamp>)` into
+/// [`EmptiableAbsoluteBoundPair`]
+///
+/// The second tuple element represents the start bound, the third element
+/// represents the end bound.
+///
+/// The first boolean indicates whether the interval is an empty interval.
+/// If it is set to `true`, the next elements are ignored altogether.
+impl From<(bool, Option<Timestamp>, Option<Timestamp>)> for EmptiableAbsoluteBoundPair {
+    fn from((is_empty, start_opt, end_opt): (bool, Option<Timestamp>, Option<Timestamp>)) -> Self {
+        let start = AbsoluteStartBound::from(start_opt);
+        let end = AbsoluteEndBound::from(end_opt);
+        Self::from((is_empty, start, end))
+    }
+}
+
+/// Converts `(bool, Option<(Timestamp, BoundInclusivity)>, Option<(Timestamp, BoundInclusivity)>)`
+/// into [`EmptiableAbsoluteBoundPair`]
+///
+/// The second tuple element represents the start bound, the third element
+/// represents the end bound.
+///
+/// The first boolean indicates whether the interval is an empty interval.
+/// If it is set to `true`, the next elements are ignored altogether.
+impl
+    From<(
+        bool,
+        Option<(Timestamp, BoundInclusivity)>,
+        Option<(Timestamp, BoundInclusivity)>,
+    )> for EmptiableAbsoluteBoundPair
+{
+    fn from(
+        (is_empty, start_opt, end_opt): (
+            bool,
+            Option<(Timestamp, BoundInclusivity)>,
+            Option<(Timestamp, BoundInclusivity)>,
+        ),
+    ) -> Self {
+        let start = AbsoluteStartBound::from(start_opt);
+        let end = AbsoluteEndBound::from(end_opt);
+        Self::from((is_empty, start, end))
     }
 }
 
