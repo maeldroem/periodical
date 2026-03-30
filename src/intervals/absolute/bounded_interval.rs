@@ -225,7 +225,7 @@ impl BoundedAbsoluteInterval {
         }
     }
 
-    /// Attempts to create a [`BoundedAbsoluteInterval`] from a [`RangeBounds`] implementor
+    /// Attempts to create a [`BoundedAbsoluteInterval`] from a [`Timestamp`] range
     ///
     /// # Errors
     ///

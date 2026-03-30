@@ -21,7 +21,7 @@
 use std::cmp::Ordering;
 use std::error::Error;
 use std::fmt::Display;
-use std::ops::{Bound, RangeBounds};
+use std::ops::RangeBounds;
 
 #[cfg(feature = "arbitrary")]
 use arbitrary::Arbitrary;
@@ -84,74 +84,36 @@ pub enum AbsoluteInterval {
 }
 
 impl AbsoluteInterval {
+    /// Creates an [`AbsoluteInterval`] from a [`Timestamp`] range
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jiff::Timestamp;
+    /// # use periodical::intervals::absolute::{AbsoluteFiniteBound, AbsoluteInterval, HasAbsoluteBoundPair};
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// let start = "2026-01-01 08:00:00Z".parse::<Timestamp>()?;
+    /// let end = "2026-01-01 16:00:00Z".parse::<Timestamp>()?;
+    ///
+    /// let interval = AbsoluteInterval::from_range(start..end);
+    ///
+    /// assert_eq!(
+    ///     interval.abs_start(),
+    ///     AbsoluteFiniteBound::new(start).to_start_bound(),
+    /// );
+    /// assert_eq!(
+    ///     interval.abs_end(),
+    ///     AbsoluteFiniteBound::new_with_inclusivity(end, BoundInclusivity::Exclusive).to_end_bound(),
+    /// );
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
     #[must_use]
     pub fn from_range<R>(range: R) -> Self
     where
         R: RangeBounds<Timestamp>,
     {
-        match (range.start_bound().cloned(), range.end_bound().cloned()) {
-            (Bound::Included(start), Bound::Included(end)) => {
-                AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new_with_inclusivity(
-                    start,
-                    BoundInclusivity::Inclusive,
-                    end,
-                    BoundInclusivity::Inclusive,
-                ))
-            },
-            (Bound::Included(start), Bound::Excluded(end)) => {
-                AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new_with_inclusivity(
-                    start,
-                    BoundInclusivity::Inclusive,
-                    end,
-                    BoundInclusivity::Exclusive,
-                ))
-            },
-            (Bound::Excluded(start), Bound::Included(end)) => {
-                AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new_with_inclusivity(
-                    start,
-                    BoundInclusivity::Exclusive,
-                    end,
-                    BoundInclusivity::Inclusive,
-                ))
-            },
-            (Bound::Excluded(start), Bound::Excluded(end)) => {
-                AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new_with_inclusivity(
-                    start,
-                    BoundInclusivity::Exclusive,
-                    end,
-                    BoundInclusivity::Exclusive,
-                ))
-            },
-            (Bound::Included(start), Bound::Unbounded) => {
-                AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
-                    start,
-                    BoundInclusivity::Inclusive,
-                    OpeningDirection::ToFuture,
-                ))
-            },
-            (Bound::Excluded(start), Bound::Unbounded) => {
-                AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
-                    start,
-                    BoundInclusivity::Exclusive,
-                    OpeningDirection::ToFuture,
-                ))
-            },
-            (Bound::Unbounded, Bound::Included(start)) => {
-                AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
-                    start,
-                    BoundInclusivity::Inclusive,
-                    OpeningDirection::ToPast,
-                ))
-            },
-            (Bound::Unbounded, Bound::Excluded(start)) => {
-                AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
-                    start,
-                    BoundInclusivity::Exclusive,
-                    OpeningDirection::ToPast,
-                ))
-            },
-            (Bound::Unbounded, Bound::Unbounded) => AbsoluteInterval::Unbounded(UnboundedInterval),
-        }
+        Self::from(AbsoluteBoundPair::from_range(range))
     }
 
     /// Compares two [`AbsoluteInterval`], but if they have the same start,
