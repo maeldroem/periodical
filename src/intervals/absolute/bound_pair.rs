@@ -31,6 +31,7 @@ use crate::intervals::absolute::{
 use crate::intervals::meta::{
     BoundInclusivity,
     Duration as IntervalDuration,
+    Emptiable,
     Epsilon,
     HasBoundInclusivity,
     HasDuration,
@@ -451,6 +452,12 @@ impl Ord for AbsoluteBoundPair {
         // absolute bound pair inside a BTreeSet, then if we use `range()`,
         // one can be considered out of the range when it shouldn't.
         self.start.cmp(&other.start)
+    }
+}
+
+impl Emptiable for AbsoluteBoundPair {
+    fn is_empty(&self) -> bool {
+        false
     }
 }
 

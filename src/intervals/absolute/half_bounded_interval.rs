@@ -30,6 +30,7 @@ use crate::intervals::absolute::{
 use crate::intervals::meta::{
     BoundInclusivity,
     Duration as IntervalDuration,
+    Emptiable,
     HasBoundInclusivity,
     HasDuration,
     HasOpenness,
@@ -362,6 +363,12 @@ impl HasAbsoluteBoundPair for HalfBoundedAbsoluteInterval {
             },
             OpeningDirection::ToFuture => AbsoluteEndBound::InfiniteFuture,
         }
+    }
+}
+
+impl Emptiable for HalfBoundedAbsoluteInterval {
+    fn is_empty(&self) -> bool {
+        false
     }
 }
 
