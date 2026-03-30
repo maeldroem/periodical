@@ -42,19 +42,16 @@ tests! {
 }
 
 inline_docs! {
-    pub use bounded_interval::{
-        BoundedAbsoluteInterval, BoundedAbsoluteIntervalCreationError,
-        BoundedAbsoluteIntervalFromAbsoluteBoundPairError, BoundedAbsoluteIntervalFromAbsoluteIntervalError,
-    };
-    pub use bound::AbsoluteBound;
-    pub use bound_pair::{AbsoluteBoundPair, AbsoluteBoundPairFromEmptiableAbsoluteBoundPairError, HasAbsoluteBoundPair};
-    pub use end_bound::AbsoluteEndBound;
-    pub use emptiable_bound_pair::{HasEmptiableAbsoluteBoundPair, EmptiableAbsoluteBoundPair};
-    pub use emptiable_interval::EmptiableAbsoluteInterval;
-    pub use finite_bound::{AbsoluteFiniteBound, AbsoluteFiniteBoundFromBoundError};
-    pub use half_bounded_interval::{HalfBoundedAbsoluteInterval, HalfBoundedAbsoluteIntervalCreationError};
-    pub use interval::AbsoluteInterval;
-    pub use start_bound::AbsoluteStartBound;
+    pub use bounded_interval::*;
+    pub use bound::*;
+    pub use bound_pair::*;
+    pub use end_bound::*;
+    pub use emptiable_bound_pair::*;
+    pub use emptiable_interval::*;
+    pub use finite_bound::*;
+    pub use half_bounded_interval::*;
+    pub use interval::*;
+    pub use start_bound::*;
 }
 
 /// Swaps an absolute start bound with an absolute end bound
