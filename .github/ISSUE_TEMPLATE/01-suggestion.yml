@@ -1,6 +1,5 @@
 name: Suggestion
-description: Suggest a feature or a change
-title: ""
+description: Suggest a feature or change
 labels: ["suggestion"]
 body:
   - type: markdown
@@ -16,7 +15,7 @@ body:
     attributes:
       label: Use case
       description: If applicable, how would a user use/benefit from your feature/change?
-  - type: Justifying feedback
+  - type: textarea
     id: justifying-feedback
     attributes:
       label: Justifying feedback
