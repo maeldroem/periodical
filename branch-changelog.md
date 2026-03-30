@@ -4,7 +4,7 @@
 
 ## Added
 
-- [ ] Implement `Emptiable` on every interval type
+- [x] Implement `Emptiable` on every interval type
 - [x] Implement additional conversions on absolute emptiable types
 - [x] Implement additional conversions on relative emptiable types
 

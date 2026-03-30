@@ -24,6 +24,7 @@ use serde::{Deserialize, Serialize};
 use crate::intervals::meta::{
     BoundInclusivity,
     Duration as IntervalDuration,
+    Emptiable,
     Epsilon,
     HasBoundInclusivity,
     HasDuration,
@@ -433,6 +434,12 @@ impl Ord for RelativeBoundPair {
         // absolute bounds inside a BTreeSet, then if we use `range()`,
         // one can be considered out of the range when it shouldn't.
         self.start.cmp(&other.start)
+    }
+}
+
+impl Emptiable for RelativeBoundPair {
+    fn is_empty(&self) -> bool {
+        false
     }
 }
 
