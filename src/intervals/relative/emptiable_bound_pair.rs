@@ -1,8 +1,7 @@
 //! Emptiable absolute bound pair
 //!
 //! Similar to [absolute bound pair](crate::intervals::absolute::bound_pair),
-//! but has the extra ability of being able to represent an [empty
-//! interval](crate::intervals::special::EmptyInterval).
+//! but has the extra ability of being able to represent an [empty interval](crate::intervals::special::EmptyInterval).
 
 use std::cmp::Ordering;
 use std::time::Duration;
@@ -249,7 +248,7 @@ impl From<(bool, Option<SignedDuration>, Option<SignedDuration>)> for EmptiableR
 }
 
 /// Converts `(bool, Option<(SignedDuration, BoundInclusivity)>, Option<(SignedDuration, BoundInclusivity)>)`
-/// into [`RelativeInterval`]
+/// into [`EmptiableRelativeBoundPair`]
 ///
 /// The second tuple element represents the start bound, the third element
 /// represents the end bound.
