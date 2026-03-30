@@ -5,6 +5,7 @@
 ## Added
 
 - Implemented `try_from_range` on `BoundedAbsoluteInterval`
+- Implemented `from_range` on `EmptiableAbsoluteBoundPair`
 
 ## Changed
 

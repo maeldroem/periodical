@@ -5,6 +5,7 @@
 //! interval](crate::intervals::special::EmptyInterval).
 
 use std::cmp::Ordering;
+use std::ops::RangeBounds;
 use std::time::Duration;
 
 #[cfg(feature = "arbitrary")]
@@ -79,6 +80,38 @@ pub enum EmptiableAbsoluteBoundPair {
 }
 
 impl EmptiableAbsoluteBoundPair {
+    /// Creates an [`EmptiableAbsoluteBoundPair`] from a [`Timestamp`] range
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jiff::Timestamp;
+    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound, EmptiableAbsoluteBoundPair};
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// let start = "2026-01-01 00:00:00Z".parse::<Timestamp>()?;
+    /// let end = "2026-05-01 00:00:00Z".parse::<Timestamp>()?;
+    ///
+    /// let emptiable_bounds = EmptiableAbsoluteBoundPair::from_range(start..end);
+    ///
+    /// assert_eq!(
+    ///     emptiable_bounds.clone().bound().map(|bounds| bounds.start()),
+    ///     Some(AbsoluteFiniteBound::new(start).to_start_bound()),
+    /// );
+    /// assert_eq!(
+    ///     emptiable_bounds.clone().bound().map(|bounds| bounds.end()),
+    ///     Some(AbsoluteFiniteBound::new_with_inclusivity(end, BoundInclusivity::Exclusive).to_end_bound()),
+    /// );
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    #[must_use]
+    pub fn from_range<R>(range: R) -> Self
+    where
+        R: RangeBounds<Timestamp>,
+    {
+        AbsoluteBoundPair::from_range(range).to_emptiable()
+    }
+
     /// Returns the content of the [`Bound`](EmptiableAbsoluteBoundPair::Bound)
     /// variant
     ///
