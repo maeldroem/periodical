@@ -4,18 +4,11 @@
 
 ## Added
 
-- [x] Implement `Emptiable` on every interval type
-- [x] Implement additional conversions on absolute emptiable types
-- [x] Implement additional conversions on relative emptiable types
+- 
 
 ## Changed
 
-- [x] Renamed `AbsoluteInterval::to_emptiable_interval` to `to_emptiable`
-- [x] Renamed `RelativeInterval::to_emptiable_interval` to `to_emptiable`
-- [x] `EmptiableAbsoluteInterval` has the same semantics as `EmptiableAbsoluteBoundPair`:
-      two variants: `Bound`, `Empty`.
-- [x] `EmptiableRelativeInterval` has the same semantics as `EmptiableRelativeBoundPair`:
-      two variants: `Bound`, `Empty`.
+- Changed re-exports internally (not global `prelude`) to use wildcard
 
 ## Deprecated
 
