@@ -22,7 +22,9 @@ use jiff::SignedDuration;
 use serde::{Deserialize, Serialize};
 
 use crate::intervals::meta::{
+    BoundInclusivity,
     Duration as IntervalDuration,
+    Emptiable,
     Epsilon,
     HasBoundInclusivity,
     HasDuration,
@@ -432,6 +434,47 @@ impl Ord for RelativeBoundPair {
         // absolute bounds inside a BTreeSet, then if we use `range()`,
         // one can be considered out of the range when it shouldn't.
         self.start.cmp(&other.start)
+    }
+}
+
+impl Emptiable for RelativeBoundPair {
+    fn is_empty(&self) -> bool {
+        false
+    }
+}
+
+/// Converts `(Option<SignedDuration>, Option<SignedDuration>)` into [`RelativeBoundPair`]
+///
+/// The first tuple element represents the start bound, the second element
+/// represents the end bound.
+impl From<(Option<SignedDuration>, Option<SignedDuration>)> for RelativeBoundPair {
+    fn from((start_opt, end_opt): (Option<SignedDuration>, Option<SignedDuration>)) -> Self {
+        let start = RelativeStartBound::from(start_opt);
+        let end = RelativeEndBound::from(end_opt);
+        RelativeBoundPair::new(start, end)
+    }
+}
+
+/// Converts `(Option<(SignedDuration, BoundInclusivity)>, Option<(SignedDuration, BoundInclusivity)>)`
+/// into [`RelativeBoundPair`]
+///
+/// The first tuple element represents the start bound, the second element
+/// represents the end bound.
+impl
+    From<(
+        Option<(SignedDuration, BoundInclusivity)>,
+        Option<(SignedDuration, BoundInclusivity)>,
+    )> for RelativeBoundPair
+{
+    fn from(
+        (start_opt, end_opt): (
+            Option<(SignedDuration, BoundInclusivity)>,
+            Option<(SignedDuration, BoundInclusivity)>,
+        ),
+    ) -> Self {
+        let start = RelativeStartBound::from(start_opt);
+        let end = RelativeEndBound::from(end_opt);
+        Self::new(start, end)
     }
 }
 

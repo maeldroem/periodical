@@ -32,6 +32,7 @@ use serde::{Deserialize, Serialize};
 use crate::intervals::meta::{
     BoundInclusivity,
     Duration as IntervalDuration,
+    Emptiable,
     HasDuration,
     HasOpenness,
     HasRelativity,
@@ -177,7 +178,7 @@ impl RelativeInterval {
 
     /// Wraps the interval in [`EmptiableRelativeInterval`]
     #[must_use]
-    pub fn to_emptiable_interval(self) -> EmptiableRelativeInterval {
+    pub fn to_emptiable(self) -> EmptiableRelativeInterval {
         EmptiableRelativeInterval::from(self)
     }
 }
@@ -249,6 +250,12 @@ impl PartialOrd for RelativeInterval {
 impl Ord for RelativeInterval {
     fn cmp(&self, other: &Self) -> Ordering {
         self.rel_bound_pair().cmp(&other.rel_bound_pair())
+    }
+}
+
+impl Emptiable for RelativeInterval {
+    fn is_empty(&self) -> bool {
+        false
     }
 }
 

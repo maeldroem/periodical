@@ -304,11 +304,7 @@ impl ToAbsolute for EmptiableRelativeInterval {
         D: Into<Timestamp>,
     {
         match self {
-            Self::Bounded(bounded) => EmptiableAbsoluteInterval::Bounded(bounded.to_absolute(reference)),
-            Self::HalfBounded(half_bounded) => {
-                EmptiableAbsoluteInterval::HalfBounded(half_bounded.to_absolute(reference))
-            },
-            Self::Unbounded(unbounded) => EmptiableAbsoluteInterval::Unbounded(unbounded.to_absolute(reference)),
+            Self::Bound(interval) => EmptiableAbsoluteInterval::Bound(interval.to_absolute(reference)),
             Self::Empty(empty) => EmptiableAbsoluteInterval::Empty(empty.to_absolute(reference)),
         }
     }
@@ -551,11 +547,7 @@ impl ToRelative for EmptiableAbsoluteInterval {
         D: Into<Timestamp>,
     {
         match self {
-            Self::Bounded(bounded) => EmptiableRelativeInterval::Bounded(bounded.to_relative(reference)),
-            Self::HalfBounded(half_bounded) => {
-                EmptiableRelativeInterval::HalfBounded(half_bounded.to_relative(reference))
-            },
-            Self::Unbounded(unbounded) => EmptiableRelativeInterval::Unbounded(unbounded.to_relative(reference)),
+            Self::Bound(interval) => EmptiableRelativeInterval::Bound(interval.to_relative(reference)),
             Self::Empty(empty) => EmptiableRelativeInterval::Empty(empty.to_relative(reference)),
         }
     }

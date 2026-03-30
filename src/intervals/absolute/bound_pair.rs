@@ -29,7 +29,9 @@ use crate::intervals::absolute::{
     prepare_absolute_bound_pair_for_interval_creation,
 };
 use crate::intervals::meta::{
+    BoundInclusivity,
     Duration as IntervalDuration,
+    Emptiable,
     Epsilon,
     HasBoundInclusivity,
     HasDuration,
@@ -450,6 +452,47 @@ impl Ord for AbsoluteBoundPair {
         // absolute bound pair inside a BTreeSet, then if we use `range()`,
         // one can be considered out of the range when it shouldn't.
         self.start.cmp(&other.start)
+    }
+}
+
+impl Emptiable for AbsoluteBoundPair {
+    fn is_empty(&self) -> bool {
+        false
+    }
+}
+
+/// Converts `(Option<Timestamp>, Option<Timestamp>)` into [`AbsoluteBoundPair`]
+///
+/// The first tuple element represents the start bound, the second element
+/// represents the end bound.
+impl From<(Option<Timestamp>, Option<Timestamp>)> for AbsoluteBoundPair {
+    fn from((start_opt, end_opt): (Option<Timestamp>, Option<Timestamp>)) -> Self {
+        let start = AbsoluteStartBound::from(start_opt);
+        let end = AbsoluteEndBound::from(end_opt);
+        AbsoluteBoundPair::new(start, end)
+    }
+}
+
+/// Converts `(Option<(Timestamp, BoundInclusivity)>, Option<(Timestamp, BoundInclusivity)>)`
+/// into [`AbsoluteBoundPair`]
+///
+/// The first tuple element represents the start bound, the second element
+/// represents the end bound.
+impl
+    From<(
+        Option<(Timestamp, BoundInclusivity)>,
+        Option<(Timestamp, BoundInclusivity)>,
+    )> for AbsoluteBoundPair
+{
+    fn from(
+        (start_opt, end_opt): (
+            Option<(Timestamp, BoundInclusivity)>,
+            Option<(Timestamp, BoundInclusivity)>,
+        ),
+    ) -> Self {
+        let start = AbsoluteStartBound::from(start_opt);
+        let end = AbsoluteEndBound::from(end_opt);
+        Self::new(start, end)
     }
 }
 

@@ -44,6 +44,7 @@ use crate::intervals::absolute::{
 use crate::intervals::meta::{
     BoundInclusivity,
     Duration as IntervalDuration,
+    Emptiable,
     HasDuration,
     HasOpenness,
     HasRelativity,
@@ -177,7 +178,7 @@ impl AbsoluteInterval {
 
     /// Wraps the interval in [`EmptiableAbsoluteInterval`]
     #[must_use]
-    pub fn to_emptiable_interval(self) -> EmptiableAbsoluteInterval {
+    pub fn to_emptiable(self) -> EmptiableAbsoluteInterval {
         EmptiableAbsoluteInterval::from(self)
     }
 }
@@ -249,6 +250,12 @@ impl PartialOrd for AbsoluteInterval {
 impl Ord for AbsoluteInterval {
     fn cmp(&self, other: &Self) -> Ordering {
         self.abs_bound_pair().cmp(&other.abs_bound_pair())
+    }
+}
+
+impl Emptiable for AbsoluteInterval {
+    fn is_empty(&self) -> bool {
+        false
     }
 }
 
