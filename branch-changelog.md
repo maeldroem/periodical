@@ -4,7 +4,7 @@
 
 ## Added
 
-- 
+- Implemented `try_from_range` on `BoundedAbsoluteInterval`
 
 ## Changed
 
