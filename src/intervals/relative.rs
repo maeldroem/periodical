@@ -42,16 +42,16 @@ tests! {
 }
 
 inline_docs! {
-    pub use bounded_interval::BoundedRelativeInterval;
-    pub use bound::RelativeBound;
-    pub use bound_pair::{HasRelativeBoundPair, RelativeBoundPair};
-    pub use emptiable_bound_pair::{HasEmptiableRelativeBoundPair, EmptiableRelativeBoundPair};
-    pub use emptiable_interval::EmptiableRelativeInterval;
-    pub use end_bound::RelativeEndBound;
-    pub use finite_bound::RelativeFiniteBound;
-    pub use half_bounded_interval::HalfBoundedRelativeInterval;
-    pub use interval::RelativeInterval;
-    pub use start_bound::RelativeStartBound;
+    pub use bounded_interval::*;
+    pub use bound::*;
+    pub use bound_pair::*;
+    pub use emptiable_bound_pair::*;
+    pub use emptiable_interval::*;
+    pub use end_bound::*;
+    pub use finite_bound::*;
+    pub use half_bounded_interval::*;
+    pub use interval::*;
+    pub use start_bound::*;
 }
 
 /// Swaps a relative start bound with a relative end bound

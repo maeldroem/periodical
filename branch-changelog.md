@@ -1,21 +1,17 @@
 <!-- CLEAN THIS FILE AFTER CREATING PR -->
 
-# Changelog
+<details>
+<summary><h1>Changelog</h1></summary>
+
+Remove the sections that don't apply to your PR
 
 ## Added
 
-- [x] Implement `Emptiable` on every interval type
-- [x] Implement additional conversions on absolute emptiable types
-- [x] Implement additional conversions on relative emptiable types
+- Things you've added
 
 ## Changed
 
-- [x] Renamed `AbsoluteInterval::to_emptiable_interval` to `to_emptiable`
-- [x] Renamed `RelativeInterval::to_emptiable_interval` to `to_emptiable`
-- [x] `EmptiableAbsoluteInterval` has the same semantics as `EmptiableAbsoluteBoundPair`:
-      two variants: `Bound`, `Empty`.
-- [x] `EmptiableRelativeInterval` has the same semantics as `EmptiableRelativeBoundPair`:
-      two variants: `Bound`, `Empty`.
+- Things you've changed
 
 ## Deprecated
 
@@ -32,3 +28,5 @@
 ## Security
 
 - Vulnerabilities you've fixed (add relevant CVE and any other relevant info/links)
+
+</details>

@@ -15,7 +15,7 @@
 use std::cmp::Ordering;
 use std::error::Error;
 use std::fmt::Display;
-use std::ops::{Range, RangeInclusive};
+use std::ops::{Bound, Range, RangeBounds, RangeInclusive};
 
 use jiff::Timestamp;
 #[cfg(feature = "serde")]
@@ -223,6 +223,54 @@ impl BoundedAbsoluteInterval {
             Ordering::Equal => Self::unchecked_new(start, end),
             Ordering::Greater => Self::unchecked_new_with_inclusivity(end, end_inclusivity, start, start_inclusivity),
         }
+    }
+
+    /// Attempts to create a [`BoundedAbsoluteInterval`] from a [`Timestamp`] range
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BoundedAbsoluteIntervalTryFromRangeError`] if any range bound is [unbounded](Bound::Unbounded).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jiff::Timestamp;
+    /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, BoundedAbsoluteIntervalTryFromRangeError};
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// let start = "2026-01-01 08:00:00Z".parse::<Timestamp>()?;
+    /// let end = "2026-01-01 16:00:00Z".parse::<Timestamp>()?;
+    ///
+    /// let interval = BoundedAbsoluteInterval::try_from_range(start..end)?;
+    ///
+    /// assert_eq!(interval.start(), start);
+    /// assert_eq!(interval.start_inclusivity(), BoundInclusivity::Inclusive);
+    /// assert_eq!(interval.end(), end);
+    /// assert_eq!(interval.end_inclusivity(), BoundInclusivity::Exclusive);
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    pub fn try_from_range<R>(range: R) -> Result<Self, BoundedAbsoluteIntervalTryFromRangeError>
+    where
+        R: RangeBounds<Timestamp>,
+    {
+        let (start, start_inclusivity) = match range.start_bound() {
+            Bound::Included(&time) => (time, BoundInclusivity::Inclusive),
+            Bound::Excluded(&time) => (time, BoundInclusivity::Exclusive),
+            Bound::Unbounded => return Err(BoundedAbsoluteIntervalTryFromRangeError),
+        };
+
+        let (end, end_inclusivity) = match range.end_bound() {
+            Bound::Included(&time) => (time, BoundInclusivity::Inclusive),
+            Bound::Excluded(&time) => (time, BoundInclusivity::Exclusive),
+            Bound::Unbounded => return Err(BoundedAbsoluteIntervalTryFromRangeError),
+        };
+
+        Ok(Self::new_with_inclusivity(
+            start,
+            start_inclusivity,
+            end,
+            end_inclusivity,
+        ))
     }
 
     /// Returns the start time
@@ -672,6 +720,22 @@ impl Display for BoundedAbsoluteIntervalCreationError {
 }
 
 impl Error for BoundedAbsoluteIntervalCreationError {}
+
+/// Error that can occur when trying to create a [`BoundedAbsoluteInterval`]
+/// from a [`Timestamp`] range
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct BoundedAbsoluteIntervalTryFromRangeError;
+
+impl Display for BoundedAbsoluteIntervalTryFromRangeError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "An error occurred when trying to convert a `Timestamp` range into a `BoundedAbsoluteInterval`",
+        )
+    }
+}
+
+impl Error for BoundedAbsoluteIntervalTryFromRangeError {}
 
 /// Errors that can occur when updating a [`BoundedAbsoluteInterval`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]

@@ -12,7 +12,7 @@
 
 use std::error::Error;
 use std::fmt::Display;
-use std::ops::{RangeFrom, RangeTo, RangeToInclusive};
+use std::ops::{Bound, RangeBounds, RangeFrom, RangeTo, RangeToInclusive};
 
 use jiff::Timestamp;
 #[cfg(feature = "serde")]
@@ -134,6 +134,58 @@ impl HalfBoundedAbsoluteInterval {
             reference,
             opening_direction,
             reference_inclusivity,
+        }
+    }
+
+    /// Attempts to create a [`HalfBoundedAbsoluteInterval`] from a [`Timestamp`] range
+    ///
+    /// # Errors
+    ///
+    /// Returns [`HalfBoundedAbsoluteIntervalTryFromRangeError`] if there is not exactly
+    /// one [unbounded](Bound::Unbounded) range bound.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jiff::Timestamp;
+    /// # use periodical::intervals::absolute::{HalfBoundedAbsoluteInterval, HalfBoundedAbsoluteIntervalTryFromRangeError};
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// let reference = "2026-01-01 08:00:00Z".parse::<Timestamp>()?;
+    ///
+    /// let interval = HalfBoundedAbsoluteInterval::try_from_range(..reference)?;
+    ///
+    /// assert_eq!(interval.reference(), reference);
+    /// assert_eq!(interval.reference_inclusivity(), BoundInclusivity::Exclusive);
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    pub fn try_from_range<R>(range: R) -> Result<Self, HalfBoundedAbsoluteIntervalTryFromRangeError>
+    where
+        R: RangeBounds<Timestamp>,
+    {
+        match (range.start_bound(), range.end_bound()) {
+            (Bound::Included(_) | Bound::Excluded(_), Bound::Included(_) | Bound::Excluded(_))
+            | (Bound::Unbounded, Bound::Unbounded) => Err(HalfBoundedAbsoluteIntervalTryFromRangeError),
+            (Bound::Unbounded, Bound::Included(&reference)) => Ok(Self::new_with_inclusivity(
+                reference,
+                BoundInclusivity::Inclusive,
+                OpeningDirection::ToPast,
+            )),
+            (Bound::Unbounded, Bound::Excluded(&reference)) => Ok(Self::new_with_inclusivity(
+                reference,
+                BoundInclusivity::Exclusive,
+                OpeningDirection::ToPast,
+            )),
+            (Bound::Included(&reference), Bound::Unbounded) => Ok(Self::new_with_inclusivity(
+                reference,
+                BoundInclusivity::Inclusive,
+                OpeningDirection::ToFuture,
+            )),
+            (Bound::Excluded(&reference), Bound::Unbounded) => Ok(Self::new_with_inclusivity(
+                reference,
+                BoundInclusivity::Exclusive,
+                OpeningDirection::ToFuture,
+            )),
         }
     }
 
@@ -321,6 +373,21 @@ impl Display for HalfBoundedAbsoluteIntervalCreationError {
 }
 
 impl Error for HalfBoundedAbsoluteIntervalCreationError {}
+
+/// Error that can occur when trying to convert a [`Timestamp`] range into a [`HalfBoundedAbsoluteInterval`]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct HalfBoundedAbsoluteIntervalTryFromRangeError;
+
+impl Display for HalfBoundedAbsoluteIntervalTryFromRangeError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "An error occurred when trying to convert a `Timestamp` range into a `HalfBoundedAbsoluteInterval`"
+        )
+    }
+}
+
+impl Error for HalfBoundedAbsoluteIntervalTryFromRangeError {}
 
 impl Interval for HalfBoundedAbsoluteInterval {}
 
