@@ -18,6 +18,7 @@
 //! [`RelativeInterval`].
 
 use std::cmp::Ordering;
+use std::ops::RangeBounds;
 
 #[cfg(feature = "arbitrary")]
 use arbitrary::Arbitrary;
@@ -58,6 +59,40 @@ pub enum EmptiableRelativeInterval {
 }
 
 impl EmptiableRelativeInterval {
+    /// Creates an [`EmptiableRelativeInterval`] from a [`SignedDuration`] range
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jiff::SignedDuration;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// # use periodical::intervals::relative::{
+    /// #     RelativeFiniteBound, RelativeInterval, EmptiableRelativeInterval, HasEmptiableRelativeBoundPair,
+    /// # };
+    /// let start = SignedDuration::from_hours(8);
+    /// let end = SignedDuration::from_hours(16);
+    ///
+    /// let interval = EmptiableRelativeInterval::from_range(start..end);
+    ///
+    /// assert_eq!(
+    ///     interval.partial_rel_start(),
+    ///     Some(RelativeFiniteBound::new(start).to_start_bound()),
+    /// );
+    /// assert_eq!(
+    ///     interval.partial_rel_end(),
+    ///     Some(RelativeFiniteBound::new_with_inclusivity(end, BoundInclusivity::Exclusive).to_end_bound()),
+    /// );
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    #[must_use]
+    pub fn from_range<R>(range: R) -> Self
+    where
+        R: RangeBounds<SignedDuration>,
+    {
+        RelativeInterval::from_range(range).to_emptiable()
+    }
+
     /// Returns the content of the [`Bound`](EmptiableRelativeInterval::Bound) variant
     ///
     /// Consumes `self` and puts the content of the [`Bound`](EmptiableRelativeInterval::Bound) variant

@@ -89,8 +89,8 @@ impl EmptiableAbsoluteBoundPair {
     /// # use jiff::Timestamp;
     /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound, EmptiableAbsoluteBoundPair};
     /// # use periodical::intervals::meta::BoundInclusivity;
-    /// let start = "2026-01-01 00:00:00Z".parse::<Timestamp>()?;
-    /// let end = "2026-05-01 00:00:00Z".parse::<Timestamp>()?;
+    /// let start = "2026-01-01 08:00:00Z".parse::<Timestamp>()?;
+    /// let end = "2026-01-01 16:00:00Z".parse::<Timestamp>()?;
     ///
     /// let emptiable_bounds = EmptiableAbsoluteBoundPair::from_range(start..end);
     ///
