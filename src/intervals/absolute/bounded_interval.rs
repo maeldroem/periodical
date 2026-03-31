@@ -722,7 +722,7 @@ impl Display for BoundedAbsoluteIntervalCreationError {
 impl Error for BoundedAbsoluteIntervalCreationError {}
 
 /// Error that can occur when trying to create a [`BoundedAbsoluteInterval`]
-/// from a [`RangeBounds`] implementor
+/// from a [`Timestamp`] range
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct BoundedAbsoluteIntervalTryFromRangeError;
 
@@ -730,7 +730,7 @@ impl Display for BoundedAbsoluteIntervalTryFromRangeError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "An error occurred when trying to create a `BoundedAbsoluteInterval` from a `RangeBounds` implementor",
+            "An error occurred when trying to convert a `Timestamp` range into a `BoundedAbsoluteInterval`",
         )
     }
 }
