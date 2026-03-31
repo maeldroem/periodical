@@ -21,7 +21,7 @@
 use std::cmp::Ordering;
 use std::error::Error;
 use std::fmt::Display;
-use std::ops::{Bound, RangeBounds};
+use std::ops::RangeBounds;
 
 #[cfg(feature = "arbitrary")]
 use arbitrary::Arbitrary;
@@ -84,74 +84,36 @@ pub enum RelativeInterval {
 }
 
 impl RelativeInterval {
+    /// Creates an [`RelativeInterval`] from a [`SignedDuration`] range
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jiff::SignedDuration;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// # use periodical::intervals::relative::{RelativeFiniteBound, RelativeInterval, HasRelativeBoundPair};
+    /// let start = SignedDuration::from_hours(8);
+    /// let end = SignedDuration::from_hours(16);
+    ///
+    /// let interval = RelativeInterval::from_range(start..end);
+    ///
+    /// assert_eq!(
+    ///     interval.rel_start(),
+    ///     RelativeFiniteBound::new(start).to_start_bound(),
+    /// );
+    /// assert_eq!(
+    ///     interval.rel_end(),
+    ///     RelativeFiniteBound::new_with_inclusivity(end, BoundInclusivity::Exclusive).to_end_bound(),
+    /// );
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
     #[must_use]
     pub fn from_range<R>(range: R) -> Self
     where
         R: RangeBounds<SignedDuration>,
     {
-        match (range.start_bound().cloned(), range.end_bound().cloned()) {
-            (Bound::Included(start), Bound::Included(end)) => {
-                RelativeInterval::Bounded(BoundedRelativeInterval::new_with_inclusivity(
-                    start,
-                    BoundInclusivity::Inclusive,
-                    end,
-                    BoundInclusivity::Inclusive,
-                ))
-            },
-            (Bound::Included(start), Bound::Excluded(end)) => {
-                RelativeInterval::Bounded(BoundedRelativeInterval::new_with_inclusivity(
-                    start,
-                    BoundInclusivity::Inclusive,
-                    end,
-                    BoundInclusivity::Exclusive,
-                ))
-            },
-            (Bound::Excluded(start), Bound::Included(end)) => {
-                RelativeInterval::Bounded(BoundedRelativeInterval::new_with_inclusivity(
-                    start,
-                    BoundInclusivity::Exclusive,
-                    end,
-                    BoundInclusivity::Inclusive,
-                ))
-            },
-            (Bound::Excluded(start), Bound::Excluded(end)) => {
-                RelativeInterval::Bounded(BoundedRelativeInterval::new_with_inclusivity(
-                    start,
-                    BoundInclusivity::Exclusive,
-                    end,
-                    BoundInclusivity::Exclusive,
-                ))
-            },
-            (Bound::Included(start), Bound::Unbounded) => {
-                RelativeInterval::HalfBounded(HalfBoundedRelativeInterval::new_with_inclusivity(
-                    start,
-                    BoundInclusivity::Inclusive,
-                    OpeningDirection::ToFuture,
-                ))
-            },
-            (Bound::Excluded(start), Bound::Unbounded) => {
-                RelativeInterval::HalfBounded(HalfBoundedRelativeInterval::new_with_inclusivity(
-                    start,
-                    BoundInclusivity::Exclusive,
-                    OpeningDirection::ToFuture,
-                ))
-            },
-            (Bound::Unbounded, Bound::Included(start)) => {
-                RelativeInterval::HalfBounded(HalfBoundedRelativeInterval::new_with_inclusivity(
-                    start,
-                    BoundInclusivity::Inclusive,
-                    OpeningDirection::ToPast,
-                ))
-            },
-            (Bound::Unbounded, Bound::Excluded(start)) => {
-                RelativeInterval::HalfBounded(HalfBoundedRelativeInterval::new_with_inclusivity(
-                    start,
-                    BoundInclusivity::Exclusive,
-                    OpeningDirection::ToPast,
-                ))
-            },
-            (Bound::Unbounded, Bound::Unbounded) => RelativeInterval::Unbounded(UnboundedInterval),
-        }
+        Self::from(RelativeBoundPair::from_range(range))
     }
 
     /// Compares two [`RelativeInterval`], but if they have the same start,
