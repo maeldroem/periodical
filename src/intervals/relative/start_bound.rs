@@ -6,6 +6,8 @@
 //! the [`InfinitePast`](RelativeStartBound::InfinitePast) variant.
 
 use std::cmp::Ordering;
+use std::error::Error;
+use std::fmt::Display;
 use std::ops::Bound;
 
 #[cfg(feature = "arbitrary")]
@@ -302,5 +304,28 @@ impl From<Bound<SignedDuration>> for RelativeStartBound {
             )),
             Bound::Unbounded => RelativeStartBound::InfinitePast,
         }
+    }
+}
+
+/// Error that can occur when trying to convert an [`RelativeBound`] into an [`RelativeStartBound`]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct RelativeStartBoundTryFromRelativeBoundError;
+
+impl Display for RelativeStartBoundTryFromRelativeBoundError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "An error occurred when trying to convert an `RelativeBound` into an `RelativeStartBound`"
+        )
+    }
+}
+
+impl Error for RelativeStartBoundTryFromRelativeBoundError {}
+
+impl TryFrom<RelativeBound> for RelativeStartBound {
+    type Error = RelativeStartBoundTryFromRelativeBoundError;
+
+    fn try_from(value: RelativeBound) -> Result<Self, Self::Error> {
+        value.start().ok_or(RelativeStartBoundTryFromRelativeBoundError)
     }
 }

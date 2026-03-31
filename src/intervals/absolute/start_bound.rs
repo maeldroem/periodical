@@ -6,6 +6,8 @@
 //! the [`InfinitePast`](AbsoluteStartBound::InfinitePast) variant.
 
 use std::cmp::Ordering;
+use std::error::Error;
+use std::fmt::Display;
 use std::ops::Bound;
 
 #[cfg(feature = "arbitrary")]
@@ -310,5 +312,28 @@ impl From<Bound<Timestamp>> for AbsoluteStartBound {
             )),
             Bound::Unbounded => AbsoluteStartBound::InfinitePast,
         }
+    }
+}
+
+/// Error that can occur when trying to convert an [`AbsoluteBound`] into an [`AbsoluteStartBound`]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct AbsoluteStartBoundTryFromAbsoluteBoundError;
+
+impl Display for AbsoluteStartBoundTryFromAbsoluteBoundError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "An error occurred when trying to convert an `AbsoluteBound` into an `AbsoluteStartBound`"
+        )
+    }
+}
+
+impl Error for AbsoluteStartBoundTryFromAbsoluteBoundError {}
+
+impl TryFrom<AbsoluteBound> for AbsoluteStartBound {
+    type Error = AbsoluteStartBoundTryFromAbsoluteBoundError;
+
+    fn try_from(value: AbsoluteBound) -> Result<Self, Self::Error> {
+        value.start().ok_or(AbsoluteStartBoundTryFromAbsoluteBoundError)
     }
 }

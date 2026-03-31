@@ -3,11 +3,12 @@
 <details>
 <summary><h1>Changelog</h1></summary>
 
-Remove the sections that don't apply to your PR
-
 ## Added
 
-- Things you've added
+- Implemented `TryFrom<AbsoluteBound>` on `AbsoluteStartBound`
+- Implemented `TryFrom<AbsoluteBound>` on `AbsoluteEndBound`
+- Implemented `TryFrom<RelativeBound>` on `RelativeStartBound`
+- Implemented `TryFrom<RelativeBound>` on `RelativeEndBound`
 
 ## Changed
 
