@@ -6,6 +6,8 @@
 //! variant.
 
 use std::cmp::Ordering;
+use std::error::Error;
+use std::fmt::Display;
 use std::ops::Bound;
 
 #[cfg(feature = "arbitrary")]
@@ -284,5 +286,28 @@ impl From<Bound<SignedDuration>> for RelativeEndBound {
             )),
             Bound::Unbounded => RelativeEndBound::InfiniteFuture,
         }
+    }
+}
+
+/// Error that can occur when trying to convert an [`RelativeBound`] into an [`RelativeEndBound`]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct RelativeEndBoundTryFromRelativeBoundError;
+
+impl Display for RelativeEndBoundTryFromRelativeBoundError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "An error occurred when trying to convert an `RelativeBound` into an `RelativeEndBound`"
+        )
+    }
+}
+
+impl Error for RelativeEndBoundTryFromRelativeBoundError {}
+
+impl TryFrom<RelativeBound> for RelativeEndBound {
+    type Error = RelativeEndBoundTryFromRelativeBoundError;
+
+    fn try_from(value: RelativeBound) -> Result<Self, Self::Error> {
+        value.end().ok_or(RelativeEndBoundTryFromRelativeBoundError)
     }
 }

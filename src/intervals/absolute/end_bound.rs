@@ -6,6 +6,8 @@
 //! the [`InfiniteFuture`](AbsoluteEndBound::InfiniteFuture) variant.
 
 use std::cmp::Ordering;
+use std::error::Error;
+use std::fmt::Display;
 use std::ops::Bound;
 
 #[cfg(feature = "arbitrary")]
@@ -292,5 +294,28 @@ impl From<Bound<Timestamp>> for AbsoluteEndBound {
             )),
             Bound::Unbounded => AbsoluteEndBound::InfiniteFuture,
         }
+    }
+}
+
+/// Error that can occur when trying to convert an [`AbsoluteBound`] into an [`AbsoluteEndBound`]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct AbsoluteEndBoundTryFromAbsoluteBoundError;
+
+impl Display for AbsoluteEndBoundTryFromAbsoluteBoundError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "An error occurred when trying to convert an `AbsoluteBound` into an `AbsoluteEndBound`"
+        )
+    }
+}
+
+impl Error for AbsoluteEndBoundTryFromAbsoluteBoundError {}
+
+impl TryFrom<AbsoluteBound> for AbsoluteEndBound {
+    type Error = AbsoluteEndBoundTryFromAbsoluteBoundError;
+
+    fn try_from(value: AbsoluteBound) -> Result<Self, Self::Error> {
+        value.end().ok_or(AbsoluteEndBoundTryFromAbsoluteBoundError)
     }
 }
