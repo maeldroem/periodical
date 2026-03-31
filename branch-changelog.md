@@ -1,20 +1,32 @@
 <!-- CLEAN THIS FILE AFTER CREATING PR -->
 
-# Changelog
+<details>
+<summary><h1>Changelog</h1></summary>
+
+Remove the sections that don't apply to your PR
 
 ## Added
 
-- Implemented `try_from_range` on `BoundedAbsoluteInterval`
-- Implemented `try_from_range` on `HalfBoundedAbsoluteInterval`
-- Implemented `from_range` on `EmptiableAbsoluteBoundPair`
-- Implemented `from_range` on `EmptiableAbsoluteInterval`
-- Implemented `try_from_range` on `BoundedRelativeInterval`
-- Implemented `try_from_range` on `HalfBoundedRelativeInterval`
-- Implemented `from_range` on `EmptiableRelativeBoundPair`
-- Implemented `from_range` on `EmptiableAbsoluteInterval`
+- Things you've added
 
 ## Changed
 
-- Updated `from_range` implementation on `AbsoluteInterval`
-- Updated `from_range` implementation on `RelativeInterval`
-- Changed re-exports internally (not global `prelude`) to use wildcards
+- Things you've changed
+
+## Deprecated
+
+- Things you've marked as deprecated
+
+## Removed
+
+- Things you've removed
+
+## Fixed
+
+- Things you've fixed
+
+## Security
+
+- Vulnerabilities you've fixed (add relevant CVE and any other relevant info/links)
+
+</details>
