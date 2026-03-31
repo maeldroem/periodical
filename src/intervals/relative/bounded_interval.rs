@@ -15,7 +15,7 @@
 use std::cmp::Ordering;
 use std::error::Error;
 use std::fmt::Display;
-use std::ops::{Range, RangeInclusive};
+use std::ops::{Bound, Range, RangeBounds, RangeInclusive};
 use std::time::Duration as StdDuration;
 
 use jiff::SignedDuration;
@@ -309,6 +309,54 @@ impl BoundedRelativeInterval {
                     .checked_add_unsigned(length.as_nanos())
                     .ok_or(BoundedRelativeIntervalCreationError::OutOfRangeEnd)?,
             ),
+            end_inclusivity,
+        ))
+    }
+
+    /// Attempts to create a [`BoundedRelativeInterval`] from a [`SignedDuration`] range
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BoundedRelativeIntervalTryFromRangeError`] if any range bound is [unbounded](Bound::Unbounded).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jiff::SignedDuration;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// # use periodical::intervals::relative::{BoundedRelativeInterval, BoundedRelativeIntervalTryFromRangeError};
+    /// let start = SignedDuration::from_hours(8);
+    /// let end = SignedDuration::from_hours(16);
+    ///
+    /// let interval = BoundedRelativeInterval::try_from_range(start..end)?;
+    ///
+    /// assert_eq!(interval.start(), start);
+    /// assert_eq!(interval.start_inclusivity(), BoundInclusivity::Inclusive);
+    /// assert_eq!(interval.end(), end);
+    /// assert_eq!(interval.end_inclusivity(), BoundInclusivity::Exclusive);
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    pub fn try_from_range<R>(range: R) -> Result<Self, BoundedRelativeIntervalTryFromRangeError>
+    where
+        R: RangeBounds<SignedDuration>,
+    {
+        let (start, start_inclusivity) = match range.start_bound() {
+            Bound::Included(&offset) => (offset, BoundInclusivity::Inclusive),
+            Bound::Excluded(&offset) => (offset, BoundInclusivity::Exclusive),
+            Bound::Unbounded => return Err(BoundedRelativeIntervalTryFromRangeError),
+        };
+
+        let (end, end_inclusivity) = match range.end_bound() {
+            Bound::Included(&offset) => (offset, BoundInclusivity::Inclusive),
+            Bound::Excluded(&offset) => (offset, BoundInclusivity::Exclusive),
+            Bound::Unbounded => return Err(BoundedRelativeIntervalTryFromRangeError),
+        };
+
+        Ok(Self::new_with_inclusivity(
+            start,
+            start_inclusivity,
+            end,
             end_inclusivity,
         ))
     }
@@ -821,6 +869,22 @@ impl Display for BoundedRelativeIntervalCreationError {
 }
 
 impl Error for BoundedRelativeIntervalCreationError {}
+
+/// Error that can occur when trying to create a [`BoundedRelativeInterval`]
+/// from a [`SignedDuration`] range
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct BoundedRelativeIntervalTryFromRangeError;
+
+impl Display for BoundedRelativeIntervalTryFromRangeError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "An error occurred when trying to convert a `SignedDuration` range into a `BoundedRelativeInterval`",
+        )
+    }
+}
+
+impl Error for BoundedRelativeIntervalTryFromRangeError {}
 
 /// Errors that can occur when updating a [`BoundedRelativeInterval`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]

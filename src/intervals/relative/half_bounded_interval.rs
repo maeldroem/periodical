@@ -12,7 +12,7 @@
 
 use std::error::Error;
 use std::fmt::Display;
-use std::ops::{RangeFrom, RangeTo, RangeToInclusive};
+use std::ops::{Bound, RangeBounds, RangeFrom, RangeTo, RangeToInclusive};
 
 use jiff::SignedDuration;
 #[cfg(feature = "serde")]
@@ -132,6 +132,63 @@ impl HalfBoundedRelativeInterval {
             reference,
             opening_direction,
             reference_inclusivity,
+        }
+    }
+
+    /// Attempts to create a [`HalfBoundedRelativeInterval`] from a [`SignedDuration`] range
+    ///
+    /// # Errors
+    ///
+    /// Returns [`HalfBoundedRelativeIntervalTryFromRangeError`] if there is not exactly
+    /// one [unbounded](Bound::Unbounded) range bound.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jiff::SignedDuration;
+    /// # use periodical::intervals::relative::{
+    /// #     HalfBoundedRelativeInterval, HalfBoundedRelativeIntervalTryFromRangeError,
+    /// # };
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// let reference = SignedDuration::from_hours(8);
+    ///
+    /// let interval = HalfBoundedRelativeInterval::try_from_range(..reference)?;
+    ///
+    /// assert_eq!(interval.reference(), reference);
+    /// assert_eq!(
+    ///     interval.reference_inclusivity(),
+    ///     BoundInclusivity::Exclusive
+    /// );
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    pub fn try_from_range<R>(range: R) -> Result<Self, HalfBoundedRelativeIntervalTryFromRangeError>
+    where
+        R: RangeBounds<SignedDuration>,
+    {
+        match (range.start_bound(), range.end_bound()) {
+            (Bound::Included(_) | Bound::Excluded(_), Bound::Included(_) | Bound::Excluded(_))
+            | (Bound::Unbounded, Bound::Unbounded) => Err(HalfBoundedRelativeIntervalTryFromRangeError),
+            (Bound::Unbounded, Bound::Included(&reference)) => Ok(Self::new_with_inclusivity(
+                reference,
+                BoundInclusivity::Inclusive,
+                OpeningDirection::ToPast,
+            )),
+            (Bound::Unbounded, Bound::Excluded(&reference)) => Ok(Self::new_with_inclusivity(
+                reference,
+                BoundInclusivity::Exclusive,
+                OpeningDirection::ToPast,
+            )),
+            (Bound::Included(&reference), Bound::Unbounded) => Ok(Self::new_with_inclusivity(
+                reference,
+                BoundInclusivity::Inclusive,
+                OpeningDirection::ToFuture,
+            )),
+            (Bound::Excluded(&reference), Bound::Unbounded) => Ok(Self::new_with_inclusivity(
+                reference,
+                BoundInclusivity::Exclusive,
+                OpeningDirection::ToFuture,
+            )),
         }
     }
 
@@ -283,6 +340,38 @@ impl HalfBoundedRelativeInterval {
     }
 }
 
+/// Errors that can occur when trying to convert [`RelativeBoundPair`] into
+/// [`HalfBoundedRelativeInterval`]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum HalfBoundedRelativeIntervalFromRelativeBoundPairError {
+    NotHalfBoundedInterval,
+}
+
+impl Display for HalfBoundedRelativeIntervalFromRelativeBoundPairError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::NotHalfBoundedInterval => write!(f, "Not a half-bounded interval"),
+        }
+    }
+}
+
+impl Error for HalfBoundedRelativeIntervalFromRelativeBoundPairError {}
+
+/// Error that can occur when trying to convert a [`SignedDuration`] range into a [`HalfBoundedRelativeInterval`]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct HalfBoundedRelativeIntervalTryFromRangeError;
+
+impl Display for HalfBoundedRelativeIntervalTryFromRangeError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "An error occurred when trying to convert a `SignedDuration` range into a `HalfBoundedRelativeInterval`"
+        )
+    }
+}
+
+impl Error for HalfBoundedRelativeIntervalTryFromRangeError {}
+
 impl Interval for HalfBoundedRelativeInterval {}
 
 impl HasOpenness for HalfBoundedRelativeInterval {
@@ -374,23 +463,6 @@ impl From<RangeToInclusive<SignedDuration>> for HalfBoundedRelativeInterval {
         )
     }
 }
-
-/// Errors that can occur when trying to convert [`RelativeBoundPair`] into
-/// [`HalfBoundedRelativeInterval`]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum HalfBoundedRelativeIntervalFromRelativeBoundPairError {
-    NotHalfBoundedInterval,
-}
-
-impl Display for HalfBoundedRelativeIntervalFromRelativeBoundPairError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::NotHalfBoundedInterval => write!(f, "Not a half-bounded interval"),
-        }
-    }
-}
-
-impl Error for HalfBoundedRelativeIntervalFromRelativeBoundPairError {}
 
 impl TryFrom<RelativeBoundPair> for HalfBoundedRelativeInterval {
     type Error = HalfBoundedRelativeIntervalFromRelativeBoundPairError;
