@@ -21,6 +21,14 @@ Find way to handle multiple interval durations to handle correctly mathematical 
 - Implemented `TryFrom<EmptiableRelativeBoundPair>` on `BoundedRelativeInterval`
 - Implemented `TryFrom<EmptiableRelativeInterval>` on `BoundedRelativeInterval`
 - Implemented `to_range_bound_with` on `BoundInclusivity`
+- Implemented `TryFrom<AbsoluteBoundPair>`on ` UnboundedInterval`
+- Implemented `TryFrom<EmptiableAbsoluteBoundPair>`on ` UnboundedInterval`
+- Implemented `TryFrom<AbsoluteInterval>`on ` UnboundedInterval`
+- Implemented `TryFrom<EmptiableAbsoluteInterval>`on ` UnboundedInterval`
+- Implemented `TryFrom<RelativeBoundPair>`on ` UnboundedInterval`
+- Implemented `TryFrom<EmptiableRelativeBoundPair>`on ` UnboundedInterval`
+- Implemented `TryFrom<RelativeInterval>`on ` UnboundedInterval`
+- Implemented `TryFrom<EmptiableRelativeInterval>`on ` UnboundedInterval`
 
 ## Changed
 
@@ -42,7 +50,7 @@ Find way to handle multiple interval durations to handle correctly mathematical 
 
 ## Removed
 
-- Things you've removed
+- Removed `UnboundedIntervalConversionErr` to instead use specific conversion error types
 
 ## Fixed
 
