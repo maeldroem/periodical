@@ -35,13 +35,16 @@ use crate::intervals::meta::{
     Relativity,
 };
 use crate::intervals::relative::{
+    BoundedRelativeInterval,
     EmptiableRelativeBoundPair,
     EmptiableRelativeInterval,
+    HalfBoundedRelativeInterval,
     RelativeEndBound,
     RelativeStartBound,
     check_relative_bound_pair_for_interval_creation,
     prepare_relative_bound_pair_for_interval_creation,
 };
+use crate::intervals::special::UnboundedInterval;
 
 /// Possession of non-empty relative bound pair
 pub trait HasRelativeBoundPair {
@@ -476,6 +479,24 @@ impl
         let start = RelativeStartBound::from(start_opt);
         let end = RelativeEndBound::from(end_opt);
         Self::new(start, end)
+    }
+}
+
+impl From<BoundedRelativeInterval> for RelativeBoundPair {
+    fn from(value: BoundedRelativeInterval) -> Self {
+        value.rel_bound_pair()
+    }
+}
+
+impl From<HalfBoundedRelativeInterval> for RelativeBoundPair {
+    fn from(value: HalfBoundedRelativeInterval) -> Self {
+        value.rel_bound_pair()
+    }
+}
+
+impl From<UnboundedInterval> for RelativeBoundPair {
+    fn from(value: UnboundedInterval) -> Self {
+        value.rel_bound_pair()
     }
 }
 
