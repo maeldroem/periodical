@@ -44,11 +44,11 @@ use crate::intervals::absolute::{
 use crate::intervals::meta::{
     BoundInclusivity,
     Duration as IntervalDuration,
-    Emptiable,
     HasDuration,
     HasOpenness,
     HasRelativity,
     Interval,
+    IsEmpty,
     OpeningDirection,
     Openness,
     Relativity,
@@ -302,7 +302,7 @@ impl Ord for AbsoluteInterval {
     }
 }
 
-impl Emptiable for AbsoluteInterval {
+impl IsEmpty for AbsoluteInterval {
     fn is_empty(&self) -> bool {
         false
     }

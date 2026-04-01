@@ -18,7 +18,7 @@ use crate::intervals::absolute::{AbsoluteBoundPair, AbsoluteEndBound, AbsoluteSt
 use crate::intervals::meta::{
     BoundInclusivity,
     Duration as IntervalDuration,
-    Emptiable,
+    IsEmpty,
     Epsilon,
     HasDuration,
     HasOpenness,
@@ -198,7 +198,7 @@ impl HasEmptiableAbsoluteBoundPair for EmptiableAbsoluteBoundPair {
     }
 }
 
-impl Emptiable for EmptiableAbsoluteBoundPair {
+impl IsEmpty for EmptiableAbsoluteBoundPair {
     fn is_empty(&self) -> bool {
         matches!(self, Self::Empty)
     }

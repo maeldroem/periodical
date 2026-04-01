@@ -16,7 +16,7 @@ use crate::intervals::absolute::{
 };
 use crate::intervals::meta::{
     Duration as IntervalDuration,
-    Emptiable,
+    IsEmpty,
     Epsilon,
     HasDuration,
     HasOpenness,

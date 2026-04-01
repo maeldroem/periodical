@@ -25,7 +25,7 @@ use serde::{Deserialize, Serialize};
 use crate::intervals::meta::{
     BoundInclusivity,
     Duration as IntervalDuration,
-    Emptiable,
+    IsEmpty,
     Epsilon,
     HasBoundInclusivity,
     HasDuration,
@@ -949,7 +949,7 @@ impl HasRelativeBoundPair for BoundedRelativeInterval {
     }
 }
 
-impl Emptiable for BoundedRelativeInterval {
+impl IsEmpty for BoundedRelativeInterval {
     fn is_empty(&self) -> bool {
         false
     }

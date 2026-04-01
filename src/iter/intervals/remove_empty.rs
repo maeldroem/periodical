@@ -75,13 +75,13 @@
 //! # Ok::<(), Box<dyn Error>>(())
 //! ```
 
-use crate::intervals::meta::Emptiable;
+use crate::intervals::meta::IsEmpty;
 
 /// Dispatcher trait for empty interval removal iterator
 pub trait RemoveEmptyIntervalsIteratorDispatcher
 where
     Self: IntoIterator + Sized,
-    Self::Item: Emptiable,
+    Self::Item: IsEmpty,
 {
     /// Filters out empty intervals from the collection
     ///
@@ -166,7 +166,7 @@ where
 impl<I> RemoveEmptyIntervalsIteratorDispatcher for I
 where
     I: IntoIterator + Sized,
-    I::Item: Emptiable,
+    I::Item: IsEmpty,
 {
 }
 
@@ -182,7 +182,7 @@ pub struct RemoveEmptyIntervals<I> {
 impl<I> RemoveEmptyIntervals<I>
 where
     I: Iterator,
-    I::Item: Emptiable,
+    I::Item: IsEmpty,
 {
     /// Creates a new [`RemoveEmptyIntervals`]
     #[must_use]
@@ -196,7 +196,7 @@ where
 impl<I> Iterator for RemoveEmptyIntervals<I>
 where
     I: Iterator,
-    I::Item: Emptiable,
+    I::Item: IsEmpty,
 {
     type Item = I::Item;
 
@@ -218,7 +218,7 @@ where
 impl<I> DoubleEndedIterator for RemoveEmptyIntervals<I>
 where
     I: DoubleEndedIterator,
-    I::Item: Emptiable,
+    I::Item: IsEmpty,
 {
     fn next_back(&mut self) -> Option<Self::Item> {
         loop {
