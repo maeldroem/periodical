@@ -27,6 +27,7 @@ use crate::intervals::absolute::{
     AbsoluteFiniteBound,
     AbsoluteInterval,
     AbsoluteStartBound,
+    EmptiableAbsoluteBoundPair,
     EmptiableAbsoluteInterval,
     HasAbsoluteBoundPair,
 };
@@ -876,18 +877,45 @@ impl TryFrom<AbsoluteBoundPair> for BoundedAbsoluteInterval {
     }
 }
 
-/// Errors that can occur when trying to convert [`AbsoluteInterval`] into
+/// Error that can occur when trying to convert [`EmptiableAbsoluteBoundPair`] into [`BoundedAbsoluteInterval`]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct BoundedAbsoluteIntervalTryFromEmptiableAbsoluteBoundPairError;
+
+impl Display for BoundedAbsoluteIntervalTryFromEmptiableAbsoluteBoundPairError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "An error occurred when trying to convert `EmptiableAbsoluteBoundPair` into `BoundedAbsoluteInterval`"
+        )
+    }
+}
+
+impl Error for BoundedAbsoluteIntervalTryFromEmptiableAbsoluteBoundPairError {}
+
+impl TryFrom<EmptiableAbsoluteBoundPair> for BoundedAbsoluteInterval {
+    type Error = BoundedAbsoluteIntervalTryFromEmptiableAbsoluteBoundPairError;
+
+    fn try_from(value: EmptiableAbsoluteBoundPair) -> Result<Self, Self::Error> {
+        Self::try_from(
+            value
+                .bound()
+                .ok_or(BoundedAbsoluteIntervalTryFromEmptiableAbsoluteBoundPairError)?,
+        )
+        .or(Err(BoundedAbsoluteIntervalTryFromEmptiableAbsoluteBoundPairError))
+    }
+}
+
+/// Error that can occur when trying to convert [`AbsoluteInterval`] into
 /// [`BoundedAbsoluteInterval`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum BoundedAbsoluteIntervalFromAbsoluteIntervalError {
-    WrongVariant,
-}
+pub struct BoundedAbsoluteIntervalFromAbsoluteIntervalError;
 
 impl Display for BoundedAbsoluteIntervalFromAbsoluteIntervalError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::WrongVariant => write!(f, "Wrong variant"),
-        }
+        write!(
+            f,
+            "An error occurred when trying to convert `AbsoluteInterval` into `BoundedAbsoluteInterval"
+        )
     }
 }
 
@@ -897,9 +925,34 @@ impl TryFrom<AbsoluteInterval> for BoundedAbsoluteInterval {
     type Error = BoundedAbsoluteIntervalFromAbsoluteIntervalError;
 
     fn try_from(value: AbsoluteInterval) -> Result<Self, Self::Error> {
-        match value {
-            AbsoluteInterval::Bounded(interval) => Ok(interval),
-            _ => Err(Self::Error::WrongVariant),
-        }
+        value.bounded().ok_or(BoundedAbsoluteIntervalFromAbsoluteIntervalError)
+    }
+}
+
+/// Error that can occur when trying to convert [`EmptiableAbsoluteInterval`] into [`BoundedAbsoluteInterval`]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct BoundedAbsoluteIntervalTryFromEmptiableAbsoluteIntervalError;
+
+impl Display for BoundedAbsoluteIntervalTryFromEmptiableAbsoluteIntervalError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "An error occurred when trying to convert `EmptiableAbsoluteInterval` into `BoundedAbsoluteInterval`"
+        )
+    }
+}
+
+impl Error for BoundedAbsoluteIntervalTryFromEmptiableAbsoluteIntervalError {}
+
+impl TryFrom<EmptiableAbsoluteInterval> for BoundedAbsoluteInterval {
+    type Error = BoundedAbsoluteIntervalTryFromEmptiableAbsoluteIntervalError;
+
+    fn try_from(value: EmptiableAbsoluteInterval) -> Result<Self, Self::Error> {
+        Self::try_from(
+            value
+                .bound()
+                .ok_or(BoundedAbsoluteIntervalTryFromEmptiableAbsoluteIntervalError)?,
+        )
+        .or(Err(BoundedAbsoluteIntervalTryFromEmptiableAbsoluteIntervalError))
     }
 }
