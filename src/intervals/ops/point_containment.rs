@@ -44,7 +44,9 @@
 //!     .to_end_bound(),
 //! );
 //!
-//! let point = "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?;
+//! let point = "2025-01-01 10:00:00[Europe/Oslo]"
+//!     .parse::<Zoned>()?
+//!     .timestamp();
 //!
 //! assert!(interval.simple_contains_point(point));
 //! # Ok::<(), Box<dyn Error>>(())
@@ -518,7 +520,7 @@ pub fn deny_on_bounds_containment_rule_counts_as_contained(
 ///     ).to_end_bound(),
 /// );
 ///
-/// let point = "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?;
+/// let point = "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp();
 ///
 /// assert_eq!(
 ///     interval.disambiguated_point_containment_position(point, PointContainmentRuleSet::Strict),
@@ -545,7 +547,7 @@ pub fn deny_on_bounds_containment_rule_counts_as_contained(
 ///     ).to_end_bound(),
 /// );
 ///
-/// let point = "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?;
+/// let point = "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp();
 ///
 /// assert!(interval.simple_contains_point(point));
 /// # Ok::<(), Box<dyn Error>>(())
@@ -595,7 +597,9 @@ pub trait CanPositionPointContainment<P> {
     ///     .to_end_bound(),
     /// );
     ///
-    /// let point = "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?;
+    /// let point = "2025-01-01 08:00:00[Europe/Oslo]"
+    ///     .parse::<Zoned>()?
+    ///     .timestamp();
     ///
     /// assert_eq!(
     ///     interval.point_containment_position(point),
@@ -637,7 +641,7 @@ pub trait CanPositionPointContainment<P> {
     ///     ).to_end_bound(),
     /// );
     ///
-    /// let point = "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?;
+    /// let point = "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp();
     ///
     /// assert_eq!(
     ///     interval.disambiguated_point_containment_position(point, PointContainmentRuleSet::Strict),
@@ -685,7 +689,9 @@ pub trait CanPositionPointContainment<P> {
     ///     .to_end_bound(),
     /// );
     ///
-    /// let point = "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?;
+    /// let point = "2025-01-01 08:00:00[Europe/Oslo]"
+    ///     .parse::<Zoned>()?
+    ///     .timestamp();
     ///
     /// assert!(interval.simple_contains_point(point));
     /// # Ok::<(), Box<dyn Error>>(())
@@ -746,7 +752,9 @@ pub trait CanPositionPointContainment<P> {
     ///     .to_end_bound(),
     /// );
     ///
-    /// let point = "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?;
+    /// let point = "2025-01-01 08:00:00[Europe/Oslo]"
+    ///     .parse::<Zoned>()?
+    ///     .timestamp();
     ///
     /// assert!(interval.contains_point(
     ///     point,
@@ -808,7 +816,7 @@ pub trait CanPositionPointContainment<P> {
     ///     ).to_end_bound(),
     /// );
     ///
-    /// let point = "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?;
+    /// let point = "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp();
     ///
     /// let containment_closure = |point_pos: PointContainmentPosition| -> bool {
     ///     matches!(
@@ -875,7 +883,7 @@ pub trait CanPositionPointContainment<P> {
     ///     ).to_end_bound(),
     /// );
     ///
-    /// let point = "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?;
+    /// let point = "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp();
     ///
     /// let containment_closure = |point_pos: DisambiguatedPointContainmentPosition| -> bool {
     ///     matches!(point_pos, DisambiguatedPointContainmentPosition::Inside)
@@ -909,140 +917,125 @@ pub trait CanPositionPointContainment<P> {
     }
 }
 
-impl<P> CanPositionPointContainment<P> for AbsoluteBoundPair
-where
-    P: Into<Timestamp>,
-{
+impl CanPositionPointContainment<Timestamp> for AbsoluteBoundPair {
     type Error = Infallible;
 
-    fn point_containment_position(&self, positionable: P) -> Result<PointContainmentPosition, Self::Error> {
-        Ok(point_containment_position_abs_bound_pair(self, positionable.into()))
+    fn point_containment_position(&self, positionable: Timestamp) -> Result<PointContainmentPosition, Self::Error> {
+        Ok(point_containment_position_abs_bound_pair(self, positionable))
     }
 }
 
-impl<P> CanPositionPointContainment<P> for EmptiableAbsoluteBoundPair
-where
-    P: Into<Timestamp>,
-{
+impl CanPositionPointContainment<Timestamp> for EmptiableAbsoluteBoundPair {
     type Error = Infallible;
 
-    fn point_containment_position(&self, positionable: P) -> Result<PointContainmentPosition, Self::Error> {
+    fn point_containment_position(&self, positionable: Timestamp) -> Result<PointContainmentPosition, Self::Error> {
         let EmptiableAbsoluteBoundPair::Bound(bounds) = self else {
             return Ok(PointContainmentPosition::Outside);
         };
 
-        Ok(point_containment_position_abs_bound_pair(bounds, positionable.into()))
+        Ok(point_containment_position_abs_bound_pair(bounds, positionable))
     }
 }
 
-impl<P> CanPositionPointContainment<P> for AbsoluteInterval
-where
-    P: Into<Timestamp>,
-{
+impl CanPositionPointContainment<Timestamp> for AbsoluteInterval {
     type Error = Infallible;
 
-    fn point_containment_position(&self, positionable: P) -> Result<PointContainmentPosition, Self::Error> {
+    fn point_containment_position(&self, positionable: Timestamp) -> Result<PointContainmentPosition, Self::Error> {
         let EmptiableAbsoluteBoundPair::Bound(bounds) = self.emptiable_abs_bound_pair() else {
             return Ok(PointContainmentPosition::Outside);
         };
 
-        Ok(point_containment_position_abs_bound_pair(&bounds, positionable.into()))
+        Ok(point_containment_position_abs_bound_pair(&bounds, positionable))
     }
 }
 
-impl<P> CanPositionPointContainment<P> for BoundedAbsoluteInterval
-where
-    P: Into<Timestamp>,
-{
+impl CanPositionPointContainment<Timestamp> for BoundedAbsoluteInterval {
     type Error = Infallible;
 
-    fn point_containment_position(&self, positionable: P) -> Result<PointContainmentPosition, Self::Error> {
+    fn point_containment_position(&self, positionable: Timestamp) -> Result<PointContainmentPosition, Self::Error> {
         Ok(point_containment_position_abs_bound_pair(
             &self.abs_bound_pair(),
-            positionable.into(),
+            positionable,
         ))
     }
 }
 
-impl<P> CanPositionPointContainment<P> for HalfBoundedAbsoluteInterval
-where
-    P: Into<Timestamp>,
-{
+impl CanPositionPointContainment<Timestamp> for HalfBoundedAbsoluteInterval {
     type Error = Infallible;
 
-    fn point_containment_position(&self, positionable: P) -> Result<PointContainmentPosition, Self::Error> {
+    fn point_containment_position(&self, positionable: Timestamp) -> Result<PointContainmentPosition, Self::Error> {
         Ok(point_containment_position_abs_bound_pair(
             &self.abs_bound_pair(),
-            positionable.into(),
+            positionable,
         ))
     }
 }
 
-impl<P> CanPositionPointContainment<P> for RelativeBoundPair
-where
-    P: Into<SignedDuration>,
-{
+impl CanPositionPointContainment<SignedDuration> for RelativeBoundPair {
     type Error = Infallible;
 
-    fn point_containment_position(&self, positionable: P) -> Result<PointContainmentPosition, Self::Error> {
-        Ok(point_containment_position_rel_bound_pair(self, positionable.into()))
+    fn point_containment_position(
+        &self,
+        positionable: SignedDuration,
+    ) -> Result<PointContainmentPosition, Self::Error> {
+        Ok(point_containment_position_rel_bound_pair(self, positionable))
     }
 }
 
-impl<P> CanPositionPointContainment<P> for EmptiableRelativeBoundPair
-where
-    P: Into<SignedDuration>,
-{
+impl CanPositionPointContainment<SignedDuration> for EmptiableRelativeBoundPair {
     type Error = Infallible;
 
-    fn point_containment_position(&self, positionable: P) -> Result<PointContainmentPosition, Self::Error> {
+    fn point_containment_position(
+        &self,
+        positionable: SignedDuration,
+    ) -> Result<PointContainmentPosition, Self::Error> {
         let EmptiableRelativeBoundPair::Bound(bounds) = self else {
             return Ok(PointContainmentPosition::Outside);
         };
 
-        Ok(point_containment_position_rel_bound_pair(bounds, positionable.into()))
+        Ok(point_containment_position_rel_bound_pair(bounds, positionable))
     }
 }
 
-impl<P> CanPositionPointContainment<P> for RelativeInterval
-where
-    P: Into<SignedDuration>,
-{
+impl CanPositionPointContainment<SignedDuration> for RelativeInterval {
     type Error = Infallible;
 
-    fn point_containment_position(&self, positionable: P) -> Result<PointContainmentPosition, Self::Error> {
+    fn point_containment_position(
+        &self,
+        positionable: SignedDuration,
+    ) -> Result<PointContainmentPosition, Self::Error> {
         let EmptiableRelativeBoundPair::Bound(bounds) = self.emptiable_rel_bound_pair() else {
             return Ok(PointContainmentPosition::Outside);
         };
 
-        Ok(point_containment_position_rel_bound_pair(&bounds, positionable.into()))
+        Ok(point_containment_position_rel_bound_pair(&bounds, positionable))
     }
 }
 
-impl<P> CanPositionPointContainment<P> for BoundedRelativeInterval
-where
-    P: Into<SignedDuration>,
-{
+impl CanPositionPointContainment<SignedDuration> for BoundedRelativeInterval {
     type Error = Infallible;
 
-    fn point_containment_position(&self, positionable: P) -> Result<PointContainmentPosition, Self::Error> {
+    fn point_containment_position(
+        &self,
+        positionable: SignedDuration,
+    ) -> Result<PointContainmentPosition, Self::Error> {
         Ok(point_containment_position_rel_bound_pair(
             &self.rel_bound_pair(),
-            positionable.into(),
+            positionable,
         ))
     }
 }
 
-impl<P> CanPositionPointContainment<P> for HalfBoundedRelativeInterval
-where
-    P: Into<SignedDuration>,
-{
+impl CanPositionPointContainment<SignedDuration> for HalfBoundedRelativeInterval {
     type Error = Infallible;
 
-    fn point_containment_position(&self, positionable: P) -> Result<PointContainmentPosition, Self::Error> {
+    fn point_containment_position(
+        &self,
+        positionable: SignedDuration,
+    ) -> Result<PointContainmentPosition, Self::Error> {
         Ok(point_containment_position_rel_bound_pair(
             &self.rel_bound_pair(),
-            positionable.into(),
+            positionable,
         ))
     }
 }

@@ -129,7 +129,9 @@ impl PrecisionMode {
 /// # use periodical::ops::{Precision, PrecisionMode};
 /// let round_up_every_35_mins = Precision::new(Duration::from_mins(35), PrecisionMode::ToFuture)?;
 ///
-/// let first_january_2025 = "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?;
+/// let first_january_2025 = "2025-01-01 00:00:00[Europe/Oslo]"
+///     .parse::<Zoned>()?
+///     .timestamp();
 /// let two_minutes_after_eight = "2025-01-01 08:02:11[Europe/Oslo]".parse::<Zoned>()?;
 /// let fourteen_minutes_after_ten = "2025-01-01 10:14:21[Europe/Oslo]".parse::<Zoned>()?;
 ///
@@ -137,7 +139,7 @@ impl PrecisionMode {
 /// // 14 * 35m = 08:10
 /// assert_eq!(
 ///     round_up_every_35_mins
-///         .precise_time_with_base_time(&two_minutes_after_eight, &first_january_2025,)?,
+///         .precise_time_with_base_time(&two_minutes_after_eight, first_january_2025)?,
 ///     "2025-01-01 08:10:00[Europe/Oslo]".parse::<Zoned>()?,
 /// );
 ///
@@ -145,7 +147,7 @@ impl PrecisionMode {
 /// // 18 * 35m = 10:30
 /// assert_eq!(
 ///     round_up_every_35_mins
-///         .precise_time_with_base_time(&fourteen_minutes_after_ten, &first_january_2025,)?,
+///         .precise_time_with_base_time(&fourteen_minutes_after_ten, first_january_2025)?,
 ///     "2025-01-01 10:30:00[Europe/Oslo]".parse::<Zoned>()?,
 /// );
 /// # Ok::<(), Box<dyn Error>>(())
@@ -515,10 +517,10 @@ impl Precision {
     /// # use periodical::ops::{Precision, PrecisionMode};
     /// let precision = Precision::new(Duration::from_hours(2), PrecisionMode::ToFuture)?;
     /// let time = "2026-03-29 07:55:02[Europe/Oslo]".parse::<Zoned>()?;
-    /// let base = time.start_of_day()?;
+    /// let base = time.start_of_day()?.timestamp();
     ///
     /// assert_eq!(
-    ///     precision.precise_time_with_base_time(&time, &base)?,
+    ///     precision.precise_time_with_base_time(&time, base)?,
     ///     "2026-03-29 09:00:00[Europe/Oslo]".parse::<Zoned>()?,
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
@@ -533,21 +535,24 @@ impl Precision {
     /// # use periodical::ops::{Precision, PrecisionMode};
     /// let precision = Precision::new(Duration::from_mins(22), PrecisionMode::ToFuture)?;
     /// let time = "2026-01-02 07:55:02[Europe/Oslo]".parse::<Zoned>()?;
-    /// let base = "2026-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?;
+    /// let base = "2026-01-01 00:00:00[Europe/Oslo]"
+    ///     .parse::<Zoned>()?
+    ///     .timestamp();
     ///
     /// assert_eq!(
-    ///     precision.precise_time_with_base_time(&time, &base)?,
+    ///     precision.precise_time_with_base_time(&time, base)?,
     ///     "2026-01-02 08:16:00[Europe/Oslo]".parse::<Zoned>()?,
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     ///
     /// [1]: https://en.wikipedia.org/w/index.php?title=Unix_time&useskin=vector
-    pub fn precise_time_with_base_time<B>(&self, time: &Zoned, base: B) -> Result<Zoned, PrecisionOutOfRangeDateError>
-    where
-        B: Into<Timestamp>,
-    {
-        let base = base.into().to_zoned(time.time_zone().clone());
+    pub fn precise_time_with_base_time(
+        &self,
+        time: &Zoned,
+        base: Timestamp,
+    ) -> Result<Zoned, PrecisionOutOfRangeDateError> {
+        let base = base.to_zoned(time.time_zone().clone());
 
         base.checked_add(self.precise_signed_duration(time.duration_since(&base))?)
             .map_err(|_| PrecisionOutOfRangeDateError)
