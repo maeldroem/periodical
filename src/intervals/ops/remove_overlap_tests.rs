@@ -114,7 +114,7 @@ mod remove_overlap {
                     "2025-01-04 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
                 )),
             )),
-            Err(OverlapRemovalErr::NoOverlap),
+            Err(OverlapRemovalNoOverlapFoundError),
         );
 
         Ok(())
@@ -183,7 +183,7 @@ mod remove_overlap {
                     BoundInclusivity::Inclusive,
                 )),
             )),
-            Err(OverlapRemovalErr::NoOverlap),
+            Err(OverlapRemovalNoOverlapFoundError),
         );
 
         Ok(())
@@ -212,7 +212,7 @@ mod remove_overlap {
                     BoundInclusivity::Inclusive,
                 )),
             )),
-            Err(OverlapRemovalErr::NoOverlap),
+            Err(OverlapRemovalNoOverlapFoundError),
         );
 
         Ok(())
@@ -241,7 +241,7 @@ mod remove_overlap {
                     BoundInclusivity::Inclusive,
                 )),
             )),
-            Err(OverlapRemovalErr::NoOverlap),
+            Err(OverlapRemovalNoOverlapFoundError),
         );
 
         Ok(())

@@ -227,21 +227,21 @@ fn try_from_relative_bounds_wrong() {
             RelativeStartBound::InfinitePast,
             RelativeEndBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(1))),
         )),
-        Err(BoundedRelativeIntervalFromRelativeBoundPairError::NotBoundedInterval),
+        Err(BoundedRelativeIntervalTryFromRelativeBoundPairError),
     );
     assert_eq!(
         BoundedRelativeInterval::try_from(RelativeBoundPair::new(
             RelativeStartBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(1))),
             RelativeEndBound::InfiniteFuture,
         )),
-        Err(BoundedRelativeIntervalFromRelativeBoundPairError::NotBoundedInterval),
+        Err(BoundedRelativeIntervalTryFromRelativeBoundPairError),
     );
     assert_eq!(
         BoundedRelativeInterval::try_from(RelativeBoundPair::new(
             RelativeStartBound::InfinitePast,
             RelativeEndBound::InfiniteFuture,
         )),
-        Err(BoundedRelativeIntervalFromRelativeBoundPairError::NotBoundedInterval),
+        Err(BoundedRelativeIntervalTryFromRelativeBoundPairError),
     );
 }
 

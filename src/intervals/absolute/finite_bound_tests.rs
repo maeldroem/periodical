@@ -167,6 +167,6 @@ fn try_from_exclusive_bound() -> Result<(), Box<dyn Error>> {
 fn try_from_unbounded_bound() {
     assert_eq!(
         AbsoluteFiniteBound::try_from(Bound::Unbounded),
-        Err(AbsoluteFiniteBoundFromBoundError::IsUnbounded),
+        Err(AbsoluteFiniteBoundTryFromBoundError),
     );
 }

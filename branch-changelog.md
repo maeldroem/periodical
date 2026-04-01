@@ -7,7 +7,7 @@ Find way to handle multiple interval durations to handle correctly mathematical 
 
 FIXME: Conversion errors and descriptions are backwards
 
-FIXME: Remove single-variant errors
+FIXME: Remove implementations of operations where it always returns an error
 
 <details>
 <summary><h1>Changelog</h1></summary>
@@ -73,18 +73,50 @@ FIXME: Remove single-variant errors
 ## Changed
 
 - `BoundedAbsoluteIntervalFromAbsoluteIntervalError` was converted from a single-variant enum to a tag struct
+  and renamed to `BoundedAbsoluteIntervalTryFromAbsoluteIntervalError`
 - `AbsoluteBoundPairFromEmptiableAbsoluteBoundPairError` was converted from a single-variant enum to a tag struct
+  and renamed to `AbsoluteBoundPairTryFromEmptiableAbsoluteBoundPairError`
+- `BoundedAbsoluteIntervalFromAbsoluteBoundPairError` was converted from a single-variant enum to a tag struct
+  and renamed to `BoundedAbsoluteIntervalTryFromAbsoluteBoundPairError`
+- `AbsoluteFiniteBoundFromBoundError` was converted from a single-variant enum to a tag struct
+  and renamed to `AbsoluteFiniteBoundTryFromBoundError`
+- `HalfBoundedAbsoluteIntervalFromAbsoluteBoundPairError` was converted from a single-variant enum to a tag struct
+  and renamed to `HalfBoundedAbsoluteIntervalTryFromAbsoluteBoundPairError`
+- `HalfBoundedAbsoluteIntervalFromAbsoluteIntervalError` was converted from a single-variant enum to a tag struct
+  and renamed `HalfBoundedAbsoluteIntervalTryFromAbsoluteIntervalError`
 - `TryFrom<AbsoluteInterval>` implementation on `BoundedAbsoluteInterval` was re-expressed using the new
   variant retrieval methods of `AbsoluteInterval`
 - `BoundedAbsoluteInterval::to_emptiable` was renamed `to_emptiable_interval` for explicitness
 - `HalfBoundedAbsoluteInterval::to_emptiable` was renamed `to_emptiable_interval` for explicitness
+
 - `BoundedRelativeIntervalFromRelativeIntervalError` was converted from a single-variant enum to a tag struct
+  and renamed to `BoundedRelativeIntervalTryFromRelativeIntervalError`
 - `RelativeBoundPairFromEmptiableRelativeBoundPairError` was converted from a single-variant enum to a tag struct
+  and renamed to `RelativeBoundPairTryFromEmptiableRelativeBoundPairError`
+- `BoundedRelativeIntervalFromRelativeBoundPairError` was converted from a single-variant enum to a tag struct
+  and renamed to `BoundedRelativeIntervalTryFromRelativeBoundPairError`
+- `RelativeFiniteBoundFromBoundError` was converted from a single-variant enum to a tag struct
+  and renamed to `RelativeFiniteBoundTryFromBoundError`
+- `HalfBoundedRelativeIntervalFromRelativeBoundPairError` was converted from a single-variant enum to a tag struct
+  and renamed to `HalfBoundedRelativeIntervalTryFromRelativeBoundPairError`
+- `HalfBoundedRelativeIntervalFromRelativeIntervalError` was converted from a single-variant enum to a tag struct
+  and renamed to `HalfBoundedRelativeIntervalTryFromRelativeIntervalError`
 - `TryFrom<RelativeInterval>` implementation on `BoundedRelativeInterval` was re-expressed using the new
   variant retrieval methods of `RelativeInterval`
 - `BoundedRelativeInterval::to_emptiable` was renamed `to_emptiable_interval` for explicitness
 - `HalfBoundedRelativeInterval::to_emptiable` was renamed `to_emptiable_interval` for explicitness
 - Renamed `Emptiable` trait to `IsEmpty` for explicitness
+
+- `OverlapRemovalErr` was converted from a single-variant enum to a tag struct and renamed
+  to `OverlapRemovalNoOverlapFoundError`
+- `GapFillError` was converted from a single-variant enum to a tag struct and renamed
+  to `GapFillOverlapFoundError`
+- `PrecisionCreationError` was converted from a single-variant enum to a tag struct and renamed
+  to `PrecisionCreationPrecisionIsZeroError`
+- `PrecisionError` was converted from a single-variant enum to a tag struct
+  and renamed to `PrecisionOutOfRangeDateError`
+- `EpsilonInterpretationDurationError` was converted from a single-variant enum to a tag struct
+  and renamed to `EpsilonInterpretationDurationOverflowError`
 
 ## Deprecated
 

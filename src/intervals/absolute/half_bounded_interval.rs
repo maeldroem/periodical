@@ -481,25 +481,23 @@ impl From<RangeToInclusive<Timestamp>> for HalfBoundedAbsoluteInterval {
     }
 }
 
-/// Errors that can occur when trying to convert [`AbsoluteBoundPair`] into
-/// [`HalfBoundedAbsoluteInterval`]
+/// Error that can occur when trying to convert [`AbsoluteBoundPair`] into [`HalfBoundedAbsoluteInterval`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum HalfBoundedAbsoluteIntervalFromAbsoluteBoundPairError {
-    NotHalfBoundedInterval,
-}
+pub struct HalfBoundedAbsoluteIntervalTryFromAbsoluteBoundPairError;
 
-impl Display for HalfBoundedAbsoluteIntervalFromAbsoluteBoundPairError {
+impl Display for HalfBoundedAbsoluteIntervalTryFromAbsoluteBoundPairError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::NotHalfBoundedInterval => write!(f, "Not a half-bounded interval"),
-        }
+        write!(
+            f,
+            "An error occurred when trying to convert `AbsoluteBoundPair` into `HalfBoundedAbsoluteInterval`"
+        )
     }
 }
 
-impl Error for HalfBoundedAbsoluteIntervalFromAbsoluteBoundPairError {}
+impl Error for HalfBoundedAbsoluteIntervalTryFromAbsoluteBoundPairError {}
 
 impl TryFrom<AbsoluteBoundPair> for HalfBoundedAbsoluteInterval {
-    type Error = HalfBoundedAbsoluteIntervalFromAbsoluteBoundPairError;
+    type Error = HalfBoundedAbsoluteIntervalTryFromAbsoluteBoundPairError;
 
     fn try_from(value: AbsoluteBoundPair) -> Result<Self, Self::Error> {
         match (value.start(), value.end()) {
@@ -517,35 +515,32 @@ impl TryFrom<AbsoluteBoundPair> for HalfBoundedAbsoluteInterval {
                     OpeningDirection::ToFuture,
                 ))
             },
-            _ => Err(Self::Error::NotHalfBoundedInterval),
+            _ => Err(HalfBoundedAbsoluteIntervalTryFromAbsoluteBoundPairError),
         }
     }
 }
 
-/// Errors that can occur when trying to convert [`AbsoluteInterval`] into
-/// [`HalfBoundedAbsoluteInterval`]
+/// Error that can occur when trying to convert [`AbsoluteInterval`] into [`HalfBoundedAbsoluteInterval`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum HalfBoundedAbsoluteIntervalFromAbsoluteIntervalError {
-    WrongVariant,
-}
+pub struct HalfBoundedAbsoluteIntervalTryFromAbsoluteIntervalError;
 
-impl Display for HalfBoundedAbsoluteIntervalFromAbsoluteIntervalError {
+impl Display for HalfBoundedAbsoluteIntervalTryFromAbsoluteIntervalError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::WrongVariant => write!(f, "Wrong variant"),
-        }
+        write!(
+            f,
+            "An error occurred when trying to convert `AbsoluteInterval` into `HalfBoundedAbsoluteInterval`"
+        )
     }
 }
 
-impl Error for HalfBoundedAbsoluteIntervalFromAbsoluteIntervalError {}
+impl Error for HalfBoundedAbsoluteIntervalTryFromAbsoluteIntervalError {}
 
 impl TryFrom<AbsoluteInterval> for HalfBoundedAbsoluteInterval {
-    type Error = HalfBoundedAbsoluteIntervalFromAbsoluteIntervalError;
+    type Error = HalfBoundedAbsoluteIntervalTryFromAbsoluteIntervalError;
 
     fn try_from(value: AbsoluteInterval) -> Result<Self, Self::Error> {
-        match value {
-            AbsoluteInterval::HalfBounded(interval) => Ok(interval),
-            _ => Err(Self::Error::WrongVariant),
-        }
+        value
+            .half_bounded()
+            .ok_or(HalfBoundedAbsoluteIntervalTryFromAbsoluteIntervalError)
     }
 }

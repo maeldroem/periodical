@@ -34,13 +34,13 @@ use crate::intervals::absolute::{
 use crate::intervals::meta::{
     BoundInclusivity,
     Duration as IntervalDuration,
-    IsEmpty,
     Epsilon,
     HasBoundInclusivity,
     HasDuration,
     HasOpenness,
     HasRelativity,
     Interval,
+    IsEmpty,
     Openness,
     Relativity,
 };
@@ -842,25 +842,23 @@ impl From<RangeInclusive<Timestamp>> for BoundedAbsoluteInterval {
     }
 }
 
-/// Errors that can occur when trying to convert [`AbsoluteBoundPair`] into
-/// [`BoundedAbsoluteInterval`]
+/// Error that can occur when trying to convert [`AbsoluteBoundPair`] into [`BoundedAbsoluteInterval`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum BoundedAbsoluteIntervalFromAbsoluteBoundPairError {
-    NotBoundedInterval,
-}
+pub struct BoundedAbsoluteIntervalTryFromAbsoluteBoundPairError;
 
-impl Display for BoundedAbsoluteIntervalFromAbsoluteBoundPairError {
+impl Display for BoundedAbsoluteIntervalTryFromAbsoluteBoundPairError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::NotBoundedInterval => write!(f, "Not a bounded interval"),
-        }
+        write!(
+            f,
+            "An error occurred when trying to convert `AbsoluteBoundPair` into `BoundedAbsoluteInterval`"
+        )
     }
 }
 
-impl Error for BoundedAbsoluteIntervalFromAbsoluteBoundPairError {}
+impl Error for BoundedAbsoluteIntervalTryFromAbsoluteBoundPairError {}
 
 impl TryFrom<AbsoluteBoundPair> for BoundedAbsoluteInterval {
-    type Error = BoundedAbsoluteIntervalFromAbsoluteBoundPairError;
+    type Error = BoundedAbsoluteIntervalTryFromAbsoluteBoundPairError;
 
     fn try_from(value: AbsoluteBoundPair) -> Result<Self, Self::Error> {
         match (value.start(), value.end()) {
@@ -872,7 +870,7 @@ impl TryFrom<AbsoluteBoundPair> for BoundedAbsoluteInterval {
                     finite_end.inclusivity(),
                 ))
             },
-            _ => Err(Self::Error::NotBoundedInterval),
+            _ => Err(BoundedAbsoluteIntervalTryFromAbsoluteBoundPairError),
         }
     }
 }

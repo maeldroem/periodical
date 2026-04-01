@@ -212,14 +212,14 @@ fn try_from_absolute_bounds_wrong() -> Result<(), Box<dyn Error>> {
             AbsoluteStartBound::InfinitePast,
             AbsoluteEndBound::InfiniteFuture,
         )),
-        Err(HalfBoundedAbsoluteIntervalFromAbsoluteBoundPairError::NotHalfBoundedInterval),
+        Err(HalfBoundedAbsoluteIntervalTryFromAbsoluteBoundPairError),
     );
     assert_eq!(
         HalfBoundedAbsoluteInterval::try_from(AbsoluteBoundPair::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?)),
             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new("2025-01-02 00:00:00Z".parse::<Timestamp>()?)),
         )),
-        Err(HalfBoundedAbsoluteIntervalFromAbsoluteBoundPairError::NotHalfBoundedInterval),
+        Err(HalfBoundedAbsoluteIntervalTryFromAbsoluteBoundPairError),
     );
 
     Ok(())
@@ -249,14 +249,14 @@ fn try_from_absolute_interval_correct() -> Result<(), Box<dyn Error>> {
 fn try_from_absolute_interval_wrong() -> Result<(), Box<dyn Error>> {
     assert_eq!(
         HalfBoundedAbsoluteInterval::try_from(AbsoluteInterval::Unbounded(UnboundedInterval)),
-        Err(HalfBoundedAbsoluteIntervalFromAbsoluteIntervalError::WrongVariant),
+        Err(HalfBoundedAbsoluteIntervalTryFromAbsoluteIntervalError),
     );
     assert_eq!(
         HalfBoundedAbsoluteInterval::try_from(AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
             "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
             "2025-01-02 00:00:00Z".parse::<Timestamp>()?,
         ))),
-        Err(HalfBoundedAbsoluteIntervalFromAbsoluteIntervalError::WrongVariant),
+        Err(HalfBoundedAbsoluteIntervalTryFromAbsoluteIntervalError),
     );
 
     Ok(())

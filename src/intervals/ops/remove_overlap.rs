@@ -4,6 +4,9 @@
 //! between the two intervals. If the two intervals are not overlapping, the
 //! operation produces an error.
 
+use std::error::Error;
+use std::fmt::Display;
+
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
@@ -158,12 +161,17 @@ impl<T> OverlapRemovalResult<T> {
     }
 }
 
-/// Errors that can occur when using [`OverlapRemovable`]
+/// No overlap was found between the intervals when using [`OverlapRemovable`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum OverlapRemovalErr {
-    /// No overlap was found between the intervals
-    NoOverlap,
+pub struct OverlapRemovalNoOverlapFoundError;
+
+impl Display for OverlapRemovalNoOverlapFoundError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "No overlap was found between the intervals")
+    }
 }
+
+impl Error for OverlapRemovalNoOverlapFoundError {}
 
 /// Capacity to remove overlap between two intervals that strictly overlap
 pub trait OverlapRemovable<Rhs = Self> {
@@ -176,8 +184,11 @@ pub trait OverlapRemovable<Rhs = Self> {
     /// # Errors
     ///
     /// If the given bounds don't overlap, this method returns
-    /// [`OverlapRemovalErr::NoOverlap`].
-    fn remove_overlap(&self, rhs: &Rhs) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalErr>;
+    /// [`OverlapRemovalNoOverlapFoundError`].
+    fn remove_overlap(
+        &self,
+        rhs: &Rhs,
+    ) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalNoOverlapFoundError>;
 }
 
 impl<Rhs> OverlapRemovable<Rhs> for AbsoluteBoundPair
@@ -186,7 +197,10 @@ where
 {
     type Output = EmptiableAbsoluteBoundPair;
 
-    fn remove_overlap(&self, rhs: &Rhs) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalErr> {
+    fn remove_overlap(
+        &self,
+        rhs: &Rhs,
+    ) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalNoOverlapFoundError> {
         remove_overlap_abs_bound_pair_with_emptiable_abs_bound_pair(self, &rhs.emptiable_abs_bound_pair())
     }
 }
@@ -197,7 +211,10 @@ where
 {
     type Output = Self;
 
-    fn remove_overlap(&self, rhs: &Rhs) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalErr> {
+    fn remove_overlap(
+        &self,
+        rhs: &Rhs,
+    ) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalNoOverlapFoundError> {
         remove_overlap_emptiable_abs_bound_pair(self, &rhs.emptiable_abs_bound_pair())
     }
 }
@@ -208,7 +225,10 @@ where
 {
     type Output = EmptiableAbsoluteInterval;
 
-    fn remove_overlap(&self, rhs: &Rhs) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalErr> {
+    fn remove_overlap(
+        &self,
+        rhs: &Rhs,
+    ) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalNoOverlapFoundError> {
         remove_overlap_abs_bound_pair_with_emptiable_abs_bound_pair(
             &self.abs_bound_pair(),
             &rhs.emptiable_abs_bound_pair(),
@@ -223,7 +243,10 @@ where
 {
     type Output = Self;
 
-    fn remove_overlap(&self, rhs: &Rhs) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalErr> {
+    fn remove_overlap(
+        &self,
+        rhs: &Rhs,
+    ) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalNoOverlapFoundError> {
         remove_overlap_emptiable_abs_bound_pair(&self.emptiable_abs_bound_pair(), &rhs.emptiable_abs_bound_pair())
             .map(|overlap_removal_res| overlap_removal_res.map(Self::Output::from))
     }
@@ -235,7 +258,10 @@ where
 {
     type Output = EmptiableAbsoluteInterval;
 
-    fn remove_overlap(&self, rhs: &Rhs) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalErr> {
+    fn remove_overlap(
+        &self,
+        rhs: &Rhs,
+    ) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalNoOverlapFoundError> {
         remove_overlap_emptiable_abs_bound_pair(&self.emptiable_abs_bound_pair(), &rhs.emptiable_abs_bound_pair())
             .map(|overlap_removal_res| overlap_removal_res.map(Self::Output::from))
     }
@@ -247,7 +273,10 @@ where
 {
     type Output = EmptiableAbsoluteInterval;
 
-    fn remove_overlap(&self, rhs: &Rhs) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalErr> {
+    fn remove_overlap(
+        &self,
+        rhs: &Rhs,
+    ) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalNoOverlapFoundError> {
         remove_overlap_emptiable_abs_bound_pair(&self.emptiable_abs_bound_pair(), &rhs.emptiable_abs_bound_pair())
             .map(|overlap_removal_res| overlap_removal_res.map(Self::Output::from))
     }
@@ -259,7 +288,10 @@ where
 {
     type Output = EmptiableRelativeBoundPair;
 
-    fn remove_overlap(&self, rhs: &Rhs) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalErr> {
+    fn remove_overlap(
+        &self,
+        rhs: &Rhs,
+    ) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalNoOverlapFoundError> {
         remove_overlap_rel_bound_pair_with_emptiable_rel_bound_pair(self, &rhs.emptiable_rel_bound_pair())
     }
 }
@@ -270,7 +302,10 @@ where
 {
     type Output = Self;
 
-    fn remove_overlap(&self, rhs: &Rhs) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalErr> {
+    fn remove_overlap(
+        &self,
+        rhs: &Rhs,
+    ) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalNoOverlapFoundError> {
         remove_overlap_emptiable_rel_bound_pair(self, &rhs.emptiable_rel_bound_pair())
     }
 }
@@ -281,7 +316,10 @@ where
 {
     type Output = EmptiableRelativeInterval;
 
-    fn remove_overlap(&self, rhs: &Rhs) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalErr> {
+    fn remove_overlap(
+        &self,
+        rhs: &Rhs,
+    ) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalNoOverlapFoundError> {
         remove_overlap_emptiable_rel_bound_pair(&self.emptiable_rel_bound_pair(), &rhs.emptiable_rel_bound_pair())
             .map(|overlap_removal_res| overlap_removal_res.map(Self::Output::from))
     }
@@ -293,7 +331,10 @@ where
 {
     type Output = Self;
 
-    fn remove_overlap(&self, rhs: &Rhs) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalErr> {
+    fn remove_overlap(
+        &self,
+        rhs: &Rhs,
+    ) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalNoOverlapFoundError> {
         remove_overlap_emptiable_rel_bound_pair(&self.emptiable_rel_bound_pair(), &rhs.emptiable_rel_bound_pair())
             .map(|overlap_removal_res| overlap_removal_res.map(Self::Output::from))
     }
@@ -305,7 +346,10 @@ where
 {
     type Output = EmptiableRelativeInterval;
 
-    fn remove_overlap(&self, rhs: &Rhs) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalErr> {
+    fn remove_overlap(
+        &self,
+        rhs: &Rhs,
+    ) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalNoOverlapFoundError> {
         remove_overlap_emptiable_rel_bound_pair(&self.emptiable_rel_bound_pair(), &rhs.emptiable_rel_bound_pair())
             .map(|overlap_removal_res| overlap_removal_res.map(Self::Output::from))
     }
@@ -317,7 +361,10 @@ where
 {
     type Output = EmptiableRelativeInterval;
 
-    fn remove_overlap(&self, rhs: &Rhs) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalErr> {
+    fn remove_overlap(
+        &self,
+        rhs: &Rhs,
+    ) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalNoOverlapFoundError> {
         remove_overlap_emptiable_rel_bound_pair(&self.emptiable_rel_bound_pair(), &rhs.emptiable_rel_bound_pair())
             .map(|overlap_removal_res| overlap_removal_res.map(Self::Output::from))
     }
@@ -326,7 +373,10 @@ where
 impl OverlapRemovable<AbsoluteBoundPair> for UnboundedInterval {
     type Output = EmptiableAbsoluteInterval;
 
-    fn remove_overlap(&self, rhs: &AbsoluteBoundPair) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalErr> {
+    fn remove_overlap(
+        &self,
+        rhs: &AbsoluteBoundPair,
+    ) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalNoOverlapFoundError> {
         remove_overlap_abs_bound_pair(&self.abs_bound_pair(), &rhs.abs_bound_pair())
             .map(|overlap_removal_res| overlap_removal_res.map(Self::Output::from))
     }
@@ -338,7 +388,7 @@ impl OverlapRemovable<EmptiableAbsoluteBoundPair> for UnboundedInterval {
     fn remove_overlap(
         &self,
         rhs: &EmptiableAbsoluteBoundPair,
-    ) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalErr> {
+    ) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalNoOverlapFoundError> {
         remove_overlap_abs_bound_pair_with_emptiable_abs_bound_pair(
             &self.abs_bound_pair(),
             &rhs.emptiable_abs_bound_pair(),
@@ -350,7 +400,10 @@ impl OverlapRemovable<EmptiableAbsoluteBoundPair> for UnboundedInterval {
 impl OverlapRemovable<AbsoluteInterval> for UnboundedInterval {
     type Output = EmptiableAbsoluteInterval;
 
-    fn remove_overlap(&self, rhs: &AbsoluteInterval) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalErr> {
+    fn remove_overlap(
+        &self,
+        rhs: &AbsoluteInterval,
+    ) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalNoOverlapFoundError> {
         remove_overlap_abs_bound_pair(&self.abs_bound_pair(), &rhs.abs_bound_pair())
             .map(|overlap_removal_res| overlap_removal_res.map(Self::Output::from))
     }
@@ -362,7 +415,7 @@ impl OverlapRemovable<EmptiableAbsoluteInterval> for UnboundedInterval {
     fn remove_overlap(
         &self,
         rhs: &EmptiableAbsoluteInterval,
-    ) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalErr> {
+    ) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalNoOverlapFoundError> {
         remove_overlap_emptiable_abs_bound_pair(&self.emptiable_abs_bound_pair(), &rhs.emptiable_abs_bound_pair())
             .map(|overlap_removal_res| overlap_removal_res.map(Self::Output::from))
     }
@@ -374,7 +427,7 @@ impl OverlapRemovable<BoundedAbsoluteInterval> for UnboundedInterval {
     fn remove_overlap(
         &self,
         rhs: &BoundedAbsoluteInterval,
-    ) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalErr> {
+    ) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalNoOverlapFoundError> {
         remove_overlap_abs_bound_pair(&self.abs_bound_pair(), &rhs.abs_bound_pair())
             .map(|overlap_removal_res| overlap_removal_res.map(Self::Output::from))
     }
@@ -386,7 +439,7 @@ impl OverlapRemovable<HalfBoundedAbsoluteInterval> for UnboundedInterval {
     fn remove_overlap(
         &self,
         rhs: &HalfBoundedAbsoluteInterval,
-    ) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalErr> {
+    ) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalNoOverlapFoundError> {
         remove_overlap_abs_bound_pair(&self.abs_bound_pair(), &rhs.abs_bound_pair())
             .map(|overlap_removal_res| overlap_removal_res.map(Self::Output::from))
     }
@@ -395,7 +448,10 @@ impl OverlapRemovable<HalfBoundedAbsoluteInterval> for UnboundedInterval {
 impl OverlapRemovable<RelativeBoundPair> for UnboundedInterval {
     type Output = EmptiableRelativeInterval;
 
-    fn remove_overlap(&self, rhs: &RelativeBoundPair) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalErr> {
+    fn remove_overlap(
+        &self,
+        rhs: &RelativeBoundPair,
+    ) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalNoOverlapFoundError> {
         remove_overlap_rel_bound_pair(&self.rel_bound_pair(), &rhs.rel_bound_pair())
             .map(|overlap_removal_res| overlap_removal_res.map(Self::Output::from))
     }
@@ -407,7 +463,7 @@ impl OverlapRemovable<EmptiableRelativeBoundPair> for UnboundedInterval {
     fn remove_overlap(
         &self,
         rhs: &EmptiableRelativeBoundPair,
-    ) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalErr> {
+    ) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalNoOverlapFoundError> {
         remove_overlap_rel_bound_pair_with_emptiable_rel_bound_pair(
             &self.rel_bound_pair(),
             &rhs.emptiable_rel_bound_pair(),
@@ -419,7 +475,10 @@ impl OverlapRemovable<EmptiableRelativeBoundPair> for UnboundedInterval {
 impl OverlapRemovable<RelativeInterval> for UnboundedInterval {
     type Output = EmptiableRelativeInterval;
 
-    fn remove_overlap(&self, rhs: &RelativeInterval) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalErr> {
+    fn remove_overlap(
+        &self,
+        rhs: &RelativeInterval,
+    ) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalNoOverlapFoundError> {
         remove_overlap_rel_bound_pair(&self.rel_bound_pair(), &rhs.rel_bound_pair())
             .map(|overlap_removal_res| overlap_removal_res.map(Self::Output::from))
     }
@@ -431,7 +490,7 @@ impl OverlapRemovable<EmptiableRelativeInterval> for UnboundedInterval {
     fn remove_overlap(
         &self,
         rhs: &EmptiableRelativeInterval,
-    ) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalErr> {
+    ) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalNoOverlapFoundError> {
         remove_overlap_rel_bound_pair_with_emptiable_rel_bound_pair(
             &self.rel_bound_pair(),
             &rhs.emptiable_rel_bound_pair(),
@@ -446,7 +505,7 @@ impl OverlapRemovable<BoundedRelativeInterval> for UnboundedInterval {
     fn remove_overlap(
         &self,
         rhs: &BoundedRelativeInterval,
-    ) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalErr> {
+    ) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalNoOverlapFoundError> {
         remove_overlap_rel_bound_pair(&self.rel_bound_pair(), &rhs.rel_bound_pair())
             .map(|overlap_removal_res| overlap_removal_res.map(Self::Output::from))
     }
@@ -458,7 +517,7 @@ impl OverlapRemovable<HalfBoundedRelativeInterval> for UnboundedInterval {
     fn remove_overlap(
         &self,
         rhs: &HalfBoundedRelativeInterval,
-    ) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalErr> {
+    ) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalNoOverlapFoundError> {
         remove_overlap_rel_bound_pair(&self.rel_bound_pair(), &rhs.rel_bound_pair())
             .map(|overlap_removal_res| overlap_removal_res.map(Self::Output::from))
     }
@@ -470,7 +529,7 @@ impl OverlapRemovable<UnboundedInterval> for UnboundedInterval {
     fn remove_overlap(
         &self,
         _rhs: &UnboundedInterval,
-    ) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalErr> {
+    ) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalNoOverlapFoundError> {
         Ok(OverlapRemovalResult::Single(EmptyInterval))
     }
 }
@@ -478,7 +537,10 @@ impl OverlapRemovable<UnboundedInterval> for UnboundedInterval {
 impl OverlapRemovable<EmptyInterval> for UnboundedInterval {
     type Output = UnboundedInterval;
 
-    fn remove_overlap(&self, _rhs: &EmptyInterval) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalErr> {
+    fn remove_overlap(
+        &self,
+        _rhs: &EmptyInterval,
+    ) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalNoOverlapFoundError> {
         Ok(OverlapRemovalResult::Single(*self))
     }
 }
@@ -489,7 +551,10 @@ where
 {
     type Output = EmptyInterval;
 
-    fn remove_overlap(&self, _rhs: &Rhs) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalErr> {
+    fn remove_overlap(
+        &self,
+        _rhs: &Rhs,
+    ) -> Result<OverlapRemovalResult<Self::Output>, OverlapRemovalNoOverlapFoundError> {
         Ok(OverlapRemovalResult::Single(*self))
     }
 }
@@ -502,18 +567,18 @@ where
 /// # Errors
 ///
 /// If the given bounds don't overlap, this method returns
-/// [`OverlapRemovalErr::NoOverlap`].
+/// [`OverlapRemovalNoOverlapFoundError`].
 pub fn remove_overlap_abs_bound_pair(
     a: &AbsoluteBoundPair,
     b: &AbsoluteBoundPair,
-) -> Result<OverlapRemovalResult<EmptiableAbsoluteBoundPair>, OverlapRemovalErr> {
+) -> Result<OverlapRemovalResult<EmptiableAbsoluteBoundPair>, OverlapRemovalNoOverlapFoundError> {
     type Dop = DisambiguatedOverlapPosition;
 
     let Ok(disambiguated_overlap_position) = a.disambiguated_overlap_position(b, OverlapRuleSet::default());
 
     match disambiguated_overlap_position {
         Dop::Outside => unreachable!("Only empty intervals can produce `OverlapPosition::Outside`"),
-        Dop::OutsideBefore | Dop::OutsideAfter => Err(OverlapRemovalErr::NoOverlap),
+        Dop::OutsideBefore | Dop::OutsideAfter => Err(OverlapRemovalNoOverlapFoundError),
         Dop::EndsOnStart => {
             let AbsoluteEndBound::Finite(mut finite_bound) = a.abs_end() else {
                 unreachable!(
@@ -676,11 +741,11 @@ pub fn remove_end_overlap_abs(a: &AbsoluteBoundPair, b: &AbsoluteBoundPair) -> A
 /// # Errors
 ///
 /// If the given bounds don't overlap, this method returns
-/// [`OverlapRemovalErr::NoOverlap`].
+/// [`OverlapRemovalNoOverlapFoundError`].
 pub fn remove_overlap_abs_bound_pair_with_emptiable_abs_bound_pair(
     a: &AbsoluteBoundPair,
     b: &EmptiableAbsoluteBoundPair,
-) -> Result<OverlapRemovalResult<EmptiableAbsoluteBoundPair>, OverlapRemovalErr> {
+) -> Result<OverlapRemovalResult<EmptiableAbsoluteBoundPair>, OverlapRemovalNoOverlapFoundError> {
     let EmptiableAbsoluteBoundPair::Bound(b_abs_bound_pair) = b else {
         return Ok(OverlapRemovalResult::Single(EmptiableAbsoluteBoundPair::from(
             a.clone(),
@@ -698,11 +763,11 @@ pub fn remove_overlap_abs_bound_pair_with_emptiable_abs_bound_pair(
 /// # Errors
 ///
 /// If the given bounds don't overlap, this method returns
-/// [`OverlapRemovalErr::NoOverlap`].
+/// [`OverlapRemovalNoOverlapFoundError`].
 pub fn remove_overlap_emptiable_abs_bound_pair(
     a: &EmptiableAbsoluteBoundPair,
     b: &EmptiableAbsoluteBoundPair,
-) -> Result<OverlapRemovalResult<EmptiableAbsoluteBoundPair>, OverlapRemovalErr> {
+) -> Result<OverlapRemovalResult<EmptiableAbsoluteBoundPair>, OverlapRemovalNoOverlapFoundError> {
     let EmptiableAbsoluteBoundPair::Bound(a_abs_bound_pair) = a else {
         return Ok(OverlapRemovalResult::Single(a.clone()));
     };
@@ -718,18 +783,18 @@ pub fn remove_overlap_emptiable_abs_bound_pair(
 /// # Errors
 ///
 /// If the given bounds don't overlap, this method returns
-/// [`OverlapRemovalErr::NoOverlap`].
+/// [`OverlapRemovalNoOverlapFoundError`].
 pub fn remove_overlap_rel_bound_pair(
     a: &RelativeBoundPair,
     b: &RelativeBoundPair,
-) -> Result<OverlapRemovalResult<EmptiableRelativeBoundPair>, OverlapRemovalErr> {
+) -> Result<OverlapRemovalResult<EmptiableRelativeBoundPair>, OverlapRemovalNoOverlapFoundError> {
     type Dop = DisambiguatedOverlapPosition;
 
     let Ok(disambiguated_overlap_position) = a.disambiguated_overlap_position(b, OverlapRuleSet::default());
 
     match disambiguated_overlap_position {
         Dop::Outside => unreachable!("Only empty intervals can produce `OverlapPosition::Outside`"),
-        Dop::OutsideBefore | Dop::OutsideAfter => Err(OverlapRemovalErr::NoOverlap),
+        Dop::OutsideBefore | Dop::OutsideAfter => Err(OverlapRemovalNoOverlapFoundError),
         Dop::EndsOnStart => {
             let RelativeEndBound::Finite(mut finite_bound) = a.rel_end() else {
                 unreachable!(
@@ -892,11 +957,11 @@ pub fn remove_end_overlap_rel(a: &RelativeBoundPair, b: &RelativeBoundPair) -> R
 /// # Errors
 ///
 /// If the given bounds don't overlap, this method returns
-/// [`OverlapRemovalErr::NoOverlap`].
+/// [`OverlapRemovalNoOverlapFoundError`].
 pub fn remove_overlap_rel_bound_pair_with_emptiable_rel_bound_pair(
     a: &RelativeBoundPair,
     b: &EmptiableRelativeBoundPair,
-) -> Result<OverlapRemovalResult<EmptiableRelativeBoundPair>, OverlapRemovalErr> {
+) -> Result<OverlapRemovalResult<EmptiableRelativeBoundPair>, OverlapRemovalNoOverlapFoundError> {
     let EmptiableRelativeBoundPair::Bound(b_rel_bound_pair) = b else {
         return Ok(OverlapRemovalResult::Single(EmptiableRelativeBoundPair::from(
             a.clone(),
@@ -914,11 +979,11 @@ pub fn remove_overlap_rel_bound_pair_with_emptiable_rel_bound_pair(
 /// # Errors
 ///
 /// If the given bounds don't overlap, this method returns
-/// [`OverlapRemovalErr::NoOverlap`].
+/// [`OverlapRemovalNoOverlapFoundError`].
 pub fn remove_overlap_emptiable_rel_bound_pair(
     a: &EmptiableRelativeBoundPair,
     b: &EmptiableRelativeBoundPair,
-) -> Result<OverlapRemovalResult<EmptiableRelativeBoundPair>, OverlapRemovalErr> {
+) -> Result<OverlapRemovalResult<EmptiableRelativeBoundPair>, OverlapRemovalNoOverlapFoundError> {
     let EmptiableRelativeBoundPair::Bound(a_rel_bound_pair) = a else {
         return Ok(OverlapRemovalResult::Single(a.clone()));
     };

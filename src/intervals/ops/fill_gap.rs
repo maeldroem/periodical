@@ -63,6 +63,9 @@
 //! # Ok::<(), Box<dyn Error>>(())
 //! ```
 
+use std::error::Error;
+use std::fmt::Display;
+
 use super::grow::{GrowableEndBound, GrowableStartBound};
 use super::overlap::{CanPositionOverlap, DisambiguatedOverlapPosition, OverlapRuleSet};
 use crate::intervals::absolute::{
@@ -94,12 +97,17 @@ use crate::intervals::relative::{
 };
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 
-/// Errors that can be produced when using [`GapFillable`]
+/// The two given intervals were overlapping when using [`GapFillable`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum GapFillError {
-    /// The two given intervals were overlapping
-    Overlap,
+pub struct GapFillOverlapFoundError;
+
+impl Display for GapFillOverlapFoundError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "The two given intervals were overlapping")
+    }
 }
+
+impl Error for GapFillOverlapFoundError {}
 
 /// Capacity to fill gaps between non-overlapping intervals
 ///
@@ -115,8 +123,7 @@ pub trait GapFillable<Rhs = Self> {
     ///
     /// # Errors
     ///
-    /// If the two intervals are overlapping, it result in
-    /// [`GapFillError::Overlap`].
+    /// If the two intervals are overlapping, it result in [`GapFillOverlapFoundError`].
     ///
     /// # Examples
     ///
@@ -176,7 +183,7 @@ pub trait GapFillable<Rhs = Self> {
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
-    fn fill_gap(&self, rhs: &Rhs) -> Result<Self::Output, GapFillError>;
+    fn fill_gap(&self, rhs: &Rhs) -> Result<Self::Output, GapFillOverlapFoundError>;
 }
 
 impl<Rhs> GapFillable<Rhs> for AbsoluteBoundPair
@@ -185,7 +192,7 @@ where
 {
     type Output = Self;
 
-    fn fill_gap(&self, rhs: &Rhs) -> Result<Self::Output, GapFillError> {
+    fn fill_gap(&self, rhs: &Rhs) -> Result<Self::Output, GapFillOverlapFoundError> {
         fill_gap_abs_bound_pair_with_emptiable_abs_bound_pair(self, &rhs.emptiable_abs_bound_pair())
     }
 }
@@ -196,7 +203,7 @@ where
 {
     type Output = Self;
 
-    fn fill_gap(&self, rhs: &Rhs) -> Result<Self::Output, GapFillError> {
+    fn fill_gap(&self, rhs: &Rhs) -> Result<Self::Output, GapFillOverlapFoundError> {
         fill_gap_emptiable_abs_bound_pair(self, &rhs.emptiable_abs_bound_pair())
     }
 }
@@ -207,7 +214,7 @@ where
 {
     type Output = Self;
 
-    fn fill_gap(&self, rhs: &Rhs) -> Result<Self::Output, GapFillError> {
+    fn fill_gap(&self, rhs: &Rhs) -> Result<Self::Output, GapFillOverlapFoundError> {
         fill_gap_abs_bound_pair_with_emptiable_abs_bound_pair(&self.abs_bound_pair(), &rhs.emptiable_abs_bound_pair())
             .map(Self::Output::from)
     }
@@ -219,7 +226,7 @@ where
 {
     type Output = Self;
 
-    fn fill_gap(&self, rhs: &Rhs) -> Result<Self::Output, GapFillError> {
+    fn fill_gap(&self, rhs: &Rhs) -> Result<Self::Output, GapFillOverlapFoundError> {
         fill_gap_emptiable_abs_bound_pair(&self.emptiable_abs_bound_pair(), &rhs.emptiable_abs_bound_pair())
             .map(Self::Output::from)
     }
@@ -231,7 +238,7 @@ where
 {
     type Output = AbsoluteInterval;
 
-    fn fill_gap(&self, rhs: &Rhs) -> Result<Self::Output, GapFillError> {
+    fn fill_gap(&self, rhs: &Rhs) -> Result<Self::Output, GapFillOverlapFoundError> {
         fill_gap_abs_bound_pair_with_emptiable_abs_bound_pair(&self.abs_bound_pair(), &rhs.emptiable_abs_bound_pair())
             .map(Self::Output::from)
     }
@@ -243,7 +250,7 @@ where
 {
     type Output = AbsoluteInterval;
 
-    fn fill_gap(&self, rhs: &Rhs) -> Result<Self::Output, GapFillError> {
+    fn fill_gap(&self, rhs: &Rhs) -> Result<Self::Output, GapFillOverlapFoundError> {
         fill_gap_abs_bound_pair_with_emptiable_abs_bound_pair(&self.abs_bound_pair(), &rhs.emptiable_abs_bound_pair())
             .map(Self::Output::from)
     }
@@ -255,7 +262,7 @@ where
 {
     type Output = Self;
 
-    fn fill_gap(&self, rhs: &Rhs) -> Result<Self::Output, GapFillError> {
+    fn fill_gap(&self, rhs: &Rhs) -> Result<Self::Output, GapFillOverlapFoundError> {
         fill_gap_rel_bound_pair_with_emptiable_rel_bound_pair(self, &rhs.emptiable_rel_bound_pair())
     }
 }
@@ -266,7 +273,7 @@ where
 {
     type Output = Self;
 
-    fn fill_gap(&self, rhs: &Rhs) -> Result<Self::Output, GapFillError> {
+    fn fill_gap(&self, rhs: &Rhs) -> Result<Self::Output, GapFillOverlapFoundError> {
         fill_gap_emptiable_rel_bound_pair(self, &rhs.emptiable_rel_bound_pair())
     }
 }
@@ -277,7 +284,7 @@ where
 {
     type Output = Self;
 
-    fn fill_gap(&self, rhs: &Rhs) -> Result<Self::Output, GapFillError> {
+    fn fill_gap(&self, rhs: &Rhs) -> Result<Self::Output, GapFillOverlapFoundError> {
         fill_gap_rel_bound_pair_with_emptiable_rel_bound_pair(&self.rel_bound_pair(), &rhs.emptiable_rel_bound_pair())
             .map(Self::Output::from)
     }
@@ -289,7 +296,7 @@ where
 {
     type Output = Self;
 
-    fn fill_gap(&self, rhs: &Rhs) -> Result<Self::Output, GapFillError> {
+    fn fill_gap(&self, rhs: &Rhs) -> Result<Self::Output, GapFillOverlapFoundError> {
         fill_gap_emptiable_rel_bound_pair(&self.emptiable_rel_bound_pair(), &rhs.emptiable_rel_bound_pair())
             .map(Self::Output::from)
     }
@@ -301,7 +308,7 @@ where
 {
     type Output = RelativeInterval;
 
-    fn fill_gap(&self, rhs: &Rhs) -> Result<Self::Output, GapFillError> {
+    fn fill_gap(&self, rhs: &Rhs) -> Result<Self::Output, GapFillOverlapFoundError> {
         fill_gap_rel_bound_pair_with_emptiable_rel_bound_pair(&self.rel_bound_pair(), &rhs.emptiable_rel_bound_pair())
             .map(Self::Output::from)
     }
@@ -313,7 +320,7 @@ where
 {
     type Output = RelativeInterval;
 
-    fn fill_gap(&self, rhs: &Rhs) -> Result<Self::Output, GapFillError> {
+    fn fill_gap(&self, rhs: &Rhs) -> Result<Self::Output, GapFillOverlapFoundError> {
         fill_gap_rel_bound_pair_with_emptiable_rel_bound_pair(&self.rel_bound_pair(), &rhs.emptiable_rel_bound_pair())
             .map(Self::Output::from)
     }
@@ -325,8 +332,8 @@ where
 {
     type Output = UnboundedInterval;
 
-    fn fill_gap(&self, _rhs: &Rhs) -> Result<Self::Output, GapFillError> {
-        Err(GapFillError::Overlap)
+    fn fill_gap(&self, _rhs: &Rhs) -> Result<Self::Output, GapFillOverlapFoundError> {
+        Err(GapFillOverlapFoundError)
     }
 }
 
@@ -336,7 +343,7 @@ where
 {
     type Output = Rhs;
 
-    fn fill_gap(&self, rhs: &Rhs) -> Result<Self::Output, GapFillError> {
+    fn fill_gap(&self, rhs: &Rhs) -> Result<Self::Output, GapFillOverlapFoundError> {
         Ok(rhs.clone())
     }
 }
@@ -348,11 +355,11 @@ where
 ///
 /// # Errors
 ///
-/// If the given bounds overlap, it results in [`GapFillError::Overlap`]
+/// If the given bounds overlap, it results in [`GapFillOverlapFoundError`]
 pub fn fill_gap_abs_bound_pair(
     a: &AbsoluteBoundPair,
     b: &AbsoluteBoundPair,
-) -> Result<AbsoluteBoundPair, GapFillError> {
+) -> Result<AbsoluteBoundPair, GapFillOverlapFoundError> {
     type Dop = DisambiguatedOverlapPosition;
 
     let Ok(overlap_position) = a.disambiguated_overlap_position(b, OverlapRuleSet::Strict);
@@ -389,7 +396,7 @@ pub fn fill_gap_abs_bound_pair(
 
             Ok(a.grow_start(new_start_bound))
         },
-        _ => Err(GapFillError::Overlap),
+        _ => Err(GapFillOverlapFoundError),
     }
 }
 
@@ -400,11 +407,11 @@ pub fn fill_gap_abs_bound_pair(
 ///
 /// # Errors
 ///
-/// If the given bounds overlap, it results in [`GapFillError::Overlap`]
+/// If the given bounds overlap, it results in [`GapFillOverlapFoundError`]
 pub fn fill_gap_abs_bound_pair_with_emptiable_abs_bound_pair(
     a: &AbsoluteBoundPair,
     b: &EmptiableAbsoluteBoundPair,
-) -> Result<AbsoluteBoundPair, GapFillError> {
+) -> Result<AbsoluteBoundPair, GapFillOverlapFoundError> {
     let EmptiableAbsoluteBoundPair::Bound(b_abs_bound_pair) = b else {
         return Ok(a.clone());
     };
@@ -419,11 +426,11 @@ pub fn fill_gap_abs_bound_pair_with_emptiable_abs_bound_pair(
 ///
 /// # Errors
 ///
-/// If the given bounds overlap, it results in [`GapFillError::Overlap`]
+/// If the given bounds overlap, it results in [`GapFillOverlapFoundError`]
 pub fn fill_gap_emptiable_abs_bound_pair(
     a: &EmptiableAbsoluteBoundPair,
     b: &EmptiableAbsoluteBoundPair,
-) -> Result<EmptiableAbsoluteBoundPair, GapFillError> {
+) -> Result<EmptiableAbsoluteBoundPair, GapFillOverlapFoundError> {
     let EmptiableAbsoluteBoundPair::Bound(a_abs_bound_pair) = a else {
         return Ok(b.clone());
     };
@@ -438,11 +445,11 @@ pub fn fill_gap_emptiable_abs_bound_pair(
 ///
 /// # Errors
 ///
-/// If the given bounds overlap, it results in [`GapFillError::Overlap`]
+/// If the given bounds overlap, it results in [`GapFillOverlapFoundError`]
 pub fn fill_gap_rel_bound_pair(
     a: &RelativeBoundPair,
     b: &RelativeBoundPair,
-) -> Result<RelativeBoundPair, GapFillError> {
+) -> Result<RelativeBoundPair, GapFillOverlapFoundError> {
     type Dop = DisambiguatedOverlapPosition;
 
     let Ok(overlap_position) = a.disambiguated_overlap_position(b, OverlapRuleSet::Strict);
@@ -479,7 +486,7 @@ pub fn fill_gap_rel_bound_pair(
 
             Ok(a.grow_start(new_start_bound))
         },
-        _ => Err(GapFillError::Overlap),
+        _ => Err(GapFillOverlapFoundError),
     }
 }
 
@@ -490,11 +497,11 @@ pub fn fill_gap_rel_bound_pair(
 ///
 /// # Errors
 ///
-/// If the given bounds overlap, it results in [`GapFillError::Overlap`]
+/// If the given bounds overlap, it results in [`GapFillOverlapFoundError`]
 pub fn fill_gap_rel_bound_pair_with_emptiable_rel_bound_pair(
     a: &RelativeBoundPair,
     b: &EmptiableRelativeBoundPair,
-) -> Result<RelativeBoundPair, GapFillError> {
+) -> Result<RelativeBoundPair, GapFillOverlapFoundError> {
     let EmptiableRelativeBoundPair::Bound(b_rel_bound_pair) = b else {
         return Ok(a.clone());
     };
@@ -509,11 +516,11 @@ pub fn fill_gap_rel_bound_pair_with_emptiable_rel_bound_pair(
 ///
 /// # Errors
 ///
-/// If the given bounds overlap, it results in [`GapFillError::Overlap`]
+/// If the given bounds overlap, it results in [`GapFillOverlapFoundError`]
 pub fn fill_gap_emptiable_rel_bound_pair(
     a: &EmptiableRelativeBoundPair,
     b: &EmptiableRelativeBoundPair,
-) -> Result<EmptiableRelativeBoundPair, GapFillError> {
+) -> Result<EmptiableRelativeBoundPair, GapFillOverlapFoundError> {
     let EmptiableRelativeBoundPair::Bound(a_rel_bound_pair) = a else {
         return Ok(b.clone());
     };
