@@ -50,14 +50,23 @@ FIXME: Remove single-variant errors
 
 - Added methods to convert `UnboundedInterval` into either `AbsoluteBoundPair`, `EmptiableAbsoluteBoundPair`,
   `AbsoluteInterval`, `EmptiableAbsoluteInterval`
-- Implemented `TryFrom<AbsoluteBoundPair>`on ` UnboundedInterval`
-- Implemented `TryFrom<EmptiableAbsoluteBoundPair>`on ` UnboundedInterval`
-- Implemented `TryFrom<AbsoluteInterval>`on ` UnboundedInterval`
-- Implemented `TryFrom<EmptiableAbsoluteInterval>`on ` UnboundedInterval`
-- Implemented `TryFrom<RelativeBoundPair>`on ` UnboundedInterval`
-- Implemented `TryFrom<EmptiableRelativeBoundPair>`on ` UnboundedInterval`
-- Implemented `TryFrom<RelativeInterval>`on ` UnboundedInterval`
-- Implemented `TryFrom<EmptiableRelativeInterval>`on ` UnboundedInterval`
+- Added methods to convert `UnboundedInterval` into either `RelativeBoundPair`, `EmptiableRelativeBoundPair`,
+  `RelativeInterval`, `EmptiableRelativeInterval`
+- Implemented `TryFrom<AbsoluteBoundPair>` on `UnboundedInterval`
+- Implemented `TryFrom<EmptiableAbsoluteBoundPair>` on `UnboundedInterval`
+- Implemented `TryFrom<AbsoluteInterval>` on `UnboundedInterval`
+- Implemented `TryFrom<EmptiableAbsoluteInterval>` on `UnboundedInterval`
+- Implemented `TryFrom<RelativeBoundPair>` on `UnboundedInterval`
+- Implemented `TryFrom<EmptiableRelativeBoundPair>` on `UnboundedInterval`
+- Implemented `TryFrom<RelativeInterval>` on `UnboundedInterval`
+- Implemented `TryFrom<EmptiableRelativeInterval>` on `UnboundedInterval`
+
+- Added methods to convert `EmptyInterval` into either `EmptiableAbsoluteBoundPair` or `EmptiableAbsoluteInterval`
+- Added methods to convert `EmptyInterval` into either `EmptiableRelativeBoundPair` or `EmptiableRelativeInterval`
+- Implemented `TryFrom<EmptiableAbsoluteBoundPair>` on `EmptyInterval`
+- Implemented `TryFrom<EmptiableAbsoluteInterval>` on `EmptyInterval`
+- Implemented `TryFrom<EmptiableRelativeBoundPair>` on `EmptyInterval`
+- Implemented `TryFrom<EmptiableRelativeInterval>` on `EmptyInterval`
 
 - Implemented `to_range_bound_with` on `BoundInclusivity`
 
