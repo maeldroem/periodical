@@ -1,7 +1,6 @@
 //! Union of a [layered bounds iterator](crate::iter::intervals::layered_bounds)
 //!
-//! Operates a [union] on a [layered bounds
-//! iterator](crate::iter::intervals::layered_bounds).
+//! Operates a [union] on a [layered bounds iterator](crate::iter::intervals::layered_bounds).
 //!
 //! [union]: https://en.wikipedia.org/w/index.php?title=Union_(set_theory)&oldid=1310613637
 //!
@@ -205,9 +204,7 @@ where
 {
     /// Operates a [union]
     ///
-    /// See [module
-    /// documentation](crate::iter::intervals::layered_bounds_set_ops::unite)
-    /// for more information.
+    /// See [module documentation](self) for more information.
     ///
     /// [union]: https://en.wikipedia.org/w/index.php?title=Union_(set_theory)&oldid=1310613637
     fn abs_unite_layered(self) -> LayeredAbsoluteBoundsUnion<Self::IntoIter> {
@@ -331,9 +328,7 @@ where
 {
     /// Operates a [union]
     ///
-    /// See [module
-    /// documentation](crate::iter::intervals::layered_bounds_set_ops::unite)
-    /// for more information.
+    /// See [module documentation](self) for more information.
     ///
     /// [union]: https://en.wikipedia.org/w/index.php?title=Union_(set_theory)&oldid=1310613637
     fn rel_unite_layered(self) -> LayeredRelativeBoundsUnion<Self::IntoIter> {

@@ -3,8 +3,7 @@
 //! Iterator used for tracking layer changes between two sets of bounds,
 //! interpreted as two separate _layers_.
 //!
-//! This iterator is very useful for [set
-//! operations](crate::iter::intervals::layered_bounds_set_ops) but also
+//! This iterator is very useful for [set operations](crate::iter::intervals::layered_bounds_set_ops) but also
 //! for making the process of dealing with bounds flexible, as layered bounds
 //! iterator return changes in the [`LayeredBoundsState`] using either
 //! [`LayeredBoundsStateChangeAtAbsoluteBound`] for absolute bounds,

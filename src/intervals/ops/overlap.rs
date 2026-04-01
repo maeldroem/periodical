@@ -1063,8 +1063,7 @@ pub trait CanPositionOverlap<Rhs = Self> {
     /// Returns whether the given interval overlaps the current one using
     /// predetermined rules
     ///
-    /// Uses the [default rule set](OverlapRuleSet::default) with the [default
-    /// rules](DEFAULT_OVERLAP_RULES).
+    /// Uses the [default rule set](OverlapRuleSet::default) with the [default rules](DEFAULT_OVERLAP_RULES).
     ///
     /// Those have been chosen because they are the closest to how we
     /// mathematically and humanly interpret overlaps.

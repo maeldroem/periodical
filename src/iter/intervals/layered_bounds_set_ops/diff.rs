@@ -1,9 +1,7 @@
-//! Difference of a [layered bounds
-//! iterator](crate::iter::intervals::layered_bounds)
+//! Difference of a [layered bounds iterator](crate::iter::intervals::layered_bounds)
 //!
-//! Operates a [set difference] on a [layered bounds
-//! iterator](crate::iter::intervals::layered_bounds). The first layer acts like
-//! the first operand in a classical set difference, while the second layer acts
+//! Operates a [set difference] on a [layered bounds iterator](crate::iter::intervals::layered_bounds).
+//! The first layer acts like the first operand in a classical set difference, while the second layer acts
 //! like the second operand. In other words, the first layer are the _removed_
 //! while the second layer are the _removers_.
 //!
@@ -207,9 +205,7 @@ where
 {
     /// Operates a [set difference]
     ///
-    /// See [module
-    /// documentation](crate::iter::intervals::layered_bounds_set_ops::diff) for
-    /// more information.
+    /// See [module documentation](self) for more information.
     ///
     /// [set difference]: https://en.wikipedia.org/w/index.php?title=Complement_(set_theory)&oldid=1272128427#Relative_complement
     fn abs_difference_layered(self) -> LayeredAbsoluteBoundsDifference<Self::IntoIter> {
@@ -327,9 +323,7 @@ where
 {
     /// Operates a [set difference]
     ///
-    /// See [module
-    /// documentation](crate::iter::intervals::layered_bounds_set_ops::diff) for
-    /// more information.
+    /// See [module documentation](self) for more information.
     ///
     /// [set difference]: https://en.wikipedia.org/w/index.php?title=Complement_(set_theory)&oldid=1272128427#Relative_complement
     fn rel_difference_layered(self) -> LayeredRelativeBoundsDifference<Self::IntoIter> {

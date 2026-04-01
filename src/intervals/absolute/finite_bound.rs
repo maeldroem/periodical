@@ -64,8 +64,7 @@ pub struct AbsoluteFiniteBound {
 impl AbsoluteFiniteBound {
     /// Creates a new [`AbsoluteFiniteBound`] using the given time
     ///
-    /// This creates a finite bound using the [default
-    /// `BoundInclusivity`](BoundInclusivity::default).
+    /// This creates a finite bound using the [default `BoundInclusivity`](BoundInclusivity::default).
     #[must_use]
     pub fn new(time: Timestamp) -> Self {
         Self::new_with_inclusivity(time, BoundInclusivity::default())

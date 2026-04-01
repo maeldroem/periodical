@@ -1,8 +1,6 @@
-//! Symmetric difference of a [layered bounds
-//! iterator](crate::iter::intervals::layered_bounds)
+//! Symmetric difference of a [layered bounds iterator](crate::iter::intervals::layered_bounds)
 //!
-//! Operates a [symmetric difference] on a [layered bounds
-//! iterator](crate::iter::intervals::layered_bounds).
+//! Operates a [symmetric difference] on a [layered bounds iterator](crate::iter::intervals::layered_bounds).
 //!
 //! [symmetric difference]: https://en.wikipedia.org/w/index.php?title=Symmetric_difference&oldid=1311741596
 //!
@@ -281,9 +279,7 @@ where
 {
     /// Operates a [symmetric difference]
     ///
-    /// See [module
-    /// documentation](crate::iter::intervals::layered_bounds_set_ops::sym_diff)
-    /// for more information.
+    /// See [module documentation](self) for more information.
     ///
     /// [intersection]: https://en.wikipedia.org/w/index.php?title=Symmetric_difference&oldid=1311741596
     fn abs_symmetric_difference_layered(self) -> LayeredAbsoluteBoundsSymmetricDifference<Self::IntoIter> {
@@ -412,9 +408,7 @@ where
 {
     /// Operates a [symmetric difference]
     ///
-    /// See [module
-    /// documentation](crate::iter::intervals::layered_bounds_set_ops::sym_diff)
-    /// for more information.
+    /// See [module documentation](self) for more information.
     ///
     /// [intersection]: https://en.wikipedia.org/w/index.php?title=Symmetric_difference&oldid=1311741596
     fn rel_symmetric_difference_layered(self) -> LayeredRelativeBoundsSymmetricDifference<Self::IntoIter> {

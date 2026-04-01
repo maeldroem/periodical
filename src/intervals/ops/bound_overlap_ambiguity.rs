@@ -266,8 +266,7 @@ impl BoundOverlapDisambiguationRuleSet {
     }
 }
 
-/// Disambiguates a [`BoundOverlapAmbiguity`] using [the strict rule
-/// set](BoundOverlapDisambiguationRuleSet::Strict)
+/// Disambiguates a [`BoundOverlapAmbiguity`] using [the strict rule set](BoundOverlapDisambiguationRuleSet::Strict)
 #[must_use]
 pub fn strict_bound_overlap_disambiguation(ambiguity: BoundOverlapAmbiguity) -> DisambiguatedBoundOverlap {
     type Boa = BoundOverlapAmbiguity;
@@ -291,8 +290,7 @@ pub fn strict_bound_overlap_disambiguation(ambiguity: BoundOverlapAmbiguity) -> 
     }
 }
 
-/// Disambiguates a [`BoundOverlapAmbiguity`] using [the lenient rule
-/// set](BoundOverlapDisambiguationRuleSet::Lenient)
+/// Disambiguates a [`BoundOverlapAmbiguity`] using [the lenient rule set](BoundOverlapDisambiguationRuleSet::Lenient)
 #[must_use]
 pub fn lenient_bound_overlap_disambiguation(ambiguity: BoundOverlapAmbiguity) -> DisambiguatedBoundOverlap {
     type Boa = BoundOverlapAmbiguity;
@@ -311,16 +309,14 @@ pub fn lenient_bound_overlap_disambiguation(ambiguity: BoundOverlapAmbiguity) ->
 }
 
 /// Disambiguates a [`BoundOverlapAmbiguity`]
-/// using [the very lenient rule
-/// set](BoundOverlapDisambiguationRuleSet::VeryLenient)
+/// using [the very lenient rule set](BoundOverlapDisambiguationRuleSet::VeryLenient)
 #[must_use]
 pub fn very_lenient_bound_overlap_disambiguation(_ambiguity: BoundOverlapAmbiguity) -> DisambiguatedBoundOverlap {
     DisambiguatedBoundOverlap::Equal
 }
 
 /// Disambiguates a [`BoundOverlapAmbiguity`]
-/// using [the continuous to future rule
-/// set](BoundOverlapDisambiguationRuleSet::ContinuousToFuture)
+/// using [the continuous to future rule set](BoundOverlapDisambiguationRuleSet::ContinuousToFuture)
 #[must_use]
 pub fn continuous_to_future_bound_overlap_disambiguation(
     ambiguity: BoundOverlapAmbiguity,
@@ -345,8 +341,7 @@ pub fn continuous_to_future_bound_overlap_disambiguation(
 }
 
 /// Disambiguates a [`BoundOverlapAmbiguity`]
-/// using [the continuous to past rule
-/// set](BoundOverlapDisambiguationRuleSet::ContinuousToPast)
+/// using [the continuous to past rule set](BoundOverlapDisambiguationRuleSet::ContinuousToPast)
 #[must_use]
 pub fn continuous_to_past_bound_overlap_disambiguation(ambiguity: BoundOverlapAmbiguity) -> DisambiguatedBoundOverlap {
     type Boa = BoundOverlapAmbiguity;

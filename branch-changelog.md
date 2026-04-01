@@ -15,13 +15,8 @@ Explain the motivation for this PR and what it does/solves
 
 ## Changed
 
-- Changed `precise_time_with_base_time` to have explicit type requirement instead of allowing `Into<T>`
-- Changed `Cuttable` impls to have an explicit type instead of allowing `Into<T>`
-- Changed `CanPositionPointContainment` impls to have an explicit type instead of allowing `Into<T>`
-- Changed `PreciseAbsoluteInterval::precise_interval_with_different_precisions_with_base_time`
-  to have explicit type requirement instead of allowing `Into<T>`
-- Changed `ToAbsolute::to_absolute` to have an explicit type instead of allowing `Into<T>`
-- Changed `ToRelative::to_relative` to have an explicit type instead of allowing `Into<T>`
+- All Wikipedia links in documentation are set to be the permanent link given by Wikipedia,
+  in order to avoid broken links in the future
 
 ## Deprecated
 
@@ -33,7 +28,7 @@ Explain the motivation for this PR and what it does/solves
 
 ## Fixed
 
-- Things you've fixed
+- Fixed broken Markdown links
 
 ## Security
 

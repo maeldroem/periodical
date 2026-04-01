@@ -1,8 +1,7 @@
 //! Emptiable absolute bound pair
 //!
 //! Similar to [absolute bound pair](crate::intervals::absolute::bound_pair),
-//! but has the extra ability of being able to represent an [empty
-//! interval](crate::intervals::special::EmptyInterval).
+//! but has the extra ability of being able to represent an [empty interval](crate::intervals::special::EmptyInterval).
 
 use std::cmp::Ordering;
 use std::ops::RangeBounds;

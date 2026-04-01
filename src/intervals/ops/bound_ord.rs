@@ -1,16 +1,13 @@
-//! [Partial ordering](PartialOrd) for bounds with support for [bound overlap
-//! ambiguity](BoundOverlapAmbiguity)
+//! [Partial ordering](PartialOrd) for bounds with support for [bound overlap ambiguity](BoundOverlapAmbiguity)
 //!
 //! Allows for partial ordering of bounds with support for
 //! [`BoundOverlapAmbiguity`], which in turn allows for more precise treatment
 //! of those ambiguities.
 //!
 //! When using [`PartialOrd`] on bounds instead of [`PartialBoundOrd`], only the
-//! result of bound overlap disambiguation using [the strict rule
-//! set](BoundOverlapDisambiguationRuleSet::Strict) is returned, whereas
-//! [`PartialBoundOrd`] exposes the ambiguity and therefore makes it possible to
-//! use other [`BoundOverlapDisambiguationRuleSet`]s or simply treat them in a
-//! custom way.
+//! result of bound overlap disambiguation using [the strict rule set](BoundOverlapDisambiguationRuleSet::Strict)
+//! is returned, whereas [`PartialBoundOrd`] exposes the ambiguity and therefore makes it possible to
+//! use other [`BoundOverlapDisambiguationRuleSet`]s or simply treat them in a custom way.
 //!
 //! Using [`PartialBoundOrd`] will result in a [`BoundOrdering`], that you can
 //! then disambiguate into a classical [`Ordering`] using either

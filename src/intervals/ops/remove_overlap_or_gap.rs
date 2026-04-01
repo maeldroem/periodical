@@ -4,8 +4,7 @@
 //! exist between the two intervals.
 //!
 //! This module combines [filling the gap](crate::intervals::ops::fill_gap) if
-//! no overlap is present, and [removing the
-//! overlap](crate::intervals::ops::remove_overlap) in the contrary.
+//! no overlap is present, and [removing the overlap](crate::intervals::ops::remove_overlap) in the contrary.
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};

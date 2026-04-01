@@ -1,8 +1,6 @@
-//! Intersection of a [layered bounds
-//! iterator](crate::iter::intervals::layered_bounds)
+//! Intersection of a [layered bounds iterator](crate::iter::intervals::layered_bounds)
 //!
-//! Operates an [intersection] on a [layered bounds
-//! iterator](crate::iter::intervals::layered_bounds).
+//! Operates an [intersection] on a [layered bounds iterator](crate::iter::intervals::layered_bounds).
 //!
 //! [intersection]: https://en.wikipedia.org/w/index.php?title=Intersection_(set_theory)&oldid=1191979994
 //!
@@ -196,8 +194,7 @@ where
 {
     /// Operates an [intersection]
     ///
-    /// See [module
-    /// documentation](crate::iter::intervals::layered_bounds_set_ops::intersect)
+    /// See [module documentation](self)
     /// for more information.
     ///
     /// [intersection]: https://en.wikipedia.org/w/index.php?title=Intersection_(set_theory)&oldid=1191979994
@@ -312,8 +309,7 @@ where
 {
     /// Operates an [intersection]
     ///
-    /// See [module
-    /// documentation](crate::iter::intervals::layered_bounds_set_ops::intersect)
+    /// See [module documentation](self)
     /// for more information.
     ///
     /// [intersection]: https://en.wikipedia.org/w/index.php?title=Intersection_(set_theory)&oldid=1191979994
