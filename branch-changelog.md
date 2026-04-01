@@ -17,6 +17,7 @@ FIXME: Remove single-variant errors
 - Added methods to retrieve individual variants of `AbsoluteInterval` (`bounded`, `half_bounded`, `unbounded`)
 - Implemented `From<BoundedAbsoluteInterval>` on `AbsoluteBoundPair`
 - Implemented `From<HalfBoundedAbsoluteInterval>` on `AbsoluteBoundPair`
+- Implemented `From<AbsoluteInterval>` on `AbsoluteBoundPair`
 - Implemented `From<UnboundedInterval>` on `AbsoluteBoundPair`
 - Implemented `TryFrom<AbsoluteBound>` on `AbsoluteStartBound`
 - Implemented `TryFrom<AbsoluteBound>` on `AbsoluteEndBound`
@@ -27,6 +28,7 @@ FIXME: Remove single-variant errors
 - Added methods to retrieve individual variants of `RelativeInterval` (`bounded`, `half_bounded`, `unbounded`)
 - Implemented `From<BoundedRelativeInterval>` on `RelativeBoundPair`
 - Implemented `From<HalfBoundedRelativeInterval>` on `RelativeBoundPair`
+- Implemented `From<RelativeInterval>` on `RelativeBoundPair`
 - Implemented `From<UnboundedInterval>` on `RelativeBoundPair`
 - Implemented `TryFrom<RelativeBound>` on `RelativeStartBound`
 - Implemented `TryFrom<RelativeBound>` on `RelativeEndBound`
