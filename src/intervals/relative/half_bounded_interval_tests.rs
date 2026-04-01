@@ -184,14 +184,14 @@ fn interval_try_from_relative_bounds_wrong() {
             RelativeStartBound::InfinitePast,
             RelativeEndBound::InfiniteFuture,
         )),
-        Err(HalfBoundedRelativeIntervalFromRelativeBoundPairError::NotHalfBoundedInterval),
+        Err(HalfBoundedRelativeIntervalTryFromRelativeBoundPairError),
     );
     assert_eq!(
         HalfBoundedRelativeInterval::try_from(RelativeBoundPair::new(
             RelativeStartBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(1))),
             RelativeEndBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(2))),
         )),
-        Err(HalfBoundedRelativeIntervalFromRelativeBoundPairError::NotHalfBoundedInterval),
+        Err(HalfBoundedRelativeIntervalTryFromRelativeBoundPairError),
     );
 }
 
@@ -217,13 +217,13 @@ fn interval_try_from_relative_interval_correct() {
 fn interval_try_from_relative_interval_wrong() {
     assert_eq!(
         HalfBoundedRelativeInterval::try_from(RelativeInterval::Unbounded(UnboundedInterval)),
-        Err(HalfBoundedRelativeIntervalFromRelativeIntervalError::WrongVariant),
+        Err(HalfBoundedRelativeIntervalTryFromRelativeIntervalError),
     );
     assert_eq!(
         HalfBoundedRelativeInterval::try_from(RelativeInterval::Bounded(BoundedRelativeInterval::new(
             SignedDuration::from_hours(1),
             SignedDuration::from_hours(2),
         ))),
-        Err(HalfBoundedRelativeIntervalFromRelativeIntervalError::WrongVariant),
+        Err(HalfBoundedRelativeIntervalTryFromRelativeIntervalError),
     );
 }

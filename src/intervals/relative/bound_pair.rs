@@ -24,23 +24,28 @@ use serde::{Deserialize, Serialize};
 use crate::intervals::meta::{
     BoundInclusivity,
     Duration as IntervalDuration,
-    Emptiable,
     Epsilon,
     HasBoundInclusivity,
     HasDuration,
     HasOpenness,
     HasRelativity,
     Interval,
+    IsEmpty,
     Openness,
     Relativity,
 };
 use crate::intervals::relative::{
+    BoundedRelativeInterval,
     EmptiableRelativeBoundPair,
+    EmptiableRelativeInterval,
+    HalfBoundedRelativeInterval,
     RelativeEndBound,
+    RelativeInterval,
     RelativeStartBound,
     check_relative_bound_pair_for_interval_creation,
     prepare_relative_bound_pair_for_interval_creation,
 };
+use crate::intervals::special::UnboundedInterval;
 
 /// Possession of non-empty relative bound pair
 pub trait HasRelativeBoundPair {
@@ -437,7 +442,7 @@ impl Ord for RelativeBoundPair {
     }
 }
 
-impl Emptiable for RelativeBoundPair {
+impl IsEmpty for RelativeBoundPair {
     fn is_empty(&self) -> bool {
         false
     }
@@ -478,32 +483,79 @@ impl
     }
 }
 
-/// Errors that can occur when trying to convert [`EmptiableRelativeBoundPair`]
-/// into [`RelativeBoundPair`]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum RelativeBoundPairFromEmptiableRelativeBoundPairError {
-    EmptyVariant,
-}
-
-impl Display for RelativeBoundPairFromEmptiableRelativeBoundPairError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::EmptyVariant => write!(f, "Provided EmptiableRelativeBoundPair was empty"),
-        }
+impl From<BoundedRelativeInterval> for RelativeBoundPair {
+    fn from(value: BoundedRelativeInterval) -> Self {
+        value.rel_bound_pair()
     }
 }
 
-impl Error for RelativeBoundPairFromEmptiableRelativeBoundPairError {}
+impl From<HalfBoundedRelativeInterval> for RelativeBoundPair {
+    fn from(value: HalfBoundedRelativeInterval) -> Self {
+        value.rel_bound_pair()
+    }
+}
+
+impl From<RelativeInterval> for RelativeBoundPair {
+    fn from(value: RelativeInterval) -> Self {
+        value.rel_bound_pair()
+    }
+}
+
+impl From<UnboundedInterval> for RelativeBoundPair {
+    fn from(value: UnboundedInterval) -> Self {
+        value.rel_bound_pair()
+    }
+}
+
+/// Error that can occur when trying to convert [`EmptiableRelativeBoundPair`]
+/// into [`RelativeBoundPair`]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct RelativeBoundPairTryFromEmptiableRelativeBoundPairError;
+
+impl Display for RelativeBoundPairTryFromEmptiableRelativeBoundPairError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "An error occurred when trying to convert `EmptiableRelativeBoundPair` into `RelativeBoundPair`"
+        )
+    }
+}
+
+impl Error for RelativeBoundPairTryFromEmptiableRelativeBoundPairError {}
 
 impl TryFrom<EmptiableRelativeBoundPair> for RelativeBoundPair {
-    type Error = RelativeBoundPairFromEmptiableRelativeBoundPairError;
+    type Error = RelativeBoundPairTryFromEmptiableRelativeBoundPairError;
 
     fn try_from(value: EmptiableRelativeBoundPair) -> Result<Self, Self::Error> {
-        match value {
-            EmptiableRelativeBoundPair::Empty => {
-                Err(RelativeBoundPairFromEmptiableRelativeBoundPairError::EmptyVariant)
-            },
-            EmptiableRelativeBoundPair::Bound(bounds) => Ok(bounds),
-        }
+        value
+            .bound()
+            .ok_or(RelativeBoundPairTryFromEmptiableRelativeBoundPairError)
+    }
+}
+
+/// Error that can occur when trying to convert [`EmptiableRelativeInterval`]
+/// into [`RelativeBoundPair`]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct RelativeBoundPairTryFromEmptiableRelativeIntervalError;
+
+impl Display for RelativeBoundPairTryFromEmptiableRelativeIntervalError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "An error occurred when trying to convert `EmptiableRelativeInterval` into `RelativeBoundPair`"
+        )
+    }
+}
+
+impl Error for RelativeBoundPairTryFromEmptiableRelativeIntervalError {}
+
+impl TryFrom<EmptiableRelativeInterval> for RelativeBoundPair {
+    type Error = RelativeBoundPairTryFromEmptiableRelativeIntervalError;
+
+    fn try_from(value: EmptiableRelativeInterval) -> Result<Self, Self::Error> {
+        Ok(value
+            .bound()
+            .ok_or(RelativeBoundPairTryFromEmptiableRelativeIntervalError)?
+            .rel_bound_pair())
     }
 }

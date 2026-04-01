@@ -16,16 +16,26 @@ use serde::{Deserialize, Serialize};
 use crate::intervals::meta::{
     BoundInclusivity,
     Duration as IntervalDuration,
-    Emptiable,
     Epsilon,
     HasDuration,
     HasOpenness,
     HasRelativity,
     Interval,
+    IsEmpty,
     Openness,
     Relativity,
 };
-use crate::intervals::relative::{HasRelativeBoundPair, RelativeBoundPair, RelativeEndBound, RelativeStartBound};
+use crate::intervals::relative::{
+    BoundedRelativeInterval,
+    EmptiableRelativeInterval,
+    HalfBoundedRelativeInterval,
+    HasRelativeBoundPair,
+    RelativeBoundPair,
+    RelativeEndBound,
+    RelativeInterval,
+    RelativeStartBound,
+};
+use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 
 /// Possession of possibly empty relative bound pair
 pub trait HasEmptiableRelativeBoundPair {
@@ -68,8 +78,7 @@ where
 /// [empty intervals](crate::intervals::special::EmptyInterval)
 ///
 /// For more information, check [`RelativeBoundPair`],
-/// [`EmptyInterval`](crate::intervals::special::EmptyInterval),
-/// or [`crate::intervals` module documentation](crate::intervals).
+/// [`EmptyInterval`], or [`crate::intervals` module documentation](crate::intervals).
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
@@ -197,7 +206,7 @@ impl HasEmptiableRelativeBoundPair for EmptiableRelativeBoundPair {
     }
 }
 
-impl Emptiable for EmptiableRelativeBoundPair {
+impl IsEmpty for EmptiableRelativeBoundPair {
     fn is_empty(&self) -> bool {
         matches!(self, Self::Empty)
     }
@@ -311,5 +320,41 @@ impl
 impl From<RelativeBoundPair> for EmptiableRelativeBoundPair {
     fn from(value: RelativeBoundPair) -> Self {
         EmptiableRelativeBoundPair::Bound(value)
+    }
+}
+
+impl From<BoundedRelativeInterval> for EmptiableRelativeBoundPair {
+    fn from(value: BoundedRelativeInterval) -> Self {
+        value.emptiable_rel_bound_pair()
+    }
+}
+
+impl From<HalfBoundedRelativeInterval> for EmptiableRelativeBoundPair {
+    fn from(value: HalfBoundedRelativeInterval) -> Self {
+        value.emptiable_rel_bound_pair()
+    }
+}
+
+impl From<RelativeInterval> for EmptiableRelativeBoundPair {
+    fn from(value: RelativeInterval) -> Self {
+        value.emptiable_rel_bound_pair()
+    }
+}
+
+impl From<EmptiableRelativeInterval> for EmptiableRelativeBoundPair {
+    fn from(value: EmptiableRelativeInterval) -> Self {
+        value.emptiable_rel_bound_pair()
+    }
+}
+
+impl From<UnboundedInterval> for EmptiableRelativeBoundPair {
+    fn from(value: UnboundedInterval) -> Self {
+        value.emptiable_rel_bound_pair()
+    }
+}
+
+impl From<EmptyInterval> for EmptiableRelativeBoundPair {
+    fn from(value: EmptyInterval) -> Self {
+        value.emptiable_rel_bound_pair()
     }
 }

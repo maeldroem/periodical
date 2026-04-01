@@ -47,9 +47,9 @@ impl PrecisionMode {
     ///
     /// # Errors
     ///
-    /// Returns [`PrecisionIsZero`](PrecisionCreationError::PrecisionIsZero) if
+    /// Returns [`PrecisionCreationPrecisionIsZeroError`] if
     /// the given precision is zero.
-    pub fn with_precision(self, precision: StdDuration) -> Result<Precision, PrecisionCreationError> {
+    pub fn with_precision(self, precision: StdDuration) -> Result<Precision, PrecisionCreationPrecisionIsZeroError> {
         Precision::new(precision, self)
     }
 }
@@ -171,11 +171,11 @@ impl Precision {
     ///
     /// # Errors
     ///
-    /// Returns [`PrecisionIsZero`](PrecisionCreationError::PrecisionIsZero) if
+    /// Returns [`PrecisionCreationPrecisionIsZeroError`] if
     /// the given precision is zero.
-    pub fn new(precision: StdDuration, mode: PrecisionMode) -> Result<Self, PrecisionCreationError> {
+    pub fn new(precision: StdDuration, mode: PrecisionMode) -> Result<Self, PrecisionCreationPrecisionIsZeroError> {
         if precision.is_zero() {
-            return Err(PrecisionCreationError::PrecisionIsZero);
+            return Err(PrecisionCreationPrecisionIsZeroError);
         }
 
         Ok(Self::unchecked_new(precision, mode))
@@ -280,7 +280,7 @@ impl Precision {
     ///
     /// # Errors
     ///
-    /// Returns [`OutOfRangeDate`](PrecisionError::OutOfRangeDate) if the
+    /// Returns [`PrecisionOutOfRangeDateError`] if the
     /// computed new duration has an amount of seconds superior to what
     /// [`u64`] can store.
     ///
@@ -303,14 +303,14 @@ impl Precision {
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
-    pub fn precise_duration(&self, duration: StdDuration) -> Result<StdDuration, PrecisionError> {
+    pub fn precise_duration(&self, duration: StdDuration) -> Result<StdDuration, PrecisionOutOfRangeDateError> {
         let new_timestamp = self.precise_unsigned_nanos(duration.as_nanos());
 
         // Polyfill for StdDuration::from_nanos_u128() to avoid bumping MSRV
         // & StdDuration::try_from_nanos_u128() doesn't yet exist
         let nanos_per_sec = StdDuration::from_secs(1).as_nanos();
-        let secs_component = u64::try_from(new_timestamp / nanos_per_sec).or(Err(PrecisionError::OutOfRangeDate))?;
-        let nanos_component = u32::try_from(new_timestamp % nanos_per_sec).or(Err(PrecisionError::OutOfRangeDate))?;
+        let secs_component = u64::try_from(new_timestamp / nanos_per_sec).or(Err(PrecisionOutOfRangeDateError))?;
+        let nanos_component = u32::try_from(new_timestamp % nanos_per_sec).or(Err(PrecisionOutOfRangeDateError))?;
 
         Ok(StdDuration::new(secs_component, nanos_component))
     }
@@ -322,7 +322,7 @@ impl Precision {
     ///
     /// # Errors
     ///
-    /// Returns [`OutOfRangeDate`](PrecisionError::OutOfRangeDate) if the
+    /// Returns [`PrecisionOutOfRangeDateError`] if the
     /// computed new duration exceeded what [`i128`] can store.
     ///
     /// # Panics
@@ -345,7 +345,10 @@ impl Precision {
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
-    pub fn precise_signed_duration(&self, signed_duration: SignedDuration) -> Result<SignedDuration, PrecisionError> {
+    pub fn precise_signed_duration(
+        &self,
+        signed_duration: SignedDuration,
+    ) -> Result<SignedDuration, PrecisionOutOfRangeDateError> {
         Ok(SignedDuration::from_nanos_i128(
             self.precise_signed_nanos(signed_duration.as_nanos()),
         ))
@@ -382,7 +385,7 @@ impl Precision {
     ///
     /// # Errors
     ///
-    /// Returns [`OutOfRangeDate`](PrecisionError::OutOfRangeDate) if the
+    /// Returns [`PrecisionOutOfRangeDateError`] if the
     /// transfer to UTC would represent a timestamp too small to be stored
     /// correctly or if the resulting time would result in a time that
     /// cannot be stored in [`Zoned`].
@@ -454,21 +457,21 @@ impl Precision {
     /// ```
     ///
     /// [1]: https://en.wikipedia.org/w/index.php?title=Unix_time&useskin=vector
-    pub fn precise_time(&self, time: &Zoned) -> Result<AmbiguousZoned, PrecisionError> {
+    pub fn precise_time(&self, time: &Zoned) -> Result<AmbiguousZoned, PrecisionOutOfRangeDateError> {
         let utc_day_start = time
             .datetime()
             .start_of_day()
             .to_zoned(TimeZone::UTC)
-            .or(Err(PrecisionError::OutOfRangeDate))?;
+            .or(Err(PrecisionOutOfRangeDateError))?;
         let duration_diff = time
             .datetime()
             .to_zoned(TimeZone::UTC)
-            .or(Err(PrecisionError::OutOfRangeDate))?
+            .or(Err(PrecisionOutOfRangeDateError))?
             .timestamp()
             .duration_since(utc_day_start.timestamp());
         let precised_datetime = utc_day_start
             .checked_add(self.precise_signed_duration(duration_diff)?)
-            .or(Err(PrecisionError::OutOfRangeDate))?
+            .or(Err(PrecisionOutOfRangeDateError))?
             .datetime();
 
         Ok(time.time_zone().to_ambiguous_zoned(precised_datetime))
@@ -492,7 +495,7 @@ impl Precision {
     ///
     /// # Errors
     ///
-    /// Returns [`OutOfRangeDate`](PrecisionError::OutOfRangeDate) if the
+    /// Returns [`PrecisionOutOfRangeDateError`] if the
     /// resulting time would result in a time that cannot be stored in
     /// [`Zoned`].
     ///
@@ -540,50 +543,40 @@ impl Precision {
     /// ```
     ///
     /// [1]: https://en.wikipedia.org/w/index.php?title=Unix_time&useskin=vector
-    pub fn precise_time_with_base_time<B>(&self, time: &Zoned, base: B) -> Result<Zoned, PrecisionError>
+    pub fn precise_time_with_base_time<B>(&self, time: &Zoned, base: B) -> Result<Zoned, PrecisionOutOfRangeDateError>
     where
         B: Into<Timestamp>,
     {
         let base = base.into().to_zoned(time.time_zone().clone());
 
         base.checked_add(self.precise_signed_duration(time.duration_since(&base))?)
-            .map_err(|_| PrecisionError::OutOfRangeDate)
+            .map_err(|_| PrecisionOutOfRangeDateError)
     }
 }
 
-/// Errors that can be produced when creating a [`Precision`]
+/// Duration given as a precision was zero when creating a [`Precision`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum PrecisionCreationError {
-    /// Duration given as a precision is zero
-    PrecisionIsZero,
-}
+pub struct PrecisionCreationPrecisionIsZeroError;
 
-impl Display for PrecisionCreationError {
+impl Display for PrecisionCreationPrecisionIsZeroError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::PrecisionIsZero => write!(f, "Duration given as a precision is zero"),
-        }
+        write!(f, "Duration given as a precision is zero")
     }
 }
 
-impl Error for PrecisionCreationError {}
+impl Error for PrecisionCreationPrecisionIsZeroError {}
 
-/// Errors that can be produced when using [`Precision`]
+/// An operation produced an out-of-range date when using [`Precision`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum PrecisionError {
-    /// An operation produced an out-of-range date
-    OutOfRangeDate,
-}
+pub struct PrecisionOutOfRangeDateError;
 
-impl Display for PrecisionError {
+impl Display for PrecisionOutOfRangeDateError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::OutOfRangeDate => write!(f, "Operation produced an out-of-range date"),
-        }
+        write!(f, "Operation produced an out-of-range date")
     }
 }
 
-impl Error for PrecisionError {}
+impl Error for PrecisionOutOfRangeDateError {}
 
 /// Represents a running result
 ///

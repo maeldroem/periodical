@@ -29,11 +29,11 @@ use serde::{Deserialize, Serialize};
 use crate::intervals::meta::{
     BoundInclusivity,
     Duration as IntervalDuration,
-    Emptiable,
     HasDuration,
     HasOpenness,
     HasRelativity,
     Interval,
+    IsEmpty,
     Openness,
     Relativity,
 };
@@ -96,7 +96,7 @@ impl EmptiableRelativeInterval {
     /// Returns the content of the [`Bound`](EmptiableRelativeInterval::Bound) variant
     ///
     /// Consumes `self` and puts the content of the [`Bound`](EmptiableRelativeInterval::Bound) variant
-    /// in an [`Option`]. If instead `self` is another variant, the method returns [`None`]
+    /// in an [`Option`]. If instead `self` is another variant, the method returns [`None`].
     ///
     /// # Examples
     ///
@@ -201,7 +201,7 @@ impl HasEmptiableRelativeBoundPair for EmptiableRelativeInterval {
     }
 }
 
-impl Emptiable for EmptiableRelativeInterval {
+impl IsEmpty for EmptiableRelativeInterval {
     fn is_empty(&self) -> bool {
         matches!(self, Self::Empty(_))
     }

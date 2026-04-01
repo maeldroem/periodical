@@ -14,19 +14,29 @@ use jiff::Timestamp;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use crate::intervals::absolute::{AbsoluteBoundPair, AbsoluteEndBound, AbsoluteStartBound, HasAbsoluteBoundPair};
+use crate::intervals::absolute::{
+    AbsoluteBoundPair,
+    AbsoluteEndBound,
+    AbsoluteInterval,
+    AbsoluteStartBound,
+    BoundedAbsoluteInterval,
+    EmptiableAbsoluteInterval,
+    HalfBoundedAbsoluteInterval,
+    HasAbsoluteBoundPair,
+};
 use crate::intervals::meta::{
     BoundInclusivity,
     Duration as IntervalDuration,
-    Emptiable,
     Epsilon,
     HasDuration,
     HasOpenness,
     HasRelativity,
     Interval,
+    IsEmpty,
     Openness,
     Relativity,
 };
+use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 
 /// Possession of possibly empty absolute bound pair
 pub trait HasEmptiableAbsoluteBoundPair {
@@ -69,8 +79,7 @@ where
 /// [empty intervals](crate::intervals::special::EmptyInterval)
 ///
 /// For more information, check [`AbsoluteBoundPair`],
-/// [`EmptyInterval`](crate::intervals::special::EmptyInterval),
-/// or [`crate::intervals` module documentation](crate::intervals).
+/// [`EmptyInterval`], or [`crate::intervals` module documentation](crate::intervals).
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
@@ -198,7 +207,7 @@ impl HasEmptiableAbsoluteBoundPair for EmptiableAbsoluteBoundPair {
     }
 }
 
-impl Emptiable for EmptiableAbsoluteBoundPair {
+impl IsEmpty for EmptiableAbsoluteBoundPair {
     fn is_empty(&self) -> bool {
         matches!(self, Self::Empty)
     }
@@ -312,5 +321,41 @@ impl
 impl From<AbsoluteBoundPair> for EmptiableAbsoluteBoundPair {
     fn from(value: AbsoluteBoundPair) -> Self {
         EmptiableAbsoluteBoundPair::Bound(value)
+    }
+}
+
+impl From<BoundedAbsoluteInterval> for EmptiableAbsoluteBoundPair {
+    fn from(value: BoundedAbsoluteInterval) -> Self {
+        value.emptiable_abs_bound_pair()
+    }
+}
+
+impl From<HalfBoundedAbsoluteInterval> for EmptiableAbsoluteBoundPair {
+    fn from(value: HalfBoundedAbsoluteInterval) -> Self {
+        value.emptiable_abs_bound_pair()
+    }
+}
+
+impl From<AbsoluteInterval> for EmptiableAbsoluteBoundPair {
+    fn from(value: AbsoluteInterval) -> Self {
+        value.emptiable_abs_bound_pair()
+    }
+}
+
+impl From<EmptiableAbsoluteInterval> for EmptiableAbsoluteBoundPair {
+    fn from(value: EmptiableAbsoluteInterval) -> Self {
+        value.emptiable_abs_bound_pair()
+    }
+}
+
+impl From<UnboundedInterval> for EmptiableAbsoluteBoundPair {
+    fn from(value: UnboundedInterval) -> Self {
+        value.emptiable_abs_bound_pair()
+    }
+}
+
+impl From<EmptyInterval> for EmptiableAbsoluteBoundPair {
+    fn from(value: EmptyInterval) -> Self {
+        value.emptiable_abs_bound_pair()
     }
 }

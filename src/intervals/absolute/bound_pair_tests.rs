@@ -608,6 +608,6 @@ fn try_from_emptiable_correct_variant() {
 fn try_from_emptiable_wrong_variant() {
     assert_eq!(
         AbsoluteBoundPair::try_from(EmptiableAbsoluteBoundPair::Empty),
-        Err(AbsoluteBoundPairFromEmptiableAbsoluteBoundPairError::EmptyVariant),
+        Err(AbsoluteBoundPairTryFromEmptiableAbsoluteBoundPairError),
     );
 }

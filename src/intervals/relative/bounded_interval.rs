@@ -25,17 +25,18 @@ use serde::{Deserialize, Serialize};
 use crate::intervals::meta::{
     BoundInclusivity,
     Duration as IntervalDuration,
-    Emptiable,
     Epsilon,
     HasBoundInclusivity,
     HasDuration,
     HasOpenness,
     HasRelativity,
     Interval,
+    IsEmpty,
     Openness,
     Relativity,
 };
 use crate::intervals::relative::{
+    EmptiableRelativeBoundPair,
     EmptiableRelativeInterval,
     HasRelativeBoundPair,
     RelativeBoundPair,
@@ -845,7 +846,7 @@ impl BoundedRelativeInterval {
 
     /// Wraps the interval in [`EmptiableRelativeInterval`]
     #[must_use]
-    pub fn to_emptiable(self) -> EmptiableRelativeInterval {
+    pub fn to_emptiable_interval(self) -> EmptiableRelativeInterval {
         EmptiableRelativeInterval::from(self)
     }
 }
@@ -948,7 +949,7 @@ impl HasRelativeBoundPair for BoundedRelativeInterval {
     }
 }
 
-impl Emptiable for BoundedRelativeInterval {
+impl IsEmpty for BoundedRelativeInterval {
     fn is_empty(&self) -> bool {
         false
     }
@@ -993,25 +994,23 @@ impl From<RangeInclusive<SignedDuration>> for BoundedRelativeInterval {
     }
 }
 
-/// Errors that can occur when trying to convert [`RelativeBoundPair`] into
-/// [`BoundedRelativeInterval`]
+/// Error that can occur when trying to convert [`RelativeBoundPair`] into [`BoundedRelativeInterval`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum BoundedRelativeIntervalFromRelativeBoundPairError {
-    NotBoundedInterval,
-}
+pub struct BoundedRelativeIntervalTryFromRelativeBoundPairError;
 
-impl Display for BoundedRelativeIntervalFromRelativeBoundPairError {
+impl Display for BoundedRelativeIntervalTryFromRelativeBoundPairError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::NotBoundedInterval => write!(f, "Not a bounded interval"),
-        }
+        write!(
+            f,
+            "An error occurred when trying to convert `RelativeBoundPair` into `BoundedRelativeInterval`"
+        )
     }
 }
 
-impl Error for BoundedRelativeIntervalFromRelativeBoundPairError {}
+impl Error for BoundedRelativeIntervalTryFromRelativeBoundPairError {}
 
 impl TryFrom<RelativeBoundPair> for BoundedRelativeInterval {
-    type Error = BoundedRelativeIntervalFromRelativeBoundPairError;
+    type Error = BoundedRelativeIntervalTryFromRelativeBoundPairError;
 
     fn try_from(value: RelativeBoundPair) -> Result<Self, Self::Error> {
         match (value.start(), value.end()) {
@@ -1023,23 +1022,50 @@ impl TryFrom<RelativeBoundPair> for BoundedRelativeInterval {
                     finite_end.inclusivity(),
                 ))
             },
-            _ => Err(Self::Error::NotBoundedInterval),
+            _ => Err(BoundedRelativeIntervalTryFromRelativeBoundPairError),
         }
     }
 }
 
-/// Errors that can occur when trying to convert [`RelativeInterval`] into
+/// Error that can occur when trying to convert [`EmptiableRelativeBoundPair`] into [`BoundedRelativeInterval`]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct BoundedRelativeIntervalTryFromEmptiableRelativeBoundPairError;
+
+impl Display for BoundedRelativeIntervalTryFromEmptiableRelativeBoundPairError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "An error occurred when trying to convert `EmptiableRelativeBoundPair` into `BoundedRelativeInterval`"
+        )
+    }
+}
+
+impl Error for BoundedRelativeIntervalTryFromEmptiableRelativeBoundPairError {}
+
+impl TryFrom<EmptiableRelativeBoundPair> for BoundedRelativeInterval {
+    type Error = BoundedRelativeIntervalTryFromEmptiableRelativeBoundPairError;
+
+    fn try_from(value: EmptiableRelativeBoundPair) -> Result<Self, Self::Error> {
+        Self::try_from(
+            value
+                .bound()
+                .ok_or(BoundedRelativeIntervalTryFromEmptiableRelativeBoundPairError)?,
+        )
+        .or(Err(BoundedRelativeIntervalTryFromEmptiableRelativeBoundPairError))
+    }
+}
+
+/// Error that can occur when trying to convert [`RelativeInterval`] into
 /// [`BoundedRelativeInterval`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum BoundedRelativeIntervalFromRelativeIntervalError {
-    WrongVariant,
-}
+pub struct BoundedRelativeIntervalFromRelativeIntervalError;
 
 impl Display for BoundedRelativeIntervalFromRelativeIntervalError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::WrongVariant => write!(f, "Wrong variant"),
-        }
+        write!(
+            f,
+            "An error occurred when trying to convert `RelativeInterval` into `BoundedRelativeInterval"
+        )
     }
 }
 
@@ -1049,9 +1075,34 @@ impl TryFrom<RelativeInterval> for BoundedRelativeInterval {
     type Error = BoundedRelativeIntervalFromRelativeIntervalError;
 
     fn try_from(value: RelativeInterval) -> Result<Self, Self::Error> {
-        match value {
-            RelativeInterval::Bounded(interval) => Ok(interval),
-            _ => Err(Self::Error::WrongVariant),
-        }
+        value.bounded().ok_or(BoundedRelativeIntervalFromRelativeIntervalError)
+    }
+}
+
+/// Error that can occur when trying to convert [`EmptiableRelativeInterval`] into [`BoundedRelativeInterval`]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct BoundedRelativeIntervalTryFromEmptiableRelativeIntervalError;
+
+impl Display for BoundedRelativeIntervalTryFromEmptiableRelativeIntervalError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "An error occurred when trying to convert `EmptiableRelativeInterval` into `BoundedRelativeInterval`"
+        )
+    }
+}
+
+impl Error for BoundedRelativeIntervalTryFromEmptiableRelativeIntervalError {}
+
+impl TryFrom<EmptiableRelativeInterval> for BoundedRelativeInterval {
+    type Error = BoundedRelativeIntervalTryFromEmptiableRelativeIntervalError;
+
+    fn try_from(value: EmptiableRelativeInterval) -> Result<Self, Self::Error> {
+        Self::try_from(
+            value
+                .bound()
+                .ok_or(BoundedRelativeIntervalTryFromEmptiableRelativeIntervalError)?,
+        )
+        .or(Err(BoundedRelativeIntervalTryFromEmptiableRelativeIntervalError))
     }
 }

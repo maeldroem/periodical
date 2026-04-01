@@ -308,21 +308,21 @@ fn interval_try_from_absolute_bounds_wrong() -> Result<(), Box<dyn Error>> {
             AbsoluteStartBound::InfinitePast,
             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?)),
         )),
-        Err(BoundedAbsoluteIntervalFromAbsoluteBoundPairError::NotBoundedInterval),
+        Err(BoundedAbsoluteIntervalTryFromAbsoluteBoundPairError),
     );
     assert_eq!(
         BoundedAbsoluteInterval::try_from(AbsoluteBoundPair::new(
             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?)),
             AbsoluteEndBound::InfiniteFuture,
         )),
-        Err(BoundedAbsoluteIntervalFromAbsoluteBoundPairError::NotBoundedInterval),
+        Err(BoundedAbsoluteIntervalTryFromAbsoluteBoundPairError),
     );
     assert_eq!(
         BoundedAbsoluteInterval::try_from(AbsoluteBoundPair::new(
             AbsoluteStartBound::InfinitePast,
             AbsoluteEndBound::InfiniteFuture,
         )),
-        Err(BoundedAbsoluteIntervalFromAbsoluteBoundPairError::NotBoundedInterval),
+        Err(BoundedAbsoluteIntervalTryFromAbsoluteBoundPairError),
     );
 
     Ok(())
@@ -348,14 +348,14 @@ fn interval_try_from_absolute_interval_correct() -> Result<(), Box<dyn Error>> {
 fn interval_try_from_absolute_interval_wrong() -> Result<(), Box<dyn Error>> {
     assert_eq!(
         BoundedAbsoluteInterval::try_from(AbsoluteInterval::Unbounded(UnboundedInterval)),
-        Err(BoundedAbsoluteIntervalFromAbsoluteIntervalError::WrongVariant),
+        Err(BoundedAbsoluteIntervalFromAbsoluteIntervalError),
     );
     assert_eq!(
         BoundedAbsoluteInterval::try_from(AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new(
             "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
             OpeningDirection::ToFuture,
         ))),
-        Err(BoundedAbsoluteIntervalFromAbsoluteIntervalError::WrongVariant),
+        Err(BoundedAbsoluteIntervalFromAbsoluteIntervalError),
     );
 
     Ok(())

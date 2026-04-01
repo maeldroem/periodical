@@ -16,11 +16,11 @@ use crate::intervals::absolute::{
 };
 use crate::intervals::meta::{
     Duration as IntervalDuration,
-    Emptiable,
     Epsilon,
     HasDuration,
     HasOpenness,
     HasRelativity,
+    IsEmpty,
     Openness,
     Relativity,
 };
@@ -101,7 +101,7 @@ fn unbounded_interval_try_from_abs_interval_wrong_variant() -> Result<(), Box<dy
             "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
             "2025-01-02 00:00:00Z".parse::<Timestamp>()?,
         ))),
-        Err(UnboundedIntervalConversionErr::WrongVariant),
+        Err(UnboundedIntervalTryFromAbsoluteIntervalError),
     );
     Ok(())
 }
@@ -121,7 +121,7 @@ fn unbounded_interval_try_from_rel_interval_wrong_variant() {
             SignedDuration::from_hours(1),
             SignedDuration::from_hours(5),
         ))),
-        Err(UnboundedIntervalConversionErr::WrongVariant),
+        Err(UnboundedIntervalTryFromRelativeIntervalError),
     );
 }
 

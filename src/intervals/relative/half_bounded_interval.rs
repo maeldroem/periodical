@@ -21,12 +21,12 @@ use serde::{Deserialize, Serialize};
 use crate::intervals::meta::{
     BoundInclusivity,
     Duration as IntervalDuration,
-    Emptiable,
     HasBoundInclusivity,
     HasDuration,
     HasOpenness,
     HasRelativity,
     Interval,
+    IsEmpty,
     OpeningDirection,
     Openness,
     Relativity,
@@ -335,27 +335,10 @@ impl HalfBoundedRelativeInterval {
 
     /// Wraps the interval in [`EmptiableRelativeInterval`]
     #[must_use]
-    pub fn to_emptiable(self) -> EmptiableRelativeInterval {
+    pub fn to_emptiable_interval(self) -> EmptiableRelativeInterval {
         EmptiableRelativeInterval::from(self)
     }
 }
-
-/// Errors that can occur when trying to convert [`RelativeBoundPair`] into
-/// [`HalfBoundedRelativeInterval`]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum HalfBoundedRelativeIntervalFromRelativeBoundPairError {
-    NotHalfBoundedInterval,
-}
-
-impl Display for HalfBoundedRelativeIntervalFromRelativeBoundPairError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::NotHalfBoundedInterval => write!(f, "Not a half-bounded interval"),
-        }
-    }
-}
-
-impl Error for HalfBoundedRelativeIntervalFromRelativeBoundPairError {}
 
 /// Error that can occur when trying to convert a [`SignedDuration`] range into a [`HalfBoundedRelativeInterval`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -416,7 +399,7 @@ impl HasRelativeBoundPair for HalfBoundedRelativeInterval {
     }
 }
 
-impl Emptiable for HalfBoundedRelativeInterval {
+impl IsEmpty for HalfBoundedRelativeInterval {
     fn is_empty(&self) -> bool {
         false
     }
@@ -464,8 +447,23 @@ impl From<RangeToInclusive<SignedDuration>> for HalfBoundedRelativeInterval {
     }
 }
 
+/// Error that can occur when trying to convert [`RelativeBoundPair`] into [`HalfBoundedRelativeInterval`]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct HalfBoundedRelativeIntervalTryFromRelativeBoundPairError;
+
+impl Display for HalfBoundedRelativeIntervalTryFromRelativeBoundPairError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "An error occurred when trying to convert `RelativeBoundPair` into `HalfBoundedRelativeInterval`"
+        )
+    }
+}
+
+impl Error for HalfBoundedRelativeIntervalTryFromRelativeBoundPairError {}
+
 impl TryFrom<RelativeBoundPair> for HalfBoundedRelativeInterval {
-    type Error = HalfBoundedRelativeIntervalFromRelativeBoundPairError;
+    type Error = HalfBoundedRelativeIntervalTryFromRelativeBoundPairError;
 
     fn try_from(value: RelativeBoundPair) -> Result<Self, Self::Error> {
         match (value.start(), value.end()) {
@@ -483,35 +481,32 @@ impl TryFrom<RelativeBoundPair> for HalfBoundedRelativeInterval {
                     OpeningDirection::ToFuture,
                 ))
             },
-            _ => Err(Self::Error::NotHalfBoundedInterval),
+            _ => Err(HalfBoundedRelativeIntervalTryFromRelativeBoundPairError),
         }
     }
 }
 
-/// Errors that can occur when trying to convert [`RelativeInterval`] into
-/// [`HalfBoundedRelativeInterval`]
+/// Error that can occur when trying to convert [`RelativeInterval`] into [`HalfBoundedRelativeInterval`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum HalfBoundedRelativeIntervalFromRelativeIntervalError {
-    WrongVariant,
-}
+pub struct HalfBoundedRelativeIntervalTryFromRelativeIntervalError;
 
-impl Display for HalfBoundedRelativeIntervalFromRelativeIntervalError {
+impl Display for HalfBoundedRelativeIntervalTryFromRelativeIntervalError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::WrongVariant => write!(f, "Wrong variant"),
-        }
+        write!(
+            f,
+            "An error occurred when trying to convert `RelativeInterval` into `HalfBoundedRelativeInterval`"
+        )
     }
 }
 
-impl Error for HalfBoundedRelativeIntervalFromRelativeIntervalError {}
+impl Error for HalfBoundedRelativeIntervalTryFromRelativeIntervalError {}
 
 impl TryFrom<RelativeInterval> for HalfBoundedRelativeInterval {
-    type Error = HalfBoundedRelativeIntervalFromRelativeIntervalError;
+    type Error = HalfBoundedRelativeIntervalTryFromRelativeIntervalError;
 
     fn try_from(value: RelativeInterval) -> Result<Self, Self::Error> {
-        match value {
-            RelativeInterval::HalfBounded(interval) => Ok(interval),
-            _ => Err(Self::Error::WrongVariant),
-        }
+        value
+            .half_bounded()
+            .ok_or(HalfBoundedRelativeIntervalTryFromRelativeIntervalError)
     }
 }

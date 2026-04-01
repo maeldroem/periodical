@@ -169,32 +169,23 @@ impl From<(SignedDuration, BoundInclusivity)> for RelativeFiniteBound {
     }
 }
 
-/// Errors that can occur when trying to convert a [`Bound<SignedDuration>`]
-/// into an [`RelativeFiniteBound`]
+/// Error that can occur when trying to convert [`Bound<SignedDuration>`] into [`RelativeFiniteBound`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum RelativeFiniteBoundFromBoundError {
-    /// The given bound was of the [`Unbounded`](Bound::Unbounded) variant
-    IsUnbounded,
-}
+pub struct RelativeFiniteBoundTryFromBoundError;
 
-impl Display for RelativeFiniteBoundFromBoundError {
+impl Display for RelativeFiniteBoundTryFromBoundError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::IsUnbounded => {
-                write!(
-                    f,
-                    "The given bound was of the `Unbounded` variant, and therefore could not be converted to an \
-                     `RelativeFiniteBound`"
-                )
-            },
-        }
+        write!(
+            f,
+            "An error occurred when trying to convert `Bound<SignedDuration>` into `RelativeFiniteBound`"
+        )
     }
 }
 
-impl Error for RelativeFiniteBoundFromBoundError {}
+impl Error for RelativeFiniteBoundTryFromBoundError {}
 
 impl TryFrom<Bound<SignedDuration>> for RelativeFiniteBound {
-    type Error = RelativeFiniteBoundFromBoundError;
+    type Error = RelativeFiniteBoundTryFromBoundError;
 
     fn try_from(value: Bound<SignedDuration>) -> Result<Self, Self::Error> {
         match value {
@@ -206,7 +197,7 @@ impl TryFrom<Bound<SignedDuration>> for RelativeFiniteBound {
                 offset,
                 BoundInclusivity::Exclusive,
             )),
-            Bound::Unbounded => Err(RelativeFiniteBoundFromBoundError::IsUnbounded),
+            Bound::Unbounded => Err(RelativeFiniteBoundTryFromBoundError),
         }
     }
 }

@@ -44,11 +44,11 @@ use crate::intervals::absolute::{
 use crate::intervals::meta::{
     BoundInclusivity,
     Duration as IntervalDuration,
-    Emptiable,
     HasDuration,
     HasOpenness,
     HasRelativity,
     Interval,
+    IsEmpty,
     OpeningDirection,
     Openness,
     Relativity,
@@ -138,6 +138,93 @@ impl AbsoluteInterval {
             .ord_by_start_and_inv_length(&other.abs_bound_pair())
     }
 
+    /// Returns the content of the [`Bounded`](AbsoluteInterval::Bounded) variant
+    ///
+    /// Consumes `self` and puts the content of the [`Bounded`](AbsoluteInterval::Bounded) variant
+    /// in an [`Option`]. If instead `self` is another variant, the method returns [`None`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jiff::Zoned;
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// let bounded_interval = BoundedAbsoluteInterval::new(
+    ///     "2026-01-01 08:00:00[Europe/Oslo]"
+    ///         .parse::<Zoned>()?
+    ///         .timestamp(),
+    ///     "2026-01-01 16:00:00[Europe/Oslo]"
+    ///         .parse::<Zoned>()?
+    ///         .timestamp(),
+    /// );
+    ///
+    /// let interval = bounded_interval.clone().to_interval();
+    ///
+    /// assert_eq!(interval.bounded(), Some(bounded_interval));
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    #[must_use]
+    pub fn bounded(self) -> Option<BoundedAbsoluteInterval> {
+        match self {
+            Self::Bounded(interval) => Some(interval),
+            _ => None,
+        }
+    }
+
+    /// Returns the content of the [`HalfBounded`](AbsoluteInterval::HalfBounded) variant
+    ///
+    /// Consumes `self` and puts the content of the [`HalfBounded`](AbsoluteInterval::HalfBounded) variant
+    /// in an [`Option`]. If instead `self` is another variant, the method returns [`None`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jiff::Zoned;
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
+    /// # use periodical::intervals::meta::OpeningDirection;
+    /// let half_bounded_interval = HalfBoundedAbsoluteInterval::new(
+    ///     "2026-01-01 08:00:00[Europe/Oslo]"
+    ///         .parse::<Zoned>()?
+    ///         .timestamp(),
+    ///     OpeningDirection::ToPast,
+    /// );
+    ///
+    /// let interval = half_bounded_interval.clone().to_interval();
+    ///
+    /// assert_eq!(interval.half_bounded(), Some(half_bounded_interval));
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    #[must_use]
+    pub fn half_bounded(self) -> Option<HalfBoundedAbsoluteInterval> {
+        match self {
+            Self::HalfBounded(interval) => Some(interval),
+            _ => None,
+        }
+    }
+
+    /// Returns the content of the [`Unbounded`](AbsoluteInterval::Unbounded) variant
+    ///
+    /// Consumes `self` and puts the content of the [`Unbounded`](AbsoluteInterval::Unbounded) variant
+    /// in an [`Option`]. If instead `self` is another variant, the method returns [`None`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use periodical::intervals::absolute::AbsoluteInterval;
+    /// # use periodical::intervals::special::UnboundedInterval;
+    /// let interval = AbsoluteInterval::Unbounded(UnboundedInterval);
+    ///
+    /// assert_eq!(interval.unbounded(), Some(UnboundedInterval));
+    /// ```
+    #[must_use]
+    pub fn unbounded(self) -> Option<UnboundedInterval> {
+        match self {
+            Self::Unbounded(interval) => Some(interval),
+            _ => None,
+        }
+    }
+
     /// Wraps the interval in [`EmptiableAbsoluteInterval`]
     #[must_use]
     pub fn to_emptiable(self) -> EmptiableAbsoluteInterval {
@@ -215,7 +302,7 @@ impl Ord for AbsoluteInterval {
     }
 }
 
-impl Emptiable for AbsoluteInterval {
+impl IsEmpty for AbsoluteInterval {
     fn is_empty(&self) -> bool {
         false
     }

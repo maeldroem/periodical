@@ -1,6 +1,6 @@
 //! Iterator to remove empty intervals
 //!
-//! This iterator uses the [`Emptiable`] trait to determine what is considered
+//! This iterator uses the [`IsEmpty`] trait to determine what is considered
 //! an empty interval.
 //!
 //! # Examples
@@ -75,17 +75,17 @@
 //! # Ok::<(), Box<dyn Error>>(())
 //! ```
 
-use crate::intervals::meta::Emptiable;
+use crate::intervals::meta::IsEmpty;
 
 /// Dispatcher trait for empty interval removal iterator
 pub trait RemoveEmptyIntervalsIteratorDispatcher
 where
     Self: IntoIterator + Sized,
-    Self::Item: Emptiable,
+    Self::Item: IsEmpty,
 {
     /// Filters out empty intervals from the collection
     ///
-    /// Uses the trait [`Emptiable`] under the hood.
+    /// Uses the trait [`IsEmpty`] under the hood.
     ///
     /// # Examples
     ///
@@ -166,13 +166,13 @@ where
 impl<I> RemoveEmptyIntervalsIteratorDispatcher for I
 where
     I: IntoIterator + Sized,
-    I::Item: Emptiable,
+    I::Item: IsEmpty,
 {
 }
 
 /// Empty interval removal iterator
 ///
-/// Uses the trait [`Emptiable`] in order to determine what is an empty
+/// Uses the trait [`IsEmpty`] in order to determine what is an empty
 /// interval.
 #[derive(Debug, Clone, Hash)]
 pub struct RemoveEmptyIntervals<I> {
@@ -182,7 +182,7 @@ pub struct RemoveEmptyIntervals<I> {
 impl<I> RemoveEmptyIntervals<I>
 where
     I: Iterator,
-    I::Item: Emptiable,
+    I::Item: IsEmpty,
 {
     /// Creates a new [`RemoveEmptyIntervals`]
     #[must_use]
@@ -196,7 +196,7 @@ where
 impl<I> Iterator for RemoveEmptyIntervals<I>
 where
     I: Iterator,
-    I::Item: Emptiable,
+    I::Item: IsEmpty,
 {
     type Item = I::Item;
 
@@ -218,7 +218,7 @@ where
 impl<I> DoubleEndedIterator for RemoveEmptyIntervals<I>
 where
     I: DoubleEndedIterator,
-    I::Item: Emptiable,
+    I::Item: IsEmpty,
 {
     fn next_back(&mut self) -> Option<Self::Item> {
         loop {

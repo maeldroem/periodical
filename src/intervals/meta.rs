@@ -5,6 +5,7 @@
 
 use std::error::Error;
 use std::fmt::Display;
+use std::ops::Bound;
 use std::time::Duration as StdDuration;
 
 #[cfg(feature = "arbitrary")]
@@ -245,14 +246,13 @@ impl Epsilon {
     /// # Errors
     ///
     /// If `start_epsilon_duration` + `end_epsilon_duration` overflows,
-    /// the method returns
-    /// [`DurationOverflow`](EpsilonInterpretationDurationError::DurationOverflow).
+    /// the method returns [`EpsilonInterpretationDurationOverflowError`].
     ///
     ///
     /// # Examples
     ///
     /// ```
-    /// # use periodical::intervals::meta::{Epsilon, EpsilonInterpretationDurationError};
+    /// # use periodical::intervals::meta::Epsilon;
     /// let start_epsilon_duration = std::time::Duration::from_secs(1);
     /// let end_epsilon_duration = std::time::Duration::from_secs(2);
     ///
@@ -281,14 +281,14 @@ impl Epsilon {
         &self,
         start_epsilon_duration: StdDuration,
         end_epsilon_duration: StdDuration,
-    ) -> Result<StdDuration, EpsilonInterpretationDurationError> {
+    ) -> Result<StdDuration, EpsilonInterpretationDurationOverflowError> {
         match self {
             Self::None => Ok(StdDuration::ZERO),
             Self::Start => Ok(start_epsilon_duration),
             Self::End => Ok(end_epsilon_duration),
             Self::Both => start_epsilon_duration
                 .checked_add(end_epsilon_duration)
-                .ok_or(EpsilonInterpretationDurationError::DurationOverflow),
+                .ok_or(EpsilonInterpretationDurationOverflowError),
         }
     }
 
@@ -297,14 +297,13 @@ impl Epsilon {
     /// # Errors
     ///
     /// If `epsilon_duration * 2` overflows,
-    /// the method returns
-    /// [`DurationOverflow`](EpsilonInterpretationDurationError::DurationOverflow).
+    /// the method returns [`EpsilonInterpretationDurationOverflowError`].
     ///
     ///
     /// # Examples
     ///
     /// ```
-    /// # use periodical::intervals::meta::{Epsilon, EpsilonInterpretationDurationError};
+    /// # use periodical::intervals::meta::Epsilon;
     /// let epsilon_duration = std::time::Duration::from_secs(1);
     ///
     /// assert_eq!(
@@ -327,7 +326,7 @@ impl Epsilon {
     pub fn interpret_as_duration(
         &self,
         epsilon_duration: StdDuration,
-    ) -> Result<StdDuration, EpsilonInterpretationDurationError> {
+    ) -> Result<StdDuration, EpsilonInterpretationDurationOverflowError> {
         self.interpret_as_duration_bound_specific(epsilon_duration, epsilon_duration)
     }
 }
@@ -374,31 +373,25 @@ impl From<(bool, bool)> for Epsilon {
     }
 }
 
-/// Errors that can occur when [`Epsilon`] is interpreted as a duration
+/// Duration interpretation overflowed when [`Epsilon`] tried to be interpreted as a duration
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum EpsilonInterpretationDurationError {
-    /// Duration interpretation overflowed
-    DurationOverflow,
-}
+pub struct EpsilonInterpretationDurationOverflowError;
 
-impl Display for EpsilonInterpretationDurationError {
+impl Display for EpsilonInterpretationDurationOverflowError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::DurationOverflow => write!(f, "Epsilon interpretation made the duration overflow"),
-        }
+        write!(f, "Epsilon interpretation made the duration overflow")
     }
 }
 
-impl Error for EpsilonInterpretationDurationError {}
+impl Error for EpsilonInterpretationDurationOverflowError {}
 
 /// Interval duration
 ///
-/// Represents the duration of an interval. It can either be
+/// Represents the duration of a single interval. It can either be
 /// [`Infinite`](Duration::Infinite), or [`Finite`](Duration::Finite), in which
 /// case the duration is stored as a standard [`Duration`](StdDuration)
 /// and an [`Epsilon`], which serves to represent infinitesimal duration
-/// variations created by the use of [exclusive
-/// bounds](BoundInclusivity::Exclusive).
+/// variations created by the use of [exclusive bounds](BoundInclusivity::Exclusive).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
@@ -567,6 +560,26 @@ impl BoundInclusivity {
             BoundInclusivity::Exclusive => BoundInclusivity::Inclusive,
         }
     }
+
+    /// Creates a [`Bound`] from [`BoundInclusivity`] and a given value
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::ops::Bound;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// assert_eq!(
+    ///     BoundInclusivity::Exclusive.to_range_bound_with(5),
+    ///     Bound::Excluded(5),
+    /// );
+    /// ```
+    #[must_use]
+    pub fn to_range_bound_with<T>(self, value: T) -> Bound<T> {
+        match self {
+            Self::Inclusive => Bound::Included(value),
+            Self::Exclusive => Bound::Excluded(value),
+        }
+    }
 }
 
 impl Display for BoundInclusivity {
@@ -602,7 +615,7 @@ pub trait HasBoundInclusivity {
 }
 
 /// Capacity of an interval to be empty
-pub trait Emptiable {
+pub trait IsEmpty {
     /// Returns whether the interval is empty
     fn is_empty(&self) -> bool;
 }
