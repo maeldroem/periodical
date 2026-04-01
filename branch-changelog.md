@@ -5,8 +5,6 @@
 Find way to handle multiple interval durations to handle correctly mathematical operations
 (addition, subtraction, etc.)
 
-FIXME: Conversion errors and descriptions are backwards
-
 FIXME: Remove implementations of operations where it always returns an error
 
 <details>
@@ -125,13 +123,5 @@ FIXME: Remove implementations of operations where it always returns an error
 ## Removed
 
 - Removed `UnboundedIntervalConversionErr` to instead use specific conversion error types
-
-## Fixed
-
-- Things you've fixed
-
-## Security
-
-- Vulnerabilities you've fixed (add relevant CVE and any other relevant info/links)
 
 </details>
