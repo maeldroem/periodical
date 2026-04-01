@@ -54,13 +54,53 @@ use crate::intervals::meta::{Epsilon, Interval};
 pub struct UnboundedInterval;
 
 impl UnboundedInterval {
-    // /// Converts [`UnboundedInterval`] into an [`AbsoluteBoundPair`]
-    // #[must_use]
-    // pub fn to_abs_bound_pair(self) -> AbsoluteBoundPair {
-    //     AbsoluteBoundPair::from(self)
-    // }
+    /// Converts `self` into an [`AbsoluteBoundPair`]
+    #[must_use]
+    pub fn to_abs_bound_pair(self) -> AbsoluteBoundPair {
+        AbsoluteBoundPair::from(self)
+    }
 
-    // pub fn to_abs_interval(self) -> AbsoluteInterval {}
+    /// Converts `self` into an [`EmptiableAbsoluteBoundPair`]
+    #[must_use]
+    pub fn to_emptiable_abs_bound_pair(self) -> EmptiableAbsoluteBoundPair {
+        EmptiableAbsoluteBoundPair::from(self)
+    }
+
+    /// Converts `self` into an [`AbsoluteInterval`]
+    #[must_use]
+    pub fn to_abs_interval(self) -> AbsoluteInterval {
+        AbsoluteInterval::from(self)
+    }
+
+    /// Converts `self` into an [`EmptiableAbsoluteInterval`]
+    #[must_use]
+    pub fn to_emptiable_abs_interval(self) -> EmptiableAbsoluteInterval {
+        EmptiableAbsoluteInterval::from(self)
+    }
+
+    /// Converts `self` into an [`RelativeBoundPair`]
+    #[must_use]
+    pub fn to_rel_bound_pair(self) -> RelativeBoundPair {
+        RelativeBoundPair::from(self)
+    }
+
+    /// Converts `self` into an [`EmptiableRelativeBoundPair`]
+    #[must_use]
+    pub fn to_emptiable_rel_bound_pair(self) -> EmptiableRelativeBoundPair {
+        EmptiableRelativeBoundPair::from(self)
+    }
+
+    /// Converts `self` into an [`RelativeInterval`]
+    #[must_use]
+    pub fn to_rel_interval(self) -> RelativeInterval {
+        RelativeInterval::from(self)
+    }
+
+    /// Converts `self` into an [`EmptiableRelativeInterval`]
+    #[must_use]
+    pub fn to_emptiable_rel_interval(self) -> EmptiableRelativeInterval {
+        EmptiableRelativeInterval::from(self)
+    }
 }
 
 impl Interval for UnboundedInterval {}
