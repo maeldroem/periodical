@@ -335,7 +335,7 @@ impl HalfBoundedRelativeInterval {
 
     /// Wraps the interval in [`EmptiableRelativeInterval`]
     #[must_use]
-    pub fn to_emptiable(self) -> EmptiableRelativeInterval {
+    pub fn to_emptiable_interval(self) -> EmptiableRelativeInterval {
         EmptiableRelativeInterval::from(self)
     }
 }
