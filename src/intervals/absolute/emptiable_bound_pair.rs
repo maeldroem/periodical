@@ -14,7 +14,16 @@ use jiff::Timestamp;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use crate::intervals::absolute::{AbsoluteBoundPair, AbsoluteEndBound, AbsoluteStartBound, HasAbsoluteBoundPair};
+use crate::intervals::absolute::{
+    AbsoluteBoundPair,
+    AbsoluteEndBound,
+    AbsoluteInterval,
+    AbsoluteStartBound,
+    BoundedAbsoluteInterval,
+    EmptiableAbsoluteInterval,
+    HalfBoundedAbsoluteInterval,
+    HasAbsoluteBoundPair,
+};
 use crate::intervals::meta::{
     BoundInclusivity,
     Duration as IntervalDuration,
@@ -27,6 +36,7 @@ use crate::intervals::meta::{
     Openness,
     Relativity,
 };
+use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 
 /// Possession of possibly empty absolute bound pair
 pub trait HasEmptiableAbsoluteBoundPair {
@@ -312,5 +322,41 @@ impl
 impl From<AbsoluteBoundPair> for EmptiableAbsoluteBoundPair {
     fn from(value: AbsoluteBoundPair) -> Self {
         EmptiableAbsoluteBoundPair::Bound(value)
+    }
+}
+
+impl From<BoundedAbsoluteInterval> for EmptiableAbsoluteBoundPair {
+    fn from(value: BoundedAbsoluteInterval) -> Self {
+        value.emptiable_abs_bound_pair()
+    }
+}
+
+impl From<HalfBoundedAbsoluteInterval> for EmptiableAbsoluteBoundPair {
+    fn from(value: HalfBoundedAbsoluteInterval) -> Self {
+        value.emptiable_abs_bound_pair()
+    }
+}
+
+impl From<AbsoluteInterval> for EmptiableAbsoluteBoundPair {
+    fn from(value: AbsoluteInterval) -> Self {
+        value.emptiable_abs_bound_pair()
+    }
+}
+
+impl From<EmptiableAbsoluteInterval> for EmptiableAbsoluteBoundPair {
+    fn from(value: EmptiableAbsoluteInterval) -> Self {
+        value.emptiable_abs_bound_pair()
+    }
+}
+
+impl From<UnboundedInterval> for EmptiableAbsoluteBoundPair {
+    fn from(value: UnboundedInterval) -> Self {
+        value.emptiable_abs_bound_pair()
+    }
+}
+
+impl From<EmptyInterval> for EmptiableAbsoluteBoundPair {
+    fn from(value: EmptyInterval) -> Self {
+        value.emptiable_abs_bound_pair()
     }
 }
