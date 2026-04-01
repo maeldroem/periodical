@@ -185,32 +185,23 @@ impl From<(Timestamp, BoundInclusivity)> for AbsoluteFiniteBound {
     }
 }
 
-/// Errors that can occur when trying to convert a [`Bound<Timestamp>`] into an
-/// [`AbsoluteFiniteBound`]
+/// Error that can occur when trying to convert [`Bound<Timestamp>`] into [`AbsoluteFiniteBound`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum AbsoluteFiniteBoundFromBoundError {
-    /// The given bound was of the [`Unbounded`](Bound::Unbounded) variant
-    IsUnbounded,
-}
+pub struct AbsoluteFiniteBoundTryFromBoundError;
 
-impl Display for AbsoluteFiniteBoundFromBoundError {
+impl Display for AbsoluteFiniteBoundTryFromBoundError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::IsUnbounded => {
-                write!(
-                    f,
-                    "The given bound was of the `Unbounded` variant, and therefore could not be converted to an \
-                     `AbsoluteFiniteBound`"
-                )
-            },
-        }
+        write!(
+            f,
+            "An error occurred when trying to convert `Bound<Timestamp>` into `AbsoluteFiniteBound`"
+        )
     }
 }
 
-impl Error for AbsoluteFiniteBoundFromBoundError {}
+impl Error for AbsoluteFiniteBoundTryFromBoundError {}
 
 impl TryFrom<Bound<Timestamp>> for AbsoluteFiniteBound {
-    type Error = AbsoluteFiniteBoundFromBoundError;
+    type Error = AbsoluteFiniteBoundTryFromBoundError;
 
     fn try_from(value: Bound<Timestamp>) -> Result<Self, Self::Error> {
         match value {
@@ -222,7 +213,7 @@ impl TryFrom<Bound<Timestamp>> for AbsoluteFiniteBound {
                 time,
                 BoundInclusivity::Exclusive,
             )),
-            Bound::Unbounded => Err(AbsoluteFiniteBoundFromBoundError::IsUnbounded),
+            Bound::Unbounded => Err(AbsoluteFiniteBoundTryFromBoundError),
         }
     }
 }

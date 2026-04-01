@@ -58,7 +58,7 @@ fn two_overlapping_half_bounded() -> Result<(), Box<dyn Error>> {
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             OpeningDirection::ToFuture
         )),
-        Err(GapFillError::Overlap),
+        Err(GapFillOverlapFoundError),
     );
 
     Ok(())
@@ -98,7 +98,7 @@ fn two_strictly_adjacent_half_bounded() -> Result<(), Box<dyn Error>> {
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             OpeningDirection::ToFuture
         )),
-        Err(GapFillError::Overlap),
+        Err(GapFillOverlapFoundError),
     );
 
     Ok(())

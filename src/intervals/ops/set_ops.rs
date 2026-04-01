@@ -23,7 +23,11 @@ use crate::intervals::absolute::{
 use crate::intervals::meta::Interval;
 use crate::intervals::ops::Complementable;
 use crate::intervals::ops::overlap::{OverlapRule, OverlapRuleSet};
-use crate::intervals::ops::remove_overlap::{OverlapRemovable, OverlapRemovalErr, OverlapRemovalResult};
+use crate::intervals::ops::remove_overlap::{
+    OverlapRemovable,
+    OverlapRemovalNoOverlapFoundError,
+    OverlapRemovalResult,
+};
 use crate::intervals::relative::{
     BoundedRelativeInterval,
     EmptiableRelativeBoundPair,
@@ -1664,7 +1668,7 @@ pub fn differentiate_abs_bound_pair(
             OverlapRemovalResult::Single(single) => DifferenceResult::Single(single),
             OverlapRemovalResult::Split(s1, s2) => DifferenceResult::Split(s1, s2),
         },
-        Err(OverlapRemovalErr::NoOverlap) => unreachable!("Overlap check already happened earlier"),
+        Err(OverlapRemovalNoOverlapFoundError) => unreachable!("Overlap check already happened earlier"),
     }
 }
 
@@ -1722,7 +1726,7 @@ pub fn differentiate_rel_bound_pair(
             OverlapRemovalResult::Single(single) => DifferenceResult::Single(single),
             OverlapRemovalResult::Split(s1, s2) => DifferenceResult::Split(s1, s2),
         },
-        Err(OverlapRemovalErr::NoOverlap) => unreachable!("Overlap check already happened earlier"),
+        Err(OverlapRemovalNoOverlapFoundError) => unreachable!("Overlap check already happened earlier"),
     }
 }
 
@@ -2335,11 +2339,11 @@ pub fn symmetrically_differentiate_abs_bound_pair(
 
     let diff_a_with_b = match a.remove_overlap(b) {
         Ok(a_removed_b) => a_removed_b,
-        Err(OverlapRemovalErr::NoOverlap) => unreachable!("Overlap check already happened earlier"),
+        Err(OverlapRemovalNoOverlapFoundError) => unreachable!("Overlap check already happened earlier"),
     };
     let diff_b_with_a = match b.remove_overlap(a) {
         Ok(b_removed_a) => b_removed_a,
-        Err(OverlapRemovalErr::NoOverlap) => unreachable!("Overlap check already happened earlier"),
+        Err(OverlapRemovalNoOverlapFoundError) => unreachable!("Overlap check already happened earlier"),
     };
 
     match (diff_a_with_b, diff_b_with_a) {
@@ -2426,11 +2430,11 @@ pub fn symmetrically_differentiate_rel_bound_pair(
 
     let diff_a_with_b = match a.remove_overlap(b) {
         Ok(a_removed_b) => a_removed_b,
-        Err(OverlapRemovalErr::NoOverlap) => unreachable!("Overlap check already happened earlier"),
+        Err(OverlapRemovalNoOverlapFoundError) => unreachable!("Overlap check already happened earlier"),
     };
     let diff_b_with_a = match b.remove_overlap(a) {
         Ok(b_removed_a) => b_removed_a,
-        Err(OverlapRemovalErr::NoOverlap) => unreachable!("Overlap check already happened earlier"),
+        Err(OverlapRemovalNoOverlapFoundError) => unreachable!("Overlap check already happened earlier"),
     };
 
     match (diff_a_with_b, diff_b_with_a) {

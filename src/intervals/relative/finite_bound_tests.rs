@@ -132,6 +132,6 @@ fn try_from_exclusive_bound() {
 fn try_from_unbounded_bound() {
     assert_eq!(
         RelativeFiniteBound::try_from(Bound::Unbounded),
-        Err(RelativeFiniteBoundFromBoundError::IsUnbounded),
+        Err(RelativeFiniteBoundTryFromBoundError),
     );
 }

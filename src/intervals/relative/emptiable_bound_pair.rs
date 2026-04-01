@@ -78,8 +78,7 @@ where
 /// [empty intervals](crate::intervals::special::EmptyInterval)
 ///
 /// For more information, check [`RelativeBoundPair`],
-/// [`EmptyInterval`](crate::intervals::special::EmptyInterval),
-/// or [`crate::intervals` module documentation](crate::intervals).
+/// [`EmptyInterval`], or [`crate::intervals` module documentation](crate::intervals).
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]

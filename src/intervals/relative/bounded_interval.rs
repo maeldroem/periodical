@@ -25,13 +25,13 @@ use serde::{Deserialize, Serialize};
 use crate::intervals::meta::{
     BoundInclusivity,
     Duration as IntervalDuration,
-    IsEmpty,
     Epsilon,
     HasBoundInclusivity,
     HasDuration,
     HasOpenness,
     HasRelativity,
     Interval,
+    IsEmpty,
     Openness,
     Relativity,
 };
@@ -994,25 +994,23 @@ impl From<RangeInclusive<SignedDuration>> for BoundedRelativeInterval {
     }
 }
 
-/// Errors that can occur when trying to convert [`RelativeBoundPair`] into
-/// [`BoundedRelativeInterval`]
+/// Error that can occur when trying to convert [`RelativeBoundPair`] into [`BoundedRelativeInterval`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum BoundedRelativeIntervalFromRelativeBoundPairError {
-    NotBoundedInterval,
-}
+pub struct BoundedRelativeIntervalTryFromRelativeBoundPairError;
 
-impl Display for BoundedRelativeIntervalFromRelativeBoundPairError {
+impl Display for BoundedRelativeIntervalTryFromRelativeBoundPairError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::NotBoundedInterval => write!(f, "Not a bounded interval"),
-        }
+        write!(
+            f,
+            "An error occurred when trying to convert `RelativeBoundPair` into `BoundedRelativeInterval`"
+        )
     }
 }
 
-impl Error for BoundedRelativeIntervalFromRelativeBoundPairError {}
+impl Error for BoundedRelativeIntervalTryFromRelativeBoundPairError {}
 
 impl TryFrom<RelativeBoundPair> for BoundedRelativeInterval {
-    type Error = BoundedRelativeIntervalFromRelativeBoundPairError;
+    type Error = BoundedRelativeIntervalTryFromRelativeBoundPairError;
 
     fn try_from(value: RelativeBoundPair) -> Result<Self, Self::Error> {
         match (value.start(), value.end()) {
@@ -1024,7 +1022,7 @@ impl TryFrom<RelativeBoundPair> for BoundedRelativeInterval {
                     finite_end.inclusivity(),
                 ))
             },
-            _ => Err(Self::Error::NotBoundedInterval),
+            _ => Err(BoundedRelativeIntervalTryFromRelativeBoundPairError),
         }
     }
 }
