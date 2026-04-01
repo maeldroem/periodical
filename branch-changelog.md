@@ -48,7 +48,8 @@ FIXME: Remove single-variant errors
 - Implemented `TryFrom<EmptiableRelativeInterval>` on `BoundedRelativeInterval`
 - Implemented `TryFrom<EmptiableRelativeInterval>` on `RelativeBoundPair`
 
-- Implemented `to_range_bound_with` on `BoundInclusivity`
+- Added methods to convert `UnboundedInterval` into either `AbsoluteBoundPair`, `EmptiableAbsoluteBoundPair`,
+  `AbsoluteInterval`, `EmptiableAbsoluteInterval`
 - Implemented `TryFrom<AbsoluteBoundPair>`on ` UnboundedInterval`
 - Implemented `TryFrom<EmptiableAbsoluteBoundPair>`on ` UnboundedInterval`
 - Implemented `TryFrom<AbsoluteInterval>`on ` UnboundedInterval`
@@ -57,6 +58,8 @@ FIXME: Remove single-variant errors
 - Implemented `TryFrom<EmptiableRelativeBoundPair>`on ` UnboundedInterval`
 - Implemented `TryFrom<RelativeInterval>`on ` UnboundedInterval`
 - Implemented `TryFrom<EmptiableRelativeInterval>`on ` UnboundedInterval`
+
+- Implemented `to_range_bound_with` on `BoundInclusivity`
 
 ## Changed
 
