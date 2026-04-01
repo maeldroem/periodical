@@ -318,8 +318,7 @@ impl PointContainmentRuleSet {
     }
 }
 
-/// Disambiguates a [`PointContainmentPosition`] using [the strict rule
-/// set](PointContainmentRuleSet::Strict)
+/// Disambiguates a [`PointContainmentPosition`] using [the strict rule set](PointContainmentRuleSet::Strict)
 ///
 /// See [module documentation](crate::intervals::ops::point_containment) for
 /// more information.
@@ -343,11 +342,9 @@ pub fn strict_containment_rule_set_disambiguation(
     }
 }
 
-/// Disambiguates a [`PointContainmentPosition`] using [the lenient rule
-/// set](PointContainmentRuleSet::Lenient)
+/// Disambiguates a [`PointContainmentPosition`] using [the lenient rule set](PointContainmentRuleSet::Lenient)
 ///
-/// See [module documentation](crate::intervals::ops::point_containment) for
-/// more information.
+/// See [module documentation](crate::intervals::ops::point_containment) for more information.
 #[must_use]
 pub fn lenient_containment_rule_set_disambiguation(
     containment_position: PointContainmentPosition,

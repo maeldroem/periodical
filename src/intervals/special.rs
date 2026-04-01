@@ -369,9 +369,9 @@ impl TryFrom<EmptiableRelativeInterval> for UnboundedInterval {
 
 /// Empty interval
 ///
-/// Similar to the [empty set](https://en.wikipedia.org/wiki/Empty_set), this allows for still performing
-/// operations such as the complement of the interval without issues, but the
-/// difference between an empty set and and empty interval is that intervals are
+/// Similar to the [empty set](https://en.wikipedia.org/w/index.php?title=Empty_set&oldid=1336567852),
+/// this allows for still performing operations such as the complement of the interval without issues,
+/// but the difference between an empty set and and empty interval is that intervals are
 /// linked to time, therefore empty intervals are out of this time dimension.
 ///
 /// This means that, contrary to an empty set, an empty interval is **not** a

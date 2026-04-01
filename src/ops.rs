@@ -458,7 +458,7 @@ impl Precision {
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     ///
-    /// [1]: https://en.wikipedia.org/w/index.php?title=Unix_time&useskin=vector
+    /// [1]: https://en.wikipedia.org/w/index.php?title=Unix_time&oldid=1345178064
     pub fn precise_time(&self, time: &Zoned) -> Result<AmbiguousZoned, PrecisionOutOfRangeDateError> {
         let utc_day_start = time
             .datetime()
@@ -546,7 +546,7 @@ impl Precision {
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     ///
-    /// [1]: https://en.wikipedia.org/w/index.php?title=Unix_time&useskin=vector
+    /// [1]: https://en.wikipedia.org/w/index.php?title=Unix_time&oldid=1345178064
     pub fn precise_time_with_base_time(
         &self,
         time: &Zoned,

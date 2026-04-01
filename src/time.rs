@@ -38,7 +38,7 @@ pub const ISO_WEEKS_IN_LONG_YEAR: u8 = 53;
 /// Number of months in a year
 ///
 /// Per the Gregorian calendar.
-/// [Other calendars](https://en.wikipedia.org/wiki/Month?useskin=vector#Months_in_various_calendars)
+/// [Other calendars](https://en.wikipedia.org/w/index.php?title=Month&oldid=1344356659#Months_in_various_calendars)
 /// may use other amounts of months.
 pub const MONTHS_IN_YEAR: u8 = 12;
 
@@ -91,7 +91,7 @@ pub fn date_today(tz: TimeZone) -> Date {
 pub fn iso_weeks_in_year(year: i16) -> Result<u8, JiffError> {
     let start_of_year = Date::new(year, 1, 1)?;
 
-    // https://en.wikipedia.org/wiki/ISO_week_date?useskin=vector#Weeks_per_year
+    // https://en.wikipedia.org/w/index.php?title=ISO_week_date&oldid=1345029647#Weeks_per_year
     let is_long_year = start_of_year.weekday() == Weekday::Thursday
         || (start_of_year.in_leap_year() && start_of_year.weekday() == Weekday::Wednesday);
 
@@ -370,7 +370,7 @@ impl Error for OffsetIsoWeekDateError {}
 /// An individual month
 ///
 /// Per the Gregorian calendar.
-/// [Other calendars](https://en.wikipedia.org/wiki/Month?useskin=vector#Months_in_various_calendars)
+/// [Other calendars](https://en.wikipedia.org/w/index.php?title=Month&oldid=1344356659#Months_in_various_calendars)
 /// may use other amounts of months and other names for them.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Month {

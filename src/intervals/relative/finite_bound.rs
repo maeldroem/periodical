@@ -60,8 +60,7 @@ pub struct RelativeFiniteBound {
 impl RelativeFiniteBound {
     /// Creates a new [`RelativeFiniteBound`] using the given offset
     ///
-    /// This creates a finite bound using the [default
-    /// `BoundInclusivity`](BoundInclusivity::default)
+    /// This creates a finite bound using the [default `BoundInclusivity`](BoundInclusivity::default)
     #[must_use]
     pub fn new(offset: SignedDuration) -> Self {
         Self::new_with_inclusivity(offset, BoundInclusivity::default())
