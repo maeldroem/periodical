@@ -40,7 +40,9 @@
 //! );
 //!
 //! let cut_type = CutType::new(BoundInclusivity::Exclusive, BoundInclusivity::Exclusive);
-//! let at = "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?;
+//! let at = "2025-01-01 12:00:00[Europe/Oslo]"
+//!     .parse::<Zoned>()?
+//!     .timestamp();
 //!
 //! assert_eq!(
 //!     interval.cut_at(at, cut_type),
@@ -104,7 +106,9 @@
 //! );
 //!
 //! let cut_type = CutType::new(BoundInclusivity::Exclusive, BoundInclusivity::Inclusive);
-//! let at = "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?;
+//! let at = "2025-01-01 16:00:00[Europe/Oslo]"
+//!     .parse::<Zoned>()?
+//!     .timestamp();
 //!
 //! assert_eq!(
 //!     interval.cut_at(at, cut_type),
@@ -167,9 +171,11 @@
 //! );
 //!
 //! let cut_type = CutType::new(BoundInclusivity::Exclusive, BoundInclusivity::Exclusive);
-//! let at = "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?;
+//! let at = "2025-01-01 16:00:00[Europe/Oslo]"
+//!     .parse::<Zoned>()?
+//!     .timestamp();
 //!
-//! assert_eq!(interval.cut_at(at, cut_type), CutResult::Uncut,);
+//! assert_eq!(interval.cut_at(at, cut_type), CutResult::Uncut);
 //! # Ok::<(), Box<dyn Error>>(())
 //! ```
 
@@ -439,7 +445,9 @@ impl<T> CutResult<T> {
 /// );
 ///
 /// let cut_type = CutType::new(BoundInclusivity::Exclusive, BoundInclusivity::Exclusive);
-/// let at = "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?;
+/// let at = "2025-01-01 12:00:00[Europe/Oslo]"
+///     .parse::<Zoned>()?
+///     .timestamp();
 ///
 /// assert_eq!(
 ///     interval.cut_at(at, cut_type),
@@ -503,7 +511,9 @@ impl<T> CutResult<T> {
 /// );
 ///
 /// let cut_type = CutType::new(BoundInclusivity::Exclusive, BoundInclusivity::Inclusive);
-/// let at = "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?;
+/// let at = "2025-01-01 16:00:00[Europe/Oslo]"
+///     .parse::<Zoned>()?
+///     .timestamp();
 ///
 /// assert_eq!(
 ///     interval.cut_at(at, cut_type),
@@ -566,7 +576,9 @@ impl<T> CutResult<T> {
 /// );
 ///
 /// let cut_type = CutType::new(BoundInclusivity::Exclusive, BoundInclusivity::Exclusive);
-/// let at = "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?;
+/// let at = "2025-01-01 16:00:00[Europe/Oslo]"
+///     .parse::<Zoned>()?
+///     .timestamp();
 ///
 /// assert_eq!(interval.cut_at(at, cut_type), CutResult::Uncut,);
 /// # Ok::<(), Box<dyn Error>>(())
@@ -601,7 +613,9 @@ pub trait Cuttable<P> {
     /// );
     ///
     /// let cut_type = CutType::new(BoundInclusivity::Exclusive, BoundInclusivity::Exclusive);
-    /// let at = "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?;
+    /// let at = "2025-01-01 12:00:00[Europe/Oslo]"
+    ///     .parse::<Zoned>()?
+    ///     .timestamp();
     ///
     /// assert_eq!(
     ///     interval.cut_at(at, cut_type),
@@ -643,140 +657,104 @@ pub trait Cuttable<P> {
     fn cut_at(&self, position: P, cut_type: CutType) -> CutResult<Self::Output>;
 }
 
-impl<P> Cuttable<P> for AbsoluteBoundPair
-where
-    P: Into<Timestamp>,
-{
+impl Cuttable<Timestamp> for AbsoluteBoundPair {
     type Output = Self;
 
-    fn cut_at(&self, position: P, cut_type: CutType) -> CutResult<Self::Output> {
-        cut_abs_bound_pair(self, position.into(), cut_type)
+    fn cut_at(&self, position: Timestamp, cut_type: CutType) -> CutResult<Self::Output> {
+        cut_abs_bound_pair(self, position, cut_type)
     }
 }
 
-impl<P> Cuttable<P> for EmptiableAbsoluteBoundPair
-where
-    P: Into<Timestamp>,
-{
+impl Cuttable<Timestamp> for EmptiableAbsoluteBoundPair {
     type Output = Self;
 
-    fn cut_at(&self, position: P, cut_type: CutType) -> CutResult<Self::Output> {
-        cut_emptiable_abs_bound_pair(self, position.into(), cut_type)
+    fn cut_at(&self, position: Timestamp, cut_type: CutType) -> CutResult<Self::Output> {
+        cut_emptiable_abs_bound_pair(self, position, cut_type)
     }
 }
 
-impl<P> Cuttable<P> for AbsoluteInterval
-where
-    P: Into<Timestamp>,
-{
+impl Cuttable<Timestamp> for AbsoluteInterval {
     type Output = Self;
 
-    fn cut_at(&self, position: P, cut_type: CutType) -> CutResult<Self::Output> {
-        cut_abs_bound_pair(&self.abs_bound_pair(), position.into(), cut_type)
+    fn cut_at(&self, position: Timestamp, cut_type: CutType) -> CutResult<Self::Output> {
+        cut_abs_bound_pair(&self.abs_bound_pair(), position, cut_type)
             .map_cut(|c1, c2| (AbsoluteInterval::from(c1), AbsoluteInterval::from(c2)))
     }
 }
 
-impl<P> Cuttable<P> for EmptiableAbsoluteInterval
-where
-    P: Into<Timestamp>,
-{
+impl Cuttable<Timestamp> for EmptiableAbsoluteInterval {
     type Output = Self;
 
-    fn cut_at(&self, position: P, cut_type: CutType) -> CutResult<Self::Output> {
-        cut_emptiable_abs_bound_pair(&self.emptiable_abs_bound_pair(), position.into(), cut_type)
+    fn cut_at(&self, position: Timestamp, cut_type: CutType) -> CutResult<Self::Output> {
+        cut_emptiable_abs_bound_pair(&self.emptiable_abs_bound_pair(), position, cut_type)
             .map_cut(|c1, c2| (EmptiableAbsoluteInterval::from(c1), EmptiableAbsoluteInterval::from(c2)))
     }
 }
 
-impl<P> Cuttable<P> for BoundedAbsoluteInterval
-where
-    P: Into<Timestamp>,
-{
+impl Cuttable<Timestamp> for BoundedAbsoluteInterval {
     type Output = Self;
 
-    fn cut_at(&self, position: P, cut_type: CutType) -> CutResult<Self::Output> {
-        cut_bounded_abs_interval(self, position.into(), cut_type)
+    fn cut_at(&self, position: Timestamp, cut_type: CutType) -> CutResult<Self::Output> {
+        cut_bounded_abs_interval(self, position, cut_type)
     }
 }
 
-impl<P> Cuttable<P> for HalfBoundedAbsoluteInterval
-where
-    P: Into<Timestamp>,
-{
+impl Cuttable<Timestamp> for HalfBoundedAbsoluteInterval {
     type Output = AbsoluteInterval;
 
-    fn cut_at(&self, position: P, cut_type: CutType) -> CutResult<Self::Output> {
-        cut_abs_bound_pair(&self.abs_bound_pair(), position.into(), cut_type)
+    fn cut_at(&self, position: Timestamp, cut_type: CutType) -> CutResult<Self::Output> {
+        cut_abs_bound_pair(&self.abs_bound_pair(), position, cut_type)
             .map_cut(|c1, c2| (AbsoluteInterval::from(c1), AbsoluteInterval::from(c2)))
     }
 }
 
-impl<P> Cuttable<P> for RelativeBoundPair
-where
-    P: Into<SignedDuration>,
-{
+impl Cuttable<SignedDuration> for RelativeBoundPair {
     type Output = Self;
 
-    fn cut_at(&self, position: P, cut_type: CutType) -> CutResult<Self::Output> {
-        cut_rel_bound_pair(self, position.into(), cut_type)
+    fn cut_at(&self, position: SignedDuration, cut_type: CutType) -> CutResult<Self::Output> {
+        cut_rel_bound_pair(self, position, cut_type)
     }
 }
 
-impl<P> Cuttable<P> for EmptiableRelativeBoundPair
-where
-    P: Into<SignedDuration>,
-{
+impl Cuttable<SignedDuration> for EmptiableRelativeBoundPair {
     type Output = Self;
 
-    fn cut_at(&self, position: P, cut_type: CutType) -> CutResult<Self::Output> {
-        cut_emptiable_rel_bound_pair(self, position.into(), cut_type)
+    fn cut_at(&self, position: SignedDuration, cut_type: CutType) -> CutResult<Self::Output> {
+        cut_emptiable_rel_bound_pair(self, position, cut_type)
     }
 }
 
-impl<P> Cuttable<P> for RelativeInterval
-where
-    P: Into<SignedDuration>,
-{
+impl Cuttable<SignedDuration> for RelativeInterval {
     type Output = Self;
 
-    fn cut_at(&self, position: P, cut_type: CutType) -> CutResult<Self::Output> {
-        cut_rel_bound_pair(&self.rel_bound_pair(), position.into(), cut_type)
+    fn cut_at(&self, position: SignedDuration, cut_type: CutType) -> CutResult<Self::Output> {
+        cut_rel_bound_pair(&self.rel_bound_pair(), position, cut_type)
             .map_cut(|c1, c2| (RelativeInterval::from(c1), RelativeInterval::from(c2)))
     }
 }
 
-impl<P> Cuttable<P> for EmptiableRelativeInterval
-where
-    P: Into<SignedDuration>,
-{
+impl Cuttable<SignedDuration> for EmptiableRelativeInterval {
     type Output = Self;
 
-    fn cut_at(&self, position: P, cut_type: CutType) -> CutResult<Self::Output> {
-        cut_emptiable_rel_bound_pair(&self.emptiable_rel_bound_pair(), position.into(), cut_type)
+    fn cut_at(&self, position: SignedDuration, cut_type: CutType) -> CutResult<Self::Output> {
+        cut_emptiable_rel_bound_pair(&self.emptiable_rel_bound_pair(), position, cut_type)
             .map_cut(|c1, c2| (EmptiableRelativeInterval::from(c1), EmptiableRelativeInterval::from(c2)))
     }
 }
 
-impl<P> Cuttable<P> for BoundedRelativeInterval
-where
-    P: Into<SignedDuration>,
-{
+impl Cuttable<SignedDuration> for BoundedRelativeInterval {
     type Output = Self;
 
-    fn cut_at(&self, position: P, cut_type: CutType) -> CutResult<Self::Output> {
-        cut_bounded_rel_interval(self, position.into(), cut_type)
+    fn cut_at(&self, position: SignedDuration, cut_type: CutType) -> CutResult<Self::Output> {
+        cut_bounded_rel_interval(self, position, cut_type)
     }
 }
 
-impl<P> Cuttable<P> for HalfBoundedRelativeInterval
-where
-    P: Into<SignedDuration>,
-{
+impl Cuttable<SignedDuration> for HalfBoundedRelativeInterval {
     type Output = RelativeInterval;
 
-    fn cut_at(&self, position: P, cut_type: CutType) -> CutResult<Self::Output> {
-        cut_rel_bound_pair(&self.rel_bound_pair(), position.into(), cut_type)
+    fn cut_at(&self, position: SignedDuration, cut_type: CutType) -> CutResult<Self::Output> {
+        cut_rel_bound_pair(&self.rel_bound_pair(), position, cut_type)
             .map_cut(|c1, c2| (RelativeInterval::from(c1), RelativeInterval::from(c2)))
     }
 }

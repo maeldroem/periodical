@@ -775,7 +775,7 @@ mod precision {
 
             assert_eq!(
                 Precision::unchecked_new(Duration::from_hours(2), PrecisionMode::ToFuture)
-                    .precise_time_with_base_time(&time, &base)?,
+                    .precise_time_with_base_time(&time, base.timestamp())?,
                 "2026-03-29 09:00:00[Europe/Oslo]".parse::<Zoned>()?,
             );
 
@@ -789,7 +789,7 @@ mod precision {
             let base = "2026-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?;
 
             assert_eq!(
-                precision.precise_time_with_base_time(&time, &base)?,
+                precision.precise_time_with_base_time(&time, base.timestamp())?,
                 "2026-01-02 08:16:00[Europe/Oslo]".parse::<Zoned>()?,
             );
 
@@ -807,7 +807,7 @@ mod precision {
             // as a tangible hour.
             assert_eq!(
                 Precision::unchecked_new(Duration::from_hours(2), PrecisionMode::ToFuture)
-                    .precise_time_with_base_time(&time.with_time_zone(TimeZone::get("UTC")?), &base)?,
+                    .precise_time_with_base_time(&time.with_time_zone(TimeZone::get("UTC")?), base.timestamp())?,
                 "2026-03-29 07:00:00Z[UTC]".parse::<Zoned>()?, // = 09:00:00 in Europe/Oslo
             );
 
@@ -822,7 +822,7 @@ mod precision {
 
             assert_eq!(
                 Precision::unchecked_new(Duration::from_mins(30), PrecisionMode::ToFuture)
-                    .precise_time_with_base_time(&time.with_time_zone(TimeZone::get("UTC")?), &base)?,
+                    .precise_time_with_base_time(&time.with_time_zone(TimeZone::get("UTC")?), base.timestamp())?,
                 "2026-03-29 06:00:00Z[UTC]".parse::<Zoned>()?, // = 08:00:00 in Europe/Oslo
             );
 
