@@ -25,19 +25,20 @@ use crate::intervals::absolute::{
     AbsoluteEndBound,
     AbsoluteStartBound,
     EmptiableAbsoluteBoundPair,
+    EmptiableAbsoluteInterval,
     check_absolute_bound_pair_for_interval_creation,
     prepare_absolute_bound_pair_for_interval_creation,
 };
 use crate::intervals::meta::{
     BoundInclusivity,
     Duration as IntervalDuration,
-    IsEmpty,
     Epsilon,
     HasBoundInclusivity,
     HasDuration,
     HasOpenness,
     HasRelativity,
     Interval,
+    IsEmpty,
     Openness,
     Relativity,
 };
@@ -496,32 +497,55 @@ impl
     }
 }
 
-/// Errors that can occur when trying to convert [`EmptiableAbsoluteBoundPair`]
+/// Error that can occur when trying to convert [`EmptiableAbsoluteBoundPair`]
 /// into [`AbsoluteBoundPair`]
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub enum AbsoluteBoundPairFromEmptiableAbsoluteBoundPairError {
-    EmptyVariant,
-}
+pub struct AbsoluteBoundPairTryFromEmptiableAbsoluteBoundPairError;
 
-impl Display for AbsoluteBoundPairFromEmptiableAbsoluteBoundPairError {
+impl Display for AbsoluteBoundPairTryFromEmptiableAbsoluteBoundPairError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::EmptyVariant => write!(f, "Provided EmptiableAbsoluteBoundPair was empty"),
-        }
+        write!(
+            f,
+            "An error occurred when trying to convert `EmptiableAbsoluteBoundPair` into `AbsoluteBoundPair`"
+        )
     }
 }
 
-impl Error for AbsoluteBoundPairFromEmptiableAbsoluteBoundPairError {}
+impl Error for AbsoluteBoundPairTryFromEmptiableAbsoluteBoundPairError {}
 
 impl TryFrom<EmptiableAbsoluteBoundPair> for AbsoluteBoundPair {
-    type Error = AbsoluteBoundPairFromEmptiableAbsoluteBoundPairError;
+    type Error = AbsoluteBoundPairTryFromEmptiableAbsoluteBoundPairError;
 
     fn try_from(value: EmptiableAbsoluteBoundPair) -> Result<Self, Self::Error> {
-        match value {
-            EmptiableAbsoluteBoundPair::Empty => {
-                Err(AbsoluteBoundPairFromEmptiableAbsoluteBoundPairError::EmptyVariant)
-            },
-            EmptiableAbsoluteBoundPair::Bound(bounds) => Ok(bounds),
-        }
+        value
+            .bound()
+            .ok_or(AbsoluteBoundPairTryFromEmptiableAbsoluteBoundPairError)
+    }
+}
+
+/// Error that can occur when trying to convert [`EmptiableAbsoluteInterval`]
+/// into [`AbsoluteBoundPair`]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct AbsoluteBoundPairTryFromEmptiableAbsoluteIntervalError;
+
+impl Display for AbsoluteBoundPairTryFromEmptiableAbsoluteIntervalError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "An error occurred when trying to convert `EmptiableAbsoluteInterval` into `AbsoluteBoundPair`"
+        )
+    }
+}
+
+impl Error for AbsoluteBoundPairTryFromEmptiableAbsoluteIntervalError {}
+
+impl TryFrom<EmptiableAbsoluteInterval> for AbsoluteBoundPair {
+    type Error = AbsoluteBoundPairTryFromEmptiableAbsoluteIntervalError;
+
+    fn try_from(value: EmptiableAbsoluteInterval) -> Result<Self, Self::Error> {
+        Ok(value
+            .bound()
+            .ok_or(AbsoluteBoundPairTryFromEmptiableAbsoluteIntervalError)?
+            .abs_bound_pair())
     }
 }

@@ -480,6 +480,6 @@ fn try_from_emptiable_correct_variant() {
 fn try_from_emptiable_wrong_variant() {
     assert_eq!(
         RelativeBoundPair::try_from(EmptiableRelativeBoundPair::Empty),
-        Err(RelativeBoundPairFromEmptiableRelativeBoundPairError::EmptyVariant),
+        Err(RelativeBoundPairTryFromEmptiableRelativeBoundPairError),
     );
 }
