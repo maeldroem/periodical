@@ -15,17 +15,25 @@ FIXME: Remove single-variant errors
 ## Added
 
 - Added methods to retrieve individual variants of `AbsoluteInterval` (`bounded`, `half_bounded`, `unbounded`)
-- Added methods to retrieve individual variants of `RelativeInterval` (`bounded`, `half_bounded`, `unbounded`)
+- Implemented `From<BoundedAbsoluteInterval>` on `AbsoluteBoundPair`
+- Implemented `From<HalfBoundedAbsoluteInterval>` on `AbsoluteBoundPair`
+- Implemented `From<UnboundedInterval>` on `AbsoluteBoundPair`
 - Implemented `TryFrom<AbsoluteBound>` on `AbsoluteStartBound`
 - Implemented `TryFrom<AbsoluteBound>` on `AbsoluteEndBound`
 - Implemented `TryFrom<EmptiableAbsoluteBoundPair>` on `BoundedAbsoluteInterval`
 - Implemented `TryFrom<EmptiableAbsoluteInterval>` on `BoundedAbsoluteInterval`
 - Implemented `TryFrom<EmptiableAbsoluteInterval>` on `AbsoluteBoundPair`
+
+- Added methods to retrieve individual variants of `RelativeInterval` (`bounded`, `half_bounded`, `unbounded`)
+- Implemented `From<BoundedRelativeInterval>` on `RelativeBoundPair`
+- Implemented `From<HalfBoundedRelativeInterval>` on `RelativeBoundPair`
+- Implemented `From<UnboundedInterval>` on `RelativeBoundPair`
 - Implemented `TryFrom<RelativeBound>` on `RelativeStartBound`
 - Implemented `TryFrom<RelativeBound>` on `RelativeEndBound`
 - Implemented `TryFrom<EmptiableRelativeBoundPair>` on `BoundedRelativeInterval`
 - Implemented `TryFrom<EmptiableRelativeInterval>` on `BoundedRelativeInterval`
 - Implemented `TryFrom<EmptiableRelativeInterval>` on `RelativeBoundPair`
+
 - Implemented `to_range_bound_with` on `BoundInclusivity`
 - Implemented `TryFrom<AbsoluteBoundPair>`on ` UnboundedInterval`
 - Implemented `TryFrom<EmptiableAbsoluteBoundPair>`on ` UnboundedInterval`

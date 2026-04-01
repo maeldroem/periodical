@@ -24,8 +24,10 @@ use serde::{Deserialize, Serialize};
 use crate::intervals::absolute::{
     AbsoluteEndBound,
     AbsoluteStartBound,
+    BoundedAbsoluteInterval,
     EmptiableAbsoluteBoundPair,
     EmptiableAbsoluteInterval,
+    HalfBoundedAbsoluteInterval,
     check_absolute_bound_pair_for_interval_creation,
     prepare_absolute_bound_pair_for_interval_creation,
 };
@@ -42,6 +44,7 @@ use crate::intervals::meta::{
     Openness,
     Relativity,
 };
+use crate::intervals::special::UnboundedInterval;
 
 /// Possession of a **non-empty** absolute bound pair
 pub trait HasAbsoluteBoundPair {
@@ -494,6 +497,24 @@ impl
         let start = AbsoluteStartBound::from(start_opt);
         let end = AbsoluteEndBound::from(end_opt);
         Self::new(start, end)
+    }
+}
+
+impl From<BoundedAbsoluteInterval> for AbsoluteBoundPair {
+    fn from(value: BoundedAbsoluteInterval) -> Self {
+        value.abs_bound_pair()
+    }
+}
+
+impl From<HalfBoundedAbsoluteInterval> for AbsoluteBoundPair {
+    fn from(value: HalfBoundedAbsoluteInterval) -> Self {
+        value.abs_bound_pair()
+    }
+}
+
+impl From<UnboundedInterval> for AbsoluteBoundPair {
+    fn from(value: UnboundedInterval) -> Self {
+        value.abs_bound_pair()
     }
 }
 
