@@ -5,6 +5,10 @@
 Find way to handle multiple interval durations to handle correctly mathematical operations
 (addition, subtraction, etc.)
 
+FIXME: Conversion errors and descriptions are backwards
+
+FIXME: Remove single-variant errors
+
 <details>
 <summary><h1>Changelog</h1></summary>
 
@@ -16,10 +20,12 @@ Find way to handle multiple interval durations to handle correctly mathematical 
 - Implemented `TryFrom<AbsoluteBound>` on `AbsoluteEndBound`
 - Implemented `TryFrom<EmptiableAbsoluteBoundPair>` on `BoundedAbsoluteInterval`
 - Implemented `TryFrom<EmptiableAbsoluteInterval>` on `BoundedAbsoluteInterval`
+- Implemented `TryFrom<EmptiableAbsoluteInterval>` on `AbsoluteBoundPair`
 - Implemented `TryFrom<RelativeBound>` on `RelativeStartBound`
 - Implemented `TryFrom<RelativeBound>` on `RelativeEndBound`
 - Implemented `TryFrom<EmptiableRelativeBoundPair>` on `BoundedRelativeInterval`
 - Implemented `TryFrom<EmptiableRelativeInterval>` on `BoundedRelativeInterval`
+- Implemented `TryFrom<EmptiableRelativeInterval>` on `RelativeBoundPair`
 - Implemented `to_range_bound_with` on `BoundInclusivity`
 - Implemented `TryFrom<AbsoluteBoundPair>`on ` UnboundedInterval`
 - Implemented `TryFrom<EmptiableAbsoluteBoundPair>`on ` UnboundedInterval`
@@ -33,11 +39,13 @@ Find way to handle multiple interval durations to handle correctly mathematical 
 ## Changed
 
 - `BoundedAbsoluteIntervalFromAbsoluteIntervalError` was converted from a single-variant enum to a tag struct
+- `AbsoluteBoundPairFromEmptiableAbsoluteBoundPairError` was converted from a single-variant enum to a tag struct
 - `TryFrom<AbsoluteInterval>` implementation on `BoundedAbsoluteInterval` was re-expressed using the new
   variant retrieval methods of `AbsoluteInterval`
 - `BoundedAbsoluteInterval::to_emptiable` was renamed `to_emptiable_interval` for explicitness
 - `HalfBoundedAbsoluteInterval::to_emptiable` was renamed `to_emptiable_interval` for explicitness
-- `BoundedAbsoluteIntervalFromRelativeIntervalError` was converted from a single-variant enum to a tag struct
+- `BoundedRelativeIntervalFromRelativeIntervalError` was converted from a single-variant enum to a tag struct
+- `RelativeBoundPairFromEmptiableRelativeBoundPairError` was converted from a single-variant enum to a tag struct
 - `TryFrom<RelativeInterval>` implementation on `BoundedRelativeInterval` was re-expressed using the new
   variant retrieval methods of `RelativeInterval`
 - `BoundedRelativeInterval::to_emptiable` was renamed `to_emptiable_interval` for explicitness
