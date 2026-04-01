@@ -263,13 +263,13 @@ fn try_from_relative_interval_correct() {
 fn try_from_relative_interval_wrong() {
     assert_eq!(
         BoundedRelativeInterval::try_from(RelativeInterval::Unbounded(UnboundedInterval)),
-        Err(BoundedRelativeIntervalFromRelativeIntervalError::WrongVariant),
+        Err(BoundedRelativeIntervalFromRelativeIntervalError),
     );
     assert_eq!(
         BoundedRelativeInterval::try_from(RelativeInterval::HalfBounded(HalfBoundedRelativeInterval::new(
             SignedDuration::from_hours(1),
             OpeningDirection::ToFuture,
         ))),
-        Err(BoundedRelativeIntervalFromRelativeIntervalError::WrongVariant),
+        Err(BoundedRelativeIntervalFromRelativeIntervalError),
     );
 }

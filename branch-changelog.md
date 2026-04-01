@@ -9,12 +9,21 @@
 - Added methods to retrieve individual variants of `RelativeInterval` (`bounded`, `half_bounded`, `unbounded`)
 - Implemented `TryFrom<AbsoluteBound>` on `AbsoluteStartBound`
 - Implemented `TryFrom<AbsoluteBound>` on `AbsoluteEndBound`
+- Implemented `TryFrom<EmptiableAbsoluteBoundPair>` on `BoundedAbsoluteInterval`
+- Implemented `TryFrom<EmptiableAbsoluteInterval>` on `BoundedAbsoluteInterval`
 - Implemented `TryFrom<RelativeBound>` on `RelativeStartBound`
 - Implemented `TryFrom<RelativeBound>` on `RelativeEndBound`
+- Implemented `TryFrom<EmptiableRelativeBoundPair>` on `BoundedRelativeInterval`
+- Implemented `TryFrom<EmptiableRelativeInterval>` on `BoundedRelativeInterval`
 
 ## Changed
 
-- Things you've changed
+- `BoundedAbsoluteIntervalFromAbsoluteIntervalError` was converted from a single-variant enum to a tag struct
+- `TryFrom<AbsoluteInterval>` implementation on `BoundedAbsoluteInterval` was re-expressed using the new
+  variant retrieval methods of `AbsoluteInterval`
+- `BoundedAbsoluteIntervalFromRelativeIntervalError` was converted from a single-variant enum to a tag struct
+- `TryFrom<RelativeInterval>` implementation on `BoundedRelativeInterval` was re-expressed using the new
+  variant retrieval methods of `RelativeInterval`
 
 ## Deprecated
 

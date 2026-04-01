@@ -96,7 +96,7 @@ impl EmptiableAbsoluteInterval {
     /// Returns the content of the [`Bound`](EmptiableAbsoluteInterval::Bound) variant
     ///
     /// Consumes `self` and puts the content of the [`Bound`](EmptiableAbsoluteInterval::Bound) variant
-    /// in an [`Option`]. If instead `self` is another variant, the method returns [`None`]
+    /// in an [`Option`]. If instead `self` is another variant, the method returns [`None`].
     ///
     /// # Examples
     ///

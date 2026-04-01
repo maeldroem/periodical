@@ -207,7 +207,7 @@ impl RelativeInterval {
     /// # use periodical::intervals::special::UnboundedInterval;
     /// let interval = RelativeInterval::Unbounded(UnboundedInterval);
     ///
-    /// assert_eq!(interval.unbounded(), Some(half_bounded_interval));
+    /// assert_eq!(interval.unbounded(), Some(UnboundedInterval));
     /// ```
     #[must_use]
     pub fn unbounded(self) -> Option<UnboundedInterval> {
