@@ -21,9 +21,13 @@
 - `BoundedAbsoluteIntervalFromAbsoluteIntervalError` was converted from a single-variant enum to a tag struct
 - `TryFrom<AbsoluteInterval>` implementation on `BoundedAbsoluteInterval` was re-expressed using the new
   variant retrieval methods of `AbsoluteInterval`
+- `BoundedAbsoluteInterval::to_emptiable` was renamed `to_emptiable_interval` for explicitness
+- `HalfBoundedAbsoluteInterval::to_emptiable` was renamed `to_emptiable_interval` for explicitness
 - `BoundedAbsoluteIntervalFromRelativeIntervalError` was converted from a single-variant enum to a tag struct
 - `TryFrom<RelativeInterval>` implementation on `BoundedRelativeInterval` was re-expressed using the new
   variant retrieval methods of `RelativeInterval`
+- `BoundedRelativeInterval::to_emptiable` was renamed `to_emptiable_interval` for explicitness
+- `HalfBoundedRelativeInterval::to_emptiable` was renamed `to_emptiable_interval` for explicitness
 
 ## Deprecated
 
