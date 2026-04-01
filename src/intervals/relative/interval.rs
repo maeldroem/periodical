@@ -138,6 +138,85 @@ impl RelativeInterval {
             .ord_by_start_and_inv_length(&other.rel_bound_pair())
     }
 
+    /// Returns the content of the [`Bounded`](RelativeInterval::Bounded) variant
+    ///
+    /// Consumes `self` and puts the content of the [`Bounded`](RelativeInterval::Bounded) variant
+    /// in an [`Option`]. If instead `self` is another variant, the method returns [`None`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jiff::SignedDuration;
+    /// # use periodical::intervals::relative::BoundedRelativeInterval;
+    /// let bounded_interval = BoundedRelativeInterval::new(
+    ///     SignedDuration::from_hours(8),
+    ///     SignedDuration::from_hours(16),
+    /// );
+    ///
+    /// let interval = bounded_interval.clone().to_interval();
+    ///
+    /// assert_eq!(interval.bounded(), Some(bounded_interval));
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    #[must_use]
+    pub fn bounded(self) -> Option<BoundedRelativeInterval> {
+        match self {
+            Self::Bounded(interval) => Some(interval),
+            _ => None,
+        }
+    }
+
+    /// Returns the content of the [`HalfBounded`](RelativeInterval::HalfBounded) variant
+    ///
+    /// Consumes `self` and puts the content of the [`HalfBounded`](RelativeInterval::HalfBounded) variant
+    /// in an [`Option`]. If instead `self` is another variant, the method returns [`None`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jiff::SignedDuration;
+    /// # use periodical::intervals::relative::HalfBoundedRelativeInterval;
+    /// # use periodical::intervals::meta::OpeningDirection;
+    /// let half_bounded_interval =
+    ///     HalfBoundedRelativeInterval::new(SignedDuration::from_hours(8), OpeningDirection::ToPast);
+    ///
+    /// let interval = half_bounded_interval.clone().to_interval();
+    ///
+    /// assert_eq!(interval.half_bounded(), Some(half_bounded_interval));
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    #[must_use]
+    pub fn half_bounded(self) -> Option<HalfBoundedRelativeInterval> {
+        match self {
+            Self::HalfBounded(interval) => Some(interval),
+            _ => None,
+        }
+    }
+
+    /// Returns the content of the [`Unbounded`](RelativeInterval::Unbounded) variant
+    ///
+    /// Consumes `self` and puts the content of the [`Unbounded`](RelativeInterval::Unbounded) variant
+    /// in an [`Option`]. If instead `self` is another variant, the method returns [`None`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use periodical::intervals::relative::RelativeInterval;
+    /// # use periodical::intervals::special::UnboundedInterval;
+    /// let interval = RelativeInterval::Unbounded(UnboundedInterval);
+    ///
+    /// assert_eq!(interval.unbounded(), Some(half_bounded_interval));
+    /// ```
+    #[must_use]
+    pub fn unbounded(self) -> Option<UnboundedInterval> {
+        match self {
+            Self::Unbounded(interval) => Some(interval),
+            _ => None,
+        }
+    }
+
     /// Wraps the interval in [`EmptiableRelativeInterval`]
     #[must_use]
     pub fn to_emptiable(self) -> EmptiableRelativeInterval {

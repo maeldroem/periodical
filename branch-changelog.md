@@ -5,6 +5,8 @@
 
 ## Added
 
+- Added methods to retrieve individual variants of `AbsoluteInterval` (`bounded`, `half_bounded`, `unbounded`)
+- Added methods to retrieve individual variants of `RelativeInterval` (`bounded`, `half_bounded`, `unbounded`)
 - Implemented `TryFrom<AbsoluteBound>` on `AbsoluteStartBound`
 - Implemented `TryFrom<AbsoluteBound>` on `AbsoluteEndBound`
 - Implemented `TryFrom<RelativeBound>` on `RelativeStartBound`
