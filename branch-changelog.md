@@ -1,11 +1,16 @@
 <!-- CLEAN THIS FILE AFTER CREATING PR -->
 
+# Explanation
+
+Implemented a ton of conversion methods for intervals and converted single-variant enum errors
+to tag struct errors.
+
 # Notes
 
 Find way to handle multiple interval durations to handle correctly mathematical operations
 (addition, subtraction, etc.)
 
-FIXME: Remove implementations of operations where it always returns an error
+Remove implementations of operations where it always returns an error
 
 <details>
 <summary><h1>Changelog</h1></summary>
