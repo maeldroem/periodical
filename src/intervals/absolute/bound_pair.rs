@@ -23,6 +23,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::intervals::absolute::{
     AbsoluteEndBound,
+    AbsoluteInterval,
     AbsoluteStartBound,
     BoundedAbsoluteInterval,
     EmptiableAbsoluteBoundPair,
@@ -508,6 +509,12 @@ impl From<BoundedAbsoluteInterval> for AbsoluteBoundPair {
 
 impl From<HalfBoundedAbsoluteInterval> for AbsoluteBoundPair {
     fn from(value: HalfBoundedAbsoluteInterval) -> Self {
+        value.abs_bound_pair()
+    }
+}
+
+impl From<AbsoluteInterval> for AbsoluteBoundPair {
+    fn from(value: AbsoluteInterval) -> Self {
         value.abs_bound_pair()
     }
 }

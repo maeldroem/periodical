@@ -18,12 +18,12 @@ use crate::intervals::absolute::{AbsoluteBoundPair, AbsoluteEndBound, AbsoluteSt
 use crate::intervals::meta::{
     BoundInclusivity,
     Duration as IntervalDuration,
-    IsEmpty,
     Epsilon,
     HasDuration,
     HasOpenness,
     HasRelativity,
     Interval,
+    IsEmpty,
     Openness,
     Relativity,
 };
