@@ -24,7 +24,7 @@ use super::absolute::{
 };
 use super::meta::{
     Duration as IntervalDuration,
-    Emptiable,
+    IsEmpty,
     HasDuration,
     HasOpenness,
     HasRelativity,
@@ -211,7 +211,7 @@ impl HasEmptiableRelativeBoundPair for EmptyInterval {
     }
 }
 
-impl Emptiable for EmptyInterval {
+impl IsEmpty for EmptyInterval {
     fn is_empty(&self) -> bool {
         true
     }

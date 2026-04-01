@@ -16,7 +16,7 @@ use serde::{Deserialize, Serialize};
 use crate::intervals::meta::{
     BoundInclusivity,
     Duration as IntervalDuration,
-    Emptiable,
+    IsEmpty,
     Epsilon,
     HasDuration,
     HasOpenness,
@@ -197,7 +197,7 @@ impl HasEmptiableRelativeBoundPair for EmptiableRelativeBoundPair {
     }
 }
 
-impl Emptiable for EmptiableRelativeBoundPair {
+impl IsEmpty for EmptiableRelativeBoundPair {
     fn is_empty(&self) -> bool {
         matches!(self, Self::Empty)
     }

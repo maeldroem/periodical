@@ -5,6 +5,7 @@
 
 use std::error::Error;
 use std::fmt::Display;
+use std::ops::Bound;
 use std::time::Duration as StdDuration;
 
 #[cfg(feature = "arbitrary")]
@@ -393,12 +394,11 @@ impl Error for EpsilonInterpretationDurationError {}
 
 /// Interval duration
 ///
-/// Represents the duration of an interval. It can either be
+/// Represents the duration of a single interval. It can either be
 /// [`Infinite`](Duration::Infinite), or [`Finite`](Duration::Finite), in which
 /// case the duration is stored as a standard [`Duration`](StdDuration)
 /// and an [`Epsilon`], which serves to represent infinitesimal duration
-/// variations created by the use of [exclusive
-/// bounds](BoundInclusivity::Exclusive).
+/// variations created by the use of [exclusive bounds](BoundInclusivity::Exclusive).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
@@ -567,6 +567,26 @@ impl BoundInclusivity {
             BoundInclusivity::Exclusive => BoundInclusivity::Inclusive,
         }
     }
+
+    /// Creates a [`Bound`] from [`BoundInclusivity`] and a given value
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::ops::Bound;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// assert_eq!(
+    ///     BoundInclusivity::Exclusive.to_range_bound_with(5),
+    ///     Bound::Excluded(5),
+    /// );
+    /// ```
+    #[must_use]
+    pub fn to_range_bound_with<T>(self, value: T) -> Bound<T> {
+        match self {
+            Self::Inclusive => Bound::Included(value),
+            Self::Exclusive => Bound::Excluded(value),
+        }
+    }
 }
 
 impl Display for BoundInclusivity {
@@ -602,7 +622,7 @@ pub trait HasBoundInclusivity {
 }
 
 /// Capacity of an interval to be empty
-pub trait Emptiable {
+pub trait IsEmpty {
     /// Returns whether the interval is empty
     fn is_empty(&self) -> bool;
 }

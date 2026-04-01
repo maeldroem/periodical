@@ -1,5 +1,10 @@
 <!-- CLEAN THIS FILE AFTER CREATING PR -->
 
+# Notes
+
+Find way to handle multiple interval durations to handle correctly mathematical operations
+(addition, subtraction, etc.)
+
 <details>
 <summary><h1>Changelog</h1></summary>
 
@@ -15,6 +20,7 @@
 - Implemented `TryFrom<RelativeBound>` on `RelativeEndBound`
 - Implemented `TryFrom<EmptiableRelativeBoundPair>` on `BoundedRelativeInterval`
 - Implemented `TryFrom<EmptiableRelativeInterval>` on `BoundedRelativeInterval`
+- Implemented `to_range_bound_with` on `BoundInclusivity`
 
 ## Changed
 
@@ -28,6 +34,7 @@
   variant retrieval methods of `RelativeInterval`
 - `BoundedRelativeInterval::to_emptiable` was renamed `to_emptiable_interval` for explicitness
 - `HalfBoundedRelativeInterval::to_emptiable` was renamed `to_emptiable_interval` for explicitness
+- Renamed `Emptiable` trait to `IsEmpty` for explicitness
 
 ## Deprecated
 

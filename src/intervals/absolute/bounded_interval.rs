@@ -34,7 +34,7 @@ use crate::intervals::absolute::{
 use crate::intervals::meta::{
     BoundInclusivity,
     Duration as IntervalDuration,
-    Emptiable,
+    IsEmpty,
     Epsilon,
     HasBoundInclusivity,
     HasDuration,
@@ -797,7 +797,7 @@ impl HasAbsoluteBoundPair for BoundedAbsoluteInterval {
     }
 }
 
-impl Emptiable for BoundedAbsoluteInterval {
+impl IsEmpty for BoundedAbsoluteInterval {
     fn is_empty(&self) -> bool {
         false
     }
