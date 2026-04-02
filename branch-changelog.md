@@ -11,12 +11,11 @@ Explain the motivation for this PR and what it does/solves
 
 ## Added
 
-- Things you've added
+- Prepared `precision` for relative precision change (`precision::relative::bound`, `precision::relative::interval`)
 
 ## Changed
 
-- All Wikipedia links in documentation are set to be the permanent link given by Wikipedia,
-  in order to avoid broken links in the future
+- Split `precision` into `precision::absolute::bound` and `precision::absolute::interval`
 
 ## Deprecated
 
@@ -28,7 +27,7 @@ Explain the motivation for this PR and what it does/solves
 
 ## Fixed
 
-- Fixed broken Markdown links
+-
 
 ## Security
 
