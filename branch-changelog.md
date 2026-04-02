@@ -9,14 +9,15 @@ Explain the motivation for this PR and what it does/solves
 <details>
 <summary><h1>Changelog</h1></summary>
 
+Remove the sections that don't apply to your PR
+
 ## Added
 
 - Things you've added
 
 ## Changed
 
-- All Wikipedia links in documentation are set to be the permanent link given by Wikipedia,
-  in order to avoid broken links in the future
+- Things you've changed
 
 ## Deprecated
 
@@ -28,7 +29,7 @@ Explain the motivation for this PR and what it does/solves
 
 ## Fixed
 
-- Fixed broken Markdown links
+- Things you've fixed
 
 ## Security
 
