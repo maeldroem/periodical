@@ -9,17 +9,15 @@ Explain the motivation for this PR and what it does/solves
 <details>
 <summary><h1>Changelog</h1></summary>
 
+Remove the sections that don't apply to your PR
+
 ## Added
 
-- Prepared `intervals::ops::precision` for relative precision change (`precision::relative::bound`, `precision::relative::interval`)
+- Things you've added
 
 ## Changed
 
-- Split `intervals::ops::precision` into `precision::absolute::bound` and `precision::absolute::interval`
-- Split `intervals::ops::set_ops` into `set_ops::diff`, `set_ops::intersect`, `set_ops::sym_diff`,
-  and `set_ops::unite`
-- Split `iter::intervals::layered_bounds` into `layered_bounds::state`, `layered_bounds::abs_state_change`,
-  `layered_bounds::rel_state_change`, `layered_bounds::absolute`, and `layered_bounds::relative`
+- Things you've changed
 
 ## Deprecated
 
@@ -31,7 +29,7 @@ Explain the motivation for this PR and what it does/solves
 
 ## Fixed
 
--
+- Things you've fixed
 
 ## Security
 
