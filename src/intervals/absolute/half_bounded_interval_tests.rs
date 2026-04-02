@@ -175,10 +175,11 @@ fn from_range_to_inclusive() -> Result<(), Box<dyn Error>> {
 fn try_from_absolute_bounds_correct() -> Result<(), Box<dyn Error>> {
     assert_eq!(
         HalfBoundedAbsoluteInterval::try_from(AbsoluteBoundPair::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            AbsoluteFiniteBound::new_with_inclusivity(
                 "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
                 BoundInclusivity::Exclusive,
-            )),
+            )
+            .to_start_bound(),
             AbsoluteEndBound::InfiniteFuture,
         )),
         Ok(HalfBoundedAbsoluteInterval::new_with_inclusivity(
@@ -216,7 +217,7 @@ fn try_from_absolute_bounds_wrong() -> Result<(), Box<dyn Error>> {
     );
     assert_eq!(
         HalfBoundedAbsoluteInterval::try_from(AbsoluteBoundPair::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?)),
+            AbsoluteFiniteBound::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new("2025-01-02 00:00:00Z".parse::<Timestamp>()?)),
         )),
         Err(HalfBoundedAbsoluteIntervalTryFromAbsoluteBoundPairError),

@@ -302,14 +302,14 @@ impl From<Option<(Timestamp, BoundInclusivity)>> for AbsoluteStartBound {
 impl From<Bound<Timestamp>> for AbsoluteStartBound {
     fn from(bound: Bound<Timestamp>) -> Self {
         match bound {
-            Bound::Included(time) => AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            Bound::Included(time) => AbsoluteFiniteBound::new_with_inclusivity(
                 time,
                 BoundInclusivity::Inclusive,
-            )),
-            Bound::Excluded(time) => AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            ).to_start_bound(),
+            Bound::Excluded(time) => AbsoluteFiniteBound::new_with_inclusivity(
                 time,
                 BoundInclusivity::Exclusive,
-            )),
+            ).to_start_bound(),
             Bound::Unbounded => AbsoluteStartBound::InfinitePast,
         }
     }

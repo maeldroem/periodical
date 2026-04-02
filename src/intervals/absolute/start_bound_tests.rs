@@ -53,7 +53,9 @@ fn finite() -> Result<(), Box<dyn Error>> {
 #[test]
 fn opposite_finite() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        AbsoluteStartBound::Finite(AbsoluteFiniteBound::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?)).opposite(),
+        AbsoluteFiniteBound::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?)
+            .to_start_bound()
+            .opposite(),
         Some(AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
             "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
             BoundInclusivity::Exclusive,
