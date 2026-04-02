@@ -204,10 +204,8 @@ fn try_from_relative_bounds_correct() {
         BoundedRelativeInterval::try_from(RelativeBoundPair::new(
             RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive,)
                 .to_start_bound(),
-            RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                SignedDuration::from_hours(2),
-                BoundInclusivity::Inclusive,
-            )),
+            RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(2), BoundInclusivity::Inclusive,)
+                .to_end_bound(),
         )),
         Ok(BoundedRelativeInterval::new_with_inclusivity(
             SignedDuration::from_hours(1),
@@ -223,7 +221,7 @@ fn try_from_relative_bounds_wrong() {
     assert_eq!(
         BoundedRelativeInterval::try_from(RelativeBoundPair::new(
             RelativeStartBound::InfinitePast,
-            RelativeEndBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(1))),
+            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound(),
         )),
         Err(BoundedRelativeIntervalTryFromRelativeBoundPairError),
     );

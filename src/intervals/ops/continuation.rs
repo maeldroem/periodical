@@ -522,10 +522,10 @@ pub fn past_continuation_rel_bound_pair(bounds: &RelativeBoundPair) -> Emptiable
         RelativeStartBound::InfinitePast => EmptiableRelativeBoundPair::Empty,
         RelativeStartBound::Finite(finite) => EmptiableRelativeBoundPair::from(RelativeBoundPair::new(
             RelativeStartBound::InfinitePast,
-            RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+            RelativeFiniteBound::new_with_inclusivity(
                 finite.offset(),
                 finite.inclusivity().opposite(),
-            )),
+            ).to_end_bound(),
         )),
     }
 }

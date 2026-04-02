@@ -17,12 +17,13 @@ Remove the sections that don't apply to your PR
 
 ## Changed
 
-- Changed all usage of `AbsoluteStartBound::Finite(x)` to `x.to_start_bound()`
-- Changed all usage of `AbsoluteEndBound::Finite(x)` to `x.to_end_bound()`
-- Changed all usage of `AbsoluteBound::Start(x)` to `x.to_bound()`
-- Changed all usage of `AbsoluteBound::End(x)` to `x.to_bound()`
+- Changed all usages of `AbsoluteStartBound::Finite(x)` to `x.to_start_bound()`
+- Changed all usages of `AbsoluteEndBound::Finite(x)` to `x.to_end_bound()`
+- Changed all usages of `AbsoluteBound::Start(x)` to `x.to_bound()`
+- Changed all usages of `AbsoluteBound::End(x)` to `x.to_bound()`
 
-- Changed all usage of `RelativeStartBound::Finite(x)` to `x.to_start_bound()`
+- Changed all usages of `RelativeStartBound::Finite(x)` to `x.to_start_bound()`
+- Changed all usages of `RelativeEndBound::Finite(x)` to `x.to_end_bound()`
 
 ## Deprecated
 
