@@ -18,8 +18,7 @@
 //!
 //! # Basic usage
 //!
-//! Most of the time, you will want to import the global prelude by using `use
-//! periodical::prelude::*;`.
+//! Most of the time, you will want to import the global prelude by using `use periodical::prelude::*;`.
 //!
 //! The global prelude brings common traits into scope, making the methods
 //! described by the traits available. It also imports common structures, like
@@ -32,8 +31,7 @@
 //! shifts, holidays, active periods, etc. are all part of that category.
 //!
 //! Finding the set difference of a collection of intervals, or finding the kind
-//! of overlap between intervals are all useful tools made easy through the
-//! usage of `periodical`!
+//! of overlap between intervals are all useful tools made easy through the usage of `periodical`!
 //!
 //! Tracking tasks or other time-dependent things is also a good use case for
 //! `periodical`: Its dependency on `chrono` allows for high-precision tracking,
@@ -56,8 +54,7 @@
 //!
 //! This gives multiple advantages: You can define complex and long schedules
 //! easily, have a human-readable representation that can easily be updated, and
-//! has a representation that takes up less space compared to the imperative
-//! way.
+//! has a representation that takes up less space compared to the imperative way.
 //!
 //! # Crate features
 //!

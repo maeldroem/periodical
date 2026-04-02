@@ -6,8 +6,7 @@
 //! It also contains structures to represent [offset ISO weeks](OffsetIsoWeek),
 //! [individual months](Month), [a month within a year](MonthInYear), but also
 //! [calendar anchor offsets](CalendarAnchorOffset), which is used for
-//! representing _naive_ durations anchored to their calendar unit (e.g. ISO
-//! week, month).
+//! representing _naive_ durations anchored to their calendar unit (e.g. ISO week, month).
 
 use std::cmp::Ordering;
 use std::error::Error;
@@ -21,8 +20,7 @@ use jiff::{Error as JiffError, Span, Timestamp};
 ///
 /// A _week_ here is interpreted as a duration.
 ///
-/// _Anchored_ ISO weeks and traditionally-numbered weeks may contain different
-/// amounts of days.
+/// _Anchored_ ISO weeks and traditionally-numbered weeks may contain different amounts of days.
 pub const DAYS_IN_WEEK: u8 = 7;
 
 /// Amount of ISO weeks in a short year
@@ -76,8 +74,7 @@ pub fn date_today(tz: TimeZone) -> Date {
 ///
 /// # Errors
 ///
-/// If the year is out of range, the corresponding [`Error`](JiffError) is
-/// returned.
+/// If the year is out of range, the corresponding [`Error`](JiffError) is returned.
 ///
 /// # Examples
 ///
@@ -214,8 +211,7 @@ impl OffsetIsoWeek {
     /// # Errors
     ///
     /// Returns [`OffsetIsoWeekDateError`] if something went wrong during
-    /// computation, usually due to the computation resulting in an
-    /// out-of-range date.
+    /// computation, usually due to the computation resulting in an out-of-range date.
     ///
     /// # Examples
     ///
@@ -276,8 +272,7 @@ impl OffsetIsoWeek {
     /// # Errors
     ///
     /// Returns [`OffsetIsoWeekDateError`] if something went wrong during
-    /// computation, usually due to the computation resulting in an
-    /// out-of-range date.
+    /// computation, usually due to the computation resulting in an out-of-range date.
     ///
     /// # Examples
     ///
@@ -424,8 +419,7 @@ impl Month {
     ///
     /// # Errors
     ///
-    /// Returns [`MonthTryFromNumberError`] if the number is 0 or is greater
-    /// than 12.
+    /// Returns [`MonthTryFromNumberError`] if the number is 0 or is greater than 12.
     ///
     /// ```
     /// # use periodical::time::{Month, MonthTryFromNumberError};
@@ -438,8 +432,7 @@ impl Month {
 
     /// Associates a year to the [`Month`]
     ///
-    /// Converts the [`Month`] to a [`MonthInYear`], consuming `self` in the
-    /// process.
+    /// Converts the [`Month`] to a [`MonthInYear`], consuming `self` in the process.
     ///
     /// Equivalent to [`MonthInYear::new`].
     ///
@@ -540,8 +533,7 @@ impl MonthInYear {
     ///
     /// Returns [`OutOfRangeMonth`](MonthInYearDateError::OutOfRangeMonth) if
     /// conversion of the [1-offset month number](Month::one_offset_number)
-    /// fails to be converted to [`i8`], which should reasonably never
-    /// happen.
+    /// fails to be converted to [`i8`], which should reasonably never happen.
     ///
     /// Returns [`OutOfRangeYear`](MonthInYearDateError::OutOfRangeYear) if the
     /// stored year is out of range for a [`Date`].
@@ -590,8 +582,7 @@ impl MonthInYear {
     ///
     /// Returns [`OutOfRangeMonth`](MonthInYearDateError::OutOfRangeMonth) if
     /// conversion of the [1-offset month number](Month::one_offset_number)
-    /// fails to be converted to [`i8`], which should reasonably never
-    /// happen.
+    /// fails to be converted to [`i8`], which should reasonably never happen.
     ///
     /// Returns [`OutOfRangeYear`](MonthInYearDateError::OutOfRangeYear) if the
     /// stored year is out of range for a [`Date`].
@@ -677,11 +668,9 @@ impl TryFrom<Date> for MonthInYear {
 ///
 /// # What is a calendar anchor
 ///
-/// A _calendar anchor_ is any subdivision of the Gregorian calendar, e.g. days,
-/// weeks, months, years.
+/// A _calendar anchor_ is any subdivision of the Gregorian calendar, e.g. days, weeks, months, years.
 ///
-/// As other naive units, it is not a precise amount, rather an abstract value
-/// that we often use in common speech.
+/// As other naive units, it is not a precise amount, rather an abstract value that we often use in common speech.
 ///
 /// The goal of this structure is to represent calendar offsets that can be
 /// applied to naive structures such as [`Date`s](Date).
@@ -727,8 +716,7 @@ impl CalendarAnchorOffset {
     /// Whether the calendar offset duration is zero
     ///
     /// This does **not** mean that after applying the [`CalendarAnchorOffset`]
-    /// to another naive structure will result in the same value as the
-    /// original naive structure.
+    /// to another naive structure will result in the same value as the original naive structure.
     #[must_use]
     pub fn is_zero(&self) -> bool {
         match self {
@@ -740,8 +728,7 @@ impl CalendarAnchorOffset {
     /// Whether the stored naive duration is positive (`> 0`)
     ///
     /// This does **not** mean that after applying the [`CalendarAnchorOffset`]
-    /// to another naive structure will result in a value greater than the
-    /// original naive structure.
+    /// to another naive structure will result in a value greater than the original naive structure.
     #[must_use]
     pub fn is_positive(&self) -> bool {
         match self {
@@ -753,8 +740,7 @@ impl CalendarAnchorOffset {
     /// Whether the stored naive duration is negative (`< 0`)
     ///
     /// This does **not** mean that after applying the [`CalendarAnchorOffset`]
-    /// to another naive structure will result in a value less than the
-    /// original naive structure.
+    /// to another naive structure will result in a value less than the original naive structure.
     #[must_use]
     pub fn is_negative(&self) -> bool {
         match self {
@@ -786,8 +772,7 @@ impl PartialOrd for CalendarAnchorOffset {
 /// the resulting date will be `2026-03-02`, as it is the first day of the next
 /// week compared to the given date's week.
 ///
-/// This method is mostly used by
-/// [`checked_add_calendar_anchor_offset_to_date`].
+/// This method is mostly used by [`checked_add_calendar_anchor_offset_to_date`].
 ///
 /// # Errors
 ///
@@ -858,8 +843,7 @@ pub fn checked_add_calendar_week_offset_to_date(
 /// the resulting date will be `2026-03-02`, as it is the first day of the
 /// previous week compared to the given date's week.
 ///
-/// This method is mostly used by
-/// [`checked_sub_calendar_anchor_offset_to_date`].
+/// This method is mostly used by [`checked_sub_calendar_anchor_offset_to_date`].
 ///
 /// # Errors
 ///
@@ -922,8 +906,7 @@ pub fn checked_sub_calendar_week_offset_to_date(
 
 /// Checked addition of a [`CalendarAnchorOffset`] to a [`Date`]
 ///
-/// This operation results in a [`Date`] on the start of anchor (e.g. day, week,
-/// month).
+/// This operation results in a [`Date`] on the start of anchor (e.g. day, week, month).
 ///
 /// # Errors
 ///
@@ -1082,8 +1065,7 @@ pub fn checked_add_calendar_anchor_offset_to_date(
 
 /// Checked subtraction of a [`CalendarAnchorOffset`] to a [`Date`]
 ///
-/// This operation results in a [`Date`] on the start of anchor (e.g. day, week,
-/// month).
+/// This operation results in a [`Date`] on the start of anchor (e.g. day, week, month).
 ///
 /// # Errors
 ///

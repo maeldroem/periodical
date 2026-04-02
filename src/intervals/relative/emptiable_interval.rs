@@ -274,8 +274,8 @@ impl From<(Option<SignedDuration>, Option<SignedDuration>)> for EmptiableRelativ
     }
 }
 
-/// Converts `(Option<(SignedDuration, BoundInclusivity)>,
-/// Option<(SignedDuration, BoundInclusivity)>)` into [`RelativeInterval`]
+/// Converts `(Option<(SignedDuration, BoundInclusivity)>, Option<(SignedDuration, BoundInclusivity)>)`
+/// into [`RelativeInterval`]
 ///
 /// The first tuple element represents the start bound, the second element
 /// represents the end bound.
@@ -322,8 +322,8 @@ impl From<(bool, Option<SignedDuration>, Option<SignedDuration>)> for EmptiableR
     }
 }
 
-/// Converts `(bool, Option<(SignedDuration, BoundInclusivity)>,
-/// Option<(SignedDuration, BoundInclusivity)>)` into [`RelativeInterval`]
+/// Converts `(bool, Option<(SignedDuration, BoundInclusivity)>, Option<(SignedDuration, BoundInclusivity)>)`
+/// into [`RelativeInterval`]
 ///
 /// The second tuple element represents the start bound, the third element
 /// represents the end bound.

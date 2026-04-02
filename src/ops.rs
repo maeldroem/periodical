@@ -1,7 +1,6 @@
 //! Generic operation-related structures
 //!
-//! This module contains [`Precision`], [`RunningResult`] and set operations
-//! result structures.
+//! This module contains [`Precision`], [`RunningResult`] and set operations result structures.
 //!
 //! Those structures are not part of [`intervals::ops`](crate::intervals::ops)
 //! as they are not related to intervals and can be used in other contexts.
@@ -30,11 +29,9 @@ pub enum PrecisionMode {
 }
 
 impl PrecisionMode {
-    /// Creates a [`Precision`] with the given precision without checking
-    /// invariants
+    /// Creates a [`Precision`] with the given precision without checking invariants
     ///
-    /// Equivalent to calling [`Precision::unchecked_new`] with `self` and the
-    /// desired duration.
+    /// Equivalent to calling [`Precision::unchecked_new`] with `self` and the desired duration.
     #[must_use]
     pub fn unchecked_with_precision(self, precision: StdDuration) -> Precision {
         Precision::unchecked_new(precision, self)
@@ -42,13 +39,11 @@ impl PrecisionMode {
 
     /// Creates a [`Precision`] with the given precision
     ///
-    /// Equivalent to calling [`Precision::new`] with `self` and the desired
-    /// duration.
+    /// Equivalent to calling [`Precision::new`] with `self` and the desired duration.
     ///
     /// # Errors
     ///
-    /// Returns [`PrecisionCreationPrecisionIsZeroError`] if
-    /// the given precision is zero.
+    /// Returns [`PrecisionCreationPrecisionIsZeroError`] if the given precision is zero.
     pub fn with_precision(self, precision: StdDuration) -> Result<Precision, PrecisionCreationPrecisionIsZeroError> {
         Precision::new(precision, self)
     }
@@ -60,8 +55,7 @@ impl PrecisionMode {
 ///
 /// Rounding a time is useful in many cases, such as when a output time is
 /// expected to be a multiple of a certain duration. In some companies, this is
-/// used to be able to convert work time into pay without having to handle
-/// fractions.
+/// used to be able to convert work time into pay without having to handle fractions.
 ///
 /// Common rounding values such as 5 minutes, 15 minutes, 45 minutes, 1 hour,
 /// are all divisors of 24 hours, which means that they all are modular with
@@ -71,10 +65,8 @@ impl PrecisionMode {
 /// If you want to use other durations that may not exactly divide a day, you
 /// should keep in mind that the rounding is always based on [the Unix epoch](https://en.wikipedia.org/w/index.php?title=Unix_time&oldid=1308795653).
 ///
-/// To solve that problem, you can use another frame of reference for the
-/// rounding using the
-/// [`precise_time_with_base_time`](Precision::precise_time_with_base_time)
-/// method.
+/// To solve that problem, you can use another frame of reference for the rounding using the
+/// [`precise_time_with_base_time`](Precision::precise_time_with_base_time) method.
 ///
 /// Also, a time will never change if it is already a multiple of the precision
 /// duration. For example, if we round up to every 5 minutes, `08:05:00` won't
@@ -173,8 +165,7 @@ impl Precision {
     ///
     /// # Errors
     ///
-    /// Returns [`PrecisionCreationPrecisionIsZeroError`] if
-    /// the given precision is zero.
+    /// Returns [`PrecisionCreationPrecisionIsZeroError`] if the given precision is zero.
     pub fn new(precision: StdDuration, mode: PrecisionMode) -> Result<Self, PrecisionCreationPrecisionIsZeroError> {
         if precision.is_zero() {
             return Err(PrecisionCreationPrecisionIsZeroError);
@@ -197,13 +188,11 @@ impl Precision {
 
     /// Applies the precision to a given [`u128`] representing a duration
     ///
-    /// This operation is mostly designed for use by
-    /// [`precise_duration`](Precision::precise_duration).
+    /// This operation is mostly designed for use by [`precise_duration`](Precision::precise_duration).
     ///
     /// # Panics
     ///
-    /// Panics if [`Precision`]'s invariants are not respected, i.e. the stored
-    /// precision is zero.
+    /// Panics if [`Precision`]'s invariants are not respected, i.e. the stored precision is zero.
     #[must_use]
     pub fn precise_unsigned_nanos(&self, duration: u128) -> u128 {
         let precision_nanos = self.precision().as_nanos();
@@ -233,13 +222,11 @@ impl Precision {
 
     /// Applies the precision to a given [`i128`] representing a duration
     ///
-    /// This operation is mostly designed for use by
-    /// [`precise_signed_duration`](Precision::precise_signed_duration).
+    /// This operation is mostly designed for use by [`precise_signed_duration`](Precision::precise_signed_duration).
     ///
     /// # Panics
     ///
-    /// Panics if [`Precision`]'s invariants are not respected, i.e. the stored
-    /// precision is zero.
+    /// Panics if [`Precision`]'s invariants are not respected, i.e. the stored precision is zero.
     #[must_use]
     pub fn precise_signed_nanos(&self, duration: i128) -> i128 {
         let precision_nanos = self.precision().as_nanos();
@@ -277,19 +264,16 @@ impl Precision {
 
     /// Applies the precision to a given [`Duration`](StdDuration)
     ///
-    /// Since a duration is relative, rounding is based on the multiple of the
-    /// precision's duration.
+    /// Since a duration is relative, rounding is based on the multiple of the precision's duration.
     ///
     /// # Errors
     ///
-    /// Returns [`PrecisionOutOfRangeDateError`] if the
-    /// computed new duration has an amount of seconds superior to what
-    /// [`u64`] can store.
+    /// Returns [`PrecisionOutOfRangeDateError`] if the computed new duration has an amount of seconds superior
+    /// to what [`u64`] can store.
     ///
     /// # Panics
     ///
-    /// Panics if [`Precision`]'s invariants are not respected, i.e. the stored
-    /// precision is zero.
+    /// Panics if [`Precision`]'s invariants are not respected, i.e. the stored precision is zero.
     ///
     /// # Examples
     ///
@@ -319,18 +303,15 @@ impl Precision {
 
     /// Applies the precision to a given [`SignedDuration`]
     ///
-    /// Since a duration is relative, rounding is based on the multiple of the
-    /// precision's duration.
+    /// Since a duration is relative, rounding is based on the multiple of the precision's duration.
     ///
     /// # Errors
     ///
-    /// Returns [`PrecisionOutOfRangeDateError`] if the
-    /// computed new duration exceeded what [`i128`] can store.
+    /// Returns [`PrecisionOutOfRangeDateError`] if the computed new duration exceeded what [`i128`] can store.
     ///
     /// # Panics
     ///
-    /// Panics if [`Precision`]'s invariants are not respected, i.e. the stored
-    /// precision is zero.
+    /// Panics if [`Precision`]'s invariants are not respected, i.e. the stored precision is zero.
     ///
     /// # Examples
     ///
@@ -364,8 +345,8 @@ impl Precision {
     ///
     /// Instead, this method assumes this is not your intention and that you
     /// instead want to round the displayed clock time to the duration.
-    /// See [`precise_time_with_base_time`](Precision::precise_time_with_base_time) if this is does not match
-    /// your desired behavior.
+    /// See [`precise_time_with_base_time`](Precision::precise_time_with_base_time)
+    /// if this is does not match your desired behavior.
     ///
     /// This method applies the rounding based on the time's date and
     /// temporarily assumes a linear timezone: UTC. This assumption is to
@@ -394,8 +375,7 @@ impl Precision {
     ///
     /// # Panics
     ///
-    /// Panics if [`Precision`]'s invariants are not respected, i.e. the stored
-    /// precision is zero.
+    /// Panics if [`Precision`]'s invariants are not respected, i.e. the stored precision is zero.
     ///
     /// # Examples
     ///
@@ -497,14 +477,12 @@ impl Precision {
     ///
     /// # Errors
     ///
-    /// Returns [`PrecisionOutOfRangeDateError`] if the
-    /// resulting time would result in a time that cannot be stored in
-    /// [`Zoned`].
+    /// Returns [`PrecisionOutOfRangeDateError`] if the resulting time would result in a time
+    /// that cannot be stored in [`Zoned`].
     ///
     /// # Panics
     ///
-    /// Panics if [`Precision`]'s invariants are not respected, i.e. the stored
-    /// precision is zero.
+    /// Panics if [`Precision`]'s invariants are not respected, i.e. the stored precision is zero.
     ///
     /// # Examples
     ///
@@ -588,8 +566,7 @@ impl Error for PrecisionOutOfRangeDateError {}
 /// If returning an unfinished result, for example from an iterator, is useful,
 /// this enumerator helps with determining the state of the running result.
 ///
-/// It is currently not used in `periodical` and therefore may be subject to
-/// deletion in the future.
+/// It is currently not used in `periodical` and therefore may be subject to deletion in the future.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum RunningResult<R, D = R> {
@@ -741,8 +718,7 @@ pub enum ComplementResult<C> {
 }
 
 impl<C> ComplementResult<C> {
-    /// Whether the [`ComplementResult`] is of the
-    /// [`Single`](ComplementResult::Single) variant
+    /// Whether the [`ComplementResult`] is of the [`Single`](ComplementResult::Single) variant
     ///
     /// # Examples
     ///
@@ -755,8 +731,7 @@ impl<C> ComplementResult<C> {
         matches!(self, Self::Single(_))
     }
 
-    /// Whether the [`ComplementResult`] is of the
-    /// [`Split`](ComplementResult::Split) variant
+    /// Whether the [`ComplementResult`] is of the [`Split`](ComplementResult::Split) variant
     ///
     /// # Examples
     ///
@@ -854,8 +829,7 @@ pub enum UnionResult<U> {
 }
 
 impl<U> UnionResult<U> {
-    /// Whether the [`UnionResult`] is of the [`United`](UnionResult::United)
-    /// variant
+    /// Whether the [`UnionResult`] is of the [`United`](UnionResult::United) variant
     ///
     /// # Examples
     ///
@@ -868,8 +842,7 @@ impl<U> UnionResult<U> {
         matches!(self, Self::United(_))
     }
 
-    /// Whether the [`UnionResult`] is of the
-    /// [`Separate`](UnionResult::Separate) variant
+    /// Whether the [`UnionResult`] is of the [`Separate`](UnionResult::Separate) variant
     ///
     /// # Examples
     ///
@@ -884,9 +857,8 @@ impl<U> UnionResult<U> {
 
     /// Returns the content of the [`United`](UnionResult::United) variant
     ///
-    /// Consumes `self` and puts the content of the
-    /// [`United`](UnionResult::United) variant in an [`Option`]. If instead
-    /// `self` is another variant, this method returns [`None`].
+    /// Consumes `self` and puts the content of the [`United`](UnionResult::United) variant in an [`Option`].
+    /// If instead `self` is another variant, this method returns [`None`].
     ///
     /// # Examples
     ///
@@ -939,8 +911,7 @@ pub enum IntersectionResult<I> {
 }
 
 impl<I> IntersectionResult<I> {
-    /// Whether the [`IntersectionResult`] is of the
-    /// [`Intersected`](IntersectionResult::Intersected) variant
+    /// Whether the [`IntersectionResult`] is of the [`Intersected`](IntersectionResult::Intersected) variant
     ///
     /// # Examples
     ///
@@ -953,8 +924,7 @@ impl<I> IntersectionResult<I> {
         matches!(self, Self::Intersected(_))
     }
 
-    /// Whether the [`IntersectionResult`] is of the
-    /// [`Separate`](IntersectionResult::Separate) variant
+    /// Whether the [`IntersectionResult`] is of the [`Separate`](IntersectionResult::Separate) variant
     ///
     /// # Examples
     ///
@@ -967,13 +937,10 @@ impl<I> IntersectionResult<I> {
         matches!(self, Self::Separate)
     }
 
-    /// Returns the content of the
-    /// [`Intersected`](IntersectionResult::Intersected) variant
+    /// Returns the content of the [`Intersected`](IntersectionResult::Intersected) variant
     ///
-    /// Consumes `self` and puts the content of the
-    /// [`Intersected`](IntersectionResult::Intersected) variant
-    /// in an [`Option`]. If instead `self` is another variant, the method
-    /// returns [`None`].
+    /// Consumes `self` and puts the content of the [`Intersected`](IntersectionResult::Intersected) variant
+    /// in an [`Option`]. If instead `self` is another variant, the method returns [`None`].
     ///
     /// # Examples
     ///
@@ -993,8 +960,7 @@ impl<I> IntersectionResult<I> {
         }
     }
 
-    /// Maps the contents of the
-    /// [`Intersected`](IntersectionResult::Intersected) variant
+    /// Maps the contents of the [`Intersected`](IntersectionResult::Intersected) variant
     ///
     /// # Examples
     ///
@@ -1047,8 +1013,7 @@ impl<D> DifferenceResult<D> {
         matches!(self, Self::Single(_) | Self::Split(..))
     }
 
-    /// Whether the [`DifferenceResult`] is of the
-    /// [`Single`](DifferenceResult::Single) variant
+    /// Whether the [`DifferenceResult`] is of the [`Single`](DifferenceResult::Single) variant
     ///
     /// # Examples
     ///
@@ -1062,8 +1027,7 @@ impl<D> DifferenceResult<D> {
         matches!(self, Self::Single(_))
     }
 
-    /// Whether the [`DifferenceResult`] is of the
-    /// [`Split`](DifferenceResult::Split) variant
+    /// Whether the [`DifferenceResult`] is of the [`Split`](DifferenceResult::Split) variant
     ///
     /// # Examples
     ///
@@ -1077,8 +1041,7 @@ impl<D> DifferenceResult<D> {
         matches!(self, Self::Split(..))
     }
 
-    /// Whether the [`DifferenceResult`] is of the
-    /// [`Separate`](DifferenceResult::Separate) variant
+    /// Whether the [`DifferenceResult`] is of the [`Separate`](DifferenceResult::Separate) variant
     ///
     /// # Examples
     ///
@@ -1094,9 +1057,8 @@ impl<D> DifferenceResult<D> {
 
     /// Returns the content of the [`Single`](DifferenceResult::Single) variant
     ///
-    /// Consumes `self` and puts the content of the
-    /// [`Single`](DifferenceResult::Single) variant in an [`Option`]. If
-    /// instead `self` is another variant, the method returns [`None`].
+    /// Consumes `self` and puts the content of the [`Single`](DifferenceResult::Single) variant in an [`Option`].
+    /// If instead `self` is another variant, the method returns [`None`].
     ///
     /// # Examples
     ///
@@ -1116,9 +1078,8 @@ impl<D> DifferenceResult<D> {
 
     /// Returns the content of the [`Split`](DifferenceResult::Split) variant
     ///
-    /// Consumes `self` and puts the content of the
-    /// [`Split`](DifferenceResult::Split) variant in an [`Option`]. If
-    /// instead `self` is another variant, the method returns [`None`].
+    /// Consumes `self` and puts the content of the [`Split`](DifferenceResult::Split) variant in an [`Option`].
+    /// If instead `self` is another variant, the method returns [`None`].
     ///
     /// # Examples
     ///
@@ -1139,11 +1100,11 @@ impl<D> DifferenceResult<D> {
         }
     }
 
-    /// Maps the contents of the [`Single`](DifferenceResult::Single) and
-    /// [`Split`](DifferenceResult::Split) variants
+    /// Maps the contents of the [`Single`](DifferenceResult::Single)
+    /// and [`Split`](DifferenceResult::Split) variants
     ///
-    /// Uses a closure that describes the transformation from the original
-    /// difference elements to the transformed ones.
+    /// Uses a closure that describes the transformation from the original difference elements
+    /// to the transformed ones.
     ///
     /// # Examples
     ///
@@ -1246,13 +1207,10 @@ impl<D> SymmetricDifferenceResult<D> {
         matches!(self, Self::Separate)
     }
 
-    /// Returns the content of the [`Single`](SymmetricDifferenceResult::Single)
-    /// variant
+    /// Returns the content of the [`Single`](SymmetricDifferenceResult::Single) variant
     ///
-    /// Consumes `self` and puts the content of the
-    /// [`Single`](SymmetricDifferenceResult::Single) variant
-    /// in an [`Option`]. If instead `self` is another variant, the method
-    /// returns [`None`].
+    /// Consumes `self` and puts the content of the [`Single`](SymmetricDifferenceResult::Single) variant
+    /// in an [`Option`]. If instead `self` is another variant, the method returns [`None`].
     ///
     /// # Examples
     ///
@@ -1276,13 +1234,10 @@ impl<D> SymmetricDifferenceResult<D> {
         }
     }
 
-    /// Returns the content of the [`Split`](SymmetricDifferenceResult::Split)
-    /// variant
+    /// Returns the content of the [`Split`](SymmetricDifferenceResult::Split) variant
     ///
-    /// Consumes `self` and puts the content of the
-    /// [`Split`](SymmetricDifferenceResult::Split) variant
-    /// in an [`Option`]. If instead `self` is another variant, the method
-    /// returns [`None`].
+    /// Consumes `self` and puts the content of the [`Split`](SymmetricDifferenceResult::Split) variant
+    /// in an [`Option`]. If instead `self` is another variant, the method returns [`None`].
     ///
     /// # Examples
     ///
