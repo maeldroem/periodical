@@ -11,11 +11,13 @@ Explain the motivation for this PR and what it does/solves
 
 ## Added
 
-- Prepared `precision` for relative precision change (`precision::relative::bound`, `precision::relative::interval`)
+- Prepared `intervals::ops::precision` for relative precision change (`precision::relative::bound`, `precision::relative::interval`)
 
 ## Changed
 
-- Split `precision` into `precision::absolute::bound` and `precision::absolute::interval`
+- Split `intervals::ops::precision` into `precision::absolute::bound` and `precision::absolute::interval`
+- Split `intervals::ops::set_ops` into `set_ops::diff`, `set_ops::intersect`, `set_ops::sym_diff`,
+  and `set_ops::unite`
 
 ## Deprecated
 
