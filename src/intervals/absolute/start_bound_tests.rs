@@ -56,10 +56,13 @@ fn opposite_finite() -> Result<(), Box<dyn Error>> {
         AbsoluteFiniteBound::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?)
             .to_start_bound()
             .opposite(),
-        Some(AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-            "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-            BoundInclusivity::Exclusive,
-        ))),
+        Some(
+            AbsoluteFiniteBound::new_with_inclusivity(
+                "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
+                BoundInclusivity::Exclusive,
+            )
+            .to_end_bound()
+        ),
     );
     Ok(())
 }

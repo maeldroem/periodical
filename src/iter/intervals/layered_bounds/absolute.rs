@@ -4,7 +4,7 @@ use std::cmp::Ordering;
 use std::iter::{FusedIterator, Peekable};
 use std::ops::{Add, Sub};
 
-use crate::intervals::absolute::{AbsoluteBound, AbsoluteEndBound};
+use crate::intervals::absolute::AbsoluteBound;
 use crate::intervals::meta::BoundInclusivity;
 use crate::intervals::ops::{BoundOrdering, BoundOverlapDisambiguationRuleSet, PartialBoundOrd};
 use crate::iter::intervals::layered_bounds::abs_state_change::LayeredBoundsStateChangeAtAbsoluteBound;
@@ -804,7 +804,7 @@ pub fn layered_abs_bounds_change_start_end(
                 let change_to_return = Change::new(
                     old_state,
                     LayeredBoundsState::BothLayers,
-                    Some(AbsoluteEndBound::Finite(end_of_second_layer)),
+                    Some(end_of_second_layer.to_end_bound()),
                     // We use `finite_first_layer_start` here because it overlaps with the second layer's end
                     // for a single instant
                     Some(finite_first_layer_start.to_start_bound()),
@@ -820,7 +820,7 @@ pub fn layered_abs_bounds_change_start_end(
                 *queued_result_mut = Some(Change::new(
                     LayeredBoundsState::BothLayers,
                     *state_mut,
-                    Some(AbsoluteEndBound::Finite(finite_first_layer_start)),
+                    Some(finite_first_layer_start.to_end_bound()),
                     Some(start_of_first_layer.to_start_bound()),
                 ));
 
@@ -833,7 +833,7 @@ pub fn layered_abs_bounds_change_start_end(
                 Change::new(
                     old_state,
                     *state_mut,
-                    Some(AbsoluteEndBound::Finite(finite_second_layer_end)),
+                    Some(finite_second_layer_end.to_end_bound()),
                     Some(finite_first_layer_start.to_start_bound()),
                 )
             }
@@ -919,7 +919,7 @@ pub fn layered_abs_bounds_change_end_start(
                 let change_to_return = Change::new(
                     old_state,
                     LayeredBoundsState::BothLayers,
-                    Some(AbsoluteEndBound::Finite(end_of_first_layer)),
+                    Some(end_of_first_layer.to_end_bound()),
                     // We use `finite_second_layer_start` here because it overlaps with the first layer's end
                     // for a single instant
                     Some(finite_second_layer_start.to_start_bound()),
@@ -935,7 +935,7 @@ pub fn layered_abs_bounds_change_end_start(
                 *queued_result_mut = Some(Change::new(
                     LayeredBoundsState::BothLayers,
                     *state_mut,
-                    Some(AbsoluteEndBound::Finite(finite_second_layer_start)),
+                    Some(finite_second_layer_start.to_end_bound()),
                     Some(start_of_second_layer.to_start_bound()),
                 ));
 
@@ -948,7 +948,7 @@ pub fn layered_abs_bounds_change_end_start(
                 Change::new(
                     old_state,
                     *state_mut,
-                    Some(AbsoluteEndBound::Finite(finite_first_layer_end)),
+                    Some(finite_first_layer_end.to_end_bound()),
                     Some(finite_second_layer_start.to_start_bound()),
                 )
             }

@@ -188,7 +188,6 @@ use serde::{Deserialize, Serialize};
 use super::point_containment::CanPositionPointContainment;
 use crate::intervals::absolute::{
     AbsoluteBoundPair,
-    AbsoluteEndBound,
     AbsoluteFiniteBound,
     AbsoluteInterval,
     BoundedAbsoluteInterval,
@@ -805,10 +804,7 @@ pub fn cut_abs_bound_pair(
         return CutResult::Uncut;
     }
 
-    let past_cut_end = AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-        at,
-        cut_type.past_bound_inclusivity(),
-    ));
+    let past_cut_end = AbsoluteFiniteBound::new_with_inclusivity(at, cut_type.past_bound_inclusivity()).to_end_bound();
     let future_cut_start =
         AbsoluteFiniteBound::new_with_inclusivity(at, cut_type.future_bound_inclusivity()).to_start_bound();
 
@@ -821,10 +817,7 @@ pub fn cut_abs_bound_pair(
     let mut past_split = bounds.clone();
     let mut future_split = bounds.clone();
 
-    past_split.set_end(AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-        at,
-        cut_type.past_bound_inclusivity(),
-    )));
+    past_split.set_end(AbsoluteFiniteBound::new_with_inclusivity(at, cut_type.past_bound_inclusivity()).to_end_bound());
 
     future_split
         .set_start(AbsoluteFiniteBound::new_with_inclusivity(at, cut_type.future_bound_inclusivity()).to_start_bound());

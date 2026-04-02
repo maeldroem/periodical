@@ -440,10 +440,10 @@ pub fn past_continuation_abs_bound_pair(bounds: &AbsoluteBoundPair) -> Emptiable
         AbsoluteStartBound::InfinitePast => EmptiableAbsoluteBoundPair::Empty,
         AbsoluteStartBound::Finite(finite) => EmptiableAbsoluteBoundPair::from(AbsoluteBoundPair::new(
             AbsoluteStartBound::InfinitePast,
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            AbsoluteFiniteBound::new_with_inclusivity(
                 finite.time(),
                 finite.inclusivity().opposite(),
-            )),
+            ).to_end_bound(),
         )),
     }
 }
