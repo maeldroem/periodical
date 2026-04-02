@@ -53,7 +53,6 @@ tests! {
     mod grow_tests;
     mod overlap_tests;
     mod point_containment_tests;
-    mod precision_tests;
     mod relativity_conversion_tests;
     mod remove_overlap_or_gap_tests;
     mod remove_overlap_tests;
@@ -86,7 +85,7 @@ inline_docs! {
         CanPositionPointContainment, DEFAULT_POINT_CONTAINMENT_RULES, DisambiguatedPointContainmentPosition,
         PointContainmentPosition, PointContainmentRule, PointContainmentRuleSet,
     };
-    pub use precision::PreciseAbsoluteInterval;
+    pub use precision::{PreciseAbsoluteInterval, PreciseAbsoluteBound};
     pub use relativity_conversion::{ToAbsolute, ToRelative};
     pub use remove_overlap::{OverlapRemovable, OverlapRemovalResult};
     pub use remove_overlap_or_gap::{OverlapOrGapRemovalResult, RemovableOverlapOrGap};
