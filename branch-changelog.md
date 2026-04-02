@@ -18,6 +18,8 @@ Explain the motivation for this PR and what it does/solves
 - Split `intervals::ops::precision` into `precision::absolute::bound` and `precision::absolute::interval`
 - Split `intervals::ops::set_ops` into `set_ops::diff`, `set_ops::intersect`, `set_ops::sym_diff`,
   and `set_ops::unite`
+- Split `iter::intervals::layered_bounds` into `layered_bounds::state`, `layered_bounds::abs_state_change`,
+  `layered_bounds::rel_state_change`, `layered_bounds::absolute`, and `layered_bounds::relative`
 
 ## Deprecated
 
