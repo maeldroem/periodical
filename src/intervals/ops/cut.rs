@@ -225,8 +225,8 @@ use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 /// of the cut, the second element describes the [`BoundInclusivity`] to put on
 /// the future part of the cut.
 ///
-/// For example, `CutType::new(BoundInclusivity::Inclusive,
-/// BoundInclusivity::Exclusive)`, will cut an interval such that the first cut
+/// For example, `CutType::new(BoundInclusivity::Inclusive, BoundInclusivity::Exclusive)`,
+/// will cut an interval such that the first cut
 /// part will end with an inclusive bound at the position
 /// given to [`Cuttable::cut_at`], and the second part will start with an
 /// exclusive bound at the same position.

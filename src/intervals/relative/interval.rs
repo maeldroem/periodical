@@ -386,8 +386,8 @@ impl From<(Option<SignedDuration>, Option<SignedDuration>)> for RelativeInterval
     }
 }
 
-/// Converts `(Option<(SignedDuration, BoundInclusivity)>,
-/// Option<(SignedDuration, BoundInclusivity)>)` into [`RelativeInterval`]
+/// Converts `(Option<(SignedDuration, BoundInclusivity)>, Option<(SignedDuration, BoundInclusivity)>)`
+/// into [`RelativeInterval`]
 ///
 /// The first tuple element represents the start bound, the second element
 /// represents the end bound.
