@@ -216,38 +216,16 @@ impl OffsetIsoWeek {
     /// # Examples
     ///
     /// ```
-    /// # use jiff::Error as JiffError;
+    /// # use std::error::Error;
     /// # use jiff::civil::Date;
-    /// # use periodical::time::{OffsetIsoWeek, OffsetIsoWeekDateError, OffsetIsoWeekCreationError};
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     OffsetIsoWeekCreationError(OffsetIsoWeekCreationError),
-    /// #     OffsetIsoWeekDateError(OffsetIsoWeekDateError),
-    /// #     JiffError(JiffError),
-    /// # }
-    /// #
-    /// # impl From<OffsetIsoWeekCreationError> for ExampleError {
-    /// #     fn from(value: OffsetIsoWeekCreationError) -> Self {
-    /// #         Self::OffsetIsoWeekCreationError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<OffsetIsoWeekDateError> for ExampleError {
-    /// #     fn from(value: OffsetIsoWeekDateError) -> Self {
-    /// #         Self::OffsetIsoWeekDateError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<JiffError> for ExampleError {
-    /// #     fn from(value: JiffError) -> Self {
-    /// #         Self::JiffError(value)
-    /// #     }
-    /// # }
+    /// # use periodical::time::OffsetIsoWeek;
     /// let first_iso_week_on_sunday_of_2026 = OffsetIsoWeek::new_with_offset(1, 2026, -1)?;
     ///
-    /// assert_eq!(first_iso_week_on_sunday_of_2026.first_day()?, "2025-12-28".parse::<Date>()?);
-    /// # Ok::<(), ExampleError>(())
+    /// assert_eq!(
+    ///     first_iso_week_on_sunday_of_2026.first_day()?,
+    ///     "2025-12-28".parse::<Date>()?
+    /// );
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn first_day(&self) -> Result<Date, OffsetIsoWeekDateError> {
         let iso_week_first_day = ISOWeekDate::new(
@@ -277,38 +255,16 @@ impl OffsetIsoWeek {
     /// # Examples
     ///
     /// ```
-    /// # use jiff::Error as JiffError;
+    /// # use std::error::Error;
     /// # use jiff::civil::Date;
-    /// # use periodical::time::{OffsetIsoWeek, OffsetIsoWeekDateError, OffsetIsoWeekCreationError};
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     OffsetIsoWeekCreationError(OffsetIsoWeekCreationError),
-    /// #     OffsetIsoWeekDateError(OffsetIsoWeekDateError),
-    /// #     JiffError(JiffError),
-    /// # }
-    /// #
-    /// # impl From<OffsetIsoWeekCreationError> for ExampleError {
-    /// #     fn from(value: OffsetIsoWeekCreationError) -> Self {
-    /// #         Self::OffsetIsoWeekCreationError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<OffsetIsoWeekDateError> for ExampleError {
-    /// #     fn from(value: OffsetIsoWeekDateError) -> Self {
-    /// #         Self::OffsetIsoWeekDateError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<JiffError> for ExampleError {
-    /// #     fn from(value: JiffError) -> Self {
-    /// #         Self::JiffError(value)
-    /// #     }
-    /// # }
+    /// # use periodical::time::OffsetIsoWeek;
     /// let first_iso_week_on_sunday_of_2026 = OffsetIsoWeek::new_with_offset(1, 2026, -1)?;
     ///
-    /// assert_eq!(first_iso_week_on_sunday_of_2026.last_day()?, "2026-01-03".parse::<Date>()?);
-    /// # Ok::<(), ExampleError>(())
+    /// assert_eq!(
+    ///     first_iso_week_on_sunday_of_2026.last_day()?,
+    ///     "2026-01-03".parse::<Date>()?
+    /// );
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn last_day(&self) -> Result<Date, OffsetIsoWeekDateError> {
         let iso_week_last_day = ISOWeekDate::new(
@@ -541,31 +497,13 @@ impl MonthInYear {
     /// # Examples
     ///
     /// ```
-    /// # use jiff::Error as JiffError;
+    /// # use std::error::Error;
     /// # use jiff::civil::Date;
-    /// # use periodical::time::{Month, MonthInYear, MonthInYearDateError};
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     MonthInYearDateError(MonthInYearDateError),
-    /// #     JiffError(JiffError),
-    /// # }
-    /// #
-    /// # impl From<MonthInYearDateError> for ExampleError {
-    /// #     fn from(value: MonthInYearDateError) -> Self {
-    /// #         Self::MonthInYearDateError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<JiffError> for ExampleError {
-    /// #     fn from(value: JiffError) -> Self {
-    /// #         Self::JiffError(value)
-    /// #     }
-    /// # }
+    /// # use periodical::time::{Month, MonthInYear};
     /// let may_2026 = MonthInYear::new(Month::May, 2026);
     ///
     /// assert_eq!(may_2026.first_day()?, "2026-05-01".parse::<Date>()?);
-    /// # Ok::<(), ExampleError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn first_day(&self) -> Result<Date, MonthInYearDateError> {
         Date::new(
@@ -590,31 +528,13 @@ impl MonthInYear {
     /// # Examples
     ///
     /// ```
-    /// # use jiff::Error as JiffError;
+    /// # use std::error::Error;
     /// # use jiff::civil::Date;
-    /// # use periodical::time::{Month, MonthInYear, MonthInYearDateError};
-    /// #
-    /// # #[derive(Debug)]
-    /// # enum ExampleError {
-    /// #     MonthInYearDateError(MonthInYearDateError),
-    /// #     JiffError(JiffError),
-    /// # }
-    /// #
-    /// # impl From<MonthInYearDateError> for ExampleError {
-    /// #     fn from(value: MonthInYearDateError) -> Self {
-    /// #         Self::MonthInYearDateError(value)
-    /// #     }
-    /// # }
-    /// #
-    /// # impl From<JiffError> for ExampleError {
-    /// #     fn from(value: JiffError) -> Self {
-    /// #         Self::JiffError(value)
-    /// #     }
-    /// # }
+    /// # use periodical::time::{Month, MonthInYear};
     /// let may_2026 = MonthInYear::new(Month::May, 2026);
     ///
     /// assert_eq!(may_2026.last_day()?, "2026-05-31".parse::<Date>()?);
-    /// # Ok::<(), ExampleError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn last_day(&self) -> Result<Date, MonthInYearDateError> {
         self.first_day().map(Date::last_of_month)
@@ -785,27 +705,9 @@ impl PartialOrd for CalendarAnchorOffset {
 /// # Examples
 ///
 /// ```
-/// # use jiff::Error as JiffError;
+/// # use std::error::Error;
 /// # use jiff::civil::{Date, Weekday};
-/// # use periodical::time::{CalendarAnchorOffsetDateError, checked_add_calendar_week_offset_to_date};
-/// #
-/// # #[derive(Debug)]
-/// # enum ExampleError {
-/// #     CalendarAnchorOffsetDateError(CalendarAnchorOffsetDateError),
-/// #     JiffError(JiffError),
-/// # }
-/// #
-/// # impl From<CalendarAnchorOffsetDateError> for ExampleError {
-/// #     fn from(value: CalendarAnchorOffsetDateError) -> Self {
-/// #         Self::CalendarAnchorOffsetDateError(value)
-/// #     }
-/// # }
-/// #
-/// # impl From<JiffError> for ExampleError {
-/// #     fn from(value: JiffError) -> Self {
-/// #         Self::JiffError(value)
-/// #     }
-/// # }
+/// # use periodical::time::checked_add_calendar_week_offset_to_date;
 /// let date = "2026-03-04".parse::<Date>()?;
 ///
 /// assert_eq!(
@@ -816,7 +718,7 @@ impl PartialOrd for CalendarAnchorOffset {
 ///     checked_add_calendar_week_offset_to_date(-2, Weekday::Sunday, date)?,
 ///     "2026-02-15".parse::<Date>()?,
 /// );
-/// # Ok::<(), ExampleError>(())
+/// # Ok::<(), Box<dyn Error>>(())
 /// ```
 pub fn checked_add_calendar_week_offset_to_date(
     weeks_offset: i64,
@@ -856,27 +758,9 @@ pub fn checked_add_calendar_week_offset_to_date(
 /// # Examples
 ///
 /// ```
-/// # use jiff::Error as JiffError;
+/// # use std::error::Error;
 /// # use jiff::civil::{Date, Weekday};
-/// # use periodical::time::{CalendarAnchorOffsetDateError, checked_sub_calendar_week_offset_to_date};
-/// #
-/// # #[derive(Debug)]
-/// # enum ExampleError {
-/// #     CalendarAnchorOffsetDateError(CalendarAnchorOffsetDateError),
-/// #     JiffError(JiffError),
-/// # }
-/// #
-/// # impl From<CalendarAnchorOffsetDateError> for ExampleError {
-/// #     fn from(value: CalendarAnchorOffsetDateError) -> Self {
-/// #         Self::CalendarAnchorOffsetDateError(value)
-/// #     }
-/// # }
-/// #
-/// # impl From<JiffError> for ExampleError {
-/// #     fn from(value: JiffError) -> Self {
-/// #         Self::JiffError(value)
-/// #     }
-/// # }
+/// # use periodical::time::checked_sub_calendar_week_offset_to_date;
 /// let date = "2026-03-04".parse::<Date>()?;
 ///
 /// assert_eq!(
@@ -887,7 +771,7 @@ pub fn checked_add_calendar_week_offset_to_date(
 ///     checked_sub_calendar_week_offset_to_date(-2, Weekday::Sunday, date)?,
 ///     "2026-03-15".parse::<Date>()?,
 /// );
-/// # Ok::<(), ExampleError>(())
+/// # Ok::<(), Box<dyn Error>>(())
 /// ```
 pub fn checked_sub_calendar_week_offset_to_date(
     weeks_offset: i64,
@@ -922,29 +806,9 @@ pub fn checked_sub_calendar_week_offset_to_date(
 /// ## Getting the next day
 ///
 /// ```
-/// # use jiff::Error as JiffError;
+/// # use std::error::Error;
 /// # use jiff::civil::Date;
-/// # use periodical::time::{
-/// #     CalendarAnchorOffset, CalendarAnchorOffsetDateError, checked_add_calendar_anchor_offset_to_date,
-/// # };
-/// #
-/// # #[derive(Debug)]
-/// # enum ExampleError {
-/// #     CalendarAnchorOffsetDateError(CalendarAnchorOffsetDateError),
-/// #     JiffError(JiffError),
-/// # }
-/// #
-/// # impl From<CalendarAnchorOffsetDateError> for ExampleError {
-/// #     fn from(value: CalendarAnchorOffsetDateError) -> Self {
-/// #         ExampleError::CalendarAnchorOffsetDateError(value)
-/// #     }
-/// # }
-/// #
-/// # impl From<JiffError> for ExampleError {
-/// #     fn from(value: JiffError) -> Self {
-/// #         ExampleError::JiffError(value)
-/// #     }
-/// # }
+/// # use periodical::time::{CalendarAnchorOffset, checked_add_calendar_anchor_offset_to_date};
 /// assert_eq!(
 ///     checked_add_calendar_anchor_offset_to_date(
 ///         CalendarAnchorOffset::Days(1),
@@ -952,35 +816,15 @@ pub fn checked_sub_calendar_week_offset_to_date(
 ///     )?,
 ///     "2026-03-03".parse::<Date>()?,
 /// );
-/// # Ok::<(), ExampleError>(())
+/// # Ok::<(), Box<dyn Error>>(())
 /// ```
 ///
 /// ## Getting the date of 3 months from the end of the month
 ///
 /// ```
-/// # use jiff::Error as JiffError;
+/// # use std::error::Error;
 /// # use jiff::civil::Date;
-/// # use periodical::time::{
-/// #     CalendarAnchorOffset, CalendarAnchorOffsetDateError, checked_add_calendar_anchor_offset_to_date,
-/// # };
-/// #
-/// # #[derive(Debug)]
-/// # enum ExampleError {
-/// #     CalendarAnchorOffsetDateError(CalendarAnchorOffsetDateError),
-/// #     JiffError(JiffError),
-/// # }
-/// #
-/// # impl From<CalendarAnchorOffsetDateError> for ExampleError {
-/// #     fn from(value: CalendarAnchorOffsetDateError) -> Self {
-/// #         ExampleError::CalendarAnchorOffsetDateError(value)
-/// #     }
-/// # }
-/// #
-/// # impl From<JiffError> for ExampleError {
-/// #     fn from(value: JiffError) -> Self {
-/// #         ExampleError::JiffError(value)
-/// #     }
-/// # }
+/// # use periodical::time::{CalendarAnchorOffset, checked_add_calendar_anchor_offset_to_date};
 /// assert_eq!(
 ///     checked_add_calendar_anchor_offset_to_date(
 ///         CalendarAnchorOffset::Months(3),
@@ -988,35 +832,15 @@ pub fn checked_sub_calendar_week_offset_to_date(
 ///     )?,
 ///     "2026-06-01".parse::<Date>()?,
 /// );
-/// # Ok::<(), ExampleError>(())
+/// # Ok::<(), Box<dyn Error>>(())
 /// ```
 ///
 /// ## Previous year's start
 ///
 /// ```
-/// # use jiff::Error as JiffError;
+/// # use std::error::Error;
 /// # use jiff::civil::Date;
-/// # use periodical::time::{
-/// #     CalendarAnchorOffset, CalendarAnchorOffsetDateError, checked_add_calendar_anchor_offset_to_date,
-/// # };
-/// #
-/// # #[derive(Debug)]
-/// # enum ExampleError {
-/// #     CalendarAnchorOffsetDateError(CalendarAnchorOffsetDateError),
-/// #     JiffError(JiffError),
-/// # }
-/// #
-/// # impl From<CalendarAnchorOffsetDateError> for ExampleError {
-/// #     fn from(value: CalendarAnchorOffsetDateError) -> Self {
-/// #         ExampleError::CalendarAnchorOffsetDateError(value)
-/// #     }
-/// # }
-/// #
-/// # impl From<JiffError> for ExampleError {
-/// #     fn from(value: JiffError) -> Self {
-/// #         ExampleError::JiffError(value)
-/// #     }
-/// # }
+/// # use periodical::time::{CalendarAnchorOffset, checked_add_calendar_anchor_offset_to_date};
 /// assert_eq!(
 ///     checked_add_calendar_anchor_offset_to_date(
 ///         CalendarAnchorOffset::Years(-1),
@@ -1024,7 +848,7 @@ pub fn checked_sub_calendar_week_offset_to_date(
 ///     )?,
 ///     "2025-01-01".parse::<Date>()?,
 /// );
-/// # Ok::<(), ExampleError>(())
+/// # Ok::<(), Box<dyn Error>>(())
 /// ```
 pub fn checked_add_calendar_anchor_offset_to_date(
     calendar_anchor_offset: CalendarAnchorOffset,
@@ -1081,29 +905,9 @@ pub fn checked_add_calendar_anchor_offset_to_date(
 /// ## Getting the previous day
 ///
 /// ```
-/// # use jiff::Error as JiffError;
+/// # use std::error::Error;
 /// # use jiff::civil::Date;
-/// # use periodical::time::{
-/// #     CalendarAnchorOffset, CalendarAnchorOffsetDateError, checked_sub_calendar_anchor_offset_to_date,
-/// # };
-/// #
-/// # #[derive(Debug)]
-/// # enum ExampleError {
-/// #     CalendarAnchorOffsetDateError(CalendarAnchorOffsetDateError),
-/// #     JiffError(JiffError),
-/// # }
-/// #
-/// # impl From<CalendarAnchorOffsetDateError> for ExampleError {
-/// #     fn from(value: CalendarAnchorOffsetDateError) -> Self {
-/// #         ExampleError::CalendarAnchorOffsetDateError(value)
-/// #     }
-/// # }
-/// #
-/// # impl From<JiffError> for ExampleError {
-/// #     fn from(value: JiffError) -> Self {
-/// #         ExampleError::JiffError(value)
-/// #     }
-/// # }
+/// # use periodical::time::{CalendarAnchorOffset, checked_sub_calendar_anchor_offset_to_date};
 /// assert_eq!(
 ///     checked_sub_calendar_anchor_offset_to_date(
 ///         CalendarAnchorOffset::Days(1),
@@ -1111,35 +915,15 @@ pub fn checked_add_calendar_anchor_offset_to_date(
 ///     )?,
 ///     "2026-03-01".parse::<Date>()?,
 /// );
-/// # Ok::<(), ExampleError>(())
+/// # Ok::<(), Box<dyn Error>>(())
 /// ```
 ///
 /// ## Getting the month for 3 months in the past
 ///
 /// ```
-/// # use jiff::Error as JiffError;
+/// # use std::error::Error;
 /// # use jiff::civil::Date;
-/// # use periodical::time::{
-/// #     CalendarAnchorOffset, CalendarAnchorOffsetDateError, checked_sub_calendar_anchor_offset_to_date,
-/// # };
-/// #
-/// # #[derive(Debug)]
-/// # enum ExampleError {
-/// #     CalendarAnchorOffsetDateError(CalendarAnchorOffsetDateError),
-/// #     JiffError(JiffError),
-/// # }
-/// #
-/// # impl From<CalendarAnchorOffsetDateError> for ExampleError {
-/// #     fn from(value: CalendarAnchorOffsetDateError) -> Self {
-/// #         ExampleError::CalendarAnchorOffsetDateError(value)
-/// #     }
-/// # }
-/// #
-/// # impl From<JiffError> for ExampleError {
-/// #     fn from(value: JiffError) -> Self {
-/// #         ExampleError::JiffError(value)
-/// #     }
-/// # }
+/// # use periodical::time::{CalendarAnchorOffset, checked_sub_calendar_anchor_offset_to_date};
 /// assert_eq!(
 ///     checked_sub_calendar_anchor_offset_to_date(
 ///         CalendarAnchorOffset::Months(3),
@@ -1147,35 +931,15 @@ pub fn checked_add_calendar_anchor_offset_to_date(
 ///     )?,
 ///     "2026-02-01".parse::<Date>()?,
 /// );
-/// # Ok::<(), ExampleError>(())
+/// # Ok::<(), Box<dyn Error>>(())
 /// ```
 ///
 /// ## Previous year's start
 ///
 /// ```
-/// # use jiff::Error as JiffError;
+/// # use std::error::Error;
 /// # use jiff::civil::Date;
-/// # use periodical::time::{
-/// #     CalendarAnchorOffset, CalendarAnchorOffsetDateError, checked_sub_calendar_anchor_offset_to_date,
-/// # };
-/// #
-/// # #[derive(Debug)]
-/// # enum ExampleError {
-/// #     CalendarAnchorOffsetDateError(CalendarAnchorOffsetDateError),
-/// #     JiffError(JiffError),
-/// # }
-/// #
-/// # impl From<CalendarAnchorOffsetDateError> for ExampleError {
-/// #     fn from(value: CalendarAnchorOffsetDateError) -> Self {
-/// #         ExampleError::CalendarAnchorOffsetDateError(value)
-/// #     }
-/// # }
-/// #
-/// # impl From<JiffError> for ExampleError {
-/// #     fn from(value: JiffError) -> Self {
-/// #         ExampleError::JiffError(value)
-/// #     }
-/// # }
+/// # use periodical::time::{CalendarAnchorOffset, checked_sub_calendar_anchor_offset_to_date};
 /// assert_eq!(
 ///     checked_sub_calendar_anchor_offset_to_date(
 ///         CalendarAnchorOffset::Years(1),
@@ -1183,7 +947,7 @@ pub fn checked_add_calendar_anchor_offset_to_date(
 ///     )?,
 ///     "2025-01-01".parse::<Date>()?,
 /// );
-/// # Ok::<(), ExampleError>(())
+/// # Ok::<(), Box<dyn Error>>(())
 /// ```
 pub fn checked_sub_calendar_anchor_offset_to_date(
     calendar_anchor_offset: CalendarAnchorOffset,
