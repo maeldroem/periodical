@@ -42,7 +42,8 @@ fn get_abs_bound_of_start_inside() -> Result<(), Box<dyn Error>> {
     assert_eq!(
         BoundPosition::Start(2).get_abs_bound(data.iter()),
         Some(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new("2025-05-01 00:00:00Z".parse::<Timestamp>()?))
+            AbsoluteFiniteBound::new("2025-05-01 00:00:00Z".parse::<Timestamp>()?)
+                .to_start_bound()
                 .to_bound()
         ),
     );

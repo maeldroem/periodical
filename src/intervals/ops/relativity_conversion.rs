@@ -176,10 +176,10 @@ impl ToAbsolute for RelativeStartBound {
         match self {
             RelativeStartBound::InfinitePast => AbsoluteStartBound::InfinitePast,
             RelativeStartBound::Finite(relative_finite) => {
-                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                AbsoluteFiniteBound::new_with_inclusivity(
                     reference + relative_finite.offset(),
                     relative_finite.inclusivity(),
-                ))
+                ).to_start_bound()
             },
         }
     }

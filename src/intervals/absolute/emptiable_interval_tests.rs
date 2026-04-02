@@ -8,7 +8,6 @@ use crate::intervals::absolute::{
     AbsoluteEndBound,
     AbsoluteFiniteBound,
     AbsoluteInterval,
-    AbsoluteStartBound,
     BoundedAbsoluteInterval,
     EmptiableAbsoluteBoundPair,
     HalfBoundedAbsoluteInterval,
@@ -20,10 +19,11 @@ use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 fn from_absolute_bounds() -> Result<(), Box<dyn Error>> {
     assert_eq!(
         EmptiableAbsoluteInterval::from(AbsoluteBoundPair::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            AbsoluteFiniteBound::new_with_inclusivity(
                 "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
                 BoundInclusivity::Exclusive,
-            )),
+            )
+            .to_start_bound(),
             AbsoluteEndBound::InfiniteFuture,
         )),
         EmptiableAbsoluteInterval::Bound(AbsoluteInterval::HalfBounded(
@@ -42,10 +42,11 @@ fn from_absolute_bounds() -> Result<(), Box<dyn Error>> {
 fn from_emptiable_absolute_bounds() -> Result<(), Box<dyn Error>> {
     assert_eq!(
         EmptiableAbsoluteInterval::from(EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            AbsoluteFiniteBound::new_with_inclusivity(
                 "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
                 BoundInclusivity::Exclusive,
-            )),
+            )
+            .to_start_bound(),
             AbsoluteEndBound::InfiniteFuture,
         ))),
         EmptiableAbsoluteInterval::Bound(AbsoluteInterval::HalfBounded(

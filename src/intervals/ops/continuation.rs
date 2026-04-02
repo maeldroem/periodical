@@ -456,10 +456,10 @@ pub fn future_continuation_abs_bound_pair(bounds: &AbsoluteBoundPair) -> Emptiab
     match bounds.abs_end() {
         AbsoluteEndBound::InfiniteFuture => EmptiableAbsoluteBoundPair::Empty,
         AbsoluteEndBound::Finite(finite) => EmptiableAbsoluteBoundPair::from(AbsoluteBoundPair::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            AbsoluteFiniteBound::new_with_inclusivity(
                 finite.time(),
                 finite.inclusivity().opposite(),
-            )),
+            ).to_start_bound(),
             AbsoluteEndBound::InfiniteFuture,
         )),
     }
