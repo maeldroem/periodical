@@ -5,7 +5,7 @@ use jiff::{SignedDuration, Zoned};
 use super::diff::*;
 use crate::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound, AbsoluteStartBound};
 use crate::intervals::meta::BoundInclusivity;
-use crate::intervals::relative::{RelativeBoundPair, RelativeEndBound, RelativeFiniteBound, RelativeStartBound};
+use crate::intervals::relative::{RelativeBoundPair, RelativeFiniteBound, RelativeStartBound};
 use crate::iter::intervals::bounds::{AbsoluteBoundsIteratorDispatcher, RelativeBoundsIteratorDispatcher};
 use crate::iter::intervals::layered_bounds::{
     LayeredBoundsState,
@@ -204,9 +204,7 @@ mod rel {
             LayeredBoundsStateChangeAtRelativeBound::new(
                 LayeredBoundsState::FirstLayer,
                 LayeredBoundsState::SecondLayer,
-                Some(RelativeEndBound::Finite(RelativeFiniteBound::new(
-                    SignedDuration::from_hours(101),
-                ))),
+                Some(RelativeFiniteBound::new(SignedDuration::from_hours(101)).to_end_bound()),
                 Some(
                     RelativeFiniteBound::new_with_inclusivity(
                         SignedDuration::from_hours(101),
@@ -218,10 +216,13 @@ mod rel {
             LayeredBoundsStateChangeAtRelativeBound::new(
                 LayeredBoundsState::SecondLayer,
                 LayeredBoundsState::NoLayers,
-                Some(RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                    SignedDuration::from_hours(501),
-                    BoundInclusivity::Exclusive,
-                ))),
+                Some(
+                    RelativeFiniteBound::new_with_inclusivity(
+                        SignedDuration::from_hours(501),
+                        BoundInclusivity::Exclusive,
+                    )
+                    .to_end_bound(),
+                ),
                 Some(RelativeFiniteBound::new(SignedDuration::from_hours(501)).to_start_bound()),
             ),
         ];
@@ -237,17 +238,17 @@ mod rel {
             // 2
             RelativeBoundPair::new(
                 RelativeFiniteBound::new(SignedDuration::from_hours(105)).to_start_bound(),
-                RelativeEndBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(125))),
+                RelativeFiniteBound::new(SignedDuration::from_hours(125)).to_end_bound(),
             ),
             // 6
             RelativeBoundPair::new(
                 RelativeFiniteBound::new(SignedDuration::from_hours(205)).to_start_bound(),
-                RelativeEndBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(215))),
+                RelativeFiniteBound::new(SignedDuration::from_hours(215)).to_end_bound(),
             ),
             // 8
             RelativeBoundPair::new(
                 RelativeFiniteBound::new(SignedDuration::from_hours(217)).to_start_bound(),
-                RelativeEndBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(223))),
+                RelativeFiniteBound::new(SignedDuration::from_hours(223)).to_end_bound(),
             ),
         ];
 
@@ -255,34 +256,30 @@ mod rel {
             // 1
             RelativeBoundPair::new(
                 RelativeFiniteBound::new(SignedDuration::from_hours(101)).to_start_bound(),
-                RelativeEndBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(107))),
+                RelativeFiniteBound::new(SignedDuration::from_hours(107)).to_end_bound(),
             ),
             // 3
             RelativeBoundPair::new(
                 RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(110), BoundInclusivity::Exclusive)
                     .to_start_bound(),
-                RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                    SignedDuration::from_hours(115),
-                    BoundInclusivity::Exclusive,
-                )),
+                RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(115), BoundInclusivity::Exclusive)
+                    .to_end_bound(),
             ),
             // 4
             RelativeBoundPair::new(
                 RelativeFiniteBound::new(SignedDuration::from_hours(120)).to_start_bound(),
-                RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                    SignedDuration::from_hours(125),
-                    BoundInclusivity::Exclusive,
-                )),
+                RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(125), BoundInclusivity::Exclusive)
+                    .to_end_bound(),
             ),
             // 5
             RelativeBoundPair::new(
                 RelativeFiniteBound::new(SignedDuration::from_hours(201)).to_start_bound(),
-                RelativeEndBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(205))),
+                RelativeFiniteBound::new(SignedDuration::from_hours(205)).to_end_bound(),
             ),
             // 7
             RelativeBoundPair::new(
                 RelativeFiniteBound::new(SignedDuration::from_hours(215)).to_start_bound(),
-                RelativeEndBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(225))),
+                RelativeFiniteBound::new(SignedDuration::from_hours(225)).to_end_bound(),
             ),
         ];
 
@@ -300,18 +297,19 @@ mod rel {
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeEndBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(110))),
+                    RelativeFiniteBound::new(SignedDuration::from_hours(110)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
                     RelativeFiniteBound::new(SignedDuration::from_hours(115)).to_start_bound(),
-                    RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBound::new_with_inclusivity(
                         SignedDuration::from_hours(120),
                         BoundInclusivity::Exclusive,
-                    )),
+                    )
+                    .to_end_bound(),
                 ),
                 RelativeBoundPair::new(
                     RelativeFiniteBound::new(SignedDuration::from_hours(125)).to_start_bound(),
-                    RelativeEndBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(125))),
+                    RelativeFiniteBound::new(SignedDuration::from_hours(125)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
                     RelativeFiniteBound::new_with_inclusivity(
@@ -319,10 +317,11 @@ mod rel {
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBound::new_with_inclusivity(
                         SignedDuration::from_hours(215),
                         BoundInclusivity::Exclusive,
-                    )),
+                    )
+                    .to_end_bound(),
                 ),
             ],
         );

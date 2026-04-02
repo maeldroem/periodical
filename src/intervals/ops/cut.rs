@@ -207,10 +207,8 @@ use crate::intervals::relative::{
     HasEmptiableRelativeBoundPair,
     HasRelativeBoundPair,
     RelativeBoundPair,
-    RelativeEndBound,
     RelativeFiniteBound,
     RelativeInterval,
-    RelativeStartBound,
     check_relative_bound_pair_for_interval_creation,
 };
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
@@ -901,14 +899,9 @@ pub fn cut_rel_bound_pair(
         return CutResult::Uncut;
     }
 
-    let past_cut_end = RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-        at,
-        cut_type.past_bound_inclusivity(),
-    ));
-    let future_cut_start = RelativeFiniteBound::new_with_inclusivity(
-        at,
-        cut_type.future_bound_inclusivity(),
-    ).to_start_bound();
+    let past_cut_end = RelativeFiniteBound::new_with_inclusivity(at, cut_type.past_bound_inclusivity()).to_end_bound();
+    let future_cut_start =
+        RelativeFiniteBound::new_with_inclusivity(at, cut_type.future_bound_inclusivity()).to_start_bound();
 
     if check_relative_bound_pair_for_interval_creation(&bounds.start(), &past_cut_end).is_err()
         || check_relative_bound_pair_for_interval_creation(&future_cut_start, &bounds.end()).is_err()
@@ -919,15 +912,10 @@ pub fn cut_rel_bound_pair(
     let mut past_split = bounds.clone();
     let mut future_split = bounds.clone();
 
-    past_split.set_end(RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-        at,
-        cut_type.past_bound_inclusivity(),
-    )));
+    past_split.set_end(RelativeFiniteBound::new_with_inclusivity(at, cut_type.past_bound_inclusivity()).to_end_bound());
 
-    future_split.set_start(RelativeFiniteBound::new_with_inclusivity(
-        at,
-        cut_type.future_bound_inclusivity(),
-    ).to_start_bound());
+    future_split
+        .set_start(RelativeFiniteBound::new_with_inclusivity(at, cut_type.future_bound_inclusivity()).to_start_bound());
 
     CutResult::Cut(past_split, future_split)
 }

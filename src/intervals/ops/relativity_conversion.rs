@@ -404,10 +404,10 @@ impl ToRelative for AbsoluteEndBound {
         match self {
             AbsoluteEndBound::InfiniteFuture => RelativeEndBound::InfiniteFuture,
             AbsoluteEndBound::Finite(absolute_finite) => {
-                RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+                RelativeFiniteBound::new_with_inclusivity(
                     absolute_finite.time().duration_since(reference),
                     absolute_finite.inclusivity(),
-                ))
+                ).to_end_bound()
             },
         }
     }

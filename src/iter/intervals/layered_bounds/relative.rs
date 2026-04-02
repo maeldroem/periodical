@@ -6,7 +6,7 @@ use std::ops::{Add, Sub};
 
 use crate::intervals::meta::BoundInclusivity;
 use crate::intervals::ops::{BoundOrdering, BoundOverlapDisambiguationRuleSet, PartialBoundOrd};
-use crate::intervals::relative::{RelativeBound, RelativeEndBound};
+use crate::intervals::relative::RelativeBound;
 use crate::iter::intervals::layered_bounds::rel_state_change::LayeredBoundsStateChangeAtRelativeBound;
 use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
 
@@ -594,7 +594,8 @@ pub fn layered_rel_bounds_change_start_start(
 ///
 /// 1. The peeked value of a layer wasn't equal to the value returned by calling `next()` on that layer
 /// 2. The value returned by `next()` on the layer wasn't of the expected variant
-/// 3. The comparison between [`RelativeStartBound`] and [`RelativeEndBound`] returned [`None`]
+/// 3. The comparison between [`RelativeStartBound`](crate::intervals::relative::RelativeStartBound) and
+///    [`RelativeEndBound`](crate::intervals::relative::RelativeEndBound) returned [`None`]
 #[must_use]
 pub fn layered_rel_bounds_change_start_end(
     old_state: LayeredBoundsState,
@@ -647,7 +648,7 @@ pub fn layered_rel_bounds_change_start_end(
                 let change_to_return = Change::new(
                     old_state,
                     LayeredBoundsState::BothLayers,
-                    Some(RelativeEndBound::Finite(end_of_second_layer)),
+                    Some(end_of_second_layer.to_end_bound()),
                     // We use `finite_first_layer_start` here because it overlaps with the second layer's end
                     // for a single instant
                     Some(finite_first_layer_start.to_start_bound()),
@@ -663,7 +664,7 @@ pub fn layered_rel_bounds_change_start_end(
                 *queued_result_mut = Some(Change::new(
                     LayeredBoundsState::BothLayers,
                     *state_mut,
-                    Some(RelativeEndBound::Finite(finite_first_layer_start)),
+                    Some(finite_first_layer_start.to_end_bound()),
                     Some(start_of_first_layer.to_start_bound()),
                 ));
 
@@ -676,7 +677,7 @@ pub fn layered_rel_bounds_change_start_end(
                 Change::new(
                     old_state,
                     *state_mut,
-                    Some(RelativeEndBound::Finite(finite_second_layer_end)),
+                    Some(finite_second_layer_end.to_end_bound()),
                     Some(finite_first_layer_start.to_start_bound()),
                 )
             }
@@ -713,7 +714,8 @@ pub fn layered_rel_bounds_change_start_end(
 ///
 /// 1. The peeked value of a layer wasn't equal to the value returned by calling `next()` on that layer
 /// 2. The value returned by `next()` on the layer wasn't of the expected variant
-/// 3. The comparison between [`RelativeEndBound`] and [`RelativeStartBound`] returned [`None`]
+/// 3. The comparison between [`RelativeEndBound`](crate::intervals::relative::RelativeEndBound) and
+///    [`RelativeStartBound`](crate::intervals::relative::RelativeStartBound) returned [`None`]
 #[must_use]
 pub fn layered_rel_bounds_change_end_start(
     old_state: LayeredBoundsState,
@@ -761,7 +763,7 @@ pub fn layered_rel_bounds_change_end_start(
                 let change_to_return = Change::new(
                     old_state,
                     LayeredBoundsState::BothLayers,
-                    Some(RelativeEndBound::Finite(end_of_first_layer)),
+                    Some(end_of_first_layer.to_end_bound()),
                     // We use `finite_second_layer_start` here because it overlaps with the first layer's end
                     // for a single instant
                     Some(finite_second_layer_start.to_start_bound()),
@@ -777,7 +779,7 @@ pub fn layered_rel_bounds_change_end_start(
                 *queued_result_mut = Some(Change::new(
                     LayeredBoundsState::BothLayers,
                     *state_mut,
-                    Some(RelativeEndBound::Finite(finite_second_layer_start)),
+                    Some(finite_second_layer_start.to_end_bound()),
                     Some(start_of_second_layer.to_start_bound()),
                 ));
 
@@ -790,7 +792,7 @@ pub fn layered_rel_bounds_change_end_start(
                 Change::new(
                     old_state,
                     *state_mut,
-                    Some(RelativeEndBound::Finite(finite_first_layer_end)),
+                    Some(finite_first_layer_end.to_end_bound()),
                     Some(finite_second_layer_start.to_start_bound()),
                 )
             }

@@ -2,7 +2,7 @@ use jiff::SignedDuration;
 
 use super::rel_state_change::*;
 use crate::intervals::meta::BoundInclusivity;
-use crate::intervals::relative::{RelativeEndBound, RelativeFiniteBound};
+use crate::intervals::relative::RelativeFiniteBound;
 use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
 
 #[test]
@@ -39,20 +39,20 @@ fn at_rel_bound_old_state_end() {
         LayeredBoundsStateChangeAtRelativeBound::new(
             LayeredBoundsState::FirstLayer,
             LayeredBoundsState::SecondLayer,
-            Some(RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                SignedDuration::from_hours(1),
-                BoundInclusivity::Inclusive,
-            ))),
+            Some(
+                RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Inclusive,)
+                    .to_end_bound()
+            ),
             Some(
                 RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive,)
                     .to_start_bound()
             ),
         )
         .old_state_end(),
-        Some(RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-            SignedDuration::from_hours(1),
-            BoundInclusivity::Inclusive,
-        ))),
+        Some(
+            RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Inclusive,)
+                .to_end_bound()
+        ),
     );
 }
 
@@ -62,10 +62,10 @@ fn at_rel_bound_new_state_start() {
         LayeredBoundsStateChangeAtRelativeBound::new(
             LayeredBoundsState::FirstLayer,
             LayeredBoundsState::SecondLayer,
-            Some(RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                SignedDuration::from_hours(1),
-                BoundInclusivity::Inclusive,
-            ))),
+            Some(
+                RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Inclusive,)
+                    .to_end_bound()
+            ),
             Some(
                 RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive,)
                     .to_start_bound()
