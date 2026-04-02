@@ -17,29 +17,21 @@ use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
 fn create() {
     let first_layer_data = [
         RelativeBound::Start(RelativeStartBound::InfinitePast),
-        RelativeBound::Start(RelativeStartBound::Finite(RelativeFiniteBound::new(
-            SignedDuration::from_hours(101),
-        ))),
+        RelativeBound::Start(RelativeFiniteBound::new(SignedDuration::from_hours(101)).to_start_bound()),
         RelativeBound::End(RelativeEndBound::Finite(RelativeFiniteBound::new(
             SignedDuration::from_hours(102),
         ))),
-        RelativeBound::Start(RelativeStartBound::Finite(RelativeFiniteBound::new(
-            SignedDuration::from_hours(105),
-        ))),
+        RelativeBound::Start(RelativeFiniteBound::new(SignedDuration::from_hours(105)).to_start_bound()),
         RelativeBound::End(RelativeEndBound::InfiniteFuture),
     ];
 
     let second_layer_data = [
         RelativeBound::Start(RelativeStartBound::InfinitePast),
-        RelativeBound::Start(RelativeStartBound::Finite(RelativeFiniteBound::new(
-            SignedDuration::from_hours(101),
-        ))),
+        RelativeBound::Start(RelativeFiniteBound::new(SignedDuration::from_hours(101)).to_start_bound()),
         RelativeBound::End(RelativeEndBound::Finite(RelativeFiniteBound::new(
             SignedDuration::from_hours(102),
         ))),
-        RelativeBound::Start(RelativeStartBound::Finite(RelativeFiniteBound::new(
-            SignedDuration::from_hours(105),
-        ))),
+        RelativeBound::Start(RelativeFiniteBound::new(SignedDuration::from_hours(105)).to_start_bound()),
         RelativeBound::End(RelativeEndBound::InfiniteFuture),
     ];
 
@@ -54,30 +46,28 @@ fn run() {
     let first_layer_data = [
         // 1
         RelativeBoundPair::new(
-            RelativeStartBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(101))),
+            RelativeFiniteBound::new(SignedDuration::from_hours(101)).to_start_bound(),
             RelativeEndBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(105))),
         ),
         // 3
         RelativeBoundPair::new(
-            RelativeStartBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(117))),
+            RelativeFiniteBound::new(SignedDuration::from_hours(117)).to_start_bound(),
             RelativeEndBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(120))),
         ),
         // 6
         RelativeBoundPair::new(
-            RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                SignedDuration::from_hours(205),
-                BoundInclusivity::Exclusive,
-            )),
+            RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(205), BoundInclusivity::Exclusive)
+                .to_start_bound(),
             RelativeEndBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(210))),
         ),
         // 7
         RelativeBoundPair::new(
-            RelativeStartBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(215))),
+            RelativeFiniteBound::new(SignedDuration::from_hours(215)).to_start_bound(),
             RelativeEndBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(225))),
         ),
         // 9
         RelativeBoundPair::new(
-            RelativeStartBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(226))),
+            RelativeFiniteBound::new(SignedDuration::from_hours(226)).to_start_bound(),
             RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
                 SignedDuration::from_hours(310),
                 BoundInclusivity::Exclusive,
@@ -85,15 +75,13 @@ fn run() {
         ),
         // 11
         RelativeBoundPair::new(
-            RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                SignedDuration::from_hours(310),
-                BoundInclusivity::Exclusive,
-            )),
+            RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(310), BoundInclusivity::Exclusive)
+                .to_start_bound(),
             RelativeEndBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(315))),
         ),
         // 13
         RelativeBoundPair::new(
-            RelativeStartBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(320))),
+            RelativeFiniteBound::new(SignedDuration::from_hours(320)).to_start_bound(),
             RelativeEndBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(325))),
         ),
     ];
@@ -101,30 +89,28 @@ fn run() {
     let second_layer_data = [
         // 2
         RelativeBoundPair::new(
-            RelativeStartBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(110))),
+            RelativeFiniteBound::new(SignedDuration::from_hours(110)).to_start_bound(),
             RelativeEndBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(115))),
         ),
         // 4
         RelativeBoundPair::new(
-            RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                SignedDuration::from_hours(120),
-                BoundInclusivity::Exclusive,
-            )),
+            RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(120), BoundInclusivity::Exclusive)
+                .to_start_bound(),
             RelativeEndBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(125))),
         ),
         // 5
         RelativeBoundPair::new(
-            RelativeStartBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(130))),
+            RelativeFiniteBound::new(SignedDuration::from_hours(130)).to_start_bound(),
             RelativeEndBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(205))),
         ),
         // 8
         RelativeBoundPair::new(
-            RelativeStartBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(220))),
+            RelativeFiniteBound::new(SignedDuration::from_hours(220)).to_start_bound(),
             RelativeEndBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(301))),
         ),
         // 10
         RelativeBoundPair::new(
-            RelativeStartBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(304))),
+            RelativeFiniteBound::new(SignedDuration::from_hours(304)).to_start_bound(),
             RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
                 SignedDuration::from_hours(310),
                 BoundInclusivity::Exclusive,
@@ -132,10 +118,8 @@ fn run() {
         ),
         // 12
         RelativeBoundPair::new(
-            RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                SignedDuration::from_hours(310),
-                BoundInclusivity::Exclusive,
-            )),
+            RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(310), BoundInclusivity::Exclusive)
+                .to_start_bound(),
             RelativeEndBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(320))),
         ),
     ];
@@ -161,9 +145,7 @@ fn run() {
                     SignedDuration::from_hours(101),
                     BoundInclusivity::Exclusive,
                 ))),
-                Some(RelativeStartBound::Finite(RelativeFiniteBound::new(
-                    SignedDuration::from_hours(101)
-                ))),
+                Some(RelativeFiniteBound::new(SignedDuration::from_hours(101)).to_start_bound()),
             ),
             // B
             LayeredBoundsStateChangeAtRelativeBound::new(
@@ -172,10 +154,13 @@ fn run() {
                 Some(RelativeEndBound::Finite(RelativeFiniteBound::new(
                     SignedDuration::from_hours(105)
                 ))),
-                Some(RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                    SignedDuration::from_hours(105),
-                    BoundInclusivity::Exclusive,
-                ))),
+                Some(
+                    RelativeFiniteBound::new_with_inclusivity(
+                        SignedDuration::from_hours(105),
+                        BoundInclusivity::Exclusive,
+                    )
+                    .to_start_bound()
+                ),
             ),
             // C
             LayeredBoundsStateChangeAtRelativeBound::new(
@@ -185,9 +170,7 @@ fn run() {
                     SignedDuration::from_hours(110),
                     BoundInclusivity::Exclusive,
                 ))),
-                Some(RelativeStartBound::Finite(RelativeFiniteBound::new(
-                    SignedDuration::from_hours(110)
-                ))),
+                Some(RelativeFiniteBound::new(SignedDuration::from_hours(110)).to_start_bound()),
             ),
             // D
             LayeredBoundsStateChangeAtRelativeBound::new(
@@ -196,10 +179,13 @@ fn run() {
                 Some(RelativeEndBound::Finite(RelativeFiniteBound::new(
                     SignedDuration::from_hours(115)
                 ))),
-                Some(RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                    SignedDuration::from_hours(115),
-                    BoundInclusivity::Exclusive,
-                ))),
+                Some(
+                    RelativeFiniteBound::new_with_inclusivity(
+                        SignedDuration::from_hours(115),
+                        BoundInclusivity::Exclusive,
+                    )
+                    .to_start_bound()
+                ),
             ),
             // E
             LayeredBoundsStateChangeAtRelativeBound::new(
@@ -209,9 +195,7 @@ fn run() {
                     SignedDuration::from_hours(117),
                     BoundInclusivity::Exclusive,
                 ))),
-                Some(RelativeStartBound::Finite(RelativeFiniteBound::new(
-                    SignedDuration::from_hours(117)
-                ))),
+                Some(RelativeFiniteBound::new(SignedDuration::from_hours(117)).to_start_bound()),
             ),
             // F
             LayeredBoundsStateChangeAtRelativeBound::new(
@@ -220,10 +204,13 @@ fn run() {
                 Some(RelativeEndBound::Finite(RelativeFiniteBound::new(
                     SignedDuration::from_hours(120)
                 ))),
-                Some(RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                    SignedDuration::from_hours(120),
-                    BoundInclusivity::Exclusive,
-                ))),
+                Some(
+                    RelativeFiniteBound::new_with_inclusivity(
+                        SignedDuration::from_hours(120),
+                        BoundInclusivity::Exclusive,
+                    )
+                    .to_start_bound()
+                ),
             ),
             // G
             LayeredBoundsStateChangeAtRelativeBound::new(
@@ -232,10 +219,13 @@ fn run() {
                 Some(RelativeEndBound::Finite(RelativeFiniteBound::new(
                     SignedDuration::from_hours(125)
                 ))),
-                Some(RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                    SignedDuration::from_hours(125),
-                    BoundInclusivity::Exclusive,
-                ))),
+                Some(
+                    RelativeFiniteBound::new_with_inclusivity(
+                        SignedDuration::from_hours(125),
+                        BoundInclusivity::Exclusive,
+                    )
+                    .to_start_bound()
+                ),
             ),
             // H
             LayeredBoundsStateChangeAtRelativeBound::new(
@@ -245,9 +235,7 @@ fn run() {
                     SignedDuration::from_hours(130),
                     BoundInclusivity::Exclusive,
                 ))),
-                Some(RelativeStartBound::Finite(RelativeFiniteBound::new(
-                    SignedDuration::from_hours(130)
-                ))),
+                Some(RelativeFiniteBound::new(SignedDuration::from_hours(130)).to_start_bound()),
             ),
             // I
             LayeredBoundsStateChangeAtRelativeBound::new(
@@ -256,10 +244,13 @@ fn run() {
                 Some(RelativeEndBound::Finite(RelativeFiniteBound::new(
                     SignedDuration::from_hours(205)
                 ))),
-                Some(RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                    SignedDuration::from_hours(205),
-                    BoundInclusivity::Exclusive,
-                ))),
+                Some(
+                    RelativeFiniteBound::new_with_inclusivity(
+                        SignedDuration::from_hours(205),
+                        BoundInclusivity::Exclusive,
+                    )
+                    .to_start_bound()
+                ),
             ),
             // J
             LayeredBoundsStateChangeAtRelativeBound::new(
@@ -268,10 +259,13 @@ fn run() {
                 Some(RelativeEndBound::Finite(RelativeFiniteBound::new(
                     SignedDuration::from_hours(210)
                 ))),
-                Some(RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                    SignedDuration::from_hours(210),
-                    BoundInclusivity::Exclusive,
-                ))),
+                Some(
+                    RelativeFiniteBound::new_with_inclusivity(
+                        SignedDuration::from_hours(210),
+                        BoundInclusivity::Exclusive,
+                    )
+                    .to_start_bound()
+                ),
             ),
             // K
             LayeredBoundsStateChangeAtRelativeBound::new(
@@ -281,9 +275,7 @@ fn run() {
                     SignedDuration::from_hours(215),
                     BoundInclusivity::Exclusive,
                 ))),
-                Some(RelativeStartBound::Finite(RelativeFiniteBound::new(
-                    SignedDuration::from_hours(215)
-                ))),
+                Some(RelativeFiniteBound::new(SignedDuration::from_hours(215)).to_start_bound()),
             ),
             // L
             LayeredBoundsStateChangeAtRelativeBound::new(
@@ -293,9 +285,7 @@ fn run() {
                     SignedDuration::from_hours(220),
                     BoundInclusivity::Exclusive,
                 ))),
-                Some(RelativeStartBound::Finite(RelativeFiniteBound::new(
-                    SignedDuration::from_hours(220)
-                ))),
+                Some(RelativeFiniteBound::new(SignedDuration::from_hours(220)).to_start_bound()),
             ),
             // M
             LayeredBoundsStateChangeAtRelativeBound::new(
@@ -304,10 +294,13 @@ fn run() {
                 Some(RelativeEndBound::Finite(RelativeFiniteBound::new(
                     SignedDuration::from_hours(225)
                 ))),
-                Some(RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                    SignedDuration::from_hours(225),
-                    BoundInclusivity::Exclusive,
-                ))),
+                Some(
+                    RelativeFiniteBound::new_with_inclusivity(
+                        SignedDuration::from_hours(225),
+                        BoundInclusivity::Exclusive,
+                    )
+                    .to_start_bound()
+                ),
             ),
             // N
             LayeredBoundsStateChangeAtRelativeBound::new(
@@ -317,9 +310,7 @@ fn run() {
                     SignedDuration::from_hours(226),
                     BoundInclusivity::Exclusive,
                 ))),
-                Some(RelativeStartBound::Finite(RelativeFiniteBound::new(
-                    SignedDuration::from_hours(226)
-                ))),
+                Some(RelativeFiniteBound::new(SignedDuration::from_hours(226)).to_start_bound()),
             ),
             // O
             LayeredBoundsStateChangeAtRelativeBound::new(
@@ -328,10 +319,13 @@ fn run() {
                 Some(RelativeEndBound::Finite(RelativeFiniteBound::new(
                     SignedDuration::from_hours(301)
                 ))),
-                Some(RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                    SignedDuration::from_hours(301),
-                    BoundInclusivity::Exclusive,
-                ))),
+                Some(
+                    RelativeFiniteBound::new_with_inclusivity(
+                        SignedDuration::from_hours(301),
+                        BoundInclusivity::Exclusive,
+                    )
+                    .to_start_bound()
+                ),
             ),
             // P
             LayeredBoundsStateChangeAtRelativeBound::new(
@@ -341,9 +335,7 @@ fn run() {
                     SignedDuration::from_hours(304),
                     BoundInclusivity::Exclusive,
                 ))),
-                Some(RelativeStartBound::Finite(RelativeFiniteBound::new(
-                    SignedDuration::from_hours(304)
-                ))),
+                Some(RelativeFiniteBound::new(SignedDuration::from_hours(304)).to_start_bound()),
             ),
             // Q
             LayeredBoundsStateChangeAtRelativeBound::new(
@@ -353,9 +345,7 @@ fn run() {
                     SignedDuration::from_hours(310),
                     BoundInclusivity::Exclusive,
                 ))),
-                Some(RelativeStartBound::Finite(RelativeFiniteBound::new(
-                    SignedDuration::from_hours(310)
-                ))),
+                Some(RelativeFiniteBound::new(SignedDuration::from_hours(310)).to_start_bound()),
             ),
             // R
             LayeredBoundsStateChangeAtRelativeBound::new(
@@ -364,10 +354,13 @@ fn run() {
                 Some(RelativeEndBound::Finite(RelativeFiniteBound::new(
                     SignedDuration::from_hours(310)
                 ))),
-                Some(RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                    SignedDuration::from_hours(310),
-                    BoundInclusivity::Exclusive,
-                ))),
+                Some(
+                    RelativeFiniteBound::new_with_inclusivity(
+                        SignedDuration::from_hours(310),
+                        BoundInclusivity::Exclusive,
+                    )
+                    .to_start_bound()
+                ),
             ),
             // S
             LayeredBoundsStateChangeAtRelativeBound::new(
@@ -376,10 +369,13 @@ fn run() {
                 Some(RelativeEndBound::Finite(RelativeFiniteBound::new(
                     SignedDuration::from_hours(315)
                 ))),
-                Some(RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                    SignedDuration::from_hours(315),
-                    BoundInclusivity::Exclusive,
-                ))),
+                Some(
+                    RelativeFiniteBound::new_with_inclusivity(
+                        SignedDuration::from_hours(315),
+                        BoundInclusivity::Exclusive,
+                    )
+                    .to_start_bound()
+                ),
             ),
             // T1
             LayeredBoundsStateChangeAtRelativeBound::new(
@@ -389,9 +385,7 @@ fn run() {
                     SignedDuration::from_hours(320),
                     BoundInclusivity::Exclusive,
                 ))),
-                Some(RelativeStartBound::Finite(RelativeFiniteBound::new(
-                    SignedDuration::from_hours(320)
-                ))),
+                Some(RelativeFiniteBound::new(SignedDuration::from_hours(320)).to_start_bound()),
             ),
             // T2
             LayeredBoundsStateChangeAtRelativeBound::new(
@@ -400,10 +394,13 @@ fn run() {
                 Some(RelativeEndBound::Finite(RelativeFiniteBound::new(
                     SignedDuration::from_hours(320)
                 ))),
-                Some(RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                    SignedDuration::from_hours(320),
-                    BoundInclusivity::Exclusive,
-                ))),
+                Some(
+                    RelativeFiniteBound::new_with_inclusivity(
+                        SignedDuration::from_hours(320),
+                        BoundInclusivity::Exclusive,
+                    )
+                    .to_start_bound()
+                ),
             ),
             // U
             LayeredBoundsStateChangeAtRelativeBound::new(
@@ -412,10 +409,13 @@ fn run() {
                 Some(RelativeEndBound::Finite(RelativeFiniteBound::new(
                     SignedDuration::from_hours(325)
                 ))),
-                Some(RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                    SignedDuration::from_hours(325),
-                    BoundInclusivity::Exclusive,
-                ))),
+                Some(
+                    RelativeFiniteBound::new_with_inclusivity(
+                        SignedDuration::from_hours(325),
+                        BoundInclusivity::Exclusive,
+                    )
+                    .to_start_bound()
+                ),
             ),
         ],
     );

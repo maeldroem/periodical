@@ -10,7 +10,6 @@ use crate::intervals::relative::{
     RelativeEndBound,
     RelativeFiniteBound,
     RelativeInterval,
-    RelativeStartBound,
 };
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 
@@ -18,10 +17,8 @@ use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 fn relative_interval_from_relative_bounds() {
     assert_eq!(
         EmptiableRelativeInterval::from(RelativeBoundPair::new(
-            RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                SignedDuration::from_hours(1),
-                BoundInclusivity::Exclusive,
-            )),
+            RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive,)
+                .to_start_bound(),
             RelativeEndBound::InfiniteFuture,
         )),
         EmptiableRelativeInterval::Bound(RelativeInterval::HalfBounded(
@@ -38,10 +35,8 @@ fn relative_interval_from_relative_bounds() {
 fn relative_interval_from_emptiable_relative_bounds() {
     assert_eq!(
         EmptiableRelativeInterval::from(EmptiableRelativeBoundPair::Bound(RelativeBoundPair::new(
-            RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                SignedDuration::from_hours(1),
-                BoundInclusivity::Exclusive,
-            )),
+            RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive,)
+                .to_start_bound(),
             RelativeEndBound::InfiniteFuture,
         ))),
         EmptiableRelativeInterval::Bound(RelativeInterval::HalfBounded(

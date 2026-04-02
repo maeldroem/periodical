@@ -202,10 +202,8 @@ fn from_range_inclusive() {
 fn try_from_relative_bounds_correct() {
     assert_eq!(
         BoundedRelativeInterval::try_from(RelativeBoundPair::new(
-            RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                SignedDuration::from_hours(1),
-                BoundInclusivity::Exclusive,
-            )),
+            RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive,)
+                .to_start_bound(),
             RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
                 SignedDuration::from_hours(2),
                 BoundInclusivity::Inclusive,
@@ -231,7 +229,7 @@ fn try_from_relative_bounds_wrong() {
     );
     assert_eq!(
         BoundedRelativeInterval::try_from(RelativeBoundPair::new(
-            RelativeStartBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(1))),
+            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
             RelativeEndBound::InfiniteFuture,
         )),
         Err(BoundedRelativeIntervalTryFromRelativeBoundPairError),

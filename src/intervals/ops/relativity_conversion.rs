@@ -388,10 +388,10 @@ impl ToRelative for AbsoluteStartBound {
         match self {
             AbsoluteStartBound::InfinitePast => RelativeStartBound::InfinitePast,
             AbsoluteStartBound::Finite(absolute_finite) => {
-                RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+                RelativeFiniteBound::new_with_inclusivity(
                     absolute_finite.time().duration_since(reference),
                     absolute_finite.inclusivity(),
-                ))
+                ).to_start_bound()
             },
         }
     }

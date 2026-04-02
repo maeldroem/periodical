@@ -538,10 +538,10 @@ pub fn future_continuation_rel_bound_pair(bounds: &RelativeBoundPair) -> Emptiab
     match bounds.rel_end() {
         RelativeEndBound::InfiniteFuture => EmptiableRelativeBoundPair::Empty,
         RelativeEndBound::Finite(finite) => EmptiableRelativeBoundPair::from(RelativeBoundPair::new(
-            RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+            RelativeFiniteBound::new_with_inclusivity(
                 finite.offset(),
                 finite.inclusivity().opposite(),
-            )),
+            ).to_start_bound(),
             RelativeEndBound::InfiniteFuture,
         )),
     }

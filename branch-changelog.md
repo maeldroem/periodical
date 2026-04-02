@@ -22,6 +22,8 @@ Remove the sections that don't apply to your PR
 - Changed all usage of `AbsoluteBound::Start(x)` to `x.to_bound()`
 - Changed all usage of `AbsoluteBound::End(x)` to `x.to_bound()`
 
+- Changed all usage of `RelativeStartBound::Finite(x)` to `x.to_start_bound()`
+
 ## Deprecated
 
 - Things you've marked as deprecated

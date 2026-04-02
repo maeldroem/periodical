@@ -87,7 +87,7 @@ pub fn swap_relative_bound_pair(start: &mut RelativeStartBound, end: &mut Relati
     match (&mut *start, &mut *end) {
         (RelativeStartBound::InfinitePast, RelativeEndBound::InfiniteFuture) => {},
         (RelativeStartBound::InfinitePast, RelativeEndBound::Finite(finite_end)) => {
-            *start = RelativeStartBound::Finite(*finite_end);
+            *start = finite_end.to_start_bound();
             *end = RelativeEndBound::InfiniteFuture;
         },
         (RelativeStartBound::Finite(finite_start), RelativeEndBound::InfiniteFuture) => {
