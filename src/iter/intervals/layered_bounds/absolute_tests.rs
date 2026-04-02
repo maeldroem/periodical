@@ -3,13 +3,7 @@ use std::error::Error;
 use jiff::Zoned;
 
 use super::absolute::*;
-use crate::intervals::absolute::{
-    AbsoluteBound,
-    AbsoluteBoundPair,
-    AbsoluteEndBound,
-    AbsoluteFiniteBound,
-    AbsoluteStartBound,
-};
+use crate::intervals::absolute::{AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound};
 use crate::intervals::meta::BoundInclusivity;
 use crate::iter::intervals::bounds::AbsoluteBoundsIteratorDispatcher;
 use crate::iter::intervals::layered_bounds::abs_state_change::LayeredBoundsStateChangeAtAbsoluteBound;
@@ -18,31 +12,31 @@ use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
 #[test]
 fn create() -> Result<(), Box<dyn Error>> {
     let first_layer_data = [
-        AbsoluteBound::Start(AbsoluteStartBound::InfinitePast),
-        AbsoluteBound::Start(
-            AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_start_bound(),
-        ),
-        AbsoluteBound::End(
-            AbsoluteFiniteBound::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_end_bound(),
-        ),
-        AbsoluteBound::Start(
-            AbsoluteFiniteBound::new("2025-01-05 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_start_bound(),
-        ),
-        AbsoluteBound::End(AbsoluteEndBound::InfiniteFuture),
+        AbsoluteStartBound::InfinitePast.to_bound(),
+        AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+            .to_start_bound()
+            .to_bound(),
+        AbsoluteFiniteBound::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+            .to_end_bound()
+            .to_bound(),
+        AbsoluteFiniteBound::new("2025-01-05 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+            .to_start_bound()
+            .to_bound(),
+        AbsoluteEndBound::InfiniteFuture.to_bound(),
     ];
 
     let second_layer_data = [
-        AbsoluteBound::Start(AbsoluteStartBound::InfinitePast),
-        AbsoluteBound::Start(
-            AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_start_bound(),
-        ),
-        AbsoluteBound::End(
-            AbsoluteFiniteBound::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_end_bound(),
-        ),
-        AbsoluteBound::Start(
-            AbsoluteFiniteBound::new("2025-01-05 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_start_bound(),
-        ),
-        AbsoluteBound::End(AbsoluteEndBound::InfiniteFuture),
+        AbsoluteStartBound::InfinitePast.to_bound(),
+        AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+            .to_start_bound()
+            .to_bound(),
+        AbsoluteFiniteBound::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+            .to_end_bound()
+            .to_bound(),
+        AbsoluteFiniteBound::new("2025-01-05 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+            .to_start_bound()
+            .to_bound(),
+        AbsoluteEndBound::InfiniteFuture.to_bound(),
     ];
 
     let _ = LayeredAbsoluteBounds::new(first_layer_data.into_iter(), second_layer_data.into_iter());
