@@ -39,8 +39,10 @@ impl AbsoluteBound {
     /// let start_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     /// let end_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
     ///
-    /// let start = AbsoluteBound::Start(AbsoluteFiniteBound::new(start_time).to_start_bound());
-    /// let end = AbsoluteBound::End(AbsoluteFiniteBound::new(end_time).to_end_bound());
+    /// let start = AbsoluteFiniteBound::new(start_time)
+    ///     .to_start_bound()
+    ///     .to_bound();
+    /// let end = AbsoluteFiniteBound::new(end_time).to_end_bound().to_bound();
     ///
     /// assert!(start.is_start());
     /// assert!(!end.is_start());
@@ -62,8 +64,10 @@ impl AbsoluteBound {
     /// let start_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     /// let end_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
     ///
-    /// let start = AbsoluteBound::Start(AbsoluteFiniteBound::new(start_time).to_start_bound());
-    /// let end = AbsoluteBound::End(AbsoluteFiniteBound::new(end_time).to_end_bound());
+    /// let start = AbsoluteFiniteBound::new(start_time)
+    ///     .to_start_bound()
+    ///     .to_bound();
+    /// let end = AbsoluteFiniteBound::new(end_time).to_end_bound().to_bound();
     ///
     /// assert!(end.is_end());
     /// assert!(!start.is_end());
@@ -91,8 +95,10 @@ impl AbsoluteBound {
     /// let start_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     /// let end_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
     ///
-    /// let start = AbsoluteBound::Start(AbsoluteFiniteBound::new(start_time).to_start_bound());
-    /// let end = AbsoluteBound::End(AbsoluteFiniteBound::new(end_time).to_end_bound());
+    /// let start = AbsoluteFiniteBound::new(start_time)
+    ///     .to_start_bound()
+    ///     .to_bound();
+    /// let end = AbsoluteFiniteBound::new(end_time).to_end_bound().to_bound();
     ///
     /// assert_eq!(
     ///     start.start(),
@@ -126,8 +132,10 @@ impl AbsoluteBound {
     /// let start_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     /// let end_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
     ///
-    /// let start = AbsoluteBound::Start(AbsoluteFiniteBound::new(start_time).to_start_bound());
-    /// let end = AbsoluteBound::End(AbsoluteFiniteBound::new(end_time).to_end_bound());
+    /// let start = AbsoluteFiniteBound::new(start_time)
+    ///     .to_start_bound()
+    ///     .to_bound();
+    /// let end = AbsoluteFiniteBound::new(end_time).to_end_bound().to_bound();
     ///
     /// assert_eq!(
     ///     end.end(),

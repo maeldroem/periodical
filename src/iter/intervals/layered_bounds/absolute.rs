@@ -751,7 +751,7 @@ pub fn layered_abs_bounds_change_start_start(
 /// 1. The peeked value of a layer wasn't equal to the value returned by calling `next()` on that layer
 /// 2. The value returned by `next()` on the layer wasn't of the expected variant
 /// 3. The comparison between [`AbsoluteStartBound`](crate::intervals::absolute::AbsoluteStartBound) and
-///    [`AbsoluteEndBound`] returned [`None`]
+///    [`AbsoluteEndBound`](crate::intervals::absolute::AbsoluteEndBound) returned [`None`]
 #[must_use]
 pub fn layered_abs_bounds_change_start_end(
     old_state: LayeredBoundsState,
@@ -870,7 +870,7 @@ pub fn layered_abs_bounds_change_start_end(
 ///
 /// 1. The peeked value of a layer wasn't equal to the value returned by calling `next()` on that layer
 /// 2. The value returned by `next()` on the layer wasn't of the expected variant
-/// 3. The comparison between [`AbsoluteEndBound`] and
+/// 3. The comparison between [`AbsoluteEndBound`](crate::intervals::absolute::AbsoluteEndBound) and
 ///    [`AbsoluteStartBound`](crate::intervals::absolute::AbsoluteStartBound) returned [`None`]
 #[must_use]
 pub fn layered_abs_bounds_change_end_start(
