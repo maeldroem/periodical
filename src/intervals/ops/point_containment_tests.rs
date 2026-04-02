@@ -3,12 +3,7 @@ use std::error::Error;
 use jiff::Zoned;
 
 use super::point_containment::*;
-use crate::intervals::absolute::{
-    AbsoluteBoundPair,
-    AbsoluteEndBound,
-    AbsoluteFiniteBound,
-    EmptiableAbsoluteBoundPair,
-};
+use crate::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound, EmptiableAbsoluteBoundPair};
 use crate::intervals::meta::BoundInclusivity;
 
 #[test]
@@ -416,10 +411,11 @@ fn time_outside_before() -> Result<(), Box<dyn Error>> {
                 BoundInclusivity::Inclusive,
             )
             .to_start_bound(),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            AbsoluteFiniteBound::new_with_inclusivity(
                 "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Inclusive,
-            )),
+            )
+            .to_end_bound(),
         )
         .point_containment_position("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()),
         Ok(PointContainmentPosition::OutsideBefore),
@@ -437,10 +433,11 @@ fn time_outside_after() -> Result<(), Box<dyn Error>> {
                 BoundInclusivity::Inclusive,
             )
             .to_start_bound(),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            AbsoluteFiniteBound::new_with_inclusivity(
                 "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Inclusive,
-            )),
+            )
+            .to_end_bound(),
         )
         .point_containment_position("2025-01-04 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()),
         Ok(PointContainmentPosition::OutsideAfter),
@@ -469,10 +466,11 @@ fn time_on_start_inclusive() -> Result<(), Box<dyn Error>> {
                 BoundInclusivity::Inclusive,
             )
             .to_start_bound(),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            AbsoluteFiniteBound::new_with_inclusivity(
                 "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Inclusive,
-            )),
+            )
+            .to_end_bound(),
         )
         .point_containment_position("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()),
         Ok(PointContainmentPosition::OnStart(BoundInclusivity::Inclusive)),
@@ -490,10 +488,11 @@ fn time_on_start_exclusive() -> Result<(), Box<dyn Error>> {
                 BoundInclusivity::Exclusive,
             )
             .to_start_bound(),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            AbsoluteFiniteBound::new_with_inclusivity(
                 "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Inclusive,
-            )),
+            )
+            .to_end_bound(),
         )
         .point_containment_position("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()),
         Ok(PointContainmentPosition::OnStart(BoundInclusivity::Exclusive)),
@@ -511,10 +510,11 @@ fn time_on_end_inclusive() -> Result<(), Box<dyn Error>> {
                 BoundInclusivity::Inclusive,
             )
             .to_start_bound(),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            AbsoluteFiniteBound::new_with_inclusivity(
                 "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Inclusive,
-            )),
+            )
+            .to_end_bound(),
         )
         .point_containment_position("2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()),
         Ok(PointContainmentPosition::OnEnd(BoundInclusivity::Inclusive)),
@@ -532,10 +532,11 @@ fn time_on_end_exclusive() -> Result<(), Box<dyn Error>> {
                 BoundInclusivity::Inclusive,
             )
             .to_start_bound(),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            AbsoluteFiniteBound::new_with_inclusivity(
                 "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
-            )),
+            )
+            .to_end_bound(),
         )
         .point_containment_position("2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()),
         Ok(PointContainmentPosition::OnEnd(BoundInclusivity::Exclusive)),
@@ -553,10 +554,11 @@ fn time_inside() -> Result<(), Box<dyn Error>> {
                 BoundInclusivity::Inclusive,
             )
             .to_start_bound(),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            AbsoluteFiniteBound::new_with_inclusivity(
                 "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Inclusive,
-            )),
+            )
+            .to_end_bound(),
         )
         .point_containment_position("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()),
         Ok(PointContainmentPosition::Inside),

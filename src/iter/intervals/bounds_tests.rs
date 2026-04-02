@@ -27,16 +27,14 @@ mod abs_bounds {
             AbsoluteBoundPair::new(
                 AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                     .to_start_bound(),
-                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-                    "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-                )),
+                AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                    .to_end_bound(),
             ),
             AbsoluteBoundPair::new(
                 AbsoluteFiniteBound::new("2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                     .to_start_bound(),
-                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-                    "2025-01-05 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-                )),
+                AbsoluteFiniteBound::new("2025-01-05 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                    .to_end_bound(),
             ),
         ];
 
@@ -50,37 +48,32 @@ mod abs_bounds {
         let data = [
             AbsoluteBoundPair::new(
                 AbsoluteStartBound::InfinitePast,
-                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-                    "2024-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-                )),
+                AbsoluteFiniteBound::new("2024-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                    .to_end_bound(),
             ),
             AbsoluteBoundPair::new(
                 AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                     .to_start_bound(),
-                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-                    "2025-01-06 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-                )),
+                AbsoluteFiniteBound::new("2025-01-06 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                    .to_end_bound(),
             ),
             AbsoluteBoundPair::new(
                 AbsoluteFiniteBound::new("2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                     .to_start_bound(),
-                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-                    "2025-01-09 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-                )),
+                AbsoluteFiniteBound::new("2025-01-09 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                    .to_end_bound(),
             ),
             AbsoluteBoundPair::new(
                 AbsoluteFiniteBound::new("2025-02-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                     .to_start_bound(),
-                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-                    "2025-02-04 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-                )),
+                AbsoluteFiniteBound::new("2025-02-04 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                    .to_end_bound(),
             ),
             AbsoluteBoundPair::new(
                 AbsoluteFiniteBound::new("2025-02-05 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                     .to_start_bound(),
-                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-                    "2025-02-10 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-                )),
+                AbsoluteFiniteBound::new("2025-02-10 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                    .to_end_bound(),
             ),
             AbsoluteBoundPair::new(
                 AbsoluteFiniteBound::new("2025-02-06 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
@@ -93,37 +86,42 @@ mod abs_bounds {
             AbsoluteBoundsIter::new(data.into_iter()).collect::<Vec<_>>(),
             vec![
                 AbsoluteBound::Start(AbsoluteStartBound::InfinitePast),
-                AbsoluteBound::End(AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-                    "2024-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
-                ))),
+                AbsoluteBound::End(
+                    AbsoluteFiniteBound::new("2024-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                        .to_end_bound()
+                ),
                 AbsoluteBound::Start(
                     AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                         .to_start_bound()
                 ),
-                AbsoluteBound::End(AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-                    "2025-01-06 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
-                ))),
+                AbsoluteBound::End(
+                    AbsoluteFiniteBound::new("2025-01-06 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                        .to_end_bound()
+                ),
                 AbsoluteBound::Start(
                     AbsoluteFiniteBound::new("2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                         .to_start_bound()
                 ),
-                AbsoluteBound::End(AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-                    "2025-01-09 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
-                ))),
+                AbsoluteBound::End(
+                    AbsoluteFiniteBound::new("2025-01-09 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                        .to_end_bound()
+                ),
                 AbsoluteBound::Start(
                     AbsoluteFiniteBound::new("2025-02-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                         .to_start_bound()
                 ),
-                AbsoluteBound::End(AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-                    "2025-02-04 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
-                ))),
+                AbsoluteBound::End(
+                    AbsoluteFiniteBound::new("2025-02-04 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                        .to_end_bound()
+                ),
                 AbsoluteBound::Start(
                     AbsoluteFiniteBound::new("2025-02-05 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                         .to_start_bound()
                 ),
-                AbsoluteBound::End(AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-                    "2025-02-10 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
-                ))),
+                AbsoluteBound::End(
+                    AbsoluteFiniteBound::new("2025-02-10 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                        .to_end_bound()
+                ),
                 AbsoluteBound::Start(
                     AbsoluteFiniteBound::new("2025-02-06 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                         .to_start_bound()

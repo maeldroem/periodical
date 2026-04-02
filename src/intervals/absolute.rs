@@ -91,7 +91,7 @@ pub fn swap_absolute_bound_pair(start: &mut AbsoluteStartBound, end: &mut Absolu
             *end = AbsoluteEndBound::InfiniteFuture;
         },
         (AbsoluteStartBound::Finite(finite_start), AbsoluteEndBound::InfiniteFuture) => {
-            *end = AbsoluteEndBound::Finite(*finite_start);
+            *end = finite_start.to_end_bound();
             *start = AbsoluteStartBound::InfinitePast;
         },
         (AbsoluteStartBound::Finite(finite_start), AbsoluteEndBound::Finite(finite_end)) => {

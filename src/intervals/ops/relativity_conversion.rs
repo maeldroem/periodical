@@ -192,10 +192,10 @@ impl ToAbsolute for RelativeEndBound {
         match self {
             RelativeEndBound::InfiniteFuture => AbsoluteEndBound::InfiniteFuture,
             RelativeEndBound::Finite(relative_finite) => {
-                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+                AbsoluteFiniteBound::new_with_inclusivity(
                     reference + relative_finite.offset(),
                     relative_finite.inclusivity(),
-                ))
+                ).to_end_bound()
             },
         }
     }
