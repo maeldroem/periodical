@@ -393,8 +393,8 @@ impl From<(Option<Timestamp>, Option<Timestamp>)> for AbsoluteInterval {
     }
 }
 
-/// Converts `(Option<(Timestamp, BoundInclusivity)>, Option<(Timestamp,
-/// BoundInclusivity)>)` into [`AbsoluteInterval`]
+/// Converts `(Option<(Timestamp, BoundInclusivity)>, Option<(Timestamp, BoundInclusivity)>)`
+/// into [`AbsoluteInterval`]
 ///
 /// The first tuple element represents the start bound, the second element
 /// represents the end bound.

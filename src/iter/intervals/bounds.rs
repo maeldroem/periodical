@@ -200,8 +200,7 @@ impl AbsoluteBoundsIter {
     ///
     /// It is possible to use this method safely, for example in order to avoid
     /// going through an [`AbsoluteUnitedBoundsIter`] between each use
-    /// of [set operations on layered bounds
-    /// iterators](crate::iter::intervals::layered_bounds_set_ops),
+    /// of [set operations on layered bounds iterators](crate::iter::intervals::layered_bounds_set_ops),
     /// especially if the operation guarantees that there are no overlapping
     /// intervals left.
     ///
@@ -432,8 +431,7 @@ impl RelativeBoundsIter {
     ///
     /// It is possible to use this method safely, for example in order to avoid
     /// going through an [`RelativeUnitedBoundsIter`] between each use
-    /// of [set operations on layered bounds
-    /// iterators](crate::iter::intervals::layered_bounds_set_ops),
+    /// of [set operations on layered bounds iterators](crate::iter::intervals::layered_bounds_set_ops),
     /// especially if the operation guarantees that there are no overlapping
     /// intervals left.
     ///

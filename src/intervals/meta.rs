@@ -172,8 +172,7 @@ impl From<bool> for OpeningDirection {
 
 /// Infinitesimal duration variation of an interval
 ///
-/// Represents the infinitesimal duration variation(s) created by [exclusive
-/// bounds](BoundInclusivity::Exclusive).
+/// Represents the infinitesimal duration variation(s) created by [exclusive bounds](BoundInclusivity::Exclusive).
 ///
 /// An infinitesimal duration is represented by an epsilon sign, hence the name.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
