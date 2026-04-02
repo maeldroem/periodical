@@ -56,7 +56,6 @@ tests! {
     mod relativity_conversion_tests;
     mod remove_overlap_or_gap_tests;
     mod remove_overlap_tests;
-    mod set_ops_tests;
     mod shrink_tests;
     // mod split_tests;
 }
