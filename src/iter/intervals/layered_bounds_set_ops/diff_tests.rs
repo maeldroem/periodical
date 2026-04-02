@@ -207,10 +207,13 @@ mod rel {
                 Some(RelativeEndBound::Finite(RelativeFiniteBound::new(
                     SignedDuration::from_hours(101),
                 ))),
-                Some(RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                    SignedDuration::from_hours(101),
-                    BoundInclusivity::Exclusive,
-                ))),
+                Some(
+                    RelativeFiniteBound::new_with_inclusivity(
+                        SignedDuration::from_hours(101),
+                        BoundInclusivity::Exclusive,
+                    )
+                    .to_start_bound(),
+                ),
             ),
             LayeredBoundsStateChangeAtRelativeBound::new(
                 LayeredBoundsState::SecondLayer,
@@ -219,9 +222,7 @@ mod rel {
                     SignedDuration::from_hours(501),
                     BoundInclusivity::Exclusive,
                 ))),
-                Some(RelativeStartBound::Finite(RelativeFiniteBound::new(
-                    SignedDuration::from_hours(501),
-                ))),
+                Some(RelativeFiniteBound::new(SignedDuration::from_hours(501)).to_start_bound()),
             ),
         ];
 
@@ -235,17 +236,17 @@ mod rel {
         let first_layer_data = [
             // 2
             RelativeBoundPair::new(
-                RelativeStartBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(105))),
+                RelativeFiniteBound::new(SignedDuration::from_hours(105)).to_start_bound(),
                 RelativeEndBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(125))),
             ),
             // 6
             RelativeBoundPair::new(
-                RelativeStartBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(205))),
+                RelativeFiniteBound::new(SignedDuration::from_hours(205)).to_start_bound(),
                 RelativeEndBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(215))),
             ),
             // 8
             RelativeBoundPair::new(
-                RelativeStartBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(217))),
+                RelativeFiniteBound::new(SignedDuration::from_hours(217)).to_start_bound(),
                 RelativeEndBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(223))),
             ),
         ];
@@ -253,15 +254,13 @@ mod rel {
         let second_layer_data = [
             // 1
             RelativeBoundPair::new(
-                RelativeStartBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(101))),
+                RelativeFiniteBound::new(SignedDuration::from_hours(101)).to_start_bound(),
                 RelativeEndBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(107))),
             ),
             // 3
             RelativeBoundPair::new(
-                RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                    SignedDuration::from_hours(110),
-                    BoundInclusivity::Exclusive,
-                )),
+                RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(110), BoundInclusivity::Exclusive)
+                    .to_start_bound(),
                 RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
                     SignedDuration::from_hours(115),
                     BoundInclusivity::Exclusive,
@@ -269,7 +268,7 @@ mod rel {
             ),
             // 4
             RelativeBoundPair::new(
-                RelativeStartBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(120))),
+                RelativeFiniteBound::new(SignedDuration::from_hours(120)).to_start_bound(),
                 RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
                     SignedDuration::from_hours(125),
                     BoundInclusivity::Exclusive,
@@ -277,12 +276,12 @@ mod rel {
             ),
             // 5
             RelativeBoundPair::new(
-                RelativeStartBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(201))),
+                RelativeFiniteBound::new(SignedDuration::from_hours(201)).to_start_bound(),
                 RelativeEndBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(205))),
             ),
             // 7
             RelativeBoundPair::new(
-                RelativeStartBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(215))),
+                RelativeFiniteBound::new(SignedDuration::from_hours(215)).to_start_bound(),
                 RelativeEndBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(225))),
             ),
         ];
@@ -296,28 +295,30 @@ mod rel {
                 .collect::<Vec<_>>(),
             vec![
                 RelativeBoundPair::new(
-                    RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBound::new_with_inclusivity(
                         SignedDuration::from_hours(107),
                         BoundInclusivity::Exclusive,
-                    )),
+                    )
+                    .to_start_bound(),
                     RelativeEndBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(110))),
                 ),
                 RelativeBoundPair::new(
-                    RelativeStartBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(115))),
+                    RelativeFiniteBound::new(SignedDuration::from_hours(115)).to_start_bound(),
                     RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
                         SignedDuration::from_hours(120),
                         BoundInclusivity::Exclusive,
                     )),
                 ),
                 RelativeBoundPair::new(
-                    RelativeStartBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(125))),
+                    RelativeFiniteBound::new(SignedDuration::from_hours(125)).to_start_bound(),
                     RelativeEndBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(125))),
                 ),
                 RelativeBoundPair::new(
-                    RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBound::new_with_inclusivity(
                         SignedDuration::from_hours(205),
                         BoundInclusivity::Exclusive,
-                    )),
+                    )
+                    .to_start_bound(),
                     RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
                         SignedDuration::from_hours(215),
                         BoundInclusivity::Exclusive,

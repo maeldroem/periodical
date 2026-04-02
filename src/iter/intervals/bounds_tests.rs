@@ -122,11 +122,11 @@ mod abs_bounds {
 fn create_rel_bounds_iter() {
     let data = [
         RelativeBoundPair::new(
-            RelativeStartBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(1))),
+            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
             RelativeEndBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(1))),
         ),
         RelativeBoundPair::new(
-            RelativeStartBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(3))),
+            RelativeFiniteBound::new(SignedDuration::from_hours(3)).to_start_bound(),
             RelativeEndBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(5))),
         ),
     ];
@@ -142,23 +142,23 @@ fn rel_bounds_iter_run() {
             RelativeEndBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(1))),
         ),
         RelativeBoundPair::new(
-            RelativeStartBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(10))),
+            RelativeFiniteBound::new(SignedDuration::from_hours(10)).to_start_bound(),
             RelativeEndBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(15))),
         ),
         RelativeBoundPair::new(
-            RelativeStartBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(13))),
+            RelativeFiniteBound::new(SignedDuration::from_hours(13)).to_start_bound(),
             RelativeEndBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(19))),
         ),
         RelativeBoundPair::new(
-            RelativeStartBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(20))),
+            RelativeFiniteBound::new(SignedDuration::from_hours(20)).to_start_bound(),
             RelativeEndBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(24))),
         ),
         RelativeBoundPair::new(
-            RelativeStartBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(25))),
+            RelativeFiniteBound::new(SignedDuration::from_hours(25)).to_start_bound(),
             RelativeEndBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(29))),
         ),
         RelativeBoundPair::new(
-            RelativeStartBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(27))),
+            RelativeFiniteBound::new(SignedDuration::from_hours(27)).to_start_bound(),
             RelativeEndBound::InfiniteFuture,
         ),
     ];
@@ -170,33 +170,23 @@ fn rel_bounds_iter_run() {
             RelativeBound::End(RelativeEndBound::Finite(RelativeFiniteBound::new(
                 SignedDuration::from_hours(1)
             ))),
-            RelativeBound::Start(RelativeStartBound::Finite(RelativeFiniteBound::new(
-                SignedDuration::from_hours(10)
-            ))),
+            RelativeBound::Start(RelativeFiniteBound::new(SignedDuration::from_hours(10)).to_start_bound()),
             RelativeBound::End(RelativeEndBound::Finite(RelativeFiniteBound::new(
                 SignedDuration::from_hours(15)
             ))),
-            RelativeBound::Start(RelativeStartBound::Finite(RelativeFiniteBound::new(
-                SignedDuration::from_hours(13)
-            ))),
+            RelativeBound::Start(RelativeFiniteBound::new(SignedDuration::from_hours(13)).to_start_bound()),
             RelativeBound::End(RelativeEndBound::Finite(RelativeFiniteBound::new(
                 SignedDuration::from_hours(19)
             ))),
-            RelativeBound::Start(RelativeStartBound::Finite(RelativeFiniteBound::new(
-                SignedDuration::from_hours(20)
-            ))),
+            RelativeBound::Start(RelativeFiniteBound::new(SignedDuration::from_hours(20)).to_start_bound()),
             RelativeBound::End(RelativeEndBound::Finite(RelativeFiniteBound::new(
                 SignedDuration::from_hours(24)
             ))),
-            RelativeBound::Start(RelativeStartBound::Finite(RelativeFiniteBound::new(
-                SignedDuration::from_hours(25)
-            ))),
+            RelativeBound::Start(RelativeFiniteBound::new(SignedDuration::from_hours(25)).to_start_bound()),
             RelativeBound::End(RelativeEndBound::Finite(RelativeFiniteBound::new(
                 SignedDuration::from_hours(29)
             ))),
-            RelativeBound::Start(RelativeStartBound::Finite(RelativeFiniteBound::new(
-                SignedDuration::from_hours(27)
-            ))),
+            RelativeBound::Start(RelativeFiniteBound::new(SignedDuration::from_hours(27)).to_start_bound()),
             RelativeBound::End(RelativeEndBound::InfiniteFuture),
         ],
     );

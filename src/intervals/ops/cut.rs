@@ -905,10 +905,10 @@ pub fn cut_rel_bound_pair(
         at,
         cut_type.past_bound_inclusivity(),
     ));
-    let future_cut_start = RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+    let future_cut_start = RelativeFiniteBound::new_with_inclusivity(
         at,
         cut_type.future_bound_inclusivity(),
-    ));
+    ).to_start_bound();
 
     if check_relative_bound_pair_for_interval_creation(&bounds.start(), &past_cut_end).is_err()
         || check_relative_bound_pair_for_interval_creation(&future_cut_start, &bounds.end()).is_err()
@@ -924,10 +924,10 @@ pub fn cut_rel_bound_pair(
         cut_type.past_bound_inclusivity(),
     )));
 
-    future_split.set_start(RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
+    future_split.set_start(RelativeFiniteBound::new_with_inclusivity(
         at,
         cut_type.future_bound_inclusivity(),
-    )));
+    ).to_start_bound());
 
     CutResult::Cut(past_split, future_split)
 }
