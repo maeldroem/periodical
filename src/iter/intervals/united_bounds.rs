@@ -53,6 +53,10 @@ use crate::intervals::relative::{RelativeBound, RelativeEndBound};
 use crate::iter::intervals::layered_bounds::{LayeredAbsoluteBounds, LayeredRelativeBounds};
 
 /// Iterator for uniting absolute bounds
+///
+/// # Panics
+///
+/// Panics if the number of active layers overflows [`u64`].
 pub struct AbsoluteUnitedBoundsIter<I> {
     iter: I,
     layer: u64,
@@ -209,8 +213,10 @@ where
 
             match next {
                 AbsoluteBound::Start(_) => {
-                    // ACK: Yes, this will panic if we reach u64's limit
-                    self.layer += 1;
+                    self.layer = self
+                        .layer
+                        .checked_add(1)
+                        .expect("The number of active layers overflowed when using `AbsoluteUniteBoundsIter`");
 
                     if self.is_next_start_adjacent {
                         self.is_next_start_adjacent = false;
@@ -228,8 +234,10 @@ where
                     }
                 },
                 AbsoluteBound::End(next_end) => {
-                    // ACK: Yes, this will panic if it attempts to go below 0
-                    self.layer -= 1;
+                    self.layer = self.layer.checked_sub(1).expect(
+                        "An error occurred with `AbsoluteUniteBoundsIter`: The number of active layers underflowed, \
+                         which is unexpected",
+                    );
 
                     // Since we already decremented the layer, the last counted end bound must be on
                     // layer 0 i.e. we were on the first layer (1) and it just
@@ -286,6 +294,10 @@ fn is_abs_end_bound_adjacent_to_abs_peeked(end: &AbsoluteEndBound, peeked: &Abso
 }
 
 /// Iterator for uniting relative bounds
+///
+/// # Panics
+///
+/// Panics if the number of active layers overflows [`u64`].
 pub struct RelativeUnitedBoundsIter<I> {
     iter: I,
     layer: u64,
@@ -401,8 +413,10 @@ where
 
             match next {
                 RelativeBound::Start(_) => {
-                    // ACK: Yes, this will panic if we reach u64's limit
-                    self.layer += 1;
+                    self.layer = self
+                        .layer
+                        .checked_add(1)
+                        .expect("The number of active layers overflowed when using `RelativeUniteBoundsIter`");
 
                     if self.is_next_start_adjacent {
                         self.is_next_start_adjacent = false;
@@ -420,8 +434,10 @@ where
                     }
                 },
                 RelativeBound::End(next_end) => {
-                    // ACK: Yes, this will panic if it attempts to go below 0
-                    self.layer -= 1;
+                    self.layer = self.layer.checked_sub(1).expect(
+                        "An error occurred with `RelativeUniteBoundsIter`: The number of active layers underflowed, \
+                         which is unexpected",
+                    );
 
                     // Since we already decremented the layer, the last counted end bound must be on
                     // layer 0 i.e. we were on the first layer (1) and it just
