@@ -95,7 +95,7 @@ use crate::intervals::relative::{
     RelativeInterval,
     RelativeStartBound,
 };
-use crate::intervals::special::{EmptyInterval, UnboundedInterval};
+use crate::intervals::special::EmptyInterval;
 
 /// The two given intervals were overlapping when using [`GapFillable`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -323,17 +323,6 @@ where
     fn fill_gap(&self, rhs: &Rhs) -> Result<Self::Output, GapFillOverlapFoundError> {
         fill_gap_rel_bound_pair_with_emptiable_rel_bound_pair(&self.rel_bound_pair(), &rhs.emptiable_rel_bound_pair())
             .map(Self::Output::from)
-    }
-}
-
-impl<Rhs> GapFillable<Rhs> for UnboundedInterval
-where
-    Rhs: Interval,
-{
-    type Output = UnboundedInterval;
-
-    fn fill_gap(&self, _rhs: &Rhs) -> Result<Self::Output, GapFillOverlapFoundError> {
-        Err(GapFillOverlapFoundError)
     }
 }
 
