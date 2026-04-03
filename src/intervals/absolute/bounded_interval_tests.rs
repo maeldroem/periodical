@@ -281,14 +281,16 @@ fn interval_from_range_inclusive() -> Result<(), Box<dyn Error>> {
 fn interval_try_from_absolute_bounds_correct() -> Result<(), Box<dyn Error>> {
     assert_eq!(
         BoundedAbsoluteInterval::try_from(AbsoluteBoundPair::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            AbsoluteFiniteBound::new_with_inclusivity(
                 "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
                 BoundInclusivity::Exclusive,
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            )
+            .to_start_bound(),
+            AbsoluteFiniteBound::new_with_inclusivity(
                 "2025-01-02 00:00:00Z".parse::<Timestamp>()?,
                 BoundInclusivity::Inclusive,
-            )),
+            )
+            .to_end_bound(),
         )),
         Ok(BoundedAbsoluteInterval::new_with_inclusivity(
             "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
@@ -306,13 +308,13 @@ fn interval_try_from_absolute_bounds_wrong() -> Result<(), Box<dyn Error>> {
     assert_eq!(
         BoundedAbsoluteInterval::try_from(AbsoluteBoundPair::new(
             AbsoluteStartBound::InfinitePast,
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?)),
+            AbsoluteFiniteBound::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
         )),
         Err(BoundedAbsoluteIntervalTryFromAbsoluteBoundPairError),
     );
     assert_eq!(
         BoundedAbsoluteInterval::try_from(AbsoluteBoundPair::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?)),
+            AbsoluteFiniteBound::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
             AbsoluteEndBound::InfiniteFuture,
         )),
         Err(BoundedAbsoluteIntervalTryFromAbsoluteBoundPairError),

@@ -7,7 +7,6 @@ use crate::intervals::absolute::{
     AbsoluteBoundPair,
     AbsoluteEndBound,
     AbsoluteFiniteBound,
-    AbsoluteStartBound,
     BoundedAbsoluteInterval,
     HalfBoundedAbsoluteInterval,
 };
@@ -18,10 +17,11 @@ use crate::intervals::special::UnboundedInterval;
 fn from_absolute_bounds() -> Result<(), Box<dyn Error>> {
     assert_eq!(
         AbsoluteInterval::from(AbsoluteBoundPair::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            AbsoluteFiniteBound::new_with_inclusivity(
                 "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
                 BoundInclusivity::Exclusive,
-            )),
+            )
+            .to_start_bound(),
             AbsoluteEndBound::InfiniteFuture,
         )),
         AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(

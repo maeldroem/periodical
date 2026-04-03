@@ -175,12 +175,11 @@ impl ToAbsolute for RelativeStartBound {
     fn to_absolute(&self, reference: Timestamp) -> Self::AbsoluteType {
         match self {
             RelativeStartBound::InfinitePast => AbsoluteStartBound::InfinitePast,
-            RelativeStartBound::Finite(relative_finite) => {
-                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                    reference + relative_finite.offset(),
-                    relative_finite.inclusivity(),
-                ))
-            },
+            RelativeStartBound::Finite(relative_finite) => AbsoluteFiniteBound::new_with_inclusivity(
+                reference + relative_finite.offset(),
+                relative_finite.inclusivity(),
+            )
+            .to_start_bound(),
         }
     }
 }
@@ -191,12 +190,11 @@ impl ToAbsolute for RelativeEndBound {
     fn to_absolute(&self, reference: Timestamp) -> Self::AbsoluteType {
         match self {
             RelativeEndBound::InfiniteFuture => AbsoluteEndBound::InfiniteFuture,
-            RelativeEndBound::Finite(relative_finite) => {
-                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                    reference + relative_finite.offset(),
-                    relative_finite.inclusivity(),
-                ))
-            },
+            RelativeEndBound::Finite(relative_finite) => AbsoluteFiniteBound::new_with_inclusivity(
+                reference + relative_finite.offset(),
+                relative_finite.inclusivity(),
+            )
+            .to_end_bound(),
         }
     }
 }
@@ -387,12 +385,11 @@ impl ToRelative for AbsoluteStartBound {
     fn to_relative(&self, reference: Timestamp) -> Self::RelativeType {
         match self {
             AbsoluteStartBound::InfinitePast => RelativeStartBound::InfinitePast,
-            AbsoluteStartBound::Finite(absolute_finite) => {
-                RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                    absolute_finite.time().duration_since(reference),
-                    absolute_finite.inclusivity(),
-                ))
-            },
+            AbsoluteStartBound::Finite(absolute_finite) => RelativeFiniteBound::new_with_inclusivity(
+                absolute_finite.time().duration_since(reference),
+                absolute_finite.inclusivity(),
+            )
+            .to_start_bound(),
         }
     }
 }
@@ -403,12 +400,11 @@ impl ToRelative for AbsoluteEndBound {
     fn to_relative(&self, reference: Timestamp) -> Self::RelativeType {
         match self {
             AbsoluteEndBound::InfiniteFuture => RelativeEndBound::InfiniteFuture,
-            AbsoluteEndBound::Finite(absolute_finite) => {
-                RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                    absolute_finite.time().duration_since(reference),
-                    absolute_finite.inclusivity(),
-                ))
-            },
+            AbsoluteEndBound::Finite(absolute_finite) => RelativeFiniteBound::new_with_inclusivity(
+                absolute_finite.time().duration_since(reference),
+                absolute_finite.inclusivity(),
+            )
+            .to_end_bound(),
         }
     }
 }

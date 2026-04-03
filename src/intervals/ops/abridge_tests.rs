@@ -30,16 +30,13 @@ fn abs_bounds_unbounded_half_bounded() -> Result<(), Box<dyn Error>> {
     assert_eq!(
         AbsoluteBoundPair::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture).abridge(
             &AbsoluteBoundPair::new(
-                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-                    "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
-                )),
+                AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                    .to_start_bound(),
                 AbsoluteEndBound::InfiniteFuture,
             )
         ),
         EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-                "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
-            )),
+            AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_start_bound(),
             AbsoluteEndBound::InfiniteFuture,
         )),
     );
@@ -52,21 +49,15 @@ fn abs_bounds_unbounded_bounded() -> Result<(), Box<dyn Error>> {
     assert_eq!(
         AbsoluteBoundPair::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture).abridge(
             &AbsoluteBoundPair::new(
-                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-                    "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
-                )),
-                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-                    "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
-                )),
+                AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                    .to_start_bound(),
+                AbsoluteFiniteBound::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                    .to_end_bound(),
             )
         ),
         EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-                "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-                "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
-            )),
+            AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_start_bound(),
+            AbsoluteFiniteBound::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_end_bound(),
         )),
     );
 
@@ -77,9 +68,7 @@ fn abs_bounds_unbounded_bounded() -> Result<(), Box<dyn Error>> {
 fn abs_bounds_half_bounded_unbounded() -> Result<(), Box<dyn Error>> {
     assert_eq!(
         AbsoluteBoundPair::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-                "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
-            )),
+            AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_start_bound(),
             AbsoluteEndBound::InfiniteFuture,
         )
         .abridge(&AbsoluteBoundPair::new(
@@ -87,9 +76,7 @@ fn abs_bounds_half_bounded_unbounded() -> Result<(), Box<dyn Error>> {
             AbsoluteEndBound::InfiniteFuture
         )),
         EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-                "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
-            )),
+            AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_start_bound(),
             AbsoluteEndBound::InfiniteFuture,
         )),
     );
@@ -101,21 +88,15 @@ fn abs_bounds_half_bounded_unbounded() -> Result<(), Box<dyn Error>> {
 fn abs_bounds_two_equal_half_bounded() -> Result<(), Box<dyn Error>> {
     assert_eq!(
         AbsoluteBoundPair::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-                "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
-            )),
+            AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_start_bound(),
             AbsoluteEndBound::InfiniteFuture,
         )
         .abridge(&AbsoluteBoundPair::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-                "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
-            )),
+            AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_start_bound(),
             AbsoluteEndBound::InfiniteFuture,
         )),
         EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-                "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
-            )),
+            AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_start_bound(),
             AbsoluteEndBound::InfiniteFuture,
         )),
     );
@@ -128,23 +109,15 @@ fn abs_bounds_two_half_bounded_same_ref_time() -> Result<(), Box<dyn Error>> {
     assert_eq!(
         AbsoluteBoundPair::new(
             AbsoluteStartBound::InfinitePast,
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-                "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
-            ))
+            AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_end_bound()
         )
         .abridge(&AbsoluteBoundPair::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-                "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
-            )),
+            AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_start_bound(),
             AbsoluteEndBound::InfiniteFuture,
         )),
         EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-                "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-                "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
-            )),
+            AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_start_bound(),
+            AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_end_bound(),
         )),
     );
 
@@ -156,25 +129,23 @@ fn abs_bounds_two_half_bounded_with_gap() -> Result<(), Box<dyn Error>> {
     assert_eq!(
         AbsoluteBoundPair::new(
             AbsoluteStartBound::InfinitePast,
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-                "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
-            )),
+            AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_end_bound(),
         )
         .abridge(&AbsoluteBoundPair::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-                "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
-            )),
+            AbsoluteFiniteBound::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_start_bound(),
             AbsoluteEndBound::InfiniteFuture,
         )),
         EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            AbsoluteFiniteBound::new_with_inclusivity(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            )
+            .to_start_bound(),
+            AbsoluteFiniteBound::new_with_inclusivity(
                 "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
-            )),
+            )
+            .to_end_bound(),
         )),
     );
 
@@ -185,21 +156,15 @@ fn abs_bounds_two_half_bounded_with_gap() -> Result<(), Box<dyn Error>> {
 fn abs_bounds_two_half_bounded_same_direction_different_times() -> Result<(), Box<dyn Error>> {
     assert_eq!(
         AbsoluteBoundPair::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-                "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
-            )),
+            AbsoluteFiniteBound::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_start_bound(),
             AbsoluteEndBound::InfiniteFuture,
         )
         .abridge(&AbsoluteBoundPair::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-                "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
-            )),
+            AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_start_bound(),
             AbsoluteEndBound::InfiniteFuture,
         )),
         EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-                "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
-            )),
+            AbsoluteFiniteBound::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_start_bound(),
             AbsoluteEndBound::InfiniteFuture,
         )),
     );
@@ -211,28 +176,24 @@ fn abs_bounds_two_half_bounded_same_direction_different_times() -> Result<(), Bo
 fn abs_bounds_bounded_half_bounded_with_gap() -> Result<(), Box<dyn Error>> {
     assert_eq!(
         AbsoluteBoundPair::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-                "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-                "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
-            )),
+            AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_start_bound(),
+            AbsoluteFiniteBound::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_end_bound(),
         )
         .abridge(&AbsoluteBoundPair::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-                "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
-            )),
+            AbsoluteFiniteBound::new("2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_start_bound(),
             AbsoluteEndBound::InfiniteFuture,
         )),
         EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            AbsoluteFiniteBound::new_with_inclusivity(
                 "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            )
+            .to_start_bound(),
+            AbsoluteFiniteBound::new_with_inclusivity(
                 "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
-            )),
+            )
+            .to_end_bound(),
         )),
     );
 
@@ -243,30 +204,24 @@ fn abs_bounds_bounded_half_bounded_with_gap() -> Result<(), Box<dyn Error>> {
 fn abs_bounds_two_bounded_with_gap() -> Result<(), Box<dyn Error>> {
     assert_eq!(
         AbsoluteBoundPair::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-                "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-                "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
-            )),
+            AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_start_bound(),
+            AbsoluteFiniteBound::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_end_bound(),
         )
         .abridge(&AbsoluteBoundPair::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-                "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-                "2025-01-04 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
-            )),
+            AbsoluteFiniteBound::new("2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_start_bound(),
+            AbsoluteFiniteBound::new("2025-01-04 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_end_bound(),
         )),
         EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            AbsoluteFiniteBound::new_with_inclusivity(
                 "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            )
+            .to_start_bound(),
+            AbsoluteFiniteBound::new_with_inclusivity(
                 "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
-            )),
+            )
+            .to_end_bound()
         )),
     );
 
@@ -277,28 +232,16 @@ fn abs_bounds_two_bounded_with_gap() -> Result<(), Box<dyn Error>> {
 fn abs_bounds_two_bounded_overlapping() -> Result<(), Box<dyn Error>> {
     assert_eq!(
         AbsoluteBoundPair::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-                "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-                "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
-            )),
+            AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_start_bound(),
+            AbsoluteFiniteBound::new("2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_end_bound(),
         )
         .abridge(&AbsoluteBoundPair::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-                "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-                "2025-01-04 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
-            )),
+            AbsoluteFiniteBound::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_start_bound(),
+            AbsoluteFiniteBound::new("2025-01-04 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_end_bound(),
         )),
         EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-                "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-                "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
-            )),
+            AbsoluteFiniteBound::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_start_bound(),
+            AbsoluteFiniteBound::new("2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_end_bound(),
         )),
     );
 
@@ -336,23 +279,15 @@ fn abs_bounds_abs_bounds_adjacent_inclusive_inclusive() -> Result<(), Box<dyn Er
     assert_eq!(
         AbsoluteBoundPair::new(
             AbsoluteStartBound::InfinitePast,
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-                "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
-            )),
+            AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_end_bound(),
         )
         .abridge(&AbsoluteBoundPair::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-                "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
-            )),
+            AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_start_bound(),
             AbsoluteEndBound::InfiniteFuture,
         )),
         EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-                "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-                "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
-            )),
+            AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_start_bound(),
+            AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_end_bound(),
         )),
     );
 
@@ -364,15 +299,14 @@ fn abs_bounds_abs_bounds_adjacent_inclusive_exclusive() -> Result<(), Box<dyn Er
     assert_eq!(
         AbsoluteBoundPair::new(
             AbsoluteStartBound::InfinitePast,
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-                "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
-            )),
+            AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_end_bound(),
         )
         .abridge(&AbsoluteBoundPair::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            AbsoluteFiniteBound::new_with_inclusivity(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
-            )),
+            )
+            .to_start_bound(),
             AbsoluteEndBound::InfiniteFuture,
         )),
         EmptiableAbsoluteBoundPair::Empty,
@@ -386,15 +320,14 @@ fn abs_bounds_abs_bounds_adjacent_exclusive_inclusive() -> Result<(), Box<dyn Er
     assert_eq!(
         AbsoluteBoundPair::new(
             AbsoluteStartBound::InfinitePast,
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            AbsoluteFiniteBound::new_with_inclusivity(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
-            )),
+            )
+            .to_end_bound(),
         )
         .abridge(&AbsoluteBoundPair::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-                "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
-            )),
+            AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_start_bound(),
             AbsoluteEndBound::InfiniteFuture,
         )),
         EmptiableAbsoluteBoundPair::Empty,
@@ -408,25 +341,23 @@ fn abs_bounds_abs_bounds_adjacent_exclusive_exclusive() -> Result<(), Box<dyn Er
     assert_eq!(
         AbsoluteBoundPair::new(
             AbsoluteStartBound::InfinitePast,
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            AbsoluteFiniteBound::new_with_inclusivity(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
-            )),
+            )
+            .to_end_bound(),
         )
         .abridge(&AbsoluteBoundPair::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
+            AbsoluteFiniteBound::new_with_inclusivity(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
-            )),
+            )
+            .to_start_bound(),
             AbsoluteEndBound::InfiniteFuture,
         )),
         EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-                "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
-            )),
-            AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-                "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
-            )),
+            AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_start_bound(),
+            AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_end_bound(),
         )),
     );
 

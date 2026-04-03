@@ -8,7 +8,6 @@ use crate::intervals::relative::{
     RelativeBoundPair,
     RelativeEndBound,
     RelativeFiniteBound,
-    RelativeStartBound,
 };
 use crate::intervals::special::UnboundedInterval;
 
@@ -16,10 +15,8 @@ use crate::intervals::special::UnboundedInterval;
 fn relative_interval_from_relative_bounds() {
     assert_eq!(
         RelativeInterval::from(RelativeBoundPair::new(
-            RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                SignedDuration::from_hours(1),
-                BoundInclusivity::Exclusive,
-            )),
+            RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive,)
+                .to_start_bound(),
             RelativeEndBound::InfiniteFuture,
         )),
         RelativeInterval::HalfBounded(HalfBoundedRelativeInterval::new_with_inclusivity(

@@ -170,12 +170,6 @@ impl RelativeBoundPair {
         )
     }
 
-    /// Wraps the [`RelativeBoundPair`] in an [`EmptiableRelativeBoundPair`]
-    #[must_use]
-    pub fn to_emptiable(self) -> EmptiableRelativeBoundPair {
-        EmptiableRelativeBoundPair::from(self)
-    }
-
     /// Returns the relative start bound
     ///
     /// # Examples
@@ -376,6 +370,24 @@ impl RelativeBoundPair {
             Ordering::Equal => self.end.cmp(&other.end).reverse(),
             Ordering::Greater => Ordering::Greater,
         }
+    }
+
+    /// Converts the [`RelativeBoundPair`] into [`RelativeInterval`]
+    #[must_use]
+    pub fn to_interval(self) -> RelativeInterval {
+        RelativeInterval::from(self)
+    }
+
+    /// Converts the [`RelativeBoundPair`] into [`EmptiableRelativeInterval`]
+    #[must_use]
+    pub fn to_emptiable_interval(self) -> EmptiableRelativeInterval {
+        self.to_interval().to_emptiable()
+    }
+
+    /// Wraps the [`RelativeBoundPair`] in an [`EmptiableRelativeBoundPair`]
+    #[must_use]
+    pub fn to_emptiable(self) -> EmptiableRelativeBoundPair {
+        EmptiableRelativeBoundPair::from(self)
     }
 }
 

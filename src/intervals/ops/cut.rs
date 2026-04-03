@@ -188,10 +188,8 @@ use serde::{Deserialize, Serialize};
 use super::point_containment::CanPositionPointContainment;
 use crate::intervals::absolute::{
     AbsoluteBoundPair,
-    AbsoluteEndBound,
     AbsoluteFiniteBound,
     AbsoluteInterval,
-    AbsoluteStartBound,
     BoundedAbsoluteInterval,
     EmptiableAbsoluteBoundPair,
     EmptiableAbsoluteInterval,
@@ -209,10 +207,8 @@ use crate::intervals::relative::{
     HasEmptiableRelativeBoundPair,
     HasRelativeBoundPair,
     RelativeBoundPair,
-    RelativeEndBound,
     RelativeFiniteBound,
     RelativeInterval,
-    RelativeStartBound,
     check_relative_bound_pair_for_interval_creation,
 };
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
@@ -678,7 +674,7 @@ impl Cuttable<Timestamp> for AbsoluteInterval {
 
     fn cut_at(&self, position: Timestamp, cut_type: CutType) -> CutResult<Self::Output> {
         cut_abs_bound_pair(&self.abs_bound_pair(), position, cut_type)
-            .map_cut(|c1, c2| (AbsoluteInterval::from(c1), AbsoluteInterval::from(c2)))
+            .map_cut(|c1, c2| (c1.to_interval(), c2.to_interval()))
     }
 }
 
@@ -687,7 +683,7 @@ impl Cuttable<Timestamp> for EmptiableAbsoluteInterval {
 
     fn cut_at(&self, position: Timestamp, cut_type: CutType) -> CutResult<Self::Output> {
         cut_emptiable_abs_bound_pair(&self.emptiable_abs_bound_pair(), position, cut_type)
-            .map_cut(|c1, c2| (EmptiableAbsoluteInterval::from(c1), EmptiableAbsoluteInterval::from(c2)))
+            .map_cut(|c1, c2| (c1.to_emptiable_interval(), c2.to_emptiable_interval()))
     }
 }
 
@@ -704,7 +700,7 @@ impl Cuttable<Timestamp> for HalfBoundedAbsoluteInterval {
 
     fn cut_at(&self, position: Timestamp, cut_type: CutType) -> CutResult<Self::Output> {
         cut_abs_bound_pair(&self.abs_bound_pair(), position, cut_type)
-            .map_cut(|c1, c2| (AbsoluteInterval::from(c1), AbsoluteInterval::from(c2)))
+            .map_cut(|c1, c2| (c1.to_interval(), c2.to_interval()))
     }
 }
 
@@ -729,7 +725,7 @@ impl Cuttable<SignedDuration> for RelativeInterval {
 
     fn cut_at(&self, position: SignedDuration, cut_type: CutType) -> CutResult<Self::Output> {
         cut_rel_bound_pair(&self.rel_bound_pair(), position, cut_type)
-            .map_cut(|c1, c2| (RelativeInterval::from(c1), RelativeInterval::from(c2)))
+            .map_cut(|c1, c2| (c1.to_interval(), c2.to_interval()))
     }
 }
 
@@ -738,7 +734,7 @@ impl Cuttable<SignedDuration> for EmptiableRelativeInterval {
 
     fn cut_at(&self, position: SignedDuration, cut_type: CutType) -> CutResult<Self::Output> {
         cut_emptiable_rel_bound_pair(&self.emptiable_rel_bound_pair(), position, cut_type)
-            .map_cut(|c1, c2| (EmptiableRelativeInterval::from(c1), EmptiableRelativeInterval::from(c2)))
+            .map_cut(|c1, c2| (c1.to_emptiable_interval(), c2.to_emptiable_interval()))
     }
 }
 
@@ -755,7 +751,7 @@ impl Cuttable<SignedDuration> for HalfBoundedRelativeInterval {
 
     fn cut_at(&self, position: SignedDuration, cut_type: CutType) -> CutResult<Self::Output> {
         cut_rel_bound_pair(&self.rel_bound_pair(), position, cut_type)
-            .map_cut(|c1, c2| (RelativeInterval::from(c1), RelativeInterval::from(c2)))
+            .map_cut(|c1, c2| (c1.to_interval(), c2.to_interval()))
     }
 }
 
@@ -764,7 +760,7 @@ impl Cuttable<Timestamp> for UnboundedInterval {
 
     fn cut_at(&self, position: Timestamp, cut_type: CutType) -> CutResult<Self::Output> {
         cut_abs_bound_pair(&self.abs_bound_pair(), position, cut_type)
-            .map_cut(|c1, c2| (AbsoluteInterval::from(c1), AbsoluteInterval::from(c2)))
+            .map_cut(|c1, c2| (c1.to_interval(), c2.to_interval()))
     }
 }
 
@@ -773,7 +769,7 @@ impl Cuttable<SignedDuration> for UnboundedInterval {
 
     fn cut_at(&self, position: SignedDuration, cut_type: CutType) -> CutResult<Self::Output> {
         cut_rel_bound_pair(&self.rel_bound_pair(), position, cut_type)
-            .map_cut(|c1, c2| (RelativeInterval::from(c1), RelativeInterval::from(c2)))
+            .map_cut(|c1, c2| (c1.to_interval(), c2.to_interval()))
     }
 }
 
@@ -806,14 +802,9 @@ pub fn cut_abs_bound_pair(
         return CutResult::Uncut;
     }
 
-    let past_cut_end = AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-        at,
-        cut_type.past_bound_inclusivity(),
-    ));
-    let future_cut_start = AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-        at,
-        cut_type.future_bound_inclusivity(),
-    ));
+    let past_cut_end = AbsoluteFiniteBound::new_with_inclusivity(at, cut_type.past_bound_inclusivity()).to_end_bound();
+    let future_cut_start =
+        AbsoluteFiniteBound::new_with_inclusivity(at, cut_type.future_bound_inclusivity()).to_start_bound();
 
     if check_absolute_bound_pair_for_interval_creation(&bounds.start(), &past_cut_end).is_err()
         || check_absolute_bound_pair_for_interval_creation(&future_cut_start, &bounds.end()).is_err()
@@ -824,15 +815,10 @@ pub fn cut_abs_bound_pair(
     let mut past_split = bounds.clone();
     let mut future_split = bounds.clone();
 
-    past_split.set_end(AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-        at,
-        cut_type.past_bound_inclusivity(),
-    )));
+    past_split.set_end(AbsoluteFiniteBound::new_with_inclusivity(at, cut_type.past_bound_inclusivity()).to_end_bound());
 
-    future_split.set_start(AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-        at,
-        cut_type.future_bound_inclusivity(),
-    )));
+    future_split
+        .set_start(AbsoluteFiniteBound::new_with_inclusivity(at, cut_type.future_bound_inclusivity()).to_start_bound());
 
     CutResult::Cut(past_split, future_split)
 }
@@ -913,14 +899,9 @@ pub fn cut_rel_bound_pair(
         return CutResult::Uncut;
     }
 
-    let past_cut_end = RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-        at,
-        cut_type.past_bound_inclusivity(),
-    ));
-    let future_cut_start = RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-        at,
-        cut_type.future_bound_inclusivity(),
-    ));
+    let past_cut_end = RelativeFiniteBound::new_with_inclusivity(at, cut_type.past_bound_inclusivity()).to_end_bound();
+    let future_cut_start =
+        RelativeFiniteBound::new_with_inclusivity(at, cut_type.future_bound_inclusivity()).to_start_bound();
 
     if check_relative_bound_pair_for_interval_creation(&bounds.start(), &past_cut_end).is_err()
         || check_relative_bound_pair_for_interval_creation(&future_cut_start, &bounds.end()).is_err()
@@ -931,15 +912,10 @@ pub fn cut_rel_bound_pair(
     let mut past_split = bounds.clone();
     let mut future_split = bounds.clone();
 
-    past_split.set_end(RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-        at,
-        cut_type.past_bound_inclusivity(),
-    )));
+    past_split.set_end(RelativeFiniteBound::new_with_inclusivity(at, cut_type.past_bound_inclusivity()).to_end_bound());
 
-    future_split.set_start(RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-        at,
-        cut_type.future_bound_inclusivity(),
-    )));
+    future_split
+        .set_start(RelativeFiniteBound::new_with_inclusivity(at, cut_type.future_bound_inclusivity()).to_start_bound());
 
     CutResult::Cut(past_split, future_split)
 }

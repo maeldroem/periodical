@@ -57,8 +57,7 @@ impl RelativeEndBound {
     /// # use jiff::SignedDuration;
     /// # use periodical::intervals::relative::{RelativeEndBound, RelativeFiniteBound};
     /// let infinite_end_bound = RelativeEndBound::InfiniteFuture;
-    /// let finite_end_bound =
-    ///     RelativeEndBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(1)));
+    /// let finite_end_bound = RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound();
     ///
     /// assert!(finite_end_bound.is_finite());
     /// assert!(!infinite_end_bound.is_finite());
@@ -77,8 +76,7 @@ impl RelativeEndBound {
     /// # use jiff::SignedDuration;
     /// # use periodical::intervals::relative::{RelativeEndBound, RelativeFiniteBound};
     /// let infinite_end_bound = RelativeEndBound::InfiniteFuture;
-    /// let finite_end_bound =
-    ///     RelativeEndBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(1)));
+    /// let finite_end_bound = RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound();
     ///
     /// assert!(infinite_end_bound.is_infinite_future());
     /// assert!(!finite_end_bound.is_infinite_future());
@@ -100,8 +98,7 @@ impl RelativeEndBound {
     /// # use jiff::SignedDuration;
     /// # use periodical::intervals::relative::{RelativeEndBound, RelativeFiniteBound};
     /// let infinite_end_bound = RelativeEndBound::InfiniteFuture;
-    /// let finite_end_bound =
-    ///     RelativeEndBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(1)));
+    /// let finite_end_bound = RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound();
     ///
     /// assert_eq!(
     ///     finite_end_bound.finite(),
@@ -147,8 +144,7 @@ impl RelativeEndBound {
     /// # }
     /// #
     /// # impl Error for FiniteBoundExpectedError {}
-    /// let end_first_shift =
-    ///     RelativeEndBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(1)));
+    /// let end_first_shift = RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound();
     /// let break_start = end_first_shift.opposite().ok_or(FiniteBoundExpectedError)?;
     ///
     /// assert_eq!(
@@ -276,14 +272,12 @@ impl From<Option<(SignedDuration, BoundInclusivity)>> for RelativeEndBound {
 impl From<Bound<SignedDuration>> for RelativeEndBound {
     fn from(bound: Bound<SignedDuration>) -> Self {
         match bound {
-            Bound::Included(offset) => RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                offset,
-                BoundInclusivity::Inclusive,
-            )),
-            Bound::Excluded(offset) => RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                offset,
-                BoundInclusivity::Exclusive,
-            )),
+            Bound::Included(offset) => {
+                RelativeFiniteBound::new_with_inclusivity(offset, BoundInclusivity::Inclusive).to_end_bound()
+            },
+            Bound::Excluded(offset) => {
+                RelativeFiniteBound::new_with_inclusivity(offset, BoundInclusivity::Exclusive).to_end_bound()
+            },
             Bound::Unbounded => RelativeEndBound::InfiniteFuture,
         }
     }

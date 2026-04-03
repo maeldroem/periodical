@@ -58,7 +58,7 @@ impl RelativeStartBound {
     /// # use periodical::intervals::relative::{RelativeFiniteBound, RelativeStartBound};
     /// let infinite_start_bound = RelativeStartBound::InfinitePast;
     /// let finite_start_bound =
-    ///     RelativeStartBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(1)));
+    ///     RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound();
     ///
     /// assert!(finite_start_bound.is_finite());
     /// assert!(!infinite_start_bound.is_finite());
@@ -78,7 +78,7 @@ impl RelativeStartBound {
     /// # use periodical::intervals::relative::{RelativeFiniteBound, RelativeStartBound};
     /// let infinite_start_bound = RelativeStartBound::InfinitePast;
     /// let finite_start_bound =
-    ///     RelativeStartBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(1)));
+    ///     RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound();
     ///
     /// assert!(infinite_start_bound.is_infinite_past());
     /// assert!(!finite_start_bound.is_infinite_past());
@@ -102,7 +102,7 @@ impl RelativeStartBound {
     /// # use periodical::intervals::relative::{RelativeFiniteBound, RelativeStartBound};
     /// let infinite_start_bound = RelativeStartBound::InfinitePast;
     /// let finite_start_bound =
-    ///     RelativeStartBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(1)));
+    ///     RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound();
     ///
     /// assert_eq!(
     ///     finite_start_bound.finite(),
@@ -148,7 +148,7 @@ impl RelativeStartBound {
     /// #
     /// # impl Error for FiniteBoundExpectedError {}
     /// let start_second_part_my_shift =
-    ///     RelativeStartBound::Finite(RelativeFiniteBound::new(SignedDuration::from_hours(3)));
+    ///     RelativeFiniteBound::new(SignedDuration::from_hours(3)).to_start_bound();
     /// let break_end_before_shift = start_second_part_my_shift
     ///     .opposite()
     ///     .ok_or(FiniteBoundExpectedError)?;
@@ -294,14 +294,12 @@ impl From<Option<(SignedDuration, BoundInclusivity)>> for RelativeStartBound {
 impl From<Bound<SignedDuration>> for RelativeStartBound {
     fn from(bound: Bound<SignedDuration>) -> Self {
         match bound {
-            Bound::Included(offset) => RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                offset,
-                BoundInclusivity::Inclusive,
-            )),
-            Bound::Excluded(offset) => RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                offset,
-                BoundInclusivity::Exclusive,
-            )),
+            Bound::Included(offset) => {
+                RelativeFiniteBound::new_with_inclusivity(offset, BoundInclusivity::Inclusive).to_start_bound()
+            },
+            Bound::Excluded(offset) => {
+                RelativeFiniteBound::new_with_inclusivity(offset, BoundInclusivity::Exclusive).to_start_bound()
+            },
             Bound::Unbounded => RelativeStartBound::InfinitePast,
         }
     }

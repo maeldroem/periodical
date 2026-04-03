@@ -176,12 +176,6 @@ impl AbsoluteBoundPair {
         )
     }
 
-    /// Wraps the [`AbsoluteBoundPair`] in an [`EmptiableAbsoluteBoundPair`]
-    #[must_use]
-    pub fn to_emptiable(self) -> EmptiableAbsoluteBoundPair {
-        EmptiableAbsoluteBoundPair::from(self)
-    }
-
     /// Returns the absolute start bound
     ///
     /// # Examples
@@ -394,6 +388,24 @@ impl AbsoluteBoundPair {
             Ordering::Equal => self.end.cmp(&other.end).reverse(),
             Ordering::Greater => Ordering::Greater,
         }
+    }
+
+    /// Converts the [`AbsoluteBoundPair`] into [`AbsoluteInterval`]
+    #[must_use]
+    pub fn to_interval(self) -> AbsoluteInterval {
+        AbsoluteInterval::from(self)
+    }
+
+    /// Converts the [`AbsoluteBoundPair`] into [`EmptiableAbsoluteInterval`]
+    #[must_use]
+    pub fn to_emptiable_interval(self) -> EmptiableAbsoluteInterval {
+        self.to_interval().to_emptiable()
+    }
+
+    /// Wraps the [`AbsoluteBoundPair`] in an [`EmptiableAbsoluteBoundPair`]
+    #[must_use]
+    pub fn to_emptiable(self) -> EmptiableAbsoluteBoundPair {
+        EmptiableAbsoluteBoundPair::from(self)
     }
 }
 
