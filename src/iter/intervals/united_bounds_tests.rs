@@ -5,13 +5,7 @@ use jiff::{SignedDuration, Zoned};
 use super::united_bounds::*;
 use crate::intervals::absolute::{AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound};
 use crate::intervals::meta::BoundInclusivity;
-use crate::intervals::relative::{
-    RelativeBound,
-    RelativeBoundPair,
-    RelativeEndBound,
-    RelativeFiniteBound,
-    RelativeStartBound,
-};
+use crate::intervals::relative::{RelativeBoundPair, RelativeEndBound, RelativeFiniteBound, RelativeStartBound};
 use crate::iter::intervals::bounds::{AbsoluteBoundsIteratorDispatcher, RelativeBoundsIteratorDispatcher};
 
 mod abs_united_bounds {
@@ -274,31 +268,68 @@ mod rel_united_bounds {
     #[test]
     fn run() {
         let mut data = [
-            RelativeBound::Start(RelativeStartBound::InfinitePast),
-            RelativeBound::End(RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound()),
-            RelativeBound::Start(RelativeFiniteBound::new(SignedDuration::from_hours(12)).to_start_bound()),
-            RelativeBound::End(RelativeFiniteBound::new(SignedDuration::from_hours(15)).to_end_bound()),
-            RelativeBound::Start(RelativeFiniteBound::new(SignedDuration::from_hours(20)).to_start_bound()),
-            RelativeBound::End(RelativeFiniteBound::new(SignedDuration::from_hours(30)).to_end_bound()),
-            RelativeBound::Start(RelativeFiniteBound::new(SignedDuration::from_hours(20)).to_start_bound()),
-            RelativeBound::End(RelativeFiniteBound::new(SignedDuration::from_hours(22)).to_end_bound()),
-            RelativeBound::Start(RelativeFiniteBound::new(SignedDuration::from_hours(21)).to_start_bound()),
-            RelativeBound::End(RelativeFiniteBound::new(SignedDuration::from_hours(25)).to_end_bound()),
-            RelativeBound::Start(RelativeFiniteBound::new(SignedDuration::from_hours(23)).to_start_bound()),
-            RelativeBound::End(RelativeFiniteBound::new(SignedDuration::from_hours(27)).to_end_bound()),
-            RelativeBound::Start(RelativeFiniteBound::new(SignedDuration::from_hours(29)).to_start_bound()),
-            RelativeBound::End(RelativeFiniteBound::new(SignedDuration::from_hours(35)).to_end_bound()),
-            RelativeBound::Start(
-                RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(35), BoundInclusivity::Exclusive)
-                    .to_start_bound(),
-            ),
-            RelativeBound::End(RelativeFiniteBound::new(SignedDuration::from_hours(40)).to_end_bound()),
-            RelativeBound::Start(RelativeFiniteBound::new(SignedDuration::from_hours(50)).to_start_bound()),
-            RelativeBound::End(RelativeFiniteBound::new(SignedDuration::from_hours(55)).to_end_bound()),
-            RelativeBound::Start(RelativeFiniteBound::new(SignedDuration::from_hours(54)).to_start_bound()),
-            RelativeBound::End(RelativeEndBound::InfiniteFuture),
-            RelativeBound::Start(RelativeFiniteBound::new(SignedDuration::from_hours(101)).to_start_bound()),
-            RelativeBound::End(RelativeFiniteBound::new(SignedDuration::from_hours(201)).to_end_bound()),
+            RelativeStartBound::InfinitePast.to_bound(),
+            RelativeFiniteBound::new(SignedDuration::from_hours(1))
+                .to_end_bound()
+                .to_bound(),
+            RelativeFiniteBound::new(SignedDuration::from_hours(12))
+                .to_start_bound()
+                .to_bound(),
+            RelativeFiniteBound::new(SignedDuration::from_hours(15))
+                .to_end_bound()
+                .to_bound(),
+            RelativeFiniteBound::new(SignedDuration::from_hours(20))
+                .to_start_bound()
+                .to_bound(),
+            RelativeFiniteBound::new(SignedDuration::from_hours(30))
+                .to_end_bound()
+                .to_bound(),
+            RelativeFiniteBound::new(SignedDuration::from_hours(20))
+                .to_start_bound()
+                .to_bound(),
+            RelativeFiniteBound::new(SignedDuration::from_hours(22))
+                .to_end_bound()
+                .to_bound(),
+            RelativeFiniteBound::new(SignedDuration::from_hours(21))
+                .to_start_bound()
+                .to_bound(),
+            RelativeFiniteBound::new(SignedDuration::from_hours(25))
+                .to_end_bound()
+                .to_bound(),
+            RelativeFiniteBound::new(SignedDuration::from_hours(23))
+                .to_start_bound()
+                .to_bound(),
+            RelativeFiniteBound::new(SignedDuration::from_hours(27))
+                .to_end_bound()
+                .to_bound(),
+            RelativeFiniteBound::new(SignedDuration::from_hours(29))
+                .to_start_bound()
+                .to_bound(),
+            RelativeFiniteBound::new(SignedDuration::from_hours(35))
+                .to_end_bound()
+                .to_bound(),
+            RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(35), BoundInclusivity::Exclusive)
+                .to_start_bound()
+                .to_bound(),
+            RelativeFiniteBound::new(SignedDuration::from_hours(40))
+                .to_end_bound()
+                .to_bound(),
+            RelativeFiniteBound::new(SignedDuration::from_hours(50))
+                .to_start_bound()
+                .to_bound(),
+            RelativeFiniteBound::new(SignedDuration::from_hours(55))
+                .to_end_bound()
+                .to_bound(),
+            RelativeFiniteBound::new(SignedDuration::from_hours(54))
+                .to_start_bound()
+                .to_bound(),
+            RelativeEndBound::InfiniteFuture.to_bound(),
+            RelativeFiniteBound::new(SignedDuration::from_hours(101))
+                .to_start_bound()
+                .to_bound(),
+            RelativeFiniteBound::new(SignedDuration::from_hours(201))
+                .to_end_bound()
+                .to_bound(),
         ];
 
         data.sort();
@@ -306,14 +337,26 @@ mod rel_united_bounds {
         assert_eq!(
             RelativeUnitedBoundsIter::new(data.into_iter()).collect::<Vec<_>>(),
             vec![
-                RelativeBound::Start(RelativeStartBound::InfinitePast),
-                RelativeBound::End(RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound()),
-                RelativeBound::Start(RelativeFiniteBound::new(SignedDuration::from_hours(12)).to_start_bound()),
-                RelativeBound::End(RelativeFiniteBound::new(SignedDuration::from_hours(15)).to_end_bound()),
-                RelativeBound::Start(RelativeFiniteBound::new(SignedDuration::from_hours(20)).to_start_bound()),
-                RelativeBound::End(RelativeFiniteBound::new(SignedDuration::from_hours(40)).to_end_bound()),
-                RelativeBound::Start(RelativeFiniteBound::new(SignedDuration::from_hours(50)).to_start_bound()),
-                RelativeBound::End(RelativeEndBound::InfiniteFuture),
+                RelativeStartBound::InfinitePast.to_bound(),
+                RelativeFiniteBound::new(SignedDuration::from_hours(1))
+                    .to_end_bound()
+                    .to_bound(),
+                RelativeFiniteBound::new(SignedDuration::from_hours(12))
+                    .to_start_bound()
+                    .to_bound(),
+                RelativeFiniteBound::new(SignedDuration::from_hours(15))
+                    .to_end_bound()
+                    .to_bound(),
+                RelativeFiniteBound::new(SignedDuration::from_hours(20))
+                    .to_start_bound()
+                    .to_bound(),
+                RelativeFiniteBound::new(SignedDuration::from_hours(40))
+                    .to_end_bound()
+                    .to_bound(),
+                RelativeFiniteBound::new(SignedDuration::from_hours(50))
+                    .to_start_bound()
+                    .to_bound(),
+                RelativeEndBound::InfiniteFuture.to_bound(),
             ],
         );
     }
@@ -371,14 +414,26 @@ mod rel_united_bounds {
         assert_eq!(
             data.rel_bounds_iter().unite_bounds().collect::<Vec<_>>(),
             vec![
-                RelativeBound::Start(RelativeStartBound::InfinitePast),
-                RelativeBound::End(RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound()),
-                RelativeBound::Start(RelativeFiniteBound::new(SignedDuration::from_hours(12)).to_start_bound()),
-                RelativeBound::End(RelativeFiniteBound::new(SignedDuration::from_hours(15)).to_end_bound()),
-                RelativeBound::Start(RelativeFiniteBound::new(SignedDuration::from_hours(20)).to_start_bound()),
-                RelativeBound::End(RelativeFiniteBound::new(SignedDuration::from_hours(40)).to_end_bound()),
-                RelativeBound::Start(RelativeFiniteBound::new(SignedDuration::from_hours(50)).to_start_bound()),
-                RelativeBound::End(RelativeEndBound::InfiniteFuture),
+                RelativeStartBound::InfinitePast.to_bound(),
+                RelativeFiniteBound::new(SignedDuration::from_hours(1))
+                    .to_end_bound()
+                    .to_bound(),
+                RelativeFiniteBound::new(SignedDuration::from_hours(12))
+                    .to_start_bound()
+                    .to_bound(),
+                RelativeFiniteBound::new(SignedDuration::from_hours(15))
+                    .to_end_bound()
+                    .to_bound(),
+                RelativeFiniteBound::new(SignedDuration::from_hours(20))
+                    .to_start_bound()
+                    .to_bound(),
+                RelativeFiniteBound::new(SignedDuration::from_hours(40))
+                    .to_end_bound()
+                    .to_bound(),
+                RelativeFiniteBound::new(SignedDuration::from_hours(50))
+                    .to_start_bound()
+                    .to_bound(),
+                RelativeEndBound::InfiniteFuture.to_bound(),
             ],
         );
     }

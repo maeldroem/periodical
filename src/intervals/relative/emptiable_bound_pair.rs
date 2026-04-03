@@ -120,6 +120,36 @@ impl EmptiableRelativeBoundPair {
         RelativeBoundPair::from_range(range).to_emptiable()
     }
 
+    /// Compares two [`EmptiableRelativeBoundPair`], but if they have the same
+    /// start, order by decreasing length
+    ///
+    /// Uses [`RelativeBoundPair::ord_by_start_and_inv_length`] under the hood
+    /// for the [`Bound`](EmptiableRelativeBoundPair::Bound) variants and
+    /// [`EmptiableRelativeBoundPair::cmp`]
+    /// for the [`Empty`](EmptiableRelativeBoundPair::Empty) variants (which
+    /// will just place all empty bounds before any bound bounds).
+    ///
+    /// Don't rely on this method for checking for equality of start, as it will
+    /// produce other [`Ordering`]s if their lengths don't match too.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use periodical::intervals::relative::EmptiableRelativeBoundPair;
+    /// # let mut bounds: [EmptiableRelativeBoundPair; 0] = [];
+    /// bounds.sort_by(EmptiableRelativeBoundPair::ord_by_start_and_inv_length);
+    /// ```
+    #[must_use]
+    pub fn ord_by_start_and_inv_length(&self, other: &Self) -> Ordering {
+        match (self, other) {
+            (
+                EmptiableRelativeBoundPair::Bound(og_rel_bound_pair),
+                EmptiableRelativeBoundPair::Bound(other_rel_bound_pair),
+            ) => og_rel_bound_pair.ord_by_start_and_inv_length(other_rel_bound_pair),
+            _ => self.cmp(other),
+        }
+    }
+
     /// Returns the content of the [`Bound`](EmptiableRelativeBoundPair::Bound)
     /// variant
     ///
@@ -153,34 +183,10 @@ impl EmptiableRelativeBoundPair {
         }
     }
 
-    /// Compares two [`EmptiableRelativeBoundPair`], but if they have the same
-    /// start, order by decreasing length
-    ///
-    /// Uses [`RelativeBoundPair::ord_by_start_and_inv_length`] under the hood
-    /// for the [`Bound`](EmptiableRelativeBoundPair::Bound) variants and
-    /// [`EmptiableRelativeBoundPair::cmp`]
-    /// for the [`Empty`](EmptiableRelativeBoundPair::Empty) variants (which
-    /// will just place all empty bounds before any bound bounds).
-    ///
-    /// Don't rely on this method for checking for equality of start, as it will
-    /// produce other [`Ordering`]s if their lengths don't match too.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use periodical::intervals::relative::EmptiableRelativeBoundPair;
-    /// # let mut bounds: [EmptiableRelativeBoundPair; 0] = [];
-    /// bounds.sort_by(EmptiableRelativeBoundPair::ord_by_start_and_inv_length);
-    /// ```
+    /// Converts the [`EmptiableRelativeBoundPair`] into [`EmptiableRelativeInterval`]
     #[must_use]
-    pub fn ord_by_start_and_inv_length(&self, other: &Self) -> Ordering {
-        match (self, other) {
-            (
-                EmptiableRelativeBoundPair::Bound(og_rel_bound_pair),
-                EmptiableRelativeBoundPair::Bound(other_rel_bound_pair),
-            ) => og_rel_bound_pair.ord_by_start_and_inv_length(other_rel_bound_pair),
-            _ => self.cmp(other),
-        }
+    pub fn to_emptiable_interval(self) -> EmptiableRelativeInterval {
+        EmptiableRelativeInterval::from(self)
     }
 }
 

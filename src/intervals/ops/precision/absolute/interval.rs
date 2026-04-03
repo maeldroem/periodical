@@ -398,12 +398,7 @@ impl PreciseAbsoluteInterval for AbsoluteInterval {
         precision_start: Precision,
         precision_end: Precision,
     ) -> Self::PrecisedIntervalOutput {
-        Ok(AbsoluteInterval::from(precise_abs_bound_pair(
-            &self.abs_bound_pair(),
-            tz,
-            precision_start,
-            precision_end,
-        )?))
+        Ok(precise_abs_bound_pair(&self.abs_bound_pair(), tz, precision_start, precision_end)?.to_interval())
     }
 
     fn precise_interval_with_different_precisions_with_base_time(
@@ -414,14 +409,15 @@ impl PreciseAbsoluteInterval for AbsoluteInterval {
         precision_end: Precision,
         base_end: Timestamp,
     ) -> Self::PrecisedIntervalOutput {
-        Ok(AbsoluteInterval::from(precise_abs_bound_pair_with_base_time(
+        Ok(precise_abs_bound_pair_with_base_time(
             &self.abs_bound_pair(),
             tz,
             precision_start,
             base_start,
             precision_end,
             base_end,
-        )?))
+        )?
+        .to_interval())
     }
 }
 
@@ -435,12 +431,9 @@ impl PreciseAbsoluteInterval for EmptiableAbsoluteInterval {
         precision_end: Precision,
     ) -> Self::PrecisedIntervalOutput {
         if let EmptiableAbsoluteBoundPair::Bound(ref abs_bound_pair) = self.emptiable_abs_bound_pair() {
-            return Ok(EmptiableAbsoluteInterval::from(precise_abs_bound_pair(
-                abs_bound_pair,
-                tz,
-                precision_start,
-                precision_end,
-            )?));
+            return Ok(
+                precise_abs_bound_pair(abs_bound_pair, tz, precision_start, precision_end)?.to_emptiable_interval(),
+            );
         }
 
         Ok(EmptiableAbsoluteInterval::Empty(EmptyInterval))
@@ -455,14 +448,15 @@ impl PreciseAbsoluteInterval for EmptiableAbsoluteInterval {
         base_end: Timestamp,
     ) -> Self::PrecisedIntervalOutput {
         if let EmptiableAbsoluteBoundPair::Bound(ref abs_bound_pair) = self.emptiable_abs_bound_pair() {
-            return Ok(EmptiableAbsoluteInterval::from(precise_abs_bound_pair_with_base_time(
+            return Ok(precise_abs_bound_pair_with_base_time(
                 abs_bound_pair,
                 tz,
                 precision_start,
                 base_start,
                 precision_end,
                 base_end,
-            )?));
+            )?
+            .to_emptiable_interval());
         }
 
         Ok(EmptiableAbsoluteInterval::Empty(EmptyInterval))

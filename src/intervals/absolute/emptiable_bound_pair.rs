@@ -120,6 +120,36 @@ impl EmptiableAbsoluteBoundPair {
         AbsoluteBoundPair::from_range(range).to_emptiable()
     }
 
+    /// Compares two [`EmptiableAbsoluteBoundPair`], but if they have the same
+    /// start, order by decreasing length
+    ///
+    /// Uses [`AbsoluteBoundPair::ord_by_start_and_inv_length`] under the hood
+    /// for the [`Bound`](EmptiableAbsoluteBoundPair::Bound) variants and
+    /// [`EmptiableAbsoluteBoundPair::cmp`]
+    /// for the [`Empty`](EmptiableAbsoluteBoundPair::Empty) variants (which
+    /// will just place all empty bounds before any bound bounds).
+    ///
+    /// Don't rely on this method for checking for equality of start, as it will
+    /// produce other [`Ordering`]s if their lengths don't match too.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use periodical::intervals::absolute::EmptiableAbsoluteBoundPair;
+    /// # let mut bounds: [EmptiableAbsoluteBoundPair; 0] = [];
+    /// bounds.sort_by(EmptiableAbsoluteBoundPair::ord_by_start_and_inv_length);
+    /// ```
+    #[must_use]
+    pub fn ord_by_start_and_inv_length(&self, other: &Self) -> Ordering {
+        match (self, other) {
+            (
+                EmptiableAbsoluteBoundPair::Bound(og_abs_bound_pair),
+                EmptiableAbsoluteBoundPair::Bound(other_abs_bound_pair),
+            ) => og_abs_bound_pair.ord_by_start_and_inv_length(other_abs_bound_pair),
+            _ => self.cmp(other),
+        }
+    }
+
     /// Returns the content of the [`Bound`](EmptiableAbsoluteBoundPair::Bound)
     /// variant
     ///
@@ -153,34 +183,10 @@ impl EmptiableAbsoluteBoundPair {
         }
     }
 
-    /// Compares two [`EmptiableAbsoluteBoundPair`], but if they have the same
-    /// start, order by decreasing length
-    ///
-    /// Uses [`AbsoluteBoundPair::ord_by_start_and_inv_length`] under the hood
-    /// for the [`Bound`](EmptiableAbsoluteBoundPair::Bound) variants and
-    /// [`EmptiableAbsoluteBoundPair::cmp`]
-    /// for the [`Empty`](EmptiableAbsoluteBoundPair::Empty) variants (which
-    /// will just place all empty bounds before any bound bounds).
-    ///
-    /// Don't rely on this method for checking for equality of start, as it will
-    /// produce other [`Ordering`]s if their lengths don't match too.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use periodical::intervals::absolute::EmptiableAbsoluteBoundPair;
-    /// # let mut bounds: [EmptiableAbsoluteBoundPair; 0] = [];
-    /// bounds.sort_by(EmptiableAbsoluteBoundPair::ord_by_start_and_inv_length);
-    /// ```
+    /// Converts the [`EmptiableAbsoluteBoundPair`] into [`EmptiableAbsoluteInterval`]
     #[must_use]
-    pub fn ord_by_start_and_inv_length(&self, other: &Self) -> Ordering {
-        match (self, other) {
-            (
-                EmptiableAbsoluteBoundPair::Bound(og_abs_bound_pair),
-                EmptiableAbsoluteBoundPair::Bound(other_abs_bound_pair),
-            ) => og_abs_bound_pair.ord_by_start_and_inv_length(other_abs_bound_pair),
-            _ => self.cmp(other),
-        }
+    pub fn to_emptiable_interval(self) -> EmptiableAbsoluteInterval {
+        EmptiableAbsoluteInterval::from(self)
     }
 }
 
