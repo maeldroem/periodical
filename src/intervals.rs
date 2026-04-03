@@ -107,7 +107,7 @@
 //! );
 //!
 //! // ..For creating an interval
-//! let second_interval = AbsoluteInterval::from(bounds_for_second_interval);
+//! let second_interval = bounds_for_second_interval.to_interval();
 //! # Ok::<(), Box<dyn Error>>(())
 //! ```
 

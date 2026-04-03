@@ -284,14 +284,12 @@ impl From<Option<(Timestamp, BoundInclusivity)>> for AbsoluteEndBound {
 impl From<Bound<Timestamp>> for AbsoluteEndBound {
     fn from(bound: Bound<Timestamp>) -> Self {
         match bound {
-            Bound::Included(time) => AbsoluteFiniteBound::new_with_inclusivity(
-                time,
-                BoundInclusivity::Inclusive,
-            ).to_end_bound(),
-            Bound::Excluded(time) => AbsoluteFiniteBound::new_with_inclusivity(
-                time,
-                BoundInclusivity::Exclusive,
-            ).to_end_bound(),
+            Bound::Included(time) => {
+                AbsoluteFiniteBound::new_with_inclusivity(time, BoundInclusivity::Inclusive).to_end_bound()
+            },
+            Bound::Excluded(time) => {
+                AbsoluteFiniteBound::new_with_inclusivity(time, BoundInclusivity::Exclusive).to_end_bound()
+            },
             Bound::Unbounded => AbsoluteEndBound::InfiniteFuture,
         }
     }

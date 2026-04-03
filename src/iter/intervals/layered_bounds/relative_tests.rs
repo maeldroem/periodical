@@ -2,13 +2,7 @@ use jiff::SignedDuration;
 
 use super::relative::*;
 use crate::intervals::meta::BoundInclusivity;
-use crate::intervals::relative::{
-    RelativeBound,
-    RelativeBoundPair,
-    RelativeEndBound,
-    RelativeFiniteBound,
-    RelativeStartBound,
-};
+use crate::intervals::relative::{RelativeBoundPair, RelativeEndBound, RelativeFiniteBound, RelativeStartBound};
 use crate::iter::intervals::bounds::RelativeBoundsIteratorDispatcher;
 use crate::iter::intervals::layered_bounds::rel_state_change::LayeredBoundsStateChangeAtRelativeBound;
 use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
@@ -16,19 +10,31 @@ use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
 #[test]
 fn create() {
     let first_layer_data = [
-        RelativeBound::Start(RelativeStartBound::InfinitePast),
-        RelativeBound::Start(RelativeFiniteBound::new(SignedDuration::from_hours(101)).to_start_bound()),
-        RelativeBound::End(RelativeFiniteBound::new(SignedDuration::from_hours(102)).to_end_bound()),
-        RelativeBound::Start(RelativeFiniteBound::new(SignedDuration::from_hours(105)).to_start_bound()),
-        RelativeBound::End(RelativeEndBound::InfiniteFuture),
+        RelativeStartBound::InfinitePast.to_bound(),
+        RelativeFiniteBound::new(SignedDuration::from_hours(101))
+            .to_start_bound()
+            .to_bound(),
+        RelativeFiniteBound::new(SignedDuration::from_hours(102))
+            .to_end_bound()
+            .to_bound(),
+        RelativeFiniteBound::new(SignedDuration::from_hours(105))
+            .to_start_bound()
+            .to_bound(),
+        RelativeEndBound::InfiniteFuture.to_bound(),
     ];
 
     let second_layer_data = [
-        RelativeBound::Start(RelativeStartBound::InfinitePast),
-        RelativeBound::Start(RelativeFiniteBound::new(SignedDuration::from_hours(101)).to_start_bound()),
-        RelativeBound::End(RelativeFiniteBound::new(SignedDuration::from_hours(102)).to_end_bound()),
-        RelativeBound::Start(RelativeFiniteBound::new(SignedDuration::from_hours(105)).to_start_bound()),
-        RelativeBound::End(RelativeEndBound::InfiniteFuture),
+        RelativeStartBound::InfinitePast.to_bound(),
+        RelativeFiniteBound::new(SignedDuration::from_hours(101))
+            .to_start_bound()
+            .to_bound(),
+        RelativeFiniteBound::new(SignedDuration::from_hours(102))
+            .to_end_bound()
+            .to_bound(),
+        RelativeFiniteBound::new(SignedDuration::from_hours(105))
+            .to_start_bound()
+            .to_bound(),
+        RelativeEndBound::InfiniteFuture.to_bound(),
     ];
 
     let _ = LayeredRelativeBounds::new(first_layer_data.into_iter(), second_layer_data.into_iter());

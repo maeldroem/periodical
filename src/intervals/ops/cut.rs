@@ -674,7 +674,7 @@ impl Cuttable<Timestamp> for AbsoluteInterval {
 
     fn cut_at(&self, position: Timestamp, cut_type: CutType) -> CutResult<Self::Output> {
         cut_abs_bound_pair(&self.abs_bound_pair(), position, cut_type)
-            .map_cut(|c1, c2| (AbsoluteInterval::from(c1), AbsoluteInterval::from(c2)))
+            .map_cut(|c1, c2| (c1.to_interval(), c2.to_interval()))
     }
 }
 
@@ -683,7 +683,7 @@ impl Cuttable<Timestamp> for EmptiableAbsoluteInterval {
 
     fn cut_at(&self, position: Timestamp, cut_type: CutType) -> CutResult<Self::Output> {
         cut_emptiable_abs_bound_pair(&self.emptiable_abs_bound_pair(), position, cut_type)
-            .map_cut(|c1, c2| (EmptiableAbsoluteInterval::from(c1), EmptiableAbsoluteInterval::from(c2)))
+            .map_cut(|c1, c2| (c1.to_emptiable_interval(), c2.to_emptiable_interval()))
     }
 }
 
@@ -700,7 +700,7 @@ impl Cuttable<Timestamp> for HalfBoundedAbsoluteInterval {
 
     fn cut_at(&self, position: Timestamp, cut_type: CutType) -> CutResult<Self::Output> {
         cut_abs_bound_pair(&self.abs_bound_pair(), position, cut_type)
-            .map_cut(|c1, c2| (AbsoluteInterval::from(c1), AbsoluteInterval::from(c2)))
+            .map_cut(|c1, c2| (c1.to_interval(), c2.to_interval()))
     }
 }
 
@@ -725,7 +725,7 @@ impl Cuttable<SignedDuration> for RelativeInterval {
 
     fn cut_at(&self, position: SignedDuration, cut_type: CutType) -> CutResult<Self::Output> {
         cut_rel_bound_pair(&self.rel_bound_pair(), position, cut_type)
-            .map_cut(|c1, c2| (RelativeInterval::from(c1), RelativeInterval::from(c2)))
+            .map_cut(|c1, c2| (c1.to_interval(), c2.to_interval()))
     }
 }
 
@@ -734,7 +734,7 @@ impl Cuttable<SignedDuration> for EmptiableRelativeInterval {
 
     fn cut_at(&self, position: SignedDuration, cut_type: CutType) -> CutResult<Self::Output> {
         cut_emptiable_rel_bound_pair(&self.emptiable_rel_bound_pair(), position, cut_type)
-            .map_cut(|c1, c2| (EmptiableRelativeInterval::from(c1), EmptiableRelativeInterval::from(c2)))
+            .map_cut(|c1, c2| (c1.to_emptiable_interval(), c2.to_emptiable_interval()))
     }
 }
 
@@ -751,7 +751,7 @@ impl Cuttable<SignedDuration> for HalfBoundedRelativeInterval {
 
     fn cut_at(&self, position: SignedDuration, cut_type: CutType) -> CutResult<Self::Output> {
         cut_rel_bound_pair(&self.rel_bound_pair(), position, cut_type)
-            .map_cut(|c1, c2| (RelativeInterval::from(c1), RelativeInterval::from(c2)))
+            .map_cut(|c1, c2| (c1.to_interval(), c2.to_interval()))
     }
 }
 
@@ -760,7 +760,7 @@ impl Cuttable<Timestamp> for UnboundedInterval {
 
     fn cut_at(&self, position: Timestamp, cut_type: CutType) -> CutResult<Self::Output> {
         cut_abs_bound_pair(&self.abs_bound_pair(), position, cut_type)
-            .map_cut(|c1, c2| (AbsoluteInterval::from(c1), AbsoluteInterval::from(c2)))
+            .map_cut(|c1, c2| (c1.to_interval(), c2.to_interval()))
     }
 }
 
@@ -769,7 +769,7 @@ impl Cuttable<SignedDuration> for UnboundedInterval {
 
     fn cut_at(&self, position: SignedDuration, cut_type: CutType) -> CutResult<Self::Output> {
         cut_rel_bound_pair(&self.rel_bound_pair(), position, cut_type)
-            .map_cut(|c1, c2| (RelativeInterval::from(c1), RelativeInterval::from(c2)))
+            .map_cut(|c1, c2| (c1.to_interval(), c2.to_interval()))
     }
 }
 
