@@ -478,16 +478,11 @@ impl OffsetIsoWeek {
         self.zero_based_nth_day(n.checked_sub(1).ok_or(OffsetIsoWeekDateError)?)
     }
 
-    pub fn weekday_date(&self, weekday: Weekday) -> Result<Date, OffsetIsoWeekDateError> {
-        todo!()
-    }
-
     /// Returns the offset first day of the week
     ///
     /// # Errors
     ///
-    /// Returns [`OffsetIsoWeekDateError`] if something went wrong during
-    /// computation, usually due to the computation resulting in an out-of-range date.
+    /// Returns [`OffsetIsoWeekDateError`] if anything went wrong with computing the resulting date.
     ///
     /// # Examples
     ///
@@ -504,29 +499,14 @@ impl OffsetIsoWeek {
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn first_day(&self) -> Result<Date, OffsetIsoWeekDateError> {
-        let iso_week_first_day = ISOWeekDate::new(
-            self.year(),
-            i8::try_from(self.week()).or(Err(OffsetIsoWeekDateError))?,
-            Weekday::Monday,
-        )
-        .or(Err(OffsetIsoWeekDateError))?
-        .date();
-
-        iso_week_first_day
-            .checked_add(
-                Span::new()
-                    .try_days(self.week_start_offset())
-                    .or(Err(OffsetIsoWeekDateError))?,
-            )
-            .or(Err(OffsetIsoWeekDateError))
+        self.zero_based_nth_day(0)
     }
 
     /// Returns the offset last day of the week
     ///
     /// # Errors
     ///
-    /// Returns [`OffsetIsoWeekDateError`] if something went wrong during
-    /// computation, usually due to the computation resulting in an out-of-range date.
+    /// Returns [`OffsetIsoWeekDateError`] if anything went wrong with computing the resulting date.
     ///
     /// # Examples
     ///
@@ -543,21 +523,11 @@ impl OffsetIsoWeek {
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn last_day(&self) -> Result<Date, OffsetIsoWeekDateError> {
-        let iso_week_last_day = ISOWeekDate::new(
-            self.year(),
-            i8::try_from(self.week()).or(Err(OffsetIsoWeekDateError))?,
-            Weekday::Sunday,
-        )
-        .or(Err(OffsetIsoWeekDateError))?
-        .date();
+        self.zero_based_nth_day(DAYS_IN_WEEK - 1)
+    }
 
-        iso_week_last_day
-            .checked_add(
-                Span::new()
-                    .try_days(self.week_start_offset())
-                    .or(Err(OffsetIsoWeekDateError))?,
-            )
-            .or(Err(OffsetIsoWeekDateError))
+    pub fn weekday_date(&self, weekday: Weekday) -> Result<Date, OffsetIsoWeekDateError> {
+        todo!()
     }
 }
 
