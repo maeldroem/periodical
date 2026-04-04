@@ -157,6 +157,26 @@ impl OffsetIsoWeek {
     /// equivalent to a regular ISO week.
     pub const ISO_OFFSET: i8 = 0;
 
+    /// Creates a new [`OffsetIsoWeek`] without checking invariants
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use periodical::time::OffsetIsoWeek;
+    /// // Offset out of allowed range
+    /// let week = OffsetIsoWeek::unchecked_new_with_offset(1, 2026, -10);
+    ///
+    /// assert_eq!(week.week_start_offset(), -10);
+    /// ```
+    #[must_use]
+    pub fn unchecked_new_with_offset(week: u8, year: i16, week_start_offset: i8) -> Self {
+        OffsetIsoWeek {
+            week,
+            year,
+            week_start_offset,
+        }
+    }
+
     /// Creates a new [`OffsetIsoWeek`] without an offset
     ///
     /// Expects an ISO week number and an ISO week year.
@@ -217,23 +237,68 @@ impl OffsetIsoWeek {
             return Err(OffsetIsoWeekCreationError::OutOfRangeOffset);
         }
 
-        Ok(OffsetIsoWeek {
-            week,
-            year,
-            week_start_offset,
-        })
+        Ok(Self::unchecked_new_with_offset(week, year, week_start_offset))
     }
 
+    /// Creates a new [`OffsetIsoWeek`] without offset from a [`Date`]
+    ///
+    /// # Errors
+    ///
+    /// Shouldn't return any errors, but will return any errors that
+    /// [`from_date_with_offset`](Self::from_date_with_offset) would return with `week_start_offset` set to
+    /// [`ISO_OFFSET`](Self::ISO_OFFSET).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jiff::civil::Date;
+    /// # use periodical::time::OffsetIsoWeek;
+    /// let week = OffsetIsoWeek::from_date("2023-01-01".parse::<Date>()?)?;
+    ///
+    /// assert_eq!(week.week(), 52);
+    /// assert_eq!(week.year(), 2022);
+    /// assert_eq!(week.week_start_offset(), 0);
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
     pub fn from_date(date: Date) -> Result<Self, OffsetIsoWeekCreationError> {
         Self::from_date_with_offset(date, Self::ISO_OFFSET)
     }
 
+    /// Creates a new [`OffsetIsoWeek`] with an offset from a [`Date`]
+    ///
+    /// # Errors
+    ///
+    /// Returns [`OutOfRangeOffset`](OffsetIsoWeekCreationError::OutOfRangeOffset) if the given offset
+    /// is less than `-6` or greater than `6`.
+    ///
+    /// Returns [`Computation`](OffsetIsoWeekCreationError::Computation) if getting the date's offset to
+    /// the first day or last day of the ISO week failed.
+    ///
+    /// Returns [`OutOfRangeYear`](OffsetIsoWeekCreationError::OutOfRangeYear)
+    /// if the resulting year is out of the range that [`Date`] can support.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jiff::civil::Date;
+    /// # use periodical::time::OffsetIsoWeek;
+    /// let week = OffsetIsoWeek::from_date_with_offset("2024-01-01".parse::<Date>()?, 2)?;
+    ///
+    /// assert_eq!(week.week(), 52);
+    /// assert_eq!(week.year(), 2023);
+    /// assert_eq!(week.week_start_offset(), 2);
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
     pub fn from_date_with_offset(date: Date, week_start_offset: i8) -> Result<Self, OffsetIsoWeekCreationError> {
-        let iso_weeks_in_year = iso_weeks_in_year(date.year()).or(Err(OffsetIsoWeekCreationError::OutOfRangeYear))?;
-
         if !Self::ALLOWED_OFFSET_RANGE.contains(&week_start_offset) {
             return Err(OffsetIsoWeekCreationError::OutOfRangeOffset);
         }
+
+        let iso_week_date = date.iso_week_date();
+        let iso_week = iso_week_date.week().unsigned_abs();
+        let iso_week_year = iso_week_date.year();
 
         // ISO |0·1·2·3·4·5·6|0·1·2·3·4·5·6|0·
         //     |      W1     |      W2     | W3
@@ -246,12 +311,85 @@ impl OffsetIsoWeek {
         // If the week offset is less than ¬o, +1 to the result's week.
         //
         // If the resulting week is 0, -1 to the result's year.
-        // If the resulting week is greater than the original date's amount of ISO weeks,
-        let iso_week_date = date.iso_week_date();
-        let iso_week = iso_week_date.week();
-        let year = date.year();
+        // If the resulting week is greater than the original date's amount of ISO weeks, +1
 
-        todo!()
+        let (resulting_week, resulting_year) = match week_start_offset.signum() {
+            0 => (iso_week, iso_week_year),
+            1 => {
+                let offset_from_start = i8::try_from(
+                    iso_week_date
+                        .date()
+                        .since(
+                            iso_week_date
+                                .first_of_week()
+                                .or(Err(OffsetIsoWeekCreationError::Computation))?
+                                .date(),
+                        )
+                        .or(Err(OffsetIsoWeekCreationError::Computation))?
+                        .get_days(),
+                )
+                .or(Err(OffsetIsoWeekCreationError::Computation))?;
+
+                let mut resulting_week = iso_week;
+                let mut resulting_year = iso_week_year;
+
+                if week_start_offset > offset_from_start {
+                    resulting_week = resulting_week.saturating_sub(1);
+
+                    if resulting_week == 0 {
+                        resulting_year = resulting_year
+                            .checked_sub(1)
+                            .ok_or(OffsetIsoWeekCreationError::OutOfRangeYear)?;
+
+                        resulting_week =
+                            iso_weeks_in_year(resulting_year).or(Err(OffsetIsoWeekCreationError::OutOfRangeYear))?;
+                    }
+                }
+
+                (resulting_week, resulting_year)
+            },
+            -1 => {
+                let offset_from_end = i8::try_from(
+                    iso_week_date
+                        .date()
+                        .since(
+                            iso_week_date
+                                .last_of_week()
+                                .or(Err(OffsetIsoWeekCreationError::Computation))?
+                                .date(),
+                        )
+                        .or(Err(OffsetIsoWeekCreationError::Computation))?
+                        .get_days(),
+                )
+                .or(Err(OffsetIsoWeekCreationError::Computation))?;
+
+                let mut resulting_week = iso_week;
+                let mut resulting_year = iso_week_year;
+
+                if week_start_offset < offset_from_end {
+                    let iso_weeks_in_year =
+                        iso_weeks_in_year(resulting_year).or(Err(OffsetIsoWeekCreationError::OutOfRangeYear))?;
+                    resulting_week = resulting_week.saturating_add(1);
+
+                    if resulting_week == iso_weeks_in_year {
+                        resulting_year = resulting_year
+                            .checked_add(1)
+                            .ok_or(OffsetIsoWeekCreationError::OutOfRangeYear)?;
+
+                        resulting_week = 1;
+                    }
+                }
+
+                (resulting_week, resulting_year)
+            },
+            _ => unreachable!("core::num::signum is guaranteed to return only in the range -1..=1"),
+        };
+
+        Ok(Self::unchecked_new_with_offset(
+            resulting_week,
+            resulting_year,
+            week_start_offset,
+        ))
     }
 
     /// Returns the week number
@@ -374,6 +512,7 @@ pub enum OffsetIsoWeekCreationError {
     OutOfRangeYear,
     OutOfRangeWeek,
     OutOfRangeOffset,
+    Computation,
 }
 
 impl Display for OffsetIsoWeekCreationError {
@@ -382,6 +521,7 @@ impl Display for OffsetIsoWeekCreationError {
             Self::OutOfRangeYear => write!(f, "Out of range year"),
             Self::OutOfRangeWeek => write!(f, "Out of range week number"),
             Self::OutOfRangeOffset => write!(f, "Out of range week start offset"),
+            Self::Computation => write!(f, "An error occurred when computing the `OffsetIsoWeek`"),
         }
     }
 }
