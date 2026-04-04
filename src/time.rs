@@ -419,8 +419,63 @@ impl OffsetIsoWeek {
         self.week_start_offset
     }
 
-    pub fn nth_day(&self, n: u8) -> Result<Date, OffsetIsoWeekDateError> {
-        todo!()
+    /// Returns the Nth (0-based) date of the [`OffsetIsoWeek`]
+    ///
+    /// # Errors
+    ///
+    /// Returns [`OffsetIsoWeekDateError`] if anything went wrong with computing the resulting date.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jiff::civil::Date;
+    /// # use periodical::time::OffsetIsoWeek;
+    /// let week = OffsetIsoWeek::new_with_offset(1, 2026, -2)?;
+    ///
+    /// assert_eq!(week.zero_based_nth_day(1)?, "2025-12-28".parse::<Date>()?);
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    pub fn zero_based_nth_day(&self, n: u8) -> Result<Date, OffsetIsoWeekDateError> {
+        if n > (DAYS_IN_WEEK - 1) {
+            return Err(OffsetIsoWeekDateError);
+        }
+
+        ISOWeekDate::new(
+            self.year(),
+            i8::try_from(self.week()).or(Err(OffsetIsoWeekDateError))?,
+            Weekday::from_monday_zero_offset(i8::try_from(n).or(Err(OffsetIsoWeekDateError))?)
+                .or(Err(OffsetIsoWeekDateError))?,
+        )
+        .or(Err(OffsetIsoWeekDateError))?
+        .date()
+        .checked_add(
+            Span::new()
+                .try_days(self.week_start_offset())
+                .or(Err(OffsetIsoWeekDateError))?,
+        )
+        .or(Err(OffsetIsoWeekDateError))
+    }
+
+    /// Returns the Nth (1-based) date of the [`OffsetIsoWeek`]
+    ///
+    /// # Errors
+    ///
+    /// Returns [`OffsetIsoWeekDateError`] if anything went wrong with computing the resulting date.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jiff::civil::Date;
+    /// # use periodical::time::OffsetIsoWeek;
+    /// let week = OffsetIsoWeek::new_with_offset(1, 2026, -2)?;
+    ///
+    /// assert_eq!(week.one_based_nth_day(1)?, "2025-12-27".parse::<Date>()?);
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    pub fn one_based_nth_day(&self, n: u8) -> Result<Date, OffsetIsoWeekDateError> {
+        self.zero_based_nth_day(n.checked_sub(1).ok_or(OffsetIsoWeekDateError)?)
     }
 
     pub fn weekday_date(&self, weekday: Weekday) -> Result<Date, OffsetIsoWeekDateError> {
