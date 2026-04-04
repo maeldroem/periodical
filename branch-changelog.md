@@ -17,7 +17,9 @@ in the item's `impl` under an explicit name, which is later used in the `From`/`
 
 ## Added
 
--
+- Implemented `unchecked_new_with_offset` on `OffsetIsoWeek`
+- Implemented `from_date_with_offset` and `from_date` on `OffsetIsoWeek`
+- Added `Computation` variant to `OffsetIsoWeekCreationError`
 
 ## Changed
 
