@@ -11,6 +11,7 @@
 use std::cmp::Ordering;
 use std::error::Error;
 use std::fmt::Display;
+use std::ops::RangeInclusive;
 
 use jiff::civil::{Date, ISOWeekDate, Weekday};
 use jiff::tz::TimeZone;
@@ -113,6 +114,33 @@ pub fn iso_weeks_in_year(year: i16) -> Result<u8, JiffError> {
 /// If one wishes to keep the ISO week numbering system but have weeks starting
 /// on sunday, one can create an [`OffsetIsoWeek`] with an offset of `-1`
 /// (Monday = `0`).
+///
+/// # About ISO week years
+///
+/// Since ISO weeks are always 7 days long but the number of days in a year never is a multiple of 7,
+/// then we still need a way to know which year this week is for.
+///
+/// In order to solve that, ISO 8601 defines a year on its definition for the ISO week, therefore making
+/// ISO week years shorter/longer than civil years.
+///
+/// This also means that you can't simply do `OffsetIsoWeek::new(date.iso_week_date().week(), date.year())`.
+/// For example, if `date` is 2023-01-01, `date.iso_week_date().week()` will evaluate to `52`, and `date.year()`
+/// will evaluate to `2023`.
+/// [But if we look up a calendar](https://www.timeanddate.com/calendar/?year=2023&country=18),
+/// the 52nd ISO week of ISO year 2023 actually spans from 2023-12-25 to 2023-12-31 😬
+///
+/// To fix that, we simply need to use `date.iso_week_date().year()` instead of `date.year()`.
+/// But no worries, we have method for that! [`OffsetIsoWeek::from_date`].
+///
+/// # See also
+///
+/// - ["ISO week date" on Wikipedia](https://en.wikipedia.org/w/index.php?title=ISO_week_date&oldid=1345029647&useskin=vector)
+/// - [Time and Date's calendar tool](https://www.timeanddate.com/calendar/)[^1]
+/// - ["ISO 8601" on Wikipedia](https://en.wikipedia.org/w/index.php?title=ISO_8601&oldid=1344743613)
+/// - ["Week" on Wikipedia](https://en.wikipedia.org/w/index.php?title=Week&oldid=1345823865)
+///
+/// [^1]: If you simply google "iso week calendar", you may find online calendars that use a faulty algorithm
+///       for determining ISO week numbers, ironically. Trust me, I've come across a bunch of them.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct OffsetIsoWeek {
     week: u8,
@@ -121,6 +149,8 @@ pub struct OffsetIsoWeek {
 }
 
 impl OffsetIsoWeek {
+    /// Allowed offset range for [`OffsetIsoWeek`]
+    pub const ALLOWED_OFFSET_RANGE: RangeInclusive<i8> = -6..=6;
     /// No week start offset
     ///
     /// With this offset (or lack thereof), an [`OffsetIsoWeek`] becomes
@@ -128,6 +158,9 @@ impl OffsetIsoWeek {
     pub const ISO_OFFSET: i8 = 0;
 
     /// Creates a new [`OffsetIsoWeek`] without an offset
+    ///
+    /// Expects an ISO week number and an ISO week year.
+    /// See [`OffsetIsoWeek`] for more info about ISO week years.
     ///
     /// # Errors
     ///
@@ -150,6 +183,9 @@ impl OffsetIsoWeek {
     }
 
     /// Creates a new [`OffsetIsoWeek`] with the given week start offset
+    ///
+    /// Expects an ISO week number and an ISO week year.
+    /// See [`OffsetIsoWeek`] for more info about ISO week years.
     ///
     /// # Errors
     ///
@@ -177,7 +213,7 @@ impl OffsetIsoWeek {
             return Err(OffsetIsoWeekCreationError::OutOfRangeWeek);
         }
 
-        if !(-6i8..=6i8).contains(&week_start_offset) {
+        if !Self::ALLOWED_OFFSET_RANGE.contains(&week_start_offset) {
             return Err(OffsetIsoWeekCreationError::OutOfRangeOffset);
         }
 
@@ -188,13 +224,52 @@ impl OffsetIsoWeek {
         })
     }
 
+    pub fn from_date(date: Date) -> Result<Self, OffsetIsoWeekCreationError> {
+        Self::from_date_with_offset(date, Self::ISO_OFFSET)
+    }
+
+    pub fn from_date_with_offset(date: Date, week_start_offset: i8) -> Result<Self, OffsetIsoWeekCreationError> {
+        let iso_weeks_in_year = iso_weeks_in_year(date.year()).or(Err(OffsetIsoWeekCreationError::OutOfRangeYear))?;
+
+        if !Self::ALLOWED_OFFSET_RANGE.contains(&week_start_offset) {
+            return Err(OffsetIsoWeekCreationError::OutOfRangeOffset);
+        }
+
+        // ISO |0·1·2·3·4·5·6|0·1·2·3·4·5·6|0·
+        //     |      W1     |      W2     | W3
+        //                    ----^ (o = +2)
+        //                        ^-------- (¬o = -4)
+        // We take the date's offset to the week's start (= o)
+        // and compute the complement of the offset (¬o = o - 6)
+        //
+        // If the week offset is greater than o, -1 to the result's week.
+        // If the week offset is less than ¬o, +1 to the result's week.
+        //
+        // If the resulting week is 0, -1 to the result's year.
+        // If the resulting week is greater than the original date's amount of ISO weeks,
+        let iso_week_date = date.iso_week_date();
+        let iso_week = iso_week_date.week();
+        let year = date.year();
+
+        todo!()
+    }
+
     /// Returns the week number
     #[must_use]
     pub fn week(&self) -> u8 {
         self.week
     }
 
-    /// Returns the year
+    /// Returns the offset ISO week year
+    ///
+    /// <div class="warning">
+    ///
+    /// **THIS IS NOT A CIVIL YEAR**, do not use it for displaying a week's civil year.
+    /// Use `a_week.nth_day(n)?.year()` instead.
+    ///
+    /// </div>
+    ///
+    /// See [`OffsetIsoWeek`] for more info about ISO week years.
     #[must_use]
     pub fn year(&self) -> i16 {
         self.year
@@ -204,6 +279,14 @@ impl OffsetIsoWeek {
     #[must_use]
     pub fn week_start_offset(&self) -> i8 {
         self.week_start_offset
+    }
+
+    pub fn nth_day(&self, n: u8) -> Result<Date, OffsetIsoWeekDateError> {
+        todo!()
+    }
+
+    pub fn weekday_date(&self, weekday: Weekday) -> Result<Date, OffsetIsoWeekDateError> {
+        todo!()
     }
 
     /// Returns the offset first day of the week

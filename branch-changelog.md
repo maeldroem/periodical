@@ -6,6 +6,12 @@ Link relevant issues and PRs here!
 
 Explain the motivation for this PR and what it does/solves
 
+# Notes
+
+Where should the actual logic for conversion be located? Either within the item's `impl`
+or the relevant `From`/`TryFrom` impl? I believe that, where possible, logic should be implemented
+in the item's `impl` under an explicit name, which is later used in the `From`/`TryFrom` impl.
+
 <details>
 <summary><h1>Changelog</h1></summary>
 
@@ -15,9 +21,7 @@ Explain the motivation for this PR and what it does/solves
 
 ## Changed
 
-- Instead of acknowledging a possible panic in a code comment, made explicit in the code by providing
-  a custom panic message through `.expect()` and acknowledged the possible panics in `AbsoluteUnitedBoundsIter`'s
-  and `RelativeUnitedBoundsIter`'s documentation
+-
 
 ## Deprecated
 
