@@ -21,6 +21,9 @@ in the item's `impl` under an explicit name, which is later used in the `From`/`
 - Implemented `from_date_with_offset` and `from_date` on `OffsetIsoWeek`
 - Added `Computation` variant to `OffsetIsoWeekCreationError`
 - Implemented `zero_based_nth_day` and `one_based_nth_day` on `OffsetIsoWeek`
+- Implemented `start_weekday` and `end_weekday` on `OffsetIsoWeek`
+- Implemented `weekday_date` on `OffsetIsoWeek`
+- Implemented `TryFrom<Date>` and `TryFrom<(Date, i8)>` on `OffsetIsoWeek`
 
 ## Changed
 

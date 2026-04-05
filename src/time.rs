@@ -419,6 +419,20 @@ impl OffsetIsoWeek {
         self.week_start_offset
     }
 
+    /// Returns the week start's [`Weekday`]
+    #[must_use]
+    pub fn start_weekday(&self) -> Weekday {
+        // Monday is used here as it is the week start for an ISO week
+        Weekday::Monday.wrapping_add(self.week_start_offset())
+    }
+
+    /// Returns the week end's [`Weekday`]
+    #[must_use]
+    pub fn end_weekday(&self) -> Weekday {
+        // Sunday is used here as it is the week end for an ISO week
+        Weekday::Sunday.wrapping_add(self.week_start_offset())
+    }
+
     /// Returns the Nth (0-based) date of the [`OffsetIsoWeek`]
     ///
     /// # Errors
@@ -526,8 +540,28 @@ impl OffsetIsoWeek {
         self.zero_based_nth_day(DAYS_IN_WEEK - 1)
     }
 
+    /// Returns the [`Date`] corresponding to the given [`Weekday`]
+    ///
+    /// # Errors
+    ///
+    /// Returns [`OffsetIsoWeekDateError`] if anything went wrong with computing the resulting date.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jiff::civil::{Date, Weekday};
+    /// # use periodical::time::OffsetIsoWeek;
+    /// let week = OffsetIsoWeek::new_with_offset(3, 2026, -2)?;
+    ///
+    /// assert_eq!(
+    ///     week.weekday_date(Weekday::Monday)?,
+    ///     "2026-01-12".parse::<Date>()?,
+    /// );
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
     pub fn weekday_date(&self, weekday: Weekday) -> Result<Date, OffsetIsoWeekDateError> {
-        todo!()
+        self.zero_based_nth_day(u8::try_from(weekday.since(self.start_weekday())).or(Err(OffsetIsoWeekDateError))?)
     }
 }
 
@@ -565,6 +599,22 @@ impl Display for OffsetIsoWeekDateError {
 }
 
 impl Error for OffsetIsoWeekDateError {}
+
+impl TryFrom<Date> for OffsetIsoWeek {
+    type Error = OffsetIsoWeekCreationError;
+
+    fn try_from(value: Date) -> Result<Self, Self::Error> {
+        Self::from_date(value)
+    }
+}
+
+impl TryFrom<(Date, i8)> for OffsetIsoWeek {
+    type Error = OffsetIsoWeekCreationError;
+
+    fn try_from((date, week_start_offset): (Date, i8)) -> Result<Self, Self::Error> {
+        Self::from_date_with_offset(date, week_start_offset)
+    }
+}
 
 /// An individual month
 ///
