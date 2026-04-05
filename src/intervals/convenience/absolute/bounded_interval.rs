@@ -730,18 +730,134 @@ impl BoundedAbsoluteInterval {
         Self::offset_week_before_duration_from_date(date, calendar_anchor_offset, OffsetIsoWeek::ISO_OFFSET, tz)
     }
 
+    /// Creates a new [`BoundedAbsoluteInterval`] of the offset ISO week after a given
+    /// [`CalendarAnchorOffset`] relative to today
+    ///
+    /// # Errors
+    ///
+    /// Returns any error that [`offset_week_after_duration_from_date`](Self::offset_week_after_duration_from_date)
+    /// may return.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jiff::civil::Weekday;
+    /// # use jiff::tz::TimeZone;
+    /// # use periodical::time::CalendarAnchorOffset;
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// let interval = BoundedAbsoluteInterval::offset_week_after_duration_from_today(
+    ///     CalendarAnchorOffset::Weeks(2, Weekday::Tuesday),
+    ///     -2,
+    ///     TimeZone::get("Europe/Oslo")?,
+    /// )?;
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    pub fn offset_week_after_duration_from_today(
+        calendar_anchor_offset: CalendarAnchorOffset,
+        week_start_offset: i8,
+        tz: TimeZone,
+    ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
+        Self::offset_week_after_duration_from_date(
+            date_today(tz.clone()),
+            calendar_anchor_offset,
+            week_start_offset,
+            tz,
+        )
+    }
+
+    /// Creates a new [`BoundedAbsoluteInterval`] of the ISO week after a given
+    /// [`CalendarAnchorOffset`] relative to today
+    ///
+    /// # Errors
+    ///
+    /// Returns any error that [`week_after_duration_from_date`](Self::week_after_duration_from_date)
+    /// may return.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jiff::civil::Weekday;
+    /// # use jiff::tz::TimeZone;
+    /// # use periodical::time::CalendarAnchorOffset;
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// let interval = BoundedAbsoluteInterval::week_after_duration_from_today(
+    ///     CalendarAnchorOffset::Weeks(2, Weekday::Tuesday),
+    ///     TimeZone::get("Europe/Oslo")?,
+    /// )?;
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
     pub fn week_after_duration_from_today(
         calendar_anchor_offset: CalendarAnchorOffset,
         tz: TimeZone,
     ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
-        todo!()
+        Self::week_after_duration_from_date(date_today(tz.clone()), calendar_anchor_offset, tz)
     }
 
+    /// Creates a new [`BoundedAbsoluteInterval`] of the offset ISO week before a given
+    /// [`CalendarAnchorOffset`] relative to today
+    ///
+    /// # Errors
+    ///
+    /// Returns any error that [`offset_week_before_duration_from_date`](Self::offset_week_before_duration_from_date)
+    /// may return.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jiff::civil::Weekday;
+    /// # use jiff::tz::TimeZone;
+    /// # use periodical::time::CalendarAnchorOffset;
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// let interval = BoundedAbsoluteInterval::offset_week_before_duration_from_today(
+    ///     CalendarAnchorOffset::Weeks(2, Weekday::Tuesday),
+    ///     -2,
+    ///     TimeZone::get("Europe/Oslo")?,
+    /// )?;
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    pub fn offset_week_before_duration_from_today(
+        calendar_anchor_offset: CalendarAnchorOffset,
+        week_start_offset: i8,
+        tz: TimeZone,
+    ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
+        Self::offset_week_before_duration_from_date(
+            date_today(tz.clone()),
+            calendar_anchor_offset,
+            week_start_offset,
+            tz,
+        )
+    }
+
+    /// Creates a new [`BoundedAbsoluteInterval`] of the ISO week after a given
+    /// [`CalendarAnchorOffset`] relative to today
+    ///
+    /// # Errors
+    ///
+    /// Returns any error that [`week_before_duration_from_date`](Self::week_before_duration_from_date)
+    /// may return.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jiff::civil::Weekday;
+    /// # use jiff::tz::TimeZone;
+    /// # use periodical::time::CalendarAnchorOffset;
+    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
+    /// let interval = BoundedAbsoluteInterval::week_before_duration_from_today(
+    ///     CalendarAnchorOffset::Weeks(2, Weekday::Tuesday),
+    ///     TimeZone::get("Europe/Oslo")?,
+    /// )?;
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
     pub fn week_before_duration_from_today(
         calendar_anchor_offset: CalendarAnchorOffset,
         tz: TimeZone,
     ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
-        todo!()
+        Self::week_before_duration_from_date(date_today(tz.clone()), calendar_anchor_offset, tz)
     }
 
     pub fn this_week(tz: TimeZone) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
