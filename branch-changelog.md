@@ -28,6 +28,8 @@ in the item's `impl` under an explicit name, which is later used in the `From`/`
   `week_after_duration_from_date`, and `week_before_duration_from_date` on `OffsetIsoWeek`
 - Implemented `offset_week_after_duration_from_today`, `week_after_duration_from_today`,
   `offset_week_before_duration_from_today`, and `week_before_duration_from_today` on `OffsetIsoWeek`
+- Implemented `this_week`, `this_offset_week`, `next_week`, `next_offset_week`, `previous_week`,
+  and `previous_offset_week` on `OffsetIsoWeek`
 
 ## Changed
 
