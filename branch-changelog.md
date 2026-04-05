@@ -24,6 +24,8 @@ in the item's `impl` under an explicit name, which is later used in the `From`/`
 - Implemented `start_weekday` and `end_weekday` on `OffsetIsoWeek`
 - Implemented `weekday_date` on `OffsetIsoWeek`
 - Implemented `TryFrom<Date>` and `TryFrom<(Date, i8)>` on `OffsetIsoWeek`
+- Implemented `offset_week_after_duration_from_date`, `offset_week_before_duration_from_date`,
+  `week_after_duration_from_date`, and `week_before_duration_from_date` on `OffsetIsoWeek`
 
 ## Changed
 
