@@ -30,6 +30,7 @@ in the item's `impl` under an explicit name, which is later used in the `From`/`
   `offset_week_before_duration_from_today`, and `week_before_duration_from_today` on `OffsetIsoWeek`
 - Implemented `this_week`, `this_offset_week`, `next_week`, `next_offset_week`, `previous_week`,
   and `previous_offset_week` on `OffsetIsoWeek`
+- Implemented `TryFrom<Date>` on `Month`
 
 ## Changed
 
