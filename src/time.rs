@@ -740,6 +740,26 @@ impl From<MonthInYear> for Month {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct MonthTryFromDateError;
+
+impl Display for MonthTryFromDateError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "An error occurred when trying to convert `Date` into `Month`")
+    }
+}
+
+impl Error for MonthTryFromDateError {}
+
+impl TryFrom<Date> for Month {
+    type Error = MonthTryFromDateError;
+
+    fn try_from(value: Date) -> Result<Self, Self::Error> {
+        Self::try_from_one_offset(u8::try_from(value.month()).or(Err(MonthTryFromDateError))?)
+            .or(Err(MonthTryFromDateError))
+    }
+}
+
 /// Error produced by conversion methods from a number to a [`Month`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct MonthTryFromNumberError;
