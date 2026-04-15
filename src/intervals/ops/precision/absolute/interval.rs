@@ -16,7 +16,7 @@ use crate::intervals::ops::precision::absolute::bound::{
     precise_abs_bound_pair_with_base_time,
 };
 use crate::intervals::special::EmptyInterval;
-use crate::ops::{Precision, PrecisionOutOfRangeDateError};
+use crate::ops::{Precision, PrecisionOutOfRangeError};
 
 /// Ability to precise absolute intervals
 ///
@@ -320,7 +320,7 @@ pub trait PreciseAbsoluteInterval {
 }
 
 impl PreciseAbsoluteInterval for AbsoluteBoundPair {
-    type PrecisedIntervalOutput = Result<Self, PrecisionOutOfRangeDateError>;
+    type PrecisedIntervalOutput = Result<Self, PrecisionOutOfRangeError>;
 
     fn precise_interval_with_different_precisions(
         &self,
@@ -344,7 +344,7 @@ impl PreciseAbsoluteInterval for AbsoluteBoundPair {
 }
 
 impl PreciseAbsoluteInterval for EmptiableAbsoluteBoundPair {
-    type PrecisedIntervalOutput = Result<Self, PrecisionOutOfRangeDateError>;
+    type PrecisedIntervalOutput = Result<Self, PrecisionOutOfRangeError>;
 
     fn precise_interval_with_different_precisions(
         &self,
@@ -390,7 +390,7 @@ impl PreciseAbsoluteInterval for EmptiableAbsoluteBoundPair {
 }
 
 impl PreciseAbsoluteInterval for AbsoluteInterval {
-    type PrecisedIntervalOutput = Result<Self, PrecisionOutOfRangeDateError>;
+    type PrecisedIntervalOutput = Result<Self, PrecisionOutOfRangeError>;
 
     fn precise_interval_with_different_precisions(
         &self,
@@ -422,7 +422,7 @@ impl PreciseAbsoluteInterval for AbsoluteInterval {
 }
 
 impl PreciseAbsoluteInterval for EmptiableAbsoluteInterval {
-    type PrecisedIntervalOutput = Result<Self, PrecisionOutOfRangeDateError>;
+    type PrecisedIntervalOutput = Result<Self, PrecisionOutOfRangeError>;
 
     fn precise_interval_with_different_precisions(
         &self,
