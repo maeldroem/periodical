@@ -11,6 +11,7 @@ use crate::time::{
     CalendarAnchorOffsetDateError,
     MonthInYear,
     OffsetIsoWeek,
+    OffsetIsoWeekCreationError,
     checked_add_calendar_anchor_offset_to_date,
     checked_sub_calendar_anchor_offset_to_date,
     date_today,
@@ -448,6 +449,148 @@ impl HalfBoundedAbsoluteInterval {
         Self::until_date(
             week.first_day()
                 .or(Err(HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReference))?,
+            tz,
+        )
+    }
+
+    /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans since the current week in the given timezone
+    ///
+    /// # Errors
+    ///
+    /// Returns [`ComputationError`](HalfBoundedAbsoluteIntervalCreationError::ComputationError)
+    /// if [`OffsetIsoWeek::from_date`] returned an error.
+    ///
+    /// Returns any error that [`since_week`](Self::since_week) may return.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jiff::tz::TimeZone;
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
+    /// let interval = HalfBoundedAbsoluteInterval::since_this_week(TimeZone::get("Europe/Oslo")?)?;
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    pub fn since_this_week(tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
+        Self::since_week(
+            OffsetIsoWeek::from_date(date_today(tz.clone()))
+                .or(Err(HalfBoundedAbsoluteIntervalCreationError::ComputationError))?,
+            tz,
+        )
+    }
+
+    /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans since the current offset week in the given timezone
+    ///
+    /// # Errors
+    ///
+    /// Returns [`ComputationError`](HalfBoundedAbsoluteIntervalCreationError::ComputationError)
+    /// if [`OffsetIsoWeek::from_date_with_offset`]
+    /// returned [`OffsetIsoWeekCreationError::Computation`]
+    /// or [`OffsetIsoWeekCreationError::OutOfRangeOffset`].
+    ///
+    /// Returns [`OutOfRangeReference`](HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReference)
+    /// if [`OffsetIsoWeek::from_date_with_offset`]
+    /// returned [`OffsetIsoWeekCreationError::OutOfRangeWeek`]
+    /// or [`OffsetIsoWeekCreationError::OutOfRangeYear`].
+    ///
+    /// Returns any error that [`since_week`](Self::since_week) may return.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jiff::tz::TimeZone;
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
+    /// let interval =
+    ///     HalfBoundedAbsoluteInterval::since_this_offset_week(-1, TimeZone::get("Europe/Oslo")?)?;
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    pub fn since_this_offset_week(
+        week_start_offset: i8,
+        tz: TimeZone,
+    ) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
+        Self::since_week(
+            OffsetIsoWeek::from_date_with_offset(date_today(tz.clone()), week_start_offset).map_err(
+                |err| match err {
+                    OffsetIsoWeekCreationError::Computation | OffsetIsoWeekCreationError::OutOfRangeOffset => {
+                        HalfBoundedAbsoluteIntervalCreationError::ComputationError
+                    },
+                    OffsetIsoWeekCreationError::OutOfRangeWeek | OffsetIsoWeekCreationError::OutOfRangeYear => {
+                        HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReference
+                    },
+                },
+            )?,
+            tz,
+        )
+    }
+
+    /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans until the current week in the given timezone
+    ///
+    /// # Errors
+    ///
+    /// Returns [`ComputationError`](HalfBoundedAbsoluteIntervalCreationError::ComputationError)
+    /// if [`OffsetIsoWeek::from_date`] returned an error.
+    ///
+    /// Returns any error that [`until_week`](Self::until_week) may return.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jiff::tz::TimeZone;
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
+    /// let interval = HalfBoundedAbsoluteInterval::until_this_week(TimeZone::get("Europe/Oslo")?)?;
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    pub fn until_this_week(tz: TimeZone) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
+        Self::until_week(
+            OffsetIsoWeek::from_date(date_today(tz.clone()))
+                .or(Err(HalfBoundedAbsoluteIntervalCreationError::ComputationError))?,
+            tz,
+        )
+    }
+
+    /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans until the current offset week in the given timezone
+    ///
+    /// # Errors
+    ///
+    /// Returns [`ComputationError`](HalfBoundedAbsoluteIntervalCreationError::ComputationError)
+    /// if [`OffsetIsoWeek::from_date_with_offset`]
+    /// returned [`OffsetIsoWeekCreationError::Computation`]
+    /// or [`OffsetIsoWeekCreationError::OutOfRangeOffset`].
+    ///
+    /// Returns [`OutOfRangeReference`](HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReference)
+    /// if [`OffsetIsoWeek::from_date_with_offset`]
+    /// returned [`OffsetIsoWeekCreationError::OutOfRangeWeek`]
+    /// or [`OffsetIsoWeekCreationError::OutOfRangeYear`].
+    ///
+    /// Returns any error that [`until_week`](Self::until_week) may return.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jiff::tz::TimeZone;
+    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
+    /// let interval =
+    ///     HalfBoundedAbsoluteInterval::until_this_offset_week(-1, TimeZone::get("Europe/Oslo")?)?;
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    pub fn until_this_offset_week(
+        week_start_offset: i8,
+        tz: TimeZone,
+    ) -> Result<Self, HalfBoundedAbsoluteIntervalCreationError> {
+        Self::until_week(
+            OffsetIsoWeek::from_date_with_offset(date_today(tz.clone()), week_start_offset).map_err(
+                |err| match err {
+                    OffsetIsoWeekCreationError::Computation | OffsetIsoWeekCreationError::OutOfRangeOffset => {
+                        HalfBoundedAbsoluteIntervalCreationError::ComputationError
+                    },
+                    OffsetIsoWeekCreationError::OutOfRangeWeek | OffsetIsoWeekCreationError::OutOfRangeYear => {
+                        HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReference
+                    },
+                },
+            )?,
             tz,
         )
     }
