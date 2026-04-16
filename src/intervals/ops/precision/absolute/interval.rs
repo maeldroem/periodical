@@ -12,8 +12,10 @@ use crate::intervals::absolute::{
     HasEmptiableAbsoluteBoundPair,
 };
 use crate::intervals::ops::precision::absolute::bound::{
-    precise_abs_bound_pair,
-    precise_abs_bound_pair_with_base_time,
+    precise_abs_end_bound,
+    precise_abs_end_bound_with_base_time,
+    precise_abs_start_bound,
+    precise_abs_start_bound_with_base_time,
 };
 use crate::intervals::special::EmptyInterval;
 use crate::ops::{Precision, PrecisionOutOfRangeError};
@@ -75,6 +77,8 @@ pub trait PreciseAbsoluteInterval {
 
     /// Precises the start and end bounds with different [`Precision`]s
     ///
+    /// See [`Precision::precise_time`] for more information.
+    ///
     /// # Examples
     ///
     /// ```
@@ -132,6 +136,8 @@ pub trait PreciseAbsoluteInterval {
     ) -> Self::PrecisedIntervalOutput;
 
     /// Precises the start and end bounds with the given [`Precision`]
+    ///
+    /// See [`Precision::precise_time`] for more information.
     ///
     /// # Examples
     ///
@@ -352,16 +358,11 @@ impl PreciseAbsoluteInterval for EmptiableAbsoluteBoundPair {
         start_precision: Precision,
         end_precision: Precision,
     ) -> Self::PrecisedIntervalOutput {
-        if let EmptiableAbsoluteBoundPair::Bound(abs_bound_pair) = self {
-            return Ok(EmptiableAbsoluteBoundPair::Bound(precise_abs_bound_pair(
-                abs_bound_pair,
-                tz,
-                start_precision,
-                end_precision,
-            )?));
+        if let Self::Bound(abs_bound_pair) = self {
+            Ok(precise_abs_bound_pair(abs_bound_pair, tz, start_precision, end_precision)?.to_emptiable())
+        } else {
+            Ok(Self::Empty)
         }
-
-        Ok(EmptiableAbsoluteBoundPair::Empty)
     }
 
     fn precise_interval_with_different_precisions_with_base_time(
@@ -372,20 +373,19 @@ impl PreciseAbsoluteInterval for EmptiableAbsoluteBoundPair {
         precision_end: Precision,
         base_end: Timestamp,
     ) -> Self::PrecisedIntervalOutput {
-        if let EmptiableAbsoluteBoundPair::Bound(abs_bound_pair) = self {
-            return Ok(EmptiableAbsoluteBoundPair::Bound(
-                precise_abs_bound_pair_with_base_time(
-                    abs_bound_pair,
-                    tz,
-                    precision_start,
-                    base_start,
-                    precision_end,
-                    base_end,
-                )?,
-            ));
+        if let Self::Bound(abs_bound_pair) = self {
+            Ok(precise_abs_bound_pair_with_base_time(
+                abs_bound_pair,
+                tz,
+                precision_start,
+                base_start,
+                precision_end,
+                base_end,
+            )?
+            .to_emptiable())
+        } else {
+            Ok(Self::Empty)
         }
-
-        Ok(EmptiableAbsoluteBoundPair::Empty)
     }
 }
 
@@ -431,12 +431,10 @@ impl PreciseAbsoluteInterval for EmptiableAbsoluteInterval {
         precision_end: Precision,
     ) -> Self::PrecisedIntervalOutput {
         if let EmptiableAbsoluteBoundPair::Bound(ref abs_bound_pair) = self.emptiable_abs_bound_pair() {
-            return Ok(
-                precise_abs_bound_pair(abs_bound_pair, tz, precision_start, precision_end)?.to_emptiable_interval(),
-            );
+            Ok(precise_abs_bound_pair(abs_bound_pair, tz, precision_start, precision_end)?.to_emptiable_interval())
+        } else {
+            Ok(Self::Empty(EmptyInterval))
         }
-
-        Ok(EmptiableAbsoluteInterval::Empty(EmptyInterval))
     }
 
     fn precise_interval_with_different_precisions_with_base_time(
@@ -448,7 +446,7 @@ impl PreciseAbsoluteInterval for EmptiableAbsoluteInterval {
         base_end: Timestamp,
     ) -> Self::PrecisedIntervalOutput {
         if let EmptiableAbsoluteBoundPair::Bound(ref abs_bound_pair) = self.emptiable_abs_bound_pair() {
-            return Ok(precise_abs_bound_pair_with_base_time(
+            Ok(precise_abs_bound_pair_with_base_time(
                 abs_bound_pair,
                 tz,
                 precision_start,
@@ -456,9 +454,45 @@ impl PreciseAbsoluteInterval for EmptiableAbsoluteInterval {
                 precision_end,
                 base_end,
             )?
-            .to_emptiable_interval());
+            .to_emptiable_interval())
+        } else {
+            Ok(Self::Empty(EmptyInterval))
         }
-
-        Ok(EmptiableAbsoluteInterval::Empty(EmptyInterval))
     }
+}
+
+/// Precises [`AbsoluteBoundPair`] with the given [`Precision`]s
+///
+/// # Errors
+///
+/// See [`Precision::precise_time`]
+pub fn precise_abs_bound_pair(
+    bound_pair: &AbsoluteBoundPair,
+    tz: TimeZone,
+    precision_start: Precision,
+    precision_end: Precision,
+) -> Result<AbsoluteBoundPair, PrecisionOutOfRangeError> {
+    Ok(AbsoluteBoundPair::new(
+        precise_abs_start_bound(&bound_pair.start(), tz.clone(), precision_start)?,
+        precise_abs_end_bound(&bound_pair.end(), tz, precision_end)?,
+    ))
+}
+
+/// Precises [`AbsoluteBoundPair`] with the given [`Precision`]s and base times
+///
+/// # Errors
+///
+/// See [`Precision::precise_time_with_base_time`]
+pub fn precise_abs_bound_pair_with_base_time(
+    bound_pair: &AbsoluteBoundPair,
+    tz: TimeZone,
+    precision_start: Precision,
+    base_start: Timestamp,
+    precision_end: Precision,
+    base_end: Timestamp,
+) -> Result<AbsoluteBoundPair, PrecisionOutOfRangeError> {
+    Ok(AbsoluteBoundPair::new(
+        precise_abs_start_bound_with_base_time(&bound_pair.start(), tz.clone(), precision_start, base_start)?,
+        precise_abs_end_bound_with_base_time(&bound_pair.end(), tz, precision_end, base_end)?,
+    ))
 }
