@@ -66,5 +66,5 @@ pub mod relative;
 
 inline_docs! {
     pub use absolute::{PreciseAbsoluteBound, PreciseAbsoluteInterval};
-    // pub use relative::{PreciseRelativeBound, PreciseRelativeInterval};
+    pub use relative::{PreciseRelativeBound, PreciseRelativeInterval};
 }
