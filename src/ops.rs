@@ -264,11 +264,11 @@ impl Precision {
 
     /// Applies the precision to a given [`Duration`](StdDuration)
     ///
-    /// Since a duration is relative, rounding is based on the multiple of the precision's duration.
+    /// Rounding is based on the multiple of the precision's duration.
     ///
     /// # Errors
     ///
-    /// Returns [`PrecisionOutOfRangeDateError`] if the computed new duration has an amount of seconds superior
+    /// Returns [`PrecisionOutOfRangeError`] if the computed new duration has an amount of seconds superior
     /// to what [`u64`] can store.
     ///
     /// # Panics
@@ -289,14 +289,123 @@ impl Precision {
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
-    pub fn precise_duration(&self, duration: StdDuration) -> Result<StdDuration, PrecisionOutOfRangeDateError> {
+    pub fn precise_duration(&self, duration: StdDuration) -> Result<StdDuration, PrecisionOutOfRangeError> {
         let new_timestamp = self.precise_unsigned_nanos(duration.as_nanos());
 
         // Polyfill for StdDuration::from_nanos_u128() to avoid bumping MSRV
         // & StdDuration::try_from_nanos_u128() doesn't yet exist
         let nanos_per_sec = StdDuration::from_secs(1).as_nanos();
-        let secs_component = u64::try_from(new_timestamp / nanos_per_sec).or(Err(PrecisionOutOfRangeDateError))?;
-        let nanos_component = u32::try_from(new_timestamp % nanos_per_sec).or(Err(PrecisionOutOfRangeDateError))?;
+        let secs_component = u64::try_from(new_timestamp / nanos_per_sec).or(Err(PrecisionOutOfRangeError))?;
+        let nanos_component = u32::try_from(new_timestamp % nanos_per_sec).or(Err(PrecisionOutOfRangeError))?;
+
+        Ok(StdDuration::new(secs_component, nanos_component))
+    }
+
+    /// Applies the precision to a given [`Duration`](StdDuration) based on a given offset
+    ///
+    /// Rounding is based on the multiple of the precision's duration relative to the given base offset.
+    ///
+    /// Use [`precise_duration_with_base_offset_via_signed`](Self::precise_duration_with_base_offset_via_signed)
+    /// if you expect the given duration to possibly be lower than the given base offset.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`PrecisionOutOfRangeError`] for any of the following reasons:
+    /// - The base offset could not be subtracted from the duration without underflow
+    /// - [`precise_duration`](Self::precise_duration) returned an error
+    /// - The resulting precised duration relative to the base offset overflowed after adding the base offset back
+    ///
+    /// # Panics
+    ///
+    /// See [`precise_duration`](Self::precise_duration).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use std::time::Duration;
+    /// # use periodical::ops::{Precision, PrecisionMode};
+    /// let precision = Precision::new(Duration::from_mins(15), PrecisionMode::ToPast)?;
+    ///
+    /// assert_eq!(
+    ///     precision
+    ///         .precise_duration_with_base_offset(Duration::from_mins(77), Duration::from_mins(3))?,
+    ///     Duration::from_mins(63),
+    /// );
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    pub fn precise_duration_with_base_offset(
+        &self,
+        duration: StdDuration,
+        base: StdDuration,
+    ) -> Result<StdDuration, PrecisionOutOfRangeError> {
+        base.checked_add(self.precise_duration(duration.checked_sub(base).ok_or(PrecisionOutOfRangeError)?)?)
+            .ok_or(PrecisionOutOfRangeError)
+    }
+
+    /// Applies the precision to a given [`Duration`](StdDuration) based on a given offset via [`SignedDuration`]
+    /// conversions
+    ///
+    /// Similar to [`precise_duration_with_base_offset`](Self::precise_duration_with_base_offset), but converts
+    /// the base and the offset to [`SignedDuration`]s to do the computation, before converting the result back
+    /// into a [`Duration`](StdDuration).
+    ///
+    /// This is useful when you expect the given [`Duration`](StdDuration) to be lower than the given base offset.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`PrecisionOutOfRangeError`] for any of the following reasons:
+    /// - The duration could not be converted to a [`SignedDuration`]
+    /// - The base offset could not be converted to a [`SignedDuration`]
+    /// - [`precise_signed_duration_with_base_offset`](Self::precise_signed_duration_with_base_offset) returned an error
+    /// - The resulting precised duration could not be converted back to a [`Duration`](StdDuration)
+    ///
+    /// # Panics
+    ///
+    /// See [`precise_signed_duration_with_base_offset`](Self::precise_signed_duration_with_base_offset).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use std::time::Duration;
+    /// # use periodical::ops::{Precision, PrecisionMode};
+    /// let precision = Precision::new(Duration::from_mins(3), PrecisionMode::ToFuture)?;
+    ///
+    /// assert_eq!(
+    ///     precision.precise_duration_with_base_offset_via_signed(
+    ///         Duration::from_mins(1),
+    ///         Duration::from_mins(2)
+    ///     )?,
+    ///     Duration::from_mins(2),
+    /// );
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    pub fn precise_duration_with_base_offset_via_signed(
+        &self,
+        duration: StdDuration,
+        base: StdDuration,
+    ) -> Result<StdDuration, PrecisionOutOfRangeError> {
+        let signed_duration =
+            SignedDuration::try_from_nanos_i128(i128::try_from(duration.as_nanos()).or(Err(PrecisionOutOfRangeError))?)
+                .ok_or(PrecisionOutOfRangeError)?;
+        let signed_base =
+            SignedDuration::try_from_nanos_i128(i128::try_from(base.as_nanos()).or(Err(PrecisionOutOfRangeError))?)
+                .ok_or(PrecisionOutOfRangeError)?;
+
+        let unsigned_precised_duration = u128::try_from(
+            self.precise_signed_duration_with_base_offset(signed_duration, signed_base)?
+                .as_nanos(),
+        )
+        .or(Err(PrecisionOutOfRangeError))?;
+
+        // Polyfill for StdDuration::from_nanos_u128() to avoid bumping MSRV
+        // & StdDuration::try_from_nanos_u128() doesn't yet exist
+        let nanos_per_sec = StdDuration::from_secs(1).as_nanos();
+        let secs_component =
+            u64::try_from(unsigned_precised_duration / nanos_per_sec).or(Err(PrecisionOutOfRangeError))?;
+        let nanos_component =
+            u32::try_from(unsigned_precised_duration % nanos_per_sec).or(Err(PrecisionOutOfRangeError))?;
 
         Ok(StdDuration::new(secs_component, nanos_component))
     }
@@ -307,7 +416,7 @@ impl Precision {
     ///
     /// # Errors
     ///
-    /// Returns [`PrecisionOutOfRangeDateError`] if the computed new duration exceeded what [`i128`] can store.
+    /// Returns [`PrecisionOutOfRangeError`] if the computed new duration exceeded what [`i128`] can store.
     ///
     /// # Panics
     ///
@@ -331,10 +440,52 @@ impl Precision {
     pub fn precise_signed_duration(
         &self,
         signed_duration: SignedDuration,
-    ) -> Result<SignedDuration, PrecisionOutOfRangeDateError> {
+    ) -> Result<SignedDuration, PrecisionOutOfRangeError> {
         Ok(SignedDuration::from_nanos_i128(
             self.precise_signed_nanos(signed_duration.as_nanos()),
         ))
+    }
+
+    /// Applies the precision to a given [`SignedDuration`] based on a given offset
+    ///
+    /// Rounding is based on the multiple of the precision's duration relative to the given base offset.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`PrecisionOutOfRangeError`] for any of the following reasons:
+    /// - The base offset could not be subtracted from the duration without underflow
+    /// - [`precise_signed_duration`](Self::precise_signed_duration) returned an error
+    /// - The resulting precised duration relative to the base offset overflowed after adding the base offset back
+    ///
+    /// # Panics
+    ///
+    /// See [`precise_signed_duration`](Self::precise_signed_duration).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use std::time::Duration;
+    /// # use jiff::SignedDuration;
+    /// # use periodical::ops::{Precision, PrecisionMode};
+    /// let precision = Precision::new(Duration::from_mins(15), PrecisionMode::ToPast)?;
+    ///
+    /// assert_eq!(
+    ///     precision.precise_signed_duration_with_base_offset(
+    ///         SignedDuration::from_mins(-77),
+    ///         SignedDuration::from_mins(-3)
+    ///     )?,
+    ///     SignedDuration::from_mins(-78),
+    /// );
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    pub fn precise_signed_duration_with_base_offset(
+        &self,
+        duration: SignedDuration,
+        base: SignedDuration,
+    ) -> Result<SignedDuration, PrecisionOutOfRangeError> {
+        base.checked_add(self.precise_signed_duration(duration.checked_sub(base).ok_or(PrecisionOutOfRangeError)?)?)
+            .ok_or(PrecisionOutOfRangeError)
     }
 
     /// Applies the precision to the given time
@@ -368,7 +519,7 @@ impl Precision {
     ///
     /// # Errors
     ///
-    /// Returns [`PrecisionOutOfRangeDateError`] if the
+    /// Returns [`PrecisionOutOfRangeError`] if the
     /// transfer to UTC would represent a timestamp too small to be stored
     /// correctly or if the resulting time would result in a time that
     /// cannot be stored in [`Zoned`].
@@ -439,21 +590,21 @@ impl Precision {
     /// ```
     ///
     /// [1]: https://en.wikipedia.org/w/index.php?title=Unix_time&oldid=1345178064
-    pub fn precise_time(&self, time: &Zoned) -> Result<AmbiguousZoned, PrecisionOutOfRangeDateError> {
+    pub fn precise_time(&self, time: &Zoned) -> Result<AmbiguousZoned, PrecisionOutOfRangeError> {
         let utc_day_start = time
             .datetime()
             .start_of_day()
             .to_zoned(TimeZone::UTC)
-            .or(Err(PrecisionOutOfRangeDateError))?;
+            .or(Err(PrecisionOutOfRangeError))?;
         let duration_diff = time
             .datetime()
             .to_zoned(TimeZone::UTC)
-            .or(Err(PrecisionOutOfRangeDateError))?
+            .or(Err(PrecisionOutOfRangeError))?
             .timestamp()
             .duration_since(utc_day_start.timestamp());
         let precised_datetime = utc_day_start
             .checked_add(self.precise_signed_duration(duration_diff)?)
-            .or(Err(PrecisionOutOfRangeDateError))?
+            .or(Err(PrecisionOutOfRangeError))?
             .datetime();
 
         Ok(time.time_zone().to_ambiguous_zoned(precised_datetime))
@@ -477,7 +628,7 @@ impl Precision {
     ///
     /// # Errors
     ///
-    /// Returns [`PrecisionOutOfRangeDateError`] if the resulting time would result in a time
+    /// Returns [`PrecisionOutOfRangeError`] if the resulting time would result in a time
     /// that cannot be stored in [`Zoned`].
     ///
     /// # Panics
@@ -529,11 +680,11 @@ impl Precision {
         &self,
         time: &Zoned,
         base: Timestamp,
-    ) -> Result<Zoned, PrecisionOutOfRangeDateError> {
+    ) -> Result<Zoned, PrecisionOutOfRangeError> {
         let base = base.to_zoned(time.time_zone().clone());
 
         base.checked_add(self.precise_signed_duration(time.duration_since(&base))?)
-            .map_err(|_| PrecisionOutOfRangeDateError)
+            .map_err(|_| PrecisionOutOfRangeError)
     }
 }
 
@@ -549,17 +700,17 @@ impl Display for PrecisionCreationPrecisionIsZeroError {
 
 impl Error for PrecisionCreationPrecisionIsZeroError {}
 
-/// An operation produced an out-of-range date when using [`Precision`]
+/// An operation produced an out-of-range value when using [`Precision`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PrecisionOutOfRangeDateError;
+pub struct PrecisionOutOfRangeError;
 
-impl Display for PrecisionOutOfRangeDateError {
+impl Display for PrecisionOutOfRangeError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Operation produced an out-of-range date")
+        write!(f, "Operation produced an out-of-range value")
     }
 }
 
-impl Error for PrecisionOutOfRangeDateError {}
+impl Error for PrecisionOutOfRangeError {}
 
 /// Represents a running result
 ///

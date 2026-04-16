@@ -13,14 +13,15 @@ Explain the motivation for this PR and what it does/solves
 
 ## Added
 
-- Implemented `since_this_week` on `HalfBoundedAbsoluteInterval`
-- Implemented `since_this_offset_week` on `HalfBoundedAbsoluteInterval`
-- Implemented `until_this_week` on `HalfBoundedAbsoluteInterval`
-- Implemented `until_this_offset_week` on `HalfBoundedAbsoluteInterval`
+- Implemented `precise_duration_with_base_offset` on `Precision`
+- Implemented `precise_duration_with_base_offset_via_signed` on `Precision`
+- Implemented `precise_signed_duration_with_base_offset` on `Precision`
+- Implemented relative version of `PreciseAbsoluteBound` and `PreciseAbsoluteInterval`
 
 ## Changed
 
--
+- Renamed `PrecisionOutOfRangeDateError` to `PrecisionOutOfRangeError` to make the error more generic.
+  Adjusted the error's message in consequence.
 
 ## Deprecated
 

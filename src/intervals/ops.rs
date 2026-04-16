@@ -84,7 +84,7 @@ inline_docs! {
         CanPositionPointContainment, DEFAULT_POINT_CONTAINMENT_RULES, DisambiguatedPointContainmentPosition,
         PointContainmentPosition, PointContainmentRule, PointContainmentRuleSet,
     };
-    pub use precision::{PreciseAbsoluteInterval, PreciseAbsoluteBound};
+    pub use precision::{PreciseAbsoluteInterval, PreciseAbsoluteBound, PreciseRelativeInterval, PreciseRelativeBound};
     pub use relativity_conversion::{ToAbsolute, ToRelative};
     pub use remove_overlap::{OverlapRemovable, OverlapRemovalResult};
     pub use remove_overlap_or_gap::{OverlapOrGapRemovalResult, RemovableOverlapOrGap};

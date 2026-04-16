@@ -10,7 +10,7 @@ tests! {
     mod interval_tests;
 }
 
-// inline_docs! {
-//     pub use bound::PreciseRelativeBound;
-//     pub use interval::PreciseRelativeInterval;
-// }
+inline_docs! {
+    pub use bound::PreciseRelativeBound;
+    pub use interval::PreciseRelativeInterval;
+}
