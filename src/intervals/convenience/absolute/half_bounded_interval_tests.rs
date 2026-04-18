@@ -41,7 +41,7 @@ fn until_date() -> Result<(), Box<dyn Error>> {
 #[test]
 fn since_week() -> Result<(), Box<dyn Error>> {
     let interval =
-        HalfBoundedAbsoluteInterval::since_week(OffsetIsoWeek::new(5, 2026)?, TimeZone::get("Europe/Oslo")?)?;
+        HalfBoundedAbsoluteInterval::since_week(OffsetIsoWeek::new(2026, 5)?, TimeZone::get("Europe/Oslo")?)?;
 
     assert_eq!(
         interval.reference(),
@@ -56,7 +56,7 @@ fn since_week() -> Result<(), Box<dyn Error>> {
 #[test]
 fn until_week() -> Result<(), Box<dyn Error>> {
     let interval =
-        HalfBoundedAbsoluteInterval::until_week(OffsetIsoWeek::new(5, 2026)?, TimeZone::get("Europe/Oslo")?)?;
+        HalfBoundedAbsoluteInterval::until_week(OffsetIsoWeek::new(2026, 5)?, TimeZone::get("Europe/Oslo")?)?;
 
     assert_eq!(
         interval.reference(),

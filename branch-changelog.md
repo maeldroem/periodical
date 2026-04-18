@@ -13,15 +13,12 @@ Explain the motivation for this PR and what it does/solves
 
 ## Added
 
-- Implemented `precise_duration_with_base_offset` on `Precision`
-- Implemented `precise_duration_with_base_offset_via_signed` on `Precision`
-- Implemented `precise_signed_duration_with_base_offset` on `Precision`
-- Implemented relative version of `PreciseAbsoluteBound` and `PreciseAbsoluteInterval`
+-
 
 ## Changed
 
-- Renamed `PrecisionOutOfRangeDateError` to `PrecisionOutOfRangeError` to make the error more generic.
-  Adjusted the error's message in consequence.
+- `OffsetIsoWeek::new` and `OffsetIsoWeek::new_with_offset` now take the year argument before the week argument
+- `MonthInYear::new` now takes the year argument before the month argument
 
 ## Deprecated
 
