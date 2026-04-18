@@ -123,7 +123,7 @@ pub fn iso_weeks_in_year(year: i16) -> Result<u8, JiffError> {
 /// In order to solve that, ISO 8601 defines a year on its definition for the ISO week, therefore making
 /// ISO week years shorter/longer than civil years.
 ///
-/// This also means that you can't simply do `OffsetIsoWeek::new(date.iso_week_date().week(), date.year())`.
+/// This also means that you can't simply do `OffsetIsoWeek::new(date.year(), date.iso_week_date().week())`.
 /// For example, if `date` is 2023-01-01, `date.iso_week_date().week()` will evaluate to `52`, and `date.year()`
 /// will evaluate to `2023`.
 /// [But if we look up a calendar](https://www.timeanddate.com/calendar/?year=2023&country=18),
@@ -143,8 +143,8 @@ pub fn iso_weeks_in_year(year: i16) -> Result<u8, JiffError> {
 ///       for determining ISO week numbers, ironically. Trust me, I've come across a bunch of them.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct OffsetIsoWeek {
-    week: u8,
     year: i16,
+    week: u8,
     week_start_offset: i8,
 }
 
@@ -164,15 +164,15 @@ impl OffsetIsoWeek {
     /// ```
     /// # use periodical::time::OffsetIsoWeek;
     /// // Offset out of allowed range
-    /// let week = OffsetIsoWeek::unchecked_new_with_offset(1, 2026, -10);
+    /// let week = OffsetIsoWeek::unchecked_new_with_offset(2026, 1, -10);
     ///
     /// assert_eq!(week.week_start_offset(), -10);
     /// ```
     #[must_use]
-    pub fn unchecked_new_with_offset(week: u8, year: i16, week_start_offset: i8) -> Self {
+    pub fn unchecked_new_with_offset(year: i16, week: u8, week_start_offset: i8) -> Self {
         OffsetIsoWeek {
-            week,
             year,
+            week,
             week_start_offset,
         }
     }
@@ -195,11 +195,11 @@ impl OffsetIsoWeek {
     ///
     /// ```
     /// # use periodical::time::{OffsetIsoWeek, OffsetIsoWeekCreationError};
-    /// let first_iso_week_of_2026 = OffsetIsoWeek::new(1, 2026)?;
+    /// let first_iso_week_of_2026 = OffsetIsoWeek::new(2026, 1)?;
     /// # Ok::<(), OffsetIsoWeekCreationError>(())
     /// ```
-    pub fn new(week: u8, year: i16) -> Result<Self, OffsetIsoWeekCreationError> {
-        Self::new_with_offset(week, year, Self::ISO_OFFSET)
+    pub fn new(year: i16, week: u8) -> Result<Self, OffsetIsoWeekCreationError> {
+        Self::new_with_offset(year, week, Self::ISO_OFFSET)
     }
 
     /// Creates a new [`OffsetIsoWeek`] with the given week start offset
@@ -223,10 +223,10 @@ impl OffsetIsoWeek {
     ///
     /// ```
     /// # use periodical::time::{OffsetIsoWeek, OffsetIsoWeekCreationError};
-    /// let first_iso_week_on_sunday_of_2026 = OffsetIsoWeek::new_with_offset(1, 2026, -1)?;
+    /// let first_iso_week_on_sunday_of_2026 = OffsetIsoWeek::new_with_offset(2026, 1, -1)?;
     /// # Ok::<(), OffsetIsoWeekCreationError>(())
     /// ```
-    pub fn new_with_offset(week: u8, year: i16, week_start_offset: i8) -> Result<Self, OffsetIsoWeekCreationError> {
+    pub fn new_with_offset(year: i16, week: u8, week_start_offset: i8) -> Result<Self, OffsetIsoWeekCreationError> {
         let iso_weeks_in_year = iso_weeks_in_year(year).or(Err(OffsetIsoWeekCreationError::OutOfRangeYear))?;
 
         if !(1..=iso_weeks_in_year).contains(&week) {
@@ -237,7 +237,7 @@ impl OffsetIsoWeek {
             return Err(OffsetIsoWeekCreationError::OutOfRangeOffset);
         }
 
-        Ok(Self::unchecked_new_with_offset(week, year, week_start_offset))
+        Ok(Self::unchecked_new_with_offset(year, week, week_start_offset))
     }
 
     /// Creates a new [`OffsetIsoWeek`] without offset from a [`Date`]
@@ -386,8 +386,8 @@ impl OffsetIsoWeek {
         };
 
         Ok(Self::unchecked_new_with_offset(
-            resulting_week,
             resulting_year,
+            resulting_week,
             week_start_offset,
         ))
     }
@@ -445,7 +445,7 @@ impl OffsetIsoWeek {
     /// # use std::error::Error;
     /// # use jiff::civil::Date;
     /// # use periodical::time::OffsetIsoWeek;
-    /// let week = OffsetIsoWeek::new_with_offset(1, 2026, -2)?;
+    /// let week = OffsetIsoWeek::new_with_offset(2026, 1, -2)?;
     ///
     /// assert_eq!(week.zero_based_nth_day(1)?, "2025-12-28".parse::<Date>()?);
     /// # Ok::<(), Box<dyn Error>>(())
@@ -483,7 +483,7 @@ impl OffsetIsoWeek {
     /// # use std::error::Error;
     /// # use jiff::civil::Date;
     /// # use periodical::time::OffsetIsoWeek;
-    /// let week = OffsetIsoWeek::new_with_offset(1, 2026, -2)?;
+    /// let week = OffsetIsoWeek::new_with_offset(2026, 1, -2)?;
     ///
     /// assert_eq!(week.one_based_nth_day(1)?, "2025-12-27".parse::<Date>()?);
     /// # Ok::<(), Box<dyn Error>>(())
@@ -504,7 +504,7 @@ impl OffsetIsoWeek {
     /// # use std::error::Error;
     /// # use jiff::civil::Date;
     /// # use periodical::time::OffsetIsoWeek;
-    /// let first_iso_week_on_sunday_of_2026 = OffsetIsoWeek::new_with_offset(1, 2026, -1)?;
+    /// let first_iso_week_on_sunday_of_2026 = OffsetIsoWeek::new_with_offset(2026, 1, -1)?;
     ///
     /// assert_eq!(
     ///     first_iso_week_on_sunday_of_2026.first_day()?,
@@ -528,7 +528,7 @@ impl OffsetIsoWeek {
     /// # use std::error::Error;
     /// # use jiff::civil::Date;
     /// # use periodical::time::OffsetIsoWeek;
-    /// let first_iso_week_on_sunday_of_2026 = OffsetIsoWeek::new_with_offset(1, 2026, -1)?;
+    /// let first_iso_week_on_sunday_of_2026 = OffsetIsoWeek::new_with_offset(2026, 1, -1)?;
     ///
     /// assert_eq!(
     ///     first_iso_week_on_sunday_of_2026.last_day()?,
@@ -552,7 +552,7 @@ impl OffsetIsoWeek {
     /// # use std::error::Error;
     /// # use jiff::civil::{Date, Weekday};
     /// # use periodical::time::OffsetIsoWeek;
-    /// let week = OffsetIsoWeek::new_with_offset(3, 2026, -2)?;
+    /// let week = OffsetIsoWeek::new_with_offset(2026, 3, -2)?;
     ///
     /// assert_eq!(
     ///     week.weekday_date(Weekday::Monday)?,
@@ -701,7 +701,7 @@ impl Month {
     /// ```
     #[must_use]
     pub fn with_year(self, year: i16) -> MonthInYear {
-        MonthInYear::new(self, year)
+        MonthInYear::new(year, self)
     }
 
     /// Returns the 0-offset number of the [`Month`]
@@ -782,7 +782,7 @@ pub struct MonthInYear {
 impl MonthInYear {
     /// Creates a new [`MonthInYear`] from the given year and month
     #[must_use]
-    pub fn new(month: Month, year: i16) -> Self {
+    pub fn new(year: i16, month: Month) -> Self {
         Self {
             year,
             month,
@@ -818,7 +818,7 @@ impl MonthInYear {
     /// # use std::error::Error;
     /// # use jiff::civil::Date;
     /// # use periodical::time::{Month, MonthInYear};
-    /// let may_2026 = MonthInYear::new(Month::May, 2026);
+    /// let may_2026 = MonthInYear::new(2026, Month::May);
     ///
     /// assert_eq!(may_2026.first_day()?, "2026-05-01".parse::<Date>()?);
     /// # Ok::<(), Box<dyn Error>>(())
@@ -849,7 +849,7 @@ impl MonthInYear {
     /// # use std::error::Error;
     /// # use jiff::civil::Date;
     /// # use periodical::time::{Month, MonthInYear};
-    /// let may_2026 = MonthInYear::new(Month::May, 2026);
+    /// let may_2026 = MonthInYear::new(2026, Month::May);
     ///
     /// assert_eq!(may_2026.last_day()?, "2026-05-31".parse::<Date>()?);
     /// # Ok::<(), Box<dyn Error>>(())
@@ -896,8 +896,8 @@ impl TryFrom<Date> for MonthInYear {
 
     fn try_from(value: Date) -> Result<Self, Self::Error> {
         Ok(MonthInYear::new(
-            Month::try_from_one_offset(value.month().unsigned_abs())?,
             value.year(),
+            Month::try_from_one_offset(value.month().unsigned_abs())?,
         ))
     }
 }

@@ -149,7 +149,7 @@ fn from_inclusive_date_range_reversed_order() -> Result<(), Box<dyn Error>> {
 #[test]
 fn from_week() -> Result<(), Box<dyn Error>> {
     let week_interval =
-        BoundedAbsoluteInterval::from_week(OffsetIsoWeek::new(5, 2026)?, TimeZone::get("Europe/Oslo")?)?;
+        BoundedAbsoluteInterval::from_week(OffsetIsoWeek::new(2026, 5)?, TimeZone::get("Europe/Oslo")?)?;
 
     assert_eq!(
         week_interval.start(),
@@ -167,8 +167,8 @@ fn from_week() -> Result<(), Box<dyn Error>> {
 
 #[test]
 fn from_inclusive_week_range() -> Result<(), Box<dyn Error>> {
-    let start = OffsetIsoWeek::new(5, 2026)?;
-    let end = OffsetIsoWeek::new(10, 2026)?;
+    let start = OffsetIsoWeek::new(2026, 5)?;
+    let end = OffsetIsoWeek::new(2026, 10)?;
 
     let interval = BoundedAbsoluteInterval::from_inclusive_week_range(start, end, TimeZone::get("Europe/Oslo")?)?;
 
@@ -188,7 +188,7 @@ fn from_inclusive_week_range() -> Result<(), Box<dyn Error>> {
 
 #[test]
 fn from_inclusive_week_range_same_week() -> Result<(), Box<dyn Error>> {
-    let week = OffsetIsoWeek::new(5, 2026)?;
+    let week = OffsetIsoWeek::new(2026, 5)?;
 
     let interval = BoundedAbsoluteInterval::from_inclusive_week_range(week, week, TimeZone::get("Europe/Oslo")?)?;
 
@@ -208,8 +208,8 @@ fn from_inclusive_week_range_same_week() -> Result<(), Box<dyn Error>> {
 
 #[test]
 fn from_inclusive_week_range_reverse_order() -> Result<(), Box<dyn Error>> {
-    let start = OffsetIsoWeek::new_with_offset(5, 2026, 4)?;
-    let end = OffsetIsoWeek::new_with_offset(5, 2026, -4)?;
+    let start = OffsetIsoWeek::new_with_offset(2026, 5, 4)?;
+    let end = OffsetIsoWeek::new_with_offset(2026, 5, -4)?;
 
     let interval = BoundedAbsoluteInterval::from_inclusive_week_range(start, end, TimeZone::get("Europe/Oslo")?)?;
 

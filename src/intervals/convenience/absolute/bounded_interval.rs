@@ -437,7 +437,7 @@ impl BoundedAbsoluteInterval {
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::time::OffsetIsoWeek;
     /// let week_interval = BoundedAbsoluteInterval::from_week(
-    ///     OffsetIsoWeek::new(5, 2026)?,
+    ///     OffsetIsoWeek::new(2026, 5)?,
     ///     TimeZone::get("Europe/Oslo")?,
     /// )?;
     ///
@@ -1056,8 +1056,8 @@ impl BoundedAbsoluteInterval {
     /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::time::OffsetIsoWeek;
-    /// let start = OffsetIsoWeek::new_with_offset(10, 2026, -1)?; // Sunday week
-    /// let end = OffsetIsoWeek::new_with_offset(14, 2026, 2)?; // Wednesday week
+    /// let start = OffsetIsoWeek::new_with_offset(2026, 10, -1)?; // Sunday week
+    /// let end = OffsetIsoWeek::new_with_offset(2026, 14, 2)?; // Wednesday week
     ///
     /// let interval = BoundedAbsoluteInterval::from_inclusive_week_range(
     ///     start,
