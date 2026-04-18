@@ -2,8 +2,15 @@ use std::cmp::Ordering;
 use std::error::Error;
 
 use jiff::civil::{Date, Weekday};
+use jiff::tz::TimeZone;
 
 use super::time::*;
+
+#[test]
+fn date_today_smoke_test() -> Result<(), Box<dyn Error>> {
+    let _ = date_today(TimeZone::get("Europe/Oslo")?);
+    Ok(())
+}
 
 mod iso_weeks_in_year_fn {
     use super::*;
@@ -62,6 +69,34 @@ mod offset_iso_week {
         assert_eq!(offset_iso_week.first_day()?, "2026-01-28".parse::<Date>()?);
         assert_eq!(offset_iso_week.last_day()?, "2026-02-03".parse::<Date>()?);
         Ok(())
+    }
+
+    #[test]
+    fn new_with_offset_out_of_range_week_zero() {
+        assert_eq!(
+            OffsetIsoWeek::new_with_offset(0, 2026, 0),
+            Err(OffsetIsoWeekCreationError::OutOfRangeWeek)
+        );
+    }
+
+    #[test]
+    fn new_with_offset_out_of_range_week() {
+        assert_eq!(
+            OffsetIsoWeek::new_with_offset(55, 2026, 0),
+            Err(OffsetIsoWeekCreationError::OutOfRangeWeek)
+        );
+    }
+
+    #[test]
+    fn new_with_out_of_range_offset() {
+        assert_eq!(
+            OffsetIsoWeek::new_with_offset(5, 2026, -10),
+            Err(OffsetIsoWeekCreationError::OutOfRangeOffset)
+        );
+        assert_eq!(
+            OffsetIsoWeek::new_with_offset(5, 2026, 10),
+            Err(OffsetIsoWeekCreationError::OutOfRangeOffset)
+        );
     }
 }
 
