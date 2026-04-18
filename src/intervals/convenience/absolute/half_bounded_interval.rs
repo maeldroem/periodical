@@ -382,7 +382,7 @@ impl HalfBoundedAbsoluteInterval {
     /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
     /// # use periodical::time::OffsetIsoWeek;
     /// let interval = HalfBoundedAbsoluteInterval::since_week(
-    ///     OffsetIsoWeek::new(5, 2026)?,
+    ///     OffsetIsoWeek::new(2026, 5)?,
     ///     TimeZone::get("Europe/Oslo")?,
     /// )?;
     ///
@@ -428,7 +428,7 @@ impl HalfBoundedAbsoluteInterval {
     /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
     /// # use periodical::time::OffsetIsoWeek;
     /// let interval = HalfBoundedAbsoluteInterval::until_week(
-    ///     OffsetIsoWeek::new(5, 2026)?,
+    ///     OffsetIsoWeek::new(2026, 5)?,
     ///     TimeZone::get("Europe/Oslo")?,
     /// )?;
     ///

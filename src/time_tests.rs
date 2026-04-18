@@ -42,7 +42,7 @@ mod offset_iso_week {
 
     #[test]
     fn new_without_offset() -> Result<(), Box<dyn Error>> {
-        let iso_week = OffsetIsoWeek::new(5, 2026)?;
+        let iso_week = OffsetIsoWeek::new(2026, 5)?;
         assert_eq!(iso_week.first_day()?, "2026-01-26".parse::<Date>()?);
         assert_eq!(iso_week.last_day()?, "2026-02-01".parse::<Date>()?);
         Ok(())
@@ -50,7 +50,7 @@ mod offset_iso_week {
 
     #[test]
     fn new_with_offset_sunday() -> Result<(), Box<dyn Error>> {
-        let offset_iso_week = OffsetIsoWeek::new_with_offset(5, 2026, -1)?;
+        let offset_iso_week = OffsetIsoWeek::new_with_offset(2026, 5, -1)?;
         assert_eq!(offset_iso_week.first_day()?, "2026-01-25".parse::<Date>()?);
         assert_eq!(offset_iso_week.last_day()?, "2026-01-31".parse::<Date>()?);
         Ok(())
@@ -58,7 +58,7 @@ mod offset_iso_week {
 
     #[test]
     fn new_with_offset_wednesday() -> Result<(), Box<dyn Error>> {
-        let offset_iso_week = OffsetIsoWeek::new_with_offset(5, 2026, 2)?;
+        let offset_iso_week = OffsetIsoWeek::new_with_offset(2026, 5, 2)?;
         assert_eq!(offset_iso_week.first_day()?, "2026-01-28".parse::<Date>()?);
         assert_eq!(offset_iso_week.last_day()?, "2026-02-03".parse::<Date>()?);
         Ok(())
@@ -99,7 +99,7 @@ mod month_in_year {
 
     #[test]
     fn month_first_and_last_days() -> Result<(), Box<dyn Error>> {
-        let month = MonthInYear::new(Month::May, 2026);
+        let month = MonthInYear::new(2026, Month::May);
         assert_eq!(month.first_day()?, "2026-05-01".parse::<Date>()?);
         assert_eq!(month.last_day()?, "2026-05-31".parse::<Date>()?);
         Ok(())
