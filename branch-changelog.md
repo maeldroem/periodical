@@ -11,7 +11,7 @@ Updated previous tests and created more tests for covering all the work so far.
 
 ## Added
 
--
+- Tests to complete code coverage for `OffsetIsoWeek`
 
 ## Changed
 

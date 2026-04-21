@@ -200,6 +200,55 @@ mod offset_iso_week {
 
         Ok(())
     }
+
+    #[test]
+    fn start_end_weekday() -> Result<(), Box<dyn Error>> {
+        let positive_offset_week = OffsetIsoWeek::new_with_offset(2026, 1, 5)?;
+
+        assert_eq!(positive_offset_week.start_weekday(), Weekday::Saturday);
+        assert_eq!(positive_offset_week.end_weekday(), Weekday::Friday);
+
+        let negative_offset_week = OffsetIsoWeek::new_with_offset(2026, 1, -5)?;
+
+        assert_eq!(negative_offset_week.start_weekday(), Weekday::Wednesday);
+        assert_eq!(negative_offset_week.end_weekday(), Weekday::Tuesday);
+
+        Ok(())
+    }
+
+    #[test]
+    fn zero_one_based_nth_day() -> Result<(), Box<dyn Error>> {
+        let week = OffsetIsoWeek::new_with_offset(2026, 1, 5)?;
+        let expected_date = "2026-01-07".parse::<Date>()?;
+
+        assert_eq!(week.zero_based_nth_day(4)?, expected_date);
+        assert_eq!(week.one_based_nth_day(5)?, expected_date);
+
+        Ok(())
+    }
+
+    #[test]
+    fn zero_one_based_nth_day_out_of_range() -> Result<(), Box<dyn Error>> {
+        let week = OffsetIsoWeek::new_with_offset(2026, 1, 5)?;
+
+        assert_eq!(week.zero_based_nth_day(7), Err(OffsetIsoWeekDateError));
+        assert_eq!(week.one_based_nth_day(0), Err(OffsetIsoWeekDateError));
+        assert_eq!(week.one_based_nth_day(8), Err(OffsetIsoWeekDateError));
+
+        Ok(())
+    }
+
+    #[test]
+    fn weekday_date() -> Result<(), Box<dyn Error>> {
+        let week = OffsetIsoWeek::new_with_offset(2026, 1, 5)?;
+
+        assert_eq!(week.weekday_date(Weekday::Monday)?, "2026-01-05".parse::<Date>()?);
+        assert_eq!(week.weekday_date(Weekday::Wednesday)?, "2026-01-07".parse::<Date>()?);
+        assert_eq!(week.weekday_date(Weekday::Friday)?, "2026-01-09".parse::<Date>()?);
+        assert_eq!(week.weekday_date(Weekday::Sunday)?, "2026-01-04".parse::<Date>()?);
+
+        Ok(())
+    }
 }
 
 mod month {
