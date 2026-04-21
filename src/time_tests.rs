@@ -72,17 +72,17 @@ mod offset_iso_week {
     }
 
     #[test]
-    fn new_with_offset_out_of_range_week_zero() {
+    fn new_out_of_range_week_zero() {
         assert_eq!(
-            OffsetIsoWeek::new_with_offset(0, 2026, 0),
+            OffsetIsoWeek::new(2026, 0),
             Err(OffsetIsoWeekCreationError::OutOfRangeWeek)
         );
     }
 
     #[test]
-    fn new_with_offset_out_of_range_week() {
+    fn new_out_of_range_week() {
         assert_eq!(
-            OffsetIsoWeek::new_with_offset(55, 2026, 0),
+            OffsetIsoWeek::new(2026, 55),
             Err(OffsetIsoWeekCreationError::OutOfRangeWeek)
         );
     }
@@ -90,13 +90,115 @@ mod offset_iso_week {
     #[test]
     fn new_with_out_of_range_offset() {
         assert_eq!(
-            OffsetIsoWeek::new_with_offset(5, 2026, -10),
+            OffsetIsoWeek::new_with_offset(2026, 5, -10),
             Err(OffsetIsoWeekCreationError::OutOfRangeOffset)
         );
         assert_eq!(
-            OffsetIsoWeek::new_with_offset(5, 2026, 10),
+            OffsetIsoWeek::new_with_offset(2026, 5, 10),
             Err(OffsetIsoWeekCreationError::OutOfRangeOffset)
         );
+    }
+
+    #[test]
+    fn from_date() -> Result<(), Box<dyn Error>> {
+        let week = OffsetIsoWeek::from_date("2023-01-01".parse::<Date>()?)?;
+
+        assert_eq!(week.year(), 2022);
+        assert_eq!(week.week(), 52);
+        assert_eq!(week.week_start_offset(), 0);
+
+        Ok(())
+    }
+
+    #[test]
+    fn from_date_with_offset_out_of_range_offset() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            OffsetIsoWeek::from_date_with_offset("2026-01-01".parse::<Date>()?, -10),
+            Err(OffsetIsoWeekCreationError::OutOfRangeOffset),
+        );
+        assert_eq!(
+            OffsetIsoWeek::from_date_with_offset("2026-01-01".parse::<Date>()?, 10),
+            Err(OffsetIsoWeekCreationError::OutOfRangeOffset),
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn from_date_with_offset_no_offset() -> Result<(), Box<dyn Error>> {
+        let week = OffsetIsoWeek::from_date_with_offset("2026-05-01".parse::<Date>()?, 0)?;
+
+        assert_eq!(week.year(), 2026);
+        assert_eq!(week.week(), 18);
+        assert_eq!(week.week_start_offset(), 0);
+
+        Ok(())
+    }
+
+    #[test]
+    fn from_date_with_offset_positive_offset_year_wrap() -> Result<(), Box<dyn Error>> {
+        let week = OffsetIsoWeek::from_date_with_offset("2025-12-31".parse::<Date>()?, 5)?;
+
+        assert_eq!(week.year(), 2025);
+        assert_eq!(week.week(), 52);
+        assert_eq!(week.week_start_offset(), 5);
+
+        Ok(())
+    }
+
+    #[test]
+    fn from_date_with_offset_negative_offset_year_wrap() -> Result<(), Box<dyn Error>> {
+        let week = OffsetIsoWeek::from_date_with_offset("2025-12-25".parse::<Date>()?, -5)?;
+
+        assert_eq!(week.year(), 2026);
+        assert_eq!(week.week(), 1);
+        assert_eq!(week.week_start_offset(), -5);
+
+        Ok(())
+    }
+
+    #[test]
+    fn from_date_with_offset_positive_offset_week_wrap() -> Result<(), Box<dyn Error>> {
+        let week = OffsetIsoWeek::from_date_with_offset("2026-05-01".parse::<Date>()?, 5)?;
+
+        assert_eq!(week.year(), 2026);
+        assert_eq!(week.week(), 17);
+        assert_eq!(week.week_start_offset(), 5);
+
+        Ok(())
+    }
+
+    #[test]
+    fn from_date_with_offset_negative_offset_week_wrap() -> Result<(), Box<dyn Error>> {
+        let week = OffsetIsoWeek::from_date_with_offset("2026-05-01".parse::<Date>()?, -5)?;
+
+        assert_eq!(week.year(), 2026);
+        assert_eq!(week.week(), 19);
+        assert_eq!(week.week_start_offset(), -5);
+
+        Ok(())
+    }
+
+    #[test]
+    fn from_date_with_offset_positive_offset_no_wrap() -> Result<(), Box<dyn Error>> {
+        let week = OffsetIsoWeek::from_date_with_offset("2026-05-01".parse::<Date>()?, 2)?;
+
+        assert_eq!(week.year(), 2026);
+        assert_eq!(week.week(), 18);
+        assert_eq!(week.week_start_offset(), 2);
+
+        Ok(())
+    }
+
+    #[test]
+    fn from_date_with_offset_negative_offset_no_wrap() -> Result<(), Box<dyn Error>> {
+        let week = OffsetIsoWeek::from_date_with_offset("2026-05-01".parse::<Date>()?, -2)?;
+
+        assert_eq!(week.year(), 2026);
+        assert_eq!(week.week(), 18);
+        assert_eq!(week.week_start_offset(), -2);
+
+        Ok(())
     }
 }
 
