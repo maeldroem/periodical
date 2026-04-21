@@ -27,7 +27,7 @@ Updated previous tests and created more tests for covering all the work so far.
 
 ## Fixed
 
--
+- Fixed wrong offset computation in `OffsetIsoWeek::from_date_with_offset`
 
 ## Security
 
