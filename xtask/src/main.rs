@@ -19,8 +19,10 @@ const TEST_FILE_GLOB: &str = "**/*_tests.rs";
 
 /// Line exclusion pattern for `grcov`
 ///
-/// Ignores all attributes, comments, punctuation-full lines, else-clause line, empty lines.
-const GRCOV_LINE_EXCL_REGEX: &str = r#"^\s*(#\[.+\]|\/{2}.*|[\(\[]|,?[\)\]][;,]?|\} else \{)?\n?$"#;
+/// Ignores all attributes, comments, punctuation-full lines, else-clause line,
+/// lines with `unreachable!` invocations, and empty lines.
+const GRCOV_LINE_EXCL_REGEX: &str =
+    r#"^\s*(#\[.+\]|\/{2}.*|[\(\[\{]|,?[\)\]\}][;,]?|\} else \{|.+?unreachable!.+)?\n?$"#;
 
 #[derive(Parser)]
 struct Cli {
