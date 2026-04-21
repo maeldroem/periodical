@@ -7,15 +7,20 @@ use std::sync::LazyLock;
 
 use clap::{Parser, Subcommand};
 
-static COVERAGE_FOLDER: LazyLock<&'static Path> = LazyLock::new(|| Path::new("coverage"));
-static PROFILING_FILE_NAME: LazyLock<&'static Path> = LazyLock::new(|| Path::new("cargo-coverage-%m.profraw"));
-static COVERAGE_TARGET_FOLDER: LazyLock<&'static Path> = LazyLock::new(|| Path::new("./target/coverage/html"));
+static COVERAGE_FOLDER: LazyLock<&Path> = LazyLock::new(|| Path::new("./target/coverage/profraw"));
+static PROFILING_FILE_NAME: LazyLock<&Path> = LazyLock::new(|| Path::new("cargo-coverage-%m.profraw"));
+static COVERAGE_TARGET_FOLDER: LazyLock<&Path> = LazyLock::new(|| Path::new("./target/coverage/html"));
 
 static CARGO_LOCATION: LazyLock<String> = LazyLock::new(|| env::var("CARGO").unwrap_or("cargo".to_string()));
-static GRCOV_LOCATION: LazyLock<String> = LazyLock::new(|| "grcov".to_string());
-static XDG_OPEN_LOCATION: LazyLock<String> = LazyLock::new(|| "xdg-open".to_string());
+static GRCOV_LOCATION: LazyLock<&str> = LazyLock::new(|| "grcov");
+static XDG_OPEN_LOCATION: LazyLock<&str> = LazyLock::new(|| "xdg-open");
 
-const TEST_FILE_GLOB: &'static str = "**/*_tests.rs";
+const TEST_FILE_GLOB: &str = "**/*_tests.rs";
+
+/// Line exclusion pattern for `grcov`
+///
+/// Ignores all attributes, comments, punctuation-full lines, else-clause line, empty lines.
+const GRCOV_LINE_EXCL_REGEX: &str = r#"^\s*(#\[.+\]|\/{2}.*|[\(\[]|,?[\)\]][;,]?|\} else \{)?\n?$"#;
 
 #[derive(Parser)]
 struct Cli {
@@ -59,7 +64,7 @@ fn xtask_coverage(open: bool) -> Result<(), Box<dyn Error>> {
 
     eprintln!("Profiling code…");
 
-    Command::new(AsRef::<OsStr>::as_ref(&*CARGO_LOCATION))
+    let cargo_test_succeed = Command::new(AsRef::<OsStr>::as_ref(&*CARGO_LOCATION))
         .env("CARGO_INCREMENTAL", "0")
         .env("RUSTFLAGS", "-C instrument-coverage")
         .env("LLVM_PROFILE_FILE", llvm_profile_file)
@@ -67,12 +72,17 @@ fn xtask_coverage(open: bool) -> Result<(), Box<dyn Error>> {
         .arg("--tests") // Only tests, no doc tests
         .arg("--all-features")
         .arg("-q")
-        .status()?;
+        .status()?
+        .success();
+
+    if !cargo_test_succeed {
+        return Err("Failed to profile code".into());
+    }
 
     eprintln!("Code profiled successfully!");
     eprintln!("Generating code coverage report…");
 
-    Command::new(AsRef::<OsStr>::as_ref(&*GRCOV_LOCATION))
+    let grcov_succeed = Command::new(AsRef::<OsStr>::as_ref(&*GRCOV_LOCATION))
         .arg(".")
         .arg("-b")
         .arg("./target/debug/deps/")
@@ -82,12 +92,19 @@ fn xtask_coverage(open: bool) -> Result<(), Box<dyn Error>> {
         .arg("html")
         .arg("--branch")
         .arg("--llvm")
+        .arg("--excl-line")
+        .arg(GRCOV_LINE_EXCL_REGEX)
         .arg("--ignore-not-existing")
         .arg("--ignore")
         .arg(TEST_FILE_GLOB)
         .arg("-o")
         .arg(AsRef::<OsStr>::as_ref(&*COVERAGE_TARGET_FOLDER))
-        .status()?;
+        .status()?
+        .success();
+
+    if !grcov_succeed {
+        return Err("Failed to generate code coverage report".into());
+    }
 
     eprintln!("Generated code coverage report successfully!");
 
@@ -97,9 +114,14 @@ fn xtask_coverage(open: bool) -> Result<(), Box<dyn Error>> {
         let mut report_index = COVERAGE_TARGET_FOLDER.to_path_buf();
         report_index.push("html/index.html");
 
-        Command::new(AsRef::<OsStr>::as_ref(&*XDG_OPEN_LOCATION))
+        let xdg_open_succeed = Command::new(AsRef::<OsStr>::as_ref(&*XDG_OPEN_LOCATION))
             .arg(report_index)
-            .status()?;
+            .status()?
+            .success();
+
+        if !xdg_open_succeed {
+            return Err("Failed to open code coverage report".into());
+        }
 
         eprintln!("Opened!");
     }
