@@ -8,7 +8,7 @@ use std::sync::LazyLock;
 use clap::{Parser, Subcommand};
 
 static COVERAGE_FOLDER: LazyLock<&Path> = LazyLock::new(|| Path::new("./target/coverage/profraw"));
-static PROFILING_FILE_NAME: LazyLock<&Path> = LazyLock::new(|| Path::new("cargo-coverage-%m.profraw"));
+static PROFILING_FILE_NAME: LazyLock<&Path> = LazyLock::new(|| Path::new("cargo_coverage_%p_%m.profraw"));
 static COVERAGE_TARGET_FOLDER: LazyLock<&Path> = LazyLock::new(|| Path::new("./target/coverage/html"));
 
 static CARGO_LOCATION: LazyLock<String> = LazyLock::new(|| env::var("CARGO").unwrap_or("cargo".to_string()));
