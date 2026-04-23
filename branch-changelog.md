@@ -13,6 +13,7 @@ Updated previous tests and created more tests for covering all the work so far.
 
 - Tests to complete code coverage for `time::OffsetIsoWeek`
 - Tests to complete code coverage for `time::Month`
+- Tests to complete code coverage for `time::CalendarAnchorOffset`
 
 ## Changed
 

@@ -272,9 +272,6 @@ impl OffsetIsoWeek {
     /// Returns [`OutOfRangeOffset`](OffsetIsoWeekCreationError::OutOfRangeOffset) if the given offset
     /// is less than `-6` or greater than `6`.
     ///
-    /// Returns [`Computation`](OffsetIsoWeekCreationError::Computation) if getting the date's offset to
-    /// the first day or last day of the ISO week failed.
-    ///
     /// Returns [`OutOfRangeYear`](OffsetIsoWeekCreationError::OutOfRangeYear)
     /// if the resulting year is out of the range that [`Date`] can support.
     ///
