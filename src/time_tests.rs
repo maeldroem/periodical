@@ -357,91 +357,91 @@ mod calendar_anchor_offset {
     use super::*;
 
     #[test]
-    fn calendar_anchor_offset_days_is_zero() {
+    fn days_is_zero() {
         assert!(!CalendarAnchorOffset::Days(1).is_zero());
         assert!(CalendarAnchorOffset::Days(0).is_zero());
         assert!(!CalendarAnchorOffset::Days(-1).is_zero());
     }
 
     #[test]
-    fn calendar_anchor_offset_weeks_is_zero() {
+    fn weeks_is_zero() {
         assert!(!CalendarAnchorOffset::Weeks(1, Weekday::Monday).is_zero());
         assert!(CalendarAnchorOffset::Weeks(0, Weekday::Monday).is_zero());
         assert!(!CalendarAnchorOffset::Weeks(-1, Weekday::Monday).is_zero());
     }
 
     #[test]
-    fn calendar_anchor_offset_months_is_zero() {
+    fn months_is_zero() {
         assert!(!CalendarAnchorOffset::Months(1).is_zero());
         assert!(CalendarAnchorOffset::Months(0).is_zero());
         assert!(!CalendarAnchorOffset::Months(-1).is_zero());
     }
 
     #[test]
-    fn calendar_anchor_offset_years_is_zero() {
+    fn years_is_zero() {
         assert!(!CalendarAnchorOffset::Years(1).is_zero());
         assert!(CalendarAnchorOffset::Years(0).is_zero());
         assert!(!CalendarAnchorOffset::Years(-1).is_zero());
     }
 
     #[test]
-    fn calendar_anchor_offset_days_is_positive() {
+    fn days_is_positive() {
         assert!(CalendarAnchorOffset::Days(1).is_positive());
         assert!(!CalendarAnchorOffset::Days(0).is_positive());
         assert!(!CalendarAnchorOffset::Days(-1).is_positive());
     }
 
     #[test]
-    fn calendar_anchor_offset_weeks_is_positive() {
+    fn weeks_is_positive() {
         assert!(CalendarAnchorOffset::Weeks(1, Weekday::Monday).is_positive());
         assert!(!CalendarAnchorOffset::Weeks(0, Weekday::Monday).is_positive());
         assert!(!CalendarAnchorOffset::Weeks(-1, Weekday::Monday).is_positive());
     }
 
     #[test]
-    fn calendar_anchor_offset_months_is_positive() {
+    fn months_is_positive() {
         assert!(CalendarAnchorOffset::Months(1).is_positive());
         assert!(!CalendarAnchorOffset::Months(0).is_positive());
         assert!(!CalendarAnchorOffset::Months(-1).is_positive());
     }
 
     #[test]
-    fn calendar_anchor_offset_years_is_positive() {
+    fn years_is_positive() {
         assert!(CalendarAnchorOffset::Years(1).is_positive());
         assert!(!CalendarAnchorOffset::Years(0).is_positive());
         assert!(!CalendarAnchorOffset::Years(-1).is_positive());
     }
 
     #[test]
-    fn calendar_anchor_offset_days_is_negative() {
+    fn days_is_negative() {
         assert!(!CalendarAnchorOffset::Days(1).is_negative());
         assert!(!CalendarAnchorOffset::Days(0).is_negative());
         assert!(CalendarAnchorOffset::Days(-1).is_negative());
     }
 
     #[test]
-    fn calendar_anchor_offset_weeks_is_negative() {
+    fn weeks_is_negative() {
         assert!(!CalendarAnchorOffset::Weeks(1, Weekday::Monday).is_negative());
         assert!(!CalendarAnchorOffset::Weeks(0, Weekday::Monday).is_negative());
         assert!(CalendarAnchorOffset::Weeks(-1, Weekday::Monday).is_negative());
     }
 
     #[test]
-    fn calendar_anchor_offset_months_is_negative() {
+    fn months_is_negative() {
         assert!(!CalendarAnchorOffset::Months(1).is_negative());
         assert!(!CalendarAnchorOffset::Months(0).is_negative());
         assert!(CalendarAnchorOffset::Months(-1).is_negative());
     }
 
     #[test]
-    fn calendar_anchor_offset_years_is_negative() {
+    fn years_is_negative() {
         assert!(!CalendarAnchorOffset::Years(1).is_negative());
         assert!(!CalendarAnchorOffset::Years(0).is_negative());
         assert!(CalendarAnchorOffset::Years(-1).is_negative());
     }
 
     #[test]
-    fn calendar_anchor_offset_cant_compare_different_units() {
+    fn cant_compare_different_units() {
         assert_eq!(
             CalendarAnchorOffset::Days(1).partial_cmp(&CalendarAnchorOffset::Weeks(1, Weekday::Monday)),
             None
@@ -493,7 +493,7 @@ mod calendar_anchor_offset {
     }
 
     #[test]
-    fn calendar_anchor_offset_compare_days() {
+    fn compare_days() {
         assert_eq!(
             CalendarAnchorOffset::Days(1).partial_cmp(&CalendarAnchorOffset::Days(0)),
             Some(Ordering::Greater)
@@ -509,7 +509,7 @@ mod calendar_anchor_offset {
     }
 
     #[test]
-    fn calendar_anchor_offset_compare_weeks_same_ref_day() {
+    fn compare_weeks_same_ref_day() {
         assert_eq!(
             CalendarAnchorOffset::Weeks(1, Weekday::Monday)
                 .partial_cmp(&CalendarAnchorOffset::Weeks(0, Weekday::Monday)),
@@ -528,7 +528,7 @@ mod calendar_anchor_offset {
     }
 
     #[test]
-    fn calendar_anchor_offset_compare_weeks_different_ref_day() {
+    fn compare_weeks_different_ref_day() {
         assert_eq!(
             CalendarAnchorOffset::Weeks(1, Weekday::Monday)
                 .partial_cmp(&CalendarAnchorOffset::Weeks(0, Weekday::Sunday)),
@@ -547,7 +547,7 @@ mod calendar_anchor_offset {
     }
 
     #[test]
-    fn calendar_anchor_offset_compare_months() {
+    fn compare_months() {
         assert_eq!(
             CalendarAnchorOffset::Months(1).partial_cmp(&CalendarAnchorOffset::Months(0)),
             Some(Ordering::Greater)
@@ -563,7 +563,7 @@ mod calendar_anchor_offset {
     }
 
     #[test]
-    fn calendar_anchor_offset_compare_years() {
+    fn compare_years() {
         assert_eq!(
             CalendarAnchorOffset::Years(1).partial_cmp(&CalendarAnchorOffset::Years(0)),
             Some(Ordering::Greater)
@@ -685,6 +685,42 @@ mod calendar_anchor_offset {
     }
 
     #[test]
+    fn checked_add_calendar_anchor_offset_to_date_zero_iso_weeks() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            checked_add_calendar_anchor_offset_to_date(
+                CalendarAnchorOffset::IsoWeeks(0),
+                "2026-04-23".parse::<Date>()?,
+            )?,
+            "2026-04-20".parse::<Date>()?,
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn checked_add_calendar_anchor_offset_to_date_positive_iso_weeks() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            checked_add_calendar_anchor_offset_to_date(
+                CalendarAnchorOffset::IsoWeeks(10),
+                "2026-05-01".parse::<Date>()?,
+            )?,
+            "2026-07-06".parse::<Date>()?,
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn checked_add_calendar_anchor_offset_to_date_negative_iso_weeks() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            checked_add_calendar_anchor_offset_to_date(
+                CalendarAnchorOffset::IsoWeeks(-10),
+                "2026-05-01".parse::<Date>()?,
+            )?,
+            "2026-02-16".parse::<Date>()?,
+        );
+        Ok(())
+    }
+
+    #[test]
     fn checked_add_calendar_anchor_offset_to_date_zero_months() -> Result<(), Box<dyn Error>> {
         // Per `checked_add_calendar_anchor_offset_to_date`'s doc, adding months to get a day
         // returns the first day of the month.
@@ -771,6 +807,30 @@ mod calendar_anchor_offset {
                 "2026-05-20".parse::<Date>()?,
             )?,
             "2016-01-01".parse::<Date>()?,
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn checked_add_calendar_anchor_offset_to_date_offset_too_large() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            checked_add_calendar_anchor_offset_to_date(
+                CalendarAnchorOffset::Years(i32::MAX),
+                "2026-05-01".parse::<Date>()?,
+            ),
+            Err(CalendarAnchorOffsetDateError::OffsetTooLarge),
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn checked_add_calendar_anchor_offset_to_date_out_of_range_result() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            checked_add_calendar_anchor_offset_to_date(
+                CalendarAnchorOffset::Years(7974), // Will make year 10'000, not supported by jiff
+                "2026-05-01".parse::<Date>()?,
+            ),
+            Err(CalendarAnchorOffsetDateError::OutOfRangeResult),
         );
         Ok(())
     }
@@ -882,6 +942,42 @@ mod calendar_anchor_offset {
     }
 
     #[test]
+    fn checked_sub_calendar_anchor_offset_to_date_zero_iso_weeks() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            checked_sub_calendar_anchor_offset_to_date(
+                CalendarAnchorOffset::IsoWeeks(0),
+                "2026-04-23".parse::<Date>()?,
+            )?,
+            "2026-04-20".parse::<Date>()?,
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn checked_sub_calendar_anchor_offset_to_date_positive_iso_weeks() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            checked_sub_calendar_anchor_offset_to_date(
+                CalendarAnchorOffset::IsoWeeks(10),
+                "2026-05-01".parse::<Date>()?,
+            )?,
+            "2026-02-16".parse::<Date>()?,
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn checked_sub_calendar_anchor_offset_to_date_negative_iso_weeks() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            checked_sub_calendar_anchor_offset_to_date(
+                CalendarAnchorOffset::IsoWeeks(-10),
+                "2026-05-01".parse::<Date>()?,
+            )?,
+            "2026-07-06".parse::<Date>()?,
+        );
+        Ok(())
+    }
+
+    #[test]
     fn checked_sub_calendar_anchor_offset_to_date_zero_months() -> Result<(), Box<dyn Error>> {
         // Per `checked_sub_calendar_anchor_offset_to_date`'s doc, subtracting months to get a day
         // returns the first day of the month.
@@ -968,6 +1064,30 @@ mod calendar_anchor_offset {
                 "2026-05-20".parse::<Date>()?,
             )?,
             "2036-01-01".parse::<Date>()?,
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn checked_sub_calendar_anchor_offset_to_date_offset_too_large() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            checked_sub_calendar_anchor_offset_to_date(
+                CalendarAnchorOffset::Years(i32::MAX),
+                "2026-05-01".parse::<Date>()?,
+            ),
+            Err(CalendarAnchorOffsetDateError::OffsetTooLarge),
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn checked_sub_calendar_anchor_offset_to_date_out_of_range_result() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            checked_sub_calendar_anchor_offset_to_date(
+                CalendarAnchorOffset::Years(7000), // Will make year -10'000, not supported by jiff
+                Date::new(-3000, 5, 1)?,
+            ),
+            Err(CalendarAnchorOffsetDateError::OutOfRangeResult),
         );
         Ok(())
     }
