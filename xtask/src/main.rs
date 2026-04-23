@@ -22,7 +22,7 @@ const TEST_FILE_GLOB: &str = "**/*_tests.rs";
 /// Ignores all attributes, comments, punctuation-full lines, else-clause line,
 /// lines with `unreachable!` invocations, and empty lines.
 const GRCOV_LINE_EXCL_REGEX: &str =
-    r#"^\s*(#\[.+\]|\/{2}.*|[\(\[\{]|,?[\)\]\}][;,]?|\} else \{|.+?unreachable!.+)?\n?$"#;
+    r#"^\s*(#\[.+\]|\/{2}.*|[\(\[\{]+|,?[\)\]\}]+[;,]?|\} else \{|.+?unreachable!.+)?\n?$"#;
 
 #[derive(Parser)]
 struct Cli {
