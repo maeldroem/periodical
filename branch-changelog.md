@@ -11,7 +11,8 @@ Updated previous tests and created more tests for covering all the work so far.
 
 ## Added
 
-- Tests to complete code coverage for `OffsetIsoWeek`
+- Tests to complete code coverage for `time::OffsetIsoWeek`
+- Tests to complete code coverage for `time::Month`
 
 ## Changed
 

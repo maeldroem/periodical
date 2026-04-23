@@ -256,7 +256,18 @@ mod month {
 
     #[test]
     fn try_from_zero_offset() {
+        assert_eq!(Month::try_from_zero_offset(0), Ok(Month::January));
+        assert_eq!(Month::try_from_zero_offset(1), Ok(Month::February));
+        assert_eq!(Month::try_from_zero_offset(2), Ok(Month::March));
+        assert_eq!(Month::try_from_zero_offset(3), Ok(Month::April));
         assert_eq!(Month::try_from_zero_offset(4), Ok(Month::May));
+        assert_eq!(Month::try_from_zero_offset(5), Ok(Month::June));
+        assert_eq!(Month::try_from_zero_offset(6), Ok(Month::July));
+        assert_eq!(Month::try_from_zero_offset(7), Ok(Month::August));
+        assert_eq!(Month::try_from_zero_offset(8), Ok(Month::September));
+        assert_eq!(Month::try_from_zero_offset(9), Ok(Month::October));
+        assert_eq!(Month::try_from_zero_offset(10), Ok(Month::November));
+        assert_eq!(Month::try_from_zero_offset(11), Ok(Month::December));
     }
 
     #[test]
@@ -266,17 +277,67 @@ mod month {
 
     #[test]
     fn try_from_one_offset() {
+        assert_eq!(Month::try_from_one_offset(1), Ok(Month::January));
+        assert_eq!(Month::try_from_one_offset(2), Ok(Month::February));
+        assert_eq!(Month::try_from_one_offset(3), Ok(Month::March));
+        assert_eq!(Month::try_from_one_offset(4), Ok(Month::April));
         assert_eq!(Month::try_from_one_offset(5), Ok(Month::May));
-    }
-
-    #[test]
-    fn try_from_one_offset_zero() {
-        assert_eq!(Month::try_from_one_offset(0), Err(MonthTryFromNumberError));
+        assert_eq!(Month::try_from_one_offset(6), Ok(Month::June));
+        assert_eq!(Month::try_from_one_offset(7), Ok(Month::July));
+        assert_eq!(Month::try_from_one_offset(8), Ok(Month::August));
+        assert_eq!(Month::try_from_one_offset(9), Ok(Month::September));
+        assert_eq!(Month::try_from_one_offset(10), Ok(Month::October));
+        assert_eq!(Month::try_from_one_offset(11), Ok(Month::November));
+        assert_eq!(Month::try_from_one_offset(12), Ok(Month::December));
     }
 
     #[test]
     fn try_from_one_offset_out_of_range() {
+        assert_eq!(Month::try_from_one_offset(0), Err(MonthTryFromNumberError));
         assert_eq!(Month::try_from_one_offset(13), Err(MonthTryFromNumberError));
+    }
+
+    #[test]
+    fn zero_offset_number() {
+        assert_eq!(Month::January.zero_offset_number(), 0);
+        assert_eq!(Month::February.zero_offset_number(), 1);
+        assert_eq!(Month::March.zero_offset_number(), 2);
+        assert_eq!(Month::April.zero_offset_number(), 3);
+        assert_eq!(Month::May.zero_offset_number(), 4);
+        assert_eq!(Month::June.zero_offset_number(), 5);
+        assert_eq!(Month::July.zero_offset_number(), 6);
+        assert_eq!(Month::August.zero_offset_number(), 7);
+        assert_eq!(Month::September.zero_offset_number(), 8);
+        assert_eq!(Month::October.zero_offset_number(), 9);
+        assert_eq!(Month::November.zero_offset_number(), 10);
+        assert_eq!(Month::December.zero_offset_number(), 11);
+    }
+
+    #[test]
+    fn one_offset_number() {
+        assert_eq!(Month::January.one_offset_number(), 1);
+        assert_eq!(Month::February.one_offset_number(), 2);
+        assert_eq!(Month::March.one_offset_number(), 3);
+        assert_eq!(Month::April.one_offset_number(), 4);
+        assert_eq!(Month::May.one_offset_number(), 5);
+        assert_eq!(Month::June.one_offset_number(), 6);
+        assert_eq!(Month::July.one_offset_number(), 7);
+        assert_eq!(Month::August.one_offset_number(), 8);
+        assert_eq!(Month::September.one_offset_number(), 9);
+        assert_eq!(Month::October.one_offset_number(), 10);
+        assert_eq!(Month::November.one_offset_number(), 11);
+        assert_eq!(Month::December.one_offset_number(), 12);
+    }
+
+    #[test]
+    fn from_month_in_year() {
+        assert_eq!(Month::from(MonthInYear::new(2026, Month::April)), Month::April);
+    }
+
+    #[test]
+    fn try_from_date() -> Result<(), Box<dyn Error>> {
+        assert_eq!(Month::try_from("2026-04-23".parse::<Date>()?)?, Month::April);
+        Ok(())
     }
 }
 
