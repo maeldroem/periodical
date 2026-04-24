@@ -1241,6 +1241,10 @@ mod running_result {
             RunningResult::<u8>::Running(10).map_running(|x| x + 10),
             RunningResult::<u8>::Running(20)
         );
+        assert_eq!(
+            RunningResult::<u8>::Done(10).map_running(|x| x + 10),
+            RunningResult::<u8>::Done(10),
+        );
     }
 
     #[test]
@@ -1248,6 +1252,10 @@ mod running_result {
         assert_eq!(
             RunningResult::<u8>::Done(10).map_done(|x| x + 10),
             RunningResult::<u8>::Done(20)
+        );
+        assert_eq!(
+            RunningResult::<u8>::Running(10).map_done(|x| x + 10),
+            RunningResult::<u8>::Running(10),
         );
     }
 }
@@ -1319,6 +1327,10 @@ mod union_result {
             UnionResult::<u8>::United(10).map_united(|x| x + 10),
             UnionResult::United(20)
         );
+        assert_eq!(
+            UnionResult::<u8>::Separate.map_united(|x| x + 10),
+            UnionResult::<u8>::Separate,
+        );
     }
 }
 
@@ -1349,11 +1361,22 @@ mod intersection_result {
             IntersectionResult::<u8>::Intersected(10).map_intersected(|x| x + 10),
             IntersectionResult::<u8>::Intersected(20),
         );
+        assert_eq!(
+            IntersectionResult::<u8>::Separate.map_intersected(|x| x + 10),
+            IntersectionResult::<u8>::Separate,
+        );
     }
 }
 
 mod difference_result {
     use super::*;
+
+    #[test]
+    fn is_difference() {
+        assert!(DifferenceResult::<()>::Single(()).is_difference());
+        assert!(DifferenceResult::<()>::Split((), ()).is_difference());
+        assert!(!DifferenceResult::<()>::Separate.is_difference());
+    }
 
     #[test]
     fn is_shrunk() {
@@ -1399,6 +1422,10 @@ mod difference_result {
         assert_eq!(
             DifferenceResult::<u8>::Split(10, 20).map_difference(|x| x + 10),
             DifferenceResult::<u8>::Split(20, 30),
+        );
+        assert_eq!(
+            DifferenceResult::<u8>::Separate.map_difference(|x| x + 10),
+            DifferenceResult::<u8>::Separate,
         );
     }
 }
@@ -1457,6 +1484,10 @@ mod sym_difference_result {
         assert_eq!(
             SymmetricDifferenceResult::<u8>::Split(10, 20).map_symmetric_difference(|x| x + 10),
             SymmetricDifferenceResult::<u8>::Split(20, 30),
+        );
+        assert_eq!(
+            SymmetricDifferenceResult::<u8>::Separate.map_symmetric_difference(|x| x + 10),
+            SymmetricDifferenceResult::<u8>::Separate,
         );
     }
 }
