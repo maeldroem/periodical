@@ -357,21 +357,6 @@ impl From<(BoundInclusivity, BoundInclusivity)> for Epsilon {
     }
 }
 
-/// Converts `(bool, bool)` into [`Epsilon`]
-///
-/// The first tuple element represents whether the start bound has an epsilon,
-/// the second tuple element represents whether the end bound has an epsilon.
-impl From<(bool, bool)> for Epsilon {
-    fn from((start_has_epsilon, end_has_epsilon): (bool, bool)) -> Self {
-        match (start_has_epsilon, end_has_epsilon) {
-            (false, false) => Epsilon::None,
-            (true, false) => Epsilon::Start,
-            (false, true) => Epsilon::End,
-            (true, true) => Epsilon::Both,
-        }
-    }
-}
-
 /// Duration interpretation overflowed when [`Epsilon`] tried to be interpreted as a duration
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct EpsilonInterpretationDurationOverflowError;

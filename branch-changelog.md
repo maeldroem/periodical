@@ -16,6 +16,7 @@ Updated previous tests and created more tests for covering all the work so far.
 - Tests to complete code coverage for `time::CalendarAnchorOffset`
 - Tests to complete code coverage for `ops`
 - Tests to complete code coverage for `intervals::bound_position`
+- Tests to complete code coverage for `intervals::meta`
 
 ## Changed
 
@@ -27,7 +28,8 @@ Updated previous tests and created more tests for covering all the work so far.
 
 ## Removed
 
--
+- Removed conversion from `(bool, bool)` to `Epsilon`, as `Epsilon` can be created from
+  `(BoundInclusivity, BoundInclusivity)`, and `BoundInclusivity` can be created from a boolean.
 
 ## Fixed
 
