@@ -1,4 +1,5 @@
 use std::error::Error;
+use std::hash::{DefaultHasher, Hash, Hasher};
 
 use jiff::Timestamp;
 
@@ -101,6 +102,140 @@ fn end_finite_opposite() -> Result<(), Box<dyn Error>> {
             .to_bound()
         ),
     );
+    Ok(())
+}
+
+#[test]
+fn equality() -> Result<(), Box<dyn Error>> {
+    assert_eq!(
+        AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?)
+            .to_start_bound()
+            .to_bound(),
+        AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?)
+            .to_start_bound()
+            .to_bound()
+    );
+    assert_eq!(
+        AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?)
+            .to_end_bound()
+            .to_bound(),
+        AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?)
+            .to_end_bound()
+            .to_bound()
+    );
+    assert_eq!(
+        AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?)
+            .to_start_bound()
+            .to_bound(),
+        AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?)
+            .to_end_bound()
+            .to_bound()
+    );
+    assert_eq!(
+        AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?)
+            .to_start_bound()
+            .to_bound(),
+        AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?)
+            .to_end_bound()
+            .to_bound()
+    );
+
+    Ok(())
+}
+
+#[test]
+fn hash_infinite_past() {
+    let mut hasher1 = DefaultHasher::new();
+    let mut hasher2 = DefaultHasher::new();
+
+    AbsoluteStartBound::InfinitePast.to_bound().hash(&mut hasher1);
+    AbsoluteStartBound::InfinitePast.to_bound().hash(&mut hasher2);
+
+    assert_eq!(hasher1.finish(), hasher2.finish());
+}
+
+#[test]
+fn hash_infinite_future() {
+    let mut hasher1 = DefaultHasher::new();
+    let mut hasher2 = DefaultHasher::new();
+
+    AbsoluteEndBound::InfiniteFuture.to_bound().hash(&mut hasher1);
+    AbsoluteEndBound::InfiniteFuture.to_bound().hash(&mut hasher2);
+
+    assert_eq!(hasher1.finish(), hasher2.finish());
+}
+
+#[test]
+fn hash_finite_start() -> Result<(), Box<dyn Error>> {
+    let mut hasher1 = DefaultHasher::new();
+    let mut hasher2 = DefaultHasher::new();
+
+    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?)
+        .to_start_bound()
+        .to_bound()
+        .hash(&mut hasher1);
+    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?)
+        .to_start_bound()
+        .to_bound()
+        .hash(&mut hasher2);
+
+    assert_eq!(hasher1.finish(), hasher2.finish());
+
+    Ok(())
+}
+
+#[test]
+fn hash_finite_end() -> Result<(), Box<dyn Error>> {
+    let mut hasher1 = DefaultHasher::new();
+    let mut hasher2 = DefaultHasher::new();
+
+    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?)
+        .to_end_bound()
+        .to_bound()
+        .hash(&mut hasher1);
+    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?)
+        .to_end_bound()
+        .to_bound()
+        .hash(&mut hasher2);
+
+    Ok(())
+}
+
+#[test]
+fn hash_finite_start_end() -> Result<(), Box<dyn Error>> {
+    let mut hasher1 = DefaultHasher::new();
+    let mut hasher2 = DefaultHasher::new();
+
+    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?)
+        .to_start_bound()
+        .to_bound()
+        .hash(&mut hasher1);
+    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?)
+        .to_end_bound()
+        .to_bound()
+        .hash(&mut hasher2);
+
+    assert_eq!(hasher1.finish(), hasher2.finish());
+
+    Ok(())
+}
+
+#[test]
+fn hash_finite_start_end_no_match() -> Result<(), Box<dyn Error>> {
+    let mut hasher1 = DefaultHasher::new();
+    let mut hasher2 = DefaultHasher::new();
+
+    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?)
+        .to_start_bound()
+        .to_bound()
+        .hash(&mut hasher1);
+    AbsoluteFiniteBound::new("2026-01-01 00:00:01Z".parse::<Timestamp>()?)
+        .to_end_bound()
+        .to_bound()
+        .hash(&mut hasher2);
+
+    assert_ne!(hasher1.finish(), hasher2.finish());
+
     Ok(())
 }
 

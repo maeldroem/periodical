@@ -11,13 +11,16 @@ Updated previous tests and created more tests for covering all the work so far.
 
 ## Added
 
-- Tests to complete code coverage for `time::OffsetIsoWeek`
-- Tests to complete code coverage for `time::Month`
-- Tests to complete code coverage for `time::CalendarAnchorOffset`
+- Tests to complete code coverage for `time`
 - Tests to complete code coverage for `ops`
-- Tests to complete code coverage for `intervals::bound_position`
-- Tests to complete code coverage for `intervals::meta`
-- Tests to complete code coverage for `intervals::special`
+- Tests to complete code coverage for `intervals`
+  - `bound_position`
+  - `meta`
+  - `special`
+  - `absolute`
+    - `bound`
+  - `relative`
+    - `bound`
 
 ## Changed
 
