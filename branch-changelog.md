@@ -17,6 +17,7 @@ Updated previous tests and created more tests for covering all the work so far.
 - Tests to complete code coverage for `ops`
 - Tests to complete code coverage for `intervals::bound_position`
 - Tests to complete code coverage for `intervals::meta`
+- Tests to complete code coverage for `intervals::special`
 
 ## Changed
 
