@@ -19,8 +19,10 @@ Updated previous tests and created more tests for covering all the work so far.
   - `special`
   - `absolute`
     - `bound`
+    - `bound_pair`
   - `relative`
     - `bound`
+    - `bound_pair`
 
 ## Changed
 
