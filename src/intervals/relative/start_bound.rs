@@ -258,7 +258,7 @@ impl PartialOrd<RelativeEndBound> for RelativeStartBound {
                     match disambiguated_bound_overlap {
                         DisambiguatedBoundOverlap::Before => Some(Ordering::Greater),
                         DisambiguatedBoundOverlap::Equal => Some(Ordering::Equal),
-                        DisambiguatedBoundOverlap::After => Some(Ordering::Less),
+                        DisambiguatedBoundOverlap::After => Some(Ordering::Less), // Unreachable, safe fallback
                     }
                 },
                 Ordering::Greater => Some(Ordering::Greater),
