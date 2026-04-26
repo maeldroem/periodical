@@ -745,7 +745,7 @@ fn is_empty() {
 }
 
 #[test]
-fn from_opt_timestamp_pair() {
+fn from_opt_signed_duration_pair() {
     let start = SignedDuration::ZERO;
 
     assert_eq!(
@@ -758,7 +758,7 @@ fn from_opt_timestamp_pair() {
 }
 
 #[test]
-fn from_opt_timestamp_inclusivity_pair() {
+fn from_opt_signed_duration_inclusivity_pair() {
     let start = SignedDuration::from_hours(8);
     let end = SignedDuration::from_hours(16);
 
