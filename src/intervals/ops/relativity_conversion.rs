@@ -203,8 +203,6 @@ impl ToAbsolute for RelativeBoundPair {
     type AbsoluteType = AbsoluteBoundPair;
 
     fn to_absolute(&self, reference: Timestamp) -> Self::AbsoluteType {
-        let reference = reference;
-
         AbsoluteBoundPair::new(
             self.rel_start().to_absolute(reference),
             self.rel_end().to_absolute(reference),
@@ -413,8 +411,6 @@ impl ToRelative for AbsoluteBoundPair {
     type RelativeType = RelativeBoundPair;
 
     fn to_relative(&self, reference: Timestamp) -> Self::RelativeType {
-        let reference = reference;
-
         RelativeBoundPair::new(
             self.abs_start().to_relative(reference),
             self.abs_end().to_relative(reference),
@@ -437,8 +433,6 @@ impl ToRelative for BoundedAbsoluteInterval {
     type RelativeType = BoundedRelativeInterval;
 
     fn to_relative(&self, reference: Timestamp) -> Self::RelativeType {
-        let reference = reference;
-
         BoundedRelativeInterval::new_with_inclusivity(
             self.start().duration_since(reference),
             self.start_inclusivity(),

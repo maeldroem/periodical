@@ -1,4 +1,3 @@
-use std::error::Error;
 use std::hash::{DefaultHasher, Hash, Hasher};
 
 use jiff::SignedDuration;
@@ -154,7 +153,7 @@ fn hash_infinite_future() {
 }
 
 #[test]
-fn hash_finite_start() -> Result<(), Box<dyn Error>> {
+fn hash_finite_start() {
     let mut hasher1 = DefaultHasher::new();
     let mut hasher2 = DefaultHasher::new();
 
@@ -168,12 +167,10 @@ fn hash_finite_start() -> Result<(), Box<dyn Error>> {
         .hash(&mut hasher2);
 
     assert_eq!(hasher1.finish(), hasher2.finish());
-
-    Ok(())
 }
 
 #[test]
-fn hash_finite_end() -> Result<(), Box<dyn Error>> {
+fn hash_finite_end() {
     let mut hasher1 = DefaultHasher::new();
     let mut hasher2 = DefaultHasher::new();
 
@@ -185,12 +182,10 @@ fn hash_finite_end() -> Result<(), Box<dyn Error>> {
         .to_end_bound()
         .to_bound()
         .hash(&mut hasher2);
-
-    Ok(())
 }
 
 #[test]
-fn hash_finite_start_end() -> Result<(), Box<dyn Error>> {
+fn hash_finite_start_end() {
     let mut hasher1 = DefaultHasher::new();
     let mut hasher2 = DefaultHasher::new();
 
@@ -204,12 +199,10 @@ fn hash_finite_start_end() -> Result<(), Box<dyn Error>> {
         .hash(&mut hasher2);
 
     assert_eq!(hasher1.finish(), hasher2.finish());
-
-    Ok(())
 }
 
 #[test]
-fn hash_finite_start_end_no_match() -> Result<(), Box<dyn Error>> {
+fn hash_finite_start_end_no_match() {
     let mut hasher1 = DefaultHasher::new();
     let mut hasher2 = DefaultHasher::new();
 
@@ -223,8 +216,6 @@ fn hash_finite_start_end_no_match() -> Result<(), Box<dyn Error>> {
         .hash(&mut hasher2);
 
     assert_ne!(hasher1.finish(), hasher2.finish());
-
-    Ok(())
 }
 
 #[test]

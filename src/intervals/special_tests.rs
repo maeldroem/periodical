@@ -306,7 +306,7 @@ mod unbounded_interval {
     }
 
     #[test]
-    fn try_from_emptiable_rel_interval() -> Result<(), Box<dyn Error>> {
+    fn try_from_emptiable_rel_interval() {
         assert_eq!(
             UnboundedInterval::try_from(RelativeInterval::Unbounded(UnboundedInterval).to_emptiable()),
             Ok(UnboundedInterval),
@@ -325,8 +325,6 @@ mod unbounded_interval {
             UnboundedInterval::try_from(EmptiableRelativeInterval::Empty(EmptyInterval)),
             Err(UnboundedIntervalTryFromEmptiableRelativeIntervalError)
         );
-
-        Ok(())
     }
 }
 

@@ -1186,8 +1186,7 @@ pub trait CanPositionOverlap<Rhs = Self> {
         RI: IntoIterator<Item = &'a OverlapRule>,
     {
         self.disambiguated_overlap_position(rhs, rule_set)
-            .map(|disambiguated_overlap_position| check_overlap_rules(disambiguated_overlap_position, rules))
-            .unwrap_or(false)
+            .is_ok_and(|disambiguated_overlap_position| check_overlap_rules(disambiguated_overlap_position, rules))
     }
 
     /// Returns whether the given other interval overlaps the current interval
@@ -1273,7 +1272,7 @@ pub trait CanPositionOverlap<Rhs = Self> {
     where
         F: FnOnce(OverlapPosition) -> bool,
     {
-        self.overlap_position(rhs).map(f).unwrap_or(false)
+        self.overlap_position(rhs).is_ok_and(f)
     }
 
     /// Returns whether the given interval overlaps the current interval using
@@ -1344,9 +1343,7 @@ pub trait CanPositionOverlap<Rhs = Self> {
     where
         F: FnOnce(DisambiguatedOverlapPosition) -> bool,
     {
-        self.disambiguated_overlap_position(rhs, rule_set)
-            .map(f)
-            .unwrap_or(false)
+        self.disambiguated_overlap_position(rhs, rule_set).is_ok_and(f)
     }
 }
 
