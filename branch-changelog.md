@@ -20,10 +20,12 @@ Updated previous tests and created more tests for covering all the work so far.
   - `absolute`
     - `bound`
     - `bound_pair`
+    - `end_bound`
     - `start_bound`
   - `relative`
     - `bound`
     - `bound_pair`
+    - `end_bound`
     - `start_bound`
 
 ## Changed
