@@ -1,16 +1,14 @@
 //! Precision change for relative intervals and bounds
 
-use crate::utils::{inline_docs, tests};
-
 pub mod bound;
 pub mod interval;
 
-tests! {
-    mod bound_tests;
-    mod interval_tests;
-}
+#[cfg(test)]
+mod bound_tests;
+#[cfg(test)]
+mod interval_tests;
 
-inline_docs! {
-    pub use bound::PreciseRelativeBound;
-    pub use interval::PreciseRelativeInterval;
-}
+#[doc(inline)]
+pub use bound::PreciseRelativeBound;
+#[doc(inline)]
+pub use interval::PreciseRelativeInterval;

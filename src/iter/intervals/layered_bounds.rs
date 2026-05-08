@@ -262,26 +262,30 @@
 //! # Ok::<(), Box<dyn Error>>(())
 //! ```
 
-use crate::utils::{inline_docs, tests};
-
 pub mod abs_state_change;
 pub mod absolute;
 pub mod rel_state_change;
 pub mod relative;
 pub mod state;
 
-tests! {
-    mod abs_state_change_tests;
-    mod absolute_tests;
-    mod rel_state_change_tests;
-    mod relative_tests;
-    mod state_tests;
-}
+#[cfg(test)]
+mod abs_state_change_tests;
+#[cfg(test)]
+mod absolute_tests;
+#[cfg(test)]
+mod rel_state_change_tests;
+#[cfg(test)]
+mod relative_tests;
+#[cfg(test)]
+mod state_tests;
 
-inline_docs! {
-    pub use abs_state_change::LayeredBoundsStateChangeAtAbsoluteBound;
-    pub use absolute::LayeredAbsoluteBounds;
-    pub use rel_state_change::LayeredBoundsStateChangeAtRelativeBound;
-    pub use relative::LayeredRelativeBounds;
-    pub use state::LayeredBoundsState;
-}
+#[doc(inline)]
+pub use abs_state_change::LayeredBoundsStateChangeAtAbsoluteBound;
+#[doc(inline)]
+pub use absolute::LayeredAbsoluteBounds;
+#[doc(inline)]
+pub use rel_state_change::LayeredBoundsStateChangeAtRelativeBound;
+#[doc(inline)]
+pub use relative::LayeredRelativeBounds;
+#[doc(inline)]
+pub use state::LayeredBoundsState;

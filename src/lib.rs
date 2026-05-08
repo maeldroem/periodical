@@ -67,14 +67,10 @@ pub mod ops;
 pub mod prelude;
 pub mod time;
 
-mod utils;
-
 #[cfg(feature = "arbitrary")]
 mod arbitrary_impl;
 
-use utils::tests;
-
-tests! {
-    mod ops_tests;
-    mod time_tests;
-}
+#[cfg(test)]
+mod ops_tests;
+#[cfg(test)]
+mod time_tests;

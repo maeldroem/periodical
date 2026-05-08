@@ -18,8 +18,6 @@
 //!
 //! And, perchance, more to come in the future!
 
-use crate::utils::{inline_docs, tests};
-
 pub mod abridge;
 pub mod bound_containment;
 pub mod bound_ord;
@@ -40,54 +38,99 @@ pub mod set_ops;
 pub mod shrink;
 // pub mod split;
 
-tests! {
-    mod abridge_tests;
-    mod bound_containment_tests;
-    mod bound_ord_tests;
-    mod bound_overlap_ambiguity_tests;
-    mod complement_tests;
-    mod continuation_tests;
-    mod cut_tests;
-    mod extend_tests;
-    mod fill_gap_tests;
-    mod grow_tests;
-    mod overlap_tests;
-    mod point_containment_tests;
-    mod relativity_conversion_tests;
-    mod remove_overlap_or_gap_tests;
-    mod remove_overlap_tests;
-    mod shrink_tests;
-    // mod split_tests;
-}
+#[cfg(test)]
+mod abridge_tests;
+#[cfg(test)]
+mod bound_containment_tests;
+#[cfg(test)]
+mod bound_ord_tests;
+#[cfg(test)]
+mod bound_overlap_ambiguity_tests;
+#[cfg(test)]
+mod complement_tests;
+#[cfg(test)]
+mod continuation_tests;
+#[cfg(test)]
+mod cut_tests;
+#[cfg(test)]
+mod extend_tests;
+#[cfg(test)]
+mod fill_gap_tests;
+#[cfg(test)]
+mod grow_tests;
+#[cfg(test)]
+mod overlap_tests;
+#[cfg(test)]
+mod point_containment_tests;
+#[cfg(test)]
+mod relativity_conversion_tests;
+#[cfg(test)]
+mod remove_overlap_or_gap_tests;
+#[cfg(test)]
+mod remove_overlap_tests;
+#[cfg(test)]
+mod shrink_tests;
+// #[cfg(test)]
+// mod split_tests;
 
-inline_docs! {
-    pub use abridge::Abridgable;
-    pub use bound_containment::{
-        BoundContainmentPosition, BoundContainmentRule, BoundContainmentRuleSet, CanPositionBoundContainment,
-        DEFAULT_BOUND_CONTAINMENT_RULES, DisambiguatedBoundContainmentPosition,
-    };
-    pub use bound_ord::{BoundOrdering, PartialBoundOrd};
-    pub use bound_overlap_ambiguity::{
-        BoundOverlapAmbiguity, BoundOverlapDisambiguationRuleSet, DisambiguatedBoundOverlap,
-    };
-    pub use complement::Complementable;
-    pub use continuation::Continuable;
-    pub use cut::{CutResult, CutType, Cuttable};
-    pub use extend::Extensible;
-    pub use fill_gap::GapFillable;
-    pub use grow::{GrowableEndBound, GrowableStartBound};
-    pub use overlap::{
-        CanPositionOverlap, DEFAULT_OVERLAP_RULES, DisambiguatedOverlapPosition, OverlapPosition, OverlapRule,
-        OverlapRuleSet,
-    };
-    pub use point_containment::{
-        CanPositionPointContainment, DEFAULT_POINT_CONTAINMENT_RULES, DisambiguatedPointContainmentPosition,
-        PointContainmentPosition, PointContainmentRule, PointContainmentRuleSet,
-    };
-    pub use precision::{PreciseAbsoluteInterval, PreciseAbsoluteBound, PreciseRelativeInterval, PreciseRelativeBound};
-    pub use relativity_conversion::{ToAbsolute, ToRelative};
-    pub use remove_overlap::{OverlapRemovable, OverlapRemovalResult};
-    pub use remove_overlap_or_gap::{OverlapOrGapRemovalResult, RemovableOverlapOrGap};
-    pub use set_ops::{Differentiable, Intersectable, SymmetricallyDifferentiable, Unitable};
-    pub use shrink::{ShrinkableEndBound, ShrinkableStartBound};
-}
+#[doc(inline)]
+pub use abridge::Abridgable;
+#[doc(inline)]
+pub use bound_containment::{
+    BoundContainmentPosition,
+    BoundContainmentRule,
+    BoundContainmentRuleSet,
+    CanPositionBoundContainment,
+    DEFAULT_BOUND_CONTAINMENT_RULES,
+    DisambiguatedBoundContainmentPosition,
+};
+#[doc(inline)]
+pub use bound_ord::{BoundOrdering, PartialBoundOrd};
+#[doc(inline)]
+pub use bound_overlap_ambiguity::{
+    BoundOverlapAmbiguity,
+    BoundOverlapDisambiguationRuleSet,
+    DisambiguatedBoundOverlap,
+};
+#[doc(inline)]
+pub use complement::Complementable;
+#[doc(inline)]
+pub use continuation::Continuable;
+#[doc(inline)]
+pub use cut::{CutResult, CutType, Cuttable};
+#[doc(inline)]
+pub use extend::Extensible;
+#[doc(inline)]
+pub use fill_gap::GapFillable;
+#[doc(inline)]
+pub use grow::{GrowableEndBound, GrowableStartBound};
+#[doc(inline)]
+pub use overlap::{
+    CanPositionOverlap,
+    DEFAULT_OVERLAP_RULES,
+    DisambiguatedOverlapPosition,
+    OverlapPosition,
+    OverlapRule,
+    OverlapRuleSet,
+};
+#[doc(inline)]
+pub use point_containment::{
+    CanPositionPointContainment,
+    DEFAULT_POINT_CONTAINMENT_RULES,
+    DisambiguatedPointContainmentPosition,
+    PointContainmentPosition,
+    PointContainmentRule,
+    PointContainmentRuleSet,
+};
+#[doc(inline)]
+pub use precision::{PreciseAbsoluteBound, PreciseAbsoluteInterval, PreciseRelativeBound, PreciseRelativeInterval};
+#[doc(inline)]
+pub use relativity_conversion::{ToAbsolute, ToRelative};
+#[doc(inline)]
+pub use remove_overlap::{OverlapRemovable, OverlapRemovalResult};
+#[doc(inline)]
+pub use remove_overlap_or_gap::{OverlapOrGapRemovalResult, RemovableOverlapOrGap};
+#[doc(inline)]
+pub use set_ops::{Differentiable, Intersectable, SymmetricallyDifferentiable, Unitable};
+#[doc(inline)]
+pub use shrink::{ShrinkableEndBound, ShrinkableStartBound};
