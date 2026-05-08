@@ -12,12 +12,12 @@ const RUSTUP_BIN_LOCATION: &str = "rustup";
 const GRCOV_BIN_LOCATION: &str = "grcov";
 const OPEN_BIN_LOCATION: &str = "xdg-open";
 
-static PROFILING_DATA_FOLDER: LazyLock<&Path> = LazyLock::new(|| Path::new("./target/profiling"));
-static CODE_COVERAGE_REPORT_TARGET: LazyLock<&Path> = LazyLock::new(|| Path::new("./target/coverage"));
+static PROFILING_DATA_FOLDER: LazyLock<&Path> = LazyLock::new(|| Path::new("target/profiling"));
+static CODE_COVERAGE_REPORT_TARGET: LazyLock<&Path> = LazyLock::new(|| Path::new("target/coverage"));
 
 const PROFILING_DATA_NAME_TEMPLATE: &str = "cargo_coverage_%p_%m.profraw";
 
-const TEST_FILE_GLOB: &str = "./src/**/*_tests.rs";
+const TEST_FILE_GLOB: &str = "src/**/*_tests.rs";
 
 /// Line exclusion pattern for `grcov`
 ///
