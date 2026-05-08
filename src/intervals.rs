@@ -111,8 +111,6 @@
 //! # Ok::<(), Box<dyn Error>>(())
 //! ```
 
-use crate::utils::tests;
-
 pub mod absolute;
 pub mod bound_position;
 pub mod convenience;
@@ -121,10 +119,13 @@ pub mod ops;
 pub mod relative;
 pub mod special;
 
-tests! {
-    mod absolute_tests;
-    mod bound_position_tests;
-    mod meta_tests;
-    mod relative_tests;
-    mod special_tests;
-}
+#[cfg(test)]
+mod absolute_tests;
+#[cfg(test)]
+mod bound_position_tests;
+#[cfg(test)]
+mod meta_tests;
+#[cfg(test)]
+mod relative_tests;
+#[cfg(test)]
+mod special_tests;

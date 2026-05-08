@@ -59,12 +59,10 @@
 //! # Ok::<(), Box<dyn Error>>(())
 //! ```
 
-use crate::utils::inline_docs;
-
 pub mod absolute;
 pub mod relative;
 
-inline_docs! {
-    pub use absolute::{PreciseAbsoluteBound, PreciseAbsoluteInterval};
-    pub use relative::{PreciseRelativeBound, PreciseRelativeInterval};
-}
+#[doc(inline)]
+pub use absolute::{PreciseAbsoluteBound, PreciseAbsoluteInterval};
+#[doc(inline)]
+pub use relative::{PreciseRelativeBound, PreciseRelativeInterval};

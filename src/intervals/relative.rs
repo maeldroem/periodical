@@ -15,7 +15,6 @@ use std::error::Error;
 use std::fmt::Display;
 
 use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
-use crate::utils::{inline_docs, tests};
 
 pub mod bound;
 pub mod bound_pair;
@@ -28,31 +27,47 @@ pub mod half_bounded_interval;
 pub mod interval;
 pub mod start_bound;
 
-tests! {
-    mod bounded_interval_tests;
-    mod bound_pair_tests;
-    mod bound_tests;
-    mod emptiable_bound_pair_tests;
-    mod emptiable_interval_tests;
-    mod end_bound_tests;
-    mod finite_bound_tests;
-    mod half_bounded_interval_tests;
-    mod interval_tests;
-    mod start_bound_tests;
-}
+#[cfg(test)]
+mod bound_pair_tests;
+#[cfg(test)]
+mod bound_tests;
+#[cfg(test)]
+mod bounded_interval_tests;
+#[cfg(test)]
+mod emptiable_bound_pair_tests;
+#[cfg(test)]
+mod emptiable_interval_tests;
+#[cfg(test)]
+mod end_bound_tests;
+#[cfg(test)]
+mod finite_bound_tests;
+#[cfg(test)]
+mod half_bounded_interval_tests;
+#[cfg(test)]
+mod interval_tests;
+#[cfg(test)]
+mod start_bound_tests;
 
-inline_docs! {
-    pub use bounded_interval::*;
-    pub use bound::*;
-    pub use bound_pair::*;
-    pub use emptiable_bound_pair::*;
-    pub use emptiable_interval::*;
-    pub use end_bound::*;
-    pub use finite_bound::*;
-    pub use half_bounded_interval::*;
-    pub use interval::*;
-    pub use start_bound::*;
-}
+#[doc(inline)]
+pub use bound::*;
+#[doc(inline)]
+pub use bound_pair::*;
+#[doc(inline)]
+pub use bounded_interval::*;
+#[doc(inline)]
+pub use emptiable_bound_pair::*;
+#[doc(inline)]
+pub use emptiable_interval::*;
+#[doc(inline)]
+pub use end_bound::*;
+#[doc(inline)]
+pub use finite_bound::*;
+#[doc(inline)]
+pub use half_bounded_interval::*;
+#[doc(inline)]
+pub use interval::*;
+#[doc(inline)]
+pub use start_bound::*;
 
 /// Swaps a relative start bound with a relative end bound
 ///

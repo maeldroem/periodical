@@ -38,6 +38,7 @@ Updated previous tests and created more tests for covering all the work so far.
 
 - Removed conversion from `(bool, bool)` to `Epsilon`, as `Epsilon` can be created from
   `(BoundInclusivity, BoundInclusivity)`, and `BoundInclusivity` can be created from a boolean.
+- (Internal) Removed `tests!` and `inline_docs!` macros
 
 ## Fixed
 
