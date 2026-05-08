@@ -778,10 +778,9 @@ pub trait CanPositionPointContainment<P> {
         RI: IntoIterator<Item = &'a PointContainmentRule>,
     {
         self.disambiguated_point_containment_position(positionable, rule_set)
-            .map(|disambiguated_containment_position| {
+            .is_ok_and(|disambiguated_containment_position| {
                 check_point_containment_rules(disambiguated_containment_position, rules)
             })
-            .unwrap_or(false)
     }
 
     /// Returns whether the given point is contained in the interval using the
@@ -842,7 +841,7 @@ pub trait CanPositionPointContainment<P> {
     where
         F: FnOnce(PointContainmentPosition) -> bool,
     {
-        self.point_containment_position(positionable).map(f).unwrap_or(false)
+        self.point_containment_position(positionable).is_ok_and(f)
     }
 
     /// Returns whether the given point is contained in the interval using the
@@ -909,8 +908,7 @@ pub trait CanPositionPointContainment<P> {
         F: FnOnce(DisambiguatedPointContainmentPosition) -> bool,
     {
         self.disambiguated_point_containment_position(positionable, rule_set)
-            .map(f)
-            .unwrap_or(false)
+            .is_ok_and(f)
     }
 }
 

@@ -321,7 +321,7 @@ pub trait PreciseAbsoluteInterval {
         precision: Precision,
         base: Timestamp,
     ) -> Self::PrecisedIntervalOutput {
-        self.precise_interval_with_different_precisions_with_base_time(tz, precision, base.clone(), precision, base)
+        self.precise_interval_with_different_precisions_with_base_time(tz, precision, base, precision, base)
     }
 }
 

@@ -12,5 +12,5 @@ fuzz_target!(|data: (AbsoluteBoundPair, Duration)| {
     let reference = Timestamp::MIN
         .saturating_add(reference_delta)
         .expect("We are not using Span");
-    assert_eq!(bounds.to_relative(reference).to_absolute(reference), bounds)
+    assert_eq!(bounds.to_relative(reference).to_absolute(reference), bounds);
 });
