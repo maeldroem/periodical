@@ -154,7 +154,6 @@ fn xtask_coverage(open: bool) -> Result<(), XtaskError> {
         .env("CARGO_INCREMENTAL", "0")
         .env("RUSTFLAGS", "-C instrument-coverage")
         .env("LLVM_PROFILE_FILE", llvm_profile_file)
-        .arg("+stable")
         .arg("test")
         .arg("--tests") // Only tests, no doc tests
         .arg("--all-features")
@@ -198,7 +197,7 @@ fn xtask_coverage(open: bool) -> Result<(), XtaskError> {
     if open {
         eprintln!("Opening code coverage report…");
 
-        let mut report_index = PROFILING_DATA_FOLDER.to_path_buf();
+        let mut report_index = CODE_COVERAGE_REPORT_TARGET.to_path_buf();
         report_index.push("html/index.html");
 
         let open_succeed = Command::new(OPEN_BIN_LOCATION).arg(report_index).status()?.success();
