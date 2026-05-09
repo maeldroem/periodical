@@ -295,56 +295,43 @@ impl
     }
 }
 
-/// Converts `(bool, RelativeStartBound, RelativeEndBound)` into [`EmptiableRelativeInterval`]
+/// Converts `Option<(RelativeStartBound, RelativeEndBound)>` into [`EmptiableRelativeInterval`]
 ///
-/// The second tuple element represents the start bound, the third element
-/// represents the end bound.
-///
-/// The first boolean indicates whether the interval is an empty interval.
-/// If it is set to `true`, the next elements are ignored altogether.
-impl From<(bool, RelativeStartBound, RelativeEndBound)> for EmptiableRelativeInterval {
-    fn from(value: (bool, RelativeStartBound, RelativeEndBound)) -> Self {
-        Self::from(EmptiableRelativeBoundPair::from(value))
+/// The option represents whether the interval is an empty interval.
+impl From<Option<(RelativeStartBound, RelativeEndBound)>> for EmptiableRelativeInterval {
+    fn from(opt_start_end: Option<(RelativeStartBound, RelativeEndBound)>) -> Self {
+        Self::from(EmptiableRelativeBoundPair::from(opt_start_end))
     }
 }
 
-/// Converts `(bool, Option<SignedDuration>, Option<SignedDuration>)` into
-/// [`RelativeInterval`]
+/// Converts `Option<(Option<SignedDuration>, Option<SignedDuration>)>` into [`EmptiableRelativeInterval`]
 ///
-/// The second tuple element represents the start bound, the third element
-/// represents the end bound.
-///
-/// The first boolean indicates whether the interval is an [`EmptyInterval`].
-/// If it is set to `true`, the next elements are ignored altogether.
-impl From<(bool, Option<SignedDuration>, Option<SignedDuration>)> for EmptiableRelativeInterval {
-    fn from(value: (bool, Option<SignedDuration>, Option<SignedDuration>)) -> Self {
-        Self::from(EmptiableRelativeBoundPair::from(value))
+/// The option represents whether the interval is an empty interval.
+impl From<Option<(Option<SignedDuration>, Option<SignedDuration>)>> for EmptiableRelativeInterval {
+    fn from(opt_start_opt_end_opt: Option<(Option<SignedDuration>, Option<SignedDuration>)>) -> Self {
+        Self::from(EmptiableRelativeBoundPair::from(opt_start_opt_end_opt))
     }
 }
 
-/// Converts `(bool, Option<(SignedDuration, BoundInclusivity)>, Option<(SignedDuration, BoundInclusivity)>)`
-/// into [`RelativeInterval`]
+/// Converts `Option<(Option<(SignedDuration, BoundInclusivity)>, Option<(SignedDuration, BoundInclusivity)>)>`
+/// into [`EmptiableRelativeInterval`]
 ///
-/// The second tuple element represents the start bound, the third element
-/// represents the end bound.
-///
-/// The first boolean indicates whether the interval is an [`EmptyInterval`].
-/// If it is set to `true`, the next elements are ignored altogether.
+/// The option represents whether the interval is an empty interval.
 impl
-    From<(
-        bool,
-        Option<(SignedDuration, BoundInclusivity)>,
-        Option<(SignedDuration, BoundInclusivity)>,
-    )> for EmptiableRelativeInterval
+    From<
+        Option<(
+            Option<(SignedDuration, BoundInclusivity)>,
+            Option<(SignedDuration, BoundInclusivity)>,
+        )>,
+    > for EmptiableRelativeInterval
 {
     fn from(
-        value: (
-            bool,
+        opt_start_incl_opt_end_incl_opt: Option<(
             Option<(SignedDuration, BoundInclusivity)>,
             Option<(SignedDuration, BoundInclusivity)>,
-        ),
+        )>,
     ) -> Self {
-        Self::from(EmptiableRelativeBoundPair::from(value))
+        Self::from(EmptiableRelativeBoundPair::from(opt_start_incl_opt_end_incl_opt))
     }
 }
 
