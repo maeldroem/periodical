@@ -21,11 +21,13 @@ Updated previous tests and created more tests for covering all the work so far.
     - `bound`
     - `bound_pair`
     - `end_bound`
+    - `finite_bound`
     - `start_bound`
   - `relative`
     - `bound`
     - `bound_pair`
     - `end_bound`
+    - `finite_bound`
     - `start_bound`
 
 ## Changed
