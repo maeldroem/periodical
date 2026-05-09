@@ -301,55 +301,43 @@ impl
     }
 }
 
-/// Converts `(bool, AbsoluteStartBound, AbsoluteEndBound)` into [`EmptiableAbsoluteInterval`]
+/// Converts `Option<(AbsoluteStartBound, AbsoluteEndBound)>` into [`EmptiableAbsoluteInterval`]
 ///
-/// The second tuple element represents the start bound, the third element
-/// represents the end bound.
-///
-/// The first boolean indicates whether the interval is an empty interval.
-/// If it is set to `true`, the next elements are ignored altogether.
-impl From<(bool, AbsoluteStartBound, AbsoluteEndBound)> for EmptiableAbsoluteInterval {
-    fn from(value: (bool, AbsoluteStartBound, AbsoluteEndBound)) -> Self {
-        Self::from(EmptiableAbsoluteBoundPair::from(value))
+/// The option represents whether the interval is an empty interval.
+impl From<Option<(AbsoluteStartBound, AbsoluteEndBound)>> for EmptiableAbsoluteInterval {
+    fn from(opt_start_end: Option<(AbsoluteStartBound, AbsoluteEndBound)>) -> Self {
+        Self::from(EmptiableAbsoluteBoundPair::from(opt_start_end))
     }
 }
 
-/// Converts `(bool, Option<Timestamp>, Option<Timestamp>)` into [`AbsoluteInterval`]
+/// Converts `Option<(Option<Timestamp>, Option<Timestamp>)>` into [`EmptiableAbsoluteInterval`]
 ///
-/// The second tuple element represents the start bound, the third element
-/// represents the end bound.
-///
-/// The first boolean indicates whether the interval is an [`EmptyInterval`].
-/// If it is set to `true`, the next elements are ignored altogether.
-impl From<(bool, Option<Timestamp>, Option<Timestamp>)> for EmptiableAbsoluteInterval {
-    fn from(value: (bool, Option<Timestamp>, Option<Timestamp>)) -> Self {
-        Self::from(EmptiableAbsoluteBoundPair::from(value))
+/// The option represents whether the interval is an empty interval.
+impl From<Option<(Option<Timestamp>, Option<Timestamp>)>> for EmptiableAbsoluteInterval {
+    fn from(opt_start_opt_end_opt: Option<(Option<Timestamp>, Option<Timestamp>)>) -> Self {
+        Self::from(EmptiableAbsoluteBoundPair::from(opt_start_opt_end_opt))
     }
 }
 
-/// Converts `(bool, Option<(Timestamp, BoundInclusivity)>, Option<(Timestamp, BoundInclusivity)>)`
-/// into [`AbsoluteInterval`]
+/// Converts `Option<(Option<(Timestamp, BoundInclusivity)>, Option<(Timestamp, BoundInclusivity)>)>`
+/// into [`EmptiableAbsoluteInterval`]
 ///
-/// The second tuple element represents the start bound, the third element
-/// represents the end bound.
-///
-/// The first boolean indicates whether the interval is an [`EmptyInterval`].
-/// If it is set to `true`, the next elements are ignored altogether.
+/// The option represents whether the interval is an empty interval.
 impl
-    From<(
-        bool,
-        Option<(Timestamp, BoundInclusivity)>,
-        Option<(Timestamp, BoundInclusivity)>,
-    )> for EmptiableAbsoluteInterval
+    From<
+        Option<(
+            Option<(Timestamp, BoundInclusivity)>,
+            Option<(Timestamp, BoundInclusivity)>,
+        )>,
+    > for EmptiableAbsoluteInterval
 {
     fn from(
-        value: (
-            bool,
+        opt_start_incl_opt_end_incl_opt: Option<(
             Option<(Timestamp, BoundInclusivity)>,
             Option<(Timestamp, BoundInclusivity)>,
-        ),
+        )>,
     ) -> Self {
-        Self::from(EmptiableAbsoluteBoundPair::from(value))
+        Self::from(EmptiableAbsoluteBoundPair::from(opt_start_incl_opt_end_incl_opt))
     }
 }
 

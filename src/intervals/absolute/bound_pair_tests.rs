@@ -316,43 +316,13 @@ mod ord_by_start_and_inv_length {
     use super::*;
 
     #[test]
-    fn less() -> Result<(), Box<dyn Error>> {
+    fn less_start() -> Result<(), Box<dyn Error>> {
         let bound_pair1 = AbsoluteBoundPair::new(
             AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-            AbsoluteFiniteBound::new("2026-01-02 08:00:00Z".parse::<Timestamp>()?).to_end_bound(),
-        );
-        let bound_pair2 = AbsoluteBoundPair::new(
-            AbsoluteFiniteBound::new("2026-01-01 08:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-            AbsoluteFiniteBound::new("2026-01-02 08:00:00Z".parse::<Timestamp>()?).to_end_bound(),
-        );
-
-        assert_eq!(bound_pair1.ord_by_start_and_inv_length(&bound_pair2), Ordering::Less);
-        Ok(())
-    }
-
-    #[test]
-    fn greater() -> Result<(), Box<dyn Error>> {
-        let bound_pair1 = AbsoluteBoundPair::new(
-            AbsoluteFiniteBound::new("2026-01-01 08:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-            AbsoluteFiniteBound::new("2026-01-02 08:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            AbsoluteFiniteBound::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
         );
         let bound_pair2 = AbsoluteBoundPair::new(
             AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-            AbsoluteFiniteBound::new("2026-01-02 08:00:00Z".parse::<Timestamp>()?).to_end_bound(),
-        );
-
-        assert_eq!(bound_pair1.ord_by_start_and_inv_length(&bound_pair2), Ordering::Greater);
-        Ok(())
-    }
-
-    #[test]
-    fn equal_less() -> Result<(), Box<dyn Error>> {
-        let bound_pair1 = AbsoluteBoundPair::new(
-            AbsoluteFiniteBound::new("2026-01-01 08:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-            AbsoluteFiniteBound::new("2026-01-02 08:00:00Z".parse::<Timestamp>()?).to_end_bound(),
-        );
-        let bound_pair2 = AbsoluteBoundPair::new(
-            AbsoluteFiniteBound::new("2026-01-01 08:00:00Z".parse::<Timestamp>()?).to_start_bound(),
             AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
         );
 
@@ -361,14 +331,74 @@ mod ord_by_start_and_inv_length {
     }
 
     #[test]
-    fn equal_equal() -> Result<(), Box<dyn Error>> {
+    fn greater_start() -> Result<(), Box<dyn Error>> {
         let bound_pair1 = AbsoluteBoundPair::new(
-            AbsoluteFiniteBound::new("2026-01-01 08:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-            AbsoluteFiniteBound::new("2026-01-02 08:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+            AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
         );
         let bound_pair2 = AbsoluteBoundPair::new(
-            AbsoluteFiniteBound::new("2026-01-01 08:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-            AbsoluteFiniteBound::new("2026-01-02 08:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+            AbsoluteFiniteBound::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+        );
+
+        assert_eq!(bound_pair1.ord_by_start_and_inv_length(&bound_pair2), Ordering::Greater);
+        Ok(())
+    }
+
+    #[test]
+    fn less_start_inf() -> Result<(), Box<dyn Error>> {
+        let bound_pair1 = AbsoluteBoundPair::new(
+            AbsoluteStartBound::InfinitePast,
+            AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+        );
+        let bound_pair2 = AbsoluteBoundPair::new(
+            AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+            AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+        );
+
+        assert_eq!(bound_pair1.ord_by_start_and_inv_length(&bound_pair2), Ordering::Less);
+        Ok(())
+    }
+
+    #[test]
+    fn greater_start_inf() -> Result<(), Box<dyn Error>> {
+        let bound_pair1 = AbsoluteBoundPair::new(
+            AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+            AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+        );
+        let bound_pair2 = AbsoluteBoundPair::new(
+            AbsoluteStartBound::InfinitePast,
+            AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+        );
+
+        assert_eq!(bound_pair1.ord_by_start_and_inv_length(&bound_pair2), Ordering::Greater);
+        Ok(())
+    }
+
+    #[test]
+    fn equal_start_less_end() -> Result<(), Box<dyn Error>> {
+        let bound_pair1 = AbsoluteBoundPair::new(
+            AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+            AbsoluteFiniteBound::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+        );
+        let bound_pair2 = AbsoluteBoundPair::new(
+            AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+            AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+        );
+
+        assert_eq!(bound_pair1.ord_by_start_and_inv_length(&bound_pair2), Ordering::Less);
+        Ok(())
+    }
+
+    #[test]
+    fn equal_start_equal_end() -> Result<(), Box<dyn Error>> {
+        let bound_pair1 = AbsoluteBoundPair::new(
+            AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+            AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+        );
+        let bound_pair2 = AbsoluteBoundPair::new(
+            AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+            AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
         );
 
         assert_eq!(bound_pair1.ord_by_start_and_inv_length(&bound_pair2), Ordering::Equal);
@@ -376,18 +406,140 @@ mod ord_by_start_and_inv_length {
     }
 
     #[test]
-    fn equal_greater() -> Result<(), Box<dyn Error>> {
+    fn equal_start_greater_end() -> Result<(), Box<dyn Error>> {
         let bound_pair1 = AbsoluteBoundPair::new(
-            AbsoluteFiniteBound::new("2026-01-01 08:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+            AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
             AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
         );
         let bound_pair2 = AbsoluteBoundPair::new(
-            AbsoluteFiniteBound::new("2026-01-01 08:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-            AbsoluteFiniteBound::new("2026-01-02 08:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+            AbsoluteFiniteBound::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
         );
 
         assert_eq!(bound_pair1.ord_by_start_and_inv_length(&bound_pair2), Ordering::Greater);
         Ok(())
+    }
+
+    #[test]
+    fn equal_start_less_end_inf() -> Result<(), Box<dyn Error>> {
+        let bound_pair1 = AbsoluteBoundPair::new(
+            AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+            AbsoluteEndBound::InfiniteFuture,
+        );
+        let bound_pair2 = AbsoluteBoundPair::new(
+            AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+            AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+        );
+
+        assert_eq!(bound_pair1.ord_by_start_and_inv_length(&bound_pair2), Ordering::Less);
+        Ok(())
+    }
+
+    #[test]
+    fn equal_start_greater_end_inf() -> Result<(), Box<dyn Error>> {
+        let bound_pair1 = AbsoluteBoundPair::new(
+            AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+            AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+        );
+        let bound_pair2 = AbsoluteBoundPair::new(
+            AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+            AbsoluteEndBound::InfiniteFuture,
+        );
+
+        assert_eq!(bound_pair1.ord_by_start_and_inv_length(&bound_pair2), Ordering::Greater);
+        Ok(())
+    }
+
+    #[test]
+    fn equal_start_equal_end_inf() -> Result<(), Box<dyn Error>> {
+        let bound_pair1 = AbsoluteBoundPair::new(
+            AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+            AbsoluteEndBound::InfiniteFuture,
+        );
+        let bound_pair2 = AbsoluteBoundPair::new(
+            AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+            AbsoluteEndBound::InfiniteFuture,
+        );
+
+        assert_eq!(bound_pair1.ord_by_start_and_inv_length(&bound_pair2), Ordering::Equal);
+        Ok(())
+    }
+
+    #[test]
+    fn equal_start_inf_less_end() -> Result<(), Box<dyn Error>> {
+        let bound_pair1 = AbsoluteBoundPair::new(
+            AbsoluteStartBound::InfinitePast,
+            AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+        );
+        let bound_pair2 = AbsoluteBoundPair::new(
+            AbsoluteStartBound::InfinitePast,
+            AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+        );
+
+        assert_eq!(bound_pair1.ord_by_start_and_inv_length(&bound_pair2), Ordering::Less);
+        Ok(())
+    }
+
+    #[test]
+    fn equal_start_inf_greater_end() -> Result<(), Box<dyn Error>> {
+        let bound_pair1 = AbsoluteBoundPair::new(
+            AbsoluteStartBound::InfinitePast,
+            AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+        );
+        let bound_pair2 = AbsoluteBoundPair::new(
+            AbsoluteStartBound::InfinitePast,
+            AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+        );
+
+        assert_eq!(bound_pair1.ord_by_start_and_inv_length(&bound_pair2), Ordering::Greater);
+        Ok(())
+    }
+
+    #[test]
+    fn equal_start_inf_equal_end() -> Result<(), Box<dyn Error>> {
+        let bound_pair1 = AbsoluteBoundPair::new(
+            AbsoluteStartBound::InfinitePast,
+            AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+        );
+        let bound_pair2 = AbsoluteBoundPair::new(
+            AbsoluteStartBound::InfinitePast,
+            AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+        );
+
+        assert_eq!(bound_pair1.ord_by_start_and_inv_length(&bound_pair2), Ordering::Equal);
+        Ok(())
+    }
+
+    #[test]
+    fn equal_start_inf_less_end_inf() -> Result<(), Box<dyn Error>> {
+        let bound_pair1 = AbsoluteBoundPair::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture);
+        let bound_pair2 = AbsoluteBoundPair::new(
+            AbsoluteStartBound::InfinitePast,
+            AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+        );
+
+        assert_eq!(bound_pair1.ord_by_start_and_inv_length(&bound_pair2), Ordering::Less);
+        Ok(())
+    }
+
+    #[test]
+    fn equal_start_inf_greater_end_inf() -> Result<(), Box<dyn Error>> {
+        let bound_pair1 = AbsoluteBoundPair::new(
+            AbsoluteStartBound::InfinitePast,
+            AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+        );
+        let bound_pair2 = AbsoluteBoundPair::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture);
+
+        assert_eq!(bound_pair1.ord_by_start_and_inv_length(&bound_pair2), Ordering::Greater);
+        Ok(())
+    }
+
+    #[test]
+    fn equal_start_inf_equal_end_inf() {
+        let bound_pair1 = AbsoluteBoundPair::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture);
+        let bound_pair2 = AbsoluteBoundPair::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture);
+
+        assert_eq!(bound_pair1.ord_by_start_and_inv_length(&bound_pair2), Ordering::Equal);
     }
 }
 
@@ -567,12 +719,12 @@ fn relativity() -> Result<(), Box<dyn Error>> {
 
     assert_eq!(bounded.relativity(), Relativity::Absolute);
     assert_eq!(half_bounded.relativity(), Relativity::Absolute);
-    assert_eq!(unbounded.relativity(), Relativity::Absolute);
+    assert_eq!(unbounded.relativity(), Relativity::Any);
 
     Ok(())
 }
 
-mod cmp {
+mod ord {
     use super::*;
 
     #[test]

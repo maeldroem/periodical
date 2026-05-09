@@ -86,58 +86,58 @@ fn relative_interval_from_opt_datetime_bound_inclusivity_pairs() {
     );
 }
 
-#[test]
-fn relative_interval_from_bool_and_two_opt_datetime_empty() {
-    assert_eq!(
-        <EmptiableRelativeInterval as From<(bool, Option<SignedDuration>, Option<SignedDuration>)>>::from((
-            true, None, None,
-        )),
-        EmptiableRelativeInterval::Empty(EmptyInterval),
-    );
-}
+// #[test]
+// fn relative_interval_from_bool_and_two_opt_datetime_empty() {
+//     assert_eq!(
+//         <EmptiableRelativeInterval as From<(bool, Option<SignedDuration>, Option<SignedDuration>)>>::from((
+//             true, None, None,
+//         )),
+//         EmptiableRelativeInterval::Empty(EmptyInterval),
+//     );
+// }
 
-#[test]
-fn relative_interval_from_bool_and_two_opt_datetime() {
-    assert_eq!(
-        EmptiableRelativeInterval::from((
-            false,
-            Some(SignedDuration::from_hours(1)),
-            Some(SignedDuration::from_hours(2)),
-        )),
-        EmptiableRelativeInterval::Bound(RelativeInterval::Bounded(BoundedRelativeInterval::new(
-            SignedDuration::from_hours(1),
-            SignedDuration::from_hours(2)
-        ))),
-    );
-}
+// #[test]
+// fn relative_interval_from_bool_and_two_opt_datetime() {
+//     assert_eq!(
+//         EmptiableRelativeInterval::from((
+//             false,
+//             Some(SignedDuration::from_hours(1)),
+//             Some(SignedDuration::from_hours(2)),
+//         )),
+//         EmptiableRelativeInterval::Bound(RelativeInterval::Bounded(BoundedRelativeInterval::new(
+//             SignedDuration::from_hours(1),
+//             SignedDuration::from_hours(2)
+//         ))),
+//     );
+// }
 
-#[test]
-fn relative_interval_from_bool_and_two_opt_datetime_bound_inclusivity_empty() {
-    assert_eq!(
-        <EmptiableRelativeInterval as From<(
-            bool,
-            Option<(SignedDuration, BoundInclusivity)>,
-            Option<(SignedDuration, BoundInclusivity)>
-        )>>::from((true, None, None,)),
-        EmptiableRelativeInterval::Empty(EmptyInterval),
-    );
-}
+// #[test]
+// fn relative_interval_from_bool_and_two_opt_datetime_bound_inclusivity_empty() {
+//     assert_eq!(
+//         <EmptiableRelativeInterval as From<(
+//             bool,
+//             Option<(SignedDuration, BoundInclusivity)>,
+//             Option<(SignedDuration, BoundInclusivity)>
+//         )>>::from((true, None, None,)),
+//         EmptiableRelativeInterval::Empty(EmptyInterval),
+//     );
+// }
 
-#[test]
-fn relative_interval_from_bool_and_two_opt_datetime_bound_inclusivity() {
-    assert_eq!(
-        EmptiableRelativeInterval::from((
-            false,
-            Some((SignedDuration::from_hours(1), BoundInclusivity::Exclusive)),
-            Some((SignedDuration::from_hours(2), BoundInclusivity::Exclusive)),
-        )),
-        EmptiableRelativeInterval::Bound(RelativeInterval::Bounded(
-            BoundedRelativeInterval::new_with_inclusivity(
-                SignedDuration::from_hours(1),
-                BoundInclusivity::Exclusive,
-                SignedDuration::from_hours(2),
-                BoundInclusivity::Exclusive,
-            )
-        )),
-    );
-}
+// #[test]
+// fn relative_interval_from_bool_and_two_opt_datetime_bound_inclusivity() {
+//     assert_eq!(
+//         EmptiableRelativeInterval::from((
+//             false,
+//             Some((SignedDuration::from_hours(1), BoundInclusivity::Exclusive)),
+//             Some((SignedDuration::from_hours(2), BoundInclusivity::Exclusive)),
+//         )),
+//         EmptiableRelativeInterval::Bound(RelativeInterval::Bounded(
+//             BoundedRelativeInterval::new_with_inclusivity(
+//                 SignedDuration::from_hours(1),
+//                 BoundInclusivity::Exclusive,
+//                 SignedDuration::from_hours(2),
+//                 BoundInclusivity::Exclusive,
+//             )
+//         )),
+//     );
+// }

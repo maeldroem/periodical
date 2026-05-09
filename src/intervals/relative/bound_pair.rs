@@ -434,7 +434,10 @@ impl HasOpenness for RelativeBoundPair {
 
 impl HasRelativity for RelativeBoundPair {
     fn relativity(&self) -> Relativity {
-        Relativity::Relative
+        match (self.start(), self.end()) {
+            (RelativeStartBound::InfinitePast, RelativeEndBound::InfiniteFuture) => Relativity::Any,
+            _ => Relativity::Relative,
+        }
     }
 }
 

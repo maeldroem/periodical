@@ -238,7 +238,10 @@ impl HasOpenness for EmptiableRelativeBoundPair {
 
 impl HasRelativity for EmptiableRelativeBoundPair {
     fn relativity(&self) -> Relativity {
-        Relativity::Relative
+        match self {
+            Self::Bound(bound) => bound.relativity(),
+            Self::Empty => Relativity::Any,
+        }
     }
 }
 
@@ -262,64 +265,61 @@ impl Ord for EmptiableRelativeBoundPair {
     }
 }
 
-/// Converts `(bool, RelativeStartBound, RelativeEndBound)` into [`EmptiableRelativeBoundPair`]
+/// Converts `Option<(RelativeStartBound, RelativeEndBound)>` into [`EmptiableRelativeBoundPair`]
 ///
-/// The second tuple element represents the start bound, the third element
-/// represents the end bound.
-///
-/// The first boolean indicates whether the interval is an empty interval.
-/// If it is set to `true`, the next elements are ignored altogether.
-impl From<(bool, RelativeStartBound, RelativeEndBound)> for EmptiableRelativeBoundPair {
-    fn from((is_empty, start, end): (bool, RelativeStartBound, RelativeEndBound)) -> Self {
-        if is_empty {
-            return Self::Empty;
+/// The option represents whether the interval is an empty interval.
+impl From<Option<(RelativeStartBound, RelativeEndBound)>> for EmptiableRelativeBoundPair {
+    fn from(opt_start_end: Option<(RelativeStartBound, RelativeEndBound)>) -> Self {
+        if let Some((start, end)) = opt_start_end {
+            Self::from(RelativeBoundPair::new(start, end))
+        } else {
+            Self::Empty
         }
-
-        Self::from(RelativeBoundPair::new(start, end))
     }
 }
 
-/// Converts `(bool, Option<SignedDuration>, Option<SignedDuration>)` into
-/// [`EmptiableRelativeBoundPair`]
+/// Converts `Option<(Option<SignedDuration>, Option<SignedDuration>)>` into [`EmptiableRelativeBoundPair`]
 ///
-/// The second tuple element represents the start bound, the third element
-/// represents the end bound.
-///
-/// The first boolean indicates whether the interval is an empty interval.
-/// If it is set to `true`, the next elements are ignored altogether.
-impl From<(bool, Option<SignedDuration>, Option<SignedDuration>)> for EmptiableRelativeBoundPair {
-    fn from((is_empty, start_opt, end_opt): (bool, Option<SignedDuration>, Option<SignedDuration>)) -> Self {
-        let start = RelativeStartBound::from(start_opt);
-        let end = RelativeEndBound::from(end_opt);
-        Self::from((is_empty, start, end))
+/// The option represents whether the interval is an empty interval.
+impl From<Option<(Option<SignedDuration>, Option<SignedDuration>)>> for EmptiableRelativeBoundPair {
+    fn from(opt_start_opt_end_opt: Option<(Option<SignedDuration>, Option<SignedDuration>)>) -> Self {
+        if let Some((start_opt, end_opt)) = opt_start_opt_end_opt {
+            Self::from(RelativeBoundPair::new(
+                RelativeStartBound::from(start_opt),
+                RelativeEndBound::from(end_opt),
+            ))
+        } else {
+            Self::Empty
+        }
     }
 }
 
-/// Converts `(bool, Option<(SignedDuration, BoundInclusivity)>, Option<(SignedDuration, BoundInclusivity)>)`
+/// Converts `Option<(Option<(SignedDuration, BoundInclusivity)>, Option<(SignedDuration, BoundInclusivity)>)>`
 /// into [`EmptiableRelativeBoundPair`]
 ///
-/// The second tuple element represents the start bound, the third element
-/// represents the end bound.
-///
-/// The first boolean indicates whether the interval is an empty interval.
-/// If it is set to `true`, the next elements are ignored altogether.
+/// The option represents whether the interval is an empty interval.
 impl
-    From<(
-        bool,
-        Option<(SignedDuration, BoundInclusivity)>,
-        Option<(SignedDuration, BoundInclusivity)>,
-    )> for EmptiableRelativeBoundPair
+    From<
+        Option<(
+            Option<(SignedDuration, BoundInclusivity)>,
+            Option<(SignedDuration, BoundInclusivity)>,
+        )>,
+    > for EmptiableRelativeBoundPair
 {
     fn from(
-        (is_empty, start_opt, end_opt): (
-            bool,
+        opt_start_incl_opt_end_incl_opt: Option<(
             Option<(SignedDuration, BoundInclusivity)>,
             Option<(SignedDuration, BoundInclusivity)>,
-        ),
+        )>,
     ) -> Self {
-        let start = RelativeStartBound::from(start_opt);
-        let end = RelativeEndBound::from(end_opt);
-        Self::from((is_empty, start, end))
+        if let Some((start_incl_opt, end_incl_opt)) = opt_start_incl_opt_end_incl_opt {
+            Self::from(RelativeBoundPair::new(
+                RelativeStartBound::from(start_incl_opt),
+                RelativeEndBound::from(end_incl_opt),
+            ))
+        } else {
+            Self::Empty
+        }
     }
 }
 

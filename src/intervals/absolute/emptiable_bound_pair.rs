@@ -238,7 +238,10 @@ impl HasOpenness for EmptiableAbsoluteBoundPair {
 
 impl HasRelativity for EmptiableAbsoluteBoundPair {
     fn relativity(&self) -> Relativity {
-        Relativity::Absolute
+        match self {
+            Self::Bound(bound) => bound.relativity(),
+            Self::Empty => Relativity::Any,
+        }
     }
 }
 
@@ -262,64 +265,61 @@ impl Ord for EmptiableAbsoluteBoundPair {
     }
 }
 
-/// Converts `(bool, AbsoluteStartBound, AbsoluteEndBound)` into [`EmptiableAbsoluteBoundPair`]
+/// Converts `Option<(AbsoluteStartBound, AbsoluteEndBound)>` into [`EmptiableAbsoluteBoundPair`]
 ///
-/// The second tuple element represents the start bound, the third element
-/// represents the end bound.
-///
-/// The first boolean indicates whether the interval is an empty interval.
-/// If it is set to `true`, the next elements are ignored altogether.
-impl From<(bool, AbsoluteStartBound, AbsoluteEndBound)> for EmptiableAbsoluteBoundPair {
-    fn from((is_empty, start, end): (bool, AbsoluteStartBound, AbsoluteEndBound)) -> Self {
-        if is_empty {
-            return Self::Empty;
+/// The option represents whether the interval is an empty interval.
+impl From<Option<(AbsoluteStartBound, AbsoluteEndBound)>> for EmptiableAbsoluteBoundPair {
+    fn from(opt_start_end: Option<(AbsoluteStartBound, AbsoluteEndBound)>) -> Self {
+        if let Some((start, end)) = opt_start_end {
+            Self::from(AbsoluteBoundPair::new(start, end))
+        } else {
+            Self::Empty
         }
-
-        Self::from(AbsoluteBoundPair::new(start, end))
     }
 }
 
-/// Converts `(bool, Option<Timestamp>, Option<Timestamp>)` into
-/// [`EmptiableAbsoluteBoundPair`]
+/// Converts `Option<(Option<Timestamp>, Option<Timestamp>)>` into [`EmptiableAbsoluteBoundPair`]
 ///
-/// The second tuple element represents the start bound, the third element
-/// represents the end bound.
-///
-/// The first boolean indicates whether the interval is an empty interval.
-/// If it is set to `true`, the next elements are ignored altogether.
-impl From<(bool, Option<Timestamp>, Option<Timestamp>)> for EmptiableAbsoluteBoundPair {
-    fn from((is_empty, start_opt, end_opt): (bool, Option<Timestamp>, Option<Timestamp>)) -> Self {
-        let start = AbsoluteStartBound::from(start_opt);
-        let end = AbsoluteEndBound::from(end_opt);
-        Self::from((is_empty, start, end))
+/// The option represents whether the interval is an empty interval.
+impl From<Option<(Option<Timestamp>, Option<Timestamp>)>> for EmptiableAbsoluteBoundPair {
+    fn from(opt_start_opt_end_opt: Option<(Option<Timestamp>, Option<Timestamp>)>) -> Self {
+        if let Some((start_opt, end_opt)) = opt_start_opt_end_opt {
+            Self::from(AbsoluteBoundPair::new(
+                AbsoluteStartBound::from(start_opt),
+                AbsoluteEndBound::from(end_opt),
+            ))
+        } else {
+            Self::Empty
+        }
     }
 }
 
-/// Converts `(bool, Option<(Timestamp, BoundInclusivity)>, Option<(Timestamp, BoundInclusivity)>)`
+/// Converts `Option<(Option<(Timestamp, BoundInclusivity)>, Option<(Timestamp, BoundInclusivity)>)>`
 /// into [`EmptiableAbsoluteBoundPair`]
 ///
-/// The second tuple element represents the start bound, the third element
-/// represents the end bound.
-///
-/// The first boolean indicates whether the interval is an empty interval.
-/// If it is set to `true`, the next elements are ignored altogether.
+/// The option represents whether the interval is an empty interval.
 impl
-    From<(
-        bool,
-        Option<(Timestamp, BoundInclusivity)>,
-        Option<(Timestamp, BoundInclusivity)>,
-    )> for EmptiableAbsoluteBoundPair
+    From<
+        Option<(
+            Option<(Timestamp, BoundInclusivity)>,
+            Option<(Timestamp, BoundInclusivity)>,
+        )>,
+    > for EmptiableAbsoluteBoundPair
 {
     fn from(
-        (is_empty, start_opt, end_opt): (
-            bool,
+        opt_start_incl_opt_end_incl_opt: Option<(
             Option<(Timestamp, BoundInclusivity)>,
             Option<(Timestamp, BoundInclusivity)>,
-        ),
+        )>,
     ) -> Self {
-        let start = AbsoluteStartBound::from(start_opt);
-        let end = AbsoluteEndBound::from(end_opt);
-        Self::from((is_empty, start, end))
+        if let Some((start_incl_opt, end_incl_opt)) = opt_start_incl_opt_end_incl_opt {
+            Self::from(AbsoluteBoundPair::new(
+                AbsoluteStartBound::from(start_incl_opt),
+                AbsoluteEndBound::from(end_incl_opt),
+            ))
+        } else {
+            Self::Empty
+        }
     }
 }
 
