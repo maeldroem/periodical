@@ -30,7 +30,6 @@ use jiff::SignedDuration;
 use serde::{Deserialize, Serialize};
 
 use crate::intervals::meta::{
-    BoundInclusivity,
     Duration as IntervalDuration,
     HasDuration,
     HasOpenness,
@@ -362,58 +361,6 @@ impl From<RelativeBoundPair> for RelativeInterval {
                 end_offset,
                 end_inclusivity,
             )),
-        }
-    }
-}
-
-/// Converts `(Option<SignedDuration>, Option<SignedDuration>)` into
-/// [`RelativeInterval`]
-///
-/// The first tuple element represents the start bound, the second element
-/// represents the end bound.
-impl From<(Option<SignedDuration>, Option<SignedDuration>)> for RelativeInterval {
-    fn from((start_opt, end_opt): (Option<SignedDuration>, Option<SignedDuration>)) -> Self {
-        match (start_opt, end_opt) {
-            (Some(start), Some(end)) => RelativeInterval::Bounded(BoundedRelativeInterval::new(start, end)),
-            (Some(start), None) => {
-                RelativeInterval::HalfBounded(HalfBoundedRelativeInterval::new(start, OpeningDirection::ToFuture))
-            },
-            (None, Some(end)) => {
-                RelativeInterval::HalfBounded(HalfBoundedRelativeInterval::new(end, OpeningDirection::ToPast))
-            },
-            (None, None) => RelativeInterval::Unbounded(UnboundedInterval),
-        }
-    }
-}
-
-/// Converts `(Option<(SignedDuration, BoundInclusivity)>, Option<(SignedDuration, BoundInclusivity)>)`
-/// into [`RelativeInterval`]
-///
-/// The first tuple element represents the start bound, the second element
-/// represents the end bound.
-impl
-    From<(
-        Option<(SignedDuration, BoundInclusivity)>,
-        Option<(SignedDuration, BoundInclusivity)>,
-    )> for RelativeInterval
-{
-    fn from(
-        (start_opt, end_opt): (
-            Option<(SignedDuration, BoundInclusivity)>,
-            Option<(SignedDuration, BoundInclusivity)>,
-        ),
-    ) -> Self {
-        match (start_opt, end_opt) {
-            (Some((start, start_inclusivity)), Some((end, end_inclusivity))) => RelativeInterval::Bounded(
-                BoundedRelativeInterval::new_with_inclusivity(start, start_inclusivity, end, end_inclusivity),
-            ),
-            (Some((start, start_inclusivity)), None) => RelativeInterval::HalfBounded(
-                HalfBoundedRelativeInterval::new_with_inclusivity(start, start_inclusivity, OpeningDirection::ToFuture),
-            ),
-            (None, Some((end, end_inclusivity))) => RelativeInterval::HalfBounded(
-                HalfBoundedRelativeInterval::new_with_inclusivity(end, end_inclusivity, OpeningDirection::ToPast),
-            ),
-            (None, None) => RelativeInterval::Unbounded(UnboundedInterval),
         }
     }
 }

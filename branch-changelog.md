@@ -25,6 +25,7 @@ Updated previous tests and created more tests for covering all the work so far.
     - `end_bound`
     - `finite_bound`
     - `half_bounded_interval`
+    - `interval`
     - `start_bound`
   - `relative`
     - `bound`
@@ -34,6 +35,7 @@ Updated previous tests and created more tests for covering all the work so far.
     - `end_bound`
     - `finite_bound`
     - `half_bounded_interval`
+    - `interval`
     - `start_bound`
 - Implemented conversion from `EmptiableAbsoluteInterval` into `HalfBoundedAbsoluteInterval`
 - Implemented conversion from `EmptiableRelativeInterval` into `HalfBoundedRelativeInterval`
@@ -56,6 +58,11 @@ Updated previous tests and created more tests for covering all the work so far.
 
 - Removed conversion from `(bool, bool)` to `Epsilon`, as `Epsilon` can be created from
   `(BoundInclusivity, BoundInclusivity)`, and `BoundInclusivity` can be created from a boolean
+- Removed conversion from `(Option<Timestamp>, Option<Timestamp>)` to `AbsoluteInterval`, as `AbsoluteInterval`
+  can be created from `AbsoluteBoundPair`, which can be created from `(Option<Timestamp>, Option<Timestamp>)`.
+- Removed conversion from `(Option<SignedDuration>, Option<SignedDuration>)` to `RelativeInterval`,
+  as `RelativeInterval` can be created from `RelativeBoundPair`, which can be created via
+  `(Option<SignedDuration>, Option<SignedDuration>)`.
 - (Internal) Removed `tests!` and `inline_docs!` macros
 
 ## Fixed
