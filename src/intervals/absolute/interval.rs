@@ -42,7 +42,6 @@ use crate::intervals::absolute::{
     HasEmptiableAbsoluteBoundPair,
 };
 use crate::intervals::meta::{
-    BoundInclusivity,
     Duration as IntervalDuration,
     HasDuration,
     HasOpenness,
@@ -370,57 +369,6 @@ impl From<AbsoluteBoundPair> for AbsoluteInterval {
                 end_time,
                 end_inclusivity,
             )),
-        }
-    }
-}
-
-/// Converts `(Option<Timestamp>, Option<Timestamp>)` into [`AbsoluteInterval`]
-///
-/// The first tuple element represents the start bound, the second element
-/// represents the end bound.
-impl From<(Option<Timestamp>, Option<Timestamp>)> for AbsoluteInterval {
-    fn from((start_opt, end_opt): (Option<Timestamp>, Option<Timestamp>)) -> Self {
-        match (start_opt, end_opt) {
-            (Some(start), Some(end)) => AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(start, end)),
-            (Some(start), None) => {
-                AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new(start, OpeningDirection::ToFuture))
-            },
-            (None, Some(end)) => {
-                AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new(end, OpeningDirection::ToPast))
-            },
-            (None, None) => AbsoluteInterval::Unbounded(UnboundedInterval),
-        }
-    }
-}
-
-/// Converts `(Option<(Timestamp, BoundInclusivity)>, Option<(Timestamp, BoundInclusivity)>)`
-/// into [`AbsoluteInterval`]
-///
-/// The first tuple element represents the start bound, the second element
-/// represents the end bound.
-impl
-    From<(
-        Option<(Timestamp, BoundInclusivity)>,
-        Option<(Timestamp, BoundInclusivity)>,
-    )> for AbsoluteInterval
-{
-    fn from(
-        (start_opt, end_opt): (
-            Option<(Timestamp, BoundInclusivity)>,
-            Option<(Timestamp, BoundInclusivity)>,
-        ),
-    ) -> Self {
-        match (start_opt, end_opt) {
-            (Some((start, start_inclusivity)), Some((end, end_inclusivity))) => AbsoluteInterval::Bounded(
-                BoundedAbsoluteInterval::new_with_inclusivity(start, start_inclusivity, end, end_inclusivity),
-            ),
-            (Some((start, start_inclusivity)), None) => AbsoluteInterval::HalfBounded(
-                HalfBoundedAbsoluteInterval::new_with_inclusivity(start, start_inclusivity, OpeningDirection::ToFuture),
-            ),
-            (None, Some((end, end_inclusivity))) => AbsoluteInterval::HalfBounded(
-                HalfBoundedAbsoluteInterval::new_with_inclusivity(end, end_inclusivity, OpeningDirection::ToPast),
-            ),
-            (None, None) => AbsoluteInterval::Unbounded(UnboundedInterval),
         }
     }
 }
