@@ -24,6 +24,7 @@ Updated previous tests and created more tests for covering all the work so far.
     - `emptiable_bound_pair`
     - `end_bound`
     - `finite_bound`
+    - `half_bounded_interval`
     - `start_bound`
   - `relative`
     - `bound`
@@ -32,7 +33,10 @@ Updated previous tests and created more tests for covering all the work so far.
     - `emptiable_bound_pair`
     - `end_bound`
     - `finite_bound`
+    - `half_bounded_interval`
     - `start_bound`
+- Implemented conversion from `EmptiableAbsoluteInterval` into `HalfBoundedAbsoluteInterval`
+- Implemented conversion from `EmptiableRelativeInterval` into `HalfBoundedRelativeInterval`
 
 ## Changed
 
@@ -41,6 +45,8 @@ Updated previous tests and created more tests for covering all the work so far.
   `EmptiableRelativeBoundPair`
 - Converted conversions that use a boolean in a tuple to represent emptiness for an emptiable bound pair
   or emptiable interval to using `Option` to represent the empty variant
+- Changed conversion of `((Timestamp/SignedDuration, BoundInclusivity), OpeningDirection)` for half bounded intervals
+  to `(Timestamp/SignedDuration, BoundInclusivity, OpeningDirection)`.
 
 ## Deprecated
 

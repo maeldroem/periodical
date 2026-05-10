@@ -411,8 +411,8 @@ impl From<(SignedDuration, OpeningDirection)> for HalfBoundedRelativeInterval {
     }
 }
 
-impl From<((SignedDuration, BoundInclusivity), OpeningDirection)> for HalfBoundedRelativeInterval {
-    fn from(((offset, inclusivity), direction): ((SignedDuration, BoundInclusivity), OpeningDirection)) -> Self {
+impl From<(SignedDuration, BoundInclusivity, OpeningDirection)> for HalfBoundedRelativeInterval {
+    fn from((offset, inclusivity, direction): (SignedDuration, BoundInclusivity, OpeningDirection)) -> Self {
         HalfBoundedRelativeInterval::new_with_inclusivity(offset, inclusivity, direction)
     }
 }
@@ -508,5 +508,33 @@ impl TryFrom<RelativeInterval> for HalfBoundedRelativeInterval {
         value
             .half_bounded()
             .ok_or(HalfBoundedRelativeIntervalTryFromRelativeIntervalError)
+    }
+}
+
+/// Error that can occur when trying to convert [`EmptiableRelativeInterval`] into [`HalfBoundedRelativeInterval`]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct HalfBoundedRelativeIntervalTryFromEmptiableRelativeIntervalError;
+
+impl Display for HalfBoundedRelativeIntervalTryFromEmptiableRelativeIntervalError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "An error occurred when trying to convert `EmptiableRelativeInterval` into `HalfBoundedRelativeInterval`"
+        )
+    }
+}
+
+impl Error for HalfBoundedRelativeIntervalTryFromEmptiableRelativeIntervalError {}
+
+impl TryFrom<EmptiableRelativeInterval> for HalfBoundedRelativeInterval {
+    type Error = HalfBoundedRelativeIntervalTryFromEmptiableRelativeIntervalError;
+
+    fn try_from(value: EmptiableRelativeInterval) -> Result<Self, Self::Error> {
+        Self::try_from(
+            value
+                .bound()
+                .ok_or(HalfBoundedRelativeIntervalTryFromEmptiableRelativeIntervalError)?,
+        )
+        .or(Err(HalfBoundedRelativeIntervalTryFromEmptiableRelativeIntervalError))
     }
 }

@@ -445,8 +445,8 @@ impl From<(Timestamp, OpeningDirection)> for HalfBoundedAbsoluteInterval {
     }
 }
 
-impl From<((Timestamp, BoundInclusivity), OpeningDirection)> for HalfBoundedAbsoluteInterval {
-    fn from(((time, inclusivity), direction): ((Timestamp, BoundInclusivity), OpeningDirection)) -> Self {
+impl From<(Timestamp, BoundInclusivity, OpeningDirection)> for HalfBoundedAbsoluteInterval {
+    fn from((time, inclusivity, direction): (Timestamp, BoundInclusivity, OpeningDirection)) -> Self {
         HalfBoundedAbsoluteInterval::new_with_inclusivity(time, inclusivity, direction)
     }
 }
@@ -542,5 +542,33 @@ impl TryFrom<AbsoluteInterval> for HalfBoundedAbsoluteInterval {
         value
             .half_bounded()
             .ok_or(HalfBoundedAbsoluteIntervalTryFromAbsoluteIntervalError)
+    }
+}
+
+/// Error that can occur when trying to convert [`EmptiableAbsoluteInterval`] into [`HalfBoundedAbsoluteInterval`]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct HalfBoundedAbsoluteIntervalTryFromEmptiableAbsoluteIntervalError;
+
+impl Display for HalfBoundedAbsoluteIntervalTryFromEmptiableAbsoluteIntervalError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "An error occurred when trying to convert `EmptiableAbsoluteInterval` into `HalfBoundedAbsoluteInterval`"
+        )
+    }
+}
+
+impl Error for HalfBoundedAbsoluteIntervalTryFromEmptiableAbsoluteIntervalError {}
+
+impl TryFrom<EmptiableAbsoluteInterval> for HalfBoundedAbsoluteInterval {
+    type Error = HalfBoundedAbsoluteIntervalTryFromEmptiableAbsoluteIntervalError;
+
+    fn try_from(value: EmptiableAbsoluteInterval) -> Result<Self, Self::Error> {
+        Self::try_from(
+            value
+                .bound()
+                .ok_or(HalfBoundedAbsoluteIntervalTryFromEmptiableAbsoluteIntervalError)?,
+        )
+        .or(Err(HalfBoundedAbsoluteIntervalTryFromEmptiableAbsoluteIntervalError))
     }
 }
