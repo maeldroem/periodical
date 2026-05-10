@@ -1,10 +1,11 @@
 use std::error::Error;
 use std::ffi::OsStr;
 use std::fmt::Display;
-use std::io;
+use std::fs::DirBuilder;
 use std::path::Path;
 use std::process::{Command, ExitCode};
 use std::sync::LazyLock;
+use std::{fs, io};
 
 use clap::{Parser, Subcommand};
 
@@ -12,8 +13,8 @@ const RUSTUP_BIN_LOCATION: &str = "rustup";
 const GRCOV_BIN_LOCATION: &str = "grcov";
 const OPEN_BIN_LOCATION: &str = "xdg-open";
 
-static PROFILING_DATA_FOLDER: LazyLock<&Path> = LazyLock::new(|| Path::new("target/profiling"));
-static CODE_COVERAGE_REPORT_TARGET: LazyLock<&Path> = LazyLock::new(|| Path::new("target/coverage"));
+static PROFILING_DATA_FOLDER: LazyLock<&Path> = LazyLock::new(|| Path::new("./target/profiling"));
+static CODE_COVERAGE_REPORT_TARGET: LazyLock<&Path> = LazyLock::new(|| Path::new("./target/coverage"));
 
 const PROFILING_DATA_NAME_TEMPLATE: &str = "cargo_coverage_%p_%m.profraw";
 
@@ -21,10 +22,8 @@ const TEST_FILE_GLOB: &str = "src/**/*_tests.rs";
 
 /// Line exclusion pattern for `grcov`
 ///
-/// Ignores all attributes, comments, punctuation-full lines, else-clause line,
-/// lines with `unreachable!` invocations, implementation declarations, and empty lines.
-const GRCOV_LINE_EXCL_REGEX: &str =
-    r"^\s*(#\[.+\]|\/{2}.*|[\(\[\{]+|,?[\)\]\}]+[;,]?|\} else \{|.+?unreachable!.+|impl .+)?\n?$";
+/// Ignores all attributes, comments, and lines with `unreachable!` invocations.
+const GRCOV_LINE_EXCL_REGEX: &str = r"^\s*(#\[.+\]|\/{2}.*|.+?unreachable!.+)\n?$";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 enum RustToolchain {
@@ -166,6 +165,23 @@ fn xtask_coverage(open: bool) -> Result<(), XtaskError> {
     }
 
     eprintln!("Code profiled successfully!");
+    eprintln!("Making sure the code coverage report folder exists…");
+
+    // Basically, `grcov` checks to see what kind of node exists at the give output path.
+    // If there's nothing, it outputs the results directly in the path, as a folder.
+    // If it's a file, it fails because we are using a non-file report type.
+    // If it's a folder, then it creates a new folder in it with the name of the output type, here "html".
+    // To prevent confusion between the first and last scenario, we need to make sure the report target
+    // already exists, so that the HTML report is always generated in the same place.
+    if DirBuilder::new()
+        .recursive(true)
+        .create(*CODE_COVERAGE_REPORT_TARGET)
+        .is_err()
+    {
+        return Err("Failed to make sure the code coverage report folder already exist!".into());
+    }
+
+    eprintln!("Done.");
     eprintln!("Generating code coverage report…");
 
     let grcov_succeed = Command::new(GRCOV_BIN_LOCATION)
