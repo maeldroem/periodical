@@ -157,12 +157,13 @@ impl BoundedRelativeInterval {
     ) -> Result<Self, BoundedRelativeIntervalCreationError> {
         Ok(BoundedRelativeInterval::unchecked_new(
             start,
-            SignedDuration::from_nanos_i128(
+            SignedDuration::try_from_nanos_i128(
                 start
                     .as_nanos()
                     .checked_add_unsigned(length.as_nanos())
                     .ok_or(BoundedRelativeIntervalCreationError::OutOfRangeEnd)?,
-            ),
+            )
+            .ok_or(BoundedRelativeIntervalCreationError::OutOfRangeEnd)?,
         ))
     }
 
@@ -304,12 +305,13 @@ impl BoundedRelativeInterval {
         Ok(BoundedRelativeInterval::unchecked_new_with_inclusivity(
             start,
             start_inclusivity,
-            SignedDuration::from_nanos_i128(
+            SignedDuration::try_from_nanos_i128(
                 start
                     .as_nanos()
                     .checked_add_unsigned(length.as_nanos())
                     .ok_or(BoundedRelativeIntervalCreationError::OutOfRangeEnd)?,
-            ),
+            )
+            .ok_or(BoundedRelativeIntervalCreationError::OutOfRangeEnd)?,
             end_inclusivity,
         ))
     }

@@ -20,6 +20,7 @@ Updated previous tests and created more tests for covering all the work so far.
   - `absolute`
     - `bound`
     - `bound_pair`
+    - `bounded_interval`
     - `emptiable_bound_pair`
     - `end_bound`
     - `finite_bound`
@@ -27,6 +28,7 @@ Updated previous tests and created more tests for covering all the work so far.
   - `relative`
     - `bound`
     - `bound_pair`
+    - `bounded_interval`
     - `emptiable_bound_pair`
     - `end_bound`
     - `finite_bound`
@@ -53,6 +55,10 @@ Updated previous tests and created more tests for covering all the work so far.
 ## Fixed
 
 - Fixed wrong offset computation in `OffsetIsoWeek::from_date_with_offset`
+- Fixed panic due to usage of `SignedDuration::from_nanos_i128` instead of `SignedDuration::try_from_nanos_i128` in
+  `BoundedRelativeInterval::new_with_length`
+- Fixed panic due to usage of `SignedDuration::from_nanos_i128` instead of `SignedDuration::try_from_nanos_i128` in
+  `BoundedRelativeInterval::new_with_length_and_inclusivity`
 
 ## Security
 
