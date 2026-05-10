@@ -22,9 +22,9 @@ const TEST_FILE_GLOB: &str = "src/**/*_tests.rs";
 /// Line exclusion pattern for `grcov`
 ///
 /// Ignores all attributes, comments, punctuation-full lines, else-clause line,
-/// lines with `unreachable!` invocations, and empty lines.
+/// lines with `unreachable!` invocations, implementation declarations, and empty lines.
 const GRCOV_LINE_EXCL_REGEX: &str =
-    r"^\s*(#\[.+\]|\/{2}.*|[\(\[\{]+|,?[\)\]\}]+[;,]?|\} else \{|.+?unreachable!.+)?\n?$";
+    r"^\s*(#\[.+\]|\/{2}.*|[\(\[\{]+|,?[\)\]\}]+[;,]?|\} else \{|.+?unreachable!.+|impl .+)?\n?$";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 enum RustToolchain {
