@@ -38,7 +38,6 @@ use crate::intervals::absolute::{
     HasEmptiableAbsoluteBoundPair,
 };
 use crate::intervals::meta::{
-    BoundInclusivity,
     Duration as IntervalDuration,
     HasDuration,
     HasOpenness,
@@ -267,77 +266,6 @@ impl From<EmptiableAbsoluteBoundPair> for EmptiableAbsoluteInterval {
 impl From<AbsoluteInterval> for EmptiableAbsoluteInterval {
     fn from(value: AbsoluteInterval) -> Self {
         Self::Bound(value)
-    }
-}
-
-/// Converts `(Option<Timestamp>, Option<Timestamp>)` into [`AbsoluteInterval`]
-///
-/// The first tuple element represents the start bound, the second element
-/// represents the end bound.
-impl From<(Option<Timestamp>, Option<Timestamp>)> for EmptiableAbsoluteInterval {
-    fn from((from_opt, to_opt): (Option<Timestamp>, Option<Timestamp>)) -> Self {
-        Self::from(AbsoluteBoundPair::from((from_opt, to_opt)).to_emptiable())
-    }
-}
-
-/// Converts `(Option<(Timestamp, BoundInclusivity)>, Option<(Timestamp, BoundInclusivity)>)`
-/// into [`AbsoluteInterval`]
-///
-/// The first tuple element represents the start bound, the second element
-/// represents the end bound.
-impl
-    From<(
-        Option<(Timestamp, BoundInclusivity)>,
-        Option<(Timestamp, BoundInclusivity)>,
-    )> for EmptiableAbsoluteInterval
-{
-    fn from(
-        value: (
-            Option<(Timestamp, BoundInclusivity)>,
-            Option<(Timestamp, BoundInclusivity)>,
-        ),
-    ) -> Self {
-        Self::from(AbsoluteBoundPair::from(value))
-    }
-}
-
-/// Converts `Option<(AbsoluteStartBound, AbsoluteEndBound)>` into [`EmptiableAbsoluteInterval`]
-///
-/// The option represents whether the interval is an empty interval.
-impl From<Option<(AbsoluteStartBound, AbsoluteEndBound)>> for EmptiableAbsoluteInterval {
-    fn from(opt_start_end: Option<(AbsoluteStartBound, AbsoluteEndBound)>) -> Self {
-        Self::from(EmptiableAbsoluteBoundPair::from(opt_start_end))
-    }
-}
-
-/// Converts `Option<(Option<Timestamp>, Option<Timestamp>)>` into [`EmptiableAbsoluteInterval`]
-///
-/// The option represents whether the interval is an empty interval.
-impl From<Option<(Option<Timestamp>, Option<Timestamp>)>> for EmptiableAbsoluteInterval {
-    fn from(opt_start_opt_end_opt: Option<(Option<Timestamp>, Option<Timestamp>)>) -> Self {
-        Self::from(EmptiableAbsoluteBoundPair::from(opt_start_opt_end_opt))
-    }
-}
-
-/// Converts `Option<(Option<(Timestamp, BoundInclusivity)>, Option<(Timestamp, BoundInclusivity)>)>`
-/// into [`EmptiableAbsoluteInterval`]
-///
-/// The option represents whether the interval is an empty interval.
-impl
-    From<
-        Option<(
-            Option<(Timestamp, BoundInclusivity)>,
-            Option<(Timestamp, BoundInclusivity)>,
-        )>,
-    > for EmptiableAbsoluteInterval
-{
-    fn from(
-        opt_start_incl_opt_end_incl_opt: Option<(
-            Option<(Timestamp, BoundInclusivity)>,
-            Option<(Timestamp, BoundInclusivity)>,
-        )>,
-    ) -> Self {
-        Self::from(EmptiableAbsoluteBoundPair::from(opt_start_incl_opt_end_incl_opt))
     }
 }
 
