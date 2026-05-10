@@ -2,10 +2,10 @@ use std::error::Error;
 use std::ffi::OsStr;
 use std::fmt::Display;
 use std::fs::DirBuilder;
+use std::io;
 use std::path::Path;
 use std::process::{Command, ExitCode};
 use std::sync::LazyLock;
-use std::{fs, io};
 
 use clap::{Parser, Subcommand};
 
