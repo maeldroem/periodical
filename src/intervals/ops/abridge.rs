@@ -48,14 +48,191 @@ use crate::intervals::relative::{
 };
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 
-macro_rules! abridge_impl_rhs_clone {
-    ($implementor:ty, $output:ty, [$($rhs:ty),*$(,)?] $(,)?) => {
+macro_rules! abridge_impl {
+    (implementor => $implementor:ty, rhs => [$($rhs:ty),*$(,)?], output => $output:ty, clone lhs $(,)?) => {
+        $(
+            impl Abridgable<$rhs> for $implementor {
+                type Output = $output;
+
+                fn abridge(&self, _rhs: &$rhs) -> Self::Output {
+                    Self::Output::from(self.clone())
+                }
+            }
+        )*
+    };
+    (implementor => $implementor:ty, rhs => [$($rhs:ty),*$(,)?], output => $output:ty, clone rhs $(,)?) => {
         $(
             impl Abridgable<$rhs> for $implementor {
                 type Output = $output;
 
                 fn abridge(&self, rhs: &$rhs) -> Self::Output {
                     Self::Output::from(rhs.clone())
+                }
+            }
+        )*
+    };
+    (implementor => $implementor:ty, rhs => [$($rhs:ty),*$(,)?], output => clone rhs $(,)?) => {
+        $(
+            impl Abridgable<$rhs> for $implementor {
+                type Output = $rhs;
+
+                fn abridge(&self, rhs: &$rhs) -> Self::Output {
+                    rhs.clone()
+                }
+            }
+        )*
+    };
+    (implementor => $implementor:ty, rhs => [$($rhs:ty),*$(,)?], output => clone lhs $(,)?) => {
+        $(
+            impl Abridgable<$rhs> for $implementor {
+                type Output = Self;
+
+                fn abridge(&self, _rhs: &$rhs) -> Self::Output {
+                    self.clone()
+                }
+            }
+        )*
+    };
+    (
+        implementor => $implementor:ty,
+        rhs => [$($rhs:ty),*$(,)?],
+        output => $output:ty,
+        absolute,
+        (non_emptiable, non_emptiable $(,)?) $(,)?
+    ) => {
+        $(
+            impl Abridgable<$rhs> for $implementor {
+                type Output = $output;
+
+                fn abridge(&self, rhs: &$rhs) -> Self::Output {
+                    Self::Output::from(abridge_abs_bound_pair(&self.abs_bound_pair(), &rhs.abs_bound_pair()))
+                }
+            }
+        )*
+    };
+    (
+        implementor => $implementor:ty,
+        rhs => [$($rhs:ty),*$(,)?],
+        output => $output:ty,
+        absolute,
+        (non_emptiable, emptiable $(,)?) $(,)?
+    ) => {
+        $(
+            impl Abridgable<$rhs> for $implementor {
+                type Output = $output;
+
+                fn abridge(&self, rhs: &$rhs) -> Self::Output {
+                    Self::Output::from(abridge_abs_bound_pair_with_emptiable_abs_bound_pair(
+                        &self.abs_bound_pair(),
+                        &rhs.emptiable_abs_bound_pair()
+                    ))
+                }
+            }
+        )*
+    };
+    (
+        implementor => $implementor:ty,
+        rhs => [$($rhs:ty),*$(,)?],
+        output => $output:ty,
+        absolute,
+        (emptiable, non_emptiable $(,)?) $(,)?
+    ) => {
+        abridge_impl!(
+            implementor => $implementor,
+            rhs => [$($rhs),*],
+            output => $output,
+            absolute,
+            (emptiable, emptiable),
+        );
+    };
+    (
+        implementor => $implementor:ty,
+        rhs => [$($rhs:ty),*$(,)?],
+        output => $output:ty,
+        absolute,
+        (emptiable, emptiable $(,)?) $(,)?
+    ) => {
+        $(
+            impl Abridgable<$rhs> for $implementor {
+                type Output = $output;
+
+                fn abridge(&self, rhs: &$rhs) -> Self::Output {
+                    Self::Output::from(abridge_emptiable_abs_bound_pair(
+                        &self.emptiable_abs_bound_pair(),
+                        &rhs.emptiable_abs_bound_pair()
+                    ))
+                }
+            }
+        )*
+    };
+    (
+        implementor => $implementor:ty,
+        rhs => [$($rhs:ty),*$(,)?],
+        output => $output:ty,
+        relative,
+        (non_emptiable, non_emptiable $(,)?) $(,)?
+    ) => {
+        $(
+            impl Abridgable<$rhs> for $implementor {
+                type Output = $output;
+
+                fn abridge(&self, rhs: &$rhs) -> Self::Output {
+                    Self::Output::from(abridge_rel_bound_pair(&self.rel_bound_pair(), &rhs.rel_bound_pair()))
+                }
+            }
+        )*
+    };
+    (
+        implementor => $implementor:ty,
+        rhs => [$($rhs:ty),*$(,)?],
+        output => $output:ty,
+        relative,
+        (non_emptiable, emptiable $(,)?) $(,)?
+    ) => {
+        $(
+            impl Abridgable<$rhs> for $implementor {
+                type Output = $output;
+
+                fn abridge(&self, rhs: &$rhs) -> Self::Output {
+                    Self::Output::from(abridge_rel_bound_pair_with_emptiable_rel_bound_pair(
+                        &self.rel_bound_pair(),
+                        &rhs.emptiable_rel_bound_pair()
+                    ))
+                }
+            }
+        )*
+    };
+    (
+        implementor => $implementor:ty,
+        rhs => [$($rhs:ty),*$(,)?],
+        output => $output:ty,
+        relative,
+        (emptiable, non_emptiable $(,)?) $(,)?
+    ) => {
+        abridge_impl!(
+            implementor => $implementor,
+            rhs => [$($rhs),*],
+            output => $output,
+            relative,
+            (emptiable, emptiable),
+        );
+    };
+    (
+        implementor => $implementor:ty,
+        rhs => [$($rhs:ty),*$(,)?],
+        output => $output:ty,
+        relative,
+        (emptiable, emptiable $(,)?) $(,)?
+    ) => {
+        $(
+            impl Abridgable<$rhs> for $implementor {
+                type Output = $output;
+
+                fn abridge(&self, rhs: &$rhs) -> Self::Output {
+                    Self::Output::from(abridge_emptiable_rel_bound_pair(
+                        &self.emptiable_rel_bound_pair(),
+                        &rhs.emptiable_rel_bound_pair()
+                    ))
                 }
             }
         )*
@@ -263,215 +440,200 @@ pub trait Abridgable<Rhs = Self> {
     fn abridge(&self, rhs: &Rhs) -> Self::Output;
 }
 
-impl<Rhs> Abridgable<Rhs> for AbsoluteBoundPair
-where
-    Rhs: HasEmptiableAbsoluteBoundPair,
-{
-    type Output = EmptiableAbsoluteBoundPair;
+abridge_impl!(
+    implementor => AbsoluteBoundPair,
+    rhs => [AbsoluteBoundPair],
+    output => EmptiableAbsoluteBoundPair,
+    absolute,
+    (non_emptiable, non_emptiable),
+);
+abridge_impl!(
+    implementor => AbsoluteBoundPair,
+    rhs => [EmptiableAbsoluteBoundPair],
+    output => EmptiableAbsoluteBoundPair,
+    absolute,
+    (non_emptiable, emptiable),
+);
+abridge_impl!(
+    implementor => EmptiableAbsoluteBoundPair,
+    rhs => [AbsoluteBoundPair],
+    output => EmptiableAbsoluteBoundPair,
+    absolute,
+    (emptiable, non_emptiable),
+);
+abridge_impl!(
+    implementor => EmptiableAbsoluteBoundPair,
+    rhs => [EmptiableAbsoluteBoundPair],
+    output => EmptiableAbsoluteBoundPair,
+    absolute,
+    (emptiable, emptiable),
+);
+abridge_impl!(
+    implementor => AbsoluteInterval,
+    rhs => [AbsoluteInterval],
+    output => EmptiableAbsoluteInterval,
+    absolute,
+    (non_emptiable, non_emptiable),
+);
+abridge_impl!(
+    implementor => AbsoluteInterval,
+    rhs => [EmptiableAbsoluteInterval],
+    output => EmptiableAbsoluteInterval,
+    absolute,
+    (non_emptiable, emptiable),
+);
+abridge_impl!(
+    implementor => EmptiableAbsoluteInterval,
+    rhs => [AbsoluteInterval],
+    output => EmptiableAbsoluteInterval,
+    absolute,
+    (emptiable, non_emptiable),
+);
+abridge_impl!(
+    implementor => EmptiableAbsoluteInterval,
+    rhs => [EmptiableAbsoluteInterval],
+    output => EmptiableAbsoluteInterval,
+    absolute,
+    (emptiable, emptiable),
+);
+abridge_impl!(
+    implementor => BoundedAbsoluteInterval,
+    rhs => [BoundedAbsoluteInterval, HalfBoundedAbsoluteInterval],
+    output => EmptiableAbsoluteInterval,
+    absolute,
+    (non_emptiable, non_emptiable),
+);
+abridge_impl!(
+    implementor => BoundedAbsoluteInterval,
+    rhs => [UnboundedInterval, EmptyInterval],
+    output => clone lhs,
+);
+abridge_impl!(
+    implementor => HalfBoundedAbsoluteInterval,
+    rhs => [BoundedAbsoluteInterval, HalfBoundedAbsoluteInterval],
+    output => EmptiableAbsoluteInterval,
+    absolute,
+    (non_emptiable, non_emptiable),
+);
+abridge_impl!(
+    implementor => HalfBoundedAbsoluteInterval,
+    rhs => [UnboundedInterval, EmptyInterval],
+    output => clone lhs,
+);
 
-    fn abridge(&self, rhs: &Rhs) -> Self::Output {
-        abridge_abs_bound_pair_with_emptiable_abs_bound_pair(&self.abs_bound_pair(), &rhs.emptiable_abs_bound_pair())
-    }
-}
+abridge_impl!(
+    implementor => RelativeBoundPair,
+    rhs => [RelativeBoundPair],
+    output => EmptiableRelativeBoundPair,
+    relative,
+    (non_emptiable, non_emptiable),
+);
+abridge_impl!(
+    implementor => RelativeBoundPair,
+    rhs => [EmptiableRelativeBoundPair],
+    output => EmptiableRelativeBoundPair,
+    relative,
+    (non_emptiable, emptiable),
+);
+abridge_impl!(
+    implementor => EmptiableRelativeBoundPair,
+    rhs => [RelativeBoundPair],
+    output => EmptiableRelativeBoundPair,
+    relative,
+    (emptiable, non_emptiable),
+);
+abridge_impl!(
+    implementor => EmptiableRelativeBoundPair,
+    rhs => [EmptiableRelativeBoundPair],
+    output => EmptiableRelativeBoundPair,
+    relative,
+    (emptiable, emptiable),
+);
+abridge_impl!(
+    implementor => RelativeInterval,
+    rhs => [RelativeInterval],
+    output => EmptiableRelativeInterval,
+    relative,
+    (non_emptiable, non_emptiable),
+);
+abridge_impl!(
+    implementor => RelativeInterval,
+    rhs => [EmptiableRelativeInterval],
+    output => EmptiableRelativeInterval,
+    relative,
+    (non_emptiable, emptiable),
+);
+abridge_impl!(
+    implementor => EmptiableRelativeInterval,
+    rhs => [RelativeInterval],
+    output => EmptiableRelativeInterval,
+    relative,
+    (emptiable, non_emptiable),
+);
+abridge_impl!(
+    implementor => EmptiableRelativeInterval,
+    rhs => [EmptiableRelativeInterval],
+    output => EmptiableRelativeInterval,
+    relative,
+    (emptiable, emptiable),
+);
+abridge_impl!(
+    implementor => BoundedRelativeInterval,
+    rhs => [BoundedRelativeInterval, HalfBoundedRelativeInterval],
+    output => EmptiableRelativeInterval,
+    relative,
+    (non_emptiable, non_emptiable),
+);
+abridge_impl!(
+    implementor => BoundedRelativeInterval,
+    rhs => [UnboundedInterval, EmptyInterval],
+    output => clone lhs,
+);
+abridge_impl!(
+    implementor => HalfBoundedRelativeInterval,
+    rhs => [BoundedRelativeInterval, HalfBoundedRelativeInterval],
+    output => EmptiableRelativeInterval,
+    relative,
+    (non_emptiable, non_emptiable),
+);
+abridge_impl!(
+    implementor => HalfBoundedRelativeInterval,
+    rhs => [UnboundedInterval, EmptyInterval],
+    output => clone lhs,
+);
 
-impl<Rhs> Abridgable<Rhs> for EmptiableAbsoluteBoundPair
-where
-    Rhs: HasEmptiableAbsoluteBoundPair,
-{
-    type Output = Self;
-
-    fn abridge(&self, rhs: &Rhs) -> Self::Output {
-        abridge_emptiable_abs_bound_pair(&self.emptiable_abs_bound_pair(), &rhs.emptiable_abs_bound_pair())
-    }
-}
-
-impl<Rhs> Abridgable<Rhs> for AbsoluteInterval
-where
-    Rhs: HasEmptiableAbsoluteBoundPair,
-{
-    type Output = EmptiableAbsoluteInterval;
-
-    fn abridge(&self, rhs: &Rhs) -> Self::Output {
-        Self::Output::from(self.abs_bound_pair().abridge(&rhs.emptiable_abs_bound_pair()))
-    }
-}
-
-impl<Rhs> Abridgable<Rhs> for EmptiableAbsoluteInterval
-where
-    Rhs: HasEmptiableAbsoluteBoundPair,
-{
-    type Output = Self;
-
-    fn abridge(&self, rhs: &Rhs) -> Self::Output {
-        Self::Output::from(self.emptiable_abs_bound_pair().abridge(&rhs.emptiable_abs_bound_pair()))
-    }
-}
-
-impl<Rhs> Abridgable<Rhs> for BoundedAbsoluteInterval
-where
-    Rhs: HasEmptiableAbsoluteBoundPair,
-{
-    type Output = EmptiableAbsoluteInterval;
-
-    fn abridge(&self, rhs: &Rhs) -> Self::Output {
-        Self::Output::from(self.abs_bound_pair().abridge(&rhs.emptiable_abs_bound_pair()))
-    }
-}
-
-impl<Rhs> Abridgable<Rhs> for HalfBoundedAbsoluteInterval
-where
-    Rhs: HasEmptiableAbsoluteBoundPair,
-{
-    type Output = EmptiableAbsoluteInterval;
-
-    fn abridge(&self, rhs: &Rhs) -> Self::Output {
-        Self::Output::from(self.abs_bound_pair().abridge(&rhs.emptiable_abs_bound_pair()))
-    }
-}
-
-impl<Rhs> Abridgable<Rhs> for RelativeBoundPair
-where
-    Rhs: HasEmptiableRelativeBoundPair,
-{
-    type Output = EmptiableRelativeBoundPair;
-
-    fn abridge(&self, rhs: &Rhs) -> Self::Output {
-        abridge_rel_bound_pair_with_emptiable_rel_bound_pair(&self.rel_bound_pair(), &rhs.emptiable_rel_bound_pair())
-    }
-}
-
-impl<Rhs> Abridgable<Rhs> for EmptiableRelativeBoundPair
-where
-    Rhs: HasEmptiableRelativeBoundPair,
-{
-    type Output = Self;
-
-    fn abridge(&self, rhs: &Rhs) -> Self::Output {
-        abridge_emptiable_rel_bound_pair(self, &rhs.emptiable_rel_bound_pair())
-    }
-}
-
-impl<Rhs> Abridgable<Rhs> for RelativeInterval
-where
-    Rhs: HasEmptiableRelativeBoundPair,
-{
-    type Output = EmptiableRelativeInterval;
-
-    fn abridge(&self, rhs: &Rhs) -> Self::Output {
-        Self::Output::from(self.rel_bound_pair().abridge(&rhs.emptiable_rel_bound_pair()))
-    }
-}
-
-impl<Rhs> Abridgable<Rhs> for EmptiableRelativeInterval
-where
-    Rhs: HasEmptiableRelativeBoundPair,
-{
-    type Output = Self;
-
-    fn abridge(&self, rhs: &Rhs) -> Self::Output {
-        Self::Output::from(self.emptiable_rel_bound_pair().abridge(&rhs.emptiable_rel_bound_pair()))
-    }
-}
-
-impl<Rhs> Abridgable<Rhs> for BoundedRelativeInterval
-where
-    Rhs: HasEmptiableRelativeBoundPair,
-{
-    type Output = EmptiableRelativeInterval;
-
-    fn abridge(&self, rhs: &Rhs) -> Self::Output {
-        Self::Output::from(self.rel_bound_pair().abridge(&rhs.emptiable_rel_bound_pair()))
-    }
-}
-
-impl<Rhs> Abridgable<Rhs> for HalfBoundedRelativeInterval
-where
-    Rhs: HasEmptiableRelativeBoundPair,
-{
-    type Output = EmptiableRelativeInterval;
-
-    fn abridge(&self, rhs: &Rhs) -> Self::Output {
-        Self::Output::from(self.rel_bound_pair().abridge(&rhs.emptiable_rel_bound_pair()))
-    }
-}
-
-abridge_impl_rhs_clone!(
-    UnboundedInterval,
-    AbsoluteInterval,
-    [
-        AbsoluteBoundPair,
-        AbsoluteInterval,
+abridge_impl!(
+    implementor => UnboundedInterval,
+    rhs => [
         BoundedAbsoluteInterval,
         HalfBoundedAbsoluteInterval,
-    ]
-);
-abridge_impl_rhs_clone!(
-    UnboundedInterval,
-    EmptiableAbsoluteInterval,
-    [EmptiableAbsoluteBoundPair, EmptiableAbsoluteInterval,]
-);
-abridge_impl_rhs_clone!(
-    UnboundedInterval,
-    RelativeInterval,
-    [
-        RelativeBoundPair,
-        RelativeInterval,
         BoundedRelativeInterval,
         HalfBoundedRelativeInterval,
-    ]
+    ],
+    output => clone rhs,
 );
-abridge_impl_rhs_clone!(
-    UnboundedInterval,
-    EmptiableRelativeInterval,
-    [EmptiableRelativeBoundPair, EmptiableRelativeInterval,]
+abridge_impl!(
+    implementor => UnboundedInterval,
+    rhs => [UnboundedInterval, EmptyInterval],
+    output => clone lhs,
 );
 
-abridge_impl_rhs_clone!(
-    EmptyInterval,
-    AbsoluteInterval,
-    [
-        AbsoluteBoundPair,
-        AbsoluteInterval,
+abridge_impl!(
+    implementor => EmptyInterval,
+    rhs => [
         BoundedAbsoluteInterval,
         HalfBoundedAbsoluteInterval,
-    ]
-);
-abridge_impl_rhs_clone!(
-    EmptyInterval,
-    EmptiableAbsoluteInterval,
-    [EmptiableAbsoluteBoundPair, EmptiableAbsoluteInterval,]
-);
-abridge_impl_rhs_clone!(
-    EmptyInterval,
-    RelativeInterval,
-    [
-        RelativeBoundPair,
-        RelativeInterval,
         BoundedRelativeInterval,
         HalfBoundedRelativeInterval,
-    ]
+        UnboundedInterval,
+    ],
+    output => clone rhs,
 );
-abridge_impl_rhs_clone!(
-    EmptyInterval,
-    EmptiableRelativeInterval,
-    [EmptiableRelativeBoundPair, EmptiableRelativeInterval,]
+abridge_impl!(
+    implementor => EmptyInterval,
+    rhs => [EmptyInterval],
+    output => clone lhs,
 );
-
-impl Abridgable<UnboundedInterval> for EmptyInterval {
-    type Output = EmptyInterval;
-
-    fn abridge(&self, _rhs: &UnboundedInterval) -> Self::Output {
-        *self
-    }
-}
-
-impl Abridgable<EmptyInterval> for EmptyInterval {
-    type Output = EmptyInterval;
-
-    fn abridge(&self, _rhs: &EmptyInterval) -> Self::Output {
-        *self
-    }
-}
 
 /// Abridges two [`AbsoluteBoundPair`]s
 #[must_use]
