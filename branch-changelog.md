@@ -39,6 +39,8 @@ Updated previous tests and created more tests for covering all the work so far.
     - `half_bounded_interval`
     - `interval`
     - `start_bound`
+  - `ops`
+    - `abridge`
 - Implemented conversion from `EmptiableAbsoluteInterval` into `HalfBoundedAbsoluteInterval`
 - Implemented conversion from `EmptiableRelativeInterval` into `HalfBoundedRelativeInterval`
 - Created a list of bound pair pairs for test cases involving operations (subject, compared)
@@ -55,7 +57,9 @@ Updated previous tests and created more tests for covering all the work so far.
 - Converted conversions that use a boolean in a tuple to represent emptiness for an emptiable bound pair
   or emptiable interval to using `Option` to represent the empty variant
 - Changed conversion of `((Timestamp/SignedDuration, BoundInclusivity), OpeningDirection)` for half bounded intervals
-  to `(Timestamp/SignedDuration, BoundInclusivity, OpeningDirection)`.
+  to `(Timestamp/SignedDuration, BoundInclusivity, OpeningDirection)`
+- Adapted binary operation implementations to respect adopted policies regarding binary operations
+  - `Abridgable`
 
 ## Deprecated
 
