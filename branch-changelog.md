@@ -42,6 +42,7 @@ Updated previous tests and created more tests for covering all the work so far.
 - Implemented conversion from `EmptiableAbsoluteInterval` into `HalfBoundedAbsoluteInterval`
 - Implemented conversion from `EmptiableRelativeInterval` into `HalfBoundedRelativeInterval`
 - Created a list of bound pair pairs for test cases involving operations (subject, compared)
+- Added missing implementation of `Abridgable` for `EmptiableRelativeInterval`
 
 ## Changed
 
