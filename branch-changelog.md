@@ -45,6 +45,7 @@ Updated previous tests and created more tests for covering all the work so far.
 - Added missing implementation of `Abridgable` for `EmptiableRelativeInterval`
 - Adopted policy of binary operations returning the strictest possible type, "strictest binary operation output policy"
 - Adopted policy of no generic implementations for binary operations, "no binary operation generic impl policy"
+- Adopted "no binary operation over-compatibility impl policy"
 
 ## Changed
 
