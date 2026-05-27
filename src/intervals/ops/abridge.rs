@@ -362,6 +362,17 @@ where
     }
 }
 
+impl<Rhs> Abridgable<Rhs> for EmptiableRelativeInterval
+where
+    Rhs: HasEmptiableRelativeBoundPair,
+{
+    type Output = Self;
+
+    fn abridge(&self, rhs: &Rhs) -> Self::Output {
+        Self::Output::from(self.emptiable_rel_bound_pair().abridge(&rhs.emptiable_rel_bound_pair()))
+    }
+}
+
 impl<Rhs> Abridgable<Rhs> for BoundedRelativeInterval
 where
     Rhs: HasEmptiableRelativeBoundPair,
