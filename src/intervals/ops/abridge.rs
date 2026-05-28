@@ -48,7 +48,7 @@ use crate::intervals::relative::{
 };
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 
-macro_rules! abridge_impl {
+macro_rules! abridgable_impl {
     (implementor => $implementor:ty, rhs => [$($rhs:ty),*$(,)?], output => $output:ty, clone lhs $(,)?) => {
         $(
             impl Abridgable<$rhs> for $implementor {
@@ -137,7 +137,7 @@ macro_rules! abridge_impl {
         absolute,
         (emptiable, non_emptiable $(,)?) $(,)?
     ) => {
-        abridge_impl!(
+        abridgable_impl!(
             implementor => $implementor,
             rhs => [$($rhs),*],
             output => $output,
@@ -209,7 +209,7 @@ macro_rules! abridge_impl {
         relative,
         (emptiable, non_emptiable $(,)?) $(,)?
     ) => {
-        abridge_impl!(
+        abridgable_impl!(
             implementor => $implementor,
             rhs => [$($rhs),*],
             output => $output,
@@ -440,169 +440,169 @@ pub trait Abridgable<Rhs = Self> {
     fn abridge(&self, rhs: &Rhs) -> Self::Output;
 }
 
-abridge_impl!(
+abridgable_impl!(
     implementor => AbsoluteBoundPair,
     rhs => [AbsoluteBoundPair],
     output => EmptiableAbsoluteBoundPair,
     absolute,
     (non_emptiable, non_emptiable),
 );
-abridge_impl!(
+abridgable_impl!(
     implementor => AbsoluteBoundPair,
     rhs => [EmptiableAbsoluteBoundPair],
     output => EmptiableAbsoluteBoundPair,
     absolute,
     (non_emptiable, emptiable),
 );
-abridge_impl!(
+abridgable_impl!(
     implementor => EmptiableAbsoluteBoundPair,
     rhs => [AbsoluteBoundPair],
     output => EmptiableAbsoluteBoundPair,
     absolute,
     (emptiable, non_emptiable),
 );
-abridge_impl!(
+abridgable_impl!(
     implementor => EmptiableAbsoluteBoundPair,
     rhs => [EmptiableAbsoluteBoundPair],
     output => EmptiableAbsoluteBoundPair,
     absolute,
     (emptiable, emptiable),
 );
-abridge_impl!(
+abridgable_impl!(
     implementor => AbsoluteInterval,
     rhs => [AbsoluteInterval],
     output => EmptiableAbsoluteInterval,
     absolute,
     (non_emptiable, non_emptiable),
 );
-abridge_impl!(
+abridgable_impl!(
     implementor => AbsoluteInterval,
     rhs => [EmptiableAbsoluteInterval],
     output => EmptiableAbsoluteInterval,
     absolute,
     (non_emptiable, emptiable),
 );
-abridge_impl!(
+abridgable_impl!(
     implementor => EmptiableAbsoluteInterval,
     rhs => [AbsoluteInterval],
     output => EmptiableAbsoluteInterval,
     absolute,
     (emptiable, non_emptiable),
 );
-abridge_impl!(
+abridgable_impl!(
     implementor => EmptiableAbsoluteInterval,
     rhs => [EmptiableAbsoluteInterval],
     output => EmptiableAbsoluteInterval,
     absolute,
     (emptiable, emptiable),
 );
-abridge_impl!(
+abridgable_impl!(
     implementor => BoundedAbsoluteInterval,
     rhs => [BoundedAbsoluteInterval, HalfBoundedAbsoluteInterval],
     output => EmptiableAbsoluteInterval,
     absolute,
     (non_emptiable, non_emptiable),
 );
-abridge_impl!(
+abridgable_impl!(
     implementor => BoundedAbsoluteInterval,
     rhs => [UnboundedInterval, EmptyInterval],
     output => clone lhs,
 );
-abridge_impl!(
+abridgable_impl!(
     implementor => HalfBoundedAbsoluteInterval,
     rhs => [BoundedAbsoluteInterval, HalfBoundedAbsoluteInterval],
     output => EmptiableAbsoluteInterval,
     absolute,
     (non_emptiable, non_emptiable),
 );
-abridge_impl!(
+abridgable_impl!(
     implementor => HalfBoundedAbsoluteInterval,
     rhs => [UnboundedInterval, EmptyInterval],
     output => clone lhs,
 );
 
-abridge_impl!(
+abridgable_impl!(
     implementor => RelativeBoundPair,
     rhs => [RelativeBoundPair],
     output => EmptiableRelativeBoundPair,
     relative,
     (non_emptiable, non_emptiable),
 );
-abridge_impl!(
+abridgable_impl!(
     implementor => RelativeBoundPair,
     rhs => [EmptiableRelativeBoundPair],
     output => EmptiableRelativeBoundPair,
     relative,
     (non_emptiable, emptiable),
 );
-abridge_impl!(
+abridgable_impl!(
     implementor => EmptiableRelativeBoundPair,
     rhs => [RelativeBoundPair],
     output => EmptiableRelativeBoundPair,
     relative,
     (emptiable, non_emptiable),
 );
-abridge_impl!(
+abridgable_impl!(
     implementor => EmptiableRelativeBoundPair,
     rhs => [EmptiableRelativeBoundPair],
     output => EmptiableRelativeBoundPair,
     relative,
     (emptiable, emptiable),
 );
-abridge_impl!(
+abridgable_impl!(
     implementor => RelativeInterval,
     rhs => [RelativeInterval],
     output => EmptiableRelativeInterval,
     relative,
     (non_emptiable, non_emptiable),
 );
-abridge_impl!(
+abridgable_impl!(
     implementor => RelativeInterval,
     rhs => [EmptiableRelativeInterval],
     output => EmptiableRelativeInterval,
     relative,
     (non_emptiable, emptiable),
 );
-abridge_impl!(
+abridgable_impl!(
     implementor => EmptiableRelativeInterval,
     rhs => [RelativeInterval],
     output => EmptiableRelativeInterval,
     relative,
     (emptiable, non_emptiable),
 );
-abridge_impl!(
+abridgable_impl!(
     implementor => EmptiableRelativeInterval,
     rhs => [EmptiableRelativeInterval],
     output => EmptiableRelativeInterval,
     relative,
     (emptiable, emptiable),
 );
-abridge_impl!(
+abridgable_impl!(
     implementor => BoundedRelativeInterval,
     rhs => [BoundedRelativeInterval, HalfBoundedRelativeInterval],
     output => EmptiableRelativeInterval,
     relative,
     (non_emptiable, non_emptiable),
 );
-abridge_impl!(
+abridgable_impl!(
     implementor => BoundedRelativeInterval,
     rhs => [UnboundedInterval, EmptyInterval],
     output => clone lhs,
 );
-abridge_impl!(
+abridgable_impl!(
     implementor => HalfBoundedRelativeInterval,
     rhs => [BoundedRelativeInterval, HalfBoundedRelativeInterval],
     output => EmptiableRelativeInterval,
     relative,
     (non_emptiable, non_emptiable),
 );
-abridge_impl!(
+abridgable_impl!(
     implementor => HalfBoundedRelativeInterval,
     rhs => [UnboundedInterval, EmptyInterval],
     output => clone lhs,
 );
 
-abridge_impl!(
+abridgable_impl!(
     implementor => UnboundedInterval,
     rhs => [
         BoundedAbsoluteInterval,
@@ -612,13 +612,13 @@ abridge_impl!(
     ],
     output => clone rhs,
 );
-abridge_impl!(
+abridgable_impl!(
     implementor => UnboundedInterval,
     rhs => [UnboundedInterval, EmptyInterval],
     output => clone lhs,
 );
 
-abridge_impl!(
+abridgable_impl!(
     implementor => EmptyInterval,
     rhs => [
         BoundedAbsoluteInterval,
@@ -629,7 +629,7 @@ abridge_impl!(
     ],
     output => clone rhs,
 );
-abridge_impl!(
+abridgable_impl!(
     implementor => EmptyInterval,
     rhs => [EmptyInterval],
     output => clone lhs,
