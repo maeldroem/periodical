@@ -49,28 +49,6 @@ use crate::intervals::relative::{
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 
 macro_rules! abridgable_impl {
-    (implementor => $implementor:ty, rhs => [$($rhs:ty),*$(,)?], output => $output:ty, clone lhs $(,)?) => {
-        $(
-            impl Abridgable<$rhs> for $implementor {
-                type Output = $output;
-
-                fn abridge(&self, _rhs: &$rhs) -> Self::Output {
-                    Self::Output::from(self.clone())
-                }
-            }
-        )*
-    };
-    (implementor => $implementor:ty, rhs => [$($rhs:ty),*$(,)?], output => $output:ty, clone rhs $(,)?) => {
-        $(
-            impl Abridgable<$rhs> for $implementor {
-                type Output = $output;
-
-                fn abridge(&self, rhs: &$rhs) -> Self::Output {
-                    Self::Output::from(rhs.clone())
-                }
-            }
-        )*
-    };
     (implementor => $implementor:ty, rhs => [$($rhs:ty),*$(,)?], output => clone rhs $(,)?) => {
         $(
             impl Abridgable<$rhs> for $implementor {
@@ -638,28 +616,28 @@ abridgable_impl!(
 /// Abridges two [`AbsoluteBoundPair`]s
 #[must_use]
 pub fn abridge_abs_bound_pair(
-    og_bounds: &AbsoluteBoundPair,
-    other_bounds: &AbsoluteBoundPair,
+    lhs_bound_pair: &AbsoluteBoundPair,
+    rhs_bound_pair: &AbsoluteBoundPair,
 ) -> EmptiableAbsoluteBoundPair {
-    let mut highest_start = match (og_bounds.abs_start(), other_bounds.abs_start()) {
+    let mut highest_start = match (lhs_bound_pair.abs_start(), rhs_bound_pair.abs_start()) {
         (AbsoluteStartBound::InfinitePast, bound @ AbsoluteStartBound::Finite(..))
         | (
             bound @ (AbsoluteStartBound::Finite(..) | AbsoluteStartBound::InfinitePast),
             AbsoluteStartBound::InfinitePast,
         ) => bound,
-        (og_bound @ AbsoluteStartBound::Finite(..), other_bound @ AbsoluteStartBound::Finite(..)) => {
-            if og_bound >= other_bound { og_bound } else { other_bound }
+        (lhs_bound @ AbsoluteStartBound::Finite(..), rhs_bound @ AbsoluteStartBound::Finite(..)) => {
+            if lhs_bound >= rhs_bound { lhs_bound } else { rhs_bound }
         },
     };
 
-    let mut lowest_end = match (og_bounds.abs_end(), other_bounds.abs_end()) {
+    let mut lowest_end = match (lhs_bound_pair.abs_end(), rhs_bound_pair.abs_end()) {
         (AbsoluteEndBound::InfiniteFuture, bound @ AbsoluteEndBound::Finite(..))
         | (
             bound @ (AbsoluteEndBound::Finite(..) | AbsoluteEndBound::InfiniteFuture),
             AbsoluteEndBound::InfiniteFuture,
         ) => bound,
-        (og_bound @ AbsoluteEndBound::Finite(..), other_bound @ AbsoluteEndBound::Finite(..)) => {
-            if og_bound <= other_bound { og_bound } else { other_bound }
+        (lhs_bound @ AbsoluteEndBound::Finite(..), rhs_bound @ AbsoluteEndBound::Finite(..)) => {
+            if lhs_bound <= rhs_bound { lhs_bound } else { rhs_bound }
         },
     };
 
@@ -713,28 +691,28 @@ pub fn abridge_abs_bound_pair(
 /// Abridges an [`AbsoluteBoundPair`] with an [`EmptiableAbsoluteBoundPair`]
 #[must_use]
 pub fn abridge_abs_bound_pair_with_emptiable_abs_bound_pair(
-    og_bounds: &AbsoluteBoundPair,
-    other_bounds: &EmptiableAbsoluteBoundPair,
+    lhs_bound_pair: &AbsoluteBoundPair,
+    rhs_bound_pair: &EmptiableAbsoluteBoundPair,
 ) -> EmptiableAbsoluteBoundPair {
-    let EmptiableAbsoluteBoundPair::Bound(other_non_empty_bounds) = other_bounds else {
-        return EmptiableAbsoluteBoundPair::Bound(og_bounds.clone());
+    let EmptiableAbsoluteBoundPair::Bound(rhs_non_empty_bounds) = rhs_bound_pair else {
+        return EmptiableAbsoluteBoundPair::Bound(lhs_bound_pair.clone());
     };
 
-    abridge_abs_bound_pair(og_bounds, other_non_empty_bounds)
+    abridge_abs_bound_pair(lhs_bound_pair, rhs_non_empty_bounds)
 }
 
 /// Abridges two [`EmptiableAbsoluteBoundPair`]s
 #[must_use]
 pub fn abridge_emptiable_abs_bound_pair(
-    og_bounds: &EmptiableAbsoluteBoundPair,
-    other_bounds: &EmptiableAbsoluteBoundPair,
+    lhs_bound_pair: &EmptiableAbsoluteBoundPair,
+    rhs_bound_pair: &EmptiableAbsoluteBoundPair,
 ) -> EmptiableAbsoluteBoundPair {
-    match (og_bounds, other_bounds) {
+    match (lhs_bound_pair, rhs_bound_pair) {
         (EmptiableAbsoluteBoundPair::Empty, EmptiableAbsoluteBoundPair::Empty) => EmptiableAbsoluteBoundPair::Empty,
         (EmptiableAbsoluteBoundPair::Empty, bound @ EmptiableAbsoluteBoundPair::Bound(..))
         | (bound @ EmptiableAbsoluteBoundPair::Bound(..), EmptiableAbsoluteBoundPair::Empty) => bound.clone(),
-        (EmptiableAbsoluteBoundPair::Bound(og_bounds), EmptiableAbsoluteBoundPair::Bound(other_bounds)) => {
-            abridge_abs_bound_pair(og_bounds, other_bounds)
+        (EmptiableAbsoluteBoundPair::Bound(lhs_bound_pair), EmptiableAbsoluteBoundPair::Bound(rhs_bound_pair)) => {
+            abridge_abs_bound_pair(lhs_bound_pair, rhs_bound_pair)
         },
     }
 }
@@ -742,28 +720,28 @@ pub fn abridge_emptiable_abs_bound_pair(
 /// Abridges two [`RelativeBoundPair`]s
 #[must_use]
 pub fn abridge_rel_bound_pair(
-    og_bounds: &RelativeBoundPair,
-    other_bounds: &RelativeBoundPair,
+    lhs_bound_pair: &RelativeBoundPair,
+    rhs_bound_pair: &RelativeBoundPair,
 ) -> EmptiableRelativeBoundPair {
-    let mut highest_start = match (og_bounds.rel_start(), other_bounds.rel_start()) {
+    let mut highest_start = match (lhs_bound_pair.rel_start(), rhs_bound_pair.rel_start()) {
         (RelativeStartBound::InfinitePast, bound @ RelativeStartBound::Finite(..))
         | (
             bound @ (RelativeStartBound::Finite(..) | RelativeStartBound::InfinitePast),
             RelativeStartBound::InfinitePast,
         ) => bound,
-        (og_bound @ RelativeStartBound::Finite(..), other_bound @ RelativeStartBound::Finite(..)) => {
-            if og_bound >= other_bound { og_bound } else { other_bound }
+        (lhs_bound @ RelativeStartBound::Finite(..), rhs_bound @ RelativeStartBound::Finite(..)) => {
+            if lhs_bound >= rhs_bound { lhs_bound } else { rhs_bound }
         },
     };
 
-    let mut lowest_end = match (og_bounds.rel_end(), other_bounds.rel_end()) {
+    let mut lowest_end = match (lhs_bound_pair.rel_end(), rhs_bound_pair.rel_end()) {
         (RelativeEndBound::InfiniteFuture, bound @ RelativeEndBound::Finite(..))
         | (
             bound @ (RelativeEndBound::Finite(..) | RelativeEndBound::InfiniteFuture),
             RelativeEndBound::InfiniteFuture,
         ) => bound,
-        (og_bound @ RelativeEndBound::Finite(..), other_bound @ RelativeEndBound::Finite(..)) => {
-            if og_bound <= other_bound { og_bound } else { other_bound }
+        (lhs_bound @ RelativeEndBound::Finite(..), rhs_bound @ RelativeEndBound::Finite(..)) => {
+            if lhs_bound <= rhs_bound { lhs_bound } else { rhs_bound }
         },
     };
 
@@ -817,28 +795,28 @@ pub fn abridge_rel_bound_pair(
 /// Abridges an [`RelativeBoundPair`] with an [`EmptiableRelativeBoundPair`]
 #[must_use]
 pub fn abridge_rel_bound_pair_with_emptiable_rel_bound_pair(
-    og_bounds: &RelativeBoundPair,
-    other_bounds: &EmptiableRelativeBoundPair,
+    lhs_bound_pair: &RelativeBoundPair,
+    rhs_bound_pair: &EmptiableRelativeBoundPair,
 ) -> EmptiableRelativeBoundPair {
-    let EmptiableRelativeBoundPair::Bound(other_non_empty_bounds) = other_bounds else {
-        return EmptiableRelativeBoundPair::Bound(og_bounds.clone());
+    let EmptiableRelativeBoundPair::Bound(rhs_non_empty_bound_pair) = rhs_bound_pair else {
+        return EmptiableRelativeBoundPair::Bound(lhs_bound_pair.clone());
     };
 
-    abridge_rel_bound_pair(og_bounds, other_non_empty_bounds)
+    abridge_rel_bound_pair(lhs_bound_pair, rhs_non_empty_bound_pair)
 }
 
 /// Abridges two [`EmptiableRelativeBoundPair`]s
 #[must_use]
 pub fn abridge_emptiable_rel_bound_pair(
-    og_bounds: &EmptiableRelativeBoundPair,
-    other_bounds: &EmptiableRelativeBoundPair,
+    lhs_bound_pair: &EmptiableRelativeBoundPair,
+    rhs_bound_pair: &EmptiableRelativeBoundPair,
 ) -> EmptiableRelativeBoundPair {
-    match (og_bounds, other_bounds) {
+    match (lhs_bound_pair, rhs_bound_pair) {
         (EmptiableRelativeBoundPair::Empty, EmptiableRelativeBoundPair::Empty) => EmptiableRelativeBoundPair::Empty,
         (EmptiableRelativeBoundPair::Empty, bound @ EmptiableRelativeBoundPair::Bound(..))
         | (bound @ EmptiableRelativeBoundPair::Bound(..), EmptiableRelativeBoundPair::Empty) => bound.clone(),
-        (EmptiableRelativeBoundPair::Bound(og_bounds), EmptiableRelativeBoundPair::Bound(other_bounds)) => {
-            abridge_rel_bound_pair(og_bounds, other_bounds)
+        (EmptiableRelativeBoundPair::Bound(lhs_bound_pair), EmptiableRelativeBoundPair::Bound(rhs_bound_pair)) => {
+            abridge_rel_bound_pair(lhs_bound_pair, rhs_bound_pair)
         },
     }
 }
