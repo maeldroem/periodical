@@ -417,6 +417,12 @@ impl From<(SignedDuration, BoundInclusivity, OpeningDirection)> for HalfBoundedR
     }
 }
 
+impl From<(RelativeFiniteBound, OpeningDirection)> for HalfBoundedRelativeInterval {
+    fn from((reference, opening_direction): (RelativeFiniteBound, OpeningDirection)) -> Self {
+        Self::new_with_inclusivity(reference.offset(), reference.inclusivity(), opening_direction)
+    }
+}
+
 impl From<RangeFrom<SignedDuration>> for HalfBoundedRelativeInterval {
     fn from(range: RangeFrom<SignedDuration>) -> Self {
         HalfBoundedRelativeInterval::new_with_inclusivity(

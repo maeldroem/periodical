@@ -451,6 +451,12 @@ impl From<(Timestamp, BoundInclusivity, OpeningDirection)> for HalfBoundedAbsolu
     }
 }
 
+impl From<(AbsoluteFiniteBound, OpeningDirection)> for HalfBoundedAbsoluteInterval {
+    fn from((reference, opening_direction): (AbsoluteFiniteBound, OpeningDirection)) -> Self {
+        Self::new_with_inclusivity(reference.time(), reference.inclusivity(), opening_direction)
+    }
+}
+
 impl From<RangeFrom<Timestamp>> for HalfBoundedAbsoluteInterval {
     fn from(range: RangeFrom<Timestamp>) -> Self {
         HalfBoundedAbsoluteInterval::new_with_inclusivity(

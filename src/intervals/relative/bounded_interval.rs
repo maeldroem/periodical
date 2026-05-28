@@ -974,6 +974,12 @@ impl From<((SignedDuration, BoundInclusivity), (SignedDuration, BoundInclusivity
     }
 }
 
+impl From<(RelativeFiniteBound, RelativeFiniteBound)> for BoundedRelativeInterval {
+    fn from((start, end): (RelativeFiniteBound, RelativeFiniteBound)) -> Self {
+        Self::new_with_inclusivity(start.offset(), start.inclusivity(), end.offset(), end.inclusivity())
+    }
+}
+
 impl From<Range<SignedDuration>> for BoundedRelativeInterval {
     fn from(range: Range<SignedDuration>) -> Self {
         BoundedRelativeInterval::new_with_inclusivity(

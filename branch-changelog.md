@@ -48,6 +48,7 @@ Updated previous tests and created more tests for covering all the work so far.
 - Adopted policy of binary operations returning the strictest possible type, "strictest binary operation output policy"
 - Adopted policy of no generic implementations for binary operations, "no binary operation generic impl policy"
 - Adopted "no binary operation over-compatibility impl policy"
+- Added missing conversion from finite bounds for bounded and half-bounded intervals
 
 ## Changed
 

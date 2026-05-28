@@ -820,6 +820,12 @@ impl From<((Timestamp, BoundInclusivity), (Timestamp, BoundInclusivity))> for Bo
     }
 }
 
+impl From<(AbsoluteFiniteBound, AbsoluteFiniteBound)> for BoundedAbsoluteInterval {
+    fn from((start, end): (AbsoluteFiniteBound, AbsoluteFiniteBound)) -> Self {
+        Self::new_with_inclusivity(start.time(), start.inclusivity(), end.time(), end.inclusivity())
+    }
+}
+
 impl From<Range<Timestamp>> for BoundedAbsoluteInterval {
     fn from(range: Range<Timestamp>) -> Self {
         BoundedAbsoluteInterval::new_with_inclusivity(
