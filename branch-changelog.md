@@ -4,6 +4,15 @@
 
 Updated previous tests and created more tests for covering all the work so far.
 
+For allowing more granular control over interval bounds, we need a way to represent start/end bounds that are
+finite only.
+This allows for type safety when comparing finite bounds and not having to use their possibly infinite variants
+to perform comparisons that then have to be unwrapped into finite variants.
+
+Link relevant issues and PRs here!
+
+Explain the motivation for this PR and what it does/solves
+
 # Notes
 
 <details>
@@ -53,6 +62,8 @@ Updated previous tests and created more tests for covering all the work so far.
 - Added and implemented on relevant types `HasBoundExtremality` to return a bound's extremality
 - Added conversions from `(*FiniteBound, BoundExtremality)` to `*Bound`
 - Added `HasBoundExtremality` to prelude
+- Added finite variants for start/end bounds
+- Added finite variant for `*Bound`
 
 ## Changed
 
@@ -66,6 +77,7 @@ Updated previous tests and created more tests for covering all the work so far.
 - Adapted binary operation implementations to respect adopted policies regarding binary operations
   - `Abridgable`
 - Renamed `*FiniteBound` to `*FiniteBoundPosition` for clarity
+- `*StartBound` and `*EndBound` now contain a `*FiniteStartBound`/`*FiniteEndBound` in their `Finite` variant
 
 ## Deprecated
 

@@ -16,6 +16,7 @@ use jiff::Timestamp;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
+use crate::intervals::absolute::finite_start_bound::AbsoluteFiniteStartBound;
 use crate::intervals::absolute::{AbsoluteBound, AbsoluteEndBound, AbsoluteFiniteBoundPosition};
 use crate::intervals::meta::{BoundExtremality, BoundInclusivity, HasBoundExtremality, HasBoundInclusivity};
 use crate::intervals::ops::bound_overlap_ambiguity::{
@@ -28,12 +29,12 @@ use crate::intervals::ops::bound_overlap_ambiguity::{
 ///
 /// Represents the start bound of an interval, may it be infinitely in the past
 /// or at a precise point in time, in which case it contains an
-/// [`AbsoluteFiniteBoundPosition`].
+/// [`AbsoluteFiniteStartBound`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum AbsoluteStartBound {
-    Finite(AbsoluteFiniteBoundPosition),
+    Finite(AbsoluteFiniteStartBound),
     InfinitePast,
 }
 
@@ -116,7 +117,7 @@ impl AbsoluteStartBound {
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    pub fn finite(self) -> Option<AbsoluteFiniteBoundPosition> {
+    pub fn finite(self) -> Option<AbsoluteFiniteStartBound> {
         match self {
             Self::Finite(finite) => Some(finite),
             Self::InfinitePast => None,
