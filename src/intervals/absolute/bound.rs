@@ -12,7 +12,7 @@ use arbitrary::Arbitrary;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use crate::intervals::absolute::{AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound};
+use crate::intervals::absolute::{AbsoluteEndBound, AbsoluteFiniteBoundPosition, AbsoluteStartBound};
 use crate::intervals::meta::{BoundExtremality, HasBoundExtremality};
 
 /// Enum for absolute start and end bounds
@@ -36,14 +36,16 @@ impl AbsoluteBound {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Timestamp;
-    /// # use periodical::intervals::absolute::{AbsoluteBound, AbsoluteFiniteBound};
+    /// # use periodical::intervals::absolute::{AbsoluteBound, AbsoluteFiniteBoundPosition};
     /// let start_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     /// let end_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
     ///
-    /// let start = AbsoluteFiniteBound::new(start_time)
+    /// let start = AbsoluteFiniteBoundPosition::new(start_time)
     ///     .to_start_bound()
     ///     .to_bound();
-    /// let end = AbsoluteFiniteBound::new(end_time).to_end_bound().to_bound();
+    /// let end = AbsoluteFiniteBoundPosition::new(end_time)
+    ///     .to_end_bound()
+    ///     .to_bound();
     ///
     /// assert!(start.is_start());
     /// assert!(!end.is_start());
@@ -61,14 +63,16 @@ impl AbsoluteBound {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Timestamp;
-    /// # use periodical::intervals::absolute::{AbsoluteBound, AbsoluteFiniteBound};
+    /// # use periodical::intervals::absolute::{AbsoluteBound, AbsoluteFiniteBoundPosition};
     /// let start_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     /// let end_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
     ///
-    /// let start = AbsoluteFiniteBound::new(start_time)
+    /// let start = AbsoluteFiniteBoundPosition::new(start_time)
     ///     .to_start_bound()
     ///     .to_bound();
-    /// let end = AbsoluteFiniteBound::new(end_time).to_end_bound().to_bound();
+    /// let end = AbsoluteFiniteBoundPosition::new(end_time)
+    ///     .to_end_bound()
+    ///     .to_bound();
     ///
     /// assert!(end.is_end());
     /// assert!(!start.is_end());
@@ -91,19 +95,21 @@ impl AbsoluteBound {
     /// # use std::error::Error;
     /// # use jiff::Timestamp;
     /// # use periodical::intervals::absolute::{
-    /// #     AbsoluteBound, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+    /// #     AbsoluteBound, AbsoluteEndBound, AbsoluteFiniteBoundPosition, AbsoluteStartBound,
     /// # };
     /// let start_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     /// let end_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
     ///
-    /// let start = AbsoluteFiniteBound::new(start_time)
+    /// let start = AbsoluteFiniteBoundPosition::new(start_time)
     ///     .to_start_bound()
     ///     .to_bound();
-    /// let end = AbsoluteFiniteBound::new(end_time).to_end_bound().to_bound();
+    /// let end = AbsoluteFiniteBoundPosition::new(end_time)
+    ///     .to_end_bound()
+    ///     .to_bound();
     ///
     /// assert_eq!(
     ///     start.start(),
-    ///     Some(AbsoluteFiniteBound::new(start_time).to_start_bound()),
+    ///     Some(AbsoluteFiniteBoundPosition::new(start_time).to_start_bound()),
     /// );
     /// assert_eq!(end.start(), None,);
     /// # Ok::<(), Box<dyn Error>>(())
@@ -128,19 +134,21 @@ impl AbsoluteBound {
     /// # use std::error::Error;
     /// # use jiff::Timestamp;
     /// # use periodical::intervals::absolute::{
-    /// #     AbsoluteBound, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+    /// #     AbsoluteBound, AbsoluteEndBound, AbsoluteFiniteBoundPosition, AbsoluteStartBound,
     /// # };
     /// let start_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     /// let end_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
     ///
-    /// let start = AbsoluteFiniteBound::new(start_time)
+    /// let start = AbsoluteFiniteBoundPosition::new(start_time)
     ///     .to_start_bound()
     ///     .to_bound();
-    /// let end = AbsoluteFiniteBound::new(end_time).to_end_bound().to_bound();
+    /// let end = AbsoluteFiniteBoundPosition::new(end_time)
+    ///     .to_end_bound()
+    ///     .to_bound();
     ///
     /// assert_eq!(
     ///     end.end(),
-    ///     Some(AbsoluteFiniteBound::new(end_time).to_end_bound()),
+    ///     Some(AbsoluteFiniteBoundPosition::new(end_time).to_end_bound()),
     /// );
     /// assert_eq!(start.end(), None,);
     /// # Ok::<(), Box<dyn Error>>(())
@@ -263,8 +271,8 @@ impl From<AbsoluteEndBound> for AbsoluteBound {
     }
 }
 
-impl From<(AbsoluteFiniteBound, BoundExtremality)> for AbsoluteBound {
-    fn from((bound, extremality): (AbsoluteFiniteBound, BoundExtremality)) -> Self {
+impl From<(AbsoluteFiniteBoundPosition, BoundExtremality)> for AbsoluteBound {
+    fn from((bound, extremality): (AbsoluteFiniteBoundPosition, BoundExtremality)) -> Self {
         match extremality {
             BoundExtremality::Start => Self::from(bound.to_start_bound()),
             BoundExtremality::End => Self::from(bound.to_end_bound()),

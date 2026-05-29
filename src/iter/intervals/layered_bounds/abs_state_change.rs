@@ -52,7 +52,7 @@ impl LayeredBoundsStateChangeAtAbsoluteBound {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::AbsoluteFiniteBound;
+    /// # use periodical::intervals::absolute::AbsoluteFiniteBoundPosition;
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::iter::intervals::layered_bounds::{
     /// #     LayeredBoundsState, LayeredBoundsStateChangeAtAbsoluteBound,
@@ -61,7 +61,7 @@ impl LayeredBoundsStateChangeAtAbsoluteBound {
     ///     LayeredBoundsState::NoLayers,
     ///     LayeredBoundsState::FirstLayer,
     ///     Some(
-    ///         AbsoluteFiniteBound::new(
+    ///         AbsoluteFiniteBoundPosition::new(
     ///             "2025-01-01 08:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
@@ -69,7 +69,7 @@ impl LayeredBoundsStateChangeAtAbsoluteBound {
     ///         .to_end_bound(),
     ///     ),
     ///     Some(
-    ///         AbsoluteFiniteBound::new_with_inclusivity(
+    ///         AbsoluteFiniteBoundPosition::new_with_inclusivity(
     ///             "2025-01-01 08:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
@@ -94,7 +94,7 @@ impl LayeredBoundsStateChangeAtAbsoluteBound {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::AbsoluteFiniteBound;
+    /// # use periodical::intervals::absolute::AbsoluteFiniteBoundPosition;
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::iter::intervals::layered_bounds::{
     /// #     LayeredBoundsState, LayeredBoundsStateChangeAtAbsoluteBound,
@@ -103,7 +103,7 @@ impl LayeredBoundsStateChangeAtAbsoluteBound {
     ///     LayeredBoundsState::NoLayers,
     ///     LayeredBoundsState::FirstLayer,
     ///     Some(
-    ///         AbsoluteFiniteBound::new(
+    ///         AbsoluteFiniteBoundPosition::new(
     ///             "2025-01-01 08:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
@@ -111,7 +111,7 @@ impl LayeredBoundsStateChangeAtAbsoluteBound {
     ///         .to_end_bound(),
     ///     ),
     ///     Some(
-    ///         AbsoluteFiniteBound::new_with_inclusivity(
+    ///         AbsoluteFiniteBoundPosition::new_with_inclusivity(
     ///             "2025-01-01 08:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
@@ -143,7 +143,7 @@ impl LayeredBoundsStateChangeAtAbsoluteBound {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::AbsoluteFiniteBound;
+    /// # use periodical::intervals::absolute::AbsoluteFiniteBoundPosition;
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::iter::intervals::layered_bounds::{
     /// #     LayeredBoundsState, LayeredBoundsStateChangeAtAbsoluteBound,
@@ -152,7 +152,7 @@ impl LayeredBoundsStateChangeAtAbsoluteBound {
     ///     LayeredBoundsState::NoLayers,
     ///     LayeredBoundsState::FirstLayer,
     ///     Some(
-    ///         AbsoluteFiniteBound::new(
+    ///         AbsoluteFiniteBoundPosition::new(
     ///             "2025-01-01 08:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
@@ -160,7 +160,7 @@ impl LayeredBoundsStateChangeAtAbsoluteBound {
     ///         .to_end_bound(),
     ///     ),
     ///     Some(
-    ///         AbsoluteFiniteBound::new_with_inclusivity(
+    ///         AbsoluteFiniteBoundPosition::new_with_inclusivity(
     ///             "2025-01-01 08:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
@@ -173,7 +173,7 @@ impl LayeredBoundsStateChangeAtAbsoluteBound {
     /// assert_eq!(
     ///     change.old_state_end(),
     ///     Some(
-    ///         AbsoluteFiniteBound::new(
+    ///         AbsoluteFiniteBoundPosition::new(
     ///             "2025-01-01 08:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
@@ -202,7 +202,7 @@ impl LayeredBoundsStateChangeAtAbsoluteBound {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::AbsoluteFiniteBound;
+    /// # use periodical::intervals::absolute::AbsoluteFiniteBoundPosition;
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::iter::intervals::layered_bounds::{
     /// #     LayeredBoundsState, LayeredBoundsStateChangeAtAbsoluteBound,
@@ -211,7 +211,7 @@ impl LayeredBoundsStateChangeAtAbsoluteBound {
     ///     LayeredBoundsState::NoLayers,
     ///     LayeredBoundsState::FirstLayer,
     ///     Some(
-    ///         AbsoluteFiniteBound::new(
+    ///         AbsoluteFiniteBoundPosition::new(
     ///             "2025-01-01 08:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
@@ -219,7 +219,7 @@ impl LayeredBoundsStateChangeAtAbsoluteBound {
     ///         .to_end_bound(),
     ///     ),
     ///     Some(
-    ///         AbsoluteFiniteBound::new_with_inclusivity(
+    ///         AbsoluteFiniteBoundPosition::new_with_inclusivity(
     ///             "2025-01-01 08:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
@@ -232,7 +232,7 @@ impl LayeredBoundsStateChangeAtAbsoluteBound {
     /// assert_eq!(
     ///     change.new_state_start(),
     ///     Some(
-    ///         AbsoluteFiniteBound::new_with_inclusivity(
+    ///         AbsoluteFiniteBoundPosition::new_with_inclusivity(
     ///             "2025-01-01 08:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),

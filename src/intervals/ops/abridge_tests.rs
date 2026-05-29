@@ -6,7 +6,7 @@ use super::abridge::*;
 use crate::intervals::absolute::{
     AbsoluteBoundPair,
     AbsoluteEndBound,
-    AbsoluteFiniteBound,
+    AbsoluteFiniteBoundPosition,
     AbsoluteStartBound,
     BoundedAbsoluteInterval,
     EmptiableAbsoluteBoundPair,
@@ -33,7 +33,7 @@ use crate::intervals::relative::{
     HasRelativeBoundPair,
     RelativeBoundPair,
     RelativeEndBound,
-    RelativeFiniteBound,
+    RelativeFiniteBoundPosition,
     RelativeStartBound,
 };
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
@@ -131,12 +131,12 @@ mod absolute {
                 .ok_or("data not found")?;
 
             let expected = AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new_with_inclusivity(
+                AbsoluteFiniteBoundPosition::new_with_inclusivity(
                     "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                     BoundInclusivity::Exclusive,
                 )
                 .to_start_bound(),
-                AbsoluteFiniteBound::new_with_inclusivity(
+                AbsoluteFiniteBoundPosition::new_with_inclusivity(
                     "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
                     BoundInclusivity::Exclusive,
                 )
@@ -166,12 +166,12 @@ mod absolute {
                 .ok_or("data not found")?;
 
             let expected = AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new_with_inclusivity(
+                AbsoluteFiniteBoundPosition::new_with_inclusivity(
                     "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                     BoundInclusivity::Exclusive,
                 )
                 .to_start_bound(),
-                AbsoluteFiniteBound::new_with_inclusivity(
+                AbsoluteFiniteBoundPosition::new_with_inclusivity(
                     "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
                     BoundInclusivity::Exclusive,
                 )
@@ -204,8 +204,8 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -272,8 +272,8 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -303,8 +303,8 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -370,8 +370,8 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -398,8 +398,8 @@ mod absolute {
                 .ok_or("data not found")?;
 
             let expected = AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsoluteFiniteBound::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
             );
 
             abs_assert(
@@ -425,8 +425,8 @@ mod absolute {
                 .ok_or("data not found")?;
 
             let expected = AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsoluteFiniteBound::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
             );
 
             abs_assert(
@@ -452,8 +452,8 @@ mod absolute {
                 .ok_or("data not found")?;
 
             let expected = AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsoluteFiniteBound::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
             );
 
             abs_assert(
@@ -482,8 +482,8 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -509,12 +509,12 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -540,12 +540,12 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -571,12 +571,12 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -606,8 +606,8 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -633,8 +633,8 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -664,8 +664,8 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -695,8 +695,8 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -730,8 +730,8 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -757,8 +757,8 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -788,8 +788,8 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -819,8 +819,8 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -850,12 +850,12 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -881,12 +881,12 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -916,12 +916,12 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -951,12 +951,12 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -986,12 +986,12 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -1017,12 +1017,12 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1052,12 +1052,12 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1087,12 +1087,12 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1122,12 +1122,12 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -1153,12 +1153,12 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1188,12 +1188,12 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1223,12 +1223,12 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1262,8 +1262,8 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -1289,12 +1289,12 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -1320,12 +1320,12 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -1351,12 +1351,12 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -1386,8 +1386,8 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -1413,8 +1413,8 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1444,8 +1444,8 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1475,8 +1475,8 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1507,8 +1507,8 @@ mod absolute {
                 .ok_or("data not found")?;
 
             let expected = AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsoluteFiniteBound::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
             );
 
             abs_assert(
@@ -1538,12 +1538,12 @@ mod absolute {
                 .ok_or("data not found")?;
 
             let expected = AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new_with_inclusivity(
+                AbsoluteFiniteBoundPosition::new_with_inclusivity(
                     "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                     BoundInclusivity::Exclusive,
                 )
                 .to_start_bound(),
-                AbsoluteFiniteBound::new_with_inclusivity(
+                AbsoluteFiniteBoundPosition::new_with_inclusivity(
                     "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
                     BoundInclusivity::Exclusive,
                 )
@@ -1573,12 +1573,12 @@ mod absolute {
                 .ok_or("data not found")?;
 
             let expected = AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new_with_inclusivity(
+                AbsoluteFiniteBoundPosition::new_with_inclusivity(
                     "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                     BoundInclusivity::Exclusive,
                 )
                 .to_start_bound(),
-                AbsoluteFiniteBound::new_with_inclusivity(
+                AbsoluteFiniteBoundPosition::new_with_inclusivity(
                     "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                     BoundInclusivity::Exclusive,
                 )
@@ -1611,8 +1611,8 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -1678,8 +1678,8 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -1709,8 +1709,8 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -1776,8 +1776,8 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -1804,8 +1804,8 @@ mod absolute {
                 .ok_or("data not found")?;
 
             let expected = AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsoluteFiniteBound::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
             );
 
             abs_assert(
@@ -1831,8 +1831,8 @@ mod absolute {
                 .ok_or("data not found")?;
 
             let expected = AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
             );
 
             abs_assert(
@@ -1861,8 +1861,8 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -1888,8 +1888,8 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -1919,8 +1919,8 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -1946,12 +1946,12 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -1977,12 +1977,12 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -2008,12 +2008,12 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -2043,8 +2043,8 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -2070,8 +2070,8 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -2101,8 +2101,8 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -2132,8 +2132,8 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -2162,8 +2162,8 @@ mod absolute {
         #[test]
         fn inside() -> Result<(), Box<dyn Error>> {
             let bounded = AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
             );
 
             abs_assert(
@@ -2186,8 +2186,8 @@ mod absolute {
         #[test]
         fn outside() -> Result<(), Box<dyn Error>> {
             let bounded = AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
             );
 
             abs_assert(
@@ -2216,12 +2216,12 @@ mod absolute {
                 .ok_or("data not found")?;
 
             let expected = AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new_with_inclusivity(
+                AbsoluteFiniteBoundPosition::new_with_inclusivity(
                     "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                     BoundInclusivity::Exclusive,
                 )
                 .to_start_bound(),
-                AbsoluteFiniteBound::new_with_inclusivity(
+                AbsoluteFiniteBoundPosition::new_with_inclusivity(
                     "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                     BoundInclusivity::Exclusive,
                 )
@@ -2251,12 +2251,12 @@ mod absolute {
                 .ok_or("data not found")?;
 
             let expected = AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new_with_inclusivity(
+                AbsoluteFiniteBoundPosition::new_with_inclusivity(
                     "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                     BoundInclusivity::Exclusive,
                 )
                 .to_start_bound(),
-                AbsoluteFiniteBound::new_with_inclusivity(
+                AbsoluteFiniteBoundPosition::new_with_inclusivity(
                     "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
                     BoundInclusivity::Exclusive,
                 )
@@ -2289,8 +2289,8 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -2356,8 +2356,8 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -2387,8 +2387,8 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -2454,8 +2454,8 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -2482,8 +2482,8 @@ mod absolute {
                 .ok_or("data not found")?;
 
             let expected = AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
             );
 
             abs_assert(
@@ -2509,8 +2509,8 @@ mod absolute {
                 .ok_or("data not found")?;
 
             let expected = AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsoluteFiniteBound::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
             );
 
             abs_assert(
@@ -2539,8 +2539,8 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -2566,12 +2566,12 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -2597,12 +2597,12 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -2628,12 +2628,12 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -2663,8 +2663,8 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -2690,8 +2690,8 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -2721,8 +2721,8 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -2752,8 +2752,8 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -2787,8 +2787,8 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -2814,8 +2814,8 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -2846,12 +2846,12 @@ mod absolute {
                 .ok_or("data not found")?;
 
             let expected = AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new_with_inclusivity(
+                AbsoluteFiniteBoundPosition::new_with_inclusivity(
                     "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                     BoundInclusivity::Exclusive,
                 )
                 .to_start_bound(),
-                AbsoluteFiniteBound::new_with_inclusivity(
+                AbsoluteFiniteBoundPosition::new_with_inclusivity(
                     "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                     BoundInclusivity::Exclusive,
                 )
@@ -2881,12 +2881,12 @@ mod absolute {
                 .ok_or("data not found")?;
 
             let expected = AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new_with_inclusivity(
+                AbsoluteFiniteBoundPosition::new_with_inclusivity(
                     "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                     BoundInclusivity::Exclusive,
                 )
                 .to_start_bound(),
-                AbsoluteFiniteBound::new_with_inclusivity(
+                AbsoluteFiniteBoundPosition::new_with_inclusivity(
                     "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                     BoundInclusivity::Exclusive,
                 )
@@ -2919,8 +2919,8 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -2986,8 +2986,8 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -3017,8 +3017,8 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -3084,8 +3084,8 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -3112,8 +3112,8 @@ mod absolute {
                 .ok_or("data not found")?;
 
             let expected = AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
             );
 
             abs_assert(
@@ -3139,8 +3139,8 @@ mod absolute {
                 .ok_or("data not found")?;
 
             let expected = AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
             );
 
             abs_assert(
@@ -3167,7 +3167,7 @@ mod absolute {
 
             let expected = AbsoluteBoundPair::new(
                 AbsoluteStartBound::InfinitePast,
-                AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
             );
 
             abs_assert(
@@ -3193,7 +3193,7 @@ mod absolute {
                 .ok_or("data not found")?;
 
             let expected = AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
                 AbsoluteEndBound::InfiniteFuture,
             );
 
@@ -3226,7 +3226,7 @@ mod absolute {
                         .ok_or("data not found")?;
 
                     let expected = AbsoluteBoundPair::new(
-                        AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                        AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
                         AbsoluteEndBound::InfiniteFuture,
                     );
 
@@ -3253,7 +3253,7 @@ mod absolute {
                         .ok_or("data not found")?;
 
                     let expected = AbsoluteBoundPair::new(
-                        AbsoluteFiniteBound::new_with_inclusivity(
+                        AbsoluteFiniteBoundPosition::new_with_inclusivity(
                             "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                             BoundInclusivity::Exclusive,
                         )
@@ -3284,7 +3284,7 @@ mod absolute {
                         .ok_or("data not found")?;
 
                     let expected = AbsoluteBoundPair::new(
-                        AbsoluteFiniteBound::new_with_inclusivity(
+                        AbsoluteFiniteBoundPosition::new_with_inclusivity(
                             "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                             BoundInclusivity::Exclusive,
                         )
@@ -3315,7 +3315,7 @@ mod absolute {
                         .ok_or("data not found")?;
 
                     let expected = AbsoluteBoundPair::new(
-                        AbsoluteFiniteBound::new_with_inclusivity(
+                        AbsoluteFiniteBoundPosition::new_with_inclusivity(
                             "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                             BoundInclusivity::Exclusive,
                         )
@@ -3351,7 +3351,7 @@ mod absolute {
 
                     let expected = AbsoluteBoundPair::new(
                         AbsoluteStartBound::InfinitePast,
-                        AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                        AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                     );
 
                     abs_assert(
@@ -3378,7 +3378,7 @@ mod absolute {
 
                     let expected = AbsoluteBoundPair::new(
                         AbsoluteStartBound::InfinitePast,
-                        AbsoluteFiniteBound::new_with_inclusivity(
+                        AbsoluteFiniteBoundPosition::new_with_inclusivity(
                             "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                             BoundInclusivity::Exclusive,
                         )
@@ -3409,7 +3409,7 @@ mod absolute {
 
                     let expected = AbsoluteBoundPair::new(
                         AbsoluteStartBound::InfinitePast,
-                        AbsoluteFiniteBound::new_with_inclusivity(
+                        AbsoluteFiniteBoundPosition::new_with_inclusivity(
                             "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                             BoundInclusivity::Exclusive,
                         )
@@ -3440,7 +3440,7 @@ mod absolute {
 
                     let expected = AbsoluteBoundPair::new(
                         AbsoluteStartBound::InfinitePast,
-                        AbsoluteFiniteBound::new_with_inclusivity(
+                        AbsoluteFiniteBoundPosition::new_with_inclusivity(
                             "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                             BoundInclusivity::Exclusive,
                         )
@@ -3473,7 +3473,7 @@ mod absolute {
 
             let expected = AbsoluteBoundPair::new(
                 AbsoluteStartBound::InfinitePast,
-                AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
             );
 
             abs_assert(
@@ -3499,7 +3499,7 @@ mod absolute {
                 .ok_or("data not found")?;
 
             let expected = AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
                 AbsoluteEndBound::InfiniteFuture,
             );
 
@@ -3525,7 +3525,7 @@ mod absolute {
         fn inside_and_same_start() -> Result<(), Box<dyn Error>> {
             let half_bounded = AbsoluteBoundPair::new(
                 AbsoluteStartBound::InfinitePast,
-                AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
             );
 
             abs_assert(
@@ -3544,7 +3544,7 @@ mod absolute {
         #[test]
         fn inside_and_same_end() -> Result<(), Box<dyn Error>> {
             let half_bounded = AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
                 AbsoluteEndBound::InfiniteFuture,
             );
 
@@ -3568,7 +3568,7 @@ mod absolute {
         #[test]
         fn outside_to_past() -> Result<(), Box<dyn Error>> {
             let half_bounded = AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
                 AbsoluteEndBound::InfiniteFuture,
             );
 
@@ -3589,7 +3589,7 @@ mod absolute {
         fn outside_to_future() -> Result<(), Box<dyn Error>> {
             let half_bounded = AbsoluteBoundPair::new(
                 AbsoluteStartBound::InfinitePast,
-                AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
             );
 
             abs_assert(
@@ -3612,8 +3612,8 @@ mod absolute {
         #[test]
         fn contains() -> Result<(), Box<dyn Error>> {
             let bounded = AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
             );
 
             abs_assert(
@@ -3637,7 +3637,7 @@ mod absolute {
         fn contains_and_same_start() -> Result<(), Box<dyn Error>> {
             let half_bounded = AbsoluteBoundPair::new(
                 AbsoluteStartBound::InfinitePast,
-                AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
             );
 
             abs_assert(
@@ -3656,7 +3656,7 @@ mod absolute {
         #[test]
         fn contains_and_same_end() -> Result<(), Box<dyn Error>> {
             let half_bounded = AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
                 AbsoluteEndBound::InfiniteFuture,
             );
 
@@ -3708,8 +3708,8 @@ mod absolute {
         #[test]
         fn outside() -> Result<(), Box<dyn Error>> {
             let bounded = AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
             );
 
             abs_assert_empty(
@@ -3732,7 +3732,7 @@ mod absolute {
         #[test]
         fn outside_to_future() -> Result<(), Box<dyn Error>> {
             let half_bounded = AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
                 AbsoluteEndBound::InfiniteFuture,
             );
 
@@ -3753,7 +3753,7 @@ mod absolute {
         fn outside_to_past() -> Result<(), Box<dyn Error>> {
             let half_bounded = AbsoluteBoundPair::new(
                 AbsoluteStartBound::InfinitePast,
-                AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
             );
 
             abs_assert_empty(
@@ -3813,9 +3813,9 @@ mod relative {
                 .ok_or("data not found")?;
 
             let expected = RelativeBoundPair::new(
-                RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
+                RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
                     .to_start_bound(),
-                RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(3), BoundInclusivity::Exclusive)
+                RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(3), BoundInclusivity::Exclusive)
                     .to_end_bound(),
             );
 
@@ -3841,9 +3841,9 @@ mod relative {
                 .ok_or("data not found")?;
 
             let expected = RelativeBoundPair::new(
-                RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
+                RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
                     .to_start_bound(),
-                RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(3), BoundInclusivity::Exclusive)
+                RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(3), BoundInclusivity::Exclusive)
                     .to_end_bound(),
             );
 
@@ -3872,8 +3872,8 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -3937,8 +3937,8 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -3967,8 +3967,8 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -4031,8 +4031,8 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -4058,8 +4058,8 @@ mod relative {
                 .ok_or("data not found")?;
 
             let expected = RelativeBoundPair::new(
-                RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_start_bound(),
-                RelativeFiniteBound::new(SignedDuration::from_hours(3)).to_end_bound(),
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
             );
 
             rel_assert(
@@ -4084,8 +4084,8 @@ mod relative {
                 .ok_or("data not found")?;
 
             let expected = RelativeBoundPair::new(
-                RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_start_bound(),
-                RelativeFiniteBound::new(SignedDuration::from_hours(3)).to_end_bound(),
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
             );
 
             rel_assert(
@@ -4107,8 +4107,8 @@ mod relative {
             let data = BOUNDED_BOUNDED_REL.get("inside").cloned().ok_or("data not found")?;
 
             let expected = RelativeBoundPair::new(
-                RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_start_bound(),
-                RelativeFiniteBound::new(SignedDuration::from_hours(3)).to_end_bound(),
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
             );
 
             rel_assert(
@@ -4136,8 +4136,8 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -4162,12 +4162,12 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -4192,12 +4192,12 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -4222,12 +4222,12 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -4256,8 +4256,8 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(3)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -4282,8 +4282,8 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(3),
                         BoundInclusivity::Exclusive,
                     )
@@ -4312,8 +4312,8 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(3),
                         BoundInclusivity::Exclusive,
                     )
@@ -4342,8 +4342,8 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(3),
                         BoundInclusivity::Exclusive,
                     )
@@ -4376,8 +4376,8 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -4402,8 +4402,8 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -4432,8 +4432,8 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -4462,8 +4462,8 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -4492,12 +4492,12 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -4522,12 +4522,12 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -4556,12 +4556,12 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -4590,12 +4590,12 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -4624,12 +4624,12 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -4654,12 +4654,12 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -4688,12 +4688,12 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -4722,12 +4722,12 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -4756,12 +4756,12 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -4786,12 +4786,12 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -4820,12 +4820,12 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -4854,12 +4854,12 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -4892,8 +4892,8 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -4918,12 +4918,12 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -4948,12 +4948,12 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -4978,12 +4978,12 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -5012,8 +5012,8 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(3)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -5038,8 +5038,8 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(3),
                         BoundInclusivity::Exclusive,
                     )
@@ -5068,8 +5068,8 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(3),
                         BoundInclusivity::Exclusive,
                     )
@@ -5098,8 +5098,8 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(3),
                         BoundInclusivity::Exclusive,
                     )
@@ -5126,8 +5126,8 @@ mod relative {
             let data = BOUNDED_BOUNDED_REL.get("contains").cloned().ok_or("data not found")?;
 
             let expected = RelativeBoundPair::new(
-                RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_start_bound(),
-                RelativeFiniteBound::new(SignedDuration::from_hours(3)).to_end_bound(),
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
             );
 
             rel_assert(
@@ -5156,9 +5156,9 @@ mod relative {
                 .ok_or("data not found")?;
 
             let expected = RelativeBoundPair::new(
-                RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
+                RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
                     .to_start_bound(),
-                RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(3), BoundInclusivity::Exclusive)
+                RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(3), BoundInclusivity::Exclusive)
                     .to_end_bound(),
             );
 
@@ -5184,9 +5184,9 @@ mod relative {
                 .ok_or("data not found")?;
 
             let expected = RelativeBoundPair::new(
-                RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+                RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
                     .to_start_bound(),
-                RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
+                RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
                     .to_end_bound(),
             );
 
@@ -5215,8 +5215,8 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -5279,8 +5279,8 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -5309,8 +5309,8 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -5373,8 +5373,8 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -5400,8 +5400,8 @@ mod relative {
                 .ok_or("data not found")?;
 
             let expected = RelativeBoundPair::new(
-                RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_start_bound(),
-                RelativeFiniteBound::new(SignedDuration::from_hours(3)).to_end_bound(),
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
             );
 
             rel_assert(
@@ -5426,8 +5426,8 @@ mod relative {
                 .ok_or("data not found")?;
 
             let expected = RelativeBoundPair::new(
-                RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
             );
 
             rel_assert(
@@ -5455,8 +5455,8 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(3)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -5481,8 +5481,8 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -5511,8 +5511,8 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -5537,12 +5537,12 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -5567,12 +5567,12 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -5597,12 +5597,12 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -5631,8 +5631,8 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -5657,8 +5657,8 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -5687,8 +5687,8 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -5717,8 +5717,8 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -5747,8 +5747,8 @@ mod relative {
         #[test]
         fn inside() -> Result<(), Box<dyn Error>> {
             let bounded = RelativeBoundPair::new(
-                RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
             );
 
             rel_assert(
@@ -5771,8 +5771,8 @@ mod relative {
         #[test]
         fn outside() -> Result<(), Box<dyn Error>> {
             let bounded = RelativeBoundPair::new(
-                RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
             );
 
             rel_assert(
@@ -5800,9 +5800,9 @@ mod relative {
                 .ok_or("data not found")?;
 
             let expected = RelativeBoundPair::new(
-                RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+                RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
                     .to_start_bound(),
-                RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
+                RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
                     .to_end_bound(),
             );
 
@@ -5828,9 +5828,9 @@ mod relative {
                 .ok_or("data not found")?;
 
             let expected = RelativeBoundPair::new(
-                RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
+                RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
                     .to_start_bound(),
-                RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(3), BoundInclusivity::Exclusive)
+                RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(3), BoundInclusivity::Exclusive)
                     .to_end_bound(),
             );
 
@@ -5859,8 +5859,8 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -5923,8 +5923,8 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -5953,8 +5953,8 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -6017,8 +6017,8 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -6044,8 +6044,8 @@ mod relative {
                 .ok_or("data not found")?;
 
             let expected = RelativeBoundPair::new(
-                RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
             );
 
             rel_assert(
@@ -6070,8 +6070,8 @@ mod relative {
                 .ok_or("data not found")?;
 
             let expected = RelativeBoundPair::new(
-                RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_start_bound(),
-                RelativeFiniteBound::new(SignedDuration::from_hours(3)).to_end_bound(),
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
             );
 
             rel_assert(
@@ -6099,8 +6099,8 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -6125,12 +6125,12 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -6155,12 +6155,12 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -6185,12 +6185,12 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -6219,8 +6219,8 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -6245,8 +6245,8 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -6275,8 +6275,8 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -6305,8 +6305,8 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -6339,8 +6339,8 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(3)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -6365,8 +6365,8 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -6396,9 +6396,9 @@ mod relative {
                 .ok_or("data not found")?;
 
             let expected = RelativeBoundPair::new(
-                RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+                RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
                     .to_start_bound(),
-                RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
+                RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
                     .to_end_bound(),
             );
 
@@ -6424,9 +6424,9 @@ mod relative {
                 .ok_or("data not found")?;
 
             let expected = RelativeBoundPair::new(
-                RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+                RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
                     .to_start_bound(),
-                RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
+                RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
                     .to_end_bound(),
             );
 
@@ -6455,8 +6455,8 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -6519,8 +6519,8 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -6549,8 +6549,8 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -6613,8 +6613,8 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -6640,8 +6640,8 @@ mod relative {
                 .ok_or("data not found")?;
 
             let expected = RelativeBoundPair::new(
-                RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
             );
 
             rel_assert(
@@ -6666,8 +6666,8 @@ mod relative {
                 .ok_or("data not found")?;
 
             let expected = RelativeBoundPair::new(
-                RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
             );
 
             rel_assert(
@@ -6693,7 +6693,7 @@ mod relative {
 
             let expected = RelativeBoundPair::new(
                 RelativeStartBound::InfinitePast,
-                RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound(),
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
             );
 
             rel_assert(
@@ -6718,7 +6718,7 @@ mod relative {
                 .ok_or("data not found")?;
 
             let expected = RelativeBoundPair::new(
-                RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_start_bound(),
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
                 RelativeEndBound::InfiniteFuture,
             );
 
@@ -6750,7 +6750,7 @@ mod relative {
                         .ok_or("data not found")?;
 
                     let expected = RelativeBoundPair::new(
-                        RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
+                        RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
                         RelativeEndBound::InfiniteFuture,
                     );
 
@@ -6776,7 +6776,7 @@ mod relative {
                         .ok_or("data not found")?;
 
                     let expected = RelativeBoundPair::new(
-                        RelativeFiniteBound::new_with_inclusivity(
+                        RelativeFiniteBoundPosition::new_with_inclusivity(
                             SignedDuration::from_hours(1),
                             BoundInclusivity::Exclusive,
                         )
@@ -6806,7 +6806,7 @@ mod relative {
                         .ok_or("data not found")?;
 
                     let expected = RelativeBoundPair::new(
-                        RelativeFiniteBound::new_with_inclusivity(
+                        RelativeFiniteBoundPosition::new_with_inclusivity(
                             SignedDuration::from_hours(1),
                             BoundInclusivity::Exclusive,
                         )
@@ -6836,7 +6836,7 @@ mod relative {
                         .ok_or("data not found")?;
 
                     let expected = RelativeBoundPair::new(
-                        RelativeFiniteBound::new_with_inclusivity(
+                        RelativeFiniteBoundPosition::new_with_inclusivity(
                             SignedDuration::from_hours(1),
                             BoundInclusivity::Exclusive,
                         )
@@ -6871,7 +6871,7 @@ mod relative {
 
                     let expected = RelativeBoundPair::new(
                         RelativeStartBound::InfinitePast,
-                        RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound(),
+                        RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
                     );
 
                     rel_assert(
@@ -6897,7 +6897,7 @@ mod relative {
 
                     let expected = RelativeBoundPair::new(
                         RelativeStartBound::InfinitePast,
-                        RelativeFiniteBound::new_with_inclusivity(
+                        RelativeFiniteBoundPosition::new_with_inclusivity(
                             SignedDuration::from_hours(1),
                             BoundInclusivity::Exclusive,
                         )
@@ -6927,7 +6927,7 @@ mod relative {
 
                     let expected = RelativeBoundPair::new(
                         RelativeStartBound::InfinitePast,
-                        RelativeFiniteBound::new_with_inclusivity(
+                        RelativeFiniteBoundPosition::new_with_inclusivity(
                             SignedDuration::from_hours(1),
                             BoundInclusivity::Exclusive,
                         )
@@ -6957,7 +6957,7 @@ mod relative {
 
                     let expected = RelativeBoundPair::new(
                         RelativeStartBound::InfinitePast,
-                        RelativeFiniteBound::new_with_inclusivity(
+                        RelativeFiniteBoundPosition::new_with_inclusivity(
                             SignedDuration::from_hours(1),
                             BoundInclusivity::Exclusive,
                         )
@@ -6989,7 +6989,7 @@ mod relative {
 
             let expected = RelativeBoundPair::new(
                 RelativeStartBound::InfinitePast,
-                RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound(),
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
             );
 
             rel_assert(
@@ -7014,7 +7014,7 @@ mod relative {
                 .ok_or("data not found")?;
 
             let expected = RelativeBoundPair::new(
-                RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_start_bound(),
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
                 RelativeEndBound::InfiniteFuture,
             );
 
@@ -7040,7 +7040,7 @@ mod relative {
         fn inside_and_same_start() -> Result<(), Box<dyn Error>> {
             let half_bounded = RelativeBoundPair::new(
                 RelativeStartBound::InfinitePast,
-                RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound(),
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
             );
 
             rel_assert(
@@ -7059,7 +7059,7 @@ mod relative {
         #[test]
         fn inside_and_same_end() -> Result<(), Box<dyn Error>> {
             let half_bounded = RelativeBoundPair::new(
-                RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
                 RelativeEndBound::InfiniteFuture,
             );
 
@@ -7083,7 +7083,7 @@ mod relative {
         #[test]
         fn outside_to_past() -> Result<(), Box<dyn Error>> {
             let half_bounded = RelativeBoundPair::new(
-                RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
                 RelativeEndBound::InfiniteFuture,
             );
 
@@ -7104,7 +7104,7 @@ mod relative {
         fn outside_to_future() -> Result<(), Box<dyn Error>> {
             let half_bounded = RelativeBoundPair::new(
                 RelativeStartBound::InfinitePast,
-                RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound(),
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
             );
 
             rel_assert(
@@ -7127,8 +7127,8 @@ mod relative {
         #[test]
         fn contains() -> Result<(), Box<dyn Error>> {
             let bounded = RelativeBoundPair::new(
-                RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
             );
 
             rel_assert(
@@ -7152,7 +7152,7 @@ mod relative {
         fn contains_and_same_start() -> Result<(), Box<dyn Error>> {
             let half_bounded = RelativeBoundPair::new(
                 RelativeStartBound::InfinitePast,
-                RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound(),
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
             );
 
             rel_assert(
@@ -7171,7 +7171,7 @@ mod relative {
         #[test]
         fn contains_and_same_end() -> Result<(), Box<dyn Error>> {
             let half_bounded = RelativeBoundPair::new(
-                RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
                 RelativeEndBound::InfiniteFuture,
             );
 
@@ -7221,8 +7221,8 @@ mod relative {
         #[test]
         fn outside() -> Result<(), Box<dyn Error>> {
             let bounded = RelativeBoundPair::new(
-                RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
             );
 
             rel_assert_empty(
@@ -7245,7 +7245,7 @@ mod relative {
         #[test]
         fn outside_to_future() -> Result<(), Box<dyn Error>> {
             let half_bounded = RelativeBoundPair::new(
-                RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
                 RelativeEndBound::InfiniteFuture,
             );
 
@@ -7266,7 +7266,7 @@ mod relative {
         fn outside_to_past() -> Result<(), Box<dyn Error>> {
             let half_bounded = RelativeBoundPair::new(
                 RelativeStartBound::InfinitePast,
-                RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound(),
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
             );
 
             rel_assert_empty(

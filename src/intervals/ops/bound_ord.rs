@@ -21,15 +21,15 @@
 //! # use std::cmp::Ordering;
 //! # use std::error::Error;
 //! # use jiff::Zoned;
-//! # use periodical::intervals::absolute::AbsoluteFiniteBound;
+//! # use periodical::intervals::absolute::AbsoluteFiniteBoundPosition;
 //! # use periodical::intervals::meta::BoundInclusivity;
 //! # use periodical::intervals::ops::bound_ord::PartialBoundOrd;
 //! # use periodical::intervals::ops::bound_overlap_ambiguity::BoundOverlapDisambiguationRuleSet;
-//! let ref_bound = AbsoluteFiniteBound::new(
+//! let ref_bound = AbsoluteFiniteBoundPosition::new(
 //!     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 //! ).to_start_bound();
 //!
-//! let compared_bound = AbsoluteFiniteBound::new_with_inclusivity(
+//! let compared_bound = AbsoluteFiniteBoundPosition::new_with_inclusivity(
 //!     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 //!     BoundInclusivity::Exclusive,
 //! ).to_start_bound();
@@ -100,15 +100,15 @@ impl BoundOrdering {
     /// # use std::cmp::Ordering;
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::{AbsoluteFiniteBound, AbsoluteStartBound};
+    /// # use periodical::intervals::absolute::{AbsoluteFiniteBoundPosition, AbsoluteStartBound};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::bound_ord::PartialBoundOrd;
     /// # use periodical::intervals::ops::bound_overlap_ambiguity::BoundOverlapDisambiguationRuleSet;
-    /// let ref_bound = AbsoluteFiniteBound::new(
+    /// let ref_bound = AbsoluteFiniteBoundPosition::new(
     ///     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     /// ).to_start_bound();
     ///
-    /// let compared_bound = AbsoluteFiniteBound::new_with_inclusivity(
+    /// let compared_bound = AbsoluteFiniteBoundPosition::new_with_inclusivity(
     ///     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     BoundInclusivity::Exclusive,
     /// ).to_start_bound();
@@ -146,26 +146,26 @@ impl BoundOrdering {
     /// # use std::cmp::Ordering;
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::{AbsoluteFiniteBound, AbsoluteStartBound};
+    /// # use periodical::intervals::absolute::{AbsoluteFiniteBoundPosition, AbsoluteStartBound};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::bound_ord::PartialBoundOrd;
     /// # use periodical::intervals::ops::bound_overlap_ambiguity::{
     /// #     BoundOverlapAmbiguity, BoundOverlapDisambiguationRuleSet, DisambiguatedBoundOverlap,
     /// # };
-    /// let ref_bound = AbsoluteFiniteBound::new(
+    /// let ref_bound = AbsoluteFiniteBoundPosition::new(
     ///     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     /// ).to_start_bound();
     ///
-    /// let compared_bound = AbsoluteFiniteBound::new(
+    /// let compared_bound = AbsoluteFiniteBoundPosition::new(
     ///     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     /// ).to_start_bound();
     ///
-    /// let mut ref_bound_exclusive = AbsoluteFiniteBound::new_with_inclusivity(
+    /// let mut ref_bound_exclusive = AbsoluteFiniteBoundPosition::new_with_inclusivity(
     ///     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     BoundInclusivity::Exclusive,
     /// ).to_start_bound();
     ///
-    /// let compared_bound_exclusive = AbsoluteFiniteBound::new_with_inclusivity(
+    /// let compared_bound_exclusive = AbsoluteFiniteBoundPosition::new_with_inclusivity(
     ///     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     BoundInclusivity::Exclusive,
     /// ).to_start_bound();
@@ -233,18 +233,18 @@ impl BoundOrdering {
 /// ```
 /// # use std::error::Error;
 /// # use jiff::Zoned;
-/// # use periodical::intervals::absolute::{AbsoluteFiniteBound, AbsoluteStartBound};
+/// # use periodical::intervals::absolute::{AbsoluteFiniteBoundPosition, AbsoluteStartBound};
 /// # use periodical::intervals::meta::BoundInclusivity;
 /// # use periodical::intervals::ops::bound_ord::{BoundOrdering, PartialBoundOrd};
 /// # use periodical::intervals::ops::bound_overlap_ambiguity::BoundOverlapAmbiguity;
-/// let ref_bound = AbsoluteFiniteBound::new(
+/// let ref_bound = AbsoluteFiniteBoundPosition::new(
 ///     "2025-01-01 08:00:00[Europe/Oslo]"
 ///         .parse::<Zoned>()?
 ///         .timestamp(),
 /// )
 /// .to_start_bound();
 ///
-/// let compared_bound = AbsoluteFiniteBound::new_with_inclusivity(
+/// let compared_bound = AbsoluteFiniteBoundPosition::new_with_inclusivity(
 ///     "2025-01-01 08:00:00[Europe/Oslo]"
 ///         .parse::<Zoned>()?
 ///         .timestamp(),
@@ -271,18 +271,18 @@ pub trait PartialBoundOrd<Rhs = Self> {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::{AbsoluteFiniteBound, AbsoluteStartBound};
+    /// # use periodical::intervals::absolute::{AbsoluteFiniteBoundPosition, AbsoluteStartBound};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::bound_ord::{BoundOrdering, PartialBoundOrd};
     /// # use periodical::intervals::ops::bound_overlap_ambiguity::BoundOverlapAmbiguity;
-    /// let ref_bound = AbsoluteFiniteBound::new(
+    /// let ref_bound = AbsoluteFiniteBoundPosition::new(
     ///     "2025-01-01 08:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
     /// )
     /// .to_start_bound();
     ///
-    /// let compared_bound = AbsoluteFiniteBound::new_with_inclusivity(
+    /// let compared_bound = AbsoluteFiniteBoundPosition::new_with_inclusivity(
     ///     "2025-01-01 08:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
@@ -310,20 +310,20 @@ pub trait PartialBoundOrd<Rhs = Self> {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::{AbsoluteFiniteBound, AbsoluteStartBound};
+    /// # use periodical::intervals::absolute::{AbsoluteFiniteBoundPosition, AbsoluteStartBound};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::bound_ord::{BoundOrdering, PartialBoundOrd};
     /// # use periodical::intervals::ops::bound_overlap_ambiguity::{
     /// #     BoundOverlapAmbiguity, BoundOverlapDisambiguationRuleSet,
     /// # };
-    /// let ref_bound = AbsoluteFiniteBound::new(
+    /// let ref_bound = AbsoluteFiniteBoundPosition::new(
     ///     "2025-01-01 08:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
     /// )
     /// .to_start_bound();
     ///
-    /// let compared_bound = AbsoluteFiniteBound::new_with_inclusivity(
+    /// let compared_bound = AbsoluteFiniteBoundPosition::new_with_inclusivity(
     ///     "2025-01-01 08:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
@@ -356,20 +356,20 @@ pub trait PartialBoundOrd<Rhs = Self> {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::{AbsoluteFiniteBound, AbsoluteStartBound};
+    /// # use periodical::intervals::absolute::{AbsoluteFiniteBoundPosition, AbsoluteStartBound};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::bound_ord::{BoundOrdering, PartialBoundOrd};
     /// # use periodical::intervals::ops::bound_overlap_ambiguity::{
     /// #     BoundOverlapAmbiguity, BoundOverlapDisambiguationRuleSet,
     /// # };
-    /// let ref_bound = AbsoluteFiniteBound::new(
+    /// let ref_bound = AbsoluteFiniteBoundPosition::new(
     ///     "2025-01-01 08:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
     /// )
     /// .to_start_bound();
     ///
-    /// let compared_bound = AbsoluteFiniteBound::new_with_inclusivity(
+    /// let compared_bound = AbsoluteFiniteBoundPosition::new_with_inclusivity(
     ///     "2025-01-01 08:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
@@ -402,20 +402,20 @@ pub trait PartialBoundOrd<Rhs = Self> {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::{AbsoluteFiniteBound, AbsoluteStartBound};
+    /// # use periodical::intervals::absolute::{AbsoluteFiniteBoundPosition, AbsoluteStartBound};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::bound_ord::{BoundOrdering, PartialBoundOrd};
     /// # use periodical::intervals::ops::bound_overlap_ambiguity::{
     /// #     BoundOverlapAmbiguity, BoundOverlapDisambiguationRuleSet,
     /// # };
-    /// let ref_bound = AbsoluteFiniteBound::new(
+    /// let ref_bound = AbsoluteFiniteBoundPosition::new(
     ///     "2025-01-01 08:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
     /// )
     /// .to_start_bound();
     ///
-    /// let compared_bound = AbsoluteFiniteBound::new_with_inclusivity(
+    /// let compared_bound = AbsoluteFiniteBoundPosition::new_with_inclusivity(
     ///     "2025-01-01 08:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
@@ -448,20 +448,20 @@ pub trait PartialBoundOrd<Rhs = Self> {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::{AbsoluteFiniteBound, AbsoluteStartBound};
+    /// # use periodical::intervals::absolute::{AbsoluteFiniteBoundPosition, AbsoluteStartBound};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::bound_ord::{BoundOrdering, PartialBoundOrd};
     /// # use periodical::intervals::ops::bound_overlap_ambiguity::{
     /// #     BoundOverlapAmbiguity, BoundOverlapDisambiguationRuleSet,
     /// # };
-    /// let ref_bound = AbsoluteFiniteBound::new(
+    /// let ref_bound = AbsoluteFiniteBoundPosition::new(
     ///     "2025-01-01 08:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
     /// )
     /// .to_start_bound();
     ///
-    /// let compared_bound = AbsoluteFiniteBound::new_with_inclusivity(
+    /// let compared_bound = AbsoluteFiniteBoundPosition::new_with_inclusivity(
     ///     "2025-01-01 08:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),

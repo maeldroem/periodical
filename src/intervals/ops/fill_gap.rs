@@ -9,17 +9,17 @@
 //! ```
 //! # use std::error::Error;
 //! # use jiff::Zoned;
-//! # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+//! # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
 //! # use periodical::intervals::meta::BoundInclusivity;
 //! # use periodical::intervals::ops::fill_gap::GapFillable;
 //! let first_interval = AbsoluteBoundPair::new(
-//!     AbsoluteFiniteBound::new(
+//!     AbsoluteFiniteBoundPosition::new(
 //!         "2025-01-01 08:00:00[Europe/Oslo]"
 //!             .parse::<Zoned>()?
 //!             .timestamp(),
 //!     )
 //!     .to_start_bound(),
-//!     AbsoluteFiniteBound::new(
+//!     AbsoluteFiniteBoundPosition::new(
 //!         "2025-01-01 10:00:00[Europe/Oslo]"
 //!             .parse::<Zoned>()?
 //!             .timestamp(),
@@ -28,13 +28,13 @@
 //! );
 //!
 //! let second_interval = AbsoluteBoundPair::new(
-//!     AbsoluteFiniteBound::new(
+//!     AbsoluteFiniteBoundPosition::new(
 //!         "2025-01-01 12:00:00[Europe/Oslo]"
 //!             .parse::<Zoned>()?
 //!             .timestamp(),
 //!     )
 //!     .to_start_bound(),
-//!     AbsoluteFiniteBound::new(
+//!     AbsoluteFiniteBoundPosition::new(
 //!         "2025-01-01 16:00:00[Europe/Oslo]"
 //!             .parse::<Zoned>()?
 //!             .timestamp(),
@@ -45,13 +45,13 @@
 //! assert_eq!(
 //!     first_interval.fill_gap(&second_interval),
 //!     Ok(AbsoluteBoundPair::new(
-//!         AbsoluteFiniteBound::new(
+//!         AbsoluteFiniteBoundPosition::new(
 //!             "2025-01-01 08:00:00[Europe/Oslo]"
 //!                 .parse::<Zoned>()?
 //!                 .timestamp(),
 //!         )
 //!         .to_start_bound(),
-//!         AbsoluteFiniteBound::new_with_inclusivity(
+//!         AbsoluteFiniteBoundPosition::new_with_inclusivity(
 //!             "2025-01-01 12:00:00[Europe/Oslo]"
 //!                 .parse::<Zoned>()?
 //!                 .timestamp(),
@@ -71,7 +71,7 @@ use super::overlap::{CanPositionOverlap, DisambiguatedOverlapPosition, OverlapRu
 use crate::intervals::absolute::{
     AbsoluteBoundPair,
     AbsoluteEndBound,
-    AbsoluteFiniteBound,
+    AbsoluteFiniteBoundPosition,
     AbsoluteInterval,
     AbsoluteStartBound,
     BoundedAbsoluteInterval,
@@ -91,7 +91,7 @@ use crate::intervals::relative::{
     HasRelativeBoundPair,
     RelativeBoundPair,
     RelativeEndBound,
-    RelativeFiniteBound,
+    RelativeFiniteBoundPosition,
     RelativeInterval,
     RelativeStartBound,
 };
@@ -130,17 +130,17 @@ pub trait GapFillable<Rhs = Self> {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::fill_gap::GapFillable;
     /// let first_interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 08:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
     ///     )
     ///     .to_start_bound(),
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 10:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
@@ -149,13 +149,13 @@ pub trait GapFillable<Rhs = Self> {
     /// );
     ///
     /// let second_interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 12:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
     ///     )
     ///     .to_start_bound(),
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 16:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
@@ -166,13 +166,13 @@ pub trait GapFillable<Rhs = Self> {
     /// assert_eq!(
     ///     first_interval.fill_gap(&second_interval),
     ///     Ok(AbsoluteBoundPair::new(
-    ///         AbsoluteFiniteBound::new(
+    ///         AbsoluteFiniteBoundPosition::new(
     ///             "2025-01-01 08:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
     ///         )
     ///         .to_start_bound(),
-    ///         AbsoluteFiniteBound::new_with_inclusivity(
+    ///         AbsoluteFiniteBoundPosition::new_with_inclusivity(
     ///             "2025-01-01 12:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
@@ -356,31 +356,31 @@ pub fn fill_gap_abs_bound_pair(
     match overlap_position {
         Dop::Outside => unreachable!("Only empty intervals can produce `OverlapPosition::Outside`"),
         Dop::OutsideBefore => {
-            let AbsoluteStartBound::Finite(finite_bound) = b.abs_start() else {
+            let AbsoluteStartBound::Finite(finite_bound_position) = b.abs_start() else {
                 unreachable!(
                     "If the start of the compared bounds is `InfinitePast`, then it is impossible that the overlap \
                      was `OutsideBefore`"
                 );
             };
 
-            let new_end_bound = AbsoluteEndBound::from(AbsoluteFiniteBound::new_with_inclusivity(
-                finite_bound.time(),
-                finite_bound.inclusivity().opposite(), // So that it fully closes the gap
+            let new_end_bound = AbsoluteEndBound::from(AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                finite_bound_position.time(),
+                finite_bound_position.inclusivity().opposite(), // So that it fully closes the gap
             ));
 
             Ok(a.grow_end(new_end_bound))
         },
         Dop::OutsideAfter => {
-            let AbsoluteEndBound::Finite(finite_bound) = b.abs_end() else {
+            let AbsoluteEndBound::Finite(finite_bound_position) = b.abs_end() else {
                 unreachable!(
                     "If the end of the compared bounds is `InfiniteFuture`, then it is impossible that the overlap \
                      was `OutsideAfter`"
                 );
             };
 
-            let new_start_bound = AbsoluteStartBound::from(AbsoluteFiniteBound::new_with_inclusivity(
-                finite_bound.time(),
-                finite_bound.inclusivity().opposite(), // So that it fully closes the gap
+            let new_start_bound = AbsoluteStartBound::from(AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                finite_bound_position.time(),
+                finite_bound_position.inclusivity().opposite(), // So that it fully closes the gap
             ));
 
             Ok(a.grow_start(new_start_bound))
@@ -446,31 +446,31 @@ pub fn fill_gap_rel_bound_pair(
     match overlap_position {
         Dop::Outside => unreachable!("Only empty intervals can produce `OverlapPosition::Outside`"),
         Dop::OutsideBefore => {
-            let RelativeStartBound::Finite(finite_bound) = b.rel_start() else {
+            let RelativeStartBound::Finite(finite_bound_position) = b.rel_start() else {
                 unreachable!(
                     "If the start of the compared bounds is `InfinitePast`, then it is impossible that the overlap \
                      was `OutsideBefore`"
                 );
             };
 
-            let new_end_bound = RelativeEndBound::from(RelativeFiniteBound::new_with_inclusivity(
-                finite_bound.offset(),
-                finite_bound.inclusivity().opposite(), // So that it fully closes the gap
+            let new_end_bound = RelativeEndBound::from(RelativeFiniteBoundPosition::new_with_inclusivity(
+                finite_bound_position.offset(),
+                finite_bound_position.inclusivity().opposite(), // So that it fully closes the gap
             ));
 
             Ok(a.grow_end(new_end_bound))
         },
         Dop::OutsideAfter => {
-            let RelativeEndBound::Finite(finite_bound) = b.rel_end() else {
+            let RelativeEndBound::Finite(finite_bound_position) = b.rel_end() else {
                 unreachable!(
                     "If the end of the compared bounds is `InfiniteFuture`, then it is impossible that the overlap \
                      was `OutsideAfter`"
                 );
             };
 
-            let new_start_bound = RelativeStartBound::from(RelativeFiniteBound::new_with_inclusivity(
-                finite_bound.offset(),
-                finite_bound.inclusivity().opposite(), // So that it fully closes the gap
+            let new_start_bound = RelativeStartBound::from(RelativeFiniteBoundPosition::new_with_inclusivity(
+                finite_bound_position.offset(),
+                finite_bound_position.inclusivity().opposite(), // So that it fully closes the gap
             ));
 
             Ok(a.grow_start(new_start_bound))

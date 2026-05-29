@@ -36,7 +36,7 @@ use crate::intervals::relative::{
     HasRelativeBoundPair,
     RelativeBoundPair,
     RelativeEndBound,
-    RelativeFiniteBound,
+    RelativeFiniteBoundPosition,
     RelativeInterval,
     RelativeStartBound,
 };
@@ -384,7 +384,7 @@ impl HasRelativeBoundPair for HalfBoundedRelativeInterval {
         match self.opening_direction {
             OpeningDirection::ToPast => RelativeStartBound::InfinitePast,
             OpeningDirection::ToFuture => {
-                RelativeFiniteBound::new_with_inclusivity(self.reference, self.reference_inclusivity).to_start_bound()
+                RelativeFiniteBoundPosition::new_with_inclusivity(self.reference, self.reference_inclusivity).to_start_bound()
             },
         }
     }
@@ -392,7 +392,7 @@ impl HasRelativeBoundPair for HalfBoundedRelativeInterval {
     fn rel_end(&self) -> RelativeEndBound {
         match self.opening_direction {
             OpeningDirection::ToPast => {
-                RelativeFiniteBound::new_with_inclusivity(self.reference, self.reference_inclusivity).to_end_bound()
+                RelativeFiniteBoundPosition::new_with_inclusivity(self.reference, self.reference_inclusivity).to_end_bound()
             },
             OpeningDirection::ToFuture => RelativeEndBound::InfiniteFuture,
         }
@@ -417,8 +417,8 @@ impl From<(SignedDuration, BoundInclusivity, OpeningDirection)> for HalfBoundedR
     }
 }
 
-impl From<(RelativeFiniteBound, OpeningDirection)> for HalfBoundedRelativeInterval {
-    fn from((reference, opening_direction): (RelativeFiniteBound, OpeningDirection)) -> Self {
+impl From<(RelativeFiniteBoundPosition, OpeningDirection)> for HalfBoundedRelativeInterval {
+    fn from((reference, opening_direction): (RelativeFiniteBoundPosition, OpeningDirection)) -> Self {
         Self::new_with_inclusivity(reference.offset(), reference.inclusivity(), opening_direction)
     }
 }

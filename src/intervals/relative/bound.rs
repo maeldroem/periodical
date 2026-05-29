@@ -13,7 +13,7 @@ use arbitrary::Arbitrary;
 use serde::{Deserialize, Serialize};
 
 use crate::intervals::meta::{BoundExtremality, HasBoundExtremality};
-use crate::intervals::relative::{RelativeEndBound, RelativeFiniteBound, RelativeStartBound};
+use crate::intervals::relative::{RelativeEndBound, RelativeFiniteBoundPosition, RelativeStartBound};
 
 /// Enum for relative start and end bounds
 ///
@@ -35,14 +35,14 @@ impl RelativeBound {
     ///
     /// ```
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::{RelativeBound, RelativeFiniteBound};
+    /// # use periodical::intervals::relative::{RelativeBound, RelativeFiniteBoundPosition};
     /// let start_offset = SignedDuration::from_hours(8);
     /// let end_offset = SignedDuration::from_hours(16);
     ///
-    /// let start = RelativeFiniteBound::new(start_offset)
+    /// let start = RelativeFiniteBoundPosition::new(start_offset)
     ///     .to_start_bound()
     ///     .to_bound();
-    /// let end = RelativeFiniteBound::new(end_offset)
+    /// let end = RelativeFiniteBoundPosition::new(end_offset)
     ///     .to_end_bound()
     ///     .to_bound();
     ///
@@ -60,14 +60,14 @@ impl RelativeBound {
     ///
     /// ```
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::{RelativeBound, RelativeFiniteBound};
+    /// # use periodical::intervals::relative::{RelativeBound, RelativeFiniteBoundPosition};
     /// let start_offset = SignedDuration::from_hours(8);
     /// let end_offset = SignedDuration::from_hours(16);
     ///
-    /// let start = RelativeFiniteBound::new(start_offset)
+    /// let start = RelativeFiniteBoundPosition::new(start_offset)
     ///     .to_start_bound()
     ///     .to_bound();
-    /// let end = RelativeFiniteBound::new(end_offset)
+    /// let end = RelativeFiniteBoundPosition::new(end_offset)
     ///     .to_end_bound()
     ///     .to_bound();
     ///
@@ -89,20 +89,20 @@ impl RelativeBound {
     ///
     /// ```
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::{RelativeBound, RelativeFiniteBound};
+    /// # use periodical::intervals::relative::{RelativeBound, RelativeFiniteBoundPosition};
     /// let start_offset = SignedDuration::from_hours(8);
     /// let end_offset = SignedDuration::from_hours(16);
     ///
-    /// let start = RelativeFiniteBound::new(start_offset)
+    /// let start = RelativeFiniteBoundPosition::new(start_offset)
     ///     .to_start_bound()
     ///     .to_bound();
-    /// let end = RelativeFiniteBound::new(end_offset)
+    /// let end = RelativeFiniteBoundPosition::new(end_offset)
     ///     .to_end_bound()
     ///     .to_bound();
     ///
     /// assert_eq!(
     ///     start.start(),
-    ///     Some(RelativeFiniteBound::new(start_offset).to_start_bound()),
+    ///     Some(RelativeFiniteBoundPosition::new(start_offset).to_start_bound()),
     /// );
     /// assert_eq!(end.start(), None,);
     /// ```
@@ -124,20 +124,20 @@ impl RelativeBound {
     ///
     /// ```
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::{RelativeBound, RelativeFiniteBound};
+    /// # use periodical::intervals::relative::{RelativeBound, RelativeFiniteBoundPosition};
     /// let start_offset = SignedDuration::from_hours(8);
     /// let end_offset = SignedDuration::from_hours(16);
     ///
-    /// let start = RelativeFiniteBound::new(start_offset)
+    /// let start = RelativeFiniteBoundPosition::new(start_offset)
     ///     .to_start_bound()
     ///     .to_bound();
-    /// let end = RelativeFiniteBound::new(end_offset)
+    /// let end = RelativeFiniteBoundPosition::new(end_offset)
     ///     .to_end_bound()
     ///     .to_bound();
     ///
     /// assert_eq!(
     ///     end.end(),
-    ///     Some(RelativeFiniteBound::new(end_offset).to_end_bound()),
+    ///     Some(RelativeFiniteBoundPosition::new(end_offset).to_end_bound()),
     /// );
     /// assert_eq!(start.end(), None,);
     /// ```
@@ -259,8 +259,8 @@ impl From<RelativeEndBound> for RelativeBound {
     }
 }
 
-impl From<(RelativeFiniteBound, BoundExtremality)> for RelativeBound {
-    fn from((bound, extremality): (RelativeFiniteBound, BoundExtremality)) -> Self {
+impl From<(RelativeFiniteBoundPosition, BoundExtremality)> for RelativeBound {
+    fn from((bound, extremality): (RelativeFiniteBoundPosition, BoundExtremality)) -> Self {
         match extremality {
             BoundExtremality::Start => Self::from(bound.to_start_bound()),
             BoundExtremality::End => Self::from(bound.to_end_bound()),

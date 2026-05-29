@@ -9,14 +9,14 @@ use jiff::Timestamp;
 use crate::intervals::absolute::{
     AbsoluteBoundPair,
     AbsoluteEndBound,
-    AbsoluteFiniteBound,
+    AbsoluteFiniteBoundPosition,
     AbsoluteStartBound,
     BoundedAbsoluteInterval,
     HalfBoundedAbsoluteInterval,
 };
 use crate::intervals::meta::{BoundInclusivity, OpeningDirection};
 
-impl<'a> Arbitrary<'a> for AbsoluteFiniteBound {
+impl<'a> Arbitrary<'a> for AbsoluteFiniteBoundPosition {
     fn arbitrary(u: &mut Unstructured<'a>) -> arbitrary::Result<Self> {
         let timestamp_range = Timestamp::MIN.as_nanosecond()..=Timestamp::MAX.as_nanosecond();
         let timestamp = Timestamp::from_nanosecond(u.int_in_range(timestamp_range)?).or(Err(Error::IncorrectFormat))?;

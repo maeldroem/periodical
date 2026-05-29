@@ -41,7 +41,7 @@ use crate::intervals::relative::{
     HasRelativeBoundPair,
     RelativeBoundPair,
     RelativeEndBound,
-    RelativeFiniteBound,
+    RelativeFiniteBoundPosition,
     RelativeInterval,
     RelativeStartBound,
 };
@@ -943,11 +943,11 @@ impl HasRelativeBoundPair for BoundedRelativeInterval {
     }
 
     fn rel_start(&self) -> RelativeStartBound {
-        RelativeFiniteBound::new_with_inclusivity(self.start, self.start_inclusivity).to_start_bound()
+        RelativeFiniteBoundPosition::new_with_inclusivity(self.start, self.start_inclusivity).to_start_bound()
     }
 
     fn rel_end(&self) -> RelativeEndBound {
-        RelativeFiniteBound::new_with_inclusivity(self.end, self.end_inclusivity).to_end_bound()
+        RelativeFiniteBoundPosition::new_with_inclusivity(self.end, self.end_inclusivity).to_end_bound()
     }
 }
 
@@ -974,8 +974,8 @@ impl From<((SignedDuration, BoundInclusivity), (SignedDuration, BoundInclusivity
     }
 }
 
-impl From<(RelativeFiniteBound, RelativeFiniteBound)> for BoundedRelativeInterval {
-    fn from((start, end): (RelativeFiniteBound, RelativeFiniteBound)) -> Self {
+impl From<(RelativeFiniteBoundPosition, RelativeFiniteBoundPosition)> for BoundedRelativeInterval {
+    fn from((start, end): (RelativeFiniteBoundPosition, RelativeFiniteBoundPosition)) -> Self {
         Self::new_with_inclusivity(start.offset(), start.inclusivity(), end.offset(), end.inclusivity())
     }
 }

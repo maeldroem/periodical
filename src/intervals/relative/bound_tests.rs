@@ -4,7 +4,7 @@ use jiff::SignedDuration;
 
 use super::bound::*;
 use crate::intervals::meta::BoundInclusivity;
-use crate::intervals::relative::{RelativeEndBound, RelativeFiniteBound, RelativeStartBound};
+use crate::intervals::relative::{RelativeEndBound, RelativeFiniteBoundPosition, RelativeStartBound};
 
 #[test]
 fn is_start() {
@@ -21,14 +21,14 @@ fn is_end() {
 #[test]
 fn start() {
     assert_eq!(
-        RelativeFiniteBound::new(SignedDuration::from_hours(1))
+        RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1))
             .to_start_bound()
             .to_bound()
             .start(),
-        Some(RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound()),
+        Some(RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound()),
     );
     assert_eq!(
-        RelativeFiniteBound::new(SignedDuration::from_hours(1))
+        RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1))
             .to_end_bound()
             .to_bound()
             .start(),
@@ -39,18 +39,18 @@ fn start() {
 #[test]
 fn end() {
     assert_eq!(
-        RelativeFiniteBound::new(SignedDuration::from_hours(1))
+        RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1))
             .to_start_bound()
             .to_bound()
             .end(),
         None,
     );
     assert_eq!(
-        RelativeFiniteBound::new(SignedDuration::from_hours(1))
+        RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1))
             .to_end_bound()
             .to_bound()
             .end(),
-        Some(RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound()),
+        Some(RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound()),
     );
 }
 
@@ -62,12 +62,12 @@ fn start_inf_past_opposite() {
 #[test]
 fn start_finite_opposite() {
     assert_eq!(
-        RelativeFiniteBound::new(SignedDuration::from_hours(1))
+        RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1))
             .to_start_bound()
             .to_bound()
             .opposite(),
         Some(
-            RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive,)
+            RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive,)
                 .to_end_bound()
                 .to_bound()
         ),
@@ -82,12 +82,12 @@ fn end_inf_future_opposite() {
 #[test]
 fn end_finite_opposite() {
     assert_eq!(
-        RelativeFiniteBound::new(SignedDuration::from_hours(1))
+        RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1))
             .to_end_bound()
             .to_bound()
             .opposite(),
         Some(
-            RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive,)
+            RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive,)
                 .to_start_bound()
                 .to_bound()
         ),
@@ -97,34 +97,34 @@ fn end_finite_opposite() {
 #[test]
 fn equality() {
     assert_eq!(
-        RelativeFiniteBound::new(SignedDuration::from_hours(1))
+        RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1))
             .to_start_bound()
             .to_bound(),
-        RelativeFiniteBound::new(SignedDuration::from_hours(1))
+        RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1))
             .to_start_bound()
             .to_bound()
     );
     assert_eq!(
-        RelativeFiniteBound::new(SignedDuration::from_hours(1))
+        RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1))
             .to_end_bound()
             .to_bound(),
-        RelativeFiniteBound::new(SignedDuration::from_hours(1))
-            .to_end_bound()
-            .to_bound()
-    );
-    assert_eq!(
-        RelativeFiniteBound::new(SignedDuration::from_hours(1))
-            .to_start_bound()
-            .to_bound(),
-        RelativeFiniteBound::new(SignedDuration::from_hours(1))
+        RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1))
             .to_end_bound()
             .to_bound()
     );
     assert_eq!(
-        RelativeFiniteBound::new(SignedDuration::from_hours(1))
+        RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1))
             .to_start_bound()
             .to_bound(),
-        RelativeFiniteBound::new(SignedDuration::from_hours(1))
+        RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1))
+            .to_end_bound()
+            .to_bound()
+    );
+    assert_eq!(
+        RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1))
+            .to_start_bound()
+            .to_bound(),
+        RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1))
             .to_end_bound()
             .to_bound()
     );
@@ -157,11 +157,11 @@ fn hash_finite_start() {
     let mut hasher1 = DefaultHasher::new();
     let mut hasher2 = DefaultHasher::new();
 
-    RelativeFiniteBound::new(SignedDuration::ZERO)
+    RelativeFiniteBoundPosition::new(SignedDuration::ZERO)
         .to_start_bound()
         .to_bound()
         .hash(&mut hasher1);
-    RelativeFiniteBound::new(SignedDuration::ZERO)
+    RelativeFiniteBoundPosition::new(SignedDuration::ZERO)
         .to_start_bound()
         .to_bound()
         .hash(&mut hasher2);
@@ -174,11 +174,11 @@ fn hash_finite_end() {
     let mut hasher1 = DefaultHasher::new();
     let mut hasher2 = DefaultHasher::new();
 
-    RelativeFiniteBound::new(SignedDuration::ZERO)
+    RelativeFiniteBoundPosition::new(SignedDuration::ZERO)
         .to_end_bound()
         .to_bound()
         .hash(&mut hasher1);
-    RelativeFiniteBound::new(SignedDuration::ZERO)
+    RelativeFiniteBoundPosition::new(SignedDuration::ZERO)
         .to_end_bound()
         .to_bound()
         .hash(&mut hasher2);
@@ -189,11 +189,11 @@ fn hash_finite_start_end() {
     let mut hasher1 = DefaultHasher::new();
     let mut hasher2 = DefaultHasher::new();
 
-    RelativeFiniteBound::new(SignedDuration::ZERO)
+    RelativeFiniteBoundPosition::new(SignedDuration::ZERO)
         .to_start_bound()
         .to_bound()
         .hash(&mut hasher1);
-    RelativeFiniteBound::new(SignedDuration::ZERO)
+    RelativeFiniteBoundPosition::new(SignedDuration::ZERO)
         .to_end_bound()
         .to_bound()
         .hash(&mut hasher2);
@@ -206,11 +206,11 @@ fn hash_finite_start_end_no_match() {
     let mut hasher1 = DefaultHasher::new();
     let mut hasher2 = DefaultHasher::new();
 
-    RelativeFiniteBound::new(SignedDuration::ZERO)
+    RelativeFiniteBoundPosition::new(SignedDuration::ZERO)
         .to_start_bound()
         .to_bound()
         .hash(&mut hasher1);
-    RelativeFiniteBound::new(SignedDuration::from_secs(1))
+    RelativeFiniteBoundPosition::new(SignedDuration::from_secs(1))
         .to_end_bound()
         .to_bound()
         .hash(&mut hasher2);
@@ -221,15 +221,15 @@ fn hash_finite_start_end_no_match() {
 #[test]
 fn from_relative_start_bound() {
     assert_eq!(
-        RelativeBound::from(RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound()),
-        RelativeBound::Start(RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound()),
+        RelativeBound::from(RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound()),
+        RelativeBound::Start(RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound()),
     );
 }
 
 #[test]
 fn from_relative_end_bound() {
     assert_eq!(
-        RelativeBound::from(RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound()),
-        RelativeBound::End(RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound()),
+        RelativeBound::from(RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound()),
+        RelativeBound::End(RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound()),
     );
 }

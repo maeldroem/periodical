@@ -22,7 +22,7 @@ pub mod bounded_interval;
 pub mod emptiable_bound_pair;
 pub mod emptiable_interval;
 pub mod end_bound;
-pub mod finite_bound;
+pub mod finite_bound_position;
 pub mod half_bounded_interval;
 pub mod interval;
 pub mod start_bound;
@@ -61,7 +61,7 @@ pub use emptiable_interval::*;
 #[doc(inline)]
 pub use end_bound::*;
 #[doc(inline)]
-pub use finite_bound::*;
+pub use finite_bound_position::*;
 #[doc(inline)]
 pub use half_bounded_interval::*;
 #[doc(inline)]
@@ -79,17 +79,17 @@ pub use start_bound::*;
 /// ```
 /// # use std::error::Error;
 /// # use jiff::SignedDuration;
-/// # use periodical::intervals::relative::{RelativeFiniteBound, swap_relative_bound_pair};
+/// # use periodical::intervals::relative::{RelativeFiniteBoundPosition, swap_relative_bound_pair};
 /// let start_offset = SignedDuration::from_hours(16);
 /// let end_offset = SignedDuration::from_hours(8);
 ///
-/// let mut start = RelativeFiniteBound::new(start_offset).to_start_bound();
-/// let mut end = RelativeFiniteBound::new(end_offset).to_end_bound();
+/// let mut start = RelativeFiniteBoundPosition::new(start_offset).to_start_bound();
+/// let mut end = RelativeFiniteBoundPosition::new(end_offset).to_end_bound();
 ///
 /// swap_relative_bound_pair(&mut start, &mut end);
 ///
-/// assert_eq!(start, RelativeFiniteBound::new(end_offset).to_start_bound());
-/// assert_eq!(end, RelativeFiniteBound::new(start_offset).to_end_bound());
+/// assert_eq!(start, RelativeFiniteBoundPosition::new(end_offset).to_start_bound());
+/// assert_eq!(end, RelativeFiniteBoundPosition::new(start_offset).to_end_bound());
 /// # Ok::<(), Box<dyn Error>>(())
 /// ```
 pub fn swap_relative_bound_pair(start: &mut RelativeStartBound, end: &mut RelativeEndBound) {
@@ -222,13 +222,13 @@ pub fn check_relative_bound_pair_for_interval_creation(
 /// ```
 /// # use std::error::Error;
 /// # use jiff::SignedDuration;
-/// # use periodical::intervals::relative::{RelativeFiniteBound, prepare_relative_bound_pair_for_interval_creation};
+/// # use periodical::intervals::relative::{RelativeFiniteBoundPosition, prepare_relative_bound_pair_for_interval_creation};
 /// let start_offset = SignedDuration::from_hours(16);
 /// let end_offset = SignedDuration::from_hours(8);
 ///
 /// // Warning: not in chronological order!
-/// let mut start = RelativeFiniteBound::new(start_offset).to_start_bound();
-/// let mut end = RelativeFiniteBound::new(end_offset).to_end_bound();
+/// let mut start = RelativeFiniteBoundPosition::new(start_offset).to_start_bound();
+/// let mut end = RelativeFiniteBoundPosition::new(end_offset).to_end_bound();
 ///
 /// let was_changed = prepare_relative_bound_pair_for_interval_creation(&mut start, &mut end);
 ///

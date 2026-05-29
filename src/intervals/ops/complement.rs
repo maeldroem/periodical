@@ -12,16 +12,16 @@
 //! # use jiff::Zoned;
 //! # use periodical::ops::ComplementResult;
 //! # use periodical::intervals::absolute::{
-//! #     AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, EmptiableAbsoluteBoundPair
+//! #     AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBoundPosition, AbsoluteStartBound, EmptiableAbsoluteBoundPair
 //! # };
 //! # use periodical::intervals::meta::BoundInclusivity;
 //! # use periodical::intervals::ops::complement::Complementable;
 //! let interval = AbsoluteBoundPair::new(
-//!     AbsoluteFiniteBound::new_with_inclusivity(
+//!     AbsoluteFiniteBoundPosition::new_with_inclusivity(
 //!         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 //!         BoundInclusivity::Exclusive,
 //!     ).to_start_bound(),
-//!     AbsoluteFiniteBound::new(
+//!     AbsoluteFiniteBoundPosition::new(
 //!         "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 //!     ).to_end_bound(),
 //! );
@@ -31,12 +31,12 @@
 //!     ComplementResult::Split(
 //!         EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::new(
 //!             AbsoluteStartBound::InfinitePast,
-//!             AbsoluteFiniteBound::new(
+//!             AbsoluteFiniteBoundPosition::new(
 //!                 "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 //!             ).to_end_bound(),
 //!         )),
 //!         EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::new(
-//!             AbsoluteFiniteBound::new_with_inclusivity(
+//!             AbsoluteFiniteBoundPosition::new_with_inclusivity(
 //!                 "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 //!                 BoundInclusivity::Exclusive,
 //!             ).to_start_bound(),
@@ -50,7 +50,7 @@
 use crate::intervals::absolute::{
     AbsoluteBoundPair,
     AbsoluteEndBound,
-    AbsoluteFiniteBound,
+    AbsoluteFiniteBoundPosition,
     AbsoluteInterval,
     AbsoluteStartBound,
     BoundedAbsoluteInterval,
@@ -70,7 +70,7 @@ use crate::intervals::relative::{
     HasRelativeBoundPair,
     RelativeBoundPair,
     RelativeEndBound,
-    RelativeFiniteBound,
+    RelativeFiniteBoundPosition,
     RelativeInterval,
     RelativeStartBound,
 };
@@ -86,16 +86,16 @@ use crate::ops::ComplementResult;
 /// # use jiff::Zoned;
 /// # use periodical::ops::ComplementResult;
 /// # use periodical::intervals::absolute::{
-/// #     AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, EmptiableAbsoluteBoundPair,
+/// #     AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBoundPosition, AbsoluteStartBound, EmptiableAbsoluteBoundPair,
 /// # };
 /// # use periodical::intervals::meta::BoundInclusivity;
 /// # use periodical::intervals::ops::complement::Complementable;
 /// let interval = AbsoluteBoundPair::new(
-///     AbsoluteFiniteBound::new_with_inclusivity(
+///     AbsoluteFiniteBoundPosition::new_with_inclusivity(
 ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///         BoundInclusivity::Exclusive,
 ///     ).to_start_bound(),
-///     AbsoluteFiniteBound::new(
+///     AbsoluteFiniteBoundPosition::new(
 ///         "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///     ).to_end_bound(),
 /// );
@@ -105,12 +105,12 @@ use crate::ops::ComplementResult;
 ///     ComplementResult::Split(
 ///         EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::new(
 ///             AbsoluteStartBound::InfinitePast,
-///             AbsoluteFiniteBound::new(
+///             AbsoluteFiniteBoundPosition::new(
 ///                 "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///             ).to_end_bound(),
 ///         )),
 ///         EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::new(
-///             AbsoluteFiniteBound::new_with_inclusivity(
+///             AbsoluteFiniteBoundPosition::new_with_inclusivity(
 ///                 "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///                 BoundInclusivity::Exclusive,
 ///             ).to_start_bound(),
@@ -253,7 +253,7 @@ pub fn complement_abs_bound_pair(bounds: &AbsoluteBoundPair) -> ComplementResult
         (Sb::InfinitePast, Eb::InfiniteFuture) => ComplementResult::Single(EmptyInterval.emptiable_abs_bound_pair()),
         (Sb::InfinitePast, Eb::Finite(finite)) => {
             ComplementResult::Single(EmptiableAbsoluteBoundPair::from(AbsoluteBoundPair::new(
-                AbsoluteStartBound::from(AbsoluteFiniteBound::new_with_inclusivity(
+                AbsoluteStartBound::from(AbsoluteFiniteBoundPosition::new_with_inclusivity(
                     finite.time(),
                     finite.inclusivity().opposite(),
                 )),
@@ -263,7 +263,7 @@ pub fn complement_abs_bound_pair(bounds: &AbsoluteBoundPair) -> ComplementResult
         (Sb::Finite(finite), Eb::InfiniteFuture) => {
             ComplementResult::Single(EmptiableAbsoluteBoundPair::from(AbsoluteBoundPair::new(
                 AbsoluteStartBound::InfinitePast,
-                AbsoluteEndBound::from(AbsoluteFiniteBound::new_with_inclusivity(
+                AbsoluteEndBound::from(AbsoluteFiniteBoundPosition::new_with_inclusivity(
                     finite.time(),
                     finite.inclusivity().opposite(),
                 )),
@@ -272,13 +272,13 @@ pub fn complement_abs_bound_pair(bounds: &AbsoluteBoundPair) -> ComplementResult
         (Sb::Finite(finite_start), Eb::Finite(finite_end)) => ComplementResult::Split(
             EmptiableAbsoluteBoundPair::from(AbsoluteBoundPair::new(
                 AbsoluteStartBound::InfinitePast,
-                AbsoluteEndBound::from(AbsoluteFiniteBound::new_with_inclusivity(
+                AbsoluteEndBound::from(AbsoluteFiniteBoundPosition::new_with_inclusivity(
                     finite_start.time(),
                     finite_start.inclusivity().opposite(),
                 )),
             )),
             EmptiableAbsoluteBoundPair::from(AbsoluteBoundPair::new(
-                AbsoluteStartBound::from(AbsoluteFiniteBound::new_with_inclusivity(
+                AbsoluteStartBound::from(AbsoluteFiniteBoundPosition::new_with_inclusivity(
                     finite_end.time(),
                     finite_end.inclusivity().opposite(),
                 )),
@@ -344,7 +344,7 @@ pub fn complement_rel_bound_pair(bounds: &RelativeBoundPair) -> ComplementResult
         (Sb::InfinitePast, Eb::InfiniteFuture) => ComplementResult::Single(EmptyInterval.emptiable_rel_bound_pair()),
         (Sb::InfinitePast, Eb::Finite(finite)) => {
             ComplementResult::Single(EmptiableRelativeBoundPair::from(RelativeBoundPair::new(
-                RelativeStartBound::from(RelativeFiniteBound::new_with_inclusivity(
+                RelativeStartBound::from(RelativeFiniteBoundPosition::new_with_inclusivity(
                     finite.offset(),
                     finite.inclusivity().opposite(),
                 )),
@@ -354,7 +354,7 @@ pub fn complement_rel_bound_pair(bounds: &RelativeBoundPair) -> ComplementResult
         (Sb::Finite(finite), Eb::InfiniteFuture) => {
             ComplementResult::Single(EmptiableRelativeBoundPair::from(RelativeBoundPair::new(
                 RelativeStartBound::InfinitePast,
-                RelativeEndBound::from(RelativeFiniteBound::new_with_inclusivity(
+                RelativeEndBound::from(RelativeFiniteBoundPosition::new_with_inclusivity(
                     finite.offset(),
                     finite.inclusivity().opposite(),
                 )),
@@ -363,13 +363,13 @@ pub fn complement_rel_bound_pair(bounds: &RelativeBoundPair) -> ComplementResult
         (Sb::Finite(finite_start), Eb::Finite(finite_end)) => ComplementResult::Split(
             EmptiableRelativeBoundPair::from(RelativeBoundPair::new(
                 RelativeStartBound::InfinitePast,
-                RelativeEndBound::from(RelativeFiniteBound::new_with_inclusivity(
+                RelativeEndBound::from(RelativeFiniteBoundPosition::new_with_inclusivity(
                     finite_start.offset(),
                     finite_start.inclusivity().opposite(),
                 )),
             )),
             EmptiableRelativeBoundPair::from(RelativeBoundPair::new(
-                RelativeStartBound::from(RelativeFiniteBound::new_with_inclusivity(
+                RelativeStartBound::from(RelativeFiniteBoundPosition::new_with_inclusivity(
                     finite_end.offset(),
                     finite_end.inclusivity().opposite(),
                 )),

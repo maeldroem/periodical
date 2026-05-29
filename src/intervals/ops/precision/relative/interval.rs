@@ -28,11 +28,11 @@ use crate::ops::{Precision, PrecisionOutOfRangeError};
 /// # use std::time::Duration;
 /// # use jiff::SignedDuration;
 /// # use periodical::ops::{Precision, PrecisionMode};
-/// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBound};
+/// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBoundPosition};
 /// # use periodical::intervals::ops::PreciseRelativeInterval;
 /// let interval = RelativeBoundPair::new(
-///     RelativeFiniteBound::new(SignedDuration::from_mins(3)).to_start_bound(),
-///     RelativeFiniteBound::new(SignedDuration::from_hours(7) + SignedDuration::from_mins(57))
+///     RelativeFiniteBoundPosition::new(SignedDuration::from_mins(3)).to_start_bound(),
+///     RelativeFiniteBoundPosition::new(SignedDuration::from_hours(7) + SignedDuration::from_mins(57))
 ///         .to_end_bound(),
 /// );
 ///
@@ -42,8 +42,8 @@ use crate::ops::{Precision, PrecisionOutOfRangeError};
 ///         PrecisionMode::ToPast
 ///     )?),
 ///     Ok(RelativeBoundPair::new(
-///         RelativeFiniteBound::new(SignedDuration::ZERO).to_start_bound(),
-///         RelativeFiniteBound::new(SignedDuration::from_hours(7) + SignedDuration::from_mins(55))
+///         RelativeFiniteBoundPosition::new(SignedDuration::ZERO).to_start_bound(),
+///         RelativeFiniteBoundPosition::new(SignedDuration::from_hours(7) + SignedDuration::from_mins(55))
 ///             .to_end_bound(),
 ///     )),
 /// );
@@ -64,11 +64,11 @@ pub trait PreciseRelativeInterval {
     /// # use std::time::Duration;
     /// # use jiff::SignedDuration;
     /// # use periodical::ops::{Precision, PrecisionMode};
-    /// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBound};
+    /// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBoundPosition};
     /// # use periodical::intervals::ops::PreciseRelativeInterval;
     /// let interval = RelativeBoundPair::new(
-    ///     RelativeFiniteBound::new(SignedDuration::from_mins(3)).to_start_bound(),
-    ///     RelativeFiniteBound::new(SignedDuration::from_hours(7) + SignedDuration::from_mins(57))
+    ///     RelativeFiniteBoundPosition::new(SignedDuration::from_mins(3)).to_start_bound(),
+    ///     RelativeFiniteBoundPosition::new(SignedDuration::from_hours(7) + SignedDuration::from_mins(57))
     ///         .to_end_bound(),
     /// );
     ///
@@ -78,8 +78,8 @@ pub trait PreciseRelativeInterval {
     ///         Precision::new(Duration::from_mins(5), PrecisionMode::ToFuture)?,
     ///     ),
     ///     Ok(RelativeBoundPair::new(
-    ///         RelativeFiniteBound::new(SignedDuration::ZERO).to_start_bound(),
-    ///         RelativeFiniteBound::new(SignedDuration::from_hours(8)).to_end_bound(),
+    ///         RelativeFiniteBoundPosition::new(SignedDuration::ZERO).to_start_bound(),
+    ///         RelativeFiniteBoundPosition::new(SignedDuration::from_hours(8)).to_end_bound(),
     ///     )),
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
@@ -102,11 +102,11 @@ pub trait PreciseRelativeInterval {
     /// # use std::time::Duration;
     /// # use jiff::SignedDuration;
     /// # use periodical::ops::{Precision, PrecisionMode};
-    /// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBound};
+    /// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBoundPosition};
     /// # use periodical::intervals::ops::PreciseRelativeInterval;
     /// let interval = RelativeBoundPair::new(
-    ///     RelativeFiniteBound::new(SignedDuration::from_mins(3)).to_start_bound(),
-    ///     RelativeFiniteBound::new(SignedDuration::from_hours(7) + SignedDuration::from_mins(57))
+    ///     RelativeFiniteBoundPosition::new(SignedDuration::from_mins(3)).to_start_bound(),
+    ///     RelativeFiniteBoundPosition::new(SignedDuration::from_hours(7) + SignedDuration::from_mins(57))
     ///         .to_end_bound(),
     /// );
     ///
@@ -116,8 +116,8 @@ pub trait PreciseRelativeInterval {
     ///         PrecisionMode::ToPast
     ///     )?),
     ///     Ok(RelativeBoundPair::new(
-    ///         RelativeFiniteBound::new(SignedDuration::ZERO).to_start_bound(),
-    ///         RelativeFiniteBound::new(SignedDuration::from_hours(7) + SignedDuration::from_mins(55))
+    ///         RelativeFiniteBoundPosition::new(SignedDuration::ZERO).to_start_bound(),
+    ///         RelativeFiniteBoundPosition::new(SignedDuration::from_hours(7) + SignedDuration::from_mins(55))
     ///             .to_end_bound(),
     ///     )),
     /// );
@@ -140,11 +140,11 @@ pub trait PreciseRelativeInterval {
     /// # use std::time::Duration;
     /// # use jiff::SignedDuration;
     /// # use periodical::ops::{Precision, PrecisionMode};
-    /// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBound};
+    /// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBoundPosition};
     /// # use periodical::intervals::ops::PreciseRelativeInterval;
     /// let interval = RelativeBoundPair::new(
-    ///     RelativeFiniteBound::new(SignedDuration::from_mins(13)).to_start_bound(),
-    ///     RelativeFiniteBound::new(SignedDuration::from_hours(7) + SignedDuration::from_mins(57))
+    ///     RelativeFiniteBoundPosition::new(SignedDuration::from_mins(13)).to_start_bound(),
+    ///     RelativeFiniteBoundPosition::new(SignedDuration::from_hours(7) + SignedDuration::from_mins(57))
     ///         .to_end_bound(),
     /// );
     ///
@@ -156,8 +156,8 @@ pub trait PreciseRelativeInterval {
     ///         SignedDuration::from_mins(1),
     ///     ),
     ///     Ok(RelativeBoundPair::new(
-    ///         RelativeFiniteBound::new(SignedDuration::from_mins(12)).to_start_bound(),
-    ///         RelativeFiniteBound::new(SignedDuration::from_hours(8) + SignedDuration::from_mins(1))
+    ///         RelativeFiniteBoundPosition::new(SignedDuration::from_mins(12)).to_start_bound(),
+    ///         RelativeFiniteBoundPosition::new(SignedDuration::from_hours(8) + SignedDuration::from_mins(1))
     ///             .to_end_bound(),
     ///     )),
     /// );
@@ -183,11 +183,11 @@ pub trait PreciseRelativeInterval {
     /// # use std::time::Duration;
     /// # use jiff::SignedDuration;
     /// # use periodical::ops::{Precision, PrecisionMode};
-    /// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBound};
+    /// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBoundPosition};
     /// # use periodical::intervals::ops::PreciseRelativeInterval;
     /// let interval = RelativeBoundPair::new(
-    ///     RelativeFiniteBound::new(SignedDuration::from_mins(13)).to_start_bound(),
-    ///     RelativeFiniteBound::new(SignedDuration::from_hours(7) + SignedDuration::from_mins(58))
+    ///     RelativeFiniteBoundPosition::new(SignedDuration::from_mins(13)).to_start_bound(),
+    ///     RelativeFiniteBoundPosition::new(SignedDuration::from_hours(7) + SignedDuration::from_mins(58))
     ///         .to_end_bound(),
     /// );
     ///
@@ -197,8 +197,8 @@ pub trait PreciseRelativeInterval {
     ///         SignedDuration::from_mins(2),
     ///     ),
     ///     Ok(RelativeBoundPair::new(
-    ///         RelativeFiniteBound::new(SignedDuration::from_mins(12)).to_start_bound(),
-    ///         RelativeFiniteBound::new(SignedDuration::from_hours(7) + SignedDuration::from_mins(57))
+    ///         RelativeFiniteBoundPosition::new(SignedDuration::from_mins(12)).to_start_bound(),
+    ///         RelativeFiniteBoundPosition::new(SignedDuration::from_hours(7) + SignedDuration::from_mins(57))
     ///             .to_end_bound(),
     ///     )),
     /// );

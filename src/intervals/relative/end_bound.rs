@@ -1,7 +1,7 @@
 //! Relative end bound
 //!
 //! Represents the end bound of a relative interval. It can either be finite, in
-//! which case it will contain an [`RelativeFiniteBound`], or represent an open
+//! which case it will contain an [`RelativeFiniteBoundPosition`], or represent an open
 //! end bound through the [`InfiniteFuture`](RelativeEndBound::InfiniteFuture)
 //! variant.
 
@@ -22,13 +22,13 @@ use crate::intervals::ops::bound_overlap_ambiguity::{
     BoundOverlapDisambiguationRuleSet,
     DisambiguatedBoundOverlap,
 };
-use crate::intervals::relative::{RelativeBound, RelativeFiniteBound, RelativeStartBound};
+use crate::intervals::relative::{RelativeBound, RelativeFiniteBoundPosition, RelativeStartBound};
 
 /// A relative end interval bound
 ///
 /// Represents the end bound of an interval, may it be infinitely in the future
 /// or at a precise point in time, in which case it contains an
-/// [`RelativeFiniteBound`].
+/// [`RelativeFiniteBoundPosition`].
 ///
 /// Contrary to specific relative interval types, both [`RelativeStartBound`]
 /// and [`RelativeEndBound`] use an offset, and not an offset for the start and
@@ -37,7 +37,7 @@ use crate::intervals::relative::{RelativeBound, RelativeFiniteBound, RelativeSta
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum RelativeEndBound {
-    Finite(RelativeFiniteBound),
+    Finite(RelativeFiniteBoundPosition),
     InfiniteFuture,
 }
 
@@ -55,9 +55,9 @@ impl RelativeEndBound {
     ///
     /// ```
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::{RelativeEndBound, RelativeFiniteBound};
+    /// # use periodical::intervals::relative::{RelativeEndBound, RelativeFiniteBoundPosition};
     /// let infinite_end_bound = RelativeEndBound::InfiniteFuture;
-    /// let finite_end_bound = RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound();
+    /// let finite_end_bound = RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound();
     ///
     /// assert!(finite_end_bound.is_finite());
     /// assert!(!infinite_end_bound.is_finite());
@@ -74,9 +74,9 @@ impl RelativeEndBound {
     ///
     /// ```
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::{RelativeEndBound, RelativeFiniteBound};
+    /// # use periodical::intervals::relative::{RelativeEndBound, RelativeFiniteBoundPosition};
     /// let infinite_end_bound = RelativeEndBound::InfiniteFuture;
-    /// let finite_end_bound = RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound();
+    /// let finite_end_bound = RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound();
     ///
     /// assert!(infinite_end_bound.is_infinite_future());
     /// assert!(!finite_end_bound.is_infinite_future());
@@ -96,18 +96,18 @@ impl RelativeEndBound {
     ///
     /// ```
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::{RelativeEndBound, RelativeFiniteBound};
+    /// # use periodical::intervals::relative::{RelativeEndBound, RelativeFiniteBoundPosition};
     /// let infinite_end_bound = RelativeEndBound::InfiniteFuture;
-    /// let finite_end_bound = RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound();
+    /// let finite_end_bound = RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound();
     ///
     /// assert_eq!(
     ///     finite_end_bound.finite(),
-    ///     Some(RelativeFiniteBound::new(SignedDuration::from_hours(1))),
+    ///     Some(RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1))),
     /// );
     /// assert_eq!(infinite_end_bound.finite(), None);
     /// ```
     #[must_use]
-    pub fn finite(self) -> Option<RelativeFiniteBound> {
+    pub fn finite(self) -> Option<RelativeFiniteBoundPosition> {
         match self {
             Self::Finite(finite) => Some(finite),
             Self::InfiniteFuture => None,
@@ -132,24 +132,24 @@ impl RelativeEndBound {
     /// # use std::error::Error;
     /// # use jiff::SignedDuration;
     /// # use periodical::intervals::meta::BoundInclusivity;
-    /// # use periodical::intervals::relative::{RelativeEndBound, RelativeFiniteBound};
+    /// # use periodical::intervals::relative::{RelativeEndBound, RelativeFiniteBoundPosition};
     /// #
     /// # #[derive(Debug)]
-    /// # struct FiniteBoundExpectedError;
+    /// # struct FiniteBoundPositionExpectedError;
     /// #
-    /// # impl std::fmt::Display for FiniteBoundExpectedError {
+    /// # impl std::fmt::Display for FiniteBoundPositionExpectedError {
     /// #     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
     /// #         write!(f, "Finite bound expected")
     /// #     }
     /// # }
     /// #
-    /// # impl Error for FiniteBoundExpectedError {}
-    /// let end_first_shift = RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound();
-    /// let break_start = end_first_shift.opposite().ok_or(FiniteBoundExpectedError)?;
+    /// # impl Error for FiniteBoundPositionExpectedError {}
+    /// let end_first_shift = RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound();
+    /// let break_start = end_first_shift.opposite().ok_or(FiniteBoundPositionExpectedError)?;
     ///
     /// assert_eq!(
     ///     break_start.finite(),
-    ///     Some(RelativeFiniteBound::new_with_inclusivity(
+    ///     Some(RelativeFiniteBoundPosition::new_with_inclusivity(
     ///         SignedDuration::from_hours(1),
     ///         BoundInclusivity::Exclusive,
     ///     )),
@@ -160,7 +160,7 @@ impl RelativeEndBound {
     pub fn opposite(&self) -> Option<RelativeStartBound> {
         match self {
             Self::Finite(finite) => Some(
-                RelativeFiniteBound::new_with_inclusivity(finite.offset(), finite.inclusivity().opposite())
+                RelativeFiniteBoundPosition::new_with_inclusivity(finite.offset(), finite.inclusivity().opposite())
                     .to_start_bound(),
             ),
             Self::InfiniteFuture => None,
@@ -187,11 +187,11 @@ impl Ord for RelativeEndBound {
             (RelativeEndBound::InfiniteFuture, RelativeEndBound::Finite(_)) => Ordering::Greater,
             (RelativeEndBound::Finite(_), RelativeEndBound::InfiniteFuture) => Ordering::Less,
             (
-                RelativeEndBound::Finite(RelativeFiniteBound {
+                RelativeEndBound::Finite(RelativeFiniteBoundPosition {
                     offset: offset_og,
                     inclusivity: inclusivity_og,
                 }),
-                RelativeEndBound::Finite(RelativeFiniteBound {
+                RelativeEndBound::Finite(RelativeFiniteBoundPosition {
                     offset: offset_other,
                     inclusivity: inclusivity_other,
                 }),
@@ -224,11 +224,11 @@ impl PartialOrd<RelativeStartBound> for RelativeEndBound {
         match (self, other) {
             (RelativeEndBound::InfiniteFuture, _) | (_, RelativeStartBound::InfinitePast) => Some(Ordering::Greater),
             (
-                RelativeEndBound::Finite(RelativeFiniteBound {
+                RelativeEndBound::Finite(RelativeFiniteBoundPosition {
                     offset: end_offset,
                     inclusivity: end_inclusivity,
                 }),
-                RelativeStartBound::Finite(RelativeFiniteBound {
+                RelativeStartBound::Finite(RelativeFiniteBoundPosition {
                     offset: start_offset,
                     inclusivity: start_inclusivity,
                 }),
@@ -251,8 +251,8 @@ impl PartialOrd<RelativeStartBound> for RelativeEndBound {
     }
 }
 
-impl From<RelativeFiniteBound> for RelativeEndBound {
-    fn from(value: RelativeFiniteBound) -> Self {
+impl From<RelativeFiniteBoundPosition> for RelativeEndBound {
+    fn from(value: RelativeFiniteBoundPosition) -> Self {
         Self::Finite(value)
     }
 }
@@ -260,7 +260,7 @@ impl From<RelativeFiniteBound> for RelativeEndBound {
 impl From<Option<SignedDuration>> for RelativeEndBound {
     fn from(value: Option<SignedDuration>) -> Self {
         match value {
-            Some(offset) => Self::Finite(RelativeFiniteBound::from(offset)),
+            Some(offset) => Self::Finite(RelativeFiniteBoundPosition::from(offset)),
             None => Self::InfiniteFuture,
         }
     }
@@ -269,7 +269,7 @@ impl From<Option<SignedDuration>> for RelativeEndBound {
 impl From<Option<(SignedDuration, BoundInclusivity)>> for RelativeEndBound {
     fn from(value: Option<(SignedDuration, BoundInclusivity)>) -> Self {
         match value {
-            Some((offset, inclusivity)) => Self::Finite(RelativeFiniteBound::new_with_inclusivity(offset, inclusivity)),
+            Some((offset, inclusivity)) => Self::Finite(RelativeFiniteBoundPosition::new_with_inclusivity(offset, inclusivity)),
             None => Self::InfiniteFuture,
         }
     }
@@ -279,10 +279,10 @@ impl From<Bound<SignedDuration>> for RelativeEndBound {
     fn from(bound: Bound<SignedDuration>) -> Self {
         match bound {
             Bound::Included(offset) => {
-                RelativeFiniteBound::new_with_inclusivity(offset, BoundInclusivity::Inclusive).to_end_bound()
+                RelativeFiniteBoundPosition::new_with_inclusivity(offset, BoundInclusivity::Inclusive).to_end_bound()
             },
             Bound::Excluded(offset) => {
-                RelativeFiniteBound::new_with_inclusivity(offset, BoundInclusivity::Exclusive).to_end_bound()
+                RelativeFiniteBoundPosition::new_with_inclusivity(offset, BoundInclusivity::Exclusive).to_end_bound()
             },
             Bound::Unbounded => RelativeEndBound::InfiniteFuture,
         }

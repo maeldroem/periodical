@@ -8,7 +8,7 @@ use super::bounded_interval::*;
 use crate::intervals::absolute::{
     AbsoluteBoundPair,
     AbsoluteEndBound,
-    AbsoluteFiniteBound,
+    AbsoluteFiniteBoundPosition,
     AbsoluteInterval,
     AbsoluteStartBound,
     EmptiableAbsoluteBoundPair,
@@ -752,8 +752,8 @@ fn abs_bound_pair() -> Result<(), Box<dyn Error>> {
         )
         .abs_bound_pair(),
         AbsoluteBoundPair::new(
-            AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-            AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound()
+            AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+            AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound()
         )
     );
     Ok(())
@@ -767,7 +767,7 @@ fn abs_start() -> Result<(), Box<dyn Error>> {
             "2026-01-02 00:00:00Z".parse::<Timestamp>()?
         )
         .abs_start(),
-        AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound()
+        AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound()
     );
     Ok(())
 }
@@ -780,7 +780,7 @@ fn abs_end() -> Result<(), Box<dyn Error>> {
             "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
         )
         .abs_end(),
-        AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound()
+        AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound()
     );
     Ok(())
 }
@@ -794,8 +794,8 @@ fn emptiable_abs_bound_pair() -> Result<(), Box<dyn Error>> {
         )
         .emptiable_abs_bound_pair(),
         AbsoluteBoundPair::new(
-            AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-            AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound()
+            AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+            AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound()
         )
         .to_emptiable()
     );
@@ -810,7 +810,7 @@ fn partial_abs_start() -> Result<(), Box<dyn Error>> {
             "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
         )
         .partial_abs_start(),
-        Some(AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound())
+        Some(AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound())
     );
     Ok(())
 }
@@ -823,7 +823,7 @@ fn partial_abs_end() -> Result<(), Box<dyn Error>> {
             "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
         )
         .partial_abs_end(),
-        Some(AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound())
+        Some(AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound())
     );
     Ok(())
 }
@@ -915,8 +915,8 @@ mod try_from_bound_pair {
 
         assert_eq!(
             BoundedAbsoluteInterval::try_from(AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new(start).to_start_bound(),
-                AbsoluteFiniteBound::new(end).to_end_bound()
+                AbsoluteFiniteBoundPosition::new(start).to_start_bound(),
+                AbsoluteFiniteBoundPosition::new(end).to_end_bound()
             )),
             Ok(BoundedAbsoluteInterval::new(start, end))
         );
@@ -929,7 +929,7 @@ mod try_from_bound_pair {
 
         assert_eq!(
             BoundedAbsoluteInterval::try_from(AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new(start).to_start_bound(),
+                AbsoluteFiniteBoundPosition::new(start).to_start_bound(),
                 AbsoluteEndBound::InfiniteFuture
             )),
             Err(BoundedAbsoluteIntervalTryFromAbsoluteBoundPairError)
@@ -944,7 +944,7 @@ mod try_from_bound_pair {
         assert_eq!(
             BoundedAbsoluteInterval::try_from(AbsoluteBoundPair::new(
                 AbsoluteStartBound::InfinitePast,
-                AbsoluteFiniteBound::new(end).to_end_bound()
+                AbsoluteFiniteBoundPosition::new(end).to_end_bound()
             )),
             Err(BoundedAbsoluteIntervalTryFromAbsoluteBoundPairError)
         );
@@ -974,8 +974,8 @@ mod try_from_emptiable_bound_pair {
         assert_eq!(
             BoundedAbsoluteInterval::try_from(
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new(start).to_start_bound(),
-                    AbsoluteFiniteBound::new(end).to_end_bound()
+                    AbsoluteFiniteBoundPosition::new(start).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new(end).to_end_bound()
                 )
                 .to_emptiable()
             ),
@@ -991,7 +991,7 @@ mod try_from_emptiable_bound_pair {
         assert_eq!(
             BoundedAbsoluteInterval::try_from(
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new(start).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new(start).to_start_bound(),
                     AbsoluteEndBound::InfiniteFuture
                 )
                 .to_emptiable()
@@ -1009,7 +1009,7 @@ mod try_from_emptiable_bound_pair {
             BoundedAbsoluteInterval::try_from(
                 AbsoluteBoundPair::new(
                     AbsoluteStartBound::InfinitePast,
-                    AbsoluteFiniteBound::new(end).to_end_bound()
+                    AbsoluteFiniteBoundPosition::new(end).to_end_bound()
                 )
                 .to_emptiable()
             ),

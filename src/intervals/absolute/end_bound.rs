@@ -1,7 +1,7 @@
 //! Absolute end bound
 //!
 //! Represents the end bound of an absolute interval. It can either be finite,
-//! in which case it will contain an [`AbsoluteFiniteBound`], or represent an
+//! in which case it will contain an [`AbsoluteFiniteBoundPosition`], or represent an
 //! open end bound through
 //! the [`InfiniteFuture`](AbsoluteEndBound::InfiniteFuture) variant.
 
@@ -16,7 +16,7 @@ use jiff::Timestamp;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use crate::intervals::absolute::{AbsoluteBound, AbsoluteFiniteBound, AbsoluteStartBound};
+use crate::intervals::absolute::{AbsoluteBound, AbsoluteFiniteBoundPosition, AbsoluteStartBound};
 use crate::intervals::meta::{BoundExtremality, BoundInclusivity, HasBoundExtremality, HasBoundInclusivity};
 use crate::intervals::ops::bound_overlap_ambiguity::{
     BoundOverlapAmbiguity,
@@ -28,12 +28,12 @@ use crate::intervals::ops::bound_overlap_ambiguity::{
 ///
 /// Represents the end bound of an interval, may it be infinitely in the future
 /// or at a precise point in time, in which case it contains an
-/// [`AbsoluteFiniteBound`].
+/// [`AbsoluteFiniteBoundPosition`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum AbsoluteEndBound {
-    Finite(AbsoluteFiniteBound),
+    Finite(AbsoluteFiniteBoundPosition),
     InfiniteFuture,
 }
 
@@ -52,11 +52,11 @@ impl AbsoluteEndBound {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Timestamp;
-    /// # use periodical::intervals::absolute::{AbsoluteEndBound, AbsoluteFiniteBound};
+    /// # use periodical::intervals::absolute::{AbsoluteEndBound, AbsoluteFiniteBoundPosition};
     /// let infinite_end_bound = AbsoluteEndBound::InfiniteFuture;
     ///
     /// let time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
-    /// let finite_end_bound = AbsoluteFiniteBound::new(time).to_end_bound();
+    /// let finite_end_bound = AbsoluteFiniteBoundPosition::new(time).to_end_bound();
     ///
     /// assert!(finite_end_bound.is_finite());
     /// assert!(!infinite_end_bound.is_finite());
@@ -75,11 +75,11 @@ impl AbsoluteEndBound {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Timestamp;
-    /// # use periodical::intervals::absolute::{AbsoluteEndBound, AbsoluteFiniteBound};
+    /// # use periodical::intervals::absolute::{AbsoluteEndBound, AbsoluteFiniteBoundPosition};
     /// let infinite_end_bound = AbsoluteEndBound::InfiniteFuture;
     ///
     /// let time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
-    /// let finite_end_bound = AbsoluteFiniteBound::new(time).to_end_bound();
+    /// let finite_end_bound = AbsoluteFiniteBoundPosition::new(time).to_end_bound();
     ///
     /// assert!(infinite_end_bound.is_infinite_future());
     /// assert!(!finite_end_bound.is_infinite_future());
@@ -101,21 +101,21 @@ impl AbsoluteEndBound {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Timestamp;
-    /// # use periodical::intervals::absolute::{AbsoluteEndBound, AbsoluteFiniteBound};
+    /// # use periodical::intervals::absolute::{AbsoluteEndBound, AbsoluteFiniteBoundPosition};
     /// let infinite_end_bound = AbsoluteEndBound::InfiniteFuture;
     ///
     /// let time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
-    /// let finite_end_bound = AbsoluteFiniteBound::new(time).to_end_bound();
+    /// let finite_end_bound = AbsoluteFiniteBoundPosition::new(time).to_end_bound();
     ///
     /// assert_eq!(
     ///     finite_end_bound.finite(),
-    ///     Some(AbsoluteFiniteBound::new(time))
+    ///     Some(AbsoluteFiniteBoundPosition::new(time))
     /// );
     /// assert_eq!(infinite_end_bound.finite(), None);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    pub fn finite(self) -> Option<AbsoluteFiniteBound> {
+    pub fn finite(self) -> Option<AbsoluteFiniteBoundPosition> {
         match self {
             Self::Finite(finite) => Some(finite),
             Self::InfiniteFuture => None,
@@ -139,27 +139,27 @@ impl AbsoluteEndBound {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Timestamp;
-    /// # use periodical::intervals::absolute::{AbsoluteEndBound, AbsoluteFiniteBound};
+    /// # use periodical::intervals::absolute::{AbsoluteEndBound, AbsoluteFiniteBoundPosition};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// #
     /// # #[derive(Debug)]
-    /// # struct FiniteBoundExpectedError;
+    /// # struct FiniteBoundPositionExpectedError;
     /// #
-    /// # impl std::fmt::Display for FiniteBoundExpectedError {
+    /// # impl std::fmt::Display for FiniteBoundPositionExpectedError {
     /// #     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
     /// #         write!(f, "Finite bound expected")
     /// #     }
     /// # }
     /// #
-    /// # impl Error for FiniteBoundExpectedError {}
+    /// # impl Error for FiniteBoundPositionExpectedError {}
     /// let time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     ///
-    /// let end_first_shift = AbsoluteFiniteBound::new(time).to_end_bound();
-    /// let break_start = end_first_shift.opposite().ok_or(FiniteBoundExpectedError)?;
+    /// let end_first_shift = AbsoluteFiniteBoundPosition::new(time).to_end_bound();
+    /// let break_start = end_first_shift.opposite().ok_or(FiniteBoundPositionExpectedError)?;
     ///
     /// assert_eq!(
     ///     break_start.finite(),
-    ///     Some(AbsoluteFiniteBound::new_with_inclusivity(
+    ///     Some(AbsoluteFiniteBoundPosition::new_with_inclusivity(
     ///         time,
     ///         BoundInclusivity::Exclusive,
     ///     )),
@@ -170,7 +170,7 @@ impl AbsoluteEndBound {
     pub fn opposite(&self) -> Option<AbsoluteStartBound> {
         match self {
             Self::Finite(finite) => Some(
-                AbsoluteFiniteBound::new_with_inclusivity(finite.time(), finite.inclusivity().opposite())
+                AbsoluteFiniteBoundPosition::new_with_inclusivity(finite.time(), finite.inclusivity().opposite())
                     .to_start_bound(),
             ),
             Self::InfiniteFuture => None,
@@ -197,11 +197,11 @@ impl Ord for AbsoluteEndBound {
             (AbsoluteEndBound::InfiniteFuture, AbsoluteEndBound::Finite(_)) => Ordering::Greater,
             (AbsoluteEndBound::Finite(_), AbsoluteEndBound::InfiniteFuture) => Ordering::Less,
             (
-                AbsoluteEndBound::Finite(AbsoluteFiniteBound {
+                AbsoluteEndBound::Finite(AbsoluteFiniteBoundPosition {
                     time: time_og,
                     inclusivity: inclusivity_og,
                 }),
-                AbsoluteEndBound::Finite(AbsoluteFiniteBound {
+                AbsoluteEndBound::Finite(AbsoluteFiniteBoundPosition {
                     time: time_other,
                     inclusivity: inclusivity_other,
                 }),
@@ -234,11 +234,11 @@ impl PartialOrd<AbsoluteStartBound> for AbsoluteEndBound {
         match (self, other) {
             (AbsoluteEndBound::InfiniteFuture, _) | (_, AbsoluteStartBound::InfinitePast) => Some(Ordering::Greater),
             (
-                AbsoluteEndBound::Finite(AbsoluteFiniteBound {
+                AbsoluteEndBound::Finite(AbsoluteFiniteBoundPosition {
                     time: end_time,
                     inclusivity: end_inclusivity,
                 }),
-                AbsoluteStartBound::Finite(AbsoluteFiniteBound {
+                AbsoluteStartBound::Finite(AbsoluteFiniteBoundPosition {
                     time: start_time,
                     inclusivity: start_inclusivity,
                 }),
@@ -261,8 +261,8 @@ impl PartialOrd<AbsoluteStartBound> for AbsoluteEndBound {
     }
 }
 
-impl From<AbsoluteFiniteBound> for AbsoluteEndBound {
-    fn from(value: AbsoluteFiniteBound) -> Self {
+impl From<AbsoluteFiniteBoundPosition> for AbsoluteEndBound {
+    fn from(value: AbsoluteFiniteBoundPosition) -> Self {
         Self::Finite(value)
     }
 }
@@ -270,7 +270,7 @@ impl From<AbsoluteFiniteBound> for AbsoluteEndBound {
 impl From<Option<Timestamp>> for AbsoluteEndBound {
     fn from(value: Option<Timestamp>) -> Self {
         match value {
-            Some(timestamp) => Self::Finite(AbsoluteFiniteBound::from(timestamp)),
+            Some(timestamp) => Self::Finite(AbsoluteFiniteBoundPosition::from(timestamp)),
             None => Self::InfiniteFuture,
         }
     }
@@ -279,9 +279,10 @@ impl From<Option<Timestamp>> for AbsoluteEndBound {
 impl From<Option<(Timestamp, BoundInclusivity)>> for AbsoluteEndBound {
     fn from(value: Option<(Timestamp, BoundInclusivity)>) -> Self {
         match value {
-            Some((timestamp, inclusivity)) => {
-                Self::Finite(AbsoluteFiniteBound::new_with_inclusivity(timestamp, inclusivity))
-            },
+            Some((timestamp, inclusivity)) => Self::Finite(AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                timestamp,
+                inclusivity,
+            )),
             None => Self::InfiniteFuture,
         }
     }
@@ -291,10 +292,10 @@ impl From<Bound<Timestamp>> for AbsoluteEndBound {
     fn from(bound: Bound<Timestamp>) -> Self {
         match bound {
             Bound::Included(time) => {
-                AbsoluteFiniteBound::new_with_inclusivity(time, BoundInclusivity::Inclusive).to_end_bound()
+                AbsoluteFiniteBoundPosition::new_with_inclusivity(time, BoundInclusivity::Inclusive).to_end_bound()
             },
             Bound::Excluded(time) => {
-                AbsoluteFiniteBound::new_with_inclusivity(time, BoundInclusivity::Exclusive).to_end_bound()
+                AbsoluteFiniteBoundPosition::new_with_inclusivity(time, BoundInclusivity::Exclusive).to_end_bound()
             },
             Bound::Unbounded => AbsoluteEndBound::InfiniteFuture,
         }

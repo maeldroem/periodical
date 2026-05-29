@@ -66,7 +66,7 @@ impl EmptiableAbsoluteInterval {
     /// # use std::error::Error;
     /// # use jiff::Timestamp;
     /// # use periodical::intervals::absolute::{
-    /// #     AbsoluteFiniteBound, AbsoluteInterval, EmptiableAbsoluteInterval, HasEmptiableAbsoluteBoundPair,
+    /// #     AbsoluteFiniteBoundPosition, AbsoluteInterval, EmptiableAbsoluteInterval, HasEmptiableAbsoluteBoundPair,
     /// # };
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// let start = "2026-01-01 08:00:00Z".parse::<Timestamp>()?;
@@ -76,11 +76,11 @@ impl EmptiableAbsoluteInterval {
     ///
     /// assert_eq!(
     ///     interval.partial_abs_start(),
-    ///     Some(AbsoluteFiniteBound::new(start).to_start_bound()),
+    ///     Some(AbsoluteFiniteBoundPosition::new(start).to_start_bound()),
     /// );
     /// assert_eq!(
     ///     interval.partial_abs_end(),
-    ///     Some(AbsoluteFiniteBound::new_with_inclusivity(end, BoundInclusivity::Exclusive).to_end_bound()),
+    ///     Some(AbsoluteFiniteBoundPosition::new_with_inclusivity(end, BoundInclusivity::Exclusive).to_end_bound()),
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```

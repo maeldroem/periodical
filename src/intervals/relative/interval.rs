@@ -49,7 +49,7 @@ use crate::intervals::relative::{
     HasRelativeBoundPair,
     RelativeBoundPair,
     RelativeEndBound,
-    RelativeFiniteBound,
+    RelativeFiniteBoundPosition,
     RelativeStartBound,
 };
 use crate::intervals::special::UnboundedInterval;
@@ -91,7 +91,7 @@ impl RelativeInterval {
     /// # use std::error::Error;
     /// # use jiff::SignedDuration;
     /// # use periodical::intervals::meta::BoundInclusivity;
-    /// # use periodical::intervals::relative::{RelativeFiniteBound, RelativeInterval, HasRelativeBoundPair};
+    /// # use periodical::intervals::relative::{RelativeFiniteBoundPosition, RelativeInterval, HasRelativeBoundPair};
     /// let start = SignedDuration::from_hours(8);
     /// let end = SignedDuration::from_hours(16);
     ///
@@ -99,11 +99,11 @@ impl RelativeInterval {
     ///
     /// assert_eq!(
     ///     interval.rel_start(),
-    ///     RelativeFiniteBound::new(start).to_start_bound(),
+    ///     RelativeFiniteBoundPosition::new(start).to_start_bound(),
     /// );
     /// assert_eq!(
     ///     interval.rel_end(),
-    ///     RelativeFiniteBound::new_with_inclusivity(end, BoundInclusivity::Exclusive).to_end_bound(),
+    ///     RelativeFiniteBoundPosition::new_with_inclusivity(end, BoundInclusivity::Exclusive).to_end_bound(),
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
@@ -326,7 +326,7 @@ impl From<RelativeBoundPair> for RelativeInterval {
             (StartB::InfinitePast, EndB::InfiniteFuture) => RelativeInterval::Unbounded(UnboundedInterval),
             (
                 StartB::InfinitePast,
-                EndB::Finite(RelativeFiniteBound {
+                EndB::Finite(RelativeFiniteBoundPosition {
                     offset,
                     inclusivity,
                 }),
@@ -336,7 +336,7 @@ impl From<RelativeBoundPair> for RelativeInterval {
                 OpeningDirection::ToPast,
             )),
             (
-                StartB::Finite(RelativeFiniteBound {
+                StartB::Finite(RelativeFiniteBoundPosition {
                     offset,
                     inclusivity,
                 }),
@@ -347,11 +347,11 @@ impl From<RelativeBoundPair> for RelativeInterval {
                 OpeningDirection::ToFuture,
             )),
             (
-                StartB::Finite(RelativeFiniteBound {
+                StartB::Finite(RelativeFiniteBoundPosition {
                     offset: start_offset,
                     inclusivity: start_inclusivity,
                 }),
-                EndB::Finite(RelativeFiniteBound {
+                EndB::Finite(RelativeFiniteBoundPosition {
                     offset: end_offset,
                     inclusivity: end_inclusivity,
                 }),
@@ -393,7 +393,7 @@ impl TryFrom<EmptiableRelativeBoundPair> for RelativeInterval {
             },
             (
                 Some(StartB::InfinitePast),
-                Some(EndB::Finite(RelativeFiniteBound {
+                Some(EndB::Finite(RelativeFiniteBoundPosition {
                     offset,
                     inclusivity,
                 })),
@@ -401,7 +401,7 @@ impl TryFrom<EmptiableRelativeBoundPair> for RelativeInterval {
                 HalfBoundedRelativeInterval::new_with_inclusivity(offset, inclusivity, OpeningDirection::ToPast),
             )),
             (
-                Some(StartB::Finite(RelativeFiniteBound {
+                Some(StartB::Finite(RelativeFiniteBoundPosition {
                     offset,
                     inclusivity,
                 })),
@@ -410,11 +410,11 @@ impl TryFrom<EmptiableRelativeBoundPair> for RelativeInterval {
                 HalfBoundedRelativeInterval::new_with_inclusivity(offset, inclusivity, OpeningDirection::ToFuture),
             )),
             (
-                Some(StartB::Finite(RelativeFiniteBound {
+                Some(StartB::Finite(RelativeFiniteBoundPosition {
                     offset: start_offset,
                     inclusivity: start_inclusivity,
                 })),
-                Some(EndB::Finite(RelativeFiniteBound {
+                Some(EndB::Finite(RelativeFiniteBoundPosition {
                     offset: end_offset,
                     inclusivity: end_inclusivity,
                 })),

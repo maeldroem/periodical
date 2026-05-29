@@ -22,7 +22,7 @@ use crate::intervals::relative::{
     HasRelativeBoundPair,
     RelativeBoundPair,
     RelativeEndBound,
-    RelativeFiniteBound,
+    RelativeFiniteBoundPosition,
     RelativeInterval,
     RelativeStartBound,
 };
@@ -291,7 +291,7 @@ fn rel_bound_pair() {
     assert_eq!(
         HalfBoundedRelativeInterval::new(SignedDuration::from_hours(1), OpeningDirection::ToFuture).rel_bound_pair(),
         RelativeBoundPair::new(
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
             RelativeEndBound::InfiniteFuture
         )
     );
@@ -303,7 +303,7 @@ fn rel_start() {
 
     assert_eq!(
         HalfBoundedRelativeInterval::new(reference, OpeningDirection::ToFuture).rel_start(),
-        RelativeFiniteBound::new(reference).to_start_bound()
+        RelativeFiniteBoundPosition::new(reference).to_start_bound()
     );
     assert_eq!(
         HalfBoundedRelativeInterval::new(reference, OpeningDirection::ToPast).rel_start(),
@@ -321,7 +321,7 @@ fn rel_end() {
     );
     assert_eq!(
         HalfBoundedRelativeInterval::new(reference, OpeningDirection::ToPast).rel_end(),
-        RelativeFiniteBound::new(reference).to_end_bound()
+        RelativeFiniteBoundPosition::new(reference).to_end_bound()
     );
 }
 
@@ -331,7 +331,7 @@ fn emptiable_rel_bound_pair() {
         HalfBoundedRelativeInterval::new(SignedDuration::from_hours(1), OpeningDirection::ToFuture)
             .emptiable_rel_bound_pair(),
         EmptiableRelativeBoundPair::Bound(RelativeBoundPair::new(
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
             RelativeEndBound::InfiniteFuture
         ))
     );
@@ -343,7 +343,7 @@ fn partial_rel_start() {
 
     assert_eq!(
         HalfBoundedRelativeInterval::new(reference, OpeningDirection::ToFuture).partial_rel_start(),
-        Some(RelativeFiniteBound::new(reference).to_start_bound())
+        Some(RelativeFiniteBoundPosition::new(reference).to_start_bound())
     );
     assert_eq!(
         HalfBoundedRelativeInterval::new(reference, OpeningDirection::ToPast).partial_rel_start(),
@@ -361,7 +361,7 @@ fn partial_rel_end() {
     );
     assert_eq!(
         HalfBoundedRelativeInterval::new(reference, OpeningDirection::ToPast).partial_rel_end(),
-        Some(RelativeFiniteBound::new(reference).to_end_bound())
+        Some(RelativeFiniteBoundPosition::new(reference).to_end_bound())
     );
 }
 
@@ -429,8 +429,8 @@ mod try_from_bound_pair {
     fn finite_finite() {
         assert_eq!(
             HalfBoundedRelativeInterval::try_from(RelativeBoundPair::new(
-                RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound()
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound()
             )),
             Err(HalfBoundedRelativeIntervalTryFromRelativeBoundPairError)
         );
@@ -440,7 +440,7 @@ mod try_from_bound_pair {
     fn finite_infinite() {
         assert_eq!(
             HalfBoundedRelativeInterval::try_from(RelativeBoundPair::new(
-                RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
                 RelativeEndBound::InfiniteFuture
             )),
             Ok(HalfBoundedRelativeInterval::new(
@@ -455,7 +455,7 @@ mod try_from_bound_pair {
         assert_eq!(
             HalfBoundedRelativeInterval::try_from(RelativeBoundPair::new(
                 RelativeStartBound::InfinitePast,
-                RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound()
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound()
             )),
             Ok(HalfBoundedRelativeInterval::new(
                 SignedDuration::from_hours(2),

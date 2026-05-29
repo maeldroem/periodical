@@ -4,8 +4,8 @@
 //! [`SignedDuration`], and a [bound inclusivity](BoundInclusivity).
 //!
 //! Relative finite bounds are usually converted into either an
-//! [`RelativeStartBound`] through the [`to_start_bound`](RelativeFiniteBound::to_start_bound) method,
-//! or into an [`RelativeEndBound`] through the [`to_end_bound`](RelativeFiniteBound::to_end_bound) method.
+//! [`RelativeStartBound`] through the [`to_start_bound`](RelativeFiniteBoundPosition::to_start_bound) method,
+//! or into an [`RelativeEndBound`] through the [`to_end_bound`](RelativeFiniteBoundPosition::to_end_bound) method.
 
 use std::cmp::Ordering;
 use std::error::Error;
@@ -23,11 +23,10 @@ use crate::intervals::relative::{RelativeEndBound, RelativeStartBound};
 ///
 /// Contains an offset [`SignedDuration`] and an ambiguous [`BoundInclusivity`]:
 /// if it is [`Exclusive`](BoundInclusivity::Exclusive), then we additionally
-/// need the _source_ (whether it acts as the start or end of an interval) in
-/// order to know what this bound truly encompasses.
+/// need the _extremality_ (whether it acts as the start or end of an interval) in
+/// order to know what this position truly encompasses.
 ///
-/// This is why when comparing finite bounds, only its position (for relative
-/// bounds, its offset) is used.
+/// This is why when comparing finite bound positions, only its offset is used.
 ///
 /// # Examples
 ///
@@ -35,30 +34,30 @@ use crate::intervals::relative::{RelativeEndBound, RelativeStartBound};
 ///
 /// ```
 /// # use jiff::SignedDuration;
-/// # use periodical::intervals::relative::RelativeFiniteBound;
-/// let finite_bound = RelativeFiniteBound::new(SignedDuration::from_hours(21));
+/// # use periodical::intervals::relative::RelativeFiniteBoundPosition;
+/// let finite_bound_position = RelativeFiniteBoundPosition::new(SignedDuration::from_hours(21));
 /// ```
 ///
-/// ## Creating an [`RelativeFiniteBound`] with an explicit [`BoundInclusivity`]
+/// ## Creating an [`RelativeFiniteBoundPosition`] with an explicit [`BoundInclusivity`]
 ///
 /// ```
 /// # use jiff::SignedDuration;
-/// # use periodical::intervals::relative::RelativeFiniteBound;
+/// # use periodical::intervals::relative::RelativeFiniteBoundPosition;
 /// # use periodical::intervals::meta::BoundInclusivity;
-/// let finite_bound = RelativeFiniteBound::new_with_inclusivity(
+/// let finite_bound_position = RelativeFiniteBoundPosition::new_with_inclusivity(
 ///     SignedDuration::from_hours(21),
 ///     BoundInclusivity::Exclusive,
 /// );
 /// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
-pub struct RelativeFiniteBound {
+pub struct RelativeFiniteBoundPosition {
     pub(crate) offset: SignedDuration,
     pub(crate) inclusivity: BoundInclusivity,
 }
 
-impl RelativeFiniteBound {
-    /// Creates a new [`RelativeFiniteBound`] using the given offset
+impl RelativeFiniteBoundPosition {
+    /// Creates a new [`RelativeFiniteBoundPosition`] using the given offset
     ///
     /// This creates a finite bound using the [default `BoundInclusivity`](BoundInclusivity::default)
     #[must_use]
@@ -66,11 +65,11 @@ impl RelativeFiniteBound {
         Self::new_with_inclusivity(offset, BoundInclusivity::default())
     }
 
-    /// Creates a new [`RelativeFiniteBound`] using the given offset and
+    /// Creates a new [`RelativeFiniteBoundPosition`] using the given offset and
     /// [`BoundInclusivity`]
     #[must_use]
     pub fn new_with_inclusivity(offset: SignedDuration, inclusivity: BoundInclusivity) -> Self {
-        RelativeFiniteBound {
+        RelativeFiniteBoundPosition {
             offset,
             inclusivity,
         }
@@ -82,10 +81,13 @@ impl RelativeFiniteBound {
     ///
     /// ```
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::RelativeFiniteBound;
-    /// let finite_bound = RelativeFiniteBound::new(SignedDuration::from_hours(12));
+    /// # use periodical::intervals::relative::RelativeFiniteBoundPosition;
+    /// let finite_bound_position = RelativeFiniteBoundPosition::new(SignedDuration::from_hours(12));
     ///
-    /// assert_eq!(finite_bound.offset(), SignedDuration::from_hours(12));
+    /// assert_eq!(
+    ///     finite_bound_position.offset(),
+    ///     SignedDuration::from_hours(12)
+    /// );
     /// ```
     #[must_use]
     pub fn offset(&self) -> SignedDuration {
@@ -98,11 +100,14 @@ impl RelativeFiniteBound {
     ///
     /// ```
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::RelativeFiniteBound;
-    /// let mut finite_bound = RelativeFiniteBound::new(SignedDuration::from_hours(1));
-    /// finite_bound.set_offset(SignedDuration::from_hours(32));
+    /// # use periodical::intervals::relative::RelativeFiniteBoundPosition;
+    /// let mut finite_bound_position = RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1));
+    /// finite_bound_position.set_offset(SignedDuration::from_hours(32));
     ///
-    /// assert_eq!(finite_bound.offset(), SignedDuration::from_hours(32));
+    /// assert_eq!(
+    ///     finite_bound_position.offset(),
+    ///     SignedDuration::from_hours(32)
+    /// );
     /// ```
     pub fn set_offset(&mut self, offset: SignedDuration) {
         self.offset = offset;
@@ -114,12 +119,15 @@ impl RelativeFiniteBound {
     ///
     /// ```
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::RelativeFiniteBound;
+    /// # use periodical::intervals::relative::RelativeFiniteBoundPosition;
     /// # use periodical::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
-    /// let mut finite_bound = RelativeFiniteBound::new(SignedDuration::from_hours(1));
-    /// finite_bound.set_inclusivity(BoundInclusivity::Exclusive);
+    /// let mut finite_bound_position = RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1));
+    /// finite_bound_position.set_inclusivity(BoundInclusivity::Exclusive);
     ///
-    /// assert_eq!(finite_bound.inclusivity(), BoundInclusivity::Exclusive);
+    /// assert_eq!(
+    ///     finite_bound_position.inclusivity(),
+    ///     BoundInclusivity::Exclusive
+    /// );
     /// ```
     pub fn set_inclusivity(&mut self, inclusivity: BoundInclusivity) {
         self.inclusivity = inclusivity;
@@ -138,65 +146,65 @@ impl RelativeFiniteBound {
     }
 }
 
-impl HasBoundInclusivity for RelativeFiniteBound {
+impl HasBoundInclusivity for RelativeFiniteBoundPosition {
     fn inclusivity(&self) -> BoundInclusivity {
         self.inclusivity
     }
 }
 
-impl PartialOrd for RelativeFiniteBound {
+impl PartialOrd for RelativeFiniteBoundPosition {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl Ord for RelativeFiniteBound {
+impl Ord for RelativeFiniteBoundPosition {
     fn cmp(&self, other: &Self) -> Ordering {
         self.offset.cmp(&other.offset)
     }
 }
 
-impl From<SignedDuration> for RelativeFiniteBound {
+impl From<SignedDuration> for RelativeFiniteBoundPosition {
     fn from(value: SignedDuration) -> Self {
-        RelativeFiniteBound::new(value)
+        RelativeFiniteBoundPosition::new(value)
     }
 }
 
-impl From<(SignedDuration, BoundInclusivity)> for RelativeFiniteBound {
+impl From<(SignedDuration, BoundInclusivity)> for RelativeFiniteBoundPosition {
     fn from((offset, inclusivity): (SignedDuration, BoundInclusivity)) -> Self {
-        RelativeFiniteBound::new_with_inclusivity(offset, inclusivity)
+        RelativeFiniteBoundPosition::new_with_inclusivity(offset, inclusivity)
     }
 }
 
-/// Error that can occur when trying to convert [`Bound<SignedDuration>`] into [`RelativeFiniteBound`]
+/// Error that can occur when trying to convert [`Bound<SignedDuration>`] into [`RelativeFiniteBoundPosition`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct RelativeFiniteBoundTryFromBoundError;
+pub struct RelativeFiniteBoundPositionTryFromBoundError;
 
-impl Display for RelativeFiniteBoundTryFromBoundError {
+impl Display for RelativeFiniteBoundPositionTryFromBoundError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "An error occurred when trying to convert `Bound<SignedDuration>` into `RelativeFiniteBound`"
+            "An error occurred when trying to convert `Bound<SignedDuration>` into `RelativeFiniteBoundPosition`"
         )
     }
 }
 
-impl Error for RelativeFiniteBoundTryFromBoundError {}
+impl Error for RelativeFiniteBoundPositionTryFromBoundError {}
 
-impl TryFrom<Bound<SignedDuration>> for RelativeFiniteBound {
-    type Error = RelativeFiniteBoundTryFromBoundError;
+impl TryFrom<Bound<SignedDuration>> for RelativeFiniteBoundPosition {
+    type Error = RelativeFiniteBoundPositionTryFromBoundError;
 
     fn try_from(value: Bound<SignedDuration>) -> Result<Self, Self::Error> {
         match value {
-            Bound::Included(offset) => Ok(RelativeFiniteBound::new_with_inclusivity(
+            Bound::Included(offset) => Ok(RelativeFiniteBoundPosition::new_with_inclusivity(
                 offset,
                 BoundInclusivity::Inclusive,
             )),
-            Bound::Excluded(offset) => Ok(RelativeFiniteBound::new_with_inclusivity(
+            Bound::Excluded(offset) => Ok(RelativeFiniteBoundPosition::new_with_inclusivity(
                 offset,
                 BoundInclusivity::Exclusive,
             )),
-            Bound::Unbounded => Err(RelativeFiniteBoundTryFromBoundError),
+            Bound::Unbounded => Err(RelativeFiniteBoundPositionTryFromBoundError),
         }
     }
 }

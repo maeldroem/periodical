@@ -9,7 +9,7 @@ use super::interval::*;
 use crate::intervals::absolute::{
     AbsoluteBoundPair,
     AbsoluteEndBound,
-    AbsoluteFiniteBound,
+    AbsoluteFiniteBoundPosition,
     AbsoluteStartBound,
     BoundedAbsoluteInterval,
     EmptiableAbsoluteBoundPair,
@@ -654,8 +654,8 @@ mod abs_bound_pair {
             ))
             .abs_bound_pair(),
             AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound()
+                AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound()
             )
         );
         Ok(())
@@ -670,7 +670,7 @@ mod abs_bound_pair {
             ))
             .abs_bound_pair(),
             AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
                 AbsoluteEndBound::InfiniteFuture
             )
         );
@@ -697,7 +697,7 @@ mod abs_start {
                 "2026-01-02 00:00:00Z".parse::<Timestamp>()?
             ))
             .abs_start(),
-            AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+            AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
         );
         Ok(())
     }
@@ -710,7 +710,7 @@ mod abs_start {
                 OpeningDirection::ToFuture
             ))
             .abs_start(),
-            AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+            AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
         );
         Ok(())
     }
@@ -748,7 +748,7 @@ mod abs_end {
                 "2026-01-02 00:00:00Z".parse::<Timestamp>()?
             ))
             .abs_end(),
-            AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
         );
         Ok(())
     }
@@ -774,7 +774,7 @@ mod abs_end {
                 OpeningDirection::ToPast
             ))
             .abs_end(),
-            AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound()
+            AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound()
         );
         Ok(())
     }
@@ -800,8 +800,8 @@ mod emptiable_abs_bound_pair {
             ))
             .emptiable_abs_bound_pair(),
             AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound()
+                AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound()
             )
             .to_emptiable()
         );
@@ -817,7 +817,7 @@ mod emptiable_abs_bound_pair {
             ))
             .emptiable_abs_bound_pair(),
             AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
                 AbsoluteEndBound::InfiniteFuture
             )
             .to_emptiable()
@@ -845,7 +845,7 @@ mod partial_abs_start {
                 "2026-01-02 00:00:00Z".parse::<Timestamp>()?
             ))
             .partial_abs_start(),
-            Some(AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),)
+            Some(AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),)
         );
         Ok(())
     }
@@ -858,7 +858,7 @@ mod partial_abs_start {
                 OpeningDirection::ToFuture
             ))
             .partial_abs_start(),
-            Some(AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),)
+            Some(AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),)
         );
         Ok(())
     }
@@ -896,7 +896,7 @@ mod partial_abs_end {
                 "2026-01-02 00:00:00Z".parse::<Timestamp>()?
             ))
             .partial_abs_end(),
-            Some(AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),)
+            Some(AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),)
         );
         Ok(())
     }
@@ -922,7 +922,7 @@ mod partial_abs_end {
                 OpeningDirection::ToPast
             ))
             .partial_abs_end(),
-            Some(AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound())
+            Some(AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound())
         );
         Ok(())
     }
@@ -1493,8 +1493,8 @@ mod from_bound_pair {
     fn bounded() -> Result<(), Box<dyn Error>> {
         assert_eq!(
             AbsoluteInterval::from(AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound()
+                AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound()
             )),
             AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
@@ -1508,7 +1508,7 @@ mod from_bound_pair {
     fn half_bounded_to_future() -> Result<(), Box<dyn Error>> {
         assert_eq!(
             AbsoluteInterval::from(AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
                 AbsoluteEndBound::InfiniteFuture
             )),
             AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new(
@@ -1524,7 +1524,7 @@ mod from_bound_pair {
         assert_eq!(
             AbsoluteInterval::from(AbsoluteBoundPair::new(
                 AbsoluteStartBound::InfinitePast,
-                AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound()
+                AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound()
             )),
             AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
@@ -1554,8 +1554,8 @@ mod try_from_emptiable_bound_pair {
         assert_eq!(
             AbsoluteInterval::try_from(
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound()
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound()
                 )
                 .to_emptiable()
             ),
@@ -1572,7 +1572,7 @@ mod try_from_emptiable_bound_pair {
         assert_eq!(
             AbsoluteInterval::try_from(
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
                     AbsoluteEndBound::InfiniteFuture
                 )
                 .to_emptiable()
@@ -1591,7 +1591,7 @@ mod try_from_emptiable_bound_pair {
             AbsoluteInterval::try_from(
                 AbsoluteBoundPair::new(
                     AbsoluteStartBound::InfinitePast,
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound()
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound()
                 )
                 .to_emptiable()
             ),

@@ -16,7 +16,7 @@ use super::shrink::{ShrinkableEndBound, ShrinkableStartBound};
 use crate::intervals::absolute::{
     AbsoluteBoundPair,
     AbsoluteEndBound,
-    AbsoluteFiniteBound,
+    AbsoluteFiniteBoundPosition,
     AbsoluteInterval,
     AbsoluteStartBound,
     BoundedAbsoluteInterval,
@@ -38,7 +38,7 @@ use crate::intervals::relative::{
     HasRelativeBoundPair,
     RelativeBoundPair,
     RelativeEndBound,
-    RelativeFiniteBound,
+    RelativeFiniteBoundPosition,
     RelativeInterval,
     RelativeStartBound,
 };
@@ -180,23 +180,23 @@ impl<T> OverlapOrGapRemovalResult<T> {
 /// ```
 /// # use std::error::Error;
 /// # use jiff::Zoned;
-/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
 /// # use periodical::intervals::meta::BoundInclusivity;
 /// # use periodical::intervals::ops::remove_overlap_or_gap::{OverlapOrGapRemovalResult, RemovableOverlapOrGap};
 /// let first_interval = AbsoluteBoundPair::new(
-///     AbsoluteFiniteBound::new(
+///     AbsoluteFiniteBoundPosition::new(
 ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///     ).to_start_bound(),
-///     AbsoluteFiniteBound::new(
+///     AbsoluteFiniteBoundPosition::new(
 ///         "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///     ).to_end_bound(),
 /// );
 ///
 /// let second_interval = AbsoluteBoundPair::new(
-///     AbsoluteFiniteBound::new(
+///     AbsoluteFiniteBoundPosition::new(
 ///         "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///     ).to_start_bound(),
-///     AbsoluteFiniteBound::new(
+///     AbsoluteFiniteBoundPosition::new(
 ///         "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///     ).to_end_bound(),
 /// );
@@ -204,10 +204,10 @@ impl<T> OverlapOrGapRemovalResult<T> {
 /// assert_eq!(
 ///     first_interval.remove_overlap_or_gap(&second_interval),
 ///     OverlapOrGapRemovalResult::Single(AbsoluteBoundPair::new(
-///         AbsoluteFiniteBound::new(
+///         AbsoluteFiniteBoundPosition::new(
 ///             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///         ).to_start_bound(),
-///         AbsoluteFiniteBound::new_with_inclusivity(
+///         AbsoluteFiniteBoundPosition::new_with_inclusivity(
 ///             "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///             BoundInclusivity::Exclusive,
 ///         ).to_end_bound(),
@@ -229,23 +229,23 @@ pub trait RemovableOverlapOrGap<Rhs = Self> {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::remove_overlap_or_gap::{OverlapOrGapRemovalResult, RemovableOverlapOrGap};
     /// let first_interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_start_bound(),
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 17:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_end_bound(),
     /// );
     ///
     /// let second_interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_start_bound(),
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_end_bound(),
     /// );
@@ -254,20 +254,20 @@ pub trait RemovableOverlapOrGap<Rhs = Self> {
     ///     first_interval.remove_overlap_or_gap(&second_interval),
     ///     OverlapOrGapRemovalResult::Split(
     ///         AbsoluteBoundPair::new(
-    ///             AbsoluteFiniteBound::new(
+    ///             AbsoluteFiniteBoundPosition::new(
     ///                 "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///             ).to_start_bound(),
-    ///             AbsoluteFiniteBound::new_with_inclusivity(
+    ///             AbsoluteFiniteBoundPosition::new_with_inclusivity(
     ///                 "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///                 BoundInclusivity::Exclusive,
     ///             ).to_end_bound(),
     ///         ).to_emptiable(),
     ///         AbsoluteBoundPair::new(
-    ///             AbsoluteFiniteBound::new_with_inclusivity(
+    ///             AbsoluteFiniteBoundPosition::new_with_inclusivity(
     ///                 "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///                 BoundInclusivity::Exclusive,
     ///             ).to_start_bound(),
-    ///             AbsoluteFiniteBound::new(
+    ///             AbsoluteFiniteBoundPosition::new(
     ///                 "2025-01-01 17:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///             ).to_end_bound(),
     ///         ).to_emptiable(),
@@ -625,91 +625,91 @@ pub fn remove_overlap_or_gap_abs_bound_pair(
     match overlap_position {
         Dop::Outside => unreachable!("Only empty intervals can produce `OverlapPosition::Outside`"),
         Dop::OutsideBefore => {
-            let AbsoluteStartBound::Finite(finite_bound) = b.abs_start() else {
+            let AbsoluteStartBound::Finite(finite_bound_position) = b.abs_start() else {
                 unreachable!(
                     "If the start of the compared bounds is `InfinitePast`, then it is impossible that the overlap \
                      was `OutsideBefore`"
                 );
             };
 
-            let new_end_bound = AbsoluteEndBound::from(AbsoluteFiniteBound::new_with_inclusivity(
-                finite_bound.time(),
-                finite_bound.inclusivity().opposite(), // So that it fully closes the gap
+            let new_end_bound = AbsoluteEndBound::from(AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                finite_bound_position.time(),
+                finite_bound_position.inclusivity().opposite(), // So that it fully closes the gap
             ));
 
             OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBoundPair::from(a.grow_end(new_end_bound)))
         },
         Dop::OutsideAfter => {
-            let AbsoluteEndBound::Finite(finite_bound) = b.abs_end() else {
+            let AbsoluteEndBound::Finite(finite_bound_position) = b.abs_end() else {
                 unreachable!(
                     "If the end of the compared bounds is `InfiniteFuture`, then it is impossible that the overlap \
                      was `OutsideAfter`"
                 );
             };
 
-            let new_start_bound = AbsoluteStartBound::from(AbsoluteFiniteBound::new_with_inclusivity(
-                finite_bound.time(),
-                finite_bound.inclusivity().opposite(), // So that it fully closes the gap
+            let new_start_bound = AbsoluteStartBound::from(AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                finite_bound_position.time(),
+                finite_bound_position.inclusivity().opposite(), // So that it fully closes the gap
             ));
 
             OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBoundPair::from(a.grow_start(new_start_bound)))
         },
         Dop::EndsOnStart => {
-            let AbsoluteStartBound::Finite(finite_bound) = b.abs_start() else {
+            let AbsoluteStartBound::Finite(finite_bound_position) = b.abs_start() else {
                 unreachable!(
                     "If the start of the compared bounds is `InfinitePast`, then it is impossible that the overlap \
                      was `EndsOnStart`"
                 );
             };
 
-            let new_end_bound = AbsoluteEndBound::from(AbsoluteFiniteBound::new_with_inclusivity(
-                finite_bound.time(),
-                finite_bound.inclusivity().opposite(), // So that it fully closes the gap
+            let new_end_bound = AbsoluteEndBound::from(AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                finite_bound_position.time(),
+                finite_bound_position.inclusivity().opposite(), // So that it fully closes the gap
             ));
 
             OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBoundPair::Bound(a.shrink_end(new_end_bound)))
         },
         Dop::StartsOnEnd => {
-            let AbsoluteEndBound::Finite(finite_bound) = b.abs_end() else {
+            let AbsoluteEndBound::Finite(finite_bound_position) = b.abs_end() else {
                 unreachable!(
                     "If the end of the compared bounds is `InfiniteFuture`, then it is impossible that the overlap \
                      was `StartsOnEnd`"
                 );
             };
 
-            let new_start_bound = AbsoluteStartBound::from(AbsoluteFiniteBound::new_with_inclusivity(
-                finite_bound.time(),
-                finite_bound.inclusivity().opposite(), // So that it fully closes the gap
+            let new_start_bound = AbsoluteStartBound::from(AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                finite_bound_position.time(),
+                finite_bound_position.inclusivity().opposite(), // So that it fully closes the gap
             ));
 
             OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBoundPair::Bound(a.shrink_start(new_start_bound)))
         },
         Dop::CrossesStart => {
-            let AbsoluteStartBound::Finite(finite_bound) = b.abs_start() else {
+            let AbsoluteStartBound::Finite(finite_bound_position) = b.abs_start() else {
                 unreachable!(
                     "If the start of the compared bounds is `InfinitePast`, then it is impossible that the overlap \
                      was `CrossesStart`"
                 );
             };
 
-            let new_end_bound = AbsoluteEndBound::from(AbsoluteFiniteBound::new_with_inclusivity(
-                finite_bound.time(),
-                finite_bound.inclusivity().opposite(), // So that it fully closes the gap
+            let new_end_bound = AbsoluteEndBound::from(AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                finite_bound_position.time(),
+                finite_bound_position.inclusivity().opposite(), // So that it fully closes the gap
             ));
 
             OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBoundPair::from(a.shrink_end(new_end_bound)))
         },
         Dop::CrossesEnd => {
-            let AbsoluteEndBound::Finite(finite_bound) = b.abs_end() else {
+            let AbsoluteEndBound::Finite(finite_bound_position) = b.abs_end() else {
                 unreachable!(
                     "If the end of the compared bounds is `InfiniteFuture`, then it is impossible that the overlap \
                      was `CrossesEnd`"
                 );
             };
 
-            let new_start_bound = AbsoluteStartBound::from(AbsoluteFiniteBound::new_with_inclusivity(
-                finite_bound.time(),
-                finite_bound.inclusivity().opposite(), // So that it fully closes the gap
+            let new_start_bound = AbsoluteStartBound::from(AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                finite_bound_position.time(),
+                finite_bound_position.inclusivity().opposite(), // So that it fully closes the gap
             ));
 
             OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBoundPair::from(a.shrink_start(new_start_bound)))
@@ -778,91 +778,91 @@ pub fn remove_overlap_or_gap_rel_bound_pair(
     match overlap_position {
         Dop::Outside => unreachable!("Only empty intervals can produce `OverlapPosition::Outside`"),
         Dop::OutsideBefore => {
-            let RelativeStartBound::Finite(finite_bound) = b.rel_start() else {
+            let RelativeStartBound::Finite(finite_bound_position) = b.rel_start() else {
                 unreachable!(
                     "If the start of the compared bounds is `InfinitePast`, then it is impossible that the overlap \
                      was `OutsideBefore`"
                 );
             };
 
-            let new_end_bound = RelativeEndBound::from(RelativeFiniteBound::new_with_inclusivity(
-                finite_bound.offset(),
-                finite_bound.inclusivity().opposite(), // So that it fully closes the gap
+            let new_end_bound = RelativeEndBound::from(RelativeFiniteBoundPosition::new_with_inclusivity(
+                finite_bound_position.offset(),
+                finite_bound_position.inclusivity().opposite(), // So that it fully closes the gap
             ));
 
             OverlapOrGapRemovalResult::Single(EmptiableRelativeBoundPair::from(a.grow_end(new_end_bound)))
         },
         Dop::OutsideAfter => {
-            let RelativeEndBound::Finite(finite_bound) = b.rel_end() else {
+            let RelativeEndBound::Finite(finite_bound_position) = b.rel_end() else {
                 unreachable!(
                     "If the end of the compared bounds is `InfiniteFuture`, then it is impossible that the overlap \
                      was `OutsideAfter`"
                 );
             };
 
-            let new_start_bound = RelativeStartBound::from(RelativeFiniteBound::new_with_inclusivity(
-                finite_bound.offset(),
-                finite_bound.inclusivity().opposite(), // So that it fully closes the gap
+            let new_start_bound = RelativeStartBound::from(RelativeFiniteBoundPosition::new_with_inclusivity(
+                finite_bound_position.offset(),
+                finite_bound_position.inclusivity().opposite(), // So that it fully closes the gap
             ));
 
             OverlapOrGapRemovalResult::Single(EmptiableRelativeBoundPair::from(a.grow_start(new_start_bound)))
         },
         Dop::EndsOnStart => {
-            let RelativeStartBound::Finite(finite_bound) = b.rel_start() else {
+            let RelativeStartBound::Finite(finite_bound_position) = b.rel_start() else {
                 unreachable!(
                     "If the start of the compared bounds is `InfinitePast`, then it is impossible that the overlap \
                      was `EndsOnStart`"
                 );
             };
 
-            let new_end_bound = RelativeEndBound::from(RelativeFiniteBound::new_with_inclusivity(
-                finite_bound.offset(),
-                finite_bound.inclusivity().opposite(), // So that it fully closes the gap
+            let new_end_bound = RelativeEndBound::from(RelativeFiniteBoundPosition::new_with_inclusivity(
+                finite_bound_position.offset(),
+                finite_bound_position.inclusivity().opposite(), // So that it fully closes the gap
             ));
 
             OverlapOrGapRemovalResult::Single(EmptiableRelativeBoundPair::Bound(a.shrink_end(new_end_bound)))
         },
         Dop::StartsOnEnd => {
-            let RelativeEndBound::Finite(finite_bound) = b.rel_end() else {
+            let RelativeEndBound::Finite(finite_bound_position) = b.rel_end() else {
                 unreachable!(
                     "If the end of the compared bounds is `InfiniteFuture`, then it is impossible that the overlap \
                      was `StartsOnEnd`"
                 );
             };
 
-            let new_start_bound = RelativeStartBound::from(RelativeFiniteBound::new_with_inclusivity(
-                finite_bound.offset(),
-                finite_bound.inclusivity().opposite(), // So that it fully closes the gap
+            let new_start_bound = RelativeStartBound::from(RelativeFiniteBoundPosition::new_with_inclusivity(
+                finite_bound_position.offset(),
+                finite_bound_position.inclusivity().opposite(), // So that it fully closes the gap
             ));
 
             OverlapOrGapRemovalResult::Single(EmptiableRelativeBoundPair::Bound(a.shrink_start(new_start_bound)))
         },
         Dop::CrossesStart => {
-            let RelativeStartBound::Finite(finite_bound) = b.rel_start() else {
+            let RelativeStartBound::Finite(finite_bound_position) = b.rel_start() else {
                 unreachable!(
                     "If the start of the compared bounds is `InfinitePast`, then it is impossible that the overlap \
                      was `CrossesStart`"
                 );
             };
 
-            let new_end_bound = RelativeEndBound::from(RelativeFiniteBound::new_with_inclusivity(
-                finite_bound.offset(),
-                finite_bound.inclusivity().opposite(), // So that it fully closes the gap
+            let new_end_bound = RelativeEndBound::from(RelativeFiniteBoundPosition::new_with_inclusivity(
+                finite_bound_position.offset(),
+                finite_bound_position.inclusivity().opposite(), // So that it fully closes the gap
             ));
 
             OverlapOrGapRemovalResult::Single(EmptiableRelativeBoundPair::from(a.shrink_end(new_end_bound)))
         },
         Dop::CrossesEnd => {
-            let RelativeEndBound::Finite(finite_bound) = b.rel_end() else {
+            let RelativeEndBound::Finite(finite_bound_position) = b.rel_end() else {
                 unreachable!(
                     "If the end of the compared bounds is `InfiniteFuture`, then it is impossible that the overlap \
                      was `CrossesEnd`"
                 );
             };
 
-            let new_start_bound = RelativeStartBound::from(RelativeFiniteBound::new_with_inclusivity(
-                finite_bound.offset(),
-                finite_bound.inclusivity().opposite(), // So that it fully closes the gap
+            let new_start_bound = RelativeStartBound::from(RelativeFiniteBoundPosition::new_with_inclusivity(
+                finite_bound_position.offset(),
+                finite_bound_position.inclusivity().opposite(), // So that it fully closes the gap
             ));
 
             OverlapOrGapRemovalResult::Single(EmptiableRelativeBoundPair::from(a.shrink_start(new_start_bound)))

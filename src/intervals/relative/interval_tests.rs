@@ -26,7 +26,7 @@ use crate::intervals::relative::{
     HasRelativeBoundPair,
     RelativeBoundPair,
     RelativeEndBound,
-    RelativeFiniteBound,
+    RelativeFiniteBoundPosition,
     RelativeStartBound,
 };
 use crate::intervals::special::UnboundedInterval;
@@ -579,8 +579,8 @@ mod rel_bound_pair {
             ))
             .rel_bound_pair(),
             RelativeBoundPair::new(
-                RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound()
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound()
             )
         );
     }
@@ -594,7 +594,7 @@ mod rel_bound_pair {
             ))
             .rel_bound_pair(),
             RelativeBoundPair::new(
-                RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
                 RelativeEndBound::InfiniteFuture
             )
         );
@@ -620,7 +620,7 @@ mod rel_start {
                 SignedDuration::from_hours(2)
             ))
             .rel_start(),
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
         );
     }
 
@@ -632,7 +632,7 @@ mod rel_start {
                 OpeningDirection::ToFuture
             ))
             .rel_start(),
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
         );
     }
 
@@ -668,7 +668,7 @@ mod rel_end {
                 SignedDuration::from_hours(2)
             ))
             .rel_end(),
-            RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
         );
     }
 
@@ -692,7 +692,7 @@ mod rel_end {
                 OpeningDirection::ToPast
             ))
             .rel_end(),
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound()
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound()
         );
     }
 
@@ -717,8 +717,8 @@ mod emptiable_rel_bound_pair {
             ))
             .emptiable_rel_bound_pair(),
             RelativeBoundPair::new(
-                RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound()
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound()
             )
             .to_emptiable()
         );
@@ -733,7 +733,7 @@ mod emptiable_rel_bound_pair {
             ))
             .emptiable_rel_bound_pair(),
             RelativeBoundPair::new(
-                RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
                 RelativeEndBound::InfiniteFuture
             )
             .to_emptiable()
@@ -760,7 +760,7 @@ mod partial_rel_start {
                 SignedDuration::from_hours(2)
             ))
             .partial_rel_start(),
-            Some(RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),)
+            Some(RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),)
         );
     }
 
@@ -772,7 +772,7 @@ mod partial_rel_start {
                 OpeningDirection::ToFuture
             ))
             .partial_rel_start(),
-            Some(RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),)
+            Some(RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),)
         );
     }
 
@@ -808,7 +808,7 @@ mod partial_rel_end {
                 SignedDuration::from_hours(2)
             ))
             .partial_rel_end(),
-            Some(RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),)
+            Some(RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),)
         );
     }
 
@@ -832,7 +832,7 @@ mod partial_rel_end {
                 OpeningDirection::ToPast
             ))
             .partial_rel_end(),
-            Some(RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound())
+            Some(RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound())
         );
     }
 
@@ -1356,8 +1356,8 @@ mod from_bound_pair {
     fn bounded() {
         assert_eq!(
             RelativeInterval::from(RelativeBoundPair::new(
-                RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound()
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound()
             )),
             RelativeInterval::Bounded(BoundedRelativeInterval::new(
                 SignedDuration::from_hours(1),
@@ -1370,7 +1370,7 @@ mod from_bound_pair {
     fn half_bounded_to_future() {
         assert_eq!(
             RelativeInterval::from(RelativeBoundPair::new(
-                RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
                 RelativeEndBound::InfiniteFuture
             )),
             RelativeInterval::HalfBounded(HalfBoundedRelativeInterval::new(
@@ -1385,7 +1385,7 @@ mod from_bound_pair {
         assert_eq!(
             RelativeInterval::from(RelativeBoundPair::new(
                 RelativeStartBound::InfinitePast,
-                RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound()
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound()
             )),
             RelativeInterval::HalfBounded(HalfBoundedRelativeInterval::new(
                 SignedDuration::from_hours(1),
@@ -1414,8 +1414,8 @@ mod try_from_emptiable_bound_pair {
         assert_eq!(
             RelativeInterval::try_from(
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound()
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound()
                 )
                 .to_emptiable()
             ),
@@ -1431,7 +1431,7 @@ mod try_from_emptiable_bound_pair {
         assert_eq!(
             RelativeInterval::try_from(
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
                     RelativeEndBound::InfiniteFuture
                 )
                 .to_emptiable()
@@ -1449,7 +1449,7 @@ mod try_from_emptiable_bound_pair {
             RelativeInterval::try_from(
                 RelativeBoundPair::new(
                     RelativeStartBound::InfinitePast,
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound()
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound()
                 )
                 .to_emptiable()
             ),

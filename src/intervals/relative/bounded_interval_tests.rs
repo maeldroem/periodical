@@ -24,7 +24,7 @@ use crate::intervals::relative::{
     HasRelativeBoundPair,
     RelativeBoundPair,
     RelativeEndBound,
-    RelativeFiniteBound,
+    RelativeFiniteBoundPosition,
     RelativeInterval,
     RelativeStartBound,
 };
@@ -775,8 +775,8 @@ fn rel_bound_pair() {
     assert_eq!(
         BoundedRelativeInterval::new(SignedDuration::from_hours(1), SignedDuration::from_hours(2)).rel_bound_pair(),
         RelativeBoundPair::new(
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-            RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound()
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound()
         )
     );
 }
@@ -785,7 +785,7 @@ fn rel_bound_pair() {
 fn rel_start() {
     assert_eq!(
         BoundedRelativeInterval::new(SignedDuration::from_hours(1), SignedDuration::from_hours(2)).rel_start(),
-        RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound()
+        RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound()
     );
 }
 
@@ -793,7 +793,7 @@ fn rel_start() {
 fn rel_end() {
     assert_eq!(
         BoundedRelativeInterval::new(SignedDuration::from_hours(1), SignedDuration::from_hours(2),).rel_end(),
-        RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound()
+        RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound()
     );
 }
 
@@ -803,8 +803,8 @@ fn emptiable_rel_bound_pair() {
         BoundedRelativeInterval::new(SignedDuration::from_hours(1), SignedDuration::from_hours(2),)
             .emptiable_rel_bound_pair(),
         RelativeBoundPair::new(
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-            RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound()
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound()
         )
         .to_emptiable()
     );
@@ -814,7 +814,7 @@ fn emptiable_rel_bound_pair() {
 fn partial_rel_start() {
     assert_eq!(
         BoundedRelativeInterval::new(SignedDuration::from_hours(1), SignedDuration::from_hours(2),).partial_rel_start(),
-        Some(RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound())
+        Some(RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound())
     );
 }
 
@@ -822,7 +822,7 @@ fn partial_rel_start() {
 fn partial_rel_end() {
     assert_eq!(
         BoundedRelativeInterval::new(SignedDuration::from_hours(1), SignedDuration::from_hours(2),).partial_rel_end(),
-        Some(RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound())
+        Some(RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound())
     );
 }
 
@@ -900,8 +900,8 @@ mod try_from_bound_pair {
 
         assert_eq!(
             BoundedRelativeInterval::try_from(RelativeBoundPair::new(
-                RelativeFiniteBound::new(start).to_start_bound(),
-                RelativeFiniteBound::new(end).to_end_bound()
+                RelativeFiniteBoundPosition::new(start).to_start_bound(),
+                RelativeFiniteBoundPosition::new(end).to_end_bound()
             )),
             Ok(BoundedRelativeInterval::new(start, end))
         );
@@ -913,7 +913,7 @@ mod try_from_bound_pair {
 
         assert_eq!(
             BoundedRelativeInterval::try_from(RelativeBoundPair::new(
-                RelativeFiniteBound::new(start).to_start_bound(),
+                RelativeFiniteBoundPosition::new(start).to_start_bound(),
                 RelativeEndBound::InfiniteFuture
             )),
             Err(BoundedRelativeIntervalTryFromRelativeBoundPairError)
@@ -927,7 +927,7 @@ mod try_from_bound_pair {
         assert_eq!(
             BoundedRelativeInterval::try_from(RelativeBoundPair::new(
                 RelativeStartBound::InfinitePast,
-                RelativeFiniteBound::new(end).to_end_bound()
+                RelativeFiniteBoundPosition::new(end).to_end_bound()
             )),
             Err(BoundedRelativeIntervalTryFromRelativeBoundPairError)
         );
@@ -956,8 +956,8 @@ mod try_from_emptiable_bound_pair {
         assert_eq!(
             BoundedRelativeInterval::try_from(
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(start).to_start_bound(),
-                    RelativeFiniteBound::new(end).to_end_bound()
+                    RelativeFiniteBoundPosition::new(start).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(end).to_end_bound()
                 )
                 .to_emptiable()
             ),
@@ -972,7 +972,7 @@ mod try_from_emptiable_bound_pair {
         assert_eq!(
             BoundedRelativeInterval::try_from(
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(start).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(start).to_start_bound(),
                     RelativeEndBound::InfiniteFuture
                 )
                 .to_emptiable()
@@ -989,7 +989,7 @@ mod try_from_emptiable_bound_pair {
             BoundedRelativeInterval::try_from(
                 RelativeBoundPair::new(
                     RelativeStartBound::InfinitePast,
-                    RelativeFiniteBound::new(end).to_end_bound()
+                    RelativeFiniteBoundPosition::new(end).to_end_bound()
                 )
                 .to_emptiable()
             ),

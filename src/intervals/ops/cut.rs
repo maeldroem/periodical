@@ -21,17 +21,17 @@
 //! ```
 //! # use std::error::Error;
 //! # use jiff::Zoned;
-//! # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+//! # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
 //! # use periodical::intervals::meta::BoundInclusivity;
 //! # use periodical::intervals::ops::cut::{CutResult, Cuttable, CutType};
 //! let interval = AbsoluteBoundPair::new(
-//!     AbsoluteFiniteBound::new(
+//!     AbsoluteFiniteBoundPosition::new(
 //!         "2025-01-01 08:00:00[Europe/Oslo]"
 //!             .parse::<Zoned>()?
 //!             .timestamp(),
 //!     )
 //!     .to_start_bound(),
-//!     AbsoluteFiniteBound::new(
+//!     AbsoluteFiniteBoundPosition::new(
 //!         "2025-01-01 16:00:00[Europe/Oslo]"
 //!             .parse::<Zoned>()?
 //!             .timestamp(),
@@ -48,13 +48,13 @@
 //!     interval.cut_at(at, cut_type),
 //!     CutResult::Cut(
 //!         AbsoluteBoundPair::new(
-//!             AbsoluteFiniteBound::new(
+//!             AbsoluteFiniteBoundPosition::new(
 //!                 "2025-01-01 08:00:00[Europe/Oslo]"
 //!                     .parse::<Zoned>()?
 //!                     .timestamp()
 //!             )
 //!             .to_start_bound(),
-//!             AbsoluteFiniteBound::new_with_inclusivity(
+//!             AbsoluteFiniteBoundPosition::new_with_inclusivity(
 //!                 "2025-01-01 12:00:00[Europe/Oslo]"
 //!                     .parse::<Zoned>()?
 //!                     .timestamp(),
@@ -63,14 +63,14 @@
 //!             .to_end_bound(),
 //!         ),
 //!         AbsoluteBoundPair::new(
-//!             AbsoluteFiniteBound::new_with_inclusivity(
+//!             AbsoluteFiniteBoundPosition::new_with_inclusivity(
 //!                 "2025-01-01 12:00:00[Europe/Oslo]"
 //!                     .parse::<Zoned>()?
 //!                     .timestamp(),
 //!                 BoundInclusivity::Exclusive,
 //!             )
 //!             .to_start_bound(),
-//!             AbsoluteFiniteBound::new(
+//!             AbsoluteFiniteBoundPosition::new(
 //!                 "2025-01-01 16:00:00[Europe/Oslo]"
 //!                     .parse::<Zoned>()?
 //!                     .timestamp(),
@@ -87,17 +87,17 @@
 //! ```
 //! # use std::error::Error;
 //! # use jiff::Zoned;
-//! # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+//! # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
 //! # use periodical::intervals::meta::BoundInclusivity;
 //! # use periodical::intervals::ops::cut::{CutResult, Cuttable, CutType};
 //! let interval = AbsoluteBoundPair::new(
-//!     AbsoluteFiniteBound::new(
+//!     AbsoluteFiniteBoundPosition::new(
 //!         "2025-01-01 08:00:00[Europe/Oslo]"
 //!             .parse::<Zoned>()?
 //!             .timestamp(),
 //!     )
 //!     .to_start_bound(),
-//!     AbsoluteFiniteBound::new(
+//!     AbsoluteFiniteBoundPosition::new(
 //!         "2025-01-01 16:00:00[Europe/Oslo]"
 //!             .parse::<Zoned>()?
 //!             .timestamp(),
@@ -114,13 +114,13 @@
 //!     interval.cut_at(at, cut_type),
 //!     CutResult::Cut(
 //!         AbsoluteBoundPair::new(
-//!             AbsoluteFiniteBound::new(
+//!             AbsoluteFiniteBoundPosition::new(
 //!                 "2025-01-01 08:00:00[Europe/Oslo]"
 //!                     .parse::<Zoned>()?
 //!                     .timestamp()
 //!             )
 //!             .to_start_bound(),
-//!             AbsoluteFiniteBound::new_with_inclusivity(
+//!             AbsoluteFiniteBoundPosition::new_with_inclusivity(
 //!                 "2025-01-01 16:00:00[Europe/Oslo]"
 //!                     .parse::<Zoned>()?
 //!                     .timestamp(),
@@ -129,13 +129,13 @@
 //!             .to_end_bound(),
 //!         ),
 //!         AbsoluteBoundPair::new(
-//!             AbsoluteFiniteBound::new(
+//!             AbsoluteFiniteBoundPosition::new(
 //!                 "2025-01-01 16:00:00[Europe/Oslo]"
 //!                     .parse::<Zoned>()?
 //!                     .timestamp(),
 //!             )
 //!             .to_start_bound(),
-//!             AbsoluteFiniteBound::new(
+//!             AbsoluteFiniteBoundPosition::new(
 //!                 "2025-01-01 16:00:00[Europe/Oslo]"
 //!                     .parse::<Zoned>()?
 //!                     .timestamp(),
@@ -152,17 +152,17 @@
 //! ```
 //! # use std::error::Error;
 //! # use jiff::Zoned;
-//! # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+//! # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
 //! # use periodical::intervals::meta::BoundInclusivity;
 //! # use periodical::intervals::ops::cut::{CutResult, Cuttable, CutType};
 //! let interval = AbsoluteBoundPair::new(
-//!     AbsoluteFiniteBound::new(
+//!     AbsoluteFiniteBoundPosition::new(
 //!         "2025-01-01 08:00:00[Europe/Oslo]"
 //!             .parse::<Zoned>()?
 //!             .timestamp(),
 //!     )
 //!     .to_start_bound(),
-//!     AbsoluteFiniteBound::new(
+//!     AbsoluteFiniteBoundPosition::new(
 //!         "2025-01-01 16:00:00[Europe/Oslo]"
 //!             .parse::<Zoned>()?
 //!             .timestamp(),
@@ -188,7 +188,7 @@ use serde::{Deserialize, Serialize};
 use super::point_containment::CanPositionPointContainment;
 use crate::intervals::absolute::{
     AbsoluteBoundPair,
-    AbsoluteFiniteBound,
+    AbsoluteFiniteBoundPosition,
     AbsoluteInterval,
     BoundedAbsoluteInterval,
     EmptiableAbsoluteBoundPair,
@@ -207,7 +207,7 @@ use crate::intervals::relative::{
     HasEmptiableRelativeBoundPair,
     HasRelativeBoundPair,
     RelativeBoundPair,
-    RelativeFiniteBound,
+    RelativeFiniteBoundPosition,
     RelativeInterval,
     check_relative_bound_pair_for_interval_creation,
 };
@@ -422,17 +422,17 @@ impl<T> CutResult<T> {
 /// ```
 /// # use std::error::Error;
 /// # use jiff::Zoned;
-/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
 /// # use periodical::intervals::meta::BoundInclusivity;
 /// # use periodical::intervals::ops::cut::{CutResult, Cuttable, CutType};
 /// let interval = AbsoluteBoundPair::new(
-///     AbsoluteFiniteBound::new(
+///     AbsoluteFiniteBoundPosition::new(
 ///         "2025-01-01 08:00:00[Europe/Oslo]"
 ///             .parse::<Zoned>()?
 ///             .timestamp(),
 ///     )
 ///     .to_start_bound(),
-///     AbsoluteFiniteBound::new(
+///     AbsoluteFiniteBoundPosition::new(
 ///         "2025-01-01 16:00:00[Europe/Oslo]"
 ///             .parse::<Zoned>()?
 ///             .timestamp(),
@@ -449,13 +449,13 @@ impl<T> CutResult<T> {
 ///     interval.cut_at(at, cut_type),
 ///     CutResult::Cut(
 ///         AbsoluteBoundPair::new(
-///             AbsoluteFiniteBound::new(
+///             AbsoluteFiniteBoundPosition::new(
 ///                 "2025-01-01 08:00:00[Europe/Oslo]"
 ///                     .parse::<Zoned>()?
 ///                     .timestamp()
 ///             )
 ///             .to_start_bound(),
-///             AbsoluteFiniteBound::new_with_inclusivity(
+///             AbsoluteFiniteBoundPosition::new_with_inclusivity(
 ///                 "2025-01-01 12:00:00[Europe/Oslo]"
 ///                     .parse::<Zoned>()?
 ///                     .timestamp(),
@@ -464,14 +464,14 @@ impl<T> CutResult<T> {
 ///             .to_end_bound(),
 ///         ),
 ///         AbsoluteBoundPair::new(
-///             AbsoluteFiniteBound::new_with_inclusivity(
+///             AbsoluteFiniteBoundPosition::new_with_inclusivity(
 ///                 "2025-01-01 12:00:00[Europe/Oslo]"
 ///                     .parse::<Zoned>()?
 ///                     .timestamp(),
 ///                 BoundInclusivity::Exclusive,
 ///             )
 ///             .to_start_bound(),
-///             AbsoluteFiniteBound::new(
+///             AbsoluteFiniteBoundPosition::new(
 ///                 "2025-01-01 16:00:00[Europe/Oslo]"
 ///                     .parse::<Zoned>()?
 ///                     .timestamp(),
@@ -488,17 +488,17 @@ impl<T> CutResult<T> {
 /// ```
 /// # use std::error::Error;
 /// # use jiff::Zoned;
-/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
 /// # use periodical::intervals::meta::BoundInclusivity;
 /// # use periodical::intervals::ops::cut::{CutResult, Cuttable, CutType};
 /// let interval = AbsoluteBoundPair::new(
-///     AbsoluteFiniteBound::new(
+///     AbsoluteFiniteBoundPosition::new(
 ///         "2025-01-01 08:00:00[Europe/Oslo]"
 ///             .parse::<Zoned>()?
 ///             .timestamp(),
 ///     )
 ///     .to_start_bound(),
-///     AbsoluteFiniteBound::new(
+///     AbsoluteFiniteBoundPosition::new(
 ///         "2025-01-01 16:00:00[Europe/Oslo]"
 ///             .parse::<Zoned>()?
 ///             .timestamp(),
@@ -515,13 +515,13 @@ impl<T> CutResult<T> {
 ///     interval.cut_at(at, cut_type),
 ///     CutResult::Cut(
 ///         AbsoluteBoundPair::new(
-///             AbsoluteFiniteBound::new(
+///             AbsoluteFiniteBoundPosition::new(
 ///                 "2025-01-01 08:00:00[Europe/Oslo]"
 ///                     .parse::<Zoned>()?
 ///                     .timestamp()
 ///             )
 ///             .to_start_bound(),
-///             AbsoluteFiniteBound::new_with_inclusivity(
+///             AbsoluteFiniteBoundPosition::new_with_inclusivity(
 ///                 "2025-01-01 16:00:00[Europe/Oslo]"
 ///                     .parse::<Zoned>()?
 ///                     .timestamp(),
@@ -530,13 +530,13 @@ impl<T> CutResult<T> {
 ///             .to_end_bound(),
 ///         ),
 ///         AbsoluteBoundPair::new(
-///             AbsoluteFiniteBound::new(
+///             AbsoluteFiniteBoundPosition::new(
 ///                 "2025-01-01 16:00:00[Europe/Oslo]"
 ///                     .parse::<Zoned>()?
 ///                     .timestamp(),
 ///             )
 ///             .to_start_bound(),
-///             AbsoluteFiniteBound::new(
+///             AbsoluteFiniteBoundPosition::new(
 ///                 "2025-01-01 16:00:00[Europe/Oslo]"
 ///                     .parse::<Zoned>()?
 ///                     .timestamp(),
@@ -553,17 +553,17 @@ impl<T> CutResult<T> {
 /// ```
 /// # use std::error::Error;
 /// # use jiff::Zoned;
-/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
 /// # use periodical::intervals::meta::BoundInclusivity;
 /// # use periodical::intervals::ops::cut::{CutResult, Cuttable, CutType};
 /// let interval = AbsoluteBoundPair::new(
-///     AbsoluteFiniteBound::new(
+///     AbsoluteFiniteBoundPosition::new(
 ///         "2025-01-01 08:00:00[Europe/Oslo]"
 ///             .parse::<Zoned>()?
 ///             .timestamp(),
 ///     )
 ///     .to_start_bound(),
-///     AbsoluteFiniteBound::new(
+///     AbsoluteFiniteBoundPosition::new(
 ///         "2025-01-01 16:00:00[Europe/Oslo]"
 ///             .parse::<Zoned>()?
 ///             .timestamp(),
@@ -590,17 +590,17 @@ pub trait Cuttable<P> {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::cut::{CutResult, Cuttable, CutType};
     /// let interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 08:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
     ///     )
     ///     .to_start_bound(),
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 16:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
@@ -617,13 +617,13 @@ pub trait Cuttable<P> {
     ///     interval.cut_at(at, cut_type),
     ///     CutResult::Cut(
     ///         AbsoluteBoundPair::new(
-    ///             AbsoluteFiniteBound::new(
+    ///             AbsoluteFiniteBoundPosition::new(
     ///                 "2025-01-01 08:00:00[Europe/Oslo]"
     ///                     .parse::<Zoned>()?
     ///                     .timestamp()
     ///             )
     ///             .to_start_bound(),
-    ///             AbsoluteFiniteBound::new_with_inclusivity(
+    ///             AbsoluteFiniteBoundPosition::new_with_inclusivity(
     ///                 "2025-01-01 12:00:00[Europe/Oslo]"
     ///                     .parse::<Zoned>()?
     ///                     .timestamp(),
@@ -632,14 +632,14 @@ pub trait Cuttable<P> {
     ///             .to_end_bound(),
     ///         ),
     ///         AbsoluteBoundPair::new(
-    ///             AbsoluteFiniteBound::new_with_inclusivity(
+    ///             AbsoluteFiniteBoundPosition::new_with_inclusivity(
     ///                 "2025-01-01 12:00:00[Europe/Oslo]"
     ///                     .parse::<Zoned>()?
     ///                     .timestamp(),
     ///                 BoundInclusivity::Exclusive,
     ///             )
     ///             .to_start_bound(),
-    ///             AbsoluteFiniteBound::new(
+    ///             AbsoluteFiniteBoundPosition::new(
     ///                 "2025-01-01 16:00:00[Europe/Oslo]"
     ///                     .parse::<Zoned>()?
     ///                     .timestamp(),
@@ -802,9 +802,10 @@ pub fn cut_abs_bound_pair(
         return CutResult::Uncut;
     }
 
-    let past_cut_end = AbsoluteFiniteBound::new_with_inclusivity(at, cut_type.past_bound_inclusivity()).to_end_bound();
+    let past_cut_end =
+        AbsoluteFiniteBoundPosition::new_with_inclusivity(at, cut_type.past_bound_inclusivity()).to_end_bound();
     let future_cut_start =
-        AbsoluteFiniteBound::new_with_inclusivity(at, cut_type.future_bound_inclusivity()).to_start_bound();
+        AbsoluteFiniteBoundPosition::new_with_inclusivity(at, cut_type.future_bound_inclusivity()).to_start_bound();
 
     if check_absolute_bound_pair_for_interval_creation(&bounds.start(), &past_cut_end).is_err()
         || check_absolute_bound_pair_for_interval_creation(&future_cut_start, &bounds.end()).is_err()
@@ -815,10 +816,13 @@ pub fn cut_abs_bound_pair(
     let mut past_split = bounds.clone();
     let mut future_split = bounds.clone();
 
-    past_split.set_end(AbsoluteFiniteBound::new_with_inclusivity(at, cut_type.past_bound_inclusivity()).to_end_bound());
+    past_split.set_end(
+        AbsoluteFiniteBoundPosition::new_with_inclusivity(at, cut_type.past_bound_inclusivity()).to_end_bound(),
+    );
 
-    future_split
-        .set_start(AbsoluteFiniteBound::new_with_inclusivity(at, cut_type.future_bound_inclusivity()).to_start_bound());
+    future_split.set_start(
+        AbsoluteFiniteBoundPosition::new_with_inclusivity(at, cut_type.future_bound_inclusivity()).to_start_bound(),
+    );
 
     CutResult::Cut(past_split, future_split)
 }
@@ -858,10 +862,11 @@ pub fn cut_bounded_abs_interval(
         return CutResult::Uncut;
     }
 
-    let past_cut_end = AbsoluteFiniteBound::new_with_inclusivity(at, cut_type.past_bound_inclusivity()).to_end_bound();
+    let past_cut_end =
+        AbsoluteFiniteBoundPosition::new_with_inclusivity(at, cut_type.past_bound_inclusivity()).to_end_bound();
 
     let future_cut_start =
-        AbsoluteFiniteBound::new_with_inclusivity(at, cut_type.future_bound_inclusivity()).to_start_bound();
+        AbsoluteFiniteBoundPosition::new_with_inclusivity(at, cut_type.future_bound_inclusivity()).to_start_bound();
 
     if check_absolute_bound_pair_for_interval_creation(&interval.abs_start(), &past_cut_end).is_err()
         || check_absolute_bound_pair_for_interval_creation(&future_cut_start, &interval.abs_end()).is_err()
@@ -899,9 +904,9 @@ pub fn cut_rel_bound_pair(
         return CutResult::Uncut;
     }
 
-    let past_cut_end = RelativeFiniteBound::new_with_inclusivity(at, cut_type.past_bound_inclusivity()).to_end_bound();
+    let past_cut_end = RelativeFiniteBoundPosition::new_with_inclusivity(at, cut_type.past_bound_inclusivity()).to_end_bound();
     let future_cut_start =
-        RelativeFiniteBound::new_with_inclusivity(at, cut_type.future_bound_inclusivity()).to_start_bound();
+        RelativeFiniteBoundPosition::new_with_inclusivity(at, cut_type.future_bound_inclusivity()).to_start_bound();
 
     if check_relative_bound_pair_for_interval_creation(&bounds.start(), &past_cut_end).is_err()
         || check_relative_bound_pair_for_interval_creation(&future_cut_start, &bounds.end()).is_err()
@@ -912,10 +917,10 @@ pub fn cut_rel_bound_pair(
     let mut past_split = bounds.clone();
     let mut future_split = bounds.clone();
 
-    past_split.set_end(RelativeFiniteBound::new_with_inclusivity(at, cut_type.past_bound_inclusivity()).to_end_bound());
+    past_split.set_end(RelativeFiniteBoundPosition::new_with_inclusivity(at, cut_type.past_bound_inclusivity()).to_end_bound());
 
     future_split
-        .set_start(RelativeFiniteBound::new_with_inclusivity(at, cut_type.future_bound_inclusivity()).to_start_bound());
+        .set_start(RelativeFiniteBoundPosition::new_with_inclusivity(at, cut_type.future_bound_inclusivity()).to_start_bound());
 
     CutResult::Cut(past_split, future_split)
 }
@@ -955,10 +960,10 @@ pub fn cut_bounded_rel_interval(
         return CutResult::Uncut;
     }
 
-    let past_cut_end = RelativeFiniteBound::new_with_inclusivity(at, cut_type.past_bound_inclusivity()).to_end_bound();
+    let past_cut_end = RelativeFiniteBoundPosition::new_with_inclusivity(at, cut_type.past_bound_inclusivity()).to_end_bound();
 
     let future_cut_start =
-        RelativeFiniteBound::new_with_inclusivity(at, cut_type.future_bound_inclusivity()).to_start_bound();
+        RelativeFiniteBoundPosition::new_with_inclusivity(at, cut_type.future_bound_inclusivity()).to_start_bound();
 
     if check_relative_bound_pair_for_interval_creation(&interval.rel_start(), &past_cut_end).is_err()
         || check_relative_bound_pair_for_interval_creation(&future_cut_start, &interval.rel_end()).is_err()

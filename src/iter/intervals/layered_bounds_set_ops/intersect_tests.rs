@@ -3,9 +3,9 @@ use std::error::Error;
 use jiff::{SignedDuration, Zoned};
 
 use super::intersect::*;
-use crate::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound, AbsoluteStartBound};
+use crate::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition, AbsoluteStartBound};
 use crate::intervals::meta::BoundInclusivity;
-use crate::intervals::relative::{RelativeBoundPair, RelativeFiniteBound, RelativeStartBound};
+use crate::intervals::relative::{RelativeBoundPair, RelativeFiniteBoundPosition, RelativeStartBound};
 use crate::iter::intervals::bounds::{AbsoluteBoundsIteratorDispatcher, RelativeBoundsIteratorDispatcher};
 use crate::iter::intervals::layered_bounds::{
     LayeredBoundsState,
@@ -29,11 +29,11 @@ mod abs {
                 LayeredBoundsState::FirstLayer,
                 LayeredBoundsState::SecondLayer,
                 Some(
-                    AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                    AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                         .to_end_bound(),
                 ),
                 Some(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                         BoundInclusivity::Exclusive,
                     )
@@ -44,14 +44,14 @@ mod abs {
                 LayeredBoundsState::SecondLayer,
                 LayeredBoundsState::NoLayers,
                 Some(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2025-05-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound(),
                 ),
                 Some(
-                    AbsoluteFiniteBound::new("2025-05-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                    AbsoluteFiniteBoundPosition::new("2025-05-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                         .to_start_bound(),
                 ),
             ),
@@ -69,23 +69,23 @@ mod abs {
         let first_layer_data = [
             // 1
             AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                     .to_start_bound(),
-                AbsoluteFiniteBound::new("2025-01-05 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                AbsoluteFiniteBoundPosition::new("2025-01-05 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                     .to_end_bound(),
             ),
             // 3
             AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new("2025-01-11 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                AbsoluteFiniteBoundPosition::new("2025-01-11 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                     .to_start_bound(),
-                AbsoluteFiniteBound::new("2025-01-15 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                AbsoluteFiniteBoundPosition::new("2025-01-15 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                     .to_end_bound(),
             ),
             // 5
             AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new("2025-01-20 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                AbsoluteFiniteBoundPosition::new("2025-01-20 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                     .to_start_bound(),
-                AbsoluteFiniteBound::new_with_inclusivity(
+                AbsoluteFiniteBoundPosition::new_with_inclusivity(
                     "2025-02-10 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                 )
@@ -96,26 +96,26 @@ mod abs {
         let second_layer_data = [
             // 2
             AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new("2025-01-05 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                AbsoluteFiniteBoundPosition::new("2025-01-05 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                     .to_start_bound(),
-                AbsoluteFiniteBound::new("2025-01-10 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                AbsoluteFiniteBoundPosition::new("2025-01-10 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                     .to_end_bound(),
             ),
             // 4
             AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new("2025-01-20 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                AbsoluteFiniteBoundPosition::new("2025-01-20 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                     .to_start_bound(),
-                AbsoluteFiniteBound::new("2025-01-22 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                AbsoluteFiniteBoundPosition::new("2025-01-22 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                     .to_end_bound(),
             ),
             // 6
             AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new_with_inclusivity(
+                AbsoluteFiniteBoundPosition::new_with_inclusivity(
                     "2025-02-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                 )
                 .to_start_bound(),
-                AbsoluteFiniteBound::new("2025-02-15 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                AbsoluteFiniteBoundPosition::new("2025-02-15 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                     .to_end_bound(),
             ),
         ];
@@ -129,24 +129,24 @@ mod abs {
                 .collect::<Vec<_>>(),
             vec![
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2025-01-05 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                    AbsoluteFiniteBoundPosition::new("2025-01-05 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                         .to_start_bound(),
-                    AbsoluteFiniteBound::new("2025-01-05 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                    AbsoluteFiniteBoundPosition::new("2025-01-05 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                         .to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2025-01-20 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                    AbsoluteFiniteBoundPosition::new("2025-01-20 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                         .to_start_bound(),
-                    AbsoluteFiniteBound::new("2025-01-22 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                    AbsoluteFiniteBoundPosition::new("2025-01-22 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                         .to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2025-02-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2025-02-10 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                         BoundInclusivity::Exclusive,
                     )
@@ -174,9 +174,9 @@ mod rel {
             LayeredBoundsStateChangeAtRelativeBound::new(
                 LayeredBoundsState::FirstLayer,
                 LayeredBoundsState::SecondLayer,
-                Some(RelativeFiniteBound::new(SignedDuration::from_hours(101)).to_end_bound()),
+                Some(RelativeFiniteBoundPosition::new(SignedDuration::from_hours(101)).to_end_bound()),
                 Some(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(101),
                         BoundInclusivity::Exclusive,
                     )
@@ -187,13 +187,13 @@ mod rel {
                 LayeredBoundsState::SecondLayer,
                 LayeredBoundsState::NoLayers,
                 Some(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(501),
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound(),
                 ),
-                Some(RelativeFiniteBound::new(SignedDuration::from_hours(501)).to_start_bound()),
+                Some(RelativeFiniteBoundPosition::new(SignedDuration::from_hours(501)).to_start_bound()),
             ),
         ];
 
@@ -207,18 +207,18 @@ mod rel {
         let first_layer_data = [
             // 1
             RelativeBoundPair::new(
-                RelativeFiniteBound::new(SignedDuration::from_hours(101)).to_start_bound(),
-                RelativeFiniteBound::new(SignedDuration::from_hours(105)).to_end_bound(),
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(101)).to_start_bound(),
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(105)).to_end_bound(),
             ),
             // 3
             RelativeBoundPair::new(
-                RelativeFiniteBound::new(SignedDuration::from_hours(111)).to_start_bound(),
-                RelativeFiniteBound::new(SignedDuration::from_hours(115)).to_end_bound(),
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(111)).to_start_bound(),
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(115)).to_end_bound(),
             ),
             // 5
             RelativeBoundPair::new(
-                RelativeFiniteBound::new(SignedDuration::from_hours(120)).to_start_bound(),
-                RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(210), BoundInclusivity::Exclusive)
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(120)).to_start_bound(),
+                RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(210), BoundInclusivity::Exclusive)
                     .to_end_bound(),
             ),
         ];
@@ -226,19 +226,19 @@ mod rel {
         let second_layer_data = [
             // 2
             RelativeBoundPair::new(
-                RelativeFiniteBound::new(SignedDuration::from_hours(105)).to_start_bound(),
-                RelativeFiniteBound::new(SignedDuration::from_hours(110)).to_end_bound(),
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(105)).to_start_bound(),
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(110)).to_end_bound(),
             ),
             // 4
             RelativeBoundPair::new(
-                RelativeFiniteBound::new(SignedDuration::from_hours(120)).to_start_bound(),
-                RelativeFiniteBound::new(SignedDuration::from_hours(122)).to_end_bound(),
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(120)).to_start_bound(),
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(122)).to_end_bound(),
             ),
             // 6
             RelativeBoundPair::new(
-                RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(201), BoundInclusivity::Exclusive)
+                RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(201), BoundInclusivity::Exclusive)
                     .to_start_bound(),
-                RelativeFiniteBound::new(SignedDuration::from_hours(215)).to_end_bound(),
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(215)).to_end_bound(),
             ),
         ];
 
@@ -251,20 +251,20 @@ mod rel {
                 .collect::<Vec<_>>(),
             vec![
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(105)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(105)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(105)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(105)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(120)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(122)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(120)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(122)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(201),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(210),
                         BoundInclusivity::Exclusive,
                     )

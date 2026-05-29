@@ -95,7 +95,7 @@ impl EmptiableRelativeBoundPair {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBound, EmptiableRelativeBoundPair};
+    /// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBoundPosition, EmptiableRelativeBoundPair};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// let start = SignedDuration::from_hours(8);
     /// let end = SignedDuration::from_hours(16);
@@ -104,11 +104,11 @@ impl EmptiableRelativeBoundPair {
     ///
     /// assert_eq!(
     ///     emptiable_bounds.clone().bound().map(|bounds| bounds.start()),
-    ///     Some(RelativeFiniteBound::new(start).to_start_bound()),
+    ///     Some(RelativeFiniteBoundPosition::new(start).to_start_bound()),
     /// );
     /// assert_eq!(
     ///     emptiable_bounds.clone().bound().map(|bounds| bounds.end()),
-    ///     Some(RelativeFiniteBound::new_with_inclusivity(end, BoundInclusivity::Exclusive).to_end_bound()),
+    ///     Some(RelativeFiniteBoundPosition::new_with_inclusivity(end, BoundInclusivity::Exclusive).to_end_bound()),
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```

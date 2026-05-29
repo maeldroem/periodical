@@ -9,7 +9,7 @@ use jiff::Timestamp;
 use crate::intervals::absolute::{
     AbsoluteBoundPair,
     AbsoluteEndBound,
-    AbsoluteFiniteBound,
+    AbsoluteFiniteBoundPosition,
     AbsoluteInterval,
     AbsoluteStartBound,
     BoundedAbsoluteInterval,
@@ -27,7 +27,7 @@ use crate::intervals::relative::{
     HasRelativeBoundPair,
     RelativeBoundPair,
     RelativeEndBound,
-    RelativeFiniteBound,
+    RelativeFiniteBoundPosition,
     RelativeInterval,
     RelativeStartBound,
 };
@@ -71,12 +71,12 @@ macro_rules! to_relative_impl_reflective {
 /// ```
 /// # use std::error::Error;
 /// # use jiff::{SignedDuration, Zoned};
-/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
 /// # use periodical::intervals::ops::relativity_conversion::ToAbsolute;
-/// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBound};
+/// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBoundPosition};
 /// let rel_interval = RelativeBoundPair::new(
-///     RelativeFiniteBound::new(SignedDuration::from_hours(8)).to_start_bound(),
-///     RelativeFiniteBound::new(SignedDuration::from_hours(16)).to_end_bound(),
+///     RelativeFiniteBoundPosition::new(SignedDuration::from_hours(8)).to_start_bound(),
+///     RelativeFiniteBoundPosition::new(SignedDuration::from_hours(16)).to_end_bound(),
 /// );
 ///
 /// assert_eq!(
@@ -86,13 +86,13 @@ macro_rules! to_relative_impl_reflective {
 ///             .timestamp()
 ///     ),
 ///     AbsoluteBoundPair::new(
-///         AbsoluteFiniteBound::new(
+///         AbsoluteFiniteBoundPosition::new(
 ///             "2025-01-01 08:00:00[Europe/Oslo]"
 ///                 .parse::<Zoned>()?
 ///                 .timestamp(),
 ///         )
 ///         .to_start_bound(),
-///         AbsoluteFiniteBound::new(
+///         AbsoluteFiniteBoundPosition::new(
 ///             "2025-01-01 16:00:00[Europe/Oslo]"
 ///                 .parse::<Zoned>()?
 ///                 .timestamp(),
@@ -112,12 +112,12 @@ pub trait ToAbsolute {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::{SignedDuration, Zoned};
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
     /// # use periodical::intervals::ops::relativity_conversion::ToAbsolute;
-    /// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBound};
+    /// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBoundPosition};
     /// let rel_interval = RelativeBoundPair::new(
-    ///     RelativeFiniteBound::new(SignedDuration::from_hours(8)).to_start_bound(),
-    ///     RelativeFiniteBound::new(SignedDuration::from_hours(16)).to_end_bound(),
+    ///     RelativeFiniteBoundPosition::new(SignedDuration::from_hours(8)).to_start_bound(),
+    ///     RelativeFiniteBoundPosition::new(SignedDuration::from_hours(16)).to_end_bound(),
     /// );
     ///
     /// assert_eq!(
@@ -127,13 +127,13 @@ pub trait ToAbsolute {
     ///             .timestamp()
     ///     ),
     ///     AbsoluteBoundPair::new(
-    ///         AbsoluteFiniteBound::new(
+    ///         AbsoluteFiniteBoundPosition::new(
     ///             "2025-01-01 08:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
     ///         )
     ///         .to_start_bound(),
-    ///         AbsoluteFiniteBound::new(
+    ///         AbsoluteFiniteBoundPosition::new(
     ///             "2025-01-01 16:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
@@ -150,7 +150,7 @@ pub trait ToAbsolute {
 to_absolute_impl_reflective!([
     UnboundedInterval,
     EmptyInterval,
-    AbsoluteFiniteBound,
+    AbsoluteFiniteBoundPosition,
     AbsoluteStartBound,
     AbsoluteEndBound,
     AbsoluteBoundPair,
@@ -161,11 +161,11 @@ to_absolute_impl_reflective!([
     EmptiableAbsoluteInterval,
 ]);
 
-impl ToAbsolute for RelativeFiniteBound {
-    type AbsoluteType = AbsoluteFiniteBound;
+impl ToAbsolute for RelativeFiniteBoundPosition {
+    type AbsoluteType = AbsoluteFiniteBoundPosition;
 
     fn to_absolute(&self, reference: Timestamp) -> Self::AbsoluteType {
-        AbsoluteFiniteBound::new_with_inclusivity(reference + self.offset(), self.inclusivity())
+        AbsoluteFiniteBoundPosition::new_with_inclusivity(reference + self.offset(), self.inclusivity())
     }
 }
 
@@ -175,7 +175,7 @@ impl ToAbsolute for RelativeStartBound {
     fn to_absolute(&self, reference: Timestamp) -> Self::AbsoluteType {
         match self {
             RelativeStartBound::InfinitePast => AbsoluteStartBound::InfinitePast,
-            RelativeStartBound::Finite(relative_finite) => AbsoluteFiniteBound::new_with_inclusivity(
+            RelativeStartBound::Finite(relative_finite) => AbsoluteFiniteBoundPosition::new_with_inclusivity(
                 reference + relative_finite.offset(),
                 relative_finite.inclusivity(),
             )
@@ -190,7 +190,7 @@ impl ToAbsolute for RelativeEndBound {
     fn to_absolute(&self, reference: Timestamp) -> Self::AbsoluteType {
         match self {
             RelativeEndBound::InfiniteFuture => AbsoluteEndBound::InfiniteFuture,
-            RelativeEndBound::Finite(relative_finite) => AbsoluteFiniteBound::new_with_inclusivity(
+            RelativeEndBound::Finite(relative_finite) => AbsoluteFiniteBoundPosition::new_with_inclusivity(
                 reference + relative_finite.offset(),
                 relative_finite.inclusivity(),
             )
@@ -279,17 +279,17 @@ impl ToAbsolute for EmptiableRelativeInterval {
 /// ```
 /// # use std::error::Error;
 /// # use jiff::{SignedDuration, Zoned};
-/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
 /// # use periodical::intervals::ops::relativity_conversion::ToRelative;
-/// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBound};
+/// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBoundPosition};
 /// let abs_interval = AbsoluteBoundPair::new(
-///     AbsoluteFiniteBound::new(
+///     AbsoluteFiniteBoundPosition::new(
 ///         "2025-01-01 08:00:00[Europe/Oslo]"
 ///             .parse::<Zoned>()?
 ///             .timestamp(),
 ///     )
 ///     .to_start_bound(),
-///     AbsoluteFiniteBound::new(
+///     AbsoluteFiniteBoundPosition::new(
 ///         "2025-01-01 16:00:00[Europe/Oslo]"
 ///             .parse::<Zoned>()?
 ///             .timestamp(),
@@ -304,8 +304,8 @@ impl ToAbsolute for EmptiableRelativeInterval {
 ///             .timestamp()
 ///     ),
 ///     RelativeBoundPair::new(
-///         RelativeFiniteBound::new(SignedDuration::from_hours(8),).to_start_bound(),
-///         RelativeFiniteBound::new(SignedDuration::from_hours(16),).to_end_bound(),
+///         RelativeFiniteBoundPosition::new(SignedDuration::from_hours(8),).to_start_bound(),
+///         RelativeFiniteBoundPosition::new(SignedDuration::from_hours(16),).to_end_bound(),
 ///     ),
 /// );
 /// # Ok::<(), Box<dyn Error>>(())
@@ -320,17 +320,17 @@ pub trait ToRelative {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::{SignedDuration, Zoned};
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
     /// # use periodical::intervals::ops::relativity_conversion::ToRelative;
-    /// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBound};
+    /// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBoundPosition};
     /// let abs_interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 08:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
     ///     )
     ///     .to_start_bound(),
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 16:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
@@ -345,8 +345,8 @@ pub trait ToRelative {
     ///             .timestamp()
     ///     ),
     ///     RelativeBoundPair::new(
-    ///         RelativeFiniteBound::new(SignedDuration::from_hours(8),).to_start_bound(),
-    ///         RelativeFiniteBound::new(SignedDuration::from_hours(16),).to_end_bound(),
+    ///         RelativeFiniteBoundPosition::new(SignedDuration::from_hours(8),).to_start_bound(),
+    ///         RelativeFiniteBoundPosition::new(SignedDuration::from_hours(16),).to_end_bound(),
     ///     ),
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
@@ -358,7 +358,7 @@ pub trait ToRelative {
 to_relative_impl_reflective!([
     UnboundedInterval,
     EmptyInterval,
-    RelativeFiniteBound,
+    RelativeFiniteBoundPosition,
     RelativeStartBound,
     RelativeEndBound,
     RelativeBoundPair,
@@ -369,11 +369,11 @@ to_relative_impl_reflective!([
     EmptiableRelativeInterval,
 ]);
 
-impl ToRelative for AbsoluteFiniteBound {
-    type RelativeType = RelativeFiniteBound;
+impl ToRelative for AbsoluteFiniteBoundPosition {
+    type RelativeType = RelativeFiniteBoundPosition;
 
     fn to_relative(&self, reference: Timestamp) -> Self::RelativeType {
-        RelativeFiniteBound::new_with_inclusivity(self.time().duration_since(reference), self.inclusivity())
+        RelativeFiniteBoundPosition::new_with_inclusivity(self.time().duration_since(reference), self.inclusivity())
     }
 }
 
@@ -383,7 +383,7 @@ impl ToRelative for AbsoluteStartBound {
     fn to_relative(&self, reference: Timestamp) -> Self::RelativeType {
         match self {
             AbsoluteStartBound::InfinitePast => RelativeStartBound::InfinitePast,
-            AbsoluteStartBound::Finite(absolute_finite) => RelativeFiniteBound::new_with_inclusivity(
+            AbsoluteStartBound::Finite(absolute_finite) => RelativeFiniteBoundPosition::new_with_inclusivity(
                 absolute_finite.time().duration_since(reference),
                 absolute_finite.inclusivity(),
             )
@@ -398,7 +398,7 @@ impl ToRelative for AbsoluteEndBound {
     fn to_relative(&self, reference: Timestamp) -> Self::RelativeType {
         match self {
             AbsoluteEndBound::InfiniteFuture => RelativeEndBound::InfiniteFuture,
-            AbsoluteEndBound::Finite(absolute_finite) => RelativeFiniteBound::new_with_inclusivity(
+            AbsoluteEndBound::Finite(absolute_finite) => RelativeFiniteBoundPosition::new_with_inclusivity(
                 absolute_finite.time().duration_since(reference),
                 absolute_finite.inclusivity(),
             )

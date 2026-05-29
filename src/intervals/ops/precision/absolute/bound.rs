@@ -3,7 +3,7 @@
 use jiff::Timestamp;
 use jiff::tz::TimeZone;
 
-use crate::intervals::absolute::{AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound};
+use crate::intervals::absolute::{AbsoluteEndBound, AbsoluteFiniteBoundPosition, AbsoluteStartBound};
 use crate::intervals::meta::HasBoundInclusivity;
 use crate::ops::{Precision, PrecisionOutOfRangeError};
 
@@ -19,10 +19,10 @@ use crate::ops::{Precision, PrecisionOutOfRangeError};
 /// # use jiff::Zoned;
 /// # use jiff::tz::TimeZone;
 /// # use periodical::ops::{Precision, PrecisionMode};
-/// # use periodical::intervals::absolute::AbsoluteFiniteBound;
+/// # use periodical::intervals::absolute::AbsoluteFiniteBoundPosition;
 /// # use periodical::intervals::meta::BoundInclusivity;
 /// # use periodical::intervals::ops::PreciseAbsoluteBound;
-/// let bound = AbsoluteFiniteBound::new_with_inclusivity(
+/// let bound = AbsoluteFiniteBoundPosition::new_with_inclusivity(
 ///     "2025-01-01 08:24:41[Europe/Oslo]"
 ///         .parse::<Zoned>()?
 ///         .timestamp(),
@@ -35,7 +35,7 @@ use crate::ops::{Precision, PrecisionOutOfRangeError};
 ///         TimeZone::get("Europe/Oslo")?,
 ///         Precision::new(Duration::from_mins(5), PrecisionMode::ToFuture)?,
 ///     ),
-///     Ok(AbsoluteFiniteBound::new_with_inclusivity(
+///     Ok(AbsoluteFiniteBoundPosition::new_with_inclusivity(
 ///         "2025-01-01 08:25:00[Europe/Oslo]"
 ///             .parse::<Zoned>()?
 ///             .timestamp(),
@@ -61,10 +61,10 @@ pub trait PreciseAbsoluteBound {
     /// # use jiff::Zoned;
     /// # use jiff::tz::TimeZone;
     /// # use periodical::ops::{Precision, PrecisionMode};
-    /// # use periodical::intervals::absolute::AbsoluteFiniteBound;
+    /// # use periodical::intervals::absolute::AbsoluteFiniteBoundPosition;
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::PreciseAbsoluteBound;
-    /// let bound = AbsoluteFiniteBound::new_with_inclusivity(
+    /// let bound = AbsoluteFiniteBoundPosition::new_with_inclusivity(
     ///     "2025-01-01 08:24:41[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
@@ -77,7 +77,7 @@ pub trait PreciseAbsoluteBound {
     ///         TimeZone::get("Europe/Oslo")?,
     ///         Precision::new(Duration::from_mins(5), PrecisionMode::ToFuture)?,
     ///     ),
-    ///     Ok(AbsoluteFiniteBound::new_with_inclusivity(
+    ///     Ok(AbsoluteFiniteBoundPosition::new_with_inclusivity(
     ///         "2025-01-01 08:25:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
@@ -102,10 +102,10 @@ pub trait PreciseAbsoluteBound {
     /// # use jiff::Zoned;
     /// # use jiff::tz::TimeZone;
     /// # use periodical::ops::{Precision, PrecisionMode};
-    /// # use periodical::intervals::absolute::AbsoluteFiniteBound;
+    /// # use periodical::intervals::absolute::AbsoluteFiniteBoundPosition;
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::PreciseAbsoluteBound;
-    /// let bound = AbsoluteFiniteBound::new_with_inclusivity(
+    /// let bound = AbsoluteFiniteBoundPosition::new_with_inclusivity(
     ///     "2025-01-01 08:24:41[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
@@ -121,7 +121,7 @@ pub trait PreciseAbsoluteBound {
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
     ///     ),
-    ///     Ok(AbsoluteFiniteBound::new_with_inclusivity(
+    ///     Ok(AbsoluteFiniteBoundPosition::new_with_inclusivity(
     ///         "2025-01-01 08:28:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
@@ -140,11 +140,11 @@ pub trait PreciseAbsoluteBound {
     ) -> Self::PrecisedBoundOutput;
 }
 
-impl PreciseAbsoluteBound for AbsoluteFiniteBound {
+impl PreciseAbsoluteBound for AbsoluteFiniteBoundPosition {
     type PrecisedBoundOutput = Result<Self, PrecisionOutOfRangeError>;
 
     fn precise_bound(&self, tz: TimeZone, precision: Precision) -> Self::PrecisedBoundOutput {
-        precise_abs_finite_bound(self, tz, precision)
+        precise_abs_finite_bound_position(self, tz, precision)
     }
 
     fn precise_bound_with_base_time(
@@ -191,17 +191,17 @@ impl PreciseAbsoluteBound for AbsoluteEndBound {
     }
 }
 
-/// Precises an [`AbsoluteFiniteBound`] with the given [`Precision`]
+/// Precises an [`AbsoluteFiniteBoundPosition`] with the given [`Precision`]
 ///
 /// # Errors
 ///
 /// See [`Precision::precise_time`]
-pub fn precise_abs_finite_bound(
-    bound: &AbsoluteFiniteBound,
+pub fn precise_abs_finite_bound_position(
+    bound: &AbsoluteFiniteBoundPosition,
     tz: TimeZone,
     precision: Precision,
-) -> Result<AbsoluteFiniteBound, PrecisionOutOfRangeError> {
-    Ok(AbsoluteFiniteBound::new_with_inclusivity(
+) -> Result<AbsoluteFiniteBoundPosition, PrecisionOutOfRangeError> {
+    Ok(AbsoluteFiniteBoundPosition::new_with_inclusivity(
         precision
             .precise_time(&bound.time().to_zoned(tz))?
             .compatible()
@@ -223,8 +223,8 @@ pub fn precise_abs_start_bound(
 ) -> Result<AbsoluteStartBound, PrecisionOutOfRangeError> {
     match bound {
         AbsoluteStartBound::InfinitePast => Ok(*bound),
-        AbsoluteStartBound::Finite(finite_bound) => {
-            precise_abs_finite_bound(finite_bound, tz, precision).map(AbsoluteFiniteBound::to_start_bound)
+        AbsoluteStartBound::Finite(finite_bound_position) => {
+            precise_abs_finite_bound_position(finite_bound_position, tz, precision).map(AbsoluteFiniteBoundPosition::to_start_bound)
         },
     }
 }
@@ -241,24 +241,24 @@ pub fn precise_abs_end_bound(
 ) -> Result<AbsoluteEndBound, PrecisionOutOfRangeError> {
     match bound {
         AbsoluteEndBound::InfiniteFuture => Ok(*bound),
-        AbsoluteEndBound::Finite(finite_bound) => {
-            precise_abs_finite_bound(finite_bound, tz, precision).map(AbsoluteFiniteBound::to_end_bound)
+        AbsoluteEndBound::Finite(finite_bound_position) => {
+            precise_abs_finite_bound_position(finite_bound_position, tz, precision).map(AbsoluteFiniteBoundPosition::to_end_bound)
         },
     }
 }
 
-/// Precises an [`AbsoluteFiniteBound`] with the given [`Precision`] and base time
+/// Precises an [`AbsoluteFiniteBoundPosition`] with the given [`Precision`] and base time
 ///
 /// # Errors
 ///
 /// See [`Precision::precise_time_with_base_time`]
 pub fn precise_abs_finite_bound_with_base_time(
-    bound: &AbsoluteFiniteBound,
+    bound: &AbsoluteFiniteBoundPosition,
     tz: TimeZone,
     precision: Precision,
     base: Timestamp,
-) -> Result<AbsoluteFiniteBound, PrecisionOutOfRangeError> {
-    Ok(AbsoluteFiniteBound::new_with_inclusivity(
+) -> Result<AbsoluteFiniteBoundPosition, PrecisionOutOfRangeError> {
+    Ok(AbsoluteFiniteBoundPosition::new_with_inclusivity(
         precision
             .precise_time_with_base_time(&bound.time().to_zoned(tz), base)?
             .timestamp(),
@@ -279,9 +279,9 @@ pub fn precise_abs_start_bound_with_base_time(
 ) -> Result<AbsoluteStartBound, PrecisionOutOfRangeError> {
     match bound {
         AbsoluteStartBound::InfinitePast => Ok(*bound),
-        AbsoluteStartBound::Finite(finite_bound) => {
-            precise_abs_finite_bound_with_base_time(finite_bound, tz, precision, base)
-                .map(AbsoluteFiniteBound::to_start_bound)
+        AbsoluteStartBound::Finite(finite_bound_position) => {
+            precise_abs_finite_bound_with_base_time(finite_bound_position, tz, precision, base)
+                .map(AbsoluteFiniteBoundPosition::to_start_bound)
         },
     }
 }
@@ -299,9 +299,9 @@ pub fn precise_abs_end_bound_with_base_time(
 ) -> Result<AbsoluteEndBound, PrecisionOutOfRangeError> {
     match bound {
         AbsoluteEndBound::InfiniteFuture => Ok(*bound),
-        AbsoluteEndBound::Finite(finite_bound) => {
-            precise_abs_finite_bound_with_base_time(finite_bound, tz, precision, base)
-                .map(AbsoluteFiniteBound::to_end_bound)
+        AbsoluteEndBound::Finite(finite_bound_position) => {
+            precise_abs_finite_bound_with_base_time(finite_bound_position, tz, precision, base)
+                .map(AbsoluteFiniteBoundPosition::to_end_bound)
         },
     }
 }
