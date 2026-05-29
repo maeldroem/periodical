@@ -16,12 +16,7 @@ use jiff::SignedDuration;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use crate::intervals::meta::{BoundExtremality, BoundInclusivity, HasBoundExtremality, HasBoundInclusivity};
-use crate::intervals::ops::bound_overlap_ambiguity::{
-    BoundOverlapAmbiguity,
-    BoundOverlapDisambiguationRuleSet,
-    DisambiguatedBoundOverlap,
-};
+use crate::intervals::meta::{BoundExtremality, BoundInclusivity, HasBoundExtremality};
 use crate::intervals::relative::finite_end_bound::RelativeFiniteEndBound;
 use crate::intervals::relative::{RelativeBound, RelativeFiniteBoundPosition, RelativeStartBound};
 
@@ -168,10 +163,7 @@ impl RelativeEndBound {
     #[must_use]
     pub fn opposite(&self) -> Option<RelativeStartBound> {
         match self {
-            Self::Finite(finite) => Some(
-                RelativeFiniteBoundPosition::new_with_inclusivity(finite.offset(), finite.inclusivity().opposite())
-                    .to_start_bound(),
-            ),
+            Self::Finite(finite) => Some(finite.opposite().to_start_bound()),
             Self::InfiniteFuture => None,
         }
     }
@@ -192,84 +184,30 @@ impl PartialOrd for RelativeEndBound {
 impl Ord for RelativeEndBound {
     fn cmp(&self, other: &Self) -> Ordering {
         match (self, other) {
-            (RelativeEndBound::InfiniteFuture, RelativeEndBound::InfiniteFuture) => Ordering::Equal,
-            (RelativeEndBound::InfiniteFuture, RelativeEndBound::Finite(_)) => Ordering::Greater,
-            (RelativeEndBound::Finite(_), RelativeEndBound::InfiniteFuture) => Ordering::Less,
-            (
-                RelativeEndBound::Finite(RelativeFiniteBoundPosition {
-                    offset: offset_og,
-                    inclusivity: inclusivity_og,
-                }),
-                RelativeEndBound::Finite(RelativeFiniteBoundPosition {
-                    offset: offset_other,
-                    inclusivity: inclusivity_other,
-                }),
-            ) => {
-                let offset_cmp = offset_og.cmp(offset_other);
-
-                if matches!(offset_cmp, Ordering::Less | Ordering::Greater) {
-                    return offset_cmp;
-                }
-
-                match (inclusivity_og, inclusivity_other) {
-                    (BoundInclusivity::Inclusive, BoundInclusivity::Inclusive)
-                    | (BoundInclusivity::Exclusive, BoundInclusivity::Exclusive) => Ordering::Equal,
-                    (BoundInclusivity::Inclusive, BoundInclusivity::Exclusive) => Ordering::Greater,
-                    (BoundInclusivity::Exclusive, BoundInclusivity::Inclusive) => Ordering::Less,
-                }
-            },
+            (Self::InfiniteFuture, Self::InfiniteFuture) => Ordering::Equal,
+            (Self::InfiniteFuture, Self::Finite(_)) => Ordering::Greater,
+            (Self::Finite(_), Self::InfiniteFuture) => Ordering::Less,
+            (Self::Finite(lhs_finite_end), Self::Finite(rhs_finite_end)) => lhs_finite_end.cmp(rhs_finite_end),
         }
     }
 }
 
-impl PartialEq<RelativeStartBound> for RelativeEndBound {
-    fn eq(&self, other: &RelativeStartBound) -> bool {
-        other.eq(self)
-    }
-}
-
-impl PartialOrd<RelativeStartBound> for RelativeEndBound {
-    fn partial_cmp(&self, other: &RelativeStartBound) -> Option<Ordering> {
-        match (self, other) {
-            (RelativeEndBound::InfiniteFuture, _) | (_, RelativeStartBound::InfinitePast) => Some(Ordering::Greater),
-            (
-                RelativeEndBound::Finite(RelativeFiniteBoundPosition {
-                    offset: end_offset,
-                    inclusivity: end_inclusivity,
-                }),
-                RelativeStartBound::Finite(RelativeFiniteBoundPosition {
-                    offset: start_offset,
-                    inclusivity: start_inclusivity,
-                }),
-            ) => match end_offset.cmp(start_offset) {
-                Ordering::Less => Some(Ordering::Less),
-                Ordering::Equal => {
-                    let disambiguated_bound_overlap =
-                        BoundOverlapAmbiguity::EndStart(*end_inclusivity, *start_inclusivity)
-                            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Strict);
-
-                    match disambiguated_bound_overlap {
-                        DisambiguatedBoundOverlap::Before => Some(Ordering::Greater), // Unreachable, safe fallback
-                        DisambiguatedBoundOverlap::Equal => Some(Ordering::Equal),
-                        DisambiguatedBoundOverlap::After => Some(Ordering::Less),
-                    }
-                },
-                Ordering::Greater => Some(Ordering::Greater),
-            },
-        }
+impl From<RelativeFiniteEndBound> for RelativeEndBound {
+    fn from(value: RelativeFiniteEndBound) -> Self {
+        Self::Finite(value)
     }
 }
 
 impl From<RelativeFiniteBoundPosition> for RelativeEndBound {
     fn from(value: RelativeFiniteBoundPosition) -> Self {
-        Self::Finite(value)
+        Self::Finite(RelativeFiniteEndBound::new(value))
     }
 }
 
 impl From<Option<SignedDuration>> for RelativeEndBound {
     fn from(value: Option<SignedDuration>) -> Self {
         match value {
-            Some(offset) => Self::Finite(RelativeFiniteBoundPosition::from(offset)),
+            Some(offset) => Self::from(RelativeFiniteBoundPosition::from(offset)),
             None => Self::InfiniteFuture,
         }
     }
@@ -279,7 +217,7 @@ impl From<Option<(SignedDuration, BoundInclusivity)>> for RelativeEndBound {
     fn from(value: Option<(SignedDuration, BoundInclusivity)>) -> Self {
         match value {
             Some((offset, inclusivity)) => {
-                Self::Finite(RelativeFiniteBoundPosition::new_with_inclusivity(offset, inclusivity))
+                Self::from(RelativeFiniteBoundPosition::new_with_inclusivity(offset, inclusivity))
             },
             None => Self::InfiniteFuture,
         }
@@ -322,3 +260,5 @@ impl TryFrom<RelativeBound> for RelativeEndBound {
         value.end().ok_or(RelativeEndBoundTryFromRelativeBoundError)
     }
 }
+
+// TODO: impl TryFrom for FiniteBound

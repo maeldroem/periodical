@@ -54,8 +54,8 @@ use crate::intervals::relative::{RelativeEndBound, RelativeStartBound};
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub struct RelativeFiniteBoundPosition {
-    pub(crate) offset: SignedDuration,
-    pub(crate) inclusivity: BoundInclusivity,
+    offset: SignedDuration,
+    inclusivity: BoundInclusivity,
 }
 
 impl RelativeFiniteBoundPosition {

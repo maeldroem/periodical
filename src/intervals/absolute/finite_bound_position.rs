@@ -59,8 +59,8 @@ use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub struct AbsoluteFiniteBoundPosition {
-    pub(crate) time: Timestamp,
-    pub(crate) inclusivity: BoundInclusivity,
+    time: Timestamp,
+    inclusivity: BoundInclusivity,
 }
 
 impl AbsoluteFiniteBoundPosition {
@@ -136,7 +136,10 @@ impl AbsoluteFiniteBoundPosition {
     /// let mut finite_bound_position = AbsoluteFiniteBoundPosition::new(time);
     /// finite_bound_position.set_inclusivity(BoundInclusivity::Exclusive);
     ///
-    /// assert_eq!(finite_bound_position.inclusivity(), BoundInclusivity::Exclusive);
+    /// assert_eq!(
+    ///     finite_bound_position.inclusivity(),
+    ///     BoundInclusivity::Exclusive
+    /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn set_inclusivity(&mut self, new_inclusivity: BoundInclusivity) {
