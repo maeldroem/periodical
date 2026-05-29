@@ -17,6 +17,8 @@ use jiff::SignedDuration;
 use serde::{Deserialize, Serialize};
 
 use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
+use crate::intervals::relative::finite_end_bound::RelativeFiniteEndBound;
+use crate::intervals::relative::finite_start_bound::RelativeFiniteStartBound;
 use crate::intervals::relative::{RelativeEndBound, RelativeStartBound};
 
 /// A relative finite bound
@@ -133,10 +135,18 @@ impl RelativeFiniteBoundPosition {
         self.inclusivity = inclusivity;
     }
 
+    pub fn to_finite_start_bound(self) -> RelativeFiniteStartBound {
+        todo!()
+    }
+
     /// Wraps the finite bound in an [`RelativeStartBound`]
     #[must_use]
     pub fn to_start_bound(self) -> RelativeStartBound {
         RelativeStartBound::from(self)
+    }
+
+    pub fn to_finite_end_bound(self) -> RelativeFiniteEndBound {
+        todo!()
     }
 
     /// Wraps the finite bound in an [`RelativeEndBound`]

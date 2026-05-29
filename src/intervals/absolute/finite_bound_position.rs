@@ -16,6 +16,8 @@ use jiff::Timestamp;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
+use crate::intervals::absolute::finite_end_bound::AbsoluteFiniteEndBound;
+use crate::intervals::absolute::finite_start_bound::AbsoluteFiniteStartBound;
 use crate::intervals::absolute::{AbsoluteEndBound, AbsoluteStartBound};
 use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
 
@@ -141,10 +143,18 @@ impl AbsoluteFiniteBoundPosition {
         self.inclusivity = new_inclusivity;
     }
 
+    pub fn to_finite_start_bound(self) -> AbsoluteFiniteStartBound {
+        todo!();
+    }
+
     /// Wraps the finite bound in an [`AbsoluteStartBound`]
     #[must_use]
     pub fn to_start_bound(self) -> AbsoluteStartBound {
         AbsoluteStartBound::from(self)
+    }
+
+    pub fn to_finite_end_bound(self) -> AbsoluteFiniteEndBound {
+        todo!();
     }
 
     /// Wraps the finite bound in an [`AbsoluteEndBound`]

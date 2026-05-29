@@ -1,8 +1,8 @@
 //! Absolute bound representation
 //!
-//! Represents an absolute bound regardless of its source (start/end).
+//! Represents an absolute bound regardless of its extremality (start/end).
 //! This is particularly useful for representing absolute bounds of an interval
-//! as a single type, while still conserving its source.
+//! as a single type, while still conserving its extremality.
 
 use std::cmp::Ordering;
 use std::hash::{Hash, Hasher};
@@ -188,7 +188,7 @@ impl AbsoluteBound {
     /// A similar process is used in
     /// [`LayeredAbsoluteBounds`](crate::iter::intervals::layered_bounds::LayeredAbsoluteBounds).
     #[must_use]
-    pub fn opposite(&self) -> Option<Self> {
+    pub fn opposite(self) -> Option<Self> {
         match self {
             Self::Start(start) => start.opposite().map(Self::End),
             Self::End(end) => end.opposite().map(Self::Start),

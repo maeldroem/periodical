@@ -22,6 +22,7 @@ use crate::intervals::ops::bound_overlap_ambiguity::{
     BoundOverlapDisambiguationRuleSet,
     DisambiguatedBoundOverlap,
 };
+use crate::intervals::relative::finite_end_bound::RelativeFiniteEndBound;
 use crate::intervals::relative::{RelativeBound, RelativeFiniteBoundPosition, RelativeStartBound};
 
 /// A relative end interval bound
@@ -37,7 +38,7 @@ use crate::intervals::relative::{RelativeBound, RelativeFiniteBoundPosition, Rel
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum RelativeEndBound {
-    Finite(RelativeFiniteBoundPosition),
+    Finite(RelativeFiniteEndBound),
     InfiniteFuture,
 }
 
@@ -57,7 +58,8 @@ impl RelativeEndBound {
     /// # use jiff::SignedDuration;
     /// # use periodical::intervals::relative::{RelativeEndBound, RelativeFiniteBoundPosition};
     /// let infinite_end_bound = RelativeEndBound::InfiniteFuture;
-    /// let finite_end_bound = RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound();
+    /// let finite_end_bound =
+    ///     RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound();
     ///
     /// assert!(finite_end_bound.is_finite());
     /// assert!(!infinite_end_bound.is_finite());
@@ -76,7 +78,8 @@ impl RelativeEndBound {
     /// # use jiff::SignedDuration;
     /// # use periodical::intervals::relative::{RelativeEndBound, RelativeFiniteBoundPosition};
     /// let infinite_end_bound = RelativeEndBound::InfiniteFuture;
-    /// let finite_end_bound = RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound();
+    /// let finite_end_bound =
+    ///     RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound();
     ///
     /// assert!(infinite_end_bound.is_infinite_future());
     /// assert!(!finite_end_bound.is_infinite_future());
@@ -98,16 +101,19 @@ impl RelativeEndBound {
     /// # use jiff::SignedDuration;
     /// # use periodical::intervals::relative::{RelativeEndBound, RelativeFiniteBoundPosition};
     /// let infinite_end_bound = RelativeEndBound::InfiniteFuture;
-    /// let finite_end_bound = RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound();
+    /// let finite_end_bound =
+    ///     RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound();
     ///
     /// assert_eq!(
     ///     finite_end_bound.finite(),
-    ///     Some(RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1))),
+    ///     Some(RelativeFiniteBoundPosition::new(
+    ///         SignedDuration::from_hours(1)
+    ///     )),
     /// );
     /// assert_eq!(infinite_end_bound.finite(), None);
     /// ```
     #[must_use]
-    pub fn finite(self) -> Option<RelativeFiniteBoundPosition> {
+    pub fn finite(self) -> Option<RelativeFiniteEndBound> {
         match self {
             Self::Finite(finite) => Some(finite),
             Self::InfiniteFuture => None,
@@ -144,8 +150,11 @@ impl RelativeEndBound {
     /// # }
     /// #
     /// # impl Error for FiniteBoundPositionExpectedError {}
-    /// let end_first_shift = RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound();
-    /// let break_start = end_first_shift.opposite().ok_or(FiniteBoundPositionExpectedError)?;
+    /// let end_first_shift =
+    ///     RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound();
+    /// let break_start = end_first_shift
+    ///     .opposite()
+    ///     .ok_or(FiniteBoundPositionExpectedError)?;
     ///
     /// assert_eq!(
     ///     break_start.finite(),
@@ -269,7 +278,9 @@ impl From<Option<SignedDuration>> for RelativeEndBound {
 impl From<Option<(SignedDuration, BoundInclusivity)>> for RelativeEndBound {
     fn from(value: Option<(SignedDuration, BoundInclusivity)>) -> Self {
         match value {
-            Some((offset, inclusivity)) => Self::Finite(RelativeFiniteBoundPosition::new_with_inclusivity(offset, inclusivity)),
+            Some((offset, inclusivity)) => {
+                Self::Finite(RelativeFiniteBoundPosition::new_with_inclusivity(offset, inclusivity))
+            },
             None => Self::InfiniteFuture,
         }
     }

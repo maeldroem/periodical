@@ -16,6 +16,7 @@ use jiff::Timestamp;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
+use crate::intervals::absolute::finite_end_bound::AbsoluteFiniteEndBound;
 use crate::intervals::absolute::{AbsoluteBound, AbsoluteFiniteBoundPosition, AbsoluteStartBound};
 use crate::intervals::meta::{BoundExtremality, BoundInclusivity, HasBoundExtremality, HasBoundInclusivity};
 use crate::intervals::ops::bound_overlap_ambiguity::{
@@ -33,7 +34,7 @@ use crate::intervals::ops::bound_overlap_ambiguity::{
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum AbsoluteEndBound {
-    Finite(AbsoluteFiniteBoundPosition),
+    Finite(AbsoluteFiniteEndBound),
     InfiniteFuture,
 }
 
@@ -115,7 +116,7 @@ impl AbsoluteEndBound {
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    pub fn finite(self) -> Option<AbsoluteFiniteBoundPosition> {
+    pub fn finite(self) -> Option<AbsoluteFiniteEndBound> {
         match self {
             Self::Finite(finite) => Some(finite),
             Self::InfiniteFuture => None,

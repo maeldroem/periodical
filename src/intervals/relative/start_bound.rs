@@ -22,6 +22,7 @@ use crate::intervals::ops::bound_overlap_ambiguity::{
     BoundOverlapDisambiguationRuleSet,
     DisambiguatedBoundOverlap,
 };
+use crate::intervals::relative::finite_start_bound::RelativeFiniteStartBound;
 use crate::intervals::relative::{RelativeBound, RelativeEndBound, RelativeFiniteBoundPosition};
 
 /// A relative start bound
@@ -37,7 +38,7 @@ use crate::intervals::relative::{RelativeBound, RelativeEndBound, RelativeFinite
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum RelativeStartBound {
-    Finite(RelativeFiniteBoundPosition),
+    Finite(RelativeFiniteStartBound),
     InfinitePast,
 }
 
@@ -113,7 +114,7 @@ impl RelativeStartBound {
     /// assert_eq!(infinite_start_bound.finite(), None);
     /// ```
     #[must_use]
-    pub fn finite(self) -> Option<RelativeFiniteBoundPosition> {
+    pub fn finite(self) -> Option<RelativeFiniteStartBound> {
         match self {
             Self::Finite(finite) => Some(finite),
             Self::InfinitePast => None,
