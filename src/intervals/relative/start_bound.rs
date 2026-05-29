@@ -16,12 +16,7 @@ use jiff::SignedDuration;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use crate::intervals::meta::{BoundExtremality, BoundInclusivity, HasBoundExtremality, HasBoundInclusivity};
-use crate::intervals::ops::bound_overlap_ambiguity::{
-    BoundOverlapAmbiguity,
-    BoundOverlapDisambiguationRuleSet,
-    DisambiguatedBoundOverlap,
-};
+use crate::intervals::meta::{BoundExtremality, BoundInclusivity, HasBoundExtremality};
 use crate::intervals::relative::finite_start_bound::RelativeFiniteStartBound;
 use crate::intervals::relative::{RelativeBound, RelativeEndBound, RelativeFiniteBoundPosition};
 
@@ -168,10 +163,7 @@ impl RelativeStartBound {
     #[must_use]
     pub fn opposite(&self) -> Option<RelativeEndBound> {
         match self {
-            Self::Finite(finite) => Some(
-                RelativeFiniteBoundPosition::new_with_inclusivity(finite.offset(), finite.inclusivity().opposite())
-                    .to_end_bound(),
-            ),
+            Self::Finite(finite) => Some(finite.opposite().to_end_bound()),
             Self::InfinitePast => None,
         }
     }
@@ -180,28 +172,6 @@ impl RelativeStartBound {
 impl HasBoundExtremality for RelativeStartBound {
     fn bound_extremality(&self) -> BoundExtremality {
         BoundExtremality::Start
-    }
-}
-
-impl PartialEq<RelativeEndBound> for RelativeStartBound {
-    fn eq(&self, other: &RelativeEndBound) -> bool {
-        if let RelativeStartBound::Finite(RelativeFiniteBoundPosition {
-            offset: start_offset,
-            inclusivity: start_inclusivity,
-        }) = self
-            && let RelativeEndBound::Finite(RelativeFiniteBoundPosition {
-                offset: end_offset,
-                inclusivity: end_inclusivity,
-            }) = other
-        {
-            // If the offsets are equal, anything other than double inclusive bounds is
-            // invalid
-            start_offset == end_offset
-                && *start_inclusivity == BoundInclusivity::Inclusive
-                && *end_inclusivity == BoundInclusivity::Inclusive
-        } else {
-            false
-        }
     }
 }
 
@@ -214,78 +184,30 @@ impl PartialOrd for RelativeStartBound {
 impl Ord for RelativeStartBound {
     fn cmp(&self, other: &Self) -> Ordering {
         match (self, other) {
-            (RelativeStartBound::InfinitePast, RelativeStartBound::InfinitePast) => Ordering::Equal,
-            (RelativeStartBound::InfinitePast, RelativeStartBound::Finite(_)) => Ordering::Less,
-            (RelativeStartBound::Finite(_), RelativeStartBound::InfinitePast) => Ordering::Greater,
-            (
-                RelativeStartBound::Finite(RelativeFiniteBoundPosition {
-                    offset: offset_og,
-                    inclusivity: inclusivity_og,
-                }),
-                RelativeStartBound::Finite(RelativeFiniteBoundPosition {
-                    offset: offset_other,
-                    inclusivity: inclusivity_other,
-                }),
-            ) => {
-                let offset_cmp = offset_og.cmp(offset_other);
-
-                if matches!(offset_cmp, Ordering::Less | Ordering::Greater) {
-                    return offset_cmp;
-                }
-
-                match (inclusivity_og, inclusivity_other) {
-                    (BoundInclusivity::Inclusive, BoundInclusivity::Inclusive)
-                    | (BoundInclusivity::Exclusive, BoundInclusivity::Exclusive) => Ordering::Equal,
-                    (BoundInclusivity::Inclusive, BoundInclusivity::Exclusive) => Ordering::Less,
-                    (BoundInclusivity::Exclusive, BoundInclusivity::Inclusive) => Ordering::Greater,
-                }
-            },
+            (Self::InfinitePast, Self::InfinitePast) => Ordering::Equal,
+            (Self::InfinitePast, Self::Finite(_)) => Ordering::Less,
+            (Self::Finite(_), Self::InfinitePast) => Ordering::Greater,
+            (Self::Finite(lhs_finite_start), Self::Finite(rhs_finite_start)) => lhs_finite_start.cmp(rhs_finite_start),
         }
     }
 }
 
-impl PartialOrd<RelativeEndBound> for RelativeStartBound {
-    fn partial_cmp(&self, other: &RelativeEndBound) -> Option<Ordering> {
-        match (self, other) {
-            (RelativeStartBound::InfinitePast, _) | (_, RelativeEndBound::InfiniteFuture) => Some(Ordering::Less),
-            (
-                RelativeStartBound::Finite(RelativeFiniteBoundPosition {
-                    offset: start_offset,
-                    inclusivity: start_inclusivity,
-                }),
-                RelativeEndBound::Finite(RelativeFiniteBoundPosition {
-                    offset: end_offset,
-                    inclusivity: end_inclusivity,
-                }),
-            ) => match start_offset.cmp(end_offset) {
-                Ordering::Less => Some(Ordering::Less),
-                Ordering::Equal => {
-                    let disambiguated_bound_overlap =
-                        BoundOverlapAmbiguity::StartEnd(*start_inclusivity, *end_inclusivity)
-                            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Strict);
-
-                    match disambiguated_bound_overlap {
-                        DisambiguatedBoundOverlap::Before => Some(Ordering::Greater),
-                        DisambiguatedBoundOverlap::Equal => Some(Ordering::Equal),
-                        DisambiguatedBoundOverlap::After => Some(Ordering::Less), // Unreachable, safe fallback
-                    }
-                },
-                Ordering::Greater => Some(Ordering::Greater),
-            },
-        }
+impl From<RelativeFiniteStartBound> for RelativeStartBound {
+    fn from(value: RelativeFiniteStartBound) -> Self {
+        Self::Finite(value)
     }
 }
 
 impl From<RelativeFiniteBoundPosition> for RelativeStartBound {
     fn from(value: RelativeFiniteBoundPosition) -> Self {
-        Self::Finite(value)
+        Self::Finite(RelativeFiniteStartBound::new(value))
     }
 }
 
 impl From<Option<SignedDuration>> for RelativeStartBound {
     fn from(value: Option<SignedDuration>) -> Self {
         match value {
-            Some(offset) => Self::Finite(RelativeFiniteBoundPosition::from(offset)),
+            Some(offset) => Self::from(RelativeFiniteBoundPosition::from(offset)),
             None => Self::InfinitePast,
         }
     }
@@ -295,7 +217,7 @@ impl From<Option<(SignedDuration, BoundInclusivity)>> for RelativeStartBound {
     fn from(value: Option<(SignedDuration, BoundInclusivity)>) -> Self {
         match value {
             Some((offset, inclusivity)) => {
-                Self::Finite(RelativeFiniteBoundPosition::new_with_inclusivity(offset, inclusivity))
+                Self::from(RelativeFiniteBoundPosition::new_with_inclusivity(offset, inclusivity))
             },
             None => Self::InfinitePast,
         }
@@ -338,3 +260,5 @@ impl TryFrom<RelativeBound> for RelativeStartBound {
         value.start().ok_or(RelativeStartBoundTryFromRelativeBoundError)
     }
 }
+
+// TODO: impl TryFrom for FiniteBound

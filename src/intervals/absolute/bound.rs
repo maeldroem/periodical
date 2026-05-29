@@ -4,15 +4,15 @@
 //! This is particularly useful for representing absolute bounds of an interval
 //! as a single type, while still conserving its extremality.
 
-use std::cmp::Ordering;
-use std::hash::{Hash, Hasher};
-
 #[cfg(feature = "arbitrary")]
 use arbitrary::Arbitrary;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use crate::intervals::absolute::{AbsoluteEndBound, AbsoluteFiniteBoundPosition, AbsoluteStartBound};
+use crate::intervals::absolute::finite_bound::AbsoluteFiniteBound;
+use crate::intervals::absolute::finite_end_bound::AbsoluteFiniteEndBound;
+use crate::intervals::absolute::finite_start_bound::AbsoluteFiniteStartBound;
+use crate::intervals::absolute::{AbsoluteEndBound, AbsoluteStartBound};
 use crate::intervals::meta::{BoundExtremality, HasBoundExtremality};
 
 /// Enum for absolute start and end bounds
@@ -20,7 +20,7 @@ use crate::intervals::meta::{BoundExtremality, HasBoundExtremality};
 /// Represents an absolute bound regardless of its source (start/end).
 /// This is particularly useful for representing absolute bounds of an interval
 /// as a single type, while still conserving its source.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum AbsoluteBound {
@@ -205,57 +205,15 @@ impl HasBoundExtremality for AbsoluteBound {
     }
 }
 
-impl PartialEq for AbsoluteBound {
-    fn eq(&self, other: &Self) -> bool {
-        match (self, other) {
-            (AbsoluteBound::Start(og_start), AbsoluteBound::Start(other_start)) => og_start.eq(other_start),
-            (AbsoluteBound::End(og_end), AbsoluteBound::End(other_end)) => og_end.eq(other_end),
-            (AbsoluteBound::Start(start), AbsoluteBound::End(end))
-            | (AbsoluteBound::End(end), AbsoluteBound::Start(start)) => start.eq(end),
-        }
+impl From<AbsoluteFiniteStartBound> for AbsoluteBound {
+    fn from(value: AbsoluteFiniteStartBound) -> Self {
+        Self::Start(AbsoluteStartBound::from(value))
     }
 }
 
-impl Eq for AbsoluteBound {}
-
-impl PartialOrd for AbsoluteBound {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-impl Ord for AbsoluteBound {
-    fn cmp(&self, other: &Self) -> Ordering {
-        match (self, other) {
-            (AbsoluteBound::Start(og_start), AbsoluteBound::Start(other_start)) => og_start.cmp(other_start),
-            (AbsoluteBound::End(og_end), AbsoluteBound::End(other_end)) => og_end.cmp(other_end),
-            (AbsoluteBound::Start(og_start), AbsoluteBound::End(other_end)) => {
-                // Partial ordering between two different bounds should not fail, but we provide
-                // a default just in case
-                og_start.partial_cmp(other_end).unwrap_or(Ordering::Equal)
-            },
-            (AbsoluteBound::End(og_end), AbsoluteBound::Start(other_start)) => {
-                // Partial ordering between two different bounds should not fail, but we provide
-                // a default just in case
-                og_end.partial_cmp(other_start).unwrap_or(Ordering::Equal)
-            },
-        }
-    }
-}
-
-impl Hash for AbsoluteBound {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        match self {
-            Self::Start(AbsoluteStartBound::InfinitePast) => {
-                AbsoluteStartBound::InfinitePast.hash(state);
-            },
-            Self::Start(AbsoluteStartBound::Finite(finite)) | Self::End(AbsoluteEndBound::Finite(finite)) => {
-                finite.hash(state);
-            },
-            Self::End(AbsoluteEndBound::InfiniteFuture) => {
-                AbsoluteEndBound::InfiniteFuture.hash(state);
-            },
-        }
+impl From<AbsoluteFiniteEndBound> for AbsoluteBound {
+    fn from(value: AbsoluteFiniteEndBound) -> Self {
+        Self::End(AbsoluteEndBound::from(value))
     }
 }
 
@@ -271,11 +229,11 @@ impl From<AbsoluteEndBound> for AbsoluteBound {
     }
 }
 
-impl From<(AbsoluteFiniteBoundPosition, BoundExtremality)> for AbsoluteBound {
-    fn from((bound, extremality): (AbsoluteFiniteBoundPosition, BoundExtremality)) -> Self {
-        match extremality {
-            BoundExtremality::Start => Self::from(bound.to_start_bound()),
-            BoundExtremality::End => Self::from(bound.to_end_bound()),
+impl From<AbsoluteFiniteBound> for AbsoluteBound {
+    fn from(value: AbsoluteFiniteBound) -> Self {
+        match value {
+            AbsoluteFiniteBound::Start(finite_start) => Self::Start(AbsoluteStartBound::from(finite_start)),
+            AbsoluteFiniteBound::End(finite_end) => Self::End(AbsoluteEndBound::from(finite_end)),
         }
     }
 }
