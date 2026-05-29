@@ -50,6 +50,7 @@ Explain the motivation for this PR and what it does/solves
     - `start_bound`
   - `ops`
     - `abridge`
+    - `extend` (WIP)
 - Implemented conversion from `EmptiableAbsoluteInterval` into `HalfBoundedAbsoluteInterval`
 - Implemented conversion from `EmptiableRelativeInterval` into `HalfBoundedRelativeInterval`
 - Created a list of bound pair pairs for test cases involving operations (subject, compared)
@@ -76,6 +77,7 @@ Explain the motivation for this PR and what it does/solves
   to `(Timestamp/SignedDuration, BoundInclusivity, OpeningDirection)`
 - Adapted binary operation implementations to respect adopted policies regarding binary operations
   - `Abridgable`
+  - `Extensible` (WIP)
 - Renamed `*FiniteBound` to `*FiniteBoundPosition` for clarity
 - `*StartBound` and `*EndBound` now contain a `*FiniteStartBound`/`*FiniteEndBound` in their `Finite` variant
 
