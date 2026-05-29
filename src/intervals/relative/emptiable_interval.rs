@@ -67,7 +67,7 @@ impl EmptiableRelativeInterval {
     /// # use jiff::SignedDuration;
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::relative::{
-    /// #     RelativeFiniteBound, RelativeInterval, EmptiableRelativeInterval, HasEmptiableRelativeBoundPair,
+    /// #     RelativeFiniteBoundPosition, RelativeInterval, EmptiableRelativeInterval, HasEmptiableRelativeBoundPair,
     /// # };
     /// let start = SignedDuration::from_hours(8);
     /// let end = SignedDuration::from_hours(16);
@@ -76,11 +76,11 @@ impl EmptiableRelativeInterval {
     ///
     /// assert_eq!(
     ///     interval.partial_rel_start(),
-    ///     Some(RelativeFiniteBound::new(start).to_start_bound()),
+    ///     Some(RelativeFiniteBoundPosition::new(start).to_start_bound()),
     /// );
     /// assert_eq!(
     ///     interval.partial_rel_end(),
-    ///     Some(RelativeFiniteBound::new_with_inclusivity(end, BoundInclusivity::Exclusive).to_end_bound()),
+    ///     Some(RelativeFiniteBoundPosition::new_with_inclusivity(end, BoundInclusivity::Exclusive).to_end_bound()),
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```

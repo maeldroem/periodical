@@ -4,8 +4,8 @@
 //! by a [`Timestamp`], and a [bound inclusivity](BoundInclusivity).
 //!
 //! Absolute finite bounds are usually converted into either an [`AbsoluteStartBound`]
-//! through the [`to_start_bound`](AbsoluteFiniteBound::to_start_bound) method,
-//! or into an [`AbsoluteEndBound`] through the [`to_end_bound`](AbsoluteFiniteBound::to_end_bound) method.
+//! through the [`to_start_bound`](AbsoluteFiniteBoundPosition::to_start_bound) method,
+//! or into an [`AbsoluteEndBound`] through the [`to_end_bound`](AbsoluteFiniteBoundPosition::to_end_bound) method.
 
 use std::cmp::Ordering;
 use std::error::Error;
@@ -19,15 +19,14 @@ use serde::{Deserialize, Serialize};
 use crate::intervals::absolute::{AbsoluteEndBound, AbsoluteStartBound};
 use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
 
-/// An absolute finite bound
+/// An absolute finite bound position
 ///
 /// Contains a time and an ambiguous [`BoundInclusivity`]: if it is
 /// [`Exclusive`](BoundInclusivity::Exclusive), then we additionally need the
-/// _source_ (whether it acts as the start or end of an interval) in order to
-/// know what this bound truly encompasses.
+/// _extremality_ (whether it acts as the start or end of an interval) in order to
+/// know what this position truly encompasses.
 ///
-/// This is why when comparing finite bounds, only its position (for absolute
-/// bounds, its time) is used.
+/// This is why when comparing finite bound positions, only its time is compared.
 ///
 /// # Examples
 ///
@@ -36,19 +35,20 @@ use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
 /// ```
 /// # use std::error::Error;
 /// # use jiff::Timestamp;
-/// # use periodical::intervals::absolute::AbsoluteFiniteBound;
-/// let finite_bound = AbsoluteFiniteBound::new("2025-01-01 08:00:00Z".parse::<Timestamp>()?);
+/// # use periodical::intervals::absolute::AbsoluteFiniteBoundPosition;
+/// let finite_bound_position =
+///     AbsoluteFiniteBoundPosition::new("2025-01-01 08:00:00Z".parse::<Timestamp>()?);
 /// # Ok::<(), Box<dyn Error>>(())
 /// ```
 ///
-/// ## Creating an [`AbsoluteFiniteBound`] with an explicit [`BoundInclusivity`]
+/// ## Creating an [`AbsoluteFiniteBoundPosition`] with an explicit [`BoundInclusivity`]
 ///
 /// ```
 /// # use std::error::Error;
 /// # use jiff::Timestamp;
-/// # use periodical::intervals::absolute::AbsoluteFiniteBound;
+/// # use periodical::intervals::absolute::AbsoluteFiniteBoundPosition;
 /// # use periodical::intervals::meta::BoundInclusivity;
-/// let finite_bound = AbsoluteFiniteBound::new_with_inclusivity(
+/// let finite_bound_position = AbsoluteFiniteBoundPosition::new_with_inclusivity(
 ///     "2025-01-01 08:00:00Z".parse::<Timestamp>()?,
 ///     BoundInclusivity::Exclusive,
 /// );
@@ -56,13 +56,13 @@ use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
 /// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
-pub struct AbsoluteFiniteBound {
+pub struct AbsoluteFiniteBoundPosition {
     pub(crate) time: Timestamp,
     pub(crate) inclusivity: BoundInclusivity,
 }
 
-impl AbsoluteFiniteBound {
-    /// Creates a new [`AbsoluteFiniteBound`] using the given time
+impl AbsoluteFiniteBoundPosition {
+    /// Creates a new [`AbsoluteFiniteBoundPosition`] using the given time
     ///
     /// This creates a finite bound using the [default `BoundInclusivity`](BoundInclusivity::default).
     #[must_use]
@@ -70,11 +70,11 @@ impl AbsoluteFiniteBound {
         Self::new_with_inclusivity(time, BoundInclusivity::default())
     }
 
-    /// Creates a new [`AbsoluteFiniteBound`] using the given time and
+    /// Creates a new [`AbsoluteFiniteBoundPosition`] using the given time and
     /// [`BoundInclusivity`]
     #[must_use]
     pub fn new_with_inclusivity(time: Timestamp, inclusivity: BoundInclusivity) -> Self {
-        AbsoluteFiniteBound {
+        AbsoluteFiniteBoundPosition {
             time,
             inclusivity,
         }
@@ -87,11 +87,11 @@ impl AbsoluteFiniteBound {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Timestamp;
-    /// # use periodical::intervals::absolute::AbsoluteFiniteBound;
+    /// # use periodical::intervals::absolute::AbsoluteFiniteBoundPosition;
     /// let time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
-    /// let finite_bound = AbsoluteFiniteBound::new(time);
+    /// let finite_bound_position = AbsoluteFiniteBoundPosition::new(time);
     ///
-    /// assert_eq!(finite_bound.time(), time);
+    /// assert_eq!(finite_bound_position.time(), time);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
@@ -106,14 +106,14 @@ impl AbsoluteFiniteBound {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Timestamp;
-    /// # use periodical::intervals::absolute::AbsoluteFiniteBound;
+    /// # use periodical::intervals::absolute::AbsoluteFiniteBoundPosition;
     /// let time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     /// let new_time = "2025-01-02 16:00:00Z".parse::<Timestamp>()?;
     ///
-    /// let mut finite_bound = AbsoluteFiniteBound::new(time);
-    /// finite_bound.set_time(new_time);
+    /// let mut finite_bound_position = AbsoluteFiniteBoundPosition::new(time);
+    /// finite_bound_position.set_time(new_time);
     ///
-    /// assert_eq!(finite_bound.time(), new_time);
+    /// assert_eq!(finite_bound_position.time(), new_time);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn set_time(&mut self, new_time: Timestamp) {
@@ -127,14 +127,14 @@ impl AbsoluteFiniteBound {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Timestamp;
-    /// # use periodical::intervals::absolute::AbsoluteFiniteBound;
+    /// # use periodical::intervals::absolute::AbsoluteFiniteBoundPosition;
     /// # use periodical::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
     /// let time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     ///
-    /// let mut finite_bound = AbsoluteFiniteBound::new(time);
-    /// finite_bound.set_inclusivity(BoundInclusivity::Exclusive);
+    /// let mut finite_bound_position = AbsoluteFiniteBoundPosition::new(time);
+    /// finite_bound_position.set_inclusivity(BoundInclusivity::Exclusive);
     ///
-    /// assert_eq!(finite_bound.inclusivity(), BoundInclusivity::Exclusive);
+    /// assert_eq!(finite_bound_position.inclusivity(), BoundInclusivity::Exclusive);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn set_inclusivity(&mut self, new_inclusivity: BoundInclusivity) {
@@ -154,65 +154,65 @@ impl AbsoluteFiniteBound {
     }
 }
 
-impl HasBoundInclusivity for AbsoluteFiniteBound {
+impl HasBoundInclusivity for AbsoluteFiniteBoundPosition {
     fn inclusivity(&self) -> BoundInclusivity {
         self.inclusivity
     }
 }
 
-impl PartialOrd for AbsoluteFiniteBound {
+impl PartialOrd for AbsoluteFiniteBoundPosition {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl Ord for AbsoluteFiniteBound {
+impl Ord for AbsoluteFiniteBoundPosition {
     fn cmp(&self, other: &Self) -> Ordering {
         self.time.cmp(&other.time)
     }
 }
 
-impl From<Timestamp> for AbsoluteFiniteBound {
+impl From<Timestamp> for AbsoluteFiniteBoundPosition {
     fn from(value: Timestamp) -> Self {
-        AbsoluteFiniteBound::new(value)
+        AbsoluteFiniteBoundPosition::new(value)
     }
 }
 
-impl From<(Timestamp, BoundInclusivity)> for AbsoluteFiniteBound {
+impl From<(Timestamp, BoundInclusivity)> for AbsoluteFiniteBoundPosition {
     fn from((time, inclusivity): (Timestamp, BoundInclusivity)) -> Self {
-        AbsoluteFiniteBound::new_with_inclusivity(time, inclusivity)
+        AbsoluteFiniteBoundPosition::new_with_inclusivity(time, inclusivity)
     }
 }
 
-/// Error that can occur when trying to convert [`Bound<Timestamp>`] into [`AbsoluteFiniteBound`]
+/// Error that can occur when trying to convert [`Bound<Timestamp>`] into [`AbsoluteFiniteBoundPosition`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AbsoluteFiniteBoundTryFromBoundError;
+pub struct AbsoluteFiniteBoundPositionTryFromBoundError;
 
-impl Display for AbsoluteFiniteBoundTryFromBoundError {
+impl Display for AbsoluteFiniteBoundPositionTryFromBoundError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "An error occurred when trying to convert `Bound<Timestamp>` into `AbsoluteFiniteBound`"
+            "An error occurred when trying to convert `Bound<Timestamp>` into `AbsoluteFiniteBoundPosition`"
         )
     }
 }
 
-impl Error for AbsoluteFiniteBoundTryFromBoundError {}
+impl Error for AbsoluteFiniteBoundPositionTryFromBoundError {}
 
-impl TryFrom<Bound<Timestamp>> for AbsoluteFiniteBound {
-    type Error = AbsoluteFiniteBoundTryFromBoundError;
+impl TryFrom<Bound<Timestamp>> for AbsoluteFiniteBoundPosition {
+    type Error = AbsoluteFiniteBoundPositionTryFromBoundError;
 
     fn try_from(value: Bound<Timestamp>) -> Result<Self, Self::Error> {
         match value {
-            Bound::Included(time) => Ok(AbsoluteFiniteBound::new_with_inclusivity(
+            Bound::Included(time) => Ok(AbsoluteFiniteBoundPosition::new_with_inclusivity(
                 time,
                 BoundInclusivity::Inclusive,
             )),
-            Bound::Excluded(time) => Ok(AbsoluteFiniteBound::new_with_inclusivity(
+            Bound::Excluded(time) => Ok(AbsoluteFiniteBoundPosition::new_with_inclusivity(
                 time,
                 BoundInclusivity::Exclusive,
             )),
-            Bound::Unbounded => Err(AbsoluteFiniteBoundTryFromBoundError),
+            Bound::Unbounded => Err(AbsoluteFiniteBoundPositionTryFromBoundError),
         }
     }
 }

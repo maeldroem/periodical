@@ -32,7 +32,7 @@ use serde::{Deserialize, Serialize};
 use crate::intervals::absolute::{
     AbsoluteBoundPair,
     AbsoluteEndBound,
-    AbsoluteFiniteBound,
+    AbsoluteFiniteBoundPosition,
     AbsoluteStartBound,
     BoundedAbsoluteInterval,
     EmptiableAbsoluteBoundPair,
@@ -90,7 +90,7 @@ impl AbsoluteInterval {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Timestamp;
-    /// # use periodical::intervals::absolute::{AbsoluteFiniteBound, AbsoluteInterval, HasAbsoluteBoundPair};
+    /// # use periodical::intervals::absolute::{AbsoluteFiniteBoundPosition, AbsoluteInterval, HasAbsoluteBoundPair};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// let start = "2026-01-01 08:00:00Z".parse::<Timestamp>()?;
     /// let end = "2026-01-01 16:00:00Z".parse::<Timestamp>()?;
@@ -99,11 +99,11 @@ impl AbsoluteInterval {
     ///
     /// assert_eq!(
     ///     interval.abs_start(),
-    ///     AbsoluteFiniteBound::new(start).to_start_bound(),
+    ///     AbsoluteFiniteBoundPosition::new(start).to_start_bound(),
     /// );
     /// assert_eq!(
     ///     interval.abs_end(),
-    ///     AbsoluteFiniteBound::new_with_inclusivity(end, BoundInclusivity::Exclusive).to_end_bound(),
+    ///     AbsoluteFiniteBoundPosition::new_with_inclusivity(end, BoundInclusivity::Exclusive).to_end_bound(),
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
@@ -334,7 +334,7 @@ impl From<AbsoluteBoundPair> for AbsoluteInterval {
             (StartB::InfinitePast, EndB::InfiniteFuture) => AbsoluteInterval::Unbounded(UnboundedInterval),
             (
                 StartB::InfinitePast,
-                EndB::Finite(AbsoluteFiniteBound {
+                EndB::Finite(AbsoluteFiniteBoundPosition {
                     time,
                     inclusivity,
                 }),
@@ -344,7 +344,7 @@ impl From<AbsoluteBoundPair> for AbsoluteInterval {
                 OpeningDirection::ToPast,
             )),
             (
-                StartB::Finite(AbsoluteFiniteBound {
+                StartB::Finite(AbsoluteFiniteBoundPosition {
                     time,
                     inclusivity,
                 }),
@@ -355,11 +355,11 @@ impl From<AbsoluteBoundPair> for AbsoluteInterval {
                 OpeningDirection::ToFuture,
             )),
             (
-                StartB::Finite(AbsoluteFiniteBound {
+                StartB::Finite(AbsoluteFiniteBoundPosition {
                     time: start_time,
                     inclusivity: start_inclusivity,
                 }),
-                EndB::Finite(AbsoluteFiniteBound {
+                EndB::Finite(AbsoluteFiniteBoundPosition {
                     time: end_time,
                     inclusivity: end_inclusivity,
                 }),
@@ -401,7 +401,7 @@ impl TryFrom<EmptiableAbsoluteBoundPair> for AbsoluteInterval {
             },
             (
                 Some(StartB::InfinitePast),
-                Some(EndB::Finite(AbsoluteFiniteBound {
+                Some(EndB::Finite(AbsoluteFiniteBoundPosition {
                     time,
                     inclusivity,
                 })),
@@ -409,7 +409,7 @@ impl TryFrom<EmptiableAbsoluteBoundPair> for AbsoluteInterval {
                 HalfBoundedAbsoluteInterval::new_with_inclusivity(time, inclusivity, OpeningDirection::ToPast),
             )),
             (
-                Some(StartB::Finite(AbsoluteFiniteBound {
+                Some(StartB::Finite(AbsoluteFiniteBoundPosition {
                     time,
                     inclusivity,
                 })),
@@ -418,11 +418,11 @@ impl TryFrom<EmptiableAbsoluteBoundPair> for AbsoluteInterval {
                 HalfBoundedAbsoluteInterval::new_with_inclusivity(time, inclusivity, OpeningDirection::ToFuture),
             )),
             (
-                Some(StartB::Finite(AbsoluteFiniteBound {
+                Some(StartB::Finite(AbsoluteFiniteBoundPosition {
                     time: start_time,
                     inclusivity: start_inclusivity,
                 })),
-                Some(EndB::Finite(AbsoluteFiniteBound {
+                Some(EndB::Finite(AbsoluteFiniteBoundPosition {
                     time: end_time,
                     inclusivity: end_inclusivity,
                 })),

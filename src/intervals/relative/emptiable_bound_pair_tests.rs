@@ -22,7 +22,7 @@ use crate::intervals::relative::{
     HalfBoundedRelativeInterval,
     RelativeBoundPair,
     RelativeEndBound,
-    RelativeFiniteBound,
+    RelativeFiniteBoundPosition,
     RelativeInterval,
     RelativeStartBound,
 };
@@ -35,7 +35,7 @@ fn from_range() {
     assert_eq!(
         EmptiableRelativeBoundPair::from_range(start..),
         RelativeBoundPair::new(
-            RelativeStartBound::Finite(RelativeFiniteBound::new(start)),
+            RelativeStartBound::Finite(RelativeFiniteBoundPosition::new(start)),
             RelativeEndBound::InfiniteFuture
         )
         .to_emptiable()
@@ -48,13 +48,13 @@ mod ord_by_start_and_inv_length {
     #[test]
     fn bound_bound_less_start() {
         let bound_pair1 = RelativeBoundPair::new(
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-            RelativeFiniteBound::new(SignedDuration::from_hours(3)).to_end_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
         )
         .to_emptiable();
         let bound_pair2 = RelativeBoundPair::new(
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-            RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
         )
         .to_emptiable();
 
@@ -64,13 +64,13 @@ mod ord_by_start_and_inv_length {
     #[test]
     fn bound_bound_greater_start() {
         let bound_pair1 = RelativeBoundPair::new(
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-            RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
         )
         .to_emptiable();
         let bound_pair2 = RelativeBoundPair::new(
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-            RelativeFiniteBound::new(SignedDuration::from_hours(3)).to_end_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
         )
         .to_emptiable();
 
@@ -81,12 +81,12 @@ mod ord_by_start_and_inv_length {
     fn bound_bound_less_start_inf() {
         let bound_pair1 = RelativeBoundPair::new(
             RelativeStartBound::InfinitePast,
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
         )
         .to_emptiable();
         let bound_pair2 = RelativeBoundPair::new(
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-            RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
         )
         .to_emptiable();
 
@@ -96,13 +96,13 @@ mod ord_by_start_and_inv_length {
     #[test]
     fn bound_bound_greater_start_inf() {
         let bound_pair1 = RelativeBoundPair::new(
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-            RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
         )
         .to_emptiable();
         let bound_pair2 = RelativeBoundPair::new(
             RelativeStartBound::InfinitePast,
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
         )
         .to_emptiable();
 
@@ -112,13 +112,13 @@ mod ord_by_start_and_inv_length {
     #[test]
     fn bound_bound_equal_start_less_end() {
         let bound_pair1 = RelativeBoundPair::new(
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-            RelativeFiniteBound::new(SignedDuration::from_hours(3)).to_end_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
         )
         .to_emptiable();
         let bound_pair2 = RelativeBoundPair::new(
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-            RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
         )
         .to_emptiable();
 
@@ -128,13 +128,13 @@ mod ord_by_start_and_inv_length {
     #[test]
     fn bound_bound_equal_start_equal_end() {
         let bound_pair1 = RelativeBoundPair::new(
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-            RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
         )
         .to_emptiable();
         let bound_pair2 = RelativeBoundPair::new(
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-            RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
         )
         .to_emptiable();
 
@@ -144,13 +144,13 @@ mod ord_by_start_and_inv_length {
     #[test]
     fn bound_bound_equal_start_greater_end() {
         let bound_pair1 = RelativeBoundPair::new(
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-            RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
         )
         .to_emptiable();
         let bound_pair2 = RelativeBoundPair::new(
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-            RelativeFiniteBound::new(SignedDuration::from_hours(3)).to_end_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
         )
         .to_emptiable();
 
@@ -160,13 +160,13 @@ mod ord_by_start_and_inv_length {
     #[test]
     fn bound_bound_equal_start_less_end_inf() {
         let bound_pair1 = RelativeBoundPair::new(
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
             RelativeEndBound::InfiniteFuture,
         )
         .to_emptiable();
         let bound_pair2 = RelativeBoundPair::new(
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-            RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
         )
         .to_emptiable();
 
@@ -176,12 +176,12 @@ mod ord_by_start_and_inv_length {
     #[test]
     fn bound_bound_equal_start_greater_end_inf() {
         let bound_pair1 = RelativeBoundPair::new(
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-            RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
         )
         .to_emptiable();
         let bound_pair2 = RelativeBoundPair::new(
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
             RelativeEndBound::InfiniteFuture,
         )
         .to_emptiable();
@@ -192,12 +192,12 @@ mod ord_by_start_and_inv_length {
     #[test]
     fn bound_bound_equal_start_equal_end_inf() {
         let bound_pair1 = RelativeBoundPair::new(
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
             RelativeEndBound::InfiniteFuture,
         )
         .to_emptiable();
         let bound_pair2 = RelativeBoundPair::new(
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
             RelativeEndBound::InfiniteFuture,
         )
         .to_emptiable();
@@ -209,12 +209,12 @@ mod ord_by_start_and_inv_length {
     fn bound_bound_equal_start_inf_less_end() {
         let bound_pair1 = RelativeBoundPair::new(
             RelativeStartBound::InfinitePast,
-            RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
         )
         .to_emptiable();
         let bound_pair2 = RelativeBoundPair::new(
             RelativeStartBound::InfinitePast,
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
         )
         .to_emptiable();
 
@@ -225,12 +225,12 @@ mod ord_by_start_and_inv_length {
     fn bound_bound_equal_start_inf_greater_end() {
         let bound_pair1 = RelativeBoundPair::new(
             RelativeStartBound::InfinitePast,
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
         )
         .to_emptiable();
         let bound_pair2 = RelativeBoundPair::new(
             RelativeStartBound::InfinitePast,
-            RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
         )
         .to_emptiable();
 
@@ -241,12 +241,12 @@ mod ord_by_start_and_inv_length {
     fn bound_bound_equal_start_inf_equal_end() {
         let bound_pair1 = RelativeBoundPair::new(
             RelativeStartBound::InfinitePast,
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
         )
         .to_emptiable();
         let bound_pair2 = RelativeBoundPair::new(
             RelativeStartBound::InfinitePast,
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
         )
         .to_emptiable();
 
@@ -259,7 +259,7 @@ mod ord_by_start_and_inv_length {
             RelativeBoundPair::new(RelativeStartBound::InfinitePast, RelativeEndBound::InfiniteFuture).to_emptiable();
         let bound_pair2 = RelativeBoundPair::new(
             RelativeStartBound::InfinitePast,
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
         )
         .to_emptiable();
 
@@ -270,7 +270,7 @@ mod ord_by_start_and_inv_length {
     fn bound_bound_equal_start_inf_greater_end_inf() {
         let bound_pair1 = RelativeBoundPair::new(
             RelativeStartBound::InfinitePast,
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
         )
         .to_emptiable();
         let bound_pair2 =
@@ -292,8 +292,8 @@ mod ord_by_start_and_inv_length {
     #[test]
     fn bound_unbound() {
         let bound_pair1 = RelativeBoundPair::new(
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-            RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
         )
         .to_emptiable();
         let bound_pair2 = EmptiableRelativeBoundPair::Empty;
@@ -305,8 +305,8 @@ mod ord_by_start_and_inv_length {
     fn unbound_bound() {
         let bound_pair1 = EmptiableRelativeBoundPair::Empty;
         let bound_pair2 = RelativeBoundPair::new(
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-            RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
         )
         .to_emptiable();
 
@@ -325,8 +325,8 @@ mod ord_by_start_and_inv_length {
 #[test]
 fn bound() {
     let bound_pair = RelativeBoundPair::new(
-        RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-        RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+        RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+        RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
     );
     let emptiable_bound_pair = bound_pair.clone().to_emptiable();
 
@@ -344,8 +344,8 @@ mod to_emptiable_interval {
 
         assert_eq!(
             RelativeBoundPair::new(
-                RelativeFiniteBound::new(start).to_start_bound(),
-                RelativeFiniteBound::new(end).to_end_bound(),
+                RelativeFiniteBoundPosition::new(start).to_start_bound(),
+                RelativeFiniteBoundPosition::new(end).to_end_bound(),
             )
             .to_emptiable()
             .to_emptiable_interval(),
@@ -359,7 +359,7 @@ mod to_emptiable_interval {
 
         assert_eq!(
             RelativeBoundPair::new(
-                RelativeFiniteBound::new(reference).to_start_bound(),
+                RelativeFiniteBoundPosition::new(reference).to_start_bound(),
                 RelativeEndBound::InfiniteFuture
             )
             .to_emptiable()
@@ -394,17 +394,17 @@ mod to_emptiable_interval {
 fn emptiable_rel_bound_pair() {
     assert_eq!(
         RelativeBoundPair::new(
-            RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+            RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
                 .to_start_bound(),
-            RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
+            RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
                 .to_end_bound(),
         )
         .to_emptiable()
         .emptiable_rel_bound_pair(),
         RelativeBoundPair::new(
-            RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+            RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
                 .to_start_bound(),
-            RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
+            RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
                 .to_end_bound(),
         )
         .to_emptiable()
@@ -415,15 +415,15 @@ fn emptiable_rel_bound_pair() {
 fn partial_rel_start() {
     assert_eq!(
         RelativeBoundPair::new(
-            RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+            RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
                 .to_start_bound(),
-            RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
+            RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
                 .to_end_bound(),
         )
         .to_emptiable()
         .partial_rel_start(),
         Some(
-            RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+            RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
                 .to_start_bound()
         )
     );
@@ -434,15 +434,15 @@ fn partial_rel_start() {
 fn partial_rel_end() {
     assert_eq!(
         RelativeBoundPair::new(
-            RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+            RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
                 .to_start_bound(),
-            RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
+            RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
                 .to_end_bound(),
         )
         .to_emptiable()
         .partial_rel_end(),
         Some(
-            RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
+            RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
                 .to_end_bound()
         )
     );
@@ -463,8 +463,8 @@ fn is_empty() {
 fn duration() {
     assert_eq!(
         RelativeBoundPair::new(
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-            RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound()
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound()
         )
         .to_emptiable()
         .duration(),
@@ -480,8 +480,8 @@ fn duration() {
 fn openness() {
     assert_eq!(
         RelativeBoundPair::new(
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-            RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound()
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound()
         )
         .to_emptiable()
         .openness(),
@@ -493,12 +493,12 @@ fn openness() {
 #[test]
 fn relativity() {
     let bounded = RelativeBoundPair::new(
-        RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-        RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+        RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+        RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
     )
     .to_emptiable();
     let half_bounded = RelativeBoundPair::new(
-        RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
+        RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
         RelativeEndBound::InfiniteFuture,
     )
     .to_emptiable();
@@ -517,13 +517,13 @@ mod ord {
     #[test]
     fn bound_bound_equal_start_less_end() {
         let bound_pair1 = RelativeBoundPair::new(
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-            RelativeFiniteBound::new(SignedDuration::from_hours(3)).to_end_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
         )
         .to_emptiable();
         let bound_pair2 = RelativeBoundPair::new(
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-            RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
         )
         .to_emptiable();
 
@@ -533,13 +533,13 @@ mod ord {
     #[test]
     fn bound_bound_equal_start_greater_end() {
         let bound_pair1 = RelativeBoundPair::new(
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-            RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
         )
         .to_emptiable();
         let bound_pair2 = RelativeBoundPair::new(
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-            RelativeFiniteBound::new(SignedDuration::from_hours(3)).to_end_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
         )
         .to_emptiable();
 
@@ -550,12 +550,12 @@ mod ord {
     fn bound_bound_less_start_inf() {
         let bound_pair1 = RelativeBoundPair::new(
             RelativeStartBound::InfinitePast,
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
         )
         .to_emptiable();
         let bound_pair2 = RelativeBoundPair::new(
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-            RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
         )
         .to_emptiable();
 
@@ -565,13 +565,13 @@ mod ord {
     #[test]
     fn bound_bound_greater_start_inf() {
         let bound_pair1 = RelativeBoundPair::new(
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-            RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
         )
         .to_emptiable();
         let bound_pair2 = RelativeBoundPair::new(
             RelativeStartBound::InfinitePast,
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
         )
         .to_emptiable();
 
@@ -581,13 +581,13 @@ mod ord {
     #[test]
     fn bound_bound_equal_start_equal_end() {
         let bound_pair1 = RelativeBoundPair::new(
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-            RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
         )
         .to_emptiable();
         let bound_pair2 = RelativeBoundPair::new(
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-            RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
         )
         .to_emptiable();
 
@@ -597,13 +597,13 @@ mod ord {
     #[test]
     fn bound_bound_equal_start_greater_end_inf() {
         let bound_pair1 = RelativeBoundPair::new(
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
             RelativeEndBound::InfiniteFuture,
         )
         .to_emptiable();
         let bound_pair2 = RelativeBoundPair::new(
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-            RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
         )
         .to_emptiable();
 
@@ -613,12 +613,12 @@ mod ord {
     #[test]
     fn bound_bound_equal_start_less_end_inf() {
         let bound_pair1 = RelativeBoundPair::new(
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-            RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
         )
         .to_emptiable();
         let bound_pair2 = RelativeBoundPair::new(
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
             RelativeEndBound::InfiniteFuture,
         )
         .to_emptiable();
@@ -629,12 +629,12 @@ mod ord {
     #[test]
     fn bound_bound_equal_start_equal_end_inf() {
         let bound_pair1 = RelativeBoundPair::new(
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
             RelativeEndBound::InfiniteFuture,
         )
         .to_emptiable();
         let bound_pair2 = RelativeBoundPair::new(
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
             RelativeEndBound::InfiniteFuture,
         )
         .to_emptiable();
@@ -646,12 +646,12 @@ mod ord {
     fn bound_bound_equal_start_inf_greater_end() {
         let bound_pair1 = RelativeBoundPair::new(
             RelativeStartBound::InfinitePast,
-            RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
         )
         .to_emptiable();
         let bound_pair2 = RelativeBoundPair::new(
             RelativeStartBound::InfinitePast,
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
         )
         .to_emptiable();
 
@@ -662,12 +662,12 @@ mod ord {
     fn bound_bound_equal_start_inf_less_end() {
         let bound_pair1 = RelativeBoundPair::new(
             RelativeStartBound::InfinitePast,
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
         )
         .to_emptiable();
         let bound_pair2 = RelativeBoundPair::new(
             RelativeStartBound::InfinitePast,
-            RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
         )
         .to_emptiable();
 
@@ -678,12 +678,12 @@ mod ord {
     fn bound_bound_equal_start_inf_equal_end() {
         let bound_pair1 = RelativeBoundPair::new(
             RelativeStartBound::InfinitePast,
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
         )
         .to_emptiable();
         let bound_pair2 = RelativeBoundPair::new(
             RelativeStartBound::InfinitePast,
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
         )
         .to_emptiable();
 
@@ -696,7 +696,7 @@ mod ord {
             RelativeBoundPair::new(RelativeStartBound::InfinitePast, RelativeEndBound::InfiniteFuture).to_emptiable();
         let bound_pair2 = RelativeBoundPair::new(
             RelativeStartBound::InfinitePast,
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
         )
         .to_emptiable();
 
@@ -707,7 +707,7 @@ mod ord {
     fn bound_bound_equal_start_inf_less_end_inf() {
         let bound_pair1 = RelativeBoundPair::new(
             RelativeStartBound::InfinitePast,
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
         )
         .to_emptiable();
         let bound_pair2 =
@@ -729,8 +729,8 @@ mod ord {
     #[test]
     fn bound_unbound() {
         let bound_pair1 = RelativeBoundPair::new(
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-            RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
         )
         .to_emptiable();
         let bound_pair2 = EmptiableRelativeBoundPair::Empty;
@@ -742,8 +742,8 @@ mod ord {
     fn unbound_bound() {
         let bound_pair1 = EmptiableRelativeBoundPair::Empty;
         let bound_pair2 = RelativeBoundPair::new(
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-            RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
         )
         .to_emptiable();
 
@@ -782,8 +782,8 @@ fn from_opt_start_opt_end_opt() {
             Some(SignedDuration::from_hours(2))
         ))),
         RelativeBoundPair::new(
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-            RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound()
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound()
         )
         .to_emptiable()
     );
@@ -801,9 +801,9 @@ fn from_opt_start_incl_opt_end_incl_opt() {
             Some((SignedDuration::from_hours(2), BoundInclusivity::Exclusive))
         ))),
         RelativeBoundPair::new(
-            RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+            RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
                 .to_start_bound(),
-            RelativeFiniteBound::new_with_inclusivity(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
+            RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
                 .to_end_bound()
         )
         .to_emptiable()
@@ -841,8 +841,8 @@ fn from_bounded_interval() {
             SignedDuration::from_hours(2),
         )),
         RelativeBoundPair::new(
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-            RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound()
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound()
         )
         .to_emptiable()
     );
@@ -856,7 +856,7 @@ fn from_half_bounded_interval() {
             OpeningDirection::ToFuture,
         )),
         RelativeBoundPair::new(
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
             RelativeEndBound::InfiniteFuture
         )
         .to_emptiable()
@@ -871,8 +871,8 @@ fn from_interval() {
             SignedDuration::from_hours(2),
         ))),
         RelativeBoundPair::new(
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-            RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
         )
         .to_emptiable()
     );
@@ -885,8 +885,8 @@ fn from_emptiable_interval() {
             BoundedRelativeInterval::new(SignedDuration::from_hours(1), SignedDuration::from_hours(2),)
         ))),
         RelativeBoundPair::new(
-            RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-            RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
         )
         .to_emptiable()
     );

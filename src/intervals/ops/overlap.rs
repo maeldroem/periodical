@@ -27,16 +27,16 @@
 //! ```
 //! # use std::error::Error;
 //! # use jiff::Zoned;
-//! # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+//! # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
 //! # use periodical::intervals::ops::overlap::CanPositionOverlap;
 //! let first_interval = AbsoluteBoundPair::new(
-//!     AbsoluteFiniteBound::new(
+//!     AbsoluteFiniteBoundPosition::new(
 //!         "2025-01-01 08:00:00[Europe/Oslo]"
 //!             .parse::<Zoned>()?
 //!             .timestamp(),
 //!     )
 //!     .to_start_bound(),
-//!     AbsoluteFiniteBound::new(
+//!     AbsoluteFiniteBoundPosition::new(
 //!         "2025-01-01 14:00:00[Europe/Oslo]"
 //!             .parse::<Zoned>()?
 //!             .timestamp(),
@@ -45,13 +45,13 @@
 //! );
 //!
 //! let second_interval = AbsoluteBoundPair::new(
-//!     AbsoluteFiniteBound::new(
+//!     AbsoluteFiniteBoundPosition::new(
 //!         "2025-01-01 12:00:00[Europe/Oslo]"
 //!             .parse::<Zoned>()?
 //!             .timestamp(),
 //!     )
 //!     .to_start_bound(),
-//!     AbsoluteFiniteBound::new(
+//!     AbsoluteFiniteBoundPosition::new(
 //!         "2025-01-01 16:00:00[Europe/Oslo]"
 //!             .parse::<Zoned>()?
 //!             .timestamp(),
@@ -74,7 +74,7 @@ use serde::{Deserialize, Serialize};
 use crate::intervals::absolute::{
     AbsoluteBoundPair,
     AbsoluteEndBound,
-    AbsoluteFiniteBound,
+    AbsoluteFiniteBoundPosition,
     AbsoluteInterval,
     AbsoluteStartBound,
     BoundedAbsoluteInterval,
@@ -95,7 +95,7 @@ use crate::intervals::relative::{
     HasEmptiableRelativeBoundPair,
     RelativeBoundPair,
     RelativeEndBound,
-    RelativeFiniteBound,
+    RelativeFiniteBoundPosition,
     RelativeInterval,
     RelativeStartBound,
 };
@@ -884,24 +884,24 @@ pub fn deny_future_adjacency_overlap_rule_counts_as_overlap(
 /// ```
 /// # use std::error::Error;
 /// # use jiff::Zoned;
-/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
 /// # use periodical::intervals::meta::BoundInclusivity;
 /// # use periodical::intervals::ops::overlap::{CanPositionOverlap, DisambiguatedOverlapPosition, OverlapRuleSet};
 /// let compared_interval = AbsoluteBoundPair::new(
-///     AbsoluteFiniteBound::new(
+///     AbsoluteFiniteBoundPosition::new(
 ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///     ).to_start_bound(),
-///     AbsoluteFiniteBound::new(
+///     AbsoluteFiniteBoundPosition::new(
 ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///     ).to_end_bound(),
 /// );
 ///
 /// let reference_interval = AbsoluteBoundPair::new(
-///     AbsoluteFiniteBound::new_with_inclusivity(
+///     AbsoluteFiniteBoundPosition::new_with_inclusivity(
 ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///         BoundInclusivity::Exclusive,
 ///     ).to_start_bound(),
-///     AbsoluteFiniteBound::new(
+///     AbsoluteFiniteBoundPosition::new(
 ///         "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///     ).to_end_bound(),
 /// );
@@ -918,24 +918,24 @@ pub fn deny_future_adjacency_overlap_rule_counts_as_overlap(
 /// ```
 /// # use std::error::Error;
 /// # use jiff::Zoned;
-/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
 /// # use periodical::intervals::meta::BoundInclusivity;
 /// # use periodical::intervals::ops::overlap::{CanPositionOverlap, OverlapRule, OverlapRuleSet};
 /// let compared_interval = AbsoluteBoundPair::new(
-///     AbsoluteFiniteBound::new(
+///     AbsoluteFiniteBoundPosition::new(
 ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///     ).to_start_bound(),
-///     AbsoluteFiniteBound::new(
+///     AbsoluteFiniteBoundPosition::new(
 ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///     ).to_end_bound(),
 /// );
 ///
 /// let reference_interval = AbsoluteBoundPair::new(
-///     AbsoluteFiniteBound::new_with_inclusivity(
+///     AbsoluteFiniteBoundPosition::new_with_inclusivity(
 ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///         BoundInclusivity::Exclusive,
 ///     ).to_start_bound(),
-///     AbsoluteFiniteBound::new(
+///     AbsoluteFiniteBoundPosition::new(
 ///         "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///     ).to_end_bound(),
 /// );
@@ -971,25 +971,25 @@ pub trait CanPositionOverlap<Rhs = Self> {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::bound_overlap_ambiguity::BoundOverlapAmbiguity;
     /// # use periodical::intervals::ops::overlap::{CanPositionOverlap, OverlapPosition, OverlapRuleSet};
     /// let compared_interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_start_bound(),
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_end_bound(),
     /// );
     ///
     /// let reference_interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new_with_inclusivity(
+    ///     AbsoluteFiniteBoundPosition::new_with_inclusivity(
     ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///         BoundInclusivity::Exclusive,
     ///     ).to_start_bound(),
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_end_bound(),
     /// );
@@ -1023,24 +1023,24 @@ pub trait CanPositionOverlap<Rhs = Self> {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::overlap::{CanPositionOverlap, DisambiguatedOverlapPosition, OverlapRuleSet};
     /// let compared_interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_start_bound(),
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_end_bound(),
     /// );
     ///
     /// let reference_interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new_with_inclusivity(
+    ///     AbsoluteFiniteBoundPosition::new_with_inclusivity(
     ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///         BoundInclusivity::Exclusive,
     ///     ).to_start_bound(),
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_end_bound(),
     /// );
@@ -1073,17 +1073,17 @@ pub trait CanPositionOverlap<Rhs = Self> {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::overlap:: CanPositionOverlap;
     /// let compared_interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 08:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
     ///     )
     ///     .to_start_bound(),
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 11:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
@@ -1092,13 +1092,13 @@ pub trait CanPositionOverlap<Rhs = Self> {
     /// );
     ///
     /// let reference_interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 10:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
     ///     )
     ///     .to_start_bound(),
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 12:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
@@ -1140,24 +1140,24 @@ pub trait CanPositionOverlap<Rhs = Self> {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::overlap::{CanPositionOverlap, OverlapRule, OverlapRuleSet};
     /// let compared_interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_start_bound(),
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_end_bound(),
     /// );
     ///
     /// let reference_interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new_with_inclusivity(
+    ///     AbsoluteFiniteBoundPosition::new_with_inclusivity(
     ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///         BoundInclusivity::Exclusive,
     ///     ).to_start_bound(),
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_end_bound(),
     /// );
@@ -1206,18 +1206,18 @@ pub trait CanPositionOverlap<Rhs = Self> {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::bound_overlap_ambiguity::BoundOverlapAmbiguity;
     /// # use periodical::intervals::ops::overlap::{CanPositionOverlap, OverlapPosition};
     /// let compared_interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 08:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
     ///     )
     ///     .to_start_bound(),
-    ///     AbsoluteFiniteBound::new_with_inclusivity(
+    ///     AbsoluteFiniteBoundPosition::new_with_inclusivity(
     ///         "2025-01-01 10:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
@@ -1227,14 +1227,14 @@ pub trait CanPositionOverlap<Rhs = Self> {
     /// );
     ///
     /// let reference_interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new_with_inclusivity(
+    ///     AbsoluteFiniteBoundPosition::new_with_inclusivity(
     ///         "2025-01-01 10:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
     ///         BoundInclusivity::Exclusive,
     ///     )
     ///     .to_start_bound(),
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 12:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
@@ -1291,26 +1291,26 @@ pub trait CanPositionOverlap<Rhs = Self> {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::bound_overlap_ambiguity::BoundOverlapAmbiguity;
     /// # use periodical::intervals::ops::overlap::{CanPositionOverlap, DisambiguatedOverlapPosition, OverlapRuleSet};
     /// let compared_interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_start_bound(),
-    ///     AbsoluteFiniteBound::new_with_inclusivity(
+    ///     AbsoluteFiniteBoundPosition::new_with_inclusivity(
     ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///         BoundInclusivity::Exclusive,
     ///     ).to_end_bound(),
     /// );
     ///
     /// let reference_interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new_with_inclusivity(
+    ///     AbsoluteFiniteBoundPosition::new_with_inclusivity(
     ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///         BoundInclusivity::Exclusive,
     ///     ).to_start_bound(),
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_end_bound(),
     /// );
@@ -1612,9 +1612,9 @@ pub fn overlap_position_abs_bound_pair(og: &AbsoluteBoundPair, other: &AbsoluteB
 /// See [module documentation](self) for more info.
 #[must_use]
 pub fn overlap_position_abs_half_bounded_past_bounded(
-    ref_bound: &AbsoluteFiniteBound,
-    other_start: &AbsoluteFiniteBound,
-    other_end: &AbsoluteFiniteBound,
+    ref_bound: &AbsoluteFiniteBoundPosition,
+    other_start: &AbsoluteFiniteBoundPosition,
+    other_end: &AbsoluteFiniteBoundPosition,
 ) -> OverlapPosition {
     match (
         ref_bound.time().cmp(&other_start.time()),
@@ -1640,9 +1640,9 @@ pub fn overlap_position_abs_half_bounded_past_bounded(
 /// See [module documentation](self) for more info.
 #[must_use]
 pub fn overlap_position_abs_half_bounded_future_bounded(
-    ref_bound: &AbsoluteFiniteBound,
-    other_start: &AbsoluteFiniteBound,
-    other_end: &AbsoluteFiniteBound,
+    ref_bound: &AbsoluteFiniteBoundPosition,
+    other_start: &AbsoluteFiniteBoundPosition,
+    other_end: &AbsoluteFiniteBoundPosition,
 ) -> OverlapPosition {
     match (
         ref_bound.time().cmp(&other_start.time()),
@@ -1668,9 +1668,9 @@ pub fn overlap_position_abs_half_bounded_future_bounded(
 /// See [module documentation](self) for more info.
 #[must_use]
 pub fn overlap_position_abs_bounded_half_bounded_past(
-    og_start: &AbsoluteFiniteBound,
-    og_end: &AbsoluteFiniteBound,
-    ref_bound: &AbsoluteFiniteBound,
+    og_start: &AbsoluteFiniteBoundPosition,
+    og_end: &AbsoluteFiniteBoundPosition,
+    ref_bound: &AbsoluteFiniteBoundPosition,
 ) -> OverlapPosition {
     match (
         ref_bound.time().cmp(&og_start.time()),
@@ -1696,9 +1696,9 @@ pub fn overlap_position_abs_bounded_half_bounded_past(
 /// See [module documentation](self) for more info.
 #[must_use]
 pub fn overlap_position_abs_bounded_half_bounded_future(
-    og_start: &AbsoluteFiniteBound,
-    og_end: &AbsoluteFiniteBound,
-    ref_bound: &AbsoluteFiniteBound,
+    og_start: &AbsoluteFiniteBoundPosition,
+    og_end: &AbsoluteFiniteBoundPosition,
+    ref_bound: &AbsoluteFiniteBoundPosition,
 ) -> OverlapPosition {
     match (
         ref_bound.time().cmp(&og_start.time()),
@@ -1723,10 +1723,10 @@ pub fn overlap_position_abs_bounded_half_bounded_future(
 /// See [module documentation](self) for more info.
 #[must_use]
 pub fn overlap_position_abs_bounded_pair(
-    og_start: &AbsoluteFiniteBound,
-    og_end: &AbsoluteFiniteBound,
-    other_start: &AbsoluteFiniteBound,
-    other_end: &AbsoluteFiniteBound,
+    og_start: &AbsoluteFiniteBoundPosition,
+    og_end: &AbsoluteFiniteBoundPosition,
+    other_start: &AbsoluteFiniteBoundPosition,
+    other_end: &AbsoluteFiniteBoundPosition,
 ) -> OverlapPosition {
     let og_start_cmp = (
         og_start.time().cmp(&other_start.time()),
@@ -1883,9 +1883,9 @@ pub fn overlap_position_rel_bound_pair(og: &RelativeBoundPair, other: &RelativeB
 /// See [module documentation](self) for more info.
 #[must_use]
 pub fn overlap_position_rel_half_bounded_past_bounded(
-    ref_bound: &RelativeFiniteBound,
-    other_start: &RelativeFiniteBound,
-    other_end: &RelativeFiniteBound,
+    ref_bound: &RelativeFiniteBoundPosition,
+    other_start: &RelativeFiniteBoundPosition,
+    other_end: &RelativeFiniteBoundPosition,
 ) -> OverlapPosition {
     match (
         ref_bound.offset().cmp(&other_start.offset()),
@@ -1911,9 +1911,9 @@ pub fn overlap_position_rel_half_bounded_past_bounded(
 /// See [module documentation](self) for more info.
 #[must_use]
 pub fn overlap_position_rel_half_bounded_future_bounded(
-    ref_bound: &RelativeFiniteBound,
-    other_start: &RelativeFiniteBound,
-    other_end: &RelativeFiniteBound,
+    ref_bound: &RelativeFiniteBoundPosition,
+    other_start: &RelativeFiniteBoundPosition,
+    other_end: &RelativeFiniteBoundPosition,
 ) -> OverlapPosition {
     match (
         ref_bound.offset().cmp(&other_start.offset()),
@@ -1939,9 +1939,9 @@ pub fn overlap_position_rel_half_bounded_future_bounded(
 /// See [module documentation](self) for more info.
 #[must_use]
 pub fn overlap_position_rel_bounded_half_bounded_past(
-    og_start: &RelativeFiniteBound,
-    og_end: &RelativeFiniteBound,
-    ref_bound: &RelativeFiniteBound,
+    og_start: &RelativeFiniteBoundPosition,
+    og_end: &RelativeFiniteBoundPosition,
+    ref_bound: &RelativeFiniteBoundPosition,
 ) -> OverlapPosition {
     match (
         ref_bound.offset().cmp(&og_start.offset()),
@@ -1967,9 +1967,9 @@ pub fn overlap_position_rel_bounded_half_bounded_past(
 /// See [module documentation](self) for more info.
 #[must_use]
 pub fn overlap_position_rel_bounded_half_bounded_future(
-    og_start: &RelativeFiniteBound,
-    og_end: &RelativeFiniteBound,
-    ref_bound: &RelativeFiniteBound,
+    og_start: &RelativeFiniteBoundPosition,
+    og_end: &RelativeFiniteBoundPosition,
+    ref_bound: &RelativeFiniteBoundPosition,
 ) -> OverlapPosition {
     match (
         ref_bound.offset().cmp(&og_start.offset()),
@@ -1994,10 +1994,10 @@ pub fn overlap_position_rel_bounded_half_bounded_future(
 /// See [module documentation](self) for more info.
 #[must_use]
 pub fn overlap_position_rel_bounded_pair(
-    og_start: &RelativeFiniteBound,
-    og_end: &RelativeFiniteBound,
-    other_start: &RelativeFiniteBound,
-    other_end: &RelativeFiniteBound,
+    og_start: &RelativeFiniteBoundPosition,
+    og_end: &RelativeFiniteBoundPosition,
+    other_start: &RelativeFiniteBoundPosition,
+    other_end: &RelativeFiniteBoundPosition,
 ) -> OverlapPosition {
     let og_start_cmp = (
         og_start.offset().cmp(&other_start.offset()),

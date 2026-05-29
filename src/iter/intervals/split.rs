@@ -5,7 +5,7 @@
 use jiff::tz::TimeZone;
 
 use crate::intervals::absolute::{
-    AbsoluteBoundPair, AbsoluteFiniteBound, AbsoluteStartBound, BoundedAbsoluteInterval, HalfBoundedAbsoluteInterval,
+    AbsoluteBoundPair, AbsoluteFiniteBoundPosition, AbsoluteStartBound, BoundedAbsoluteInterval, HalfBoundedAbsoluteInterval,
     HasAbsoluteBoundPair,
 };
 use crate::intervals::meta::BoundInclusivity;

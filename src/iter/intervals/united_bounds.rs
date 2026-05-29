@@ -8,22 +8,22 @@
 //! ```
 //! # use std::error::Error;
 //! # use jiff::Zoned;
-//! # use periodical::intervals::absolute::{AbsoluteBound, AbsoluteBoundPair, AbsoluteFiniteBound};
+//! # use periodical::intervals::absolute::{AbsoluteBound, AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
 //! # use periodical::iter::intervals::bounds::AbsoluteBoundsIteratorDispatcher;
 //! let intervals = [
 //!     AbsoluteBoundPair::new(
-//!         AbsoluteFiniteBound::new(
+//!         AbsoluteFiniteBoundPosition::new(
 //!             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 //!         ).to_start_bound(),
-//!         AbsoluteFiniteBound::new(
+//!         AbsoluteFiniteBoundPosition::new(
 //!             "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 //!         ).to_end_bound(),
 //!     ),
 //!     AbsoluteBoundPair::new(
-//!         AbsoluteFiniteBound::new(
+//!         AbsoluteFiniteBoundPosition::new(
 //!             "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 //!         ).to_start_bound(),
-//!         AbsoluteFiniteBound::new(
+//!         AbsoluteFiniteBoundPosition::new(
 //!             "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 //!         ).to_end_bound(),
 //!     ),
@@ -32,10 +32,10 @@
 //! assert_eq!(
 //!     intervals.abs_bounds_iter().unite_bounds().collect::<Vec<_>>(),
 //!     vec![
-//!         AbsoluteFiniteBound::new(
+//!         AbsoluteFiniteBoundPosition::new(
 //!             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 //!         ).to_start_bound().to_bound(),
-//!         AbsoluteFiniteBound::new(
+//!         AbsoluteFiniteBoundPosition::new(
 //!             "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 //!         ).to_end_bound().to_bound(),
 //!     ],
@@ -113,17 +113,17 @@ where
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
     /// # use periodical::iter::intervals::bounds::AbsoluteBoundsIteratorDispatcher;
     /// let first_layer_intervals = [
     ///     AbsoluteBoundPair::new(
-    ///         AbsoluteFiniteBound::new(
+    ///         AbsoluteFiniteBoundPosition::new(
     ///             "2025-01-01 08:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
     ///         )
     ///         .to_start_bound(),
-    ///         AbsoluteFiniteBound::new(
+    ///         AbsoluteFiniteBoundPosition::new(
     ///             "2025-01-01 12:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
@@ -131,13 +131,13 @@ where
     ///         .to_end_bound(),
     ///     ),
     ///     AbsoluteBoundPair::new(
-    ///         AbsoluteFiniteBound::new(
+    ///         AbsoluteFiniteBoundPosition::new(
     ///             "2025-01-01 13:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
     ///         )
     ///         .to_start_bound(),
-    ///         AbsoluteFiniteBound::new(
+    ///         AbsoluteFiniteBoundPosition::new(
     ///             "2025-01-01 16:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
@@ -148,13 +148,13 @@ where
     ///
     /// let second_layer_intervals = [
     ///     AbsoluteBoundPair::new(
-    ///         AbsoluteFiniteBound::new(
+    ///         AbsoluteFiniteBoundPosition::new(
     ///             "2025-01-01 07:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
     ///         )
     ///         .to_start_bound(),
-    ///         AbsoluteFiniteBound::new(
+    ///         AbsoluteFiniteBoundPosition::new(
     ///             "2025-01-01 11:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
@@ -162,13 +162,13 @@ where
     ///         .to_end_bound(),
     ///     ),
     ///     AbsoluteBoundPair::new(
-    ///         AbsoluteFiniteBound::new(
+    ///         AbsoluteFiniteBoundPosition::new(
     ///             "2025-01-01 14:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
     ///         )
     ///         .to_start_bound(),
-    ///         AbsoluteFiniteBound::new(
+    ///         AbsoluteFiniteBoundPosition::new(
     ///             "2025-01-01 18:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
@@ -354,27 +354,27 @@ where
     ///
     /// ```
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBound};
+    /// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBoundPosition};
     /// # use periodical::iter::intervals::bounds::RelativeBoundsIteratorDispatcher;
     /// let first_layer_intervals = [
     ///     RelativeBoundPair::new(
-    ///         RelativeFiniteBound::new(SignedDuration::from_hours(8)).to_start_bound(),
-    ///         RelativeFiniteBound::new(SignedDuration::from_hours(12)).to_end_bound(),
+    ///         RelativeFiniteBoundPosition::new(SignedDuration::from_hours(8)).to_start_bound(),
+    ///         RelativeFiniteBoundPosition::new(SignedDuration::from_hours(12)).to_end_bound(),
     ///     ),
     ///     RelativeBoundPair::new(
-    ///         RelativeFiniteBound::new(SignedDuration::from_hours(13)).to_start_bound(),
-    ///         RelativeFiniteBound::new(SignedDuration::from_hours(16)).to_end_bound(),
+    ///         RelativeFiniteBoundPosition::new(SignedDuration::from_hours(13)).to_start_bound(),
+    ///         RelativeFiniteBoundPosition::new(SignedDuration::from_hours(16)).to_end_bound(),
     ///     ),
     /// ];
     ///
     /// let second_layer_intervals = [
     ///     RelativeBoundPair::new(
-    ///         RelativeFiniteBound::new(SignedDuration::from_hours(7)).to_start_bound(),
-    ///         RelativeFiniteBound::new(SignedDuration::from_hours(11)).to_end_bound(),
+    ///         RelativeFiniteBoundPosition::new(SignedDuration::from_hours(7)).to_start_bound(),
+    ///         RelativeFiniteBoundPosition::new(SignedDuration::from_hours(11)).to_end_bound(),
     ///     ),
     ///     RelativeBoundPair::new(
-    ///         RelativeFiniteBound::new(SignedDuration::from_hours(14)).to_start_bound(),
-    ///         RelativeFiniteBound::new(SignedDuration::from_hours(18)).to_end_bound(),
+    ///         RelativeFiniteBoundPosition::new(SignedDuration::from_hours(14)).to_start_bound(),
+    ///         RelativeFiniteBoundPosition::new(SignedDuration::from_hours(18)).to_end_bound(),
     ///     ),
     /// ];
     ///

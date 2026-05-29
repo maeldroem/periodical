@@ -20,30 +20,30 @@ use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
 /// ```
 /// # use jiff::SignedDuration;
 /// # use periodical::intervals::meta::BoundInclusivity;
-/// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBound};
+/// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBoundPosition};
 /// # use periodical::iter::intervals::bounds::RelativeBoundsIteratorDispatcher;
 /// # use periodical::iter::intervals::layered_bounds::{
 /// #     LayeredBoundsState, LayeredBoundsStateChangeAtRelativeBound, LayeredRelativeBounds,
 /// # };
 /// let first_layer_intervals = [
 ///     RelativeBoundPair::new(
-///         RelativeFiniteBound::new(SignedDuration::from_hours(8)).to_start_bound(),
-///         RelativeFiniteBound::new(SignedDuration::from_hours(12)).to_end_bound(),
+///         RelativeFiniteBoundPosition::new(SignedDuration::from_hours(8)).to_start_bound(),
+///         RelativeFiniteBoundPosition::new(SignedDuration::from_hours(12)).to_end_bound(),
 ///     ),
 ///     RelativeBoundPair::new(
-///         RelativeFiniteBound::new(SignedDuration::from_hours(13)).to_start_bound(),
-///         RelativeFiniteBound::new(SignedDuration::from_hours(16)).to_end_bound(),
+///         RelativeFiniteBoundPosition::new(SignedDuration::from_hours(13)).to_start_bound(),
+///         RelativeFiniteBoundPosition::new(SignedDuration::from_hours(16)).to_end_bound(),
 ///     ),
 /// ];
 ///
 /// let second_layer_intervals = [
 ///     RelativeBoundPair::new(
-///         RelativeFiniteBound::new(SignedDuration::from_hours(7)).to_start_bound(),
-///         RelativeFiniteBound::new(SignedDuration::from_hours(11)).to_end_bound(),
+///         RelativeFiniteBoundPosition::new(SignedDuration::from_hours(7)).to_start_bound(),
+///         RelativeFiniteBoundPosition::new(SignedDuration::from_hours(11)).to_end_bound(),
 ///     ),
 ///     RelativeBoundPair::new(
-///         RelativeFiniteBound::new(SignedDuration::from_hours(14)).to_start_bound(),
-///         RelativeFiniteBound::new(SignedDuration::from_hours(18)).to_end_bound(),
+///         RelativeFiniteBoundPosition::new(SignedDuration::from_hours(14)).to_start_bound(),
+///         RelativeFiniteBoundPosition::new(SignedDuration::from_hours(18)).to_end_bound(),
 ///     ),
 /// ];
 ///
@@ -58,32 +58,32 @@ use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
 ///             LayeredBoundsState::NoLayers,
 ///             LayeredBoundsState::SecondLayer,
 ///             Some(
-///                 RelativeFiniteBound::new_with_inclusivity(
+///                 RelativeFiniteBoundPosition::new_with_inclusivity(
 ///                     SignedDuration::from_hours(7),
 ///                     BoundInclusivity::Exclusive,
 ///                 )
 ///                 .to_end_bound()
 ///             ),
-///             Some(RelativeFiniteBound::new(SignedDuration::from_hours(7),).to_start_bound()),
+///             Some(RelativeFiniteBoundPosition::new(SignedDuration::from_hours(7),).to_start_bound()),
 ///         ),
 ///         LayeredBoundsStateChangeAtRelativeBound::new(
 ///             LayeredBoundsState::SecondLayer,
 ///             LayeredBoundsState::BothLayers,
 ///             Some(
-///                 RelativeFiniteBound::new_with_inclusivity(
+///                 RelativeFiniteBoundPosition::new_with_inclusivity(
 ///                     SignedDuration::from_hours(8),
 ///                     BoundInclusivity::Exclusive,
 ///                 )
 ///                 .to_end_bound()
 ///             ),
-///             Some(RelativeFiniteBound::new(SignedDuration::from_hours(8),).to_start_bound()),
+///             Some(RelativeFiniteBoundPosition::new(SignedDuration::from_hours(8),).to_start_bound()),
 ///         ),
 ///         LayeredBoundsStateChangeAtRelativeBound::new(
 ///             LayeredBoundsState::BothLayers,
 ///             LayeredBoundsState::FirstLayer,
-///             Some(RelativeFiniteBound::new(SignedDuration::from_hours(11),).to_end_bound()),
+///             Some(RelativeFiniteBoundPosition::new(SignedDuration::from_hours(11),).to_end_bound()),
 ///             Some(
-///                 RelativeFiniteBound::new_with_inclusivity(
+///                 RelativeFiniteBoundPosition::new_with_inclusivity(
 ///                     SignedDuration::from_hours(11),
 ///                     BoundInclusivity::Exclusive,
 ///                 )
@@ -93,9 +93,9 @@ use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
 ///         LayeredBoundsStateChangeAtRelativeBound::new(
 ///             LayeredBoundsState::FirstLayer,
 ///             LayeredBoundsState::NoLayers,
-///             Some(RelativeFiniteBound::new(SignedDuration::from_hours(12),).to_end_bound()),
+///             Some(RelativeFiniteBoundPosition::new(SignedDuration::from_hours(12),).to_end_bound()),
 ///             Some(
-///                 RelativeFiniteBound::new_with_inclusivity(
+///                 RelativeFiniteBoundPosition::new_with_inclusivity(
 ///                     SignedDuration::from_hours(12),
 ///                     BoundInclusivity::Exclusive,
 ///                 )
@@ -106,32 +106,32 @@ use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
 ///             LayeredBoundsState::NoLayers,
 ///             LayeredBoundsState::FirstLayer,
 ///             Some(
-///                 RelativeFiniteBound::new_with_inclusivity(
+///                 RelativeFiniteBoundPosition::new_with_inclusivity(
 ///                     SignedDuration::from_hours(13),
 ///                     BoundInclusivity::Exclusive,
 ///                 )
 ///                 .to_end_bound()
 ///             ),
-///             Some(RelativeFiniteBound::new(SignedDuration::from_hours(13),).to_start_bound()),
+///             Some(RelativeFiniteBoundPosition::new(SignedDuration::from_hours(13),).to_start_bound()),
 ///         ),
 ///         LayeredBoundsStateChangeAtRelativeBound::new(
 ///             LayeredBoundsState::FirstLayer,
 ///             LayeredBoundsState::BothLayers,
 ///             Some(
-///                 RelativeFiniteBound::new_with_inclusivity(
+///                 RelativeFiniteBoundPosition::new_with_inclusivity(
 ///                     SignedDuration::from_hours(14),
 ///                     BoundInclusivity::Exclusive,
 ///                 )
 ///                 .to_end_bound()
 ///             ),
-///             Some(RelativeFiniteBound::new(SignedDuration::from_hours(14),).to_start_bound()),
+///             Some(RelativeFiniteBoundPosition::new(SignedDuration::from_hours(14),).to_start_bound()),
 ///         ),
 ///         LayeredBoundsStateChangeAtRelativeBound::new(
 ///             LayeredBoundsState::BothLayers,
 ///             LayeredBoundsState::SecondLayer,
-///             Some(RelativeFiniteBound::new(SignedDuration::from_hours(16),).to_end_bound()),
+///             Some(RelativeFiniteBoundPosition::new(SignedDuration::from_hours(16),).to_end_bound()),
 ///             Some(
-///                 RelativeFiniteBound::new_with_inclusivity(
+///                 RelativeFiniteBoundPosition::new_with_inclusivity(
 ///                     SignedDuration::from_hours(16),
 ///                     BoundInclusivity::Exclusive,
 ///                 )
@@ -141,9 +141,9 @@ use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
 ///         LayeredBoundsStateChangeAtRelativeBound::new(
 ///             LayeredBoundsState::SecondLayer,
 ///             LayeredBoundsState::NoLayers,
-///             Some(RelativeFiniteBound::new(SignedDuration::from_hours(18),).to_end_bound()),
+///             Some(RelativeFiniteBoundPosition::new(SignedDuration::from_hours(18),).to_end_bound()),
 ///             Some(
-///                 RelativeFiniteBound::new_with_inclusivity(
+///                 RelativeFiniteBoundPosition::new_with_inclusivity(
 ///                     SignedDuration::from_hours(18),
 ///                     BoundInclusivity::Exclusive,
 ///                 )
@@ -171,30 +171,30 @@ impl<I1, I2> LayeredRelativeBounds<I1, I2> {
     /// ```
     /// # use jiff::SignedDuration;
     /// # use periodical::intervals::meta::BoundInclusivity;
-    /// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBound};
+    /// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBoundPosition};
     /// # use periodical::iter::intervals::bounds::RelativeBoundsIteratorDispatcher;
     /// # use periodical::iter::intervals::layered_bounds::{
     /// #     LayeredBoundsState, LayeredBoundsStateChangeAtRelativeBound, LayeredRelativeBounds,
     /// # };
     /// let first_layer_intervals = [
     ///     RelativeBoundPair::new(
-    ///         RelativeFiniteBound::new(SignedDuration::from_hours(8)).to_start_bound(),
-    ///         RelativeFiniteBound::new(SignedDuration::from_hours(12)).to_end_bound(),
+    ///         RelativeFiniteBoundPosition::new(SignedDuration::from_hours(8)).to_start_bound(),
+    ///         RelativeFiniteBoundPosition::new(SignedDuration::from_hours(12)).to_end_bound(),
     ///     ),
     ///     RelativeBoundPair::new(
-    ///         RelativeFiniteBound::new(SignedDuration::from_hours(13)).to_start_bound(),
-    ///         RelativeFiniteBound::new(SignedDuration::from_hours(16)).to_end_bound(),
+    ///         RelativeFiniteBoundPosition::new(SignedDuration::from_hours(13)).to_start_bound(),
+    ///         RelativeFiniteBoundPosition::new(SignedDuration::from_hours(16)).to_end_bound(),
     ///     ),
     /// ];
     ///
     /// let second_layer_intervals = [
     ///     RelativeBoundPair::new(
-    ///         RelativeFiniteBound::new(SignedDuration::from_hours(7)).to_start_bound(),
-    ///         RelativeFiniteBound::new(SignedDuration::from_hours(11)).to_end_bound(),
+    ///         RelativeFiniteBoundPosition::new(SignedDuration::from_hours(7)).to_start_bound(),
+    ///         RelativeFiniteBoundPosition::new(SignedDuration::from_hours(11)).to_end_bound(),
     ///     ),
     ///     RelativeBoundPair::new(
-    ///         RelativeFiniteBound::new(SignedDuration::from_hours(14)).to_start_bound(),
-    ///         RelativeFiniteBound::new(SignedDuration::from_hours(18)).to_end_bound(),
+    ///         RelativeFiniteBoundPosition::new(SignedDuration::from_hours(14)).to_start_bound(),
+    ///         RelativeFiniteBoundPosition::new(SignedDuration::from_hours(18)).to_end_bound(),
     ///     ),
     /// ];
     ///

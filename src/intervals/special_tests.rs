@@ -7,7 +7,7 @@ use super::special::*;
 use crate::intervals::absolute::{
     AbsoluteBoundPair,
     AbsoluteEndBound,
-    AbsoluteFiniteBound,
+    AbsoluteFiniteBoundPosition,
     AbsoluteInterval,
     AbsoluteStartBound,
     BoundedAbsoluteInterval,
@@ -34,7 +34,7 @@ use crate::intervals::relative::{
     HasRelativeBoundPair,
     RelativeBoundPair,
     RelativeEndBound,
-    RelativeFiniteBound,
+    RelativeFiniteBoundPosition,
     RelativeInterval,
     RelativeStartBound,
 };
@@ -173,7 +173,7 @@ mod unbounded_interval {
         );
         assert_eq!(
             UnboundedInterval::try_from(AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
                 AbsoluteEndBound::InfiniteFuture
             )),
             Err(UnboundedIntervalTryFromAbsoluteBoundPairError)
@@ -193,7 +193,7 @@ mod unbounded_interval {
         );
         assert_eq!(
             UnboundedInterval::try_from(RelativeBoundPair::new(
-                RelativeFiniteBound::new(SignedDuration::from_hours(8)).to_start_bound(),
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(8)).to_start_bound(),
                 RelativeEndBound::InfiniteFuture
             )),
             Err(UnboundedIntervalTryFromRelativeBoundPairError)
@@ -212,7 +212,7 @@ mod unbounded_interval {
         assert_eq!(
             UnboundedInterval::try_from(
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
                     AbsoluteEndBound::InfiniteFuture
                 )
                 .to_emptiable()
@@ -238,7 +238,7 @@ mod unbounded_interval {
         );
         assert_eq!(
             UnboundedInterval::try_from(RelativeBoundPair::new(
-                RelativeFiniteBound::new(SignedDuration::from_hours(8)).to_start_bound(),
+                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(8)).to_start_bound(),
                 RelativeEndBound::InfiniteFuture
             )),
             Err(UnboundedIntervalTryFromRelativeBoundPairError)

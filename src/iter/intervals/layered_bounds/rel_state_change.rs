@@ -52,16 +52,16 @@ impl LayeredBoundsStateChangeAtRelativeBound {
     /// ```
     /// # use jiff::SignedDuration;
     /// # use periodical::intervals::meta::BoundInclusivity;
-    /// # use periodical::intervals::relative::RelativeFiniteBound;
+    /// # use periodical::intervals::relative::RelativeFiniteBoundPosition;
     /// # use periodical::iter::intervals::layered_bounds::{
     /// #     LayeredBoundsState, LayeredBoundsStateChangeAtRelativeBound,
     /// # };
     /// let change = LayeredBoundsStateChangeAtRelativeBound::new(
     ///     LayeredBoundsState::NoLayers,
     ///     LayeredBoundsState::FirstLayer,
-    ///     Some(RelativeFiniteBound::new(SignedDuration::from_hours(8)).to_end_bound()),
+    ///     Some(RelativeFiniteBoundPosition::new(SignedDuration::from_hours(8)).to_end_bound()),
     ///     Some(
-    ///         RelativeFiniteBound::new_with_inclusivity(
+    ///         RelativeFiniteBoundPosition::new_with_inclusivity(
     ///             SignedDuration::from_hours(8),
     ///             BoundInclusivity::Exclusive,
     ///         )
@@ -83,16 +83,16 @@ impl LayeredBoundsStateChangeAtRelativeBound {
     /// ```
     /// # use jiff::SignedDuration;
     /// # use periodical::intervals::meta::BoundInclusivity;
-    /// # use periodical::intervals::relative::RelativeFiniteBound;
+    /// # use periodical::intervals::relative::RelativeFiniteBoundPosition;
     /// # use periodical::iter::intervals::layered_bounds::{
     /// #     LayeredBoundsState, LayeredBoundsStateChangeAtRelativeBound,
     /// # };
     /// let change = LayeredBoundsStateChangeAtRelativeBound::new(
     ///     LayeredBoundsState::NoLayers,
     ///     LayeredBoundsState::FirstLayer,
-    ///     Some(RelativeFiniteBound::new(SignedDuration::from_hours(8)).to_end_bound()),
+    ///     Some(RelativeFiniteBoundPosition::new(SignedDuration::from_hours(8)).to_end_bound()),
     ///     Some(
-    ///         RelativeFiniteBound::new_with_inclusivity(
+    ///         RelativeFiniteBoundPosition::new_with_inclusivity(
     ///             SignedDuration::from_hours(8),
     ///             BoundInclusivity::Exclusive,
     ///         )
@@ -121,16 +121,16 @@ impl LayeredBoundsStateChangeAtRelativeBound {
     /// ```
     /// # use jiff::SignedDuration;
     /// # use periodical::intervals::meta::BoundInclusivity;
-    /// # use periodical::intervals::relative::RelativeFiniteBound;
+    /// # use periodical::intervals::relative::RelativeFiniteBoundPosition;
     /// # use periodical::iter::intervals::layered_bounds::{
     /// #     LayeredBoundsState, LayeredBoundsStateChangeAtRelativeBound,
     /// # };
     /// let change = LayeredBoundsStateChangeAtRelativeBound::new(
     ///     LayeredBoundsState::NoLayers,
     ///     LayeredBoundsState::FirstLayer,
-    ///     Some(RelativeFiniteBound::new(SignedDuration::from_hours(8)).to_end_bound()),
+    ///     Some(RelativeFiniteBoundPosition::new(SignedDuration::from_hours(8)).to_end_bound()),
     ///     Some(
-    ///         RelativeFiniteBound::new_with_inclusivity(
+    ///         RelativeFiniteBoundPosition::new_with_inclusivity(
     ///             SignedDuration::from_hours(8),
     ///             BoundInclusivity::Exclusive,
     ///         )
@@ -140,7 +140,7 @@ impl LayeredBoundsStateChangeAtRelativeBound {
     ///
     /// assert_eq!(
     ///     change.old_state_end(),
-    ///     Some(RelativeFiniteBound::new(SignedDuration::from_hours(8),).to_end_bound()),
+    ///     Some(RelativeFiniteBoundPosition::new(SignedDuration::from_hours(8),).to_end_bound()),
     /// );
     /// ```
     #[must_use]
@@ -162,16 +162,16 @@ impl LayeredBoundsStateChangeAtRelativeBound {
     /// ```
     /// # use jiff::SignedDuration;
     /// # use periodical::intervals::meta::BoundInclusivity;
-    /// # use periodical::intervals::relative::RelativeFiniteBound;
+    /// # use periodical::intervals::relative::RelativeFiniteBoundPosition;
     /// # use periodical::iter::intervals::layered_bounds::{
     /// #     LayeredBoundsState, LayeredBoundsStateChangeAtRelativeBound,
     /// # };
     /// let change = LayeredBoundsStateChangeAtRelativeBound::new(
     ///     LayeredBoundsState::NoLayers,
     ///     LayeredBoundsState::FirstLayer,
-    ///     Some(RelativeFiniteBound::new(SignedDuration::from_hours(8)).to_end_bound()),
+    ///     Some(RelativeFiniteBoundPosition::new(SignedDuration::from_hours(8)).to_end_bound()),
     ///     Some(
-    ///         RelativeFiniteBound::new_with_inclusivity(
+    ///         RelativeFiniteBoundPosition::new_with_inclusivity(
     ///             SignedDuration::from_hours(8),
     ///             BoundInclusivity::Exclusive,
     ///         )
@@ -182,7 +182,7 @@ impl LayeredBoundsStateChangeAtRelativeBound {
     /// assert_eq!(
     ///     change.new_state_start(),
     ///     Some(
-    ///         RelativeFiniteBound::new_with_inclusivity(
+    ///         RelativeFiniteBoundPosition::new_with_inclusivity(
     ///             SignedDuration::from_hours(8),
     ///             BoundInclusivity::Exclusive,
     ///         )

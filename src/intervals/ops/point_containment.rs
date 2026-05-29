@@ -27,16 +27,16 @@
 //! ```
 //! # use std::error::Error;
 //! # use jiff::Zoned;
-//! # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+//! # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
 //! # use periodical::intervals::ops::point_containment::CanPositionPointContainment;
 //! let interval = AbsoluteBoundPair::new(
-//!     AbsoluteFiniteBound::new(
+//!     AbsoluteFiniteBoundPosition::new(
 //!         "2025-01-01 08:00:00[Europe/Oslo]"
 //!             .parse::<Zoned>()?
 //!             .timestamp(),
 //!     )
 //!     .to_start_bound(),
-//!     AbsoluteFiniteBound::new(
+//!     AbsoluteFiniteBoundPosition::new(
 //!         "2025-01-01 12:00:00[Europe/Oslo]"
 //!             .parse::<Zoned>()?
 //!             .timestamp(),
@@ -504,15 +504,15 @@ pub fn deny_on_bounds_containment_rule_counts_as_contained(
 /// ```
 /// # use std::error::Error;
 /// # use jiff::Zoned;
-/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
 /// # use periodical::intervals::ops::point_containment::{
 /// #     CanPositionPointContainment, DisambiguatedPointContainmentPosition, PointContainmentRuleSet,
 /// # };
 /// let interval = AbsoluteBoundPair::new(
-///     AbsoluteFiniteBound::new(
+///     AbsoluteFiniteBoundPosition::new(
 ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///     ).to_start_bound(),
-///     AbsoluteFiniteBound::new(
+///     AbsoluteFiniteBoundPosition::new(
 ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///     ).to_end_bound(),
 /// );
@@ -531,15 +531,15 @@ pub fn deny_on_bounds_containment_rule_counts_as_contained(
 /// ```
 /// # use std::error::Error;
 /// # use jiff::Zoned;
-/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
 /// # use periodical::intervals::ops::point_containment::{
 /// #     CanPositionPointContainment, DisambiguatedPointContainmentPosition, PointContainmentRuleSet,
 /// # };
 /// let interval = AbsoluteBoundPair::new(
-///     AbsoluteFiniteBound::new(
+///     AbsoluteFiniteBoundPosition::new(
 ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///     ).to_start_bound(),
-///     AbsoluteFiniteBound::new(
+///     AbsoluteFiniteBoundPosition::new(
 ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///     ).to_end_bound(),
 /// );
@@ -573,20 +573,20 @@ pub trait CanPositionPointContainment<P> {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::point_containment::{
     /// #     CanPositionPointContainment, PointContainmentPosition,
     /// # };
     /// let interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new_with_inclusivity(
+    ///     AbsoluteFiniteBoundPosition::new_with_inclusivity(
     ///         "2025-01-01 08:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
     ///         BoundInclusivity::Exclusive,
     ///     )
     ///     .to_start_bound(),
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 10:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
@@ -625,15 +625,15 @@ pub trait CanPositionPointContainment<P> {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
     /// # use periodical::intervals::ops::point_containment::{
     /// #     CanPositionPointContainment, DisambiguatedPointContainmentPosition, PointContainmentRuleSet,
     /// # };
     /// let interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_start_bound(),
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_end_bound(),
     /// );
@@ -669,16 +669,16 @@ pub trait CanPositionPointContainment<P> {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
     /// # use periodical::intervals::ops::point_containment::CanPositionPointContainment;
     /// let interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 08:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
     ///     )
     ///     .to_start_bound(),
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 10:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
@@ -730,18 +730,18 @@ pub trait CanPositionPointContainment<P> {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
     /// # use periodical::intervals::ops::point_containment::{
     /// #     CanPositionPointContainment, PointContainmentRule, PointContainmentRuleSet,
     /// # };
     /// let interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 08:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
     ///     )
     ///     .to_start_bound(),
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 10:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
@@ -800,14 +800,14 @@ pub trait CanPositionPointContainment<P> {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::point_containment::{CanPositionPointContainment, PointContainmentPosition};
     /// let interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_start_bound(),
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_end_bound(),
     /// );
@@ -864,17 +864,17 @@ pub trait CanPositionPointContainment<P> {
     /// # use std::error::Error;
     /// # use jiff::Zoned;
     /// # use periodical::intervals::absolute::{
-    /// #     AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+    /// #     AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBoundPosition, AbsoluteStartBound,
     /// # };
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::point_containment::{
     /// #     CanPositionPointContainment, DisambiguatedPointContainmentPosition, PointContainmentRuleSet,
     /// # };
     /// let interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_start_bound(),
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_end_bound(),
     /// );
@@ -1086,14 +1086,14 @@ pub fn point_containment_position_abs_bound_pair(
 
     match (bounds.abs_start(), bounds.abs_end()) {
         (StartB::InfinitePast, EndB::InfiniteFuture) => ContPos::Inside,
-        (StartB::InfinitePast, EndB::Finite(finite_bound)) => match time.cmp(&finite_bound.time()) {
+        (StartB::InfinitePast, EndB::Finite(finite_bound_position)) => match time.cmp(&finite_bound_position.time()) {
             Ordering::Less => ContPos::Inside,
-            Ordering::Equal => ContPos::OnEnd(finite_bound.inclusivity()),
+            Ordering::Equal => ContPos::OnEnd(finite_bound_position.inclusivity()),
             Ordering::Greater => ContPos::OutsideAfter,
         },
-        (StartB::Finite(finite_bound), EndB::InfiniteFuture) => match time.cmp(&finite_bound.time()) {
+        (StartB::Finite(finite_bound_position), EndB::InfiniteFuture) => match time.cmp(&finite_bound_position.time()) {
             Ordering::Less => ContPos::OutsideBefore,
-            Ordering::Equal => ContPos::OnStart(finite_bound.inclusivity()),
+            Ordering::Equal => ContPos::OnStart(finite_bound_position.inclusivity()),
             Ordering::Greater => ContPos::Inside,
         },
         (StartB::Finite(start_bound), EndB::Finite(end_bound)) => {
@@ -1121,14 +1121,14 @@ pub fn point_containment_position_rel_bound_pair(
 
     match (bounds.rel_start(), bounds.rel_end()) {
         (StartB::InfinitePast, EndB::InfiniteFuture) => ContPos::Inside,
-        (StartB::InfinitePast, EndB::Finite(finite_bound)) => match offset.cmp(&finite_bound.offset()) {
+        (StartB::InfinitePast, EndB::Finite(finite_bound_position)) => match offset.cmp(&finite_bound_position.offset()) {
             Ordering::Less => ContPos::Inside,
-            Ordering::Equal => ContPos::OnEnd(finite_bound.inclusivity()),
+            Ordering::Equal => ContPos::OnEnd(finite_bound_position.inclusivity()),
             Ordering::Greater => ContPos::OutsideAfter,
         },
-        (StartB::Finite(finite_bound), EndB::InfiniteFuture) => match offset.cmp(&finite_bound.offset()) {
+        (StartB::Finite(finite_bound_position), EndB::InfiniteFuture) => match offset.cmp(&finite_bound_position.offset()) {
             Ordering::Less => ContPos::OutsideBefore,
-            Ordering::Equal => ContPos::OnStart(finite_bound.inclusivity()),
+            Ordering::Equal => ContPos::OnStart(finite_bound_position.inclusivity()),
             Ordering::Greater => ContPos::Inside,
         },
         (StartB::Finite(start_bound), EndB::Finite(end_bound)) => {

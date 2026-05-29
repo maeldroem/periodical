@@ -59,8 +59,8 @@
 //! supporting an infinite start/end via their `InfinitePast` (for start bounds)
 //! or `InfiniteFuture` (for end bounds) variants. In the case of a finite
 //! bound, they contain an
-//! [`AbsoluteFiniteBound`](absolute::AbsoluteFiniteBound) for absolute bounds,
-//! or a [`RelativeFiniteBound`](relative::RelativeFiniteBound) for relative
+//! [`AbsoluteFiniteBoundPosition`](absolute::AbsoluteFiniteBoundPosition) for absolute bounds,
+//! or a [`RelativeFiniteBoundPosition`](relative::RelativeFiniteBoundPosition) for relative
 //! bounds.
 //!
 //! The reason why start and end bounds are separate is simple:
@@ -91,7 +91,7 @@
 //! # use std::error::Error;
 //! # use jiff::Timestamp;
 //! # use periodical::intervals::absolute::{
-//! #     AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteInterval, AbsoluteStartBound,
+//! #     AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBoundPosition, AbsoluteInterval, AbsoluteStartBound,
 //! #     BoundedAbsoluteInterval,
 //! # };
 //! let from = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
@@ -102,7 +102,7 @@
 //!
 //! // Creating a pair of bounds..
 //! let bounds_for_second_interval = AbsoluteBoundPair::new(
-//!     AbsoluteFiniteBound::new(from).to_start_bound(),
+//!     AbsoluteFiniteBoundPosition::new(from).to_start_bound(),
 //!     AbsoluteEndBound::InfiniteFuture,
 //! );
 //!

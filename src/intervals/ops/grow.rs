@@ -12,16 +12,16 @@
 //! ```
 //! # use std::error::Error;
 //! # use jiff::Zoned;
-//! # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+//! # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
 //! # use periodical::intervals::ops::grow::GrowableStartBound;
 //! let interval = AbsoluteBoundPair::new(
-//!     AbsoluteFiniteBound::new(
+//!     AbsoluteFiniteBoundPosition::new(
 //!         "2025-01-01 10:00:00[Europe/Oslo]"
 //!             .parse::<Zoned>()?
 //!             .timestamp(),
 //!     )
 //!     .to_start_bound(),
-//!     AbsoluteFiniteBound::new(
+//!     AbsoluteFiniteBoundPosition::new(
 //!         "2025-01-01 14:00:00[Europe/Oslo]"
 //!             .parse::<Zoned>()?
 //!             .timestamp(),
@@ -30,7 +30,7 @@
 //! );
 //!
 //! let grown_interval = interval.grow_start(
-//!     AbsoluteFiniteBound::new(
+//!     AbsoluteFiniteBoundPosition::new(
 //!         "2025-01-01 08:00:00[Europe/Oslo]"
 //!             .parse::<Zoned>()?
 //!             .timestamp(),
@@ -41,13 +41,13 @@
 //! assert_eq!(
 //!     grown_interval,
 //!     AbsoluteBoundPair::new(
-//!         AbsoluteFiniteBound::new(
+//!         AbsoluteFiniteBoundPosition::new(
 //!             "2025-01-01 08:00:00[Europe/Oslo]"
 //!                 .parse::<Zoned>()?
 //!                 .timestamp(),
 //!         )
 //!         .to_start_bound(),
-//!         AbsoluteFiniteBound::new(
+//!         AbsoluteFiniteBoundPosition::new(
 //!             "2025-01-01 14:00:00[Europe/Oslo]"
 //!                 .parse::<Zoned>()?
 //!                 .timestamp(),
@@ -104,16 +104,16 @@ pub trait GrowableStartBound<P> {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
     /// # use periodical::intervals::ops::grow::GrowableStartBound;
     /// let interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 10:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
     ///     )
     ///     .to_start_bound(),
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 14:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
@@ -122,7 +122,7 @@ pub trait GrowableStartBound<P> {
     /// );
     ///
     /// let grown_interval = interval.grow_start(
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 08:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
@@ -133,13 +133,13 @@ pub trait GrowableStartBound<P> {
     /// assert_eq!(
     ///     grown_interval,
     ///     AbsoluteBoundPair::new(
-    ///         AbsoluteFiniteBound::new(
+    ///         AbsoluteFiniteBoundPosition::new(
     ///             "2025-01-01 08:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
     ///         )
     ///         .to_start_bound(),
-    ///         AbsoluteFiniteBound::new(
+    ///         AbsoluteFiniteBoundPosition::new(
     ///             "2025-01-01 14:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
@@ -172,16 +172,16 @@ pub trait GrowableEndBound<P> {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
     /// # use periodical::intervals::ops::grow::GrowableEndBound;
     /// let interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 10:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
     ///     )
     ///     .to_start_bound(),
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 14:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
@@ -190,7 +190,7 @@ pub trait GrowableEndBound<P> {
     /// );
     ///
     /// let grown_interval = interval.grow_end(
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 16:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
@@ -201,13 +201,13 @@ pub trait GrowableEndBound<P> {
     /// assert_eq!(
     ///     grown_interval,
     ///     AbsoluteBoundPair::new(
-    ///         AbsoluteFiniteBound::new(
+    ///         AbsoluteFiniteBoundPosition::new(
     ///             "2025-01-01 10:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
     ///         )
     ///         .to_start_bound(),
-    ///         AbsoluteFiniteBound::new(
+    ///         AbsoluteFiniteBoundPosition::new(
     ///             "2025-01-01 16:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),

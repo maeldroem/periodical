@@ -52,31 +52,31 @@ impl BoundPosition {
     /// # use std::error::Error;
     /// # use jiff::Timestamp;
     /// # use periodical::intervals::absolute::{
-    /// #     AbsoluteBound, AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+    /// #     AbsoluteBound, AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBoundPosition, AbsoluteStartBound,
     /// # };
     /// # use periodical::intervals::bound_position::BoundPosition;
     /// let abs_bounds = [
     ///     AbsoluteBoundPair::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture),
     ///     AbsoluteBoundPair::new(
-    ///         AbsoluteFiniteBound::new(
+    ///         AbsoluteFiniteBoundPosition::new(
     ///             "2025-01-01 08:00:00Z".parse::<Timestamp>()?,
     ///         ).to_start_bound(),
-    ///         AbsoluteFiniteBound::new(
+    ///         AbsoluteFiniteBoundPosition::new(
     ///             "2025-01-01 11:00:00Z".parse::<Timestamp>()?,
     ///         ).to_end_bound(),
     ///     ),
     ///     AbsoluteBoundPair::new(
-    ///         AbsoluteFiniteBound::new(
+    ///         AbsoluteFiniteBoundPosition::new(
     ///             "2025-01-01 13:00:00Z".parse::<Timestamp>()?,
     ///         ).to_start_bound(),
-    ///         AbsoluteFiniteBound::new(
+    ///         AbsoluteFiniteBoundPosition::new(
     ///             "2025-01-01 16:00:00Z".parse::<Timestamp>()?,
     ///         ).to_end_bound(),
     ///     ),
     /// ];
     ///
     /// let positioned_bound = BoundPosition::End(1).get_abs_bound(&abs_bounds);
-    /// let expected_bound = AbsoluteFiniteBound::new(
+    /// let expected_bound = AbsoluteFiniteBoundPosition::new(
     ///     "2025-01-01 11:00:00Z".parse::<Timestamp>()?,
     /// ).to_end_bound().to_bound();
     ///
@@ -105,31 +105,31 @@ impl BoundPosition {
     /// ```
     /// # use jiff::SignedDuration;
     /// # use periodical::intervals::relative::{
-    /// #     RelativeBound, RelativeBoundPair, RelativeEndBound, RelativeFiniteBound, RelativeStartBound,
+    /// #     RelativeBound, RelativeBoundPair, RelativeEndBound, RelativeFiniteBoundPosition, RelativeStartBound,
     /// # };
     /// # use periodical::intervals::bound_position::BoundPosition;
     /// let rel_bounds = [
     ///     RelativeBoundPair::new(RelativeStartBound::InfinitePast, RelativeEndBound::InfiniteFuture),
     ///     RelativeBoundPair::new(
-    ///         RelativeFiniteBound::new(
+    ///         RelativeFiniteBoundPosition::new(
     ///             SignedDuration::from_hours(8),
     ///         ).to_start_bound(),
-    ///         RelativeFiniteBound::new(
+    ///         RelativeFiniteBoundPosition::new(
     ///             SignedDuration::from_hours(11),
     ///         ).to_end_bound(),
     ///     ),
     ///     RelativeBoundPair::new(
-    ///         RelativeFiniteBound::new(
+    ///         RelativeFiniteBoundPosition::new(
     ///             SignedDuration::from_hours(13),
     ///         ).to_start_bound(),
-    ///         RelativeFiniteBound::new(
+    ///         RelativeFiniteBoundPosition::new(
     ///             SignedDuration::from_hours(16),
     ///         ).to_end_bound(),
     ///     ),
     /// ];
     ///
     /// let positioned_bound = BoundPosition::End(1).get_rel_bound(&rel_bounds);
-    /// let expected_bound = RelativeFiniteBound::new(
+    /// let expected_bound = RelativeFiniteBoundPosition::new(
     ///     SignedDuration::from_hours(11),
     /// ).to_end_bound().to_bound();
     ///

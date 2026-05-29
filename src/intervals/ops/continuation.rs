@@ -14,18 +14,18 @@
 //! # use std::error::Error;
 //! # use jiff::Zoned;
 //! # use periodical::intervals::absolute::{
-//! #     AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+//! #     AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBoundPosition, AbsoluteStartBound,
 //! # };
 //! # use periodical::intervals::meta::BoundInclusivity;
 //! # use periodical::intervals::ops::continuation::Continuable;
 //! let interval = AbsoluteBoundPair::new(
-//!     AbsoluteFiniteBound::new(
+//!     AbsoluteFiniteBoundPosition::new(
 //!         "2025-01-01 08:00:00[Europe/Oslo]"
 //!             .parse::<Zoned>()?
 //!             .timestamp(),
 //!     )
 //!     .to_start_bound(),
-//!     AbsoluteFiniteBound::new(
+//!     AbsoluteFiniteBoundPosition::new(
 //!         "2025-01-01 16:00:00[Europe/Oslo]"
 //!             .parse::<Zoned>()?
 //!             .timestamp(),
@@ -37,7 +37,7 @@
 //!     interval.past_continuation(),
 //!     AbsoluteBoundPair::new(
 //!         AbsoluteStartBound::InfinitePast,
-//!         AbsoluteFiniteBound::new_with_inclusivity(
+//!         AbsoluteFiniteBoundPosition::new_with_inclusivity(
 //!             "2025-01-01 08:00:00[Europe/Oslo]"
 //!                 .parse::<Zoned>()?
 //!                 .timestamp(),
@@ -50,7 +50,7 @@
 //! assert_eq!(
 //!     interval.future_continuation(),
 //!     AbsoluteBoundPair::new(
-//!         AbsoluteFiniteBound::new_with_inclusivity(
+//!         AbsoluteFiniteBoundPosition::new_with_inclusivity(
 //!             "2025-01-01 16:00:00[Europe/Oslo]"
 //!                 .parse::<Zoned>()?
 //!                 .timestamp(),
@@ -67,7 +67,7 @@
 use crate::intervals::absolute::{
     AbsoluteBoundPair,
     AbsoluteEndBound,
-    AbsoluteFiniteBound,
+    AbsoluteFiniteBoundPosition,
     AbsoluteInterval,
     AbsoluteStartBound,
     BoundedAbsoluteInterval,
@@ -87,7 +87,7 @@ use crate::intervals::relative::{
     HasRelativeBoundPair,
     RelativeBoundPair,
     RelativeEndBound,
-    RelativeFiniteBound,
+    RelativeFiniteBoundPosition,
     RelativeInterval,
     RelativeStartBound,
 };
@@ -109,18 +109,18 @@ use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 /// # use std::error::Error;
 /// # use jiff::Zoned;
 /// # use periodical::intervals::absolute::{
-/// #     AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+/// #     AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBoundPosition, AbsoluteStartBound,
 /// # };
 /// # use periodical::intervals::meta::BoundInclusivity;
 /// # use periodical::intervals::ops::continuation::Continuable;
 /// let interval = AbsoluteBoundPair::new(
-///     AbsoluteFiniteBound::new(
+///     AbsoluteFiniteBoundPosition::new(
 ///         "2025-01-01 08:00:00[Europe/Oslo]"
 ///             .parse::<Zoned>()?
 ///             .timestamp(),
 ///     )
 ///     .to_start_bound(),
-///     AbsoluteFiniteBound::new(
+///     AbsoluteFiniteBoundPosition::new(
 ///         "2025-01-01 16:00:00[Europe/Oslo]"
 ///             .parse::<Zoned>()?
 ///             .timestamp(),
@@ -132,7 +132,7 @@ use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 ///     interval.past_continuation(),
 ///     AbsoluteBoundPair::new(
 ///         AbsoluteStartBound::InfinitePast,
-///         AbsoluteFiniteBound::new_with_inclusivity(
+///         AbsoluteFiniteBoundPosition::new_with_inclusivity(
 ///             "2025-01-01 08:00:00[Europe/Oslo]"
 ///                 .parse::<Zoned>()?
 ///                 .timestamp(),
@@ -145,7 +145,7 @@ use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 /// assert_eq!(
 ///     interval.future_continuation(),
 ///     AbsoluteBoundPair::new(
-///         AbsoluteFiniteBound::new_with_inclusivity(
+///         AbsoluteFiniteBoundPosition::new_with_inclusivity(
 ///             "2025-01-01 16:00:00[Europe/Oslo]"
 ///                 .parse::<Zoned>()?
 ///                 .timestamp(),
@@ -170,18 +170,18 @@ pub trait Continuable {
     /// # use std::error::Error;
     /// # use jiff::Zoned;
     /// # use periodical::intervals::absolute::{
-    /// #     AbsoluteBoundPair, AbsoluteFiniteBound, AbsoluteStartBound,
+    /// #     AbsoluteBoundPair, AbsoluteFiniteBoundPosition, AbsoluteStartBound,
     /// # };
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::continuation::Continuable;
     /// let interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 08:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
     ///     )
     ///     .to_start_bound(),
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 16:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
@@ -193,7 +193,7 @@ pub trait Continuable {
     ///     interval.past_continuation(),
     ///     AbsoluteBoundPair::new(
     ///         AbsoluteStartBound::InfinitePast,
-    ///         AbsoluteFiniteBound::new_with_inclusivity(
+    ///         AbsoluteFiniteBoundPosition::new_with_inclusivity(
     ///             "2025-01-01 08:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
@@ -216,18 +216,18 @@ pub trait Continuable {
     /// # use std::error::Error;
     /// # use jiff::Zoned;
     /// # use periodical::intervals::absolute::{
-    /// #     AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBound,
+    /// #     AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBoundPosition,
     /// # };
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::continuation::Continuable;
     /// let interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 08:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
     ///     )
     ///     .to_start_bound(),
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 16:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
@@ -238,7 +238,7 @@ pub trait Continuable {
     /// assert_eq!(
     ///     interval.future_continuation(),
     ///     AbsoluteBoundPair::new(
-    ///         AbsoluteFiniteBound::new_with_inclusivity(
+    ///         AbsoluteFiniteBoundPosition::new_with_inclusivity(
     ///             "2025-01-01 16:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
@@ -440,7 +440,8 @@ pub fn past_continuation_abs_bound_pair(bounds: &AbsoluteBoundPair) -> Emptiable
         AbsoluteStartBound::InfinitePast => EmptiableAbsoluteBoundPair::Empty,
         AbsoluteStartBound::Finite(finite) => EmptiableAbsoluteBoundPair::from(AbsoluteBoundPair::new(
             AbsoluteStartBound::InfinitePast,
-            AbsoluteFiniteBound::new_with_inclusivity(finite.time(), finite.inclusivity().opposite()).to_end_bound(),
+            AbsoluteFiniteBoundPosition::new_with_inclusivity(finite.time(), finite.inclusivity().opposite())
+                .to_end_bound(),
         )),
     }
 }
@@ -453,7 +454,8 @@ pub fn future_continuation_abs_bound_pair(bounds: &AbsoluteBoundPair) -> Emptiab
     match bounds.abs_end() {
         AbsoluteEndBound::InfiniteFuture => EmptiableAbsoluteBoundPair::Empty,
         AbsoluteEndBound::Finite(finite) => EmptiableAbsoluteBoundPair::from(AbsoluteBoundPair::new(
-            AbsoluteFiniteBound::new_with_inclusivity(finite.time(), finite.inclusivity().opposite()).to_start_bound(),
+            AbsoluteFiniteBoundPosition::new_with_inclusivity(finite.time(), finite.inclusivity().opposite())
+                .to_start_bound(),
             AbsoluteEndBound::InfiniteFuture,
         )),
     }
@@ -516,7 +518,7 @@ pub fn past_continuation_rel_bound_pair(bounds: &RelativeBoundPair) -> Emptiable
         RelativeStartBound::InfinitePast => EmptiableRelativeBoundPair::Empty,
         RelativeStartBound::Finite(finite) => EmptiableRelativeBoundPair::from(RelativeBoundPair::new(
             RelativeStartBound::InfinitePast,
-            RelativeFiniteBound::new_with_inclusivity(finite.offset(), finite.inclusivity().opposite()).to_end_bound(),
+            RelativeFiniteBoundPosition::new_with_inclusivity(finite.offset(), finite.inclusivity().opposite()).to_end_bound(),
         )),
     }
 }
@@ -529,7 +531,7 @@ pub fn future_continuation_rel_bound_pair(bounds: &RelativeBoundPair) -> Emptiab
     match bounds.rel_end() {
         RelativeEndBound::InfiniteFuture => EmptiableRelativeBoundPair::Empty,
         RelativeEndBound::Finite(finite) => EmptiableRelativeBoundPair::from(RelativeBoundPair::new(
-            RelativeFiniteBound::new_with_inclusivity(finite.offset(), finite.inclusivity().opposite())
+            RelativeFiniteBoundPosition::new_with_inclusivity(finite.offset(), finite.inclusivity().opposite())
                 .to_start_bound(),
             RelativeEndBound::InfiniteFuture,
         )),

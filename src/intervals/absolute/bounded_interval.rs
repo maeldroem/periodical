@@ -24,7 +24,7 @@ use serde::{Deserialize, Serialize};
 use crate::intervals::absolute::{
     AbsoluteBoundPair,
     AbsoluteEndBound,
-    AbsoluteFiniteBound,
+    AbsoluteFiniteBoundPosition,
     AbsoluteInterval,
     AbsoluteStartBound,
     EmptiableAbsoluteBoundPair,
@@ -789,11 +789,11 @@ impl HasAbsoluteBoundPair for BoundedAbsoluteInterval {
     }
 
     fn abs_start(&self) -> AbsoluteStartBound {
-        AbsoluteFiniteBound::new_with_inclusivity(self.start, self.start_inclusivity).to_start_bound()
+        AbsoluteFiniteBoundPosition::new_with_inclusivity(self.start, self.start_inclusivity).to_start_bound()
     }
 
     fn abs_end(&self) -> AbsoluteEndBound {
-        AbsoluteFiniteBound::new_with_inclusivity(self.end, self.end_inclusivity).to_end_bound()
+        AbsoluteFiniteBoundPosition::new_with_inclusivity(self.end, self.end_inclusivity).to_end_bound()
     }
 }
 
@@ -820,8 +820,8 @@ impl From<((Timestamp, BoundInclusivity), (Timestamp, BoundInclusivity))> for Bo
     }
 }
 
-impl From<(AbsoluteFiniteBound, AbsoluteFiniteBound)> for BoundedAbsoluteInterval {
-    fn from((start, end): (AbsoluteFiniteBound, AbsoluteFiniteBound)) -> Self {
+impl From<(AbsoluteFiniteBoundPosition, AbsoluteFiniteBoundPosition)> for BoundedAbsoluteInterval {
+    fn from((start, end): (AbsoluteFiniteBoundPosition, AbsoluteFiniteBoundPosition)) -> Self {
         Self::new_with_inclusivity(start.time(), start.inclusivity(), end.time(), end.inclusivity())
     }
 }

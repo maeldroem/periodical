@@ -88,13 +88,13 @@ impl AbsoluteBoundPair {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Timestamp;
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
     /// // Start and end are not in chronological order!
     /// let start_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
     /// let end_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     ///
-    /// let start = AbsoluteFiniteBound::new(start_time).to_start_bound();
-    /// let end = AbsoluteFiniteBound::new(end_time).to_end_bound();
+    /// let start = AbsoluteFiniteBoundPosition::new(start_time).to_start_bound();
+    /// let end = AbsoluteFiniteBoundPosition::new(end_time).to_end_bound();
     ///
     /// let bounds = AbsoluteBoundPair::unchecked_new(start, end);
     ///
@@ -120,13 +120,13 @@ impl AbsoluteBoundPair {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Timestamp;
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
     /// // Start and end are not in chronological order!
     /// let start_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
     /// let end_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     ///
-    /// let start = AbsoluteFiniteBound::new(start_time).to_start_bound();
-    /// let end = AbsoluteFiniteBound::new(end_time).to_end_bound();
+    /// let start = AbsoluteFiniteBoundPosition::new(start_time).to_start_bound();
+    /// let end = AbsoluteFiniteBoundPosition::new(end_time).to_end_bound();
     ///
     /// let bounds = AbsoluteBoundPair::new(start, end);
     ///
@@ -148,7 +148,7 @@ impl AbsoluteBoundPair {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Timestamp;
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// let start = "2026-01-01 00:00:00Z".parse::<Timestamp>()?;
     /// let end = "2026-05-01 00:00:00Z".parse::<Timestamp>()?;
@@ -157,11 +157,12 @@ impl AbsoluteBoundPair {
     ///
     /// assert_eq!(
     ///     bounds.start(),
-    ///     AbsoluteFiniteBound::new(start).to_start_bound(),
+    ///     AbsoluteFiniteBoundPosition::new(start).to_start_bound(),
     /// );
     /// assert_eq!(
     ///     bounds.end(),
-    ///     AbsoluteFiniteBound::new_with_inclusivity(end, BoundInclusivity::Exclusive,).to_end_bound(),
+    ///     AbsoluteFiniteBoundPosition::new_with_inclusivity(end, BoundInclusivity::Exclusive,)
+    ///         .to_end_bound(),
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
@@ -183,12 +184,12 @@ impl AbsoluteBoundPair {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Timestamp;
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
     /// let start_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     /// let end_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
     ///
-    /// let start = AbsoluteFiniteBound::new(start_time).to_start_bound();
-    /// let end = AbsoluteFiniteBound::new(end_time).to_end_bound();
+    /// let start = AbsoluteFiniteBoundPosition::new(start_time).to_start_bound();
+    /// let end = AbsoluteFiniteBoundPosition::new(end_time).to_end_bound();
     ///
     /// let bounds = AbsoluteBoundPair::new(start, end);
     ///
@@ -207,12 +208,12 @@ impl AbsoluteBoundPair {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Timestamp;
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
     /// let start_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     /// let end_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
     ///
-    /// let start = AbsoluteFiniteBound::new(start_time).to_start_bound();
-    /// let end = AbsoluteFiniteBound::new(end_time).to_end_bound();
+    /// let start = AbsoluteFiniteBoundPosition::new(start_time).to_start_bound();
+    /// let end = AbsoluteFiniteBoundPosition::new(end_time).to_end_bound();
     ///
     /// let bounds = AbsoluteBoundPair::new(start, end);
     ///
@@ -231,17 +232,17 @@ impl AbsoluteBoundPair {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Timestamp;
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
     /// let start_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     /// let end_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
     ///
-    /// let start = AbsoluteFiniteBound::new(start_time).to_start_bound();
-    /// let end = AbsoluteFiniteBound::new(end_time).to_end_bound();
+    /// let start = AbsoluteFiniteBoundPosition::new(start_time).to_start_bound();
+    /// let end = AbsoluteFiniteBoundPosition::new(end_time).to_end_bound();
     ///
     /// let mut bounds = AbsoluteBoundPair::new(start, end);
     ///
     /// let new_start_time = "2025-01-01 18:00:00Z".parse::<Timestamp>()?;
-    /// let new_start = AbsoluteFiniteBound::new(new_start_time).to_start_bound();
+    /// let new_start = AbsoluteFiniteBoundPosition::new(new_start_time).to_start_bound();
     ///
     /// // New start is past the end
     /// bounds.unchecked_set_start(new_start);
@@ -262,17 +263,17 @@ impl AbsoluteBoundPair {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Timestamp;
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
     /// let start_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     /// let end_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
     ///
-    /// let start = AbsoluteFiniteBound::new(start_time).to_start_bound();
-    /// let end = AbsoluteFiniteBound::new(end_time).to_end_bound();
+    /// let start = AbsoluteFiniteBoundPosition::new(start_time).to_start_bound();
+    /// let end = AbsoluteFiniteBoundPosition::new(end_time).to_end_bound();
     ///
     /// let mut bounds = AbsoluteBoundPair::new(start, end);
     ///
     /// let new_end_time = "2025-01-01 06:00:00Z".parse::<Timestamp>()?;
-    /// let new_end = AbsoluteFiniteBound::new(new_end_time).to_end_bound();
+    /// let new_end = AbsoluteFiniteBoundPosition::new(new_end_time).to_end_bound();
     ///
     /// // New end is before the start
     /// bounds.unchecked_set_end(new_end);
@@ -297,17 +298,17 @@ impl AbsoluteBoundPair {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Timestamp;
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
     /// let start_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     /// let end_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
     ///
-    /// let start = AbsoluteFiniteBound::new(start_time).to_start_bound();
-    /// let end = AbsoluteFiniteBound::new(end_time).to_end_bound();
+    /// let start = AbsoluteFiniteBoundPosition::new(start_time).to_start_bound();
+    /// let end = AbsoluteFiniteBoundPosition::new(end_time).to_end_bound();
     ///
     /// let mut bounds = AbsoluteBoundPair::new(start, end);
     ///
     /// let new_start_time = "2025-01-01 18:00:00Z".parse::<Timestamp>()?;
-    /// let new_start = AbsoluteFiniteBound::new(new_start_time).to_start_bound();
+    /// let new_start = AbsoluteFiniteBoundPosition::new(new_start_time).to_start_bound();
     ///
     /// // New start is past the end, and therefore gets ignored
     /// let was_successful = bounds.set_start(new_start);
@@ -338,17 +339,17 @@ impl AbsoluteBoundPair {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Timestamp;
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
     /// let start_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     /// let end_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
     ///
-    /// let start = AbsoluteFiniteBound::new(start_time).to_start_bound();
-    /// let end = AbsoluteFiniteBound::new(end_time).to_end_bound();
+    /// let start = AbsoluteFiniteBoundPosition::new(start_time).to_start_bound();
+    /// let end = AbsoluteFiniteBoundPosition::new(end_time).to_end_bound();
     ///
     /// let mut bounds = AbsoluteBoundPair::new(start, end);
     ///
     /// let new_end_time = "2025-01-01 06:00:00Z".parse::<Timestamp>()?;
-    /// let new_end = AbsoluteFiniteBound::new(new_end_time).to_end_bound();
+    /// let new_end = AbsoluteFiniteBoundPosition::new(new_end_time).to_end_bound();
     ///
     /// // New end is before the start, and therefore gets ignored
     /// let was_successful = bounds.set_end(new_end);

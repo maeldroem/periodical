@@ -36,16 +36,16 @@ use crate::ops::IntersectionResult;
 /// # use std::error::Error;
 /// # use jiff::Zoned;
 /// # use periodical::ops::IntersectionResult;
-/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
 /// # use periodical::intervals::ops::set_ops::Intersectable;
 /// let first_interval = AbsoluteBoundPair::new(
-///     AbsoluteFiniteBound::new(
+///     AbsoluteFiniteBoundPosition::new(
 ///         "2025-01-01 08:00:00[Europe/Oslo]"
 ///             .parse::<Zoned>()?
 ///             .timestamp(),
 ///     )
 ///     .to_start_bound(),
-///     AbsoluteFiniteBound::new(
+///     AbsoluteFiniteBoundPosition::new(
 ///         "2025-01-01 14:00:00[Europe/Oslo]"
 ///             .parse::<Zoned>()?
 ///             .timestamp(),
@@ -54,13 +54,13 @@ use crate::ops::IntersectionResult;
 /// );
 ///
 /// let second_interval = AbsoluteBoundPair::new(
-///     AbsoluteFiniteBound::new(
+///     AbsoluteFiniteBoundPosition::new(
 ///         "2025-01-01 12:00:00[Europe/Oslo]"
 ///             .parse::<Zoned>()?
 ///             .timestamp(),
 ///     )
 ///     .to_start_bound(),
-///     AbsoluteFiniteBound::new(
+///     AbsoluteFiniteBoundPosition::new(
 ///         "2025-01-01 18:00:00[Europe/Oslo]"
 ///             .parse::<Zoned>()?
 ///             .timestamp(),
@@ -71,13 +71,13 @@ use crate::ops::IntersectionResult;
 /// assert_eq!(
 ///     first_interval.intersect(&second_interval),
 ///     IntersectionResult::Intersected(AbsoluteBoundPair::new(
-///         AbsoluteFiniteBound::new(
+///         AbsoluteFiniteBoundPosition::new(
 ///             "2025-01-01 12:00:00[Europe/Oslo]"
 ///                 .parse::<Zoned>()?
 ///                 .timestamp(),
 ///         )
 ///         .to_start_bound(),
-///         AbsoluteFiniteBound::new(
+///         AbsoluteFiniteBoundPosition::new(
 ///             "2025-01-01 14:00:00[Europe/Oslo]"
 ///                 .parse::<Zoned>()?
 ///                 .timestamp(),
@@ -94,16 +94,16 @@ use crate::ops::IntersectionResult;
 /// # use std::error::Error;
 /// # use jiff::Zoned;
 /// # use periodical::ops::IntersectionResult;
-/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
 /// # use periodical::intervals::ops::set_ops::Intersectable;
 /// let first_interval = AbsoluteBoundPair::new(
-///     AbsoluteFiniteBound::new(
+///     AbsoluteFiniteBoundPosition::new(
 ///         "2025-01-01 08:00:00[Europe/Oslo]"
 ///             .parse::<Zoned>()?
 ///             .timestamp(),
 ///     )
 ///     .to_start_bound(),
-///     AbsoluteFiniteBound::new(
+///     AbsoluteFiniteBoundPosition::new(
 ///         "2025-01-01 12:00:00[Europe/Oslo]"
 ///             .parse::<Zoned>()?
 ///             .timestamp(),
@@ -112,13 +112,13 @@ use crate::ops::IntersectionResult;
 /// );
 ///
 /// let second_interval = AbsoluteBoundPair::new(
-///     AbsoluteFiniteBound::new(
+///     AbsoluteFiniteBoundPosition::new(
 ///         "2025-01-01 14:00:00[Europe/Oslo]"
 ///             .parse::<Zoned>()?
 ///             .timestamp(),
 ///     )
 ///     .to_start_bound(),
-///     AbsoluteFiniteBound::new(
+///     AbsoluteFiniteBoundPosition::new(
 ///         "2025-01-01 18:00:00[Europe/Oslo]"
 ///             .parse::<Zoned>()?
 ///             .timestamp(),
@@ -144,16 +144,16 @@ pub trait Intersectable<Rhs = Self> {
     /// # use std::error::Error;
     /// # use jiff::Zoned;
     /// # use periodical::ops::IntersectionResult;
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
     /// # use periodical::intervals::ops::set_ops::Intersectable;
     /// let first_interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 08:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
     ///     )
     ///     .to_start_bound(),
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 14:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
@@ -162,13 +162,13 @@ pub trait Intersectable<Rhs = Self> {
     /// );
     ///
     /// let second_interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 12:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
     ///     )
     ///     .to_start_bound(),
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 18:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
@@ -179,13 +179,13 @@ pub trait Intersectable<Rhs = Self> {
     /// assert_eq!(
     ///     first_interval.intersect(&second_interval),
     ///     IntersectionResult::Intersected(AbsoluteBoundPair::new(
-    ///         AbsoluteFiniteBound::new(
+    ///         AbsoluteFiniteBoundPosition::new(
     ///             "2025-01-01 12:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
     ///         )
     ///         .to_start_bound(),
-    ///         AbsoluteFiniteBound::new(
+    ///         AbsoluteFiniteBoundPosition::new(
     ///             "2025-01-01 14:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
@@ -206,24 +206,24 @@ pub trait Intersectable<Rhs = Self> {
     /// # use std::error::Error;
     /// # use jiff::Zoned;
     /// # use periodical::ops::IntersectionResult;
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound, EmptiableAbsoluteBoundPair};
+    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition, EmptiableAbsoluteBoundPair};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::abridge::Abridgable;
     /// # use periodical::intervals::ops::set_ops::Intersectable;
     /// let first_interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_start_bound(),
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_end_bound(),
     /// );
     ///
     /// let second_interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_start_bound(),
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_end_bound(),
     /// );
@@ -243,11 +243,11 @@ pub trait Intersectable<Rhs = Self> {
     /// assert_eq!(
     ///     first_interval.intersect_with(&second_interval, intersection_closure),
     ///     IntersectionResult::Intersected(AbsoluteBoundPair::new(
-    ///         AbsoluteFiniteBound::new_with_inclusivity(
+    ///         AbsoluteFiniteBoundPosition::new_with_inclusivity(
     ///             "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///             BoundInclusivity::Exclusive,
     ///         ).to_start_bound(),
-    ///         AbsoluteFiniteBound::new_with_inclusivity(
+    ///         AbsoluteFiniteBoundPosition::new_with_inclusivity(
     ///             "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///             BoundInclusivity::Exclusive,
     ///         ).to_end_bound(),

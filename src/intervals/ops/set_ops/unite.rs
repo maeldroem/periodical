@@ -36,16 +36,16 @@ use crate::ops::UnionResult;
 /// # use std::error::Error;
 /// # use jiff::Zoned;
 /// # use periodical::ops::UnionResult;
-/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
 /// # use periodical::intervals::ops::set_ops::Unitable;
 /// let first_interval = AbsoluteBoundPair::new(
-///     AbsoluteFiniteBound::new(
+///     AbsoluteFiniteBoundPosition::new(
 ///         "2025-01-01 08:00:00[Europe/Oslo]"
 ///             .parse::<Zoned>()?
 ///             .timestamp(),
 ///     )
 ///     .to_start_bound(),
-///     AbsoluteFiniteBound::new(
+///     AbsoluteFiniteBoundPosition::new(
 ///         "2025-01-01 14:00:00[Europe/Oslo]"
 ///             .parse::<Zoned>()?
 ///             .timestamp(),
@@ -54,13 +54,13 @@ use crate::ops::UnionResult;
 /// );
 ///
 /// let second_interval = AbsoluteBoundPair::new(
-///     AbsoluteFiniteBound::new(
+///     AbsoluteFiniteBoundPosition::new(
 ///         "2025-01-01 12:00:00[Europe/Oslo]"
 ///             .parse::<Zoned>()?
 ///             .timestamp(),
 ///     )
 ///     .to_start_bound(),
-///     AbsoluteFiniteBound::new(
+///     AbsoluteFiniteBoundPosition::new(
 ///         "2025-01-01 18:00:00[Europe/Oslo]"
 ///             .parse::<Zoned>()?
 ///             .timestamp(),
@@ -71,13 +71,13 @@ use crate::ops::UnionResult;
 /// assert_eq!(
 ///     first_interval.unite(&second_interval),
 ///     UnionResult::United(AbsoluteBoundPair::new(
-///         AbsoluteFiniteBound::new(
+///         AbsoluteFiniteBoundPosition::new(
 ///             "2025-01-01 08:00:00[Europe/Oslo]"
 ///                 .parse::<Zoned>()?
 ///                 .timestamp(),
 ///         )
 ///         .to_start_bound(),
-///         AbsoluteFiniteBound::new(
+///         AbsoluteFiniteBoundPosition::new(
 ///             "2025-01-01 18:00:00[Europe/Oslo]"
 ///                 .parse::<Zoned>()?
 ///                 .timestamp(),
@@ -94,16 +94,16 @@ use crate::ops::UnionResult;
 /// # use std::error::Error;
 /// # use jiff::Zoned;
 /// # use periodical::ops::UnionResult;
-/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
 /// # use periodical::intervals::ops::set_ops::Unitable;
 /// let first_interval = AbsoluteBoundPair::new(
-///     AbsoluteFiniteBound::new(
+///     AbsoluteFiniteBoundPosition::new(
 ///         "2025-01-01 08:00:00[Europe/Oslo]"
 ///             .parse::<Zoned>()?
 ///             .timestamp(),
 ///     )
 ///     .to_start_bound(),
-///     AbsoluteFiniteBound::new(
+///     AbsoluteFiniteBoundPosition::new(
 ///         "2025-01-01 12:00:00[Europe/Oslo]"
 ///             .parse::<Zoned>()?
 ///             .timestamp(),
@@ -112,13 +112,13 @@ use crate::ops::UnionResult;
 /// );
 ///
 /// let second_interval = AbsoluteBoundPair::new(
-///     AbsoluteFiniteBound::new(
+///     AbsoluteFiniteBoundPosition::new(
 ///         "2025-01-01 14:00:00[Europe/Oslo]"
 ///             .parse::<Zoned>()?
 ///             .timestamp(),
 ///     )
 ///     .to_start_bound(),
-///     AbsoluteFiniteBound::new(
+///     AbsoluteFiniteBoundPosition::new(
 ///         "2025-01-01 18:00:00[Europe/Oslo]"
 ///             .parse::<Zoned>()?
 ///             .timestamp(),
@@ -144,16 +144,16 @@ pub trait Unitable<Rhs = Self> {
     /// # use std::error::Error;
     /// # use jiff::Zoned;
     /// # use periodical::ops::UnionResult;
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
     /// # use periodical::intervals::ops::set_ops::Unitable;
     /// let first_interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 08:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
     ///     )
     ///     .to_start_bound(),
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 14:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
@@ -162,13 +162,13 @@ pub trait Unitable<Rhs = Self> {
     /// );
     ///
     /// let second_interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 12:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
     ///     )
     ///     .to_start_bound(),
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 18:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
@@ -179,13 +179,13 @@ pub trait Unitable<Rhs = Self> {
     /// assert_eq!(
     ///     first_interval.unite(&second_interval),
     ///     UnionResult::United(AbsoluteBoundPair::new(
-    ///         AbsoluteFiniteBound::new(
+    ///         AbsoluteFiniteBoundPosition::new(
     ///             "2025-01-01 08:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
     ///         )
     ///         .to_start_bound(),
-    ///         AbsoluteFiniteBound::new(
+    ///         AbsoluteFiniteBoundPosition::new(
     ///             "2025-01-01 18:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
@@ -206,17 +206,17 @@ pub trait Unitable<Rhs = Self> {
     /// # use std::error::Error;
     /// # use jiff::Zoned;
     /// # use periodical::ops::UnionResult;
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
     /// # use periodical::intervals::ops::extend::Extensible;
     /// # use periodical::intervals::ops::set_ops::Unitable;
     /// let first_interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 08:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
     ///     )
     ///     .to_start_bound(),
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 12:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
@@ -225,13 +225,13 @@ pub trait Unitable<Rhs = Self> {
     /// );
     ///
     /// let second_interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 14:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
     ///     )
     ///     .to_start_bound(),
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 18:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
@@ -248,13 +248,13 @@ pub trait Unitable<Rhs = Self> {
     /// assert_eq!(
     ///     first_interval.unite_with(&second_interval, union_closure),
     ///     UnionResult::United(AbsoluteBoundPair::new(
-    ///         AbsoluteFiniteBound::new(
+    ///         AbsoluteFiniteBoundPosition::new(
     ///             "2025-01-01 08:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
     ///         )
     ///         .to_start_bound(),
-    ///         AbsoluteFiniteBound::new(
+    ///         AbsoluteFiniteBoundPosition::new(
     ///             "2025-01-01 18:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),

@@ -65,6 +65,7 @@ Updated previous tests and created more tests for covering all the work so far.
   to `(Timestamp/SignedDuration, BoundInclusivity, OpeningDirection)`
 - Adapted binary operation implementations to respect adopted policies regarding binary operations
   - `Abridgable`
+- Renamed `*FiniteBound` to `*FiniteBoundPosition` for clarity
 
 ## Deprecated
 

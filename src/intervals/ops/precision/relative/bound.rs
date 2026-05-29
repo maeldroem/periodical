@@ -2,7 +2,7 @@
 
 use jiff::SignedDuration;
 
-use crate::intervals::relative::{RelativeEndBound, RelativeFiniteBound, RelativeStartBound};
+use crate::intervals::relative::{RelativeEndBound, RelativeFiniteBoundPosition, RelativeStartBound};
 use crate::ops::{Precision, PrecisionOutOfRangeError};
 use crate::prelude::HasBoundInclusivity;
 
@@ -17,10 +17,10 @@ use crate::prelude::HasBoundInclusivity;
 /// # use std::time::Duration;
 /// # use jiff::SignedDuration;
 /// # use periodical::ops::{Precision, PrecisionMode};
-/// # use periodical::intervals::relative::RelativeFiniteBound;
+/// # use periodical::intervals::relative::RelativeFiniteBoundPosition;
 /// # use periodical::intervals::meta::BoundInclusivity;
 /// # use periodical::intervals::ops::PreciseRelativeBound;
-/// let bound = RelativeFiniteBound::new_with_inclusivity(
+/// let bound = RelativeFiniteBoundPosition::new_with_inclusivity(
 ///     SignedDuration::from_mins(24),
 ///     BoundInclusivity::Exclusive,
 /// )
@@ -31,7 +31,7 @@ use crate::prelude::HasBoundInclusivity;
 ///         Duration::from_mins(5),
 ///         PrecisionMode::ToFuture
 ///     )?),
-///     Ok(RelativeFiniteBound::new_with_inclusivity(
+///     Ok(RelativeFiniteBoundPosition::new_with_inclusivity(
 ///         SignedDuration::from_mins(25),
 ///         BoundInclusivity::Exclusive,
 ///     )
@@ -54,10 +54,10 @@ pub trait PreciseRelativeBound {
     /// # use std::time::Duration;
     /// # use jiff::SignedDuration;
     /// # use periodical::ops::{Precision, PrecisionMode};
-    /// # use periodical::intervals::relative::RelativeFiniteBound;
+    /// # use periodical::intervals::relative::RelativeFiniteBoundPosition;
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::PreciseRelativeBound;
-    /// let bound = RelativeFiniteBound::new_with_inclusivity(
+    /// let bound = RelativeFiniteBoundPosition::new_with_inclusivity(
     ///     SignedDuration::from_mins(24),
     ///     BoundInclusivity::Exclusive,
     /// )
@@ -68,7 +68,7 @@ pub trait PreciseRelativeBound {
     ///         Duration::from_mins(5),
     ///         PrecisionMode::ToFuture
     ///     )?),
-    ///     Ok(RelativeFiniteBound::new_with_inclusivity(
+    ///     Ok(RelativeFiniteBoundPosition::new_with_inclusivity(
     ///         SignedDuration::from_mins(25),
     ///         BoundInclusivity::Exclusive,
     ///     )
@@ -90,10 +90,10 @@ pub trait PreciseRelativeBound {
     /// # use std::time::Duration;
     /// # use jiff::SignedDuration;
     /// # use periodical::ops::{Precision, PrecisionMode};
-    /// # use periodical::intervals::relative::RelativeFiniteBound;
+    /// # use periodical::intervals::relative::RelativeFiniteBoundPosition;
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::PreciseRelativeBound;
-    /// let bound = RelativeFiniteBound::new_with_inclusivity(
+    /// let bound = RelativeFiniteBoundPosition::new_with_inclusivity(
     ///     SignedDuration::from_mins(24),
     ///     BoundInclusivity::Exclusive,
     /// )
@@ -104,7 +104,7 @@ pub trait PreciseRelativeBound {
     ///         Precision::new(Duration::from_mins(5), PrecisionMode::ToFuture)?,
     ///         SignedDuration::from_mins(2)
     ///     ),
-    ///     Ok(RelativeFiniteBound::new_with_inclusivity(
+    ///     Ok(RelativeFiniteBoundPosition::new_with_inclusivity(
     ///         SignedDuration::from_mins(27),
     ///         BoundInclusivity::Exclusive,
     ///     )
@@ -116,11 +116,11 @@ pub trait PreciseRelativeBound {
     fn precise_bound_with_base_offset(&self, precision: Precision, base: SignedDuration) -> Self::PrecisedBoundOutput;
 }
 
-impl PreciseRelativeBound for RelativeFiniteBound {
+impl PreciseRelativeBound for RelativeFiniteBoundPosition {
     type PrecisedBoundOutput = Result<Self, PrecisionOutOfRangeError>;
 
     fn precise_bound(&self, precision: Precision) -> Self::PrecisedBoundOutput {
-        precise_rel_finite_bound(self, precision)
+        precise_rel_finite_bound_position(self, precision)
     }
 
     fn precise_bound_with_base_offset(&self, precision: Precision, base: SignedDuration) -> Self::PrecisedBoundOutput {
@@ -152,16 +152,16 @@ impl PreciseRelativeBound for RelativeEndBound {
     }
 }
 
-/// Precises an [`RelativeFiniteBound`] with the given [`Precision`]
+/// Precises an [`RelativeFiniteBoundPosition`] with the given [`Precision`]
 ///
 /// # Errors
 ///
 /// See [`Precision::precise_signed_duration`]
-pub fn precise_rel_finite_bound(
-    bound: &RelativeFiniteBound,
+pub fn precise_rel_finite_bound_position(
+    bound: &RelativeFiniteBoundPosition,
     precision: Precision,
-) -> Result<RelativeFiniteBound, PrecisionOutOfRangeError> {
-    Ok(RelativeFiniteBound::new_with_inclusivity(
+) -> Result<RelativeFiniteBoundPosition, PrecisionOutOfRangeError> {
+    Ok(RelativeFiniteBoundPosition::new_with_inclusivity(
         precision.precise_signed_duration(bound.offset())?,
         bound.inclusivity(),
     ))
@@ -178,8 +178,8 @@ pub fn precise_rel_start_bound(
 ) -> Result<RelativeStartBound, PrecisionOutOfRangeError> {
     match bound {
         RelativeStartBound::InfinitePast => Ok(*bound),
-        RelativeStartBound::Finite(finite_bound) => {
-            precise_rel_finite_bound(finite_bound, precision).map(RelativeFiniteBound::to_start_bound)
+        RelativeStartBound::Finite(finite_bound_position) => {
+            precise_rel_finite_bound_position(finite_bound_position, precision).map(RelativeFiniteBoundPosition::to_start_bound)
         },
     }
 }
@@ -195,23 +195,23 @@ pub fn precise_rel_end_bound(
 ) -> Result<RelativeEndBound, PrecisionOutOfRangeError> {
     match bound {
         RelativeEndBound::InfiniteFuture => Ok(*bound),
-        RelativeEndBound::Finite(finite_bound) => {
-            precise_rel_finite_bound(finite_bound, precision).map(RelativeFiniteBound::to_end_bound)
+        RelativeEndBound::Finite(finite_bound_position) => {
+            precise_rel_finite_bound_position(finite_bound_position, precision).map(RelativeFiniteBoundPosition::to_end_bound)
         },
     }
 }
 
-/// Precises an [`RelativeFiniteBound`] with the given [`Precision`] and base time
+/// Precises an [`RelativeFiniteBoundPosition`] with the given [`Precision`] and base time
 ///
 /// # Errors
 ///
 /// See [`Precision::precise_signed_duration_with_base_offset`]
 pub fn precise_rel_finite_bound_with_base_offset(
-    bound: &RelativeFiniteBound,
+    bound: &RelativeFiniteBoundPosition,
     precision: Precision,
     base: SignedDuration,
-) -> Result<RelativeFiniteBound, PrecisionOutOfRangeError> {
-    Ok(RelativeFiniteBound::new_with_inclusivity(
+) -> Result<RelativeFiniteBoundPosition, PrecisionOutOfRangeError> {
+    Ok(RelativeFiniteBoundPosition::new_with_inclusivity(
         precision.precise_signed_duration_with_base_offset(bound.offset(), base)?,
         bound.inclusivity(),
     ))
@@ -229,9 +229,9 @@ pub fn precise_rel_start_bound_with_base_offset(
 ) -> Result<RelativeStartBound, PrecisionOutOfRangeError> {
     match bound {
         RelativeStartBound::InfinitePast => Ok(*bound),
-        RelativeStartBound::Finite(finite_bound) => {
-            precise_rel_finite_bound_with_base_offset(finite_bound, precision, base)
-                .map(RelativeFiniteBound::to_start_bound)
+        RelativeStartBound::Finite(finite_bound_position) => {
+            precise_rel_finite_bound_with_base_offset(finite_bound_position, precision, base)
+                .map(RelativeFiniteBoundPosition::to_start_bound)
         },
     }
 }
@@ -248,9 +248,9 @@ pub fn precise_rel_end_bound_with_base_offset(
 ) -> Result<RelativeEndBound, PrecisionOutOfRangeError> {
     match bound {
         RelativeEndBound::InfiniteFuture => Ok(*bound),
-        RelativeEndBound::Finite(finite_bound) => {
-            precise_rel_finite_bound_with_base_offset(finite_bound, precision, base)
-                .map(RelativeFiniteBound::to_end_bound)
+        RelativeEndBound::Finite(finite_bound_position) => {
+            precise_rel_finite_bound_with_base_offset(finite_bound_position, precision, base)
+                .map(RelativeFiniteBoundPosition::to_end_bound)
         },
     }
 }

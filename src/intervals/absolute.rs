@@ -22,7 +22,7 @@ pub mod bounded_interval;
 pub mod emptiable_bound_pair;
 pub mod emptiable_interval;
 pub mod end_bound;
-pub mod finite_bound;
+pub mod finite_bound_position;
 pub mod half_bounded_interval;
 pub mod interval;
 pub mod start_bound;
@@ -61,7 +61,7 @@ pub use emptiable_interval::*;
 #[doc(inline)]
 pub use end_bound::*;
 #[doc(inline)]
-pub use finite_bound::*;
+pub use finite_bound_position::*;
 #[doc(inline)]
 pub use half_bounded_interval::*;
 #[doc(inline)]
@@ -79,17 +79,17 @@ pub use start_bound::*;
 /// ```
 /// # use std::error::Error;
 /// # use jiff::Timestamp;
-/// # use periodical::intervals::absolute::{AbsoluteFiniteBound, swap_absolute_bound_pair};
+/// # use periodical::intervals::absolute::{AbsoluteFiniteBoundPosition, swap_absolute_bound_pair};
 /// let start_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
 /// let end_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
 ///
-/// let mut start = AbsoluteFiniteBound::new(start_time).to_start_bound();
-/// let mut end = AbsoluteFiniteBound::new(end_time).to_end_bound();
+/// let mut start = AbsoluteFiniteBoundPosition::new(start_time).to_start_bound();
+/// let mut end = AbsoluteFiniteBoundPosition::new(end_time).to_end_bound();
 ///
 /// swap_absolute_bound_pair(&mut start, &mut end);
 ///
-/// assert_eq!(start, AbsoluteFiniteBound::new(end_time).to_start_bound());
-/// assert_eq!(end, AbsoluteFiniteBound::new(start_time).to_end_bound());
+/// assert_eq!(start, AbsoluteFiniteBoundPosition::new(end_time).to_start_bound());
+/// assert_eq!(end, AbsoluteFiniteBoundPosition::new(start_time).to_end_bound());
 /// # Ok::<(), Box<dyn Error>>(())
 /// ```
 pub fn swap_absolute_bound_pair(start: &mut AbsoluteStartBound, end: &mut AbsoluteEndBound) {
@@ -222,13 +222,13 @@ pub fn check_absolute_bound_pair_for_interval_creation(
 /// ```
 /// # use std::error::Error;
 /// # use jiff::Timestamp;
-/// # use periodical::intervals::absolute::{AbsoluteFiniteBound, prepare_absolute_bound_pair_for_interval_creation};
+/// # use periodical::intervals::absolute::{AbsoluteFiniteBoundPosition, prepare_absolute_bound_pair_for_interval_creation};
 /// let start_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
 /// let end_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
 ///
 /// // Warning: not in chronological order!
-/// let mut start = AbsoluteFiniteBound::new(start_time).to_start_bound();
-/// let mut end = AbsoluteFiniteBound::new(end_time).to_end_bound();
+/// let mut start = AbsoluteFiniteBoundPosition::new(start_time).to_start_bound();
+/// let mut end = AbsoluteFiniteBoundPosition::new(end_time).to_end_bound();
 ///
 /// let was_changed = prepare_absolute_bound_pair_for_interval_creation(&mut start, &mut end);
 ///

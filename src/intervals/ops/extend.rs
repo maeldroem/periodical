@@ -13,16 +13,16 @@
 //! ```
 //! # use std::error::Error;
 //! # use jiff::Zoned;
-//! # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+//! # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
 //! # use periodical::intervals::ops::Extensible;
 //! let first_interval = AbsoluteBoundPair::new(
-//!     AbsoluteFiniteBound::new(
+//!     AbsoluteFiniteBoundPosition::new(
 //!         "2025-01-01 08:00:00[Europe/Oslo]"
 //!             .parse::<Zoned>()?
 //!             .timestamp(),
 //!     )
 //!     .to_start_bound(),
-//!     AbsoluteFiniteBound::new(
+//!     AbsoluteFiniteBoundPosition::new(
 //!         "2025-01-01 12:00:00[Europe/Oslo]"
 //!             .parse::<Zoned>()?
 //!             .timestamp(),
@@ -31,13 +31,13 @@
 //! );
 //!
 //! let second_interval = AbsoluteBoundPair::new(
-//!     AbsoluteFiniteBound::new(
+//!     AbsoluteFiniteBoundPosition::new(
 //!         "2025-01-01 14:00:00[Europe/Oslo]"
 //!             .parse::<Zoned>()?
 //!             .timestamp(),
 //!     )
 //!     .to_start_bound(),
-//!     AbsoluteFiniteBound::new(
+//!     AbsoluteFiniteBoundPosition::new(
 //!         "2025-01-01 16:00:00[Europe/Oslo]"
 //!             .parse::<Zoned>()?
 //!             .timestamp(),
@@ -48,13 +48,13 @@
 //! assert_eq!(
 //!     first_interval.extend(&second_interval),
 //!     AbsoluteBoundPair::new(
-//!         AbsoluteFiniteBound::new(
+//!         AbsoluteFiniteBoundPosition::new(
 //!             "2025-01-01 08:00:00[Europe/Oslo]"
 //!                 .parse::<Zoned>()?
 //!                 .timestamp(),
 //!         )
 //!         .to_start_bound(),
-//!         AbsoluteFiniteBound::new(
+//!         AbsoluteFiniteBoundPosition::new(
 //!             "2025-01-01 16:00:00[Europe/Oslo]"
 //!                 .parse::<Zoned>()?
 //!                 .timestamp(),
@@ -124,16 +124,16 @@ pub trait Extensible<Rhs = Self> {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
     /// # use periodical::intervals::ops::Extensible;
     /// let first_interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 08:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
     ///     )
     ///     .to_start_bound(),
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 12:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
@@ -142,13 +142,13 @@ pub trait Extensible<Rhs = Self> {
     /// );
     ///
     /// let second_interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 14:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
     ///     )
     ///     .to_start_bound(),
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 16:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
@@ -159,13 +159,13 @@ pub trait Extensible<Rhs = Self> {
     /// assert_eq!(
     ///     first_interval.extend(&second_interval),
     ///     AbsoluteBoundPair::new(
-    ///         AbsoluteFiniteBound::new(
+    ///         AbsoluteFiniteBoundPosition::new(
     ///             "2025-01-01 08:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
     ///         )
     ///         .to_start_bound(),
-    ///         AbsoluteFiniteBound::new(
+    ///         AbsoluteFiniteBoundPosition::new(
     ///             "2025-01-01 16:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),

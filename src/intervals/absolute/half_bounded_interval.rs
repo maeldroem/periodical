@@ -21,7 +21,7 @@ use serde::{Deserialize, Serialize};
 use crate::intervals::absolute::{
     AbsoluteBoundPair,
     AbsoluteEndBound,
-    AbsoluteFiniteBound,
+    AbsoluteFiniteBoundPosition,
     AbsoluteInterval,
     AbsoluteStartBound,
     EmptiableAbsoluteInterval,
@@ -418,7 +418,7 @@ impl HasAbsoluteBoundPair for HalfBoundedAbsoluteInterval {
         match self.opening_direction {
             OpeningDirection::ToPast => AbsoluteStartBound::InfinitePast,
             OpeningDirection::ToFuture => {
-                AbsoluteFiniteBound::new_with_inclusivity(self.reference, self.reference_inclusivity).to_start_bound()
+                AbsoluteFiniteBoundPosition::new_with_inclusivity(self.reference, self.reference_inclusivity).to_start_bound()
             },
         }
     }
@@ -426,7 +426,7 @@ impl HasAbsoluteBoundPair for HalfBoundedAbsoluteInterval {
     fn abs_end(&self) -> AbsoluteEndBound {
         match self.opening_direction {
             OpeningDirection::ToPast => {
-                AbsoluteFiniteBound::new_with_inclusivity(self.reference, self.reference_inclusivity).to_end_bound()
+                AbsoluteFiniteBoundPosition::new_with_inclusivity(self.reference, self.reference_inclusivity).to_end_bound()
             },
             OpeningDirection::ToFuture => AbsoluteEndBound::InfiniteFuture,
         }
@@ -451,8 +451,8 @@ impl From<(Timestamp, BoundInclusivity, OpeningDirection)> for HalfBoundedAbsolu
     }
 }
 
-impl From<(AbsoluteFiniteBound, OpeningDirection)> for HalfBoundedAbsoluteInterval {
-    fn from((reference, opening_direction): (AbsoluteFiniteBound, OpeningDirection)) -> Self {
+impl From<(AbsoluteFiniteBoundPosition, OpeningDirection)> for HalfBoundedAbsoluteInterval {
+    fn from((reference, opening_direction): (AbsoluteFiniteBoundPosition, OpeningDirection)) -> Self {
         Self::new_with_inclusivity(reference.time(), reference.inclusivity(), opening_direction)
     }
 }

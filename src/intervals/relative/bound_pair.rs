@@ -87,13 +87,13 @@ impl RelativeBoundPair {
     ///
     /// ```
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBound};
+    /// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBoundPosition};
     /// // Start and end are not in chronological order!
     /// let start_offset = SignedDuration::from_hours(16);
     /// let end_offset = SignedDuration::from_hours(8);
     ///
-    /// let start = RelativeFiniteBound::new(start_offset).to_start_bound();
-    /// let end = RelativeFiniteBound::new(end_offset).to_end_bound();
+    /// let start = RelativeFiniteBoundPosition::new(start_offset).to_start_bound();
+    /// let end = RelativeFiniteBoundPosition::new(end_offset).to_end_bound();
     ///
     /// let bounds = RelativeBoundPair::unchecked_new(start, end);
     ///
@@ -117,13 +117,13 @@ impl RelativeBoundPair {
     ///
     /// ```
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBound};
+    /// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBoundPosition};
     /// // Start and end are not in chronological order!
     /// let start_offset = SignedDuration::from_hours(16);
     /// let end_offset = SignedDuration::from_hours(8);
     ///
-    /// let start = RelativeFiniteBound::new(start_offset).to_start_bound();
-    /// let end = RelativeFiniteBound::new(end_offset).to_end_bound();
+    /// let start = RelativeFiniteBoundPosition::new(start_offset).to_start_bound();
+    /// let end = RelativeFiniteBoundPosition::new(end_offset).to_end_bound();
     ///
     /// let bounds = RelativeBoundPair::new(start, end);
     ///
@@ -144,7 +144,7 @@ impl RelativeBoundPair {
     /// ```
     /// # use jiff::SignedDuration;
     /// # use periodical::intervals::meta::BoundInclusivity;
-    /// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBound};
+    /// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBoundPosition};
     /// let start = SignedDuration::from_hours(-5);
     /// let end = SignedDuration::from_hours(20);
     ///
@@ -152,11 +152,11 @@ impl RelativeBoundPair {
     ///
     /// assert_eq!(
     ///     bounds.start(),
-    ///     RelativeFiniteBound::new(start).to_start_bound(),
+    ///     RelativeFiniteBoundPosition::new(start).to_start_bound(),
     /// );
     /// assert_eq!(
     ///     bounds.end(),
-    ///     RelativeFiniteBound::new_with_inclusivity(end, BoundInclusivity::Exclusive,).to_end_bound(),
+    ///     RelativeFiniteBoundPosition::new_with_inclusivity(end, BoundInclusivity::Exclusive,).to_end_bound(),
     /// );
     /// ```
     #[must_use]
@@ -176,12 +176,12 @@ impl RelativeBoundPair {
     ///
     /// ```
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBound};
+    /// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBoundPosition};
     /// let start_offset = SignedDuration::from_hours(8);
     /// let end_offset = SignedDuration::from_hours(16);
     ///
-    /// let start = RelativeFiniteBound::new(start_offset).to_start_bound();
-    /// let end = RelativeFiniteBound::new(end_offset).to_end_bound();
+    /// let start = RelativeFiniteBoundPosition::new(start_offset).to_start_bound();
+    /// let end = RelativeFiniteBoundPosition::new(end_offset).to_end_bound();
     ///
     /// let bounds = RelativeBoundPair::new(start, end);
     ///
@@ -198,12 +198,12 @@ impl RelativeBoundPair {
     ///
     /// ```
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBound};
+    /// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBoundPosition};
     /// let start_offset = SignedDuration::from_hours(8);
     /// let end_offset = SignedDuration::from_hours(16);
     ///
-    /// let start = RelativeFiniteBound::new(start_offset).to_start_bound();
-    /// let end = RelativeFiniteBound::new(end_offset).to_end_bound();
+    /// let start = RelativeFiniteBoundPosition::new(start_offset).to_start_bound();
+    /// let end = RelativeFiniteBoundPosition::new(end_offset).to_end_bound();
     ///
     /// let bounds = RelativeBoundPair::new(start, end);
     ///
@@ -220,17 +220,17 @@ impl RelativeBoundPair {
     ///
     /// ```
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBound};
+    /// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBoundPosition};
     /// let start_offset = SignedDuration::from_hours(8);
     /// let end_offset = SignedDuration::from_hours(16);
     ///
-    /// let start = RelativeFiniteBound::new(start_offset).to_start_bound();
-    /// let end = RelativeFiniteBound::new(end_offset).to_end_bound();
+    /// let start = RelativeFiniteBoundPosition::new(start_offset).to_start_bound();
+    /// let end = RelativeFiniteBoundPosition::new(end_offset).to_end_bound();
     ///
     /// let mut bounds = RelativeBoundPair::new(start, end);
     ///
     /// let new_start_offset = SignedDuration::from_hours(18);
-    /// let new_start = RelativeFiniteBound::new(new_start_offset).to_start_bound();
+    /// let new_start = RelativeFiniteBoundPosition::new(new_start_offset).to_start_bound();
     ///
     /// // New start is past the end
     /// bounds.unchecked_set_start(new_start);
@@ -249,17 +249,17 @@ impl RelativeBoundPair {
     ///
     /// ```
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBound};
+    /// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBoundPosition};
     /// let start_offset = SignedDuration::from_hours(8);
     /// let end_offset = SignedDuration::from_hours(16);
     ///
-    /// let start = RelativeFiniteBound::new(start_offset).to_start_bound();
-    /// let end = RelativeFiniteBound::new(end_offset).to_end_bound();
+    /// let start = RelativeFiniteBoundPosition::new(start_offset).to_start_bound();
+    /// let end = RelativeFiniteBoundPosition::new(end_offset).to_end_bound();
     ///
     /// let mut bounds = RelativeBoundPair::new(start, end);
     ///
     /// let new_end_offset = SignedDuration::from_hours(6);
-    /// let new_end = RelativeFiniteBound::new(new_end_offset).to_end_bound();
+    /// let new_end = RelativeFiniteBoundPosition::new(new_end_offset).to_end_bound();
     ///
     /// // New end is before the start
     /// bounds.unchecked_set_end(new_end);
@@ -282,17 +282,17 @@ impl RelativeBoundPair {
     ///
     /// ```
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBound};
+    /// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBoundPosition};
     /// let start_offset = SignedDuration::from_hours(8);
     /// let end_offset = SignedDuration::from_hours(16);
     ///
-    /// let start = RelativeFiniteBound::new(start_offset).to_start_bound();
-    /// let end = RelativeFiniteBound::new(end_offset).to_end_bound();
+    /// let start = RelativeFiniteBoundPosition::new(start_offset).to_start_bound();
+    /// let end = RelativeFiniteBoundPosition::new(end_offset).to_end_bound();
     ///
     /// let mut bounds = RelativeBoundPair::new(start, end);
     ///
     /// let new_start_offset = SignedDuration::from_hours(18);
-    /// let new_start = RelativeFiniteBound::new(new_start_offset).to_start_bound();
+    /// let new_start = RelativeFiniteBoundPosition::new(new_start_offset).to_start_bound();
     ///
     /// // New start is past the end, and therefore gets ignored
     /// let was_successful = bounds.set_start(new_start);
@@ -321,17 +321,17 @@ impl RelativeBoundPair {
     ///
     /// ```
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBound};
+    /// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBoundPosition};
     /// let start_offset = SignedDuration::from_hours(8);
     /// let end_offset = SignedDuration::from_hours(16);
     ///
-    /// let start = RelativeFiniteBound::new(start_offset).to_start_bound();
-    /// let end = RelativeFiniteBound::new(end_offset).to_end_bound();
+    /// let start = RelativeFiniteBoundPosition::new(start_offset).to_start_bound();
+    /// let end = RelativeFiniteBoundPosition::new(end_offset).to_end_bound();
     ///
     /// let mut bounds = RelativeBoundPair::new(start, end);
     ///
     /// let new_end_offset = SignedDuration::from_hours(6);
-    /// let new_end = RelativeFiniteBound::new(new_end_offset).to_end_bound();
+    /// let new_end = RelativeFiniteBoundPosition::new(new_end_offset).to_end_bound();
     ///
     /// // New end is before the start, and therefore gets ignored
     /// let was_successful = bounds.set_end(new_end);

@@ -3,9 +3,9 @@ use std::sync::LazyLock;
 
 use jiff::{SignedDuration, Timestamp};
 
-use crate::intervals::absolute::{AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound};
+use crate::intervals::absolute::{AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBoundPosition, AbsoluteStartBound};
 use crate::intervals::meta::BoundInclusivity;
-use crate::intervals::relative::{RelativeBoundPair, RelativeEndBound, RelativeFiniteBound, RelativeStartBound};
+use crate::intervals::relative::{RelativeBoundPair, RelativeEndBound, RelativeFiniteBoundPosition, RelativeStartBound};
 
 type TestDataPairMap<T> = LazyLock<HashMap<&'static str, (T, T)>>;
 type FallibleTestDataPairMap<T, E> = LazyLock<Result<HashMap<&'static str, (T, T)>, E>>;
@@ -16,12 +16,12 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, jiff:
             "outside_before",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-04 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-04 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
             ),
         ),
@@ -29,12 +29,12 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, jiff:
             "outside_after",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-04 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-04 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
             ),
         ),
@@ -42,12 +42,12 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, jiff:
             "ends_on_start_incl_incl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
             ),
         ),
@@ -55,16 +55,16 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, jiff:
             "ends_on_start_incl_excl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
             ),
         ),
@@ -72,16 +72,16 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, jiff:
             "ends_on_start_excl_incl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
             ),
         ),
@@ -89,20 +89,20 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, jiff:
             "ends_on_start_excl_excl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
             ),
         ),
@@ -110,12 +110,12 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, jiff:
             "starts_on_end_incl_incl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
             ),
         ),
@@ -123,16 +123,16 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, jiff:
             "starts_on_end_incl_excl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
             ),
         ),
@@ -140,12 +140,12 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, jiff:
             "starts_on_end_excl_incl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -157,16 +157,16 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, jiff:
             "starts_on_end_excl_excl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -178,12 +178,12 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, jiff:
             "crosses_start",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-04 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-04 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
             ),
         ),
@@ -191,12 +191,12 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, jiff:
             "crosses_end",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-04 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-04 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
             ),
         ),
@@ -204,12 +204,12 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, jiff:
             "inside",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-04 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-04 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
             ),
         ),
@@ -217,12 +217,12 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, jiff:
             "inside_and_same_start_incl_incl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
             ),
         ),
@@ -230,16 +230,16 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, jiff:
             "inside_and_same_start_incl_excl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
             ),
         ),
@@ -247,16 +247,16 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, jiff:
             "inside_and_same_start_excl_incl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
             ),
         ),
@@ -264,20 +264,20 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, jiff:
             "inside_and_same_start_excl_excl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
             ),
         ),
@@ -285,12 +285,12 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, jiff:
             "inside_and_same_end_incl_incl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
             ),
         ),
@@ -298,12 +298,12 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, jiff:
             "inside_and_same_end_incl_excl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -315,16 +315,16 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, jiff:
             "inside_and_same_end_excl_incl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
             ),
         ),
@@ -332,16 +332,16 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, jiff:
             "inside_and_same_end_excl_excl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -353,12 +353,12 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, jiff:
             "equal_start_incl_incl_end_incl_incl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
             ),
         ),
@@ -366,12 +366,12 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, jiff:
             "equal_start_incl_incl_end_incl_excl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -383,16 +383,16 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, jiff:
             "equal_start_incl_incl_end_excl_incl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
             ),
         ),
@@ -400,16 +400,16 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, jiff:
             "equal_start_incl_incl_end_excl_excl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -421,16 +421,16 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, jiff:
             "equal_start_incl_excl_end_incl_incl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
             ),
         ),
@@ -438,16 +438,16 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, jiff:
             "equal_start_incl_excl_end_incl_excl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -459,20 +459,20 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, jiff:
             "equal_start_incl_excl_end_excl_incl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
             ),
         ),
@@ -480,20 +480,20 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, jiff:
             "equal_start_incl_excl_end_excl_excl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -505,16 +505,16 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, jiff:
             "equal_start_excl_incl_end_incl_incl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
             ),
         ),
@@ -522,16 +522,16 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, jiff:
             "equal_start_excl_incl_end_incl_excl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -543,20 +543,20 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, jiff:
             "equal_start_excl_incl_end_excl_incl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
             ),
         ),
@@ -564,20 +564,20 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, jiff:
             "equal_start_excl_incl_end_excl_excl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -589,20 +589,20 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, jiff:
             "equal_start_excl_excl_end_incl_incl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
             ),
         ),
@@ -610,20 +610,20 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, jiff:
             "equal_start_excl_excl_end_incl_excl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -635,24 +635,24 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, jiff:
             "equal_start_excl_excl_end_excl_incl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
             ),
         ),
@@ -660,24 +660,24 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, jiff:
             "equal_start_excl_excl_end_excl_excl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -689,12 +689,12 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, jiff:
             "contains_and_same_start_incl_incl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
             ),
         ),
@@ -702,16 +702,16 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, jiff:
             "contains_and_same_start_incl_excl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
             ),
         ),
@@ -719,16 +719,16 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, jiff:
             "contains_and_same_start_excl_incl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
             ),
         ),
@@ -736,20 +736,20 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, jiff:
             "contains_and_same_start_excl_excl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
             ),
         ),
@@ -757,12 +757,12 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, jiff:
             "contains_and_same_end_incl_incl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
             ),
         ),
@@ -770,12 +770,12 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, jiff:
             "contains_and_same_end_incl_excl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -787,16 +787,16 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, jiff:
             "contains_and_same_end_excl_incl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
             ),
         ),
@@ -804,16 +804,16 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, jiff:
             "contains_and_same_end_excl_excl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -825,12 +825,12 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, jiff:
             "contains",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-04 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-04 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
             ),
         ),
@@ -843,11 +843,11 @@ pub static BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, 
             "outside_before",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
                     AbsoluteEndBound::InfiniteFuture,
                 ),
             ),
@@ -856,12 +856,12 @@ pub static BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, 
             "outside_after",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
                     AbsoluteStartBound::InfinitePast,
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
             ),
         ),
@@ -869,11 +869,11 @@ pub static BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, 
             "ends_on_start_incl_incl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
                     AbsoluteEndBound::InfiniteFuture,
                 ),
             ),
@@ -882,11 +882,11 @@ pub static BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, 
             "ends_on_start_incl_excl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -899,15 +899,15 @@ pub static BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, 
             "ends_on_start_excl_incl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
                     AbsoluteEndBound::InfiniteFuture,
                 ),
             ),
@@ -916,15 +916,15 @@ pub static BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, 
             "ends_on_start_excl_excl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -937,12 +937,12 @@ pub static BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, 
             "starts_on_end_incl_incl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
                     AbsoluteStartBound::InfinitePast,
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
             ),
         ),
@@ -950,12 +950,12 @@ pub static BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, 
             "starts_on_end_incl_excl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
                     AbsoluteStartBound::InfinitePast,
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -967,16 +967,16 @@ pub static BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, 
             "starts_on_end_excl_incl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
                     AbsoluteStartBound::InfinitePast,
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
             ),
         ),
@@ -984,16 +984,16 @@ pub static BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, 
             "starts_on_end_excl_excl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
                     AbsoluteStartBound::InfinitePast,
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1005,11 +1005,11 @@ pub static BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, 
             "crosses_start",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
                     AbsoluteEndBound::InfiniteFuture,
                 ),
             ),
@@ -1018,12 +1018,12 @@ pub static BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, 
             "crosses_end",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
                     AbsoluteStartBound::InfinitePast,
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
             ),
         ),
@@ -1031,11 +1031,11 @@ pub static BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, 
             "inside_to_future",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
                     AbsoluteEndBound::InfiniteFuture,
                 ),
             ),
@@ -1044,12 +1044,12 @@ pub static BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, 
             "inside_to_past",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
                     AbsoluteStartBound::InfinitePast,
-                    AbsoluteFiniteBound::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
             ),
         ),
@@ -1057,11 +1057,11 @@ pub static BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, 
             "inside_and_same_start_incl_incl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
                     AbsoluteEndBound::InfiniteFuture,
                 ),
             ),
@@ -1070,11 +1070,11 @@ pub static BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, 
             "inside_and_same_start_incl_excl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1087,15 +1087,15 @@ pub static BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, 
             "inside_and_same_start_excl_incl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
                     AbsoluteEndBound::InfiniteFuture,
                 ),
             ),
@@ -1104,15 +1104,15 @@ pub static BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, 
             "inside_and_same_start_excl_excl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1125,12 +1125,12 @@ pub static BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, 
             "inside_and_same_end_incl_incl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
                     AbsoluteStartBound::InfinitePast,
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
             ),
         ),
@@ -1138,12 +1138,12 @@ pub static BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, 
             "inside_and_same_end_incl_excl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
                     AbsoluteStartBound::InfinitePast,
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1155,8 +1155,8 @@ pub static BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, 
             "inside_and_same_end_excl_incl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1164,7 +1164,7 @@ pub static BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, 
                 ),
                 AbsoluteBoundPair::new(
                     AbsoluteStartBound::InfinitePast,
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
             ),
         ),
@@ -1172,8 +1172,8 @@ pub static BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, 
             "inside_and_same_end_excl_excl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1181,7 +1181,7 @@ pub static BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, 
                 ),
                 AbsoluteBoundPair::new(
                     AbsoluteStartBound::InfinitePast,
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1199,11 +1199,11 @@ pub static HALF_BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, 
             (
                 AbsoluteBoundPair::new(
                     AbsoluteStartBound::InfinitePast,
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
             ),
         ),
@@ -1211,12 +1211,12 @@ pub static HALF_BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, 
             "outside_after",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
                     AbsoluteEndBound::InfiniteFuture,
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
             ),
         ),
@@ -1224,12 +1224,12 @@ pub static HALF_BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, 
             "starts_on_end_incl_incl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
                     AbsoluteEndBound::InfiniteFuture,
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
             ),
         ),
@@ -1237,12 +1237,12 @@ pub static HALF_BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, 
             "starts_on_end_incl_excl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
                     AbsoluteEndBound::InfiniteFuture,
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1254,7 +1254,7 @@ pub static HALF_BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, 
             "starts_on_end_excl_incl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1262,8 +1262,8 @@ pub static HALF_BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, 
                     AbsoluteEndBound::InfiniteFuture,
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
             ),
         ),
@@ -1271,7 +1271,7 @@ pub static HALF_BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, 
             "starts_on_end_excl_excl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1279,8 +1279,8 @@ pub static HALF_BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, 
                     AbsoluteEndBound::InfiniteFuture,
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1293,11 +1293,11 @@ pub static HALF_BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, 
             (
                 AbsoluteBoundPair::new(
                     AbsoluteStartBound::InfinitePast,
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
             ),
         ),
@@ -1306,15 +1306,15 @@ pub static HALF_BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, 
             (
                 AbsoluteBoundPair::new(
                     AbsoluteStartBound::InfinitePast,
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
             ),
         ),
@@ -1323,15 +1323,15 @@ pub static HALF_BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, 
             (
                 AbsoluteBoundPair::new(
                     AbsoluteStartBound::InfinitePast,
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
             ),
         ),
@@ -1340,19 +1340,19 @@ pub static HALF_BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, 
             (
                 AbsoluteBoundPair::new(
                     AbsoluteStartBound::InfinitePast,
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
             ),
         ),
@@ -1361,11 +1361,11 @@ pub static HALF_BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, 
             (
                 AbsoluteBoundPair::new(
                     AbsoluteStartBound::InfinitePast,
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
             ),
         ),
@@ -1373,12 +1373,12 @@ pub static HALF_BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, 
             "crosses_end",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
                     AbsoluteEndBound::InfiniteFuture,
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
             ),
         ),
@@ -1386,12 +1386,12 @@ pub static HALF_BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, 
             "contains_and_same_start_incl_incl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
                     AbsoluteEndBound::InfiniteFuture,
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
             ),
         ),
@@ -1399,16 +1399,16 @@ pub static HALF_BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, 
             "contains_and_same_start_incl_excl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
                     AbsoluteEndBound::InfiniteFuture,
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
             ),
         ),
@@ -1416,7 +1416,7 @@ pub static HALF_BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, 
             "contains_and_same_start_excl_incl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1424,8 +1424,8 @@ pub static HALF_BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, 
                     AbsoluteEndBound::InfiniteFuture,
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
             ),
         ),
@@ -1433,7 +1433,7 @@ pub static HALF_BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, 
             "contains_and_same_start_excl_excl",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1441,12 +1441,12 @@ pub static HALF_BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, 
                     AbsoluteEndBound::InfiniteFuture,
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
             ),
         ),
@@ -1455,11 +1455,11 @@ pub static HALF_BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, 
             (
                 AbsoluteBoundPair::new(
                     AbsoluteStartBound::InfinitePast,
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
             ),
         ),
@@ -1468,11 +1468,11 @@ pub static HALF_BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, 
             (
                 AbsoluteBoundPair::new(
                     AbsoluteStartBound::InfinitePast,
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1485,15 +1485,15 @@ pub static HALF_BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, 
             (
                 AbsoluteBoundPair::new(
                     AbsoluteStartBound::InfinitePast,
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
             ),
         ),
@@ -1502,15 +1502,15 @@ pub static HALF_BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, 
             (
                 AbsoluteBoundPair::new(
                     AbsoluteStartBound::InfinitePast,
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new_with_inclusivity(
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1522,12 +1522,12 @@ pub static HALF_BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, 
             "contains_to_future",
             (
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
                     AbsoluteEndBound::InfiniteFuture,
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
             ),
         ),
@@ -1536,11 +1536,11 @@ pub static HALF_BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundPair, 
             (
                 AbsoluteBoundPair::new(
                     AbsoluteStartBound::InfinitePast,
-                    AbsoluteFiniteBound::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsoluteBoundPair::new(
-                    AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
             ),
         ),
@@ -1555,10 +1555,10 @@ pub static HALF_BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundP
                 (
                     AbsoluteBoundPair::new(
                         AbsoluteStartBound::InfinitePast,
-                        AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                        AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                     ),
                     AbsoluteBoundPair::new(
-                        AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                        AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
                         AbsoluteEndBound::InfiniteFuture,
                     ),
                 ),
@@ -1567,12 +1567,12 @@ pub static HALF_BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundP
                 "outside_after",
                 (
                     AbsoluteBoundPair::new(
-                        AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                        AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
                         AbsoluteEndBound::InfiniteFuture,
                     ),
                     AbsoluteBoundPair::new(
                         AbsoluteStartBound::InfinitePast,
-                        AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                        AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                     ),
                 ),
             ),
@@ -1581,10 +1581,10 @@ pub static HALF_BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundP
                 (
                     AbsoluteBoundPair::new(
                         AbsoluteStartBound::InfinitePast,
-                        AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                        AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                     ),
                     AbsoluteBoundPair::new(
-                        AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                        AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
                         AbsoluteEndBound::InfiniteFuture,
                     ),
                 ),
@@ -1594,10 +1594,10 @@ pub static HALF_BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundP
                 (
                     AbsoluteBoundPair::new(
                         AbsoluteStartBound::InfinitePast,
-                        AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                        AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                     ),
                     AbsoluteBoundPair::new(
-                        AbsoluteFiniteBound::new_with_inclusivity(
+                        AbsoluteFiniteBoundPosition::new_with_inclusivity(
                             "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                             BoundInclusivity::Exclusive,
                         )
@@ -1611,14 +1611,14 @@ pub static HALF_BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundP
                 (
                     AbsoluteBoundPair::new(
                         AbsoluteStartBound::InfinitePast,
-                        AbsoluteFiniteBound::new_with_inclusivity(
+                        AbsoluteFiniteBoundPosition::new_with_inclusivity(
                             "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                             BoundInclusivity::Exclusive,
                         )
                         .to_end_bound(),
                     ),
                     AbsoluteBoundPair::new(
-                        AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                        AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
                         AbsoluteEndBound::InfiniteFuture,
                     ),
                 ),
@@ -1628,14 +1628,14 @@ pub static HALF_BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundP
                 (
                     AbsoluteBoundPair::new(
                         AbsoluteStartBound::InfinitePast,
-                        AbsoluteFiniteBound::new_with_inclusivity(
+                        AbsoluteFiniteBoundPosition::new_with_inclusivity(
                             "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                             BoundInclusivity::Exclusive,
                         )
                         .to_end_bound(),
                     ),
                     AbsoluteBoundPair::new(
-                        AbsoluteFiniteBound::new_with_inclusivity(
+                        AbsoluteFiniteBoundPosition::new_with_inclusivity(
                             "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                             BoundInclusivity::Exclusive,
                         )
@@ -1648,12 +1648,12 @@ pub static HALF_BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundP
                 "starts_on_end_incl_incl",
                 (
                     AbsoluteBoundPair::new(
-                        AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                        AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
                         AbsoluteEndBound::InfiniteFuture,
                     ),
                     AbsoluteBoundPair::new(
                         AbsoluteStartBound::InfinitePast,
-                        AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                        AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                     ),
                 ),
             ),
@@ -1661,12 +1661,12 @@ pub static HALF_BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundP
                 "starts_on_end_incl_excl",
                 (
                     AbsoluteBoundPair::new(
-                        AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                        AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
                         AbsoluteEndBound::InfiniteFuture,
                     ),
                     AbsoluteBoundPair::new(
                         AbsoluteStartBound::InfinitePast,
-                        AbsoluteFiniteBound::new_with_inclusivity(
+                        AbsoluteFiniteBoundPosition::new_with_inclusivity(
                             "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                             BoundInclusivity::Exclusive,
                         )
@@ -1678,7 +1678,7 @@ pub static HALF_BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundP
                 "starts_on_end_excl_incl",
                 (
                     AbsoluteBoundPair::new(
-                        AbsoluteFiniteBound::new_with_inclusivity(
+                        AbsoluteFiniteBoundPosition::new_with_inclusivity(
                             "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                             BoundInclusivity::Exclusive,
                         )
@@ -1687,7 +1687,7 @@ pub static HALF_BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundP
                     ),
                     AbsoluteBoundPair::new(
                         AbsoluteStartBound::InfinitePast,
-                        AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                        AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                     ),
                 ),
             ),
@@ -1695,7 +1695,7 @@ pub static HALF_BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundP
                 "starts_on_end_excl_excl",
                 (
                     AbsoluteBoundPair::new(
-                        AbsoluteFiniteBound::new_with_inclusivity(
+                        AbsoluteFiniteBoundPosition::new_with_inclusivity(
                             "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                             BoundInclusivity::Exclusive,
                         )
@@ -1704,7 +1704,7 @@ pub static HALF_BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundP
                     ),
                     AbsoluteBoundPair::new(
                         AbsoluteStartBound::InfinitePast,
-                        AbsoluteFiniteBound::new_with_inclusivity(
+                        AbsoluteFiniteBoundPosition::new_with_inclusivity(
                             "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                             BoundInclusivity::Exclusive,
                         )
@@ -1717,10 +1717,10 @@ pub static HALF_BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundP
                 (
                     AbsoluteBoundPair::new(
                         AbsoluteStartBound::InfinitePast,
-                        AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                        AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                     ),
                     AbsoluteBoundPair::new(
-                        AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                        AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
                         AbsoluteEndBound::InfiniteFuture,
                     ),
                 ),
@@ -1729,12 +1729,12 @@ pub static HALF_BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundP
                 "crosses_end",
                 (
                     AbsoluteBoundPair::new(
-                        AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                        AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
                         AbsoluteEndBound::InfiniteFuture,
                     ),
                     AbsoluteBoundPair::new(
                         AbsoluteStartBound::InfinitePast,
-                        AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                        AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                     ),
                 ),
             ),
@@ -1743,11 +1743,11 @@ pub static HALF_BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundP
                 (
                     AbsoluteBoundPair::new(
                         AbsoluteStartBound::InfinitePast,
-                        AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                        AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                     ),
                     AbsoluteBoundPair::new(
                         AbsoluteStartBound::InfinitePast,
-                        AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                        AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                     ),
                 ),
             ),
@@ -1755,11 +1755,11 @@ pub static HALF_BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundP
                 "inside_and_same_end",
                 (
                     AbsoluteBoundPair::new(
-                        AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                        AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
                         AbsoluteEndBound::InfiniteFuture,
                     ),
                     AbsoluteBoundPair::new(
-                        AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                        AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
                         AbsoluteEndBound::InfiniteFuture,
                     ),
                 ),
@@ -1768,11 +1768,11 @@ pub static HALF_BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundP
                 "equal_to_future_incl_incl",
                 (
                     AbsoluteBoundPair::new(
-                        AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                        AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
                         AbsoluteEndBound::InfiniteFuture,
                     ),
                     AbsoluteBoundPair::new(
-                        AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                        AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
                         AbsoluteEndBound::InfiniteFuture,
                     ),
                 ),
@@ -1781,11 +1781,11 @@ pub static HALF_BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundP
                 "equal_to_future_incl_excl",
                 (
                     AbsoluteBoundPair::new(
-                        AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                        AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
                         AbsoluteEndBound::InfiniteFuture,
                     ),
                     AbsoluteBoundPair::new(
-                        AbsoluteFiniteBound::new_with_inclusivity(
+                        AbsoluteFiniteBoundPosition::new_with_inclusivity(
                             "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                             BoundInclusivity::Exclusive,
                         )
@@ -1798,7 +1798,7 @@ pub static HALF_BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundP
                 "equal_to_future_excl_incl",
                 (
                     AbsoluteBoundPair::new(
-                        AbsoluteFiniteBound::new_with_inclusivity(
+                        AbsoluteFiniteBoundPosition::new_with_inclusivity(
                             "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                             BoundInclusivity::Exclusive,
                         )
@@ -1806,7 +1806,7 @@ pub static HALF_BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundP
                         AbsoluteEndBound::InfiniteFuture,
                     ),
                     AbsoluteBoundPair::new(
-                        AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                        AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
                         AbsoluteEndBound::InfiniteFuture,
                     ),
                 ),
@@ -1815,7 +1815,7 @@ pub static HALF_BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundP
                 "equal_to_future_excl_excl",
                 (
                     AbsoluteBoundPair::new(
-                        AbsoluteFiniteBound::new_with_inclusivity(
+                        AbsoluteFiniteBoundPosition::new_with_inclusivity(
                             "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                             BoundInclusivity::Exclusive,
                         )
@@ -1823,7 +1823,7 @@ pub static HALF_BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundP
                         AbsoluteEndBound::InfiniteFuture,
                     ),
                     AbsoluteBoundPair::new(
-                        AbsoluteFiniteBound::new_with_inclusivity(
+                        AbsoluteFiniteBoundPosition::new_with_inclusivity(
                             "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                             BoundInclusivity::Exclusive,
                         )
@@ -1837,11 +1837,11 @@ pub static HALF_BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundP
                 (
                     AbsoluteBoundPair::new(
                         AbsoluteStartBound::InfinitePast,
-                        AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                        AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                     ),
                     AbsoluteBoundPair::new(
                         AbsoluteStartBound::InfinitePast,
-                        AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                        AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                     ),
                 ),
             ),
@@ -1850,11 +1850,11 @@ pub static HALF_BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundP
                 (
                     AbsoluteBoundPair::new(
                         AbsoluteStartBound::InfinitePast,
-                        AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                        AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                     ),
                     AbsoluteBoundPair::new(
                         AbsoluteStartBound::InfinitePast,
-                        AbsoluteFiniteBound::new_with_inclusivity(
+                        AbsoluteFiniteBoundPosition::new_with_inclusivity(
                             "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                             BoundInclusivity::Exclusive,
                         )
@@ -1867,7 +1867,7 @@ pub static HALF_BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundP
                 (
                     AbsoluteBoundPair::new(
                         AbsoluteStartBound::InfinitePast,
-                        AbsoluteFiniteBound::new_with_inclusivity(
+                        AbsoluteFiniteBoundPosition::new_with_inclusivity(
                             "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                             BoundInclusivity::Exclusive,
                         )
@@ -1875,7 +1875,7 @@ pub static HALF_BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundP
                     ),
                     AbsoluteBoundPair::new(
                         AbsoluteStartBound::InfinitePast,
-                        AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                        AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                     ),
                 ),
             ),
@@ -1884,7 +1884,7 @@ pub static HALF_BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundP
                 (
                     AbsoluteBoundPair::new(
                         AbsoluteStartBound::InfinitePast,
-                        AbsoluteFiniteBound::new_with_inclusivity(
+                        AbsoluteFiniteBoundPosition::new_with_inclusivity(
                             "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                             BoundInclusivity::Exclusive,
                         )
@@ -1892,7 +1892,7 @@ pub static HALF_BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundP
                     ),
                     AbsoluteBoundPair::new(
                         AbsoluteStartBound::InfinitePast,
-                        AbsoluteFiniteBound::new_with_inclusivity(
+                        AbsoluteFiniteBoundPosition::new_with_inclusivity(
                             "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                             BoundInclusivity::Exclusive,
                         )
@@ -1905,11 +1905,11 @@ pub static HALF_BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundP
                 (
                     AbsoluteBoundPair::new(
                         AbsoluteStartBound::InfinitePast,
-                        AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                        AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                     ),
                     AbsoluteBoundPair::new(
                         AbsoluteStartBound::InfinitePast,
-                        AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                        AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                     ),
                 ),
             ),
@@ -1917,11 +1917,11 @@ pub static HALF_BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsoluteBoundP
                 "contains_and_same_end",
                 (
                     AbsoluteBoundPair::new(
-                        AbsoluteFiniteBound::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                        AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
                         AbsoluteEndBound::InfiniteFuture,
                     ),
                     AbsoluteBoundPair::new(
-                        AbsoluteFiniteBound::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                        AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
                         AbsoluteEndBound::InfiniteFuture,
                     ),
                 ),
@@ -1935,12 +1935,12 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLock::n
             "outside_before",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(3)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(4)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(4)).to_end_bound(),
                 ),
             ),
         ),
@@ -1948,12 +1948,12 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLock::n
             "outside_after",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(3)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(4)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(4)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
             ),
         ),
@@ -1961,12 +1961,12 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLock::n
             "ends_on_start_incl_incl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(3)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
                 ),
             ),
         ),
@@ -1974,16 +1974,16 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLock::n
             "ends_on_start_incl_excl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(3)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
                 ),
             ),
         ),
@@ -1991,16 +1991,16 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLock::n
             "ends_on_start_excl_incl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(3)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
                 ),
             ),
         ),
@@ -2008,20 +2008,20 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLock::n
             "ends_on_start_excl_excl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(3)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
                 ),
             ),
         ),
@@ -2029,12 +2029,12 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLock::n
             "starts_on_end_incl_incl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(3)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
             ),
         ),
@@ -2042,16 +2042,16 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLock::n
             "starts_on_end_incl_excl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(3)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
             ),
         ),
@@ -2059,12 +2059,12 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLock::n
             "starts_on_end_excl_incl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(3)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -2076,16 +2076,16 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLock::n
             "starts_on_end_excl_excl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(3)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -2097,12 +2097,12 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLock::n
             "crosses_start",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(3)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(4)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(4)).to_end_bound(),
                 ),
             ),
         ),
@@ -2110,12 +2110,12 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLock::n
             "crosses_end",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(4)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(4)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(3)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
                 ),
             ),
         ),
@@ -2123,12 +2123,12 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLock::n
             "inside",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(3)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(4)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(4)).to_end_bound(),
                 ),
             ),
         ),
@@ -2136,12 +2136,12 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLock::n
             "inside_and_same_start_incl_incl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(3)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
                 ),
             ),
         ),
@@ -2149,16 +2149,16 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLock::n
             "inside_and_same_start_incl_excl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(3)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
                 ),
             ),
         ),
@@ -2166,16 +2166,16 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLock::n
             "inside_and_same_start_excl_incl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(3)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
                 ),
             ),
         ),
@@ -2183,20 +2183,20 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLock::n
             "inside_and_same_start_excl_excl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(3)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
                 ),
             ),
         ),
@@ -2204,12 +2204,12 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLock::n
             "inside_and_same_end_incl_incl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(3)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(3)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
                 ),
             ),
         ),
@@ -2217,12 +2217,12 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLock::n
             "inside_and_same_end_incl_excl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(3)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(3),
                         BoundInclusivity::Exclusive,
                     )
@@ -2234,16 +2234,16 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLock::n
             "inside_and_same_end_excl_incl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(3),
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(3)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
                 ),
             ),
         ),
@@ -2251,16 +2251,16 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLock::n
             "inside_and_same_end_excl_excl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(3),
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(3),
                         BoundInclusivity::Exclusive,
                     )
@@ -2272,12 +2272,12 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLock::n
             "equal_start_incl_incl_end_incl_incl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
             ),
         ),
@@ -2285,12 +2285,12 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLock::n
             "equal_start_incl_incl_end_incl_excl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -2302,16 +2302,16 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLock::n
             "equal_start_incl_incl_end_excl_incl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
             ),
         ),
@@ -2319,16 +2319,16 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLock::n
             "equal_start_incl_incl_end_excl_excl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -2340,16 +2340,16 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLock::n
             "equal_start_incl_excl_end_incl_incl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
             ),
         ),
@@ -2357,16 +2357,16 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLock::n
             "equal_start_incl_excl_end_incl_excl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -2378,20 +2378,20 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLock::n
             "equal_start_incl_excl_end_excl_incl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
             ),
         ),
@@ -2399,20 +2399,20 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLock::n
             "equal_start_incl_excl_end_excl_excl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -2424,16 +2424,16 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLock::n
             "equal_start_excl_incl_end_incl_incl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
             ),
         ),
@@ -2441,16 +2441,16 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLock::n
             "equal_start_excl_incl_end_incl_excl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -2462,20 +2462,20 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLock::n
             "equal_start_excl_incl_end_excl_incl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
             ),
         ),
@@ -2483,20 +2483,20 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLock::n
             "equal_start_excl_incl_end_excl_excl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -2508,20 +2508,20 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLock::n
             "equal_start_excl_excl_end_incl_incl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
             ),
         ),
@@ -2529,20 +2529,20 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLock::n
             "equal_start_excl_excl_end_incl_excl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -2554,24 +2554,24 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLock::n
             "equal_start_excl_excl_end_excl_incl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
             ),
         ),
@@ -2579,24 +2579,24 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLock::n
             "equal_start_excl_excl_end_excl_excl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -2608,12 +2608,12 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLock::n
             "contains_and_same_start_incl_incl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(3)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
             ),
         ),
@@ -2621,16 +2621,16 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLock::n
             "contains_and_same_start_incl_excl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(3)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
             ),
         ),
@@ -2638,16 +2638,16 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLock::n
             "contains_and_same_start_excl_incl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(3)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
             ),
         ),
@@ -2655,20 +2655,20 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLock::n
             "contains_and_same_start_excl_excl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(3)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
             ),
         ),
@@ -2676,12 +2676,12 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLock::n
             "contains_and_same_end_incl_incl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(3)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(3)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
                 ),
             ),
         ),
@@ -2689,12 +2689,12 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLock::n
             "contains_and_same_end_incl_excl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(3)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(3),
                         BoundInclusivity::Exclusive,
                     )
@@ -2706,16 +2706,16 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLock::n
             "contains_and_same_end_excl_incl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(3),
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(3)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
                 ),
             ),
         ),
@@ -2723,16 +2723,16 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLock::n
             "contains_and_same_end_excl_excl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(3),
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(3),
                         BoundInclusivity::Exclusive,
                     )
@@ -2744,12 +2744,12 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLock::n
             "contains",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(4)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(4)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(3)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
                 ),
             ),
         ),
@@ -2762,11 +2762,11 @@ pub static BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLo
             "outside_before",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(3)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_start_bound(),
                     RelativeEndBound::InfiniteFuture,
                 ),
             ),
@@ -2775,12 +2775,12 @@ pub static BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLo
             "outside_after",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(3)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
                     RelativeStartBound::InfinitePast,
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
                 ),
             ),
         ),
@@ -2788,11 +2788,11 @@ pub static BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLo
             "ends_on_start_incl_incl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
                     RelativeEndBound::InfiniteFuture,
                 ),
             ),
@@ -2801,11 +2801,11 @@ pub static BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLo
             "ends_on_start_incl_excl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -2818,15 +2818,15 @@ pub static BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLo
             "ends_on_start_excl_incl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
                     RelativeEndBound::InfiniteFuture,
                 ),
             ),
@@ -2835,15 +2835,15 @@ pub static BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLo
             "ends_on_start_excl_excl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -2856,12 +2856,12 @@ pub static BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLo
             "starts_on_end_incl_incl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
                     RelativeStartBound::InfinitePast,
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
                 ),
             ),
         ),
@@ -2869,12 +2869,12 @@ pub static BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLo
             "starts_on_end_incl_excl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
                     RelativeStartBound::InfinitePast,
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -2886,16 +2886,16 @@ pub static BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLo
             "starts_on_end_excl_incl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
                     RelativeStartBound::InfinitePast,
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
                 ),
             ),
         ),
@@ -2903,16 +2903,16 @@ pub static BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLo
             "starts_on_end_excl_excl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
                     RelativeStartBound::InfinitePast,
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -2924,11 +2924,11 @@ pub static BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLo
             "crosses_start",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(3)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
                     RelativeEndBound::InfiniteFuture,
                 ),
             ),
@@ -2937,12 +2937,12 @@ pub static BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLo
             "crosses_end",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(3)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
                     RelativeStartBound::InfinitePast,
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
             ),
         ),
@@ -2950,11 +2950,11 @@ pub static BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLo
             "inside_to_future",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(3)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
                     RelativeEndBound::InfiniteFuture,
                 ),
             ),
@@ -2963,12 +2963,12 @@ pub static BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLo
             "inside_to_past",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
                     RelativeStartBound::InfinitePast,
-                    RelativeFiniteBound::new(SignedDuration::from_hours(3)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
                 ),
             ),
         ),
@@ -2976,11 +2976,11 @@ pub static BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLo
             "inside_and_same_start_incl_incl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
                     RelativeEndBound::InfiniteFuture,
                 ),
             ),
@@ -2989,11 +2989,11 @@ pub static BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLo
             "inside_and_same_start_incl_excl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -3006,15 +3006,15 @@ pub static BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLo
             "inside_and_same_start_excl_incl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
                     RelativeEndBound::InfiniteFuture,
                 ),
             ),
@@ -3023,15 +3023,15 @@ pub static BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLo
             "inside_and_same_start_excl_excl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -3044,12 +3044,12 @@ pub static BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLo
             "inside_and_same_end_incl_incl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
                     RelativeStartBound::InfinitePast,
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
             ),
         ),
@@ -3057,12 +3057,12 @@ pub static BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLo
             "inside_and_same_end_incl_excl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
                     RelativeStartBound::InfinitePast,
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -3074,8 +3074,8 @@ pub static BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLo
             "inside_and_same_end_excl_incl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -3083,7 +3083,7 @@ pub static BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLo
                 ),
                 RelativeBoundPair::new(
                     RelativeStartBound::InfinitePast,
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
             ),
         ),
@@ -3091,8 +3091,8 @@ pub static BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLo
             "inside_and_same_end_excl_excl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -3100,7 +3100,7 @@ pub static BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLo
                 ),
                 RelativeBoundPair::new(
                     RelativeStartBound::InfinitePast,
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -3118,11 +3118,11 @@ pub static HALF_BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLo
             (
                 RelativeBoundPair::new(
                     RelativeStartBound::InfinitePast,
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(3)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
                 ),
             ),
         ),
@@ -3130,12 +3130,12 @@ pub static HALF_BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLo
             "outside_after",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(3)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_start_bound(),
                     RelativeEndBound::InfiniteFuture,
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
             ),
         ),
@@ -3143,12 +3143,12 @@ pub static HALF_BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLo
             "starts_on_end_incl_incl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
                     RelativeEndBound::InfiniteFuture,
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
             ),
         ),
@@ -3156,12 +3156,12 @@ pub static HALF_BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLo
             "starts_on_end_incl_excl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
                     RelativeEndBound::InfiniteFuture,
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -3173,7 +3173,7 @@ pub static HALF_BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLo
             "starts_on_end_excl_incl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -3181,8 +3181,8 @@ pub static HALF_BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLo
                     RelativeEndBound::InfiniteFuture,
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
             ),
         ),
@@ -3190,7 +3190,7 @@ pub static HALF_BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLo
             "starts_on_end_excl_excl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -3198,8 +3198,8 @@ pub static HALF_BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLo
                     RelativeEndBound::InfiniteFuture,
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -3212,11 +3212,11 @@ pub static HALF_BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLo
             (
                 RelativeBoundPair::new(
                     RelativeStartBound::InfinitePast,
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
             ),
         ),
@@ -3225,15 +3225,15 @@ pub static HALF_BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLo
             (
                 RelativeBoundPair::new(
                     RelativeStartBound::InfinitePast,
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
             ),
         ),
@@ -3242,15 +3242,15 @@ pub static HALF_BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLo
             (
                 RelativeBoundPair::new(
                     RelativeStartBound::InfinitePast,
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
             ),
         ),
@@ -3259,19 +3259,19 @@ pub static HALF_BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLo
             (
                 RelativeBoundPair::new(
                     RelativeStartBound::InfinitePast,
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
             ),
         ),
@@ -3280,11 +3280,11 @@ pub static HALF_BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLo
             (
                 RelativeBoundPair::new(
                     RelativeStartBound::InfinitePast,
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(3)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
                 ),
             ),
         ),
@@ -3292,12 +3292,12 @@ pub static HALF_BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLo
             "crosses_end",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
                     RelativeEndBound::InfiniteFuture,
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(3)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
                 ),
             ),
         ),
@@ -3305,12 +3305,12 @@ pub static HALF_BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLo
             "contains_and_same_start_incl_incl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
                     RelativeEndBound::InfiniteFuture,
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
             ),
         ),
@@ -3318,16 +3318,16 @@ pub static HALF_BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLo
             "contains_and_same_start_incl_excl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
                     RelativeEndBound::InfiniteFuture,
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
             ),
         ),
@@ -3335,7 +3335,7 @@ pub static HALF_BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLo
             "contains_and_same_start_excl_incl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -3343,8 +3343,8 @@ pub static HALF_BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLo
                     RelativeEndBound::InfiniteFuture,
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
             ),
         ),
@@ -3352,7 +3352,7 @@ pub static HALF_BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLo
             "contains_and_same_start_excl_excl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -3360,12 +3360,12 @@ pub static HALF_BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLo
                     RelativeEndBound::InfiniteFuture,
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
             ),
         ),
@@ -3374,11 +3374,11 @@ pub static HALF_BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLo
             (
                 RelativeBoundPair::new(
                     RelativeStartBound::InfinitePast,
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
             ),
         ),
@@ -3387,11 +3387,11 @@ pub static HALF_BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLo
             (
                 RelativeBoundPair::new(
                     RelativeStartBound::InfinitePast,
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -3404,15 +3404,15 @@ pub static HALF_BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLo
             (
                 RelativeBoundPair::new(
                     RelativeStartBound::InfinitePast,
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
             ),
         ),
@@ -3421,15 +3421,15 @@ pub static HALF_BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLo
             (
                 RelativeBoundPair::new(
                     RelativeStartBound::InfinitePast,
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -3441,12 +3441,12 @@ pub static HALF_BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLo
             "contains_to_future",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
                     RelativeEndBound::InfiniteFuture,
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(3)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
                 ),
             ),
         ),
@@ -3455,11 +3455,11 @@ pub static HALF_BOUNDED_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = LazyLo
             (
                 RelativeBoundPair::new(
                     RelativeStartBound::InfinitePast,
-                    RelativeFiniteBound::new(SignedDuration::from_hours(3)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
             ),
         ),
@@ -3473,10 +3473,10 @@ pub static HALF_BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = L
             (
                 RelativeBoundPair::new(
                     RelativeStartBound::InfinitePast,
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
                     RelativeEndBound::InfiniteFuture,
                 ),
             ),
@@ -3485,12 +3485,12 @@ pub static HALF_BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = L
             "outside_after",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
                     RelativeEndBound::InfiniteFuture,
                 ),
                 RelativeBoundPair::new(
                     RelativeStartBound::InfinitePast,
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
                 ),
             ),
         ),
@@ -3499,10 +3499,10 @@ pub static HALF_BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = L
             (
                 RelativeBoundPair::new(
                     RelativeStartBound::InfinitePast,
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
                     RelativeEndBound::InfiniteFuture,
                 ),
             ),
@@ -3512,10 +3512,10 @@ pub static HALF_BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = L
             (
                 RelativeBoundPair::new(
                     RelativeStartBound::InfinitePast,
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -3529,14 +3529,14 @@ pub static HALF_BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = L
             (
                 RelativeBoundPair::new(
                     RelativeStartBound::InfinitePast,
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
                     RelativeEndBound::InfiniteFuture,
                 ),
             ),
@@ -3546,14 +3546,14 @@ pub static HALF_BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = L
             (
                 RelativeBoundPair::new(
                     RelativeStartBound::InfinitePast,
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -3566,12 +3566,12 @@ pub static HALF_BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = L
             "starts_on_end_incl_incl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
                     RelativeEndBound::InfiniteFuture,
                 ),
                 RelativeBoundPair::new(
                     RelativeStartBound::InfinitePast,
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
                 ),
             ),
         ),
@@ -3579,12 +3579,12 @@ pub static HALF_BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = L
             "starts_on_end_incl_excl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
                     RelativeEndBound::InfiniteFuture,
                 ),
                 RelativeBoundPair::new(
                     RelativeStartBound::InfinitePast,
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -3596,7 +3596,7 @@ pub static HALF_BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = L
             "starts_on_end_excl_incl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -3605,7 +3605,7 @@ pub static HALF_BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = L
                 ),
                 RelativeBoundPair::new(
                     RelativeStartBound::InfinitePast,
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
                 ),
             ),
         ),
@@ -3613,7 +3613,7 @@ pub static HALF_BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = L
             "starts_on_end_excl_excl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -3622,7 +3622,7 @@ pub static HALF_BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = L
                 ),
                 RelativeBoundPair::new(
                     RelativeStartBound::InfinitePast,
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -3635,10 +3635,10 @@ pub static HALF_BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = L
             (
                 RelativeBoundPair::new(
                     RelativeStartBound::InfinitePast,
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
                     RelativeEndBound::InfiniteFuture,
                 ),
             ),
@@ -3647,12 +3647,12 @@ pub static HALF_BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = L
             "crosses_end",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
                     RelativeEndBound::InfiniteFuture,
                 ),
                 RelativeBoundPair::new(
                     RelativeStartBound::InfinitePast,
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
             ),
         ),
@@ -3661,11 +3661,11 @@ pub static HALF_BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = L
             (
                 RelativeBoundPair::new(
                     RelativeStartBound::InfinitePast,
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
                     RelativeStartBound::InfinitePast,
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
             ),
         ),
@@ -3673,11 +3673,11 @@ pub static HALF_BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = L
             "inside_and_same_end",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
                     RelativeEndBound::InfiniteFuture,
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
                     RelativeEndBound::InfiniteFuture,
                 ),
             ),
@@ -3686,11 +3686,11 @@ pub static HALF_BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = L
             "equal_to_future_incl_incl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
                     RelativeEndBound::InfiniteFuture,
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
                     RelativeEndBound::InfiniteFuture,
                 ),
             ),
@@ -3699,11 +3699,11 @@ pub static HALF_BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = L
             "equal_to_future_incl_excl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
                     RelativeEndBound::InfiniteFuture,
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -3716,7 +3716,7 @@ pub static HALF_BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = L
             "equal_to_future_excl_incl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -3724,7 +3724,7 @@ pub static HALF_BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = L
                     RelativeEndBound::InfiniteFuture,
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
                     RelativeEndBound::InfiniteFuture,
                 ),
             ),
@@ -3733,7 +3733,7 @@ pub static HALF_BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = L
             "equal_to_future_excl_excl",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -3741,7 +3741,7 @@ pub static HALF_BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = L
                     RelativeEndBound::InfiniteFuture,
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -3755,11 +3755,11 @@ pub static HALF_BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = L
             (
                 RelativeBoundPair::new(
                     RelativeStartBound::InfinitePast,
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
                     RelativeStartBound::InfinitePast,
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
                 ),
             ),
         ),
@@ -3768,11 +3768,11 @@ pub static HALF_BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = L
             (
                 RelativeBoundPair::new(
                     RelativeStartBound::InfinitePast,
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
                     RelativeStartBound::InfinitePast,
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -3785,7 +3785,7 @@ pub static HALF_BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = L
             (
                 RelativeBoundPair::new(
                     RelativeStartBound::InfinitePast,
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -3793,7 +3793,7 @@ pub static HALF_BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = L
                 ),
                 RelativeBoundPair::new(
                     RelativeStartBound::InfinitePast,
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
                 ),
             ),
         ),
@@ -3802,7 +3802,7 @@ pub static HALF_BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = L
             (
                 RelativeBoundPair::new(
                     RelativeStartBound::InfinitePast,
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -3810,7 +3810,7 @@ pub static HALF_BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = L
                 ),
                 RelativeBoundPair::new(
                     RelativeStartBound::InfinitePast,
-                    RelativeFiniteBound::new_with_inclusivity(
+                    RelativeFiniteBoundPosition::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -3823,11 +3823,11 @@ pub static HALF_BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = L
             (
                 RelativeBoundPair::new(
                     RelativeStartBound::InfinitePast,
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
                 RelativeBoundPair::new(
                     RelativeStartBound::InfinitePast,
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_end_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
                 ),
             ),
         ),
@@ -3835,11 +3835,11 @@ pub static HALF_BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelativeBoundPair> = L
             "contains_and_same_end",
             (
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
                     RelativeEndBound::InfiniteFuture,
                 ),
                 RelativeBoundPair::new(
-                    RelativeFiniteBound::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
                     RelativeEndBound::InfiniteFuture,
                 ),
             ),

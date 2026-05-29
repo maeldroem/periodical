@@ -46,23 +46,23 @@ use crate::ops::{ComplementResult, SymmetricDifferenceResult};
 /// # use std::error::Error;
 /// # use jiff::Zoned;
 /// # use periodical::ops::SymmetricDifferenceResult;
-/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound, EmptiableAbsoluteBoundPair};
+/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition, EmptiableAbsoluteBoundPair};
 /// # use periodical::intervals::meta::BoundInclusivity;
 /// # use periodical::intervals::ops::set_ops::SymmetricallyDifferentiable;
 /// let first_interval = AbsoluteBoundPair::new(
-///     AbsoluteFiniteBound::new(
+///     AbsoluteFiniteBoundPosition::new(
 ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///     ).to_start_bound(),
-///     AbsoluteFiniteBound::new(
+///     AbsoluteFiniteBoundPosition::new(
 ///         "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///     ).to_end_bound(),
 /// );
 ///
 /// let second_interval = AbsoluteBoundPair::new(
-///     AbsoluteFiniteBound::new(
+///     AbsoluteFiniteBoundPosition::new(
 ///         "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///     ).to_start_bound(),
-///     AbsoluteFiniteBound::new(
+///     AbsoluteFiniteBoundPosition::new(
 ///         "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///     ).to_end_bound(),
 /// );
@@ -71,20 +71,20 @@ use crate::ops::{ComplementResult, SymmetricDifferenceResult};
 ///     first_interval.symmetrically_differentiate(&second_interval),
 ///     SymmetricDifferenceResult::Split(
 ///         EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::new(
-///             AbsoluteFiniteBound::new(
+///             AbsoluteFiniteBoundPosition::new(
 ///                 "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///             ).to_start_bound(),
-///             AbsoluteFiniteBound::new_with_inclusivity(
+///             AbsoluteFiniteBoundPosition::new_with_inclusivity(
 ///                 "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///                 BoundInclusivity::Exclusive,
 ///             ).to_end_bound(),
 ///         )),
 ///         EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::new(
-///             AbsoluteFiniteBound::new_with_inclusivity(
+///             AbsoluteFiniteBoundPosition::new_with_inclusivity(
 ///                 "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///                 BoundInclusivity::Exclusive,
 ///             ).to_start_bound(),
-///             AbsoluteFiniteBound::new(
+///             AbsoluteFiniteBoundPosition::new(
 ///                 "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///             ).to_end_bound(),
 ///         )),
@@ -99,22 +99,22 @@ use crate::ops::{ComplementResult, SymmetricDifferenceResult};
 /// # use std::error::Error;
 /// # use jiff::Zoned;
 /// # use periodical::ops::SymmetricDifferenceResult;
-/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound, EmptiableAbsoluteBoundPair};
+/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition, EmptiableAbsoluteBoundPair};
 /// # use periodical::intervals::ops::set_ops::SymmetricallyDifferentiable;
 /// let first_interval = AbsoluteBoundPair::new(
-///     AbsoluteFiniteBound::new(
+///     AbsoluteFiniteBoundPosition::new(
 ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///     ).to_start_bound(),
-///     AbsoluteFiniteBound::new(
+///     AbsoluteFiniteBoundPosition::new(
 ///         "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///     ).to_end_bound(),
 /// );
 ///
 /// let second_interval = AbsoluteBoundPair::new(
-///     AbsoluteFiniteBound::new(
+///     AbsoluteFiniteBoundPosition::new(
 ///         "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///     ).to_start_bound(),
-///     AbsoluteFiniteBound::new(
+///     AbsoluteFiniteBoundPosition::new(
 ///         "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///     ).to_end_bound(),
 /// );
@@ -138,23 +138,23 @@ pub trait SymmetricallyDifferentiable<Rhs = Self> {
     /// # use std::error::Error;
     /// # use jiff::Zoned;
     /// # use periodical::ops::SymmetricDifferenceResult;
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound, EmptiableAbsoluteBoundPair};
+    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition, EmptiableAbsoluteBoundPair};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::set_ops::SymmetricallyDifferentiable;
     /// let first_interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_start_bound(),
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_end_bound(),
     /// );
     ///
     /// let second_interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_start_bound(),
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_end_bound(),
     /// );
@@ -163,20 +163,20 @@ pub trait SymmetricallyDifferentiable<Rhs = Self> {
     ///     first_interval.symmetrically_differentiate(&second_interval),
     ///     SymmetricDifferenceResult::Split(
     ///         AbsoluteBoundPair::new(
-    ///             AbsoluteFiniteBound::new(
+    ///             AbsoluteFiniteBoundPosition::new(
     ///                 "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///             ).to_start_bound(),
-    ///             AbsoluteFiniteBound::new_with_inclusivity(
+    ///             AbsoluteFiniteBoundPosition::new_with_inclusivity(
     ///                 "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///                 BoundInclusivity::Exclusive,
     ///             ).to_end_bound(),
     ///         ).to_emptiable(),
     ///         AbsoluteBoundPair::new(
-    ///             AbsoluteFiniteBound::new_with_inclusivity(
+    ///             AbsoluteFiniteBoundPosition::new_with_inclusivity(
     ///                 "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///                 BoundInclusivity::Exclusive,
     ///             ).to_start_bound(),
-    ///             AbsoluteFiniteBound::new(
+    ///             AbsoluteFiniteBoundPosition::new(
     ///                 "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///             ).to_end_bound(),
     ///         ).to_emptiable(),
@@ -195,24 +195,24 @@ pub trait SymmetricallyDifferentiable<Rhs = Self> {
     /// # use std::error::Error;
     /// # use jiff::Zoned;
     /// # use periodical::ops::SymmetricDifferenceResult;
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound, EmptiableAbsoluteBoundPair};
+    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition, EmptiableAbsoluteBoundPair};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::overlap::{CanPositionOverlap, DisambiguatedOverlapPosition, OverlapRuleSet};
     /// # use periodical::intervals::ops::set_ops::SymmetricallyDifferentiable;
     /// let first_interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_start_bound(),
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_end_bound(),
     /// );
     ///
     /// let second_interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_start_bound(),
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsoluteFiniteBoundPosition::new(
     ///         "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_end_bound(),
     /// );
@@ -234,20 +234,20 @@ pub trait SymmetricallyDifferentiable<Rhs = Self> {
     ///     first_interval.symmetrically_differentiate_with(&second_interval, symmetric_difference_closure),
     ///     SymmetricDifferenceResult::Split(
     ///         AbsoluteBoundPair::new(
-    ///             AbsoluteFiniteBound::new(
+    ///             AbsoluteFiniteBoundPosition::new(
     ///                 "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///             ).to_start_bound(),
-    ///             AbsoluteFiniteBound::new_with_inclusivity(
+    ///             AbsoluteFiniteBoundPosition::new_with_inclusivity(
     ///                 "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///                 BoundInclusivity::Exclusive,
     ///             ).to_end_bound(),
     ///         ).to_emptiable(),
     ///         AbsoluteBoundPair::new(
-    ///             AbsoluteFiniteBound::new_with_inclusivity(
+    ///             AbsoluteFiniteBoundPosition::new_with_inclusivity(
     ///                 "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///                 BoundInclusivity::Exclusive,
     ///             ).to_start_bound(),
-    ///             AbsoluteFiniteBound::new(
+    ///             AbsoluteFiniteBoundPosition::new(
     ///                 "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///             ).to_end_bound(),
     ///         ).to_emptiable(),

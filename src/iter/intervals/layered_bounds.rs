@@ -14,7 +14,7 @@
 //! ```
 //! # use std::error::Error;
 //! # use jiff::Zoned;
-//! # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+//! # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
 //! # use periodical::intervals::meta::BoundInclusivity;
 //! # use periodical::iter::intervals::bounds::AbsoluteBoundsIteratorDispatcher;
 //! # use periodical::iter::intervals::layered_bounds::{
@@ -22,13 +22,13 @@
 //! # };
 //! let first_layer_intervals = [
 //!     AbsoluteBoundPair::new(
-//!         AbsoluteFiniteBound::new(
+//!         AbsoluteFiniteBoundPosition::new(
 //!             "2025-01-01 08:00:00[Europe/Oslo]"
 //!                 .parse::<Zoned>()?
 //!                 .timestamp(),
 //!         )
 //!         .to_start_bound(),
-//!         AbsoluteFiniteBound::new(
+//!         AbsoluteFiniteBoundPosition::new(
 //!             "2025-01-01 12:00:00[Europe/Oslo]"
 //!                 .parse::<Zoned>()?
 //!                 .timestamp(),
@@ -36,13 +36,13 @@
 //!         .to_end_bound(),
 //!     ),
 //!     AbsoluteBoundPair::new(
-//!         AbsoluteFiniteBound::new(
+//!         AbsoluteFiniteBoundPosition::new(
 //!             "2025-01-01 13:00:00[Europe/Oslo]"
 //!                 .parse::<Zoned>()?
 //!                 .timestamp(),
 //!         )
 //!         .to_start_bound(),
-//!         AbsoluteFiniteBound::new(
+//!         AbsoluteFiniteBoundPosition::new(
 //!             "2025-01-01 16:00:00[Europe/Oslo]"
 //!                 .parse::<Zoned>()?
 //!                 .timestamp(),
@@ -53,13 +53,13 @@
 //!
 //! let second_layer_intervals = [
 //!     AbsoluteBoundPair::new(
-//!         AbsoluteFiniteBound::new(
+//!         AbsoluteFiniteBoundPosition::new(
 //!             "2025-01-01 07:00:00[Europe/Oslo]"
 //!                 .parse::<Zoned>()?
 //!                 .timestamp(),
 //!         )
 //!         .to_start_bound(),
-//!         AbsoluteFiniteBound::new(
+//!         AbsoluteFiniteBoundPosition::new(
 //!             "2025-01-01 11:00:00[Europe/Oslo]"
 //!                 .parse::<Zoned>()?
 //!                 .timestamp(),
@@ -67,13 +67,13 @@
 //!         .to_end_bound(),
 //!     ),
 //!     AbsoluteBoundPair::new(
-//!         AbsoluteFiniteBound::new(
+//!         AbsoluteFiniteBoundPosition::new(
 //!             "2025-01-01 14:00:00[Europe/Oslo]"
 //!                 .parse::<Zoned>()?
 //!                 .timestamp(),
 //!         )
 //!         .to_start_bound(),
-//!         AbsoluteFiniteBound::new(
+//!         AbsoluteFiniteBoundPosition::new(
 //!             "2025-01-01 18:00:00[Europe/Oslo]"
 //!                 .parse::<Zoned>()?
 //!                 .timestamp(),
@@ -93,7 +93,7 @@
 //!             LayeredBoundsState::NoLayers,
 //!             LayeredBoundsState::SecondLayer,
 //!             Some(
-//!                 AbsoluteFiniteBound::new_with_inclusivity(
+//!                 AbsoluteFiniteBoundPosition::new_with_inclusivity(
 //!                     "2025-01-01 07:00:00[Europe/Oslo]"
 //!                         .parse::<Zoned>()?
 //!                         .timestamp(),
@@ -102,7 +102,7 @@
 //!                 .to_end_bound()
 //!             ),
 //!             Some(
-//!                 AbsoluteFiniteBound::new(
+//!                 AbsoluteFiniteBoundPosition::new(
 //!                     "2025-01-01 07:00:00[Europe/Oslo]"
 //!                         .parse::<Zoned>()?
 //!                         .timestamp(),
@@ -114,7 +114,7 @@
 //!             LayeredBoundsState::SecondLayer,
 //!             LayeredBoundsState::BothLayers,
 //!             Some(
-//!                 AbsoluteFiniteBound::new_with_inclusivity(
+//!                 AbsoluteFiniteBoundPosition::new_with_inclusivity(
 //!                     "2025-01-01 08:00:00[Europe/Oslo]"
 //!                         .parse::<Zoned>()?
 //!                         .timestamp(),
@@ -123,7 +123,7 @@
 //!                 .to_end_bound()
 //!             ),
 //!             Some(
-//!                 AbsoluteFiniteBound::new(
+//!                 AbsoluteFiniteBoundPosition::new(
 //!                     "2025-01-01 08:00:00[Europe/Oslo]"
 //!                         .parse::<Zoned>()?
 //!                         .timestamp(),
@@ -135,7 +135,7 @@
 //!             LayeredBoundsState::BothLayers,
 //!             LayeredBoundsState::FirstLayer,
 //!             Some(
-//!                 AbsoluteFiniteBound::new(
+//!                 AbsoluteFiniteBoundPosition::new(
 //!                     "2025-01-01 11:00:00[Europe/Oslo]"
 //!                         .parse::<Zoned>()?
 //!                         .timestamp(),
@@ -143,7 +143,7 @@
 //!                 .to_end_bound()
 //!             ),
 //!             Some(
-//!                 AbsoluteFiniteBound::new_with_inclusivity(
+//!                 AbsoluteFiniteBoundPosition::new_with_inclusivity(
 //!                     "2025-01-01 11:00:00[Europe/Oslo]"
 //!                         .parse::<Zoned>()?
 //!                         .timestamp(),
@@ -156,7 +156,7 @@
 //!             LayeredBoundsState::FirstLayer,
 //!             LayeredBoundsState::NoLayers,
 //!             Some(
-//!                 AbsoluteFiniteBound::new(
+//!                 AbsoluteFiniteBoundPosition::new(
 //!                     "2025-01-01 12:00:00[Europe/Oslo]"
 //!                         .parse::<Zoned>()?
 //!                         .timestamp(),
@@ -164,7 +164,7 @@
 //!                 .to_end_bound()
 //!             ),
 //!             Some(
-//!                 AbsoluteFiniteBound::new_with_inclusivity(
+//!                 AbsoluteFiniteBoundPosition::new_with_inclusivity(
 //!                     "2025-01-01 12:00:00[Europe/Oslo]"
 //!                         .parse::<Zoned>()?
 //!                         .timestamp(),
@@ -177,7 +177,7 @@
 //!             LayeredBoundsState::NoLayers,
 //!             LayeredBoundsState::FirstLayer,
 //!             Some(
-//!                 AbsoluteFiniteBound::new_with_inclusivity(
+//!                 AbsoluteFiniteBoundPosition::new_with_inclusivity(
 //!                     "2025-01-01 13:00:00[Europe/Oslo]"
 //!                         .parse::<Zoned>()?
 //!                         .timestamp(),
@@ -186,7 +186,7 @@
 //!                 .to_end_bound()
 //!             ),
 //!             Some(
-//!                 AbsoluteFiniteBound::new(
+//!                 AbsoluteFiniteBoundPosition::new(
 //!                     "2025-01-01 13:00:00[Europe/Oslo]"
 //!                         .parse::<Zoned>()?
 //!                         .timestamp(),
@@ -198,7 +198,7 @@
 //!             LayeredBoundsState::FirstLayer,
 //!             LayeredBoundsState::BothLayers,
 //!             Some(
-//!                 AbsoluteFiniteBound::new_with_inclusivity(
+//!                 AbsoluteFiniteBoundPosition::new_with_inclusivity(
 //!                     "2025-01-01 14:00:00[Europe/Oslo]"
 //!                         .parse::<Zoned>()?
 //!                         .timestamp(),
@@ -207,7 +207,7 @@
 //!                 .to_end_bound()
 //!             ),
 //!             Some(
-//!                 AbsoluteFiniteBound::new(
+//!                 AbsoluteFiniteBoundPosition::new(
 //!                     "2025-01-01 14:00:00[Europe/Oslo]"
 //!                         .parse::<Zoned>()?
 //!                         .timestamp(),
@@ -219,7 +219,7 @@
 //!             LayeredBoundsState::BothLayers,
 //!             LayeredBoundsState::SecondLayer,
 //!             Some(
-//!                 AbsoluteFiniteBound::new(
+//!                 AbsoluteFiniteBoundPosition::new(
 //!                     "2025-01-01 16:00:00[Europe/Oslo]"
 //!                         .parse::<Zoned>()?
 //!                         .timestamp(),
@@ -227,7 +227,7 @@
 //!                 .to_end_bound()
 //!             ),
 //!             Some(
-//!                 AbsoluteFiniteBound::new_with_inclusivity(
+//!                 AbsoluteFiniteBoundPosition::new_with_inclusivity(
 //!                     "2025-01-01 16:00:00[Europe/Oslo]"
 //!                         .parse::<Zoned>()?
 //!                         .timestamp(),
@@ -240,7 +240,7 @@
 //!             LayeredBoundsState::SecondLayer,
 //!             LayeredBoundsState::NoLayers,
 //!             Some(
-//!                 AbsoluteFiniteBound::new(
+//!                 AbsoluteFiniteBoundPosition::new(
 //!                     "2025-01-01 18:00:00[Europe/Oslo]"
 //!                         .parse::<Zoned>()?
 //!                         .timestamp(),
@@ -248,7 +248,7 @@
 //!                 .to_end_bound()
 //!             ),
 //!             Some(
-//!                 AbsoluteFiniteBound::new_with_inclusivity(
+//!                 AbsoluteFiniteBoundPosition::new_with_inclusivity(
 //!                     "2025-01-01 18:00:00[Europe/Oslo]"
 //!                         .parse::<Zoned>()?
 //!                         .timestamp(),

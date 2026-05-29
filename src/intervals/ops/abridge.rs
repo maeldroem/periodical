@@ -239,7 +239,7 @@ macro_rules! abridgable_impl {
 /// ```
 /// # use std::error::Error;
 /// # use jiff::Zoned;
-/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
 /// # use periodical::intervals::meta::BoundInclusivity;
 /// # use periodical::intervals::ops::abridge::Abridgable;
 /// let first_start_time = "2025-01-01 08:00:00[Europe/Oslo]"
@@ -250,8 +250,8 @@ macro_rules! abridgable_impl {
 ///     .timestamp();
 ///
 /// let first_interval = AbsoluteBoundPair::new(
-///     AbsoluteFiniteBound::new(first_start_time).to_start_bound(),
-///     AbsoluteFiniteBound::new(first_end_time).to_end_bound(),
+///     AbsoluteFiniteBoundPosition::new(first_start_time).to_start_bound(),
+///     AbsoluteFiniteBoundPosition::new(first_end_time).to_end_bound(),
 /// );
 ///
 /// let second_start_time = "2025-01-01 13:00:00[Europe/Oslo]"
@@ -262,8 +262,8 @@ macro_rules! abridgable_impl {
 ///     .timestamp();
 ///
 /// let second_interval = AbsoluteBoundPair::new(
-///     AbsoluteFiniteBound::new(second_start_time).to_start_bound(),
-///     AbsoluteFiniteBound::new(second_end_time).to_end_bound(),
+///     AbsoluteFiniteBoundPosition::new(second_start_time).to_start_bound(),
+///     AbsoluteFiniteBoundPosition::new(second_end_time).to_end_bound(),
 /// );
 ///
 /// let abridged_interval = first_interval.abridge(&second_interval);
@@ -278,8 +278,11 @@ macro_rules! abridgable_impl {
 ///         .bound()
 ///         .ok_or("Empty abridged interval")?
 ///         .start(),
-///     AbsoluteFiniteBound::new_with_inclusivity(first_end_time, BoundInclusivity::Exclusive,)
-///         .to_start_bound(),
+///     AbsoluteFiniteBoundPosition::new_with_inclusivity(
+///         first_end_time,
+///         BoundInclusivity::Exclusive,
+///     )
+///     .to_start_bound(),
 /// );
 /// assert_eq!(
 ///     abridged_interval
@@ -287,8 +290,11 @@ macro_rules! abridgable_impl {
 ///         .bound()
 ///         .ok_or("Empty abridged interval")?
 ///         .end(),
-///     AbsoluteFiniteBound::new_with_inclusivity(second_start_time, BoundInclusivity::Exclusive,)
-///         .to_end_bound(),
+///     AbsoluteFiniteBoundPosition::new_with_inclusivity(
+///         second_start_time,
+///         BoundInclusivity::Exclusive,
+///     )
+///     .to_end_bound(),
 /// );
 /// # Ok::<(), Box<dyn Error>>(())
 /// ```
@@ -298,7 +304,7 @@ macro_rules! abridgable_impl {
 /// ```
 /// # use std::error::Error;
 /// # use jiff::Zoned;
-/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
 /// # use periodical::intervals::meta::BoundInclusivity;
 /// # use periodical::intervals::ops::abridge::Abridgable;
 /// let first_start_time = "2025-01-01 08:00:00[Europe/Oslo]"
@@ -309,8 +315,8 @@ macro_rules! abridgable_impl {
 ///     .timestamp();
 ///
 /// let first_interval = AbsoluteBoundPair::new(
-///     AbsoluteFiniteBound::new(first_start_time).to_start_bound(),
-///     AbsoluteFiniteBound::new(first_end_time).to_end_bound(),
+///     AbsoluteFiniteBoundPosition::new(first_start_time).to_start_bound(),
+///     AbsoluteFiniteBoundPosition::new(first_end_time).to_end_bound(),
 /// );
 ///
 /// let second_start_time = "2025-01-01 11:00:00[Europe/Oslo]"
@@ -321,8 +327,8 @@ macro_rules! abridgable_impl {
 ///     .timestamp();
 ///
 /// let second_interval = AbsoluteBoundPair::new(
-///     AbsoluteFiniteBound::new(second_start_time).to_start_bound(),
-///     AbsoluteFiniteBound::new(second_end_time).to_end_bound(),
+///     AbsoluteFiniteBoundPosition::new(second_start_time).to_start_bound(),
+///     AbsoluteFiniteBoundPosition::new(second_end_time).to_end_bound(),
 /// );
 ///
 /// let abridged_interval = first_interval.abridge(&second_interval);
@@ -337,8 +343,11 @@ macro_rules! abridgable_impl {
 ///         .bound()
 ///         .ok_or("Empty abridged interval")?
 ///         .start(),
-///     AbsoluteFiniteBound::new_with_inclusivity(second_start_time, BoundInclusivity::Inclusive,)
-///         .to_start_bound(),
+///     AbsoluteFiniteBoundPosition::new_with_inclusivity(
+///         second_start_time,
+///         BoundInclusivity::Inclusive,
+///     )
+///     .to_start_bound(),
 /// );
 /// assert_eq!(
 ///     abridged_interval
@@ -346,8 +355,11 @@ macro_rules! abridgable_impl {
 ///         .bound()
 ///         .ok_or("Empty abridged interval")?
 ///         .end(),
-///     AbsoluteFiniteBound::new_with_inclusivity(first_end_time, BoundInclusivity::Inclusive,)
-///         .to_end_bound(),
+///     AbsoluteFiniteBoundPosition::new_with_inclusivity(
+///         first_end_time,
+///         BoundInclusivity::Inclusive,
+///     )
+///     .to_end_bound(),
 /// );
 /// # Ok::<(), Box<dyn Error>>(())
 /// ```
@@ -357,26 +369,26 @@ macro_rules! abridgable_impl {
 /// ```
 /// # use std::error::Error;
 /// # use jiff::Zoned;
-/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound, EmptiableAbsoluteBoundPair};
+/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition, EmptiableAbsoluteBoundPair};
 /// # use periodical::intervals::meta::BoundInclusivity;
 /// # use periodical::intervals::ops::abridge::Abridgable;
 /// let first_start_time = "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp();
 /// let first_end_time = "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp();
 ///
 /// let first_interval = AbsoluteBoundPair::new(
-///     AbsoluteFiniteBound::new(first_start_time).to_start_bound(),
-///     AbsoluteFiniteBound::new(first_end_time).to_end_bound(),
+///     AbsoluteFiniteBoundPosition::new(first_start_time).to_start_bound(),
+///     AbsoluteFiniteBoundPosition::new(first_end_time).to_end_bound(),
 /// );
 ///
 /// let second_start_time = "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp();
 /// let second_end_time = "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp();
 ///
 /// let second_interval = AbsoluteBoundPair::new(
-///     AbsoluteFiniteBound::new_with_inclusivity(
+///     AbsoluteFiniteBoundPosition::new_with_inclusivity(
 ///         second_start_time,
 ///         BoundInclusivity::Exclusive,
 ///     ).to_start_bound(),
-///     AbsoluteFiniteBound::new(second_end_time).to_end_bound(),
+///     AbsoluteFiniteBoundPosition::new(second_end_time).to_end_bound(),
 /// );
 ///
 /// let abridged_interval = first_interval.abridge(&second_interval);

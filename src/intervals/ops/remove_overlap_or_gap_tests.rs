@@ -6,7 +6,7 @@ use super::remove_overlap_or_gap::*;
 use crate::intervals::absolute::{
     AbsoluteBoundPair,
     AbsoluteEndBound,
-    AbsoluteFiniteBound,
+    AbsoluteFiniteBoundPosition,
     AbsoluteInterval,
     AbsoluteStartBound,
     EmptiableAbsoluteBoundPair,
@@ -105,21 +105,21 @@ mod remove_overlap_or_gap {
     fn gap_between_bounded() -> Result<(), Box<dyn Error>> {
         assert_eq!(
             AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                     .to_start_bound(),
-                AbsoluteFiniteBound::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                AbsoluteFiniteBoundPosition::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                     .to_end_bound(),
             )
             .remove_overlap_or_gap(&AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new("2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                AbsoluteFiniteBoundPosition::new("2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                     .to_start_bound(),
-                AbsoluteFiniteBound::new("2025-01-04 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                AbsoluteFiniteBoundPosition::new("2025-01-04 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                     .to_end_bound(),
             )),
             OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                     .to_start_bound(),
-                AbsoluteFiniteBound::new_with_inclusivity(
+                AbsoluteFiniteBoundPosition::new_with_inclusivity(
                     "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                 )
@@ -134,21 +134,21 @@ mod remove_overlap_or_gap {
     fn overlap_between_bounded() -> Result<(), Box<dyn Error>> {
         assert_eq!(
             AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                     .to_start_bound(),
-                AbsoluteFiniteBound::new("2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                AbsoluteFiniteBoundPosition::new("2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                     .to_end_bound(),
             )
             .remove_overlap_or_gap(&AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                AbsoluteFiniteBoundPosition::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                     .to_start_bound(),
-                AbsoluteFiniteBound::new("2025-01-04 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                AbsoluteFiniteBoundPosition::new("2025-01-04 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                     .to_end_bound(),
             )),
             OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                     .to_start_bound(),
-                AbsoluteFiniteBound::new_with_inclusivity(
+                AbsoluteFiniteBoundPosition::new_with_inclusivity(
                     "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                 )
@@ -163,36 +163,36 @@ mod remove_overlap_or_gap {
     fn bounded_adjacent_inclusive_inclusive() -> Result<(), Box<dyn Error>> {
         assert_eq!(
             AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new_with_inclusivity(
+                AbsoluteFiniteBoundPosition::new_with_inclusivity(
                     "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Inclusive,
                 )
                 .to_start_bound(),
-                AbsoluteFiniteBound::new_with_inclusivity(
+                AbsoluteFiniteBoundPosition::new_with_inclusivity(
                     "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Inclusive,
                 )
                 .to_end_bound(),
             )
             .remove_overlap_or_gap(&AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new_with_inclusivity(
+                AbsoluteFiniteBoundPosition::new_with_inclusivity(
                     "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Inclusive,
                 )
                 .to_start_bound(),
-                AbsoluteFiniteBound::new_with_inclusivity(
+                AbsoluteFiniteBoundPosition::new_with_inclusivity(
                     "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Inclusive,
                 )
                 .to_end_bound(),
             )),
             OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new_with_inclusivity(
+                AbsoluteFiniteBoundPosition::new_with_inclusivity(
                     "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Inclusive,
                 )
                 .to_start_bound(),
-                AbsoluteFiniteBound::new_with_inclusivity(
+                AbsoluteFiniteBoundPosition::new_with_inclusivity(
                     "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                 )
@@ -207,36 +207,36 @@ mod remove_overlap_or_gap {
     fn bounded_adjacent_inclusive_exclusive() -> Result<(), Box<dyn Error>> {
         assert_eq!(
             AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new_with_inclusivity(
+                AbsoluteFiniteBoundPosition::new_with_inclusivity(
                     "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Inclusive,
                 )
                 .to_start_bound(),
-                AbsoluteFiniteBound::new_with_inclusivity(
+                AbsoluteFiniteBoundPosition::new_with_inclusivity(
                     "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Inclusive,
                 )
                 .to_end_bound(),
             )
             .remove_overlap_or_gap(&AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new_with_inclusivity(
+                AbsoluteFiniteBoundPosition::new_with_inclusivity(
                     "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                 )
                 .to_start_bound(),
-                AbsoluteFiniteBound::new_with_inclusivity(
+                AbsoluteFiniteBoundPosition::new_with_inclusivity(
                     "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Inclusive,
                 )
                 .to_end_bound(),
             )),
             OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new_with_inclusivity(
+                AbsoluteFiniteBoundPosition::new_with_inclusivity(
                     "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Inclusive,
                 )
                 .to_start_bound(),
-                AbsoluteFiniteBound::new_with_inclusivity(
+                AbsoluteFiniteBoundPosition::new_with_inclusivity(
                     "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Inclusive,
                 )
@@ -251,36 +251,36 @@ mod remove_overlap_or_gap {
     fn bounded_adjacent_exclusive_inclusive() -> Result<(), Box<dyn Error>> {
         assert_eq!(
             AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new_with_inclusivity(
+                AbsoluteFiniteBoundPosition::new_with_inclusivity(
                     "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Inclusive,
                 )
                 .to_start_bound(),
-                AbsoluteFiniteBound::new_with_inclusivity(
+                AbsoluteFiniteBoundPosition::new_with_inclusivity(
                     "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                 )
                 .to_end_bound(),
             )
             .remove_overlap_or_gap(&AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new_with_inclusivity(
+                AbsoluteFiniteBoundPosition::new_with_inclusivity(
                     "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Inclusive,
                 )
                 .to_start_bound(),
-                AbsoluteFiniteBound::new_with_inclusivity(
+                AbsoluteFiniteBoundPosition::new_with_inclusivity(
                     "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Inclusive,
                 )
                 .to_end_bound(),
             )),
             OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new_with_inclusivity(
+                AbsoluteFiniteBoundPosition::new_with_inclusivity(
                     "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Inclusive,
                 )
                 .to_start_bound(),
-                AbsoluteFiniteBound::new_with_inclusivity(
+                AbsoluteFiniteBoundPosition::new_with_inclusivity(
                     "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                 )
@@ -295,36 +295,36 @@ mod remove_overlap_or_gap {
     fn bounded_adjacent_exclusive_exclusive() -> Result<(), Box<dyn Error>> {
         assert_eq!(
             AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new_with_inclusivity(
+                AbsoluteFiniteBoundPosition::new_with_inclusivity(
                     "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Inclusive,
                 )
                 .to_start_bound(),
-                AbsoluteFiniteBound::new_with_inclusivity(
+                AbsoluteFiniteBoundPosition::new_with_inclusivity(
                     "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                 )
                 .to_end_bound(),
             )
             .remove_overlap_or_gap(&AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new_with_inclusivity(
+                AbsoluteFiniteBoundPosition::new_with_inclusivity(
                     "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                 )
                 .to_start_bound(),
-                AbsoluteFiniteBound::new_with_inclusivity(
+                AbsoluteFiniteBoundPosition::new_with_inclusivity(
                     "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Inclusive,
                 )
                 .to_end_bound(),
             )),
             OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new_with_inclusivity(
+                AbsoluteFiniteBoundPosition::new_with_inclusivity(
                     "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Inclusive,
                 )
                 .to_start_bound(),
-                AbsoluteFiniteBound::new_with_inclusivity(
+                AbsoluteFiniteBoundPosition::new_with_inclusivity(
                     "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Inclusive,
                 )
@@ -339,12 +339,12 @@ mod remove_overlap_or_gap {
     fn bounded_on_unbounded() -> Result<(), Box<dyn Error>> {
         assert_eq!(
             AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new_with_inclusivity(
+                AbsoluteFiniteBoundPosition::new_with_inclusivity(
                     "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                 )
                 .to_start_bound(),
-                AbsoluteFiniteBound::new_with_inclusivity(
+                AbsoluteFiniteBoundPosition::new_with_inclusivity(
                     "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Inclusive,
                 )
@@ -361,12 +361,12 @@ mod remove_overlap_or_gap {
     fn unbounded_on_bounded() -> Result<(), Box<dyn Error>> {
         assert_eq!(
             UnboundedInterval.remove_overlap_or_gap(&AbsoluteBoundPair::new(
-                AbsoluteFiniteBound::new_with_inclusivity(
+                AbsoluteFiniteBoundPosition::new_with_inclusivity(
                     "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                 )
                 .to_start_bound(),
-                AbsoluteFiniteBound::new_with_inclusivity(
+                AbsoluteFiniteBoundPosition::new_with_inclusivity(
                     "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Inclusive,
                 )

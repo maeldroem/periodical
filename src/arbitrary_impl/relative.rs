@@ -10,11 +10,11 @@ use crate::intervals::relative::{
     HalfBoundedRelativeInterval,
     RelativeBoundPair,
     RelativeEndBound,
-    RelativeFiniteBound,
+    RelativeFiniteBoundPosition,
     RelativeStartBound,
 };
 
-impl<'a> Arbitrary<'a> for RelativeFiniteBound {
+impl<'a> Arbitrary<'a> for RelativeFiniteBoundPosition {
     fn arbitrary(u: &mut Unstructured<'a>) -> arbitrary::Result<Self> {
         let signed_duration_range = SignedDuration::MIN.as_nanos()..=SignedDuration::MAX.as_nanos();
         let signed_duration = SignedDuration::try_from_nanos_i128(u.int_in_range(signed_duration_range)?)
