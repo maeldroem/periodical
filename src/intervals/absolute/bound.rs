@@ -12,7 +12,8 @@ use arbitrary::Arbitrary;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use crate::intervals::absolute::{AbsoluteEndBound, AbsoluteStartBound};
+use crate::intervals::absolute::{AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound};
+use crate::intervals::meta::{BoundExtremality, HasBoundExtremality};
 
 /// Enum for absolute start and end bounds
 ///
@@ -187,6 +188,15 @@ impl AbsoluteBound {
     }
 }
 
+impl HasBoundExtremality for AbsoluteBound {
+    fn bound_extremality(&self) -> BoundExtremality {
+        match self {
+            Self::Start(_) => BoundExtremality::Start,
+            Self::End(_) => BoundExtremality::End,
+        }
+    }
+}
+
 impl PartialEq for AbsoluteBound {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
@@ -250,5 +260,14 @@ impl From<AbsoluteStartBound> for AbsoluteBound {
 impl From<AbsoluteEndBound> for AbsoluteBound {
     fn from(value: AbsoluteEndBound) -> Self {
         AbsoluteBound::End(value)
+    }
+}
+
+impl From<(AbsoluteFiniteBound, BoundExtremality)> for AbsoluteBound {
+    fn from((bound, extremality): (AbsoluteFiniteBound, BoundExtremality)) -> Self {
+        match extremality {
+            BoundExtremality::Start => Self::from(bound.to_start_bound()),
+            BoundExtremality::End => Self::from(bound.to_end_bound()),
+        }
     }
 }

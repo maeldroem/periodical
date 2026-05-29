@@ -49,6 +49,10 @@ Updated previous tests and created more tests for covering all the work so far.
 - Adopted policy of no generic implementations for binary operations, "no binary operation generic impl policy"
 - Adopted "no binary operation over-compatibility impl policy"
 - Added missing conversion from finite bounds for bounded and half-bounded intervals
+- Added `BoundExtremality` to represent bound extremality
+- Added and implemented on relevant types `HasBoundExtremality` to return a bound's extremality
+- Added conversions from `(*FiniteBound, BoundExtremality)` to `*Bound`
+- Added `HasBoundExtremality` to prelude
 
 ## Changed
 

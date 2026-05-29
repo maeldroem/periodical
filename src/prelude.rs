@@ -14,7 +14,14 @@ pub use crate::intervals::absolute::{
     HasAbsoluteBoundPair,
     HasEmptiableAbsoluteBoundPair,
 };
-pub use crate::intervals::meta::{HasBoundInclusivity, HasDuration, HasOpenness, HasRelativity, IsEmpty};
+pub use crate::intervals::meta::{
+    HasBoundExtremality,
+    HasBoundInclusivity,
+    HasDuration,
+    HasOpenness,
+    HasRelativity,
+    IsEmpty,
+};
 pub use crate::intervals::ops::abridge::Abridgable;
 pub use crate::intervals::ops::bound_containment::CanPositionBoundContainment;
 pub use crate::intervals::ops::bound_ord::PartialBoundOrd;
