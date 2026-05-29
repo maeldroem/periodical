@@ -603,3 +603,36 @@ pub trait IsEmpty {
     /// Returns whether the interval is empty
     fn is_empty(&self) -> bool;
 }
+
+/// Bound extremality — start or end
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum BoundExtremality {
+    Start,
+    End,
+}
+
+impl BoundExtremality {
+    /// Returns the opposite bound extremality
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use periodical::intervals::meta::BoundExtremality;
+    /// assert_eq!(BoundExtremality::Start.opposite(), BoundExtremality::End);
+    /// assert_eq!(BoundExtremality::End.opposite(), BoundExtremality::Start);
+    /// ```
+    #[must_use]
+    pub fn opposite(self) -> Self {
+        match self {
+            Self::Start => Self::End,
+            Self::End => Self::Start,
+        }
+    }
+}
+
+/// Capacity of a bound to have an associated extreme (start/end)
+pub trait HasBoundExtremality {
+    /// Returns the associated [`BoundExtremality`]
+    #[must_use]
+    fn bound_extremality(&self) -> BoundExtremality;
+}

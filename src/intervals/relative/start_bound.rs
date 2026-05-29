@@ -16,7 +16,7 @@ use jiff::SignedDuration;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
+use crate::intervals::meta::{BoundExtremality, BoundInclusivity, HasBoundExtremality, HasBoundInclusivity};
 use crate::intervals::ops::bound_overlap_ambiguity::{
     BoundOverlapAmbiguity,
     BoundOverlapDisambiguationRuleSet,
@@ -171,6 +171,12 @@ impl RelativeStartBound {
             ),
             Self::InfinitePast => None,
         }
+    }
+}
+
+impl HasBoundExtremality for RelativeStartBound {
+    fn bound_extremality(&self) -> BoundExtremality {
+        BoundExtremality::Start
     }
 }
 
