@@ -493,23 +493,23 @@ where
 }
 
 pub trait BoundOrd: BoundEq + BoundPartialOrd {
-    fn cmp(&self, other: &Self) -> BoundOrdering;
+    fn bound_cmp(&self, other: &Self) -> BoundOrdering;
 
-    fn max(self, other: Self, rule_set: BoundOverlapDisambiguationRuleSet) -> Self
+    fn bound_max(self, other: Self, rule_set: BoundOverlapDisambiguationRuleSet) -> Self
     where
         Self: Sized,
     {
         if other.bound_lt(&self, rule_set) { self } else { other }
     }
 
-    fn min(self, other: Self, rule_set: BoundOverlapDisambiguationRuleSet) -> Self
+    fn bound_min(self, other: Self, rule_set: BoundOverlapDisambiguationRuleSet) -> Self
     where
         Self: Sized,
     {
         if other.bound_lt(&self, rule_set) { other } else { self }
     }
 
-    fn clamp(self, min: Self, max: Self, rule_set: BoundOverlapDisambiguationRuleSet) -> Self
+    fn bound_clamp(self, min: Self, max: Self, rule_set: BoundOverlapDisambiguationRuleSet) -> Self
     where
         Self: Sized,
     {

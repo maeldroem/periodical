@@ -82,6 +82,7 @@ Explain the motivation for this PR and what it does/solves
   - `Extensible` (WIP)
 - Renamed `*FiniteBound` to `*FiniteBoundPosition` for clarity
 - `*StartBound` and `*EndBound` now contain a `*FiniteStartBound`/`*FiniteEndBound` in their `Finite` variant
+- Refactored comparisons between bounds through the use of dedicated bound comparison traits
 
 ## Deprecated
 
