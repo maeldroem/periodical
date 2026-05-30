@@ -6,7 +6,7 @@ use std::ops::{Add, Sub};
 
 use crate::intervals::absolute::AbsoluteBound;
 use crate::intervals::meta::BoundInclusivity;
-use crate::intervals::ops::{BoundOrdering, BoundOverlapDisambiguationRuleSet, PartialBoundOrd};
+use crate::intervals::ops::{BoundOrdering, BoundOverlapDisambiguationRuleSet, BoundPartialOrd};
 use crate::iter::intervals::layered_bounds::abs_state_change::LayeredBoundsStateChangeAtAbsoluteBound;
 use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
 
@@ -473,7 +473,7 @@ where
                 Some(AbsoluteBound::End(second_layer_peeked_end)),
             ) => Some(layered_abs_bounds_change_start_end(
                 old_state,
-                first_layer_peeked_start.bound_cmp(second_layer_peeked_end),
+                first_layer_peeked_start.bound_partial_cmp(second_layer_peeked_end),
                 &mut self.first_layer,
                 &mut self.second_layer,
                 &mut self.state,
@@ -484,7 +484,7 @@ where
                 Some(AbsoluteBound::Start(second_layer_peeked_start)),
             ) => Some(layered_abs_bounds_change_end_start(
                 old_state,
-                first_layer_peeked_end.bound_cmp(second_layer_peeked_start),
+                first_layer_peeked_end.bound_partial_cmp(second_layer_peeked_start),
                 &mut self.first_layer,
                 &mut self.second_layer,
                 &mut self.state,

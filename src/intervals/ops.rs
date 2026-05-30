@@ -19,8 +19,8 @@
 //! And, perchance, more to come in the future!
 
 pub mod abridge;
+pub mod bound_cmp;
 pub mod bound_containment;
-pub mod bound_ord;
 pub mod bound_overlap_ambiguity;
 pub mod complement;
 pub mod continuation;
@@ -45,8 +45,6 @@ mod test_data;
 mod abridge_tests;
 #[cfg(test)]
 mod bound_containment_tests;
-#[cfg(test)]
-mod bound_ord_tests;
 #[cfg(test)]
 mod bound_overlap_ambiguity_tests;
 #[cfg(test)]
@@ -79,6 +77,8 @@ mod shrink_tests;
 #[doc(inline)]
 pub use abridge::Abridgable;
 #[doc(inline)]
+pub use bound_cmp::{BoundEq, BoundOrd, BoundOrdering, BoundPartialEq, BoundPartialOrd};
+#[doc(inline)]
 pub use bound_containment::{
     BoundContainmentPosition,
     BoundContainmentRule,
@@ -87,8 +87,6 @@ pub use bound_containment::{
     DEFAULT_BOUND_CONTAINMENT_RULES,
     DisambiguatedBoundContainmentPosition,
 };
-#[doc(inline)]
-pub use bound_ord::{BoundOrdering, PartialBoundOrd};
 #[doc(inline)]
 pub use bound_overlap_ambiguity::{
     BoundOverlapAmbiguity,
