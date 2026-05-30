@@ -31,7 +31,7 @@ use crate::intervals::absolute::{
     swap_absolute_bound_pair,
 };
 use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
-use crate::intervals::ops::bound_ord::{BoundOrdering, PartialBoundOrd};
+use crate::intervals::ops::bound_ord::{BoundOrdering, BoundPartialOrd};
 use crate::intervals::ops::bound_overlap_ambiguity::BoundOverlapAmbiguity;
 use crate::intervals::relative::{
     BoundedRelativeInterval,
@@ -653,7 +653,7 @@ pub fn abridge_abs_bound_pair(
         },
     };
 
-    match highest_start.bound_cmp(&lowest_end) {
+    match highest_start.bound_partial_cmp(&lowest_end) {
         BoundOrdering::Less => {
             EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::unchecked_new(highest_start, lowest_end))
         },
@@ -757,7 +757,7 @@ pub fn abridge_rel_bound_pair(
         },
     };
 
-    match highest_start.bound_cmp(&lowest_end) {
+    match highest_start.bound_partial_cmp(&lowest_end) {
         BoundOrdering::Less => {
             EmptiableRelativeBoundPair::Bound(RelativeBoundPair::unchecked_new(highest_start, lowest_end))
         },

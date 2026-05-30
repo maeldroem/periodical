@@ -65,6 +65,8 @@ Explain the motivation for this PR and what it does/solves
 - Added `HasBoundExtremality` to prelude
 - Added finite variants for start/end bounds
 - Added finite variant for `*Bound`
+- Added bound variants for cmp traits (`PartialEq`, `Eq`, `PartialOrd`, `Ord`) in order to compare bounds
+  semantically rather than syntactically
 
 ## Changed
 

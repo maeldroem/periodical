@@ -5,7 +5,7 @@ use std::iter::{FusedIterator, Peekable};
 use std::ops::{Add, Sub};
 
 use crate::intervals::meta::BoundInclusivity;
-use crate::intervals::ops::{BoundOrdering, BoundOverlapDisambiguationRuleSet, PartialBoundOrd};
+use crate::intervals::ops::{BoundOrdering, BoundOverlapDisambiguationRuleSet, BoundPartialOrd};
 use crate::intervals::relative::RelativeBound;
 use crate::iter::intervals::layered_bounds::rel_state_change::LayeredBoundsStateChangeAtRelativeBound;
 use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
@@ -64,7 +64,10 @@ use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
 ///                 )
 ///                 .to_end_bound()
 ///             ),
-///             Some(RelativeFiniteBoundPosition::new(SignedDuration::from_hours(7),).to_start_bound()),
+///             Some(
+///                 RelativeFiniteBoundPosition::new(SignedDuration::from_hours(7),)
+///                     .to_start_bound()
+///             ),
 ///         ),
 ///         LayeredBoundsStateChangeAtRelativeBound::new(
 ///             LayeredBoundsState::SecondLayer,
@@ -76,12 +79,18 @@ use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
 ///                 )
 ///                 .to_end_bound()
 ///             ),
-///             Some(RelativeFiniteBoundPosition::new(SignedDuration::from_hours(8),).to_start_bound()),
+///             Some(
+///                 RelativeFiniteBoundPosition::new(SignedDuration::from_hours(8),)
+///                     .to_start_bound()
+///             ),
 ///         ),
 ///         LayeredBoundsStateChangeAtRelativeBound::new(
 ///             LayeredBoundsState::BothLayers,
 ///             LayeredBoundsState::FirstLayer,
-///             Some(RelativeFiniteBoundPosition::new(SignedDuration::from_hours(11),).to_end_bound()),
+///             Some(
+///                 RelativeFiniteBoundPosition::new(SignedDuration::from_hours(11),)
+///                     .to_end_bound()
+///             ),
 ///             Some(
 ///                 RelativeFiniteBoundPosition::new_with_inclusivity(
 ///                     SignedDuration::from_hours(11),
@@ -93,7 +102,10 @@ use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
 ///         LayeredBoundsStateChangeAtRelativeBound::new(
 ///             LayeredBoundsState::FirstLayer,
 ///             LayeredBoundsState::NoLayers,
-///             Some(RelativeFiniteBoundPosition::new(SignedDuration::from_hours(12),).to_end_bound()),
+///             Some(
+///                 RelativeFiniteBoundPosition::new(SignedDuration::from_hours(12),)
+///                     .to_end_bound()
+///             ),
 ///             Some(
 ///                 RelativeFiniteBoundPosition::new_with_inclusivity(
 ///                     SignedDuration::from_hours(12),
@@ -112,7 +124,10 @@ use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
 ///                 )
 ///                 .to_end_bound()
 ///             ),
-///             Some(RelativeFiniteBoundPosition::new(SignedDuration::from_hours(13),).to_start_bound()),
+///             Some(
+///                 RelativeFiniteBoundPosition::new(SignedDuration::from_hours(13),)
+///                     .to_start_bound()
+///             ),
 ///         ),
 ///         LayeredBoundsStateChangeAtRelativeBound::new(
 ///             LayeredBoundsState::FirstLayer,
@@ -124,12 +139,18 @@ use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
 ///                 )
 ///                 .to_end_bound()
 ///             ),
-///             Some(RelativeFiniteBoundPosition::new(SignedDuration::from_hours(14),).to_start_bound()),
+///             Some(
+///                 RelativeFiniteBoundPosition::new(SignedDuration::from_hours(14),)
+///                     .to_start_bound()
+///             ),
 ///         ),
 ///         LayeredBoundsStateChangeAtRelativeBound::new(
 ///             LayeredBoundsState::BothLayers,
 ///             LayeredBoundsState::SecondLayer,
-///             Some(RelativeFiniteBoundPosition::new(SignedDuration::from_hours(16),).to_end_bound()),
+///             Some(
+///                 RelativeFiniteBoundPosition::new(SignedDuration::from_hours(16),)
+///                     .to_end_bound()
+///             ),
 ///             Some(
 ///                 RelativeFiniteBoundPosition::new_with_inclusivity(
 ///                     SignedDuration::from_hours(16),
@@ -141,7 +162,10 @@ use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
 ///         LayeredBoundsStateChangeAtRelativeBound::new(
 ///             LayeredBoundsState::SecondLayer,
 ///             LayeredBoundsState::NoLayers,
-///             Some(RelativeFiniteBoundPosition::new(SignedDuration::from_hours(18),).to_end_bound()),
+///             Some(
+///                 RelativeFiniteBoundPosition::new(SignedDuration::from_hours(18),)
+///                     .to_end_bound()
+///             ),
 ///             Some(
 ///                 RelativeFiniteBoundPosition::new_with_inclusivity(
 ///                     SignedDuration::from_hours(18),
@@ -317,7 +341,7 @@ where
                 Some(RelativeBound::End(second_layer_peeked_end)),
             ) => Some(layered_rel_bounds_change_start_end(
                 old_state,
-                first_layer_peeked_start.bound_cmp(second_layer_peeked_end),
+                first_layer_peeked_start.bound_partial_cmp(second_layer_peeked_end),
                 &mut self.first_layer,
                 &mut self.second_layer,
                 &mut self.state,
@@ -328,7 +352,7 @@ where
                 Some(RelativeBound::Start(second_layer_peeked_start)),
             ) => Some(layered_rel_bounds_change_end_start(
                 old_state,
-                first_layer_peeked_end.bound_cmp(second_layer_peeked_start),
+                first_layer_peeked_end.bound_partial_cmp(second_layer_peeked_start),
                 &mut self.first_layer,
                 &mut self.second_layer,
                 &mut self.state,
