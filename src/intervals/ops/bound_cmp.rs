@@ -12,5 +12,7 @@ mod bound_ord_tests;
 // #[cfg(test)]
 // mod bound_eq_tests;
 
+#[doc(inline)]
 pub use bound_eq::*;
+#[doc(inline)]
 pub use bound_ord::*;

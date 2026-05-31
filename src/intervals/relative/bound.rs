@@ -11,9 +11,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::intervals::meta::{BoundExtremality, HasBoundExtremality};
 use crate::intervals::ops::{BoundEq, BoundOrd, BoundOrdering, BoundPartialEq, BoundPartialOrd};
-use crate::intervals::relative::finite_bound::RelativeFiniteBound;
-use crate::intervals::relative::finite_end_bound::RelativeFiniteEndBound;
-use crate::intervals::relative::finite_start_bound::RelativeFiniteStartBound;
+use crate::intervals::relative::RelativeFiniteBound;
+use crate::intervals::relative::RelativeFiniteEndBound;
+use crate::intervals::relative::RelativeFiniteStartBound;
 use crate::intervals::relative::{RelativeEndBound, RelativeStartBound};
 
 /// Enum for relative start and end bounds

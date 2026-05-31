@@ -338,7 +338,7 @@ impl From<AbsoluteBoundPair> for AbsoluteInterval {
                     time,
                     inclusivity,
                 }),
-            ) => AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
+            ) => AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time_and_inclusivity(
                 time,
                 inclusivity,
                 OpeningDirection::ToPast,
@@ -349,7 +349,7 @@ impl From<AbsoluteBoundPair> for AbsoluteInterval {
                     inclusivity,
                 }),
                 EndB::InfiniteFuture,
-            ) => AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
+            ) => AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time_and_inclusivity(
                 time,
                 inclusivity,
                 OpeningDirection::ToFuture,
@@ -406,7 +406,7 @@ impl TryFrom<EmptiableAbsoluteBoundPair> for AbsoluteInterval {
                     inclusivity,
                 })),
             ) => Ok(AbsoluteInterval::HalfBounded(
-                HalfBoundedAbsoluteInterval::new_with_inclusivity(time, inclusivity, OpeningDirection::ToPast),
+                HalfBoundedAbsoluteInterval::new_from_time_and_inclusivity(time, inclusivity, OpeningDirection::ToPast),
             )),
             (
                 Some(StartB::Finite(AbsoluteFiniteBoundPosition {
@@ -415,7 +415,11 @@ impl TryFrom<EmptiableAbsoluteBoundPair> for AbsoluteInterval {
                 })),
                 Some(EndB::InfiniteFuture),
             ) => Ok(AbsoluteInterval::HalfBounded(
-                HalfBoundedAbsoluteInterval::new_with_inclusivity(time, inclusivity, OpeningDirection::ToFuture),
+                HalfBoundedAbsoluteInterval::new_from_time_and_inclusivity(
+                    time,
+                    inclusivity,
+                    OpeningDirection::ToFuture,
+                ),
             )),
             (
                 Some(StartB::Finite(AbsoluteFiniteBoundPosition {

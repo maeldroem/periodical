@@ -28,7 +28,7 @@ use crate::intervals::absolute::{
     HalfBoundedAbsoluteInterval,
     HasAbsoluteBoundPair,
     HasEmptiableAbsoluteBoundPair,
-    swap_absolute_bound_pair,
+    swap_absolute_start_end_bound,
 };
 use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
 use crate::intervals::ops::bound_ord::{BoundOrdering, BoundPartialOrd};
@@ -685,7 +685,7 @@ pub fn abridge_abs_bound_pair(
             }
         },
         BoundOrdering::Greater => {
-            swap_absolute_bound_pair(&mut highest_start, &mut lowest_end);
+            swap_absolute_start_end_bound(&mut highest_start, &mut lowest_end);
 
             if let AbsoluteStartBound::Finite(ref mut finite_start) = highest_start {
                 finite_start.set_inclusivity(finite_start.inclusivity().opposite());

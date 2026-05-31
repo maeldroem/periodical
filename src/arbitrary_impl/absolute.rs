@@ -70,7 +70,7 @@ impl<'a> Arbitrary<'a> for HalfBoundedAbsoluteInterval {
 
         let reference = Timestamp::from_nanosecond(u.int_in_range(timestamp_range)?).or(Err(Error::IncorrectFormat))?;
 
-        Ok(HalfBoundedAbsoluteInterval::new_with_inclusivity(
+        Ok(HalfBoundedAbsoluteInterval::new_from_time_and_inclusivity(
             reference,
             BoundInclusivity::arbitrary(u)?,
             OpeningDirection::arbitrary(u)?,

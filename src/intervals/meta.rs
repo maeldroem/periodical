@@ -170,6 +170,11 @@ impl From<bool> for OpeningDirection {
     }
 }
 
+pub trait HasOpeningDirection {
+    #[must_use]
+    fn opening_direction(&self) -> OpeningDirection;
+}
+
 /// Infinitesimal duration variation of an interval
 ///
 /// Represents the infinitesimal duration variation(s) created by [exclusive bounds](BoundInclusivity::Exclusive).

@@ -16,10 +16,14 @@ use jiff::Timestamp;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use crate::intervals::absolute::finite_bound::AbsoluteFiniteBound;
-use crate::intervals::absolute::finite_end_bound::AbsoluteFiniteEndBound;
-use crate::intervals::absolute::finite_start_bound::AbsoluteFiniteStartBound;
-use crate::intervals::absolute::{AbsoluteBound, AbsoluteFiniteBoundPosition, AbsoluteStartBound};
+use crate::intervals::absolute::{
+    AbsoluteBound,
+    AbsoluteFiniteBound,
+    AbsoluteFiniteBoundPosition,
+    AbsoluteFiniteEndBound,
+    AbsoluteFiniteStartBound,
+    AbsoluteStartBound,
+};
 use crate::intervals::meta::{BoundExtremality, BoundInclusivity, HasBoundExtremality, HasBoundInclusivity};
 use crate::intervals::ops::{BoundEq, BoundOrd, BoundOrdering, BoundOverlapAmbiguity, BoundPartialEq, BoundPartialOrd};
 
@@ -249,10 +253,7 @@ impl BoundOrd for AbsoluteEndBound {
             Ordering::Less => BoundOrdering::Less,
             Ordering::Equal => BoundOrdering::Equal(self.finite().zip(other.finite()).map(
                 |(lhs_finite_end, rhs_finite_end)| {
-                    BoundOverlapAmbiguity::BothEnds(
-                        lhs_finite_end.finite_bound_position().inclusivity(),
-                        rhs_finite_end.finite_bound_position().inclusivity(),
-                    )
+                    BoundOverlapAmbiguity::BothEnds(lhs_finite_end.inclusivity(), rhs_finite_end.inclusivity())
                 },
             )),
             Ordering::Greater => BoundOrdering::Greater,

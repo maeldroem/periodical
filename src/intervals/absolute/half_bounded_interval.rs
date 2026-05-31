@@ -21,10 +21,13 @@ use serde::{Deserialize, Serialize};
 use crate::intervals::absolute::{
     AbsoluteBoundPair,
     AbsoluteEndBound,
+    AbsoluteFiniteBound,
     AbsoluteFiniteBoundPosition,
     AbsoluteInterval,
     AbsoluteStartBound,
     EmptiableAbsoluteInterval,
+    HalfBoundedToFutureAbsoluteInterval,
+    HalfBoundedToPastAbsoluteInterval,
     HasAbsoluteBoundPair,
 };
 use crate::intervals::meta::{
@@ -54,13 +57,23 @@ use crate::intervals::meta::{
 /// [openness](Openness) invariant, see [`AbsoluteBoundPair`].
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
-pub struct HalfBoundedAbsoluteInterval {
-    reference: Timestamp,
-    opening_direction: OpeningDirection,
-    reference_inclusivity: BoundInclusivity,
+pub enum HalfBoundedAbsoluteInterval {
+    ToFuture(HalfBoundedToFutureAbsoluteInterval),
+    ToPast(HalfBoundedToPastAbsoluteInterval),
 }
 
 impl HalfBoundedAbsoluteInterval {
+    pub fn new(reference: AbsoluteFiniteBoundPosition, opening_direction: OpeningDirection) -> Self {
+        match opening_direction {
+            OpeningDirection::ToFuture => Self::ToFuture(HalfBoundedToFutureAbsoluteInterval::new(
+                reference.to_finite_start_bound(),
+            )),
+            OpeningDirection::ToPast => {
+                Self::ToPast(HalfBoundedToPastAbsoluteInterval::new(reference.to_finite_end_bound()))
+            },
+        }
+    }
+
     /// Creates a new [`HalfBoundedAbsoluteInterval`]
     ///
     /// # Examples
@@ -87,11 +100,10 @@ impl HalfBoundedAbsoluteInterval {
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    pub fn new(reference: Timestamp, opening_direction: OpeningDirection) -> Self {
-        HalfBoundedAbsoluteInterval {
-            reference,
-            opening_direction,
-            reference_inclusivity: BoundInclusivity::default(),
+    pub fn new_from_time(reference: Timestamp, opening_direction: OpeningDirection) -> Self {
+        match opening_direction {
+            OpeningDirection::ToFuture => Self::ToFuture(HalfBoundedToFutureAbsoluteInterval::new_from_time(reference)),
+            OpeningDirection::ToPast => Self::ToPast(HalfBoundedToPastAbsoluteInterval::new_from_time(reference)),
         }
     }
 
@@ -125,15 +137,19 @@ impl HalfBoundedAbsoluteInterval {
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    pub fn new_with_inclusivity(
+    pub fn new_from_time_and_inclusivity(
         reference: Timestamp,
         reference_inclusivity: BoundInclusivity,
         opening_direction: OpeningDirection,
     ) -> Self {
-        HalfBoundedAbsoluteInterval {
-            reference,
-            opening_direction,
-            reference_inclusivity,
+        match opening_direction {
+            OpeningDirection::ToFuture => Self::ToFuture(
+                HalfBoundedToFutureAbsoluteInterval::new_from_time_and_inclusivity(reference, reference_inclusivity),
+            ),
+            OpeningDirection::ToPast => Self::ToPast(HalfBoundedToPastAbsoluteInterval::new_from_time_and_inclusivity(
+                reference,
+                reference_inclusivity,
+            )),
         }
     }
 
@@ -166,27 +182,38 @@ impl HalfBoundedAbsoluteInterval {
         match (range.start_bound(), range.end_bound()) {
             (Bound::Included(_) | Bound::Excluded(_), Bound::Included(_) | Bound::Excluded(_))
             | (Bound::Unbounded, Bound::Unbounded) => Err(HalfBoundedAbsoluteIntervalTryFromRangeError),
-            (Bound::Unbounded, Bound::Included(&reference)) => Ok(Self::new_with_inclusivity(
+            (Bound::Unbounded, Bound::Included(&reference)) => Ok(Self::new_from_time_and_inclusivity(
                 reference,
                 BoundInclusivity::Inclusive,
                 OpeningDirection::ToPast,
             )),
-            (Bound::Unbounded, Bound::Excluded(&reference)) => Ok(Self::new_with_inclusivity(
+            (Bound::Unbounded, Bound::Excluded(&reference)) => Ok(Self::new_from_time_and_inclusivity(
                 reference,
                 BoundInclusivity::Exclusive,
                 OpeningDirection::ToPast,
             )),
-            (Bound::Included(&reference), Bound::Unbounded) => Ok(Self::new_with_inclusivity(
+            (Bound::Included(&reference), Bound::Unbounded) => Ok(Self::new_from_time_and_inclusivity(
                 reference,
                 BoundInclusivity::Inclusive,
                 OpeningDirection::ToFuture,
             )),
-            (Bound::Excluded(&reference), Bound::Unbounded) => Ok(Self::new_with_inclusivity(
+            (Bound::Excluded(&reference), Bound::Unbounded) => Ok(Self::new_from_time_and_inclusivity(
                 reference,
                 BoundInclusivity::Exclusive,
                 OpeningDirection::ToFuture,
             )),
         }
+    }
+
+    pub fn reference(&self) -> AbsoluteFiniteBound {
+        match self {
+            Self::ToFuture(hb_to_future) => hb_to_future.start().to_finite_bound(),
+            Self::ToPast(hb_to_past) => hb_to_past.end().to_finite_bound(),
+        }
+    }
+
+    pub fn reference_pos(&self) -> AbsoluteFiniteBoundPosition {
+        self.reference().pos()
     }
 
     /// Returns the reference time
@@ -207,33 +234,8 @@ impl HalfBoundedAbsoluteInterval {
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    pub fn reference(&self) -> Timestamp {
-        self.reference
-    }
-
-    /// Returns the opening direction
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::error::Error;
-    /// # use jiff::Timestamp;
-    /// # use periodical::intervals::absolute::HalfBoundedAbsoluteInterval;
-    /// # use periodical::intervals::meta::OpeningDirection;
-    /// let ref_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
-    ///
-    /// let half_bounded_interval =
-    ///     HalfBoundedAbsoluteInterval::new(ref_time, OpeningDirection::ToPast);
-    ///
-    /// assert_eq!(
-    ///     half_bounded_interval.opening_direction(),
-    ///     OpeningDirection::ToPast
-    /// );
-    /// # Ok::<(), Box<dyn Error>>(())
-    /// ```
-    #[must_use]
-    pub fn opening_direction(&self) -> OpeningDirection {
-        self.opening_direction
+    pub fn reference_time(&self) -> Timestamp {
+        self.reference().pos().time()
     }
 
     /// Returns the inclusivity of the reference time
@@ -259,7 +261,25 @@ impl HalfBoundedAbsoluteInterval {
     /// ```
     #[must_use]
     pub fn reference_inclusivity(&self) -> BoundInclusivity {
-        self.reference_inclusivity
+        self.reference().pos().inclusivity()
+    }
+
+    pub fn set_reference(&mut self, new_reference: AbsoluteFiniteBound) {
+        match new_reference {
+            AbsoluteFiniteBound::Start(finite_start) => {
+                *self = Self::ToFuture(HalfBoundedToFutureAbsoluteInterval::new(finite_start))
+            },
+            AbsoluteFiniteBound::End(finite_end) => {
+                *self = Self::ToPast(HalfBoundedToPastAbsoluteInterval::new(finite_end))
+            },
+        }
+    }
+
+    pub fn set_reference_pos(&mut self, new_reference_pos: AbsoluteFiniteBoundPosition) {
+        match self {
+            Self::ToFuture(hb_to_future) => *hb_to_future.start_mut().pos_mut() = new_reference_pos,
+            Self::ToPast(hb_to_past) => *hb_to_past.end_mut().pos_mut() = new_reference_pos,
+        }
     }
 
     /// Sets the reference time
@@ -283,8 +303,11 @@ impl HalfBoundedAbsoluteInterval {
     /// assert_eq!(half_bounded_interval.reference(), new_ref_time);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
-    pub fn set_reference(&mut self, new_reference: Timestamp) {
-        self.reference = new_reference;
+    pub fn set_reference_time(&mut self, new_reference_time: Timestamp) {
+        match self {
+            Self::ToFuture(hb_to_future) => hb_to_future.start_mut().pos_mut().set_time(new_reference_time),
+            Self::ToPast(hb_to_past) => hb_to_past.end_mut().pos_mut().set_time(new_reference_time),
+        }
     }
 
     /// Sets the inclusivity of the reference time
@@ -310,7 +333,10 @@ impl HalfBoundedAbsoluteInterval {
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn set_reference_inclusivity(&mut self, new_inclusivity: BoundInclusivity) {
-        self.reference_inclusivity = new_inclusivity;
+        match self {
+            Self::ToFuture(hb_to_future) => hb_to_future.start_mut().pos_mut().set_inclusivity(new_inclusivity),
+            Self::ToPast(hb_to_past) => hb_to_past.end_mut().pos_mut().set_inclusivity(new_inclusivity),
+        }
     }
 
     /// Sets the opening direction
@@ -336,7 +362,39 @@ impl HalfBoundedAbsoluteInterval {
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn set_opening_direction(&mut self, new_opening_direction: OpeningDirection) {
-        self.opening_direction = new_opening_direction;
+        match new_opening_direction {
+            OpeningDirection::ToFuture => {
+                *self = Self::ToFuture(HalfBoundedToFutureAbsoluteInterval::new(
+                    self.reference_pos().to_finite_start_bound(),
+                ));
+            },
+            OpeningDirection::ToPast => {
+                *self = Self::ToPast(HalfBoundedToPastAbsoluteInterval::new(
+                    self.reference_pos().to_finite_end_bound(),
+                ));
+            },
+        }
+    }
+
+    pub fn opposite(self) -> Self {
+        match self {
+            Self::ToFuture(hb_to_future) => Self::ToPast(hb_to_future.opposite()),
+            Self::ToPast(hb_to_past) => Self::ToFuture(hb_to_past.opposite()),
+        }
+    }
+
+    pub fn half_bounded_to_future(self) -> Option<HalfBoundedToFutureAbsoluteInterval> {
+        match self {
+            Self::ToFuture(hb_to_future) => Some(hb_to_future),
+            Self::ToPast(_) => None,
+        }
+    }
+
+    pub fn half_bounded_to_past(self) -> Option<HalfBoundedToPastAbsoluteInterval> {
+        match self {
+            Self::ToFuture(_) => None,
+            Self::ToPast(hb_to_past) => Some(hb_to_past),
+        }
     }
 
     /// Wraps the interval in [`AbsoluteInterval`]
@@ -415,20 +473,16 @@ impl HasAbsoluteBoundPair for HalfBoundedAbsoluteInterval {
     }
 
     fn abs_start(&self) -> AbsoluteStartBound {
-        match self.opening_direction {
-            OpeningDirection::ToPast => AbsoluteStartBound::InfinitePast,
-            OpeningDirection::ToFuture => {
-                AbsoluteFiniteBoundPosition::new_with_inclusivity(self.reference, self.reference_inclusivity).to_start_bound()
-            },
+        match self {
+            Self::ToFuture(hb_to_future) => hb_to_future.start().to_start_bound(),
+            Self::ToPast(hb_to_past) => hb_to_past.start(),
         }
     }
 
     fn abs_end(&self) -> AbsoluteEndBound {
-        match self.opening_direction {
-            OpeningDirection::ToPast => {
-                AbsoluteFiniteBoundPosition::new_with_inclusivity(self.reference, self.reference_inclusivity).to_end_bound()
-            },
-            OpeningDirection::ToFuture => AbsoluteEndBound::InfiniteFuture,
+        match self {
+            Self::ToFuture(hb_to_future) => hb_to_future.end(),
+            Self::ToPast(hb_to_past) => hb_to_past.end().to_end_bound(),
         }
     }
 }
@@ -441,25 +495,25 @@ impl IsEmpty for HalfBoundedAbsoluteInterval {
 
 impl From<(Timestamp, OpeningDirection)> for HalfBoundedAbsoluteInterval {
     fn from((time, direction): (Timestamp, OpeningDirection)) -> Self {
-        HalfBoundedAbsoluteInterval::new(time, direction)
+        HalfBoundedAbsoluteInterval::new_from_time(time, direction)
     }
 }
 
 impl From<(Timestamp, BoundInclusivity, OpeningDirection)> for HalfBoundedAbsoluteInterval {
     fn from((time, inclusivity, direction): (Timestamp, BoundInclusivity, OpeningDirection)) -> Self {
-        HalfBoundedAbsoluteInterval::new_with_inclusivity(time, inclusivity, direction)
+        HalfBoundedAbsoluteInterval::new_from_time_and_inclusivity(time, inclusivity, direction)
     }
 }
 
 impl From<(AbsoluteFiniteBoundPosition, OpeningDirection)> for HalfBoundedAbsoluteInterval {
     fn from((reference, opening_direction): (AbsoluteFiniteBoundPosition, OpeningDirection)) -> Self {
-        Self::new_with_inclusivity(reference.time(), reference.inclusivity(), opening_direction)
+        Self::new_from_time_and_inclusivity(reference.time(), reference.inclusivity(), opening_direction)
     }
 }
 
 impl From<RangeFrom<Timestamp>> for HalfBoundedAbsoluteInterval {
     fn from(range: RangeFrom<Timestamp>) -> Self {
-        HalfBoundedAbsoluteInterval::new_with_inclusivity(
+        HalfBoundedAbsoluteInterval::new_from_time_and_inclusivity(
             range.start,
             BoundInclusivity::Inclusive,
             OpeningDirection::ToFuture,
@@ -469,7 +523,7 @@ impl From<RangeFrom<Timestamp>> for HalfBoundedAbsoluteInterval {
 
 impl From<RangeTo<Timestamp>> for HalfBoundedAbsoluteInterval {
     fn from(range: RangeTo<Timestamp>) -> Self {
-        HalfBoundedAbsoluteInterval::new_with_inclusivity(
+        HalfBoundedAbsoluteInterval::new_from_time_and_inclusivity(
             range.end,
             BoundInclusivity::Exclusive,
             OpeningDirection::ToPast,
@@ -479,7 +533,7 @@ impl From<RangeTo<Timestamp>> for HalfBoundedAbsoluteInterval {
 
 impl From<RangeToInclusive<Timestamp>> for HalfBoundedAbsoluteInterval {
     fn from(range: RangeToInclusive<Timestamp>) -> Self {
-        HalfBoundedAbsoluteInterval::new_with_inclusivity(
+        HalfBoundedAbsoluteInterval::new_from_time_and_inclusivity(
             range.end,
             BoundInclusivity::Inclusive,
             OpeningDirection::ToPast,
@@ -508,18 +562,10 @@ impl TryFrom<AbsoluteBoundPair> for HalfBoundedAbsoluteInterval {
     fn try_from(value: AbsoluteBoundPair) -> Result<Self, Self::Error> {
         match (value.start(), value.end()) {
             (AbsoluteStartBound::InfinitePast, AbsoluteEndBound::Finite(finite_end)) => {
-                Ok(HalfBoundedAbsoluteInterval::new_with_inclusivity(
-                    finite_end.time(),
-                    finite_end.inclusivity(),
-                    OpeningDirection::ToPast,
-                ))
+                Ok(Self::ToPast(HalfBoundedToPastAbsoluteInterval::new(finite_end)))
             },
             (AbsoluteStartBound::Finite(finite_start), AbsoluteEndBound::InfiniteFuture) => {
-                Ok(HalfBoundedAbsoluteInterval::new_with_inclusivity(
-                    finite_start.time(),
-                    finite_start.inclusivity(),
-                    OpeningDirection::ToFuture,
-                ))
+                Ok(Self::ToFuture(HalfBoundedToFutureAbsoluteInterval::new(finite_start)))
             },
             _ => Err(HalfBoundedAbsoluteIntervalTryFromAbsoluteBoundPairError),
         }

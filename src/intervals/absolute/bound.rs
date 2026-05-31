@@ -9,9 +9,9 @@ use arbitrary::Arbitrary;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use crate::intervals::absolute::finite_bound::AbsoluteFiniteBound;
-use crate::intervals::absolute::finite_end_bound::AbsoluteFiniteEndBound;
-use crate::intervals::absolute::finite_start_bound::AbsoluteFiniteStartBound;
+use crate::intervals::absolute::AbsoluteFiniteBound;
+use crate::intervals::absolute::AbsoluteFiniteEndBound;
+use crate::intervals::absolute::AbsoluteFiniteStartBound;
 use crate::intervals::absolute::{AbsoluteEndBound, AbsoluteStartBound};
 use crate::intervals::meta::{BoundExtremality, HasBoundExtremality};
 use crate::intervals::ops::{BoundEq, BoundOrd, BoundOrdering, BoundPartialEq, BoundPartialOrd};

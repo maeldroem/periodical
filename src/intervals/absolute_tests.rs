@@ -10,7 +10,7 @@ fn absolute_start_bound_inf_absolute_end_bound_inf_swap() {
     let mut start = AbsoluteStartBound::InfinitePast;
     let mut end = AbsoluteEndBound::InfiniteFuture;
 
-    swap_absolute_bound_pair(&mut start, &mut end);
+    swap_absolute_start_end_bound(&mut start, &mut end);
 
     assert_eq!(start, AbsoluteStartBound::InfinitePast);
     assert_eq!(end, AbsoluteEndBound::InfiniteFuture);
@@ -25,7 +25,7 @@ fn absolute_start_bound_inf_absolute_end_bound_finite_swap() -> Result<(), Box<d
     )
     .to_end_bound();
 
-    swap_absolute_bound_pair(&mut start, &mut end);
+    swap_absolute_start_end_bound(&mut start, &mut end);
 
     assert_eq!(
         start,
@@ -49,7 +49,7 @@ fn absolute_start_bound_finite_absolute_end_bound_inf_swap() -> Result<(), Box<d
     .to_start_bound();
     let mut end = AbsoluteEndBound::InfiniteFuture;
 
-    swap_absolute_bound_pair(&mut start, &mut end);
+    swap_absolute_start_end_bound(&mut start, &mut end);
 
     assert_eq!(start, AbsoluteStartBound::InfinitePast);
     assert_eq!(
@@ -77,7 +77,7 @@ fn absolute_start_bound_finite_absolute_end_bound_finite_swap() -> Result<(), Bo
     )
     .to_end_bound();
 
-    swap_absolute_bound_pair(&mut start, &mut end);
+    swap_absolute_start_end_bound(&mut start, &mut end);
 
     assert_eq!(
         start,
@@ -102,7 +102,7 @@ fn absolute_start_bound_finite_absolute_end_bound_finite_swap() -> Result<(), Bo
 #[test]
 fn check_absolute_bound_pair_for_interval_creation_inf_past_inf_future() {
     assert_eq!(
-        check_absolute_bound_pair_for_interval_creation(
+        check_absolute_start_end_bounds_for_interval_creation(
             &AbsoluteStartBound::InfinitePast,
             &AbsoluteEndBound::InfiniteFuture,
         ),
@@ -113,7 +113,7 @@ fn check_absolute_bound_pair_for_interval_creation_inf_past_inf_future() {
 #[test]
 fn check_absolute_bound_pair_for_interval_creation_inf_past_finite() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        check_absolute_bound_pair_for_interval_creation(
+        check_absolute_start_end_bounds_for_interval_creation(
             &AbsoluteStartBound::InfinitePast,
             &AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
         ),
@@ -126,7 +126,7 @@ fn check_absolute_bound_pair_for_interval_creation_inf_past_finite() -> Result<(
 #[test]
 fn check_absolute_bound_pair_for_interval_creation_finite_inf_future() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        check_absolute_bound_pair_for_interval_creation(
+        check_absolute_start_end_bounds_for_interval_creation(
             &AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
             &AbsoluteEndBound::InfiniteFuture,
         ),
@@ -140,7 +140,7 @@ fn check_absolute_bound_pair_for_interval_creation_finite_inf_future() -> Result
 fn check_absolute_bound_pair_for_interval_creation_finite_finite_different_times_correct_order()
 -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        check_absolute_bound_pair_for_interval_creation(
+        check_absolute_start_end_bounds_for_interval_creation(
             &AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
             &AbsoluteFiniteBoundPosition::new("2025-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
         ),
@@ -154,11 +154,11 @@ fn check_absolute_bound_pair_for_interval_creation_finite_finite_different_times
 fn check_absolute_bound_pair_for_interval_creation_finite_finite_different_times_wrong_order()
 -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        check_absolute_bound_pair_for_interval_creation(
+        check_absolute_start_end_bounds_for_interval_creation(
             &AbsoluteFiniteBoundPosition::new("2025-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
             &AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
         ),
-        Err(AbsoluteBoundPairCheckForIntervalCreationError::StartPastEnd),
+        Err(AbsoluteStartEndBoundsCheckForIntervalCreationError::StartPastEnd),
     );
 
     Ok(())
@@ -168,7 +168,7 @@ fn check_absolute_bound_pair_for_interval_creation_finite_finite_different_times
 fn check_absolute_bound_pair_for_interval_creation_finite_finite_same_time_inclusive_inclusive()
 -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        check_absolute_bound_pair_for_interval_creation(
+        check_absolute_start_end_bounds_for_interval_creation(
             &AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
             &AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
         ),
@@ -182,7 +182,7 @@ fn check_absolute_bound_pair_for_interval_creation_finite_finite_same_time_inclu
 fn check_absolute_bound_pair_for_interval_creation_finite_finite_same_time_inclusive_exclusive()
 -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        check_absolute_bound_pair_for_interval_creation(
+        check_absolute_start_end_bounds_for_interval_creation(
             &AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
             &AbsoluteFiniteBoundPosition::new_with_inclusivity(
                 "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
@@ -190,7 +190,7 @@ fn check_absolute_bound_pair_for_interval_creation_finite_finite_same_time_inclu
             )
             .to_end_bound(),
         ),
-        Err(AbsoluteBoundPairCheckForIntervalCreationError::SameTimeButNotDoublyInclusive),
+        Err(AbsoluteStartEndBoundsCheckForIntervalCreationError::SameTimeButNotDoublyInclusive),
     );
 
     Ok(())

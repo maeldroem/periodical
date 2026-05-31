@@ -490,8 +490,8 @@ pub fn future_continuation_emptiable_abs_bound_pair(bounds: &EmptiableAbsoluteBo
 /// See [module documentation](self) for more info.
 #[must_use]
 pub fn past_continuation_bounded_abs_interval(interval: &BoundedAbsoluteInterval) -> HalfBoundedAbsoluteInterval {
-    HalfBoundedAbsoluteInterval::new_with_inclusivity(
-        interval.start(),
+    HalfBoundedAbsoluteInterval::new_from_time_and_inclusivity(
+        interval.start_time(),
         interval.start_inclusivity().opposite(),
         OpeningDirection::ToPast,
     )
@@ -502,8 +502,8 @@ pub fn past_continuation_bounded_abs_interval(interval: &BoundedAbsoluteInterval
 /// See [module documentation](self) for more info.
 #[must_use]
 pub fn future_continuation_bounded_abs_interval(interval: &BoundedAbsoluteInterval) -> HalfBoundedAbsoluteInterval {
-    HalfBoundedAbsoluteInterval::new_with_inclusivity(
-        interval.end(),
+    HalfBoundedAbsoluteInterval::new_from_time_and_inclusivity(
+        interval.end_time(),
         interval.end_inclusivity().opposite(),
         OpeningDirection::ToFuture,
     )
@@ -518,7 +518,8 @@ pub fn past_continuation_rel_bound_pair(bounds: &RelativeBoundPair) -> Emptiable
         RelativeStartBound::InfinitePast => EmptiableRelativeBoundPair::Empty,
         RelativeStartBound::Finite(finite) => EmptiableRelativeBoundPair::from(RelativeBoundPair::new(
             RelativeStartBound::InfinitePast,
-            RelativeFiniteBoundPosition::new_with_inclusivity(finite.offset(), finite.inclusivity().opposite()).to_end_bound(),
+            RelativeFiniteBoundPosition::new_with_inclusivity(finite.offset(), finite.inclusivity().opposite())
+                .to_end_bound(),
         )),
     }
 }
@@ -568,7 +569,7 @@ pub fn future_continuation_emptiable_rel_bound_pair(bounds: &EmptiableRelativeBo
 #[must_use]
 pub fn past_continuation_bounded_rel_interval(interval: &BoundedRelativeInterval) -> HalfBoundedRelativeInterval {
     HalfBoundedRelativeInterval::new_with_inclusivity(
-        interval.start(),
+        interval.start_offset(),
         interval.start_inclusivity().opposite(),
         OpeningDirection::ToPast,
     )
@@ -580,7 +581,7 @@ pub fn past_continuation_bounded_rel_interval(interval: &BoundedRelativeInterval
 #[must_use]
 pub fn future_continuation_bounded_rel_interval(interval: &BoundedRelativeInterval) -> HalfBoundedRelativeInterval {
     HalfBoundedRelativeInterval::new_with_inclusivity(
-        interval.end(),
+        interval.end_offset(),
         interval.end_inclusivity().opposite(),
         OpeningDirection::ToFuture,
     )

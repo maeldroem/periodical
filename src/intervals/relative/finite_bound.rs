@@ -6,9 +6,14 @@
 
 use crate::intervals::meta::{BoundExtremality, HasBoundExtremality};
 use crate::intervals::ops::{BoundEq, BoundOrd, BoundOrdering, BoundPartialEq, BoundPartialOrd};
-use crate::intervals::relative::finite_end_bound::RelativeFiniteEndBound;
-use crate::intervals::relative::finite_start_bound::RelativeFiniteStartBound;
-use crate::intervals::relative::{RelativeBound, RelativeEndBound, RelativeFiniteBoundPosition, RelativeStartBound};
+use crate::intervals::relative::{
+    RelativeBound,
+    RelativeEndBound,
+    RelativeFiniteBoundPosition,
+    RelativeFiniteEndBound,
+    RelativeFiniteStartBound,
+    RelativeStartBound,
+};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum RelativeFiniteBound {
@@ -36,6 +41,13 @@ impl RelativeFiniteBound {
         match self {
             Self::Start(_) => None,
             Self::End(end) => Some(end),
+        }
+    }
+
+    pub fn pos(self) -> RelativeFiniteBoundPosition {
+        match self {
+            Self::Start(start) => start.pos(),
+            Self::End(end) => end.pos(),
         }
     }
 

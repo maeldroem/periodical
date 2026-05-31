@@ -18,10 +18,14 @@ use serde::{Deserialize, Serialize};
 
 use crate::intervals::meta::{BoundExtremality, BoundInclusivity, HasBoundExtremality, HasBoundInclusivity};
 use crate::intervals::ops::{BoundEq, BoundOrd, BoundOrdering, BoundOverlapAmbiguity, BoundPartialEq, BoundPartialOrd};
-use crate::intervals::relative::finite_bound::RelativeFiniteBound;
-use crate::intervals::relative::finite_end_bound::RelativeFiniteEndBound;
-use crate::intervals::relative::finite_start_bound::RelativeFiniteStartBound;
-use crate::intervals::relative::{RelativeBound, RelativeEndBound, RelativeFiniteBoundPosition};
+use crate::intervals::relative::{
+    RelativeBound,
+    RelativeEndBound,
+    RelativeFiniteBound,
+    RelativeFiniteBoundPosition,
+    RelativeFiniteEndBound,
+    RelativeFiniteStartBound,
+};
 
 /// A relative start bound
 ///
@@ -246,8 +250,8 @@ impl BoundOrd for RelativeStartBound {
             Ordering::Equal => BoundOrdering::Equal(self.finite().zip(other.finite()).map(
                 |(lhs_finite_start, rhs_finite_start)| {
                     BoundOverlapAmbiguity::BothStarts(
-                        lhs_finite_start.finite_bound_position().inclusivity(),
-                        rhs_finite_start.finite_bound_position().inclusivity(),
+                        lhs_finite_start.inclusivity(),
+                        rhs_finite_start.inclusivity(),
                     )
                 },
             )),

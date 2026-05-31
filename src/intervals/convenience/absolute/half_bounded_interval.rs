@@ -32,7 +32,7 @@ impl HalfBoundedAbsoluteInterval {
     /// ```
     #[must_use]
     pub fn since_now(inclusivity: BoundInclusivity) -> Self {
-        Self::new_with_inclusivity(Timestamp::now(), inclusivity, OpeningDirection::ToFuture)
+        Self::new_from_time_and_inclusivity(Timestamp::now(), inclusivity, OpeningDirection::ToFuture)
     }
 
     /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans until now
@@ -49,7 +49,7 @@ impl HalfBoundedAbsoluteInterval {
     /// ```
     #[must_use]
     pub fn until_now(inclusivity: BoundInclusivity) -> Self {
-        Self::new_with_inclusivity(Timestamp::now(), inclusivity, OpeningDirection::ToPast)
+        Self::new_from_time_and_inclusivity(Timestamp::now(), inclusivity, OpeningDirection::ToPast)
     }
 
     /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans since the start
@@ -99,7 +99,7 @@ impl HalfBoundedAbsoluteInterval {
             .or(Err(HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReference))?
             .timestamp();
 
-        Ok(Self::new(reference, OpeningDirection::ToFuture))
+        Ok(Self::new_from_time(reference, OpeningDirection::ToFuture))
     }
 
     /// Creates a new [`HalfBoundedAbsoluteInterval`] that spans until the start
@@ -149,7 +149,7 @@ impl HalfBoundedAbsoluteInterval {
             .or(Err(HalfBoundedAbsoluteIntervalCreationError::OutOfRangeReference))?
             .timestamp();
 
-        Ok(Self::new_with_inclusivity(
+        Ok(Self::new_from_time_and_inclusivity(
             reference,
             BoundInclusivity::Exclusive,
             OpeningDirection::ToPast,

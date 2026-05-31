@@ -38,8 +38,8 @@ fn unchecked_new() -> Result<(), Box<dyn Error>> {
         "2025-01-02 00:00:00Z".parse::<Timestamp>()?,
     );
 
-    assert_eq!(interval.start(), "2025-01-01 00:00:00Z".parse::<Timestamp>()?);
-    assert_eq!(interval.end(), "2025-01-02 00:00:00Z".parse::<Timestamp>()?);
+    assert_eq!(interval.start_time(), "2025-01-01 00:00:00Z".parse::<Timestamp>()?);
+    assert_eq!(interval.end_time(), "2025-01-02 00:00:00Z".parse::<Timestamp>()?);
     assert_eq!(interval.start_inclusivity(), BoundInclusivity::Inclusive);
     assert_eq!(interval.end_inclusivity(), BoundInclusivity::Inclusive);
 
@@ -56,8 +56,8 @@ mod new {
             "2025-01-02 00:00:00Z".parse::<Timestamp>()?,
         );
 
-        assert_eq!(interval.start(), "2025-01-01 00:00:00Z".parse::<Timestamp>()?);
-        assert_eq!(interval.end(), "2025-01-02 00:00:00Z".parse::<Timestamp>()?);
+        assert_eq!(interval.start_time(), "2025-01-01 00:00:00Z".parse::<Timestamp>()?);
+        assert_eq!(interval.end_time(), "2025-01-02 00:00:00Z".parse::<Timestamp>()?);
         assert_eq!(interval.start_inclusivity(), BoundInclusivity::Inclusive);
         assert_eq!(interval.end_inclusivity(), BoundInclusivity::Inclusive);
 
@@ -71,8 +71,8 @@ mod new {
             "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
         );
 
-        assert_eq!(interval.start(), "2025-01-01 00:00:00Z".parse::<Timestamp>()?);
-        assert_eq!(interval.end(), "2025-01-02 00:00:00Z".parse::<Timestamp>()?);
+        assert_eq!(interval.start_time(), "2025-01-01 00:00:00Z".parse::<Timestamp>()?);
+        assert_eq!(interval.end_time(), "2025-01-02 00:00:00Z".parse::<Timestamp>()?);
         assert_eq!(interval.start_inclusivity(), BoundInclusivity::Inclusive);
         assert_eq!(interval.end_inclusivity(), BoundInclusivity::Inclusive);
 
@@ -269,7 +269,7 @@ fn start() -> Result<(), Box<dyn Error>> {
             "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
             "2026-01-02 00:00:00Z".parse::<Timestamp>()?
         )
-        .start(),
+        .start_time(),
         "2026-01-01 00:00:00Z".parse::<Timestamp>()?
     );
     Ok(())
@@ -282,7 +282,7 @@ fn end() -> Result<(), Box<dyn Error>> {
             "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
             "2026-01-02 00:00:00Z".parse::<Timestamp>()?
         )
-        .end(),
+        .end_time(),
         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
     );
     Ok(())
@@ -368,8 +368,8 @@ mod set_start {
             "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
         );
 
-        assert_eq!(interval.set_start(new_start), Ok(()));
-        assert_eq!(interval.start(), new_start);
+        assert_eq!(interval.set_start_time(new_start), Ok(()));
+        assert_eq!(interval.start_time(), new_start);
 
         Ok(())
     }
@@ -425,8 +425,8 @@ mod set_start {
             "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
         );
 
-        assert_eq!(interval.set_start(new_start), Ok(()));
-        assert_eq!(interval.start(), new_start);
+        assert_eq!(interval.set_start_time(new_start), Ok(()));
+        assert_eq!(interval.start_time(), new_start);
         assert_eq!(interval.start_inclusivity(), BoundInclusivity::Inclusive);
 
         Ok(())
@@ -441,8 +441,8 @@ mod set_start {
             "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
         );
 
-        assert_eq!(interval.set_start(new_start), Ok(()));
-        assert_eq!(interval.start(), new_start);
+        assert_eq!(interval.set_start_time(new_start), Ok(()));
+        assert_eq!(interval.start_time(), new_start);
 
         Ok(())
     }
@@ -457,10 +457,10 @@ mod set_start {
         );
 
         assert_eq!(
-            interval.set_start(new_start),
+            interval.set_start_time(new_start),
             Err(BoundedAbsoluteIntervalUpdateError::ChronologicalOrderViolation)
         );
-        assert_eq!(interval.start(), "2026-01-01 00:00:00Z".parse::<Timestamp>()?);
+        assert_eq!(interval.start_time(), "2026-01-01 00:00:00Z".parse::<Timestamp>()?);
 
         Ok(())
     }
@@ -479,10 +479,10 @@ mod set_end {
         );
 
         assert_eq!(
-            interval.set_end(new_end),
+            interval.set_end_time(new_end),
             Err(BoundedAbsoluteIntervalUpdateError::ChronologicalOrderViolation)
         );
-        assert_eq!(interval.end(), "2026-01-03 00:00:00Z".parse::<Timestamp>()?);
+        assert_eq!(interval.end_time(), "2026-01-03 00:00:00Z".parse::<Timestamp>()?);
 
         Ok(())
     }
@@ -496,8 +496,8 @@ mod set_end {
             "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
         );
 
-        assert_eq!(interval.set_end(new_end), Ok(()));
-        assert_eq!(interval.end(), new_end);
+        assert_eq!(interval.set_end_time(new_end), Ok(()));
+        assert_eq!(interval.end_time(), new_end);
 
         Ok(())
     }
@@ -553,8 +553,8 @@ mod set_end {
             "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
         );
 
-        assert_eq!(interval.set_end(new_end), Ok(()));
-        assert_eq!(interval.end(), new_end);
+        assert_eq!(interval.set_end_time(new_end), Ok(()));
+        assert_eq!(interval.end_time(), new_end);
         assert_eq!(interval.end_inclusivity(), BoundInclusivity::Inclusive);
 
         Ok(())
@@ -570,10 +570,10 @@ mod set_end {
         );
 
         assert_eq!(
-            interval.set_start(new_start),
+            interval.set_start_time(new_start),
             Err(BoundedAbsoluteIntervalUpdateError::ChronologicalOrderViolation)
         );
-        assert_eq!(interval.start(), "2026-01-01 00:00:00Z".parse::<Timestamp>()?);
+        assert_eq!(interval.start_time(), "2026-01-01 00:00:00Z".parse::<Timestamp>()?);
 
         Ok(())
     }
@@ -588,7 +588,7 @@ fn unchecked_set_start_inclusivity() -> Result<(), Box<dyn Error>> {
 
     interval.unchecked_set_start_inclusivity(BoundInclusivity::Exclusive);
 
-    assert_eq!(interval.start(), interval.end());
+    assert_eq!(interval.start_time(), interval.end_time());
     assert_eq!(interval.start_inclusivity(), BoundInclusivity::Exclusive);
     assert_eq!(interval.end_inclusivity(), BoundInclusivity::Inclusive);
 
@@ -604,7 +604,7 @@ fn unchecked_set_end_inclusivity() -> Result<(), Box<dyn Error>> {
 
     interval.unchecked_set_end_inclusivity(BoundInclusivity::Exclusive);
 
-    assert_eq!(interval.start(), interval.end());
+    assert_eq!(interval.start_time(), interval.end_time());
     assert_eq!(interval.start_inclusivity(), BoundInclusivity::Inclusive);
     assert_eq!(interval.end_inclusivity(), BoundInclusivity::Exclusive);
 
@@ -1059,7 +1059,7 @@ mod try_from_interval {
     fn half_bounded() -> Result<(), Box<dyn Error>> {
         assert_eq!(
             BoundedAbsoluteInterval::try_from(
-                HalfBoundedAbsoluteInterval::new(
+                HalfBoundedAbsoluteInterval::new_from_time(
                     "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                     OpeningDirection::ToFuture
                 )
@@ -1100,7 +1100,7 @@ mod try_from_emptiable_interval {
     fn bound_half_bounded() -> Result<(), Box<dyn Error>> {
         assert_eq!(
             BoundedAbsoluteInterval::try_from(
-                HalfBoundedAbsoluteInterval::new(
+                HalfBoundedAbsoluteInterval::new_from_time(
                     "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                     OpeningDirection::ToFuture
                 )

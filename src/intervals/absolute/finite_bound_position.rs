@@ -16,8 +16,8 @@ use jiff::Timestamp;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use crate::intervals::absolute::finite_end_bound::AbsoluteFiniteEndBound;
-use crate::intervals::absolute::finite_start_bound::AbsoluteFiniteStartBound;
+use crate::intervals::absolute::AbsoluteFiniteEndBound;
+use crate::intervals::absolute::AbsoluteFiniteStartBound;
 use crate::intervals::absolute::{AbsoluteEndBound, AbsoluteStartBound};
 use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
 
