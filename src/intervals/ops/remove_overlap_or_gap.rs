@@ -632,10 +632,11 @@ pub fn remove_overlap_or_gap_abs_bound_pair(
                 );
             };
 
-            let new_end_bound = AbsoluteEndBound::from(AbsoluteFiniteBoundPosition::new_with_inclusivity(
-                finite_bound_position.time(),
-                finite_bound_position.inclusivity().opposite(), // So that it fully closes the gap
-            ));
+            let new_end_bound = AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                finite_bound_position.pos().time(),
+                finite_bound_position.pos().inclusivity().opposite(), // So that it fully closes the gap
+            )
+            .to_end_bound();
 
             OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBoundPair::from(a.grow_end(new_end_bound)))
         },
@@ -647,10 +648,11 @@ pub fn remove_overlap_or_gap_abs_bound_pair(
                 );
             };
 
-            let new_start_bound = AbsoluteStartBound::from(AbsoluteFiniteBoundPosition::new_with_inclusivity(
-                finite_bound_position.time(),
-                finite_bound_position.inclusivity().opposite(), // So that it fully closes the gap
-            ));
+            let new_start_bound = AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                finite_bound_position.pos().time(),
+                finite_bound_position.pos().inclusivity().opposite(), // So that it fully closes the gap
+            )
+            .to_start_bound();
 
             OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBoundPair::from(a.grow_start(new_start_bound)))
         },
@@ -662,10 +664,11 @@ pub fn remove_overlap_or_gap_abs_bound_pair(
                 );
             };
 
-            let new_end_bound = AbsoluteEndBound::from(AbsoluteFiniteBoundPosition::new_with_inclusivity(
-                finite_bound_position.time(),
-                finite_bound_position.inclusivity().opposite(), // So that it fully closes the gap
-            ));
+            let new_end_bound = AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                finite_bound_position.pos().time(),
+                finite_bound_position.pos().inclusivity().opposite(), // So that it fully closes the gap
+            )
+            .to_end_bound();
 
             OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBoundPair::Bound(a.shrink_end(new_end_bound)))
         },
@@ -677,10 +680,11 @@ pub fn remove_overlap_or_gap_abs_bound_pair(
                 );
             };
 
-            let new_start_bound = AbsoluteStartBound::from(AbsoluteFiniteBoundPosition::new_with_inclusivity(
-                finite_bound_position.time(),
-                finite_bound_position.inclusivity().opposite(), // So that it fully closes the gap
-            ));
+            let new_start_bound = AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                finite_bound_position.pos().time(),
+                finite_bound_position.pos().inclusivity().opposite(), // So that it fully closes the gap
+            )
+            .to_start_bound();
 
             OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBoundPair::Bound(a.shrink_start(new_start_bound)))
         },
@@ -692,10 +696,11 @@ pub fn remove_overlap_or_gap_abs_bound_pair(
                 );
             };
 
-            let new_end_bound = AbsoluteEndBound::from(AbsoluteFiniteBoundPosition::new_with_inclusivity(
-                finite_bound_position.time(),
-                finite_bound_position.inclusivity().opposite(), // So that it fully closes the gap
-            ));
+            let new_end_bound = AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                finite_bound_position.pos().time(),
+                finite_bound_position.pos().inclusivity().opposite(), // So that it fully closes the gap
+            )
+            .to_end_bound();
 
             OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBoundPair::from(a.shrink_end(new_end_bound)))
         },
@@ -707,10 +712,11 @@ pub fn remove_overlap_or_gap_abs_bound_pair(
                 );
             };
 
-            let new_start_bound = AbsoluteStartBound::from(AbsoluteFiniteBoundPosition::new_with_inclusivity(
-                finite_bound_position.time(),
-                finite_bound_position.inclusivity().opposite(), // So that it fully closes the gap
-            ));
+            let new_start_bound = AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                finite_bound_position.pos().time(),
+                finite_bound_position.pos().inclusivity().opposite(), // So that it fully closes the gap
+            )
+            .to_start_bound();
 
             OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBoundPair::from(a.shrink_start(new_start_bound)))
         },
@@ -785,10 +791,11 @@ pub fn remove_overlap_or_gap_rel_bound_pair(
                 );
             };
 
-            let new_end_bound = RelativeEndBound::from(RelativeFiniteBoundPosition::new_with_inclusivity(
-                finite_bound_position.offset(),
-                finite_bound_position.inclusivity().opposite(), // So that it fully closes the gap
-            ));
+            let new_end_bound = RelativeFiniteBoundPosition::new_with_inclusivity(
+                finite_bound_position.pos().offset(),
+                finite_bound_position.pos().inclusivity().opposite(), // So that it fully closes the gap
+            )
+            .to_end_bound();
 
             OverlapOrGapRemovalResult::Single(EmptiableRelativeBoundPair::from(a.grow_end(new_end_bound)))
         },
@@ -800,10 +807,11 @@ pub fn remove_overlap_or_gap_rel_bound_pair(
                 );
             };
 
-            let new_start_bound = RelativeStartBound::from(RelativeFiniteBoundPosition::new_with_inclusivity(
-                finite_bound_position.offset(),
-                finite_bound_position.inclusivity().opposite(), // So that it fully closes the gap
-            ));
+            let new_start_bound = RelativeFiniteBoundPosition::new_with_inclusivity(
+                finite_bound_position.pos().offset(),
+                finite_bound_position.pos().inclusivity().opposite(), // So that it fully closes the gap
+            )
+            .to_start_bound();
 
             OverlapOrGapRemovalResult::Single(EmptiableRelativeBoundPair::from(a.grow_start(new_start_bound)))
         },
@@ -815,10 +823,11 @@ pub fn remove_overlap_or_gap_rel_bound_pair(
                 );
             };
 
-            let new_end_bound = RelativeEndBound::from(RelativeFiniteBoundPosition::new_with_inclusivity(
-                finite_bound_position.offset(),
-                finite_bound_position.inclusivity().opposite(), // So that it fully closes the gap
-            ));
+            let new_end_bound = RelativeFiniteBoundPosition::new_with_inclusivity(
+                finite_bound_position.pos().offset(),
+                finite_bound_position.pos().inclusivity().opposite(), // So that it fully closes the gap
+            )
+            .to_end_bound();
 
             OverlapOrGapRemovalResult::Single(EmptiableRelativeBoundPair::Bound(a.shrink_end(new_end_bound)))
         },
@@ -830,10 +839,11 @@ pub fn remove_overlap_or_gap_rel_bound_pair(
                 );
             };
 
-            let new_start_bound = RelativeStartBound::from(RelativeFiniteBoundPosition::new_with_inclusivity(
-                finite_bound_position.offset(),
-                finite_bound_position.inclusivity().opposite(), // So that it fully closes the gap
-            ));
+            let new_start_bound = RelativeFiniteBoundPosition::new_with_inclusivity(
+                finite_bound_position.pos().offset(),
+                finite_bound_position.pos().inclusivity().opposite(), // So that it fully closes the gap
+            )
+            .to_start_bound();
 
             OverlapOrGapRemovalResult::Single(EmptiableRelativeBoundPair::Bound(a.shrink_start(new_start_bound)))
         },
@@ -845,10 +855,11 @@ pub fn remove_overlap_or_gap_rel_bound_pair(
                 );
             };
 
-            let new_end_bound = RelativeEndBound::from(RelativeFiniteBoundPosition::new_with_inclusivity(
-                finite_bound_position.offset(),
-                finite_bound_position.inclusivity().opposite(), // So that it fully closes the gap
-            ));
+            let new_end_bound = RelativeFiniteBoundPosition::new_with_inclusivity(
+                finite_bound_position.pos().offset(),
+                finite_bound_position.pos().inclusivity().opposite(), // So that it fully closes the gap
+            )
+            .to_end_bound();
 
             OverlapOrGapRemovalResult::Single(EmptiableRelativeBoundPair::from(a.shrink_end(new_end_bound)))
         },
@@ -860,10 +871,11 @@ pub fn remove_overlap_or_gap_rel_bound_pair(
                 );
             };
 
-            let new_start_bound = RelativeStartBound::from(RelativeFiniteBoundPosition::new_with_inclusivity(
-                finite_bound_position.offset(),
-                finite_bound_position.inclusivity().opposite(), // So that it fully closes the gap
-            ));
+            let new_start_bound = RelativeFiniteBoundPosition::new_with_inclusivity(
+                finite_bound_position.pos().offset(),
+                finite_bound_position.pos().inclusivity().opposite(), // So that it fully closes the gap
+            )
+            .to_start_bound();
 
             OverlapOrGapRemovalResult::Single(EmptiableRelativeBoundPair::from(a.shrink_start(new_start_bound)))
         },

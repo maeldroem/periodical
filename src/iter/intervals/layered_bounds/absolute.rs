@@ -6,7 +6,7 @@ use std::ops::{Add, Sub};
 
 use crate::intervals::absolute::AbsoluteBound;
 use crate::intervals::meta::BoundInclusivity;
-use crate::intervals::ops::{BoundOrdering, BoundOverlapDisambiguationRuleSet, BoundPartialOrd};
+use crate::intervals::ops::{BoundOrd, BoundOrdering, BoundOverlapDisambiguationRuleSet};
 use crate::iter::intervals::layered_bounds::abs_state_change::LayeredBoundsStateChangeAtAbsoluteBound;
 use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
 

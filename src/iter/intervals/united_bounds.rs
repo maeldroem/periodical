@@ -47,7 +47,6 @@ use std::cmp::Ordering;
 use std::iter::{FusedIterator, Peekable};
 
 use crate::intervals::absolute::{AbsoluteBound, AbsoluteEndBound};
-use crate::intervals::ops::BoundPartialOrd;
 use crate::intervals::ops::bound_overlap_ambiguity::BoundOverlapDisambiguationRuleSet;
 use crate::intervals::relative::{RelativeBound, RelativeEndBound};
 use crate::iter::intervals::layered_bounds::{LayeredAbsoluteBounds, LayeredRelativeBounds};

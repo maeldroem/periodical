@@ -67,7 +67,6 @@
 use crate::intervals::absolute::{
     AbsoluteBoundPair,
     AbsoluteEndBound,
-    AbsoluteFiniteBoundPosition,
     AbsoluteInterval,
     AbsoluteStartBound,
     BoundedAbsoluteInterval,
@@ -77,7 +76,7 @@ use crate::intervals::absolute::{
     HasAbsoluteBoundPair,
     HasEmptiableAbsoluteBoundPair,
 };
-use crate::intervals::meta::{HasBoundInclusivity, OpeningDirection};
+use crate::intervals::meta::OpeningDirection;
 use crate::intervals::relative::{
     BoundedRelativeInterval,
     EmptiableRelativeBoundPair,
@@ -87,7 +86,6 @@ use crate::intervals::relative::{
     HasRelativeBoundPair,
     RelativeBoundPair,
     RelativeEndBound,
-    RelativeFiniteBoundPosition,
     RelativeInterval,
     RelativeStartBound,
 };
@@ -438,11 +436,10 @@ impl Continuable for EmptyInterval {
 pub fn past_continuation_abs_bound_pair(bounds: &AbsoluteBoundPair) -> EmptiableAbsoluteBoundPair {
     match bounds.abs_start() {
         AbsoluteStartBound::InfinitePast => EmptiableAbsoluteBoundPair::Empty,
-        AbsoluteStartBound::Finite(finite) => EmptiableAbsoluteBoundPair::from(AbsoluteBoundPair::new(
-            AbsoluteStartBound::InfinitePast,
-            AbsoluteFiniteBoundPosition::new_with_inclusivity(finite.time(), finite.inclusivity().opposite())
-                .to_end_bound(),
-        )),
+        AbsoluteStartBound::Finite(finite_start) => {
+            AbsoluteBoundPair::new(AbsoluteStartBound::InfinitePast, finite_start.opposite().to_end_bound())
+                .to_emptiable()
+        },
     }
 }
 
@@ -453,11 +450,10 @@ pub fn past_continuation_abs_bound_pair(bounds: &AbsoluteBoundPair) -> Emptiable
 pub fn future_continuation_abs_bound_pair(bounds: &AbsoluteBoundPair) -> EmptiableAbsoluteBoundPair {
     match bounds.abs_end() {
         AbsoluteEndBound::InfiniteFuture => EmptiableAbsoluteBoundPair::Empty,
-        AbsoluteEndBound::Finite(finite) => EmptiableAbsoluteBoundPair::from(AbsoluteBoundPair::new(
-            AbsoluteFiniteBoundPosition::new_with_inclusivity(finite.time(), finite.inclusivity().opposite())
-                .to_start_bound(),
-            AbsoluteEndBound::InfiniteFuture,
-        )),
+        AbsoluteEndBound::Finite(finite_end) => {
+            AbsoluteBoundPair::new(finite_end.opposite().to_start_bound(), AbsoluteEndBound::InfiniteFuture)
+                .to_emptiable()
+        },
     }
 }
 
@@ -516,11 +512,10 @@ pub fn future_continuation_bounded_abs_interval(interval: &BoundedAbsoluteInterv
 pub fn past_continuation_rel_bound_pair(bounds: &RelativeBoundPair) -> EmptiableRelativeBoundPair {
     match bounds.rel_start() {
         RelativeStartBound::InfinitePast => EmptiableRelativeBoundPair::Empty,
-        RelativeStartBound::Finite(finite) => EmptiableRelativeBoundPair::from(RelativeBoundPair::new(
-            RelativeStartBound::InfinitePast,
-            RelativeFiniteBoundPosition::new_with_inclusivity(finite.offset(), finite.inclusivity().opposite())
-                .to_end_bound(),
-        )),
+        RelativeStartBound::Finite(finite_start) => {
+            RelativeBoundPair::new(RelativeStartBound::InfinitePast, finite_start.opposite().to_end_bound())
+                .to_emptiable()
+        },
     }
 }
 
@@ -531,11 +526,10 @@ pub fn past_continuation_rel_bound_pair(bounds: &RelativeBoundPair) -> Emptiable
 pub fn future_continuation_rel_bound_pair(bounds: &RelativeBoundPair) -> EmptiableRelativeBoundPair {
     match bounds.rel_end() {
         RelativeEndBound::InfiniteFuture => EmptiableRelativeBoundPair::Empty,
-        RelativeEndBound::Finite(finite) => EmptiableRelativeBoundPair::from(RelativeBoundPair::new(
-            RelativeFiniteBoundPosition::new_with_inclusivity(finite.offset(), finite.inclusivity().opposite())
-                .to_start_bound(),
-            RelativeEndBound::InfiniteFuture,
-        )),
+        RelativeEndBound::Finite(finite_end) => {
+            RelativeBoundPair::new(finite_end.opposite().to_start_bound(), RelativeEndBound::InfiniteFuture)
+                .to_emptiable()
+        },
     }
 }
 
@@ -568,7 +562,7 @@ pub fn future_continuation_emptiable_rel_bound_pair(bounds: &EmptiableRelativeBo
 /// See [module documentation](self) for more info.
 #[must_use]
 pub fn past_continuation_bounded_rel_interval(interval: &BoundedRelativeInterval) -> HalfBoundedRelativeInterval {
-    HalfBoundedRelativeInterval::new_with_inclusivity(
+    HalfBoundedRelativeInterval::new_from_offset_and_inclusivity(
         interval.start_offset(),
         interval.start_inclusivity().opposite(),
         OpeningDirection::ToPast,
@@ -580,7 +574,7 @@ pub fn past_continuation_bounded_rel_interval(interval: &BoundedRelativeInterval
 /// See [module documentation](self) for more info.
 #[must_use]
 pub fn future_continuation_bounded_rel_interval(interval: &BoundedRelativeInterval) -> HalfBoundedRelativeInterval {
-    HalfBoundedRelativeInterval::new_with_inclusivity(
+    HalfBoundedRelativeInterval::new_from_offset_and_inclusivity(
         interval.end_offset(),
         interval.end_inclusivity().opposite(),
         OpeningDirection::ToFuture,

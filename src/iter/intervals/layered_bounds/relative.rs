@@ -5,7 +5,7 @@ use std::iter::{FusedIterator, Peekable};
 use std::ops::{Add, Sub};
 
 use crate::intervals::meta::BoundInclusivity;
-use crate::intervals::ops::{BoundOrdering, BoundOverlapDisambiguationRuleSet, BoundPartialOrd};
+use crate::intervals::ops::{BoundOrd, BoundOrdering, BoundOverlapDisambiguationRuleSet};
 use crate::intervals::relative::RelativeBound;
 use crate::iter::intervals::layered_bounds::rel_state_change::LayeredBoundsStateChangeAtRelativeBound;
 use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;

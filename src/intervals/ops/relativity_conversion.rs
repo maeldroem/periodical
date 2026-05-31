@@ -18,7 +18,7 @@ use crate::intervals::absolute::{
     HalfBoundedAbsoluteInterval,
     HasAbsoluteBoundPair,
 };
-use crate::intervals::meta::HasBoundInclusivity;
+use crate::intervals::meta::{HasBoundInclusivity, HasOpeningDirection};
 use crate::intervals::relative::{
     BoundedRelativeInterval,
     EmptiableRelativeBoundPair,
@@ -176,8 +176,8 @@ impl ToAbsolute for RelativeStartBound {
         match self {
             RelativeStartBound::InfinitePast => AbsoluteStartBound::InfinitePast,
             RelativeStartBound::Finite(relative_finite) => AbsoluteFiniteBoundPosition::new_with_inclusivity(
-                reference + relative_finite.offset(),
-                relative_finite.inclusivity(),
+                reference + relative_finite.pos().offset(),
+                relative_finite.pos().inclusivity(),
             )
             .to_start_bound(),
         }
@@ -191,8 +191,8 @@ impl ToAbsolute for RelativeEndBound {
         match self {
             RelativeEndBound::InfiniteFuture => AbsoluteEndBound::InfiniteFuture,
             RelativeEndBound::Finite(relative_finite) => AbsoluteFiniteBoundPosition::new_with_inclusivity(
-                reference + relative_finite.offset(),
-                relative_finite.inclusivity(),
+                reference + relative_finite.pos().offset(),
+                relative_finite.pos().inclusivity(),
             )
             .to_end_bound(),
         }
@@ -225,7 +225,7 @@ impl ToAbsolute for BoundedRelativeInterval {
     type AbsoluteType = BoundedAbsoluteInterval;
 
     fn to_absolute(&self, reference: Timestamp) -> Self::AbsoluteType {
-        BoundedAbsoluteInterval::unchecked_new_with_inclusivity(
+        BoundedAbsoluteInterval::unchecked_new_from_times_and_inclusivities(
             reference + self.start_offset(),
             self.start_inclusivity(),
             reference + self.end_offset(),
@@ -239,7 +239,7 @@ impl ToAbsolute for HalfBoundedRelativeInterval {
 
     fn to_absolute(&self, reference: Timestamp) -> Self::AbsoluteType {
         HalfBoundedAbsoluteInterval::new_from_time_and_inclusivity(
-            reference + self.reference(),
+            reference + self.reference_offset(),
             self.reference_inclusivity(),
             self.opening_direction(),
         )
@@ -384,8 +384,8 @@ impl ToRelative for AbsoluteStartBound {
         match self {
             AbsoluteStartBound::InfinitePast => RelativeStartBound::InfinitePast,
             AbsoluteStartBound::Finite(absolute_finite) => RelativeFiniteBoundPosition::new_with_inclusivity(
-                absolute_finite.time().duration_since(reference),
-                absolute_finite.inclusivity(),
+                absolute_finite.pos().time().duration_since(reference),
+                absolute_finite.pos().inclusivity(),
             )
             .to_start_bound(),
         }
@@ -399,8 +399,8 @@ impl ToRelative for AbsoluteEndBound {
         match self {
             AbsoluteEndBound::InfiniteFuture => RelativeEndBound::InfiniteFuture,
             AbsoluteEndBound::Finite(absolute_finite) => RelativeFiniteBoundPosition::new_with_inclusivity(
-                absolute_finite.time().duration_since(reference),
-                absolute_finite.inclusivity(),
+                absolute_finite.pos().time().duration_since(reference),
+                absolute_finite.pos().inclusivity(),
             )
             .to_end_bound(),
         }
@@ -433,7 +433,7 @@ impl ToRelative for BoundedAbsoluteInterval {
     type RelativeType = BoundedRelativeInterval;
 
     fn to_relative(&self, reference: Timestamp) -> Self::RelativeType {
-        BoundedRelativeInterval::new_with_inclusivity(
+        BoundedRelativeInterval::new_from_offsets_and_inclusivities(
             self.start_time().duration_since(reference),
             self.start_inclusivity(),
             self.end_time().duration_since(reference),
@@ -446,7 +446,7 @@ impl ToRelative for HalfBoundedAbsoluteInterval {
     type RelativeType = HalfBoundedRelativeInterval;
 
     fn to_relative(&self, reference: Timestamp) -> Self::RelativeType {
-        HalfBoundedRelativeInterval::new_with_inclusivity(
+        HalfBoundedRelativeInterval::new_from_offset_and_inclusivity(
             self.reference_time().duration_since(reference),
             self.reference_inclusivity(),
             self.opening_direction(),

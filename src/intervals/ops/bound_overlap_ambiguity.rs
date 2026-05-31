@@ -135,7 +135,7 @@ impl BoundOverlapAmbiguity {
     /// );
     /// ```
     #[must_use]
-    pub fn disambiguate_using_rule_set(self, rule_set: BoundOverlapDisambiguationRuleSet) -> DisambiguatedBoundOverlap {
+    pub fn disambiguate(self, rule_set: BoundOverlapDisambiguationRuleSet) -> DisambiguatedBoundOverlap {
         rule_set.disambiguate(self)
     }
 

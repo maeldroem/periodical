@@ -57,8 +57,8 @@ use serde::{Deserialize, Serialize};
 use crate::intervals::ops::BoundEq;
 use crate::intervals::ops::bound_overlap_ambiguity::{
     BoundOverlapAmbiguity,
-    BoundOverlapDisambiguationRuleSet,
     DisambiguatedBoundOverlap,
+    BoundOverlapDisambiguationRuleSet,
 };
 
 /// [`Ordering`] for bounds with support for [`BoundOverlapAmbiguity`]
@@ -124,7 +124,7 @@ impl BoundOrdering {
         match self {
             Self::Less => Ordering::Less,
             Self::Equal(None) => Ordering::Equal,
-            Self::Equal(Some(ambiguity)) => match ambiguity.disambiguate_using_rule_set(rule_set) {
+            Self::Equal(Some(ambiguity)) => match ambiguity.disambiguate(rule_set) {
                 DisambiguatedBoundOverlap::Before => Ordering::Less,
                 DisambiguatedBoundOverlap::Equal => Ordering::Equal,
                 DisambiguatedBoundOverlap::After => Ordering::Greater,
@@ -341,10 +341,7 @@ where
         match self.bound_cmp(other) {
             BoundOrdering::Less => true,
             BoundOrdering::Equal(Some(ambiguity)) => {
-                matches!(
-                    ambiguity.disambiguate_using_rule_set(rule_set),
-                    DisambiguatedBoundOverlap::Before,
-                )
+                matches!(ambiguity.disambiguate(rule_set), DisambiguatedBoundOverlap::Before,)
             },
             BoundOrdering::Equal(None) | BoundOrdering::Greater => false,
         }
@@ -388,7 +385,7 @@ where
             BoundOrdering::Less | BoundOrdering::Equal(None) => true,
             BoundOrdering::Equal(Some(ambiguity)) => {
                 matches!(
-                    ambiguity.disambiguate_using_rule_set(rule_set),
+                    ambiguity.disambiguate(rule_set),
                     DisambiguatedBoundOverlap::Before | DisambiguatedBoundOverlap::Equal,
                 )
             },
@@ -433,10 +430,7 @@ where
         match self.bound_cmp(other) {
             BoundOrdering::Less => true,
             BoundOrdering::Equal(Some(ambiguity)) => {
-                matches!(
-                    ambiguity.disambiguate_using_rule_set(rule_set),
-                    DisambiguatedBoundOverlap::After,
-                )
+                matches!(ambiguity.disambiguate(rule_set), DisambiguatedBoundOverlap::After,)
             },
             BoundOrdering::Equal(None) | BoundOrdering::Greater => false,
         }
@@ -480,7 +474,7 @@ where
             BoundOrdering::Less | BoundOrdering::Equal(None) => true,
             BoundOrdering::Equal(Some(ambiguity)) => {
                 matches!(
-                    ambiguity.disambiguate_using_rule_set(rule_set),
+                    ambiguity.disambiguate(rule_set),
                     DisambiguatedBoundOverlap::Equal | DisambiguatedBoundOverlap::After,
                 )
             },

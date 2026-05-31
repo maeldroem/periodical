@@ -79,7 +79,7 @@ impl BoundedAbsoluteInterval {
             .or(Err(BoundedAbsoluteIntervalCreationError::ComputationError))?
             .timestamp();
 
-        Ok(Self::unchecked_new_with_inclusivity(
+        Ok(Self::unchecked_new_from_times_and_inclusivities(
             start,
             BoundInclusivity::Inclusive,
             end,
@@ -404,7 +404,7 @@ impl BoundedAbsoluteInterval {
             .or(Err(BoundedAbsoluteIntervalCreationError::ComputationError))?
             .timestamp();
 
-        Ok(Self::unchecked_new_with_inclusivity(
+        Ok(Self::unchecked_new_from_times_and_inclusivities(
             start,
             BoundInclusivity::Inclusive,
             end,
