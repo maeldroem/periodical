@@ -23,6 +23,7 @@ use crate::intervals::meta::{
     Duration as IntervalDuration,
     HasBoundInclusivity,
     HasDuration,
+    HasOpeningDirection,
     HasOpenness,
     HasRelativity,
     Interval,
@@ -468,6 +469,15 @@ impl HasDuration for HalfBoundedRelativeInterval {
     }
 }
 
+impl HasOpeningDirection for HalfBoundedRelativeInterval {
+    fn opening_direction(&self) -> OpeningDirection {
+        match self {
+            Self::ToFuture(_) => OpeningDirection::ToFuture,
+            Self::ToPast(_) => OpeningDirection::ToPast,
+        }
+    }
+}
+
 impl HasRelativeBoundPair for HalfBoundedRelativeInterval {
     fn rel_bound_pair(&self) -> RelativeBoundPair {
         RelativeBoundPair::new(self.rel_start(), self.rel_end())
@@ -539,6 +549,18 @@ impl From<RangeToInclusive<SignedDuration>> for HalfBoundedRelativeInterval {
             BoundInclusivity::Inclusive,
             OpeningDirection::ToPast,
         )
+    }
+}
+
+impl From<HalfBoundedToFutureRelativeInterval> for HalfBoundedRelativeInterval {
+    fn from(value: HalfBoundedToFutureRelativeInterval) -> Self {
+        HalfBoundedRelativeInterval::ToFuture(value)
+    }
+}
+
+impl From<HalfBoundedToPastRelativeInterval> for HalfBoundedRelativeInterval {
+    fn from(value: HalfBoundedToPastRelativeInterval) -> Self {
+        HalfBoundedRelativeInterval::ToPast(value)
     }
 }
 

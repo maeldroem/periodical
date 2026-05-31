@@ -35,6 +35,7 @@ use crate::intervals::meta::{
     Duration as IntervalDuration,
     HasBoundInclusivity,
     HasDuration,
+    HasOpeningDirection,
     HasOpenness,
     HasRelativity,
     Interval,
@@ -467,6 +468,15 @@ impl HasDuration for HalfBoundedAbsoluteInterval {
     }
 }
 
+impl HasOpeningDirection for HalfBoundedAbsoluteInterval {
+    fn opening_direction(&self) -> OpeningDirection {
+        match self {
+            Self::ToFuture(_) => OpeningDirection::ToFuture,
+            Self::ToPast(_) => OpeningDirection::ToPast,
+        }
+    }
+}
+
 impl HasAbsoluteBoundPair for HalfBoundedAbsoluteInterval {
     fn abs_bound_pair(&self) -> AbsoluteBoundPair {
         AbsoluteBoundPair::new(self.abs_start(), self.abs_end())
@@ -538,6 +548,18 @@ impl From<RangeToInclusive<Timestamp>> for HalfBoundedAbsoluteInterval {
             BoundInclusivity::Inclusive,
             OpeningDirection::ToPast,
         )
+    }
+}
+
+impl From<HalfBoundedToFutureAbsoluteInterval> for HalfBoundedAbsoluteInterval {
+    fn from(value: HalfBoundedToFutureAbsoluteInterval) -> Self {
+        HalfBoundedAbsoluteInterval::ToFuture(value)
+    }
+}
+
+impl From<HalfBoundedToPastAbsoluteInterval> for HalfBoundedAbsoluteInterval {
+    fn from(value: HalfBoundedToPastAbsoluteInterval) -> Self {
+        HalfBoundedAbsoluteInterval::ToPast(value)
     }
 }
 

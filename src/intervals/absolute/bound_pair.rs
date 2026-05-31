@@ -433,8 +433,12 @@ impl HasDuration for AbsoluteBoundPair {
             (AbsoluteStartBound::InfinitePast, _) | (_, AbsoluteEndBound::InfiniteFuture) => IntervalDuration::Infinite,
             (AbsoluteStartBound::Finite(finite_start), AbsoluteEndBound::Finite(finite_end)) => {
                 IntervalDuration::Finite(
-                    finite_end.time().duration_since(finite_start.time()).unsigned_abs(),
-                    Epsilon::from((finite_start.inclusivity(), finite_end.inclusivity())),
+                    finite_end
+                        .pos()
+                        .time()
+                        .duration_since(finite_start.pos().time())
+                        .unsigned_abs(),
+                    Epsilon::from((finite_start.pos().inclusivity(), finite_end.pos().inclusivity())),
                 )
             },
         }

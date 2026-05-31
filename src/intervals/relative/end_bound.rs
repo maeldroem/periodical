@@ -250,8 +250,8 @@ impl BoundOrd for RelativeEndBound {
             Ordering::Equal => BoundOrdering::Equal(self.finite().zip(other.finite()).map(
                 |(lhs_finite_end, rhs_finite_end)| {
                     BoundOverlapAmbiguity::BothEnds(
-                        lhs_finite_end.inclusivity(),
-                        rhs_finite_end.inclusivity(),
+                        lhs_finite_end.pos().inclusivity(),
+                        rhs_finite_end.pos().inclusivity(),
                     )
                 },
             )),

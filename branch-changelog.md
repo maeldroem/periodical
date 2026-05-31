@@ -9,9 +9,7 @@ finite only.
 This allows for type safety when comparing finite bounds and not having to use their possibly infinite variants
 to perform comparisons that then have to be unwrapped into finite variants.
 
-Link relevant issues and PRs here!
-
-Explain the motivation for this PR and what it does/solves
+Reworked multiple structures to guarantee more invariants.
 
 # Notes
 
@@ -19,6 +17,11 @@ Explain the motivation for this PR and what it does/solves
 <summary><h1>Changelog</h1></summary>
 
 ## Added
+
+TODO: checks tests again after the refactoring
+TODO: rework docs and examples
+TODO: add missing conversions, rework conversions
+TODO: once all done, continue unit tests
 
 - Tests to complete code coverage for `time`
 - Tests to complete code coverage for `ops`

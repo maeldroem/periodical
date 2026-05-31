@@ -40,6 +40,8 @@ use crate::intervals::relative::{
     BoundedRelativeInterval,
     EmptiableRelativeBoundPair,
     HalfBoundedRelativeInterval,
+    HalfBoundedToFutureRelativeInterval,
+    HalfBoundedToPastRelativeInterval,
     HasEmptiableRelativeBoundPair,
     HasRelativeBoundPair,
     RelativeBoundPair,
@@ -220,6 +222,18 @@ impl Ord for EmptiableRelativeInterval {
 
 impl From<BoundedRelativeInterval> for EmptiableRelativeInterval {
     fn from(value: BoundedRelativeInterval) -> Self {
+        EmptiableRelativeInterval::Bound(value.to_interval())
+    }
+}
+
+impl From<HalfBoundedToFutureRelativeInterval> for EmptiableRelativeInterval {
+    fn from(value: HalfBoundedToFutureRelativeInterval) -> Self {
+        EmptiableRelativeInterval::Bound(value.to_interval())
+    }
+}
+
+impl From<HalfBoundedToPastRelativeInterval> for EmptiableRelativeInterval {
+    fn from(value: HalfBoundedToPastRelativeInterval) -> Self {
         EmptiableRelativeInterval::Bound(value.to_interval())
     }
 }

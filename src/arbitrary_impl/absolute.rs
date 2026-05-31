@@ -47,14 +47,14 @@ impl<'a> Arbitrary<'a> for BoundedAbsoluteInterval {
             .or(Err(Error::IncorrectFormat))?;
 
         if start_time == end_time {
-            Ok(BoundedAbsoluteInterval::new_with_inclusivity(
+            Ok(BoundedAbsoluteInterval::new_from_times_and_inclusivities(
                 start_time,
                 BoundInclusivity::Inclusive,
                 end_time,
                 BoundInclusivity::Inclusive,
             ))
         } else {
-            Ok(BoundedAbsoluteInterval::new_with_inclusivity(
+            Ok(BoundedAbsoluteInterval::new_from_times_and_inclusivities(
                 start_time,
                 BoundInclusivity::arbitrary(u)?,
                 end_time,

@@ -32,14 +32,14 @@ use serde::{Deserialize, Serialize};
 use crate::intervals::absolute::{
     AbsoluteBoundPair,
     AbsoluteEndBound,
-    AbsoluteFiniteBoundPosition,
     AbsoluteStartBound,
     BoundedAbsoluteInterval,
     EmptiableAbsoluteBoundPair,
     EmptiableAbsoluteInterval,
     HalfBoundedAbsoluteInterval,
+    HalfBoundedToFutureAbsoluteInterval,
+    HalfBoundedToPastAbsoluteInterval,
     HasAbsoluteBoundPair,
-    HasEmptiableAbsoluteBoundPair,
 };
 use crate::intervals::meta::{
     Duration as IntervalDuration,
@@ -309,19 +309,31 @@ impl IsEmpty for AbsoluteInterval {
 
 impl From<BoundedAbsoluteInterval> for AbsoluteInterval {
     fn from(value: BoundedAbsoluteInterval) -> Self {
-        AbsoluteInterval::Bounded(value)
+        Self::Bounded(value)
+    }
+}
+
+impl From<HalfBoundedToFutureAbsoluteInterval> for AbsoluteInterval {
+    fn from(value: HalfBoundedToFutureAbsoluteInterval) -> Self {
+        Self::from(HalfBoundedAbsoluteInterval::from(value))
+    }
+}
+
+impl From<HalfBoundedToPastAbsoluteInterval> for AbsoluteInterval {
+    fn from(value: HalfBoundedToPastAbsoluteInterval) -> Self {
+        Self::from(HalfBoundedAbsoluteInterval::from(value))
     }
 }
 
 impl From<HalfBoundedAbsoluteInterval> for AbsoluteInterval {
     fn from(value: HalfBoundedAbsoluteInterval) -> Self {
-        AbsoluteInterval::HalfBounded(value)
+        Self::HalfBounded(value)
     }
 }
 
 impl From<UnboundedInterval> for AbsoluteInterval {
     fn from(value: UnboundedInterval) -> Self {
-        AbsoluteInterval::Unbounded(value)
+        Self::Unbounded(value)
     }
 }
 
@@ -330,45 +342,17 @@ impl From<AbsoluteBoundPair> for AbsoluteInterval {
         type StartB = AbsoluteStartBound;
         type EndB = AbsoluteEndBound;
 
-        match (value.abs_start(), value.abs_end()) {
+        match (value.start(), value.end()) {
             (StartB::InfinitePast, EndB::InfiniteFuture) => AbsoluteInterval::Unbounded(UnboundedInterval),
-            (
-                StartB::InfinitePast,
-                EndB::Finite(AbsoluteFiniteBoundPosition {
-                    time,
-                    inclusivity,
-                }),
-            ) => AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time_and_inclusivity(
-                time,
-                inclusivity,
-                OpeningDirection::ToPast,
-            )),
-            (
-                StartB::Finite(AbsoluteFiniteBoundPosition {
-                    time,
-                    inclusivity,
-                }),
-                EndB::InfiniteFuture,
-            ) => AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time_and_inclusivity(
-                time,
-                inclusivity,
-                OpeningDirection::ToFuture,
-            )),
-            (
-                StartB::Finite(AbsoluteFiniteBoundPosition {
-                    time: start_time,
-                    inclusivity: start_inclusivity,
-                }),
-                EndB::Finite(AbsoluteFiniteBoundPosition {
-                    time: end_time,
-                    inclusivity: end_inclusivity,
-                }),
-            ) => AbsoluteInterval::Bounded(BoundedAbsoluteInterval::unchecked_new_with_inclusivity(
-                start_time,
-                start_inclusivity,
-                end_time,
-                end_inclusivity,
-            )),
+            (StartB::InfinitePast, EndB::Finite(finite_end)) => AbsoluteInterval::HalfBounded(
+                HalfBoundedAbsoluteInterval::new(finite_end.pos(), OpeningDirection::ToPast),
+            ),
+            (StartB::Finite(finite_start), EndB::InfiniteFuture) => AbsoluteInterval::HalfBounded(
+                HalfBoundedAbsoluteInterval::new(finite_start.pos(), OpeningDirection::ToFuture),
+            ),
+            (StartB::Finite(finite_start), EndB::Finite(finite_end)) => {
+                AbsoluteInterval::Bounded(BoundedAbsoluteInterval::unchecked_new(finite_start, finite_end))
+            },
         }
     }
 }
@@ -391,53 +375,10 @@ impl TryFrom<EmptiableAbsoluteBoundPair> for AbsoluteInterval {
     type Error = AbsoluteIntervalFromEmptiableAbsoluteBoundPairError;
 
     fn try_from(value: EmptiableAbsoluteBoundPair) -> Result<Self, Self::Error> {
-        type StartB = AbsoluteStartBound;
-        type EndB = AbsoluteEndBound;
-
-        match (value.partial_abs_start(), value.partial_abs_end()) {
-            (None, _) | (_, None) => Err(AbsoluteIntervalFromEmptiableAbsoluteBoundPairError),
-            (Some(StartB::InfinitePast), Some(EndB::InfiniteFuture)) => {
-                Ok(AbsoluteInterval::Unbounded(UnboundedInterval))
-            },
-            (
-                Some(StartB::InfinitePast),
-                Some(EndB::Finite(AbsoluteFiniteBoundPosition {
-                    time,
-                    inclusivity,
-                })),
-            ) => Ok(AbsoluteInterval::HalfBounded(
-                HalfBoundedAbsoluteInterval::new_from_time_and_inclusivity(time, inclusivity, OpeningDirection::ToPast),
-            )),
-            (
-                Some(StartB::Finite(AbsoluteFiniteBoundPosition {
-                    time,
-                    inclusivity,
-                })),
-                Some(EndB::InfiniteFuture),
-            ) => Ok(AbsoluteInterval::HalfBounded(
-                HalfBoundedAbsoluteInterval::new_from_time_and_inclusivity(
-                    time,
-                    inclusivity,
-                    OpeningDirection::ToFuture,
-                ),
-            )),
-            (
-                Some(StartB::Finite(AbsoluteFiniteBoundPosition {
-                    time: start_time,
-                    inclusivity: start_inclusivity,
-                })),
-                Some(EndB::Finite(AbsoluteFiniteBoundPosition {
-                    time: end_time,
-                    inclusivity: end_inclusivity,
-                })),
-            ) => Ok(AbsoluteInterval::Bounded(
-                BoundedAbsoluteInterval::unchecked_new_with_inclusivity(
-                    start_time,
-                    start_inclusivity,
-                    end_time,
-                    end_inclusivity,
-                ),
-            )),
-        }
+        Ok(Self::from(
+            value
+                .bound()
+                .ok_or(AbsoluteIntervalFromEmptiableAbsoluteBoundPairError)?,
+        ))
     }
 }
