@@ -652,7 +652,7 @@ pub fn abridge_abs_bound_pair(
     };
 
     match highest_start
-        .bound_partial_cmp(&lowest_end)
+        .bound_cmp(&lowest_end)
         .expect("semantic comparison between start/end bounds should not fail")
     {
         BoundOrdering::Less => {
@@ -758,7 +758,7 @@ pub fn abridge_rel_bound_pair(
         },
     };
 
-    match highest_start.bound_partial_cmp(&lowest_end) {
+    match highest_start.bound_cmp(&lowest_end) {
         BoundOrdering::Less => {
             EmptiableRelativeBoundPair::Bound(RelativeBoundPair::unchecked_new(highest_start, lowest_end))
         },

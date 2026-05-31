@@ -11,7 +11,7 @@ use arbitrary::Arbitrary;
 use serde::{Deserialize, Serialize};
 
 use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
-use crate::intervals::ops::{BoundEq, BoundOrd, BoundOrdering, BoundOverlapAmbiguity, BoundPartialEq, BoundPartialOrd};
+use crate::intervals::ops::{BoundEq, BoundOrd, BoundOrdExtremaOps, BoundOrdering, BoundOverlapAmbiguity};
 use crate::intervals::relative::{
     RelativeBound,
     RelativeEndBound,
@@ -78,21 +78,19 @@ impl Ord for RelativeFiniteStartBound {
     }
 }
 
-impl BoundPartialEq for RelativeFiniteStartBound {
+impl BoundEq for RelativeFiniteStartBound {
     fn bound_eq(&self, other: &Self) -> bool {
         self.eq(other)
     }
 }
 
-impl BoundEq for RelativeFiniteStartBound {}
-
-impl BoundPartialEq<RelativeStartBound> for RelativeFiniteStartBound {
+impl BoundEq<RelativeStartBound> for RelativeFiniteStartBound {
     fn bound_eq(&self, other: &RelativeStartBound) -> bool {
         other.finite().is_some_and(|finite_start| self.bound_eq(&finite_start))
     }
 }
 
-impl BoundPartialEq<RelativeFiniteEndBound> for RelativeFiniteStartBound {
+impl BoundEq<RelativeFiniteEndBound> for RelativeFiniteStartBound {
     fn bound_eq(&self, other: &RelativeFiniteEndBound) -> bool {
         let start_pos = self.pos();
         let end_pos = other.pos();
@@ -103,13 +101,13 @@ impl BoundPartialEq<RelativeFiniteEndBound> for RelativeFiniteStartBound {
     }
 }
 
-impl BoundPartialEq<RelativeEndBound> for RelativeFiniteStartBound {
+impl BoundEq<RelativeEndBound> for RelativeFiniteStartBound {
     fn bound_eq(&self, other: &RelativeEndBound) -> bool {
         other.finite().is_some_and(|finite_end| self.bound_eq(&finite_end))
     }
 }
 
-impl BoundPartialEq<RelativeFiniteBound> for RelativeFiniteStartBound {
+impl BoundEq<RelativeFiniteBound> for RelativeFiniteStartBound {
     fn bound_eq(&self, other: &RelativeFiniteBound) -> bool {
         match other {
             RelativeFiniteBound::Start(finite_start) => self.bound_eq(finite_start),
@@ -118,18 +116,12 @@ impl BoundPartialEq<RelativeFiniteBound> for RelativeFiniteStartBound {
     }
 }
 
-impl BoundPartialEq<RelativeBound> for RelativeFiniteStartBound {
+impl BoundEq<RelativeBound> for RelativeFiniteStartBound {
     fn bound_eq(&self, other: &RelativeBound) -> bool {
         match other {
             RelativeBound::Start(start) => self.bound_eq(start),
             RelativeBound::End(end) => self.bound_eq(end),
         }
-    }
-}
-
-impl BoundPartialOrd for RelativeFiniteStartBound {
-    fn bound_partial_cmp(&self, other: &Self) -> Option<BoundOrdering> {
-        Some(self.bound_cmp(other))
     }
 }
 
@@ -149,55 +141,57 @@ impl BoundOrd for RelativeFiniteStartBound {
     }
 }
 
-impl BoundPartialOrd<RelativeStartBound> for RelativeFiniteStartBound {
-    fn bound_partial_cmp(&self, other: &RelativeStartBound) -> Option<BoundOrdering> {
-        Some(if let Some(finite_start) = other.finite() {
+impl BoundOrdExtremaOps for RelativeFiniteStartBound {}
+
+impl BoundOrd<RelativeStartBound> for RelativeFiniteStartBound {
+    fn bound_cmp(&self, other: &RelativeStartBound) -> BoundOrdering {
+        if let Some(finite_start) = other.finite() {
             self.bound_cmp(&finite_start)
         } else {
             BoundOrdering::Greater
-        })
+        }
     }
 }
 
-impl BoundPartialOrd<RelativeFiniteEndBound> for RelativeFiniteStartBound {
-    fn bound_partial_cmp(&self, other: &RelativeFiniteEndBound) -> Option<BoundOrdering> {
+impl BoundOrd<RelativeFiniteEndBound> for RelativeFiniteStartBound {
+    fn bound_cmp(&self, other: &RelativeFiniteEndBound) -> BoundOrdering {
         let lhs_pos = self.pos();
         let rhs_pos = other.pos();
 
-        Some(match lhs_pos.cmp(&rhs_pos) {
+        match lhs_pos.cmp(&rhs_pos) {
             Ordering::Less => BoundOrdering::Less,
             Ordering::Equal => BoundOrdering::Equal(Some(BoundOverlapAmbiguity::StartEnd(
                 lhs_pos.inclusivity(),
                 rhs_pos.inclusivity(),
             ))),
             Ordering::Greater => BoundOrdering::Greater,
-        })
-    }
-}
-
-impl BoundPartialOrd<RelativeEndBound> for RelativeFiniteStartBound {
-    fn bound_partial_cmp(&self, other: &RelativeEndBound) -> Option<BoundOrdering> {
-        match other {
-            RelativeEndBound::Finite(finite_end) => self.bound_partial_cmp(finite_end),
-            RelativeEndBound::InfiniteFuture => Some(BoundOrdering::Less),
         }
     }
 }
 
-impl BoundPartialOrd<RelativeFiniteBound> for RelativeFiniteStartBound {
-    fn bound_partial_cmp(&self, other: &RelativeFiniteBound) -> Option<BoundOrdering> {
+impl BoundOrd<RelativeEndBound> for RelativeFiniteStartBound {
+    fn bound_cmp(&self, other: &RelativeEndBound) -> BoundOrdering {
         match other {
-            RelativeFiniteBound::Start(finite_start) => self.bound_partial_cmp(finite_start),
-            RelativeFiniteBound::End(finite_end) => self.bound_partial_cmp(finite_end),
+            RelativeEndBound::Finite(finite_end) => self.bound_cmp(finite_end),
+            RelativeEndBound::InfiniteFuture => BoundOrdering::Less,
         }
     }
 }
 
-impl BoundPartialOrd<RelativeBound> for RelativeFiniteStartBound {
-    fn bound_partial_cmp(&self, other: &RelativeBound) -> Option<BoundOrdering> {
+impl BoundOrd<RelativeFiniteBound> for RelativeFiniteStartBound {
+    fn bound_cmp(&self, other: &RelativeFiniteBound) -> BoundOrdering {
         match other {
-            RelativeBound::Start(start) => self.bound_partial_cmp(start),
-            RelativeBound::End(end) => self.bound_partial_cmp(end),
+            RelativeFiniteBound::Start(finite_start) => self.bound_cmp(finite_start),
+            RelativeFiniteBound::End(finite_end) => self.bound_cmp(finite_end),
+        }
+    }
+}
+
+impl BoundOrd<RelativeBound> for RelativeFiniteStartBound {
+    fn bound_cmp(&self, other: &RelativeBound) -> BoundOrdering {
+        match other {
+            RelativeBound::Start(start) => self.bound_cmp(start),
+            RelativeBound::End(end) => self.bound_cmp(end),
         }
     }
 }

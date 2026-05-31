@@ -1,4 +1,5 @@
-pub trait BoundPartialEq<Rhs = Self>
+// note to implementors: only implement on bounds + guarantee all transitivity etc.
+pub trait BoundEq<Rhs = Self>
 where
     Rhs: ?Sized,
 {
@@ -8,5 +9,3 @@ where
         !self.bound_eq(other)
     }
 }
-
-pub trait BoundEq: BoundPartialEq {}

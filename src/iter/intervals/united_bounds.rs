@@ -287,7 +287,7 @@ fn is_abs_end_bound_adjacent_to_abs_peeked(end: &AbsoluteEndBound, peeked: &Abso
     };
 
     matches!(
-        end.bound_partial_cmp(peeked_start).map(
+        end.bound_cmp(peeked_start).map(
             |bound_ordering| bound_ordering.disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Lenient)
         ),
         Some(Ordering::Equal),
@@ -488,7 +488,7 @@ fn is_rel_end_bound_adjacent_to_rel_peeked(end: &RelativeEndBound, peeked: &Rela
     };
 
     matches!(
-        end.bound_partial_cmp(peeked_start).map(
+        end.bound_cmp(peeked_start).map(
             |bound_ordering| bound_ordering.disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Lenient)
         ),
         Some(Ordering::Equal),

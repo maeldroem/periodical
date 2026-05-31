@@ -23,7 +23,7 @@ pub use crate::intervals::meta::{
     IsEmpty,
 };
 pub use crate::intervals::ops::abridge::Abridgable;
-pub use crate::intervals::ops::bound_cmp::{BoundEq, BoundOrd, BoundPartialEq, BoundPartialOrd};
+pub use crate::intervals::ops::bound_cmp::{BoundEq, BoundOrd, BoundOrdExtremaOps};
 pub use crate::intervals::ops::bound_containment::CanPositionBoundContainment;
 pub use crate::intervals::ops::complement::Complementable;
 pub use crate::intervals::ops::cut::{CutResult, CutType, Cuttable};

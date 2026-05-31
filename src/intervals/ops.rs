@@ -77,7 +77,7 @@ mod shrink_tests;
 #[doc(inline)]
 pub use abridge::Abridgable;
 #[doc(inline)]
-pub use bound_cmp::{BoundEq, BoundOrd, BoundOrdering, BoundPartialEq, BoundPartialOrd};
+pub use bound_cmp::{BoundEq, BoundOrd, BoundOrdExtremaOps, BoundOrdering};
 #[doc(inline)]
 pub use bound_containment::{
     BoundContainmentPosition,
