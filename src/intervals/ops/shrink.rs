@@ -58,8 +58,6 @@
 //! # Ok::<(), Box<dyn Error>>(())
 //! ```
 
-use std::cmp::Ordering;
-
 use crate::intervals::absolute::{
     AbsoluteBoundPair,
     AbsoluteEndBound,
@@ -72,6 +70,7 @@ use crate::intervals::absolute::{
     HasAbsoluteBoundPair,
     HasEmptiableAbsoluteBoundPair,
 };
+use crate::intervals::ops::{BoundOrd, BoundOverlapDisambiguationRuleSet};
 use crate::intervals::relative::{
     BoundedRelativeInterval,
     EmptiableRelativeBoundPair,
@@ -500,12 +499,8 @@ pub fn shrink_start_abs_bound_pair(bounds: &AbsoluteBoundPair, at: AbsoluteStart
     let mut new_bounds = bounds.clone();
     let max_start = new_bounds.abs_start().max(at);
 
-    match max_start.partial_cmp(&new_bounds.abs_end()) {
-        // Would create an invalid interval, so we just return a clone of the original bounds
-        None | Some(Ordering::Greater) => {},
-        Some(Ordering::Equal | Ordering::Less) => {
-            new_bounds.set_start(max_start);
-        },
+    if max_start.bound_le(&new_bounds.abs_end(), BoundOverlapDisambiguationRuleSet::Strict) {
+        new_bounds.set_start(max_start);
     }
 
     new_bounds
@@ -537,12 +532,11 @@ pub fn shrink_end_abs_bound_pair(bounds: &AbsoluteBoundPair, at: AbsoluteEndBoun
     let mut new_bounds = bounds.clone();
     let min_end = new_bounds.abs_end().min(at);
 
-    match new_bounds.abs_start().partial_cmp(&min_end) {
-        // Would create an invalid interval, so we just return a clone of the original bounds
-        None | Some(Ordering::Greater) => {},
-        Some(Ordering::Equal | Ordering::Less) => {
-            new_bounds.set_end(min_end);
-        },
+    if new_bounds
+        .abs_start()
+        .bound_le(&min_end, BoundOverlapDisambiguationRuleSet::Strict)
+    {
+        new_bounds.set_end(min_end);
     }
 
     new_bounds
@@ -575,12 +569,8 @@ pub fn shrink_start_rel_bound_pair(bounds: &RelativeBoundPair, at: RelativeStart
     let mut new_bounds = bounds.clone();
     let max_start = new_bounds.rel_start().max(at);
 
-    match max_start.partial_cmp(&new_bounds.rel_end()) {
-        // Would create an invalid interval, so we just return a clone of the original bounds
-        None | Some(Ordering::Greater) => {},
-        Some(Ordering::Equal | Ordering::Less) => {
-            new_bounds.set_start(max_start);
-        },
+    if max_start.bound_le(&new_bounds.rel_end(), BoundOverlapDisambiguationRuleSet::Strict) {
+        new_bounds.set_start(max_start);
     }
 
     new_bounds
@@ -612,12 +602,11 @@ pub fn shrink_end_rel_bound_pair(bounds: &RelativeBoundPair, at: RelativeEndBoun
     let mut new_bounds = bounds.clone();
     let min_end = new_bounds.rel_end().min(at);
 
-    match new_bounds.rel_start().partial_cmp(&min_end) {
-        // Would create an invalid interval, so we just return a clone of the original bounds
-        None | Some(Ordering::Greater) => {},
-        Some(Ordering::Equal | Ordering::Less) => {
-            new_bounds.set_end(min_end);
-        },
+    if new_bounds
+        .rel_start()
+        .bound_le(&min_end, BoundOverlapDisambiguationRuleSet::Strict)
+    {
+        new_bounds.set_end(min_end);
     }
 
     new_bounds

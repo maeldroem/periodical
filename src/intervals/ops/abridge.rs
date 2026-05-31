@@ -31,7 +31,7 @@ use crate::intervals::absolute::{
     swap_absolute_start_end_bound,
 };
 use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
-use crate::intervals::ops::{BoundOrdering, BoundOverlapAmbiguity, BoundPartialOrd};
+use crate::intervals::ops::{BoundOrd, BoundOrdering, BoundOverlapAmbiguity};
 use crate::intervals::relative::{
     BoundedRelativeInterval,
     EmptiableRelativeBoundPair,
@@ -43,6 +43,7 @@ use crate::intervals::relative::{
     RelativeEndBound,
     RelativeInterval,
     RelativeStartBound,
+    swap_relative_start_end_bound,
 };
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 
@@ -651,10 +652,7 @@ pub fn abridge_abs_bound_pair(
         },
     };
 
-    match highest_start
-        .bound_cmp(&lowest_end)
-        .expect("semantic comparison between start/end bounds should not fail")
-    {
+    match highest_start.bound_cmp(&lowest_end) {
         BoundOrdering::Less => {
             EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::unchecked_new(highest_start, lowest_end))
         },
@@ -671,11 +669,13 @@ pub fn abridge_abs_bound_pair(
                     | (BoundInclusivity::Exclusive, BoundInclusivity::Inclusive) => EmptiableAbsoluteBoundPair::Empty,
                     (BoundInclusivity::Exclusive, BoundInclusivity::Exclusive) => {
                         if let AbsoluteStartBound::Finite(ref mut finite_start) = highest_start {
-                            finite_start.set_inclusivity(finite_start.inclusivity().opposite());
+                            let new_incl = finite_start.pos().inclusivity().opposite();
+                            finite_start.pos_mut().set_inclusivity(new_incl);
                         }
 
                         if let AbsoluteEndBound::Finite(ref mut finite_end) = lowest_end {
-                            finite_end.set_inclusivity(finite_end.inclusivity().opposite());
+                            let new_incl = finite_end.pos().inclusivity().opposite();
+                            finite_end.pos_mut().set_inclusivity(new_incl);
                         }
 
                         EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::unchecked_new(highest_start, lowest_end))
@@ -689,11 +689,13 @@ pub fn abridge_abs_bound_pair(
             swap_absolute_start_end_bound(&mut highest_start, &mut lowest_end);
 
             if let AbsoluteStartBound::Finite(ref mut finite_start) = highest_start {
-                finite_start.set_inclusivity(finite_start.inclusivity().opposite());
+                let new_incl = finite_start.pos().inclusivity().opposite();
+                finite_start.pos_mut().set_inclusivity(new_incl);
             }
 
             if let AbsoluteEndBound::Finite(ref mut finite_end) = lowest_end {
-                finite_end.set_inclusivity(finite_end.inclusivity().opposite());
+                let new_incl = finite_end.pos().inclusivity().opposite();
+                finite_end.pos_mut().set_inclusivity(new_incl);
             }
 
             EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::unchecked_new(highest_start, lowest_end))
@@ -775,11 +777,13 @@ pub fn abridge_rel_bound_pair(
                     | (BoundInclusivity::Exclusive, BoundInclusivity::Inclusive) => EmptiableRelativeBoundPair::Empty,
                     (BoundInclusivity::Exclusive, BoundInclusivity::Exclusive) => {
                         if let RelativeStartBound::Finite(ref mut finite_start) = highest_start {
-                            finite_start.set_inclusivity(finite_start.inclusivity().opposite());
+                            let new_incl = finite_start.pos().inclusivity().opposite();
+                            finite_start.pos_mut().set_inclusivity(new_incl);
                         }
 
                         if let RelativeEndBound::Finite(ref mut finite_end) = lowest_end {
-                            finite_end.set_inclusivity(finite_end.inclusivity().opposite());
+                            let new_incl = finite_end.pos().inclusivity().opposite();
+                            finite_end.pos_mut().set_inclusivity(new_incl);
                         }
 
                         EmptiableRelativeBoundPair::Bound(RelativeBoundPair::unchecked_new(highest_start, lowest_end))
@@ -790,14 +794,16 @@ pub fn abridge_rel_bound_pair(
             }
         },
         BoundOrdering::Greater => {
-            swap_relative_bound_pair(&mut highest_start, &mut lowest_end);
+            swap_relative_start_end_bound(&mut highest_start, &mut lowest_end);
 
             if let RelativeStartBound::Finite(ref mut finite_start) = highest_start {
-                finite_start.set_inclusivity(finite_start.inclusivity().opposite());
+                let new_incl = finite_start.pos().inclusivity().opposite();
+                finite_start.pos_mut().set_inclusivity(new_incl);
             }
 
             if let RelativeEndBound::Finite(ref mut finite_end) = lowest_end {
-                finite_end.set_inclusivity(finite_end.inclusivity().opposite());
+                let new_incl = finite_end.pos().inclusivity().opposite();
+                finite_end.pos_mut().set_inclusivity(new_incl);
             }
 
             EmptiableRelativeBoundPair::Bound(RelativeBoundPair::unchecked_new(highest_start, lowest_end))

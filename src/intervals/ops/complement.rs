@@ -50,7 +50,6 @@
 use crate::intervals::absolute::{
     AbsoluteBoundPair,
     AbsoluteEndBound,
-    AbsoluteFiniteBoundPosition,
     AbsoluteInterval,
     AbsoluteStartBound,
     BoundedAbsoluteInterval,
@@ -60,7 +59,7 @@ use crate::intervals::absolute::{
     HasAbsoluteBoundPair,
     HasEmptiableAbsoluteBoundPair,
 };
-use crate::intervals::meta::{HasBoundInclusivity, OpeningDirection};
+use crate::intervals::meta::{HasOpeningDirection, OpeningDirection};
 use crate::intervals::relative::{
     BoundedRelativeInterval,
     EmptiableRelativeBoundPair,
@@ -70,7 +69,6 @@ use crate::intervals::relative::{
     HasRelativeBoundPair,
     RelativeBoundPair,
     RelativeEndBound,
-    RelativeFiniteBoundPosition,
     RelativeInterval,
     RelativeStartBound,
 };
@@ -251,39 +249,19 @@ pub fn complement_abs_bound_pair(bounds: &AbsoluteBoundPair) -> ComplementResult
 
     match (bounds.abs_start(), bounds.abs_end()) {
         (Sb::InfinitePast, Eb::InfiniteFuture) => ComplementResult::Single(EmptyInterval.emptiable_abs_bound_pair()),
-        (Sb::InfinitePast, Eb::Finite(finite)) => {
-            ComplementResult::Single(EmptiableAbsoluteBoundPair::from(AbsoluteBoundPair::new(
-                AbsoluteStartBound::from(AbsoluteFiniteBoundPosition::new_with_inclusivity(
-                    finite.time(),
-                    finite.inclusivity().opposite(),
-                )),
-                AbsoluteEndBound::InfiniteFuture,
-            )))
-        },
-        (Sb::Finite(finite), Eb::InfiniteFuture) => {
-            ComplementResult::Single(EmptiableAbsoluteBoundPair::from(AbsoluteBoundPair::new(
-                AbsoluteStartBound::InfinitePast,
-                AbsoluteEndBound::from(AbsoluteFiniteBoundPosition::new_with_inclusivity(
-                    finite.time(),
-                    finite.inclusivity().opposite(),
-                )),
-            )))
-        },
+        (Sb::InfinitePast, Eb::Finite(finite_end)) => ComplementResult::Single(
+            AbsoluteBoundPair::new(finite_end.opposite().to_start_bound(), AbsoluteEndBound::InfiniteFuture)
+                .to_emptiable(),
+        ),
+        (Sb::Finite(finite_start), Eb::InfiniteFuture) => ComplementResult::Single(
+            AbsoluteBoundPair::new(AbsoluteStartBound::InfinitePast, finite_start.opposite().to_end_bound())
+                .to_emptiable(),
+        ),
         (Sb::Finite(finite_start), Eb::Finite(finite_end)) => ComplementResult::Split(
-            EmptiableAbsoluteBoundPair::from(AbsoluteBoundPair::new(
-                AbsoluteStartBound::InfinitePast,
-                AbsoluteEndBound::from(AbsoluteFiniteBoundPosition::new_with_inclusivity(
-                    finite_start.time(),
-                    finite_start.inclusivity().opposite(),
-                )),
-            )),
-            EmptiableAbsoluteBoundPair::from(AbsoluteBoundPair::new(
-                AbsoluteStartBound::from(AbsoluteFiniteBoundPosition::new_with_inclusivity(
-                    finite_end.time(),
-                    finite_end.inclusivity().opposite(),
-                )),
-                AbsoluteEndBound::InfiniteFuture,
-            )),
+            AbsoluteBoundPair::new(AbsoluteStartBound::InfinitePast, finite_start.opposite().to_end_bound())
+                .to_emptiable(),
+            AbsoluteBoundPair::new(finite_end.opposite().to_start_bound(), AbsoluteEndBound::InfiniteFuture)
+                .to_emptiable(),
         ),
     }
 }
@@ -342,39 +320,19 @@ pub fn complement_rel_bound_pair(bounds: &RelativeBoundPair) -> ComplementResult
 
     match (bounds.rel_start(), bounds.rel_end()) {
         (Sb::InfinitePast, Eb::InfiniteFuture) => ComplementResult::Single(EmptyInterval.emptiable_rel_bound_pair()),
-        (Sb::InfinitePast, Eb::Finite(finite)) => {
-            ComplementResult::Single(EmptiableRelativeBoundPair::from(RelativeBoundPair::new(
-                RelativeStartBound::from(RelativeFiniteBoundPosition::new_with_inclusivity(
-                    finite.offset(),
-                    finite.inclusivity().opposite(),
-                )),
-                RelativeEndBound::InfiniteFuture,
-            )))
-        },
-        (Sb::Finite(finite), Eb::InfiniteFuture) => {
-            ComplementResult::Single(EmptiableRelativeBoundPair::from(RelativeBoundPair::new(
-                RelativeStartBound::InfinitePast,
-                RelativeEndBound::from(RelativeFiniteBoundPosition::new_with_inclusivity(
-                    finite.offset(),
-                    finite.inclusivity().opposite(),
-                )),
-            )))
-        },
+        (Sb::InfinitePast, Eb::Finite(finite_end)) => ComplementResult::Single(
+            RelativeBoundPair::new(finite_end.opposite().to_start_bound(), RelativeEndBound::InfiniteFuture)
+                .to_emptiable(),
+        ),
+        (Sb::Finite(finite_start), Eb::InfiniteFuture) => ComplementResult::Single(
+            RelativeBoundPair::new(RelativeStartBound::InfinitePast, finite_start.opposite().to_end_bound())
+                .to_emptiable(),
+        ),
         (Sb::Finite(finite_start), Eb::Finite(finite_end)) => ComplementResult::Split(
-            EmptiableRelativeBoundPair::from(RelativeBoundPair::new(
-                RelativeStartBound::InfinitePast,
-                RelativeEndBound::from(RelativeFiniteBoundPosition::new_with_inclusivity(
-                    finite_start.offset(),
-                    finite_start.inclusivity().opposite(),
-                )),
-            )),
-            EmptiableRelativeBoundPair::from(RelativeBoundPair::new(
-                RelativeStartBound::from(RelativeFiniteBoundPosition::new_with_inclusivity(
-                    finite_end.offset(),
-                    finite_end.inclusivity().opposite(),
-                )),
-                RelativeEndBound::InfiniteFuture,
-            )),
+            RelativeBoundPair::new(RelativeStartBound::InfinitePast, finite_start.opposite().to_end_bound())
+                .to_emptiable(),
+            RelativeBoundPair::new(finite_end.opposite().to_start_bound(), RelativeEndBound::InfiniteFuture)
+                .to_emptiable(),
         ),
     }
 }
@@ -397,13 +355,13 @@ pub fn complement_emptiable_rel_bound_pair(
 pub fn complement_bounded_rel_interval(
     interval: &BoundedRelativeInterval,
 ) -> ComplementResult<HalfBoundedRelativeInterval> {
-    let until_start = HalfBoundedRelativeInterval::new_with_inclusivity(
+    let until_start = HalfBoundedRelativeInterval::new_from_offset_and_inclusivity(
         interval.start_offset(),
         interval.start_inclusivity().opposite(),
         OpeningDirection::ToPast,
     );
 
-    let since_end = HalfBoundedRelativeInterval::new_with_inclusivity(
+    let since_end = HalfBoundedRelativeInterval::new_from_offset_and_inclusivity(
         interval.end_offset(),
         interval.end_inclusivity().opposite(),
         OpeningDirection::ToFuture,
@@ -416,8 +374,8 @@ pub fn complement_bounded_rel_interval(
 pub fn complement_half_bounded_rel_interval(
     interval: &HalfBoundedRelativeInterval,
 ) -> ComplementResult<HalfBoundedRelativeInterval> {
-    ComplementResult::Single(HalfBoundedRelativeInterval::new_with_inclusivity(
-        interval.reference(),
+    ComplementResult::Single(HalfBoundedRelativeInterval::new_from_offset_and_inclusivity(
+        interval.reference_offset(),
         interval.reference_inclusivity().opposite(),
         interval.opening_direction().opposite(),
     ))

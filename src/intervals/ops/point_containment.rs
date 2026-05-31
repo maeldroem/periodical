@@ -1086,22 +1086,26 @@ pub fn point_containment_position_abs_bound_pair(
 
     match (bounds.abs_start(), bounds.abs_end()) {
         (StartB::InfinitePast, EndB::InfiniteFuture) => ContPos::Inside,
-        (StartB::InfinitePast, EndB::Finite(finite_bound_position)) => match time.cmp(&finite_bound_position.time()) {
-            Ordering::Less => ContPos::Inside,
-            Ordering::Equal => ContPos::OnEnd(finite_bound_position.inclusivity()),
-            Ordering::Greater => ContPos::OutsideAfter,
+        (StartB::InfinitePast, EndB::Finite(finite_bound_position)) => {
+            match time.cmp(&finite_bound_position.pos().time()) {
+                Ordering::Less => ContPos::Inside,
+                Ordering::Equal => ContPos::OnEnd(finite_bound_position.pos().inclusivity()),
+                Ordering::Greater => ContPos::OutsideAfter,
+            }
         },
-        (StartB::Finite(finite_bound_position), EndB::InfiniteFuture) => match time.cmp(&finite_bound_position.time()) {
-            Ordering::Less => ContPos::OutsideBefore,
-            Ordering::Equal => ContPos::OnStart(finite_bound_position.inclusivity()),
-            Ordering::Greater => ContPos::Inside,
+        (StartB::Finite(finite_bound_position), EndB::InfiniteFuture) => {
+            match time.cmp(&finite_bound_position.pos().time()) {
+                Ordering::Less => ContPos::OutsideBefore,
+                Ordering::Equal => ContPos::OnStart(finite_bound_position.pos().inclusivity()),
+                Ordering::Greater => ContPos::Inside,
+            }
         },
         (StartB::Finite(start_bound), EndB::Finite(end_bound)) => {
-            match (time.cmp(&start_bound.time()), time.cmp(&end_bound.time())) {
+            match (time.cmp(&start_bound.pos().time()), time.cmp(&end_bound.pos().time())) {
                 (Ordering::Less, _) => ContPos::OutsideBefore,
-                (Ordering::Equal, _) => ContPos::OnStart(start_bound.inclusivity()),
+                (Ordering::Equal, _) => ContPos::OnStart(start_bound.pos().inclusivity()),
                 (_, Ordering::Less) => ContPos::Inside,
-                (_, Ordering::Equal) => ContPos::OnEnd(end_bound.inclusivity()),
+                (_, Ordering::Equal) => ContPos::OnEnd(end_bound.pos().inclusivity()),
                 (_, Ordering::Greater) => ContPos::OutsideAfter,
             }
         },
@@ -1121,22 +1125,29 @@ pub fn point_containment_position_rel_bound_pair(
 
     match (bounds.rel_start(), bounds.rel_end()) {
         (StartB::InfinitePast, EndB::InfiniteFuture) => ContPos::Inside,
-        (StartB::InfinitePast, EndB::Finite(finite_bound_position)) => match offset.cmp(&finite_bound_position.offset()) {
-            Ordering::Less => ContPos::Inside,
-            Ordering::Equal => ContPos::OnEnd(finite_bound_position.inclusivity()),
-            Ordering::Greater => ContPos::OutsideAfter,
+        (StartB::InfinitePast, EndB::Finite(finite_bound_position)) => {
+            match offset.cmp(&finite_bound_position.pos().offset()) {
+                Ordering::Less => ContPos::Inside,
+                Ordering::Equal => ContPos::OnEnd(finite_bound_position.pos().inclusivity()),
+                Ordering::Greater => ContPos::OutsideAfter,
+            }
         },
-        (StartB::Finite(finite_bound_position), EndB::InfiniteFuture) => match offset.cmp(&finite_bound_position.offset()) {
-            Ordering::Less => ContPos::OutsideBefore,
-            Ordering::Equal => ContPos::OnStart(finite_bound_position.inclusivity()),
-            Ordering::Greater => ContPos::Inside,
+        (StartB::Finite(finite_bound_position), EndB::InfiniteFuture) => {
+            match offset.cmp(&finite_bound_position.pos().offset()) {
+                Ordering::Less => ContPos::OutsideBefore,
+                Ordering::Equal => ContPos::OnStart(finite_bound_position.pos().inclusivity()),
+                Ordering::Greater => ContPos::Inside,
+            }
         },
         (StartB::Finite(start_bound), EndB::Finite(end_bound)) => {
-            match (offset.cmp(&start_bound.offset()), offset.cmp(&end_bound.offset())) {
+            match (
+                offset.cmp(&start_bound.pos().offset()),
+                offset.cmp(&end_bound.pos().offset()),
+            ) {
                 (Ordering::Less, _) => ContPos::OutsideBefore,
-                (Ordering::Equal, _) => ContPos::OnStart(start_bound.inclusivity()),
+                (Ordering::Equal, _) => ContPos::OnStart(start_bound.pos().inclusivity()),
                 (_, Ordering::Less) => ContPos::Inside,
-                (_, Ordering::Equal) => ContPos::OnEnd(end_bound.inclusivity()),
+                (_, Ordering::Equal) => ContPos::OnEnd(end_bound.pos().inclusivity()),
                 (_, Ordering::Greater) => ContPos::OutsideAfter,
             }
         },

@@ -590,11 +590,13 @@ pub fn remove_overlap_abs_bound_pair(
             // Since `OnStart` only happens when two inclusive bounds are equal (since we
             // are using the strict rule set) we can just set the end
             // inclusivity to exclusive.
-            finite_bound_position.set_inclusivity(BoundInclusivity::Exclusive);
+            finite_bound_position
+                .pos_mut()
+                .set_inclusivity(BoundInclusivity::Exclusive);
 
-            Ok(OverlapRemovalResult::Single(EmptiableAbsoluteBoundPair::from(
-                AbsoluteBoundPair::new(a.abs_start(), AbsoluteEndBound::from(finite_bound_position)),
-            )))
+            Ok(OverlapRemovalResult::Single(
+                AbsoluteBoundPair::new(a.abs_start(), AbsoluteEndBound::from(finite_bound_position)).to_emptiable(),
+            ))
         },
         Dop::StartsOnEnd => {
             let AbsoluteStartBound::Finite(mut finite_bound_position) = a.abs_start() else {
@@ -607,11 +609,13 @@ pub fn remove_overlap_abs_bound_pair(
             // Since `OnEnd` only happens when two inclusive bounds are equal (since we are
             // using the strict rule set) we can just set the start inclusivity
             // to exclusive.
-            finite_bound_position.set_inclusivity(BoundInclusivity::Exclusive);
+            finite_bound_position
+                .pos_mut()
+                .set_inclusivity(BoundInclusivity::Exclusive);
 
-            Ok(OverlapRemovalResult::Single(EmptiableAbsoluteBoundPair::from(
-                AbsoluteBoundPair::new(AbsoluteStartBound::from(finite_bound_position), a.abs_end()),
-            )))
+            Ok(OverlapRemovalResult::Single(
+                AbsoluteBoundPair::new(AbsoluteStartBound::from(finite_bound_position), a.abs_end()).to_emptiable(),
+            ))
         },
         Dop::CrossesStart => {
             let AbsoluteStartBound::Finite(finite_bound_position) = b.abs_start() else {
@@ -621,14 +625,15 @@ pub fn remove_overlap_abs_bound_pair(
                 );
             };
 
-            let new_end = AbsoluteEndBound::from(AbsoluteFiniteBoundPosition::new_with_inclusivity(
-                finite_bound_position.time(),
-                finite_bound_position.inclusivity().opposite(),
-            ));
+            let new_end = AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                finite_bound_position.pos().time(),
+                finite_bound_position.pos().inclusivity().opposite(),
+            )
+            .to_end_bound();
 
-            Ok(OverlapRemovalResult::Single(EmptiableAbsoluteBoundPair::from(
-                AbsoluteBoundPair::new(a.abs_start(), new_end),
-            )))
+            Ok(OverlapRemovalResult::Single(
+                AbsoluteBoundPair::new(a.abs_start(), new_end).to_emptiable(),
+            ))
         },
         Dop::CrossesEnd => {
             let AbsoluteEndBound::Finite(finite_bound_position) = b.abs_end() else {
@@ -638,27 +643,28 @@ pub fn remove_overlap_abs_bound_pair(
                 );
             };
 
-            let new_start = AbsoluteStartBound::from(AbsoluteFiniteBoundPosition::new_with_inclusivity(
-                finite_bound_position.time(),
-                finite_bound_position.inclusivity().opposite(),
-            ));
+            let new_start = AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                finite_bound_position.pos().time(),
+                finite_bound_position.pos().inclusivity().opposite(),
+            )
+            .to_start_bound();
 
-            Ok(OverlapRemovalResult::Single(EmptiableAbsoluteBoundPair::from(
-                AbsoluteBoundPair::new(new_start, a.abs_end()),
-            )))
+            Ok(OverlapRemovalResult::Single(
+                AbsoluteBoundPair::new(new_start, a.abs_end()).to_emptiable(),
+            ))
         },
         Dop::Equal | Dop::Inside | Dop::InsideAndSameStart | Dop::InsideAndSameEnd => {
             Ok(OverlapRemovalResult::Single(EmptiableAbsoluteBoundPair::Empty))
         },
-        Dop::ContainsAndSameStart => Ok(OverlapRemovalResult::Single(EmptiableAbsoluteBoundPair::from(
-            remove_end_overlap_abs(a, b),
-        ))),
-        Dop::ContainsAndSameEnd => Ok(OverlapRemovalResult::Single(EmptiableAbsoluteBoundPair::from(
-            remove_start_overlap_abs(a, b),
-        ))),
+        Dop::ContainsAndSameStart => Ok(OverlapRemovalResult::Single(
+            remove_end_overlap_abs(a, b).to_emptiable(),
+        )),
+        Dop::ContainsAndSameEnd => Ok(OverlapRemovalResult::Single(
+            remove_start_overlap_abs(a, b).to_emptiable(),
+        )),
         Dop::Contains => Ok(OverlapRemovalResult::Split(
-            EmptiableAbsoluteBoundPair::from(remove_start_overlap_abs(a, b)),
-            EmptiableAbsoluteBoundPair::from(remove_end_overlap_abs(a, b)),
+            remove_start_overlap_abs(a, b).to_emptiable(),
+            remove_end_overlap_abs(a, b).to_emptiable(),
         )),
     }
 }
@@ -678,19 +684,19 @@ pub fn remove_start_overlap_abs(a: &AbsoluteBoundPair, b: &AbsoluteBoundPair) ->
         );
     };
 
-    let cut_type = match finite_bound_position.inclusivity().opposite() {
+    let cut_type = match finite_bound_position.pos().inclusivity().opposite() {
         BoundInclusivity::Inclusive => CutType::new(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive),
         BoundInclusivity::Exclusive => CutType::new(BoundInclusivity::Exclusive, BoundInclusivity::Exclusive),
     };
 
-    match a.cut_at(finite_bound_position.time(), cut_type) {
+    match a.cut_at(finite_bound_position.pos().time(), cut_type) {
         CutResult::Uncut => {
             // The only way we can get Uncut as a result would be if the rule set is strict
             // and that `a` start at the same time as `b` does, but b is exclusive on this
             // point whereas `a` is inclusive.
 
             // TODO: Fix, this feels flaky
-            let point = AbsoluteFiniteBoundPosition::new(finite_bound_position.time());
+            let point = AbsoluteFiniteBoundPosition::new(finite_bound_position.pos().time());
 
             AbsoluteBoundPair::new(AbsoluteStartBound::from(point), AbsoluteEndBound::from(point))
         },
@@ -712,19 +718,19 @@ pub fn remove_end_overlap_abs(a: &AbsoluteBoundPair, b: &AbsoluteBoundPair) -> A
         );
     };
 
-    let cut_type = match finite_bound_position.inclusivity().opposite() {
+    let cut_type = match finite_bound_position.pos().inclusivity().opposite() {
         BoundInclusivity::Inclusive => CutType::new(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive),
         BoundInclusivity::Exclusive => CutType::new(BoundInclusivity::Exclusive, BoundInclusivity::Exclusive),
     };
 
-    match a.cut_at(finite_bound_position.time(), cut_type) {
+    match a.cut_at(finite_bound_position.pos().time(), cut_type) {
         CutResult::Uncut => {
             // The only way we can get Uncut as a result would be if the rule set is strict
             // and that `a` ends at the same time as `b` does, but b is exclusive on this
             // point whereas `a` is inclusive.
 
             // TODO: Fix, this feels flaky
-            let point = AbsoluteFiniteBoundPosition::new(finite_bound_position.time());
+            let point = AbsoluteFiniteBoundPosition::new(finite_bound_position.pos().time());
 
             AbsoluteBoundPair::new(AbsoluteStartBound::from(point), AbsoluteEndBound::from(point))
         },
@@ -806,11 +812,13 @@ pub fn remove_overlap_rel_bound_pair(
             // Since `OnStart` only happens when two inclusive bounds are equal (since we
             // are using the strict rule set) we can just set the end
             // inclusivity to exclusive.
-            finite_bound_position.set_inclusivity(BoundInclusivity::Exclusive);
+            finite_bound_position
+                .pos_mut()
+                .set_inclusivity(BoundInclusivity::Exclusive);
 
-            Ok(OverlapRemovalResult::Single(EmptiableRelativeBoundPair::from(
-                RelativeBoundPair::new(a.rel_start(), RelativeEndBound::from(finite_bound_position)),
-            )))
+            Ok(OverlapRemovalResult::Single(
+                RelativeBoundPair::new(a.rel_start(), RelativeEndBound::from(finite_bound_position)).to_emptiable(),
+            ))
         },
         Dop::StartsOnEnd => {
             let RelativeStartBound::Finite(mut finite_bound_position) = a.rel_start() else {
@@ -823,11 +831,13 @@ pub fn remove_overlap_rel_bound_pair(
             // Since `OnEnd` only happens when two inclusive bounds are equal (since we are
             // using the strict rule set) we can just set the start inclusivity
             // to exclusive.
-            finite_bound_position.set_inclusivity(BoundInclusivity::Exclusive);
+            finite_bound_position
+                .pos_mut()
+                .set_inclusivity(BoundInclusivity::Exclusive);
 
-            Ok(OverlapRemovalResult::Single(EmptiableRelativeBoundPair::from(
-                RelativeBoundPair::new(RelativeStartBound::from(finite_bound_position), a.rel_end()),
-            )))
+            Ok(OverlapRemovalResult::Single(
+                RelativeBoundPair::new(RelativeStartBound::from(finite_bound_position), a.rel_end()).to_emptiable(),
+            ))
         },
         Dop::CrossesStart => {
             let RelativeStartBound::Finite(finite_bound_position) = b.rel_start() else {
@@ -837,14 +847,15 @@ pub fn remove_overlap_rel_bound_pair(
                 );
             };
 
-            let new_end = RelativeEndBound::from(RelativeFiniteBoundPosition::new_with_inclusivity(
-                finite_bound_position.offset(),
-                finite_bound_position.inclusivity().opposite(),
-            ));
+            let new_end = RelativeFiniteBoundPosition::new_with_inclusivity(
+                finite_bound_position.pos().offset(),
+                finite_bound_position.pos().inclusivity().opposite(),
+            )
+            .to_end_bound();
 
-            Ok(OverlapRemovalResult::Single(EmptiableRelativeBoundPair::from(
-                RelativeBoundPair::new(a.rel_start(), new_end),
-            )))
+            Ok(OverlapRemovalResult::Single(
+                RelativeBoundPair::new(a.rel_start(), new_end).to_emptiable(),
+            ))
         },
         Dop::CrossesEnd => {
             let RelativeEndBound::Finite(finite_bound_position) = b.rel_end() else {
@@ -854,27 +865,28 @@ pub fn remove_overlap_rel_bound_pair(
                 );
             };
 
-            let new_start = RelativeStartBound::from(RelativeFiniteBoundPosition::new_with_inclusivity(
-                finite_bound_position.offset(),
-                finite_bound_position.inclusivity().opposite(),
-            ));
+            let new_start = RelativeFiniteBoundPosition::new_with_inclusivity(
+                finite_bound_position.pos().offset(),
+                finite_bound_position.pos().inclusivity().opposite(),
+            )
+            .to_start_bound();
 
-            Ok(OverlapRemovalResult::Single(EmptiableRelativeBoundPair::from(
-                RelativeBoundPair::new(new_start, a.rel_end()),
-            )))
+            Ok(OverlapRemovalResult::Single(
+                RelativeBoundPair::new(new_start, a.rel_end()).to_emptiable(),
+            ))
         },
         Dop::Equal | Dop::Inside | Dop::InsideAndSameStart | Dop::InsideAndSameEnd => {
             Ok(OverlapRemovalResult::Single(EmptiableRelativeBoundPair::Empty))
         },
-        Dop::ContainsAndSameStart => Ok(OverlapRemovalResult::Single(EmptiableRelativeBoundPair::from(
-            remove_end_overlap_rel(a, b),
-        ))),
-        Dop::ContainsAndSameEnd => Ok(OverlapRemovalResult::Single(EmptiableRelativeBoundPair::from(
-            remove_start_overlap_rel(a, b),
-        ))),
+        Dop::ContainsAndSameStart => Ok(OverlapRemovalResult::Single(
+            remove_end_overlap_rel(a, b).to_emptiable(),
+        )),
+        Dop::ContainsAndSameEnd => Ok(OverlapRemovalResult::Single(
+            remove_start_overlap_rel(a, b).to_emptiable(),
+        )),
         Dop::Contains => Ok(OverlapRemovalResult::Split(
-            EmptiableRelativeBoundPair::from(remove_start_overlap_rel(a, b)),
-            EmptiableRelativeBoundPair::from(remove_end_overlap_rel(a, b)),
+            remove_start_overlap_rel(a, b).to_emptiable(),
+            remove_end_overlap_rel(a, b).to_emptiable(),
         )),
     }
 }
@@ -894,19 +906,19 @@ pub fn remove_start_overlap_rel(a: &RelativeBoundPair, b: &RelativeBoundPair) ->
         );
     };
 
-    let cut_type = match finite_bound_position.inclusivity().opposite() {
+    let cut_type = match finite_bound_position.pos().inclusivity().opposite() {
         BoundInclusivity::Inclusive => CutType::new(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive),
         BoundInclusivity::Exclusive => CutType::new(BoundInclusivity::Exclusive, BoundInclusivity::Exclusive),
     };
 
-    match a.cut_at(finite_bound_position.offset(), cut_type) {
+    match a.cut_at(finite_bound_position.pos().offset(), cut_type) {
         CutResult::Uncut => {
             // The only way we can get Uncut as a result would be if the rule set is strict
             // and that `a` start at the same time as `b` does, but b is exclusive on this
             // point whereas `a` is inclusive.
 
             // TODO: Fix, this feels flaky
-            let point = RelativeFiniteBoundPosition::new(finite_bound_position.offset());
+            let point = RelativeFiniteBoundPosition::new(finite_bound_position.pos().offset());
 
             RelativeBoundPair::new(RelativeStartBound::from(point), RelativeEndBound::from(point))
         },
@@ -928,19 +940,19 @@ pub fn remove_end_overlap_rel(a: &RelativeBoundPair, b: &RelativeBoundPair) -> R
         );
     };
 
-    let cut_type = match finite_bound_position.inclusivity().opposite() {
+    let cut_type = match finite_bound_position.pos().inclusivity().opposite() {
         BoundInclusivity::Inclusive => CutType::new(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive),
         BoundInclusivity::Exclusive => CutType::new(BoundInclusivity::Exclusive, BoundInclusivity::Exclusive),
     };
 
-    match a.cut_at(finite_bound_position.offset(), cut_type) {
+    match a.cut_at(finite_bound_position.pos().offset(), cut_type) {
         CutResult::Uncut => {
             // The only way we can get Uncut as a result would be if the rule set is strict
             // and that `a` ends at the same time as `b` does, but b is exclusive on this
             // point whereas `a` is inclusive.
 
             // TODO: Fix, this feels flaky
-            let point = RelativeFiniteBoundPosition::new(finite_bound_position.offset());
+            let point = RelativeFiniteBoundPosition::new(finite_bound_position.pos().offset());
 
             RelativeBoundPair::new(RelativeStartBound::from(point), RelativeEndBound::from(point))
         },

@@ -363,10 +363,11 @@ pub fn fill_gap_abs_bound_pair(
                 );
             };
 
-            let new_end_bound = AbsoluteEndBound::from(AbsoluteFiniteBoundPosition::new_with_inclusivity(
-                finite_bound_position.time(),
-                finite_bound_position.inclusivity().opposite(), // So that it fully closes the gap
-            ));
+            let new_end_bound = AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                finite_bound_position.pos().time(),
+                finite_bound_position.pos().inclusivity().opposite(), // So that it fully closes the gap
+            )
+            .to_end_bound();
 
             Ok(a.grow_end(new_end_bound))
         },
@@ -378,10 +379,11 @@ pub fn fill_gap_abs_bound_pair(
                 );
             };
 
-            let new_start_bound = AbsoluteStartBound::from(AbsoluteFiniteBoundPosition::new_with_inclusivity(
-                finite_bound_position.time(),
-                finite_bound_position.inclusivity().opposite(), // So that it fully closes the gap
-            ));
+            let new_start_bound = AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                finite_bound_position.pos().time(),
+                finite_bound_position.pos().inclusivity().opposite(), // So that it fully closes the gap
+            )
+            .to_start_bound();
 
             Ok(a.grow_start(new_start_bound))
         },
@@ -453,10 +455,11 @@ pub fn fill_gap_rel_bound_pair(
                 );
             };
 
-            let new_end_bound = RelativeEndBound::from(RelativeFiniteBoundPosition::new_with_inclusivity(
-                finite_bound_position.offset(),
-                finite_bound_position.inclusivity().opposite(), // So that it fully closes the gap
-            ));
+            let new_end_bound = RelativeFiniteBoundPosition::new_with_inclusivity(
+                finite_bound_position.pos().offset(),
+                finite_bound_position.pos().inclusivity().opposite(), // So that it fully closes the gap
+            )
+            .to_end_bound();
 
             Ok(a.grow_end(new_end_bound))
         },
@@ -468,10 +471,11 @@ pub fn fill_gap_rel_bound_pair(
                 );
             };
 
-            let new_start_bound = RelativeStartBound::from(RelativeFiniteBoundPosition::new_with_inclusivity(
-                finite_bound_position.offset(),
-                finite_bound_position.inclusivity().opposite(), // So that it fully closes the gap
-            ));
+            let new_start_bound = RelativeFiniteBoundPosition::new_with_inclusivity(
+                finite_bound_position.pos().offset(),
+                finite_bound_position.pos().inclusivity().opposite(), // So that it fully closes the gap
+            )
+            .to_start_bound();
 
             Ok(a.grow_start(new_start_bound))
         },

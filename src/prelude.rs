@@ -18,6 +18,7 @@ pub use crate::intervals::meta::{
     HasBoundExtremality,
     HasBoundInclusivity,
     HasDuration,
+    HasOpeningDirection,
     HasOpenness,
     HasRelativity,
     IsEmpty,

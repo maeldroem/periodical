@@ -51,7 +51,7 @@ fn ambiguity_is_end_start() {
 fn strict_disambiguation_both_starts_inclusive_inclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::BothStarts(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Strict),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::Strict),
         DisambiguatedBoundOverlap::Equal,
     );
 }
@@ -60,7 +60,7 @@ fn strict_disambiguation_both_starts_inclusive_inclusive() {
 fn strict_disambiguation_both_starts_inclusive_exclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::BothStarts(BoundInclusivity::Inclusive, BoundInclusivity::Exclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Strict),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::Strict),
         DisambiguatedBoundOverlap::After,
     );
 }
@@ -69,7 +69,7 @@ fn strict_disambiguation_both_starts_inclusive_exclusive() {
 fn strict_disambiguation_both_starts_exclusive_inclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::BothStarts(BoundInclusivity::Exclusive, BoundInclusivity::Inclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Strict),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::Strict),
         DisambiguatedBoundOverlap::Before,
     );
 }
@@ -78,7 +78,7 @@ fn strict_disambiguation_both_starts_exclusive_inclusive() {
 fn strict_disambiguation_both_starts_exclusive_exclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::BothStarts(BoundInclusivity::Exclusive, BoundInclusivity::Exclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Strict),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::Strict),
         DisambiguatedBoundOverlap::Equal,
     );
 }
@@ -87,7 +87,7 @@ fn strict_disambiguation_both_starts_exclusive_exclusive() {
 fn strict_disambiguation_both_ends_inclusive_inclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::BothEnds(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Strict),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::Strict),
         DisambiguatedBoundOverlap::Equal,
     );
 }
@@ -96,7 +96,7 @@ fn strict_disambiguation_both_ends_inclusive_inclusive() {
 fn strict_disambiguation_both_ends_inclusive_exclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::BothEnds(BoundInclusivity::Inclusive, BoundInclusivity::Exclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Strict),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::Strict),
         DisambiguatedBoundOverlap::Before,
     );
 }
@@ -105,7 +105,7 @@ fn strict_disambiguation_both_ends_inclusive_exclusive() {
 fn strict_disambiguation_both_ends_exclusive_inclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::BothEnds(BoundInclusivity::Exclusive, BoundInclusivity::Inclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Strict),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::Strict),
         DisambiguatedBoundOverlap::After,
     );
 }
@@ -114,7 +114,7 @@ fn strict_disambiguation_both_ends_exclusive_inclusive() {
 fn strict_disambiguation_both_ends_exclusive_exclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::BothEnds(BoundInclusivity::Exclusive, BoundInclusivity::Exclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Strict),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::Strict),
         DisambiguatedBoundOverlap::Equal,
     );
 }
@@ -123,7 +123,7 @@ fn strict_disambiguation_both_ends_exclusive_exclusive() {
 fn strict_disambiguation_start_end_inclusive_inclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::StartEnd(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Strict),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::Strict),
         DisambiguatedBoundOverlap::Equal,
     );
 }
@@ -132,7 +132,7 @@ fn strict_disambiguation_start_end_inclusive_inclusive() {
 fn strict_disambiguation_start_end_inclusive_exclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::StartEnd(BoundInclusivity::Inclusive, BoundInclusivity::Exclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Strict),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::Strict),
         DisambiguatedBoundOverlap::Before,
     );
 }
@@ -141,7 +141,7 @@ fn strict_disambiguation_start_end_inclusive_exclusive() {
 fn strict_disambiguation_start_end_exclusive_inclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::StartEnd(BoundInclusivity::Exclusive, BoundInclusivity::Inclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Strict),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::Strict),
         DisambiguatedBoundOverlap::Before,
     );
 }
@@ -150,7 +150,7 @@ fn strict_disambiguation_start_end_exclusive_inclusive() {
 fn strict_disambiguation_start_end_exclusive_exclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::StartEnd(BoundInclusivity::Exclusive, BoundInclusivity::Exclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Strict),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::Strict),
         DisambiguatedBoundOverlap::Before,
     );
 }
@@ -159,7 +159,7 @@ fn strict_disambiguation_start_end_exclusive_exclusive() {
 fn strict_disambiguation_end_start_inclusive_inclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::EndStart(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Strict),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::Strict),
         DisambiguatedBoundOverlap::Equal,
     );
 }
@@ -168,7 +168,7 @@ fn strict_disambiguation_end_start_inclusive_inclusive() {
 fn strict_disambiguation_end_start_inclusive_exclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::EndStart(BoundInclusivity::Inclusive, BoundInclusivity::Exclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Strict),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::Strict),
         DisambiguatedBoundOverlap::After,
     );
 }
@@ -177,7 +177,7 @@ fn strict_disambiguation_end_start_inclusive_exclusive() {
 fn strict_disambiguation_end_start_exclusive_inclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::EndStart(BoundInclusivity::Exclusive, BoundInclusivity::Inclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Strict),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::Strict),
         DisambiguatedBoundOverlap::After,
     );
 }
@@ -186,7 +186,7 @@ fn strict_disambiguation_end_start_exclusive_inclusive() {
 fn strict_disambiguation_end_start_exclusive_exclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::EndStart(BoundInclusivity::Exclusive, BoundInclusivity::Exclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Strict),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::Strict),
         DisambiguatedBoundOverlap::After,
     );
 }
@@ -195,7 +195,7 @@ fn strict_disambiguation_end_start_exclusive_exclusive() {
 fn lenient_disambiguation_both_starts_inclusive_inclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::BothStarts(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Lenient),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::Lenient),
         DisambiguatedBoundOverlap::Equal,
     );
 }
@@ -204,7 +204,7 @@ fn lenient_disambiguation_both_starts_inclusive_inclusive() {
 fn lenient_disambiguation_both_starts_inclusive_exclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::BothStarts(BoundInclusivity::Inclusive, BoundInclusivity::Exclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Lenient),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::Lenient),
         DisambiguatedBoundOverlap::Equal,
     );
 }
@@ -213,7 +213,7 @@ fn lenient_disambiguation_both_starts_inclusive_exclusive() {
 fn lenient_disambiguation_both_starts_exclusive_inclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::BothStarts(BoundInclusivity::Exclusive, BoundInclusivity::Inclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Lenient),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::Lenient),
         DisambiguatedBoundOverlap::Equal,
     );
 }
@@ -222,7 +222,7 @@ fn lenient_disambiguation_both_starts_exclusive_inclusive() {
 fn lenient_disambiguation_both_starts_exclusive_exclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::BothStarts(BoundInclusivity::Exclusive, BoundInclusivity::Exclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Lenient),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::Lenient),
         DisambiguatedBoundOverlap::Equal,
     );
 }
@@ -231,7 +231,7 @@ fn lenient_disambiguation_both_starts_exclusive_exclusive() {
 fn lenient_disambiguation_both_ends_inclusive_inclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::BothEnds(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Lenient),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::Lenient),
         DisambiguatedBoundOverlap::Equal,
     );
 }
@@ -240,7 +240,7 @@ fn lenient_disambiguation_both_ends_inclusive_inclusive() {
 fn lenient_disambiguation_both_ends_inclusive_exclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::BothEnds(BoundInclusivity::Inclusive, BoundInclusivity::Exclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Lenient),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::Lenient),
         DisambiguatedBoundOverlap::Equal,
     );
 }
@@ -249,7 +249,7 @@ fn lenient_disambiguation_both_ends_inclusive_exclusive() {
 fn lenient_disambiguation_both_ends_exclusive_inclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::BothEnds(BoundInclusivity::Exclusive, BoundInclusivity::Inclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Lenient),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::Lenient),
         DisambiguatedBoundOverlap::Equal,
     );
 }
@@ -258,7 +258,7 @@ fn lenient_disambiguation_both_ends_exclusive_inclusive() {
 fn lenient_disambiguation_both_ends_exclusive_exclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::BothEnds(BoundInclusivity::Exclusive, BoundInclusivity::Exclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Lenient),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::Lenient),
         DisambiguatedBoundOverlap::Equal,
     );
 }
@@ -267,7 +267,7 @@ fn lenient_disambiguation_both_ends_exclusive_exclusive() {
 fn lenient_disambiguation_start_end_inclusive_inclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::StartEnd(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Lenient),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::Lenient),
         DisambiguatedBoundOverlap::Equal,
     );
 }
@@ -276,7 +276,7 @@ fn lenient_disambiguation_start_end_inclusive_inclusive() {
 fn lenient_disambiguation_start_end_inclusive_exclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::StartEnd(BoundInclusivity::Inclusive, BoundInclusivity::Exclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Lenient),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::Lenient),
         DisambiguatedBoundOverlap::Equal,
     );
 }
@@ -285,7 +285,7 @@ fn lenient_disambiguation_start_end_inclusive_exclusive() {
 fn lenient_disambiguation_start_end_exclusive_inclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::StartEnd(BoundInclusivity::Exclusive, BoundInclusivity::Inclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Lenient),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::Lenient),
         DisambiguatedBoundOverlap::Equal,
     );
 }
@@ -294,7 +294,7 @@ fn lenient_disambiguation_start_end_exclusive_inclusive() {
 fn lenient_disambiguation_start_end_exclusive_exclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::StartEnd(BoundInclusivity::Exclusive, BoundInclusivity::Exclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Lenient),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::Lenient),
         DisambiguatedBoundOverlap::Before,
     );
 }
@@ -303,7 +303,7 @@ fn lenient_disambiguation_start_end_exclusive_exclusive() {
 fn lenient_disambiguation_end_start_inclusive_inclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::EndStart(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Lenient),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::Lenient),
         DisambiguatedBoundOverlap::Equal,
     );
 }
@@ -312,7 +312,7 @@ fn lenient_disambiguation_end_start_inclusive_inclusive() {
 fn lenient_disambiguation_end_start_inclusive_exclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::EndStart(BoundInclusivity::Inclusive, BoundInclusivity::Exclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Lenient),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::Lenient),
         DisambiguatedBoundOverlap::Equal,
     );
 }
@@ -321,7 +321,7 @@ fn lenient_disambiguation_end_start_inclusive_exclusive() {
 fn lenient_disambiguation_end_start_exclusive_inclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::EndStart(BoundInclusivity::Exclusive, BoundInclusivity::Inclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Lenient),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::Lenient),
         DisambiguatedBoundOverlap::Equal,
     );
 }
@@ -330,7 +330,7 @@ fn lenient_disambiguation_end_start_exclusive_inclusive() {
 fn lenient_disambiguation_end_start_exclusive_exclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::EndStart(BoundInclusivity::Exclusive, BoundInclusivity::Exclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Lenient),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::Lenient),
         DisambiguatedBoundOverlap::After,
     );
 }
@@ -339,7 +339,7 @@ fn lenient_disambiguation_end_start_exclusive_exclusive() {
 fn very_lenient_disambiguation_both_starts_inclusive_inclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::BothStarts(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::VeryLenient),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::VeryLenient),
         DisambiguatedBoundOverlap::Equal,
     );
 }
@@ -348,7 +348,7 @@ fn very_lenient_disambiguation_both_starts_inclusive_inclusive() {
 fn very_lenient_disambiguation_both_starts_inclusive_exclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::BothStarts(BoundInclusivity::Inclusive, BoundInclusivity::Exclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::VeryLenient),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::VeryLenient),
         DisambiguatedBoundOverlap::Equal,
     );
 }
@@ -357,7 +357,7 @@ fn very_lenient_disambiguation_both_starts_inclusive_exclusive() {
 fn very_lenient_disambiguation_both_starts_exclusive_inclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::BothStarts(BoundInclusivity::Exclusive, BoundInclusivity::Inclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::VeryLenient),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::VeryLenient),
         DisambiguatedBoundOverlap::Equal,
     );
 }
@@ -366,7 +366,7 @@ fn very_lenient_disambiguation_both_starts_exclusive_inclusive() {
 fn very_lenient_disambiguation_both_starts_exclusive_exclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::BothStarts(BoundInclusivity::Exclusive, BoundInclusivity::Exclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::VeryLenient),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::VeryLenient),
         DisambiguatedBoundOverlap::Equal,
     );
 }
@@ -375,7 +375,7 @@ fn very_lenient_disambiguation_both_starts_exclusive_exclusive() {
 fn very_lenient_disambiguation_both_ends_inclusive_inclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::BothEnds(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::VeryLenient),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::VeryLenient),
         DisambiguatedBoundOverlap::Equal,
     );
 }
@@ -384,7 +384,7 @@ fn very_lenient_disambiguation_both_ends_inclusive_inclusive() {
 fn very_lenient_disambiguation_both_ends_inclusive_exclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::BothEnds(BoundInclusivity::Inclusive, BoundInclusivity::Exclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::VeryLenient),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::VeryLenient),
         DisambiguatedBoundOverlap::Equal,
     );
 }
@@ -393,7 +393,7 @@ fn very_lenient_disambiguation_both_ends_inclusive_exclusive() {
 fn very_lenient_disambiguation_both_ends_exclusive_inclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::BothEnds(BoundInclusivity::Exclusive, BoundInclusivity::Inclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::VeryLenient),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::VeryLenient),
         DisambiguatedBoundOverlap::Equal,
     );
 }
@@ -402,7 +402,7 @@ fn very_lenient_disambiguation_both_ends_exclusive_inclusive() {
 fn very_lenient_disambiguation_both_ends_exclusive_exclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::BothEnds(BoundInclusivity::Exclusive, BoundInclusivity::Exclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::VeryLenient),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::VeryLenient),
         DisambiguatedBoundOverlap::Equal,
     );
 }
@@ -411,7 +411,7 @@ fn very_lenient_disambiguation_both_ends_exclusive_exclusive() {
 fn very_lenient_disambiguation_start_end_inclusive_inclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::StartEnd(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::VeryLenient),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::VeryLenient),
         DisambiguatedBoundOverlap::Equal,
     );
 }
@@ -420,7 +420,7 @@ fn very_lenient_disambiguation_start_end_inclusive_inclusive() {
 fn very_lenient_disambiguation_start_end_inclusive_exclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::StartEnd(BoundInclusivity::Inclusive, BoundInclusivity::Exclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::VeryLenient),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::VeryLenient),
         DisambiguatedBoundOverlap::Equal,
     );
 }
@@ -429,7 +429,7 @@ fn very_lenient_disambiguation_start_end_inclusive_exclusive() {
 fn very_lenient_disambiguation_start_end_exclusive_inclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::StartEnd(BoundInclusivity::Exclusive, BoundInclusivity::Inclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::VeryLenient),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::VeryLenient),
         DisambiguatedBoundOverlap::Equal,
     );
 }
@@ -438,7 +438,7 @@ fn very_lenient_disambiguation_start_end_exclusive_inclusive() {
 fn very_lenient_disambiguation_start_end_exclusive_exclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::StartEnd(BoundInclusivity::Exclusive, BoundInclusivity::Exclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::VeryLenient),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::VeryLenient),
         DisambiguatedBoundOverlap::Equal,
     );
 }
@@ -447,7 +447,7 @@ fn very_lenient_disambiguation_start_end_exclusive_exclusive() {
 fn very_lenient_disambiguation_end_start_inclusive_inclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::EndStart(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::VeryLenient),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::VeryLenient),
         DisambiguatedBoundOverlap::Equal,
     );
 }
@@ -456,7 +456,7 @@ fn very_lenient_disambiguation_end_start_inclusive_inclusive() {
 fn very_lenient_disambiguation_end_start_inclusive_exclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::EndStart(BoundInclusivity::Inclusive, BoundInclusivity::Exclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::VeryLenient),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::VeryLenient),
         DisambiguatedBoundOverlap::Equal,
     );
 }
@@ -465,7 +465,7 @@ fn very_lenient_disambiguation_end_start_inclusive_exclusive() {
 fn very_lenient_disambiguation_end_start_exclusive_inclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::EndStart(BoundInclusivity::Exclusive, BoundInclusivity::Inclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::VeryLenient),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::VeryLenient),
         DisambiguatedBoundOverlap::Equal,
     );
 }
@@ -474,7 +474,7 @@ fn very_lenient_disambiguation_end_start_exclusive_inclusive() {
 fn very_lenient_disambiguation_end_start_exclusive_exclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::EndStart(BoundInclusivity::Exclusive, BoundInclusivity::Exclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::VeryLenient),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::VeryLenient),
         DisambiguatedBoundOverlap::Equal,
     );
 }
@@ -483,7 +483,7 @@ fn very_lenient_disambiguation_end_start_exclusive_exclusive() {
 fn continuous_to_future_disambiguation_both_starts_inclusive_inclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::BothStarts(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::ContinuousToFuture),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::ContinuousToFuture),
         DisambiguatedBoundOverlap::Equal,
     );
 }
@@ -492,7 +492,7 @@ fn continuous_to_future_disambiguation_both_starts_inclusive_inclusive() {
 fn continuous_to_future_disambiguation_both_starts_inclusive_exclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::BothStarts(BoundInclusivity::Inclusive, BoundInclusivity::Exclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::ContinuousToFuture),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::ContinuousToFuture),
         DisambiguatedBoundOverlap::After,
     );
 }
@@ -501,7 +501,7 @@ fn continuous_to_future_disambiguation_both_starts_inclusive_exclusive() {
 fn continuous_to_future_disambiguation_both_starts_exclusive_inclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::BothStarts(BoundInclusivity::Exclusive, BoundInclusivity::Inclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::ContinuousToFuture),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::ContinuousToFuture),
         DisambiguatedBoundOverlap::Before,
     );
 }
@@ -510,7 +510,7 @@ fn continuous_to_future_disambiguation_both_starts_exclusive_inclusive() {
 fn continuous_to_future_disambiguation_both_starts_exclusive_exclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::BothStarts(BoundInclusivity::Exclusive, BoundInclusivity::Exclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::ContinuousToFuture),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::ContinuousToFuture),
         DisambiguatedBoundOverlap::Equal,
     );
 }
@@ -519,7 +519,7 @@ fn continuous_to_future_disambiguation_both_starts_exclusive_exclusive() {
 fn continuous_to_future_disambiguation_both_ends_inclusive_inclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::BothEnds(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::ContinuousToFuture),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::ContinuousToFuture),
         DisambiguatedBoundOverlap::Equal,
     );
 }
@@ -528,7 +528,7 @@ fn continuous_to_future_disambiguation_both_ends_inclusive_inclusive() {
 fn continuous_to_future_disambiguation_both_ends_inclusive_exclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::BothEnds(BoundInclusivity::Inclusive, BoundInclusivity::Exclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::ContinuousToFuture),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::ContinuousToFuture),
         DisambiguatedBoundOverlap::Before,
     );
 }
@@ -537,7 +537,7 @@ fn continuous_to_future_disambiguation_both_ends_inclusive_exclusive() {
 fn continuous_to_future_disambiguation_both_ends_exclusive_inclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::BothEnds(BoundInclusivity::Exclusive, BoundInclusivity::Inclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::ContinuousToFuture),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::ContinuousToFuture),
         DisambiguatedBoundOverlap::After,
     );
 }
@@ -546,7 +546,7 @@ fn continuous_to_future_disambiguation_both_ends_exclusive_inclusive() {
 fn continuous_to_future_disambiguation_both_ends_exclusive_exclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::BothEnds(BoundInclusivity::Exclusive, BoundInclusivity::Exclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::ContinuousToFuture),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::ContinuousToFuture),
         DisambiguatedBoundOverlap::Equal,
     );
 }
@@ -555,7 +555,7 @@ fn continuous_to_future_disambiguation_both_ends_exclusive_exclusive() {
 fn continuous_to_future_disambiguation_start_end_inclusive_inclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::StartEnd(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::ContinuousToFuture),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::ContinuousToFuture),
         DisambiguatedBoundOverlap::Equal,
     );
 }
@@ -564,7 +564,7 @@ fn continuous_to_future_disambiguation_start_end_inclusive_inclusive() {
 fn continuous_to_future_disambiguation_start_end_inclusive_exclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::StartEnd(BoundInclusivity::Inclusive, BoundInclusivity::Exclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::ContinuousToFuture),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::ContinuousToFuture),
         DisambiguatedBoundOverlap::Equal,
     );
 }
@@ -573,7 +573,7 @@ fn continuous_to_future_disambiguation_start_end_inclusive_exclusive() {
 fn continuous_to_future_disambiguation_start_end_exclusive_inclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::StartEnd(BoundInclusivity::Exclusive, BoundInclusivity::Inclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::ContinuousToFuture),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::ContinuousToFuture),
         DisambiguatedBoundOverlap::Before,
     );
 }
@@ -582,7 +582,7 @@ fn continuous_to_future_disambiguation_start_end_exclusive_inclusive() {
 fn continuous_to_future_disambiguation_start_end_exclusive_exclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::StartEnd(BoundInclusivity::Exclusive, BoundInclusivity::Exclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::ContinuousToFuture),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::ContinuousToFuture),
         DisambiguatedBoundOverlap::Before,
     );
 }
@@ -591,7 +591,7 @@ fn continuous_to_future_disambiguation_start_end_exclusive_exclusive() {
 fn continuous_to_future_disambiguation_end_start_inclusive_inclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::EndStart(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::ContinuousToFuture),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::ContinuousToFuture),
         DisambiguatedBoundOverlap::Equal,
     );
 }
@@ -600,7 +600,7 @@ fn continuous_to_future_disambiguation_end_start_inclusive_inclusive() {
 fn continuous_to_future_disambiguation_end_start_inclusive_exclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::EndStart(BoundInclusivity::Inclusive, BoundInclusivity::Exclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::ContinuousToFuture),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::ContinuousToFuture),
         DisambiguatedBoundOverlap::After,
     );
 }
@@ -609,7 +609,7 @@ fn continuous_to_future_disambiguation_end_start_inclusive_exclusive() {
 fn continuous_to_future_disambiguation_end_start_exclusive_inclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::EndStart(BoundInclusivity::Exclusive, BoundInclusivity::Inclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::ContinuousToFuture),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::ContinuousToFuture),
         DisambiguatedBoundOverlap::Equal,
     );
 }
@@ -618,7 +618,7 @@ fn continuous_to_future_disambiguation_end_start_exclusive_inclusive() {
 fn continuous_to_future_disambiguation_end_start_exclusive_exclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::EndStart(BoundInclusivity::Exclusive, BoundInclusivity::Exclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::ContinuousToFuture),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::ContinuousToFuture),
         DisambiguatedBoundOverlap::After,
     );
 }
@@ -627,7 +627,7 @@ fn continuous_to_future_disambiguation_end_start_exclusive_exclusive() {
 fn continuous_to_past_disambiguation_both_starts_inclusive_inclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::BothStarts(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::ContinuousToPast),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::ContinuousToPast),
         DisambiguatedBoundOverlap::Equal,
     );
 }
@@ -636,7 +636,7 @@ fn continuous_to_past_disambiguation_both_starts_inclusive_inclusive() {
 fn continuous_to_past_disambiguation_both_starts_inclusive_exclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::BothStarts(BoundInclusivity::Inclusive, BoundInclusivity::Exclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::ContinuousToPast),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::ContinuousToPast),
         DisambiguatedBoundOverlap::After,
     );
 }
@@ -645,7 +645,7 @@ fn continuous_to_past_disambiguation_both_starts_inclusive_exclusive() {
 fn continuous_to_past_disambiguation_both_starts_exclusive_inclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::BothStarts(BoundInclusivity::Exclusive, BoundInclusivity::Inclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::ContinuousToPast),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::ContinuousToPast),
         DisambiguatedBoundOverlap::Before,
     );
 }
@@ -654,7 +654,7 @@ fn continuous_to_past_disambiguation_both_starts_exclusive_inclusive() {
 fn continuous_to_past_disambiguation_both_starts_exclusive_exclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::BothStarts(BoundInclusivity::Exclusive, BoundInclusivity::Exclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::ContinuousToPast),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::ContinuousToPast),
         DisambiguatedBoundOverlap::Equal,
     );
 }
@@ -663,7 +663,7 @@ fn continuous_to_past_disambiguation_both_starts_exclusive_exclusive() {
 fn continuous_to_past_disambiguation_both_ends_inclusive_inclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::BothEnds(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::ContinuousToPast),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::ContinuousToPast),
         DisambiguatedBoundOverlap::Equal,
     );
 }
@@ -672,7 +672,7 @@ fn continuous_to_past_disambiguation_both_ends_inclusive_inclusive() {
 fn continuous_to_past_disambiguation_both_ends_inclusive_exclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::BothEnds(BoundInclusivity::Inclusive, BoundInclusivity::Exclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::ContinuousToPast),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::ContinuousToPast),
         DisambiguatedBoundOverlap::Before,
     );
 }
@@ -681,7 +681,7 @@ fn continuous_to_past_disambiguation_both_ends_inclusive_exclusive() {
 fn continuous_to_past_disambiguation_both_ends_exclusive_inclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::BothEnds(BoundInclusivity::Exclusive, BoundInclusivity::Inclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::ContinuousToPast),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::ContinuousToPast),
         DisambiguatedBoundOverlap::After,
     );
 }
@@ -690,7 +690,7 @@ fn continuous_to_past_disambiguation_both_ends_exclusive_inclusive() {
 fn continuous_to_past_disambiguation_both_ends_exclusive_exclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::BothEnds(BoundInclusivity::Exclusive, BoundInclusivity::Exclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::ContinuousToPast),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::ContinuousToPast),
         DisambiguatedBoundOverlap::Equal,
     );
 }
@@ -699,7 +699,7 @@ fn continuous_to_past_disambiguation_both_ends_exclusive_exclusive() {
 fn continuous_to_past_disambiguation_start_end_inclusive_inclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::StartEnd(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::ContinuousToPast),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::ContinuousToPast),
         DisambiguatedBoundOverlap::Equal,
     );
 }
@@ -708,7 +708,7 @@ fn continuous_to_past_disambiguation_start_end_inclusive_inclusive() {
 fn continuous_to_past_disambiguation_start_end_inclusive_exclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::StartEnd(BoundInclusivity::Inclusive, BoundInclusivity::Exclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::ContinuousToPast),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::ContinuousToPast),
         DisambiguatedBoundOverlap::Before,
     );
 }
@@ -717,7 +717,7 @@ fn continuous_to_past_disambiguation_start_end_inclusive_exclusive() {
 fn continuous_to_past_disambiguation_start_end_exclusive_inclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::StartEnd(BoundInclusivity::Exclusive, BoundInclusivity::Inclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::ContinuousToPast),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::ContinuousToPast),
         DisambiguatedBoundOverlap::Equal,
     );
 }
@@ -726,7 +726,7 @@ fn continuous_to_past_disambiguation_start_end_exclusive_inclusive() {
 fn continuous_to_past_disambiguation_start_end_exclusive_exclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::StartEnd(BoundInclusivity::Exclusive, BoundInclusivity::Exclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::ContinuousToPast),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::ContinuousToPast),
         DisambiguatedBoundOverlap::Before,
     );
 }
@@ -735,7 +735,7 @@ fn continuous_to_past_disambiguation_start_end_exclusive_exclusive() {
 fn continuous_to_past_disambiguation_end_start_inclusive_inclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::EndStart(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::ContinuousToPast),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::ContinuousToPast),
         DisambiguatedBoundOverlap::Equal,
     );
 }
@@ -744,7 +744,7 @@ fn continuous_to_past_disambiguation_end_start_inclusive_inclusive() {
 fn continuous_to_past_disambiguation_end_start_inclusive_exclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::EndStart(BoundInclusivity::Inclusive, BoundInclusivity::Exclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::ContinuousToPast),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::ContinuousToPast),
         DisambiguatedBoundOverlap::Equal,
     );
 }
@@ -753,7 +753,7 @@ fn continuous_to_past_disambiguation_end_start_inclusive_exclusive() {
 fn continuous_to_past_disambiguation_end_start_exclusive_inclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::EndStart(BoundInclusivity::Exclusive, BoundInclusivity::Inclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::ContinuousToPast),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::ContinuousToPast),
         DisambiguatedBoundOverlap::After,
     );
 }
@@ -762,7 +762,7 @@ fn continuous_to_past_disambiguation_end_start_exclusive_inclusive() {
 fn continuous_to_past_disambiguation_end_start_exclusive_exclusive() {
     assert_eq!(
         BoundOverlapAmbiguity::EndStart(BoundInclusivity::Exclusive, BoundInclusivity::Exclusive)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::ContinuousToPast),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::ContinuousToPast),
         DisambiguatedBoundOverlap::After,
     );
 }
