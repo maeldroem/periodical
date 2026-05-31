@@ -14,7 +14,7 @@ use std::error::Error;
 use std::fmt::Display;
 
 use crate::intervals::meta::BoundInclusivity;
-use crate::intervals::ops::{BoundOrdering, BoundOverlapAmbiguity, BoundPartialOrd};
+use crate::intervals::ops::{BoundOrd, BoundOrdering, BoundOverlapAmbiguity};
 
 pub mod bound;
 pub mod bound_pair;
@@ -169,11 +169,7 @@ pub fn check_relative_finite_start_end_bounds_for_interval_creation(
     start: &RelativeFiniteStartBound,
     end: &RelativeFiniteEndBound,
 ) -> Result<(), RelativeStartEndBoundsCheckForIntervalCreationError> {
-    let Some(start_end_ordering) = start.bound_partial_cmp(end) else {
-        unreachable!();
-    };
-
-    match start_end_ordering {
+    match start.bound_cmp(end) {
         BoundOrdering::Less => Ok(()),
         BoundOrdering::Equal(Some(BoundOverlapAmbiguity::StartEnd(start_incl, end_incl))) => {
             if start_incl == BoundInclusivity::Inclusive && end_incl == BoundInclusivity::Inclusive {

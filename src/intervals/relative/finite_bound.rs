@@ -5,7 +5,7 @@
 //! as a single type, while still conserving its extremality.
 
 use crate::intervals::meta::{BoundExtremality, HasBoundExtremality};
-use crate::intervals::ops::{BoundEq, BoundOrd, BoundOrdering, BoundPartialEq, BoundPartialOrd};
+use crate::intervals::ops::{BoundEq, BoundOrd, BoundOrdExtremaOps, BoundOrdering};
 use crate::intervals::relative::{
     RelativeBound,
     RelativeEndBound,
@@ -72,7 +72,7 @@ impl HasBoundExtremality for RelativeFiniteBound {
     }
 }
 
-impl BoundPartialEq for RelativeFiniteBound {
+impl BoundEq for RelativeFiniteBound {
     fn bound_eq(&self, other: &Self) -> bool {
         match self {
             Self::Start(start) => start.bound_eq(other),
@@ -81,9 +81,7 @@ impl BoundPartialEq for RelativeFiniteBound {
     }
 }
 
-impl BoundEq for RelativeFiniteBound {}
-
-impl BoundPartialEq<RelativeFiniteStartBound> for RelativeFiniteBound {
+impl BoundEq<RelativeFiniteStartBound> for RelativeFiniteBound {
     fn bound_eq(&self, other: &RelativeFiniteStartBound) -> bool {
         match self {
             Self::Start(finite_start) => finite_start.bound_eq(other),
@@ -92,7 +90,7 @@ impl BoundPartialEq<RelativeFiniteStartBound> for RelativeFiniteBound {
     }
 }
 
-impl BoundPartialEq<RelativeFiniteEndBound> for RelativeFiniteBound {
+impl BoundEq<RelativeFiniteEndBound> for RelativeFiniteBound {
     fn bound_eq(&self, other: &RelativeFiniteEndBound) -> bool {
         match self {
             Self::Start(finite_start) => finite_start.bound_eq(other),
@@ -101,7 +99,7 @@ impl BoundPartialEq<RelativeFiniteEndBound> for RelativeFiniteBound {
     }
 }
 
-impl BoundPartialEq<RelativeStartBound> for RelativeFiniteBound {
+impl BoundEq<RelativeStartBound> for RelativeFiniteBound {
     fn bound_eq(&self, other: &RelativeStartBound) -> bool {
         match self {
             Self::Start(finite_start) => finite_start.bound_eq(other),
@@ -110,7 +108,7 @@ impl BoundPartialEq<RelativeStartBound> for RelativeFiniteBound {
     }
 }
 
-impl BoundPartialEq<RelativeEndBound> for RelativeFiniteBound {
+impl BoundEq<RelativeEndBound> for RelativeFiniteBound {
     fn bound_eq(&self, other: &RelativeEndBound) -> bool {
         match self {
             Self::Start(finite_start) => finite_start.bound_eq(other),
@@ -119,18 +117,12 @@ impl BoundPartialEq<RelativeEndBound> for RelativeFiniteBound {
     }
 }
 
-impl BoundPartialEq<RelativeBound> for RelativeFiniteBound {
+impl BoundEq<RelativeBound> for RelativeFiniteBound {
     fn bound_eq(&self, other: &RelativeBound) -> bool {
         match self {
             Self::Start(finite_start) => finite_start.bound_eq(other),
             Self::End(finite_end) => finite_end.bound_eq(other),
         }
-    }
-}
-
-impl BoundPartialOrd for RelativeFiniteBound {
-    fn bound_partial_cmp(&self, other: &Self) -> Option<BoundOrdering> {
-        Some(self.bound_cmp(other))
     }
 }
 
@@ -140,66 +132,56 @@ impl BoundOrd for RelativeFiniteBound {
             (Self::Start(lhs_finite_start), Self::Start(rhs_finite_start)) => {
                 lhs_finite_start.bound_cmp(rhs_finite_start)
             },
-            (Self::Start(finite_start), Self::End(finite_end)) => {
-                // Comparison between start and end is not supposed to fail,
-                // `BoundOrdering::Equal(None)` is a safe fallback
-                finite_start
-                    .bound_partial_cmp(finite_end)
-                    .unwrap_or(BoundOrdering::Equal(None))
-            },
-            (Self::End(finite_end), Self::Start(finite_start)) => {
-                // Comparison between start and end is not supposed to fail,
-                // `BoundOrdering::Equal(None)` is a safe fallback
-                finite_end
-                    .bound_partial_cmp(finite_start)
-                    .unwrap_or(BoundOrdering::Equal(None))
-            },
+            (Self::Start(finite_start), Self::End(finite_end)) => finite_start.bound_cmp(finite_end),
+            (Self::End(finite_end), Self::Start(finite_start)) => finite_end.bound_cmp(finite_start),
             (Self::End(lhs_finite_end), Self::End(rhs_finite_end)) => lhs_finite_end.bound_cmp(rhs_finite_end),
         }
     }
 }
 
-impl BoundPartialOrd<RelativeFiniteStartBound> for RelativeFiniteBound {
-    fn bound_partial_cmp(&self, other: &RelativeFiniteStartBound) -> Option<BoundOrdering> {
+impl BoundOrdExtremaOps for RelativeFiniteBound {}
+
+impl BoundOrd<RelativeFiniteStartBound> for RelativeFiniteBound {
+    fn bound_cmp(&self, other: &RelativeFiniteStartBound) -> BoundOrdering {
         match self {
-            Self::Start(finite_start) => finite_start.bound_partial_cmp(other),
-            Self::End(finite_end) => finite_end.bound_partial_cmp(other),
+            Self::Start(finite_start) => finite_start.bound_cmp(other),
+            Self::End(finite_end) => finite_end.bound_cmp(other),
         }
     }
 }
 
-impl BoundPartialOrd<RelativeFiniteEndBound> for RelativeFiniteBound {
-    fn bound_partial_cmp(&self, other: &RelativeFiniteEndBound) -> Option<BoundOrdering> {
+impl BoundOrd<RelativeFiniteEndBound> for RelativeFiniteBound {
+    fn bound_cmp(&self, other: &RelativeFiniteEndBound) -> BoundOrdering {
         match self {
-            Self::Start(finite_start) => finite_start.bound_partial_cmp(other),
-            Self::End(finite_end) => finite_end.bound_partial_cmp(other),
+            Self::Start(finite_start) => finite_start.bound_cmp(other),
+            Self::End(finite_end) => finite_end.bound_cmp(other),
         }
     }
 }
 
-impl BoundPartialOrd<RelativeStartBound> for RelativeFiniteBound {
-    fn bound_partial_cmp(&self, other: &RelativeStartBound) -> Option<BoundOrdering> {
+impl BoundOrd<RelativeStartBound> for RelativeFiniteBound {
+    fn bound_cmp(&self, other: &RelativeStartBound) -> BoundOrdering {
         match self {
-            Self::Start(finite_start) => finite_start.bound_partial_cmp(other),
-            Self::End(finite_end) => finite_end.bound_partial_cmp(other),
+            Self::Start(finite_start) => finite_start.bound_cmp(other),
+            Self::End(finite_end) => finite_end.bound_cmp(other),
         }
     }
 }
 
-impl BoundPartialOrd<RelativeEndBound> for RelativeFiniteBound {
-    fn bound_partial_cmp(&self, other: &RelativeEndBound) -> Option<BoundOrdering> {
+impl BoundOrd<RelativeEndBound> for RelativeFiniteBound {
+    fn bound_cmp(&self, other: &RelativeEndBound) -> BoundOrdering {
         match self {
-            Self::Start(finite_start) => finite_start.bound_partial_cmp(other),
-            Self::End(finite_end) => finite_end.bound_partial_cmp(other),
+            Self::Start(finite_start) => finite_start.bound_cmp(other),
+            Self::End(finite_end) => finite_end.bound_cmp(other),
         }
     }
 }
 
-impl BoundPartialOrd<RelativeBound> for RelativeFiniteBound {
-    fn bound_partial_cmp(&self, other: &RelativeBound) -> Option<BoundOrdering> {
+impl BoundOrd<RelativeBound> for RelativeFiniteBound {
+    fn bound_cmp(&self, other: &RelativeBound) -> BoundOrdering {
         match self {
-            Self::Start(finite_start) => finite_start.bound_partial_cmp(other),
-            Self::End(finite_end) => finite_end.bound_partial_cmp(other),
+            Self::Start(finite_start) => finite_start.bound_cmp(other),
+            Self::End(finite_end) => finite_end.bound_cmp(other),
         }
     }
 }

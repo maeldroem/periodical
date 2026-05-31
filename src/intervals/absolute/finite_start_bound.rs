@@ -19,7 +19,7 @@ use crate::intervals::absolute::{
     AbsoluteStartBound,
 };
 use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
-use crate::intervals::ops::{BoundEq, BoundOrd, BoundOrdering, BoundOverlapAmbiguity, BoundPartialEq, BoundPartialOrd};
+use crate::intervals::ops::{BoundEq, BoundOrd, BoundOrdExtremaOps, BoundOrdering, BoundOverlapAmbiguity};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
@@ -78,21 +78,19 @@ impl Ord for AbsoluteFiniteStartBound {
     }
 }
 
-impl BoundPartialEq for AbsoluteFiniteStartBound {
+impl BoundEq for AbsoluteFiniteStartBound {
     fn bound_eq(&self, other: &Self) -> bool {
         self.eq(other)
     }
 }
 
-impl BoundEq for AbsoluteFiniteStartBound {}
-
-impl BoundPartialEq<AbsoluteStartBound> for AbsoluteFiniteStartBound {
+impl BoundEq<AbsoluteStartBound> for AbsoluteFiniteStartBound {
     fn bound_eq(&self, other: &AbsoluteStartBound) -> bool {
         other.finite().is_some_and(|finite_start| self.bound_eq(&finite_start))
     }
 }
 
-impl BoundPartialEq<AbsoluteFiniteEndBound> for AbsoluteFiniteStartBound {
+impl BoundEq<AbsoluteFiniteEndBound> for AbsoluteFiniteStartBound {
     fn bound_eq(&self, other: &AbsoluteFiniteEndBound) -> bool {
         let start_pos = self.pos();
         let end_pos = other.pos();
@@ -103,13 +101,13 @@ impl BoundPartialEq<AbsoluteFiniteEndBound> for AbsoluteFiniteStartBound {
     }
 }
 
-impl BoundPartialEq<AbsoluteEndBound> for AbsoluteFiniteStartBound {
+impl BoundEq<AbsoluteEndBound> for AbsoluteFiniteStartBound {
     fn bound_eq(&self, other: &AbsoluteEndBound) -> bool {
         other.finite().is_some_and(|finite_end| self.bound_eq(&finite_end))
     }
 }
 
-impl BoundPartialEq<AbsoluteFiniteBound> for AbsoluteFiniteStartBound {
+impl BoundEq<AbsoluteFiniteBound> for AbsoluteFiniteStartBound {
     fn bound_eq(&self, other: &AbsoluteFiniteBound) -> bool {
         match other {
             AbsoluteFiniteBound::Start(finite_start) => self.bound_eq(finite_start),
@@ -118,18 +116,12 @@ impl BoundPartialEq<AbsoluteFiniteBound> for AbsoluteFiniteStartBound {
     }
 }
 
-impl BoundPartialEq<AbsoluteBound> for AbsoluteFiniteStartBound {
+impl BoundEq<AbsoluteBound> for AbsoluteFiniteStartBound {
     fn bound_eq(&self, other: &AbsoluteBound) -> bool {
         match other {
             AbsoluteBound::Start(start) => self.bound_eq(start),
             AbsoluteBound::End(end) => self.bound_eq(end),
         }
-    }
-}
-
-impl BoundPartialOrd for AbsoluteFiniteStartBound {
-    fn bound_partial_cmp(&self, other: &Self) -> Option<BoundOrdering> {
-        Some(self.bound_cmp(other))
     }
 }
 
@@ -149,55 +141,57 @@ impl BoundOrd for AbsoluteFiniteStartBound {
     }
 }
 
-impl BoundPartialOrd<AbsoluteStartBound> for AbsoluteFiniteStartBound {
-    fn bound_partial_cmp(&self, other: &AbsoluteStartBound) -> Option<BoundOrdering> {
-        Some(if let Some(finite_start) = other.finite() {
+impl BoundOrdExtremaOps for AbsoluteFiniteStartBound {}
+
+impl BoundOrd<AbsoluteStartBound> for AbsoluteFiniteStartBound {
+    fn bound_cmp(&self, other: &AbsoluteStartBound) -> BoundOrdering {
+        if let Some(finite_start) = other.finite() {
             self.bound_cmp(&finite_start)
         } else {
             BoundOrdering::Greater
-        })
+        }
     }
 }
 
-impl BoundPartialOrd<AbsoluteFiniteEndBound> for AbsoluteFiniteStartBound {
-    fn bound_partial_cmp(&self, other: &AbsoluteFiniteEndBound) -> Option<BoundOrdering> {
+impl BoundOrd<AbsoluteFiniteEndBound> for AbsoluteFiniteStartBound {
+    fn bound_cmp(&self, other: &AbsoluteFiniteEndBound) -> BoundOrdering {
         let lhs_pos = self.pos();
         let rhs_pos = other.pos();
 
-        Some(match lhs_pos.cmp(&rhs_pos) {
+        match lhs_pos.cmp(&rhs_pos) {
             Ordering::Less => BoundOrdering::Less,
             Ordering::Equal => BoundOrdering::Equal(Some(BoundOverlapAmbiguity::StartEnd(
                 lhs_pos.inclusivity(),
                 rhs_pos.inclusivity(),
             ))),
             Ordering::Greater => BoundOrdering::Greater,
-        })
-    }
-}
-
-impl BoundPartialOrd<AbsoluteEndBound> for AbsoluteFiniteStartBound {
-    fn bound_partial_cmp(&self, other: &AbsoluteEndBound) -> Option<BoundOrdering> {
-        match other {
-            AbsoluteEndBound::Finite(finite_end) => self.bound_partial_cmp(finite_end),
-            AbsoluteEndBound::InfiniteFuture => Some(BoundOrdering::Less),
         }
     }
 }
 
-impl BoundPartialOrd<AbsoluteFiniteBound> for AbsoluteFiniteStartBound {
-    fn bound_partial_cmp(&self, other: &AbsoluteFiniteBound) -> Option<BoundOrdering> {
+impl BoundOrd<AbsoluteEndBound> for AbsoluteFiniteStartBound {
+    fn bound_cmp(&self, other: &AbsoluteEndBound) -> BoundOrdering {
         match other {
-            AbsoluteFiniteBound::Start(finite_start) => self.bound_partial_cmp(finite_start),
-            AbsoluteFiniteBound::End(finite_end) => self.bound_partial_cmp(finite_end),
+            AbsoluteEndBound::Finite(finite_end) => self.bound_cmp(finite_end),
+            AbsoluteEndBound::InfiniteFuture => BoundOrdering::Less,
         }
     }
 }
 
-impl BoundPartialOrd<AbsoluteBound> for AbsoluteFiniteStartBound {
-    fn bound_partial_cmp(&self, other: &AbsoluteBound) -> Option<BoundOrdering> {
+impl BoundOrd<AbsoluteFiniteBound> for AbsoluteFiniteStartBound {
+    fn bound_cmp(&self, other: &AbsoluteFiniteBound) -> BoundOrdering {
         match other {
-            AbsoluteBound::Start(start) => self.bound_partial_cmp(start),
-            AbsoluteBound::End(end) => self.bound_partial_cmp(end),
+            AbsoluteFiniteBound::Start(finite_start) => self.bound_cmp(finite_start),
+            AbsoluteFiniteBound::End(finite_end) => self.bound_cmp(finite_end),
+        }
+    }
+}
+
+impl BoundOrd<AbsoluteBound> for AbsoluteFiniteStartBound {
+    fn bound_cmp(&self, other: &AbsoluteBound) -> BoundOrdering {
+        match other {
+            AbsoluteBound::Start(start) => self.bound_cmp(start),
+            AbsoluteBound::End(end) => self.bound_cmp(end),
         }
     }
 }

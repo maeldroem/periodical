@@ -54,12 +54,12 @@ use arbitrary::Arbitrary;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
+use crate::intervals::ops::BoundEq;
 use crate::intervals::ops::bound_overlap_ambiguity::{
     BoundOverlapAmbiguity,
     BoundOverlapDisambiguationRuleSet,
     DisambiguatedBoundOverlap,
 };
-use crate::intervals::ops::{BoundEq, BoundPartialEq};
 
 /// [`Ordering`] for bounds with support for [`BoundOverlapAmbiguity`]
 ///
@@ -120,7 +120,7 @@ impl BoundOrdering {
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    pub fn disambiguate_using_rule_set(self, rule_set: BoundOverlapDisambiguationRuleSet) -> Ordering {
+    pub fn disambiguate(self, rule_set: BoundOverlapDisambiguationRuleSet) -> Ordering {
         match self {
             Self::Less => Ordering::Less,
             Self::Equal(None) => Ordering::Equal,
@@ -259,7 +259,8 @@ impl BoundOrdering {
 /// );
 /// # Ok::<(), Box<dyn Error>>(())
 /// ```
-pub trait BoundPartialOrd<Rhs = Self>: BoundPartialEq<Rhs>
+// Add note to implementors: only impl on bounds + transitivity, duality etc. must be guaranteed
+pub trait BoundOrd<Rhs = Self>: BoundEq<Rhs>
 where
     Rhs: ?Sized,
 {
@@ -301,7 +302,7 @@ where
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    fn bound_partial_cmp(&self, other: &Rhs) -> Option<BoundOrdering>;
+    fn bound_cmp(&self, other: &Rhs) -> BoundOrdering;
 
     /// Returns whether `self` is less than the given other bound using the
     /// given rule set
@@ -337,17 +338,16 @@ where
     /// ```
     #[must_use]
     fn bound_lt(&self, other: &Rhs, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
-        self.bound_partial_cmp(other)
-            .is_some_and(|bound_ordering| match bound_ordering {
-                BoundOrdering::Less => true,
-                BoundOrdering::Equal(Some(ambiguity)) => {
-                    matches!(
-                        ambiguity.disambiguate_using_rule_set(rule_set),
-                        DisambiguatedBoundOverlap::Before,
-                    )
-                },
-                BoundOrdering::Equal(None) | BoundOrdering::Greater => false,
-            })
+        match self.bound_cmp(other) {
+            BoundOrdering::Less => true,
+            BoundOrdering::Equal(Some(ambiguity)) => {
+                matches!(
+                    ambiguity.disambiguate_using_rule_set(rule_set),
+                    DisambiguatedBoundOverlap::Before,
+                )
+            },
+            BoundOrdering::Equal(None) | BoundOrdering::Greater => false,
+        }
     }
 
     /// Returns whether `self` is less than or equal to the given other bound
@@ -384,17 +384,16 @@ where
     /// ```
     #[must_use]
     fn bound_le(&self, other: &Rhs, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
-        self.bound_partial_cmp(other)
-            .is_some_and(|bound_ordering| match bound_ordering {
-                BoundOrdering::Less | BoundOrdering::Equal(None) => true,
-                BoundOrdering::Equal(Some(ambiguity)) => {
-                    matches!(
-                        ambiguity.disambiguate_using_rule_set(rule_set),
-                        DisambiguatedBoundOverlap::Before | DisambiguatedBoundOverlap::Equal,
-                    )
-                },
-                BoundOrdering::Greater => false,
-            })
+        match self.bound_cmp(other) {
+            BoundOrdering::Less | BoundOrdering::Equal(None) => true,
+            BoundOrdering::Equal(Some(ambiguity)) => {
+                matches!(
+                    ambiguity.disambiguate_using_rule_set(rule_set),
+                    DisambiguatedBoundOverlap::Before | DisambiguatedBoundOverlap::Equal,
+                )
+            },
+            BoundOrdering::Greater => false,
+        }
     }
 
     /// Returns whether `self` is greater than the given other bound using the
@@ -431,17 +430,16 @@ where
     /// ```
     #[must_use]
     fn bound_gt(&self, other: &Rhs, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
-        self.bound_partial_cmp(other)
-            .is_some_and(|bound_ordering| match bound_ordering {
-                BoundOrdering::Less => true,
-                BoundOrdering::Equal(Some(ambiguity)) => {
-                    matches!(
-                        ambiguity.disambiguate_using_rule_set(rule_set),
-                        DisambiguatedBoundOverlap::After,
-                    )
-                },
-                BoundOrdering::Equal(None) | BoundOrdering::Greater => false,
-            })
+        match self.bound_cmp(other) {
+            BoundOrdering::Less => true,
+            BoundOrdering::Equal(Some(ambiguity)) => {
+                matches!(
+                    ambiguity.disambiguate_using_rule_set(rule_set),
+                    DisambiguatedBoundOverlap::After,
+                )
+            },
+            BoundOrdering::Equal(None) | BoundOrdering::Greater => false,
+        }
     }
 
     /// Returns whether `self` is greater than or equal to the given other bound
@@ -478,23 +476,20 @@ where
     /// ```
     #[must_use]
     fn bound_ge(&self, other: &Rhs, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
-        self.bound_partial_cmp(other)
-            .is_some_and(|bound_ordering| match bound_ordering {
-                BoundOrdering::Less | BoundOrdering::Equal(None) => true,
-                BoundOrdering::Equal(Some(ambiguity)) => {
-                    matches!(
-                        ambiguity.disambiguate_using_rule_set(rule_set),
-                        DisambiguatedBoundOverlap::Equal | DisambiguatedBoundOverlap::After,
-                    )
-                },
-                BoundOrdering::Greater => false,
-            })
+        match self.bound_cmp(other) {
+            BoundOrdering::Less | BoundOrdering::Equal(None) => true,
+            BoundOrdering::Equal(Some(ambiguity)) => {
+                matches!(
+                    ambiguity.disambiguate_using_rule_set(rule_set),
+                    DisambiguatedBoundOverlap::Equal | DisambiguatedBoundOverlap::After,
+                )
+            },
+            BoundOrdering::Greater => false,
+        }
     }
 }
 
-pub trait BoundOrd: BoundEq + BoundPartialOrd {
-    fn bound_cmp(&self, other: &Self) -> BoundOrdering;
-
+pub trait BoundOrdExtremaOps: BoundOrd {
     fn bound_max(self, other: Self, rule_set: BoundOverlapDisambiguationRuleSet) -> Self
     where
         Self: Sized,
