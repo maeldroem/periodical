@@ -83,6 +83,8 @@ Explain the motivation for this PR and what it does/solves
 - Renamed `*FiniteBound` to `*FiniteBoundPosition` for clarity
 - `*StartBound` and `*EndBound` now contain a `*FiniteStartBound`/`*FiniteEndBound` in their `Finite` variant
 - Refactored comparisons between bounds through the use of dedicated bound comparison traits
+- Changed internal structure of bounded intervals to use start/end finite bounds
+- Changed internal structure of half-bounded intervals to use a finite bound position
 
 ## Deprecated
 

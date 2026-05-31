@@ -226,9 +226,9 @@ impl ToAbsolute for BoundedRelativeInterval {
 
     fn to_absolute(&self, reference: Timestamp) -> Self::AbsoluteType {
         BoundedAbsoluteInterval::unchecked_new_with_inclusivity(
-            reference + self.start(),
+            reference + self.start_offset(),
             self.start_inclusivity(),
-            reference + self.end(),
+            reference + self.end_offset(),
             self.end_inclusivity(),
         )
     }
@@ -238,7 +238,7 @@ impl ToAbsolute for HalfBoundedRelativeInterval {
     type AbsoluteType = HalfBoundedAbsoluteInterval;
 
     fn to_absolute(&self, reference: Timestamp) -> Self::AbsoluteType {
-        HalfBoundedAbsoluteInterval::new_with_inclusivity(
+        HalfBoundedAbsoluteInterval::new_from_time_and_inclusivity(
             reference + self.reference(),
             self.reference_inclusivity(),
             self.opening_direction(),
@@ -434,9 +434,9 @@ impl ToRelative for BoundedAbsoluteInterval {
 
     fn to_relative(&self, reference: Timestamp) -> Self::RelativeType {
         BoundedRelativeInterval::new_with_inclusivity(
-            self.start().duration_since(reference),
+            self.start_time().duration_since(reference),
             self.start_inclusivity(),
-            self.end().duration_since(reference),
+            self.end_time().duration_since(reference),
             self.end_inclusivity(),
         )
     }
@@ -447,7 +447,7 @@ impl ToRelative for HalfBoundedAbsoluteInterval {
 
     fn to_relative(&self, reference: Timestamp) -> Self::RelativeType {
         HalfBoundedRelativeInterval::new_with_inclusivity(
-            self.reference().duration_since(reference),
+            self.reference_time().duration_since(reference),
             self.reference_inclusivity(),
             self.opening_direction(),
         )

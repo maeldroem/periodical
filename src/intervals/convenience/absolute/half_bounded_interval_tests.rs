@@ -14,7 +14,7 @@ fn since_date() -> Result<(), Box<dyn Error>> {
         HalfBoundedAbsoluteInterval::since_date("2026-05-01".parse::<Date>()?, TimeZone::get("Europe/Oslo")?)?;
 
     assert_eq!(
-        from_first_of_may.reference(),
+        from_first_of_may.reference_time(),
         "2026-05-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     );
     assert_eq!(from_first_of_may.reference_inclusivity(), BoundInclusivity::Inclusive);
@@ -29,7 +29,7 @@ fn until_date() -> Result<(), Box<dyn Error>> {
         HalfBoundedAbsoluteInterval::until_date("2026-05-01".parse::<Date>()?, TimeZone::get("Europe/Oslo")?)?;
 
     assert_eq!(
-        until_first_of_may.reference(),
+        until_first_of_may.reference_time(),
         "2026-05-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     );
     assert_eq!(until_first_of_may.reference_inclusivity(), BoundInclusivity::Exclusive);
@@ -44,7 +44,7 @@ fn since_week() -> Result<(), Box<dyn Error>> {
         HalfBoundedAbsoluteInterval::since_week(OffsetIsoWeek::new(2026, 5)?, TimeZone::get("Europe/Oslo")?)?;
 
     assert_eq!(
-        interval.reference(),
+        interval.reference_time(),
         "2026-01-26 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
     );
     assert_eq!(interval.reference_inclusivity(), BoundInclusivity::Inclusive);
@@ -59,7 +59,7 @@ fn until_week() -> Result<(), Box<dyn Error>> {
         HalfBoundedAbsoluteInterval::until_week(OffsetIsoWeek::new(2026, 5)?, TimeZone::get("Europe/Oslo")?)?;
 
     assert_eq!(
-        interval.reference(),
+        interval.reference_time(),
         "2026-01-26 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
     );
     assert_eq!(interval.reference_inclusivity(), BoundInclusivity::Exclusive);
@@ -74,7 +74,7 @@ fn since_month() -> Result<(), Box<dyn Error>> {
         HalfBoundedAbsoluteInterval::since_month(Month::March.with_year(2026), TimeZone::get("Europe/Oslo")?)?;
 
     assert_eq!(
-        since_month.reference(),
+        since_month.reference_time(),
         "2026-03-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
     );
     assert_eq!(since_month.reference_inclusivity(), BoundInclusivity::Inclusive);
@@ -89,7 +89,7 @@ fn until_month() -> Result<(), Box<dyn Error>> {
         HalfBoundedAbsoluteInterval::until_month(Month::March.with_year(2026), TimeZone::get("Europe/Oslo")?)?;
 
     assert_eq!(
-        until_month.reference(),
+        until_month.reference_time(),
         "2026-03-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
     );
     assert_eq!(until_month.reference_inclusivity(), BoundInclusivity::Exclusive);
@@ -103,7 +103,7 @@ fn since_year() -> Result<(), Box<dyn Error>> {
     let since_year = HalfBoundedAbsoluteInterval::since_year(2026, TimeZone::get("Europe/Oslo")?)?;
 
     assert_eq!(
-        since_year.reference(),
+        since_year.reference_time(),
         "2026-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
     );
     assert_eq!(since_year.reference_inclusivity(), BoundInclusivity::Inclusive);
@@ -117,7 +117,7 @@ fn until_year() -> Result<(), Box<dyn Error>> {
     let until_year = HalfBoundedAbsoluteInterval::until_year(2026, TimeZone::get("Europe/Oslo")?)?;
 
     assert_eq!(
-        until_year.reference(),
+        until_year.reference_time(),
         "2026-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
     );
     assert_eq!(until_year.reference_inclusivity(), BoundInclusivity::Exclusive);

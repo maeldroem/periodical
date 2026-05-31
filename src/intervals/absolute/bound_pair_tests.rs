@@ -1145,7 +1145,7 @@ fn from_bounded_absolute_interval() -> Result<(), Box<dyn Error>> {
 fn from_half_bounded_absolute_interval() -> Result<(), Box<dyn Error>> {
     let reference = "2026-01-01 08:00:00Z".parse::<Timestamp>()?;
 
-    let half_bounded = HalfBoundedAbsoluteInterval::new(reference, OpeningDirection::ToFuture);
+    let half_bounded = HalfBoundedAbsoluteInterval::new_from_time(reference, OpeningDirection::ToFuture);
 
     assert_eq!(
         AbsoluteBoundPair::from(half_bounded),
@@ -1182,7 +1182,7 @@ mod from_abs_interval {
     fn from_abs_interval_half_bounded() -> Result<(), Box<dyn Error>> {
         let reference = "2026-01-01 08:00:00Z".parse::<Timestamp>()?;
 
-        let interval = HalfBoundedAbsoluteInterval::new(reference, OpeningDirection::ToFuture).to_interval();
+        let interval = HalfBoundedAbsoluteInterval::new_from_time(reference, OpeningDirection::ToFuture).to_interval();
 
         assert_eq!(
             AbsoluteBoundPair::from(interval),

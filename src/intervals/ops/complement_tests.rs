@@ -30,12 +30,12 @@ fn empty_interval() {
 #[test]
 fn half_unbounded_interval() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        HalfBoundedAbsoluteInterval::new(
+        HalfBoundedAbsoluteInterval::new_from_time(
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             OpeningDirection::ToFuture,
         )
         .complement(),
-        ComplementResult::Single(HalfBoundedAbsoluteInterval::new_with_inclusivity(
+        ComplementResult::Single(HalfBoundedAbsoluteInterval::new_from_time_and_inclusivity(
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             BoundInclusivity::Exclusive,
             OpeningDirection::ToPast,
@@ -54,12 +54,12 @@ fn bounded_interval() -> Result<(), Box<dyn Error>> {
         )
         .complement(),
         ComplementResult::Split(
-            HalfBoundedAbsoluteInterval::new_with_inclusivity(
+            HalfBoundedAbsoluteInterval::new_from_time_and_inclusivity(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
                 OpeningDirection::ToPast,
             ),
-            HalfBoundedAbsoluteInterval::new_with_inclusivity(
+            HalfBoundedAbsoluteInterval::new_from_time_and_inclusivity(
                 "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
                 OpeningDirection::ToFuture,
@@ -100,14 +100,14 @@ fn abs_interval_unbounded() {
 #[test]
 fn abs_interval_half_bounded() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
+        AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time_and_inclusivity(
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             BoundInclusivity::Exclusive,
             OpeningDirection::ToPast,
         ))
         .complement(),
         ComplementResult::Single(EmptiableAbsoluteInterval::Bound(AbsoluteInterval::HalfBounded(
-            HalfBoundedAbsoluteInterval::new_with_inclusivity(
+            HalfBoundedAbsoluteInterval::new_from_time_and_inclusivity(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Inclusive,
                 OpeningDirection::ToFuture,
@@ -130,14 +130,14 @@ fn abs_interval_bounded() -> Result<(), Box<dyn Error>> {
         .complement(),
         ComplementResult::Split(
             EmptiableAbsoluteInterval::Bound(AbsoluteInterval::HalfBounded(
-                HalfBoundedAbsoluteInterval::new_with_inclusivity(
+                HalfBoundedAbsoluteInterval::new_from_time_and_inclusivity(
                     "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Inclusive,
                     OpeningDirection::ToPast,
                 )
             )),
             EmptiableAbsoluteInterval::Bound(AbsoluteInterval::HalfBounded(
-                HalfBoundedAbsoluteInterval::new_with_inclusivity(
+                HalfBoundedAbsoluteInterval::new_from_time_and_inclusivity(
                     "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Inclusive,
                     OpeningDirection::ToFuture,

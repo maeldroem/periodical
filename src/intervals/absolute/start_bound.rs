@@ -16,10 +16,14 @@ use jiff::Timestamp;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use crate::intervals::absolute::finite_bound::AbsoluteFiniteBound;
-use crate::intervals::absolute::finite_end_bound::AbsoluteFiniteEndBound;
-use crate::intervals::absolute::finite_start_bound::AbsoluteFiniteStartBound;
-use crate::intervals::absolute::{AbsoluteBound, AbsoluteEndBound, AbsoluteFiniteBoundPosition};
+use crate::intervals::absolute::{
+    AbsoluteBound,
+    AbsoluteEndBound,
+    AbsoluteFiniteBound,
+    AbsoluteFiniteBoundPosition,
+    AbsoluteFiniteEndBound,
+    AbsoluteFiniteStartBound,
+};
 use crate::intervals::meta::{BoundExtremality, BoundInclusivity, HasBoundExtremality, HasBoundInclusivity};
 use crate::intervals::ops::{BoundEq, BoundOrd, BoundOrdering, BoundOverlapAmbiguity, BoundPartialEq, BoundPartialOrd};
 
@@ -250,8 +254,8 @@ impl BoundOrd for AbsoluteStartBound {
             Ordering::Equal => BoundOrdering::Equal(self.finite().zip(other.finite()).map(
                 |(lhs_finite_start, rhs_finite_start)| {
                     BoundOverlapAmbiguity::BothStarts(
-                        lhs_finite_start.finite_bound_position().inclusivity(),
-                        rhs_finite_start.finite_bound_position().inclusivity(),
+                        lhs_finite_start.inclusivity(),
+                        rhs_finite_start.inclusivity(),
                     )
                 },
             )),

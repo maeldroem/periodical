@@ -306,14 +306,14 @@ pub fn complement_emptiable_abs_bound_pair(
 pub fn complement_bounded_abs_interval(
     interval: &BoundedAbsoluteInterval,
 ) -> ComplementResult<HalfBoundedAbsoluteInterval> {
-    let until_start = HalfBoundedAbsoluteInterval::new_with_inclusivity(
-        interval.start(),
+    let until_start = HalfBoundedAbsoluteInterval::new_from_time_and_inclusivity(
+        interval.start_time(),
         interval.start_inclusivity().opposite(),
         OpeningDirection::ToPast,
     );
 
-    let since_end = HalfBoundedAbsoluteInterval::new_with_inclusivity(
-        interval.end(),
+    let since_end = HalfBoundedAbsoluteInterval::new_from_time_and_inclusivity(
+        interval.end_time(),
         interval.end_inclusivity().opposite(),
         OpeningDirection::ToFuture,
     );
@@ -325,8 +325,8 @@ pub fn complement_bounded_abs_interval(
 pub fn complement_half_bounded_abs_interval(
     interval: &HalfBoundedAbsoluteInterval,
 ) -> ComplementResult<HalfBoundedAbsoluteInterval> {
-    ComplementResult::Single(HalfBoundedAbsoluteInterval::new_with_inclusivity(
-        interval.reference(),
+    ComplementResult::Single(HalfBoundedAbsoluteInterval::new_from_time_and_inclusivity(
+        interval.reference_time(),
         interval.reference_inclusivity().opposite(),
         interval.opening_direction().opposite(),
     ))
@@ -398,13 +398,13 @@ pub fn complement_bounded_rel_interval(
     interval: &BoundedRelativeInterval,
 ) -> ComplementResult<HalfBoundedRelativeInterval> {
     let until_start = HalfBoundedRelativeInterval::new_with_inclusivity(
-        interval.start(),
+        interval.start_offset(),
         interval.start_inclusivity().opposite(),
         OpeningDirection::ToPast,
     );
 
     let since_end = HalfBoundedRelativeInterval::new_with_inclusivity(
-        interval.end(),
+        interval.end_offset(),
         interval.end_inclusivity().opposite(),
         OpeningDirection::ToFuture,
     );

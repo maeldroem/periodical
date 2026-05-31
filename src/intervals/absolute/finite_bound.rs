@@ -4,9 +4,14 @@
 //! This is particularly useful for representing absolute bounds of an interval
 //! as a single type, while still conserving its extremality.
 
-use crate::intervals::absolute::finite_end_bound::AbsoluteFiniteEndBound;
-use crate::intervals::absolute::finite_start_bound::AbsoluteFiniteStartBound;
-use crate::intervals::absolute::{AbsoluteBound, AbsoluteEndBound, AbsoluteFiniteBoundPosition, AbsoluteStartBound};
+use crate::intervals::absolute::{
+    AbsoluteBound,
+    AbsoluteEndBound,
+    AbsoluteFiniteBoundPosition,
+    AbsoluteFiniteEndBound,
+    AbsoluteFiniteStartBound,
+    AbsoluteStartBound,
+};
 use crate::intervals::meta::{BoundExtremality, HasBoundExtremality};
 use crate::intervals::ops::{BoundEq, BoundOrd, BoundOrdering, BoundPartialEq, BoundPartialOrd};
 
@@ -36,6 +41,13 @@ impl AbsoluteFiniteBound {
         match self {
             Self::Start(_) => None,
             Self::End(end) => Some(end),
+        }
+    }
+
+    pub fn pos(self) -> AbsoluteFiniteBoundPosition {
+        match self {
+            Self::Start(start) => start.pos(),
+            Self::End(end) => end.pos(),
         }
     }
 

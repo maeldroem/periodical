@@ -39,6 +39,7 @@ use crate::intervals::relative::{
     EmptiableRelativeBoundPair,
     EmptiableRelativeInterval,
     HalfBoundedRelativeInterval,
+    HasEmptiableRelativeBoundPair,
     RelativeEndBound,
     RelativeInterval,
     RelativeStartBound,
@@ -48,7 +49,7 @@ use crate::intervals::relative::{
 use crate::intervals::special::UnboundedInterval;
 
 /// Possession of non-empty relative bound pair
-pub trait HasRelativeBoundPair {
+pub trait HasRelativeBoundPair: HasEmptiableRelativeBoundPair {
     /// Returns the relative bound pair of the object
     #[must_use]
     fn rel_bound_pair(&self) -> RelativeBoundPair;
@@ -156,7 +157,8 @@ impl RelativeBoundPair {
     /// );
     /// assert_eq!(
     ///     bounds.end(),
-    ///     RelativeFiniteBoundPosition::new_with_inclusivity(end, BoundInclusivity::Exclusive,).to_end_bound(),
+    ///     RelativeFiniteBoundPosition::new_with_inclusivity(end, BoundInclusivity::Exclusive,)
+    ///         .to_end_bound(),
     /// );
     /// ```
     #[must_use]

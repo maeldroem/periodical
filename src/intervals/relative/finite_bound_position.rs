@@ -17,9 +17,12 @@ use jiff::SignedDuration;
 use serde::{Deserialize, Serialize};
 
 use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
-use crate::intervals::relative::finite_end_bound::RelativeFiniteEndBound;
-use crate::intervals::relative::finite_start_bound::RelativeFiniteStartBound;
-use crate::intervals::relative::{RelativeEndBound, RelativeStartBound};
+use crate::intervals::relative::{
+    RelativeEndBound,
+    RelativeFiniteEndBound,
+    RelativeFiniteStartBound,
+    RelativeStartBound,
+};
 
 /// A relative finite bound
 ///

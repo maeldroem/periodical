@@ -34,8 +34,8 @@ use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 fn unchecked_new() {
     let interval = BoundedRelativeInterval::unchecked_new(SignedDuration::from_hours(1), SignedDuration::from_hours(2));
 
-    assert_eq!(interval.start(), SignedDuration::from_hours(1));
-    assert_eq!(interval.end(), SignedDuration::from_hours(2));
+    assert_eq!(interval.start_offset(), SignedDuration::from_hours(1));
+    assert_eq!(interval.end_offset(), SignedDuration::from_hours(2));
     assert_eq!(interval.start_inclusivity(), BoundInclusivity::Inclusive);
     assert_eq!(interval.end_inclusivity(), BoundInclusivity::Inclusive);
 }
@@ -47,8 +47,8 @@ mod new {
     fn no_swap() {
         let interval = BoundedRelativeInterval::new(SignedDuration::from_hours(1), SignedDuration::from_hours(2));
 
-        assert_eq!(interval.start(), SignedDuration::from_hours(1));
-        assert_eq!(interval.end(), SignedDuration::from_hours(2));
+        assert_eq!(interval.start_offset(), SignedDuration::from_hours(1));
+        assert_eq!(interval.end_offset(), SignedDuration::from_hours(2));
         assert_eq!(interval.start_inclusivity(), BoundInclusivity::Inclusive);
         assert_eq!(interval.end_inclusivity(), BoundInclusivity::Inclusive);
     }
@@ -57,8 +57,8 @@ mod new {
     fn swap() {
         let interval = BoundedRelativeInterval::new(SignedDuration::from_hours(2), SignedDuration::from_hours(1));
 
-        assert_eq!(interval.start(), SignedDuration::from_hours(1));
-        assert_eq!(interval.end(), SignedDuration::from_hours(2));
+        assert_eq!(interval.start_offset(), SignedDuration::from_hours(1));
+        assert_eq!(interval.end_offset(), SignedDuration::from_hours(2));
         assert_eq!(interval.start_inclusivity(), BoundInclusivity::Inclusive);
         assert_eq!(interval.end_inclusivity(), BoundInclusivity::Inclusive);
     }
@@ -70,7 +70,7 @@ mod new_with_length {
     #[test]
     fn ok() {
         assert_eq!(
-            BoundedRelativeInterval::new_with_length(SignedDuration::from_hours(1), Duration::from_hours(5)),
+            BoundedRelativeInterval::new_from_length(SignedDuration::from_hours(1), Duration::from_hours(5)),
             Ok(BoundedRelativeInterval::new(
                 SignedDuration::from_hours(1),
                 SignedDuration::from_hours(6)
@@ -81,7 +81,7 @@ mod new_with_length {
     #[test]
     fn out_of_range_length() {
         assert_eq!(
-            BoundedRelativeInterval::new_with_length(SignedDuration::from_hours(1), Duration::MAX),
+            BoundedRelativeInterval::new_from_length(SignedDuration::from_hours(1), Duration::MAX),
             Err(BoundedRelativeIntervalCreationError::OutOfRangeEnd)
         );
     }
@@ -142,7 +142,7 @@ mod new_with_length_and_inclusivity {
     #[test]
     fn normal() {
         assert_eq!(
-            BoundedRelativeInterval::new_with_length_and_inclusivity(
+            BoundedRelativeInterval::new_from_length_and_inclusivities(
                 SignedDuration::from_hours(1),
                 BoundInclusivity::Inclusive,
                 Duration::from_hours(5),
@@ -160,7 +160,7 @@ mod new_with_length_and_inclusivity {
     #[test]
     fn zero_length() {
         assert_eq!(
-            BoundedRelativeInterval::new_with_length_and_inclusivity(
+            BoundedRelativeInterval::new_from_length_and_inclusivities(
                 SignedDuration::from_hours(1),
                 BoundInclusivity::Inclusive,
                 Duration::ZERO,
@@ -178,7 +178,7 @@ mod new_with_length_and_inclusivity {
     #[test]
     fn out_of_range_length() {
         assert_eq!(
-            BoundedRelativeInterval::new_with_length_and_inclusivity(
+            BoundedRelativeInterval::new_from_length_and_inclusivities(
                 SignedDuration::from_hours(1),
                 BoundInclusivity::Inclusive,
                 Duration::MAX,
@@ -303,7 +303,7 @@ mod try_from_range {
 #[test]
 fn start() {
     assert_eq!(
-        BoundedRelativeInterval::new(SignedDuration::from_hours(1), SignedDuration::from_hours(2)).start(),
+        BoundedRelativeInterval::new(SignedDuration::from_hours(1), SignedDuration::from_hours(2)).start_offset(),
         SignedDuration::from_hours(1)
     );
 }
@@ -311,7 +311,7 @@ fn start() {
 #[test]
 fn end() {
     assert_eq!(
-        BoundedRelativeInterval::new(SignedDuration::from_hours(1), SignedDuration::from_hours(2)).end(),
+        BoundedRelativeInterval::new(SignedDuration::from_hours(1), SignedDuration::from_hours(2)).end_offset(),
         SignedDuration::from_hours(2),
     );
 }
@@ -387,8 +387,8 @@ mod set_start {
 
         let mut interval = BoundedRelativeInterval::new(SignedDuration::from_hours(2), SignedDuration::from_hours(3));
 
-        assert_eq!(interval.set_start(new_start), Ok(()));
-        assert_eq!(interval.start(), new_start);
+        assert_eq!(interval.set_start_offset(new_start), Ok(()));
+        assert_eq!(interval.start_offset(), new_start);
     }
 
     #[test]
@@ -435,8 +435,8 @@ mod set_start {
 
         let mut interval = BoundedRelativeInterval::new(SignedDuration::from_hours(1), SignedDuration::from_hours(2));
 
-        assert_eq!(interval.set_start(new_start), Ok(()));
-        assert_eq!(interval.start(), new_start);
+        assert_eq!(interval.set_start_offset(new_start), Ok(()));
+        assert_eq!(interval.start_offset(), new_start);
         assert_eq!(interval.start_inclusivity(), BoundInclusivity::Inclusive);
     }
 
@@ -446,8 +446,8 @@ mod set_start {
 
         let mut interval = BoundedRelativeInterval::new(SignedDuration::from_hours(1), SignedDuration::from_hours(3));
 
-        assert_eq!(interval.set_start(new_start), Ok(()));
-        assert_eq!(interval.start(), new_start);
+        assert_eq!(interval.set_start_offset(new_start), Ok(()));
+        assert_eq!(interval.start_offset(), new_start);
     }
 
     #[test]
@@ -457,10 +457,10 @@ mod set_start {
         let mut interval = BoundedRelativeInterval::new(SignedDuration::from_hours(1), SignedDuration::from_hours(2));
 
         assert_eq!(
-            interval.set_start(new_start),
+            interval.set_start_offset(new_start),
             Err(BoundedRelativeIntervalUpdateError::ChronologicalOrderViolation)
         );
-        assert_eq!(interval.start(), SignedDuration::from_hours(1));
+        assert_eq!(interval.start_offset(), SignedDuration::from_hours(1));
     }
 }
 
@@ -474,10 +474,10 @@ mod set_end {
         let mut interval = BoundedRelativeInterval::new(SignedDuration::from_hours(2), SignedDuration::from_hours(3));
 
         assert_eq!(
-            interval.set_end(new_end),
+            interval.set_end_offset(new_end),
             Err(BoundedRelativeIntervalUpdateError::ChronologicalOrderViolation)
         );
-        assert_eq!(interval.end(), SignedDuration::from_hours(3));
+        assert_eq!(interval.end_offset(), SignedDuration::from_hours(3));
     }
 
     #[test]
@@ -486,8 +486,8 @@ mod set_end {
 
         let mut interval = BoundedRelativeInterval::new(SignedDuration::from_hours(1), SignedDuration::from_hours(3));
 
-        assert_eq!(interval.set_end(new_end), Ok(()));
-        assert_eq!(interval.end(), new_end);
+        assert_eq!(interval.set_end_offset(new_end), Ok(()));
+        assert_eq!(interval.end_offset(), new_end);
     }
 
     #[test]
@@ -534,8 +534,8 @@ mod set_end {
 
         let mut interval = BoundedRelativeInterval::new(SignedDuration::from_hours(1), SignedDuration::from_hours(2));
 
-        assert_eq!(interval.set_end(new_end), Ok(()));
-        assert_eq!(interval.end(), new_end);
+        assert_eq!(interval.set_end_offset(new_end), Ok(()));
+        assert_eq!(interval.end_offset(), new_end);
         assert_eq!(interval.end_inclusivity(), BoundInclusivity::Inclusive);
     }
 
@@ -546,10 +546,10 @@ mod set_end {
         let mut interval = BoundedRelativeInterval::new(SignedDuration::from_hours(1), SignedDuration::from_hours(2));
 
         assert_eq!(
-            interval.set_start(new_start),
+            interval.set_start_offset(new_start),
             Err(BoundedRelativeIntervalUpdateError::ChronologicalOrderViolation)
         );
-        assert_eq!(interval.start(), SignedDuration::from_hours(1));
+        assert_eq!(interval.start_offset(), SignedDuration::from_hours(1));
     }
 }
 
@@ -561,8 +561,8 @@ mod set_length_from_start {
         let mut interval = BoundedRelativeInterval::new(SignedDuration::from_hours(1), SignedDuration::from_hours(6));
 
         assert_eq!(interval.set_length_from_start(Duration::ZERO), Ok(()));
-        assert_eq!(interval.start(), SignedDuration::from_hours(1));
-        assert_eq!(interval.end(), SignedDuration::from_hours(1));
+        assert_eq!(interval.start_offset(), SignedDuration::from_hours(1));
+        assert_eq!(interval.end_offset(), SignedDuration::from_hours(1));
     }
 
     #[test]
@@ -587,8 +587,8 @@ mod set_length_from_start {
         let mut interval = BoundedRelativeInterval::new(SignedDuration::from_hours(1), SignedDuration::from_hours(6));
 
         assert_eq!(interval.set_length_from_start(Duration::from_hours(2)), Ok(()));
-        assert_eq!(interval.start(), SignedDuration::from_hours(1));
-        assert_eq!(interval.end(), SignedDuration::from_hours(3));
+        assert_eq!(interval.start_offset(), SignedDuration::from_hours(1));
+        assert_eq!(interval.end_offset(), SignedDuration::from_hours(3));
     }
 
     #[test]
@@ -599,8 +599,8 @@ mod set_length_from_start {
             interval.set_length_from_start(Duration::MAX),
             Err(BoundedRelativeIntervalUpdateError::OutOfRange)
         );
-        assert_eq!(interval.start(), SignedDuration::from_hours(1));
-        assert_eq!(interval.end(), SignedDuration::from_hours(6));
+        assert_eq!(interval.start_offset(), SignedDuration::from_hours(1));
+        assert_eq!(interval.end_offset(), SignedDuration::from_hours(6));
     }
 }
 
@@ -612,8 +612,8 @@ mod set_length_from_end {
         let mut interval = BoundedRelativeInterval::new(SignedDuration::from_hours(1), SignedDuration::from_hours(6));
 
         assert_eq!(interval.set_length_from_end(Duration::ZERO), Ok(()));
-        assert_eq!(interval.start(), SignedDuration::from_hours(6));
-        assert_eq!(interval.end(), SignedDuration::from_hours(6));
+        assert_eq!(interval.start_offset(), SignedDuration::from_hours(6));
+        assert_eq!(interval.end_offset(), SignedDuration::from_hours(6));
     }
 
     #[test]
@@ -638,8 +638,8 @@ mod set_length_from_end {
         let mut interval = BoundedRelativeInterval::new(SignedDuration::from_hours(1), SignedDuration::from_hours(6));
 
         assert_eq!(interval.set_length_from_end(Duration::from_hours(2)), Ok(()));
-        assert_eq!(interval.start(), SignedDuration::from_hours(4));
-        assert_eq!(interval.end(), SignedDuration::from_hours(6));
+        assert_eq!(interval.start_offset(), SignedDuration::from_hours(4));
+        assert_eq!(interval.end_offset(), SignedDuration::from_hours(6));
     }
 
     #[test]
@@ -650,8 +650,8 @@ mod set_length_from_end {
             interval.set_length_from_end(Duration::MAX),
             Err(BoundedRelativeIntervalUpdateError::OutOfRange)
         );
-        assert_eq!(interval.start(), SignedDuration::from_hours(1));
-        assert_eq!(interval.end(), SignedDuration::from_hours(6));
+        assert_eq!(interval.start_offset(), SignedDuration::from_hours(1));
+        assert_eq!(interval.end_offset(), SignedDuration::from_hours(6));
     }
 }
 
@@ -661,7 +661,7 @@ fn unchecked_set_start_inclusivity() {
 
     interval.unchecked_set_start_inclusivity(BoundInclusivity::Exclusive);
 
-    assert_eq!(interval.start(), interval.end());
+    assert_eq!(interval.start_offset(), interval.end_offset());
     assert_eq!(interval.start_inclusivity(), BoundInclusivity::Exclusive);
     assert_eq!(interval.end_inclusivity(), BoundInclusivity::Inclusive);
 }
@@ -672,7 +672,7 @@ fn unchecked_set_end_inclusivity() {
 
     interval.unchecked_set_end_inclusivity(BoundInclusivity::Exclusive);
 
-    assert_eq!(interval.start(), interval.end());
+    assert_eq!(interval.start_offset(), interval.end_offset());
     assert_eq!(interval.start_inclusivity(), BoundInclusivity::Inclusive);
     assert_eq!(interval.end_inclusivity(), BoundInclusivity::Exclusive);
 }

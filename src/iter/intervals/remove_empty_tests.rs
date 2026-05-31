@@ -22,7 +22,7 @@ fn create() -> Result<(), Box<dyn Error>> {
         ))
         .to_emptiable(),
         EmptiableAbsoluteInterval::Empty(EmptyInterval),
-        AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new(
+        AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             OpeningDirection::ToPast,
         ))
@@ -45,7 +45,7 @@ fn run() -> Result<(), Box<dyn Error>> {
         .to_emptiable(),
         EmptiableAbsoluteInterval::Empty(EmptyInterval),
         EmptiableAbsoluteInterval::Empty(EmptyInterval),
-        AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new(
+        AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             OpeningDirection::ToPast,
         ))
@@ -62,7 +62,7 @@ fn run() -> Result<(), Box<dyn Error>> {
                 "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
             ))
             .to_emptiable(),
-            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new(
+            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 OpeningDirection::ToPast
             ))
@@ -84,7 +84,7 @@ fn run_reverse() -> Result<(), Box<dyn Error>> {
         .to_emptiable(),
         EmptiableAbsoluteInterval::Empty(EmptyInterval),
         EmptiableAbsoluteInterval::Empty(EmptyInterval),
-        AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new(
+        AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             OpeningDirection::ToPast,
         ))
@@ -95,7 +95,7 @@ fn run_reverse() -> Result<(), Box<dyn Error>> {
     assert_eq!(
         intervals.remove_empty_intervals().rev().collect::<Vec<_>>(),
         vec![
-            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new(
+            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 OpeningDirection::ToPast
             ))

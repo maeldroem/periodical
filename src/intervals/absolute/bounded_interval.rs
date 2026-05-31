@@ -25,11 +25,16 @@ use crate::intervals::absolute::{
     AbsoluteBoundPair,
     AbsoluteEndBound,
     AbsoluteFiniteBoundPosition,
+    AbsoluteFiniteEndBound,
+    AbsoluteFiniteStartBound,
     AbsoluteInterval,
     AbsoluteStartBound,
+    AbsoluteStartEndBoundsCheckForIntervalCreationError,
     EmptiableAbsoluteBoundPair,
     EmptiableAbsoluteInterval,
     HasAbsoluteBoundPair,
+    check_absolute_finite_start_end_bounds_for_interval_creation,
+    prepare_absolute_finite_start_end_bounds_for_interval_creation,
 };
 use crate::intervals::meta::{
     BoundInclusivity,
@@ -61,10 +66,8 @@ use crate::intervals::meta::{
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub struct BoundedAbsoluteInterval {
-    start: Timestamp,
-    end: Timestamp,
-    start_inclusivity: BoundInclusivity,
-    end_inclusivity: BoundInclusivity,
+    start: AbsoluteFiniteStartBound,
+    end: AbsoluteFiniteEndBound,
 }
 
 impl BoundedAbsoluteInterval {
@@ -89,12 +92,10 @@ impl BoundedAbsoluteInterval {
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    pub fn unchecked_new(start: Timestamp, end: Timestamp) -> Self {
+    pub fn unchecked_new(start: AbsoluteFiniteStartBound, end: AbsoluteFiniteEndBound) -> Self {
         BoundedAbsoluteInterval {
             start,
             end,
-            start_inclusivity: BoundInclusivity::default(),
-            end_inclusivity: BoundInclusivity::default(),
         }
     }
 
@@ -121,109 +122,52 @@ impl BoundedAbsoluteInterval {
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    pub fn new(mut start: Timestamp, mut end: Timestamp) -> Self {
-        if start > end {
-            std::mem::swap(&mut start, &mut end);
-        }
+    pub fn new(mut start: AbsoluteFiniteStartBound, mut end: AbsoluteFiniteEndBound) -> Self {
+        prepare_absolute_finite_start_end_bounds_for_interval_creation(&mut start, &mut end);
 
         Self::unchecked_new(start, end)
     }
 
-    /// Creates a new [`BoundedAbsoluteInterval`] with the given bound
-    /// inclusivities without checking if it violates invariants
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::error::Error;
-    /// # use jiff::Timestamp;
-    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
-    /// # use periodical::intervals::meta::BoundInclusivity;
-    /// let time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
-    ///
-    /// // Same time, not doubly inclusive
-    /// let bounded_interval = BoundedAbsoluteInterval::unchecked_new_with_inclusivity(
-    ///     time,
-    ///     BoundInclusivity::Inclusive,
-    ///     time,
-    ///     BoundInclusivity::Exclusive,
-    /// );
-    ///
-    /// assert_eq!(
-    ///     bounded_interval.start_inclusivity(),
-    ///     BoundInclusivity::Inclusive
-    /// );
-    /// assert_eq!(
-    ///     bounded_interval.end_inclusivity(),
-    ///     BoundInclusivity::Exclusive
-    /// );
-    /// # Ok::<(), Box<dyn Error>>(())
-    /// ```
     #[must_use]
-    pub fn unchecked_new_with_inclusivity(
-        start: Timestamp,
-        start_inclusivity: BoundInclusivity,
-        end: Timestamp,
-        end_inclusivity: BoundInclusivity,
-    ) -> Self {
-        BoundedAbsoluteInterval {
-            start,
-            end,
-            start_inclusivity,
-            end_inclusivity,
-        }
+    pub fn unchecked_new_from_times(start: Timestamp, end: Timestamp) -> Self {
+        Self::unchecked_new(
+            AbsoluteFiniteBoundPosition::new(start).to_finite_start_bound(),
+            AbsoluteFiniteBoundPosition::new(end).to_finite_end_bound(),
+        )
     }
 
-    /// Creates a new [`BoundedAbsoluteInterval`] with the given bound
-    /// inclusivities
-    ///
-    /// If the given times are not in chronological order, we swap them so they
-    /// are in chronological order.
-    ///
-    /// If the given times are equal but have bound inclusivities other than
-    /// inclusive, we set them to
-    /// [`Inclusive`](BoundInclusivity::Inclusive).
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::error::Error;
-    /// # use jiff::Timestamp;
-    /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
-    /// # use periodical::intervals::meta::BoundInclusivity;
-    /// let time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
-    ///
-    /// // Same time, not doubly inclusive
-    /// let bounded_interval = BoundedAbsoluteInterval::new_with_inclusivity(
-    ///     time,
-    ///     BoundInclusivity::Inclusive,
-    ///     time,
-    ///     BoundInclusivity::Exclusive,
-    /// );
-    ///
-    /// // Therefore gets reset to inclusive for both bounds
-    /// assert_eq!(
-    ///     bounded_interval.start_inclusivity(),
-    ///     BoundInclusivity::Inclusive
-    /// );
-    /// assert_eq!(
-    ///     bounded_interval.end_inclusivity(),
-    ///     BoundInclusivity::Inclusive
-    /// );
-    /// # Ok::<(), Box<dyn Error>>(())
-    /// ```
     #[must_use]
-    pub fn new_with_inclusivity(
+    pub fn new_from_times(start: Timestamp, end: Timestamp) -> Self {
+        Self::new(
+            AbsoluteFiniteBoundPosition::new(start).to_finite_start_bound(),
+            AbsoluteFiniteBoundPosition::new(end).to_finite_end_bound(),
+        )
+    }
+
+    #[must_use]
+    pub fn unchecked_new_from_times_and_inclusivities(
         start: Timestamp,
         start_inclusivity: BoundInclusivity,
         end: Timestamp,
         end_inclusivity: BoundInclusivity,
     ) -> Self {
-        match start.cmp(&end) {
-            Ordering::Less => Self::unchecked_new_with_inclusivity(start, start_inclusivity, end, end_inclusivity),
-            Ordering::Equal => Self::unchecked_new(start, end),
-            Ordering::Greater => Self::unchecked_new_with_inclusivity(end, end_inclusivity, start, start_inclusivity),
-        }
+        Self::unchecked_new(
+            AbsoluteFiniteBoundPosition::new_with_inclusivity(start, start_inclusivity).to_finite_start_bound(),
+            AbsoluteFiniteBoundPosition::new_with_inclusivity(end, end_inclusivity).to_finite_end_bound(),
+        )
+    }
+
+    #[must_use]
+    pub fn new_from_times_and_inclusivities(
+        start: Timestamp,
+        start_inclusivity: BoundInclusivity,
+        end: Timestamp,
+        end_inclusivity: BoundInclusivity,
+    ) -> Self {
+        Self::new(
+            AbsoluteFiniteBoundPosition::new_with_inclusivity(start, start_inclusivity).to_finite_start_bound(),
+            AbsoluteFiniteBoundPosition::new_with_inclusivity(end, end_inclusivity).to_finite_end_bound(),
+        )
     }
 
     /// Attempts to create a [`BoundedAbsoluteInterval`] from a [`Timestamp`] range
@@ -266,12 +210,20 @@ impl BoundedAbsoluteInterval {
             Bound::Unbounded => return Err(BoundedAbsoluteIntervalTryFromRangeError),
         };
 
-        Ok(Self::new_with_inclusivity(
+        Ok(Self::new_from_times_and_inclusivities(
             start,
             start_inclusivity,
             end,
             end_inclusivity,
         ))
+    }
+
+    pub fn start(&self) -> AbsoluteFiniteStartBound {
+        self.start
+    }
+
+    pub fn end(&self) -> AbsoluteFiniteEndBound {
+        self.end
     }
 
     /// Returns the start time
@@ -291,8 +243,8 @@ impl BoundedAbsoluteInterval {
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    pub fn start(&self) -> Timestamp {
-        self.start
+    pub fn start_time(&self) -> Timestamp {
+        self.start().pos().time()
     }
 
     /// Returns the end time
@@ -312,8 +264,8 @@ impl BoundedAbsoluteInterval {
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    pub fn end(&self) -> Timestamp {
-        self.end
+    pub fn end_time(&self) -> Timestamp {
+        self.end().pos().time()
     }
 
     /// Returns the inclusivity of the start bound
@@ -343,7 +295,7 @@ impl BoundedAbsoluteInterval {
     /// ```
     #[must_use]
     pub fn start_inclusivity(&self) -> BoundInclusivity {
-        self.start_inclusivity
+        self.start().pos().inclusivity()
     }
 
     /// Returns the inclusivity of the end bound
@@ -373,7 +325,47 @@ impl BoundedAbsoluteInterval {
     /// ```
     #[must_use]
     pub fn end_inclusivity(&self) -> BoundInclusivity {
-        self.end_inclusivity
+        self.end().pos().inclusivity()
+    }
+
+    pub fn unchecked_set_start(&mut self, new_start: AbsoluteFiniteStartBound) {
+        self.start = new_start;
+    }
+
+    pub fn set_start(&mut self, new_start: AbsoluteFiniteStartBound) -> Result<(), BoundedAbsoluteIntervalUpdateError> {
+        check_absolute_finite_start_end_bounds_for_interval_creation(&new_start, &self.end()).map_err(
+            |err| match err {
+                AbsoluteStartEndBoundsCheckForIntervalCreationError::StartPastEnd => {
+                    BoundedAbsoluteIntervalUpdateError::ChronologicalOrderViolation
+                },
+                AbsoluteStartEndBoundsCheckForIntervalCreationError::SameTimeButNotDoublyInclusive => {
+                    BoundedAbsoluteIntervalUpdateError::SameTimeDoublyInclusiveViolation
+                },
+            },
+        )?;
+
+        self.unchecked_set_start(new_start);
+        Ok(())
+    }
+
+    pub fn unchecked_set_end(&mut self, new_end: AbsoluteFiniteEndBound) {
+        self.end = new_end;
+    }
+
+    pub fn set_end(&mut self, new_end: AbsoluteFiniteEndBound) -> Result<(), BoundedAbsoluteIntervalUpdateError> {
+        check_absolute_finite_start_end_bounds_for_interval_creation(&self.start(), &new_end).map_err(
+            |err| match err {
+                AbsoluteStartEndBoundsCheckForIntervalCreationError::StartPastEnd => {
+                    BoundedAbsoluteIntervalUpdateError::ChronologicalOrderViolation
+                },
+                AbsoluteStartEndBoundsCheckForIntervalCreationError::SameTimeButNotDoublyInclusive => {
+                    BoundedAbsoluteIntervalUpdateError::SameTimeDoublyInclusiveViolation
+                },
+            },
+        )?;
+
+        self.unchecked_set_end(new_end);
+        Ok(())
     }
 
     /// Sets the start time without checking if it violates invariants
@@ -399,8 +391,8 @@ impl BoundedAbsoluteInterval {
     /// assert_eq!(bounded_interval.end(), end);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
-    pub fn unchecked_set_start(&mut self, new_start: Timestamp) {
-        self.start = new_start;
+    pub fn unchecked_set_start_time(&mut self, new_start_time: Timestamp) {
+        self.start.pos_mut().set_time(new_start_time);
     }
 
     /// Sets the end time without checking if it violates invariants
@@ -426,8 +418,8 @@ impl BoundedAbsoluteInterval {
     /// assert_eq!(bounded_interval.end(), new_end);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
-    pub fn unchecked_set_end(&mut self, new_end: Timestamp) {
-        self.end = new_end;
+    pub fn unchecked_set_end_time(&mut self, new_end_time: Timestamp) {
+        self.end.pos_mut().set_time(new_end_time);
     }
 
     /// Sets the start time
@@ -460,20 +452,20 @@ impl BoundedAbsoluteInterval {
     /// assert_eq!(bounded_interval.start(), new_start);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
-    pub fn set_start(&mut self, new_start: Timestamp) -> Result<(), BoundedAbsoluteIntervalUpdateError> {
-        match new_start.cmp(&self.end) {
+    pub fn set_start_time(&mut self, new_start_time: Timestamp) -> Result<(), BoundedAbsoluteIntervalUpdateError> {
+        match new_start_time.cmp(&self.end_time()) {
             Ordering::Less => {
-                self.unchecked_set_start(new_start);
+                self.unchecked_set_start_time(new_start_time);
                 Ok(())
             },
             Ordering::Equal => {
-                if self.start_inclusivity != BoundInclusivity::Inclusive
-                    || self.end_inclusivity != BoundInclusivity::Inclusive
+                if self.start_inclusivity() != BoundInclusivity::Inclusive
+                    || self.end_inclusivity() != BoundInclusivity::Inclusive
                 {
                     return Err(BoundedAbsoluteIntervalUpdateError::SameTimeDoublyInclusiveViolation);
                 }
 
-                self.unchecked_set_start(new_start);
+                self.unchecked_set_start_time(new_start_time);
                 Ok(())
             },
             Ordering::Greater => Err(BoundedAbsoluteIntervalUpdateError::ChronologicalOrderViolation),
@@ -510,20 +502,20 @@ impl BoundedAbsoluteInterval {
     /// assert_eq!(bounded_interval.end(), new_end);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
-    pub fn set_end(&mut self, new_end: Timestamp) -> Result<(), BoundedAbsoluteIntervalUpdateError> {
-        match self.start.cmp(&new_end) {
+    pub fn set_end_time(&mut self, new_end_time: Timestamp) -> Result<(), BoundedAbsoluteIntervalUpdateError> {
+        match self.start_time().cmp(&new_end_time) {
             Ordering::Less => {
-                self.unchecked_set_end(new_end);
+                self.unchecked_set_end_time(new_end_time);
                 Ok(())
             },
             Ordering::Equal => {
-                if self.start_inclusivity != BoundInclusivity::Inclusive
-                    || self.end_inclusivity != BoundInclusivity::Inclusive
+                if self.start_inclusivity() != BoundInclusivity::Inclusive
+                    || self.end_inclusivity() != BoundInclusivity::Inclusive
                 {
                     return Err(BoundedAbsoluteIntervalUpdateError::SameTimeDoublyInclusiveViolation);
                 }
 
-                self.unchecked_set_end(new_end);
+                self.unchecked_set_end_time(new_end_time);
                 Ok(())
             },
             Ordering::Greater => Err(BoundedAbsoluteIntervalUpdateError::ChronologicalOrderViolation),
@@ -558,7 +550,7 @@ impl BoundedAbsoluteInterval {
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn unchecked_set_start_inclusivity(&mut self, new_start_inclusivity: BoundInclusivity) {
-        self.start_inclusivity = new_start_inclusivity;
+        self.start.pos_mut().set_inclusivity(new_start_inclusivity);
     }
 
     /// Sets the end bound's inclusivity without checking if it violates
@@ -589,7 +581,7 @@ impl BoundedAbsoluteInterval {
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn unchecked_set_end_inclusivity(&mut self, new_end_inclusivity: BoundInclusivity) {
-        self.end_inclusivity = new_end_inclusivity;
+        self.end.pos_mut().set_inclusivity(new_end_inclusivity);
     }
 
     /// Sets the start bound's inclusivity
@@ -628,7 +620,7 @@ impl BoundedAbsoluteInterval {
         &mut self,
         new_inclusivity: BoundInclusivity,
     ) -> Result<(), BoundedAbsoluteIntervalUpdateError> {
-        if self.start == self.end && new_inclusivity != BoundInclusivity::Inclusive {
+        if self.start_time() == self.end_time() && new_inclusivity != BoundInclusivity::Inclusive {
             return Err(BoundedAbsoluteIntervalUpdateError::SameTimeDoublyInclusiveViolation);
         }
 
@@ -672,7 +664,7 @@ impl BoundedAbsoluteInterval {
         &mut self,
         new_inclusivity: BoundInclusivity,
     ) -> Result<(), BoundedAbsoluteIntervalUpdateError> {
-        if self.start == self.end && new_inclusivity != BoundInclusivity::Inclusive {
+        if self.start_time() == self.end_time() && new_inclusivity != BoundInclusivity::Inclusive {
             return Err(BoundedAbsoluteIntervalUpdateError::SameTimeDoublyInclusiveViolation);
         }
 
@@ -777,7 +769,11 @@ impl HasRelativity for BoundedAbsoluteInterval {
 impl HasDuration for BoundedAbsoluteInterval {
     fn duration(&self) -> IntervalDuration {
         IntervalDuration::Finite(
-            self.end.duration_since(self.start).unsigned_abs(),
+            self.end()
+                .pos()
+                .time()
+                .duration_since(self.start().pos().time())
+                .unsigned_abs(),
             Epsilon::from((self.start_inclusivity(), self.end_inclusivity())),
         )
     }
@@ -789,11 +785,11 @@ impl HasAbsoluteBoundPair for BoundedAbsoluteInterval {
     }
 
     fn abs_start(&self) -> AbsoluteStartBound {
-        AbsoluteFiniteBoundPosition::new_with_inclusivity(self.start, self.start_inclusivity).to_start_bound()
+        self.start().to_start_bound()
     }
 
     fn abs_end(&self) -> AbsoluteEndBound {
-        AbsoluteFiniteBoundPosition::new_with_inclusivity(self.end, self.end_inclusivity).to_end_bound()
+        self.end().to_end_bound()
     }
 }
 
@@ -805,7 +801,7 @@ impl IsEmpty for BoundedAbsoluteInterval {
 
 impl From<(Timestamp, Timestamp)> for BoundedAbsoluteInterval {
     fn from((start, end): (Timestamp, Timestamp)) -> Self {
-        BoundedAbsoluteInterval::new(start, end)
+        BoundedAbsoluteInterval::new_from_times(start, end)
     }
 }
 
@@ -816,19 +812,19 @@ impl From<((Timestamp, BoundInclusivity), (Timestamp, BoundInclusivity))> for Bo
             (Timestamp, BoundInclusivity),
         ),
     ) -> Self {
-        BoundedAbsoluteInterval::new_with_inclusivity(start, start_inclusivity, end, end_inclusivity)
+        BoundedAbsoluteInterval::new_from_times_and_inclusivities(start, start_inclusivity, end, end_inclusivity)
     }
 }
 
 impl From<(AbsoluteFiniteBoundPosition, AbsoluteFiniteBoundPosition)> for BoundedAbsoluteInterval {
     fn from((start, end): (AbsoluteFiniteBoundPosition, AbsoluteFiniteBoundPosition)) -> Self {
-        Self::new_with_inclusivity(start.time(), start.inclusivity(), end.time(), end.inclusivity())
+        Self::new(start.to_finite_start_bound(), end.to_finite_end_bound())
     }
 }
 
 impl From<Range<Timestamp>> for BoundedAbsoluteInterval {
     fn from(range: Range<Timestamp>) -> Self {
-        BoundedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_from_times_and_inclusivities(
             range.start,
             BoundInclusivity::Inclusive,
             range.end,
@@ -839,7 +835,7 @@ impl From<Range<Timestamp>> for BoundedAbsoluteInterval {
 
 impl From<RangeInclusive<Timestamp>> for BoundedAbsoluteInterval {
     fn from(range: RangeInclusive<Timestamp>) -> Self {
-        BoundedAbsoluteInterval::new_with_inclusivity(
+        BoundedAbsoluteInterval::new_from_times_and_inclusivities(
             *range.start(),
             BoundInclusivity::Inclusive,
             *range.end(),
@@ -869,12 +865,7 @@ impl TryFrom<AbsoluteBoundPair> for BoundedAbsoluteInterval {
     fn try_from(value: AbsoluteBoundPair) -> Result<Self, Self::Error> {
         match (value.start(), value.end()) {
             (AbsoluteStartBound::Finite(finite_start), AbsoluteEndBound::Finite(finite_end)) => {
-                Ok(BoundedAbsoluteInterval::new_with_inclusivity(
-                    finite_start.time(),
-                    finite_start.inclusivity(),
-                    finite_end.time(),
-                    finite_end.inclusivity(),
-                ))
+                Ok(BoundedAbsoluteInterval::new(finite_start, finite_end))
             },
             _ => Err(BoundedAbsoluteIntervalTryFromAbsoluteBoundPairError),
         }
