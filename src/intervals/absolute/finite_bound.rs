@@ -13,7 +13,7 @@ use crate::intervals::absolute::{
     AbsoluteStartBound,
 };
 use crate::intervals::meta::{BoundExtremality, HasBoundExtremality};
-use crate::intervals::ops::{BoundEq, BoundOrd, BoundOrdExtremaOps, BoundOrdering};
+use crate::intervals::ops::{BoundEq, BoundOrd, BoundOrdExtremaOps, BoundOrdering, BoundOverlapDisambiguationRuleSet};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum AbsoluteFiniteBound {
@@ -73,55 +73,55 @@ impl HasBoundExtremality for AbsoluteFiniteBound {
 }
 
 impl BoundEq for AbsoluteFiniteBound {
-    fn bound_eq(&self, other: &Self) -> bool {
+    fn bound_eq(&self, other: &Self, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
         match self {
-            Self::Start(start) => start.bound_eq(other),
-            Self::End(end) => end.bound_eq(other),
+            Self::Start(start) => start.bound_eq(other, rule_set),
+            Self::End(end) => end.bound_eq(other, rule_set),
         }
     }
 }
 
 impl BoundEq<AbsoluteFiniteStartBound> for AbsoluteFiniteBound {
-    fn bound_eq(&self, other: &AbsoluteFiniteStartBound) -> bool {
+    fn bound_eq(&self, other: &AbsoluteFiniteStartBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
         match self {
-            Self::Start(finite_start) => finite_start.bound_eq(other),
-            Self::End(finite_end) => finite_end.bound_eq(other),
+            Self::Start(finite_start) => finite_start.bound_eq(other, rule_set),
+            Self::End(finite_end) => finite_end.bound_eq(other, rule_set),
         }
     }
 }
 
 impl BoundEq<AbsoluteFiniteEndBound> for AbsoluteFiniteBound {
-    fn bound_eq(&self, other: &AbsoluteFiniteEndBound) -> bool {
+    fn bound_eq(&self, other: &AbsoluteFiniteEndBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
         match self {
-            Self::Start(finite_start) => finite_start.bound_eq(other),
-            Self::End(finite_end) => finite_end.bound_eq(other),
+            Self::Start(finite_start) => finite_start.bound_eq(other, rule_set),
+            Self::End(finite_end) => finite_end.bound_eq(other, rule_set),
         }
     }
 }
 
 impl BoundEq<AbsoluteStartBound> for AbsoluteFiniteBound {
-    fn bound_eq(&self, other: &AbsoluteStartBound) -> bool {
+    fn bound_eq(&self, other: &AbsoluteStartBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
         match self {
-            Self::Start(finite_start) => finite_start.bound_eq(other),
-            Self::End(finite_end) => finite_end.bound_eq(other),
+            Self::Start(finite_start) => finite_start.bound_eq(other, rule_set),
+            Self::End(finite_end) => finite_end.bound_eq(other, rule_set),
         }
     }
 }
 
 impl BoundEq<AbsoluteEndBound> for AbsoluteFiniteBound {
-    fn bound_eq(&self, other: &AbsoluteEndBound) -> bool {
+    fn bound_eq(&self, other: &AbsoluteEndBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
         match self {
-            Self::Start(finite_start) => finite_start.bound_eq(other),
-            Self::End(finite_end) => finite_end.bound_eq(other),
+            Self::Start(finite_start) => finite_start.bound_eq(other, rule_set),
+            Self::End(finite_end) => finite_end.bound_eq(other, rule_set),
         }
     }
 }
 
 impl BoundEq<AbsoluteBound> for AbsoluteFiniteBound {
-    fn bound_eq(&self, other: &AbsoluteBound) -> bool {
+    fn bound_eq(&self, other: &AbsoluteBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
         match self {
-            Self::Start(finite_start) => finite_start.bound_eq(other),
-            Self::End(finite_end) => finite_end.bound_eq(other),
+            Self::Start(finite_start) => finite_start.bound_eq(other, rule_set),
+            Self::End(finite_end) => finite_end.bound_eq(other, rule_set),
         }
     }
 }

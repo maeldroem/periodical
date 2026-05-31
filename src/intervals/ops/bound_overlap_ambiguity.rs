@@ -378,3 +378,25 @@ pub enum DisambiguatedBoundOverlap {
     /// Compared bound is after the reference bound
     After,
 }
+
+impl DisambiguatedBoundOverlap {
+    pub fn is_before(&self) -> bool {
+        matches!(self, Self::Before)
+    }
+
+    pub fn is_equal(&self) -> bool {
+        matches!(self, Self::Equal)
+    }
+
+    pub fn is_after(&self) -> bool {
+        matches!(self, Self::After)
+    }
+
+    pub fn is_before_or_equal(&self) -> bool {
+        matches!(self, Self::Before | Self::Equal)
+    }
+
+    pub fn is_after_or_equal(&self) -> bool {
+        matches!(self, Self::After | Self::Equal)
+    }
+}

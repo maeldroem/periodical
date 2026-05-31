@@ -11,7 +11,14 @@ use arbitrary::Arbitrary;
 use serde::{Deserialize, Serialize};
 
 use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
-use crate::intervals::ops::{BoundEq, BoundOrd, BoundOrdExtremaOps, BoundOrdering, BoundOverlapAmbiguity};
+use crate::intervals::ops::{
+    BoundEq,
+    BoundOrd,
+    BoundOrdExtremaOps,
+    BoundOrdering,
+    BoundOverlapAmbiguity,
+    BoundOverlapDisambiguationRuleSet,
+};
 use crate::intervals::relative::{
     RelativeBound,
     RelativeEndBound,
@@ -79,62 +86,64 @@ impl Ord for RelativeFiniteStartBound {
 }
 
 impl BoundEq for RelativeFiniteStartBound {
-    fn bound_eq(&self, other: &Self) -> bool {
+    fn bound_eq(&self, other: &Self, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
         self.eq(other)
+            && BoundOverlapAmbiguity::BothStarts(self.pos().inclusivity(), other.pos().inclusivity())
+                .disambiguate(rule_set)
+                .is_equal()
     }
 }
 
 impl BoundEq<RelativeStartBound> for RelativeFiniteStartBound {
-    fn bound_eq(&self, other: &RelativeStartBound) -> bool {
-        other.finite().is_some_and(|finite_start| self.bound_eq(&finite_start))
+    fn bound_eq(&self, other: &RelativeStartBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
+        other
+            .finite()
+            .is_some_and(|finite_start| self.bound_eq(&finite_start, rule_set))
     }
 }
 
 impl BoundEq<RelativeFiniteEndBound> for RelativeFiniteStartBound {
-    fn bound_eq(&self, other: &RelativeFiniteEndBound) -> bool {
-        let start_pos = self.pos();
-        let end_pos = other.pos();
-
-        start_pos.eq(&end_pos)
-            && start_pos.inclusivity() == BoundInclusivity::Inclusive
-            && end_pos.inclusivity() == BoundInclusivity::Inclusive
+    fn bound_eq(&self, other: &RelativeFiniteEndBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
+        self.pos().eq(&other.pos())
+            && BoundOverlapAmbiguity::StartEnd(self.pos().inclusivity(), other.pos().inclusivity())
+                .disambiguate(rule_set)
+                .is_equal()
     }
 }
 
 impl BoundEq<RelativeEndBound> for RelativeFiniteStartBound {
-    fn bound_eq(&self, other: &RelativeEndBound) -> bool {
-        other.finite().is_some_and(|finite_end| self.bound_eq(&finite_end))
+    fn bound_eq(&self, other: &RelativeEndBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
+        other
+            .finite()
+            .is_some_and(|finite_end| self.bound_eq(&finite_end, rule_set))
     }
 }
 
 impl BoundEq<RelativeFiniteBound> for RelativeFiniteStartBound {
-    fn bound_eq(&self, other: &RelativeFiniteBound) -> bool {
+    fn bound_eq(&self, other: &RelativeFiniteBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
         match other {
-            RelativeFiniteBound::Start(finite_start) => self.bound_eq(finite_start),
-            RelativeFiniteBound::End(finite_end) => self.bound_eq(finite_end),
+            RelativeFiniteBound::Start(finite_start) => self.bound_eq(finite_start, rule_set),
+            RelativeFiniteBound::End(finite_end) => self.bound_eq(finite_end, rule_set),
         }
     }
 }
 
 impl BoundEq<RelativeBound> for RelativeFiniteStartBound {
-    fn bound_eq(&self, other: &RelativeBound) -> bool {
+    fn bound_eq(&self, other: &RelativeBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
         match other {
-            RelativeBound::Start(start) => self.bound_eq(start),
-            RelativeBound::End(end) => self.bound_eq(end),
+            RelativeBound::Start(start) => self.bound_eq(start, rule_set),
+            RelativeBound::End(end) => self.bound_eq(end, rule_set),
         }
     }
 }
 
 impl BoundOrd for RelativeFiniteStartBound {
     fn bound_cmp(&self, other: &Self) -> BoundOrdering {
-        let lhs_pos = self.pos();
-        let rhs_pos = other.pos();
-
-        match lhs_pos.cmp(&rhs_pos) {
+        match self.pos().cmp(&other.pos()) {
             Ordering::Less => BoundOrdering::Less,
             Ordering::Equal => BoundOrdering::Equal(Some(BoundOverlapAmbiguity::BothStarts(
-                lhs_pos.inclusivity(),
-                rhs_pos.inclusivity(),
+                self.pos().inclusivity(),
+                other.pos().inclusivity(),
             ))),
             Ordering::Greater => BoundOrdering::Greater,
         }
@@ -155,14 +164,11 @@ impl BoundOrd<RelativeStartBound> for RelativeFiniteStartBound {
 
 impl BoundOrd<RelativeFiniteEndBound> for RelativeFiniteStartBound {
     fn bound_cmp(&self, other: &RelativeFiniteEndBound) -> BoundOrdering {
-        let lhs_pos = self.pos();
-        let rhs_pos = other.pos();
-
-        match lhs_pos.cmp(&rhs_pos) {
+        match self.pos().cmp(&other.pos()) {
             Ordering::Less => BoundOrdering::Less,
             Ordering::Equal => BoundOrdering::Equal(Some(BoundOverlapAmbiguity::StartEnd(
-                lhs_pos.inclusivity(),
-                rhs_pos.inclusivity(),
+                self.pos().inclusivity(),
+                other.pos().inclusivity(),
             ))),
             Ordering::Greater => BoundOrdering::Greater,
         }
