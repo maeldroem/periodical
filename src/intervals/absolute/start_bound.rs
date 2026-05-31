@@ -254,8 +254,8 @@ impl BoundOrd for AbsoluteStartBound {
             Ordering::Equal => BoundOrdering::Equal(self.finite().zip(other.finite()).map(
                 |(lhs_finite_start, rhs_finite_start)| {
                     BoundOverlapAmbiguity::BothStarts(
-                        lhs_finite_start.inclusivity(),
-                        rhs_finite_start.inclusivity(),
+                        lhs_finite_start.pos().inclusivity(),
+                        rhs_finite_start.pos().inclusivity(),
                     )
                 },
             )),

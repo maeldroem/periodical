@@ -45,11 +45,11 @@ use crate::intervals::relative::{
     EmptiableRelativeBoundPair,
     EmptiableRelativeInterval,
     HalfBoundedRelativeInterval,
-    HasEmptiableRelativeBoundPair,
+    HalfBoundedToFutureRelativeInterval,
+    HalfBoundedToPastRelativeInterval,
     HasRelativeBoundPair,
     RelativeBoundPair,
     RelativeEndBound,
-    RelativeFiniteBoundPosition,
     RelativeStartBound,
 };
 use crate::intervals::special::UnboundedInterval;
@@ -305,6 +305,18 @@ impl From<BoundedRelativeInterval> for RelativeInterval {
     }
 }
 
+impl From<HalfBoundedToFutureRelativeInterval> for RelativeInterval {
+    fn from(value: HalfBoundedToFutureRelativeInterval) -> Self {
+        Self::from(HalfBoundedRelativeInterval::from(value))
+    }
+}
+
+impl From<HalfBoundedToPastRelativeInterval> for RelativeInterval {
+    fn from(value: HalfBoundedToPastRelativeInterval) -> Self {
+        Self::from(HalfBoundedRelativeInterval::from(value))
+    }
+}
+
 impl From<HalfBoundedRelativeInterval> for RelativeInterval {
     fn from(value: HalfBoundedRelativeInterval) -> Self {
         RelativeInterval::HalfBounded(value)
@@ -322,45 +334,17 @@ impl From<RelativeBoundPair> for RelativeInterval {
         type StartB = RelativeStartBound;
         type EndB = RelativeEndBound;
 
-        match (value.rel_start(), value.rel_end()) {
+        match (value.start(), value.end()) {
             (StartB::InfinitePast, EndB::InfiniteFuture) => RelativeInterval::Unbounded(UnboundedInterval),
-            (
-                StartB::InfinitePast,
-                EndB::Finite(RelativeFiniteBoundPosition {
-                    offset,
-                    inclusivity,
-                }),
-            ) => RelativeInterval::HalfBounded(HalfBoundedRelativeInterval::new_with_inclusivity(
-                offset,
-                inclusivity,
-                OpeningDirection::ToPast,
-            )),
-            (
-                StartB::Finite(RelativeFiniteBoundPosition {
-                    offset,
-                    inclusivity,
-                }),
-                EndB::InfiniteFuture,
-            ) => RelativeInterval::HalfBounded(HalfBoundedRelativeInterval::new_with_inclusivity(
-                offset,
-                inclusivity,
-                OpeningDirection::ToFuture,
-            )),
-            (
-                StartB::Finite(RelativeFiniteBoundPosition {
-                    offset: start_offset,
-                    inclusivity: start_inclusivity,
-                }),
-                EndB::Finite(RelativeFiniteBoundPosition {
-                    offset: end_offset,
-                    inclusivity: end_inclusivity,
-                }),
-            ) => RelativeInterval::Bounded(BoundedRelativeInterval::unchecked_new_with_inclusivity(
-                start_offset,
-                start_inclusivity,
-                end_offset,
-                end_inclusivity,
-            )),
+            (StartB::InfinitePast, EndB::Finite(finite_end)) => RelativeInterval::HalfBounded(
+                HalfBoundedRelativeInterval::new(finite_end.pos(), OpeningDirection::ToPast),
+            ),
+            (StartB::Finite(finite_start), EndB::InfiniteFuture) => RelativeInterval::HalfBounded(
+                HalfBoundedRelativeInterval::new(finite_start.pos(), OpeningDirection::ToFuture),
+            ),
+            (StartB::Finite(finite_start), EndB::Finite(finite_end)) => {
+                RelativeInterval::Bounded(BoundedRelativeInterval::unchecked_new(finite_start, finite_end))
+            },
         }
     }
 }
@@ -383,49 +367,10 @@ impl TryFrom<EmptiableRelativeBoundPair> for RelativeInterval {
     type Error = RelativeIntervalFromEmptiableRelativeBoundPairError;
 
     fn try_from(value: EmptiableRelativeBoundPair) -> Result<Self, Self::Error> {
-        type StartB = RelativeStartBound;
-        type EndB = RelativeEndBound;
-
-        match (value.partial_rel_start(), value.partial_rel_end()) {
-            (None, _) | (_, None) => Err(RelativeIntervalFromEmptiableRelativeBoundPairError),
-            (Some(StartB::InfinitePast), Some(EndB::InfiniteFuture)) => {
-                Ok(RelativeInterval::Unbounded(UnboundedInterval))
-            },
-            (
-                Some(StartB::InfinitePast),
-                Some(EndB::Finite(RelativeFiniteBoundPosition {
-                    offset,
-                    inclusivity,
-                })),
-            ) => Ok(RelativeInterval::HalfBounded(
-                HalfBoundedRelativeInterval::new_with_inclusivity(offset, inclusivity, OpeningDirection::ToPast),
-            )),
-            (
-                Some(StartB::Finite(RelativeFiniteBoundPosition {
-                    offset,
-                    inclusivity,
-                })),
-                Some(EndB::InfiniteFuture),
-            ) => Ok(RelativeInterval::HalfBounded(
-                HalfBoundedRelativeInterval::new_with_inclusivity(offset, inclusivity, OpeningDirection::ToFuture),
-            )),
-            (
-                Some(StartB::Finite(RelativeFiniteBoundPosition {
-                    offset: start_offset,
-                    inclusivity: start_inclusivity,
-                })),
-                Some(EndB::Finite(RelativeFiniteBoundPosition {
-                    offset: end_offset,
-                    inclusivity: end_inclusivity,
-                })),
-            ) => Ok(RelativeInterval::Bounded(
-                BoundedRelativeInterval::unchecked_new_with_inclusivity(
-                    start_offset,
-                    start_inclusivity,
-                    end_offset,
-                    end_inclusivity,
-                ),
-            )),
-        }
+        Ok(Self::from(
+            value
+                .bound()
+                .ok_or(RelativeIntervalFromEmptiableRelativeBoundPairError)?,
+        ))
     }
 }

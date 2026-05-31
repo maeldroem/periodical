@@ -43,7 +43,7 @@ use crate::intervals::relative::{
     RelativeEndBound,
     RelativeInterval,
     RelativeStartBound,
-    check_relative_bound_pair_for_interval_creation,
+    check_relative_start_end_bounds_for_interval_creation,
     prepare_relative_bound_pair_for_interval_creation,
 };
 use crate::intervals::special::UnboundedInterval;
@@ -304,7 +304,7 @@ impl RelativeBoundPair {
     /// assert_eq!(bounds.end(), end);
     /// ```
     pub fn set_start(&mut self, new_start: RelativeStartBound) -> bool {
-        match check_relative_bound_pair_for_interval_creation(&new_start, &self.end()) {
+        match check_relative_start_end_bounds_for_interval_creation(&new_start, &self.end()) {
             Ok(()) => {
                 self.unchecked_set_start(new_start);
                 true
@@ -343,7 +343,7 @@ impl RelativeBoundPair {
     /// assert_eq!(bounds.end(), end);
     /// ```
     pub fn set_end(&mut self, new_end: RelativeEndBound) -> bool {
-        match check_relative_bound_pair_for_interval_creation(&self.start(), &new_end) {
+        match check_relative_start_end_bounds_for_interval_creation(&self.start(), &new_end) {
             Ok(()) => {
                 self.unchecked_set_end(new_end);
                 true
@@ -415,8 +415,12 @@ impl HasDuration for RelativeBoundPair {
             (RelativeStartBound::InfinitePast, _) | (_, RelativeEndBound::InfiniteFuture) => IntervalDuration::Infinite,
             (RelativeStartBound::Finite(finite_start), RelativeEndBound::Finite(finite_end)) => {
                 IntervalDuration::Finite(
-                    finite_end.offset().saturating_sub(finite_start.offset()).unsigned_abs(),
-                    Epsilon::from((finite_start.inclusivity(), finite_end.inclusivity())),
+                    finite_end
+                        .pos()
+                        .offset()
+                        .saturating_sub(finite_start.pos().offset())
+                        .unsigned_abs(),
+                    Epsilon::from((finite_start.pos().inclusivity(), finite_end.pos().inclusivity())),
                 )
             },
         }

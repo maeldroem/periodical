@@ -48,14 +48,14 @@ impl<'a> Arbitrary<'a> for BoundedRelativeInterval {
             .ok_or(Error::IncorrectFormat)?;
 
         if start_offset == end_offset {
-            Ok(BoundedRelativeInterval::new_with_inclusivity(
+            Ok(BoundedRelativeInterval::new_from_offsets_and_inclusivities(
                 start_offset,
                 BoundInclusivity::Inclusive,
                 end_offset,
                 BoundInclusivity::Inclusive,
             ))
         } else {
-            Ok(BoundedRelativeInterval::new_with_inclusivity(
+            Ok(BoundedRelativeInterval::new_from_offsets_and_inclusivities(
                 start_offset,
                 BoundInclusivity::arbitrary(u)?,
                 end_offset,
@@ -72,7 +72,7 @@ impl<'a> Arbitrary<'a> for HalfBoundedRelativeInterval {
         let reference_offset = SignedDuration::try_from_nanos_i128(u.int_in_range(signed_duration_range.clone())?)
             .ok_or(Error::IncorrectFormat)?;
 
-        Ok(HalfBoundedRelativeInterval::new_with_inclusivity(
+        Ok(HalfBoundedRelativeInterval::new_from_offset_and_inclusivity(
             reference_offset,
             BoundInclusivity::arbitrary(u)?,
             OpeningDirection::arbitrary(u)?,

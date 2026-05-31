@@ -253,7 +253,10 @@ impl BoundOrd for AbsoluteEndBound {
             Ordering::Less => BoundOrdering::Less,
             Ordering::Equal => BoundOrdering::Equal(self.finite().zip(other.finite()).map(
                 |(lhs_finite_end, rhs_finite_end)| {
-                    BoundOverlapAmbiguity::BothEnds(lhs_finite_end.inclusivity(), rhs_finite_end.inclusivity())
+                    BoundOverlapAmbiguity::BothEnds(
+                        lhs_finite_end.pos().inclusivity(),
+                        rhs_finite_end.pos().inclusivity(),
+                    )
                 },
             )),
             Ordering::Greater => BoundOrdering::Greater,

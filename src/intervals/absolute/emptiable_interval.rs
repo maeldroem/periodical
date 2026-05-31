@@ -34,6 +34,8 @@ use crate::intervals::absolute::{
     BoundedAbsoluteInterval,
     EmptiableAbsoluteBoundPair,
     HalfBoundedAbsoluteInterval,
+    HalfBoundedToFutureAbsoluteInterval,
+    HalfBoundedToPastAbsoluteInterval,
     HasAbsoluteBoundPair,
     HasEmptiableAbsoluteBoundPair,
 };
@@ -226,6 +228,18 @@ impl Ord for EmptiableAbsoluteInterval {
 
 impl From<BoundedAbsoluteInterval> for EmptiableAbsoluteInterval {
     fn from(value: BoundedAbsoluteInterval) -> Self {
+        EmptiableAbsoluteInterval::Bound(value.to_interval())
+    }
+}
+
+impl From<HalfBoundedToFutureAbsoluteInterval> for EmptiableAbsoluteInterval {
+    fn from(value: HalfBoundedToFutureAbsoluteInterval) -> Self {
+        EmptiableAbsoluteInterval::Bound(value.to_interval())
+    }
+}
+
+impl From<HalfBoundedToPastAbsoluteInterval> for EmptiableAbsoluteInterval {
+    fn from(value: HalfBoundedToPastAbsoluteInterval) -> Self {
         EmptiableAbsoluteInterval::Bound(value.to_interval())
     }
 }
