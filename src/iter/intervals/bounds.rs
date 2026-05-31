@@ -187,10 +187,7 @@ impl AbsoluteBoundsIter {
     #[must_use]
     pub fn unite_bounds(self) -> AbsoluteUnitedBoundsIter<Peekable<impl Iterator<Item = AbsoluteBound>>> {
         let mut bounds = self.collect::<Vec<_>>();
-        bounds.sort_by(|a, b| {
-            a.bound_cmp(b)
-                .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Strict)
-        });
+        bounds.sort_by(|a, b| a.bound_cmp(b).disambiguate(BoundOverlapDisambiguationRuleSet::Strict));
 
         AbsoluteUnitedBoundsIter::new(bounds.into_iter())
     }
@@ -421,10 +418,7 @@ impl RelativeBoundsIter {
     #[must_use]
     pub fn unite_bounds(self) -> RelativeUnitedBoundsIter<Peekable<impl Iterator<Item = RelativeBound>>> {
         let mut bounds = self.collect::<Vec<_>>();
-        bounds.sort_by(|a, b| {
-            a.bound_cmp(b)
-                .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Strict)
-        });
+        bounds.sort_by(|a, b| a.bound_cmp(b).disambiguate(BoundOverlapDisambiguationRuleSet::Strict));
 
         RelativeUnitedBoundsIter::new(bounds.into_iter())
     }

@@ -6,7 +6,7 @@ use std::ops::{Add, Sub};
 
 use crate::intervals::absolute::AbsoluteBound;
 use crate::intervals::meta::BoundInclusivity;
-use crate::intervals::ops::{BoundOrd, BoundOrdering, BoundOverlapDisambiguationRuleSet};
+use crate::intervals::ops::{BoundEq, BoundOrd, BoundOrdering, BoundOverlapDisambiguationRuleSet};
 use crate::iter::intervals::layered_bounds::abs_state_change::LayeredBoundsStateChangeAtAbsoluteBound;
 use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
 
@@ -763,7 +763,7 @@ pub fn layered_abs_bounds_change_start_end(
 ) -> LayeredBoundsStateChangeAtAbsoluteBound {
     type Change = LayeredBoundsStateChangeAtAbsoluteBound;
 
-    match start_end_cmp.disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Lenient) {
+    match start_end_cmp.disambiguate(BoundOverlapDisambiguationRuleSet::Lenient) {
         Ordering::Less => {
             let first_layer_start = first_layer
                 .next()
@@ -797,9 +797,11 @@ pub fn layered_abs_bounds_change_start_end(
                 .finite()
                 .expect("An AbsoluteStartBound and an AbsoluteEndBound can only be equal if they are finite");
 
-            if finite_first_layer_start == finite_second_layer_end {
+            if finite_first_layer_start.bound_eq(&finite_second_layer_end, BoundOverlapDisambiguationRuleSet::Strict) {
                 let mut end_of_second_layer = finite_second_layer_end; // Copy
-                end_of_second_layer.set_inclusivity(BoundInclusivity::Exclusive);
+                end_of_second_layer
+                    .pos_mut()
+                    .set_inclusivity(BoundInclusivity::Exclusive);
 
                 let change_to_return = Change::new(
                     old_state,
@@ -811,7 +813,9 @@ pub fn layered_abs_bounds_change_start_end(
                 );
 
                 let mut start_of_first_layer = finite_first_layer_start; // Copy
-                start_of_first_layer.set_inclusivity(BoundInclusivity::Exclusive);
+                start_of_first_layer
+                    .pos_mut()
+                    .set_inclusivity(BoundInclusivity::Inclusive);
 
                 // Since the queued result will always be emptied before any of this logic is
                 // run again, we can safely modify `state_mut` here.
@@ -820,7 +824,7 @@ pub fn layered_abs_bounds_change_start_end(
                 *queued_result_mut = Some(Change::new(
                     LayeredBoundsState::BothLayers,
                     *state_mut,
-                    Some(finite_first_layer_start.to_end_bound()),
+                    Some(finite_first_layer_start.pos().to_end_bound()),
                     Some(start_of_first_layer.to_start_bound()),
                 ));
 
@@ -883,7 +887,7 @@ pub fn layered_abs_bounds_change_end_start(
 ) -> LayeredBoundsStateChangeAtAbsoluteBound {
     type Change = LayeredBoundsStateChangeAtAbsoluteBound;
 
-    match end_start_cmp.disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Lenient) {
+    match end_start_cmp.disambiguate(BoundOverlapDisambiguationRuleSet::Lenient) {
         Ordering::Less => {
             let first_layer_end = first_layer
                 .next()
@@ -912,9 +916,11 @@ pub fn layered_abs_bounds_change_end_start(
                 .finite()
                 .expect("An AbsoluteStartBound and an AbsoluteEndBound can only be equal if they are finite");
 
-            if finite_first_layer_end == finite_second_layer_start {
+            if finite_first_layer_end.bound_eq(&finite_second_layer_start, BoundOverlapDisambiguationRuleSet::Strict) {
                 let mut end_of_first_layer = finite_first_layer_end; // Copy
-                end_of_first_layer.set_inclusivity(BoundInclusivity::Exclusive);
+                end_of_first_layer
+                    .pos_mut()
+                    .set_inclusivity(BoundInclusivity::Exclusive);
 
                 let change_to_return = Change::new(
                     old_state,
@@ -926,7 +932,9 @@ pub fn layered_abs_bounds_change_end_start(
                 );
 
                 let mut start_of_second_layer = finite_second_layer_start; // Copy
-                start_of_second_layer.set_inclusivity(BoundInclusivity::Exclusive);
+                start_of_second_layer
+                    .pos_mut()
+                    .set_inclusivity(BoundInclusivity::Inclusive);
 
                 // Since the queued result will always be emptied before any of this logic is
                 // run again, we can safely modify `state_mut` here.
@@ -935,7 +943,7 @@ pub fn layered_abs_bounds_change_end_start(
                 *queued_result_mut = Some(Change::new(
                     LayeredBoundsState::BothLayers,
                     *state_mut,
-                    Some(finite_second_layer_start.to_end_bound()),
+                    Some(finite_second_layer_start.pos().to_end_bound()),
                     Some(start_of_second_layer.to_start_bound()),
                 ));
 
