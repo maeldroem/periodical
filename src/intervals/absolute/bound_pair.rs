@@ -46,19 +46,20 @@ use crate::intervals::meta::{
     Openness,
     Relativity,
 };
+use crate::intervals::ops::{BoundOrd, BoundOverlapDisambiguationRuleSet};
 use crate::intervals::special::UnboundedInterval;
 
 /// Possession of a **non-empty** absolute bound pair
 pub trait HasAbsoluteBoundPair: HasEmptiableAbsoluteBoundPair {
-    /// Returns the absolute bound pair of the object
+    /// Returns the absolute bound pair
     #[must_use]
     fn abs_bound_pair(&self) -> AbsoluteBoundPair;
 
-    /// Returns the absolute start bound of the object
+    /// Returns the absolute start bound
     #[must_use]
     fn abs_start(&self) -> AbsoluteStartBound;
 
-    /// Returns the absolute end bound of the object
+    /// Returns the absolute end bound
     #[must_use]
     fn abs_end(&self) -> AbsoluteEndBound;
 }
@@ -71,8 +72,7 @@ pub trait HasAbsoluteBoundPair: HasEmptiableAbsoluteBoundPair {
 /// # Invariants
 ///
 /// 1. The bounds are in chronological order
-/// 2. If the bounds have the same time, their inclusivities should be
-///    [inclusive](crate::intervals::meta::BoundInclusivity::Inclusive) for both
+/// 2. If the bounds have the same time, their inclusivities should be [inclusive](BoundInclusivity::Inclusive) for both
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub struct AbsoluteBoundPair {
@@ -97,10 +97,10 @@ impl AbsoluteBoundPair {
     /// let start = AbsoluteFiniteBoundPosition::new(start_time).to_start_bound();
     /// let end = AbsoluteFiniteBoundPosition::new(end_time).to_end_bound();
     ///
-    /// let bounds = AbsoluteBoundPair::unchecked_new(start, end);
+    /// let bound_pair = AbsoluteBoundPair::unchecked_new(start, end);
     ///
-    /// assert_eq!(bounds.start(), start);
-    /// assert_eq!(bounds.end(), end);
+    /// assert_eq!(bound_pair.start(), start);
+    /// assert_eq!(bound_pair.end(), end);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
@@ -129,11 +129,11 @@ impl AbsoluteBoundPair {
     /// let start = AbsoluteFiniteBoundPosition::new(start_time).to_start_bound();
     /// let end = AbsoluteFiniteBoundPosition::new(end_time).to_end_bound();
     ///
-    /// let bounds = AbsoluteBoundPair::new(start, end);
+    /// let bound_pair = AbsoluteBoundPair::new(start, end);
     ///
     /// // Now the start and end are in chronological order
-    /// assert_eq!(bounds.start(), end);
-    /// assert_eq!(bounds.end(), start);
+    /// assert_eq!(bound_pair.start(), end);
+    /// assert_eq!(bound_pair.end(), start);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
@@ -154,15 +154,15 @@ impl AbsoluteBoundPair {
     /// let start = "2026-01-01 00:00:00Z".parse::<Timestamp>()?;
     /// let end = "2026-05-01 00:00:00Z".parse::<Timestamp>()?;
     ///
-    /// let bounds = AbsoluteBoundPair::from_range(start..end);
+    /// let bound_pair = AbsoluteBoundPair::from_range(start..end);
     ///
     /// assert_eq!(
-    ///     bounds.start(),
+    ///     bound_pair.start(),
     ///     AbsoluteFiniteBoundPosition::new(start).to_start_bound(),
     /// );
     /// assert_eq!(
-    ///     bounds.end(),
-    ///     AbsoluteFiniteBoundPosition::new_with_inclusivity(end, BoundInclusivity::Exclusive,)
+    ///     bound_pair.end(),
+    ///     AbsoluteFiniteBoundPosition::new_with_inclusivity(end, BoundInclusivity::Exclusive)
     ///         .to_end_bound(),
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
@@ -192,9 +192,9 @@ impl AbsoluteBoundPair {
     /// let start = AbsoluteFiniteBoundPosition::new(start_time).to_start_bound();
     /// let end = AbsoluteFiniteBoundPosition::new(end_time).to_end_bound();
     ///
-    /// let bounds = AbsoluteBoundPair::new(start, end);
+    /// let bound_pair = AbsoluteBoundPair::new(start, end);
     ///
-    /// assert_eq!(bounds.start(), start);
+    /// assert_eq!(bound_pair.start(), start);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
@@ -216,9 +216,9 @@ impl AbsoluteBoundPair {
     /// let start = AbsoluteFiniteBoundPosition::new(start_time).to_start_bound();
     /// let end = AbsoluteFiniteBoundPosition::new(end_time).to_end_bound();
     ///
-    /// let bounds = AbsoluteBoundPair::new(start, end);
+    /// let bound_pair = AbsoluteBoundPair::new(start, end);
     ///
-    /// assert_eq!(bounds.end(), end);
+    /// assert_eq!(bound_pair.end(), end);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
@@ -240,17 +240,17 @@ impl AbsoluteBoundPair {
     /// let start = AbsoluteFiniteBoundPosition::new(start_time).to_start_bound();
     /// let end = AbsoluteFiniteBoundPosition::new(end_time).to_end_bound();
     ///
-    /// let mut bounds = AbsoluteBoundPair::new(start, end);
+    /// let mut bound_pair = AbsoluteBoundPair::new(start, end);
     ///
     /// let new_start_time = "2025-01-01 18:00:00Z".parse::<Timestamp>()?;
     /// let new_start = AbsoluteFiniteBoundPosition::new(new_start_time).to_start_bound();
     ///
     /// // New start is past the end
-    /// bounds.unchecked_set_start(new_start);
+    /// bound_pair.unchecked_set_start(new_start);
     ///
-    /// // And yet stays in `bounds`
-    /// assert_eq!(bounds.start(), new_start);
-    /// assert_eq!(bounds.end(), end);
+    /// // And yet stays in `bound_pair`
+    /// assert_eq!(bound_pair.start(), new_start);
+    /// assert_eq!(bound_pair.end(), end);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn unchecked_set_start(&mut self, new_start: AbsoluteStartBound) {
@@ -271,17 +271,17 @@ impl AbsoluteBoundPair {
     /// let start = AbsoluteFiniteBoundPosition::new(start_time).to_start_bound();
     /// let end = AbsoluteFiniteBoundPosition::new(end_time).to_end_bound();
     ///
-    /// let mut bounds = AbsoluteBoundPair::new(start, end);
+    /// let mut bound_pair = AbsoluteBoundPair::new(start, end);
     ///
     /// let new_end_time = "2025-01-01 06:00:00Z".parse::<Timestamp>()?;
     /// let new_end = AbsoluteFiniteBoundPosition::new(new_end_time).to_end_bound();
     ///
     /// // New end is before the start
-    /// bounds.unchecked_set_end(new_end);
+    /// bound_pair.unchecked_set_end(new_end);
     ///
-    /// // And yet stays in `bounds`
-    /// assert_eq!(bounds.start(), start);
-    /// assert_eq!(bounds.end(), new_end);
+    /// // And yet stays in `bound_pair`
+    /// assert_eq!(bound_pair.start(), start);
+    /// assert_eq!(bound_pair.end(), new_end);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn unchecked_set_end(&mut self, new_end: AbsoluteEndBound) {
@@ -306,17 +306,17 @@ impl AbsoluteBoundPair {
     /// let start = AbsoluteFiniteBoundPosition::new(start_time).to_start_bound();
     /// let end = AbsoluteFiniteBoundPosition::new(end_time).to_end_bound();
     ///
-    /// let mut bounds = AbsoluteBoundPair::new(start, end);
+    /// let mut bound_pair = AbsoluteBoundPair::new(start, end);
     ///
     /// let new_start_time = "2025-01-01 18:00:00Z".parse::<Timestamp>()?;
     /// let new_start = AbsoluteFiniteBoundPosition::new(new_start_time).to_start_bound();
     ///
     /// // New start is past the end, and therefore gets ignored
-    /// let was_successful = bounds.set_start(new_start);
+    /// let was_successful = bound_pair.set_start(new_start);
     ///
     /// assert!(!was_successful);
-    /// assert_eq!(bounds.start(), start);
-    /// assert_eq!(bounds.end(), end);
+    /// assert_eq!(bound_pair.start(), start);
+    /// assert_eq!(bound_pair.end(), end);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn set_start(&mut self, new_start: AbsoluteStartBound) -> bool {
@@ -347,17 +347,17 @@ impl AbsoluteBoundPair {
     /// let start = AbsoluteFiniteBoundPosition::new(start_time).to_start_bound();
     /// let end = AbsoluteFiniteBoundPosition::new(end_time).to_end_bound();
     ///
-    /// let mut bounds = AbsoluteBoundPair::new(start, end);
+    /// let mut bound_pair = AbsoluteBoundPair::new(start, end);
     ///
     /// let new_end_time = "2025-01-01 06:00:00Z".parse::<Timestamp>()?;
     /// let new_end = AbsoluteFiniteBoundPosition::new(new_end_time).to_end_bound();
     ///
     /// // New end is before the start, and therefore gets ignored
-    /// let was_successful = bounds.set_end(new_end);
+    /// let was_successful = bound_pair.set_end(new_end);
     ///
     /// assert!(!was_successful);
-    /// assert_eq!(bounds.start(), start);
-    /// assert_eq!(bounds.end(), end);
+    /// assert_eq!(bound_pair.start(), start);
+    /// assert_eq!(bound_pair.end(), end);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn set_end(&mut self, new_end: AbsoluteEndBound) -> bool {
@@ -380,31 +380,39 @@ impl AbsoluteBoundPair {
     ///
     /// ```
     /// # use periodical::intervals::absolute::AbsoluteBoundPair;
-    /// # let mut bounds: [AbsoluteBoundPair; 0] = [];
-    /// bounds.sort_by(AbsoluteBoundPair::ord_by_start_and_inv_length);
+    /// # let mut bound_pairs: [AbsoluteBoundPair; 0] = [];
+    /// bound_pairs.sort_by(AbsoluteBoundPair::ord_by_start_and_inv_length);
     /// ```
     #[must_use]
     pub fn ord_by_start_and_inv_length(&self, other: &Self) -> Ordering {
-        match self.cmp(other) {
+        match self
+            .start()
+            .bound_cmp(&other.end())
+            .disambiguate(BoundOverlapDisambiguationRuleSet::Strict)
+        {
             Ordering::Less => Ordering::Less,
-            Ordering::Equal => self.end.cmp(&other.end).reverse(),
+            Ordering::Equal => self
+                .end()
+                .bound_cmp(&other.end())
+                .disambiguate(BoundOverlapDisambiguationRuleSet::Strict)
+                .reverse(),
             Ordering::Greater => Ordering::Greater,
         }
     }
 
-    /// Converts the [`AbsoluteBoundPair`] into [`AbsoluteInterval`]
+    /// Converts `self` into [`AbsoluteInterval`]
     #[must_use]
     pub fn to_interval(self) -> AbsoluteInterval {
         AbsoluteInterval::from(self)
     }
 
-    /// Converts the [`AbsoluteBoundPair`] into [`EmptiableAbsoluteInterval`]
+    /// Converts `self` into [`EmptiableAbsoluteInterval`]
     #[must_use]
     pub fn to_emptiable_interval(self) -> EmptiableAbsoluteInterval {
         self.to_interval().to_emptiable()
     }
 
-    /// Wraps the [`AbsoluteBoundPair`] in an [`EmptiableAbsoluteBoundPair`]
+    /// Wraps `self` in an [`EmptiableAbsoluteBoundPair`]
     #[must_use]
     pub fn to_emptiable(self) -> EmptiableAbsoluteBoundPair {
         EmptiableAbsoluteBoundPair::from(self)
@@ -477,7 +485,9 @@ impl Ord for AbsoluteBoundPair {
         // the two starts are equal leads to side-effects, like when we store
         // absolute bound pair inside a BTreeSet, then if we use `range()`,
         // one can be considered out of the range when it shouldn't.
-        self.start.cmp(&other.start)
+        self.start()
+            .bound_cmp(&other.start())
+            .disambiguate(BoundOverlapDisambiguationRuleSet::Strict)
     }
 }
 
