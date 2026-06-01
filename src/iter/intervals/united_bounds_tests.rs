@@ -3,9 +3,20 @@ use std::error::Error;
 use jiff::{SignedDuration, Zoned};
 
 use super::united_bounds::*;
-use crate::intervals::absolute::{AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBoundPosition, AbsoluteStartBound};
+use crate::intervals::absolute::{
+    AbsoluteBoundPair,
+    AbsoluteEndBound,
+    AbsoluteFiniteBoundPosition,
+    AbsoluteStartBound,
+};
 use crate::intervals::meta::BoundInclusivity;
-use crate::intervals::relative::{RelativeBoundPair, RelativeEndBound, RelativeFiniteBoundPosition, RelativeStartBound};
+use crate::intervals::ops::{BoundOrd, BoundOverlapDisambiguationRuleSet};
+use crate::intervals::relative::{
+    RelativeBoundPair,
+    RelativeEndBound,
+    RelativeFiniteBoundPosition,
+    RelativeStartBound,
+};
 use crate::iter::intervals::bounds::{AbsoluteBoundsIteratorDispatcher, RelativeBoundsIteratorDispatcher};
 
 mod abs_united_bounds {
@@ -108,7 +119,7 @@ mod abs_united_bounds {
                 .to_bound(),
         ];
 
-        data.sort();
+        data.sort_by(|a, b| a.bound_cmp(b).disambiguate(BoundOverlapDisambiguationRuleSet::Strict));
 
         assert_eq!(
             AbsoluteUnitedBoundsIter::new(data.into_iter()).collect::<Vec<_>>(),
@@ -308,9 +319,12 @@ mod rel_united_bounds {
             RelativeFiniteBoundPosition::new(SignedDuration::from_hours(35))
                 .to_end_bound()
                 .to_bound(),
-            RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(35), BoundInclusivity::Exclusive)
-                .to_start_bound()
-                .to_bound(),
+            RelativeFiniteBoundPosition::new_with_inclusivity(
+                SignedDuration::from_hours(35),
+                BoundInclusivity::Exclusive,
+            )
+            .to_start_bound()
+            .to_bound(),
             RelativeFiniteBoundPosition::new(SignedDuration::from_hours(40))
                 .to_end_bound()
                 .to_bound(),
@@ -332,7 +346,7 @@ mod rel_united_bounds {
                 .to_bound(),
         ];
 
-        data.sort();
+        data.sort_by(|a, b| a.bound_cmp(b).disambiguate(BoundOverlapDisambiguationRuleSet::Strict));
 
         assert_eq!(
             RelativeUnitedBoundsIter::new(data.into_iter()).collect::<Vec<_>>(),
@@ -393,8 +407,11 @@ mod rel_united_bounds {
                 RelativeFiniteBoundPosition::new(SignedDuration::from_hours(35)).to_end_bound(),
             ),
             RelativeBoundPair::new(
-                RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(35), BoundInclusivity::Exclusive)
-                    .to_start_bound(),
+                RelativeFiniteBoundPosition::new_with_inclusivity(
+                    SignedDuration::from_hours(35),
+                    BoundInclusivity::Exclusive,
+                )
+                .to_start_bound(),
                 RelativeFiniteBoundPosition::new(SignedDuration::from_hours(40)).to_end_bound(),
             ),
             RelativeBoundPair::new(

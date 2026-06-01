@@ -10,7 +10,7 @@ fn absolute_start_bound_inf_absolute_end_bound_inf_swap() {
     let mut start = AbsoluteStartBound::InfinitePast;
     let mut end = AbsoluteEndBound::InfiniteFuture;
 
-    swap_absolute_start_end_bound(&mut start, &mut end);
+    swap_absolute_start_end_bounds(&mut start, &mut end);
 
     assert_eq!(start, AbsoluteStartBound::InfinitePast);
     assert_eq!(end, AbsoluteEndBound::InfiniteFuture);
@@ -25,7 +25,7 @@ fn absolute_start_bound_inf_absolute_end_bound_finite_swap() -> Result<(), Box<d
     )
     .to_end_bound();
 
-    swap_absolute_start_end_bound(&mut start, &mut end);
+    swap_absolute_start_end_bounds(&mut start, &mut end);
 
     assert_eq!(
         start,
@@ -49,7 +49,7 @@ fn absolute_start_bound_finite_absolute_end_bound_inf_swap() -> Result<(), Box<d
     .to_start_bound();
     let mut end = AbsoluteEndBound::InfiniteFuture;
 
-    swap_absolute_start_end_bound(&mut start, &mut end);
+    swap_absolute_start_end_bounds(&mut start, &mut end);
 
     assert_eq!(start, AbsoluteStartBound::InfinitePast);
     assert_eq!(
@@ -77,7 +77,7 @@ fn absolute_start_bound_finite_absolute_end_bound_finite_swap() -> Result<(), Bo
     )
     .to_end_bound();
 
-    swap_absolute_start_end_bound(&mut start, &mut end);
+    swap_absolute_start_end_bounds(&mut start, &mut end);
 
     assert_eq!(
         start,
@@ -274,11 +274,11 @@ fn prepare_absolute_bound_pair_for_interval_creation_finite_finite_different_tim
     assert!(was_changed);
     assert_eq!(
         start,
-        AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound()
+        AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound()
     );
     assert_eq!(
         end,
-        AbsoluteFiniteBoundPosition::new("2025-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound()
+        AbsoluteFiniteBoundPosition::new("2025-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound()
     );
 
     Ok(())
@@ -324,7 +324,7 @@ fn prepare_absolute_bound_pair_for_interval_creation_finite_finite_same_time_inc
     );
     assert_eq!(
         end,
-        AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound()
+        AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound()
     );
 
     Ok(())

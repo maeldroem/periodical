@@ -84,7 +84,7 @@ pub use interval::*;
 #[doc(inline)]
 pub use start_bound::*;
 
-pub fn swap_absolute_finite_start_end_bound(
+pub fn swap_absolute_finite_start_end_bounds(
     finite_start: &mut AbsoluteFiniteStartBound,
     finite_end: &mut AbsoluteFiniteEndBound,
 ) {
@@ -117,7 +117,7 @@ pub fn swap_absolute_finite_start_end_bound(
 /// assert_eq!(end, AbsoluteFiniteBoundPosition::new(start_time).to_end_bound());
 /// # Ok::<(), Box<dyn Error>>(())
 /// ```
-pub fn swap_absolute_start_end_bound(start: &mut AbsoluteStartBound, end: &mut AbsoluteEndBound) {
+pub fn swap_absolute_start_end_bounds(start: &mut AbsoluteStartBound, end: &mut AbsoluteEndBound) {
     // We temporarily reborrow start and end for the match arms so that when a
     // pattern matches, they move out of their temporary scope and we can use
     // the original mutable references without guard patterns shenanigans.
@@ -135,7 +135,7 @@ pub fn swap_absolute_start_end_bound(start: &mut AbsoluteStartBound, end: &mut A
             *start = AbsoluteStartBound::InfinitePast;
         },
         (AbsoluteStartBound::Finite(finite_start), AbsoluteEndBound::Finite(finite_end)) => {
-            swap_absolute_finite_start_end_bound(finite_start, finite_end);
+            swap_absolute_finite_start_end_bounds(finite_start, finite_end);
         },
     }
 }
@@ -245,7 +245,7 @@ pub fn prepare_absolute_finite_start_end_bounds_for_interval_creation(
     match check_absolute_finite_start_end_bounds_for_interval_creation(start, end) {
         Ok(()) => false,
         Err(AbsoluteStartEndBoundsCheckForIntervalCreationError::StartPastEnd) => {
-            swap_absolute_finite_start_end_bound(start, end);
+            swap_absolute_finite_start_end_bounds(start, end);
             true
         },
         Err(AbsoluteStartEndBoundsCheckForIntervalCreationError::SameTimeButNotDoublyInclusive) => {
@@ -297,7 +297,7 @@ pub fn prepare_absolute_bound_pair_for_interval_creation(
     match check_absolute_start_end_bounds_for_interval_creation(start, end) {
         Ok(()) => false,
         Err(AbsoluteStartEndBoundsCheckForIntervalCreationError::StartPastEnd) => {
-            swap_absolute_start_end_bound(start, end);
+            swap_absolute_start_end_bounds(start, end);
             true
         },
         Err(AbsoluteStartEndBoundsCheckForIntervalCreationError::SameTimeButNotDoublyInclusive) => {

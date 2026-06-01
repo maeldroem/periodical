@@ -48,7 +48,7 @@ fn half_unbounded_interval() -> Result<(), Box<dyn Error>> {
 #[test]
 fn bounded_interval() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        BoundedAbsoluteInterval::new(
+        BoundedAbsoluteInterval::new_from_times(
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
         )
@@ -121,7 +121,7 @@ fn abs_interval_half_bounded() -> Result<(), Box<dyn Error>> {
 #[test]
 fn abs_interval_bounded() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new_with_inclusivity(
+        AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new_from_times_and_inclusivities(
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             BoundInclusivity::Exclusive,
             "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),

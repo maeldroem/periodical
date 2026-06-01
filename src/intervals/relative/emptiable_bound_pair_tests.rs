@@ -35,7 +35,7 @@ fn from_range() {
     assert_eq!(
         EmptiableRelativeBoundPair::from_range(start..),
         RelativeBoundPair::new(
-            RelativeStartBound::Finite(RelativeFiniteBoundPosition::new(start)),
+            RelativeFiniteBoundPosition::new(start).to_start_bound(),
             RelativeEndBound::InfiniteFuture
         )
         .to_emptiable()
@@ -339,16 +339,13 @@ mod to_emptiable_interval {
 
     #[test]
     fn bounded() {
-        let start = SignedDuration::from_hours(1);
-        let end = SignedDuration::from_hours(2);
+        let start = RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_finite_start_bound();
+        let end = RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_finite_end_bound();
 
         assert_eq!(
-            RelativeBoundPair::new(
-                RelativeFiniteBoundPosition::new(start).to_start_bound(),
-                RelativeFiniteBoundPosition::new(end).to_end_bound(),
-            )
-            .to_emptiable()
-            .to_emptiable_interval(),
+            RelativeBoundPair::new(start.to_start_bound(), end.to_end_bound(),)
+                .to_emptiable()
+                .to_emptiable_interval(),
             EmptiableRelativeInterval::Bound(RelativeInterval::Bounded(BoundedRelativeInterval::new(start, end)))
         );
     }
@@ -364,10 +361,9 @@ mod to_emptiable_interval {
             )
             .to_emptiable()
             .to_emptiable_interval(),
-            EmptiableRelativeInterval::Bound(RelativeInterval::HalfBounded(HalfBoundedRelativeInterval::new(
-                reference,
-                OpeningDirection::ToFuture
-            )))
+            EmptiableRelativeInterval::Bound(RelativeInterval::HalfBounded(
+                HalfBoundedRelativeInterval::new_from_offset(reference, OpeningDirection::ToFuture)
+            ))
         );
     }
 
@@ -394,18 +390,30 @@ mod to_emptiable_interval {
 fn emptiable_rel_bound_pair() {
     assert_eq!(
         RelativeBoundPair::new(
-            RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
-                .to_start_bound(),
-            RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
-                .to_end_bound(),
+            RelativeFiniteBoundPosition::new_with_inclusivity(
+                SignedDuration::from_hours(1),
+                BoundInclusivity::Exclusive
+            )
+            .to_start_bound(),
+            RelativeFiniteBoundPosition::new_with_inclusivity(
+                SignedDuration::from_hours(2),
+                BoundInclusivity::Exclusive
+            )
+            .to_end_bound(),
         )
         .to_emptiable()
         .emptiable_rel_bound_pair(),
         RelativeBoundPair::new(
-            RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
-                .to_start_bound(),
-            RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
-                .to_end_bound(),
+            RelativeFiniteBoundPosition::new_with_inclusivity(
+                SignedDuration::from_hours(1),
+                BoundInclusivity::Exclusive
+            )
+            .to_start_bound(),
+            RelativeFiniteBoundPosition::new_with_inclusivity(
+                SignedDuration::from_hours(2),
+                BoundInclusivity::Exclusive
+            )
+            .to_end_bound(),
         )
         .to_emptiable()
     );
@@ -415,16 +423,25 @@ fn emptiable_rel_bound_pair() {
 fn partial_rel_start() {
     assert_eq!(
         RelativeBoundPair::new(
-            RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
-                .to_start_bound(),
-            RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
-                .to_end_bound(),
+            RelativeFiniteBoundPosition::new_with_inclusivity(
+                SignedDuration::from_hours(1),
+                BoundInclusivity::Exclusive
+            )
+            .to_start_bound(),
+            RelativeFiniteBoundPosition::new_with_inclusivity(
+                SignedDuration::from_hours(2),
+                BoundInclusivity::Exclusive
+            )
+            .to_end_bound(),
         )
         .to_emptiable()
         .partial_rel_start(),
         Some(
-            RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
-                .to_start_bound()
+            RelativeFiniteBoundPosition::new_with_inclusivity(
+                SignedDuration::from_hours(1),
+                BoundInclusivity::Exclusive
+            )
+            .to_start_bound()
         )
     );
     assert_eq!(EmptiableRelativeBoundPair::Empty.partial_rel_start(), None);
@@ -434,16 +451,25 @@ fn partial_rel_start() {
 fn partial_rel_end() {
     assert_eq!(
         RelativeBoundPair::new(
-            RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
-                .to_start_bound(),
-            RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
-                .to_end_bound(),
+            RelativeFiniteBoundPosition::new_with_inclusivity(
+                SignedDuration::from_hours(1),
+                BoundInclusivity::Exclusive
+            )
+            .to_start_bound(),
+            RelativeFiniteBoundPosition::new_with_inclusivity(
+                SignedDuration::from_hours(2),
+                BoundInclusivity::Exclusive
+            )
+            .to_end_bound(),
         )
         .to_emptiable()
         .partial_rel_end(),
         Some(
-            RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
-                .to_end_bound()
+            RelativeFiniteBoundPosition::new_with_inclusivity(
+                SignedDuration::from_hours(2),
+                BoundInclusivity::Exclusive
+            )
+            .to_end_bound()
         )
     );
     assert_eq!(EmptiableRelativeBoundPair::Empty.partial_rel_end(), None);
@@ -801,10 +827,16 @@ fn from_opt_start_incl_opt_end_incl_opt() {
             Some((SignedDuration::from_hours(2), BoundInclusivity::Exclusive))
         ))),
         RelativeBoundPair::new(
-            RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
-                .to_start_bound(),
-            RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
-                .to_end_bound()
+            RelativeFiniteBoundPosition::new_with_inclusivity(
+                SignedDuration::from_hours(1),
+                BoundInclusivity::Exclusive
+            )
+            .to_start_bound(),
+            RelativeFiniteBoundPosition::new_with_inclusivity(
+                SignedDuration::from_hours(2),
+                BoundInclusivity::Exclusive
+            )
+            .to_end_bound()
         )
         .to_emptiable()
     );
@@ -835,23 +867,19 @@ fn from_bound_pair() {
 
 #[test]
 fn from_bounded_interval() {
+    let start = RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_finite_start_bound();
+    let end = RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_finite_end_bound();
+
     assert_eq!(
-        EmptiableRelativeBoundPair::from(BoundedRelativeInterval::new(
-            SignedDuration::from_hours(1),
-            SignedDuration::from_hours(2),
-        )),
-        RelativeBoundPair::new(
-            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
-            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound()
-        )
-        .to_emptiable()
+        EmptiableRelativeBoundPair::from(BoundedRelativeInterval::new(start, end,)),
+        RelativeBoundPair::new(start.to_start_bound(), end.to_end_bound()).to_emptiable()
     );
 }
 
 #[test]
 fn from_half_bounded_interval() {
     assert_eq!(
-        EmptiableRelativeBoundPair::from(HalfBoundedRelativeInterval::new(
+        EmptiableRelativeBoundPair::from(HalfBoundedRelativeInterval::new_from_offset(
             SignedDuration::from_hours(1),
             OpeningDirection::ToFuture,
         )),
@@ -866,7 +894,7 @@ fn from_half_bounded_interval() {
 #[test]
 fn from_interval() {
     assert_eq!(
-        EmptiableRelativeBoundPair::from(RelativeInterval::Bounded(BoundedRelativeInterval::new(
+        EmptiableRelativeBoundPair::from(RelativeInterval::Bounded(BoundedRelativeInterval::new_from_offsets(
             SignedDuration::from_hours(1),
             SignedDuration::from_hours(2),
         ))),
@@ -882,7 +910,7 @@ fn from_interval() {
 fn from_emptiable_interval() {
     assert_eq!(
         EmptiableRelativeBoundPair::from(EmptiableRelativeInterval::Bound(RelativeInterval::Bounded(
-            BoundedRelativeInterval::new(SignedDuration::from_hours(1), SignedDuration::from_hours(2),)
+            BoundedRelativeInterval::new_from_offsets(SignedDuration::from_hours(1), SignedDuration::from_hours(2),)
         ))),
         RelativeBoundPair::new(
             RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),

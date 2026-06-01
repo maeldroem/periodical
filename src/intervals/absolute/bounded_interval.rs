@@ -799,6 +799,12 @@ impl IsEmpty for BoundedAbsoluteInterval {
     }
 }
 
+impl From<(AbsoluteFiniteStartBound, AbsoluteFiniteEndBound)> for BoundedAbsoluteInterval {
+    fn from((start, end): (AbsoluteFiniteStartBound, AbsoluteFiniteEndBound)) -> Self {
+        Self::new(start, end)
+    }
+}
+
 impl From<(Timestamp, Timestamp)> for BoundedAbsoluteInterval {
     fn from((start, end): (Timestamp, Timestamp)) -> Self {
         BoundedAbsoluteInterval::new_from_times(start, end)

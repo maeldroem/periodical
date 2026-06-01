@@ -418,7 +418,7 @@ impl BoundedRelativeInterval {
                 RelativeStartEndBoundsCheckForIntervalCreationError::StartPastEnd => {
                     BoundedRelativeIntervalUpdateError::ChronologicalOrderViolation
                 },
-                RelativeStartEndBoundsCheckForIntervalCreationError::SameTimeButNotDoublyInclusive => {
+                RelativeStartEndBoundsCheckForIntervalCreationError::SameOffsetButNotDoublyInclusive => {
                     BoundedRelativeIntervalUpdateError::OutOfRange
                 },
             },
@@ -438,7 +438,7 @@ impl BoundedRelativeInterval {
                 RelativeStartEndBoundsCheckForIntervalCreationError::StartPastEnd => {
                     BoundedRelativeIntervalUpdateError::ChronologicalOrderViolation
                 },
-                RelativeStartEndBoundsCheckForIntervalCreationError::SameTimeButNotDoublyInclusive => {
+                RelativeStartEndBoundsCheckForIntervalCreationError::SameOffsetButNotDoublyInclusive => {
                     BoundedRelativeIntervalUpdateError::SameTimeDoublyInclusiveViolation
                 },
             },
@@ -957,6 +957,12 @@ impl HasRelativeBoundPair for BoundedRelativeInterval {
 impl IsEmpty for BoundedRelativeInterval {
     fn is_empty(&self) -> bool {
         false
+    }
+}
+
+impl From<(RelativeFiniteStartBound, RelativeFiniteEndBound)> for BoundedRelativeInterval {
+    fn from((start, end): (RelativeFiniteStartBound, RelativeFiniteEndBound)) -> Self {
+        Self::new(start, end)
     }
 }
 

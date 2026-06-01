@@ -5,7 +5,7 @@ use jiff::civil::Date;
 use jiff::tz::TimeZone;
 
 use crate::intervals::absolute::HalfBoundedAbsoluteInterval;
-use crate::intervals::meta::{BoundInclusivity, OpeningDirection};
+use crate::intervals::meta::{BoundInclusivity, HasOpeningDirection, OpeningDirection};
 use crate::time::{Month, OffsetIsoWeek};
 
 #[test]

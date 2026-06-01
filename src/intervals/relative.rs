@@ -1,7 +1,7 @@
 //! Relative intervals
 //!
 //! Relative intervals contain an offset duration and a length instead of being
-//! fixed in time.
+//! fixed in offset.
 //!
 //! The most common relative interval objects you will encounter are
 //!
@@ -84,7 +84,7 @@ pub use interval::*;
 #[doc(inline)]
 pub use start_bound::*;
 
-pub fn swap_relative_finite_start_end_bound(
+pub fn swap_relative_finite_start_end_bounds(
     finite_start: &mut RelativeFiniteStartBound,
     finite_end: &mut RelativeFiniteEndBound,
 ) {
@@ -103,21 +103,21 @@ pub fn swap_relative_finite_start_end_bound(
 ///
 /// ```
 /// # use std::error::Error;
-/// # use jiff::Timestamp;
+/// # use jiff::Offsetstamp;
 /// # use periodical::intervals::relative::{RelativeFiniteBoundPosition, swap_relative_bound_pair};
-/// let start_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
-/// let end_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
+/// let start_offset = "2025-01-01 16:00:00Z".parse::<Offsetstamp>()?;
+/// let end_offset = "2025-01-01 08:00:00Z".parse::<Offsetstamp>()?;
 ///
-/// let mut start = RelativeFiniteBoundPosition::new(start_time).to_start_bound();
-/// let mut end = RelativeFiniteBoundPosition::new(end_time).to_end_bound();
+/// let mut start = RelativeFiniteBoundPosition::new(start_offset).to_start_bound();
+/// let mut end = RelativeFiniteBoundPosition::new(end_offset).to_end_bound();
 ///
 /// swap_relative_bound_pair(&mut start, &mut end);
 ///
-/// assert_eq!(start, RelativeFiniteBoundPosition::new(end_time).to_start_bound());
-/// assert_eq!(end, RelativeFiniteBoundPosition::new(start_time).to_end_bound());
+/// assert_eq!(start, RelativeFiniteBoundPosition::new(end_offset).to_start_bound());
+/// assert_eq!(end, RelativeFiniteBoundPosition::new(start_offset).to_end_bound());
 /// # Ok::<(), Box<dyn Error>>(())
 /// ```
-pub fn swap_relative_start_end_bound(start: &mut RelativeStartBound, end: &mut RelativeEndBound) {
+pub fn swap_relative_start_end_bounds(start: &mut RelativeStartBound, end: &mut RelativeEndBound) {
     // We temporarily reborrow start and end for the match arms so that when a
     // pattern matches, they move out of their temporary scope and we can use
     // the original mutable references without guard patterns shenanigans.
@@ -135,7 +135,7 @@ pub fn swap_relative_start_end_bound(start: &mut RelativeStartBound, end: &mut R
             *start = RelativeStartBound::InfinitePast;
         },
         (RelativeStartBound::Finite(finite_start), RelativeEndBound::Finite(finite_end)) => {
-            swap_relative_finite_start_end_bound(finite_start, finite_end);
+            swap_relative_finite_start_end_bounds(finite_start, finite_end);
         },
     }
 }
@@ -146,18 +146,18 @@ pub fn swap_relative_start_end_bound(start: &mut RelativeStartBound, end: &mut R
 pub enum RelativeStartEndBoundsCheckForIntervalCreationError {
     /// Start bound is past the end bound
     StartPastEnd,
-    /// Both bounds are on the same time but don't have only inclusive bound
+    /// Both bounds are on the same offset but don't have only inclusive bound
     /// inclusivities
-    SameTimeButNotDoublyInclusive,
+    SameOffsetButNotDoublyInclusive,
 }
 
 impl Display for RelativeStartEndBoundsCheckForIntervalCreationError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::StartPastEnd => write!(f, "Start bound is past the end bound"),
-            Self::SameTimeButNotDoublyInclusive => write!(
+            Self::SameOffsetButNotDoublyInclusive => write!(
                 f,
-                "Both bounds are on the same time but don't have only inclusive bound inclusivities"
+                "Both bounds are on the same offset but don't have only inclusive bound inclusivities"
             ),
         }
     }
@@ -175,7 +175,7 @@ pub fn check_relative_finite_start_end_bounds_for_interval_creation(
             if start_incl == BoundInclusivity::Inclusive && end_incl == BoundInclusivity::Inclusive {
                 Ok(())
             } else {
-                Err(RelativeStartEndBoundsCheckForIntervalCreationError::SameTimeButNotDoublyInclusive)
+                Err(RelativeStartEndBoundsCheckForIntervalCreationError::SameOffsetButNotDoublyInclusive)
             }
         },
         BoundOrdering::Equal(_) => unreachable!(),
@@ -199,9 +199,9 @@ pub fn check_relative_finite_start_end_bounds_for_interval_creation(
 /// [`StartPastEnd`](RelativeBoundPairCheckForIntervalCreationError::StartPastEnd).
 ///
 ///
-/// If both bounds have the same time, but at least one of them has an exclusive
+/// If both bounds have the same offset, but at least one of them has an exclusive
 /// bound inclusivity, it returns
-/// [`SameTimeButNotDoublyInclusive`](RelativeBoundPairCheckForIntervalCreationError::SameTimeButNotDoublyInclusive).
+/// [`SameOffsetButNotDoublyInclusive`](RelativeBoundPairCheckForIntervalCreationError::SameOffsetButNotDoublyInclusive).
 ///
 /// # Examples
 ///
@@ -220,8 +220,8 @@ pub fn check_relative_finite_start_end_bounds_for_interval_creation(
 ///         Err(IntervalCreaErr::StartPastEnd) => Err(
 ///             "Start and end must be in chronological order!".to_string()
 ///         ),
-///         Err(IntervalCreaErr::SameTimeButNotDoublyInclusive) => Err(
-///             "To represent a single point in time, both inclusivities must be inclusive!".to_string()
+///         Err(IntervalCreaErr::SameOffsetButNotDoublyInclusive) => Err(
+///             "To represent a single point in offset, both inclusivities must be inclusive!".to_string()
 ///         ),
 ///     }
 /// }
@@ -245,10 +245,10 @@ pub fn prepare_relative_finite_start_end_bounds_for_interval_creation(
     match check_relative_finite_start_end_bounds_for_interval_creation(start, end) {
         Ok(()) => false,
         Err(RelativeStartEndBoundsCheckForIntervalCreationError::StartPastEnd) => {
-            swap_relative_finite_start_end_bound(start, end);
+            swap_relative_finite_start_end_bounds(start, end);
             true
         },
-        Err(RelativeStartEndBoundsCheckForIntervalCreationError::SameTimeButNotDoublyInclusive) => {
+        Err(RelativeStartEndBoundsCheckForIntervalCreationError::SameOffsetButNotDoublyInclusive) => {
             let RelativeFiniteStartBound(finite_start) = start;
             let RelativeFiniteEndBound(finite_end) = end;
 
@@ -274,14 +274,14 @@ pub fn prepare_relative_finite_start_end_bounds_for_interval_creation(
 ///
 /// ```
 /// # use std::error::Error;
-/// # use jiff::Timestamp;
+/// # use jiff::Offsetstamp;
 /// # use periodical::intervals::relative::{RelativeFiniteBoundPosition, prepare_relative_bound_pair_for_interval_creation};
-/// let start_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
-/// let end_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
+/// let start_offset = "2025-01-01 16:00:00Z".parse::<Offsetstamp>()?;
+/// let end_offset = "2025-01-01 08:00:00Z".parse::<Offsetstamp>()?;
 ///
 /// // Warning: not in chronological order!
-/// let mut start = RelativeFiniteBoundPosition::new(start_time).to_start_bound();
-/// let mut end = RelativeFiniteBoundPosition::new(end_time).to_end_bound();
+/// let mut start = RelativeFiniteBoundPosition::new(start_offset).to_start_bound();
+/// let mut end = RelativeFiniteBoundPosition::new(end_offset).to_end_bound();
 ///
 /// let was_changed = prepare_relative_bound_pair_for_interval_creation(&mut start, &mut end);
 ///
@@ -297,10 +297,10 @@ pub fn prepare_relative_bound_pair_for_interval_creation(
     match check_relative_start_end_bounds_for_interval_creation(start, end) {
         Ok(()) => false,
         Err(RelativeStartEndBoundsCheckForIntervalCreationError::StartPastEnd) => {
-            swap_relative_start_end_bound(start, end);
+            swap_relative_start_end_bounds(start, end);
             true
         },
-        Err(RelativeStartEndBoundsCheckForIntervalCreationError::SameTimeButNotDoublyInclusive) => {
+        Err(RelativeStartEndBoundsCheckForIntervalCreationError::SameOffsetButNotDoublyInclusive) => {
             if let RelativeStartBound::Finite(RelativeFiniteStartBound(finite_start_mut)) = start {
                 finite_start_mut.set_inclusivity(BoundInclusivity::Inclusive);
             }

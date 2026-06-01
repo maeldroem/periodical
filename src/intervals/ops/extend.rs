@@ -361,240 +361,240 @@ pub trait Extensible<Rhs = Self> {
     fn extend(&self, rhs: &Rhs) -> Self::Output;
 }
 
-extensible_impl!(
-    implementor => AbsoluteBoundPair,
-    rhs => [AbsoluteBoundPair],
-    output => AbsoluteBoundPair,
-    absolute,
-    (non_emptiable, non_emptiable),
-);
-extensible_impl!(
-    implementor => AbsoluteBoundPair,
-    rhs => [EmptiableAbsoluteBoundPair],
-    output => AbsoluteBoundPair,
-    absolute,
-    (non_emptiable, emptiable),
-);
-extensible_impl!(
-    implementor => EmptiableAbsoluteBoundPair,
-    rhs => [AbsoluteBoundPair],
-    output => AbsoluteBoundPair,
-    absolute,
-    (emptiable, non_emptiable),
-);
-extensible_impl!(
-    implementor => EmptiableAbsoluteBoundPair,
-    rhs => [EmptiableAbsoluteBoundPair],
-    output => EmptiableAbsoluteBoundPair,
-    absolute,
-    (emptiable, emptiable),
-);
-extensible_impl!(
-    implementor => AbsoluteInterval,
-    rhs => [AbsoluteInterval],
-    output => AbsoluteInterval,
-    absolute,
-    (non_emptiable, non_emptiable),
-);
-extensible_impl!(
-    implementor => AbsoluteInterval,
-    rhs => [EmptiableAbsoluteInterval],
-    output => AbsoluteInterval,
-    absolute,
-    (non_emptiable, emptiable),
-);
-extensible_impl!(
-    implementor => EmptiableAbsoluteInterval,
-    rhs => [AbsoluteInterval],
-    output => AbsoluteInterval,
-    absolute,
-    (emptiable, non_emptiable),
-);
-extensible_impl!(
-    implementor => EmptiableAbsoluteInterval,
-    rhs => [EmptiableAbsoluteInterval],
-    output => EmptiableAbsoluteInterval,
-    absolute,
-    (emptiable, emptiable),
-);
-extensible_impl!(
-    implementor => BoundedAbsoluteInterval,
-    rhs => [BoundedAbsoluteInterval],
-    output => BoundedAbsoluteInterval,
-    absolute,
-    (non_emptiable, non_emptiable),
-);
-extensible_impl!(
-    implementor => BoundedAbsoluteInterval,
-    rhs => [HalfBoundedAbsoluteInterval],
-    output => HalfBoundedAbsoluteInterval,
-    absolute,
-    (non_emptiable, non_emptiable),
-);
-extensible_impl!(
-    implementor => BoundedAbsoluteInterval,
-    rhs => [UnboundedInterval],
-    output => clone rhs,
-);
-extensible_impl!(
-    implementor => BoundedAbsoluteInterval,
-    rhs => [EmptyInterval],
-    output => clone lhs,
-);
-extensible_impl!(
-    implementor => HalfBoundedAbsoluteInterval,
-    rhs => [BoundedAbsoluteInterval],
-    output => HalfBoundedAbsoluteInterval,
-    absolute,
-    (non_emptiable, non_emptiable),
-);
-extensible_impl!(
-    implementor => HalfBoundedAbsoluteInterval,
-    rhs => [HalfBoundedAbsoluteInterval],
-    output => AbsoluteInterval,
-    absolute,
-    (non_emptiable, non_emptiable),
-);
-extensible_impl!(
-    implementor => HalfBoundedAbsoluteInterval,
-    rhs => [UnboundedInterval],
-    output => clone rhs,
-);
-extensible_impl!(
-    implementor => HalfBoundedAbsoluteInterval,
-    rhs => [EmptyInterval],
-    output => clone lhs,
-);
+// extensible_impl!(
+//     implementor => AbsoluteBoundPair,
+//     rhs => [AbsoluteBoundPair],
+//     output => AbsoluteBoundPair,
+//     absolute,
+//     (non_emptiable, non_emptiable),
+// );
+// extensible_impl!(
+//     implementor => AbsoluteBoundPair,
+//     rhs => [EmptiableAbsoluteBoundPair],
+//     output => AbsoluteBoundPair,
+//     absolute,
+//     (non_emptiable, emptiable),
+// );
+// extensible_impl!(
+//     implementor => EmptiableAbsoluteBoundPair,
+//     rhs => [AbsoluteBoundPair],
+//     output => AbsoluteBoundPair,
+//     absolute,
+//     (emptiable, non_emptiable),
+// );
+// extensible_impl!(
+//     implementor => EmptiableAbsoluteBoundPair,
+//     rhs => [EmptiableAbsoluteBoundPair],
+//     output => EmptiableAbsoluteBoundPair,
+//     absolute,
+//     (emptiable, emptiable),
+// );
+// extensible_impl!(
+//     implementor => AbsoluteInterval,
+//     rhs => [AbsoluteInterval],
+//     output => AbsoluteInterval,
+//     absolute,
+//     (non_emptiable, non_emptiable),
+// );
+// extensible_impl!(
+//     implementor => AbsoluteInterval,
+//     rhs => [EmptiableAbsoluteInterval],
+//     output => AbsoluteInterval,
+//     absolute,
+//     (non_emptiable, emptiable),
+// );
+// extensible_impl!(
+//     implementor => EmptiableAbsoluteInterval,
+//     rhs => [AbsoluteInterval],
+//     output => AbsoluteInterval,
+//     absolute,
+//     (emptiable, non_emptiable),
+// );
+// extensible_impl!(
+//     implementor => EmptiableAbsoluteInterval,
+//     rhs => [EmptiableAbsoluteInterval],
+//     output => EmptiableAbsoluteInterval,
+//     absolute,
+//     (emptiable, emptiable),
+// );
+// extensible_impl!(
+//     implementor => BoundedAbsoluteInterval,
+//     rhs => [BoundedAbsoluteInterval],
+//     output => BoundedAbsoluteInterval,
+//     absolute,
+//     (non_emptiable, non_emptiable),
+// );
+// extensible_impl!(
+//     implementor => BoundedAbsoluteInterval,
+//     rhs => [HalfBoundedAbsoluteInterval],
+//     output => HalfBoundedAbsoluteInterval,
+//     absolute,
+//     (non_emptiable, non_emptiable),
+// );
+// extensible_impl!(
+//     implementor => BoundedAbsoluteInterval,
+//     rhs => [UnboundedInterval],
+//     output => clone rhs,
+// );
+// extensible_impl!(
+//     implementor => BoundedAbsoluteInterval,
+//     rhs => [EmptyInterval],
+//     output => clone lhs,
+// );
+// extensible_impl!(
+//     implementor => HalfBoundedAbsoluteInterval,
+//     rhs => [BoundedAbsoluteInterval],
+//     output => HalfBoundedAbsoluteInterval,
+//     absolute,
+//     (non_emptiable, non_emptiable),
+// );
+// extensible_impl!(
+//     implementor => HalfBoundedAbsoluteInterval,
+//     rhs => [HalfBoundedAbsoluteInterval],
+//     output => AbsoluteInterval,
+//     absolute,
+//     (non_emptiable, non_emptiable),
+// );
+// extensible_impl!(
+//     implementor => HalfBoundedAbsoluteInterval,
+//     rhs => [UnboundedInterval],
+//     output => clone rhs,
+// );
+// extensible_impl!(
+//     implementor => HalfBoundedAbsoluteInterval,
+//     rhs => [EmptyInterval],
+//     output => clone lhs,
+// );
 
-extensible_impl!(
-    implementor => RelativeBoundPair,
-    rhs => [RelativeBoundPair],
-    output => RelativeBoundPair,
-    relative,
-    (non_emptiable, non_emptiable),
-);
-extensible_impl!(
-    implementor => RelativeBoundPair,
-    rhs => [EmptiableRelativeBoundPair],
-    output => RelativeBoundPair,
-    relative,
-    (non_emptiable, emptiable),
-);
-extensible_impl!(
-    implementor => EmptiableRelativeBoundPair,
-    rhs => [RelativeBoundPair],
-    output => RelativeBoundPair,
-    relative,
-    (emptiable, non_emptiable),
-);
-extensible_impl!(
-    implementor => EmptiableRelativeBoundPair,
-    rhs => [EmptiableRelativeBoundPair],
-    output => EmptiableRelativeBoundPair,
-    relative,
-    (emptiable, emptiable),
-);
-extensible_impl!(
-    implementor => RelativeInterval,
-    rhs => [RelativeInterval],
-    output => RelativeInterval,
-    relative,
-    (non_emptiable, non_emptiable),
-);
-extensible_impl!(
-    implementor => RelativeInterval,
-    rhs => [EmptiableRelativeInterval],
-    output => RelativeInterval,
-    relative,
-    (non_emptiable, emptiable),
-);
-extensible_impl!(
-    implementor => EmptiableRelativeInterval,
-    rhs => [RelativeInterval],
-    output => RelativeInterval,
-    relative,
-    (emptiable, non_emptiable),
-);
-extensible_impl!(
-    implementor => EmptiableRelativeInterval,
-    rhs => [EmptiableRelativeInterval],
-    output => EmptiableRelativeInterval,
-    relative,
-    (emptiable, emptiable),
-);
-extensible_impl!(
-    implementor => BoundedRelativeInterval,
-    rhs => [BoundedRelativeInterval],
-    output => BoundedRelativeInterval,
-    relative,
-    (non_emptiable, non_emptiable),
-);
-extensible_impl!(
-    implementor => BoundedRelativeInterval,
-    rhs => [HalfBoundedRelativeInterval],
-    output => HalfBoundedRelativeInterval,
-    relative,
-    (non_emptiable, non_emptiable),
-);
-extensible_impl!(
-    implementor => BoundedRelativeInterval,
-    rhs => [UnboundedInterval],
-    output => clone rhs,
-);
-extensible_impl!(
-    implementor => BoundedRelativeInterval,
-    rhs => [EmptyInterval],
-    output => clone lhs,
-);
-extensible_impl!(
-    implementor => HalfBoundedRelativeInterval,
-    rhs => [BoundedRelativeInterval],
-    output => HalfBoundedRelativeInterval,
-    relative,
-    (non_emptiable, non_emptiable),
-);
-extensible_impl!(
-    implementor => HalfBoundedRelativeInterval,
-    rhs => [HalfBoundedRelativeInterval],
-    output => RelativeInterval,
-    relative,
-    (non_emptiable, non_emptiable),
-);
-extensible_impl!(
-    implementor => HalfBoundedRelativeInterval,
-    rhs => [UnboundedInterval],
-    output => clone rhs,
-);
-extensible_impl!(
-    implementor => HalfBoundedRelativeInterval,
-    rhs => [EmptyInterval],
-    output => clone lhs,
-);
+// extensible_impl!(
+//     implementor => RelativeBoundPair,
+//     rhs => [RelativeBoundPair],
+//     output => RelativeBoundPair,
+//     relative,
+//     (non_emptiable, non_emptiable),
+// );
+// extensible_impl!(
+//     implementor => RelativeBoundPair,
+//     rhs => [EmptiableRelativeBoundPair],
+//     output => RelativeBoundPair,
+//     relative,
+//     (non_emptiable, emptiable),
+// );
+// extensible_impl!(
+//     implementor => EmptiableRelativeBoundPair,
+//     rhs => [RelativeBoundPair],
+//     output => RelativeBoundPair,
+//     relative,
+//     (emptiable, non_emptiable),
+// );
+// extensible_impl!(
+//     implementor => EmptiableRelativeBoundPair,
+//     rhs => [EmptiableRelativeBoundPair],
+//     output => EmptiableRelativeBoundPair,
+//     relative,
+//     (emptiable, emptiable),
+// );
+// extensible_impl!(
+//     implementor => RelativeInterval,
+//     rhs => [RelativeInterval],
+//     output => RelativeInterval,
+//     relative,
+//     (non_emptiable, non_emptiable),
+// );
+// extensible_impl!(
+//     implementor => RelativeInterval,
+//     rhs => [EmptiableRelativeInterval],
+//     output => RelativeInterval,
+//     relative,
+//     (non_emptiable, emptiable),
+// );
+// extensible_impl!(
+//     implementor => EmptiableRelativeInterval,
+//     rhs => [RelativeInterval],
+//     output => RelativeInterval,
+//     relative,
+//     (emptiable, non_emptiable),
+// );
+// extensible_impl!(
+//     implementor => EmptiableRelativeInterval,
+//     rhs => [EmptiableRelativeInterval],
+//     output => EmptiableRelativeInterval,
+//     relative,
+//     (emptiable, emptiable),
+// );
+// extensible_impl!(
+//     implementor => BoundedRelativeInterval,
+//     rhs => [BoundedRelativeInterval],
+//     output => BoundedRelativeInterval,
+//     relative,
+//     (non_emptiable, non_emptiable),
+// );
+// extensible_impl!(
+//     implementor => BoundedRelativeInterval,
+//     rhs => [HalfBoundedRelativeInterval],
+//     output => HalfBoundedRelativeInterval,
+//     relative,
+//     (non_emptiable, non_emptiable),
+// );
+// extensible_impl!(
+//     implementor => BoundedRelativeInterval,
+//     rhs => [UnboundedInterval],
+//     output => clone rhs,
+// );
+// extensible_impl!(
+//     implementor => BoundedRelativeInterval,
+//     rhs => [EmptyInterval],
+//     output => clone lhs,
+// );
+// extensible_impl!(
+//     implementor => HalfBoundedRelativeInterval,
+//     rhs => [BoundedRelativeInterval],
+//     output => HalfBoundedRelativeInterval,
+//     relative,
+//     (non_emptiable, non_emptiable),
+// );
+// extensible_impl!(
+//     implementor => HalfBoundedRelativeInterval,
+//     rhs => [HalfBoundedRelativeInterval],
+//     output => RelativeInterval,
+//     relative,
+//     (non_emptiable, non_emptiable),
+// );
+// extensible_impl!(
+//     implementor => HalfBoundedRelativeInterval,
+//     rhs => [UnboundedInterval],
+//     output => clone rhs,
+// );
+// extensible_impl!(
+//     implementor => HalfBoundedRelativeInterval,
+//     rhs => [EmptyInterval],
+//     output => clone lhs,
+// );
 
-extensible_impl!(
-    implementor => UnboundedInterval,
-    rhs => [
-        BoundedAbsoluteInterval,
-        HalfBoundedAbsoluteInterval,
-        BoundedRelativeInterval,
-        HalfBoundedRelativeInterval,
-        UnboundedInterval,
-        EmptyInterval,
-    ],
-    output => clone lhs,
-);
-extensible_impl!(
-    implementor => EmptyInterval,
-    rhs => [
-        BoundedAbsoluteInterval,
-        HalfBoundedAbsoluteInterval,
-        BoundedRelativeInterval,
-        HalfBoundedRelativeInterval,
-        UnboundedInterval,
-        EmptyInterval,
-    ],
-    output => clone rhs,
-);
+// extensible_impl!(
+//     implementor => UnboundedInterval,
+//     rhs => [
+//         BoundedAbsoluteInterval,
+//         HalfBoundedAbsoluteInterval,
+//         BoundedRelativeInterval,
+//         HalfBoundedRelativeInterval,
+//         UnboundedInterval,
+//         EmptyInterval,
+//     ],
+//     output => clone lhs,
+// );
+// extensible_impl!(
+//     implementor => EmptyInterval,
+//     rhs => [
+//         BoundedAbsoluteInterval,
+//         HalfBoundedAbsoluteInterval,
+//         BoundedRelativeInterval,
+//         HalfBoundedRelativeInterval,
+//         UnboundedInterval,
+//         EmptyInterval,
+//     ],
+//     output => clone rhs,
+// );
 
 /// Extends two [`AbsoluteBoundPair`]
 ///
@@ -644,14 +644,15 @@ pub fn extend_emptiable_abs_bound_pair(
     lhs_bound_pair: &EmptiableAbsoluteBoundPair,
     rhs_bound_pair: &EmptiableAbsoluteBoundPair,
 ) -> EmptiableAbsoluteBoundPair {
-    match (lhs_bound_pair, rhs_bound_pair) {
-        (EmptiableAbsoluteBoundPair::Empty, EmptiableAbsoluteBoundPair::Empty) => EmptiableAbsoluteBoundPair::Empty,
-        (EmptiableAbsoluteBoundPair::Empty, bound @ EmptiableAbsoluteBoundPair::Bound(..))
-        | (bound @ EmptiableAbsoluteBoundPair::Bound(..), EmptiableAbsoluteBoundPair::Empty) => bound.clone(),
-        (EmptiableAbsoluteBoundPair::Bound(lhs_bound_pair), EmptiableAbsoluteBoundPair::Bound(rhs_bound_pair)) => {
-            EmptiableAbsoluteBoundPair::Bound(lhs_bound_pair.extend(rhs_bound_pair))
-        },
-    }
+    todo!("fix");
+    // match (lhs_bound_pair, rhs_bound_pair) {
+    //     (EmptiableAbsoluteBoundPair::Empty, EmptiableAbsoluteBoundPair::Empty) => EmptiableAbsoluteBoundPair::Empty,
+    //     (EmptiableAbsoluteBoundPair::Empty, bound @ EmptiableAbsoluteBoundPair::Bound(..))
+    //     | (bound @ EmptiableAbsoluteBoundPair::Bound(..), EmptiableAbsoluteBoundPair::Empty) => bound.clone(),
+    //     (EmptiableAbsoluteBoundPair::Bound(lhs_bound_pair), EmptiableAbsoluteBoundPair::Bound(rhs_bound_pair)) => {
+    //         EmptiableAbsoluteBoundPair::Bound(lhs_bound_pair.extend(rhs_bound_pair))
+    //     },
+    // }
 }
 
 /// Extends two [`BoundedAbsoluteInterval`]
@@ -722,12 +723,13 @@ pub fn extend_emptiable_rel_bound_pair(
     lhs_bound_pair: &EmptiableRelativeBoundPair,
     rhs_bound_pair: &EmptiableRelativeBoundPair,
 ) -> EmptiableRelativeBoundPair {
-    match (lhs_bound_pair, rhs_bound_pair) {
-        (EmptiableRelativeBoundPair::Empty, EmptiableRelativeBoundPair::Empty) => EmptiableRelativeBoundPair::Empty,
-        (EmptiableRelativeBoundPair::Empty, bound @ EmptiableRelativeBoundPair::Bound(..))
-        | (bound @ EmptiableRelativeBoundPair::Bound(..), EmptiableRelativeBoundPair::Empty) => bound.clone(),
-        (EmptiableRelativeBoundPair::Bound(lhs_bound_pair), EmptiableRelativeBoundPair::Bound(rhs_bound_pair)) => {
-            EmptiableRelativeBoundPair::Bound(lhs_bound_pair.extend(rhs_bound_pair))
-        },
-    }
+    todo!("fix");
+    // match (lhs_bound_pair, rhs_bound_pair) {
+    //     (EmptiableRelativeBoundPair::Empty, EmptiableRelativeBoundPair::Empty) => EmptiableRelativeBoundPair::Empty,
+    //     (EmptiableRelativeBoundPair::Empty, bound @ EmptiableRelativeBoundPair::Bound(..))
+    //     | (bound @ EmptiableRelativeBoundPair::Bound(..), EmptiableRelativeBoundPair::Empty) => bound.clone(),
+    //     (EmptiableRelativeBoundPair::Bound(lhs_bound_pair), EmptiableRelativeBoundPair::Bound(rhs_bound_pair)) => {
+    //         EmptiableRelativeBoundPair::Bound(lhs_bound_pair.extend(rhs_bound_pair))
+    //     },
+    // }
 }

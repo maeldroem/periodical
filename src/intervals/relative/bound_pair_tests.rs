@@ -476,13 +476,10 @@ mod ord_by_start_and_inv_length {
 
 #[test]
 fn to_interval() {
-    let start = SignedDuration::from_hours(8);
-    let end = SignedDuration::from_hours(16);
+    let start = RelativeFiniteBoundPosition::new(SignedDuration::from_hours(8)).to_finite_start_bound();
+    let end = RelativeFiniteBoundPosition::new(SignedDuration::from_hours(16)).to_finite_end_bound();
 
-    let bound_pair = RelativeBoundPair::new(
-        RelativeFiniteBoundPosition::new(start).to_start_bound(),
-        RelativeFiniteBoundPosition::new(end).to_end_bound(),
-    );
+    let bound_pair = RelativeBoundPair::new(start.to_start_bound(), end.to_end_bound());
 
     assert_eq!(
         bound_pair.to_interval(),
@@ -492,13 +489,10 @@ fn to_interval() {
 
 #[test]
 fn to_emptiable_interval() {
-    let start = SignedDuration::from_hours(8);
-    let end = SignedDuration::from_hours(16);
+    let start = RelativeFiniteBoundPosition::new(SignedDuration::from_hours(8)).to_finite_start_bound();
+    let end = RelativeFiniteBoundPosition::new(SignedDuration::from_hours(16)).to_finite_end_bound();
 
-    let bound_pair = RelativeBoundPair::new(
-        RelativeFiniteBoundPosition::new(start).to_start_bound(),
-        RelativeFiniteBoundPosition::new(end).to_end_bound(),
-    );
+    let bound_pair = RelativeBoundPair::new(start.to_start_bound(), end.to_end_bound());
 
     assert_eq!(
         bound_pair.to_emptiable_interval(),
@@ -797,7 +791,8 @@ mod ord {
         );
         let b = RelativeBoundPair::new(
             RelativeStartBound::InfinitePast,
-            RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::ZERO, BoundInclusivity::Exclusive).to_end_bound(),
+            RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::ZERO, BoundInclusivity::Exclusive)
+                .to_end_bound(),
         );
 
         assert_eq!(a.cmp(&b), Ordering::Greater);
@@ -812,7 +807,8 @@ mod ord {
         );
         let b = RelativeBoundPair::new(
             RelativeStartBound::InfinitePast,
-            RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::ZERO, BoundInclusivity::Inclusive).to_end_bound(),
+            RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::ZERO, BoundInclusivity::Inclusive)
+                .to_end_bound(),
         );
 
         assert_eq!(a.cmp(&b), Ordering::Greater);
@@ -827,7 +823,8 @@ mod ord {
         );
         let b = RelativeBoundPair::new(
             RelativeStartBound::InfinitePast,
-            RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::ZERO, BoundInclusivity::Exclusive).to_end_bound(),
+            RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::ZERO, BoundInclusivity::Exclusive)
+                .to_end_bound(),
         );
 
         assert_eq!(a.cmp(&b), Ordering::Greater);
@@ -842,7 +839,8 @@ mod ord {
         );
         let b = RelativeBoundPair::new(
             RelativeStartBound::InfinitePast,
-            RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::ZERO, BoundInclusivity::Inclusive).to_end_bound(),
+            RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::ZERO, BoundInclusivity::Inclusive)
+                .to_end_bound(),
         );
 
         assert_eq!(a.cmp(&b), Ordering::Greater);
@@ -929,17 +927,14 @@ fn from_opt_signed_duration_inclusivity_pair() {
 
 #[test]
 fn from_bounded_relative_interval() {
-    let start = SignedDuration::from_hours(8);
-    let end = SignedDuration::from_hours(16);
+    let start = RelativeFiniteBoundPosition::new(SignedDuration::from_hours(8)).to_finite_start_bound();
+    let end = RelativeFiniteBoundPosition::new(SignedDuration::from_hours(16)).to_finite_end_bound();
 
     let bounded = BoundedRelativeInterval::new(start, end);
 
     assert_eq!(
         RelativeBoundPair::from(bounded),
-        RelativeBoundPair::new(
-            RelativeFiniteBoundPosition::new(start).to_start_bound(),
-            RelativeFiniteBoundPosition::new(end).to_end_bound(),
-        ),
+        RelativeBoundPair::new(start.to_start_bound(), end.to_end_bound(),),
     );
 }
 
@@ -947,7 +942,7 @@ fn from_bounded_relative_interval() {
 fn from_half_bounded_relative_interval() {
     let reference = SignedDuration::from_hours(8);
 
-    let half_bounded = HalfBoundedRelativeInterval::new(reference, OpeningDirection::ToFuture);
+    let half_bounded = HalfBoundedRelativeInterval::new_from_offset(reference, OpeningDirection::ToFuture);
 
     assert_eq!(
         RelativeBoundPair::from(half_bounded),
@@ -964,17 +959,14 @@ mod from_rel_interval {
 
     #[test]
     fn from_rel_interval_bounded() {
-        let start = SignedDuration::from_hours(8);
-        let end = SignedDuration::from_hours(16);
+        let start = RelativeFiniteBoundPosition::new(SignedDuration::from_hours(8)).to_finite_start_bound();
+        let end = RelativeFiniteBoundPosition::new(SignedDuration::from_hours(16)).to_finite_end_bound();
 
         let interval = BoundedRelativeInterval::new(start, end).to_interval();
 
         assert_eq!(
             RelativeBoundPair::from(interval),
-            RelativeBoundPair::new(
-                RelativeFiniteBoundPosition::new(start).to_start_bound(),
-                RelativeFiniteBoundPosition::new(end).to_end_bound(),
-            )
+            RelativeBoundPair::new(start.to_start_bound(), end.to_end_bound(),)
         );
     }
 
@@ -982,7 +974,8 @@ mod from_rel_interval {
     fn from_rel_interval_half_bounded() {
         let reference = SignedDuration::from_hours(8);
 
-        let interval = HalfBoundedRelativeInterval::new(reference, OpeningDirection::ToFuture).to_interval();
+        let interval =
+            HalfBoundedRelativeInterval::new_from_offset(reference, OpeningDirection::ToFuture).to_interval();
 
         assert_eq!(
             RelativeBoundPair::from(interval),
@@ -1028,17 +1021,14 @@ mod try_from_emptiable_rel_interval {
 
     #[test]
     fn not_empty() {
-        let start = SignedDuration::from_hours(8);
-        let end = SignedDuration::from_hours(16);
+        let start = RelativeFiniteBoundPosition::new(SignedDuration::from_hours(8)).to_finite_start_bound();
+        let end = RelativeFiniteBoundPosition::new(SignedDuration::from_hours(16)).to_finite_end_bound();
 
         let interval = BoundedRelativeInterval::new(start, end).to_emptiable_interval();
 
         assert_eq!(
             RelativeBoundPair::try_from(interval),
-            Ok(RelativeBoundPair::new(
-                RelativeFiniteBoundPosition::new(start).to_start_bound(),
-                RelativeFiniteBoundPosition::new(end).to_end_bound(),
-            ))
+            Ok(RelativeBoundPair::new(start.to_start_bound(), end.to_end_bound(),))
         );
     }
 
