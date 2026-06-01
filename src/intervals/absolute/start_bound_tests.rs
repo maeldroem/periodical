@@ -44,9 +44,7 @@ fn finite() -> Result<(), Box<dyn Error>> {
         AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?)
             .to_start_bound()
             .finite(),
-        Some(AbsoluteFiniteBoundPosition::new(
-            "2025-01-01 00:00:00Z".parse::<Timestamp>()?
-        )),
+        Some(AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_finite_start_bound()),
     );
     assert_eq!(AbsoluteStartBound::InfinitePast.finite(), None);
     Ok(())
@@ -68,110 +66,6 @@ fn opposite() -> Result<(), Box<dyn Error>> {
     );
     assert_eq!(AbsoluteStartBound::InfinitePast.opposite(), None);
     Ok(())
-}
-
-mod partial_eq_end_bound {
-    use super::*;
-
-    #[test]
-    fn inf_end_bound_inf() {
-        assert_ne!(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture);
-    }
-
-    #[test]
-    fn inf_end_bound_finite() -> Result<(), Box<dyn Error>> {
-        assert_ne!(
-            AbsoluteStartBound::InfinitePast,
-            AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
-        );
-        Ok(())
-    }
-
-    #[test]
-    fn finite_end_bound_inf() -> Result<(), Box<dyn Error>> {
-        assert_ne!(
-            AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-            AbsoluteEndBound::InfiniteFuture,
-        );
-        Ok(())
-    }
-
-    #[test]
-    fn finite_end_bound_finite_different_times() -> Result<(), Box<dyn Error>> {
-        assert_ne!(
-            AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-            AbsoluteFiniteBoundPosition::new("2025-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
-        );
-        Ok(())
-    }
-
-    #[test]
-    fn finite_end_bound_finite_equal_times_exclusive_bounds() -> Result<(), Box<dyn Error>> {
-        assert_ne!(
-            AbsoluteFiniteBoundPosition::new_with_inclusivity(
-                "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-                BoundInclusivity::Exclusive,
-            )
-            .to_start_bound(),
-            AbsoluteFiniteBoundPosition::new_with_inclusivity(
-                "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-                BoundInclusivity::Exclusive,
-            )
-            .to_end_bound(),
-        );
-        Ok(())
-    }
-
-    #[test]
-    fn finite_end_bound_finite_equal_times_exclusive_inclusive_bounds() -> Result<(), Box<dyn Error>> {
-        assert_ne!(
-            AbsoluteFiniteBoundPosition::new_with_inclusivity(
-                "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-                BoundInclusivity::Exclusive,
-            )
-            .to_start_bound(),
-            AbsoluteFiniteBoundPosition::new_with_inclusivity(
-                "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-                BoundInclusivity::Inclusive,
-            )
-            .to_end_bound(),
-        );
-        Ok(())
-    }
-
-    #[test]
-    fn finite_end_bound_finite_equal_times_inclusive_exclusive_bounds() -> Result<(), Box<dyn Error>> {
-        assert_ne!(
-            AbsoluteFiniteBoundPosition::new_with_inclusivity(
-                "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-                BoundInclusivity::Inclusive,
-            )
-            .to_start_bound(),
-            AbsoluteFiniteBoundPosition::new_with_inclusivity(
-                "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-                BoundInclusivity::Exclusive,
-            )
-            .to_end_bound(),
-        );
-        Ok(())
-    }
-
-    #[test]
-    fn finite_end_bound_finite_equal_times_inclusive_bounds() -> Result<(), Box<dyn Error>> {
-        assert_eq!(
-            AbsoluteFiniteBoundPosition::new_with_inclusivity(
-                "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-                BoundInclusivity::Inclusive,
-            )
-            .to_start_bound(),
-            AbsoluteFiniteBoundPosition::new_with_inclusivity(
-                "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-                BoundInclusivity::Inclusive,
-            )
-            .to_end_bound(),
-        );
-        Ok(())
-    }
 }
 
 mod ord {
@@ -309,146 +203,6 @@ mod ord {
     }
 }
 
-mod partial_ord_end_bound {
-    use super::*;
-
-    #[test]
-    fn inf_end_bound_inf() {
-        assert_eq!(
-            AbsoluteStartBound::InfinitePast.partial_cmp(&AbsoluteEndBound::InfiniteFuture),
-            Some(Ordering::Less),
-        );
-    }
-
-    #[test]
-    fn inf_end_bound_finite() -> Result<(), Box<dyn Error>> {
-        assert_eq!(
-            AbsoluteStartBound::InfinitePast.partial_cmp(
-                &AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound()
-            ),
-            Some(Ordering::Less),
-        );
-        Ok(())
-    }
-
-    #[test]
-    fn finite_end_bound_inf() -> Result<(), Box<dyn Error>> {
-        assert_eq!(
-            AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?)
-                .to_start_bound()
-                .partial_cmp(&AbsoluteEndBound::InfiniteFuture),
-            Some(Ordering::Less),
-        );
-        Ok(())
-    }
-
-    #[test]
-    fn end_bound_different_times_greater() -> Result<(), Box<dyn Error>> {
-        assert_eq!(
-            AbsoluteFiniteBoundPosition::new("2025-01-02 00:00:00Z".parse::<Timestamp>()?)
-                .to_start_bound()
-                .partial_cmp(
-                    &AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound()
-                ),
-            Some(Ordering::Greater),
-        );
-        Ok(())
-    }
-
-    #[test]
-    fn end_bound_different_times_less() -> Result<(), Box<dyn Error>> {
-        assert_eq!(
-            AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?)
-                .to_start_bound()
-                .partial_cmp(
-                    &AbsoluteFiniteBoundPosition::new("2025-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound()
-                ),
-            Some(Ordering::Less),
-        );
-        Ok(())
-    }
-
-    #[test]
-    fn end_bound_same_times_exclusive_bounds() -> Result<(), Box<dyn Error>> {
-        assert_eq!(
-            AbsoluteFiniteBoundPosition::new_with_inclusivity(
-                "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-                BoundInclusivity::Exclusive,
-            )
-            .to_start_bound()
-            .partial_cmp(
-                &AbsoluteFiniteBoundPosition::new_with_inclusivity(
-                    "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-                    BoundInclusivity::Exclusive,
-                )
-                .to_end_bound()
-            ),
-            Some(Ordering::Greater),
-        );
-        Ok(())
-    }
-
-    #[test]
-    fn end_bound_same_times_exclusive_inclusive_bounds() -> Result<(), Box<dyn Error>> {
-        assert_eq!(
-            AbsoluteFiniteBoundPosition::new_with_inclusivity(
-                "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-                BoundInclusivity::Exclusive,
-            )
-            .to_start_bound()
-            .partial_cmp(
-                &AbsoluteFiniteBoundPosition::new_with_inclusivity(
-                    "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-                    BoundInclusivity::Inclusive,
-                )
-                .to_end_bound()
-            ),
-            Some(Ordering::Greater),
-        );
-        Ok(())
-    }
-
-    #[test]
-    fn end_bound_same_times_inclusive_exclusive_bounds() -> Result<(), Box<dyn Error>> {
-        assert_eq!(
-            AbsoluteFiniteBoundPosition::new_with_inclusivity(
-                "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-                BoundInclusivity::Inclusive,
-            )
-            .to_start_bound()
-            .partial_cmp(
-                &AbsoluteFiniteBoundPosition::new_with_inclusivity(
-                    "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-                    BoundInclusivity::Exclusive,
-                )
-                .to_end_bound()
-            ),
-            Some(Ordering::Greater),
-        );
-        Ok(())
-    }
-
-    #[test]
-    fn end_bound_same_times_inclusive_bounds() -> Result<(), Box<dyn Error>> {
-        assert_eq!(
-            AbsoluteFiniteBoundPosition::new_with_inclusivity(
-                "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-                BoundInclusivity::Inclusive,
-            )
-            .to_start_bound()
-            .partial_cmp(
-                &AbsoluteFiniteBoundPosition::new_with_inclusivity(
-                    "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-                    BoundInclusivity::Inclusive,
-                )
-                .to_end_bound()
-            ),
-            Some(Ordering::Equal),
-        );
-        Ok(())
-    }
-}
-
 #[test]
 fn from_absolute_finite_bound_position() -> Result<(), Box<dyn Error>> {
     assert_eq!(
@@ -456,10 +210,13 @@ fn from_absolute_finite_bound_position() -> Result<(), Box<dyn Error>> {
             "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
             BoundInclusivity::Exclusive,
         )),
-        AbsoluteStartBound::Finite(AbsoluteFiniteBoundPosition::new_with_inclusivity(
-            "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-            BoundInclusivity::Exclusive,
-        )),
+        AbsoluteStartBound::Finite(
+            AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
+                BoundInclusivity::Exclusive,
+            )
+            .to_finite_start_bound()
+        ),
     );
     Ok(())
 }

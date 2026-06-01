@@ -2,6 +2,7 @@ use jiff::SignedDuration;
 
 use super::relative::*;
 use crate::intervals::meta::BoundInclusivity;
+use crate::intervals::ops::{BoundOrd, BoundOverlapDisambiguationRuleSet};
 use crate::intervals::relative::{
     RelativeBoundPair,
     RelativeEndBound,
@@ -148,8 +149,8 @@ fn run() {
     let mut first_layer_bounds = first_layer_data.rel_bounds_iter().collect::<Vec<_>>();
     let mut second_layer_bounds = second_layer_data.rel_bounds_iter().collect::<Vec<_>>();
 
-    first_layer_bounds.sort();
-    second_layer_bounds.sort();
+    first_layer_bounds.sort_by(|a, b| a.bound_cmp(b).disambiguate(BoundOverlapDisambiguationRuleSet::Strict));
+    second_layer_bounds.sort_by(|a, b| a.bound_cmp(b).disambiguate(BoundOverlapDisambiguationRuleSet::Strict));
 
     // first layer:    [--1--]            [--3--]             (--6--]  [--7--]  [---9--)(--11-] [-13-]
     // second layer:   :     :   [--2--]  :     (--4--] [--5--]     :  :  [---8---] [10)(--12---]

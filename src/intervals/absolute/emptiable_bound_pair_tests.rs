@@ -36,7 +36,7 @@ fn from_range() -> Result<(), Box<dyn Error>> {
     assert_eq!(
         EmptiableAbsoluteBoundPair::from_range(start..),
         AbsoluteBoundPair::new(
-            AbsoluteStartBound::Finite(AbsoluteFiniteBoundPosition::new(start)),
+            AbsoluteFiniteBoundPosition::new(start).to_start_bound(),
             AbsoluteEndBound::InfiniteFuture
         )
         .to_emptiable()
@@ -359,16 +359,14 @@ mod to_emptiable_interval {
 
     #[test]
     fn bounded() -> Result<(), Box<dyn Error>> {
-        let start = "2026-01-01 00:00:00Z".parse::<Timestamp>()?;
-        let end = "2026-01-02 00:00:00Z".parse::<Timestamp>()?;
+        let start =
+            AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_finite_start_bound();
+        let end = AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_finite_end_bound();
 
         assert_eq!(
-            AbsoluteBoundPair::new(
-                AbsoluteFiniteBoundPosition::new(start).to_start_bound(),
-                AbsoluteFiniteBoundPosition::new(end).to_end_bound(),
-            )
-            .to_emptiable()
-            .to_emptiable_interval(),
+            AbsoluteBoundPair::new(start.to_start_bound(), end.to_end_bound(),)
+                .to_emptiable()
+                .to_emptiable_interval(),
             EmptiableAbsoluteInterval::Bound(AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(start, end)))
         );
         Ok(())
@@ -385,10 +383,9 @@ mod to_emptiable_interval {
             )
             .to_emptiable()
             .to_emptiable_interval(),
-            EmptiableAbsoluteInterval::Bound(AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
-                reference,
-                OpeningDirection::ToFuture
-            )))
+            EmptiableAbsoluteInterval::Bound(AbsoluteInterval::HalfBounded(
+                HalfBoundedAbsoluteInterval::new_from_time(reference, OpeningDirection::ToFuture)
+            ))
         );
         Ok(())
     }
@@ -922,16 +919,12 @@ fn from_bound_pair() {
 
 #[test]
 fn from_bounded_interval() -> Result<(), Box<dyn Error>> {
+    let start = AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_finite_start_bound();
+    let end = AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_finite_end_bound();
+
     assert_eq!(
-        EmptiableAbsoluteBoundPair::from(BoundedAbsoluteInterval::new(
-            "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
-            "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
-        )),
-        AbsoluteBoundPair::new(
-            AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-            AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound()
-        )
-        .to_emptiable()
+        EmptiableAbsoluteBoundPair::from(BoundedAbsoluteInterval::new(start, end,)),
+        AbsoluteBoundPair::new(start.to_start_bound(), end.to_end_bound()).to_emptiable()
     );
     Ok(())
 }
@@ -954,34 +947,25 @@ fn from_half_bounded_interval() -> Result<(), Box<dyn Error>> {
 
 #[test]
 fn from_interval() -> Result<(), Box<dyn Error>> {
+    let start = AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_finite_start_bound();
+    let end = AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_finite_end_bound();
+
     assert_eq!(
-        EmptiableAbsoluteBoundPair::from(AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
-            "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
-            "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
-        ))),
-        AbsoluteBoundPair::new(
-            AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-            AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
-        )
-        .to_emptiable()
+        EmptiableAbsoluteBoundPair::from(AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(start, end,))),
+        AbsoluteBoundPair::new(start.to_start_bound(), end.to_end_bound(),).to_emptiable()
     );
     Ok(())
 }
 
 #[test]
 fn from_emptiable_interval() -> Result<(), Box<dyn Error>> {
+    let start = AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_finite_start_bound();
+    let end = AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_finite_end_bound();
     assert_eq!(
         EmptiableAbsoluteBoundPair::from(EmptiableAbsoluteInterval::Bound(AbsoluteInterval::Bounded(
-            BoundedAbsoluteInterval::new(
-                "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
-                "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
-            )
+            BoundedAbsoluteInterval::new(start, end,)
         ))),
-        AbsoluteBoundPair::new(
-            AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-            AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
-        )
-        .to_emptiable()
+        AbsoluteBoundPair::new(start.to_start_bound(), end.to_end_bound(),).to_emptiable()
     );
     assert_eq!(
         EmptiableAbsoluteBoundPair::from(EmptiableAbsoluteInterval::Empty(EmptyInterval)),

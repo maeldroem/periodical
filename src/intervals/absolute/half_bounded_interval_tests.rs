@@ -20,6 +20,7 @@ use crate::intervals::meta::{
     BoundInclusivity,
     Duration as IntervalDuration,
     HasDuration,
+    HasOpeningDirection,
     HasOpenness,
     HasRelativity,
     IsEmpty,
@@ -584,7 +585,7 @@ mod try_from_interval {
 
     #[test]
     fn bounded() -> Result<(), Box<dyn Error>> {
-        let bounded = BoundedAbsoluteInterval::new(
+        let bounded = BoundedAbsoluteInterval::new_from_times(
             "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
             "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
         );
@@ -624,7 +625,7 @@ mod try_from_emptiable_interval {
 
     #[test]
     fn bound_bounded() -> Result<(), Box<dyn Error>> {
-        let bounded = BoundedAbsoluteInterval::new(
+        let bounded = BoundedAbsoluteInterval::new_from_times(
             "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
             "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
         );

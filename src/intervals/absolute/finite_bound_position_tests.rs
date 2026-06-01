@@ -21,7 +21,8 @@ fn new() -> Result<(), Box<dyn Error>> {
 #[test]
 fn new_with_inclusivity() -> Result<(), Box<dyn Error>> {
     let time = "2025-01-01 00:00:00Z".parse::<Timestamp>()?;
-    let abs_finite_bound_position = AbsoluteFiniteBoundPosition::new_with_inclusivity(time, BoundInclusivity::Exclusive);
+    let abs_finite_bound_position =
+        AbsoluteFiniteBoundPosition::new_with_inclusivity(time, BoundInclusivity::Exclusive);
 
     assert_eq!(abs_finite_bound_position.time(), time);
     assert_eq!(abs_finite_bound_position.inclusivity(), BoundInclusivity::Exclusive);
@@ -69,10 +70,13 @@ fn to_start_bound() -> Result<(), Box<dyn Error>> {
             BoundInclusivity::Exclusive
         )
         .to_start_bound(),
-        AbsoluteStartBound::Finite(AbsoluteFiniteBoundPosition::new_with_inclusivity(
-            "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
-            BoundInclusivity::Exclusive
-        ))
+        AbsoluteStartBound::Finite(
+            AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
+                BoundInclusivity::Exclusive
+            )
+            .to_finite_start_bound()
+        )
     );
     Ok(())
 }
@@ -85,10 +89,13 @@ fn to_end_bound() -> Result<(), Box<dyn Error>> {
             BoundInclusivity::Exclusive
         )
         .to_end_bound(),
-        AbsoluteEndBound::Finite(AbsoluteFiniteBoundPosition::new_with_inclusivity(
-            "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
-            BoundInclusivity::Exclusive
-        ))
+        AbsoluteEndBound::Finite(
+            AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
+                BoundInclusivity::Exclusive
+            )
+            .to_finite_end_bound()
+        )
     );
     Ok(())
 }
@@ -115,8 +122,9 @@ mod ord {
     #[test]
     fn greater_times() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteFiniteBoundPosition::new("2025-01-02 00:00:00Z".parse::<Timestamp>()?)
-                .cmp(&AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?)),
+            AbsoluteFiniteBoundPosition::new("2025-01-02 00:00:00Z".parse::<Timestamp>()?).cmp(
+                &AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?)
+            ),
             Ordering::Greater
         );
         Ok(())
@@ -125,8 +133,9 @@ mod ord {
     #[test]
     fn less_times() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?)
-                .cmp(&AbsoluteFiniteBoundPosition::new("2025-01-02 00:00:00Z".parse::<Timestamp>()?)),
+            AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).cmp(
+                &AbsoluteFiniteBoundPosition::new("2025-01-02 00:00:00Z".parse::<Timestamp>()?)
+            ),
             Ordering::Less
         );
         Ok(())

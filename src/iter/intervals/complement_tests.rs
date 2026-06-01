@@ -16,7 +16,7 @@ use crate::ops::ComplementResult;
 #[test]
 fn create() -> Result<(), Box<dyn Error>> {
     let intervals = [
-        AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
+        AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new_from_times(
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
         )),
@@ -35,7 +35,7 @@ fn create() -> Result<(), Box<dyn Error>> {
 #[test]
 fn run() -> Result<(), Box<dyn Error>> {
     let intervals = [
-        AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
+        AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new_from_times(
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
         )),
@@ -81,7 +81,7 @@ fn run() -> Result<(), Box<dyn Error>> {
 #[test]
 fn run_reverse() -> Result<(), Box<dyn Error>> {
     let intervals = [
-        AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
+        AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new_from_times(
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
         )),

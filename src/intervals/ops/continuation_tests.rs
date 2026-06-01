@@ -110,7 +110,7 @@ fn future_continuation_half_bounded_to_future_interval() -> Result<(), Box<dyn E
 #[test]
 fn past_continuation_bounded_interval() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        BoundedAbsoluteInterval::new(
+        BoundedAbsoluteInterval::new_from_times(
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
         )
@@ -128,7 +128,7 @@ fn past_continuation_bounded_interval() -> Result<(), Box<dyn Error>> {
 #[test]
 fn future_continuation_bounded_interval() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        BoundedAbsoluteInterval::new(
+        BoundedAbsoluteInterval::new_from_times(
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
         )

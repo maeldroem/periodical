@@ -445,7 +445,8 @@ pub fn unite_abs_bound_pair(a: &AbsoluteBoundPair, b: &AbsoluteBoundPair) -> Uni
         return UnionResult::Separate;
     }
 
-    UnionResult::United(a.extend(b))
+    todo!("wait for extend to be fixed before uncommenting");
+    // UnionResult::United(a.extend(b))
 }
 
 /// Unites an [`AbsoluteBoundPair`] with an [`EmptiableAbsoluteBoundPair`]
@@ -463,7 +464,8 @@ pub fn unite_abs_bound_pair_with_emptiable_abs_bound_pair(
         return UnionResult::Separate;
     }
 
-    UnionResult::United(a.extend(b))
+    todo!("wait for extend to be fixed before uncommenting");
+    // UnionResult::United(a.extend(b))
 }
 
 /// Unites two [`EmptiableAbsoluteBoundPair`]
@@ -481,7 +483,8 @@ pub fn unite_emptiable_abs_bound_pair(
         return UnionResult::Separate;
     }
 
-    UnionResult::United(a.extend(b))
+    todo!("wait for extend to be fixed before uncommenting");
+    // UnionResult::United(a.extend(b))
 }
 
 /// Unites two [`RelativeBoundPair`]
@@ -493,7 +496,8 @@ pub fn unite_rel_bound_pair(a: &RelativeBoundPair, b: &RelativeBoundPair) -> Uni
         return UnionResult::Separate;
     }
 
-    UnionResult::United(a.extend(b))
+    todo!("wait for extend to be fixed before uncommenting");
+    // UnionResult::United(a.extend(b))
 }
 
 /// Unites an [`RelativeBoundPair`] with an [`EmptiableRelativeBoundPair`]
@@ -511,7 +515,8 @@ pub fn unite_rel_bound_pair_with_emptiable_rel_bound_pair(
         return UnionResult::Separate;
     }
 
-    UnionResult::United(a.extend(b))
+    todo!("wait for extend to be fixed before uncommenting");
+    // UnionResult::United(a.extend(b))
 }
 
 /// Unites two [`EmptiableRelativeBoundPair`]
@@ -529,5 +534,6 @@ pub fn unite_emptiable_rel_bound_pair(
         return UnionResult::Separate;
     }
 
-    UnionResult::United(a.extend(b))
+    todo!("wait for extend to be fixed before uncommenting");
+    // UnionResult::United(a.extend(b))
 }

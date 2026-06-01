@@ -256,7 +256,7 @@ mod unbounded_interval {
             Ok(UnboundedInterval),
         );
         assert_eq!(
-            UnboundedInterval::try_from(AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
+            UnboundedInterval::try_from(AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new_from_times(
                 "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
                 "2025-01-02 00:00:00Z".parse::<Timestamp>()?,
             ))),
@@ -273,7 +273,7 @@ mod unbounded_interval {
             Ok(UnboundedInterval),
         );
         assert_eq!(
-            UnboundedInterval::try_from(RelativeInterval::Bounded(BoundedRelativeInterval::new(
+            UnboundedInterval::try_from(RelativeInterval::Bounded(BoundedRelativeInterval::new_from_offsets(
                 SignedDuration::from_hours(1),
                 SignedDuration::from_hours(5),
             ))),
@@ -289,7 +289,7 @@ mod unbounded_interval {
         );
         assert_eq!(
             UnboundedInterval::try_from(
-                AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
+                AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new_from_times(
                     "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
                     "2025-01-02 00:00:00Z".parse::<Timestamp>()?,
                 ))
@@ -313,7 +313,7 @@ mod unbounded_interval {
         );
         assert_eq!(
             UnboundedInterval::try_from(
-                RelativeInterval::Bounded(BoundedRelativeInterval::new(
+                RelativeInterval::Bounded(BoundedRelativeInterval::new_from_offsets(
                     SignedDuration::from_hours(2),
                     SignedDuration::from_hours(8)
                 ))

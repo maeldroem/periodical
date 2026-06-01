@@ -3,8 +3,14 @@ use std::error::Error;
 use jiff::Zoned;
 
 use super::absolute::*;
-use crate::intervals::absolute::{AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBoundPosition, AbsoluteStartBound};
+use crate::intervals::absolute::{
+    AbsoluteBoundPair,
+    AbsoluteEndBound,
+    AbsoluteFiniteBoundPosition,
+    AbsoluteStartBound,
+};
 use crate::intervals::meta::BoundInclusivity;
+use crate::intervals::ops::{BoundOrd, BoundOverlapDisambiguationRuleSet};
 use crate::iter::intervals::bounds::AbsoluteBoundsIteratorDispatcher;
 use crate::iter::intervals::layered_bounds::abs_state_change::LayeredBoundsStateChangeAtAbsoluteBound;
 use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
@@ -52,13 +58,17 @@ fn run() -> Result<(), Box<dyn Error>> {
     let first_layer_data = [
         // 1
         AbsoluteBoundPair::new(
-            AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_start_bound(),
-            AbsoluteFiniteBoundPosition::new("2025-01-05 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_end_bound(),
+            AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                .to_start_bound(),
+            AbsoluteFiniteBoundPosition::new("2025-01-05 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                .to_end_bound(),
         ),
         // 3
         AbsoluteBoundPair::new(
-            AbsoluteFiniteBoundPosition::new("2025-01-17 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_start_bound(),
-            AbsoluteFiniteBoundPosition::new("2025-01-20 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_end_bound(),
+            AbsoluteFiniteBoundPosition::new("2025-01-17 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                .to_start_bound(),
+            AbsoluteFiniteBoundPosition::new("2025-01-20 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                .to_end_bound(),
         ),
         // 6
         AbsoluteBoundPair::new(
@@ -67,16 +77,20 @@ fn run() -> Result<(), Box<dyn Error>> {
                 BoundInclusivity::Exclusive,
             )
             .to_start_bound(),
-            AbsoluteFiniteBoundPosition::new("2025-02-10 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_end_bound(),
+            AbsoluteFiniteBoundPosition::new("2025-02-10 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                .to_end_bound(),
         ),
         // 7
         AbsoluteBoundPair::new(
-            AbsoluteFiniteBoundPosition::new("2025-02-15 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_start_bound(),
-            AbsoluteFiniteBoundPosition::new("2025-02-25 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_end_bound(),
+            AbsoluteFiniteBoundPosition::new("2025-02-15 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                .to_start_bound(),
+            AbsoluteFiniteBoundPosition::new("2025-02-25 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                .to_end_bound(),
         ),
         // 9
         AbsoluteBoundPair::new(
-            AbsoluteFiniteBoundPosition::new("2025-02-26 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_start_bound(),
+            AbsoluteFiniteBoundPosition::new("2025-02-26 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                .to_start_bound(),
             AbsoluteFiniteBoundPosition::new_with_inclusivity(
                 "2025-03-10 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
@@ -90,20 +104,25 @@ fn run() -> Result<(), Box<dyn Error>> {
                 BoundInclusivity::Exclusive,
             )
             .to_start_bound(),
-            AbsoluteFiniteBoundPosition::new("2025-03-15 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_end_bound(),
+            AbsoluteFiniteBoundPosition::new("2025-03-15 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                .to_end_bound(),
         ),
         // 13
         AbsoluteBoundPair::new(
-            AbsoluteFiniteBoundPosition::new("2025-03-20 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_start_bound(),
-            AbsoluteFiniteBoundPosition::new("2025-03-25 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_end_bound(),
+            AbsoluteFiniteBoundPosition::new("2025-03-20 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                .to_start_bound(),
+            AbsoluteFiniteBoundPosition::new("2025-03-25 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                .to_end_bound(),
         ),
     ];
 
     let second_layer_data = [
         // 2
         AbsoluteBoundPair::new(
-            AbsoluteFiniteBoundPosition::new("2025-01-10 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_start_bound(),
-            AbsoluteFiniteBoundPosition::new("2025-01-15 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_end_bound(),
+            AbsoluteFiniteBoundPosition::new("2025-01-10 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                .to_start_bound(),
+            AbsoluteFiniteBoundPosition::new("2025-01-15 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                .to_end_bound(),
         ),
         // 4
         AbsoluteBoundPair::new(
@@ -112,21 +131,27 @@ fn run() -> Result<(), Box<dyn Error>> {
                 BoundInclusivity::Exclusive,
             )
             .to_start_bound(),
-            AbsoluteFiniteBoundPosition::new("2025-01-25 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_end_bound(),
+            AbsoluteFiniteBoundPosition::new("2025-01-25 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                .to_end_bound(),
         ),
         // 5
         AbsoluteBoundPair::new(
-            AbsoluteFiniteBoundPosition::new("2025-01-30 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_start_bound(),
-            AbsoluteFiniteBoundPosition::new("2025-02-05 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_end_bound(),
+            AbsoluteFiniteBoundPosition::new("2025-01-30 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                .to_start_bound(),
+            AbsoluteFiniteBoundPosition::new("2025-02-05 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                .to_end_bound(),
         ),
         // 8
         AbsoluteBoundPair::new(
-            AbsoluteFiniteBoundPosition::new("2025-02-20 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_start_bound(),
-            AbsoluteFiniteBoundPosition::new("2025-03-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_end_bound(),
+            AbsoluteFiniteBoundPosition::new("2025-02-20 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                .to_start_bound(),
+            AbsoluteFiniteBoundPosition::new("2025-03-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                .to_end_bound(),
         ),
         // 10
         AbsoluteBoundPair::new(
-            AbsoluteFiniteBoundPosition::new("2025-03-04 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_start_bound(),
+            AbsoluteFiniteBoundPosition::new("2025-03-04 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                .to_start_bound(),
             AbsoluteFiniteBoundPosition::new_with_inclusivity(
                 "2025-03-10 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
@@ -140,15 +165,16 @@ fn run() -> Result<(), Box<dyn Error>> {
                 BoundInclusivity::Exclusive,
             )
             .to_start_bound(),
-            AbsoluteFiniteBoundPosition::new("2025-03-20 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_end_bound(),
+            AbsoluteFiniteBoundPosition::new("2025-03-20 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                .to_end_bound(),
         ),
     ];
 
     let mut first_layer_bounds = first_layer_data.abs_bounds_iter().collect::<Vec<_>>();
     let mut second_layer_bounds = second_layer_data.abs_bounds_iter().collect::<Vec<_>>();
 
-    first_layer_bounds.sort();
-    second_layer_bounds.sort();
+    first_layer_bounds.sort_by(|a, b| a.bound_cmp(b).disambiguate(BoundOverlapDisambiguationRuleSet::Strict));
+    second_layer_bounds.sort_by(|a, b| a.bound_cmp(b).disambiguate(BoundOverlapDisambiguationRuleSet::Strict));
 
     // first layer:    [--1--]            [--3--]             (--6--]  [--7--]  [---9--)(--11-] [-13-]
     // second layer:   :     :   [--2--]  :     (--4--] [--5--]     :  :  [---8---] [10)(--12---]
