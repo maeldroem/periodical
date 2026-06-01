@@ -77,6 +77,7 @@ TODO: once all done, PR onto dev to sync, then continue unit tests
 - Added finite variant for `*Bound`
 - Added bound variants for cmp traits (`PartialEq`, `Eq`, `PartialOrd`, `Ord`) in order to compare bounds
   semantically rather than syntactically
+- Added `bound_max` and `bound_min` functions to complete bound comparison toolbox
 
 ## Changed
 
