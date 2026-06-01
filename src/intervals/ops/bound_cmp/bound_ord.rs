@@ -57,8 +57,8 @@ use serde::{Deserialize, Serialize};
 use crate::intervals::ops::BoundEq;
 use crate::intervals::ops::bound_overlap_ambiguity::{
     BoundOverlapAmbiguity,
-    DisambiguatedBoundOverlap,
     BoundOverlapDisambiguationRuleSet,
+    DisambiguatedBoundOverlap,
 };
 
 /// [`Ordering`] for bounds with support for [`BoundOverlapAmbiguity`]
@@ -484,6 +484,7 @@ where
 }
 
 pub trait BoundOrdExtremaOps: BoundOrd {
+    #[must_use]
     fn bound_max(self, other: Self, rule_set: BoundOverlapDisambiguationRuleSet) -> Self
     where
         Self: Sized,
@@ -491,6 +492,7 @@ pub trait BoundOrdExtremaOps: BoundOrd {
         if other.bound_lt(&self, rule_set) { self } else { other }
     }
 
+    #[must_use]
     fn bound_min(self, other: Self, rule_set: BoundOverlapDisambiguationRuleSet) -> Self
     where
         Self: Sized,
@@ -498,6 +500,7 @@ pub trait BoundOrdExtremaOps: BoundOrd {
         if other.bound_lt(&self, rule_set) { other } else { self }
     }
 
+    #[must_use]
     fn bound_clamp(self, min: Self, max: Self, rule_set: BoundOverlapDisambiguationRuleSet) -> Self
     where
         Self: Sized,
@@ -511,4 +514,20 @@ pub trait BoundOrdExtremaOps: BoundOrd {
             self
         }
     }
+}
+
+#[must_use]
+pub fn bound_max<T>(a: T, b: T, rule_set: BoundOverlapDisambiguationRuleSet) -> T
+where
+    T: BoundOrdExtremaOps,
+{
+    a.bound_max(b, rule_set)
+}
+
+#[must_use]
+pub fn bound_min<T>(a: T, b: T, rule_set: BoundOverlapDisambiguationRuleSet) -> T
+where
+    T: BoundOrdExtremaOps,
+{
+    a.bound_min(b, rule_set)
 }
