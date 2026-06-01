@@ -23,6 +23,13 @@ TODO: rework docs and examples
 TODO: add missing conversions, rework conversions
 TODO: once all done, PR onto dev to sync, then continue unit tests
 
+- Checked, fixed, and completed documentation for…
+  - `intervals`
+    - `absolute`
+      - `bound_pair`
+    - `relative`
+      - `bound_pair`
+
 - Tests to complete code coverage for `time`
 - Tests to complete code coverage for `ops`
 - Tests to complete code coverage for `intervals`
