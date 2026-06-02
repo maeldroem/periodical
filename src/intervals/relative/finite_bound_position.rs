@@ -138,8 +138,9 @@ impl RelativeFiniteBoundPosition {
         self.inclusivity = inclusivity;
     }
 
+    #[must_use]
     pub fn to_finite_start_bound(self) -> RelativeFiniteStartBound {
-        todo!()
+        RelativeFiniteStartBound::new(self)
     }
 
     /// Wraps the finite bound in an [`RelativeStartBound`]
@@ -148,8 +149,9 @@ impl RelativeFiniteBoundPosition {
         RelativeStartBound::from(self)
     }
 
+    #[must_use]
     pub fn to_finite_end_bound(self) -> RelativeFiniteEndBound {
-        todo!()
+        RelativeFiniteEndBound::new(self)
     }
 
     /// Wraps the finite bound in an [`RelativeEndBound`]

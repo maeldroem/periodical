@@ -894,7 +894,7 @@ fn from_half_bounded_interval() {
 #[test]
 fn from_interval() {
     assert_eq!(
-        EmptiableRelativeBoundPair::from(RelativeInterval::Bounded(BoundedRelativeInterval::new_from_offsets(
+        EmptiableRelativeBoundPair::from(RelativeInterval::Bounded(BoundedRelativeInterval::from_offsets(
             SignedDuration::from_hours(1),
             SignedDuration::from_hours(2),
         ))),
@@ -910,7 +910,7 @@ fn from_interval() {
 fn from_emptiable_interval() {
     assert_eq!(
         EmptiableRelativeBoundPair::from(EmptiableRelativeInterval::Bound(RelativeInterval::Bounded(
-            BoundedRelativeInterval::new_from_offsets(SignedDuration::from_hours(1), SignedDuration::from_hours(2),)
+            BoundedRelativeInterval::from_offsets(SignedDuration::from_hours(1), SignedDuration::from_hours(2),)
         ))),
         RelativeBoundPair::new(
             RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),

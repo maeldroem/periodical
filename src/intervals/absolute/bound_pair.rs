@@ -132,8 +132,14 @@ impl AbsoluteBoundPair {
     /// let bound_pair = AbsoluteBoundPair::new(start, end);
     ///
     /// // Now the start and end are in chronological order
-    /// assert_eq!(bound_pair.start(), end);
-    /// assert_eq!(bound_pair.end(), start);
+    /// assert_eq!(
+    ///     bound_pair.start(),
+    ///     AbsoluteFiniteBoundPosition::new(end_time).to_start_bound()
+    /// );
+    /// assert_eq!(
+    ///     bound_pair.end(),
+    ///     AbsoluteFiniteBoundPosition::new(start_time).to_end_bound()
+    /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]

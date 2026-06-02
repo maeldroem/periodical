@@ -500,7 +500,7 @@ mod try_from_interval {
     #[test]
     fn bounded() {
         let bounded =
-            BoundedRelativeInterval::new_from_offsets(SignedDuration::from_hours(1), SignedDuration::from_hours(2));
+            BoundedRelativeInterval::from_offsets(SignedDuration::from_hours(1), SignedDuration::from_hours(2));
 
         assert_eq!(
             HalfBoundedRelativeInterval::try_from(bounded.to_interval()),
@@ -534,7 +534,7 @@ mod try_from_emptiable_interval {
     #[test]
     fn bound_bounded() {
         let bounded =
-            BoundedRelativeInterval::new_from_offsets(SignedDuration::from_hours(1), SignedDuration::from_hours(2));
+            BoundedRelativeInterval::from_offsets(SignedDuration::from_hours(1), SignedDuration::from_hours(2));
 
         assert_eq!(
             HalfBoundedRelativeInterval::try_from(bounded.to_emptiable_interval()),

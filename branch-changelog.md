@@ -28,9 +28,11 @@ TODO: once all done, PR onto dev to sync, then continue unit tests
     - `absolute`
       - `bound_pair`
       - `bound`
+      - `bounded_interval`
     - `relative`
       - `bound_pair`
       - `bound`
+      - `bounded_interval`
 
 - Tests to complete code coverage for `time`
 - Tests to complete code coverage for `ops`
@@ -80,6 +82,9 @@ TODO: once all done, PR onto dev to sync, then continue unit tests
 - Added bound variants for cmp traits (`PartialEq`, `Eq`, `PartialOrd`, `Ord`) in order to compare bounds
   semantically rather than syntactically
 - Added `bound_max` and `bound_min` functions to complete bound comparison toolbox
+- Added length-related creation methods on absolute bounded intervals
+- Added `unchecked_from_length_and_inclusivities` on absolute and relative bounded intervals
+- Added `set_length_from_start` and `set_length_from_end` on absolute bounded intervals
 
 ## Changed
 

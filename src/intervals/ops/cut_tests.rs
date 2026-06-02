@@ -224,7 +224,7 @@ mod cut_at {
                 CutType::new(BoundInclusivity::Inclusive, BoundInclusivity::Exclusive)
             ),
             CutResult::Cut(
-                AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new_from_times_and_inclusivities(
+                AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times_and_inclusivities(
                     "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Inclusive,
                     "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
@@ -244,7 +244,7 @@ mod cut_at {
     #[test]
     fn cut_at_outside_before_bounded_interval() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            BoundedAbsoluteInterval::new_from_times(
+            BoundedAbsoluteInterval::from_times(
                 "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
             )
@@ -261,7 +261,7 @@ mod cut_at {
     #[test]
     fn cut_at_outside_after_bounded_interval() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            BoundedAbsoluteInterval::new_from_times(
+            BoundedAbsoluteInterval::from_times(
                 "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
             )
@@ -278,7 +278,7 @@ mod cut_at {
     #[test]
     fn cut_at_inside_bounded_interval() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            BoundedAbsoluteInterval::new_from_times(
+            BoundedAbsoluteInterval::from_times(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
             )
@@ -287,13 +287,13 @@ mod cut_at {
                 CutType::new(BoundInclusivity::Exclusive, BoundInclusivity::Exclusive)
             ),
             CutResult::Cut(
-                BoundedAbsoluteInterval::new_from_times_and_inclusivities(
+                BoundedAbsoluteInterval::from_times_and_inclusivities(
                     "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Inclusive,
                     "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                 ),
-                BoundedAbsoluteInterval::new_from_times_and_inclusivities(
+                BoundedAbsoluteInterval::from_times_and_inclusivities(
                     "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                     "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
@@ -308,7 +308,7 @@ mod cut_at {
     #[test]
     fn cut_at_inclusive_edge_bounded_interval() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            BoundedAbsoluteInterval::new_from_times(
+            BoundedAbsoluteInterval::from_times(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             )
@@ -317,13 +317,13 @@ mod cut_at {
                 CutType::new(BoundInclusivity::Inclusive, BoundInclusivity::Exclusive)
             ),
             CutResult::Cut(
-                BoundedAbsoluteInterval::new_from_times_and_inclusivities(
+                BoundedAbsoluteInterval::from_times_and_inclusivities(
                     "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Inclusive,
                     "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Inclusive,
                 ),
-                BoundedAbsoluteInterval::new_from_times_and_inclusivities(
+                BoundedAbsoluteInterval::from_times_and_inclusivities(
                     "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                     "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
@@ -338,7 +338,7 @@ mod cut_at {
     #[test]
     fn cut_at_inclusive_edge_bounded_interval_would_create_illegal_interval() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            BoundedAbsoluteInterval::new_from_times(
+            BoundedAbsoluteInterval::from_times(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
             )
@@ -355,7 +355,7 @@ mod cut_at {
     #[test]
     fn cut_at_exclusive_edge_bounded_interval() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            BoundedAbsoluteInterval::new_from_times_and_inclusivities(
+            BoundedAbsoluteInterval::from_times_and_inclusivities(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
                 "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
