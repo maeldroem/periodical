@@ -1,8 +1,8 @@
 //! Relative bound representation
 //!
-//! Represents a relative bound regardless of its source (start/end).
+//! Represents a relative bound regardless of its extremality (start/end).
 //! This is particularly useful for representing relative bounds of an interval
-//! as a single type, while still conserving its source.
+//! as a single type, while still conserving their extremalities.
 
 #[cfg(feature = "arbitrary")]
 use arbitrary::Arbitrary;
@@ -19,11 +19,11 @@ use crate::intervals::relative::{
     RelativeStartBound,
 };
 
-/// Enum for relative start and end bounds
+/// Relative start/end bound
 ///
-/// Represents a relative bound regardless of its source (start/end).
+/// Represents a relative bound regardless of its extremality (start/end).
 /// This is particularly useful for representing relative bounds of an interval
-/// as a single type, while still conserving its source.
+/// as a single type, while still conserving their extremalities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
@@ -108,7 +108,7 @@ impl RelativeBound {
     ///     start.start(),
     ///     Some(RelativeFiniteBoundPosition::new(start_offset).to_start_bound()),
     /// );
-    /// assert_eq!(end.start(), None,);
+    /// assert_eq!(end.start(), None);
     /// ```
     #[must_use]
     pub fn start(self) -> Option<RelativeStartBound> {
@@ -143,7 +143,7 @@ impl RelativeBound {
     ///     end.end(),
     ///     Some(RelativeFiniteBoundPosition::new(end_offset).to_end_bound()),
     /// );
-    /// assert_eq!(start.end(), None,);
+    /// assert_eq!(start.end(), None);
     /// ```
     #[must_use]
     pub fn end(self) -> Option<RelativeEndBound> {
@@ -153,13 +153,13 @@ impl RelativeBound {
         }
     }
 
-    /// Returns the opposite bound type with the opposite inclusivity
+    /// Returns the opposite bound type with opposite inclusivity
     ///
-    /// Simply use [`RelativeStartBound::opposite`] for start bounds,
+    /// Simply uses [`RelativeStartBound::opposite`] for start bounds,
     /// and [`RelativeEndBound::opposite`] for end bounds, and then wraps the
     /// result in [`RelativeBound`].
     ///
-    /// If the bound is infinite, the method returns [`None`].
+    /// Returns [`None`] if the bound is infinite.
     ///
     /// # Examples
     ///
