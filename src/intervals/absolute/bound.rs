@@ -2,7 +2,7 @@
 //!
 //! Represents an absolute bound regardless of its extremality (start/end).
 //! This is particularly useful for representing absolute bounds of an interval
-//! as a single type, while still conserving its extremality.
+//! as a single type, while still conserving their extremalities.
 
 #[cfg(feature = "arbitrary")]
 use arbitrary::Arbitrary;
@@ -19,11 +19,11 @@ use crate::intervals::absolute::{
 use crate::intervals::meta::{BoundExtremality, HasBoundExtremality};
 use crate::intervals::ops::{BoundEq, BoundOrd, BoundOrdExtremaOps, BoundOrdering, BoundOverlapDisambiguationRuleSet};
 
-/// Enum for absolute start and end bounds
+/// Absolute start/end bound
 ///
-/// Represents an absolute bound regardless of its source (start/end).
+/// Represents an absolute bound regardless of its extremality (start/end).
 /// This is particularly useful for representing absolute bounds of an interval
-/// as a single type, while still conserving its source.
+/// as a single type, while still conserving their extremalities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
@@ -115,7 +115,7 @@ impl AbsoluteBound {
     ///     start.start(),
     ///     Some(AbsoluteFiniteBoundPosition::new(start_time).to_start_bound()),
     /// );
-    /// assert_eq!(end.start(), None,);
+    /// assert_eq!(end.start(), None);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
@@ -154,7 +154,7 @@ impl AbsoluteBound {
     ///     end.end(),
     ///     Some(AbsoluteFiniteBoundPosition::new(end_time).to_end_bound()),
     /// );
-    /// assert_eq!(start.end(), None,);
+    /// assert_eq!(start.end(), None);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
@@ -165,13 +165,13 @@ impl AbsoluteBound {
         }
     }
 
-    /// Returns the opposite bound type with the opposite inclusivity
+    /// Returns the opposite bound type with opposite inclusivity
     ///
-    /// Simply use [`AbsoluteStartBound::opposite`] for start bounds,
+    /// Simply uses [`AbsoluteStartBound::opposite`] for start bounds,
     /// and [`AbsoluteEndBound::opposite`] for end bounds, and then wraps the
     /// result in [`AbsoluteBound`].
     ///
-    /// If the bound is infinite, the method returns [`None`].
+    /// Returns [`None`] if the bound is infinite.
     ///
     /// # Examples
     ///
