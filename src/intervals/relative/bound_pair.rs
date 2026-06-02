@@ -130,8 +130,14 @@ impl RelativeBoundPair {
     /// let bound_pair = RelativeBoundPair::new(start, end);
     ///
     /// // Now the start and end are in chronological order
-    /// assert_eq!(bound_pair.start(), end);
-    /// assert_eq!(bound_pair.end(), start);
+    /// assert_eq!(
+    ///     bound_pair.start(),
+    ///     RelativeFiniteBoundPosition::new(end_offset).to_start_bound()
+    /// );
+    /// assert_eq!(
+    ///     bound_pair.end(),
+    ///     RelativeFiniteBoundPosition::new(start_offset).to_end_bound()
+    /// );
     /// ```
     #[must_use]
     pub fn new(mut start: RelativeStartBound, mut end: RelativeEndBound) -> Self {

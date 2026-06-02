@@ -16,7 +16,7 @@ use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 fn create() -> Result<(), Box<dyn Error>> {
     let intervals = [
         AbsoluteInterval::Unbounded(UnboundedInterval).to_emptiable(),
-        AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new_from_times(
+        AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times(
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
         ))
@@ -38,7 +38,7 @@ fn create() -> Result<(), Box<dyn Error>> {
 fn run() -> Result<(), Box<dyn Error>> {
     let intervals = [
         AbsoluteInterval::Unbounded(UnboundedInterval).to_emptiable(),
-        AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new_from_times(
+        AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times(
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
         ))
@@ -57,7 +57,7 @@ fn run() -> Result<(), Box<dyn Error>> {
         intervals.remove_empty_intervals().collect::<Vec<_>>(),
         vec![
             AbsoluteInterval::Unbounded(UnboundedInterval).to_emptiable(),
-            AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new_from_times(
+            AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
             ))
@@ -77,7 +77,7 @@ fn run() -> Result<(), Box<dyn Error>> {
 fn run_reverse() -> Result<(), Box<dyn Error>> {
     let intervals = [
         AbsoluteInterval::Unbounded(UnboundedInterval).to_emptiable(),
-        AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new_from_times(
+        AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times(
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
         ))
@@ -100,7 +100,7 @@ fn run_reverse() -> Result<(), Box<dyn Error>> {
                 OpeningDirection::ToPast
             ))
             .to_emptiable(),
-            AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new_from_times(
+            AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
             ))
