@@ -37,7 +37,7 @@
 //!     interval.past_continuation(),
 //!     AbsBoundPair::new(
 //!         AbsStartBound::InfinitePast,
-//!         AbsFiniteBoundPos::new_with_inclusivity(
+//!         AbsFiniteBoundPos::new_with_incl(
 //!             "2025-01-01 08:00:00[Europe/Oslo]"
 //!                 .parse::<Zoned>()?
 //!                 .timestamp(),
@@ -50,7 +50,7 @@
 //! assert_eq!(
 //!     interval.future_continuation(),
 //!     AbsBoundPair::new(
-//!         AbsFiniteBoundPos::new_with_inclusivity(
+//!         AbsFiniteBoundPos::new_with_incl(
 //!             "2025-01-01 16:00:00[Europe/Oslo]"
 //!                 .parse::<Zoned>()?
 //!                 .timestamp(),
@@ -130,7 +130,7 @@ use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 ///     interval.past_continuation(),
 ///     AbsBoundPair::new(
 ///         AbsStartBound::InfinitePast,
-///         AbsFiniteBoundPos::new_with_inclusivity(
+///         AbsFiniteBoundPos::new_with_incl(
 ///             "2025-01-01 08:00:00[Europe/Oslo]"
 ///                 .parse::<Zoned>()?
 ///                 .timestamp(),
@@ -143,7 +143,7 @@ use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 /// assert_eq!(
 ///     interval.future_continuation(),
 ///     AbsBoundPair::new(
-///         AbsFiniteBoundPos::new_with_inclusivity(
+///         AbsFiniteBoundPos::new_with_incl(
 ///             "2025-01-01 16:00:00[Europe/Oslo]"
 ///                 .parse::<Zoned>()?
 ///                 .timestamp(),
@@ -191,7 +191,7 @@ pub trait Continuable {
     ///     interval.past_continuation(),
     ///     AbsBoundPair::new(
     ///         AbsStartBound::InfinitePast,
-    ///         AbsFiniteBoundPos::new_with_inclusivity(
+    ///         AbsFiniteBoundPos::new_with_incl(
     ///             "2025-01-01 08:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
@@ -236,7 +236,7 @@ pub trait Continuable {
     /// assert_eq!(
     ///     interval.future_continuation(),
     ///     AbsBoundPair::new(
-    ///         AbsFiniteBoundPos::new_with_inclusivity(
+    ///         AbsFiniteBoundPos::new_with_incl(
     ///             "2025-01-01 16:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),

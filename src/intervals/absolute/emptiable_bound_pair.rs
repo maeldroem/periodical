@@ -107,7 +107,7 @@ impl EmptiableAbsBoundPair {
     /// );
     /// assert_eq!(
     ///     emptiable_bounds.clone().bound().map(|bound_pair| bound_pair.end()),
-    ///     Some(AbsFiniteBoundPos::new_with_inclusivity(end, BoundInclusivity::Exclusive).to_end_bound()),
+    ///     Some(AbsFiniteBoundPos::new_with_incl(end, BoundInclusivity::Exclusive).to_end_bound()),
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```

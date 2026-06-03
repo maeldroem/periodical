@@ -69,7 +69,7 @@ impl LayeredBoundsStateChangeAtAbsBound {
     ///         .to_end_bound(),
     ///     ),
     ///     Some(
-    ///         AbsFiniteBoundPos::new_with_inclusivity(
+    ///         AbsFiniteBoundPos::new_with_incl(
     ///             "2025-01-01 08:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
@@ -111,7 +111,7 @@ impl LayeredBoundsStateChangeAtAbsBound {
     ///         .to_end_bound(),
     ///     ),
     ///     Some(
-    ///         AbsFiniteBoundPos::new_with_inclusivity(
+    ///         AbsFiniteBoundPos::new_with_incl(
     ///             "2025-01-01 08:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
@@ -160,7 +160,7 @@ impl LayeredBoundsStateChangeAtAbsBound {
     ///         .to_end_bound(),
     ///     ),
     ///     Some(
-    ///         AbsFiniteBoundPos::new_with_inclusivity(
+    ///         AbsFiniteBoundPos::new_with_incl(
     ///             "2025-01-01 08:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
@@ -219,7 +219,7 @@ impl LayeredBoundsStateChangeAtAbsBound {
     ///         .to_end_bound(),
     ///     ),
     ///     Some(
-    ///         AbsFiniteBoundPos::new_with_inclusivity(
+    ///         AbsFiniteBoundPos::new_with_incl(
     ///             "2025-01-01 08:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
@@ -232,7 +232,7 @@ impl LayeredBoundsStateChangeAtAbsBound {
     /// assert_eq!(
     ///     change.new_state_start(),
     ///     Some(
-    ///         AbsFiniteBoundPos::new_with_inclusivity(
+    ///         AbsFiniteBoundPos::new_with_incl(
     ///             "2025-01-01 08:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),

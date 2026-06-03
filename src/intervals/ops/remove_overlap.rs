@@ -625,7 +625,7 @@ pub fn remove_overlap_abs_bound_pair(
                 );
             };
 
-            let new_end = AbsFiniteBoundPos::new_with_inclusivity(
+            let new_end = AbsFiniteBoundPos::new_with_incl(
                 finite_bound_position.pos().time(),
                 finite_bound_position.pos().inclusivity().opposite(),
             )
@@ -643,7 +643,7 @@ pub fn remove_overlap_abs_bound_pair(
                 );
             };
 
-            let new_start = AbsFiniteBoundPos::new_with_inclusivity(
+            let new_start = AbsFiniteBoundPos::new_with_incl(
                 finite_bound_position.pos().time(),
                 finite_bound_position.pos().inclusivity().opposite(),
             )
@@ -845,7 +845,7 @@ pub fn remove_overlap_rel_bound_pair(
                 );
             };
 
-            let new_end = RelFiniteBoundPos::new_with_inclusivity(
+            let new_end = RelFiniteBoundPos::new_with_incl(
                 finite_bound_position.pos().offset(),
                 finite_bound_position.pos().inclusivity().opposite(),
             )
@@ -863,7 +863,7 @@ pub fn remove_overlap_rel_bound_pair(
                 );
             };
 
-            let new_start = RelFiniteBoundPos::new_with_inclusivity(
+            let new_start = RelFiniteBoundPos::new_with_incl(
                 finite_bound_position.pos().offset(),
                 finite_bound_position.pos().inclusivity().opposite(),
             )

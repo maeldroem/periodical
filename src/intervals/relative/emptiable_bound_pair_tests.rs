@@ -391,17 +391,17 @@ mod to_emptiable_interval {
 fn emptiable_rel_bound_pair() {
     assert_eq!(
         RelBoundPair::new(
-            RelFiniteBoundPos::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+            RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
                 .to_start_bound(),
-            RelFiniteBoundPos::new_with_inclusivity(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
+            RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
                 .to_end_bound(),
         )
         .to_emptiable()
         .emptiable_rel_bound_pair(),
         RelBoundPair::new(
-            RelFiniteBoundPos::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+            RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
                 .to_start_bound(),
-            RelFiniteBoundPos::new_with_inclusivity(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
+            RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
                 .to_end_bound(),
         )
         .to_emptiable()
@@ -412,15 +412,15 @@ fn emptiable_rel_bound_pair() {
 fn partial_rel_start() {
     assert_eq!(
         RelBoundPair::new(
-            RelFiniteBoundPos::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+            RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
                 .to_start_bound(),
-            RelFiniteBoundPos::new_with_inclusivity(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
+            RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
                 .to_end_bound(),
         )
         .to_emptiable()
         .partial_rel_start(),
         Some(
-            RelFiniteBoundPos::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+            RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
                 .to_start_bound()
         )
     );
@@ -431,15 +431,15 @@ fn partial_rel_start() {
 fn partial_rel_end() {
     assert_eq!(
         RelBoundPair::new(
-            RelFiniteBoundPos::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+            RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
                 .to_start_bound(),
-            RelFiniteBoundPos::new_with_inclusivity(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
+            RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
                 .to_end_bound(),
         )
         .to_emptiable()
         .partial_rel_end(),
         Some(
-            RelFiniteBoundPos::new_with_inclusivity(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
+            RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
                 .to_end_bound()
         )
     );
@@ -794,9 +794,9 @@ fn from_opt_start_incl_opt_end_incl_opt() {
             Some((SignedDuration::from_hours(2), BoundInclusivity::Exclusive))
         ))),
         RelBoundPair::new(
-            RelFiniteBoundPos::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+            RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
                 .to_start_bound(),
-            RelFiniteBoundPos::new_with_inclusivity(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
+            RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
                 .to_end_bound()
         )
         .to_emptiable()

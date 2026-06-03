@@ -54,7 +54,7 @@
 //!         ComplementResult::Split(
 //!             AbsBoundPair::new(
 //!                 AbsStartBound::InfinitePast,
-//!                 AbsFiniteBoundPos::new_with_inclusivity(
+//!                 AbsFiniteBoundPos::new_with_incl(
 //!                     "2025-01-01 08:00:00[Europe/Oslo]"
 //!                         .parse::<Zoned>()?
 //!                         .timestamp(),
@@ -64,7 +64,7 @@
 //!             )
 //!             .to_emptiable(),
 //!             AbsBoundPair::new(
-//!                 AbsFiniteBoundPos::new_with_inclusivity(
+//!                 AbsFiniteBoundPos::new_with_incl(
 //!                     "2025-01-01 11:00:00[Europe/Oslo]"
 //!                         .parse::<Zoned>()?
 //!                         .timestamp(),
@@ -78,7 +78,7 @@
 //!         ComplementResult::Split(
 //!             AbsBoundPair::new(
 //!                 AbsStartBound::InfinitePast,
-//!                 AbsFiniteBoundPos::new_with_inclusivity(
+//!                 AbsFiniteBoundPos::new_with_incl(
 //!                     "2025-01-01 12:00:00[Europe/Oslo]"
 //!                         .parse::<Zoned>()?
 //!                         .timestamp(),
@@ -88,7 +88,7 @@
 //!             )
 //!             .to_emptiable(),
 //!             AbsBoundPair::new(
-//!                 AbsFiniteBoundPos::new_with_inclusivity(
+//!                 AbsFiniteBoundPos::new_with_incl(
 //!                     "2025-01-01 16:00:00[Europe/Oslo]"
 //!                         .parse::<Zoned>()?
 //!                         .timestamp(),

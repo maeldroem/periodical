@@ -579,7 +579,7 @@ pub trait CanPositionPointContainment<P> {
     /// #     CanPositionPointContainment, PointContainmentPosition,
     /// # };
     /// let interval = AbsBoundPair::new(
-    ///     AbsFiniteBoundPos::new_with_inclusivity(
+    ///     AbsFiniteBoundPos::new_with_incl(
     ///         "2025-01-01 08:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),

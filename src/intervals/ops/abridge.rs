@@ -277,7 +277,7 @@ macro_rules! abridgable_impl {
 ///         .bound()
 ///         .ok_or("Empty abridged interval")?
 ///         .start(),
-///     AbsFiniteBoundPos::new_with_inclusivity(first_end_time, BoundInclusivity::Exclusive,)
+///     AbsFiniteBoundPos::new_with_incl(first_end_time, BoundInclusivity::Exclusive,)
 ///         .to_start_bound(),
 /// );
 /// assert_eq!(
@@ -286,7 +286,7 @@ macro_rules! abridgable_impl {
 ///         .bound()
 ///         .ok_or("Empty abridged interval")?
 ///         .end(),
-///     AbsFiniteBoundPos::new_with_inclusivity(second_start_time, BoundInclusivity::Exclusive,)
+///     AbsFiniteBoundPos::new_with_incl(second_start_time, BoundInclusivity::Exclusive,)
 ///         .to_end_bound(),
 /// );
 /// # Ok::<(), Box<dyn Error>>(())
@@ -336,7 +336,7 @@ macro_rules! abridgable_impl {
 ///         .bound()
 ///         .ok_or("Empty abridged interval")?
 ///         .start(),
-///     AbsFiniteBoundPos::new_with_inclusivity(second_start_time, BoundInclusivity::Inclusive,)
+///     AbsFiniteBoundPos::new_with_incl(second_start_time, BoundInclusivity::Inclusive,)
 ///         .to_start_bound(),
 /// );
 /// assert_eq!(
@@ -345,7 +345,7 @@ macro_rules! abridgable_impl {
 ///         .bound()
 ///         .ok_or("Empty abridged interval")?
 ///         .end(),
-///     AbsFiniteBoundPos::new_with_inclusivity(first_end_time, BoundInclusivity::Inclusive,)
+///     AbsFiniteBoundPos::new_with_incl(first_end_time, BoundInclusivity::Inclusive,)
 ///         .to_end_bound(),
 /// );
 /// # Ok::<(), Box<dyn Error>>(())
@@ -371,7 +371,7 @@ macro_rules! abridgable_impl {
 /// let second_end_time = "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp();
 ///
 /// let second_interval = AbsBoundPair::new(
-///     AbsFiniteBoundPos::new_with_inclusivity(
+///     AbsFiniteBoundPos::new_with_incl(
 ///         second_start_time,
 ///         BoundInclusivity::Exclusive,
 ///     ).to_start_bound(),

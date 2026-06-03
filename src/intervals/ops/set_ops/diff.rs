@@ -74,7 +74,7 @@ use crate::ops::{ComplementResult, DifferenceResult};
 ///         AbsFiniteBoundPos::new(
 ///             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///         ).to_start_bound(),
-///         AbsFiniteBoundPos::new_with_inclusivity(
+///         AbsFiniteBoundPos::new_with_incl(
 ///             "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///             BoundInclusivity::Exclusive,
 ///         ).to_end_bound(),
@@ -158,7 +158,7 @@ pub trait Differentiable<Rhs = Self> {
     ///         AbsFiniteBoundPos::new(
     ///             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///         ).to_start_bound(),
-    ///         AbsFiniteBoundPos::new_with_inclusivity(
+    ///         AbsFiniteBoundPos::new_with_incl(
     ///             "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///             BoundInclusivity::Exclusive,
     ///         ).to_end_bound(),
@@ -225,7 +225,7 @@ pub trait Differentiable<Rhs = Self> {
     ///         AbsFiniteBoundPos::new(
     ///             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///         ).to_start_bound(),
-    ///         AbsFiniteBoundPos::new_with_inclusivity(
+    ///         AbsFiniteBoundPos::new_with_incl(
     ///             "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///             BoundInclusivity::Exclusive,
     ///         ).to_end_bound(),

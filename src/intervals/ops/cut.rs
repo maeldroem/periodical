@@ -54,7 +54,7 @@
 //!                     .timestamp()
 //!             )
 //!             .to_start_bound(),
-//!             AbsFiniteBoundPos::new_with_inclusivity(
+//!             AbsFiniteBoundPos::new_with_incl(
 //!                 "2025-01-01 12:00:00[Europe/Oslo]"
 //!                     .parse::<Zoned>()?
 //!                     .timestamp(),
@@ -63,7 +63,7 @@
 //!             .to_end_bound(),
 //!         ),
 //!         AbsBoundPair::new(
-//!             AbsFiniteBoundPos::new_with_inclusivity(
+//!             AbsFiniteBoundPos::new_with_incl(
 //!                 "2025-01-01 12:00:00[Europe/Oslo]"
 //!                     .parse::<Zoned>()?
 //!                     .timestamp(),
@@ -120,7 +120,7 @@
 //!                     .timestamp()
 //!             )
 //!             .to_start_bound(),
-//!             AbsFiniteBoundPos::new_with_inclusivity(
+//!             AbsFiniteBoundPos::new_with_incl(
 //!                 "2025-01-01 16:00:00[Europe/Oslo]"
 //!                     .parse::<Zoned>()?
 //!                     .timestamp(),
@@ -455,7 +455,7 @@ impl<T> CutResult<T> {
 ///                     .timestamp()
 ///             )
 ///             .to_start_bound(),
-///             AbsFiniteBoundPos::new_with_inclusivity(
+///             AbsFiniteBoundPos::new_with_incl(
 ///                 "2025-01-01 12:00:00[Europe/Oslo]"
 ///                     .parse::<Zoned>()?
 ///                     .timestamp(),
@@ -464,7 +464,7 @@ impl<T> CutResult<T> {
 ///             .to_end_bound(),
 ///         ),
 ///         AbsBoundPair::new(
-///             AbsFiniteBoundPos::new_with_inclusivity(
+///             AbsFiniteBoundPos::new_with_incl(
 ///                 "2025-01-01 12:00:00[Europe/Oslo]"
 ///                     .parse::<Zoned>()?
 ///                     .timestamp(),
@@ -521,7 +521,7 @@ impl<T> CutResult<T> {
 ///                     .timestamp()
 ///             )
 ///             .to_start_bound(),
-///             AbsFiniteBoundPos::new_with_inclusivity(
+///             AbsFiniteBoundPos::new_with_incl(
 ///                 "2025-01-01 16:00:00[Europe/Oslo]"
 ///                     .parse::<Zoned>()?
 ///                     .timestamp(),
@@ -623,7 +623,7 @@ pub trait Cuttable<P> {
     ///                     .timestamp()
     ///             )
     ///             .to_start_bound(),
-    ///             AbsFiniteBoundPos::new_with_inclusivity(
+    ///             AbsFiniteBoundPos::new_with_incl(
     ///                 "2025-01-01 12:00:00[Europe/Oslo]"
     ///                     .parse::<Zoned>()?
     ///                     .timestamp(),
@@ -632,7 +632,7 @@ pub trait Cuttable<P> {
     ///             .to_end_bound(),
     ///         ),
     ///         AbsBoundPair::new(
-    ///             AbsFiniteBoundPos::new_with_inclusivity(
+    ///             AbsFiniteBoundPos::new_with_incl(
     ///                 "2025-01-01 12:00:00[Europe/Oslo]"
     ///                     .parse::<Zoned>()?
     ///                     .timestamp(),
@@ -798,9 +798,9 @@ pub fn cut_abs_bound_pair(bounds: &AbsBoundPair, at: Timestamp, cut_type: CutTyp
         return CutResult::Uncut;
     }
 
-    let past_cut_end = AbsFiniteBoundPos::new_with_inclusivity(at, cut_type.past_bound_inclusivity()).to_end_bound();
+    let past_cut_end = AbsFiniteBoundPos::new_with_incl(at, cut_type.past_bound_inclusivity()).to_end_bound();
     let future_cut_start =
-        AbsFiniteBoundPos::new_with_inclusivity(at, cut_type.future_bound_inclusivity()).to_start_bound();
+        AbsFiniteBoundPos::new_with_incl(at, cut_type.future_bound_inclusivity()).to_start_bound();
 
     if check_absolute_start_end_bounds_for_interval_creation(&bounds.start(), &past_cut_end).is_err()
         || check_absolute_start_end_bounds_for_interval_creation(&future_cut_start, &bounds.end()).is_err()
@@ -811,10 +811,10 @@ pub fn cut_abs_bound_pair(bounds: &AbsBoundPair, at: Timestamp, cut_type: CutTyp
     let mut past_split = bounds.clone();
     let mut future_split = bounds.clone();
 
-    past_split.set_end(AbsFiniteBoundPos::new_with_inclusivity(at, cut_type.past_bound_inclusivity()).to_end_bound());
+    past_split.set_end(AbsFiniteBoundPos::new_with_incl(at, cut_type.past_bound_inclusivity()).to_end_bound());
 
     future_split
-        .set_start(AbsFiniteBoundPos::new_with_inclusivity(at, cut_type.future_bound_inclusivity()).to_start_bound());
+        .set_start(AbsFiniteBoundPos::new_with_incl(at, cut_type.future_bound_inclusivity()).to_start_bound());
 
     CutResult::Cut(past_split, future_split)
 }
@@ -850,10 +850,10 @@ pub fn cut_bounded_abs_interval(
         return CutResult::Uncut;
     }
 
-    let past_cut_end = AbsFiniteBoundPos::new_with_inclusivity(at, cut_type.past_bound_inclusivity()).to_end_bound();
+    let past_cut_end = AbsFiniteBoundPos::new_with_incl(at, cut_type.past_bound_inclusivity()).to_end_bound();
 
     let future_cut_start =
-        AbsFiniteBoundPos::new_with_inclusivity(at, cut_type.future_bound_inclusivity()).to_start_bound();
+        AbsFiniteBoundPos::new_with_incl(at, cut_type.future_bound_inclusivity()).to_start_bound();
 
     if check_absolute_start_end_bounds_for_interval_creation(&interval.abs_start(), &past_cut_end).is_err()
         || check_absolute_start_end_bounds_for_interval_creation(&future_cut_start, &interval.abs_end()).is_err()
@@ -887,9 +887,9 @@ pub fn cut_rel_bound_pair(bounds: &RelBoundPair, at: SignedDuration, cut_type: C
         return CutResult::Uncut;
     }
 
-    let past_cut_end = RelFiniteBoundPos::new_with_inclusivity(at, cut_type.past_bound_inclusivity()).to_end_bound();
+    let past_cut_end = RelFiniteBoundPos::new_with_incl(at, cut_type.past_bound_inclusivity()).to_end_bound();
     let future_cut_start =
-        RelFiniteBoundPos::new_with_inclusivity(at, cut_type.future_bound_inclusivity()).to_start_bound();
+        RelFiniteBoundPos::new_with_incl(at, cut_type.future_bound_inclusivity()).to_start_bound();
 
     if check_relative_start_end_bounds_for_interval_creation(&bounds.start(), &past_cut_end).is_err()
         || check_relative_start_end_bounds_for_interval_creation(&future_cut_start, &bounds.end()).is_err()
@@ -900,10 +900,10 @@ pub fn cut_rel_bound_pair(bounds: &RelBoundPair, at: SignedDuration, cut_type: C
     let mut past_split = bounds.clone();
     let mut future_split = bounds.clone();
 
-    past_split.set_end(RelFiniteBoundPos::new_with_inclusivity(at, cut_type.past_bound_inclusivity()).to_end_bound());
+    past_split.set_end(RelFiniteBoundPos::new_with_incl(at, cut_type.past_bound_inclusivity()).to_end_bound());
 
     future_split
-        .set_start(RelFiniteBoundPos::new_with_inclusivity(at, cut_type.future_bound_inclusivity()).to_start_bound());
+        .set_start(RelFiniteBoundPos::new_with_incl(at, cut_type.future_bound_inclusivity()).to_start_bound());
 
     CutResult::Cut(past_split, future_split)
 }
@@ -939,10 +939,10 @@ pub fn cut_bounded_rel_interval(
         return CutResult::Uncut;
     }
 
-    let past_cut_end = RelFiniteBoundPos::new_with_inclusivity(at, cut_type.past_bound_inclusivity()).to_end_bound();
+    let past_cut_end = RelFiniteBoundPos::new_with_incl(at, cut_type.past_bound_inclusivity()).to_end_bound();
 
     let future_cut_start =
-        RelFiniteBoundPos::new_with_inclusivity(at, cut_type.future_bound_inclusivity()).to_start_bound();
+        RelFiniteBoundPos::new_with_incl(at, cut_type.future_bound_inclusivity()).to_start_bound();
 
     if check_relative_start_end_bounds_for_interval_creation(&interval.rel_start(), &past_cut_end).is_err()
         || check_relative_start_end_bounds_for_interval_creation(&future_cut_start, &interval.rel_end()).is_err()

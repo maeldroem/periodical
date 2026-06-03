@@ -108,6 +108,7 @@ TODO: once all done, PR onto dev to sync, then continue unit tests
 - Changed internal structure of half-bounded intervals to use a finite bound position
 - Renamed `Absolute`/`Relative` by `Abs`/`Rel` to reduce space taken
 - Renamed `*FiniteBoundPosition` to `*FiniteBoundPos` to reduce space taken
+- Renamed `new_with_inclusivity` on `*FiniteBoundPos` to `new_with_incl` to reduce space taken
 
 ## Deprecated
 

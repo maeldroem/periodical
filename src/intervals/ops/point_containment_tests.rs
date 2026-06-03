@@ -406,12 +406,12 @@ fn rule_counts_as_contained_deny_on_bounds_false_outside() {
 fn time_outside_before() -> Result<(), Box<dyn Error>> {
     assert_eq!(
         AbsBoundPair::new(
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Inclusive,
             )
             .to_start_bound(),
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Inclusive,
             )
@@ -428,12 +428,12 @@ fn time_outside_before() -> Result<(), Box<dyn Error>> {
 fn time_outside_after() -> Result<(), Box<dyn Error>> {
     assert_eq!(
         AbsBoundPair::new(
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Inclusive,
             )
             .to_start_bound(),
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Inclusive,
             )
@@ -461,12 +461,12 @@ fn time_outside() -> Result<(), Box<dyn Error>> {
 fn time_on_start_inclusive() -> Result<(), Box<dyn Error>> {
     assert_eq!(
         AbsBoundPair::new(
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Inclusive,
             )
             .to_start_bound(),
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Inclusive,
             )
@@ -483,12 +483,12 @@ fn time_on_start_inclusive() -> Result<(), Box<dyn Error>> {
 fn time_on_start_exclusive() -> Result<(), Box<dyn Error>> {
     assert_eq!(
         AbsBoundPair::new(
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
             )
             .to_start_bound(),
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Inclusive,
             )
@@ -505,12 +505,12 @@ fn time_on_start_exclusive() -> Result<(), Box<dyn Error>> {
 fn time_on_end_inclusive() -> Result<(), Box<dyn Error>> {
     assert_eq!(
         AbsBoundPair::new(
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Inclusive,
             )
             .to_start_bound(),
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Inclusive,
             )
@@ -527,12 +527,12 @@ fn time_on_end_inclusive() -> Result<(), Box<dyn Error>> {
 fn time_on_end_exclusive() -> Result<(), Box<dyn Error>> {
     assert_eq!(
         AbsBoundPair::new(
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Inclusive,
             )
             .to_start_bound(),
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
             )
@@ -549,12 +549,12 @@ fn time_on_end_exclusive() -> Result<(), Box<dyn Error>> {
 fn time_inside() -> Result<(), Box<dyn Error>> {
     assert_eq!(
         AbsBoundPair::new(
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Inclusive,
             )
             .to_start_bound(),
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Inclusive,
             )

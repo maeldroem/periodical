@@ -97,7 +97,7 @@ impl EmptiableAbsInterval {
     /// assert_eq!(
     ///     interval.partial_abs_end(),
     ///     Some(
-    ///         AbsFiniteBoundPos::new_with_inclusivity(end, BoundInclusivity::Exclusive)
+    ///         AbsFiniteBoundPos::new_with_incl(end, BoundInclusivity::Exclusive)
     ///             .to_end_bound()
     ///     ),
     /// );

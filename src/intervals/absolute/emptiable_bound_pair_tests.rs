@@ -409,12 +409,12 @@ mod to_emptiable_interval {
 fn emptiable_abs_bound_pair() -> Result<(), Box<dyn Error>> {
     assert_eq!(
         AbsBoundPair::new(
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 BoundInclusivity::Exclusive
             )
             .to_start_bound(),
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                 BoundInclusivity::Exclusive
             )
@@ -423,12 +423,12 @@ fn emptiable_abs_bound_pair() -> Result<(), Box<dyn Error>> {
         .to_emptiable()
         .emptiable_abs_bound_pair(),
         AbsBoundPair::new(
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 BoundInclusivity::Exclusive
             )
             .to_start_bound(),
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                 BoundInclusivity::Exclusive
             )
@@ -443,12 +443,12 @@ fn emptiable_abs_bound_pair() -> Result<(), Box<dyn Error>> {
 fn partial_abs_start() -> Result<(), Box<dyn Error>> {
     assert_eq!(
         AbsBoundPair::new(
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 BoundInclusivity::Exclusive
             )
             .to_start_bound(),
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                 BoundInclusivity::Exclusive
             )
@@ -457,7 +457,7 @@ fn partial_abs_start() -> Result<(), Box<dyn Error>> {
         .to_emptiable()
         .partial_abs_start(),
         Some(
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 BoundInclusivity::Exclusive
             )
@@ -472,12 +472,12 @@ fn partial_abs_start() -> Result<(), Box<dyn Error>> {
 fn partial_abs_end() -> Result<(), Box<dyn Error>> {
     assert_eq!(
         AbsBoundPair::new(
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 BoundInclusivity::Exclusive
             )
             .to_start_bound(),
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                 BoundInclusivity::Exclusive
             )
@@ -486,7 +486,7 @@ fn partial_abs_end() -> Result<(), Box<dyn Error>> {
         .to_emptiable()
         .partial_abs_end(),
         Some(
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                 BoundInclusivity::Exclusive
             )
@@ -866,12 +866,12 @@ fn from_opt_start_incl_opt_end_incl_opt() -> Result<(), Box<dyn Error>> {
             ))
         ))),
         AbsBoundPair::new(
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 BoundInclusivity::Exclusive
             )
             .to_start_bound(),
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                 BoundInclusivity::Exclusive
             )

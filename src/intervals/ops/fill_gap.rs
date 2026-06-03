@@ -51,7 +51,7 @@
 //!                 .timestamp(),
 //!         )
 //!         .to_start_bound(),
-//!         AbsFiniteBoundPos::new_with_inclusivity(
+//!         AbsFiniteBoundPos::new_with_incl(
 //!             "2025-01-01 12:00:00[Europe/Oslo]"
 //!                 .parse::<Zoned>()?
 //!                 .timestamp(),
@@ -172,7 +172,7 @@ pub trait GapFillable<Rhs = Self> {
     ///                 .timestamp(),
     ///         )
     ///         .to_start_bound(),
-    ///         AbsFiniteBoundPos::new_with_inclusivity(
+    ///         AbsFiniteBoundPos::new_with_incl(
     ///             "2025-01-01 12:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
@@ -360,7 +360,7 @@ pub fn fill_gap_abs_bound_pair(a: &AbsBoundPair, b: &AbsBoundPair) -> Result<Abs
                 );
             };
 
-            let new_end_bound = AbsFiniteBoundPos::new_with_inclusivity(
+            let new_end_bound = AbsFiniteBoundPos::new_with_incl(
                 finite_bound_position.pos().time(),
                 finite_bound_position.pos().inclusivity().opposite(), // So that it fully closes the gap
             )
@@ -376,7 +376,7 @@ pub fn fill_gap_abs_bound_pair(a: &AbsBoundPair, b: &AbsBoundPair) -> Result<Abs
                 );
             };
 
-            let new_start_bound = AbsFiniteBoundPos::new_with_inclusivity(
+            let new_start_bound = AbsFiniteBoundPos::new_with_incl(
                 finite_bound_position.pos().time(),
                 finite_bound_position.pos().inclusivity().opposite(), // So that it fully closes the gap
             )
@@ -449,7 +449,7 @@ pub fn fill_gap_rel_bound_pair(a: &RelBoundPair, b: &RelBoundPair) -> Result<Rel
                 );
             };
 
-            let new_end_bound = RelFiniteBoundPos::new_with_inclusivity(
+            let new_end_bound = RelFiniteBoundPos::new_with_incl(
                 finite_bound_position.pos().offset(),
                 finite_bound_position.pos().inclusivity().opposite(), // So that it fully closes the gap
             )
@@ -465,7 +465,7 @@ pub fn fill_gap_rel_bound_pair(a: &RelBoundPair, b: &RelBoundPair) -> Result<Rel
                 );
             };
 
-            let new_start_bound = RelFiniteBoundPos::new_with_inclusivity(
+            let new_start_bound = RelFiniteBoundPos::new_with_incl(
                 finite_bound_position.pos().offset(),
                 finite_bound_position.pos().inclusivity().opposite(), // So that it fully closes the gap
             )

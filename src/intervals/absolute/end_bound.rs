@@ -171,7 +171,7 @@ impl AbsEndBound {
     ///
     /// assert_eq!(
     ///     break_start.finite(),
-    ///     Some(AbsFiniteBoundPos::new_with_inclusivity(
+    ///     Some(AbsFiniteBoundPos::new_with_incl(
     ///         time,
     ///         BoundInclusivity::Exclusive,
     ///     )),
@@ -346,7 +346,7 @@ impl From<Option<(Timestamp, BoundInclusivity)>> for AbsEndBound {
     fn from(value: Option<(Timestamp, BoundInclusivity)>) -> Self {
         match value {
             Some((timestamp, inclusivity)) => {
-                Self::from(AbsFiniteBoundPos::new_with_inclusivity(timestamp, inclusivity))
+                Self::from(AbsFiniteBoundPos::new_with_incl(timestamp, inclusivity))
             },
             None => Self::InfiniteFuture,
         }
@@ -357,10 +357,10 @@ impl From<Bound<Timestamp>> for AbsEndBound {
     fn from(bound: Bound<Timestamp>) -> Self {
         match bound {
             Bound::Included(time) => {
-                AbsFiniteBoundPos::new_with_inclusivity(time, BoundInclusivity::Inclusive).to_end_bound()
+                AbsFiniteBoundPos::new_with_incl(time, BoundInclusivity::Inclusive).to_end_bound()
             },
             Bound::Excluded(time) => {
-                AbsFiniteBoundPos::new_with_inclusivity(time, BoundInclusivity::Exclusive).to_end_bound()
+                AbsFiniteBoundPos::new_with_incl(time, BoundInclusivity::Exclusive).to_end_bound()
             },
             Bound::Unbounded => AbsEndBound::InfiniteFuture,
         }

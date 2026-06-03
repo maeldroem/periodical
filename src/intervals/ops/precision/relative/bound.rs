@@ -28,7 +28,7 @@ use crate::prelude::HasBoundInclusivity;
 /// # use periodical::intervals::relative::RelFiniteBoundPos;
 /// # use periodical::intervals::meta::BoundInclusivity;
 /// # use periodical::intervals::ops::PreciseRelBound;
-/// let bound = RelFiniteBoundPos::new_with_inclusivity(
+/// let bound = RelFiniteBoundPos::new_with_incl(
 ///     SignedDuration::from_mins(24),
 ///     BoundInclusivity::Exclusive,
 /// )
@@ -39,7 +39,7 @@ use crate::prelude::HasBoundInclusivity;
 ///         Duration::from_mins(5),
 ///         PrecisionMode::ToFuture
 ///     )?),
-///     Ok(RelFiniteBoundPos::new_with_inclusivity(
+///     Ok(RelFiniteBoundPos::new_with_incl(
 ///         SignedDuration::from_mins(25),
 ///         BoundInclusivity::Exclusive,
 ///     )
@@ -65,7 +65,7 @@ pub trait PreciseRelBound {
     /// # use periodical::intervals::relative::RelFiniteBoundPos;
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::PreciseRelBound;
-    /// let bound = RelFiniteBoundPos::new_with_inclusivity(
+    /// let bound = RelFiniteBoundPos::new_with_incl(
     ///     SignedDuration::from_mins(24),
     ///     BoundInclusivity::Exclusive,
     /// )
@@ -76,7 +76,7 @@ pub trait PreciseRelBound {
     ///         Duration::from_mins(5),
     ///         PrecisionMode::ToFuture
     ///     )?),
-    ///     Ok(RelFiniteBoundPos::new_with_inclusivity(
+    ///     Ok(RelFiniteBoundPos::new_with_incl(
     ///         SignedDuration::from_mins(25),
     ///         BoundInclusivity::Exclusive,
     ///     )
@@ -101,7 +101,7 @@ pub trait PreciseRelBound {
     /// # use periodical::intervals::relative::RelFiniteBoundPos;
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::PreciseRelBound;
-    /// let bound = RelFiniteBoundPos::new_with_inclusivity(
+    /// let bound = RelFiniteBoundPos::new_with_incl(
     ///     SignedDuration::from_mins(24),
     ///     BoundInclusivity::Exclusive,
     /// )
@@ -112,7 +112,7 @@ pub trait PreciseRelBound {
     ///         Precision::new(Duration::from_mins(5), PrecisionMode::ToFuture)?,
     ///         SignedDuration::from_mins(2)
     ///     ),
-    ///     Ok(RelFiniteBoundPos::new_with_inclusivity(
+    ///     Ok(RelFiniteBoundPos::new_with_incl(
     ///         SignedDuration::from_mins(27),
     ///         BoundInclusivity::Exclusive,
     ///     )
@@ -217,7 +217,7 @@ pub fn precise_rel_finite_bound_position(
     bound: &RelFiniteBoundPos,
     precision: Precision,
 ) -> Result<RelFiniteBoundPos, PrecisionOutOfRangeError> {
-    Ok(RelFiniteBoundPos::new_with_inclusivity(
+    Ok(RelFiniteBoundPos::new_with_incl(
         precision.precise_signed_duration(bound.offset())?,
         bound.inclusivity(),
     ))
@@ -233,7 +233,7 @@ pub fn precise_rel_finite_bound_position_with_base_offset(
     precision: Precision,
     base: SignedDuration,
 ) -> Result<RelFiniteBoundPos, PrecisionOutOfRangeError> {
-    Ok(RelFiniteBoundPos::new_with_inclusivity(
+    Ok(RelFiniteBoundPos::new_with_incl(
         precision.precise_signed_duration_with_base_offset(bound.offset(), base)?,
         bound.inclusivity(),
     ))

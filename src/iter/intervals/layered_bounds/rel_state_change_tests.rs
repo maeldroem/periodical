@@ -40,14 +40,14 @@ fn at_rel_bound_old_state_end() {
             LayeredBoundsState::FirstLayer,
             LayeredBoundsState::SecondLayer,
             Some(
-                RelFiniteBoundPos::new_with_inclusivity(
+                RelFiniteBoundPos::new_with_incl(
                     SignedDuration::from_hours(1),
                     BoundInclusivity::Inclusive,
                 )
                 .to_end_bound()
             ),
             Some(
-                RelFiniteBoundPos::new_with_inclusivity(
+                RelFiniteBoundPos::new_with_incl(
                     SignedDuration::from_hours(1),
                     BoundInclusivity::Exclusive,
                 )
@@ -56,7 +56,7 @@ fn at_rel_bound_old_state_end() {
         )
         .old_state_end(),
         Some(
-            RelFiniteBoundPos::new_with_inclusivity(
+            RelFiniteBoundPos::new_with_incl(
                 SignedDuration::from_hours(1),
                 BoundInclusivity::Inclusive,
             )
@@ -72,14 +72,14 @@ fn at_rel_bound_new_state_start() {
             LayeredBoundsState::FirstLayer,
             LayeredBoundsState::SecondLayer,
             Some(
-                RelFiniteBoundPos::new_with_inclusivity(
+                RelFiniteBoundPos::new_with_incl(
                     SignedDuration::from_hours(1),
                     BoundInclusivity::Inclusive,
                 )
                 .to_end_bound()
             ),
             Some(
-                RelFiniteBoundPos::new_with_inclusivity(
+                RelFiniteBoundPos::new_with_incl(
                     SignedDuration::from_hours(1),
                     BoundInclusivity::Exclusive,
                 )
@@ -88,7 +88,7 @@ fn at_rel_bound_new_state_start() {
         )
         .new_state_start(),
         Some(
-            RelFiniteBoundPos::new_with_inclusivity(
+            RelFiniteBoundPos::new_with_incl(
                 SignedDuration::from_hours(1),
                 BoundInclusivity::Exclusive,
             )

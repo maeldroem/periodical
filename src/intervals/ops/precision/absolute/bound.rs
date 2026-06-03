@@ -30,7 +30,7 @@ use crate::ops::{Precision, PrecisionOutOfRangeError};
 /// # use periodical::intervals::absolute::AbsFiniteBoundPos;
 /// # use periodical::intervals::meta::BoundInclusivity;
 /// # use periodical::intervals::ops::PreciseAbsBound;
-/// let bound = AbsFiniteBoundPos::new_with_inclusivity(
+/// let bound = AbsFiniteBoundPos::new_with_incl(
 ///     "2025-01-01 08:24:41[Europe/Oslo]"
 ///         .parse::<Zoned>()?
 ///         .timestamp(),
@@ -43,7 +43,7 @@ use crate::ops::{Precision, PrecisionOutOfRangeError};
 ///         TimeZone::get("Europe/Oslo")?,
 ///         Precision::new(Duration::from_mins(5), PrecisionMode::ToFuture)?,
 ///     ),
-///     Ok(AbsFiniteBoundPos::new_with_inclusivity(
+///     Ok(AbsFiniteBoundPos::new_with_incl(
 ///         "2025-01-01 08:25:00[Europe/Oslo]"
 ///             .parse::<Zoned>()?
 ///             .timestamp(),
@@ -72,7 +72,7 @@ pub trait PreciseAbsBound {
     /// # use periodical::intervals::absolute::AbsFiniteBoundPos;
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::PreciseAbsBound;
-    /// let bound = AbsFiniteBoundPos::new_with_inclusivity(
+    /// let bound = AbsFiniteBoundPos::new_with_incl(
     ///     "2025-01-01 08:24:41[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
@@ -85,7 +85,7 @@ pub trait PreciseAbsBound {
     ///         TimeZone::get("Europe/Oslo")?,
     ///         Precision::new(Duration::from_mins(5), PrecisionMode::ToFuture)?,
     ///     ),
-    ///     Ok(AbsFiniteBoundPos::new_with_inclusivity(
+    ///     Ok(AbsFiniteBoundPos::new_with_incl(
     ///         "2025-01-01 08:25:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
@@ -113,7 +113,7 @@ pub trait PreciseAbsBound {
     /// # use periodical::intervals::absolute::AbsFiniteBoundPos;
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::PreciseAbsBound;
-    /// let bound = AbsFiniteBoundPos::new_with_inclusivity(
+    /// let bound = AbsFiniteBoundPos::new_with_incl(
     ///     "2025-01-01 08:24:41[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
@@ -129,7 +129,7 @@ pub trait PreciseAbsBound {
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
     ///     ),
-    ///     Ok(AbsFiniteBoundPos::new_with_inclusivity(
+    ///     Ok(AbsFiniteBoundPos::new_with_incl(
     ///         "2025-01-01 08:28:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
@@ -277,7 +277,7 @@ pub fn precise_abs_finite_bound_position(
     tz: TimeZone,
     precision: Precision,
 ) -> Result<AbsFiniteBoundPos, PrecisionOutOfRangeError> {
-    Ok(AbsFiniteBoundPos::new_with_inclusivity(
+    Ok(AbsFiniteBoundPos::new_with_incl(
         precision
             .precise_time(&pos.time().to_zoned(tz))?
             .compatible()
@@ -298,7 +298,7 @@ pub fn precise_abs_finite_bound_position_with_base_time(
     precision: Precision,
     base: Timestamp,
 ) -> Result<AbsFiniteBoundPos, PrecisionOutOfRangeError> {
-    Ok(AbsFiniteBoundPos::new_with_inclusivity(
+    Ok(AbsFiniteBoundPos::new_with_incl(
         precision
             .precise_time_with_base_time(&pos.time().to_zoned(tz), base)?
             .timestamp(),

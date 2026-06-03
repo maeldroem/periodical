@@ -44,7 +44,7 @@ use crate::intervals::relative::{RelEndBound, RelFiniteEndBound, RelFiniteStartB
 /// # use jiff::SignedDuration;
 /// # use periodical::intervals::relative::RelFiniteBoundPos;
 /// # use periodical::intervals::meta::BoundInclusivity;
-/// let finite_bound_position = RelFiniteBoundPos::new_with_inclusivity(
+/// let finite_bound_position = RelFiniteBoundPos::new_with_incl(
 ///     SignedDuration::from_hours(21),
 ///     BoundInclusivity::Exclusive,
 /// );
@@ -62,13 +62,13 @@ impl RelFiniteBoundPos {
     /// This creates a finite bound using the [default `BoundInclusivity`](BoundInclusivity::default)
     #[must_use]
     pub fn new(offset: SignedDuration) -> Self {
-        Self::new_with_inclusivity(offset, BoundInclusivity::default())
+        Self::new_with_incl(offset, BoundInclusivity::default())
     }
 
     /// Creates a new [`RelFiniteBoundPos`] using the given offset and
     /// [`BoundInclusivity`]
     #[must_use]
-    pub fn new_with_inclusivity(offset: SignedDuration, inclusivity: BoundInclusivity) -> Self {
+    pub fn new_with_incl(offset: SignedDuration, inclusivity: BoundInclusivity) -> Self {
         RelFiniteBoundPos {
             offset,
             inclusivity,
@@ -182,7 +182,7 @@ impl From<SignedDuration> for RelFiniteBoundPos {
 
 impl From<(SignedDuration, BoundInclusivity)> for RelFiniteBoundPos {
     fn from((offset, inclusivity): (SignedDuration, BoundInclusivity)) -> Self {
-        RelFiniteBoundPos::new_with_inclusivity(offset, inclusivity)
+        RelFiniteBoundPos::new_with_incl(offset, inclusivity)
     }
 }
 
@@ -206,14 +206,8 @@ impl TryFrom<Bound<SignedDuration>> for RelFiniteBoundPos {
 
     fn try_from(value: Bound<SignedDuration>) -> Result<Self, Self::Error> {
         match value {
-            Bound::Included(offset) => Ok(RelFiniteBoundPos::new_with_inclusivity(
-                offset,
-                BoundInclusivity::Inclusive,
-            )),
-            Bound::Excluded(offset) => Ok(RelFiniteBoundPos::new_with_inclusivity(
-                offset,
-                BoundInclusivity::Exclusive,
-            )),
+            Bound::Included(offset) => Ok(RelFiniteBoundPos::new_with_incl(offset, BoundInclusivity::Inclusive)),
+            Bound::Excluded(offset) => Ok(RelFiniteBoundPos::new_with_incl(offset, BoundInclusivity::Exclusive)),
             Bound::Unbounded => Err(RelFiniteBoundPosTryFromBoundError),
         }
     }

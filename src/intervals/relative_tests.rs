@@ -17,14 +17,14 @@ fn relative_start_bound_inf_relative_end_bound_inf_swap() {
 #[test]
 fn relative_start_bound_inf_relative_end_bound_finite_swap() {
     let mut start = RelStartBound::InfinitePast;
-    let mut end = RelFiniteBoundPos::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+    let mut end = RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
         .to_end_bound();
 
     swap_relative_start_end_bounds(&mut start, &mut end);
 
     assert_eq!(
         start,
-        RelFiniteBoundPos::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive,)
+        RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive,)
             .to_start_bound()
     );
     assert_eq!(end, RelEndBound::InfiniteFuture);
@@ -32,7 +32,7 @@ fn relative_start_bound_inf_relative_end_bound_finite_swap() {
 
 #[test]
 fn relative_start_bound_finite_relative_end_bound_inf_swap() {
-    let mut start = RelFiniteBoundPos::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+    let mut start = RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
         .to_start_bound();
     let mut end = RelEndBound::InfiniteFuture;
 
@@ -41,28 +41,28 @@ fn relative_start_bound_finite_relative_end_bound_inf_swap() {
     assert_eq!(start, RelStartBound::InfinitePast);
     assert_eq!(
         end,
-        RelFiniteBoundPos::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive,)
+        RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive,)
             .to_end_bound()
     );
 }
 
 #[test]
 fn relative_start_bound_finite_relative_end_bound_finite_swap() {
-    let mut start = RelFiniteBoundPos::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+    let mut start = RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
         .to_start_bound();
-    let mut end = RelFiniteBoundPos::new_with_inclusivity(SignedDuration::from_hours(2), BoundInclusivity::Inclusive)
+    let mut end = RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(2), BoundInclusivity::Inclusive)
         .to_end_bound();
 
     swap_relative_start_end_bounds(&mut start, &mut end);
 
     assert_eq!(
         start,
-        RelFiniteBoundPos::new_with_inclusivity(SignedDuration::from_hours(2), BoundInclusivity::Inclusive,)
+        RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(2), BoundInclusivity::Inclusive,)
             .to_start_bound()
     );
     assert_eq!(
         end,
-        RelFiniteBoundPos::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive,)
+        RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive,)
             .to_end_bound()
     );
 }
@@ -138,7 +138,7 @@ fn check_relative_start_end_bounds_for_interval_creation_finite_finite_same_offs
     assert_eq!(
         check_relative_start_end_bounds_for_interval_creation(
             &RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-            &RelFiniteBoundPos::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive,)
+            &RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive,)
                 .to_end_bound(),
         ),
         Err(RelStartEndBoundsCheckForIntervalCreationError::SameOffsetButNotDoublyInclusive),
@@ -244,7 +244,7 @@ fn prepare_relative_bound_pair_for_interval_creation_finite_finite_same_offset_i
 #[test]
 fn prepare_relative_bound_pair_for_interval_creation_finite_finite_same_offset_inclusive_exclusive() {
     let mut start = RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound();
-    let mut end = RelFiniteBoundPos::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+    let mut end = RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
         .to_end_bound();
 
     let was_changed = prepare_relative_bound_pair_for_interval_creation(&mut start, &mut end);

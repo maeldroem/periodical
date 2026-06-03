@@ -164,7 +164,7 @@ impl RelBoundPair {
     /// );
     /// assert_eq!(
     ///     bound_pair.end(),
-    ///     RelFiniteBoundPos::new_with_inclusivity(end, BoundInclusivity::Exclusive).to_end_bound(),
+    ///     RelFiniteBoundPos::new_with_incl(end, BoundInclusivity::Exclusive).to_end_bound(),
     /// );
     /// ```
     #[must_use]

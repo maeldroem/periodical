@@ -61,7 +61,7 @@ impl LayeredBoundsStateChangeAtRelBound {
     ///     LayeredBoundsState::FirstLayer,
     ///     Some(RelFiniteBoundPos::new(SignedDuration::from_hours(8)).to_end_bound()),
     ///     Some(
-    ///         RelFiniteBoundPos::new_with_inclusivity(
+    ///         RelFiniteBoundPos::new_with_incl(
     ///             SignedDuration::from_hours(8),
     ///             BoundInclusivity::Exclusive,
     ///         )
@@ -92,7 +92,7 @@ impl LayeredBoundsStateChangeAtRelBound {
     ///     LayeredBoundsState::FirstLayer,
     ///     Some(RelFiniteBoundPos::new(SignedDuration::from_hours(8)).to_end_bound()),
     ///     Some(
-    ///         RelFiniteBoundPos::new_with_inclusivity(
+    ///         RelFiniteBoundPos::new_with_incl(
     ///             SignedDuration::from_hours(8),
     ///             BoundInclusivity::Exclusive,
     ///         )
@@ -130,7 +130,7 @@ impl LayeredBoundsStateChangeAtRelBound {
     ///     LayeredBoundsState::FirstLayer,
     ///     Some(RelFiniteBoundPos::new(SignedDuration::from_hours(8)).to_end_bound()),
     ///     Some(
-    ///         RelFiniteBoundPos::new_with_inclusivity(
+    ///         RelFiniteBoundPos::new_with_incl(
     ///             SignedDuration::from_hours(8),
     ///             BoundInclusivity::Exclusive,
     ///         )
@@ -171,7 +171,7 @@ impl LayeredBoundsStateChangeAtRelBound {
     ///     LayeredBoundsState::FirstLayer,
     ///     Some(RelFiniteBoundPos::new(SignedDuration::from_hours(8)).to_end_bound()),
     ///     Some(
-    ///         RelFiniteBoundPos::new_with_inclusivity(
+    ///         RelFiniteBoundPos::new_with_incl(
     ///             SignedDuration::from_hours(8),
     ///             BoundInclusivity::Exclusive,
     ///         )
@@ -182,7 +182,7 @@ impl LayeredBoundsStateChangeAtRelBound {
     /// assert_eq!(
     ///     change.new_state_start(),
     ///     Some(
-    ///         RelFiniteBoundPos::new_with_inclusivity(
+    ///         RelFiniteBoundPos::new_with_incl(
     ///             SignedDuration::from_hours(8),
     ///             BoundInclusivity::Exclusive,
     ///         )

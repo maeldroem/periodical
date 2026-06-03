@@ -218,8 +218,8 @@ impl BoundedRelInterval {
         end_inclusivity: BoundInclusivity,
     ) -> Self {
         Self::unchecked_new(
-            RelFiniteBoundPos::new_with_inclusivity(start, start_inclusivity).to_finite_start_bound(),
-            RelFiniteBoundPos::new_with_inclusivity(end, end_inclusivity).to_finite_end_bound(),
+            RelFiniteBoundPos::new_with_incl(start, start_inclusivity).to_finite_start_bound(),
+            RelFiniteBoundPos::new_with_incl(end, end_inclusivity).to_finite_end_bound(),
         )
     }
 
@@ -263,8 +263,8 @@ impl BoundedRelInterval {
         end_inclusivity: BoundInclusivity,
     ) -> Self {
         Self::new(
-            RelFiniteBoundPos::new_with_inclusivity(start, start_inclusivity).to_finite_start_bound(),
-            RelFiniteBoundPos::new_with_inclusivity(end, end_inclusivity).to_finite_end_bound(),
+            RelFiniteBoundPos::new_with_incl(start, start_inclusivity).to_finite_start_bound(),
+            RelFiniteBoundPos::new_with_incl(end, end_inclusivity).to_finite_end_bound(),
         )
     }
 

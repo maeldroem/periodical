@@ -17,7 +17,7 @@
 //! # use periodical::intervals::meta::BoundInclusivity;
 //! # use periodical::intervals::ops::complement::Complementable;
 //! let interval = AbsBoundPair::new(
-//!     AbsFiniteBoundPos::new_with_inclusivity(
+//!     AbsFiniteBoundPos::new_with_incl(
 //!         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 //!         BoundInclusivity::Exclusive,
 //!     ).to_start_bound(),
@@ -36,7 +36,7 @@
 //!             ).to_end_bound(),
 //!         )),
 //!         EmptiableAbsBoundPair::Bound(AbsBoundPair::new(
-//!             AbsFiniteBoundPos::new_with_inclusivity(
+//!             AbsFiniteBoundPos::new_with_incl(
 //!                 "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 //!                 BoundInclusivity::Exclusive,
 //!             ).to_start_bound(),
@@ -89,7 +89,7 @@ use crate::ops::ComplementResult;
 /// # use periodical::intervals::meta::BoundInclusivity;
 /// # use periodical::intervals::ops::complement::Complementable;
 /// let interval = AbsBoundPair::new(
-///     AbsFiniteBoundPos::new_with_inclusivity(
+///     AbsFiniteBoundPos::new_with_incl(
 ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///         BoundInclusivity::Exclusive,
 ///     ).to_start_bound(),
@@ -108,7 +108,7 @@ use crate::ops::ComplementResult;
 ///             ).to_end_bound(),
 ///         )),
 ///         EmptiableAbsBoundPair::Bound(AbsBoundPair::new(
-///             AbsFiniteBoundPos::new_with_inclusivity(
+///             AbsFiniteBoundPos::new_with_incl(
 ///                 "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///                 BoundInclusivity::Exclusive,
 ///             ).to_start_bound(),

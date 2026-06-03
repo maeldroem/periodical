@@ -123,12 +123,12 @@ mod absolute {
                 .ok_or("data not found")?;
 
             let expected = AbsBoundPair::new(
-                AbsFiniteBoundPos::new_with_inclusivity(
+                AbsFiniteBoundPos::new_with_incl(
                     "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                     BoundInclusivity::Exclusive,
                 )
                 .to_start_bound(),
-                AbsFiniteBoundPos::new_with_inclusivity(
+                AbsFiniteBoundPos::new_with_incl(
                     "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
                     BoundInclusivity::Exclusive,
                 )
@@ -157,12 +157,12 @@ mod absolute {
                 .ok_or("data not found")?;
 
             let expected = AbsBoundPair::new(
-                AbsFiniteBoundPos::new_with_inclusivity(
+                AbsFiniteBoundPos::new_with_incl(
                     "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                     BoundInclusivity::Exclusive,
                 )
                 .to_start_bound(),
-                AbsFiniteBoundPos::new_with_inclusivity(
+                AbsFiniteBoundPos::new_with_incl(
                     "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
                     BoundInclusivity::Exclusive,
                 )
@@ -496,7 +496,7 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -527,7 +527,7 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -558,7 +558,7 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -621,7 +621,7 @@ mod absolute {
 
                 let expected = AbsBoundPair::new(
                     AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -652,7 +652,7 @@ mod absolute {
 
                 let expected = AbsBoundPair::new(
                     AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -683,7 +683,7 @@ mod absolute {
 
                 let expected = AbsBoundPair::new(
                     AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -745,7 +745,7 @@ mod absolute {
 
                 let expected = AbsBoundPair::new(
                     AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -776,7 +776,7 @@ mod absolute {
 
                 let expected = AbsBoundPair::new(
                     AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -807,7 +807,7 @@ mod absolute {
 
                 let expected = AbsBoundPair::new(
                     AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -837,7 +837,7 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -868,12 +868,12 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -903,12 +903,12 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -938,12 +938,12 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -973,7 +973,7 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1004,12 +1004,12 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1039,12 +1039,12 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1074,12 +1074,12 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1109,7 +1109,7 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1140,12 +1140,12 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1175,12 +1175,12 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1210,12 +1210,12 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1276,7 +1276,7 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1307,7 +1307,7 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1338,7 +1338,7 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1401,7 +1401,7 @@ mod absolute {
 
                 let expected = AbsBoundPair::new(
                     AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1432,7 +1432,7 @@ mod absolute {
 
                 let expected = AbsBoundPair::new(
                     AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1463,7 +1463,7 @@ mod absolute {
 
                 let expected = AbsBoundPair::new(
                     AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1524,12 +1524,12 @@ mod absolute {
                 .ok_or("data not found")?;
 
             let expected = AbsBoundPair::new(
-                AbsFiniteBoundPos::new_with_inclusivity(
+                AbsFiniteBoundPos::new_with_incl(
                     "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                     BoundInclusivity::Exclusive,
                 )
                 .to_start_bound(),
-                AbsFiniteBoundPos::new_with_inclusivity(
+                AbsFiniteBoundPos::new_with_incl(
                     "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
                     BoundInclusivity::Exclusive,
                 )
@@ -1559,12 +1559,12 @@ mod absolute {
                 .ok_or("data not found")?;
 
             let expected = AbsBoundPair::new(
-                AbsFiniteBoundPos::new_with_inclusivity(
+                AbsFiniteBoundPos::new_with_incl(
                     "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                     BoundInclusivity::Exclusive,
                 )
                 .to_start_bound(),
-                AbsFiniteBoundPos::new_with_inclusivity(
+                AbsFiniteBoundPos::new_with_incl(
                     "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                     BoundInclusivity::Exclusive,
                 )
@@ -1932,7 +1932,7 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1963,7 +1963,7 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1994,7 +1994,7 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -2057,7 +2057,7 @@ mod absolute {
 
                 let expected = AbsBoundPair::new(
                     AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -2088,7 +2088,7 @@ mod absolute {
 
                 let expected = AbsBoundPair::new(
                     AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -2119,7 +2119,7 @@ mod absolute {
 
                 let expected = AbsBoundPair::new(
                     AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -2202,12 +2202,12 @@ mod absolute {
                 .ok_or("data not found")?;
 
             let expected = AbsBoundPair::new(
-                AbsFiniteBoundPos::new_with_inclusivity(
+                AbsFiniteBoundPos::new_with_incl(
                     "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                     BoundInclusivity::Exclusive,
                 )
                 .to_start_bound(),
-                AbsFiniteBoundPos::new_with_inclusivity(
+                AbsFiniteBoundPos::new_with_incl(
                     "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                     BoundInclusivity::Exclusive,
                 )
@@ -2237,12 +2237,12 @@ mod absolute {
                 .ok_or("data not found")?;
 
             let expected = AbsBoundPair::new(
-                AbsFiniteBoundPos::new_with_inclusivity(
+                AbsFiniteBoundPos::new_with_incl(
                     "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                     BoundInclusivity::Exclusive,
                 )
                 .to_start_bound(),
-                AbsFiniteBoundPos::new_with_inclusivity(
+                AbsFiniteBoundPos::new_with_incl(
                     "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
                     BoundInclusivity::Exclusive,
                 )
@@ -2552,7 +2552,7 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -2583,7 +2583,7 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -2614,7 +2614,7 @@ mod absolute {
                     .ok_or("data not found")?;
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -2677,7 +2677,7 @@ mod absolute {
 
                 let expected = AbsBoundPair::new(
                     AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -2708,7 +2708,7 @@ mod absolute {
 
                 let expected = AbsBoundPair::new(
                     AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -2739,7 +2739,7 @@ mod absolute {
 
                 let expected = AbsBoundPair::new(
                     AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -2832,12 +2832,12 @@ mod absolute {
                 .ok_or("data not found")?;
 
             let expected = AbsBoundPair::new(
-                AbsFiniteBoundPos::new_with_inclusivity(
+                AbsFiniteBoundPos::new_with_incl(
                     "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                     BoundInclusivity::Exclusive,
                 )
                 .to_start_bound(),
-                AbsFiniteBoundPos::new_with_inclusivity(
+                AbsFiniteBoundPos::new_with_incl(
                     "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                     BoundInclusivity::Exclusive,
                 )
@@ -2867,12 +2867,12 @@ mod absolute {
                 .ok_or("data not found")?;
 
             let expected = AbsBoundPair::new(
-                AbsFiniteBoundPos::new_with_inclusivity(
+                AbsFiniteBoundPos::new_with_incl(
                     "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                     BoundInclusivity::Exclusive,
                 )
                 .to_start_bound(),
-                AbsFiniteBoundPos::new_with_inclusivity(
+                AbsFiniteBoundPos::new_with_incl(
                     "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                     BoundInclusivity::Exclusive,
                 )
@@ -3239,7 +3239,7 @@ mod absolute {
                         .ok_or("data not found")?;
 
                     let expected = AbsBoundPair::new(
-                        AbsFiniteBoundPos::new_with_inclusivity(
+                        AbsFiniteBoundPos::new_with_incl(
                             "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                             BoundInclusivity::Exclusive,
                         )
@@ -3270,7 +3270,7 @@ mod absolute {
                         .ok_or("data not found")?;
 
                     let expected = AbsBoundPair::new(
-                        AbsFiniteBoundPos::new_with_inclusivity(
+                        AbsFiniteBoundPos::new_with_incl(
                             "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                             BoundInclusivity::Exclusive,
                         )
@@ -3301,7 +3301,7 @@ mod absolute {
                         .ok_or("data not found")?;
 
                     let expected = AbsBoundPair::new(
-                        AbsFiniteBoundPos::new_with_inclusivity(
+                        AbsFiniteBoundPos::new_with_incl(
                             "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                             BoundInclusivity::Exclusive,
                         )
@@ -3364,7 +3364,7 @@ mod absolute {
 
                     let expected = AbsBoundPair::new(
                         AbsStartBound::InfinitePast,
-                        AbsFiniteBoundPos::new_with_inclusivity(
+                        AbsFiniteBoundPos::new_with_incl(
                             "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                             BoundInclusivity::Exclusive,
                         )
@@ -3395,7 +3395,7 @@ mod absolute {
 
                     let expected = AbsBoundPair::new(
                         AbsStartBound::InfinitePast,
-                        AbsFiniteBoundPos::new_with_inclusivity(
+                        AbsFiniteBoundPos::new_with_incl(
                             "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                             BoundInclusivity::Exclusive,
                         )
@@ -3426,7 +3426,7 @@ mod absolute {
 
                     let expected = AbsBoundPair::new(
                         AbsStartBound::InfinitePast,
-                        AbsFiniteBoundPos::new_with_inclusivity(
+                        AbsFiniteBoundPos::new_with_incl(
                             "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                             BoundInclusivity::Exclusive,
                         )
@@ -3799,12 +3799,12 @@ mod relative {
                 .ok_or("data not found")?;
 
             let expected = RelBoundPair::new(
-                RelFiniteBoundPos::new_with_inclusivity(
+                RelFiniteBoundPos::new_with_incl(
                     SignedDuration::from_hours(2),
                     BoundInclusivity::Exclusive,
                 )
                 .to_start_bound(),
-                RelFiniteBoundPos::new_with_inclusivity(
+                RelFiniteBoundPos::new_with_incl(
                     SignedDuration::from_hours(3),
                     BoundInclusivity::Exclusive,
                 )
@@ -3832,12 +3832,12 @@ mod relative {
                 .ok_or("data not found")?;
 
             let expected = RelBoundPair::new(
-                RelFiniteBoundPos::new_with_inclusivity(
+                RelFiniteBoundPos::new_with_incl(
                     SignedDuration::from_hours(2),
                     BoundInclusivity::Exclusive,
                 )
                 .to_start_bound(),
-                RelFiniteBoundPos::new_with_inclusivity(
+                RelFiniteBoundPos::new_with_incl(
                     SignedDuration::from_hours(3),
                     BoundInclusivity::Exclusive,
                 )
@@ -4155,7 +4155,7 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -4185,7 +4185,7 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -4215,7 +4215,7 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -4276,7 +4276,7 @@ mod relative {
 
                 let expected = RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(3),
                         BoundInclusivity::Exclusive,
                     )
@@ -4306,7 +4306,7 @@ mod relative {
 
                 let expected = RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(3),
                         BoundInclusivity::Exclusive,
                     )
@@ -4336,7 +4336,7 @@ mod relative {
 
                 let expected = RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(3),
                         BoundInclusivity::Exclusive,
                     )
@@ -4396,7 +4396,7 @@ mod relative {
 
                 let expected = RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -4426,7 +4426,7 @@ mod relative {
 
                 let expected = RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -4456,7 +4456,7 @@ mod relative {
 
                 let expected = RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -4485,7 +4485,7 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -4515,12 +4515,12 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -4549,12 +4549,12 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -4583,12 +4583,12 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -4617,7 +4617,7 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -4647,12 +4647,12 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -4681,12 +4681,12 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -4715,12 +4715,12 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -4749,7 +4749,7 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -4779,12 +4779,12 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -4813,12 +4813,12 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -4847,12 +4847,12 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -4911,7 +4911,7 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -4941,7 +4941,7 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -4971,7 +4971,7 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -5032,7 +5032,7 @@ mod relative {
 
                 let expected = RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(3),
                         BoundInclusivity::Exclusive,
                     )
@@ -5062,7 +5062,7 @@ mod relative {
 
                 let expected = RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(3),
                         BoundInclusivity::Exclusive,
                     )
@@ -5092,7 +5092,7 @@ mod relative {
 
                 let expected = RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(3),
                         BoundInclusivity::Exclusive,
                     )
@@ -5148,12 +5148,12 @@ mod relative {
                 .ok_or("data not found")?;
 
             let expected = RelBoundPair::new(
-                RelFiniteBoundPos::new_with_inclusivity(
+                RelFiniteBoundPos::new_with_incl(
                     SignedDuration::from_hours(2),
                     BoundInclusivity::Exclusive,
                 )
                 .to_start_bound(),
-                RelFiniteBoundPos::new_with_inclusivity(
+                RelFiniteBoundPos::new_with_incl(
                     SignedDuration::from_hours(3),
                     BoundInclusivity::Exclusive,
                 )
@@ -5182,12 +5182,12 @@ mod relative {
                 .ok_or("data not found")?;
 
             let expected = RelBoundPair::new(
-                RelFiniteBoundPos::new_with_inclusivity(
+                RelFiniteBoundPos::new_with_incl(
                     SignedDuration::from_hours(1),
                     BoundInclusivity::Exclusive,
                 )
                 .to_start_bound(),
-                RelFiniteBoundPos::new_with_inclusivity(
+                RelFiniteBoundPos::new_with_incl(
                     SignedDuration::from_hours(2),
                     BoundInclusivity::Exclusive,
                 )
@@ -5541,7 +5541,7 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -5571,7 +5571,7 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -5601,7 +5601,7 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -5662,7 +5662,7 @@ mod relative {
 
                 let expected = RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -5692,7 +5692,7 @@ mod relative {
 
                 let expected = RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -5722,7 +5722,7 @@ mod relative {
 
                 let expected = RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -5804,12 +5804,12 @@ mod relative {
                 .ok_or("data not found")?;
 
             let expected = RelBoundPair::new(
-                RelFiniteBoundPos::new_with_inclusivity(
+                RelFiniteBoundPos::new_with_incl(
                     SignedDuration::from_hours(1),
                     BoundInclusivity::Exclusive,
                 )
                 .to_start_bound(),
-                RelFiniteBoundPos::new_with_inclusivity(
+                RelFiniteBoundPos::new_with_incl(
                     SignedDuration::from_hours(2),
                     BoundInclusivity::Exclusive,
                 )
@@ -5838,12 +5838,12 @@ mod relative {
                 .ok_or("data not found")?;
 
             let expected = RelBoundPair::new(
-                RelFiniteBoundPos::new_with_inclusivity(
+                RelFiniteBoundPos::new_with_incl(
                     SignedDuration::from_hours(2),
                     BoundInclusivity::Exclusive,
                 )
                 .to_start_bound(),
-                RelFiniteBoundPos::new_with_inclusivity(
+                RelFiniteBoundPos::new_with_incl(
                     SignedDuration::from_hours(3),
                     BoundInclusivity::Exclusive,
                 )
@@ -6141,7 +6141,7 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -6171,7 +6171,7 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -6201,7 +6201,7 @@ mod relative {
                     .ok_or("data not found")?;
 
                 let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -6262,7 +6262,7 @@ mod relative {
 
                 let expected = RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -6292,7 +6292,7 @@ mod relative {
 
                 let expected = RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -6322,7 +6322,7 @@ mod relative {
 
                 let expected = RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -6412,12 +6412,12 @@ mod relative {
                 .ok_or("data not found")?;
 
             let expected = RelBoundPair::new(
-                RelFiniteBoundPos::new_with_inclusivity(
+                RelFiniteBoundPos::new_with_incl(
                     SignedDuration::from_hours(1),
                     BoundInclusivity::Exclusive,
                 )
                 .to_start_bound(),
-                RelFiniteBoundPos::new_with_inclusivity(
+                RelFiniteBoundPos::new_with_incl(
                     SignedDuration::from_hours(2),
                     BoundInclusivity::Exclusive,
                 )
@@ -6446,12 +6446,12 @@ mod relative {
                 .ok_or("data not found")?;
 
             let expected = RelBoundPair::new(
-                RelFiniteBoundPos::new_with_inclusivity(
+                RelFiniteBoundPos::new_with_incl(
                     SignedDuration::from_hours(1),
                     BoundInclusivity::Exclusive,
                 )
                 .to_start_bound(),
-                RelFiniteBoundPos::new_with_inclusivity(
+                RelFiniteBoundPos::new_with_incl(
                     SignedDuration::from_hours(2),
                     BoundInclusivity::Exclusive,
                 )
@@ -6804,7 +6804,7 @@ mod relative {
                         .ok_or("data not found")?;
 
                     let expected = RelBoundPair::new(
-                        RelFiniteBoundPos::new_with_inclusivity(
+                        RelFiniteBoundPos::new_with_incl(
                             SignedDuration::from_hours(1),
                             BoundInclusivity::Exclusive,
                         )
@@ -6834,7 +6834,7 @@ mod relative {
                         .ok_or("data not found")?;
 
                     let expected = RelBoundPair::new(
-                        RelFiniteBoundPos::new_with_inclusivity(
+                        RelFiniteBoundPos::new_with_incl(
                             SignedDuration::from_hours(1),
                             BoundInclusivity::Exclusive,
                         )
@@ -6864,7 +6864,7 @@ mod relative {
                         .ok_or("data not found")?;
 
                     let expected = RelBoundPair::new(
-                        RelFiniteBoundPos::new_with_inclusivity(
+                        RelFiniteBoundPos::new_with_incl(
                             SignedDuration::from_hours(1),
                             BoundInclusivity::Exclusive,
                         )
@@ -6925,7 +6925,7 @@ mod relative {
 
                     let expected = RelBoundPair::new(
                         RelStartBound::InfinitePast,
-                        RelFiniteBoundPos::new_with_inclusivity(
+                        RelFiniteBoundPos::new_with_incl(
                             SignedDuration::from_hours(1),
                             BoundInclusivity::Exclusive,
                         )
@@ -6955,7 +6955,7 @@ mod relative {
 
                     let expected = RelBoundPair::new(
                         RelStartBound::InfinitePast,
-                        RelFiniteBoundPos::new_with_inclusivity(
+                        RelFiniteBoundPos::new_with_incl(
                             SignedDuration::from_hours(1),
                             BoundInclusivity::Exclusive,
                         )
@@ -6985,7 +6985,7 @@ mod relative {
 
                     let expected = RelBoundPair::new(
                         RelStartBound::InfinitePast,
-                        RelFiniteBoundPos::new_with_inclusivity(
+                        RelFiniteBoundPos::new_with_incl(
                             SignedDuration::from_hours(1),
                             BoundInclusivity::Exclusive,
                         )

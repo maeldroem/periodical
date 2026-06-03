@@ -67,7 +67,7 @@ fn start_finite_opposite() {
             .to_bound()
             .opposite(),
         Some(
-            RelFiniteBoundPos::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive,)
+            RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive,)
                 .to_end_bound()
                 .to_bound()
         ),
@@ -87,7 +87,7 @@ fn end_finite_opposite() {
             .to_bound()
             .opposite(),
         Some(
-            RelFiniteBoundPos::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive,)
+            RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive,)
                 .to_start_bound()
                 .to_bound()
         ),

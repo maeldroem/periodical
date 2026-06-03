@@ -97,7 +97,7 @@ impl EmptiableRelInterval {
     /// assert_eq!(
     ///     interval.partial_rel_end(),
     ///     Some(
-    ///         RelFiniteBoundPos::new_with_inclusivity(end, BoundInclusivity::Exclusive)
+    ///         RelFiniteBoundPos::new_with_incl(end, BoundInclusivity::Exclusive)
     ///             .to_end_bound()
     ///     ),
     /// );

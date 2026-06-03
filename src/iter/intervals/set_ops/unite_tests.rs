@@ -23,7 +23,7 @@ fn acc_union_run() -> Result<(), Box<dyn Error>> {
         ),
         // 2
         AbsBoundPair::new(
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2025-01-05 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
             )
@@ -42,7 +42,7 @@ fn acc_union_run() -> Result<(), Box<dyn Error>> {
         AbsBoundPair::new(
             AbsFiniteBoundPos::new("2025-01-15 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                 .to_start_bound(),
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2025-01-30 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
             )
@@ -50,12 +50,12 @@ fn acc_union_run() -> Result<(), Box<dyn Error>> {
         ),
         // 5
         AbsBoundPair::new(
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2025-01-16 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
             )
             .to_start_bound(),
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2025-01-20 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
             )
@@ -63,12 +63,12 @@ fn acc_union_run() -> Result<(), Box<dyn Error>> {
         ),
         // 6
         AbsBoundPair::new(
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2025-01-30 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
             )
             .to_start_bound(),
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2025-02-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
             )
@@ -82,19 +82,19 @@ fn acc_union_run() -> Result<(), Box<dyn Error>> {
             AbsBoundPair::new(
                 AbsFiniteBoundPos::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                     .to_start_bound(),
-                AbsFiniteBoundPos::new_with_inclusivity(
+                AbsFiniteBoundPos::new_with_incl(
                     "2025-01-30 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                 )
                 .to_end_bound(),
             ),
             AbsBoundPair::new(
-                AbsFiniteBoundPos::new_with_inclusivity(
+                AbsFiniteBoundPos::new_with_incl(
                     "2025-01-30 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                 )
                 .to_start_bound(),
-                AbsFiniteBoundPos::new_with_inclusivity(
+                AbsFiniteBoundPos::new_with_incl(
                     "2025-02-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                 )
@@ -115,7 +115,7 @@ fn acc_union_with_run() -> Result<(), Box<dyn Error>> {
         AbsBoundPair::new(
             AbsFiniteBoundPos::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                 .to_start_bound(),
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2025-01-05 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
             )
@@ -123,7 +123,7 @@ fn acc_union_with_run() -> Result<(), Box<dyn Error>> {
         ),
         // 2
         AbsBoundPair::new(
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2025-01-05 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
             )
@@ -142,7 +142,7 @@ fn acc_union_with_run() -> Result<(), Box<dyn Error>> {
         AbsBoundPair::new(
             AbsFiniteBoundPos::new("2025-01-15 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                 .to_start_bound(),
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2025-01-30 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
             )
@@ -150,12 +150,12 @@ fn acc_union_with_run() -> Result<(), Box<dyn Error>> {
         ),
         // 5
         AbsBoundPair::new(
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2025-01-16 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
             )
             .to_start_bound(),
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2025-01-20 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
             )
@@ -163,12 +163,12 @@ fn acc_union_with_run() -> Result<(), Box<dyn Error>> {
         ),
         // 6
         AbsBoundPair::new(
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2025-01-30 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
             )
             .to_start_bound(),
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2025-02-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
             )
@@ -198,7 +198,7 @@ fn acc_union_with_run() -> Result<(), Box<dyn Error>> {
             AbsBoundPair::new(
                 AbsFiniteBoundPos::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                     .to_start_bound(),
-                AbsFiniteBoundPos::new_with_inclusivity(
+                AbsFiniteBoundPos::new_with_incl(
                     "2025-02-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                 )
@@ -231,7 +231,7 @@ fn peer_union_run() -> Result<(), Box<dyn Error>> {
         ),
         // 2
         AbsBoundPair::new(
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2025-01-05 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
             )
@@ -250,7 +250,7 @@ fn peer_union_run() -> Result<(), Box<dyn Error>> {
         AbsBoundPair::new(
             AbsFiniteBoundPos::new("2025-01-15 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                 .to_start_bound(),
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2025-01-30 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
             )
@@ -258,12 +258,12 @@ fn peer_union_run() -> Result<(), Box<dyn Error>> {
         ),
         // 5
         AbsBoundPair::new(
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2025-01-16 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
             )
             .to_start_bound(),
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2025-01-20 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
             )
@@ -271,12 +271,12 @@ fn peer_union_run() -> Result<(), Box<dyn Error>> {
         ),
         // 6
         AbsBoundPair::new(
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2025-01-30 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
             )
             .to_start_bound(),
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2025-02-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
             )
@@ -296,7 +296,7 @@ fn peer_union_run() -> Result<(), Box<dyn Error>> {
             ),
             // 2, 3
             AbsBoundPair::new(
-                AbsFiniteBoundPos::new_with_inclusivity(
+                AbsFiniteBoundPos::new_with_incl(
                     "2025-01-05 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                 )
@@ -315,7 +315,7 @@ fn peer_union_run() -> Result<(), Box<dyn Error>> {
             AbsBoundPair::new(
                 AbsFiniteBoundPos::new("2025-01-15 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                     .to_start_bound(),
-                AbsFiniteBoundPos::new_with_inclusivity(
+                AbsFiniteBoundPos::new_with_incl(
                     "2025-01-30 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                 )
@@ -323,12 +323,12 @@ fn peer_union_run() -> Result<(), Box<dyn Error>> {
             ),
             // 5, 6
             AbsBoundPair::new(
-                AbsFiniteBoundPos::new_with_inclusivity(
+                AbsFiniteBoundPos::new_with_incl(
                     "2025-01-16 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                 )
                 .to_start_bound(),
-                AbsFiniteBoundPos::new_with_inclusivity(
+                AbsFiniteBoundPos::new_with_incl(
                     "2025-01-20 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                 )
@@ -350,7 +350,7 @@ fn peer_union_with_run() -> Result<(), Box<dyn Error>> {
         AbsBoundPair::new(
             AbsFiniteBoundPos::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                 .to_start_bound(),
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2025-01-05 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
             )
@@ -358,7 +358,7 @@ fn peer_union_with_run() -> Result<(), Box<dyn Error>> {
         ),
         // 2
         AbsBoundPair::new(
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2025-01-05 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
             )
@@ -377,7 +377,7 @@ fn peer_union_with_run() -> Result<(), Box<dyn Error>> {
         AbsBoundPair::new(
             AbsFiniteBoundPos::new("2025-01-15 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                 .to_start_bound(),
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2025-01-30 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
             )
@@ -385,12 +385,12 @@ fn peer_union_with_run() -> Result<(), Box<dyn Error>> {
         ),
         // 5
         AbsBoundPair::new(
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2025-01-16 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
             )
             .to_start_bound(),
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2025-01-20 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
             )
@@ -398,12 +398,12 @@ fn peer_union_with_run() -> Result<(), Box<dyn Error>> {
         ),
         // 6
         AbsBoundPair::new(
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2025-01-30 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
             )
             .to_start_bound(),
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2025-02-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
             )
@@ -439,7 +439,7 @@ fn peer_union_with_run() -> Result<(), Box<dyn Error>> {
             ),
             // 2, 3
             AbsBoundPair::new(
-                AbsFiniteBoundPos::new_with_inclusivity(
+                AbsFiniteBoundPos::new_with_incl(
                     "2025-01-05 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                 )
@@ -458,7 +458,7 @@ fn peer_union_with_run() -> Result<(), Box<dyn Error>> {
             AbsBoundPair::new(
                 AbsFiniteBoundPos::new("2025-01-15 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                     .to_start_bound(),
-                AbsFiniteBoundPos::new_with_inclusivity(
+                AbsFiniteBoundPos::new_with_incl(
                     "2025-01-30 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                 )
@@ -466,12 +466,12 @@ fn peer_union_with_run() -> Result<(), Box<dyn Error>> {
             ),
             // 5, 6
             AbsBoundPair::new(
-                AbsFiniteBoundPos::new_with_inclusivity(
+                AbsFiniteBoundPos::new_with_incl(
                     "2025-01-16 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                 )
                 .to_start_bound(),
-                AbsFiniteBoundPos::new_with_inclusivity(
+                AbsFiniteBoundPos::new_with_incl(
                     "2025-01-20 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                 )
@@ -479,12 +479,12 @@ fn peer_union_with_run() -> Result<(), Box<dyn Error>> {
             ),
             // 6, 7
             AbsBoundPair::new(
-                AbsFiniteBoundPos::new_with_inclusivity(
+                AbsFiniteBoundPos::new_with_incl(
                     "2025-01-30 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                 )
                 .to_start_bound(),
-                AbsFiniteBoundPos::new_with_inclusivity(
+                AbsFiniteBoundPos::new_with_incl(
                     "2025-02-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                 )

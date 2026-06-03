@@ -243,11 +243,11 @@ pub trait Intersectable<Rhs = Self> {
     /// assert_eq!(
     ///     first_interval.intersect_with(&second_interval, intersection_closure),
     ///     IntersectionResult::Intersected(AbsBoundPair::new(
-    ///         AbsFiniteBoundPos::new_with_inclusivity(
+    ///         AbsFiniteBoundPos::new_with_incl(
     ///             "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///             BoundInclusivity::Exclusive,
     ///         ).to_start_bound(),
-    ///         AbsFiniteBoundPos::new_with_inclusivity(
+    ///         AbsFiniteBoundPos::new_with_incl(
     ///             "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///             BoundInclusivity::Exclusive,
     ///         ).to_end_bound(),

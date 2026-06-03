@@ -74,13 +74,13 @@ use crate::ops::{ComplementResult, SymmetricDifferenceResult};
 ///             AbsFiniteBoundPos::new(
 ///                 "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///             ).to_start_bound(),
-///             AbsFiniteBoundPos::new_with_inclusivity(
+///             AbsFiniteBoundPos::new_with_incl(
 ///                 "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///                 BoundInclusivity::Exclusive,
 ///             ).to_end_bound(),
 ///         )),
 ///         EmptiableAbsBoundPair::Bound(AbsBoundPair::new(
-///             AbsFiniteBoundPos::new_with_inclusivity(
+///             AbsFiniteBoundPos::new_with_incl(
 ///                 "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///                 BoundInclusivity::Exclusive,
 ///             ).to_start_bound(),
@@ -166,13 +166,13 @@ pub trait SymmetricallyDifferentiable<Rhs = Self> {
     ///             AbsFiniteBoundPos::new(
     ///                 "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///             ).to_start_bound(),
-    ///             AbsFiniteBoundPos::new_with_inclusivity(
+    ///             AbsFiniteBoundPos::new_with_incl(
     ///                 "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///                 BoundInclusivity::Exclusive,
     ///             ).to_end_bound(),
     ///         ).to_emptiable(),
     ///         AbsBoundPair::new(
-    ///             AbsFiniteBoundPos::new_with_inclusivity(
+    ///             AbsFiniteBoundPos::new_with_incl(
     ///                 "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///                 BoundInclusivity::Exclusive,
     ///             ).to_start_bound(),
@@ -237,13 +237,13 @@ pub trait SymmetricallyDifferentiable<Rhs = Self> {
     ///             AbsFiniteBoundPos::new(
     ///                 "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///             ).to_start_bound(),
-    ///             AbsFiniteBoundPos::new_with_inclusivity(
+    ///             AbsFiniteBoundPos::new_with_incl(
     ///                 "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///                 BoundInclusivity::Exclusive,
     ///             ).to_end_bound(),
     ///         ).to_emptiable(),
     ///         AbsBoundPair::new(
-    ///             AbsFiniteBoundPos::new_with_inclusivity(
+    ///             AbsFiniteBoundPos::new_with_incl(
     ///                 "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///                 BoundInclusivity::Exclusive,
     ///             ).to_start_bound(),

@@ -13,12 +13,12 @@ use crate::ops::{Precision, PrecisionMode};
 fn abs_bound_pair_same_precision() -> Result<(), Box<dyn Error>> {
     assert_eq!(
         AbsBoundPair::new(
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2025-01-01 02:23:44[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
             )
             .to_start_bound(),
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2025-01-01 09:56:21[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
             )
@@ -29,12 +29,12 @@ fn abs_bound_pair_same_precision() -> Result<(), Box<dyn Error>> {
             Precision::new(Duration::from_mins(5), PrecisionMode::ToFuture)?
         ),
         Ok(AbsBoundPair::new(
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2025-01-01 02:25:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
             )
             .to_start_bound(),
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
             )
@@ -49,12 +49,12 @@ fn abs_bound_pair_same_precision() -> Result<(), Box<dyn Error>> {
 fn abs_bound_pair_different_precisions() -> Result<(), Box<dyn Error>> {
     assert_eq!(
         AbsBoundPair::new(
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2025-01-01 02:23:44[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
             )
             .to_start_bound(),
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2025-01-01 09:56:21[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
             )
@@ -66,12 +66,12 @@ fn abs_bound_pair_different_precisions() -> Result<(), Box<dyn Error>> {
             Precision::new(Duration::from_mins(5), PrecisionMode::ToPast)?,
         ),
         Ok(AbsBoundPair::new(
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2025-01-01 02:25:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
             )
             .to_start_bound(),
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2025-01-01 09:55:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
             )

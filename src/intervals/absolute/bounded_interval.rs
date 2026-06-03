@@ -230,8 +230,8 @@ impl BoundedAbsInterval {
         end_inclusivity: BoundInclusivity,
     ) -> Self {
         Self::unchecked_new(
-            AbsFiniteBoundPos::new_with_inclusivity(start, start_inclusivity).to_finite_start_bound(),
-            AbsFiniteBoundPos::new_with_inclusivity(end, end_inclusivity).to_finite_end_bound(),
+            AbsFiniteBoundPos::new_with_incl(start, start_inclusivity).to_finite_start_bound(),
+            AbsFiniteBoundPos::new_with_incl(end, end_inclusivity).to_finite_end_bound(),
         )
     }
 
@@ -277,8 +277,8 @@ impl BoundedAbsInterval {
         end_inclusivity: BoundInclusivity,
     ) -> Self {
         Self::new(
-            AbsFiniteBoundPos::new_with_inclusivity(start, start_inclusivity).to_finite_start_bound(),
-            AbsFiniteBoundPos::new_with_inclusivity(end, end_inclusivity).to_finite_end_bound(),
+            AbsFiniteBoundPos::new_with_incl(start, start_inclusivity).to_finite_start_bound(),
+            AbsFiniteBoundPos::new_with_incl(end, end_inclusivity).to_finite_end_bound(),
         )
     }
 
