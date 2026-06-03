@@ -13,16 +13,16 @@
 //! [`rsplit_by_naive_duration`](CalendarAnchorOffsetSplittable::rsplit_by_naive_duration) which will split the interval
 //! in reverse chronological order.
 //!
-//! # Splitting by [`BoundedRelativeInterval`]
+//! # Splitting by [`BoundedRelInterval`]
 //!
-//! Approach for splitting an interval into splits of precise duration using a [`BoundedRelativeInterval`]
+//! Approach for splitting an interval into splits of precise duration using a [`BoundedRelInterval`]
 //! as a reference.
 //!
 //! The provided [`IntervalSplit`] iterator, which is produced by
 //! [`split_by_interval`](IntervalSplittable::split_by_interval),
 //! will process this splitting approach.
 //!
-//! Since this iterator takes a [`BoundedRelativeInterval`] which has [bound inclusivities](BoundInclusivity),
+//! Since this iterator takes a [`BoundedRelInterval`] which has [bound inclusivities](BoundInclusivity),
 //! the resulting splits will reflect the same bound inclusivities as the reference, out of convenience.
 
 // TODO UPDATE MODULE OUTER DOC
@@ -32,7 +32,7 @@ use std::cmp::Ordering;
 use jiff::Timestamp;
 use jiff::tz::TimeZone;
 
-use crate::intervals::absolute::{BoundedAbsoluteInterval, HalfBoundedAbsoluteInterval, HasAbsoluteBoundPair};
+use crate::intervals::absolute::{BoundedAbsInterval, HalfBoundedAbsInterval, HasAbsBoundPair};
 use crate::iter::intervals::split::CalendarAnchorOffsetSplit;
 use crate::time::CalendarAnchorOffset;
 
@@ -47,21 +47,21 @@ pub enum CalendarAnchorOffsetSplitResult {
     /// Infinite split
     ///
     /// This is the result of splitting a
-    /// [`HalfBoundedAbsoluteInterval`](crate::intervals::absolute::HalfBoundedAbsoluteInterval).
+    /// [`HalfBoundedAbsInterval`](crate::intervals::absolute::HalfBoundedAbsInterval).
     ///
     /// If we have a half-bounded interval, with its opening direction being
     /// [`ToPast`](crate::intervals::meta::OpeningDirection::ToPast), then the [`CalendarAnchorOffsetSplit`] iterator
     /// will produce such a result spanning from the relevant time extremity, here minus infinity, to the closest
     /// relevant representable point in time, in this case, [`Timestamp::MIN`].
-    Infinite(HalfBoundedAbsoluteInterval),
+    Infinite(HalfBoundedAbsInterval),
     /// Full split
     ///
     /// A split of the expected duration.
-    Full(BoundedAbsoluteInterval),
+    Full(BoundedAbsInterval),
     /// Partial split
     ///
     /// The remainder of the interval splitting process.
-    Partial(BoundedAbsoluteInterval),
+    Partial(BoundedAbsInterval),
 }
 
 impl CalendarAnchorOffsetSplitResult {
@@ -75,16 +75,16 @@ impl CalendarAnchorOffsetSplitResult {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, HalfBoundedAbsoluteInterval};
+    /// # use periodical::intervals::absolute::{BoundedAbsInterval, HalfBoundedAbsInterval};
     /// # use periodical::intervals::meta::OpeningDirection;
     /// # use periodical::intervals::ops::split::CalendarAnchorOffsetSplitResult;
-    /// let infinite_split = HalfBoundedAbsoluteInterval::new(
+    /// let infinite_split = HalfBoundedAbsInterval::new(
     ///     "2026-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     OpeningDirection::ToPast,
     /// );
     /// let infinite_result = CalendarAnchorOffsetSplitResult::Infinite(infinite_split.clone());
     ///
-    /// let full_split = BoundedAbsoluteInterval::new(
+    /// let full_split = BoundedAbsInterval::new(
     ///     "2026-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     "2026-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     /// );
@@ -95,7 +95,7 @@ impl CalendarAnchorOffsetSplitResult {
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    pub fn infinite(self) -> Option<HalfBoundedAbsoluteInterval> {
+    pub fn infinite(self) -> Option<HalfBoundedAbsInterval> {
         match self {
             Self::Infinite(x) => Some(x),
             _ => None,
@@ -112,16 +112,16 @@ impl CalendarAnchorOffsetSplitResult {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, HalfBoundedAbsoluteInterval};
+    /// # use periodical::intervals::absolute::{BoundedAbsInterval, HalfBoundedAbsInterval};
     /// # use periodical::intervals::meta::OpeningDirection;
     /// # use periodical::intervals::ops::split::CalendarAnchorOffsetSplitResult;
-    /// let full_split = BoundedAbsoluteInterval::new(
+    /// let full_split = BoundedAbsInterval::new(
     ///     "2026-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     "2026-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     /// );
     /// let full_result = CalendarAnchorOffsetSplitResult::Full(full_split.clone());
     ///
-    /// let infinite_split = HalfBoundedAbsoluteInterval::new(
+    /// let infinite_split = HalfBoundedAbsInterval::new(
     ///     "2026-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     OpeningDirection::ToPast,
     /// );
@@ -132,7 +132,7 @@ impl CalendarAnchorOffsetSplitResult {
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    pub fn full(self) -> Option<BoundedAbsoluteInterval> {
+    pub fn full(self) -> Option<BoundedAbsInterval> {
         match self {
             Self::Full(x) => Some(x),
             _ => None,
@@ -149,16 +149,16 @@ impl CalendarAnchorOffsetSplitResult {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, HalfBoundedAbsoluteInterval};
+    /// # use periodical::intervals::absolute::{BoundedAbsInterval, HalfBoundedAbsInterval};
     /// # use periodical::intervals::meta::OpeningDirection;
     /// # use periodical::intervals::ops::split::CalendarAnchorOffsetSplitResult;
-    /// let partial_split = BoundedAbsoluteInterval::new(
+    /// let partial_split = BoundedAbsInterval::new(
     ///     "2026-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     "2026-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     /// );
     /// let partial_result = CalendarAnchorOffsetSplitResult::Partial(partial_split.clone());
     ///
-    /// let infinite_split = HalfBoundedAbsoluteInterval::new(
+    /// let infinite_split = HalfBoundedAbsInterval::new(
     ///     "2026-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     OpeningDirection::ToPast,
     /// );
@@ -169,7 +169,7 @@ impl CalendarAnchorOffsetSplitResult {
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    pub fn partial(self) -> Option<BoundedAbsoluteInterval> {
+    pub fn partial(self) -> Option<BoundedAbsInterval> {
         match self {
             Self::Partial(x) => Some(x),
             _ => None,
@@ -183,16 +183,16 @@ impl CalendarAnchorOffsetSplitResult {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, HalfBoundedAbsoluteInterval};
+    /// # use periodical::intervals::absolute::{BoundedAbsInterval, HalfBoundedAbsInterval};
     /// # use periodical::intervals::meta::OpeningDirection;
     /// # use periodical::intervals::ops::split::CalendarAnchorOffsetSplitResult;
-    /// let infinite_split = HalfBoundedAbsoluteInterval::new(
+    /// let infinite_split = HalfBoundedAbsInterval::new(
     ///     "2026-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     OpeningDirection::ToPast,
     /// );
     /// let infinite_result = CalendarAnchorOffsetSplitResult::Infinite(infinite_split);
     ///
-    /// let full_split = BoundedAbsoluteInterval::new(
+    /// let full_split = BoundedAbsInterval::new(
     ///     "2026-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     "2026-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     /// );
@@ -214,16 +214,16 @@ impl CalendarAnchorOffsetSplitResult {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, HalfBoundedAbsoluteInterval};
+    /// # use periodical::intervals::absolute::{BoundedAbsInterval, HalfBoundedAbsInterval};
     /// # use periodical::intervals::meta::OpeningDirection;
     /// # use periodical::intervals::ops::split::CalendarAnchorOffsetSplitResult;
-    /// let full_split = BoundedAbsoluteInterval::new(
+    /// let full_split = BoundedAbsInterval::new(
     ///     "2026-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     "2026-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     /// );
     /// let full_result = CalendarAnchorOffsetSplitResult::Full(full_split);
     ///
-    /// let infinite_split = HalfBoundedAbsoluteInterval::new(
+    /// let infinite_split = HalfBoundedAbsInterval::new(
     ///     "2026-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     OpeningDirection::ToPast,
     /// );
@@ -245,16 +245,16 @@ impl CalendarAnchorOffsetSplitResult {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::{BoundedAbsoluteInterval, HalfBoundedAbsoluteInterval};
+    /// # use periodical::intervals::absolute::{BoundedAbsInterval, HalfBoundedAbsInterval};
     /// # use periodical::intervals::meta::OpeningDirection;
     /// # use periodical::intervals::ops::split::CalendarAnchorOffsetSplitResult;
-    /// let partial_split = BoundedAbsoluteInterval::new(
+    /// let partial_split = BoundedAbsInterval::new(
     ///     "2026-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     "2026-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     /// );
     /// let partial_result = CalendarAnchorOffsetSplitResult::Partial(partial_split);
     ///
-    /// let infinite_split = HalfBoundedAbsoluteInterval::new(
+    /// let infinite_split = HalfBoundedAbsInterval::new(
     ///     "2026-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     OpeningDirection::ToPast,
     /// );
@@ -293,16 +293,25 @@ pub trait CalendarAnchorOffsetSplittable
 where
     Self: Sized,
 {
-    fn split_by_calendar_anchor_offset(self, calendar_anchor_offset: CalendarAnchorOffset, tz: TimeZone) -> CalendarAnchorOffsetSplit;
+    fn split_by_calendar_anchor_offset(
+        self,
+        calendar_anchor_offset: CalendarAnchorOffset,
+        tz: TimeZone,
+    ) -> CalendarAnchorOffsetSplit;
 
-    // fn rsplit_by_calendar_anchor_offset(self, calendar_anchor_offset: CalendarAnchorOffset, tz: TimeZone) -> CalendarAnchorOffsetRSplit;
+    // fn rsplit_by_calendar_anchor_offset(self, calendar_anchor_offset: CalendarAnchorOffset, tz: TimeZone) ->
+    // CalendarAnchorOffsetRSplit;
 }
 
 impl<T> CalendarAnchorOffsetSplittable for T
 where
-    T: HasAbsoluteBoundPair,
+    T: HasAbsBoundPair,
 {
-    fn split_by_calendar_anchor_offset(self, calendar_anchor_offset: CalendarAnchorOffset, tz: TimeZone) -> CalendarAnchorOffsetSplit {
+    fn split_by_calendar_anchor_offset(
+        self,
+        calendar_anchor_offset: CalendarAnchorOffset,
+        tz: TimeZone,
+    ) -> CalendarAnchorOffsetSplit {
         CalendarAnchorOffsetSplit::new(&self, calendar_anchor_offset, tz)
     }
 }

@@ -21,16 +21,16 @@ use crate::intervals::meta::{
     Relativity,
 };
 use crate::intervals::relative::{
-    EmptiableRelativeInterval,
-    HalfBoundedRelativeInterval,
-    HalfBoundedToFutureRelativeInterval,
-    HasRelativeBoundPair,
-    RelativeBoundPair,
-    RelativeEndBound,
-    RelativeFiniteBoundPosition,
-    RelativeFiniteEndBound,
-    RelativeInterval,
-    RelativeStartBound,
+    EmptiableRelInterval,
+    HalfBoundedRelInterval,
+    HalfBoundedToFutureRelInterval,
+    HasRelBoundPair,
+    RelBoundPair,
+    RelEndBound,
+    RelFiniteBoundPos,
+    RelFiniteEndBound,
+    RelInterval,
+    RelStartBound,
 };
 
 /// A half-bounded relative interval
@@ -43,29 +43,29 @@ use crate::intervals::relative::{
 /// to a bounded interval.
 ///
 /// Instead, if you are looking for an relative interval that doesn't keep the
-/// [openness](Openness) invariant, see [`RelativeBoundPair`].
+/// [openness](Openness) invariant, see [`RelBoundPair`].
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
-pub struct HalfBoundedToPastRelativeInterval(pub(crate) RelativeFiniteEndBound);
+pub struct HalfBoundedToPastRelInterval(pub(crate) RelFiniteEndBound);
 
-impl HalfBoundedToPastRelativeInterval {
-    pub fn new(end: RelativeFiniteEndBound) -> Self {
-        HalfBoundedToPastRelativeInterval(end)
+impl HalfBoundedToPastRelInterval {
+    pub fn new(end: RelFiniteEndBound) -> Self {
+        HalfBoundedToPastRelInterval(end)
     }
 
-    /// Creates a new [`HalfBoundedRelativeInterval`]
+    /// Creates a new [`HalfBoundedRelInterval`]
     ///
     /// # Examples
     ///
     /// ```
     /// # use std::error::Error;
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::HalfBoundedRelativeInterval;
+    /// # use periodical::intervals::relative::HalfBoundedRelInterval;
     /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
     /// let ref_offset = "2025-01-01 08:00:00Z".parse::<SignedDuration>()?;
     ///
     /// let half_bounded_interval =
-    ///     HalfBoundedRelativeInterval::new(ref_offset, OpeningDirection::ToPast);
+    ///     HalfBoundedRelInterval::new(ref_offset, OpeningDirection::ToPast);
     ///
     /// assert_eq!(half_bounded_interval.reference(), ref_offset);
     /// assert_eq!(
@@ -80,10 +80,10 @@ impl HalfBoundedToPastRelativeInterval {
     /// ```
     #[must_use]
     pub fn new_from_offset(reference: SignedDuration) -> Self {
-        Self::new(RelativeFiniteBoundPosition::new(reference).to_finite_end_bound())
+        Self::new(RelFiniteBoundPos::new(reference).to_finite_end_bound())
     }
 
-    /// Creates a new [`HalfBoundedRelativeInterval`] with the given bound
+    /// Creates a new [`HalfBoundedRelInterval`] with the given bound
     /// inclusivities
     ///
     /// # Examples
@@ -91,11 +91,11 @@ impl HalfBoundedToPastRelativeInterval {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::HalfBoundedRelativeInterval;
+    /// # use periodical::intervals::relative::HalfBoundedRelInterval;
     /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
     /// let ref_offset = "2025-01-01 08:00:00Z".parse::<SignedDuration>()?;
     ///
-    /// let half_bounded_interval = HalfBoundedRelativeInterval::new_with_inclusivity(
+    /// let half_bounded_interval = HalfBoundedRelInterval::new_with_inclusivity(
     ///     ref_offset,
     ///     BoundInclusivity::Exclusive,
     ///     OpeningDirection::ToFuture,
@@ -114,16 +114,16 @@ impl HalfBoundedToPastRelativeInterval {
     /// ```
     #[must_use]
     pub fn new_from_offset_and_inclusivity(reference: SignedDuration, reference_inclusivity: BoundInclusivity) -> Self {
-        HalfBoundedToPastRelativeInterval::new(
-            RelativeFiniteBoundPosition::new_with_inclusivity(reference, reference_inclusivity).to_finite_end_bound(),
+        HalfBoundedToPastRelInterval::new(
+            RelFiniteBoundPos::new_with_inclusivity(reference, reference_inclusivity).to_finite_end_bound(),
         )
     }
 
-    /// Attempts to create a [`HalfBoundedRelativeInterval`] from a [`SignedDuration`] range
+    /// Attempts to create a [`HalfBoundedRelInterval`] from a [`SignedDuration`] range
     ///
     /// # Errors
     ///
-    /// Returns [`HalfBoundedRelativeIntervalTryFromRangeError`] if there is not exactly
+    /// Returns [`HalfBoundedRelIntervalTryFromRangeError`] if there is not exactly
     /// one [unbounded](Bound::Unbounded) range bound.
     ///
     /// # Examples
@@ -131,17 +131,17 @@ impl HalfBoundedToPastRelativeInterval {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::{HalfBoundedRelativeInterval, HalfBoundedRelativeIntervalTryFromRangeError};
+    /// # use periodical::intervals::relative::{HalfBoundedRelInterval, HalfBoundedRelIntervalTryFromRangeError};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// let reference = "2026-01-01 08:00:00Z".parse::<SignedDuration>()?;
     ///
-    /// let interval = HalfBoundedRelativeInterval::try_from_range(..reference)?;
+    /// let interval = HalfBoundedRelInterval::try_from_range(..reference)?;
     ///
     /// assert_eq!(interval.reference(), reference);
     /// assert_eq!(interval.reference_inclusivity(), BoundInclusivity::Exclusive);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
-    pub fn try_from_range<R>(range: R) -> Result<Self, HalfBoundedToPastRelativeIntervalTryFromRangeError>
+    pub fn try_from_range<R>(range: R) -> Result<Self, HalfBoundedToPastRelIntervalTryFromRangeError>
     where
         R: RangeBounds<SignedDuration>,
     {
@@ -154,19 +154,19 @@ impl HalfBoundedToPastRelativeInterval {
                 reference,
                 BoundInclusivity::Exclusive,
             )),
-            _ => Err(HalfBoundedToPastRelativeIntervalTryFromRangeError),
+            _ => Err(HalfBoundedToPastRelIntervalTryFromRangeError),
         }
     }
 
-    pub fn start(&self) -> RelativeStartBound {
-        RelativeStartBound::InfinitePast
+    pub fn start(&self) -> RelStartBound {
+        RelStartBound::InfinitePast
     }
 
-    pub fn end(&self) -> RelativeFiniteEndBound {
+    pub fn end(&self) -> RelFiniteEndBound {
         self.0
     }
 
-    pub fn end_mut(&mut self) -> &mut RelativeFiniteEndBound {
+    pub fn end_mut(&mut self) -> &mut RelFiniteEndBound {
         &mut self.0
     }
 
@@ -177,12 +177,12 @@ impl HalfBoundedToPastRelativeInterval {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::HalfBoundedRelativeInterval;
+    /// # use periodical::intervals::relative::HalfBoundedRelInterval;
     /// # use periodical::intervals::meta::OpeningDirection;
     /// let ref_offset = "2025-01-01 08:00:00Z".parse::<SignedDuration>()?;
     ///
     /// let half_bounded_interval =
-    ///     HalfBoundedRelativeInterval::new(ref_offset, OpeningDirection::ToPast);
+    ///     HalfBoundedRelInterval::new(ref_offset, OpeningDirection::ToPast);
     ///
     /// assert_eq!(half_bounded_interval.reference(), ref_offset);
     /// # Ok::<(), Box<dyn Error>>(())
@@ -197,11 +197,11 @@ impl HalfBoundedToPastRelativeInterval {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::HalfBoundedRelativeInterval;
+    /// # use periodical::intervals::relative::HalfBoundedRelInterval;
     /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
     /// let ref_offset = "2025-01-01 08:00:00Z".parse::<SignedDuration>()?;
     ///
-    /// let half_bounded_interval = HalfBoundedRelativeInterval::new_with_inclusivity(
+    /// let half_bounded_interval = HalfBoundedRelInterval::new_with_inclusivity(
     ///     ref_offset,
     ///     BoundInclusivity::Exclusive,
     ///     OpeningDirection::ToFuture,
@@ -218,7 +218,7 @@ impl HalfBoundedToPastRelativeInterval {
         self.end().pos().inclusivity()
     }
 
-    pub fn set_end(&mut self, new_end: RelativeFiniteEndBound) {
+    pub fn set_end(&mut self, new_end: RelFiniteEndBound) {
         self.0 = new_end;
     }
 
@@ -229,12 +229,12 @@ impl HalfBoundedToPastRelativeInterval {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::HalfBoundedRelativeInterval;
+    /// # use periodical::intervals::relative::HalfBoundedRelInterval;
     /// # use periodical::intervals::meta::OpeningDirection;
     /// let ref_offset = "2025-01-01 08:00:00Z".parse::<SignedDuration>()?;
     ///
     /// let mut half_bounded_interval =
-    ///     HalfBoundedRelativeInterval::new(ref_offset, OpeningDirection::ToFuture);
+    ///     HalfBoundedRelInterval::new(ref_offset, OpeningDirection::ToFuture);
     ///
     /// let new_ref_offset = "2025-01-01 16:00:00Z".parse::<SignedDuration>()?;
     ///
@@ -254,12 +254,12 @@ impl HalfBoundedToPastRelativeInterval {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::HalfBoundedRelativeInterval;
+    /// # use periodical::intervals::relative::HalfBoundedRelInterval;
     /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
     /// let ref_offset = "2025-01-01 08:00:00Z".parse::<SignedDuration>()?;
     ///
     /// let mut half_bounded_interval =
-    ///     HalfBoundedRelativeInterval::new(ref_offset, OpeningDirection::ToFuture);
+    ///     HalfBoundedRelInterval::new(ref_offset, OpeningDirection::ToFuture);
     ///
     /// half_bounded_interval.set_reference_inclusivity(BoundInclusivity::Exclusive);
     ///
@@ -273,29 +273,29 @@ impl HalfBoundedToPastRelativeInterval {
         self.end_mut().pos_mut().set_inclusivity(new_inclusivity);
     }
 
-    pub fn opposite(self) -> HalfBoundedToFutureRelativeInterval {
-        HalfBoundedToFutureRelativeInterval(self.end().opposite())
+    pub fn opposite(self) -> HalfBoundedToFutureRelInterval {
+        HalfBoundedToFutureRelInterval(self.end().opposite())
     }
 
-    pub fn to_half_bounded_interval(self) -> HalfBoundedRelativeInterval {
-        HalfBoundedRelativeInterval::ToPast(self)
+    pub fn to_half_bounded_interval(self) -> HalfBoundedRelInterval {
+        HalfBoundedRelInterval::ToPast(self)
     }
 
-    /// Wraps the interval in [`RelativeInterval`]
+    /// Wraps the interval in [`RelInterval`]
     #[must_use]
-    pub fn to_interval(self) -> RelativeInterval {
-        RelativeInterval::from(self)
+    pub fn to_interval(self) -> RelInterval {
+        RelInterval::from(self)
     }
 
-    /// Wraps the interval in [`EmptiableRelativeInterval`]
+    /// Wraps the interval in [`EmptiableRelInterval`]
     #[must_use]
-    pub fn to_emptiable_interval(self) -> EmptiableRelativeInterval {
-        EmptiableRelativeInterval::from(self)
+    pub fn to_emptiable_interval(self) -> EmptiableRelInterval {
+        EmptiableRelInterval::from(self)
     }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum HalfBoundedToPastRelativeIntervalCreationError {
+pub enum HalfBoundedToPastRelIntervalCreationError {
     /// Reference could not be created as it was out of range
     OutOfRangeEnd,
     /// Something went wrong when computing data for creating the interval
@@ -305,7 +305,7 @@ pub enum HalfBoundedToPastRelativeIntervalCreationError {
     ComputationError,
 }
 
-impl Display for HalfBoundedToPastRelativeIntervalCreationError {
+impl Display for HalfBoundedToPastRelIntervalCreationError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::OutOfRangeEnd => write!(f, "Reference could not be created as it was out of range"),
@@ -314,184 +314,182 @@ impl Display for HalfBoundedToPastRelativeIntervalCreationError {
     }
 }
 
-impl Error for HalfBoundedToPastRelativeIntervalCreationError {}
+impl Error for HalfBoundedToPastRelIntervalCreationError {}
 
-/// Error that can occur when trying to convert a [`SignedDuration`] range into a [`HalfBoundedRelativeInterval`]
+/// Error that can occur when trying to convert a [`SignedDuration`] range into a [`HalfBoundedRelInterval`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct HalfBoundedToPastRelativeIntervalTryFromRangeError;
+pub struct HalfBoundedToPastRelIntervalTryFromRangeError;
 
-impl Display for HalfBoundedToPastRelativeIntervalTryFromRangeError {
+impl Display for HalfBoundedToPastRelIntervalTryFromRangeError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "An error occurred when trying to convert a `SignedDuration` range into a `HalfBoundedRelativeInterval`"
+            "An error occurred when trying to convert a `SignedDuration` range into a `HalfBoundedRelInterval`"
         )
     }
 }
 
-impl Error for HalfBoundedToPastRelativeIntervalTryFromRangeError {}
+impl Error for HalfBoundedToPastRelIntervalTryFromRangeError {}
 
-impl Interval for HalfBoundedToPastRelativeInterval {}
+impl Interval for HalfBoundedToPastRelInterval {}
 
-impl HasOpenness for HalfBoundedToPastRelativeInterval {
+impl HasOpenness for HalfBoundedToPastRelInterval {
     fn openness(&self) -> Openness {
         Openness::HalfBounded
     }
 }
 
-impl HasRelativity for HalfBoundedToPastRelativeInterval {
+impl HasRelativity for HalfBoundedToPastRelInterval {
     fn relativity(&self) -> Relativity {
-        Relativity::Relative
+        Relativity::Rel
     }
 }
 
-impl HasDuration for HalfBoundedToPastRelativeInterval {
+impl HasDuration for HalfBoundedToPastRelInterval {
     fn duration(&self) -> IntervalDuration {
         IntervalDuration::Infinite
     }
 }
 
-impl HasOpeningDirection for HalfBoundedToPastRelativeInterval {
+impl HasOpeningDirection for HalfBoundedToPastRelInterval {
     fn opening_direction(&self) -> OpeningDirection {
         OpeningDirection::ToPast
     }
 }
 
-impl HasRelativeBoundPair for HalfBoundedToPastRelativeInterval {
-    fn rel_bound_pair(&self) -> RelativeBoundPair {
-        RelativeBoundPair::new(self.rel_start(), self.rel_end())
+impl HasRelBoundPair for HalfBoundedToPastRelInterval {
+    fn rel_bound_pair(&self) -> RelBoundPair {
+        RelBoundPair::new(self.rel_start(), self.rel_end())
     }
 
-    fn rel_start(&self) -> RelativeStartBound {
+    fn rel_start(&self) -> RelStartBound {
         self.start()
     }
 
-    fn rel_end(&self) -> RelativeEndBound {
+    fn rel_end(&self) -> RelEndBound {
         self.end().to_end_bound()
     }
 }
 
-impl IsEmpty for HalfBoundedToPastRelativeInterval {
+impl IsEmpty for HalfBoundedToPastRelInterval {
     fn is_empty(&self) -> bool {
         false
     }
 }
 
-impl From<SignedDuration> for HalfBoundedToPastRelativeInterval {
+impl From<SignedDuration> for HalfBoundedToPastRelInterval {
     fn from(offset: SignedDuration) -> Self {
-        HalfBoundedToPastRelativeInterval::new_from_offset(offset)
+        HalfBoundedToPastRelInterval::new_from_offset(offset)
     }
 }
 
-impl From<(SignedDuration, BoundInclusivity)> for HalfBoundedToPastRelativeInterval {
+impl From<(SignedDuration, BoundInclusivity)> for HalfBoundedToPastRelInterval {
     fn from((offset, inclusivity): (SignedDuration, BoundInclusivity)) -> Self {
-        HalfBoundedToPastRelativeInterval::new_from_offset_and_inclusivity(offset, inclusivity)
+        HalfBoundedToPastRelInterval::new_from_offset_and_inclusivity(offset, inclusivity)
     }
 }
 
-impl From<RelativeFiniteBoundPosition> for HalfBoundedToPastRelativeInterval {
-    fn from(end: RelativeFiniteBoundPosition) -> Self {
+impl From<RelFiniteBoundPos> for HalfBoundedToPastRelInterval {
+    fn from(end: RelFiniteBoundPos) -> Self {
         Self::new(end.to_finite_end_bound())
     }
 }
 
-impl From<RelativeFiniteEndBound> for HalfBoundedToPastRelativeInterval {
-    fn from(end: RelativeFiniteEndBound) -> Self {
+impl From<RelFiniteEndBound> for HalfBoundedToPastRelInterval {
+    fn from(end: RelFiniteEndBound) -> Self {
         Self::new(end)
     }
 }
 
-impl From<RangeTo<SignedDuration>> for HalfBoundedToPastRelativeInterval {
+impl From<RangeTo<SignedDuration>> for HalfBoundedToPastRelInterval {
     fn from(range: RangeTo<SignedDuration>) -> Self {
-        HalfBoundedToPastRelativeInterval::new_from_offset_and_inclusivity(range.end, BoundInclusivity::Exclusive)
+        HalfBoundedToPastRelInterval::new_from_offset_and_inclusivity(range.end, BoundInclusivity::Exclusive)
     }
 }
 
-impl From<RangeToInclusive<SignedDuration>> for HalfBoundedToPastRelativeInterval {
+impl From<RangeToInclusive<SignedDuration>> for HalfBoundedToPastRelInterval {
     fn from(range: RangeToInclusive<SignedDuration>) -> Self {
-        HalfBoundedToPastRelativeInterval::new_from_offset_and_inclusivity(range.end, BoundInclusivity::Inclusive)
+        HalfBoundedToPastRelInterval::new_from_offset_and_inclusivity(range.end, BoundInclusivity::Inclusive)
     }
 }
 
-/// Error that can occur when trying to convert [`RelativeBoundPair`] into [`HalfBoundedRelativeInterval`]
+/// Error that can occur when trying to convert [`RelBoundPair`] into [`HalfBoundedRelInterval`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct HalfBoundedToPastRelativeIntervalTryFromRelativeBoundPairError;
+pub struct HalfBoundedToPastRelIntervalTryFromRelBoundPairError;
 
-impl Display for HalfBoundedToPastRelativeIntervalTryFromRelativeBoundPairError {
+impl Display for HalfBoundedToPastRelIntervalTryFromRelBoundPairError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "An error occurred when trying to convert `RelativeBoundPair` into `HalfBoundedRelativeInterval`"
+            "An error occurred when trying to convert `RelBoundPair` into `HalfBoundedRelInterval`"
         )
     }
 }
 
-impl Error for HalfBoundedToPastRelativeIntervalTryFromRelativeBoundPairError {}
+impl Error for HalfBoundedToPastRelIntervalTryFromRelBoundPairError {}
 
-impl TryFrom<RelativeBoundPair> for HalfBoundedToPastRelativeInterval {
-    type Error = HalfBoundedToPastRelativeIntervalTryFromRelativeBoundPairError;
+impl TryFrom<RelBoundPair> for HalfBoundedToPastRelInterval {
+    type Error = HalfBoundedToPastRelIntervalTryFromRelBoundPairError;
 
-    fn try_from(value: RelativeBoundPair) -> Result<Self, Self::Error> {
+    fn try_from(value: RelBoundPair) -> Result<Self, Self::Error> {
         match (value.start(), value.end()) {
-            (RelativeStartBound::InfinitePast, RelativeEndBound::Finite(finite_end)) => Ok(Self::new(finite_end)),
-            _ => Err(HalfBoundedToPastRelativeIntervalTryFromRelativeBoundPairError),
+            (RelStartBound::InfinitePast, RelEndBound::Finite(finite_end)) => Ok(Self::new(finite_end)),
+            _ => Err(HalfBoundedToPastRelIntervalTryFromRelBoundPairError),
         }
     }
 }
 
-/// Error that can occur when trying to convert [`RelativeInterval`] into [`HalfBoundedRelativeInterval`]
+/// Error that can occur when trying to convert [`RelInterval`] into [`HalfBoundedRelInterval`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct HalfBoundedToPastRelativeIntervalTryFromRelativeIntervalError;
+pub struct HalfBoundedToPastRelIntervalTryFromRelIntervalError;
 
-impl Display for HalfBoundedToPastRelativeIntervalTryFromRelativeIntervalError {
+impl Display for HalfBoundedToPastRelIntervalTryFromRelIntervalError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "An error occurred when trying to convert `RelativeInterval` into `HalfBoundedRelativeInterval`"
+            "An error occurred when trying to convert `RelInterval` into `HalfBoundedRelInterval`"
         )
     }
 }
 
-impl Error for HalfBoundedToPastRelativeIntervalTryFromRelativeIntervalError {}
+impl Error for HalfBoundedToPastRelIntervalTryFromRelIntervalError {}
 
-impl TryFrom<RelativeInterval> for HalfBoundedToPastRelativeInterval {
-    type Error = HalfBoundedToPastRelativeIntervalTryFromRelativeIntervalError;
+impl TryFrom<RelInterval> for HalfBoundedToPastRelInterval {
+    type Error = HalfBoundedToPastRelIntervalTryFromRelIntervalError;
 
-    fn try_from(value: RelativeInterval) -> Result<Self, Self::Error> {
+    fn try_from(value: RelInterval) -> Result<Self, Self::Error> {
         value
             .half_bounded()
-            .ok_or(HalfBoundedToPastRelativeIntervalTryFromRelativeIntervalError)?
+            .ok_or(HalfBoundedToPastRelIntervalTryFromRelIntervalError)?
             .half_bounded_to_past()
-            .ok_or(HalfBoundedToPastRelativeIntervalTryFromRelativeIntervalError)
+            .ok_or(HalfBoundedToPastRelIntervalTryFromRelIntervalError)
     }
 }
 
-/// Error that can occur when trying to convert [`EmptiableRelativeInterval`] into [`HalfBoundedRelativeInterval`]
+/// Error that can occur when trying to convert [`EmptiableRelInterval`] into [`HalfBoundedRelInterval`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct HalfBoundedToPastRelativeIntervalTryFromEmptiableRelativeIntervalError;
+pub struct HalfBoundedToPastRelIntervalTryFromEmptiableRelIntervalError;
 
-impl Display for HalfBoundedToPastRelativeIntervalTryFromEmptiableRelativeIntervalError {
+impl Display for HalfBoundedToPastRelIntervalTryFromEmptiableRelIntervalError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "An error occurred when trying to convert `EmptiableRelativeInterval` into `HalfBoundedRelativeInterval`"
+            "An error occurred when trying to convert `EmptiableRelInterval` into `HalfBoundedRelInterval`"
         )
     }
 }
 
-impl Error for HalfBoundedToPastRelativeIntervalTryFromEmptiableRelativeIntervalError {}
+impl Error for HalfBoundedToPastRelIntervalTryFromEmptiableRelIntervalError {}
 
-impl TryFrom<EmptiableRelativeInterval> for HalfBoundedToPastRelativeInterval {
-    type Error = HalfBoundedToPastRelativeIntervalTryFromEmptiableRelativeIntervalError;
+impl TryFrom<EmptiableRelInterval> for HalfBoundedToPastRelInterval {
+    type Error = HalfBoundedToPastRelIntervalTryFromEmptiableRelIntervalError;
 
-    fn try_from(value: EmptiableRelativeInterval) -> Result<Self, Self::Error> {
+    fn try_from(value: EmptiableRelInterval) -> Result<Self, Self::Error> {
         Self::try_from(
             value
                 .bound()
-                .ok_or(HalfBoundedToPastRelativeIntervalTryFromEmptiableRelativeIntervalError)?,
+                .ok_or(HalfBoundedToPastRelIntervalTryFromEmptiableRelIntervalError)?,
         )
-        .or(Err(
-            HalfBoundedToPastRelativeIntervalTryFromEmptiableRelativeIntervalError,
-        ))
+        .or(Err(HalfBoundedToPastRelIntervalTryFromEmptiableRelIntervalError))
     }
 }

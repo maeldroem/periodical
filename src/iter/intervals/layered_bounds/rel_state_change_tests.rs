@@ -2,13 +2,13 @@ use jiff::SignedDuration;
 
 use super::rel_state_change::*;
 use crate::intervals::meta::BoundInclusivity;
-use crate::intervals::relative::RelativeFiniteBoundPosition;
+use crate::intervals::relative::RelFiniteBoundPos;
 use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
 
 #[test]
 fn at_rel_bound_old_state() {
     assert_eq!(
-        LayeredBoundsStateChangeAtRelativeBound::new(
+        LayeredBoundsStateChangeAtRelBound::new(
             LayeredBoundsState::FirstLayer,
             LayeredBoundsState::SecondLayer,
             None,
@@ -22,7 +22,7 @@ fn at_rel_bound_old_state() {
 #[test]
 fn at_rel_bound_new_state() {
     assert_eq!(
-        LayeredBoundsStateChangeAtRelativeBound::new(
+        LayeredBoundsStateChangeAtRelBound::new(
             LayeredBoundsState::FirstLayer,
             LayeredBoundsState::SecondLayer,
             None,
@@ -36,18 +36,18 @@ fn at_rel_bound_new_state() {
 #[test]
 fn at_rel_bound_old_state_end() {
     assert_eq!(
-        LayeredBoundsStateChangeAtRelativeBound::new(
+        LayeredBoundsStateChangeAtRelBound::new(
             LayeredBoundsState::FirstLayer,
             LayeredBoundsState::SecondLayer,
             Some(
-                RelativeFiniteBoundPosition::new_with_inclusivity(
+                RelFiniteBoundPos::new_with_inclusivity(
                     SignedDuration::from_hours(1),
                     BoundInclusivity::Inclusive,
                 )
                 .to_end_bound()
             ),
             Some(
-                RelativeFiniteBoundPosition::new_with_inclusivity(
+                RelFiniteBoundPos::new_with_inclusivity(
                     SignedDuration::from_hours(1),
                     BoundInclusivity::Exclusive,
                 )
@@ -56,7 +56,7 @@ fn at_rel_bound_old_state_end() {
         )
         .old_state_end(),
         Some(
-            RelativeFiniteBoundPosition::new_with_inclusivity(
+            RelFiniteBoundPos::new_with_inclusivity(
                 SignedDuration::from_hours(1),
                 BoundInclusivity::Inclusive,
             )
@@ -68,18 +68,18 @@ fn at_rel_bound_old_state_end() {
 #[test]
 fn at_rel_bound_new_state_start() {
     assert_eq!(
-        LayeredBoundsStateChangeAtRelativeBound::new(
+        LayeredBoundsStateChangeAtRelBound::new(
             LayeredBoundsState::FirstLayer,
             LayeredBoundsState::SecondLayer,
             Some(
-                RelativeFiniteBoundPosition::new_with_inclusivity(
+                RelFiniteBoundPos::new_with_inclusivity(
                     SignedDuration::from_hours(1),
                     BoundInclusivity::Inclusive,
                 )
                 .to_end_bound()
             ),
             Some(
-                RelativeFiniteBoundPosition::new_with_inclusivity(
+                RelFiniteBoundPos::new_with_inclusivity(
                     SignedDuration::from_hours(1),
                     BoundInclusivity::Exclusive,
                 )
@@ -88,7 +88,7 @@ fn at_rel_bound_new_state_start() {
         )
         .new_state_start(),
         Some(
-            RelativeFiniteBoundPosition::new_with_inclusivity(
+            RelFiniteBoundPos::new_with_inclusivity(
                 SignedDuration::from_hours(1),
                 BoundInclusivity::Exclusive,
             )

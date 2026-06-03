@@ -4,46 +4,46 @@ use super::relative::*;
 use crate::intervals::meta::BoundInclusivity;
 use crate::intervals::ops::{BoundOrd, BoundOverlapDisambiguationRuleSet};
 use crate::intervals::relative::{
-    RelativeBoundPair,
-    RelativeEndBound,
-    RelativeFiniteBoundPosition,
-    RelativeStartBound,
+    RelBoundPair,
+    RelEndBound,
+    RelFiniteBoundPos,
+    RelStartBound,
 };
-use crate::iter::intervals::bounds::RelativeBoundsIteratorDispatcher;
-use crate::iter::intervals::layered_bounds::rel_state_change::LayeredBoundsStateChangeAtRelativeBound;
+use crate::iter::intervals::bounds::RelBoundsIteratorDispatcher;
+use crate::iter::intervals::layered_bounds::rel_state_change::LayeredBoundsStateChangeAtRelBound;
 use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
 
 #[test]
 fn create() {
     let first_layer_data = [
-        RelativeStartBound::InfinitePast.to_bound(),
-        RelativeFiniteBoundPosition::new(SignedDuration::from_hours(101))
+        RelStartBound::InfinitePast.to_bound(),
+        RelFiniteBoundPos::new(SignedDuration::from_hours(101))
             .to_start_bound()
             .to_bound(),
-        RelativeFiniteBoundPosition::new(SignedDuration::from_hours(102))
+        RelFiniteBoundPos::new(SignedDuration::from_hours(102))
             .to_end_bound()
             .to_bound(),
-        RelativeFiniteBoundPosition::new(SignedDuration::from_hours(105))
+        RelFiniteBoundPos::new(SignedDuration::from_hours(105))
             .to_start_bound()
             .to_bound(),
-        RelativeEndBound::InfiniteFuture.to_bound(),
+        RelEndBound::InfiniteFuture.to_bound(),
     ];
 
     let second_layer_data = [
-        RelativeStartBound::InfinitePast.to_bound(),
-        RelativeFiniteBoundPosition::new(SignedDuration::from_hours(101))
+        RelStartBound::InfinitePast.to_bound(),
+        RelFiniteBoundPos::new(SignedDuration::from_hours(101))
             .to_start_bound()
             .to_bound(),
-        RelativeFiniteBoundPosition::new(SignedDuration::from_hours(102))
+        RelFiniteBoundPos::new(SignedDuration::from_hours(102))
             .to_end_bound()
             .to_bound(),
-        RelativeFiniteBoundPosition::new(SignedDuration::from_hours(105))
+        RelFiniteBoundPos::new(SignedDuration::from_hours(105))
             .to_start_bound()
             .to_bound(),
-        RelativeEndBound::InfiniteFuture.to_bound(),
+        RelEndBound::InfiniteFuture.to_bound(),
     ];
 
-    let _ = LayeredRelativeBounds::new(first_layer_data.into_iter(), second_layer_data.into_iter());
+    let _ = LayeredRelBounds::new(first_layer_data.into_iter(), second_layer_data.into_iter());
 }
 
 #[allow(clippy::too_many_lines)]
@@ -53,96 +53,96 @@ fn run() {
     // second layer:           [--2--]        (--4--] [--5--]           [--8--] [10)(--12---]
     let first_layer_data = [
         // 1
-        RelativeBoundPair::new(
-            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(101)).to_start_bound(),
-            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(105)).to_end_bound(),
+        RelBoundPair::new(
+            RelFiniteBoundPos::new(SignedDuration::from_hours(101)).to_start_bound(),
+            RelFiniteBoundPos::new(SignedDuration::from_hours(105)).to_end_bound(),
         ),
         // 3
-        RelativeBoundPair::new(
-            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(117)).to_start_bound(),
-            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(120)).to_end_bound(),
+        RelBoundPair::new(
+            RelFiniteBoundPos::new(SignedDuration::from_hours(117)).to_start_bound(),
+            RelFiniteBoundPos::new(SignedDuration::from_hours(120)).to_end_bound(),
         ),
         // 6
-        RelativeBoundPair::new(
-            RelativeFiniteBoundPosition::new_with_inclusivity(
+        RelBoundPair::new(
+            RelFiniteBoundPos::new_with_inclusivity(
                 SignedDuration::from_hours(205),
                 BoundInclusivity::Exclusive,
             )
             .to_start_bound(),
-            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(210)).to_end_bound(),
+            RelFiniteBoundPos::new(SignedDuration::from_hours(210)).to_end_bound(),
         ),
         // 7
-        RelativeBoundPair::new(
-            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(215)).to_start_bound(),
-            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(225)).to_end_bound(),
+        RelBoundPair::new(
+            RelFiniteBoundPos::new(SignedDuration::from_hours(215)).to_start_bound(),
+            RelFiniteBoundPos::new(SignedDuration::from_hours(225)).to_end_bound(),
         ),
         // 9
-        RelativeBoundPair::new(
-            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(226)).to_start_bound(),
-            RelativeFiniteBoundPosition::new_with_inclusivity(
+        RelBoundPair::new(
+            RelFiniteBoundPos::new(SignedDuration::from_hours(226)).to_start_bound(),
+            RelFiniteBoundPos::new_with_inclusivity(
                 SignedDuration::from_hours(310),
                 BoundInclusivity::Exclusive,
             )
             .to_end_bound(),
         ),
         // 11
-        RelativeBoundPair::new(
-            RelativeFiniteBoundPosition::new_with_inclusivity(
+        RelBoundPair::new(
+            RelFiniteBoundPos::new_with_inclusivity(
                 SignedDuration::from_hours(310),
                 BoundInclusivity::Exclusive,
             )
             .to_start_bound(),
-            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(315)).to_end_bound(),
+            RelFiniteBoundPos::new(SignedDuration::from_hours(315)).to_end_bound(),
         ),
         // 13
-        RelativeBoundPair::new(
-            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(320)).to_start_bound(),
-            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(325)).to_end_bound(),
+        RelBoundPair::new(
+            RelFiniteBoundPos::new(SignedDuration::from_hours(320)).to_start_bound(),
+            RelFiniteBoundPos::new(SignedDuration::from_hours(325)).to_end_bound(),
         ),
     ];
 
     let second_layer_data = [
         // 2
-        RelativeBoundPair::new(
-            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(110)).to_start_bound(),
-            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(115)).to_end_bound(),
+        RelBoundPair::new(
+            RelFiniteBoundPos::new(SignedDuration::from_hours(110)).to_start_bound(),
+            RelFiniteBoundPos::new(SignedDuration::from_hours(115)).to_end_bound(),
         ),
         // 4
-        RelativeBoundPair::new(
-            RelativeFiniteBoundPosition::new_with_inclusivity(
+        RelBoundPair::new(
+            RelFiniteBoundPos::new_with_inclusivity(
                 SignedDuration::from_hours(120),
                 BoundInclusivity::Exclusive,
             )
             .to_start_bound(),
-            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(125)).to_end_bound(),
+            RelFiniteBoundPos::new(SignedDuration::from_hours(125)).to_end_bound(),
         ),
         // 5
-        RelativeBoundPair::new(
-            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(130)).to_start_bound(),
-            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(205)).to_end_bound(),
+        RelBoundPair::new(
+            RelFiniteBoundPos::new(SignedDuration::from_hours(130)).to_start_bound(),
+            RelFiniteBoundPos::new(SignedDuration::from_hours(205)).to_end_bound(),
         ),
         // 8
-        RelativeBoundPair::new(
-            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(220)).to_start_bound(),
-            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(301)).to_end_bound(),
+        RelBoundPair::new(
+            RelFiniteBoundPos::new(SignedDuration::from_hours(220)).to_start_bound(),
+            RelFiniteBoundPos::new(SignedDuration::from_hours(301)).to_end_bound(),
         ),
         // 10
-        RelativeBoundPair::new(
-            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(304)).to_start_bound(),
-            RelativeFiniteBoundPosition::new_with_inclusivity(
+        RelBoundPair::new(
+            RelFiniteBoundPos::new(SignedDuration::from_hours(304)).to_start_bound(),
+            RelFiniteBoundPos::new_with_inclusivity(
                 SignedDuration::from_hours(310),
                 BoundInclusivity::Exclusive,
             )
             .to_end_bound(),
         ),
         // 12
-        RelativeBoundPair::new(
-            RelativeFiniteBoundPosition::new_with_inclusivity(
+        RelBoundPair::new(
+            RelFiniteBoundPos::new_with_inclusivity(
                 SignedDuration::from_hours(310),
                 BoundInclusivity::Exclusive,
             )
             .to_start_bound(),
-            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(320)).to_end_bound(),
+            RelFiniteBoundPos::new(SignedDuration::from_hours(320)).to_end_bound(),
         ),
     ];
 
@@ -156,29 +156,29 @@ fn run() {
     // second layer:   :     :   [--2--]  :     (--4--] [--5--]     :  :  [---8---] [10)(--12---]
     // change refs:    A     B   C     D  E     F     G H     I     J  K  L  M  N O P  QR     S T    U
     assert_eq!(
-        LayeredRelativeBounds::new(first_layer_bounds.into_iter(), second_layer_bounds.into_iter(),)
+        LayeredRelBounds::new(first_layer_bounds.into_iter(), second_layer_bounds.into_iter(),)
             .collect::<Vec<_>>(),
         vec![
             // A
-            LayeredBoundsStateChangeAtRelativeBound::new(
+            LayeredBoundsStateChangeAtRelBound::new(
                 LayeredBoundsState::NoLayers,
                 LayeredBoundsState::FirstLayer,
                 Some(
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(101),
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound()
                 ),
-                Some(RelativeFiniteBoundPosition::new(SignedDuration::from_hours(101)).to_start_bound()),
+                Some(RelFiniteBoundPos::new(SignedDuration::from_hours(101)).to_start_bound()),
             ),
             // B
-            LayeredBoundsStateChangeAtRelativeBound::new(
+            LayeredBoundsStateChangeAtRelBound::new(
                 LayeredBoundsState::FirstLayer,
                 LayeredBoundsState::NoLayers,
-                Some(RelativeFiniteBoundPosition::new(SignedDuration::from_hours(105)).to_end_bound()),
+                Some(RelFiniteBoundPos::new(SignedDuration::from_hours(105)).to_end_bound()),
                 Some(
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(105),
                         BoundInclusivity::Exclusive,
                     )
@@ -186,25 +186,25 @@ fn run() {
                 ),
             ),
             // C
-            LayeredBoundsStateChangeAtRelativeBound::new(
+            LayeredBoundsStateChangeAtRelBound::new(
                 LayeredBoundsState::NoLayers,
                 LayeredBoundsState::SecondLayer,
                 Some(
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(110),
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound()
                 ),
-                Some(RelativeFiniteBoundPosition::new(SignedDuration::from_hours(110)).to_start_bound()),
+                Some(RelFiniteBoundPos::new(SignedDuration::from_hours(110)).to_start_bound()),
             ),
             // D
-            LayeredBoundsStateChangeAtRelativeBound::new(
+            LayeredBoundsStateChangeAtRelBound::new(
                 LayeredBoundsState::SecondLayer,
                 LayeredBoundsState::NoLayers,
-                Some(RelativeFiniteBoundPosition::new(SignedDuration::from_hours(115)).to_end_bound()),
+                Some(RelFiniteBoundPos::new(SignedDuration::from_hours(115)).to_end_bound()),
                 Some(
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(115),
                         BoundInclusivity::Exclusive,
                     )
@@ -212,25 +212,25 @@ fn run() {
                 ),
             ),
             // E
-            LayeredBoundsStateChangeAtRelativeBound::new(
+            LayeredBoundsStateChangeAtRelBound::new(
                 LayeredBoundsState::NoLayers,
                 LayeredBoundsState::FirstLayer,
                 Some(
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(117),
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound()
                 ),
-                Some(RelativeFiniteBoundPosition::new(SignedDuration::from_hours(117)).to_start_bound()),
+                Some(RelFiniteBoundPos::new(SignedDuration::from_hours(117)).to_start_bound()),
             ),
             // F
-            LayeredBoundsStateChangeAtRelativeBound::new(
+            LayeredBoundsStateChangeAtRelBound::new(
                 LayeredBoundsState::FirstLayer,
                 LayeredBoundsState::SecondLayer,
-                Some(RelativeFiniteBoundPosition::new(SignedDuration::from_hours(120)).to_end_bound()),
+                Some(RelFiniteBoundPos::new(SignedDuration::from_hours(120)).to_end_bound()),
                 Some(
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(120),
                         BoundInclusivity::Exclusive,
                     )
@@ -238,12 +238,12 @@ fn run() {
                 ),
             ),
             // G
-            LayeredBoundsStateChangeAtRelativeBound::new(
+            LayeredBoundsStateChangeAtRelBound::new(
                 LayeredBoundsState::SecondLayer,
                 LayeredBoundsState::NoLayers,
-                Some(RelativeFiniteBoundPosition::new(SignedDuration::from_hours(125)).to_end_bound()),
+                Some(RelFiniteBoundPos::new(SignedDuration::from_hours(125)).to_end_bound()),
                 Some(
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(125),
                         BoundInclusivity::Exclusive,
                     )
@@ -251,25 +251,25 @@ fn run() {
                 ),
             ),
             // H
-            LayeredBoundsStateChangeAtRelativeBound::new(
+            LayeredBoundsStateChangeAtRelBound::new(
                 LayeredBoundsState::NoLayers,
                 LayeredBoundsState::SecondLayer,
                 Some(
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(130),
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound()
                 ),
-                Some(RelativeFiniteBoundPosition::new(SignedDuration::from_hours(130)).to_start_bound()),
+                Some(RelFiniteBoundPos::new(SignedDuration::from_hours(130)).to_start_bound()),
             ),
             // I
-            LayeredBoundsStateChangeAtRelativeBound::new(
+            LayeredBoundsStateChangeAtRelBound::new(
                 LayeredBoundsState::SecondLayer,
                 LayeredBoundsState::FirstLayer,
-                Some(RelativeFiniteBoundPosition::new(SignedDuration::from_hours(205)).to_end_bound()),
+                Some(RelFiniteBoundPos::new(SignedDuration::from_hours(205)).to_end_bound()),
                 Some(
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(205),
                         BoundInclusivity::Exclusive,
                     )
@@ -277,12 +277,12 @@ fn run() {
                 ),
             ),
             // J
-            LayeredBoundsStateChangeAtRelativeBound::new(
+            LayeredBoundsStateChangeAtRelBound::new(
                 LayeredBoundsState::FirstLayer,
                 LayeredBoundsState::NoLayers,
-                Some(RelativeFiniteBoundPosition::new(SignedDuration::from_hours(210)).to_end_bound()),
+                Some(RelFiniteBoundPos::new(SignedDuration::from_hours(210)).to_end_bound()),
                 Some(
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(210),
                         BoundInclusivity::Exclusive,
                     )
@@ -290,38 +290,38 @@ fn run() {
                 ),
             ),
             // K
-            LayeredBoundsStateChangeAtRelativeBound::new(
+            LayeredBoundsStateChangeAtRelBound::new(
                 LayeredBoundsState::NoLayers,
                 LayeredBoundsState::FirstLayer,
                 Some(
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(215),
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound()
                 ),
-                Some(RelativeFiniteBoundPosition::new(SignedDuration::from_hours(215)).to_start_bound()),
+                Some(RelFiniteBoundPos::new(SignedDuration::from_hours(215)).to_start_bound()),
             ),
             // L
-            LayeredBoundsStateChangeAtRelativeBound::new(
+            LayeredBoundsStateChangeAtRelBound::new(
                 LayeredBoundsState::FirstLayer,
                 LayeredBoundsState::BothLayers,
                 Some(
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(220),
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound()
                 ),
-                Some(RelativeFiniteBoundPosition::new(SignedDuration::from_hours(220)).to_start_bound()),
+                Some(RelFiniteBoundPos::new(SignedDuration::from_hours(220)).to_start_bound()),
             ),
             // M
-            LayeredBoundsStateChangeAtRelativeBound::new(
+            LayeredBoundsStateChangeAtRelBound::new(
                 LayeredBoundsState::BothLayers,
                 LayeredBoundsState::SecondLayer,
-                Some(RelativeFiniteBoundPosition::new(SignedDuration::from_hours(225)).to_end_bound()),
+                Some(RelFiniteBoundPos::new(SignedDuration::from_hours(225)).to_end_bound()),
                 Some(
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(225),
                         BoundInclusivity::Exclusive,
                     )
@@ -329,25 +329,25 @@ fn run() {
                 ),
             ),
             // N
-            LayeredBoundsStateChangeAtRelativeBound::new(
+            LayeredBoundsStateChangeAtRelBound::new(
                 LayeredBoundsState::SecondLayer,
                 LayeredBoundsState::BothLayers,
                 Some(
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(226),
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound()
                 ),
-                Some(RelativeFiniteBoundPosition::new(SignedDuration::from_hours(226)).to_start_bound()),
+                Some(RelFiniteBoundPos::new(SignedDuration::from_hours(226)).to_start_bound()),
             ),
             // O
-            LayeredBoundsStateChangeAtRelativeBound::new(
+            LayeredBoundsStateChangeAtRelBound::new(
                 LayeredBoundsState::BothLayers,
                 LayeredBoundsState::FirstLayer,
-                Some(RelativeFiniteBoundPosition::new(SignedDuration::from_hours(301)).to_end_bound()),
+                Some(RelFiniteBoundPos::new(SignedDuration::from_hours(301)).to_end_bound()),
                 Some(
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(301),
                         BoundInclusivity::Exclusive,
                     )
@@ -355,38 +355,38 @@ fn run() {
                 ),
             ),
             // P
-            LayeredBoundsStateChangeAtRelativeBound::new(
+            LayeredBoundsStateChangeAtRelBound::new(
                 LayeredBoundsState::FirstLayer,
                 LayeredBoundsState::BothLayers,
                 Some(
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(304),
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound()
                 ),
-                Some(RelativeFiniteBoundPosition::new(SignedDuration::from_hours(304)).to_start_bound()),
+                Some(RelFiniteBoundPos::new(SignedDuration::from_hours(304)).to_start_bound()),
             ),
             // Q
-            LayeredBoundsStateChangeAtRelativeBound::new(
+            LayeredBoundsStateChangeAtRelBound::new(
                 LayeredBoundsState::BothLayers,
                 LayeredBoundsState::NoLayers,
                 Some(
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(310),
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound()
                 ),
-                Some(RelativeFiniteBoundPosition::new(SignedDuration::from_hours(310)).to_start_bound()),
+                Some(RelFiniteBoundPos::new(SignedDuration::from_hours(310)).to_start_bound()),
             ),
             // R
-            LayeredBoundsStateChangeAtRelativeBound::new(
+            LayeredBoundsStateChangeAtRelBound::new(
                 LayeredBoundsState::NoLayers,
                 LayeredBoundsState::BothLayers,
-                Some(RelativeFiniteBoundPosition::new(SignedDuration::from_hours(310)).to_end_bound()),
+                Some(RelFiniteBoundPos::new(SignedDuration::from_hours(310)).to_end_bound()),
                 Some(
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(310),
                         BoundInclusivity::Exclusive,
                     )
@@ -394,12 +394,12 @@ fn run() {
                 ),
             ),
             // S
-            LayeredBoundsStateChangeAtRelativeBound::new(
+            LayeredBoundsStateChangeAtRelBound::new(
                 LayeredBoundsState::BothLayers,
                 LayeredBoundsState::SecondLayer,
-                Some(RelativeFiniteBoundPosition::new(SignedDuration::from_hours(315)).to_end_bound()),
+                Some(RelFiniteBoundPos::new(SignedDuration::from_hours(315)).to_end_bound()),
                 Some(
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(315),
                         BoundInclusivity::Exclusive,
                     )
@@ -407,25 +407,25 @@ fn run() {
                 ),
             ),
             // T1
-            LayeredBoundsStateChangeAtRelativeBound::new(
+            LayeredBoundsStateChangeAtRelBound::new(
                 LayeredBoundsState::SecondLayer,
                 LayeredBoundsState::BothLayers,
                 Some(
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(320),
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound()
                 ),
-                Some(RelativeFiniteBoundPosition::new(SignedDuration::from_hours(320)).to_start_bound()),
+                Some(RelFiniteBoundPos::new(SignedDuration::from_hours(320)).to_start_bound()),
             ),
             // T2
-            LayeredBoundsStateChangeAtRelativeBound::new(
+            LayeredBoundsStateChangeAtRelBound::new(
                 LayeredBoundsState::BothLayers,
                 LayeredBoundsState::FirstLayer,
-                Some(RelativeFiniteBoundPosition::new(SignedDuration::from_hours(320)).to_end_bound()),
+                Some(RelFiniteBoundPos::new(SignedDuration::from_hours(320)).to_end_bound()),
                 Some(
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(320),
                         BoundInclusivity::Exclusive,
                     )
@@ -433,12 +433,12 @@ fn run() {
                 ),
             ),
             // U
-            LayeredBoundsStateChangeAtRelativeBound::new(
+            LayeredBoundsStateChangeAtRelBound::new(
                 LayeredBoundsState::FirstLayer,
                 LayeredBoundsState::NoLayers,
-                Some(RelativeFiniteBoundPosition::new(SignedDuration::from_hours(325)).to_end_bound()),
+                Some(RelFiniteBoundPos::new(SignedDuration::from_hours(325)).to_end_bound()),
                 Some(
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(325),
                         BoundInclusivity::Exclusive,
                     )

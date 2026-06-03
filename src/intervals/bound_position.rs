@@ -7,8 +7,8 @@
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use crate::intervals::absolute::{AbsoluteBound, HasAbsoluteBoundPair};
-use crate::intervals::relative::{HasRelativeBoundPair, RelativeBound};
+use crate::intervals::absolute::{AbsBound, HasAbsBoundPair};
+use crate::intervals::relative::{HasRelBoundPair, RelBound};
 
 /// Type and index of the positioned bound
 ///
@@ -44,7 +44,7 @@ impl BoundPosition {
         }
     }
 
-    /// Returns the [`AbsoluteBound`] corresponding to the bound position
+    /// Returns the [`AbsBound`] corresponding to the bound position
     ///
     /// # Examples
     ///
@@ -52,42 +52,34 @@ impl BoundPosition {
     /// # use std::error::Error;
     /// # use jiff::Timestamp;
     /// # use periodical::intervals::absolute::{
-    /// #     AbsoluteBound, AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBoundPosition, AbsoluteStartBound,
+    /// #     AbsBound, AbsBoundPair, AbsEndBound, AbsFiniteBoundPos, AbsStartBound,
     /// # };
     /// # use periodical::intervals::bound_position::BoundPosition;
     /// let abs_bounds = [
-    ///     AbsoluteBoundPair::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture),
-    ///     AbsoluteBoundPair::new(
-    ///         AbsoluteFiniteBoundPosition::new(
-    ///             "2025-01-01 08:00:00Z".parse::<Timestamp>()?,
-    ///         ).to_start_bound(),
-    ///         AbsoluteFiniteBoundPosition::new(
-    ///             "2025-01-01 11:00:00Z".parse::<Timestamp>()?,
-    ///         ).to_end_bound(),
+    ///     AbsBoundPair::new(AbsStartBound::InfinitePast, AbsEndBound::InfiniteFuture),
+    ///     AbsBoundPair::new(
+    ///         AbsFiniteBoundPos::new("2025-01-01 08:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+    ///         AbsFiniteBoundPos::new("2025-01-01 11:00:00Z".parse::<Timestamp>()?).to_end_bound(),
     ///     ),
-    ///     AbsoluteBoundPair::new(
-    ///         AbsoluteFiniteBoundPosition::new(
-    ///             "2025-01-01 13:00:00Z".parse::<Timestamp>()?,
-    ///         ).to_start_bound(),
-    ///         AbsoluteFiniteBoundPosition::new(
-    ///             "2025-01-01 16:00:00Z".parse::<Timestamp>()?,
-    ///         ).to_end_bound(),
+    ///     AbsBoundPair::new(
+    ///         AbsFiniteBoundPos::new("2025-01-01 13:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+    ///         AbsFiniteBoundPos::new("2025-01-01 16:00:00Z".parse::<Timestamp>()?).to_end_bound(),
     ///     ),
     /// ];
     ///
     /// let positioned_bound = BoundPosition::End(1).get_abs_bound(&abs_bounds);
-    /// let expected_bound = AbsoluteFiniteBoundPosition::new(
-    ///     "2025-01-01 11:00:00Z".parse::<Timestamp>()?,
-    /// ).to_end_bound().to_bound();
+    /// let expected_bound = AbsFiniteBoundPos::new("2025-01-01 11:00:00Z".parse::<Timestamp>()?)
+    ///     .to_end_bound()
+    ///     .to_bound();
     ///
     /// assert_eq!(positioned_bound, Some(expected_bound));
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    pub fn get_abs_bound<'j, I, J>(&self, abs_bounds: I) -> Option<AbsoluteBound>
+    pub fn get_abs_bound<'j, I, J>(&self, abs_bounds: I) -> Option<AbsBound>
     where
         I: IntoIterator<Item = &'j J>,
-        J: 'j + HasAbsoluteBoundPair,
+        J: 'j + HasAbsBoundPair,
     {
         match self {
             Self::Start(i) => abs_bounds
@@ -98,48 +90,48 @@ impl BoundPosition {
         }
     }
 
-    /// Returns the [`RelativeBound`] corresponding to the bound position
+    /// Returns the [`RelBound`] corresponding to the bound position
     ///
     /// # Examples
     ///
     /// ```
     /// # use jiff::SignedDuration;
     /// # use periodical::intervals::relative::{
-    /// #     RelativeBound, RelativeBoundPair, RelativeEndBound, RelativeFiniteBoundPosition, RelativeStartBound,
+    /// #     RelBound, RelBoundPair, RelEndBound, RelFiniteBoundPos, RelStartBound,
     /// # };
     /// # use periodical::intervals::bound_position::BoundPosition;
     /// let rel_bounds = [
-    ///     RelativeBoundPair::new(RelativeStartBound::InfinitePast, RelativeEndBound::InfiniteFuture),
-    ///     RelativeBoundPair::new(
-    ///         RelativeFiniteBoundPosition::new(
+    ///     RelBoundPair::new(RelStartBound::InfinitePast, RelEndBound::InfiniteFuture),
+    ///     RelBoundPair::new(
+    ///         RelFiniteBoundPos::new(
     ///             SignedDuration::from_hours(8),
     ///         ).to_start_bound(),
-    ///         RelativeFiniteBoundPosition::new(
+    ///         RelFiniteBoundPos::new(
     ///             SignedDuration::from_hours(11),
     ///         ).to_end_bound(),
     ///     ),
-    ///     RelativeBoundPair::new(
-    ///         RelativeFiniteBoundPosition::new(
+    ///     RelBoundPair::new(
+    ///         RelFiniteBoundPos::new(
     ///             SignedDuration::from_hours(13),
     ///         ).to_start_bound(),
-    ///         RelativeFiniteBoundPosition::new(
+    ///         RelFiniteBoundPos::new(
     ///             SignedDuration::from_hours(16),
     ///         ).to_end_bound(),
     ///     ),
     /// ];
     ///
     /// let positioned_bound = BoundPosition::End(1).get_rel_bound(&rel_bounds);
-    /// let expected_bound = RelativeFiniteBoundPosition::new(
+    /// let expected_bound = RelFiniteBoundPos::new(
     ///     SignedDuration::from_hours(11),
     /// ).to_end_bound().to_bound();
     ///
     /// assert_eq!(positioned_bound, Some(expected_bound));
     /// ```
     #[must_use]
-    pub fn get_rel_bound<'j, I, J>(&self, rel_bounds: I) -> Option<RelativeBound>
+    pub fn get_rel_bound<'j, I, J>(&self, rel_bounds: I) -> Option<RelBound>
     where
         I: IntoIterator<Item = &'j J>,
-        J: 'j + HasRelativeBoundPair,
+        J: 'j + HasRelBoundPair,
     {
         match self {
             Self::Start(i) => rel_bounds

@@ -11,31 +11,31 @@
 //! ```
 //! # use std::error::Error;
 //! # use jiff::Zoned;
-//! # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
-//! # use periodical::iter::intervals::bounds::AbsoluteBoundsIteratorDispatcher;
+//! # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos};
+//! # use periodical::iter::intervals::bounds::AbsBoundsIteratorDispatcher;
 //! let intervals = [
-//!     AbsoluteBoundPair::new(
-//!         AbsoluteFiniteBoundPosition::new(
+//!     AbsBoundPair::new(
+//!         AbsFiniteBoundPos::new(
 //!             "2025-01-01 08:00:00[Europe/Oslo]"
 //!                 .parse::<Zoned>()?
 //!                 .timestamp(),
 //!         )
 //!         .to_start_bound(),
-//!         AbsoluteFiniteBoundPosition::new(
+//!         AbsFiniteBoundPos::new(
 //!             "2025-01-01 11:00:00[Europe/Oslo]"
 //!                 .parse::<Zoned>()?
 //!                 .timestamp(),
 //!         )
 //!         .to_end_bound(),
 //!     ),
-//!     AbsoluteBoundPair::new(
-//!         AbsoluteFiniteBoundPosition::new(
+//!     AbsBoundPair::new(
+//!         AbsFiniteBoundPos::new(
 //!             "2025-01-01 12:00:00[Europe/Oslo]"
 //!                 .parse::<Zoned>()?
 //!                 .timestamp(),
 //!         )
 //!         .to_start_bound(),
-//!         AbsoluteFiniteBoundPosition::new(
+//!         AbsFiniteBoundPos::new(
 //!             "2025-01-01 16:00:00[Europe/Oslo]"
 //!                 .parse::<Zoned>()?
 //!                 .timestamp(),
@@ -47,28 +47,28 @@
 //! assert_eq!(
 //!     intervals.abs_bounds_iter().collect::<Vec<_>>(),
 //!     vec![
-//!         AbsoluteFiniteBoundPosition::new(
+//!         AbsFiniteBoundPos::new(
 //!             "2025-01-01 08:00:00[Europe/Oslo]"
 //!                 .parse::<Zoned>()?
 //!                 .timestamp(),
 //!         )
 //!         .to_start_bound()
 //!         .to_bound(),
-//!         AbsoluteFiniteBoundPosition::new(
+//!         AbsFiniteBoundPos::new(
 //!             "2025-01-01 11:00:00[Europe/Oslo]"
 //!                 .parse::<Zoned>()?
 //!                 .timestamp(),
 //!         )
 //!         .to_end_bound()
 //!         .to_bound(),
-//!         AbsoluteFiniteBoundPosition::new(
+//!         AbsFiniteBoundPos::new(
 //!             "2025-01-01 12:00:00[Europe/Oslo]"
 //!                 .parse::<Zoned>()?
 //!                 .timestamp(),
 //!         )
 //!         .to_start_bound()
 //!         .to_bound(),
-//!         AbsoluteFiniteBoundPosition::new(
+//!         AbsFiniteBoundPos::new(
 //!             "2025-01-01 16:00:00[Europe/Oslo]"
 //!                 .parse::<Zoned>()?
 //!                 .timestamp(),
@@ -85,31 +85,31 @@ use std::iter::{FusedIterator, Peekable};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use crate::intervals::absolute::{AbsoluteBound, AbsoluteBoundPair};
+use crate::intervals::absolute::{AbsBound, AbsBoundPair};
 use crate::intervals::bound_position::BoundPosition;
 use crate::intervals::ops::{BoundOrd, BoundOverlapDisambiguationRuleSet};
-use crate::intervals::relative::{RelativeBound, RelativeBoundPair};
-use crate::iter::intervals::layered_bounds::{LayeredAbsoluteBounds, LayeredRelativeBounds};
-use crate::iter::intervals::united_bounds::{AbsoluteUnitedBoundsIter, RelativeUnitedBoundsIter};
+use crate::intervals::relative::{RelBound, RelBoundPair};
+use crate::iter::intervals::layered_bounds::{LayeredAbsBounds, LayeredRelBounds};
+use crate::iter::intervals::united_bounds::{AbsUnitedBoundsIter, RelUnitedBoundsIter};
 
-/// Iterator of [`AbsoluteBound`] from absolute intervals
+/// Iterator of [`AbsBound`] from absolute intervals
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
-pub struct AbsoluteBoundsIter {
-    bounds: Vec<AbsoluteBoundPair>,
+pub struct AbsBoundsIter {
+    bounds: Vec<AbsBoundPair>,
     position: BoundPosition,
     initd: bool, // whether the iterator was just initialized
     exhausted: bool,
 }
 
-impl AbsoluteBoundsIter {
-    /// Creates a new [`AbsoluteBoundsIter`]
+impl AbsBoundsIter {
+    /// Creates a new [`AbsBoundsIter`]
     #[must_use]
     pub fn new<I>(iter: I) -> Self
     where
-        I: Iterator<Item = AbsoluteBoundPair>,
+        I: Iterator<Item = AbsBoundPair>,
     {
-        AbsoluteBoundsIter {
+        AbsBoundsIter {
             bounds: iter.collect::<Vec<_>>(),
             position: BoundPosition::default(),
             initd: true,
@@ -120,38 +120,38 @@ impl AbsoluteBoundsIter {
     /// Unites the bounds
     ///
     /// Collects the bounds, sorts them and creates an
-    /// [`AbsoluteUnitedBoundsIter`] from them.
+    /// [`AbsUnitedBoundsIter`] from them.
     ///
     /// # Examples
     ///
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
-    /// # use periodical::iter::intervals::bounds::AbsoluteBoundsIteratorDispatcher;
+    /// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos};
+    /// # use periodical::iter::intervals::bounds::AbsBoundsIteratorDispatcher;
     /// let intervals = [
-    ///     AbsoluteBoundPair::new(
-    ///         AbsoluteFiniteBoundPosition::new(
+    ///     AbsBoundPair::new(
+    ///         AbsFiniteBoundPos::new(
     ///             "2025-01-01 08:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
     ///         )
     ///         .to_start_bound(),
-    ///         AbsoluteFiniteBoundPosition::new(
+    ///         AbsFiniteBoundPos::new(
     ///             "2025-01-01 14:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
     ///         )
     ///         .to_end_bound(),
     ///     ),
-    ///     AbsoluteBoundPair::new(
-    ///         AbsoluteFiniteBoundPosition::new(
+    ///     AbsBoundPair::new(
+    ///         AbsFiniteBoundPos::new(
     ///             "2025-01-01 12:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
     ///         )
     ///         .to_start_bound(),
-    ///         AbsoluteFiniteBoundPosition::new(
+    ///         AbsFiniteBoundPos::new(
     ///             "2025-01-01 16:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
@@ -166,14 +166,14 @@ impl AbsoluteBoundsIter {
     ///         .unite_bounds()
     ///         .collect::<Vec<_>>(),
     ///     vec![
-    ///         AbsoluteFiniteBoundPosition::new(
+    ///         AbsFiniteBoundPos::new(
     ///             "2025-01-01 08:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
     ///         )
     ///         .to_start_bound()
     ///         .to_bound(),
-    ///         AbsoluteFiniteBoundPosition::new(
+    ///         AbsFiniteBoundPos::new(
     ///             "2025-01-01 16:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
@@ -185,22 +185,22 @@ impl AbsoluteBoundsIter {
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    pub fn unite_bounds(self) -> AbsoluteUnitedBoundsIter<Peekable<impl Iterator<Item = AbsoluteBound>>> {
+    pub fn unite_bounds(self) -> AbsUnitedBoundsIter<Peekable<impl Iterator<Item = AbsBound>>> {
         let mut bounds = self.collect::<Vec<_>>();
         bounds.sort_by(|a, b| a.bound_cmp(b).disambiguate(BoundOverlapDisambiguationRuleSet::Strict));
 
-        AbsoluteUnitedBoundsIter::new(bounds.into_iter())
+        AbsUnitedBoundsIter::new(bounds.into_iter())
     }
 
-    /// Creates a [`LayeredAbsoluteBounds`] without checking if it violates
+    /// Creates a [`LayeredAbsBounds`] without checking if it violates
     /// invariants
     ///
     /// Combines the current iterator and the given other iterator into a
-    /// [`LayeredAbsoluteBounds`] without checking if any of them violate
+    /// [`LayeredAbsBounds`] without checking if any of them violate
     /// invariants.
     ///
     /// It is possible to use this method safely, for example in order to avoid
-    /// going through an [`AbsoluteUnitedBoundsIter`] between each use
+    /// going through an [`AbsUnitedBoundsIter`] between each use
     /// of [set operations on layered bounds iterators](crate::iter::intervals::layered_bounds_set_ops),
     /// especially if the operation guarantees that there are no overlapping
     /// intervals left.
@@ -208,39 +208,39 @@ impl AbsoluteBoundsIter {
     /// To make sure you use this method in a safe manner, double-check that
     /// this iterator, acting as the first layer, and the given iterator,
     /// acting as the second layer, don't violate the input requirements
-    /// laid out by [`LayeredAbsoluteBounds`], see
-    /// [`LayeredAbsoluteBounds::new`].
+    /// laid out by [`LayeredAbsBounds`], see
+    /// [`LayeredAbsBounds::new`].
     ///
     /// # Examples
     ///
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
-    /// # use periodical::iter::intervals::bounds::AbsoluteBoundsIteratorDispatcher;
+    /// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos};
+    /// # use periodical::iter::intervals::bounds::AbsBoundsIteratorDispatcher;
     /// let first_layer_intervals = [
-    ///     AbsoluteBoundPair::new(
-    ///         AbsoluteFiniteBoundPosition::new(
+    ///     AbsBoundPair::new(
+    ///         AbsFiniteBoundPos::new(
     ///             "2025-01-01 08:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
     ///         )
     ///         .to_start_bound(),
-    ///         AbsoluteFiniteBoundPosition::new(
+    ///         AbsFiniteBoundPos::new(
     ///             "2025-01-01 12:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
     ///         )
     ///         .to_end_bound(),
     ///     ),
-    ///     AbsoluteBoundPair::new(
-    ///         AbsoluteFiniteBoundPosition::new(
+    ///     AbsBoundPair::new(
+    ///         AbsFiniteBoundPos::new(
     ///             "2025-01-01 13:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
     ///         )
     ///         .to_start_bound(),
-    ///         AbsoluteFiniteBoundPosition::new(
+    ///         AbsFiniteBoundPos::new(
     ///             "2025-01-01 16:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
@@ -250,28 +250,28 @@ impl AbsoluteBoundsIter {
     /// ];
     ///
     /// let second_layer_intervals = [
-    ///     AbsoluteBoundPair::new(
-    ///         AbsoluteFiniteBoundPosition::new(
+    ///     AbsBoundPair::new(
+    ///         AbsFiniteBoundPos::new(
     ///             "2025-01-01 07:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
     ///         )
     ///         .to_start_bound(),
-    ///         AbsoluteFiniteBoundPosition::new(
+    ///         AbsFiniteBoundPos::new(
     ///             "2025-01-01 11:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
     ///         )
     ///         .to_end_bound(),
     ///     ),
-    ///     AbsoluteBoundPair::new(
-    ///         AbsoluteFiniteBoundPosition::new(
+    ///     AbsBoundPair::new(
+    ///         AbsFiniteBoundPos::new(
     ///             "2025-01-01 14:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
     ///         )
     ///         .to_start_bound(),
-    ///         AbsoluteFiniteBoundPosition::new(
+    ///         AbsFiniteBoundPos::new(
     ///             "2025-01-01 18:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
@@ -288,14 +288,14 @@ impl AbsoluteBoundsIter {
     #[must_use]
     pub fn unchecked_layer(
         self,
-        second_layer: AbsoluteBoundsIter,
-    ) -> LayeredAbsoluteBounds<Peekable<Self>, Peekable<AbsoluteBoundsIter>> {
-        LayeredAbsoluteBounds::new(self, second_layer)
+        second_layer: AbsBoundsIter,
+    ) -> LayeredAbsBounds<Peekable<Self>, Peekable<AbsBoundsIter>> {
+        LayeredAbsBounds::new(self, second_layer)
     }
 }
 
-impl Iterator for AbsoluteBoundsIter {
-    type Item = AbsoluteBound;
+impl Iterator for AbsBoundsIter {
+    type Item = AbsBound;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.exhausted {
@@ -321,56 +321,56 @@ impl Iterator for AbsoluteBoundsIter {
     }
 }
 
-impl FusedIterator for AbsoluteBoundsIter {}
+impl FusedIterator for AbsBoundsIter {}
 
-impl ExactSizeIterator for AbsoluteBoundsIter {}
+impl ExactSizeIterator for AbsBoundsIter {}
 
-impl FromIterator<AbsoluteBoundPair> for AbsoluteBoundsIter {
+impl FromIterator<AbsBoundPair> for AbsBoundsIter {
     fn from_iter<I>(iter: I) -> Self
     where
-        I: IntoIterator<Item = AbsoluteBoundPair>,
+        I: IntoIterator<Item = AbsBoundPair>,
     {
-        AbsoluteBoundsIter::new(iter.into_iter())
+        AbsBoundsIter::new(iter.into_iter())
     }
 }
 
-impl Extend<AbsoluteBoundPair> for AbsoluteBoundsIter {
+impl Extend<AbsBoundPair> for AbsBoundsIter {
     fn extend<I>(&mut self, iter: I)
     where
-        I: IntoIterator<Item = AbsoluteBoundPair>,
+        I: IntoIterator<Item = AbsBoundPair>,
     {
         self.bounds.extend(iter);
     }
 }
 
-/// Iterator dispatcher trait for [`AbsoluteBoundsIter`]
-pub trait AbsoluteBoundsIteratorDispatcher: IntoIterator<Item = AbsoluteBoundPair> + Sized {
-    /// Creates an [`AbsoluteBoundsIter`] from the collection
-    fn abs_bounds_iter(self) -> AbsoluteBoundsIter {
-        AbsoluteBoundsIter::new(self.into_iter())
+/// Iterator dispatcher trait for [`AbsBoundsIter`]
+pub trait AbsBoundsIteratorDispatcher: IntoIterator<Item = AbsBoundPair> + Sized {
+    /// Creates an [`AbsBoundsIter`] from the collection
+    fn abs_bounds_iter(self) -> AbsBoundsIter {
+        AbsBoundsIter::new(self.into_iter())
     }
 }
 
-impl<I> AbsoluteBoundsIteratorDispatcher for I where I: IntoIterator<Item = AbsoluteBoundPair> + Sized {}
+impl<I> AbsBoundsIteratorDispatcher for I where I: IntoIterator<Item = AbsBoundPair> + Sized {}
 
-/// Iterator of [`RelativeBound`] from relative intervals
+/// Iterator of [`RelBound`] from relative intervals
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
-pub struct RelativeBoundsIter {
-    bounds: Vec<RelativeBoundPair>,
+pub struct RelBoundsIter {
+    bounds: Vec<RelBoundPair>,
     position: BoundPosition,
     initd: bool, // whether the iterator was just initialized
     exhausted: bool,
 }
 
-impl RelativeBoundsIter {
-    /// Creates a new [`RelativeBoundsIter`]
+impl RelBoundsIter {
+    /// Creates a new [`RelBoundsIter`]
     #[must_use]
     pub fn new<I>(iter: I) -> Self
     where
-        I: Iterator<Item = RelativeBoundPair>,
+        I: Iterator<Item = RelBoundPair>,
     {
-        RelativeBoundsIter {
+        RelBoundsIter {
             bounds: iter.collect::<Vec<_>>(),
             position: BoundPosition::default(),
             initd: true,
@@ -381,22 +381,22 @@ impl RelativeBoundsIter {
     /// Unites the bounds
     ///
     /// Collects the bounds, sorts them and creates an
-    /// [`RelativeUnitedBoundsIter`] from them.
+    /// [`RelUnitedBoundsIter`] from them.
     ///
     /// # Examples
     ///
     /// ```
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBoundPosition};
-    /// # use periodical::iter::intervals::bounds::RelativeBoundsIteratorDispatcher;
+    /// # use periodical::intervals::relative::{RelBoundPair, RelFiniteBoundPos};
+    /// # use periodical::iter::intervals::bounds::RelBoundsIteratorDispatcher;
     /// let intervals = [
-    ///     RelativeBoundPair::new(
-    ///         RelativeFiniteBoundPosition::new(SignedDuration::from_hours(8)).to_start_bound(),
-    ///         RelativeFiniteBoundPosition::new(SignedDuration::from_hours(14)).to_end_bound(),
+    ///     RelBoundPair::new(
+    ///         RelFiniteBoundPos::new(SignedDuration::from_hours(8)).to_start_bound(),
+    ///         RelFiniteBoundPos::new(SignedDuration::from_hours(14)).to_end_bound(),
     ///     ),
-    ///     RelativeBoundPair::new(
-    ///         RelativeFiniteBoundPosition::new(SignedDuration::from_hours(12)).to_start_bound(),
-    ///         RelativeFiniteBoundPosition::new(SignedDuration::from_hours(16)).to_end_bound(),
+    ///     RelBoundPair::new(
+    ///         RelFiniteBoundPos::new(SignedDuration::from_hours(12)).to_start_bound(),
+    ///         RelFiniteBoundPos::new(SignedDuration::from_hours(16)).to_end_bound(),
     ///     ),
     /// ];
     ///
@@ -406,32 +406,32 @@ impl RelativeBoundsIter {
     ///         .unite_bounds()
     ///         .collect::<Vec<_>>(),
     ///     vec![
-    ///         RelativeFiniteBoundPosition::new(SignedDuration::from_hours(8),)
+    ///         RelFiniteBoundPos::new(SignedDuration::from_hours(8),)
     ///             .to_start_bound()
     ///             .to_bound(),
-    ///         RelativeFiniteBoundPosition::new(SignedDuration::from_hours(16),)
+    ///         RelFiniteBoundPos::new(SignedDuration::from_hours(16),)
     ///             .to_end_bound()
     ///             .to_bound(),
     ///     ],
     /// );
     /// ```
     #[must_use]
-    pub fn unite_bounds(self) -> RelativeUnitedBoundsIter<Peekable<impl Iterator<Item = RelativeBound>>> {
+    pub fn unite_bounds(self) -> RelUnitedBoundsIter<Peekable<impl Iterator<Item = RelBound>>> {
         let mut bounds = self.collect::<Vec<_>>();
         bounds.sort_by(|a, b| a.bound_cmp(b).disambiguate(BoundOverlapDisambiguationRuleSet::Strict));
 
-        RelativeUnitedBoundsIter::new(bounds.into_iter())
+        RelUnitedBoundsIter::new(bounds.into_iter())
     }
 
-    /// Creates a [`LayeredRelativeBounds`] without checking if it violates
+    /// Creates a [`LayeredRelBounds`] without checking if it violates
     /// invariants
     ///
     /// Combines the current iterator and the given other iterator into a
-    /// [`LayeredRelativeBounds`] without checking if any of them violate
+    /// [`LayeredRelBounds`] without checking if any of them violate
     /// invariants.
     ///
     /// It is possible to use this method safely, for example in order to avoid
-    /// going through an [`RelativeUnitedBoundsIter`] between each use
+    /// going through an [`RelUnitedBoundsIter`] between each use
     /// of [set operations on layered bounds iterators](crate::iter::intervals::layered_bounds_set_ops),
     /// especially if the operation guarantees that there are no overlapping
     /// intervals left.
@@ -439,34 +439,34 @@ impl RelativeBoundsIter {
     /// To make sure you use this method in a safe manner, double-check that
     /// this iterator, acting as the first layer, and the given iterator,
     /// acting as the second layer, don't violate the input requirements
-    /// laid out by [`LayeredRelativeBounds`], see
-    /// [`LayeredRelativeBounds::new`].
+    /// laid out by [`LayeredRelBounds`], see
+    /// [`LayeredRelBounds::new`].
     ///
     /// # Examples
     ///
     /// ```
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBoundPosition};
-    /// # use periodical::iter::intervals::bounds::RelativeBoundsIteratorDispatcher;
+    /// # use periodical::intervals::relative::{RelBoundPair, RelFiniteBoundPos};
+    /// # use periodical::iter::intervals::bounds::RelBoundsIteratorDispatcher;
     /// let first_layer_intervals = [
-    ///     RelativeBoundPair::new(
-    ///         RelativeFiniteBoundPosition::new(SignedDuration::from_hours(8)).to_start_bound(),
-    ///         RelativeFiniteBoundPosition::new(SignedDuration::from_hours(12)).to_end_bound(),
+    ///     RelBoundPair::new(
+    ///         RelFiniteBoundPos::new(SignedDuration::from_hours(8)).to_start_bound(),
+    ///         RelFiniteBoundPos::new(SignedDuration::from_hours(12)).to_end_bound(),
     ///     ),
-    ///     RelativeBoundPair::new(
-    ///         RelativeFiniteBoundPosition::new(SignedDuration::from_hours(13)).to_start_bound(),
-    ///         RelativeFiniteBoundPosition::new(SignedDuration::from_hours(16)).to_end_bound(),
+    ///     RelBoundPair::new(
+    ///         RelFiniteBoundPos::new(SignedDuration::from_hours(13)).to_start_bound(),
+    ///         RelFiniteBoundPos::new(SignedDuration::from_hours(16)).to_end_bound(),
     ///     ),
     /// ];
     ///
     /// let second_layer_intervals = [
-    ///     RelativeBoundPair::new(
-    ///         RelativeFiniteBoundPosition::new(SignedDuration::from_hours(7)).to_start_bound(),
-    ///         RelativeFiniteBoundPosition::new(SignedDuration::from_hours(11)).to_end_bound(),
+    ///     RelBoundPair::new(
+    ///         RelFiniteBoundPos::new(SignedDuration::from_hours(7)).to_start_bound(),
+    ///         RelFiniteBoundPos::new(SignedDuration::from_hours(11)).to_end_bound(),
     ///     ),
-    ///     RelativeBoundPair::new(
-    ///         RelativeFiniteBoundPosition::new(SignedDuration::from_hours(14)).to_start_bound(),
-    ///         RelativeFiniteBoundPosition::new(SignedDuration::from_hours(18)).to_end_bound(),
+    ///     RelBoundPair::new(
+    ///         RelFiniteBoundPos::new(SignedDuration::from_hours(14)).to_start_bound(),
+    ///         RelFiniteBoundPos::new(SignedDuration::from_hours(18)).to_end_bound(),
     ///     ),
     /// ];
     ///
@@ -477,14 +477,14 @@ impl RelativeBoundsIter {
     #[must_use]
     pub fn unchecked_layer(
         self,
-        second_layer: RelativeBoundsIter,
-    ) -> LayeredRelativeBounds<Peekable<Self>, Peekable<RelativeBoundsIter>> {
-        LayeredRelativeBounds::new(self, second_layer)
+        second_layer: RelBoundsIter,
+    ) -> LayeredRelBounds<Peekable<Self>, Peekable<RelBoundsIter>> {
+        LayeredRelBounds::new(self, second_layer)
     }
 }
 
-impl Iterator for RelativeBoundsIter {
-    type Item = RelativeBound;
+impl Iterator for RelBoundsIter {
+    type Item = RelBound;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.exhausted {
@@ -510,34 +510,34 @@ impl Iterator for RelativeBoundsIter {
     }
 }
 
-impl FusedIterator for RelativeBoundsIter {}
+impl FusedIterator for RelBoundsIter {}
 
-impl ExactSizeIterator for RelativeBoundsIter {}
+impl ExactSizeIterator for RelBoundsIter {}
 
-impl FromIterator<RelativeBoundPair> for RelativeBoundsIter {
+impl FromIterator<RelBoundPair> for RelBoundsIter {
     fn from_iter<I>(iter: I) -> Self
     where
-        I: IntoIterator<Item = RelativeBoundPair>,
+        I: IntoIterator<Item = RelBoundPair>,
     {
-        RelativeBoundsIter::new(iter.into_iter())
+        RelBoundsIter::new(iter.into_iter())
     }
 }
 
-impl Extend<RelativeBoundPair> for RelativeBoundsIter {
+impl Extend<RelBoundPair> for RelBoundsIter {
     fn extend<I>(&mut self, iter: I)
     where
-        I: IntoIterator<Item = RelativeBoundPair>,
+        I: IntoIterator<Item = RelBoundPair>,
     {
         self.bounds.extend(iter);
     }
 }
 
-/// Iterator dispatcher trait for [`RelativeBoundsIter`]
-pub trait RelativeBoundsIteratorDispatcher: IntoIterator<Item = RelativeBoundPair> + Sized {
-    /// Creates an [`RelativeBoundsIter`] from the collection
-    fn rel_bounds_iter(self) -> RelativeBoundsIter {
-        RelativeBoundsIter::new(self.into_iter())
+/// Iterator dispatcher trait for [`RelBoundsIter`]
+pub trait RelBoundsIteratorDispatcher: IntoIterator<Item = RelBoundPair> + Sized {
+    /// Creates an [`RelBoundsIter`] from the collection
+    fn rel_bounds_iter(self) -> RelBoundsIter {
+        RelBoundsIter::new(self.into_iter())
     }
 }
 
-impl<I> RelativeBoundsIteratorDispatcher for I where I: IntoIterator<Item = RelativeBoundPair> + Sized {}
+impl<I> RelBoundsIteratorDispatcher for I where I: IntoIterator<Item = RelBoundPair> + Sized {}

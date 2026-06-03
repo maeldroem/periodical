@@ -5,16 +5,16 @@ use jiff::{SignedDuration, Timestamp};
 
 use super::special::*;
 use crate::intervals::absolute::{
-    AbsoluteBoundPair,
-    AbsoluteEndBound,
-    AbsoluteFiniteBoundPosition,
-    AbsoluteInterval,
-    AbsoluteStartBound,
-    BoundedAbsoluteInterval,
-    EmptiableAbsoluteBoundPair,
-    EmptiableAbsoluteInterval,
-    HasAbsoluteBoundPair,
-    HasEmptiableAbsoluteBoundPair,
+    AbsBoundPair,
+    AbsEndBound,
+    AbsFiniteBoundPos,
+    AbsInterval,
+    AbsStartBound,
+    BoundedAbsInterval,
+    EmptiableAbsBoundPair,
+    EmptiableAbsInterval,
+    HasAbsBoundPair,
+    HasEmptiableAbsBoundPair,
 };
 use crate::intervals::meta::{
     Duration as IntervalDuration,
@@ -27,16 +27,16 @@ use crate::intervals::meta::{
     Relativity,
 };
 use crate::intervals::relative::{
-    BoundedRelativeInterval,
-    EmptiableRelativeBoundPair,
-    EmptiableRelativeInterval,
-    HasEmptiableRelativeBoundPair,
-    HasRelativeBoundPair,
-    RelativeBoundPair,
-    RelativeEndBound,
-    RelativeFiniteBoundPosition,
-    RelativeInterval,
-    RelativeStartBound,
+    BoundedRelInterval,
+    EmptiableRelBoundPair,
+    EmptiableRelInterval,
+    HasEmptiableRelBoundPair,
+    HasRelBoundPair,
+    RelBoundPair,
+    RelEndBound,
+    RelFiniteBoundPos,
+    RelInterval,
+    RelStartBound,
 };
 
 mod unbounded_interval {
@@ -46,7 +46,7 @@ mod unbounded_interval {
     fn to_abs_bound_pair() {
         assert_eq!(
             UnboundedInterval.to_abs_bound_pair(),
-            AbsoluteBoundPair::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture)
+            AbsBoundPair::new(AbsStartBound::InfinitePast, AbsEndBound::InfiniteFuture)
         );
     }
 
@@ -54,7 +54,7 @@ mod unbounded_interval {
     fn to_emptiable_abs_bound_pair() {
         assert_eq!(
             UnboundedInterval.to_emptiable_abs_bound_pair(),
-            AbsoluteBoundPair::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture).to_emptiable()
+            AbsBoundPair::new(AbsStartBound::InfinitePast, AbsEndBound::InfiniteFuture).to_emptiable()
         );
     }
 
@@ -62,7 +62,7 @@ mod unbounded_interval {
     fn to_abs_interval() {
         assert_eq!(
             UnboundedInterval.to_abs_interval(),
-            AbsoluteInterval::Unbounded(UnboundedInterval)
+            AbsInterval::Unbounded(UnboundedInterval)
         );
     }
 
@@ -70,7 +70,7 @@ mod unbounded_interval {
     fn to_emptiable_abs_interval() {
         assert_eq!(
             UnboundedInterval.to_emptiable_abs_interval(),
-            AbsoluteInterval::Unbounded(UnboundedInterval).to_emptiable()
+            AbsInterval::Unbounded(UnboundedInterval).to_emptiable()
         );
     }
 
@@ -78,7 +78,7 @@ mod unbounded_interval {
     fn to_rel_bound_pair() {
         assert_eq!(
             UnboundedInterval.to_rel_bound_pair(),
-            RelativeBoundPair::new(RelativeStartBound::InfinitePast, RelativeEndBound::InfiniteFuture)
+            RelBoundPair::new(RelStartBound::InfinitePast, RelEndBound::InfiniteFuture)
         );
     }
 
@@ -86,7 +86,7 @@ mod unbounded_interval {
     fn to_emptiable_rel_bound_pair() {
         assert_eq!(
             UnboundedInterval.to_emptiable_rel_bound_pair(),
-            RelativeBoundPair::new(RelativeStartBound::InfinitePast, RelativeEndBound::InfiniteFuture).to_emptiable()
+            RelBoundPair::new(RelStartBound::InfinitePast, RelEndBound::InfiniteFuture).to_emptiable()
         );
     }
 
@@ -94,7 +94,7 @@ mod unbounded_interval {
     fn to_rel_interval() {
         assert_eq!(
             UnboundedInterval.to_rel_interval(),
-            RelativeInterval::Unbounded(UnboundedInterval)
+            RelInterval::Unbounded(UnboundedInterval)
         );
     }
 
@@ -102,7 +102,7 @@ mod unbounded_interval {
     fn to_emptiable_rel_interval() {
         assert_eq!(
             UnboundedInterval.to_emptiable_rel_interval(),
-            RelativeInterval::Unbounded(UnboundedInterval).to_emptiable()
+            RelInterval::Unbounded(UnboundedInterval).to_emptiable()
         );
     }
 
@@ -125,36 +125,36 @@ mod unbounded_interval {
     fn abs_bound_pair() {
         assert_eq!(
             UnboundedInterval.abs_bound_pair(),
-            AbsoluteBoundPair::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture),
+            AbsBoundPair::new(AbsStartBound::InfinitePast, AbsEndBound::InfiniteFuture),
         );
     }
 
     #[test]
     fn abs_start() {
-        assert_eq!(UnboundedInterval.abs_start(), AbsoluteStartBound::InfinitePast);
+        assert_eq!(UnboundedInterval.abs_start(), AbsStartBound::InfinitePast);
     }
 
     #[test]
     fn abs_end() {
-        assert_eq!(UnboundedInterval.abs_end(), AbsoluteEndBound::InfiniteFuture);
+        assert_eq!(UnboundedInterval.abs_end(), AbsEndBound::InfiniteFuture);
     }
 
     #[test]
     fn rel_bound_pair() {
         assert_eq!(
             UnboundedInterval.rel_bound_pair(),
-            RelativeBoundPair::new(RelativeStartBound::InfinitePast, RelativeEndBound::InfiniteFuture),
+            RelBoundPair::new(RelStartBound::InfinitePast, RelEndBound::InfiniteFuture),
         );
     }
 
     #[test]
     fn rel_start() {
-        assert_eq!(UnboundedInterval.rel_start(), RelativeStartBound::InfinitePast);
+        assert_eq!(UnboundedInterval.rel_start(), RelStartBound::InfinitePast);
     }
 
     #[test]
     fn rel_end() {
-        assert_eq!(UnboundedInterval.rel_end(), RelativeEndBound::InfiniteFuture);
+        assert_eq!(UnboundedInterval.rel_end(), RelEndBound::InfiniteFuture);
     }
 
     #[test]
@@ -165,18 +165,18 @@ mod unbounded_interval {
     #[test]
     fn try_from_abs_bound_pair() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            UnboundedInterval::try_from(AbsoluteBoundPair::new(
-                AbsoluteStartBound::InfinitePast,
-                AbsoluteEndBound::InfiniteFuture
+            UnboundedInterval::try_from(AbsBoundPair::new(
+                AbsStartBound::InfinitePast,
+                AbsEndBound::InfiniteFuture
             )),
             Ok(UnboundedInterval)
         );
         assert_eq!(
-            UnboundedInterval::try_from(AbsoluteBoundPair::new(
-                AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsoluteEndBound::InfiniteFuture
+            UnboundedInterval::try_from(AbsBoundPair::new(
+                AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                AbsEndBound::InfiniteFuture
             )),
-            Err(UnboundedIntervalTryFromAbsoluteBoundPairError)
+            Err(UnboundedIntervalTryFromAbsBoundPairError)
         );
 
         Ok(())
@@ -185,18 +185,18 @@ mod unbounded_interval {
     #[test]
     fn try_from_rel_bound_pair() {
         assert_eq!(
-            UnboundedInterval::try_from(RelativeBoundPair::new(
-                RelativeStartBound::InfinitePast,
-                RelativeEndBound::InfiniteFuture
+            UnboundedInterval::try_from(RelBoundPair::new(
+                RelStartBound::InfinitePast,
+                RelEndBound::InfiniteFuture
             )),
             Ok(UnboundedInterval)
         );
         assert_eq!(
-            UnboundedInterval::try_from(RelativeBoundPair::new(
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(8)).to_start_bound(),
-                RelativeEndBound::InfiniteFuture
+            UnboundedInterval::try_from(RelBoundPair::new(
+                RelFiniteBoundPos::new(SignedDuration::from_hours(8)).to_start_bound(),
+                RelEndBound::InfiniteFuture
             )),
-            Err(UnboundedIntervalTryFromRelativeBoundPairError)
+            Err(UnboundedIntervalTryFromRelBoundPairError)
         );
     }
 
@@ -204,24 +204,23 @@ mod unbounded_interval {
     fn try_from_emptiable_abs_bound_pair() -> Result<(), Box<dyn Error>> {
         assert_eq!(
             UnboundedInterval::try_from(
-                AbsoluteBoundPair::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture)
-                    .to_emptiable()
+                AbsBoundPair::new(AbsStartBound::InfinitePast, AbsEndBound::InfiniteFuture).to_emptiable()
             ),
             Ok(UnboundedInterval)
         );
         assert_eq!(
             UnboundedInterval::try_from(
-                AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteEndBound::InfiniteFuture
+                AbsBoundPair::new(
+                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsEndBound::InfiniteFuture
                 )
                 .to_emptiable()
             ),
-            Err(UnboundedIntervalTryFromEmptiableAbsoluteBoundPairError)
+            Err(UnboundedIntervalTryFromEmptiableAbsBoundPairError)
         );
         assert_eq!(
-            UnboundedInterval::try_from(EmptiableAbsoluteBoundPair::Empty),
-            Err(UnboundedIntervalTryFromEmptiableAbsoluteBoundPairError)
+            UnboundedInterval::try_from(EmptiableAbsBoundPair::Empty),
+            Err(UnboundedIntervalTryFromEmptiableAbsBoundPairError)
         );
 
         Ok(())
@@ -231,36 +230,35 @@ mod unbounded_interval {
     fn try_from_emptiable_rel_bound_pair() {
         assert_eq!(
             UnboundedInterval::try_from(
-                RelativeBoundPair::new(RelativeStartBound::InfinitePast, RelativeEndBound::InfiniteFuture)
-                    .to_emptiable()
+                RelBoundPair::new(RelStartBound::InfinitePast, RelEndBound::InfiniteFuture).to_emptiable()
             ),
             Ok(UnboundedInterval)
         );
         assert_eq!(
-            UnboundedInterval::try_from(RelativeBoundPair::new(
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(8)).to_start_bound(),
-                RelativeEndBound::InfiniteFuture
+            UnboundedInterval::try_from(RelBoundPair::new(
+                RelFiniteBoundPos::new(SignedDuration::from_hours(8)).to_start_bound(),
+                RelEndBound::InfiniteFuture
             )),
-            Err(UnboundedIntervalTryFromRelativeBoundPairError)
+            Err(UnboundedIntervalTryFromRelBoundPairError)
         );
         assert_eq!(
-            UnboundedInterval::try_from(EmptiableRelativeBoundPair::Empty),
-            Err(UnboundedIntervalTryFromEmptiableRelativeBoundPairError)
+            UnboundedInterval::try_from(EmptiableRelBoundPair::Empty),
+            Err(UnboundedIntervalTryFromEmptiableRelBoundPairError)
         );
     }
 
     #[test]
     fn try_from_abs_interval() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            UnboundedInterval::try_from(AbsoluteInterval::Unbounded(UnboundedInterval)),
+            UnboundedInterval::try_from(AbsInterval::Unbounded(UnboundedInterval)),
             Ok(UnboundedInterval),
         );
         assert_eq!(
-            UnboundedInterval::try_from(AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times(
+            UnboundedInterval::try_from(AbsInterval::Bounded(BoundedAbsInterval::from_times(
                 "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
                 "2025-01-02 00:00:00Z".parse::<Timestamp>()?,
             ))),
-            Err(UnboundedIntervalTryFromAbsoluteIntervalError),
+            Err(UnboundedIntervalTryFromAbsIntervalError),
         );
 
         Ok(())
@@ -269,37 +267,37 @@ mod unbounded_interval {
     #[test]
     fn try_from_rel_interval() {
         assert_eq!(
-            UnboundedInterval::try_from(RelativeInterval::Unbounded(UnboundedInterval)),
+            UnboundedInterval::try_from(RelInterval::Unbounded(UnboundedInterval)),
             Ok(UnboundedInterval),
         );
         assert_eq!(
-            UnboundedInterval::try_from(RelativeInterval::Bounded(BoundedRelativeInterval::from_offsets(
+            UnboundedInterval::try_from(RelInterval::Bounded(BoundedRelInterval::from_offsets(
                 SignedDuration::from_hours(1),
                 SignedDuration::from_hours(5),
             ))),
-            Err(UnboundedIntervalTryFromRelativeIntervalError),
+            Err(UnboundedIntervalTryFromRelIntervalError),
         );
     }
 
     #[test]
     fn try_from_emptiable_abs_interval() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            UnboundedInterval::try_from(AbsoluteInterval::Unbounded(UnboundedInterval).to_emptiable()),
+            UnboundedInterval::try_from(AbsInterval::Unbounded(UnboundedInterval).to_emptiable()),
             Ok(UnboundedInterval),
         );
         assert_eq!(
             UnboundedInterval::try_from(
-                AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times(
+                AbsInterval::Bounded(BoundedAbsInterval::from_times(
                     "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
                     "2025-01-02 00:00:00Z".parse::<Timestamp>()?,
                 ))
                 .to_emptiable()
             ),
-            Err(UnboundedIntervalTryFromEmptiableAbsoluteIntervalError),
+            Err(UnboundedIntervalTryFromEmptiableAbsIntervalError),
         );
         assert_eq!(
-            UnboundedInterval::try_from(EmptiableAbsoluteInterval::Empty(EmptyInterval)),
-            Err(UnboundedIntervalTryFromEmptiableAbsoluteIntervalError)
+            UnboundedInterval::try_from(EmptiableAbsInterval::Empty(EmptyInterval)),
+            Err(UnboundedIntervalTryFromEmptiableAbsIntervalError)
         );
 
         Ok(())
@@ -308,22 +306,22 @@ mod unbounded_interval {
     #[test]
     fn try_from_emptiable_rel_interval() {
         assert_eq!(
-            UnboundedInterval::try_from(RelativeInterval::Unbounded(UnboundedInterval).to_emptiable()),
+            UnboundedInterval::try_from(RelInterval::Unbounded(UnboundedInterval).to_emptiable()),
             Ok(UnboundedInterval),
         );
         assert_eq!(
             UnboundedInterval::try_from(
-                RelativeInterval::Bounded(BoundedRelativeInterval::from_offsets(
+                RelInterval::Bounded(BoundedRelInterval::from_offsets(
                     SignedDuration::from_hours(2),
                     SignedDuration::from_hours(8)
                 ))
                 .to_emptiable()
             ),
-            Err(UnboundedIntervalTryFromEmptiableRelativeIntervalError),
+            Err(UnboundedIntervalTryFromEmptiableRelIntervalError),
         );
         assert_eq!(
-            UnboundedInterval::try_from(EmptiableRelativeInterval::Empty(EmptyInterval)),
-            Err(UnboundedIntervalTryFromEmptiableRelativeIntervalError)
+            UnboundedInterval::try_from(EmptiableRelInterval::Empty(EmptyInterval)),
+            Err(UnboundedIntervalTryFromEmptiableRelIntervalError)
         );
     }
 }
@@ -335,7 +333,7 @@ mod empty_interval {
     fn to_emptiable_abs_bound_pair() {
         assert_eq!(
             EmptyInterval.to_emptiable_abs_bound_pair(),
-            EmptiableAbsoluteBoundPair::Empty
+            EmptiableAbsBoundPair::Empty
         );
     }
 
@@ -343,7 +341,7 @@ mod empty_interval {
     fn to_emptiable_abs_interval() {
         assert_eq!(
             EmptyInterval.to_emptiable_abs_interval(),
-            EmptiableAbsoluteInterval::Empty(EmptyInterval)
+            EmptiableAbsInterval::Empty(EmptyInterval)
         );
     }
 
@@ -351,7 +349,7 @@ mod empty_interval {
     fn to_emptiable_rel_bound_pair() {
         assert_eq!(
             EmptyInterval.to_emptiable_rel_bound_pair(),
-            EmptiableRelativeBoundPair::Empty
+            EmptiableRelBoundPair::Empty
         );
     }
 
@@ -359,7 +357,7 @@ mod empty_interval {
     fn to_emptiable_rel_interval() {
         assert_eq!(
             EmptyInterval.to_emptiable_rel_interval(),
-            EmptiableRelativeInterval::Empty(EmptyInterval)
+            EmptiableRelInterval::Empty(EmptyInterval)
         );
     }
 
@@ -383,10 +381,7 @@ mod empty_interval {
 
     #[test]
     fn emptiable_abs_bound_pair() {
-        assert_eq!(
-            EmptyInterval.emptiable_abs_bound_pair(),
-            EmptiableAbsoluteBoundPair::Empty
-        );
+        assert_eq!(EmptyInterval.emptiable_abs_bound_pair(), EmptiableAbsBoundPair::Empty);
     }
 
     #[test]
@@ -401,10 +396,7 @@ mod empty_interval {
 
     #[test]
     fn emptiable_rel_bound_pair() {
-        assert_eq!(
-            EmptyInterval.emptiable_rel_bound_pair(),
-            EmptiableRelativeBoundPair::Empty
-        );
+        assert_eq!(EmptyInterval.emptiable_rel_bound_pair(), EmptiableRelBoundPair::Empty);
     }
 
     #[test]
@@ -424,59 +416,47 @@ mod empty_interval {
 
     #[test]
     fn try_from_emptiable_abs_bound_pair() {
-        assert_eq!(
-            EmptyInterval::try_from(EmptiableAbsoluteBoundPair::Empty),
-            Ok(EmptyInterval),
-        );
+        assert_eq!(EmptyInterval::try_from(EmptiableAbsBoundPair::Empty), Ok(EmptyInterval),);
         assert_eq!(
             EmptyInterval::try_from(
-                AbsoluteBoundPair::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture)
-                    .to_emptiable()
+                AbsBoundPair::new(AbsStartBound::InfinitePast, AbsEndBound::InfiniteFuture).to_emptiable()
             ),
-            Err(EmptyIntervalTryFromEmptiableAbsoluteBoundPair)
+            Err(EmptyIntervalTryFromEmptiableAbsBoundPair)
         );
     }
 
     #[test]
     fn try_from_emptiable_abs_interval() {
         assert_eq!(
-            EmptyInterval::try_from(EmptiableAbsoluteInterval::Empty(EmptyInterval)),
+            EmptyInterval::try_from(EmptiableAbsInterval::Empty(EmptyInterval)),
             Ok(EmptyInterval)
         );
         assert_eq!(
-            EmptyInterval::try_from(EmptiableAbsoluteInterval::Bound(AbsoluteInterval::Unbounded(
-                UnboundedInterval
-            ))),
-            Err(EmptyIntervalTryFromEmptiableAbsoluteInterval),
+            EmptyInterval::try_from(EmptiableAbsInterval::Bound(AbsInterval::Unbounded(UnboundedInterval))),
+            Err(EmptyIntervalTryFromEmptiableAbsInterval),
         );
     }
 
     #[test]
     fn try_from_emptiable_rel_bound_pair() {
-        assert_eq!(
-            EmptyInterval::try_from(EmptiableRelativeBoundPair::Empty),
-            Ok(EmptyInterval),
-        );
+        assert_eq!(EmptyInterval::try_from(EmptiableRelBoundPair::Empty), Ok(EmptyInterval),);
         assert_eq!(
             EmptyInterval::try_from(
-                RelativeBoundPair::new(RelativeStartBound::InfinitePast, RelativeEndBound::InfiniteFuture)
-                    .to_emptiable()
+                RelBoundPair::new(RelStartBound::InfinitePast, RelEndBound::InfiniteFuture).to_emptiable()
             ),
-            Err(EmptyIntervalTryFromEmptiableRelativeBoundPair)
+            Err(EmptyIntervalTryFromEmptiableRelBoundPair)
         );
     }
 
     #[test]
     fn try_from_emptiable_rel_interval() {
         assert_eq!(
-            EmptyInterval::try_from(EmptiableRelativeInterval::Empty(EmptyInterval)),
+            EmptyInterval::try_from(EmptiableRelInterval::Empty(EmptyInterval)),
             Ok(EmptyInterval)
         );
         assert_eq!(
-            EmptyInterval::try_from(EmptiableRelativeInterval::Bound(RelativeInterval::Unbounded(
-                UnboundedInterval
-            ))),
-            Err(EmptyIntervalTryFromEmptiableRelativeInterval),
+            EmptyInterval::try_from(EmptiableRelInterval::Bound(RelInterval::Unbounded(UnboundedInterval))),
+            Err(EmptyIntervalTryFromEmptiableRelInterval),
         );
     }
 }

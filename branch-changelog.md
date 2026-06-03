@@ -65,10 +65,10 @@ TODO: once all done, PR onto dev to sync, then continue unit tests
   - `ops`
     - `abridge`
     - `extend` (WIP)
-- Implemented conversion from `EmptiableAbsoluteInterval` into `HalfBoundedAbsoluteInterval`
-- Implemented conversion from `EmptiableRelativeInterval` into `HalfBoundedRelativeInterval`
+- Implemented conversion from `EmptiableAbsInterval` into `HalfBoundedAbsInterval`
+- Implemented conversion from `EmptiableRelInterval` into `HalfBoundedRelInterval`
 - Created a list of bound pair pairs for test cases involving operations (subject, compared)
-- Added missing implementation of `Abridgable` for `EmptiableRelativeInterval`
+- Added missing implementation of `Abridgable` for `EmptiableRelInterval`
 - Adopted policy of binary operations returning the strictest possible type, "strictest binary operation output policy"
 - Adopted policy of no generic implementations for binary operations, "no binary operation generic impl policy"
 - Adopted "no binary operation over-compatibility impl policy"
@@ -88,8 +88,8 @@ TODO: once all done, PR onto dev to sync, then continue unit tests
 ## Changed
 
 - `HasRelativity` now represents the relativity of the contained interval rather than the indicated relativity
-  in the structure's name — Concerns `AbsoluteBoundPair`, `EmptiableAbsoluteBoundPair`, `RelativeBoundPair`,
-  `EmptiableRelativeBoundPair`
+  in the structure's name — Concerns `AbsBoundPair`, `EmptiableAbsBoundPair`, `RelBoundPair`,
+  `EmptiableRelBoundPair`
 - Converted conversions that use a boolean in a tuple to represent emptiness for an emptiable bound pair
   or emptiable interval to using `Option` to represent the empty variant
 - Changed conversion of `((Timestamp/SignedDuration, BoundInclusivity), OpeningDirection)` for half bounded intervals
@@ -102,6 +102,8 @@ TODO: once all done, PR onto dev to sync, then continue unit tests
 - Refactored comparisons between bounds through the use of dedicated bound comparison traits
 - Changed internal structure of bounded intervals to use start/end finite bounds
 - Changed internal structure of half-bounded intervals to use a finite bound position
+- Renamed `Absolute`/`Relative` by `Abs`/`Rel` to reduce space taken
+- Renamed `*FiniteBoundPosition` to `*FiniteBoundPos` to reduce space taken
 
 ## Deprecated
 
@@ -111,19 +113,19 @@ TODO: once all done, PR onto dev to sync, then continue unit tests
 
 - Removed conversion from `(bool, bool)` to `Epsilon`, as `Epsilon` can be created from
   `(BoundInclusivity, BoundInclusivity)`, and `BoundInclusivity` can be created from a boolean
-- Removed conversion from types that are already handled by `AbsoluteBoundPair` on `AbsoluteInterval`
-- Removed conversion from types that are already handled by `RelativeBoundPair` on `RelativeInterval`
-- Removed conversion from types that are already handled by `EmptiableAbsoluteBoundPair` on `EmptiableAbsoluteInterval`
-- Removed conversion from types that are already handled by `EmptiableRelativeBoundPair` on `EmptiableRelativeInterval`
+- Removed conversion from types that are already handled by `AbsBoundPair` on `AbsInterval`
+- Removed conversion from types that are already handled by `RelBoundPair` on `RelInterval`
+- Removed conversion from types that are already handled by `EmptiableAbsBoundPair` on `EmptiableAbsInterval`
+- Removed conversion from types that are already handled by `EmptiableRelBoundPair` on `EmptiableRelInterval`
 - (Internal) Removed `tests!` and `inline_docs!` macros
 
 ## Fixed
 
 - Fixed wrong offset computation in `OffsetIsoWeek::from_date_with_offset`
 - Fixed panic due to usage of `SignedDuration::from_nanos_i128` instead of `SignedDuration::try_from_nanos_i128` in
-  `BoundedRelativeInterval::new_with_length`
+  `BoundedRelInterval::new_with_length`
 - Fixed panic due to usage of `SignedDuration::from_nanos_i128` instead of `SignedDuration::try_from_nanos_i128` in
-  `BoundedRelativeInterval::new_with_length_and_inclusivity`
+  `BoundedRelInterval::new_with_length_and_inclusivity`
 
 ## Security
 

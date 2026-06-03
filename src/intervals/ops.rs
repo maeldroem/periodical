@@ -124,7 +124,7 @@ pub use point_containment::{
     PointContainmentRuleSet,
 };
 #[doc(inline)]
-pub use precision::{PreciseAbsoluteBound, PreciseAbsoluteInterval, PreciseRelativeBound, PreciseRelativeInterval};
+pub use precision::{PreciseAbsBound, PreciseAbsInterval, PreciseRelBound, PreciseRelInterval};
 #[doc(inline)]
 pub use relativity_conversion::{ToAbsolute, ToRelative};
 #[doc(inline)]

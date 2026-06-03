@@ -1,27 +1,27 @@
 //! Interval intersection
 
 use crate::intervals::absolute::{
-    AbsoluteBoundPair,
-    AbsoluteInterval,
-    BoundedAbsoluteInterval,
-    EmptiableAbsoluteBoundPair,
-    EmptiableAbsoluteInterval,
-    HalfBoundedAbsoluteInterval,
-    HasAbsoluteBoundPair,
-    HasEmptiableAbsoluteBoundPair,
+    AbsBoundPair,
+    AbsInterval,
+    BoundedAbsInterval,
+    EmptiableAbsBoundPair,
+    EmptiableAbsInterval,
+    HalfBoundedAbsInterval,
+    HasAbsBoundPair,
+    HasEmptiableAbsBoundPair,
 };
 use crate::intervals::meta::Interval;
 use crate::intervals::ops::abridge::Abridgable;
 use crate::intervals::ops::overlap::CanPositionOverlap;
 use crate::intervals::relative::{
-    BoundedRelativeInterval,
-    EmptiableRelativeBoundPair,
-    EmptiableRelativeInterval,
-    HalfBoundedRelativeInterval,
-    HasEmptiableRelativeBoundPair,
-    HasRelativeBoundPair,
-    RelativeBoundPair,
-    RelativeInterval,
+    BoundedRelInterval,
+    EmptiableRelBoundPair,
+    EmptiableRelInterval,
+    HalfBoundedRelInterval,
+    HasEmptiableRelBoundPair,
+    HasRelBoundPair,
+    RelBoundPair,
+    RelInterval,
 };
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 use crate::ops::IntersectionResult;
@@ -36,16 +36,16 @@ use crate::ops::IntersectionResult;
 /// # use std::error::Error;
 /// # use jiff::Zoned;
 /// # use periodical::ops::IntersectionResult;
-/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
+/// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos};
 /// # use periodical::intervals::ops::set_ops::Intersectable;
-/// let first_interval = AbsoluteBoundPair::new(
-///     AbsoluteFiniteBoundPosition::new(
+/// let first_interval = AbsBoundPair::new(
+///     AbsFiniteBoundPos::new(
 ///         "2025-01-01 08:00:00[Europe/Oslo]"
 ///             .parse::<Zoned>()?
 ///             .timestamp(),
 ///     )
 ///     .to_start_bound(),
-///     AbsoluteFiniteBoundPosition::new(
+///     AbsFiniteBoundPos::new(
 ///         "2025-01-01 14:00:00[Europe/Oslo]"
 ///             .parse::<Zoned>()?
 ///             .timestamp(),
@@ -53,14 +53,14 @@ use crate::ops::IntersectionResult;
 ///     .to_end_bound(),
 /// );
 ///
-/// let second_interval = AbsoluteBoundPair::new(
-///     AbsoluteFiniteBoundPosition::new(
+/// let second_interval = AbsBoundPair::new(
+///     AbsFiniteBoundPos::new(
 ///         "2025-01-01 12:00:00[Europe/Oslo]"
 ///             .parse::<Zoned>()?
 ///             .timestamp(),
 ///     )
 ///     .to_start_bound(),
-///     AbsoluteFiniteBoundPosition::new(
+///     AbsFiniteBoundPos::new(
 ///         "2025-01-01 18:00:00[Europe/Oslo]"
 ///             .parse::<Zoned>()?
 ///             .timestamp(),
@@ -70,14 +70,14 @@ use crate::ops::IntersectionResult;
 ///
 /// assert_eq!(
 ///     first_interval.intersect(&second_interval),
-///     IntersectionResult::Intersected(AbsoluteBoundPair::new(
-///         AbsoluteFiniteBoundPosition::new(
+///     IntersectionResult::Intersected(AbsBoundPair::new(
+///         AbsFiniteBoundPos::new(
 ///             "2025-01-01 12:00:00[Europe/Oslo]"
 ///                 .parse::<Zoned>()?
 ///                 .timestamp(),
 ///         )
 ///         .to_start_bound(),
-///         AbsoluteFiniteBoundPosition::new(
+///         AbsFiniteBoundPos::new(
 ///             "2025-01-01 14:00:00[Europe/Oslo]"
 ///                 .parse::<Zoned>()?
 ///                 .timestamp(),
@@ -94,16 +94,16 @@ use crate::ops::IntersectionResult;
 /// # use std::error::Error;
 /// # use jiff::Zoned;
 /// # use periodical::ops::IntersectionResult;
-/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
+/// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos};
 /// # use periodical::intervals::ops::set_ops::Intersectable;
-/// let first_interval = AbsoluteBoundPair::new(
-///     AbsoluteFiniteBoundPosition::new(
+/// let first_interval = AbsBoundPair::new(
+///     AbsFiniteBoundPos::new(
 ///         "2025-01-01 08:00:00[Europe/Oslo]"
 ///             .parse::<Zoned>()?
 ///             .timestamp(),
 ///     )
 ///     .to_start_bound(),
-///     AbsoluteFiniteBoundPosition::new(
+///     AbsFiniteBoundPos::new(
 ///         "2025-01-01 12:00:00[Europe/Oslo]"
 ///             .parse::<Zoned>()?
 ///             .timestamp(),
@@ -111,14 +111,14 @@ use crate::ops::IntersectionResult;
 ///     .to_end_bound(),
 /// );
 ///
-/// let second_interval = AbsoluteBoundPair::new(
-///     AbsoluteFiniteBoundPosition::new(
+/// let second_interval = AbsBoundPair::new(
+///     AbsFiniteBoundPos::new(
 ///         "2025-01-01 14:00:00[Europe/Oslo]"
 ///             .parse::<Zoned>()?
 ///             .timestamp(),
 ///     )
 ///     .to_start_bound(),
-///     AbsoluteFiniteBoundPosition::new(
+///     AbsFiniteBoundPos::new(
 ///         "2025-01-01 18:00:00[Europe/Oslo]"
 ///             .parse::<Zoned>()?
 ///             .timestamp(),
@@ -144,16 +144,16 @@ pub trait Intersectable<Rhs = Self> {
     /// # use std::error::Error;
     /// # use jiff::Zoned;
     /// # use periodical::ops::IntersectionResult;
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
+    /// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos};
     /// # use periodical::intervals::ops::set_ops::Intersectable;
-    /// let first_interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBoundPosition::new(
+    /// let first_interval = AbsBoundPair::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 08:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
     ///     )
     ///     .to_start_bound(),
-    ///     AbsoluteFiniteBoundPosition::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 14:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
@@ -161,14 +161,14 @@ pub trait Intersectable<Rhs = Self> {
     ///     .to_end_bound(),
     /// );
     ///
-    /// let second_interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBoundPosition::new(
+    /// let second_interval = AbsBoundPair::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 12:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
     ///     )
     ///     .to_start_bound(),
-    ///     AbsoluteFiniteBoundPosition::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 18:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
@@ -178,14 +178,14 @@ pub trait Intersectable<Rhs = Self> {
     ///
     /// assert_eq!(
     ///     first_interval.intersect(&second_interval),
-    ///     IntersectionResult::Intersected(AbsoluteBoundPair::new(
-    ///         AbsoluteFiniteBoundPosition::new(
+    ///     IntersectionResult::Intersected(AbsBoundPair::new(
+    ///         AbsFiniteBoundPos::new(
     ///             "2025-01-01 12:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
     ///         )
     ///         .to_start_bound(),
-    ///         AbsoluteFiniteBoundPosition::new(
+    ///         AbsFiniteBoundPos::new(
     ///             "2025-01-01 14:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
@@ -206,34 +206,34 @@ pub trait Intersectable<Rhs = Self> {
     /// # use std::error::Error;
     /// # use jiff::Zoned;
     /// # use periodical::ops::IntersectionResult;
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition, EmptiableAbsoluteBoundPair};
+    /// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos, EmptiableAbsBoundPair};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::abridge::Abridgable;
     /// # use periodical::intervals::ops::set_ops::Intersectable;
-    /// let first_interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBoundPosition::new(
+    /// let first_interval = AbsBoundPair::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_start_bound(),
-    ///     AbsoluteFiniteBoundPosition::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_end_bound(),
     /// );
     ///
-    /// let second_interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBoundPosition::new(
+    /// let second_interval = AbsBoundPair::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_start_bound(),
-    ///     AbsoluteFiniteBoundPosition::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_end_bound(),
     /// );
     ///
     /// let intersection_closure = |
-    ///     a: &AbsoluteBoundPair,
-    ///     b: &AbsoluteBoundPair,
-    /// | -> IntersectionResult<AbsoluteBoundPair> {
+    ///     a: &AbsBoundPair,
+    ///     b: &AbsBoundPair,
+    /// | -> IntersectionResult<AbsBoundPair> {
     ///     // Always abridge intervals
-    ///     if let EmptiableAbsoluteBoundPair::Bound(abridged) = a.abridge(b) {
+    ///     if let EmptiableAbsBoundPair::Bound(abridged) = a.abridge(b) {
     ///         IntersectionResult::Intersected(abridged)
     ///     } else {
     ///         IntersectionResult::Separate
@@ -242,12 +242,12 @@ pub trait Intersectable<Rhs = Self> {
     ///
     /// assert_eq!(
     ///     first_interval.intersect_with(&second_interval, intersection_closure),
-    ///     IntersectionResult::Intersected(AbsoluteBoundPair::new(
-    ///         AbsoluteFiniteBoundPosition::new_with_inclusivity(
+    ///     IntersectionResult::Intersected(AbsBoundPair::new(
+    ///         AbsFiniteBoundPos::new_with_inclusivity(
     ///             "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///             BoundInclusivity::Exclusive,
     ///         ).to_start_bound(),
-    ///         AbsoluteFiniteBoundPosition::new_with_inclusivity(
+    ///         AbsFiniteBoundPos::new_with_inclusivity(
     ///             "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///             BoundInclusivity::Exclusive,
     ///         ).to_end_bound(),
@@ -264,9 +264,9 @@ pub trait Intersectable<Rhs = Self> {
     }
 }
 
-impl<Rhs> Intersectable<Rhs> for AbsoluteBoundPair
+impl<Rhs> Intersectable<Rhs> for AbsBoundPair
 where
-    Rhs: HasEmptiableAbsoluteBoundPair,
+    Rhs: HasEmptiableAbsBoundPair,
 {
     type Output = Self;
 
@@ -275,9 +275,9 @@ where
     }
 }
 
-impl<Rhs> Intersectable<Rhs> for EmptiableAbsoluteBoundPair
+impl<Rhs> Intersectable<Rhs> for EmptiableAbsBoundPair
 where
-    Rhs: HasEmptiableAbsoluteBoundPair,
+    Rhs: HasEmptiableAbsBoundPair,
 {
     type Output = Self;
 
@@ -286,9 +286,9 @@ where
     }
 }
 
-impl<Rhs> Intersectable<Rhs> for AbsoluteInterval
+impl<Rhs> Intersectable<Rhs> for AbsInterval
 where
-    Rhs: HasEmptiableAbsoluteBoundPair,
+    Rhs: HasEmptiableAbsBoundPair,
 {
     type Output = Self;
 
@@ -298,9 +298,9 @@ where
     }
 }
 
-impl<Rhs> Intersectable<Rhs> for EmptiableAbsoluteInterval
+impl<Rhs> Intersectable<Rhs> for EmptiableAbsInterval
 where
-    Rhs: HasEmptiableAbsoluteBoundPair,
+    Rhs: HasEmptiableAbsBoundPair,
 {
     type Output = Self;
 
@@ -310,33 +310,33 @@ where
     }
 }
 
-impl<Rhs> Intersectable<Rhs> for BoundedAbsoluteInterval
+impl<Rhs> Intersectable<Rhs> for BoundedAbsInterval
 where
-    Rhs: HasEmptiableAbsoluteBoundPair,
+    Rhs: HasEmptiableAbsBoundPair,
 {
-    type Output = AbsoluteInterval;
+    type Output = AbsInterval;
 
     fn intersect(&self, rhs: &Rhs) -> IntersectionResult<Self::Output> {
         intersect_abs_bound_pair_with_emptiable_abs_bound_pair(&self.abs_bound_pair(), &rhs.emptiable_abs_bound_pair())
-            .map_intersected(AbsoluteInterval::from)
+            .map_intersected(AbsInterval::from)
     }
 }
 
-impl<Rhs> Intersectable<Rhs> for HalfBoundedAbsoluteInterval
+impl<Rhs> Intersectable<Rhs> for HalfBoundedAbsInterval
 where
-    Rhs: HasEmptiableAbsoluteBoundPair,
+    Rhs: HasEmptiableAbsBoundPair,
 {
-    type Output = AbsoluteInterval;
+    type Output = AbsInterval;
 
     fn intersect(&self, rhs: &Rhs) -> IntersectionResult<Self::Output> {
         intersect_abs_bound_pair_with_emptiable_abs_bound_pair(&self.abs_bound_pair(), &rhs.emptiable_abs_bound_pair())
-            .map_intersected(AbsoluteInterval::from)
+            .map_intersected(AbsInterval::from)
     }
 }
 
-impl<Rhs> Intersectable<Rhs> for RelativeBoundPair
+impl<Rhs> Intersectable<Rhs> for RelBoundPair
 where
-    Rhs: HasEmptiableRelativeBoundPair,
+    Rhs: HasEmptiableRelBoundPair,
 {
     type Output = Self;
 
@@ -345,9 +345,9 @@ where
     }
 }
 
-impl<Rhs> Intersectable<Rhs> for EmptiableRelativeBoundPair
+impl<Rhs> Intersectable<Rhs> for EmptiableRelBoundPair
 where
-    Rhs: HasEmptiableRelativeBoundPair,
+    Rhs: HasEmptiableRelBoundPair,
 {
     type Output = Self;
 
@@ -356,9 +356,9 @@ where
     }
 }
 
-impl<Rhs> Intersectable<Rhs> for RelativeInterval
+impl<Rhs> Intersectable<Rhs> for RelInterval
 where
-    Rhs: HasEmptiableRelativeBoundPair,
+    Rhs: HasEmptiableRelBoundPair,
 {
     type Output = Self;
 
@@ -368,9 +368,9 @@ where
     }
 }
 
-impl<Rhs> Intersectable<Rhs> for EmptiableRelativeInterval
+impl<Rhs> Intersectable<Rhs> for EmptiableRelInterval
 where
-    Rhs: HasEmptiableRelativeBoundPair,
+    Rhs: HasEmptiableRelBoundPair,
 {
     type Output = Self;
 
@@ -380,111 +380,111 @@ where
     }
 }
 
-impl<Rhs> Intersectable<Rhs> for BoundedRelativeInterval
+impl<Rhs> Intersectable<Rhs> for BoundedRelInterval
 where
-    Rhs: HasEmptiableRelativeBoundPair,
+    Rhs: HasEmptiableRelBoundPair,
 {
-    type Output = RelativeInterval;
+    type Output = RelInterval;
 
     fn intersect(&self, rhs: &Rhs) -> IntersectionResult<Self::Output> {
         intersect_rel_bound_pair_with_emptiable_rel_bound_pair(&self.rel_bound_pair(), &rhs.emptiable_rel_bound_pair())
-            .map_intersected(RelativeInterval::from)
+            .map_intersected(RelInterval::from)
     }
 }
 
-impl<Rhs> Intersectable<Rhs> for HalfBoundedRelativeInterval
+impl<Rhs> Intersectable<Rhs> for HalfBoundedRelInterval
 where
-    Rhs: HasEmptiableRelativeBoundPair,
+    Rhs: HasEmptiableRelBoundPair,
 {
-    type Output = RelativeInterval;
+    type Output = RelInterval;
 
     fn intersect(&self, rhs: &Rhs) -> IntersectionResult<Self::Output> {
         intersect_rel_bound_pair_with_emptiable_rel_bound_pair(&self.rel_bound_pair(), &rhs.emptiable_rel_bound_pair())
-            .map_intersected(RelativeInterval::from)
+            .map_intersected(RelInterval::from)
     }
 }
 
-impl Intersectable<AbsoluteBoundPair> for UnboundedInterval {
-    type Output = AbsoluteInterval;
+impl Intersectable<AbsBoundPair> for UnboundedInterval {
+    type Output = AbsInterval;
 
-    fn intersect(&self, rhs: &AbsoluteBoundPair) -> IntersectionResult<Self::Output> {
-        intersect_abs_bound_pair(&self.abs_bound_pair(), &rhs.abs_bound_pair()).map_intersected(AbsoluteInterval::from)
+    fn intersect(&self, rhs: &AbsBoundPair) -> IntersectionResult<Self::Output> {
+        intersect_abs_bound_pair(&self.abs_bound_pair(), &rhs.abs_bound_pair()).map_intersected(AbsInterval::from)
     }
 }
 
-impl Intersectable<EmptiableAbsoluteBoundPair> for UnboundedInterval {
-    type Output = AbsoluteInterval;
+impl Intersectable<EmptiableAbsBoundPair> for UnboundedInterval {
+    type Output = AbsInterval;
 
-    fn intersect(&self, rhs: &EmptiableAbsoluteBoundPair) -> IntersectionResult<Self::Output> {
+    fn intersect(&self, rhs: &EmptiableAbsBoundPair) -> IntersectionResult<Self::Output> {
         intersect_abs_bound_pair_with_emptiable_abs_bound_pair(&self.abs_bound_pair(), &rhs.emptiable_abs_bound_pair())
-            .map_intersected(AbsoluteInterval::from)
+            .map_intersected(AbsInterval::from)
     }
 }
 
-impl Intersectable<AbsoluteInterval> for UnboundedInterval {
-    type Output = AbsoluteInterval;
+impl Intersectable<AbsInterval> for UnboundedInterval {
+    type Output = AbsInterval;
 
-    fn intersect(&self, rhs: &AbsoluteInterval) -> IntersectionResult<Self::Output> {
+    fn intersect(&self, rhs: &AbsInterval) -> IntersectionResult<Self::Output> {
         intersect_abs_bound_pair_with_emptiable_abs_bound_pair(&self.abs_bound_pair(), &rhs.emptiable_abs_bound_pair())
-            .map_intersected(AbsoluteInterval::from)
+            .map_intersected(AbsInterval::from)
     }
 }
 
-impl Intersectable<BoundedAbsoluteInterval> for UnboundedInterval {
-    type Output = AbsoluteInterval;
+impl Intersectable<BoundedAbsInterval> for UnboundedInterval {
+    type Output = AbsInterval;
 
-    fn intersect(&self, rhs: &BoundedAbsoluteInterval) -> IntersectionResult<Self::Output> {
-        intersect_abs_bound_pair(&self.abs_bound_pair(), &rhs.abs_bound_pair()).map_intersected(AbsoluteInterval::from)
+    fn intersect(&self, rhs: &BoundedAbsInterval) -> IntersectionResult<Self::Output> {
+        intersect_abs_bound_pair(&self.abs_bound_pair(), &rhs.abs_bound_pair()).map_intersected(AbsInterval::from)
     }
 }
 
-impl Intersectable<HalfBoundedAbsoluteInterval> for UnboundedInterval {
-    type Output = AbsoluteInterval;
+impl Intersectable<HalfBoundedAbsInterval> for UnboundedInterval {
+    type Output = AbsInterval;
 
-    fn intersect(&self, rhs: &HalfBoundedAbsoluteInterval) -> IntersectionResult<Self::Output> {
-        intersect_abs_bound_pair(&self.abs_bound_pair(), &rhs.abs_bound_pair()).map_intersected(AbsoluteInterval::from)
+    fn intersect(&self, rhs: &HalfBoundedAbsInterval) -> IntersectionResult<Self::Output> {
+        intersect_abs_bound_pair(&self.abs_bound_pair(), &rhs.abs_bound_pair()).map_intersected(AbsInterval::from)
     }
 }
 
-impl Intersectable<RelativeBoundPair> for UnboundedInterval {
-    type Output = RelativeInterval;
+impl Intersectable<RelBoundPair> for UnboundedInterval {
+    type Output = RelInterval;
 
-    fn intersect(&self, rhs: &RelativeBoundPair) -> IntersectionResult<Self::Output> {
-        intersect_rel_bound_pair(&self.rel_bound_pair(), &rhs.rel_bound_pair()).map_intersected(RelativeInterval::from)
+    fn intersect(&self, rhs: &RelBoundPair) -> IntersectionResult<Self::Output> {
+        intersect_rel_bound_pair(&self.rel_bound_pair(), &rhs.rel_bound_pair()).map_intersected(RelInterval::from)
     }
 }
 
-impl Intersectable<EmptiableRelativeBoundPair> for UnboundedInterval {
-    type Output = RelativeInterval;
+impl Intersectable<EmptiableRelBoundPair> for UnboundedInterval {
+    type Output = RelInterval;
 
-    fn intersect(&self, rhs: &EmptiableRelativeBoundPair) -> IntersectionResult<Self::Output> {
+    fn intersect(&self, rhs: &EmptiableRelBoundPair) -> IntersectionResult<Self::Output> {
         intersect_rel_bound_pair_with_emptiable_rel_bound_pair(&self.rel_bound_pair(), &rhs.emptiable_rel_bound_pair())
-            .map_intersected(RelativeInterval::from)
+            .map_intersected(RelInterval::from)
     }
 }
 
-impl Intersectable<RelativeInterval> for UnboundedInterval {
-    type Output = RelativeInterval;
+impl Intersectable<RelInterval> for UnboundedInterval {
+    type Output = RelInterval;
 
-    fn intersect(&self, rhs: &RelativeInterval) -> IntersectionResult<Self::Output> {
+    fn intersect(&self, rhs: &RelInterval) -> IntersectionResult<Self::Output> {
         intersect_rel_bound_pair_with_emptiable_rel_bound_pair(&self.rel_bound_pair(), &rhs.emptiable_rel_bound_pair())
-            .map_intersected(RelativeInterval::from)
+            .map_intersected(RelInterval::from)
     }
 }
 
-impl Intersectable<BoundedRelativeInterval> for UnboundedInterval {
-    type Output = RelativeInterval;
+impl Intersectable<BoundedRelInterval> for UnboundedInterval {
+    type Output = RelInterval;
 
-    fn intersect(&self, rhs: &BoundedRelativeInterval) -> IntersectionResult<Self::Output> {
-        intersect_rel_bound_pair(&self.rel_bound_pair(), &rhs.rel_bound_pair()).map_intersected(RelativeInterval::from)
+    fn intersect(&self, rhs: &BoundedRelInterval) -> IntersectionResult<Self::Output> {
+        intersect_rel_bound_pair(&self.rel_bound_pair(), &rhs.rel_bound_pair()).map_intersected(RelInterval::from)
     }
 }
 
-impl Intersectable<HalfBoundedRelativeInterval> for UnboundedInterval {
-    type Output = RelativeInterval;
+impl Intersectable<HalfBoundedRelInterval> for UnboundedInterval {
+    type Output = RelInterval;
 
-    fn intersect(&self, rhs: &HalfBoundedRelativeInterval) -> IntersectionResult<Self::Output> {
-        intersect_rel_bound_pair(&self.rel_bound_pair(), &rhs.rel_bound_pair()).map_intersected(RelativeInterval::from)
+    fn intersect(&self, rhs: &HalfBoundedRelInterval) -> IntersectionResult<Self::Output> {
+        intersect_rel_bound_pair(&self.rel_bound_pair(), &rhs.rel_bound_pair()).map_intersected(RelInterval::from)
     }
 }
 
@@ -517,16 +517,16 @@ where
     }
 }
 
-/// Intersects two [`AbsoluteBoundPair`]
+/// Intersects two [`AbsBoundPair`]
 ///
 /// See [`Intersectable`] for more information.
 ///
 /// # Panics
 ///
 /// Panics if two strictly overlapping bounds, when abridged, returns
-/// [`EmptiableAbsoluteBoundPair::Empty`]
+/// [`EmptiableAbsBoundPair::Empty`]
 #[must_use]
-pub fn intersect_abs_bound_pair(a: &AbsoluteBoundPair, b: &AbsoluteBoundPair) -> IntersectionResult<AbsoluteBoundPair> {
+pub fn intersect_abs_bound_pair(a: &AbsBoundPair, b: &AbsBoundPair) -> IntersectionResult<AbsBoundPair> {
     if !a.simple_overlaps(b) {
         return IntersectionResult::Separate;
     }
@@ -538,7 +538,7 @@ pub fn intersect_abs_bound_pair(a: &AbsoluteBoundPair, b: &AbsoluteBoundPair) ->
     )
 }
 
-/// Intersects an [`AbsoluteBoundPair`] with an [`EmptiableAbsoluteBoundPair`]
+/// Intersects an [`AbsBoundPair`] with an [`EmptiableAbsBoundPair`]
 ///
 /// Empty intervals are not positioned in time, and are always "outside",
 /// therefore cannot be intersected.
@@ -548,12 +548,12 @@ pub fn intersect_abs_bound_pair(a: &AbsoluteBoundPair, b: &AbsoluteBoundPair) ->
 /// # Panics
 ///
 /// Panics if two strictly overlapping bounds, when abridged, returns
-/// [`EmptiableAbsoluteBoundPair::Empty`]
+/// [`EmptiableAbsBoundPair::Empty`]
 #[must_use]
 pub fn intersect_abs_bound_pair_with_emptiable_abs_bound_pair(
-    a: &AbsoluteBoundPair,
-    b: &EmptiableAbsoluteBoundPair,
-) -> IntersectionResult<AbsoluteBoundPair> {
+    a: &AbsBoundPair,
+    b: &EmptiableAbsBoundPair,
+) -> IntersectionResult<AbsBoundPair> {
     if !a.simple_overlaps(b) {
         return IntersectionResult::Separate;
     }
@@ -565,7 +565,7 @@ pub fn intersect_abs_bound_pair_with_emptiable_abs_bound_pair(
     )
 }
 
-/// Intersects two [`EmptiableAbsoluteBoundPair`]
+/// Intersects two [`EmptiableAbsBoundPair`]
 ///
 /// Empty intervals are not positioned in time, and are always "outside",
 /// therefore cannot be intersected.
@@ -573,9 +573,9 @@ pub fn intersect_abs_bound_pair_with_emptiable_abs_bound_pair(
 /// See [`Intersectable`] for more information.
 #[must_use]
 pub fn intersect_emptiable_abs_bound_pair(
-    a: &EmptiableAbsoluteBoundPair,
-    b: &EmptiableAbsoluteBoundPair,
-) -> IntersectionResult<EmptiableAbsoluteBoundPair> {
+    a: &EmptiableAbsBoundPair,
+    b: &EmptiableAbsBoundPair,
+) -> IntersectionResult<EmptiableAbsBoundPair> {
     if !a.simple_overlaps(b) {
         return IntersectionResult::Separate;
     }
@@ -583,16 +583,16 @@ pub fn intersect_emptiable_abs_bound_pair(
     IntersectionResult::Intersected(a.abridge(b))
 }
 
-/// Intersects two [`RelativeBoundPair`]
+/// Intersects two [`RelBoundPair`]
 ///
 /// See [`Intersectable`] for more information.
 ///
 /// # Panics
 ///
 /// Panics if two strictly overlapping bounds, when abridged, returns
-/// [`EmptiableRelativeBoundPair::Empty`]
+/// [`EmptiableRelBoundPair::Empty`]
 #[must_use]
-pub fn intersect_rel_bound_pair(a: &RelativeBoundPair, b: &RelativeBoundPair) -> IntersectionResult<RelativeBoundPair> {
+pub fn intersect_rel_bound_pair(a: &RelBoundPair, b: &RelBoundPair) -> IntersectionResult<RelBoundPair> {
     if !a.simple_overlaps(b) {
         return IntersectionResult::Separate;
     }
@@ -604,7 +604,7 @@ pub fn intersect_rel_bound_pair(a: &RelativeBoundPair, b: &RelativeBoundPair) ->
     )
 }
 
-/// Intersects an [`RelativeBoundPair`] with an [`EmptiableRelativeBoundPair`]
+/// Intersects an [`RelBoundPair`] with an [`EmptiableRelBoundPair`]
 ///
 /// Empty intervals are not positioned in time, and are always "outside",
 /// therefore cannot be intersected.
@@ -614,12 +614,12 @@ pub fn intersect_rel_bound_pair(a: &RelativeBoundPair, b: &RelativeBoundPair) ->
 /// # Panics
 ///
 /// Panics if two strictly overlapping bounds, when abridged, returns
-/// [`EmptiableRelativeBoundPair::Empty`]
+/// [`EmptiableRelBoundPair::Empty`]
 #[must_use]
 pub fn intersect_rel_bound_pair_with_emptiable_rel_bound_pair(
-    a: &RelativeBoundPair,
-    b: &EmptiableRelativeBoundPair,
-) -> IntersectionResult<RelativeBoundPair> {
+    a: &RelBoundPair,
+    b: &EmptiableRelBoundPair,
+) -> IntersectionResult<RelBoundPair> {
     if !a.simple_overlaps(b) {
         return IntersectionResult::Separate;
     }
@@ -631,7 +631,7 @@ pub fn intersect_rel_bound_pair_with_emptiable_rel_bound_pair(
     )
 }
 
-/// Intersects two [`EmptiableRelativeBoundPair`]
+/// Intersects two [`EmptiableRelBoundPair`]
 ///
 /// Empty intervals are not positioned in time, and are always "outside",
 /// therefore cannot be intersected.
@@ -639,9 +639,9 @@ pub fn intersect_rel_bound_pair_with_emptiable_rel_bound_pair(
 /// See [`Intersectable`] for more information.
 #[must_use]
 pub fn intersect_emptiable_rel_bound_pair(
-    a: &EmptiableRelativeBoundPair,
-    b: &EmptiableRelativeBoundPair,
-) -> IntersectionResult<EmptiableRelativeBoundPair> {
+    a: &EmptiableRelBoundPair,
+    b: &EmptiableRelBoundPair,
+) -> IntersectionResult<EmptiableRelBoundPair> {
     if !a.simple_overlaps(b) {
         return IntersectionResult::Separate;
     }

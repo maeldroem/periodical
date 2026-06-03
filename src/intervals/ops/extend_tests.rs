@@ -4,15 +4,15 @@ use jiff::{SignedDuration, Timestamp};
 
 use super::extend::*;
 use crate::intervals::absolute::{
-    AbsoluteBoundPair,
-    AbsoluteEndBound,
-    AbsoluteFiniteBoundPosition,
-    AbsoluteStartBound,
-    BoundedAbsoluteInterval,
-    EmptiableAbsoluteBoundPair,
-    HalfBoundedAbsoluteInterval,
-    HasAbsoluteBoundPair,
-    HasEmptiableAbsoluteBoundPair,
+    AbsBoundPair,
+    AbsEndBound,
+    AbsFiniteBoundPos,
+    AbsStartBound,
+    BoundedAbsInterval,
+    EmptiableAbsBoundPair,
+    HalfBoundedAbsInterval,
+    HasAbsBoundPair,
+    HasEmptiableAbsBoundPair,
 };
 use crate::intervals::meta::BoundInclusivity;
 use crate::intervals::ops::test_data::{
@@ -26,19 +26,19 @@ use crate::intervals::ops::test_data::{
     HALF_BOUNDED_HALF_BOUNDED_REL,
 };
 use crate::intervals::relative::{
-    BoundedRelativeInterval,
-    EmptiableRelativeBoundPair,
-    HalfBoundedRelativeInterval,
-    HasEmptiableRelativeBoundPair,
-    HasRelativeBoundPair,
-    RelativeBoundPair,
-    RelativeEndBound,
-    RelativeFiniteBoundPosition,
-    RelativeStartBound,
+    BoundedRelInterval,
+    EmptiableRelBoundPair,
+    HalfBoundedRelInterval,
+    HasEmptiableRelBoundPair,
+    HasRelBoundPair,
+    RelBoundPair,
+    RelEndBound,
+    RelFiniteBoundPos,
+    RelStartBound,
 };
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 
-fn abs_assert(lhs: &AbsoluteBoundPair, rhs: &EmptiableAbsoluteBoundPair, expected: &EmptiableAbsoluteBoundPair) {
+fn abs_assert(lhs: &AbsBoundPair, rhs: &EmptiableAbsBoundPair, expected: &EmptiableAbsBoundPair) {
     // Bound pair
     assert_eq!(lhs.clone().extend(&rhs.clone()), expected.clone());
     // Emptiable bound pair
@@ -59,11 +59,7 @@ fn abs_assert(lhs: &AbsoluteBoundPair, rhs: &EmptiableAbsoluteBoundPair, expecte
     // Assertion for dedicated type has to be implemented individually as output type is unpredictable
 }
 
-fn abs_assert_empty(
-    lhs: &EmptiableAbsoluteBoundPair,
-    rhs: &EmptiableAbsoluteBoundPair,
-    expected: &EmptiableAbsoluteBoundPair,
-) {
+fn abs_assert_empty(lhs: &EmptiableAbsBoundPair, rhs: &EmptiableAbsBoundPair, expected: &EmptiableAbsBoundPair) {
     // Emptiable bound pair
     assert_eq!(lhs.clone().extend(&rhs.clone()), expected.clone());
     // Emptiable interval
@@ -77,7 +73,7 @@ fn abs_assert_empty(
     // Assertion for dedicated type has to be implemented individually as output type is unpredictable
 }
 
-fn rel_assert(lhs: &RelativeBoundPair, rhs: &EmptiableRelativeBoundPair, expected: &EmptiableRelativeBoundPair) {
+fn rel_assert(lhs: &RelBoundPair, rhs: &EmptiableRelBoundPair, expected: &EmptiableRelBoundPair) {
     // Bound pair
     assert_eq!(lhs.clone().extend(&rhs.clone()), expected.clone());
     // Emptiable bound pair
@@ -98,11 +94,7 @@ fn rel_assert(lhs: &RelativeBoundPair, rhs: &EmptiableRelativeBoundPair, expecte
     // Assertion for dedicated type has to be implemented individually as output type is unpredictable
 }
 
-fn rel_assert_empty(
-    lhs: &EmptiableRelativeBoundPair,
-    rhs: &EmptiableRelativeBoundPair,
-    expected: &EmptiableRelativeBoundPair,
-) {
+fn rel_assert_empty(lhs: &EmptiableRelBoundPair, rhs: &EmptiableRelBoundPair, expected: &EmptiableRelBoundPair) {
     // Emptiable bound pair
     assert_eq!(lhs.clone().extend(&rhs.clone()), expected.clone());
     // Emptiable interval
@@ -130,13 +122,13 @@ mod absolute {
                 .cloned()
                 .ok_or("data not found")?;
 
-            let expected = AbsoluteBoundPair::new(
-                AbsoluteFiniteBoundPosition::new_with_inclusivity(
+            let expected = AbsBoundPair::new(
+                AbsFiniteBoundPos::new_with_inclusivity(
                     "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                     BoundInclusivity::Exclusive,
                 )
                 .to_start_bound(),
-                AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                AbsFiniteBoundPos::new_with_inclusivity(
                     "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
                     BoundInclusivity::Exclusive,
                 )
@@ -149,8 +141,7 @@ mod absolute {
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                BoundedAbsoluteInterval::try_from(data.0.clone())?
-                    .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                BoundedAbsInterval::try_from(data.0.clone())?.extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                 expected.clone().to_emptiable_interval()
             );
 
@@ -165,13 +156,13 @@ mod absolute {
                 .cloned()
                 .ok_or("data not found")?;
 
-            let expected = AbsoluteBoundPair::new(
-                AbsoluteFiniteBoundPosition::new_with_inclusivity(
+            let expected = AbsBoundPair::new(
+                AbsFiniteBoundPos::new_with_inclusivity(
                     "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                     BoundInclusivity::Exclusive,
                 )
                 .to_start_bound(),
-                AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                AbsFiniteBoundPos::new_with_inclusivity(
                     "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
                     BoundInclusivity::Exclusive,
                 )
@@ -184,8 +175,7 @@ mod absolute {
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                BoundedAbsoluteInterval::try_from(data.0.clone())?
-                    .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                BoundedAbsInterval::try_from(data.0.clone())?.extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                 expected.clone().to_emptiable_interval()
             );
 
@@ -203,9 +193,9 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -214,8 +204,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -230,12 +220,12 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = EmptiableAbsoluteBoundPair::Empty;
+                let expected = EmptiableAbsBoundPair::Empty;
 
                 abs_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
                 assert_eq!(
-                    BoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -250,13 +240,13 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = EmptiableAbsoluteBoundPair::Empty;
+                let expected = EmptiableAbsBoundPair::Empty;
 
                 abs_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
 
                 assert_eq!(
-                    BoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -271,9 +261,9 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -282,8 +272,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -302,9 +292,9 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -313,8 +303,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -329,12 +319,12 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = EmptiableAbsoluteBoundPair::Empty;
+                let expected = EmptiableAbsBoundPair::Empty;
 
                 abs_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
                 assert_eq!(
-                    BoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -349,12 +339,12 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = EmptiableAbsoluteBoundPair::Empty;
+                let expected = EmptiableAbsBoundPair::Empty;
 
                 abs_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
                 assert_eq!(
-                    BoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -369,9 +359,9 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -380,8 +370,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -397,9 +387,9 @@ mod absolute {
                 .cloned()
                 .ok_or("data not found")?;
 
-            let expected = AbsoluteBoundPair::new(
-                AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            let expected = AbsBoundPair::new(
+                AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                AbsFiniteBoundPos::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
             );
 
             abs_assert(
@@ -408,8 +398,7 @@ mod absolute {
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                BoundedAbsoluteInterval::try_from(data.0.clone())?
-                    .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                BoundedAbsInterval::try_from(data.0.clone())?.extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                 expected.clone().to_emptiable_interval()
             );
 
@@ -424,9 +413,9 @@ mod absolute {
                 .cloned()
                 .ok_or("data not found")?;
 
-            let expected = AbsoluteBoundPair::new(
-                AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            let expected = AbsBoundPair::new(
+                AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                AbsFiniteBoundPos::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
             );
 
             abs_assert(
@@ -435,8 +424,7 @@ mod absolute {
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                BoundedAbsoluteInterval::try_from(data.0.clone())?
-                    .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                BoundedAbsInterval::try_from(data.0.clone())?.extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                 expected.clone().to_emptiable_interval()
             );
 
@@ -451,9 +439,9 @@ mod absolute {
                 .cloned()
                 .ok_or("data not found")?;
 
-            let expected = AbsoluteBoundPair::new(
-                AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            let expected = AbsBoundPair::new(
+                AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                AbsFiniteBoundPos::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
             );
 
             abs_assert(
@@ -462,8 +450,7 @@ mod absolute {
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                BoundedAbsoluteInterval::try_from(data.0.clone())?
-                    .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                BoundedAbsInterval::try_from(data.0.clone())?.extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                 expected.clone().to_emptiable_interval()
             );
 
@@ -481,9 +468,9 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -492,8 +479,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -508,13 +495,13 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -523,8 +510,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -539,13 +526,13 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -554,8 +541,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -570,13 +557,13 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -585,8 +572,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -605,9 +592,9 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsFiniteBoundPos::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -616,8 +603,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -632,9 +619,9 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsFiniteBoundPos::new_with_inclusivity(
                         "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -647,8 +634,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -663,9 +650,9 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsFiniteBoundPos::new_with_inclusivity(
                         "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -678,8 +665,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -694,9 +681,9 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsFiniteBoundPos::new_with_inclusivity(
                         "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -709,8 +696,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -729,9 +716,9 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -740,8 +727,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -756,9 +743,9 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsFiniteBoundPos::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -771,8 +758,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -787,9 +774,9 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsFiniteBoundPos::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -802,8 +789,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -818,9 +805,9 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsFiniteBoundPos::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -833,8 +820,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -849,13 +836,13 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -864,8 +851,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -880,13 +867,13 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -899,8 +886,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -915,13 +902,13 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -934,8 +921,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -950,13 +937,13 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -969,8 +956,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -985,13 +972,13 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -1000,8 +987,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -1016,13 +1003,13 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1035,8 +1022,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -1051,13 +1038,13 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1070,8 +1057,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -1086,13 +1073,13 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1105,8 +1092,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -1121,13 +1108,13 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -1136,8 +1123,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -1152,13 +1139,13 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1171,8 +1158,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -1187,13 +1174,13 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1206,8 +1193,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -1222,13 +1209,13 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1241,8 +1228,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -1261,9 +1248,9 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -1272,8 +1259,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -1288,13 +1275,13 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -1303,8 +1290,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -1319,13 +1306,13 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -1334,8 +1321,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -1350,13 +1337,13 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -1365,8 +1352,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -1385,9 +1372,9 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsFiniteBoundPos::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -1396,8 +1383,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -1412,9 +1399,9 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsFiniteBoundPos::new_with_inclusivity(
                         "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1427,8 +1414,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -1443,9 +1430,9 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsFiniteBoundPos::new_with_inclusivity(
                         "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1458,8 +1445,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -1474,9 +1461,9 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsFiniteBoundPos::new_with_inclusivity(
                         "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1489,8 +1476,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -1506,9 +1493,9 @@ mod absolute {
                 .cloned()
                 .ok_or("data not found")?;
 
-            let expected = AbsoluteBoundPair::new(
-                AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            let expected = AbsBoundPair::new(
+                AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                AbsFiniteBoundPos::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
             );
 
             abs_assert(
@@ -1517,8 +1504,7 @@ mod absolute {
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                BoundedAbsoluteInterval::try_from(data.0.clone())?
-                    .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                BoundedAbsInterval::try_from(data.0.clone())?.extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                 expected.clone().to_emptiable_interval()
             );
 
@@ -1537,13 +1523,13 @@ mod absolute {
                 .cloned()
                 .ok_or("data not found")?;
 
-            let expected = AbsoluteBoundPair::new(
-                AbsoluteFiniteBoundPosition::new_with_inclusivity(
+            let expected = AbsBoundPair::new(
+                AbsFiniteBoundPos::new_with_inclusivity(
                     "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                     BoundInclusivity::Exclusive,
                 )
                 .to_start_bound(),
-                AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                AbsFiniteBoundPos::new_with_inclusivity(
                     "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
                     BoundInclusivity::Exclusive,
                 )
@@ -1556,8 +1542,8 @@ mod absolute {
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                BoundedAbsoluteInterval::try_from(data.0.clone())?
-                    .extend(&HalfBoundedAbsoluteInterval::try_from(data.1.clone())?),
+                BoundedAbsInterval::try_from(data.0.clone())?
+                    .extend(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
                 expected.clone().to_emptiable_interval()
             );
 
@@ -1572,13 +1558,13 @@ mod absolute {
                 .cloned()
                 .ok_or("data not found")?;
 
-            let expected = AbsoluteBoundPair::new(
-                AbsoluteFiniteBoundPosition::new_with_inclusivity(
+            let expected = AbsBoundPair::new(
+                AbsFiniteBoundPos::new_with_inclusivity(
                     "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                     BoundInclusivity::Exclusive,
                 )
                 .to_start_bound(),
-                AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                AbsFiniteBoundPos::new_with_inclusivity(
                     "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                     BoundInclusivity::Exclusive,
                 )
@@ -1591,8 +1577,8 @@ mod absolute {
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                BoundedAbsoluteInterval::try_from(data.0.clone())?
-                    .extend(&HalfBoundedAbsoluteInterval::try_from(data.1.clone())?),
+                BoundedAbsInterval::try_from(data.0.clone())?
+                    .extend(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
                 expected.clone().to_emptiable_interval()
             );
 
@@ -1610,9 +1596,9 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -1621,8 +1607,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&HalfBoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -1637,12 +1623,12 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = EmptiableAbsoluteBoundPair::Empty;
+                let expected = EmptiableAbsBoundPair::Empty;
 
                 abs_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
                 assert_eq!(
-                    BoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&HalfBoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -1657,12 +1643,12 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = EmptiableAbsoluteBoundPair::Empty;
+                let expected = EmptiableAbsBoundPair::Empty;
 
                 abs_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
                 assert_eq!(
-                    BoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&HalfBoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -1677,9 +1663,9 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -1688,8 +1674,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&HalfBoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -1708,9 +1694,9 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -1719,8 +1705,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&HalfBoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -1735,12 +1721,12 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = EmptiableAbsoluteBoundPair::Empty;
+                let expected = EmptiableAbsBoundPair::Empty;
 
                 abs_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
                 assert_eq!(
-                    BoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&HalfBoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -1755,12 +1741,12 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = EmptiableAbsoluteBoundPair::Empty;
+                let expected = EmptiableAbsBoundPair::Empty;
 
                 abs_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
                 assert_eq!(
-                    BoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&HalfBoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -1775,9 +1761,9 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -1786,8 +1772,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&HalfBoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -1803,9 +1789,9 @@ mod absolute {
                 .cloned()
                 .ok_or("data not found")?;
 
-            let expected = AbsoluteBoundPair::new(
-                AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            let expected = AbsBoundPair::new(
+                AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                AbsFiniteBoundPos::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
             );
 
             abs_assert(
@@ -1814,8 +1800,8 @@ mod absolute {
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                BoundedAbsoluteInterval::try_from(data.0.clone())?
-                    .extend(&HalfBoundedAbsoluteInterval::try_from(data.1.clone())?),
+                BoundedAbsInterval::try_from(data.0.clone())?
+                    .extend(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
                 expected.clone().to_emptiable_interval()
             );
 
@@ -1830,9 +1816,9 @@ mod absolute {
                 .cloned()
                 .ok_or("data not found")?;
 
-            let expected = AbsoluteBoundPair::new(
-                AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            let expected = AbsBoundPair::new(
+                AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
             );
 
             abs_assert(
@@ -1841,8 +1827,8 @@ mod absolute {
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                BoundedAbsoluteInterval::try_from(data.0.clone())?
-                    .extend(&HalfBoundedAbsoluteInterval::try_from(data.1.clone())?),
+                BoundedAbsInterval::try_from(data.0.clone())?
+                    .extend(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
                 expected.clone().to_emptiable_interval()
             );
 
@@ -1860,9 +1846,9 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsFiniteBoundPos::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -1871,8 +1857,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&HalfBoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -1887,9 +1873,9 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -1898,8 +1884,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&HalfBoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -1918,9 +1904,9 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -1929,8 +1915,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&HalfBoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -1945,13 +1931,13 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -1960,8 +1946,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&HalfBoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -1976,13 +1962,13 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -1991,8 +1977,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&HalfBoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -2007,13 +1993,13 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -2022,8 +2008,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&HalfBoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -2042,9 +2028,9 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -2053,8 +2039,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&HalfBoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -2069,9 +2055,9 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsFiniteBoundPos::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -2084,8 +2070,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&HalfBoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -2100,9 +2086,9 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsFiniteBoundPos::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -2115,8 +2101,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&HalfBoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -2131,9 +2117,9 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsFiniteBoundPos::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -2146,8 +2132,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&HalfBoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -2161,9 +2147,9 @@ mod absolute {
 
         #[test]
         fn inside() -> Result<(), Box<dyn Error>> {
-            let bounded = AbsoluteBoundPair::new(
-                AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            let bounded = AbsBoundPair::new(
+                AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
             );
 
             abs_assert(
@@ -2172,8 +2158,8 @@ mod absolute {
                 &bounded.clone().to_emptiable(),
             );
             assert_eq!(
-                BoundedAbsoluteInterval::try_from(bounded.clone())?.extend(&UnboundedInterval),
-                BoundedAbsoluteInterval::try_from(bounded.clone())?
+                BoundedAbsInterval::try_from(bounded.clone())?.extend(&UnboundedInterval),
+                BoundedAbsInterval::try_from(bounded.clone())?
             );
 
             Ok(())
@@ -2185,19 +2171,19 @@ mod absolute {
 
         #[test]
         fn outside() -> Result<(), Box<dyn Error>> {
-            let bounded = AbsoluteBoundPair::new(
-                AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            let bounded = AbsBoundPair::new(
+                AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
             );
 
             abs_assert(
                 &bounded.clone(),
-                &EmptiableAbsoluteBoundPair::Empty,
+                &EmptiableAbsBoundPair::Empty,
                 &bounded.clone().to_emptiable(),
             );
             assert_eq!(
-                BoundedAbsoluteInterval::try_from(bounded.clone())?.extend(&EmptyInterval),
-                BoundedAbsoluteInterval::try_from(bounded.clone())?
+                BoundedAbsInterval::try_from(bounded.clone())?.extend(&EmptyInterval),
+                BoundedAbsInterval::try_from(bounded.clone())?
             );
 
             Ok(())
@@ -2215,13 +2201,13 @@ mod absolute {
                 .cloned()
                 .ok_or("data not found")?;
 
-            let expected = AbsoluteBoundPair::new(
-                AbsoluteFiniteBoundPosition::new_with_inclusivity(
+            let expected = AbsBoundPair::new(
+                AbsFiniteBoundPos::new_with_inclusivity(
                     "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                     BoundInclusivity::Exclusive,
                 )
                 .to_start_bound(),
-                AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                AbsFiniteBoundPos::new_with_inclusivity(
                     "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                     BoundInclusivity::Exclusive,
                 )
@@ -2234,8 +2220,8 @@ mod absolute {
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                HalfBoundedAbsoluteInterval::try_from(data.0.clone())?
-                    .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                HalfBoundedAbsInterval::try_from(data.0.clone())?
+                    .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                 expected.clone().to_emptiable_interval()
             );
 
@@ -2250,13 +2236,13 @@ mod absolute {
                 .cloned()
                 .ok_or("data not found")?;
 
-            let expected = AbsoluteBoundPair::new(
-                AbsoluteFiniteBoundPosition::new_with_inclusivity(
+            let expected = AbsBoundPair::new(
+                AbsFiniteBoundPos::new_with_inclusivity(
                     "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                     BoundInclusivity::Exclusive,
                 )
                 .to_start_bound(),
-                AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                AbsFiniteBoundPos::new_with_inclusivity(
                     "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
                     BoundInclusivity::Exclusive,
                 )
@@ -2269,8 +2255,8 @@ mod absolute {
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                HalfBoundedAbsoluteInterval::try_from(data.0.clone())?
-                    .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                HalfBoundedAbsInterval::try_from(data.0.clone())?
+                    .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                 expected.clone().to_emptiable_interval()
             );
 
@@ -2288,9 +2274,9 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -2299,8 +2285,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    HalfBoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    HalfBoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -2315,12 +2301,12 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = EmptiableAbsoluteBoundPair::Empty;
+                let expected = EmptiableAbsBoundPair::Empty;
 
                 abs_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
                 assert_eq!(
-                    HalfBoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    HalfBoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -2335,12 +2321,12 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = EmptiableAbsoluteBoundPair::Empty;
+                let expected = EmptiableAbsBoundPair::Empty;
 
                 abs_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
                 assert_eq!(
-                    HalfBoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    HalfBoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -2355,9 +2341,9 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -2366,8 +2352,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    HalfBoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    HalfBoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -2386,9 +2372,9 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -2397,8 +2383,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    HalfBoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    HalfBoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -2413,12 +2399,12 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = EmptiableAbsoluteBoundPair::Empty;
+                let expected = EmptiableAbsBoundPair::Empty;
 
                 abs_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
                 assert_eq!(
-                    HalfBoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    HalfBoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -2433,12 +2419,12 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = EmptiableAbsoluteBoundPair::Empty;
+                let expected = EmptiableAbsBoundPair::Empty;
 
                 abs_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
                 assert_eq!(
-                    HalfBoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    HalfBoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -2453,9 +2439,9 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -2464,8 +2450,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    HalfBoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    HalfBoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -2481,9 +2467,9 @@ mod absolute {
                 .cloned()
                 .ok_or("data not found")?;
 
-            let expected = AbsoluteBoundPair::new(
-                AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            let expected = AbsBoundPair::new(
+                AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
             );
 
             abs_assert(
@@ -2492,8 +2478,8 @@ mod absolute {
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                HalfBoundedAbsoluteInterval::try_from(data.0.clone())?
-                    .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                HalfBoundedAbsInterval::try_from(data.0.clone())?
+                    .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                 expected.clone().to_emptiable_interval()
             );
 
@@ -2508,9 +2494,9 @@ mod absolute {
                 .cloned()
                 .ok_or("data not found")?;
 
-            let expected = AbsoluteBoundPair::new(
-                AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            let expected = AbsBoundPair::new(
+                AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                AbsFiniteBoundPos::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
             );
 
             abs_assert(
@@ -2519,8 +2505,8 @@ mod absolute {
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                HalfBoundedAbsoluteInterval::try_from(data.0.clone())?
-                    .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                HalfBoundedAbsInterval::try_from(data.0.clone())?
+                    .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                 expected.clone().to_emptiable_interval()
             );
 
@@ -2538,9 +2524,9 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -2549,8 +2535,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    HalfBoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    HalfBoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -2565,13 +2551,13 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -2580,8 +2566,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    HalfBoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    HalfBoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -2596,13 +2582,13 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -2611,8 +2597,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    HalfBoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    HalfBoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -2627,13 +2613,13 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new_with_inclusivity(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -2642,8 +2628,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    HalfBoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    HalfBoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -2662,9 +2648,9 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -2673,8 +2659,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    HalfBoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    HalfBoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -2689,9 +2675,9 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsFiniteBoundPos::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -2704,8 +2690,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    HalfBoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    HalfBoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -2720,9 +2706,9 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsFiniteBoundPos::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -2735,8 +2721,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    HalfBoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    HalfBoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -2751,9 +2737,9 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsFiniteBoundPos::new_with_inclusivity(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -2766,8 +2752,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    HalfBoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    HalfBoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -2786,9 +2772,9 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsFiniteBoundPos::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -2797,8 +2783,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    HalfBoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    HalfBoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -2813,9 +2799,9 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -2824,8 +2810,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    HalfBoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&BoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    HalfBoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&BoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -2845,13 +2831,13 @@ mod absolute {
                 .cloned()
                 .ok_or("data not found")?;
 
-            let expected = AbsoluteBoundPair::new(
-                AbsoluteFiniteBoundPosition::new_with_inclusivity(
+            let expected = AbsBoundPair::new(
+                AbsFiniteBoundPos::new_with_inclusivity(
                     "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                     BoundInclusivity::Exclusive,
                 )
                 .to_start_bound(),
-                AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                AbsFiniteBoundPos::new_with_inclusivity(
                     "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                     BoundInclusivity::Exclusive,
                 )
@@ -2864,8 +2850,8 @@ mod absolute {
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                HalfBoundedAbsoluteInterval::try_from(data.0.clone())?
-                    .extend(&HalfBoundedAbsoluteInterval::try_from(data.1.clone())?),
+                HalfBoundedAbsInterval::try_from(data.0.clone())?
+                    .extend(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
                 expected.clone().to_emptiable_interval()
             );
 
@@ -2880,13 +2866,13 @@ mod absolute {
                 .cloned()
                 .ok_or("data not found")?;
 
-            let expected = AbsoluteBoundPair::new(
-                AbsoluteFiniteBoundPosition::new_with_inclusivity(
+            let expected = AbsBoundPair::new(
+                AbsFiniteBoundPos::new_with_inclusivity(
                     "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                     BoundInclusivity::Exclusive,
                 )
                 .to_start_bound(),
-                AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                AbsFiniteBoundPos::new_with_inclusivity(
                     "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                     BoundInclusivity::Exclusive,
                 )
@@ -2899,8 +2885,8 @@ mod absolute {
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                HalfBoundedAbsoluteInterval::try_from(data.0.clone())?
-                    .extend(&HalfBoundedAbsoluteInterval::try_from(data.1.clone())?),
+                HalfBoundedAbsInterval::try_from(data.0.clone())?
+                    .extend(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
                 expected.clone().to_emptiable_interval()
             );
 
@@ -2918,9 +2904,9 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -2929,8 +2915,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    HalfBoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&HalfBoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    HalfBoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -2945,12 +2931,12 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = EmptiableAbsoluteBoundPair::Empty;
+                let expected = EmptiableAbsBoundPair::Empty;
 
                 abs_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
                 assert_eq!(
-                    HalfBoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&HalfBoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    HalfBoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -2965,12 +2951,12 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = EmptiableAbsoluteBoundPair::Empty;
+                let expected = EmptiableAbsBoundPair::Empty;
 
                 abs_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
                 assert_eq!(
-                    HalfBoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&HalfBoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    HalfBoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -2985,9 +2971,9 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -2996,8 +2982,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    HalfBoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&HalfBoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    HalfBoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -3016,9 +3002,9 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -3027,8 +3013,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    HalfBoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&HalfBoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    HalfBoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -3043,12 +3029,12 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = EmptiableAbsoluteBoundPair::Empty;
+                let expected = EmptiableAbsBoundPair::Empty;
 
                 abs_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
                 assert_eq!(
-                    HalfBoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&HalfBoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    HalfBoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -3063,12 +3049,12 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = EmptiableAbsoluteBoundPair::Empty;
+                let expected = EmptiableAbsBoundPair::Empty;
 
                 abs_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
                 assert_eq!(
-                    HalfBoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&HalfBoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    HalfBoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -3083,9 +3069,9 @@ mod absolute {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 );
 
                 abs_assert(
@@ -3094,8 +3080,8 @@ mod absolute {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    HalfBoundedAbsoluteInterval::try_from(data.0.clone())?
-                        .extend(&HalfBoundedAbsoluteInterval::try_from(data.1.clone())?),
+                    HalfBoundedAbsInterval::try_from(data.0.clone())?
+                        .extend(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -3111,9 +3097,9 @@ mod absolute {
                 .cloned()
                 .ok_or("data not found")?;
 
-            let expected = AbsoluteBoundPair::new(
-                AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            let expected = AbsBoundPair::new(
+                AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
             );
 
             abs_assert(
@@ -3122,8 +3108,8 @@ mod absolute {
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                HalfBoundedAbsoluteInterval::try_from(data.0.clone())?
-                    .extend(&HalfBoundedAbsoluteInterval::try_from(data.1.clone())?),
+                HalfBoundedAbsInterval::try_from(data.0.clone())?
+                    .extend(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
                 expected.clone().to_emptiable_interval()
             );
 
@@ -3138,9 +3124,9 @@ mod absolute {
                 .cloned()
                 .ok_or("data not found")?;
 
-            let expected = AbsoluteBoundPair::new(
-                AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            let expected = AbsBoundPair::new(
+                AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
             );
 
             abs_assert(
@@ -3149,8 +3135,8 @@ mod absolute {
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                HalfBoundedAbsoluteInterval::try_from(data.0.clone())?
-                    .extend(&HalfBoundedAbsoluteInterval::try_from(data.1.clone())?),
+                HalfBoundedAbsInterval::try_from(data.0.clone())?
+                    .extend(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
                 expected.clone().to_emptiable_interval()
             );
 
@@ -3165,9 +3151,9 @@ mod absolute {
                 .cloned()
                 .ok_or("data not found")?;
 
-            let expected = AbsoluteBoundPair::new(
-                AbsoluteStartBound::InfinitePast,
-                AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            let expected = AbsBoundPair::new(
+                AbsStartBound::InfinitePast,
+                AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
             );
 
             abs_assert(
@@ -3176,8 +3162,8 @@ mod absolute {
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                HalfBoundedAbsoluteInterval::try_from(data.0.clone())?
-                    .extend(&HalfBoundedAbsoluteInterval::try_from(data.1.clone())?),
+                HalfBoundedAbsInterval::try_from(data.0.clone())?
+                    .extend(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
                 expected.clone().to_emptiable_interval()
             );
 
@@ -3192,9 +3178,9 @@ mod absolute {
                 .cloned()
                 .ok_or("data not found")?;
 
-            let expected = AbsoluteBoundPair::new(
-                AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsoluteEndBound::InfiniteFuture,
+            let expected = AbsBoundPair::new(
+                AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                AbsEndBound::InfiniteFuture,
             );
 
             abs_assert(
@@ -3203,8 +3189,8 @@ mod absolute {
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                HalfBoundedAbsoluteInterval::try_from(data.0.clone())?
-                    .extend(&HalfBoundedAbsoluteInterval::try_from(data.1.clone())?),
+                HalfBoundedAbsInterval::try_from(data.0.clone())?
+                    .extend(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
                 expected.clone().to_emptiable_interval()
             );
 
@@ -3225,9 +3211,9 @@ mod absolute {
                         .cloned()
                         .ok_or("data not found")?;
 
-                    let expected = AbsoluteBoundPair::new(
-                        AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                        AbsoluteEndBound::InfiniteFuture,
+                    let expected = AbsBoundPair::new(
+                        AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                        AbsEndBound::InfiniteFuture,
                     );
 
                     abs_assert(
@@ -3236,8 +3222,8 @@ mod absolute {
                         &expected.clone().to_emptiable(),
                     );
                     assert_eq!(
-                        HalfBoundedAbsoluteInterval::try_from(data.0.clone())?
-                            .extend(&HalfBoundedAbsoluteInterval::try_from(data.1.clone())?),
+                        HalfBoundedAbsInterval::try_from(data.0.clone())?
+                            .extend(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
                         expected.clone().to_emptiable_interval()
                     );
 
@@ -3252,13 +3238,13 @@ mod absolute {
                         .cloned()
                         .ok_or("data not found")?;
 
-                    let expected = AbsoluteBoundPair::new(
-                        AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                    let expected = AbsBoundPair::new(
+                        AbsFiniteBoundPos::new_with_inclusivity(
                             "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                             BoundInclusivity::Exclusive,
                         )
                         .to_start_bound(),
-                        AbsoluteEndBound::InfiniteFuture,
+                        AbsEndBound::InfiniteFuture,
                     );
 
                     abs_assert(
@@ -3267,8 +3253,8 @@ mod absolute {
                         &expected.clone().to_emptiable(),
                     );
                     assert_eq!(
-                        HalfBoundedAbsoluteInterval::try_from(data.0.clone())?
-                            .extend(&HalfBoundedAbsoluteInterval::try_from(data.1.clone())?),
+                        HalfBoundedAbsInterval::try_from(data.0.clone())?
+                            .extend(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
                         expected.clone().to_emptiable_interval()
                     );
 
@@ -3283,13 +3269,13 @@ mod absolute {
                         .cloned()
                         .ok_or("data not found")?;
 
-                    let expected = AbsoluteBoundPair::new(
-                        AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                    let expected = AbsBoundPair::new(
+                        AbsFiniteBoundPos::new_with_inclusivity(
                             "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                             BoundInclusivity::Exclusive,
                         )
                         .to_start_bound(),
-                        AbsoluteEndBound::InfiniteFuture,
+                        AbsEndBound::InfiniteFuture,
                     );
 
                     abs_assert(
@@ -3298,8 +3284,8 @@ mod absolute {
                         &expected.clone().to_emptiable(),
                     );
                     assert_eq!(
-                        HalfBoundedAbsoluteInterval::try_from(data.0.clone())?
-                            .extend(&HalfBoundedAbsoluteInterval::try_from(data.1.clone())?),
+                        HalfBoundedAbsInterval::try_from(data.0.clone())?
+                            .extend(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
                         expected.clone().to_emptiable_interval()
                     );
 
@@ -3314,13 +3300,13 @@ mod absolute {
                         .cloned()
                         .ok_or("data not found")?;
 
-                    let expected = AbsoluteBoundPair::new(
-                        AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                    let expected = AbsBoundPair::new(
+                        AbsFiniteBoundPos::new_with_inclusivity(
                             "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                             BoundInclusivity::Exclusive,
                         )
                         .to_start_bound(),
-                        AbsoluteEndBound::InfiniteFuture,
+                        AbsEndBound::InfiniteFuture,
                     );
 
                     abs_assert(
@@ -3329,8 +3315,8 @@ mod absolute {
                         &expected.clone().to_emptiable(),
                     );
                     assert_eq!(
-                        HalfBoundedAbsoluteInterval::try_from(data.0.clone())?
-                            .extend(&HalfBoundedAbsoluteInterval::try_from(data.1.clone())?),
+                        HalfBoundedAbsInterval::try_from(data.0.clone())?
+                            .extend(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
                         expected.clone().to_emptiable_interval()
                     );
 
@@ -3349,9 +3335,9 @@ mod absolute {
                         .cloned()
                         .ok_or("data not found")?;
 
-                    let expected = AbsoluteBoundPair::new(
-                        AbsoluteStartBound::InfinitePast,
-                        AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    let expected = AbsBoundPair::new(
+                        AbsStartBound::InfinitePast,
+                        AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                     );
 
                     abs_assert(
@@ -3360,8 +3346,8 @@ mod absolute {
                         &expected.clone().to_emptiable(),
                     );
                     assert_eq!(
-                        HalfBoundedAbsoluteInterval::try_from(data.0.clone())?
-                            .extend(&HalfBoundedAbsoluteInterval::try_from(data.1.clone())?),
+                        HalfBoundedAbsInterval::try_from(data.0.clone())?
+                            .extend(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
                         expected.clone().to_emptiable_interval()
                     );
 
@@ -3376,9 +3362,9 @@ mod absolute {
                         .cloned()
                         .ok_or("data not found")?;
 
-                    let expected = AbsoluteBoundPair::new(
-                        AbsoluteStartBound::InfinitePast,
-                        AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                    let expected = AbsBoundPair::new(
+                        AbsStartBound::InfinitePast,
+                        AbsFiniteBoundPos::new_with_inclusivity(
                             "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                             BoundInclusivity::Exclusive,
                         )
@@ -3391,8 +3377,8 @@ mod absolute {
                         &expected.clone().to_emptiable(),
                     );
                     assert_eq!(
-                        HalfBoundedAbsoluteInterval::try_from(data.0.clone())?
-                            .extend(&HalfBoundedAbsoluteInterval::try_from(data.1.clone())?),
+                        HalfBoundedAbsInterval::try_from(data.0.clone())?
+                            .extend(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
                         expected.clone().to_emptiable_interval()
                     );
 
@@ -3407,9 +3393,9 @@ mod absolute {
                         .cloned()
                         .ok_or("data not found")?;
 
-                    let expected = AbsoluteBoundPair::new(
-                        AbsoluteStartBound::InfinitePast,
-                        AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                    let expected = AbsBoundPair::new(
+                        AbsStartBound::InfinitePast,
+                        AbsFiniteBoundPos::new_with_inclusivity(
                             "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                             BoundInclusivity::Exclusive,
                         )
@@ -3422,8 +3408,8 @@ mod absolute {
                         &expected.clone().to_emptiable(),
                     );
                     assert_eq!(
-                        HalfBoundedAbsoluteInterval::try_from(data.0.clone())?
-                            .extend(&HalfBoundedAbsoluteInterval::try_from(data.1.clone())?),
+                        HalfBoundedAbsInterval::try_from(data.0.clone())?
+                            .extend(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
                         expected.clone().to_emptiable_interval()
                     );
 
@@ -3438,9 +3424,9 @@ mod absolute {
                         .cloned()
                         .ok_or("data not found")?;
 
-                    let expected = AbsoluteBoundPair::new(
-                        AbsoluteStartBound::InfinitePast,
-                        AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                    let expected = AbsBoundPair::new(
+                        AbsStartBound::InfinitePast,
+                        AbsFiniteBoundPos::new_with_inclusivity(
                             "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                             BoundInclusivity::Exclusive,
                         )
@@ -3453,8 +3439,8 @@ mod absolute {
                         &expected.clone().to_emptiable(),
                     );
                     assert_eq!(
-                        HalfBoundedAbsoluteInterval::try_from(data.0.clone())?
-                            .extend(&HalfBoundedAbsoluteInterval::try_from(data.1.clone())?),
+                        HalfBoundedAbsInterval::try_from(data.0.clone())?
+                            .extend(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
                         expected.clone().to_emptiable_interval()
                     );
 
@@ -3471,9 +3457,9 @@ mod absolute {
                 .cloned()
                 .ok_or("data not found")?;
 
-            let expected = AbsoluteBoundPair::new(
-                AbsoluteStartBound::InfinitePast,
-                AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            let expected = AbsBoundPair::new(
+                AbsStartBound::InfinitePast,
+                AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
             );
 
             abs_assert(
@@ -3482,8 +3468,8 @@ mod absolute {
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                HalfBoundedAbsoluteInterval::try_from(data.0.clone())?
-                    .extend(&HalfBoundedAbsoluteInterval::try_from(data.1.clone())?),
+                HalfBoundedAbsInterval::try_from(data.0.clone())?
+                    .extend(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
                 expected.clone().to_emptiable_interval()
             );
 
@@ -3498,9 +3484,9 @@ mod absolute {
                 .cloned()
                 .ok_or("data not found")?;
 
-            let expected = AbsoluteBoundPair::new(
-                AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsoluteEndBound::InfiniteFuture,
+            let expected = AbsBoundPair::new(
+                AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                AbsEndBound::InfiniteFuture,
             );
 
             abs_assert(
@@ -3509,8 +3495,8 @@ mod absolute {
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                HalfBoundedAbsoluteInterval::try_from(data.0.clone())?
-                    .extend(&HalfBoundedAbsoluteInterval::try_from(data.1.clone())?),
+                HalfBoundedAbsInterval::try_from(data.0.clone())?
+                    .extend(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
                 expected.clone().to_emptiable_interval()
             );
 
@@ -3523,9 +3509,9 @@ mod absolute {
 
         #[test]
         fn inside_and_same_start() -> Result<(), Box<dyn Error>> {
-            let half_bounded = AbsoluteBoundPair::new(
-                AbsoluteStartBound::InfinitePast,
-                AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            let half_bounded = AbsBoundPair::new(
+                AbsStartBound::InfinitePast,
+                AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
             );
 
             abs_assert(
@@ -3534,8 +3520,8 @@ mod absolute {
                 &half_bounded.clone().to_emptiable(),
             );
             assert_eq!(
-                HalfBoundedAbsoluteInterval::try_from(half_bounded.clone())?.extend(&UnboundedInterval),
-                HalfBoundedAbsoluteInterval::try_from(half_bounded.clone())?
+                HalfBoundedAbsInterval::try_from(half_bounded.clone())?.extend(&UnboundedInterval),
+                HalfBoundedAbsInterval::try_from(half_bounded.clone())?
             );
 
             Ok(())
@@ -3543,9 +3529,9 @@ mod absolute {
 
         #[test]
         fn inside_and_same_end() -> Result<(), Box<dyn Error>> {
-            let half_bounded = AbsoluteBoundPair::new(
-                AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsoluteEndBound::InfiniteFuture,
+            let half_bounded = AbsBoundPair::new(
+                AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                AbsEndBound::InfiniteFuture,
             );
 
             abs_assert(
@@ -3554,8 +3540,8 @@ mod absolute {
                 &half_bounded.clone().to_emptiable(),
             );
             assert_eq!(
-                HalfBoundedAbsoluteInterval::try_from(half_bounded.clone())?.extend(&UnboundedInterval),
-                HalfBoundedAbsoluteInterval::try_from(half_bounded.clone())?
+                HalfBoundedAbsInterval::try_from(half_bounded.clone())?.extend(&UnboundedInterval),
+                HalfBoundedAbsInterval::try_from(half_bounded.clone())?
             );
 
             Ok(())
@@ -3567,19 +3553,19 @@ mod absolute {
 
         #[test]
         fn outside_to_past() -> Result<(), Box<dyn Error>> {
-            let half_bounded = AbsoluteBoundPair::new(
-                AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsoluteEndBound::InfiniteFuture,
+            let half_bounded = AbsBoundPair::new(
+                AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                AbsEndBound::InfiniteFuture,
             );
 
             abs_assert(
                 &half_bounded.clone(),
-                &EmptiableAbsoluteBoundPair::Empty,
+                &EmptiableAbsBoundPair::Empty,
                 &half_bounded.clone().to_emptiable(),
             );
             assert_eq!(
-                HalfBoundedAbsoluteInterval::try_from(half_bounded.clone())?.extend(&EmptyInterval),
-                HalfBoundedAbsoluteInterval::try_from(half_bounded.clone())?
+                HalfBoundedAbsInterval::try_from(half_bounded.clone())?.extend(&EmptyInterval),
+                HalfBoundedAbsInterval::try_from(half_bounded.clone())?
             );
 
             Ok(())
@@ -3587,19 +3573,19 @@ mod absolute {
 
         #[test]
         fn outside_to_future() -> Result<(), Box<dyn Error>> {
-            let half_bounded = AbsoluteBoundPair::new(
-                AbsoluteStartBound::InfinitePast,
-                AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            let half_bounded = AbsBoundPair::new(
+                AbsStartBound::InfinitePast,
+                AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
             );
 
             abs_assert(
                 &half_bounded.clone(),
-                &EmptiableAbsoluteBoundPair::Empty,
+                &EmptiableAbsBoundPair::Empty,
                 &half_bounded.clone().to_emptiable(),
             );
             assert_eq!(
-                HalfBoundedAbsoluteInterval::try_from(half_bounded.clone())?.extend(&EmptyInterval),
-                HalfBoundedAbsoluteInterval::try_from(half_bounded.clone())?
+                HalfBoundedAbsInterval::try_from(half_bounded.clone())?.extend(&EmptyInterval),
+                HalfBoundedAbsInterval::try_from(half_bounded.clone())?
             );
 
             Ok(())
@@ -3611,9 +3597,9 @@ mod absolute {
 
         #[test]
         fn contains() -> Result<(), Box<dyn Error>> {
-            let bounded = AbsoluteBoundPair::new(
-                AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            let bounded = AbsBoundPair::new(
+                AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
             );
 
             abs_assert(
@@ -3622,8 +3608,8 @@ mod absolute {
                 &bounded.clone().to_emptiable(),
             );
             assert_eq!(
-                UnboundedInterval.extend(&BoundedAbsoluteInterval::try_from(bounded.clone())?),
-                BoundedAbsoluteInterval::try_from(bounded.clone())?
+                UnboundedInterval.extend(&BoundedAbsInterval::try_from(bounded.clone())?),
+                BoundedAbsInterval::try_from(bounded.clone())?
             );
 
             Ok(())
@@ -3635,9 +3621,9 @@ mod absolute {
 
         #[test]
         fn contains_and_same_start() -> Result<(), Box<dyn Error>> {
-            let half_bounded = AbsoluteBoundPair::new(
-                AbsoluteStartBound::InfinitePast,
-                AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            let half_bounded = AbsBoundPair::new(
+                AbsStartBound::InfinitePast,
+                AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
             );
 
             abs_assert(
@@ -3646,8 +3632,8 @@ mod absolute {
                 &half_bounded.clone().to_emptiable(),
             );
             assert_eq!(
-                UnboundedInterval.extend(&HalfBoundedAbsoluteInterval::try_from(half_bounded.clone())?),
-                HalfBoundedAbsoluteInterval::try_from(half_bounded.clone())?
+                UnboundedInterval.extend(&HalfBoundedAbsInterval::try_from(half_bounded.clone())?),
+                HalfBoundedAbsInterval::try_from(half_bounded.clone())?
             );
 
             Ok(())
@@ -3655,9 +3641,9 @@ mod absolute {
 
         #[test]
         fn contains_and_same_end() -> Result<(), Box<dyn Error>> {
-            let half_bounded = AbsoluteBoundPair::new(
-                AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsoluteEndBound::InfiniteFuture,
+            let half_bounded = AbsBoundPair::new(
+                AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                AbsEndBound::InfiniteFuture,
             );
 
             abs_assert(
@@ -3666,8 +3652,8 @@ mod absolute {
                 &half_bounded.clone().to_emptiable(),
             );
             assert_eq!(
-                UnboundedInterval.extend(&HalfBoundedAbsoluteInterval::try_from(half_bounded.clone())?),
-                HalfBoundedAbsoluteInterval::try_from(half_bounded.clone())?
+                UnboundedInterval.extend(&HalfBoundedAbsInterval::try_from(half_bounded.clone())?),
+                HalfBoundedAbsInterval::try_from(half_bounded.clone())?
             );
 
             Ok(())
@@ -3695,7 +3681,7 @@ mod absolute {
         fn outside() {
             abs_assert(
                 &UnboundedInterval.abs_bound_pair(),
-                &EmptiableAbsoluteBoundPair::Empty,
+                &EmptiableAbsBoundPair::Empty,
                 &UnboundedInterval.emptiable_abs_bound_pair(),
             );
             assert_eq!(UnboundedInterval.extend(&EmptyInterval), UnboundedInterval);
@@ -3707,19 +3693,19 @@ mod absolute {
 
         #[test]
         fn outside() -> Result<(), Box<dyn Error>> {
-            let bounded = AbsoluteBoundPair::new(
-                AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            let bounded = AbsBoundPair::new(
+                AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
             );
 
             abs_assert_empty(
-                &EmptiableAbsoluteBoundPair::Empty,
+                &EmptiableAbsBoundPair::Empty,
                 &bounded.clone().to_emptiable(),
                 &bounded.clone().to_emptiable(),
             );
             assert_eq!(
-                EmptyInterval.extend(&BoundedAbsoluteInterval::try_from(bounded.clone())?),
-                BoundedAbsoluteInterval::try_from(bounded.clone())?
+                EmptyInterval.extend(&BoundedAbsInterval::try_from(bounded.clone())?),
+                BoundedAbsInterval::try_from(bounded.clone())?
             );
 
             Ok(())
@@ -3731,19 +3717,19 @@ mod absolute {
 
         #[test]
         fn outside_to_future() -> Result<(), Box<dyn Error>> {
-            let half_bounded = AbsoluteBoundPair::new(
-                AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsoluteEndBound::InfiniteFuture,
+            let half_bounded = AbsBoundPair::new(
+                AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                AbsEndBound::InfiniteFuture,
             );
 
             abs_assert_empty(
-                &EmptiableAbsoluteBoundPair::Empty,
+                &EmptiableAbsBoundPair::Empty,
                 &half_bounded.clone().to_emptiable(),
                 &half_bounded.clone().to_emptiable(),
             );
             assert_eq!(
-                EmptyInterval.extend(&HalfBoundedAbsoluteInterval::try_from(half_bounded.clone())?),
-                HalfBoundedAbsoluteInterval::try_from(half_bounded.clone())?
+                EmptyInterval.extend(&HalfBoundedAbsInterval::try_from(half_bounded.clone())?),
+                HalfBoundedAbsInterval::try_from(half_bounded.clone())?
             );
 
             Ok(())
@@ -3751,19 +3737,19 @@ mod absolute {
 
         #[test]
         fn outside_to_past() -> Result<(), Box<dyn Error>> {
-            let half_bounded = AbsoluteBoundPair::new(
-                AbsoluteStartBound::InfinitePast,
-                AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            let half_bounded = AbsBoundPair::new(
+                AbsStartBound::InfinitePast,
+                AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
             );
 
             abs_assert_empty(
-                &EmptiableAbsoluteBoundPair::Empty,
+                &EmptiableAbsBoundPair::Empty,
                 &half_bounded.clone().to_emptiable(),
                 &half_bounded.clone().to_emptiable(),
             );
             assert_eq!(
-                EmptyInterval.extend(&HalfBoundedAbsoluteInterval::try_from(half_bounded.clone())?),
-                HalfBoundedAbsoluteInterval::try_from(half_bounded.clone())?
+                EmptyInterval.extend(&HalfBoundedAbsInterval::try_from(half_bounded.clone())?),
+                HalfBoundedAbsInterval::try_from(half_bounded.clone())?
             );
 
             Ok(())
@@ -3776,7 +3762,7 @@ mod absolute {
         #[test]
         fn outside() {
             abs_assert_empty(
-                &EmptiableAbsoluteBoundPair::Empty,
+                &EmptiableAbsBoundPair::Empty,
                 &UnboundedInterval.emptiable_abs_bound_pair(),
                 &UnboundedInterval.emptiable_abs_bound_pair(),
             );
@@ -3790,9 +3776,9 @@ mod absolute {
         #[test]
         fn outside() {
             abs_assert_empty(
-                &EmptiableAbsoluteBoundPair::Empty,
-                &EmptiableAbsoluteBoundPair::Empty,
-                &EmptiableAbsoluteBoundPair::Empty,
+                &EmptiableAbsBoundPair::Empty,
+                &EmptiableAbsBoundPair::Empty,
+                &EmptiableAbsBoundPair::Empty,
             );
             assert_eq!(EmptyInterval.extend(&EmptyInterval), EmptyInterval);
         }
@@ -3812,13 +3798,13 @@ mod relative {
                 .cloned()
                 .ok_or("data not found")?;
 
-            let expected = RelativeBoundPair::new(
-                RelativeFiniteBoundPosition::new_with_inclusivity(
+            let expected = RelBoundPair::new(
+                RelFiniteBoundPos::new_with_inclusivity(
                     SignedDuration::from_hours(2),
                     BoundInclusivity::Exclusive,
                 )
                 .to_start_bound(),
-                RelativeFiniteBoundPosition::new_with_inclusivity(
+                RelFiniteBoundPos::new_with_inclusivity(
                     SignedDuration::from_hours(3),
                     BoundInclusivity::Exclusive,
                 )
@@ -3831,8 +3817,7 @@ mod relative {
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                BoundedRelativeInterval::try_from(data.0.clone())?
-                    .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                BoundedRelInterval::try_from(data.0.clone())?.extend(&BoundedRelInterval::try_from(data.1.clone())?),
                 expected.clone().to_emptiable_interval()
             );
 
@@ -3846,13 +3831,13 @@ mod relative {
                 .cloned()
                 .ok_or("data not found")?;
 
-            let expected = RelativeBoundPair::new(
-                RelativeFiniteBoundPosition::new_with_inclusivity(
+            let expected = RelBoundPair::new(
+                RelFiniteBoundPos::new_with_inclusivity(
                     SignedDuration::from_hours(2),
                     BoundInclusivity::Exclusive,
                 )
                 .to_start_bound(),
-                RelativeFiniteBoundPosition::new_with_inclusivity(
+                RelFiniteBoundPos::new_with_inclusivity(
                     SignedDuration::from_hours(3),
                     BoundInclusivity::Exclusive,
                 )
@@ -3865,8 +3850,7 @@ mod relative {
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                BoundedRelativeInterval::try_from(data.0.clone())?
-                    .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                BoundedRelInterval::try_from(data.0.clone())?.extend(&BoundedRelInterval::try_from(data.1.clone())?),
                 expected.clone().to_emptiable_interval()
             );
 
@@ -3883,9 +3867,9 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -3894,8 +3878,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -3909,12 +3893,12 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = EmptiableRelativeBoundPair::Empty;
+                let expected = EmptiableRelBoundPair::Empty;
 
                 rel_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
                 assert_eq!(
-                    BoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -3928,13 +3912,13 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = EmptiableRelativeBoundPair::Empty;
+                let expected = EmptiableRelBoundPair::Empty;
 
                 rel_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
 
                 assert_eq!(
-                    BoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -3948,9 +3932,9 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -3959,8 +3943,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -3978,9 +3962,9 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -3989,8 +3973,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -4004,12 +3988,12 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = EmptiableRelativeBoundPair::Empty;
+                let expected = EmptiableRelBoundPair::Empty;
 
                 rel_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
                 assert_eq!(
-                    BoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -4023,12 +4007,12 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = EmptiableRelativeBoundPair::Empty;
+                let expected = EmptiableRelBoundPair::Empty;
 
                 rel_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
                 assert_eq!(
-                    BoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -4042,9 +4026,9 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -4053,8 +4037,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -4069,9 +4053,9 @@ mod relative {
                 .cloned()
                 .ok_or("data not found")?;
 
-            let expected = RelativeBoundPair::new(
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
+            let expected = RelBoundPair::new(
+                RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
+                RelFiniteBoundPos::new(SignedDuration::from_hours(3)).to_end_bound(),
             );
 
             rel_assert(
@@ -4080,8 +4064,7 @@ mod relative {
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                BoundedRelativeInterval::try_from(data.0.clone())?
-                    .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                BoundedRelInterval::try_from(data.0.clone())?.extend(&BoundedRelInterval::try_from(data.1.clone())?),
                 expected.clone().to_emptiable_interval()
             );
 
@@ -4095,9 +4078,9 @@ mod relative {
                 .cloned()
                 .ok_or("data not found")?;
 
-            let expected = RelativeBoundPair::new(
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
+            let expected = RelBoundPair::new(
+                RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
+                RelFiniteBoundPos::new(SignedDuration::from_hours(3)).to_end_bound(),
             );
 
             rel_assert(
@@ -4106,8 +4089,7 @@ mod relative {
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                BoundedRelativeInterval::try_from(data.0.clone())?
-                    .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                BoundedRelInterval::try_from(data.0.clone())?.extend(&BoundedRelInterval::try_from(data.1.clone())?),
                 expected.clone().to_emptiable_interval()
             );
 
@@ -4118,9 +4100,9 @@ mod relative {
         fn inside() -> Result<(), Box<dyn Error>> {
             let data = BOUNDED_BOUNDED_REL.get("inside").cloned().ok_or("data not found")?;
 
-            let expected = RelativeBoundPair::new(
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
+            let expected = RelBoundPair::new(
+                RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
+                RelFiniteBoundPos::new(SignedDuration::from_hours(3)).to_end_bound(),
             );
 
             rel_assert(
@@ -4129,8 +4111,7 @@ mod relative {
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                BoundedRelativeInterval::try_from(data.0.clone())?
-                    .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                BoundedRelInterval::try_from(data.0.clone())?.extend(&BoundedRelInterval::try_from(data.1.clone())?),
                 expected.clone().to_emptiable_interval()
             );
 
@@ -4147,9 +4128,9 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -4158,8 +4139,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -4173,13 +4154,13 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -4188,8 +4169,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -4203,13 +4184,13 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -4218,8 +4199,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -4233,13 +4214,13 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -4248,8 +4229,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -4267,9 +4248,9 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(3)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -4278,8 +4259,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -4293,9 +4274,9 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(3),
                         BoundInclusivity::Exclusive,
                     )
@@ -4308,8 +4289,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -4323,9 +4304,9 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(3),
                         BoundInclusivity::Exclusive,
                     )
@@ -4338,8 +4319,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -4353,9 +4334,9 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(3),
                         BoundInclusivity::Exclusive,
                     )
@@ -4368,8 +4349,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -4387,9 +4368,9 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -4398,8 +4379,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -4413,9 +4394,9 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -4428,8 +4409,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -4443,9 +4424,9 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -4458,8 +4439,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -4473,9 +4454,9 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -4488,8 +4469,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -4503,13 +4484,13 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -4518,8 +4499,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -4533,13 +4514,13 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -4552,8 +4533,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -4567,13 +4548,13 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -4586,8 +4567,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -4601,13 +4582,13 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -4620,8 +4601,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -4635,13 +4616,13 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -4650,8 +4631,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -4665,13 +4646,13 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -4684,8 +4665,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -4699,13 +4680,13 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -4718,8 +4699,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -4733,13 +4714,13 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -4752,8 +4733,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -4767,13 +4748,13 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -4782,8 +4763,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -4797,13 +4778,13 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -4816,8 +4797,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -4831,13 +4812,13 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -4850,8 +4831,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -4865,13 +4846,13 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -4884,8 +4865,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -4903,9 +4884,9 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -4914,8 +4895,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -4929,13 +4910,13 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -4944,8 +4925,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -4959,13 +4940,13 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -4974,8 +4955,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -4989,13 +4970,13 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -5004,8 +4985,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -5023,9 +5004,9 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(3)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -5034,8 +5015,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -5049,9 +5030,9 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(3),
                         BoundInclusivity::Exclusive,
                     )
@@ -5064,8 +5045,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -5079,9 +5060,9 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(3),
                         BoundInclusivity::Exclusive,
                     )
@@ -5094,8 +5075,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -5109,9 +5090,9 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(3),
                         BoundInclusivity::Exclusive,
                     )
@@ -5124,8 +5105,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -5137,9 +5118,9 @@ mod relative {
         fn contains() -> Result<(), Box<dyn Error>> {
             let data = BOUNDED_BOUNDED_REL.get("contains").cloned().ok_or("data not found")?;
 
-            let expected = RelativeBoundPair::new(
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
+            let expected = RelBoundPair::new(
+                RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
+                RelFiniteBoundPos::new(SignedDuration::from_hours(3)).to_end_bound(),
             );
 
             rel_assert(
@@ -5148,8 +5129,7 @@ mod relative {
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                BoundedRelativeInterval::try_from(data.0.clone())?
-                    .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                BoundedRelInterval::try_from(data.0.clone())?.extend(&BoundedRelInterval::try_from(data.1.clone())?),
                 expected.clone().to_emptiable_interval()
             );
 
@@ -5167,13 +5147,13 @@ mod relative {
                 .cloned()
                 .ok_or("data not found")?;
 
-            let expected = RelativeBoundPair::new(
-                RelativeFiniteBoundPosition::new_with_inclusivity(
+            let expected = RelBoundPair::new(
+                RelFiniteBoundPos::new_with_inclusivity(
                     SignedDuration::from_hours(2),
                     BoundInclusivity::Exclusive,
                 )
                 .to_start_bound(),
-                RelativeFiniteBoundPosition::new_with_inclusivity(
+                RelFiniteBoundPos::new_with_inclusivity(
                     SignedDuration::from_hours(3),
                     BoundInclusivity::Exclusive,
                 )
@@ -5186,8 +5166,8 @@ mod relative {
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                BoundedRelativeInterval::try_from(data.0.clone())?
-                    .extend(&HalfBoundedRelativeInterval::try_from(data.1.clone())?),
+                BoundedRelInterval::try_from(data.0.clone())?
+                    .extend(&HalfBoundedRelInterval::try_from(data.1.clone())?),
                 expected.clone().to_emptiable_interval()
             );
 
@@ -5201,13 +5181,13 @@ mod relative {
                 .cloned()
                 .ok_or("data not found")?;
 
-            let expected = RelativeBoundPair::new(
-                RelativeFiniteBoundPosition::new_with_inclusivity(
+            let expected = RelBoundPair::new(
+                RelFiniteBoundPos::new_with_inclusivity(
                     SignedDuration::from_hours(1),
                     BoundInclusivity::Exclusive,
                 )
                 .to_start_bound(),
-                RelativeFiniteBoundPosition::new_with_inclusivity(
+                RelFiniteBoundPos::new_with_inclusivity(
                     SignedDuration::from_hours(2),
                     BoundInclusivity::Exclusive,
                 )
@@ -5220,8 +5200,8 @@ mod relative {
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                BoundedRelativeInterval::try_from(data.0.clone())?
-                    .extend(&HalfBoundedRelativeInterval::try_from(data.1.clone())?),
+                BoundedRelInterval::try_from(data.0.clone())?
+                    .extend(&HalfBoundedRelInterval::try_from(data.1.clone())?),
                 expected.clone().to_emptiable_interval()
             );
 
@@ -5238,9 +5218,9 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -5249,8 +5229,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&HalfBoundedRelativeInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&HalfBoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -5264,12 +5244,12 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = EmptiableRelativeBoundPair::Empty;
+                let expected = EmptiableRelBoundPair::Empty;
 
                 rel_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
                 assert_eq!(
-                    BoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&HalfBoundedRelativeInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&HalfBoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -5283,12 +5263,12 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = EmptiableRelativeBoundPair::Empty;
+                let expected = EmptiableRelBoundPair::Empty;
 
                 rel_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
                 assert_eq!(
-                    BoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&HalfBoundedRelativeInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&HalfBoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -5302,9 +5282,9 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -5313,8 +5293,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&HalfBoundedRelativeInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&HalfBoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -5332,9 +5312,9 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -5343,8 +5323,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&HalfBoundedRelativeInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&HalfBoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -5358,12 +5338,12 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = EmptiableRelativeBoundPair::Empty;
+                let expected = EmptiableRelBoundPair::Empty;
 
                 rel_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
                 assert_eq!(
-                    BoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&HalfBoundedRelativeInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&HalfBoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -5377,12 +5357,12 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = EmptiableRelativeBoundPair::Empty;
+                let expected = EmptiableRelBoundPair::Empty;
 
                 rel_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
                 assert_eq!(
-                    BoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&HalfBoundedRelativeInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&HalfBoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -5396,9 +5376,9 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -5407,8 +5387,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&HalfBoundedRelativeInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&HalfBoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -5423,9 +5403,9 @@ mod relative {
                 .cloned()
                 .ok_or("data not found")?;
 
-            let expected = RelativeBoundPair::new(
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
+            let expected = RelBoundPair::new(
+                RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
+                RelFiniteBoundPos::new(SignedDuration::from_hours(3)).to_end_bound(),
             );
 
             rel_assert(
@@ -5434,8 +5414,8 @@ mod relative {
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                BoundedRelativeInterval::try_from(data.0.clone())?
-                    .extend(&HalfBoundedRelativeInterval::try_from(data.1.clone())?),
+                BoundedRelInterval::try_from(data.0.clone())?
+                    .extend(&HalfBoundedRelInterval::try_from(data.1.clone())?),
                 expected.clone().to_emptiable_interval()
             );
 
@@ -5449,9 +5429,9 @@ mod relative {
                 .cloned()
                 .ok_or("data not found")?;
 
-            let expected = RelativeBoundPair::new(
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
+            let expected = RelBoundPair::new(
+                RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+                RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
             );
 
             rel_assert(
@@ -5460,8 +5440,8 @@ mod relative {
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                BoundedRelativeInterval::try_from(data.0.clone())?
-                    .extend(&HalfBoundedRelativeInterval::try_from(data.1.clone())?),
+                BoundedRelInterval::try_from(data.0.clone())?
+                    .extend(&HalfBoundedRelInterval::try_from(data.1.clone())?),
                 expected.clone().to_emptiable_interval()
             );
 
@@ -5478,9 +5458,9 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(3)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -5489,8 +5469,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&HalfBoundedRelativeInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&HalfBoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -5504,9 +5484,9 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -5515,8 +5495,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&HalfBoundedRelativeInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&HalfBoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -5534,9 +5514,9 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -5545,8 +5525,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&HalfBoundedRelativeInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&HalfBoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -5560,13 +5540,13 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -5575,8 +5555,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&HalfBoundedRelativeInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&HalfBoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -5590,13 +5570,13 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -5605,8 +5585,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&HalfBoundedRelativeInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&HalfBoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -5620,13 +5600,13 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -5635,8 +5615,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&HalfBoundedRelativeInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&HalfBoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -5654,9 +5634,9 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -5665,8 +5645,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&HalfBoundedRelativeInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&HalfBoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -5680,9 +5660,9 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -5695,8 +5675,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&HalfBoundedRelativeInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&HalfBoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -5710,9 +5690,9 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -5725,8 +5705,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&HalfBoundedRelativeInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&HalfBoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -5740,9 +5720,9 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -5755,8 +5735,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&HalfBoundedRelativeInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&HalfBoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -5770,9 +5750,9 @@ mod relative {
 
         #[test]
         fn inside() -> Result<(), Box<dyn Error>> {
-            let bounded = RelativeBoundPair::new(
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
+            let bounded = RelBoundPair::new(
+                RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+                RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
             );
 
             rel_assert(
@@ -5781,8 +5761,8 @@ mod relative {
                 &bounded.clone().to_emptiable(),
             );
             assert_eq!(
-                BoundedRelativeInterval::try_from(bounded.clone())?.extend(&UnboundedInterval),
-                BoundedRelativeInterval::try_from(bounded.clone())?
+                BoundedRelInterval::try_from(bounded.clone())?.extend(&UnboundedInterval),
+                BoundedRelInterval::try_from(bounded.clone())?
             );
 
             Ok(())
@@ -5794,19 +5774,19 @@ mod relative {
 
         #[test]
         fn outside() -> Result<(), Box<dyn Error>> {
-            let bounded = RelativeBoundPair::new(
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
+            let bounded = RelBoundPair::new(
+                RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+                RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
             );
 
             rel_assert(
                 &bounded.clone(),
-                &EmptiableRelativeBoundPair::Empty,
+                &EmptiableRelBoundPair::Empty,
                 &bounded.clone().to_emptiable(),
             );
             assert_eq!(
-                BoundedRelativeInterval::try_from(bounded.clone())?.extend(&EmptyInterval),
-                BoundedRelativeInterval::try_from(bounded.clone())?
+                BoundedRelInterval::try_from(bounded.clone())?.extend(&EmptyInterval),
+                BoundedRelInterval::try_from(bounded.clone())?
             );
 
             Ok(())
@@ -5823,13 +5803,13 @@ mod relative {
                 .cloned()
                 .ok_or("data not found")?;
 
-            let expected = RelativeBoundPair::new(
-                RelativeFiniteBoundPosition::new_with_inclusivity(
+            let expected = RelBoundPair::new(
+                RelFiniteBoundPos::new_with_inclusivity(
                     SignedDuration::from_hours(1),
                     BoundInclusivity::Exclusive,
                 )
                 .to_start_bound(),
-                RelativeFiniteBoundPosition::new_with_inclusivity(
+                RelFiniteBoundPos::new_with_inclusivity(
                     SignedDuration::from_hours(2),
                     BoundInclusivity::Exclusive,
                 )
@@ -5842,8 +5822,8 @@ mod relative {
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                HalfBoundedRelativeInterval::try_from(data.0.clone())?
-                    .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                HalfBoundedRelInterval::try_from(data.0.clone())?
+                    .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                 expected.clone().to_emptiable_interval()
             );
 
@@ -5857,13 +5837,13 @@ mod relative {
                 .cloned()
                 .ok_or("data not found")?;
 
-            let expected = RelativeBoundPair::new(
-                RelativeFiniteBoundPosition::new_with_inclusivity(
+            let expected = RelBoundPair::new(
+                RelFiniteBoundPos::new_with_inclusivity(
                     SignedDuration::from_hours(2),
                     BoundInclusivity::Exclusive,
                 )
                 .to_start_bound(),
-                RelativeFiniteBoundPosition::new_with_inclusivity(
+                RelFiniteBoundPos::new_with_inclusivity(
                     SignedDuration::from_hours(3),
                     BoundInclusivity::Exclusive,
                 )
@@ -5876,8 +5856,8 @@ mod relative {
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                HalfBoundedRelativeInterval::try_from(data.0.clone())?
-                    .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                HalfBoundedRelInterval::try_from(data.0.clone())?
+                    .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                 expected.clone().to_emptiable_interval()
             );
 
@@ -5894,9 +5874,9 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -5905,8 +5885,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    HalfBoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                    HalfBoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -5920,12 +5900,12 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = EmptiableRelativeBoundPair::Empty;
+                let expected = EmptiableRelBoundPair::Empty;
 
                 rel_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
                 assert_eq!(
-                    HalfBoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                    HalfBoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -5939,12 +5919,12 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = EmptiableRelativeBoundPair::Empty;
+                let expected = EmptiableRelBoundPair::Empty;
 
                 rel_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
                 assert_eq!(
-                    HalfBoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                    HalfBoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -5958,9 +5938,9 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -5969,8 +5949,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    HalfBoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                    HalfBoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -5988,9 +5968,9 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -5999,8 +5979,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    HalfBoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                    HalfBoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -6014,12 +5994,12 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = EmptiableRelativeBoundPair::Empty;
+                let expected = EmptiableRelBoundPair::Empty;
 
                 rel_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
                 assert_eq!(
-                    HalfBoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                    HalfBoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -6033,12 +6013,12 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = EmptiableRelativeBoundPair::Empty;
+                let expected = EmptiableRelBoundPair::Empty;
 
                 rel_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
                 assert_eq!(
-                    HalfBoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                    HalfBoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -6052,9 +6032,9 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -6063,8 +6043,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    HalfBoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                    HalfBoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -6079,9 +6059,9 @@ mod relative {
                 .cloned()
                 .ok_or("data not found")?;
 
-            let expected = RelativeBoundPair::new(
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
+            let expected = RelBoundPair::new(
+                RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+                RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
             );
 
             rel_assert(
@@ -6090,8 +6070,8 @@ mod relative {
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                HalfBoundedRelativeInterval::try_from(data.0.clone())?
-                    .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                HalfBoundedRelInterval::try_from(data.0.clone())?
+                    .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                 expected.clone().to_emptiable_interval()
             );
 
@@ -6105,9 +6085,9 @@ mod relative {
                 .cloned()
                 .ok_or("data not found")?;
 
-            let expected = RelativeBoundPair::new(
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
+            let expected = RelBoundPair::new(
+                RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
+                RelFiniteBoundPos::new(SignedDuration::from_hours(3)).to_end_bound(),
             );
 
             rel_assert(
@@ -6116,8 +6096,8 @@ mod relative {
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                HalfBoundedRelativeInterval::try_from(data.0.clone())?
-                    .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                HalfBoundedRelInterval::try_from(data.0.clone())?
+                    .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                 expected.clone().to_emptiable_interval()
             );
 
@@ -6134,9 +6114,9 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -6145,8 +6125,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    HalfBoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                    HalfBoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -6160,13 +6140,13 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -6175,8 +6155,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    HalfBoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                    HalfBoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -6190,13 +6170,13 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -6205,8 +6185,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    HalfBoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                    HalfBoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -6220,13 +6200,13 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -6235,8 +6215,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    HalfBoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                    HalfBoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -6254,9 +6234,9 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -6265,8 +6245,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    HalfBoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                    HalfBoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -6280,9 +6260,9 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -6295,8 +6275,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    HalfBoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                    HalfBoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -6310,9 +6290,9 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -6325,8 +6305,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    HalfBoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                    HalfBoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -6340,9 +6320,9 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBoundPosition::new_with_inclusivity(
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelFiniteBoundPos::new_with_inclusivity(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -6355,8 +6335,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    HalfBoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                    HalfBoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -6374,9 +6354,9 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_end_bound(),
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(3)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -6385,8 +6365,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    HalfBoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                    HalfBoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -6400,9 +6380,9 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -6411,8 +6391,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    HalfBoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&BoundedRelativeInterval::try_from(data.1.clone())?),
+                    HalfBoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&BoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -6431,13 +6411,13 @@ mod relative {
                 .cloned()
                 .ok_or("data not found")?;
 
-            let expected = RelativeBoundPair::new(
-                RelativeFiniteBoundPosition::new_with_inclusivity(
+            let expected = RelBoundPair::new(
+                RelFiniteBoundPos::new_with_inclusivity(
                     SignedDuration::from_hours(1),
                     BoundInclusivity::Exclusive,
                 )
                 .to_start_bound(),
-                RelativeFiniteBoundPosition::new_with_inclusivity(
+                RelFiniteBoundPos::new_with_inclusivity(
                     SignedDuration::from_hours(2),
                     BoundInclusivity::Exclusive,
                 )
@@ -6450,8 +6430,8 @@ mod relative {
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                HalfBoundedRelativeInterval::try_from(data.0.clone())?
-                    .extend(&HalfBoundedRelativeInterval::try_from(data.1.clone())?),
+                HalfBoundedRelInterval::try_from(data.0.clone())?
+                    .extend(&HalfBoundedRelInterval::try_from(data.1.clone())?),
                 expected.clone().to_emptiable_interval()
             );
 
@@ -6465,13 +6445,13 @@ mod relative {
                 .cloned()
                 .ok_or("data not found")?;
 
-            let expected = RelativeBoundPair::new(
-                RelativeFiniteBoundPosition::new_with_inclusivity(
+            let expected = RelBoundPair::new(
+                RelFiniteBoundPos::new_with_inclusivity(
                     SignedDuration::from_hours(1),
                     BoundInclusivity::Exclusive,
                 )
                 .to_start_bound(),
-                RelativeFiniteBoundPosition::new_with_inclusivity(
+                RelFiniteBoundPos::new_with_inclusivity(
                     SignedDuration::from_hours(2),
                     BoundInclusivity::Exclusive,
                 )
@@ -6484,8 +6464,8 @@ mod relative {
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                HalfBoundedRelativeInterval::try_from(data.0.clone())?
-                    .extend(&HalfBoundedRelativeInterval::try_from(data.1.clone())?),
+                HalfBoundedRelInterval::try_from(data.0.clone())?
+                    .extend(&HalfBoundedRelInterval::try_from(data.1.clone())?),
                 expected.clone().to_emptiable_interval()
             );
 
@@ -6502,9 +6482,9 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -6513,8 +6493,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    HalfBoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&HalfBoundedRelativeInterval::try_from(data.1.clone())?),
+                    HalfBoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&HalfBoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -6528,12 +6508,12 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = EmptiableRelativeBoundPair::Empty;
+                let expected = EmptiableRelBoundPair::Empty;
 
                 rel_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
                 assert_eq!(
-                    HalfBoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&HalfBoundedRelativeInterval::try_from(data.1.clone())?),
+                    HalfBoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&HalfBoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -6547,12 +6527,12 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = EmptiableRelativeBoundPair::Empty;
+                let expected = EmptiableRelBoundPair::Empty;
 
                 rel_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
                 assert_eq!(
-                    HalfBoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&HalfBoundedRelativeInterval::try_from(data.1.clone())?),
+                    HalfBoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&HalfBoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -6566,9 +6546,9 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -6577,8 +6557,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    HalfBoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&HalfBoundedRelativeInterval::try_from(data.1.clone())?),
+                    HalfBoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&HalfBoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -6596,9 +6576,9 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -6607,8 +6587,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    HalfBoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&HalfBoundedRelativeInterval::try_from(data.1.clone())?),
+                    HalfBoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&HalfBoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -6622,12 +6602,12 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = EmptiableRelativeBoundPair::Empty;
+                let expected = EmptiableRelBoundPair::Empty;
 
                 rel_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
                 assert_eq!(
-                    HalfBoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&HalfBoundedRelativeInterval::try_from(data.1.clone())?),
+                    HalfBoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&HalfBoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -6641,12 +6621,12 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = EmptiableRelativeBoundPair::Empty;
+                let expected = EmptiableRelBoundPair::Empty;
 
                 rel_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
                 assert_eq!(
-                    HalfBoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&HalfBoundedRelativeInterval::try_from(data.1.clone())?),
+                    HalfBoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&HalfBoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -6660,9 +6640,9 @@ mod relative {
                     .cloned()
                     .ok_or("data not found")?;
 
-                let expected = RelativeBoundPair::new(
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_end_bound(),
                 );
 
                 rel_assert(
@@ -6671,8 +6651,8 @@ mod relative {
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    HalfBoundedRelativeInterval::try_from(data.0.clone())?
-                        .extend(&HalfBoundedRelativeInterval::try_from(data.1.clone())?),
+                    HalfBoundedRelInterval::try_from(data.0.clone())?
+                        .extend(&HalfBoundedRelInterval::try_from(data.1.clone())?),
                     expected.clone().to_emptiable_interval()
                 );
 
@@ -6687,9 +6667,9 @@ mod relative {
                 .cloned()
                 .ok_or("data not found")?;
 
-            let expected = RelativeBoundPair::new(
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
+            let expected = RelBoundPair::new(
+                RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+                RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
             );
 
             rel_assert(
@@ -6698,8 +6678,8 @@ mod relative {
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                HalfBoundedRelativeInterval::try_from(data.0.clone())?
-                    .extend(&HalfBoundedRelativeInterval::try_from(data.1.clone())?),
+                HalfBoundedRelInterval::try_from(data.0.clone())?
+                    .extend(&HalfBoundedRelInterval::try_from(data.1.clone())?),
                 expected.clone().to_emptiable_interval()
             );
 
@@ -6713,9 +6693,9 @@ mod relative {
                 .cloned()
                 .ok_or("data not found")?;
 
-            let expected = RelativeBoundPair::new(
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
+            let expected = RelBoundPair::new(
+                RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+                RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
             );
 
             rel_assert(
@@ -6724,8 +6704,8 @@ mod relative {
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                HalfBoundedRelativeInterval::try_from(data.0.clone())?
-                    .extend(&HalfBoundedRelativeInterval::try_from(data.1.clone())?),
+                HalfBoundedRelInterval::try_from(data.0.clone())?
+                    .extend(&HalfBoundedRelInterval::try_from(data.1.clone())?),
                 expected.clone().to_emptiable_interval()
             );
 
@@ -6739,9 +6719,9 @@ mod relative {
                 .cloned()
                 .ok_or("data not found")?;
 
-            let expected = RelativeBoundPair::new(
-                RelativeStartBound::InfinitePast,
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
+            let expected = RelBoundPair::new(
+                RelStartBound::InfinitePast,
+                RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_end_bound(),
             );
 
             rel_assert(
@@ -6750,8 +6730,8 @@ mod relative {
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                HalfBoundedRelativeInterval::try_from(data.0.clone())?
-                    .extend(&HalfBoundedRelativeInterval::try_from(data.1.clone())?),
+                HalfBoundedRelInterval::try_from(data.0.clone())?
+                    .extend(&HalfBoundedRelInterval::try_from(data.1.clone())?),
                 expected.clone().to_emptiable_interval()
             );
 
@@ -6765,9 +6745,9 @@ mod relative {
                 .cloned()
                 .ok_or("data not found")?;
 
-            let expected = RelativeBoundPair::new(
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
-                RelativeEndBound::InfiniteFuture,
+            let expected = RelBoundPair::new(
+                RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
+                RelEndBound::InfiniteFuture,
             );
 
             rel_assert(
@@ -6776,8 +6756,8 @@ mod relative {
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                HalfBoundedRelativeInterval::try_from(data.0.clone())?
-                    .extend(&HalfBoundedRelativeInterval::try_from(data.1.clone())?),
+                HalfBoundedRelInterval::try_from(data.0.clone())?
+                    .extend(&HalfBoundedRelInterval::try_from(data.1.clone())?),
                 expected.clone().to_emptiable_interval()
             );
 
@@ -6797,9 +6777,9 @@ mod relative {
                         .cloned()
                         .ok_or("data not found")?;
 
-                    let expected = RelativeBoundPair::new(
-                        RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
-                        RelativeEndBound::InfiniteFuture,
+                    let expected = RelBoundPair::new(
+                        RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+                        RelEndBound::InfiniteFuture,
                     );
 
                     rel_assert(
@@ -6808,8 +6788,8 @@ mod relative {
                         &expected.clone().to_emptiable(),
                     );
                     assert_eq!(
-                        HalfBoundedRelativeInterval::try_from(data.0.clone())?
-                            .extend(&HalfBoundedRelativeInterval::try_from(data.1.clone())?),
+                        HalfBoundedRelInterval::try_from(data.0.clone())?
+                            .extend(&HalfBoundedRelInterval::try_from(data.1.clone())?),
                         expected.clone().to_emptiable_interval()
                     );
 
@@ -6823,13 +6803,13 @@ mod relative {
                         .cloned()
                         .ok_or("data not found")?;
 
-                    let expected = RelativeBoundPair::new(
-                        RelativeFiniteBoundPosition::new_with_inclusivity(
+                    let expected = RelBoundPair::new(
+                        RelFiniteBoundPos::new_with_inclusivity(
                             SignedDuration::from_hours(1),
                             BoundInclusivity::Exclusive,
                         )
                         .to_start_bound(),
-                        RelativeEndBound::InfiniteFuture,
+                        RelEndBound::InfiniteFuture,
                     );
 
                     rel_assert(
@@ -6838,8 +6818,8 @@ mod relative {
                         &expected.clone().to_emptiable(),
                     );
                     assert_eq!(
-                        HalfBoundedRelativeInterval::try_from(data.0.clone())?
-                            .extend(&HalfBoundedRelativeInterval::try_from(data.1.clone())?),
+                        HalfBoundedRelInterval::try_from(data.0.clone())?
+                            .extend(&HalfBoundedRelInterval::try_from(data.1.clone())?),
                         expected.clone().to_emptiable_interval()
                     );
 
@@ -6853,13 +6833,13 @@ mod relative {
                         .cloned()
                         .ok_or("data not found")?;
 
-                    let expected = RelativeBoundPair::new(
-                        RelativeFiniteBoundPosition::new_with_inclusivity(
+                    let expected = RelBoundPair::new(
+                        RelFiniteBoundPos::new_with_inclusivity(
                             SignedDuration::from_hours(1),
                             BoundInclusivity::Exclusive,
                         )
                         .to_start_bound(),
-                        RelativeEndBound::InfiniteFuture,
+                        RelEndBound::InfiniteFuture,
                     );
 
                     rel_assert(
@@ -6868,8 +6848,8 @@ mod relative {
                         &expected.clone().to_emptiable(),
                     );
                     assert_eq!(
-                        HalfBoundedRelativeInterval::try_from(data.0.clone())?
-                            .extend(&HalfBoundedRelativeInterval::try_from(data.1.clone())?),
+                        HalfBoundedRelInterval::try_from(data.0.clone())?
+                            .extend(&HalfBoundedRelInterval::try_from(data.1.clone())?),
                         expected.clone().to_emptiable_interval()
                     );
 
@@ -6883,13 +6863,13 @@ mod relative {
                         .cloned()
                         .ok_or("data not found")?;
 
-                    let expected = RelativeBoundPair::new(
-                        RelativeFiniteBoundPosition::new_with_inclusivity(
+                    let expected = RelBoundPair::new(
+                        RelFiniteBoundPos::new_with_inclusivity(
                             SignedDuration::from_hours(1),
                             BoundInclusivity::Exclusive,
                         )
                         .to_start_bound(),
-                        RelativeEndBound::InfiniteFuture,
+                        RelEndBound::InfiniteFuture,
                     );
 
                     rel_assert(
@@ -6898,8 +6878,8 @@ mod relative {
                         &expected.clone().to_emptiable(),
                     );
                     assert_eq!(
-                        HalfBoundedRelativeInterval::try_from(data.0.clone())?
-                            .extend(&HalfBoundedRelativeInterval::try_from(data.1.clone())?),
+                        HalfBoundedRelInterval::try_from(data.0.clone())?
+                            .extend(&HalfBoundedRelInterval::try_from(data.1.clone())?),
                         expected.clone().to_emptiable_interval()
                     );
 
@@ -6917,9 +6897,9 @@ mod relative {
                         .cloned()
                         .ok_or("data not found")?;
 
-                    let expected = RelativeBoundPair::new(
-                        RelativeStartBound::InfinitePast,
-                        RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
+                    let expected = RelBoundPair::new(
+                        RelStartBound::InfinitePast,
+                        RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_end_bound(),
                     );
 
                     rel_assert(
@@ -6928,8 +6908,8 @@ mod relative {
                         &expected.clone().to_emptiable(),
                     );
                     assert_eq!(
-                        HalfBoundedRelativeInterval::try_from(data.0.clone())?
-                            .extend(&HalfBoundedRelativeInterval::try_from(data.1.clone())?),
+                        HalfBoundedRelInterval::try_from(data.0.clone())?
+                            .extend(&HalfBoundedRelInterval::try_from(data.1.clone())?),
                         expected.clone().to_emptiable_interval()
                     );
 
@@ -6943,9 +6923,9 @@ mod relative {
                         .cloned()
                         .ok_or("data not found")?;
 
-                    let expected = RelativeBoundPair::new(
-                        RelativeStartBound::InfinitePast,
-                        RelativeFiniteBoundPosition::new_with_inclusivity(
+                    let expected = RelBoundPair::new(
+                        RelStartBound::InfinitePast,
+                        RelFiniteBoundPos::new_with_inclusivity(
                             SignedDuration::from_hours(1),
                             BoundInclusivity::Exclusive,
                         )
@@ -6958,8 +6938,8 @@ mod relative {
                         &expected.clone().to_emptiable(),
                     );
                     assert_eq!(
-                        HalfBoundedRelativeInterval::try_from(data.0.clone())?
-                            .extend(&HalfBoundedRelativeInterval::try_from(data.1.clone())?),
+                        HalfBoundedRelInterval::try_from(data.0.clone())?
+                            .extend(&HalfBoundedRelInterval::try_from(data.1.clone())?),
                         expected.clone().to_emptiable_interval()
                     );
 
@@ -6973,9 +6953,9 @@ mod relative {
                         .cloned()
                         .ok_or("data not found")?;
 
-                    let expected = RelativeBoundPair::new(
-                        RelativeStartBound::InfinitePast,
-                        RelativeFiniteBoundPosition::new_with_inclusivity(
+                    let expected = RelBoundPair::new(
+                        RelStartBound::InfinitePast,
+                        RelFiniteBoundPos::new_with_inclusivity(
                             SignedDuration::from_hours(1),
                             BoundInclusivity::Exclusive,
                         )
@@ -6988,8 +6968,8 @@ mod relative {
                         &expected.clone().to_emptiable(),
                     );
                     assert_eq!(
-                        HalfBoundedRelativeInterval::try_from(data.0.clone())?
-                            .extend(&HalfBoundedRelativeInterval::try_from(data.1.clone())?),
+                        HalfBoundedRelInterval::try_from(data.0.clone())?
+                            .extend(&HalfBoundedRelInterval::try_from(data.1.clone())?),
                         expected.clone().to_emptiable_interval()
                     );
 
@@ -7003,9 +6983,9 @@ mod relative {
                         .cloned()
                         .ok_or("data not found")?;
 
-                    let expected = RelativeBoundPair::new(
-                        RelativeStartBound::InfinitePast,
-                        RelativeFiniteBoundPosition::new_with_inclusivity(
+                    let expected = RelBoundPair::new(
+                        RelStartBound::InfinitePast,
+                        RelFiniteBoundPos::new_with_inclusivity(
                             SignedDuration::from_hours(1),
                             BoundInclusivity::Exclusive,
                         )
@@ -7018,8 +6998,8 @@ mod relative {
                         &expected.clone().to_emptiable(),
                     );
                     assert_eq!(
-                        HalfBoundedRelativeInterval::try_from(data.0.clone())?
-                            .extend(&HalfBoundedRelativeInterval::try_from(data.1.clone())?),
+                        HalfBoundedRelInterval::try_from(data.0.clone())?
+                            .extend(&HalfBoundedRelInterval::try_from(data.1.clone())?),
                         expected.clone().to_emptiable_interval()
                     );
 
@@ -7035,9 +7015,9 @@ mod relative {
                 .cloned()
                 .ok_or("data not found")?;
 
-            let expected = RelativeBoundPair::new(
-                RelativeStartBound::InfinitePast,
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
+            let expected = RelBoundPair::new(
+                RelStartBound::InfinitePast,
+                RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_end_bound(),
             );
 
             rel_assert(
@@ -7046,8 +7026,8 @@ mod relative {
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                HalfBoundedRelativeInterval::try_from(data.0.clone())?
-                    .extend(&HalfBoundedRelativeInterval::try_from(data.1.clone())?),
+                HalfBoundedRelInterval::try_from(data.0.clone())?
+                    .extend(&HalfBoundedRelInterval::try_from(data.1.clone())?),
                 expected.clone().to_emptiable_interval()
             );
 
@@ -7061,9 +7041,9 @@ mod relative {
                 .cloned()
                 .ok_or("data not found")?;
 
-            let expected = RelativeBoundPair::new(
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_start_bound(),
-                RelativeEndBound::InfiniteFuture,
+            let expected = RelBoundPair::new(
+                RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
+                RelEndBound::InfiniteFuture,
             );
 
             rel_assert(
@@ -7072,8 +7052,8 @@ mod relative {
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                HalfBoundedRelativeInterval::try_from(data.0.clone())?
-                    .extend(&HalfBoundedRelativeInterval::try_from(data.1.clone())?),
+                HalfBoundedRelInterval::try_from(data.0.clone())?
+                    .extend(&HalfBoundedRelInterval::try_from(data.1.clone())?),
                 expected.clone().to_emptiable_interval()
             );
 
@@ -7086,9 +7066,9 @@ mod relative {
 
         #[test]
         fn inside_and_same_start() -> Result<(), Box<dyn Error>> {
-            let half_bounded = RelativeBoundPair::new(
-                RelativeStartBound::InfinitePast,
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
+            let half_bounded = RelBoundPair::new(
+                RelStartBound::InfinitePast,
+                RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_end_bound(),
             );
 
             rel_assert(
@@ -7097,8 +7077,8 @@ mod relative {
                 &half_bounded.clone().to_emptiable(),
             );
             assert_eq!(
-                HalfBoundedRelativeInterval::try_from(half_bounded.clone())?.extend(&UnboundedInterval),
-                HalfBoundedRelativeInterval::try_from(half_bounded.clone())?
+                HalfBoundedRelInterval::try_from(half_bounded.clone())?.extend(&UnboundedInterval),
+                HalfBoundedRelInterval::try_from(half_bounded.clone())?
             );
 
             Ok(())
@@ -7106,9 +7086,9 @@ mod relative {
 
         #[test]
         fn inside_and_same_end() -> Result<(), Box<dyn Error>> {
-            let half_bounded = RelativeBoundPair::new(
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
-                RelativeEndBound::InfiniteFuture,
+            let half_bounded = RelBoundPair::new(
+                RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+                RelEndBound::InfiniteFuture,
             );
 
             rel_assert(
@@ -7117,8 +7097,8 @@ mod relative {
                 &half_bounded.clone().to_emptiable(),
             );
             assert_eq!(
-                HalfBoundedRelativeInterval::try_from(half_bounded.clone())?.extend(&UnboundedInterval),
-                HalfBoundedRelativeInterval::try_from(half_bounded.clone())?
+                HalfBoundedRelInterval::try_from(half_bounded.clone())?.extend(&UnboundedInterval),
+                HalfBoundedRelInterval::try_from(half_bounded.clone())?
             );
 
             Ok(())
@@ -7130,19 +7110,19 @@ mod relative {
 
         #[test]
         fn outside_to_past() -> Result<(), Box<dyn Error>> {
-            let half_bounded = RelativeBoundPair::new(
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
-                RelativeEndBound::InfiniteFuture,
+            let half_bounded = RelBoundPair::new(
+                RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+                RelEndBound::InfiniteFuture,
             );
 
             rel_assert(
                 &half_bounded.clone(),
-                &EmptiableRelativeBoundPair::Empty,
+                &EmptiableRelBoundPair::Empty,
                 &half_bounded.clone().to_emptiable(),
             );
             assert_eq!(
-                HalfBoundedRelativeInterval::try_from(half_bounded.clone())?.extend(&EmptyInterval),
-                HalfBoundedRelativeInterval::try_from(half_bounded.clone())?
+                HalfBoundedRelInterval::try_from(half_bounded.clone())?.extend(&EmptyInterval),
+                HalfBoundedRelInterval::try_from(half_bounded.clone())?
             );
 
             Ok(())
@@ -7150,19 +7130,19 @@ mod relative {
 
         #[test]
         fn outside_to_future() -> Result<(), Box<dyn Error>> {
-            let half_bounded = RelativeBoundPair::new(
-                RelativeStartBound::InfinitePast,
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
+            let half_bounded = RelBoundPair::new(
+                RelStartBound::InfinitePast,
+                RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_end_bound(),
             );
 
             rel_assert(
                 &half_bounded.clone(),
-                &EmptiableRelativeBoundPair::Empty,
+                &EmptiableRelBoundPair::Empty,
                 &half_bounded.clone().to_emptiable(),
             );
             assert_eq!(
-                HalfBoundedRelativeInterval::try_from(half_bounded.clone())?.extend(&EmptyInterval),
-                HalfBoundedRelativeInterval::try_from(half_bounded.clone())?
+                HalfBoundedRelInterval::try_from(half_bounded.clone())?.extend(&EmptyInterval),
+                HalfBoundedRelInterval::try_from(half_bounded.clone())?
             );
 
             Ok(())
@@ -7174,9 +7154,9 @@ mod relative {
 
         #[test]
         fn contains() -> Result<(), Box<dyn Error>> {
-            let bounded = RelativeBoundPair::new(
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
+            let bounded = RelBoundPair::new(
+                RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+                RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
             );
 
             rel_assert(
@@ -7185,8 +7165,8 @@ mod relative {
                 &bounded.clone().to_emptiable(),
             );
             assert_eq!(
-                UnboundedInterval.extend(&BoundedRelativeInterval::try_from(bounded.clone())?),
-                BoundedRelativeInterval::try_from(bounded.clone())?
+                UnboundedInterval.extend(&BoundedRelInterval::try_from(bounded.clone())?),
+                BoundedRelInterval::try_from(bounded.clone())?
             );
 
             Ok(())
@@ -7198,9 +7178,9 @@ mod relative {
 
         #[test]
         fn contains_and_same_start() -> Result<(), Box<dyn Error>> {
-            let half_bounded = RelativeBoundPair::new(
-                RelativeStartBound::InfinitePast,
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
+            let half_bounded = RelBoundPair::new(
+                RelStartBound::InfinitePast,
+                RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_end_bound(),
             );
 
             rel_assert(
@@ -7209,8 +7189,8 @@ mod relative {
                 &half_bounded.clone().to_emptiable(),
             );
             assert_eq!(
-                UnboundedInterval.extend(&HalfBoundedRelativeInterval::try_from(half_bounded.clone())?),
-                HalfBoundedRelativeInterval::try_from(half_bounded.clone())?
+                UnboundedInterval.extend(&HalfBoundedRelInterval::try_from(half_bounded.clone())?),
+                HalfBoundedRelInterval::try_from(half_bounded.clone())?
             );
 
             Ok(())
@@ -7218,9 +7198,9 @@ mod relative {
 
         #[test]
         fn contains_and_same_end() -> Result<(), Box<dyn Error>> {
-            let half_bounded = RelativeBoundPair::new(
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
-                RelativeEndBound::InfiniteFuture,
+            let half_bounded = RelBoundPair::new(
+                RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+                RelEndBound::InfiniteFuture,
             );
 
             rel_assert(
@@ -7229,8 +7209,8 @@ mod relative {
                 &half_bounded.clone().to_emptiable(),
             );
             assert_eq!(
-                UnboundedInterval.extend(&HalfBoundedRelativeInterval::try_from(half_bounded.clone())?),
-                HalfBoundedRelativeInterval::try_from(half_bounded.clone())?
+                UnboundedInterval.extend(&HalfBoundedRelInterval::try_from(half_bounded.clone())?),
+                HalfBoundedRelInterval::try_from(half_bounded.clone())?
             );
 
             Ok(())
@@ -7257,7 +7237,7 @@ mod relative {
         fn outside() {
             rel_assert(
                 &UnboundedInterval.rel_bound_pair(),
-                &EmptiableRelativeBoundPair::Empty,
+                &EmptiableRelBoundPair::Empty,
                 &UnboundedInterval.emptiable_rel_bound_pair(),
             );
         }
@@ -7268,19 +7248,19 @@ mod relative {
 
         #[test]
         fn outside() -> Result<(), Box<dyn Error>> {
-            let bounded = RelativeBoundPair::new(
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound(),
+            let bounded = RelBoundPair::new(
+                RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+                RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
             );
 
             rel_assert_empty(
-                &EmptiableRelativeBoundPair::Empty,
+                &EmptiableRelBoundPair::Empty,
                 &bounded.clone().to_emptiable(),
                 &bounded.clone().to_emptiable(),
             );
             assert_eq!(
-                EmptyInterval.extend(&BoundedRelativeInterval::try_from(bounded.clone())?),
-                BoundedRelativeInterval::try_from(bounded.clone())?
+                EmptyInterval.extend(&BoundedRelInterval::try_from(bounded.clone())?),
+                BoundedRelInterval::try_from(bounded.clone())?
             );
 
             Ok(())
@@ -7292,19 +7272,19 @@ mod relative {
 
         #[test]
         fn outside_to_future() -> Result<(), Box<dyn Error>> {
-            let half_bounded = RelativeBoundPair::new(
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
-                RelativeEndBound::InfiniteFuture,
+            let half_bounded = RelBoundPair::new(
+                RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+                RelEndBound::InfiniteFuture,
             );
 
             rel_assert_empty(
-                &EmptiableRelativeBoundPair::Empty,
+                &EmptiableRelBoundPair::Empty,
                 &half_bounded.clone().to_emptiable(),
                 &half_bounded.clone().to_emptiable(),
             );
             assert_eq!(
-                EmptyInterval.extend(&HalfBoundedRelativeInterval::try_from(half_bounded.clone())?),
-                HalfBoundedRelativeInterval::try_from(half_bounded.clone())?
+                EmptyInterval.extend(&HalfBoundedRelInterval::try_from(half_bounded.clone())?),
+                HalfBoundedRelInterval::try_from(half_bounded.clone())?
             );
 
             Ok(())
@@ -7312,19 +7292,19 @@ mod relative {
 
         #[test]
         fn outside_to_past() -> Result<(), Box<dyn Error>> {
-            let half_bounded = RelativeBoundPair::new(
-                RelativeStartBound::InfinitePast,
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_end_bound(),
+            let half_bounded = RelBoundPair::new(
+                RelStartBound::InfinitePast,
+                RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_end_bound(),
             );
 
             rel_assert_empty(
-                &EmptiableRelativeBoundPair::Empty,
+                &EmptiableRelBoundPair::Empty,
                 &half_bounded.clone().to_emptiable(),
                 &half_bounded.clone().to_emptiable(),
             );
             assert_eq!(
-                EmptyInterval.extend(&HalfBoundedRelativeInterval::try_from(half_bounded.clone())?),
-                HalfBoundedRelativeInterval::try_from(half_bounded.clone())?
+                EmptyInterval.extend(&HalfBoundedRelInterval::try_from(half_bounded.clone())?),
+                HalfBoundedRelInterval::try_from(half_bounded.clone())?
             );
 
             Ok(())
@@ -7337,7 +7317,7 @@ mod relative {
         #[test]
         fn outside() {
             rel_assert_empty(
-                &EmptiableRelativeBoundPair::Empty,
+                &EmptiableRelBoundPair::Empty,
                 &UnboundedInterval.emptiable_rel_bound_pair(),
                 &UnboundedInterval.emptiable_rel_bound_pair(),
             );
@@ -7350,9 +7330,9 @@ mod relative {
         #[test]
         fn outside() {
             rel_assert_empty(
-                &EmptiableRelativeBoundPair::Empty,
-                &EmptiableRelativeBoundPair::Empty,
-                &EmptiableRelativeBoundPair::Empty,
+                &EmptiableRelBoundPair::Empty,
+                &EmptiableRelBoundPair::Empty,
+                &EmptiableRelBoundPair::Empty,
             );
         }
     }

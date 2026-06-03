@@ -1135,7 +1135,7 @@ impl<I> IntersectionResult<I> {
 
 /// Represents the result of a [difference][1]
 ///
-/// [1]: https://en.wikipedia.org/w/index.php?title=Complement_(set_theory)&oldid=1272128427#Relative_complement
+/// [1]: https://en.wikipedia.org/w/index.php?title=Complement_(set_theory)&oldid=1272128427#Rel_complement
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum DifferenceResult<D> {

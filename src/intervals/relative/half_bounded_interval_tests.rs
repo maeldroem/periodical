@@ -16,23 +16,22 @@ use crate::intervals::meta::{
     Relativity,
 };
 use crate::intervals::relative::{
-    BoundedRelativeInterval,
-    EmptiableRelativeBoundPair,
-    EmptiableRelativeInterval,
-    HasEmptiableRelativeBoundPair,
-    HasRelativeBoundPair,
-    RelativeBoundPair,
-    RelativeEndBound,
-    RelativeFiniteBoundPosition,
-    RelativeInterval,
-    RelativeStartBound,
+    BoundedRelInterval,
+    EmptiableRelBoundPair,
+    EmptiableRelInterval,
+    HasEmptiableRelBoundPair,
+    HasRelBoundPair,
+    RelBoundPair,
+    RelEndBound,
+    RelFiniteBoundPos,
+    RelInterval,
+    RelStartBound,
 };
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 
 #[test]
 fn new() {
-    let interval =
-        HalfBoundedRelativeInterval::new_from_offset(SignedDuration::from_hours(1), OpeningDirection::ToFuture);
+    let interval = HalfBoundedRelInterval::new_from_offset(SignedDuration::from_hours(1), OpeningDirection::ToFuture);
 
     assert_eq!(interval.reference_offset(), SignedDuration::from_hours(1));
     assert_eq!(interval.opening_direction(), OpeningDirection::ToFuture);
@@ -41,7 +40,7 @@ fn new() {
 
 #[test]
 fn new_with_inclusivity() {
-    let interval = HalfBoundedRelativeInterval::new_from_offset_and_inclusivity(
+    let interval = HalfBoundedRelInterval::new_from_offset_and_inclusivity(
         SignedDuration::from_hours(1),
         BoundInclusivity::Exclusive,
         OpeningDirection::ToPast,
@@ -61,8 +60,8 @@ mod try_from_range {
         let end = SignedDuration::from_hours(2);
 
         assert_eq!(
-            HalfBoundedRelativeInterval::try_from_range(start..=end),
-            Err(HalfBoundedRelativeIntervalTryFromRangeError)
+            HalfBoundedRelInterval::try_from_range(start..=end),
+            Err(HalfBoundedRelIntervalTryFromRangeError)
         );
     }
 
@@ -72,8 +71,8 @@ mod try_from_range {
         let end = SignedDuration::from_hours(2);
 
         assert_eq!(
-            HalfBoundedRelativeInterval::try_from_range(start..end),
-            Err(HalfBoundedRelativeIntervalTryFromRangeError)
+            HalfBoundedRelInterval::try_from_range(start..end),
+            Err(HalfBoundedRelIntervalTryFromRangeError)
         );
     }
 
@@ -82,8 +81,8 @@ mod try_from_range {
         let start = SignedDuration::from_hours(1);
 
         assert_eq!(
-            HalfBoundedRelativeInterval::try_from_range(start..),
-            Ok(HalfBoundedRelativeInterval::new_from_offset(
+            HalfBoundedRelInterval::try_from_range(start..),
+            Ok(HalfBoundedRelInterval::new_from_offset(
                 start,
                 OpeningDirection::ToFuture
             ))
@@ -96,8 +95,8 @@ mod try_from_range {
         let end = SignedDuration::from_hours(2);
 
         assert_eq!(
-            HalfBoundedRelativeInterval::try_from_range((Bound::Excluded(start), Bound::Included(end))),
-            Err(HalfBoundedRelativeIntervalTryFromRangeError)
+            HalfBoundedRelInterval::try_from_range((Bound::Excluded(start), Bound::Included(end))),
+            Err(HalfBoundedRelIntervalTryFromRangeError)
         );
     }
 
@@ -107,8 +106,8 @@ mod try_from_range {
         let end = SignedDuration::from_hours(2);
 
         assert_eq!(
-            HalfBoundedRelativeInterval::try_from_range((Bound::Excluded(start), Bound::Excluded(end))),
-            Err(HalfBoundedRelativeIntervalTryFromRangeError)
+            HalfBoundedRelInterval::try_from_range((Bound::Excluded(start), Bound::Excluded(end))),
+            Err(HalfBoundedRelIntervalTryFromRangeError)
         );
     }
 
@@ -117,8 +116,8 @@ mod try_from_range {
         let start = SignedDuration::from_hours(1);
 
         assert_eq!(
-            HalfBoundedRelativeInterval::try_from_range((Bound::Excluded(start), Bound::Unbounded)),
-            Ok(HalfBoundedRelativeInterval::new_from_offset_and_inclusivity(
+            HalfBoundedRelInterval::try_from_range((Bound::Excluded(start), Bound::Unbounded)),
+            Ok(HalfBoundedRelInterval::new_from_offset_and_inclusivity(
                 start,
                 BoundInclusivity::Exclusive,
                 OpeningDirection::ToFuture
@@ -131,11 +130,8 @@ mod try_from_range {
         let end = SignedDuration::from_hours(2);
 
         assert_eq!(
-            HalfBoundedRelativeInterval::try_from_range(..=end),
-            Ok(HalfBoundedRelativeInterval::new_from_offset(
-                end,
-                OpeningDirection::ToPast
-            ))
+            HalfBoundedRelInterval::try_from_range(..=end),
+            Ok(HalfBoundedRelInterval::new_from_offset(end, OpeningDirection::ToPast))
         );
     }
 
@@ -144,8 +140,8 @@ mod try_from_range {
         let end = SignedDuration::from_hours(2);
 
         assert_eq!(
-            HalfBoundedRelativeInterval::try_from_range(..end),
-            Ok(HalfBoundedRelativeInterval::new_from_offset_and_inclusivity(
+            HalfBoundedRelInterval::try_from_range(..end),
+            Ok(HalfBoundedRelInterval::new_from_offset_and_inclusivity(
                 end,
                 BoundInclusivity::Exclusive,
                 OpeningDirection::ToPast
@@ -156,8 +152,8 @@ mod try_from_range {
     #[test]
     fn unbounded_unbounded() {
         assert_eq!(
-            HalfBoundedRelativeInterval::try_from_range(..),
-            Err(HalfBoundedRelativeIntervalTryFromRangeError)
+            HalfBoundedRelInterval::try_from_range(..),
+            Err(HalfBoundedRelIntervalTryFromRangeError)
         );
     }
 }
@@ -165,16 +161,15 @@ mod try_from_range {
 #[test]
 fn reference() {
     let reference = SignedDuration::from_hours(1);
-    let interval = HalfBoundedRelativeInterval::new_from_offset(reference, OpeningDirection::ToFuture);
+    let interval = HalfBoundedRelInterval::new_from_offset(reference, OpeningDirection::ToFuture);
 
     assert_eq!(interval.reference_offset(), reference);
 }
 
 #[test]
 fn opening_direction() {
-    let to_future =
-        HalfBoundedRelativeInterval::new_from_offset(SignedDuration::from_hours(1), OpeningDirection::ToFuture);
-    let to_past = HalfBoundedRelativeInterval::new_from_offset(SignedDuration::from_hours(1), OpeningDirection::ToPast);
+    let to_future = HalfBoundedRelInterval::new_from_offset(SignedDuration::from_hours(1), OpeningDirection::ToFuture);
+    let to_past = HalfBoundedRelInterval::new_from_offset(SignedDuration::from_hours(1), OpeningDirection::ToPast);
 
     assert_eq!(to_future.opening_direction(), OpeningDirection::ToFuture);
     assert_eq!(to_past.opening_direction(), OpeningDirection::ToPast);
@@ -182,7 +177,7 @@ fn opening_direction() {
 
 #[test]
 fn reference_inclusivity() {
-    let interval = HalfBoundedRelativeInterval::new_from_offset_and_inclusivity(
+    let interval = HalfBoundedRelInterval::new_from_offset_and_inclusivity(
         SignedDuration::from_hours(1),
         BoundInclusivity::Exclusive,
         OpeningDirection::ToFuture,
@@ -193,7 +188,7 @@ fn reference_inclusivity() {
 
 #[test]
 fn set_reference() {
-    let mut interval = HalfBoundedRelativeInterval::new_from_offset_and_inclusivity(
+    let mut interval = HalfBoundedRelInterval::new_from_offset_and_inclusivity(
         SignedDuration::from_hours(1),
         BoundInclusivity::Exclusive,
         OpeningDirection::ToFuture,
@@ -203,7 +198,7 @@ fn set_reference() {
 
     assert_eq!(
         interval,
-        HalfBoundedRelativeInterval::new_from_offset_and_inclusivity(
+        HalfBoundedRelInterval::new_from_offset_and_inclusivity(
             SignedDuration::from_hours(2),
             BoundInclusivity::Exclusive,
             OpeningDirection::ToFuture,
@@ -213,7 +208,7 @@ fn set_reference() {
 
 #[test]
 fn set_reference_inclusivity() {
-    let mut interval = HalfBoundedRelativeInterval::new_from_offset_and_inclusivity(
+    let mut interval = HalfBoundedRelInterval::new_from_offset_and_inclusivity(
         SignedDuration::from_hours(1),
         BoundInclusivity::Exclusive,
         OpeningDirection::ToFuture,
@@ -223,7 +218,7 @@ fn set_reference_inclusivity() {
 
     assert_eq!(
         interval,
-        HalfBoundedRelativeInterval::new_from_offset_and_inclusivity(
+        HalfBoundedRelInterval::new_from_offset_and_inclusivity(
             SignedDuration::from_hours(1),
             BoundInclusivity::Inclusive,
             OpeningDirection::ToFuture,
@@ -233,7 +228,7 @@ fn set_reference_inclusivity() {
 
 #[test]
 fn set_opening_direction() {
-    let mut interval = HalfBoundedRelativeInterval::new_from_offset_and_inclusivity(
+    let mut interval = HalfBoundedRelInterval::new_from_offset_and_inclusivity(
         SignedDuration::from_hours(1),
         BoundInclusivity::Exclusive,
         OpeningDirection::ToFuture,
@@ -243,7 +238,7 @@ fn set_opening_direction() {
 
     assert_eq!(
         interval,
-        HalfBoundedRelativeInterval::new_from_offset_and_inclusivity(
+        HalfBoundedRelInterval::new_from_offset_and_inclusivity(
             SignedDuration::from_hours(1),
             BoundInclusivity::Exclusive,
             OpeningDirection::ToPast,
@@ -254,30 +249,29 @@ fn set_opening_direction() {
 #[test]
 fn to_interval() {
     let half_bounded =
-        HalfBoundedRelativeInterval::new_from_offset(SignedDuration::from_hours(1), OpeningDirection::ToFuture);
+        HalfBoundedRelInterval::new_from_offset(SignedDuration::from_hours(1), OpeningDirection::ToFuture);
 
     assert_eq!(
         half_bounded.clone().to_interval(),
-        RelativeInterval::HalfBounded(half_bounded)
+        RelInterval::HalfBounded(half_bounded)
     );
 }
 
 #[test]
 fn to_emptiable_interval() {
     let half_bounded =
-        HalfBoundedRelativeInterval::new_from_offset(SignedDuration::from_hours(1), OpeningDirection::ToFuture);
+        HalfBoundedRelInterval::new_from_offset(SignedDuration::from_hours(1), OpeningDirection::ToFuture);
 
     assert_eq!(
         half_bounded.clone().to_emptiable_interval(),
-        EmptiableRelativeInterval::Bound(RelativeInterval::HalfBounded(half_bounded))
+        EmptiableRelInterval::Bound(RelInterval::HalfBounded(half_bounded))
     );
 }
 
 #[test]
 fn openness() {
     assert_eq!(
-        HalfBoundedRelativeInterval::new_from_offset(SignedDuration::from_hours(1), OpeningDirection::ToFuture)
-            .openness(),
+        HalfBoundedRelInterval::new_from_offset(SignedDuration::from_hours(1), OpeningDirection::ToFuture).openness(),
         Openness::HalfBounded
     );
 }
@@ -285,17 +279,15 @@ fn openness() {
 #[test]
 fn relativity() {
     assert_eq!(
-        HalfBoundedRelativeInterval::new_from_offset(SignedDuration::from_hours(1), OpeningDirection::ToFuture)
-            .relativity(),
-        Relativity::Relative
+        HalfBoundedRelInterval::new_from_offset(SignedDuration::from_hours(1), OpeningDirection::ToFuture).relativity(),
+        Relativity::Rel
     );
 }
 
 #[test]
 fn duration() {
     assert_eq!(
-        HalfBoundedRelativeInterval::new_from_offset(SignedDuration::from_hours(1), OpeningDirection::ToFuture)
-            .duration(),
+        HalfBoundedRelInterval::new_from_offset(SignedDuration::from_hours(1), OpeningDirection::ToFuture).duration(),
         IntervalDuration::Infinite
     );
 }
@@ -303,11 +295,11 @@ fn duration() {
 #[test]
 fn rel_bound_pair() {
     assert_eq!(
-        HalfBoundedRelativeInterval::new_from_offset(SignedDuration::from_hours(1), OpeningDirection::ToFuture)
+        HalfBoundedRelInterval::new_from_offset(SignedDuration::from_hours(1), OpeningDirection::ToFuture)
             .rel_bound_pair(),
-        RelativeBoundPair::new(
-            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
-            RelativeEndBound::InfiniteFuture
+        RelBoundPair::new(
+            RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+            RelEndBound::InfiniteFuture
         )
     );
 }
@@ -317,12 +309,12 @@ fn rel_start() {
     let reference = SignedDuration::from_hours(1);
 
     assert_eq!(
-        HalfBoundedRelativeInterval::new_from_offset(reference, OpeningDirection::ToFuture).rel_start(),
-        RelativeFiniteBoundPosition::new(reference).to_start_bound()
+        HalfBoundedRelInterval::new_from_offset(reference, OpeningDirection::ToFuture).rel_start(),
+        RelFiniteBoundPos::new(reference).to_start_bound()
     );
     assert_eq!(
-        HalfBoundedRelativeInterval::new_from_offset(reference, OpeningDirection::ToPast).rel_start(),
-        RelativeStartBound::InfinitePast
+        HalfBoundedRelInterval::new_from_offset(reference, OpeningDirection::ToPast).rel_start(),
+        RelStartBound::InfinitePast
     );
 }
 
@@ -331,23 +323,23 @@ fn rel_end() {
     let reference = SignedDuration::from_hours(1);
 
     assert_eq!(
-        HalfBoundedRelativeInterval::new_from_offset(reference, OpeningDirection::ToFuture).rel_end(),
-        RelativeEndBound::InfiniteFuture
+        HalfBoundedRelInterval::new_from_offset(reference, OpeningDirection::ToFuture).rel_end(),
+        RelEndBound::InfiniteFuture
     );
     assert_eq!(
-        HalfBoundedRelativeInterval::new_from_offset(reference, OpeningDirection::ToPast).rel_end(),
-        RelativeFiniteBoundPosition::new(reference).to_end_bound()
+        HalfBoundedRelInterval::new_from_offset(reference, OpeningDirection::ToPast).rel_end(),
+        RelFiniteBoundPos::new(reference).to_end_bound()
     );
 }
 
 #[test]
 fn emptiable_rel_bound_pair() {
     assert_eq!(
-        HalfBoundedRelativeInterval::new_from_offset(SignedDuration::from_hours(1), OpeningDirection::ToFuture)
+        HalfBoundedRelInterval::new_from_offset(SignedDuration::from_hours(1), OpeningDirection::ToFuture)
             .emptiable_rel_bound_pair(),
-        EmptiableRelativeBoundPair::Bound(RelativeBoundPair::new(
-            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
-            RelativeEndBound::InfiniteFuture
+        EmptiableRelBoundPair::Bound(RelBoundPair::new(
+            RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+            RelEndBound::InfiniteFuture
         ))
     );
 }
@@ -357,12 +349,12 @@ fn partial_rel_start() {
     let reference = SignedDuration::from_hours(1);
 
     assert_eq!(
-        HalfBoundedRelativeInterval::new_from_offset(reference, OpeningDirection::ToFuture).partial_rel_start(),
-        Some(RelativeFiniteBoundPosition::new(reference).to_start_bound())
+        HalfBoundedRelInterval::new_from_offset(reference, OpeningDirection::ToFuture).partial_rel_start(),
+        Some(RelFiniteBoundPos::new(reference).to_start_bound())
     );
     assert_eq!(
-        HalfBoundedRelativeInterval::new_from_offset(reference, OpeningDirection::ToPast).partial_rel_start(),
-        Some(RelativeStartBound::InfinitePast)
+        HalfBoundedRelInterval::new_from_offset(reference, OpeningDirection::ToPast).partial_rel_start(),
+        Some(RelStartBound::InfinitePast)
     );
 }
 
@@ -371,40 +363,39 @@ fn partial_rel_end() {
     let reference = SignedDuration::from_hours(1);
 
     assert_eq!(
-        HalfBoundedRelativeInterval::new_from_offset(reference, OpeningDirection::ToFuture).partial_rel_end(),
-        Some(RelativeEndBound::InfiniteFuture)
+        HalfBoundedRelInterval::new_from_offset(reference, OpeningDirection::ToFuture).partial_rel_end(),
+        Some(RelEndBound::InfiniteFuture)
     );
     assert_eq!(
-        HalfBoundedRelativeInterval::new_from_offset(reference, OpeningDirection::ToPast).partial_rel_end(),
-        Some(RelativeFiniteBoundPosition::new(reference).to_end_bound())
+        HalfBoundedRelInterval::new_from_offset(reference, OpeningDirection::ToPast).partial_rel_end(),
+        Some(RelFiniteBoundPos::new(reference).to_end_bound())
     );
 }
 
 #[test]
 fn is_empty() {
     assert!(
-        !HalfBoundedRelativeInterval::new_from_offset(SignedDuration::from_hours(1), OpeningDirection::ToFuture)
-            .is_empty()
+        !HalfBoundedRelInterval::new_from_offset(SignedDuration::from_hours(1), OpeningDirection::ToFuture).is_empty()
     );
 }
 
 #[test]
 fn from_timestamp_opening_direction_pair() {
     assert_eq!(
-        HalfBoundedRelativeInterval::from((SignedDuration::from_hours(1), OpeningDirection::ToFuture)),
-        HalfBoundedRelativeInterval::new_from_offset(SignedDuration::from_hours(1), OpeningDirection::ToFuture),
+        HalfBoundedRelInterval::from((SignedDuration::from_hours(1), OpeningDirection::ToFuture)),
+        HalfBoundedRelInterval::new_from_offset(SignedDuration::from_hours(1), OpeningDirection::ToFuture),
     );
 }
 
 #[test]
 fn from_timestamp_inclusivity_opening_direction_triple() {
     assert_eq!(
-        HalfBoundedRelativeInterval::from((
+        HalfBoundedRelInterval::from((
             SignedDuration::from_hours(1),
             BoundInclusivity::Exclusive,
             OpeningDirection::ToPast
         )),
-        HalfBoundedRelativeInterval::new_from_offset_and_inclusivity(
+        HalfBoundedRelInterval::new_from_offset_and_inclusivity(
             SignedDuration::from_hours(1),
             BoundInclusivity::Exclusive,
             OpeningDirection::ToPast,
@@ -415,16 +406,16 @@ fn from_timestamp_inclusivity_opening_direction_triple() {
 #[test]
 fn from_range_from() {
     assert_eq!(
-        HalfBoundedRelativeInterval::from(SignedDuration::from_hours(1)..),
-        HalfBoundedRelativeInterval::new_from_offset(SignedDuration::from_hours(1), OpeningDirection::ToFuture),
+        HalfBoundedRelInterval::from(SignedDuration::from_hours(1)..),
+        HalfBoundedRelInterval::new_from_offset(SignedDuration::from_hours(1), OpeningDirection::ToFuture),
     );
 }
 
 #[test]
 fn from_range_to() {
     assert_eq!(
-        HalfBoundedRelativeInterval::from(..SignedDuration::from_hours(1)),
-        HalfBoundedRelativeInterval::new_from_offset_and_inclusivity(
+        HalfBoundedRelInterval::from(..SignedDuration::from_hours(1)),
+        HalfBoundedRelInterval::new_from_offset_and_inclusivity(
             SignedDuration::from_hours(1),
             BoundInclusivity::Exclusive,
             OpeningDirection::ToPast,
@@ -435,8 +426,8 @@ fn from_range_to() {
 #[test]
 fn from_range_to_inclusive() {
     assert_eq!(
-        HalfBoundedRelativeInterval::from(..=SignedDuration::from_hours(1)),
-        HalfBoundedRelativeInterval::new_from_offset(SignedDuration::from_hours(1), OpeningDirection::ToPast),
+        HalfBoundedRelInterval::from(..=SignedDuration::from_hours(1)),
+        HalfBoundedRelInterval::new_from_offset(SignedDuration::from_hours(1), OpeningDirection::ToPast),
     );
 }
 
@@ -446,22 +437,22 @@ mod try_from_bound_pair {
     #[test]
     fn finite_finite() {
         assert_eq!(
-            HalfBoundedRelativeInterval::try_from(RelativeBoundPair::new(
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound()
+            HalfBoundedRelInterval::try_from(RelBoundPair::new(
+                RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+                RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound()
             )),
-            Err(HalfBoundedRelativeIntervalTryFromRelativeBoundPairError)
+            Err(HalfBoundedRelIntervalTryFromRelBoundPairError)
         );
     }
 
     #[test]
     fn finite_infinite() {
         assert_eq!(
-            HalfBoundedRelativeInterval::try_from(RelativeBoundPair::new(
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound(),
-                RelativeEndBound::InfiniteFuture
+            HalfBoundedRelInterval::try_from(RelBoundPair::new(
+                RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+                RelEndBound::InfiniteFuture
             )),
-            Ok(HalfBoundedRelativeInterval::new_from_offset(
+            Ok(HalfBoundedRelInterval::new_from_offset(
                 SignedDuration::from_hours(1),
                 OpeningDirection::ToFuture
             ))
@@ -471,11 +462,11 @@ mod try_from_bound_pair {
     #[test]
     fn infinite_finite() {
         assert_eq!(
-            HalfBoundedRelativeInterval::try_from(RelativeBoundPair::new(
-                RelativeStartBound::InfinitePast,
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2)).to_end_bound()
+            HalfBoundedRelInterval::try_from(RelBoundPair::new(
+                RelStartBound::InfinitePast,
+                RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound()
             )),
-            Ok(HalfBoundedRelativeInterval::new_from_offset(
+            Ok(HalfBoundedRelInterval::new_from_offset(
                 SignedDuration::from_hours(2),
                 OpeningDirection::ToPast
             ))
@@ -485,11 +476,11 @@ mod try_from_bound_pair {
     #[test]
     fn infinite_infinite() {
         assert_eq!(
-            HalfBoundedRelativeInterval::try_from(RelativeBoundPair::new(
-                RelativeStartBound::InfinitePast,
-                RelativeEndBound::InfiniteFuture
+            HalfBoundedRelInterval::try_from(RelBoundPair::new(
+                RelStartBound::InfinitePast,
+                RelEndBound::InfiniteFuture
             )),
-            Err(HalfBoundedRelativeIntervalTryFromRelativeBoundPairError)
+            Err(HalfBoundedRelIntervalTryFromRelBoundPairError)
         );
     }
 }
@@ -499,22 +490,21 @@ mod try_from_interval {
 
     #[test]
     fn bounded() {
-        let bounded =
-            BoundedRelativeInterval::from_offsets(SignedDuration::from_hours(1), SignedDuration::from_hours(2));
+        let bounded = BoundedRelInterval::from_offsets(SignedDuration::from_hours(1), SignedDuration::from_hours(2));
 
         assert_eq!(
-            HalfBoundedRelativeInterval::try_from(bounded.to_interval()),
-            Err(HalfBoundedRelativeIntervalTryFromRelativeIntervalError)
+            HalfBoundedRelInterval::try_from(bounded.to_interval()),
+            Err(HalfBoundedRelIntervalTryFromRelIntervalError)
         );
     }
 
     #[test]
     fn half_bounded() {
         let half_bounded =
-            HalfBoundedRelativeInterval::new_from_offset(SignedDuration::from_hours(1), OpeningDirection::ToFuture);
+            HalfBoundedRelInterval::new_from_offset(SignedDuration::from_hours(1), OpeningDirection::ToFuture);
 
         assert_eq!(
-            HalfBoundedRelativeInterval::try_from(half_bounded.clone().to_interval()),
+            HalfBoundedRelInterval::try_from(half_bounded.clone().to_interval()),
             Ok(half_bounded)
         );
     }
@@ -522,8 +512,8 @@ mod try_from_interval {
     #[test]
     fn unbounded() {
         assert_eq!(
-            HalfBoundedRelativeInterval::try_from(UnboundedInterval.to_rel_interval()),
-            Err(HalfBoundedRelativeIntervalTryFromRelativeIntervalError)
+            HalfBoundedRelInterval::try_from(UnboundedInterval.to_rel_interval()),
+            Err(HalfBoundedRelIntervalTryFromRelIntervalError)
         );
     }
 }
@@ -533,22 +523,21 @@ mod try_from_emptiable_interval {
 
     #[test]
     fn bound_bounded() {
-        let bounded =
-            BoundedRelativeInterval::from_offsets(SignedDuration::from_hours(1), SignedDuration::from_hours(2));
+        let bounded = BoundedRelInterval::from_offsets(SignedDuration::from_hours(1), SignedDuration::from_hours(2));
 
         assert_eq!(
-            HalfBoundedRelativeInterval::try_from(bounded.to_emptiable_interval()),
-            Err(HalfBoundedRelativeIntervalTryFromEmptiableRelativeIntervalError)
+            HalfBoundedRelInterval::try_from(bounded.to_emptiable_interval()),
+            Err(HalfBoundedRelIntervalTryFromEmptiableRelIntervalError)
         );
     }
 
     #[test]
     fn bound_half_bounded() {
         let half_bounded =
-            HalfBoundedRelativeInterval::new_from_offset(SignedDuration::from_hours(1), OpeningDirection::ToFuture);
+            HalfBoundedRelInterval::new_from_offset(SignedDuration::from_hours(1), OpeningDirection::ToFuture);
 
         assert_eq!(
-            HalfBoundedRelativeInterval::try_from(half_bounded.clone().to_emptiable_interval()),
+            HalfBoundedRelInterval::try_from(half_bounded.clone().to_emptiable_interval()),
             Ok(half_bounded)
         );
     }
@@ -556,16 +545,16 @@ mod try_from_emptiable_interval {
     #[test]
     fn bound_unbounded() {
         assert_eq!(
-            HalfBoundedRelativeInterval::try_from(UnboundedInterval.to_emptiable_rel_interval()),
-            Err(HalfBoundedRelativeIntervalTryFromEmptiableRelativeIntervalError)
+            HalfBoundedRelInterval::try_from(UnboundedInterval.to_emptiable_rel_interval()),
+            Err(HalfBoundedRelIntervalTryFromEmptiableRelIntervalError)
         );
     }
 
     #[test]
     fn empty() {
         assert_eq!(
-            HalfBoundedRelativeInterval::try_from(EmptyInterval.to_emptiable_rel_interval()),
-            Err(HalfBoundedRelativeIntervalTryFromEmptiableRelativeIntervalError)
+            HalfBoundedRelInterval::try_from(EmptyInterval.to_emptiable_rel_interval()),
+            Err(HalfBoundedRelIntervalTryFromEmptiableRelIntervalError)
         );
     }
 }

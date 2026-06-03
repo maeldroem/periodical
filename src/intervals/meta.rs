@@ -80,7 +80,7 @@ pub enum Relativity {
     /// Interval lives in absolute time
     ///
     /// This means that it uses an absolute [`Zoned`](jiff::Zoned).
-    Absolute,
+    Abs,
     /// Interval lives in relative time
     ///
     /// This means that it uses [`SignedDuration`](jiff::SignedDuration)s, also
@@ -89,7 +89,7 @@ pub enum Relativity {
     /// For example, if you compare and absolute interval to a point in time,
     /// e.g. this day compared to this year's 1st of January at midnight,
     /// you will end up with a relative interval.
-    Relative,
+    Rel,
     /// Interval isn't bound to relativity
     ///
     /// This means the interval uses a concept rather than representing itself
@@ -107,8 +107,8 @@ pub enum Relativity {
 impl Display for Relativity {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Absolute => write!(f, "Absolute"),
-            Self::Relative => write!(f, "Relative"),
+            Self::Abs => write!(f, "Abs"),
+            Self::Rel => write!(f, "Rel"),
             Self::Any => write!(f, "Any relativity"),
         }
     }

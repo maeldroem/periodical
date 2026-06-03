@@ -27,16 +27,16 @@
 //! ```
 //! # use std::error::Error;
 //! # use jiff::Zoned;
-//! # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
+//! # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos};
 //! # use periodical::intervals::ops::point_containment::CanPositionPointContainment;
-//! let interval = AbsoluteBoundPair::new(
-//!     AbsoluteFiniteBoundPosition::new(
+//! let interval = AbsBoundPair::new(
+//!     AbsFiniteBoundPos::new(
 //!         "2025-01-01 08:00:00[Europe/Oslo]"
 //!             .parse::<Zoned>()?
 //!             .timestamp(),
 //!     )
 //!     .to_start_bound(),
-//!     AbsoluteFiniteBoundPosition::new(
+//!     AbsFiniteBoundPos::new(
 //!         "2025-01-01 12:00:00[Europe/Oslo]"
 //!             .parse::<Zoned>()?
 //!             .timestamp(),
@@ -62,27 +62,27 @@ use jiff::{SignedDuration, Timestamp};
 use serde::{Deserialize, Serialize};
 
 use crate::intervals::absolute::{
-    AbsoluteBoundPair,
-    AbsoluteEndBound,
-    AbsoluteInterval,
-    AbsoluteStartBound,
-    BoundedAbsoluteInterval,
-    EmptiableAbsoluteBoundPair,
-    HalfBoundedAbsoluteInterval,
-    HasAbsoluteBoundPair,
-    HasEmptiableAbsoluteBoundPair,
+    AbsBoundPair,
+    AbsEndBound,
+    AbsInterval,
+    AbsStartBound,
+    BoundedAbsInterval,
+    EmptiableAbsBoundPair,
+    HalfBoundedAbsInterval,
+    HasAbsBoundPair,
+    HasEmptiableAbsBoundPair,
 };
 use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
 use crate::intervals::relative::{
-    BoundedRelativeInterval,
-    EmptiableRelativeBoundPair,
-    HalfBoundedRelativeInterval,
-    HasEmptiableRelativeBoundPair,
-    HasRelativeBoundPair,
-    RelativeBoundPair,
-    RelativeEndBound,
-    RelativeInterval,
-    RelativeStartBound,
+    BoundedRelInterval,
+    EmptiableRelBoundPair,
+    HalfBoundedRelInterval,
+    HasEmptiableRelBoundPair,
+    HasRelBoundPair,
+    RelBoundPair,
+    RelEndBound,
+    RelInterval,
+    RelStartBound,
 };
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 
@@ -504,15 +504,15 @@ pub fn deny_on_bounds_containment_rule_counts_as_contained(
 /// ```
 /// # use std::error::Error;
 /// # use jiff::Zoned;
-/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
+/// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos};
 /// # use periodical::intervals::ops::point_containment::{
 /// #     CanPositionPointContainment, DisambiguatedPointContainmentPosition, PointContainmentRuleSet,
 /// # };
-/// let interval = AbsoluteBoundPair::new(
-///     AbsoluteFiniteBoundPosition::new(
+/// let interval = AbsBoundPair::new(
+///     AbsFiniteBoundPos::new(
 ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///     ).to_start_bound(),
-///     AbsoluteFiniteBoundPosition::new(
+///     AbsFiniteBoundPos::new(
 ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///     ).to_end_bound(),
 /// );
@@ -531,15 +531,15 @@ pub fn deny_on_bounds_containment_rule_counts_as_contained(
 /// ```
 /// # use std::error::Error;
 /// # use jiff::Zoned;
-/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
+/// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos};
 /// # use periodical::intervals::ops::point_containment::{
 /// #     CanPositionPointContainment, DisambiguatedPointContainmentPosition, PointContainmentRuleSet,
 /// # };
-/// let interval = AbsoluteBoundPair::new(
-///     AbsoluteFiniteBoundPosition::new(
+/// let interval = AbsBoundPair::new(
+///     AbsFiniteBoundPos::new(
 ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///     ).to_start_bound(),
-///     AbsoluteFiniteBoundPosition::new(
+///     AbsFiniteBoundPos::new(
 ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///     ).to_end_bound(),
 /// );
@@ -573,20 +573,20 @@ pub trait CanPositionPointContainment<P> {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
+    /// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::point_containment::{
     /// #     CanPositionPointContainment, PointContainmentPosition,
     /// # };
-    /// let interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBoundPosition::new_with_inclusivity(
+    /// let interval = AbsBoundPair::new(
+    ///     AbsFiniteBoundPos::new_with_inclusivity(
     ///         "2025-01-01 08:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
     ///         BoundInclusivity::Exclusive,
     ///     )
     ///     .to_start_bound(),
-    ///     AbsoluteFiniteBoundPosition::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 10:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
@@ -625,15 +625,15 @@ pub trait CanPositionPointContainment<P> {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
+    /// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos};
     /// # use periodical::intervals::ops::point_containment::{
     /// #     CanPositionPointContainment, DisambiguatedPointContainmentPosition, PointContainmentRuleSet,
     /// # };
-    /// let interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBoundPosition::new(
+    /// let interval = AbsBoundPair::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_start_bound(),
-    ///     AbsoluteFiniteBoundPosition::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_end_bound(),
     /// );
@@ -669,16 +669,16 @@ pub trait CanPositionPointContainment<P> {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
+    /// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos};
     /// # use periodical::intervals::ops::point_containment::CanPositionPointContainment;
-    /// let interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBoundPosition::new(
+    /// let interval = AbsBoundPair::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 08:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
     ///     )
     ///     .to_start_bound(),
-    ///     AbsoluteFiniteBoundPosition::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 10:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
@@ -730,18 +730,18 @@ pub trait CanPositionPointContainment<P> {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
+    /// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos};
     /// # use periodical::intervals::ops::point_containment::{
     /// #     CanPositionPointContainment, PointContainmentRule, PointContainmentRuleSet,
     /// # };
-    /// let interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBoundPosition::new(
+    /// let interval = AbsBoundPair::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 08:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
     ///     )
     ///     .to_start_bound(),
-    ///     AbsoluteFiniteBoundPosition::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 10:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
@@ -800,14 +800,14 @@ pub trait CanPositionPointContainment<P> {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
+    /// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::point_containment::{CanPositionPointContainment, PointContainmentPosition};
-    /// let interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBoundPosition::new(
+    /// let interval = AbsBoundPair::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_start_bound(),
-    ///     AbsoluteFiniteBoundPosition::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_end_bound(),
     /// );
@@ -864,17 +864,17 @@ pub trait CanPositionPointContainment<P> {
     /// # use std::error::Error;
     /// # use jiff::Zoned;
     /// # use periodical::intervals::absolute::{
-    /// #     AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBoundPosition, AbsoluteStartBound,
+    /// #     AbsBoundPair, AbsEndBound, AbsFiniteBoundPos, AbsStartBound,
     /// # };
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::point_containment::{
     /// #     CanPositionPointContainment, DisambiguatedPointContainmentPosition, PointContainmentRuleSet,
     /// # };
-    /// let interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBoundPosition::new(
+    /// let interval = AbsBoundPair::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_start_bound(),
-    ///     AbsoluteFiniteBoundPosition::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_end_bound(),
     /// );
@@ -912,7 +912,7 @@ pub trait CanPositionPointContainment<P> {
     }
 }
 
-impl CanPositionPointContainment<Timestamp> for AbsoluteBoundPair {
+impl CanPositionPointContainment<Timestamp> for AbsBoundPair {
     type Error = Infallible;
 
     fn point_containment_position(&self, positionable: Timestamp) -> Result<PointContainmentPosition, Self::Error> {
@@ -920,11 +920,11 @@ impl CanPositionPointContainment<Timestamp> for AbsoluteBoundPair {
     }
 }
 
-impl CanPositionPointContainment<Timestamp> for EmptiableAbsoluteBoundPair {
+impl CanPositionPointContainment<Timestamp> for EmptiableAbsBoundPair {
     type Error = Infallible;
 
     fn point_containment_position(&self, positionable: Timestamp) -> Result<PointContainmentPosition, Self::Error> {
-        let EmptiableAbsoluteBoundPair::Bound(bounds) = self else {
+        let EmptiableAbsBoundPair::Bound(bounds) = self else {
             return Ok(PointContainmentPosition::Outside);
         };
 
@@ -932,11 +932,11 @@ impl CanPositionPointContainment<Timestamp> for EmptiableAbsoluteBoundPair {
     }
 }
 
-impl CanPositionPointContainment<Timestamp> for AbsoluteInterval {
+impl CanPositionPointContainment<Timestamp> for AbsInterval {
     type Error = Infallible;
 
     fn point_containment_position(&self, positionable: Timestamp) -> Result<PointContainmentPosition, Self::Error> {
-        let EmptiableAbsoluteBoundPair::Bound(bounds) = self.emptiable_abs_bound_pair() else {
+        let EmptiableAbsBoundPair::Bound(bounds) = self.emptiable_abs_bound_pair() else {
             return Ok(PointContainmentPosition::Outside);
         };
 
@@ -944,7 +944,7 @@ impl CanPositionPointContainment<Timestamp> for AbsoluteInterval {
     }
 }
 
-impl CanPositionPointContainment<Timestamp> for BoundedAbsoluteInterval {
+impl CanPositionPointContainment<Timestamp> for BoundedAbsInterval {
     type Error = Infallible;
 
     fn point_containment_position(&self, positionable: Timestamp) -> Result<PointContainmentPosition, Self::Error> {
@@ -955,7 +955,7 @@ impl CanPositionPointContainment<Timestamp> for BoundedAbsoluteInterval {
     }
 }
 
-impl CanPositionPointContainment<Timestamp> for HalfBoundedAbsoluteInterval {
+impl CanPositionPointContainment<Timestamp> for HalfBoundedAbsInterval {
     type Error = Infallible;
 
     fn point_containment_position(&self, positionable: Timestamp) -> Result<PointContainmentPosition, Self::Error> {
@@ -966,7 +966,7 @@ impl CanPositionPointContainment<Timestamp> for HalfBoundedAbsoluteInterval {
     }
 }
 
-impl CanPositionPointContainment<SignedDuration> for RelativeBoundPair {
+impl CanPositionPointContainment<SignedDuration> for RelBoundPair {
     type Error = Infallible;
 
     fn point_containment_position(
@@ -977,14 +977,14 @@ impl CanPositionPointContainment<SignedDuration> for RelativeBoundPair {
     }
 }
 
-impl CanPositionPointContainment<SignedDuration> for EmptiableRelativeBoundPair {
+impl CanPositionPointContainment<SignedDuration> for EmptiableRelBoundPair {
     type Error = Infallible;
 
     fn point_containment_position(
         &self,
         positionable: SignedDuration,
     ) -> Result<PointContainmentPosition, Self::Error> {
-        let EmptiableRelativeBoundPair::Bound(bounds) = self else {
+        let EmptiableRelBoundPair::Bound(bounds) = self else {
             return Ok(PointContainmentPosition::Outside);
         };
 
@@ -992,14 +992,14 @@ impl CanPositionPointContainment<SignedDuration> for EmptiableRelativeBoundPair 
     }
 }
 
-impl CanPositionPointContainment<SignedDuration> for RelativeInterval {
+impl CanPositionPointContainment<SignedDuration> for RelInterval {
     type Error = Infallible;
 
     fn point_containment_position(
         &self,
         positionable: SignedDuration,
     ) -> Result<PointContainmentPosition, Self::Error> {
-        let EmptiableRelativeBoundPair::Bound(bounds) = self.emptiable_rel_bound_pair() else {
+        let EmptiableRelBoundPair::Bound(bounds) = self.emptiable_rel_bound_pair() else {
             return Ok(PointContainmentPosition::Outside);
         };
 
@@ -1007,7 +1007,7 @@ impl CanPositionPointContainment<SignedDuration> for RelativeInterval {
     }
 }
 
-impl CanPositionPointContainment<SignedDuration> for BoundedRelativeInterval {
+impl CanPositionPointContainment<SignedDuration> for BoundedRelInterval {
     type Error = Infallible;
 
     fn point_containment_position(
@@ -1021,7 +1021,7 @@ impl CanPositionPointContainment<SignedDuration> for BoundedRelativeInterval {
     }
 }
 
-impl CanPositionPointContainment<SignedDuration> for HalfBoundedRelativeInterval {
+impl CanPositionPointContainment<SignedDuration> for HalfBoundedRelInterval {
     type Error = Infallible;
 
     fn point_containment_position(
@@ -1074,14 +1074,11 @@ impl CanPositionPointContainment<SignedDuration> for EmptyInterval {
 }
 
 /// Returns the [`PointContainmentPosition`] of the given time within the given
-/// [`AbsoluteBoundPair`]
+/// [`AbsBoundPair`]
 #[must_use]
-pub fn point_containment_position_abs_bound_pair(
-    bounds: &AbsoluteBoundPair,
-    time: Timestamp,
-) -> PointContainmentPosition {
-    type StartB = AbsoluteStartBound;
-    type EndB = AbsoluteEndBound;
+pub fn point_containment_position_abs_bound_pair(bounds: &AbsBoundPair, time: Timestamp) -> PointContainmentPosition {
+    type StartB = AbsStartBound;
+    type EndB = AbsEndBound;
     type ContPos = PointContainmentPosition;
 
     match (bounds.abs_start(), bounds.abs_end()) {
@@ -1113,14 +1110,14 @@ pub fn point_containment_position_abs_bound_pair(
 }
 
 /// Returns the [`PointContainmentPosition`] of the given offset within the
-/// given [`RelativeBoundPair`]
+/// given [`RelBoundPair`]
 #[must_use]
 pub fn point_containment_position_rel_bound_pair(
-    bounds: &RelativeBoundPair,
+    bounds: &RelBoundPair,
     offset: SignedDuration,
 ) -> PointContainmentPosition {
-    type StartB = RelativeStartBound;
-    type EndB = RelativeEndBound;
+    type StartB = RelStartBound;
+    type EndB = RelEndBound;
     type ContPos = PointContainmentPosition;
 
     match (bounds.rel_start(), bounds.rel_end()) {

@@ -3,16 +3,16 @@ use std::error::Error;
 use jiff::{SignedDuration, Zoned};
 
 use super::bound_ord::*;
-use crate::intervals::absolute::{AbsoluteEndBound, AbsoluteFiniteBoundPosition, AbsoluteStartBound};
+use crate::intervals::absolute::{AbsEndBound, AbsFiniteBoundPos, AbsStartBound};
 use crate::intervals::meta::BoundInclusivity;
 use crate::intervals::ops::bound_overlap_ambiguity::BoundOverlapAmbiguity;
-use crate::intervals::relative::{RelativeEndBound, RelativeFiniteBoundPosition, RelativeStartBound};
+use crate::intervals::relative::{RelEndBound, RelFiniteBoundPos, RelStartBound};
 
 #[test]
 fn abs_start_start_less_inf_past_finite() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        AbsoluteStartBound::InfinitePast.bound_cmp(
-            &AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+        AbsStartBound::InfinitePast.bound_cmp(
+            &AbsFiniteBoundPos::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                 .to_start_bound()
         ),
         BoundOrdering::Less,
@@ -24,10 +24,10 @@ fn abs_start_start_less_inf_past_finite() -> Result<(), Box<dyn Error>> {
 #[test]
 fn abs_start_start_less_finite_finite() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+        AbsFiniteBoundPos::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
             .to_start_bound()
             .bound_cmp(
-                &AbsoluteFiniteBoundPosition::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                &AbsFiniteBoundPos::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                     .to_start_bound()
             ),
         BoundOrdering::Less,
@@ -39,7 +39,7 @@ fn abs_start_start_less_finite_finite() -> Result<(), Box<dyn Error>> {
 #[test]
 fn abs_start_start_equal_inf_past() {
     assert_eq!(
-        AbsoluteStartBound::InfinitePast.bound_cmp(&AbsoluteStartBound::InfinitePast),
+        AbsStartBound::InfinitePast.bound_cmp(&AbsStartBound::InfinitePast),
         BoundOrdering::Equal(None),
     );
 }
@@ -47,10 +47,10 @@ fn abs_start_start_equal_inf_past() {
 #[test]
 fn abs_start_start_equal_inclusive_inclusive() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+        AbsFiniteBoundPos::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
             .to_start_bound()
             .bound_cmp(
-                &AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                &AbsFiniteBoundPos::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                     .to_start_bound()
             ),
         BoundOrdering::Equal(Some(BoundOverlapAmbiguity::BothStarts(
@@ -65,10 +65,10 @@ fn abs_start_start_equal_inclusive_inclusive() -> Result<(), Box<dyn Error>> {
 #[test]
 fn abs_start_start_equal_inclusive_exclusive() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+        AbsFiniteBoundPos::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
             .to_start_bound()
             .bound_cmp(
-                &AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                &AbsFiniteBoundPos::new_with_inclusivity(
                     "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                 )
@@ -86,13 +86,13 @@ fn abs_start_start_equal_inclusive_exclusive() -> Result<(), Box<dyn Error>> {
 #[test]
 fn abs_start_start_equal_exclusive_inclusive() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        AbsoluteFiniteBoundPosition::new_with_inclusivity(
+        AbsFiniteBoundPos::new_with_inclusivity(
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             BoundInclusivity::Exclusive,
         )
         .to_start_bound()
         .bound_cmp(
-            &AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+            &AbsFiniteBoundPos::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                 .to_start_bound()
         ),
         BoundOrdering::Equal(Some(BoundOverlapAmbiguity::BothStarts(
@@ -107,13 +107,13 @@ fn abs_start_start_equal_exclusive_inclusive() -> Result<(), Box<dyn Error>> {
 #[test]
 fn abs_start_start_equal_exclusive_exclusive() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        AbsoluteFiniteBoundPosition::new_with_inclusivity(
+        AbsFiniteBoundPos::new_with_inclusivity(
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             BoundInclusivity::Exclusive,
         )
         .to_start_bound()
         .bound_cmp(
-            &AbsoluteFiniteBoundPosition::new_with_inclusivity(
+            &AbsFiniteBoundPos::new_with_inclusivity(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
             )
@@ -131,9 +131,9 @@ fn abs_start_start_equal_exclusive_exclusive() -> Result<(), Box<dyn Error>> {
 #[test]
 fn abs_start_start_greater_finite_inf_past() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+        AbsFiniteBoundPos::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
             .to_start_bound()
-            .bound_cmp(&AbsoluteStartBound::InfinitePast),
+            .bound_cmp(&AbsStartBound::InfinitePast),
         BoundOrdering::Greater,
     );
 
@@ -143,10 +143,10 @@ fn abs_start_start_greater_finite_inf_past() -> Result<(), Box<dyn Error>> {
 #[test]
 fn abs_start_start_greater_finite_finite() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        AbsoluteFiniteBoundPosition::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+        AbsFiniteBoundPos::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
             .to_start_bound()
             .bound_cmp(
-                &AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                &AbsFiniteBoundPos::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                     .to_start_bound()
             ),
         BoundOrdering::Greater,
@@ -158,7 +158,7 @@ fn abs_start_start_greater_finite_finite() -> Result<(), Box<dyn Error>> {
 #[test]
 fn abs_start_end_less_inf_past_inf_future() {
     assert_eq!(
-        AbsoluteStartBound::InfinitePast.bound_cmp(&AbsoluteEndBound::InfiniteFuture),
+        AbsStartBound::InfinitePast.bound_cmp(&AbsEndBound::InfiniteFuture),
         BoundOrdering::Less,
     );
 }
@@ -166,8 +166,8 @@ fn abs_start_end_less_inf_past_inf_future() {
 #[test]
 fn abs_start_end_less_inf_past_finite() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        AbsoluteStartBound::InfinitePast.bound_cmp(
-            &AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+        AbsStartBound::InfinitePast.bound_cmp(
+            &AbsFiniteBoundPos::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                 .to_end_bound()
         ),
         BoundOrdering::Less,
@@ -179,9 +179,9 @@ fn abs_start_end_less_inf_past_finite() -> Result<(), Box<dyn Error>> {
 #[test]
 fn abs_start_end_less_finite_inf_future() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+        AbsFiniteBoundPos::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
             .to_start_bound()
-            .bound_cmp(&AbsoluteEndBound::InfiniteFuture),
+            .bound_cmp(&AbsEndBound::InfiniteFuture),
         BoundOrdering::Less,
     );
 
@@ -191,10 +191,10 @@ fn abs_start_end_less_finite_inf_future() -> Result<(), Box<dyn Error>> {
 #[test]
 fn abs_start_end_less_finite_finite() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+        AbsFiniteBoundPos::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
             .to_start_bound()
             .bound_cmp(
-                &AbsoluteFiniteBoundPosition::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                &AbsFiniteBoundPos::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                     .to_end_bound()
             ),
         BoundOrdering::Less,
@@ -206,10 +206,10 @@ fn abs_start_end_less_finite_finite() -> Result<(), Box<dyn Error>> {
 #[test]
 fn abs_start_end_equal_inclusive_inclusive() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+        AbsFiniteBoundPos::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
             .to_start_bound()
             .bound_cmp(
-                &AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                &AbsFiniteBoundPos::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                     .to_end_bound()
             ),
         BoundOrdering::Equal(Some(BoundOverlapAmbiguity::EndStart(
@@ -224,10 +224,10 @@ fn abs_start_end_equal_inclusive_inclusive() -> Result<(), Box<dyn Error>> {
 #[test]
 fn abs_start_end_equal_inclusive_exclusive() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+        AbsFiniteBoundPos::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
             .to_start_bound()
             .bound_cmp(
-                &AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                &AbsFiniteBoundPos::new_with_inclusivity(
                     "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                 )
@@ -245,13 +245,13 @@ fn abs_start_end_equal_inclusive_exclusive() -> Result<(), Box<dyn Error>> {
 #[test]
 fn abs_start_end_equal_exclusive_inclusive() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        AbsoluteFiniteBoundPosition::new_with_inclusivity(
+        AbsFiniteBoundPos::new_with_inclusivity(
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             BoundInclusivity::Exclusive,
         )
         .to_start_bound()
         .bound_cmp(
-            &AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+            &AbsFiniteBoundPos::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                 .to_end_bound()
         ),
         BoundOrdering::Equal(Some(BoundOverlapAmbiguity::EndStart(
@@ -266,13 +266,13 @@ fn abs_start_end_equal_exclusive_inclusive() -> Result<(), Box<dyn Error>> {
 #[test]
 fn abs_start_end_equal_exclusive_exclusive() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        AbsoluteFiniteBoundPosition::new_with_inclusivity(
+        AbsFiniteBoundPos::new_with_inclusivity(
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             BoundInclusivity::Exclusive,
         )
         .to_start_bound()
         .bound_cmp(
-            &AbsoluteFiniteBoundPosition::new_with_inclusivity(
+            &AbsFiniteBoundPos::new_with_inclusivity(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
             )
@@ -290,10 +290,10 @@ fn abs_start_end_equal_exclusive_exclusive() -> Result<(), Box<dyn Error>> {
 #[test]
 fn abs_start_end_greater() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        AbsoluteFiniteBoundPosition::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+        AbsFiniteBoundPos::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
             .to_start_bound()
             .bound_cmp(
-                &AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                &AbsFiniteBoundPos::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                     .to_end_bound()
             ),
         BoundOrdering::Greater,
@@ -305,10 +305,10 @@ fn abs_start_end_greater() -> Result<(), Box<dyn Error>> {
 #[test]
 fn abs_end_start_less() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+        AbsFiniteBoundPos::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
             .to_end_bound()
             .bound_cmp(
-                &AbsoluteFiniteBoundPosition::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                &AbsFiniteBoundPos::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                     .to_start_bound()
             ),
         BoundOrdering::Less,
@@ -320,10 +320,10 @@ fn abs_end_start_less() -> Result<(), Box<dyn Error>> {
 #[test]
 fn abs_end_start_equal_inclusive_inclusive() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+        AbsFiniteBoundPos::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
             .to_end_bound()
             .bound_cmp(
-                &AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                &AbsFiniteBoundPos::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                     .to_start_bound()
             ),
         BoundOrdering::Equal(Some(BoundOverlapAmbiguity::StartEnd(
@@ -338,10 +338,10 @@ fn abs_end_start_equal_inclusive_inclusive() -> Result<(), Box<dyn Error>> {
 #[test]
 fn abs_end_start_equal_inclusive_exclusive() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+        AbsFiniteBoundPos::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
             .to_end_bound()
             .bound_cmp(
-                &AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                &AbsFiniteBoundPos::new_with_inclusivity(
                     "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                 )
@@ -359,13 +359,13 @@ fn abs_end_start_equal_inclusive_exclusive() -> Result<(), Box<dyn Error>> {
 #[test]
 fn abs_end_start_equal_exclusive_inclusive() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        AbsoluteFiniteBoundPosition::new_with_inclusivity(
+        AbsFiniteBoundPos::new_with_inclusivity(
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             BoundInclusivity::Exclusive,
         )
         .to_end_bound()
         .bound_cmp(
-            &AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+            &AbsFiniteBoundPos::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                 .to_start_bound()
         ),
         BoundOrdering::Equal(Some(BoundOverlapAmbiguity::StartEnd(
@@ -380,13 +380,13 @@ fn abs_end_start_equal_exclusive_inclusive() -> Result<(), Box<dyn Error>> {
 #[test]
 fn abs_end_start_equal_exclusive_exclusive() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        AbsoluteFiniteBoundPosition::new_with_inclusivity(
+        AbsFiniteBoundPos::new_with_inclusivity(
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             BoundInclusivity::Exclusive,
         )
         .to_end_bound()
         .bound_cmp(
-            &AbsoluteFiniteBoundPosition::new_with_inclusivity(
+            &AbsFiniteBoundPos::new_with_inclusivity(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
             )
@@ -404,7 +404,7 @@ fn abs_end_start_equal_exclusive_exclusive() -> Result<(), Box<dyn Error>> {
 #[test]
 fn abs_end_start_greater_inf_future_inf_past() {
     assert_eq!(
-        AbsoluteEndBound::InfiniteFuture.bound_cmp(&AbsoluteStartBound::InfinitePast),
+        AbsEndBound::InfiniteFuture.bound_cmp(&AbsStartBound::InfinitePast),
         BoundOrdering::Greater,
     );
 }
@@ -412,8 +412,8 @@ fn abs_end_start_greater_inf_future_inf_past() {
 #[test]
 fn abs_end_start_greater_inf_future_finite() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        AbsoluteEndBound::InfiniteFuture.bound_cmp(
-            &AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+        AbsEndBound::InfiniteFuture.bound_cmp(
+            &AbsFiniteBoundPos::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                 .to_start_bound()
         ),
         BoundOrdering::Greater,
@@ -425,9 +425,9 @@ fn abs_end_start_greater_inf_future_finite() -> Result<(), Box<dyn Error>> {
 #[test]
 fn abs_end_start_greater_finite_inf_past() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+        AbsFiniteBoundPos::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
             .to_end_bound()
-            .bound_cmp(&AbsoluteStartBound::InfinitePast),
+            .bound_cmp(&AbsStartBound::InfinitePast),
         BoundOrdering::Greater,
     );
 
@@ -437,10 +437,10 @@ fn abs_end_start_greater_finite_inf_past() -> Result<(), Box<dyn Error>> {
 #[test]
 fn abs_end_start_greater_finite_finite() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        AbsoluteFiniteBoundPosition::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+        AbsFiniteBoundPos::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
             .to_end_bound()
             .bound_cmp(
-                &AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                &AbsFiniteBoundPos::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                     .to_start_bound()
             ),
         BoundOrdering::Greater,
@@ -452,9 +452,9 @@ fn abs_end_start_greater_finite_finite() -> Result<(), Box<dyn Error>> {
 #[test]
 fn abs_end_end_less_finite_inf_future() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+        AbsFiniteBoundPos::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
             .to_end_bound()
-            .bound_cmp(&AbsoluteEndBound::InfiniteFuture),
+            .bound_cmp(&AbsEndBound::InfiniteFuture),
         BoundOrdering::Less,
     );
 
@@ -464,10 +464,10 @@ fn abs_end_end_less_finite_inf_future() -> Result<(), Box<dyn Error>> {
 #[test]
 fn abs_end_end_less_finite_finite() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+        AbsFiniteBoundPos::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
             .to_end_bound()
             .bound_cmp(
-                &AbsoluteFiniteBoundPosition::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                &AbsFiniteBoundPos::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                     .to_end_bound()
             ),
         BoundOrdering::Less,
@@ -479,7 +479,7 @@ fn abs_end_end_less_finite_finite() -> Result<(), Box<dyn Error>> {
 #[test]
 fn abs_end_end_equal_inf_future_inf_future() {
     assert_eq!(
-        AbsoluteEndBound::InfiniteFuture.bound_cmp(&AbsoluteEndBound::InfiniteFuture),
+        AbsEndBound::InfiniteFuture.bound_cmp(&AbsEndBound::InfiniteFuture),
         BoundOrdering::Equal(None),
     );
 }
@@ -487,10 +487,10 @@ fn abs_end_end_equal_inf_future_inf_future() {
 #[test]
 fn abs_end_end_equal_inclusive_inclusive() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+        AbsFiniteBoundPos::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
             .to_end_bound()
             .bound_cmp(
-                &AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+                &AbsFiniteBoundPos::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                     .to_end_bound()
             ),
         BoundOrdering::Equal(Some(BoundOverlapAmbiguity::BothEnds(
@@ -505,10 +505,10 @@ fn abs_end_end_equal_inclusive_inclusive() -> Result<(), Box<dyn Error>> {
 #[test]
 fn abs_end_end_equal_inclusive_exclusive() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+        AbsFiniteBoundPos::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
             .to_end_bound()
             .bound_cmp(
-                &AbsoluteFiniteBoundPosition::new_with_inclusivity(
+                &AbsFiniteBoundPos::new_with_inclusivity(
                     "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                 )
@@ -526,13 +526,13 @@ fn abs_end_end_equal_inclusive_exclusive() -> Result<(), Box<dyn Error>> {
 #[test]
 fn abs_end_end_equal_exclusive_inclusive() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        AbsoluteFiniteBoundPosition::new_with_inclusivity(
+        AbsFiniteBoundPos::new_with_inclusivity(
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             BoundInclusivity::Exclusive,
         )
         .to_end_bound()
         .bound_cmp(
-            &AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
+            &AbsFiniteBoundPos::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                 .to_end_bound()
         ),
         BoundOrdering::Equal(Some(BoundOverlapAmbiguity::BothEnds(
@@ -547,13 +547,13 @@ fn abs_end_end_equal_exclusive_inclusive() -> Result<(), Box<dyn Error>> {
 #[test]
 fn abs_end_end_equal_exclusive_exclusive() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        AbsoluteFiniteBoundPosition::new_with_inclusivity(
+        AbsFiniteBoundPos::new_with_inclusivity(
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             BoundInclusivity::Exclusive,
         )
         .to_end_bound()
         .bound_cmp(
-            &AbsoluteFiniteBoundPosition::new_with_inclusivity(
+            &AbsFiniteBoundPos::new_with_inclusivity(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
             )
@@ -571,8 +571,8 @@ fn abs_end_end_equal_exclusive_exclusive() -> Result<(), Box<dyn Error>> {
 #[test]
 fn rel_start_start_less_inf_past_finite() {
     assert_eq!(
-        RelativeStartBound::InfinitePast
-            .bound_cmp(&RelativeFiniteBoundPosition::new(SignedDuration::from_hours(101)).to_start_bound()),
+        RelStartBound::InfinitePast
+            .bound_cmp(&RelFiniteBoundPos::new(SignedDuration::from_hours(101)).to_start_bound()),
         BoundOrdering::Less,
     );
 }
@@ -580,9 +580,9 @@ fn rel_start_start_less_inf_past_finite() {
 #[test]
 fn rel_start_start_less_finite_finite() {
     assert_eq!(
-        RelativeFiniteBoundPosition::new(SignedDuration::from_hours(101))
+        RelFiniteBoundPos::new(SignedDuration::from_hours(101))
             .to_start_bound()
-            .bound_cmp(&RelativeFiniteBoundPosition::new(SignedDuration::from_hours(102)).to_start_bound()),
+            .bound_cmp(&RelFiniteBoundPos::new(SignedDuration::from_hours(102)).to_start_bound()),
         BoundOrdering::Less,
     );
 }
@@ -590,7 +590,7 @@ fn rel_start_start_less_finite_finite() {
 #[test]
 fn rel_start_start_equal_inf_past() {
     assert_eq!(
-        RelativeStartBound::InfinitePast.bound_cmp(&RelativeStartBound::InfinitePast),
+        RelStartBound::InfinitePast.bound_cmp(&RelStartBound::InfinitePast),
         BoundOrdering::Equal(None),
     );
 }
@@ -598,9 +598,9 @@ fn rel_start_start_equal_inf_past() {
 #[test]
 fn rel_start_start_equal_inclusive_inclusive() {
     assert_eq!(
-        RelativeFiniteBoundPosition::new(SignedDuration::from_hours(101))
+        RelFiniteBoundPos::new(SignedDuration::from_hours(101))
             .to_start_bound()
-            .bound_cmp(&RelativeFiniteBoundPosition::new(SignedDuration::from_hours(101)).to_start_bound()),
+            .bound_cmp(&RelFiniteBoundPos::new(SignedDuration::from_hours(101)).to_start_bound()),
         BoundOrdering::Equal(Some(BoundOverlapAmbiguity::BothStarts(
             BoundInclusivity::Inclusive,
             BoundInclusivity::Inclusive,
@@ -611,10 +611,10 @@ fn rel_start_start_equal_inclusive_inclusive() {
 #[test]
 fn rel_start_start_equal_inclusive_exclusive() {
     assert_eq!(
-        RelativeFiniteBoundPosition::new(SignedDuration::from_hours(101))
+        RelFiniteBoundPos::new(SignedDuration::from_hours(101))
             .to_start_bound()
             .bound_cmp(
-                &RelativeFiniteBoundPosition::new_with_inclusivity(
+                &RelFiniteBoundPos::new_with_inclusivity(
                     SignedDuration::from_hours(101),
                     BoundInclusivity::Exclusive,
                 )
@@ -630,9 +630,9 @@ fn rel_start_start_equal_inclusive_exclusive() {
 #[test]
 fn rel_start_start_equal_exclusive_inclusive() {
     assert_eq!(
-        RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(101), BoundInclusivity::Exclusive,)
+        RelFiniteBoundPos::new_with_inclusivity(SignedDuration::from_hours(101), BoundInclusivity::Exclusive,)
             .to_start_bound()
-            .bound_cmp(&RelativeFiniteBoundPosition::new(SignedDuration::from_hours(101)).to_start_bound()),
+            .bound_cmp(&RelFiniteBoundPos::new(SignedDuration::from_hours(101)).to_start_bound()),
         BoundOrdering::Equal(Some(BoundOverlapAmbiguity::BothStarts(
             BoundInclusivity::Inclusive,
             BoundInclusivity::Exclusive,
@@ -643,10 +643,10 @@ fn rel_start_start_equal_exclusive_inclusive() {
 #[test]
 fn rel_start_start_equal_exclusive_exclusive() {
     assert_eq!(
-        RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(101), BoundInclusivity::Exclusive,)
+        RelFiniteBoundPos::new_with_inclusivity(SignedDuration::from_hours(101), BoundInclusivity::Exclusive,)
             .to_start_bound()
             .bound_cmp(
-                &RelativeFiniteBoundPosition::new_with_inclusivity(
+                &RelFiniteBoundPos::new_with_inclusivity(
                     SignedDuration::from_hours(101),
                     BoundInclusivity::Exclusive,
                 )
@@ -662,9 +662,9 @@ fn rel_start_start_equal_exclusive_exclusive() {
 #[test]
 fn rel_start_start_greater_finite_inf_past() {
     assert_eq!(
-        RelativeFiniteBoundPosition::new(SignedDuration::from_hours(101))
+        RelFiniteBoundPos::new(SignedDuration::from_hours(101))
             .to_start_bound()
-            .bound_cmp(&RelativeStartBound::InfinitePast),
+            .bound_cmp(&RelStartBound::InfinitePast),
         BoundOrdering::Greater,
     );
 }
@@ -672,9 +672,9 @@ fn rel_start_start_greater_finite_inf_past() {
 #[test]
 fn rel_start_start_greater_finite_finite() {
     assert_eq!(
-        RelativeFiniteBoundPosition::new(SignedDuration::from_hours(102))
+        RelFiniteBoundPos::new(SignedDuration::from_hours(102))
             .to_start_bound()
-            .bound_cmp(&RelativeFiniteBoundPosition::new(SignedDuration::from_hours(101)).to_start_bound()),
+            .bound_cmp(&RelFiniteBoundPos::new(SignedDuration::from_hours(101)).to_start_bound()),
         BoundOrdering::Greater,
     );
 }
@@ -682,7 +682,7 @@ fn rel_start_start_greater_finite_finite() {
 #[test]
 fn rel_start_end_less_inf_past_inf_future() {
     assert_eq!(
-        RelativeStartBound::InfinitePast.bound_cmp(&RelativeEndBound::InfiniteFuture),
+        RelStartBound::InfinitePast.bound_cmp(&RelEndBound::InfiniteFuture),
         BoundOrdering::Less,
     );
 }
@@ -690,8 +690,8 @@ fn rel_start_end_less_inf_past_inf_future() {
 #[test]
 fn rel_start_end_less_inf_past_finite() {
     assert_eq!(
-        RelativeStartBound::InfinitePast
-            .bound_cmp(&RelativeFiniteBoundPosition::new(SignedDuration::from_hours(101)).to_end_bound()),
+        RelStartBound::InfinitePast
+            .bound_cmp(&RelFiniteBoundPos::new(SignedDuration::from_hours(101)).to_end_bound()),
         BoundOrdering::Less,
     );
 }
@@ -699,9 +699,9 @@ fn rel_start_end_less_inf_past_finite() {
 #[test]
 fn rel_start_end_less_finite_inf_future() {
     assert_eq!(
-        RelativeFiniteBoundPosition::new(SignedDuration::from_hours(101))
+        RelFiniteBoundPos::new(SignedDuration::from_hours(101))
             .to_start_bound()
-            .bound_cmp(&RelativeEndBound::InfiniteFuture),
+            .bound_cmp(&RelEndBound::InfiniteFuture),
         BoundOrdering::Less,
     );
 }
@@ -709,9 +709,9 @@ fn rel_start_end_less_finite_inf_future() {
 #[test]
 fn rel_start_end_less_finite_finite() {
     assert_eq!(
-        RelativeFiniteBoundPosition::new(SignedDuration::from_hours(101))
+        RelFiniteBoundPos::new(SignedDuration::from_hours(101))
             .to_start_bound()
-            .bound_cmp(&RelativeFiniteBoundPosition::new(SignedDuration::from_hours(102)).to_end_bound()),
+            .bound_cmp(&RelFiniteBoundPos::new(SignedDuration::from_hours(102)).to_end_bound()),
         BoundOrdering::Less,
     );
 }
@@ -719,9 +719,9 @@ fn rel_start_end_less_finite_finite() {
 #[test]
 fn rel_start_end_equal_inclusive_inclusive() {
     assert_eq!(
-        RelativeFiniteBoundPosition::new(SignedDuration::from_hours(101))
+        RelFiniteBoundPos::new(SignedDuration::from_hours(101))
             .to_start_bound()
-            .bound_cmp(&RelativeFiniteBoundPosition::new(SignedDuration::from_hours(101)).to_end_bound()),
+            .bound_cmp(&RelFiniteBoundPos::new(SignedDuration::from_hours(101)).to_end_bound()),
         BoundOrdering::Equal(Some(BoundOverlapAmbiguity::EndStart(
             BoundInclusivity::Inclusive,
             BoundInclusivity::Inclusive,
@@ -732,10 +732,10 @@ fn rel_start_end_equal_inclusive_inclusive() {
 #[test]
 fn rel_start_end_equal_inclusive_exclusive() {
     assert_eq!(
-        RelativeFiniteBoundPosition::new(SignedDuration::from_hours(101))
+        RelFiniteBoundPos::new(SignedDuration::from_hours(101))
             .to_start_bound()
             .bound_cmp(
-                &RelativeFiniteBoundPosition::new_with_inclusivity(
+                &RelFiniteBoundPos::new_with_inclusivity(
                     SignedDuration::from_hours(101),
                     BoundInclusivity::Exclusive,
                 )
@@ -751,9 +751,9 @@ fn rel_start_end_equal_inclusive_exclusive() {
 #[test]
 fn rel_start_end_equal_exclusive_inclusive() {
     assert_eq!(
-        RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(101), BoundInclusivity::Exclusive,)
+        RelFiniteBoundPos::new_with_inclusivity(SignedDuration::from_hours(101), BoundInclusivity::Exclusive,)
             .to_start_bound()
-            .bound_cmp(&RelativeFiniteBoundPosition::new(SignedDuration::from_hours(101)).to_end_bound()),
+            .bound_cmp(&RelFiniteBoundPos::new(SignedDuration::from_hours(101)).to_end_bound()),
         BoundOrdering::Equal(Some(BoundOverlapAmbiguity::EndStart(
             BoundInclusivity::Inclusive,
             BoundInclusivity::Exclusive,
@@ -764,10 +764,10 @@ fn rel_start_end_equal_exclusive_inclusive() {
 #[test]
 fn rel_start_end_equal_exclusive_exclusive() {
     assert_eq!(
-        RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(101), BoundInclusivity::Exclusive,)
+        RelFiniteBoundPos::new_with_inclusivity(SignedDuration::from_hours(101), BoundInclusivity::Exclusive,)
             .to_start_bound()
             .bound_cmp(
-                &RelativeFiniteBoundPosition::new_with_inclusivity(
+                &RelFiniteBoundPos::new_with_inclusivity(
                     SignedDuration::from_hours(101),
                     BoundInclusivity::Exclusive,
                 )
@@ -783,9 +783,9 @@ fn rel_start_end_equal_exclusive_exclusive() {
 #[test]
 fn rel_start_end_greater() {
     assert_eq!(
-        RelativeFiniteBoundPosition::new(SignedDuration::from_hours(102))
+        RelFiniteBoundPos::new(SignedDuration::from_hours(102))
             .to_start_bound()
-            .bound_cmp(&RelativeFiniteBoundPosition::new(SignedDuration::from_hours(101)).to_end_bound()),
+            .bound_cmp(&RelFiniteBoundPos::new(SignedDuration::from_hours(101)).to_end_bound()),
         BoundOrdering::Greater,
     );
 }
@@ -793,9 +793,9 @@ fn rel_start_end_greater() {
 #[test]
 fn rel_end_start_less() {
     assert_eq!(
-        RelativeFiniteBoundPosition::new(SignedDuration::from_hours(101))
+        RelFiniteBoundPos::new(SignedDuration::from_hours(101))
             .to_end_bound()
-            .bound_cmp(&RelativeFiniteBoundPosition::new(SignedDuration::from_hours(102)).to_start_bound()),
+            .bound_cmp(&RelFiniteBoundPos::new(SignedDuration::from_hours(102)).to_start_bound()),
         BoundOrdering::Less,
     );
 }
@@ -803,9 +803,9 @@ fn rel_end_start_less() {
 #[test]
 fn rel_end_start_equal_inclusive_inclusive() {
     assert_eq!(
-        RelativeFiniteBoundPosition::new(SignedDuration::from_hours(101))
+        RelFiniteBoundPos::new(SignedDuration::from_hours(101))
             .to_end_bound()
-            .bound_cmp(&RelativeFiniteBoundPosition::new(SignedDuration::from_hours(101)).to_start_bound()),
+            .bound_cmp(&RelFiniteBoundPos::new(SignedDuration::from_hours(101)).to_start_bound()),
         BoundOrdering::Equal(Some(BoundOverlapAmbiguity::StartEnd(
             BoundInclusivity::Inclusive,
             BoundInclusivity::Inclusive,
@@ -816,10 +816,10 @@ fn rel_end_start_equal_inclusive_inclusive() {
 #[test]
 fn rel_end_start_equal_inclusive_exclusive() {
     assert_eq!(
-        RelativeFiniteBoundPosition::new(SignedDuration::from_hours(101))
+        RelFiniteBoundPos::new(SignedDuration::from_hours(101))
             .to_end_bound()
             .bound_cmp(
-                &RelativeFiniteBoundPosition::new_with_inclusivity(
+                &RelFiniteBoundPos::new_with_inclusivity(
                     SignedDuration::from_hours(101),
                     BoundInclusivity::Exclusive,
                 )
@@ -835,9 +835,9 @@ fn rel_end_start_equal_inclusive_exclusive() {
 #[test]
 fn rel_end_start_equal_exclusive_inclusive() {
     assert_eq!(
-        RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(101), BoundInclusivity::Exclusive,)
+        RelFiniteBoundPos::new_with_inclusivity(SignedDuration::from_hours(101), BoundInclusivity::Exclusive,)
             .to_end_bound()
-            .bound_cmp(&RelativeFiniteBoundPosition::new(SignedDuration::from_hours(101)).to_start_bound()),
+            .bound_cmp(&RelFiniteBoundPos::new(SignedDuration::from_hours(101)).to_start_bound()),
         BoundOrdering::Equal(Some(BoundOverlapAmbiguity::StartEnd(
             BoundInclusivity::Inclusive,
             BoundInclusivity::Exclusive,
@@ -848,10 +848,10 @@ fn rel_end_start_equal_exclusive_inclusive() {
 #[test]
 fn rel_end_start_equal_exclusive_exclusive() {
     assert_eq!(
-        RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(101), BoundInclusivity::Exclusive,)
+        RelFiniteBoundPos::new_with_inclusivity(SignedDuration::from_hours(101), BoundInclusivity::Exclusive,)
             .to_end_bound()
             .bound_cmp(
-                &RelativeFiniteBoundPosition::new_with_inclusivity(
+                &RelFiniteBoundPos::new_with_inclusivity(
                     SignedDuration::from_hours(101),
                     BoundInclusivity::Exclusive,
                 )
@@ -867,7 +867,7 @@ fn rel_end_start_equal_exclusive_exclusive() {
 #[test]
 fn rel_end_start_greater_inf_future_inf_past() {
     assert_eq!(
-        RelativeEndBound::InfiniteFuture.bound_cmp(&RelativeStartBound::InfinitePast),
+        RelEndBound::InfiniteFuture.bound_cmp(&RelStartBound::InfinitePast),
         BoundOrdering::Greater,
     );
 }
@@ -875,8 +875,8 @@ fn rel_end_start_greater_inf_future_inf_past() {
 #[test]
 fn rel_end_start_greater_inf_future_finite() {
     assert_eq!(
-        RelativeEndBound::InfiniteFuture
-            .bound_cmp(&RelativeFiniteBoundPosition::new(SignedDuration::from_hours(101)).to_start_bound()),
+        RelEndBound::InfiniteFuture
+            .bound_cmp(&RelFiniteBoundPos::new(SignedDuration::from_hours(101)).to_start_bound()),
         BoundOrdering::Greater,
     );
 }
@@ -884,9 +884,9 @@ fn rel_end_start_greater_inf_future_finite() {
 #[test]
 fn rel_end_start_greater_finite_inf_past() {
     assert_eq!(
-        RelativeFiniteBoundPosition::new(SignedDuration::from_hours(101))
+        RelFiniteBoundPos::new(SignedDuration::from_hours(101))
             .to_end_bound()
-            .bound_cmp(&RelativeStartBound::InfinitePast),
+            .bound_cmp(&RelStartBound::InfinitePast),
         BoundOrdering::Greater,
     );
 }
@@ -894,9 +894,9 @@ fn rel_end_start_greater_finite_inf_past() {
 #[test]
 fn rel_end_start_greater_finite_finite() {
     assert_eq!(
-        RelativeFiniteBoundPosition::new(SignedDuration::from_hours(102))
+        RelFiniteBoundPos::new(SignedDuration::from_hours(102))
             .to_end_bound()
-            .bound_cmp(&RelativeFiniteBoundPosition::new(SignedDuration::from_hours(101)).to_start_bound()),
+            .bound_cmp(&RelFiniteBoundPos::new(SignedDuration::from_hours(101)).to_start_bound()),
         BoundOrdering::Greater,
     );
 }
@@ -904,9 +904,9 @@ fn rel_end_start_greater_finite_finite() {
 #[test]
 fn rel_end_end_less_finite_inf_future() {
     assert_eq!(
-        RelativeFiniteBoundPosition::new(SignedDuration::from_hours(101))
+        RelFiniteBoundPos::new(SignedDuration::from_hours(101))
             .to_end_bound()
-            .bound_cmp(&RelativeEndBound::InfiniteFuture),
+            .bound_cmp(&RelEndBound::InfiniteFuture),
         BoundOrdering::Less,
     );
 }
@@ -914,9 +914,9 @@ fn rel_end_end_less_finite_inf_future() {
 #[test]
 fn rel_end_end_less_finite_finite() {
     assert_eq!(
-        RelativeFiniteBoundPosition::new(SignedDuration::from_hours(101))
+        RelFiniteBoundPos::new(SignedDuration::from_hours(101))
             .to_end_bound()
-            .bound_cmp(&RelativeFiniteBoundPosition::new(SignedDuration::from_hours(102)).to_end_bound()),
+            .bound_cmp(&RelFiniteBoundPos::new(SignedDuration::from_hours(102)).to_end_bound()),
         BoundOrdering::Less,
     );
 }
@@ -924,7 +924,7 @@ fn rel_end_end_less_finite_finite() {
 #[test]
 fn rel_end_end_equal_inf_future_inf_future() {
     assert_eq!(
-        RelativeEndBound::InfiniteFuture.bound_cmp(&RelativeEndBound::InfiniteFuture),
+        RelEndBound::InfiniteFuture.bound_cmp(&RelEndBound::InfiniteFuture),
         BoundOrdering::Equal(None),
     );
 }
@@ -932,9 +932,9 @@ fn rel_end_end_equal_inf_future_inf_future() {
 #[test]
 fn rel_end_end_equal_inclusive_inclusive() {
     assert_eq!(
-        RelativeFiniteBoundPosition::new(SignedDuration::from_hours(101))
+        RelFiniteBoundPos::new(SignedDuration::from_hours(101))
             .to_end_bound()
-            .bound_cmp(&RelativeFiniteBoundPosition::new(SignedDuration::from_hours(101)).to_end_bound()),
+            .bound_cmp(&RelFiniteBoundPos::new(SignedDuration::from_hours(101)).to_end_bound()),
         BoundOrdering::Equal(Some(BoundOverlapAmbiguity::BothEnds(
             BoundInclusivity::Inclusive,
             BoundInclusivity::Inclusive,
@@ -945,10 +945,10 @@ fn rel_end_end_equal_inclusive_inclusive() {
 #[test]
 fn rel_end_end_equal_inclusive_exclusive() {
     assert_eq!(
-        RelativeFiniteBoundPosition::new(SignedDuration::from_hours(101))
+        RelFiniteBoundPos::new(SignedDuration::from_hours(101))
             .to_end_bound()
             .bound_cmp(
-                &RelativeFiniteBoundPosition::new_with_inclusivity(
+                &RelFiniteBoundPos::new_with_inclusivity(
                     SignedDuration::from_hours(101),
                     BoundInclusivity::Exclusive,
                 )
@@ -964,9 +964,9 @@ fn rel_end_end_equal_inclusive_exclusive() {
 #[test]
 fn rel_end_end_equal_exclusive_inclusive() {
     assert_eq!(
-        RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(101), BoundInclusivity::Exclusive,)
+        RelFiniteBoundPos::new_with_inclusivity(SignedDuration::from_hours(101), BoundInclusivity::Exclusive,)
             .to_end_bound()
-            .bound_cmp(&RelativeFiniteBoundPosition::new(SignedDuration::from_hours(101)).to_end_bound()),
+            .bound_cmp(&RelFiniteBoundPos::new(SignedDuration::from_hours(101)).to_end_bound()),
         BoundOrdering::Equal(Some(BoundOverlapAmbiguity::BothEnds(
             BoundInclusivity::Inclusive,
             BoundInclusivity::Exclusive,
@@ -977,10 +977,10 @@ fn rel_end_end_equal_exclusive_inclusive() {
 #[test]
 fn rel_end_end_equal_exclusive_exclusive() {
     assert_eq!(
-        RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(101), BoundInclusivity::Exclusive,)
+        RelFiniteBoundPos::new_with_inclusivity(SignedDuration::from_hours(101), BoundInclusivity::Exclusive,)
             .to_end_bound()
             .bound_cmp(
-                &RelativeFiniteBoundPosition::new_with_inclusivity(
+                &RelFiniteBoundPos::new_with_inclusivity(
                     SignedDuration::from_hours(101),
                     BoundInclusivity::Exclusive,
                 )

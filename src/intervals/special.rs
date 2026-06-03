@@ -14,14 +14,14 @@ use arbitrary::Arbitrary;
 use serde::{Deserialize, Serialize};
 
 use super::absolute::{
-    AbsoluteBoundPair,
-    AbsoluteEndBound,
-    AbsoluteInterval,
-    AbsoluteStartBound,
-    EmptiableAbsoluteBoundPair,
-    EmptiableAbsoluteInterval,
-    HasAbsoluteBoundPair,
-    HasEmptiableAbsoluteBoundPair,
+    AbsBoundPair,
+    AbsEndBound,
+    AbsInterval,
+    AbsStartBound,
+    EmptiableAbsBoundPair,
+    EmptiableAbsInterval,
+    HasAbsBoundPair,
+    HasEmptiableAbsBoundPair,
 };
 use super::meta::{
     Duration as IntervalDuration,
@@ -33,14 +33,14 @@ use super::meta::{
     Relativity,
 };
 use super::relative::{
-    EmptiableRelativeBoundPair,
-    EmptiableRelativeInterval,
-    HasEmptiableRelativeBoundPair,
-    HasRelativeBoundPair,
-    RelativeBoundPair,
-    RelativeEndBound,
-    RelativeInterval,
-    RelativeStartBound,
+    EmptiableRelBoundPair,
+    EmptiableRelInterval,
+    HasEmptiableRelBoundPair,
+    HasRelBoundPair,
+    RelBoundPair,
+    RelEndBound,
+    RelInterval,
+    RelStartBound,
 };
 use crate::intervals::meta::{Epsilon, Interval};
 
@@ -54,52 +54,52 @@ use crate::intervals::meta::{Epsilon, Interval};
 pub struct UnboundedInterval;
 
 impl UnboundedInterval {
-    /// Converts `self` into an [`AbsoluteBoundPair`]
+    /// Converts `self` into an [`AbsBoundPair`]
     #[must_use]
-    pub fn to_abs_bound_pair(self) -> AbsoluteBoundPair {
-        AbsoluteBoundPair::from(self)
+    pub fn to_abs_bound_pair(self) -> AbsBoundPair {
+        AbsBoundPair::from(self)
     }
 
-    /// Converts `self` into an [`EmptiableAbsoluteBoundPair`]
+    /// Converts `self` into an [`EmptiableAbsBoundPair`]
     #[must_use]
-    pub fn to_emptiable_abs_bound_pair(self) -> EmptiableAbsoluteBoundPair {
-        EmptiableAbsoluteBoundPair::from(self)
+    pub fn to_emptiable_abs_bound_pair(self) -> EmptiableAbsBoundPair {
+        EmptiableAbsBoundPair::from(self)
     }
 
-    /// Converts `self` into an [`AbsoluteInterval`]
+    /// Converts `self` into an [`AbsInterval`]
     #[must_use]
-    pub fn to_abs_interval(self) -> AbsoluteInterval {
-        AbsoluteInterval::from(self)
+    pub fn to_abs_interval(self) -> AbsInterval {
+        AbsInterval::from(self)
     }
 
-    /// Converts `self` into an [`EmptiableAbsoluteInterval`]
+    /// Converts `self` into an [`EmptiableAbsInterval`]
     #[must_use]
-    pub fn to_emptiable_abs_interval(self) -> EmptiableAbsoluteInterval {
-        EmptiableAbsoluteInterval::from(self)
+    pub fn to_emptiable_abs_interval(self) -> EmptiableAbsInterval {
+        EmptiableAbsInterval::from(self)
     }
 
-    /// Converts `self` into an [`RelativeBoundPair`]
+    /// Converts `self` into an [`RelBoundPair`]
     #[must_use]
-    pub fn to_rel_bound_pair(self) -> RelativeBoundPair {
-        RelativeBoundPair::from(self)
+    pub fn to_rel_bound_pair(self) -> RelBoundPair {
+        RelBoundPair::from(self)
     }
 
-    /// Converts `self` into an [`EmptiableRelativeBoundPair`]
+    /// Converts `self` into an [`EmptiableRelBoundPair`]
     #[must_use]
-    pub fn to_emptiable_rel_bound_pair(self) -> EmptiableRelativeBoundPair {
-        EmptiableRelativeBoundPair::from(self)
+    pub fn to_emptiable_rel_bound_pair(self) -> EmptiableRelBoundPair {
+        EmptiableRelBoundPair::from(self)
     }
 
-    /// Converts `self` into an [`RelativeInterval`]
+    /// Converts `self` into an [`RelInterval`]
     #[must_use]
-    pub fn to_rel_interval(self) -> RelativeInterval {
-        RelativeInterval::from(self)
+    pub fn to_rel_interval(self) -> RelInterval {
+        RelInterval::from(self)
     }
 
-    /// Converts `self` into an [`EmptiableRelativeInterval`]
+    /// Converts `self` into an [`EmptiableRelInterval`]
     #[must_use]
-    pub fn to_emptiable_rel_interval(self) -> EmptiableRelativeInterval {
-        EmptiableRelativeInterval::from(self)
+    pub fn to_emptiable_rel_interval(self) -> EmptiableRelInterval {
+        EmptiableRelInterval::from(self)
     }
 }
 
@@ -123,31 +123,31 @@ impl HasDuration for UnboundedInterval {
     }
 }
 
-impl HasAbsoluteBoundPair for UnboundedInterval {
-    fn abs_bound_pair(&self) -> AbsoluteBoundPair {
-        AbsoluteBoundPair::new(self.abs_start(), self.abs_end())
+impl HasAbsBoundPair for UnboundedInterval {
+    fn abs_bound_pair(&self) -> AbsBoundPair {
+        AbsBoundPair::new(self.abs_start(), self.abs_end())
     }
 
-    fn abs_start(&self) -> AbsoluteStartBound {
-        AbsoluteStartBound::InfinitePast
+    fn abs_start(&self) -> AbsStartBound {
+        AbsStartBound::InfinitePast
     }
 
-    fn abs_end(&self) -> AbsoluteEndBound {
-        AbsoluteEndBound::InfiniteFuture
+    fn abs_end(&self) -> AbsEndBound {
+        AbsEndBound::InfiniteFuture
     }
 }
 
-impl HasRelativeBoundPair for UnboundedInterval {
-    fn rel_bound_pair(&self) -> RelativeBoundPair {
-        RelativeBoundPair::new(self.rel_start(), self.rel_end())
+impl HasRelBoundPair for UnboundedInterval {
+    fn rel_bound_pair(&self) -> RelBoundPair {
+        RelBoundPair::new(self.rel_start(), self.rel_end())
     }
 
-    fn rel_start(&self) -> RelativeStartBound {
-        RelativeStartBound::InfinitePast
+    fn rel_start(&self) -> RelStartBound {
+        RelStartBound::InfinitePast
     }
 
-    fn rel_end(&self) -> RelativeEndBound {
-        RelativeEndBound::InfiniteFuture
+    fn rel_end(&self) -> RelEndBound {
+        RelEndBound::InfiniteFuture
     }
 }
 
@@ -157,213 +157,205 @@ impl From<RangeFull> for UnboundedInterval {
     }
 }
 
-/// Error that can occur when trying to convert [`AbsoluteBoundPair`] into [`UnboundedInterval`]
+/// Error that can occur when trying to convert [`AbsBoundPair`] into [`UnboundedInterval`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct UnboundedIntervalTryFromAbsoluteBoundPairError;
+pub struct UnboundedIntervalTryFromAbsBoundPairError;
 
-impl Display for UnboundedIntervalTryFromAbsoluteBoundPairError {
+impl Display for UnboundedIntervalTryFromAbsBoundPairError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "An error occurred when trying to convert `AbsoluteBoundPair` into `UnboundedInterval`"
+            "An error occurred when trying to convert `AbsBoundPair` into `UnboundedInterval`"
         )
     }
 }
 
-impl Error for UnboundedIntervalTryFromAbsoluteBoundPairError {}
+impl Error for UnboundedIntervalTryFromAbsBoundPairError {}
 
-impl TryFrom<AbsoluteBoundPair> for UnboundedInterval {
-    type Error = UnboundedIntervalTryFromAbsoluteBoundPairError;
+impl TryFrom<AbsBoundPair> for UnboundedInterval {
+    type Error = UnboundedIntervalTryFromAbsBoundPairError;
 
-    fn try_from(value: AbsoluteBoundPair) -> Result<Self, Self::Error> {
+    fn try_from(value: AbsBoundPair) -> Result<Self, Self::Error> {
         match (value.start(), value.end()) {
-            (AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture) => Ok(UnboundedInterval),
-            _ => Err(UnboundedIntervalTryFromAbsoluteBoundPairError),
+            (AbsStartBound::InfinitePast, AbsEndBound::InfiniteFuture) => Ok(UnboundedInterval),
+            _ => Err(UnboundedIntervalTryFromAbsBoundPairError),
         }
     }
 }
 
-/// Error that can occur when trying to convert [`RelativeBoundPair`] into [`UnboundedInterval`]
+/// Error that can occur when trying to convert [`RelBoundPair`] into [`UnboundedInterval`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct UnboundedIntervalTryFromRelativeBoundPairError;
+pub struct UnboundedIntervalTryFromRelBoundPairError;
 
-impl Display for UnboundedIntervalTryFromRelativeBoundPairError {
+impl Display for UnboundedIntervalTryFromRelBoundPairError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "An error occurred when trying to convert `RelativeBoundPair` into `UnboundedInterval`"
+            "An error occurred when trying to convert `RelBoundPair` into `UnboundedInterval`"
         )
     }
 }
 
-impl Error for UnboundedIntervalTryFromRelativeBoundPairError {}
+impl Error for UnboundedIntervalTryFromRelBoundPairError {}
 
-impl TryFrom<RelativeBoundPair> for UnboundedInterval {
-    type Error = UnboundedIntervalTryFromRelativeBoundPairError;
+impl TryFrom<RelBoundPair> for UnboundedInterval {
+    type Error = UnboundedIntervalTryFromRelBoundPairError;
 
-    fn try_from(value: RelativeBoundPair) -> Result<Self, Self::Error> {
+    fn try_from(value: RelBoundPair) -> Result<Self, Self::Error> {
         match (value.start(), value.end()) {
-            (RelativeStartBound::InfinitePast, RelativeEndBound::InfiniteFuture) => Ok(UnboundedInterval),
-            _ => Err(UnboundedIntervalTryFromRelativeBoundPairError),
+            (RelStartBound::InfinitePast, RelEndBound::InfiniteFuture) => Ok(UnboundedInterval),
+            _ => Err(UnboundedIntervalTryFromRelBoundPairError),
         }
     }
 }
 
-/// Error that can occur when trying to convert [`EmptiableAbsoluteBoundPair`] into [`UnboundedInterval`]
+/// Error that can occur when trying to convert [`EmptiableAbsBoundPair`] into [`UnboundedInterval`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct UnboundedIntervalTryFromEmptiableAbsoluteBoundPairError;
+pub struct UnboundedIntervalTryFromEmptiableAbsBoundPairError;
 
-impl Display for UnboundedIntervalTryFromEmptiableAbsoluteBoundPairError {
+impl Display for UnboundedIntervalTryFromEmptiableAbsBoundPairError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "An error occurred when trying to convert `EmptiableAbsoluteBoundPair` into `UnboundedInterval`"
+            "An error occurred when trying to convert `EmptiableAbsBoundPair` into `UnboundedInterval`"
         )
     }
 }
 
-impl Error for UnboundedIntervalTryFromEmptiableAbsoluteBoundPairError {}
+impl Error for UnboundedIntervalTryFromEmptiableAbsBoundPairError {}
 
-impl TryFrom<EmptiableAbsoluteBoundPair> for UnboundedInterval {
-    type Error = UnboundedIntervalTryFromEmptiableAbsoluteBoundPairError;
+impl TryFrom<EmptiableAbsBoundPair> for UnboundedInterval {
+    type Error = UnboundedIntervalTryFromEmptiableAbsBoundPairError;
 
-    fn try_from(value: EmptiableAbsoluteBoundPair) -> Result<Self, Self::Error> {
+    fn try_from(value: EmptiableAbsBoundPair) -> Result<Self, Self::Error> {
         Self::try_from(
             value
                 .bound()
-                .ok_or(UnboundedIntervalTryFromEmptiableAbsoluteBoundPairError)?,
+                .ok_or(UnboundedIntervalTryFromEmptiableAbsBoundPairError)?,
         )
-        .or(Err(UnboundedIntervalTryFromEmptiableAbsoluteBoundPairError))
+        .or(Err(UnboundedIntervalTryFromEmptiableAbsBoundPairError))
     }
 }
 
-/// Error that can occur when trying to convert [`EmptiableRelativeBoundPair`] into [`UnboundedInterval`]
+/// Error that can occur when trying to convert [`EmptiableRelBoundPair`] into [`UnboundedInterval`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct UnboundedIntervalTryFromEmptiableRelativeBoundPairError;
+pub struct UnboundedIntervalTryFromEmptiableRelBoundPairError;
 
-impl Display for UnboundedIntervalTryFromEmptiableRelativeBoundPairError {
+impl Display for UnboundedIntervalTryFromEmptiableRelBoundPairError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "An error occurred when trying to convert `EmptiableRelativeBoundPair` into `UnboundedInterval`"
+            "An error occurred when trying to convert `EmptiableRelBoundPair` into `UnboundedInterval`"
         )
     }
 }
 
-impl Error for UnboundedIntervalTryFromEmptiableRelativeBoundPairError {}
+impl Error for UnboundedIntervalTryFromEmptiableRelBoundPairError {}
 
-impl TryFrom<EmptiableRelativeBoundPair> for UnboundedInterval {
-    type Error = UnboundedIntervalTryFromEmptiableRelativeBoundPairError;
+impl TryFrom<EmptiableRelBoundPair> for UnboundedInterval {
+    type Error = UnboundedIntervalTryFromEmptiableRelBoundPairError;
 
-    fn try_from(value: EmptiableRelativeBoundPair) -> Result<Self, Self::Error> {
+    fn try_from(value: EmptiableRelBoundPair) -> Result<Self, Self::Error> {
         Self::try_from(
             value
                 .bound()
-                .ok_or(UnboundedIntervalTryFromEmptiableRelativeBoundPairError)?,
+                .ok_or(UnboundedIntervalTryFromEmptiableRelBoundPairError)?,
         )
-        .or(Err(UnboundedIntervalTryFromEmptiableRelativeBoundPairError))
+        .or(Err(UnboundedIntervalTryFromEmptiableRelBoundPairError))
     }
 }
 
-/// Error that can occur when trying to convert [`AbsoluteInterval`] into [`UnboundedInterval`]
+/// Error that can occur when trying to convert [`AbsInterval`] into [`UnboundedInterval`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct UnboundedIntervalTryFromAbsoluteIntervalError;
+pub struct UnboundedIntervalTryFromAbsIntervalError;
 
-impl Display for UnboundedIntervalTryFromAbsoluteIntervalError {
+impl Display for UnboundedIntervalTryFromAbsIntervalError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "An error occurred when trying to convert `AbsoluteInterval` into `UnboundedInterval`"
+            "An error occurred when trying to convert `AbsInterval` into `UnboundedInterval`"
         )
     }
 }
 
-impl Error for UnboundedIntervalTryFromAbsoluteIntervalError {}
+impl Error for UnboundedIntervalTryFromAbsIntervalError {}
 
-impl TryFrom<AbsoluteInterval> for UnboundedInterval {
-    type Error = UnboundedIntervalTryFromAbsoluteIntervalError;
+impl TryFrom<AbsInterval> for UnboundedInterval {
+    type Error = UnboundedIntervalTryFromAbsIntervalError;
 
-    fn try_from(value: AbsoluteInterval) -> Result<Self, Self::Error> {
-        value.unbounded().ok_or(UnboundedIntervalTryFromAbsoluteIntervalError)
+    fn try_from(value: AbsInterval) -> Result<Self, Self::Error> {
+        value.unbounded().ok_or(UnboundedIntervalTryFromAbsIntervalError)
     }
 }
 
-/// Error that can occur when trying to convert [`RelativeInterval`] into [`UnboundedInterval`]
+/// Error that can occur when trying to convert [`RelInterval`] into [`UnboundedInterval`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct UnboundedIntervalTryFromRelativeIntervalError;
+pub struct UnboundedIntervalTryFromRelIntervalError;
 
-impl Display for UnboundedIntervalTryFromRelativeIntervalError {
+impl Display for UnboundedIntervalTryFromRelIntervalError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "An error occurred when trying to convert `RelativeInterval` into `UnboundedInterval`"
+            "An error occurred when trying to convert `RelInterval` into `UnboundedInterval`"
         )
     }
 }
 
-impl Error for UnboundedIntervalTryFromRelativeIntervalError {}
+impl Error for UnboundedIntervalTryFromRelIntervalError {}
 
-impl TryFrom<RelativeInterval> for UnboundedInterval {
-    type Error = UnboundedIntervalTryFromRelativeIntervalError;
+impl TryFrom<RelInterval> for UnboundedInterval {
+    type Error = UnboundedIntervalTryFromRelIntervalError;
 
-    fn try_from(value: RelativeInterval) -> Result<Self, Self::Error> {
-        value.unbounded().ok_or(UnboundedIntervalTryFromRelativeIntervalError)
+    fn try_from(value: RelInterval) -> Result<Self, Self::Error> {
+        value.unbounded().ok_or(UnboundedIntervalTryFromRelIntervalError)
     }
 }
 
-/// Error that can occur when trying to convert [`EmptiableAbsoluteInterval`] into [`UnboundedInterval`]
+/// Error that can occur when trying to convert [`EmptiableAbsInterval`] into [`UnboundedInterval`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct UnboundedIntervalTryFromEmptiableAbsoluteIntervalError;
+pub struct UnboundedIntervalTryFromEmptiableAbsIntervalError;
 
-impl Display for UnboundedIntervalTryFromEmptiableAbsoluteIntervalError {
+impl Display for UnboundedIntervalTryFromEmptiableAbsIntervalError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "An error occurred when trying to convert `EmptiableAbsoluteInterval` into `UnboundedInterval`"
+            "An error occurred when trying to convert `EmptiableAbsInterval` into `UnboundedInterval`"
         )
     }
 }
 
-impl Error for UnboundedIntervalTryFromEmptiableAbsoluteIntervalError {}
+impl Error for UnboundedIntervalTryFromEmptiableAbsIntervalError {}
 
-impl TryFrom<EmptiableAbsoluteInterval> for UnboundedInterval {
-    type Error = UnboundedIntervalTryFromEmptiableAbsoluteIntervalError;
+impl TryFrom<EmptiableAbsInterval> for UnboundedInterval {
+    type Error = UnboundedIntervalTryFromEmptiableAbsIntervalError;
 
-    fn try_from(value: EmptiableAbsoluteInterval) -> Result<Self, Self::Error> {
-        Self::try_from(
-            value
-                .bound()
-                .ok_or(UnboundedIntervalTryFromEmptiableAbsoluteIntervalError)?,
-        )
-        .or(Err(UnboundedIntervalTryFromEmptiableAbsoluteIntervalError))
+    fn try_from(value: EmptiableAbsInterval) -> Result<Self, Self::Error> {
+        Self::try_from(value.bound().ok_or(UnboundedIntervalTryFromEmptiableAbsIntervalError)?)
+            .or(Err(UnboundedIntervalTryFromEmptiableAbsIntervalError))
     }
 }
 
-/// Error that can occur when trying to convert [`EmptiableRelativeInterval`] into [`UnboundedInterval`]
+/// Error that can occur when trying to convert [`EmptiableRelInterval`] into [`UnboundedInterval`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct UnboundedIntervalTryFromEmptiableRelativeIntervalError;
+pub struct UnboundedIntervalTryFromEmptiableRelIntervalError;
 
-impl Display for UnboundedIntervalTryFromEmptiableRelativeIntervalError {
+impl Display for UnboundedIntervalTryFromEmptiableRelIntervalError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "An error occurred when trying to convert `EmptiableRelativeInterval` into `UnboundedInterval`"
+            "An error occurred when trying to convert `EmptiableRelInterval` into `UnboundedInterval`"
         )
     }
 }
 
-impl Error for UnboundedIntervalTryFromEmptiableRelativeIntervalError {}
+impl Error for UnboundedIntervalTryFromEmptiableRelIntervalError {}
 
-impl TryFrom<EmptiableRelativeInterval> for UnboundedInterval {
-    type Error = UnboundedIntervalTryFromEmptiableRelativeIntervalError;
+impl TryFrom<EmptiableRelInterval> for UnboundedInterval {
+    type Error = UnboundedIntervalTryFromEmptiableRelIntervalError;
 
-    fn try_from(value: EmptiableRelativeInterval) -> Result<Self, Self::Error> {
-        Self::try_from(
-            value
-                .bound()
-                .ok_or(UnboundedIntervalTryFromEmptiableRelativeIntervalError)?,
-        )
-        .or(Err(UnboundedIntervalTryFromEmptiableRelativeIntervalError))
+    fn try_from(value: EmptiableRelInterval) -> Result<Self, Self::Error> {
+        Self::try_from(value.bound().ok_or(UnboundedIntervalTryFromEmptiableRelIntervalError)?)
+            .or(Err(UnboundedIntervalTryFromEmptiableRelIntervalError))
     }
 }
 
@@ -387,28 +379,28 @@ impl TryFrom<EmptiableRelativeInterval> for UnboundedInterval {
 pub struct EmptyInterval;
 
 impl EmptyInterval {
-    /// Converts `self` into [`EmptiableAbsoluteBoundPair`]
+    /// Converts `self` into [`EmptiableAbsBoundPair`]
     #[must_use]
-    pub fn to_emptiable_abs_bound_pair(self) -> EmptiableAbsoluteBoundPair {
-        EmptiableAbsoluteBoundPair::Empty
+    pub fn to_emptiable_abs_bound_pair(self) -> EmptiableAbsBoundPair {
+        EmptiableAbsBoundPair::Empty
     }
 
-    /// Converts `self` into [`EmptiableAbsoluteInterval`]
+    /// Converts `self` into [`EmptiableAbsInterval`]
     #[must_use]
-    pub fn to_emptiable_abs_interval(self) -> EmptiableAbsoluteInterval {
-        EmptiableAbsoluteInterval::Empty(self)
+    pub fn to_emptiable_abs_interval(self) -> EmptiableAbsInterval {
+        EmptiableAbsInterval::Empty(self)
     }
 
-    /// Converts `self` into [`EmptiableRelativeBoundPair`]
+    /// Converts `self` into [`EmptiableRelBoundPair`]
     #[must_use]
-    pub fn to_emptiable_rel_bound_pair(self) -> EmptiableRelativeBoundPair {
-        EmptiableRelativeBoundPair::Empty
+    pub fn to_emptiable_rel_bound_pair(self) -> EmptiableRelBoundPair {
+        EmptiableRelBoundPair::Empty
     }
 
-    /// Converts `self` into [`EmptiableRelativeInterval`]
+    /// Converts `self` into [`EmptiableRelInterval`]
     #[must_use]
-    pub fn to_emptiable_rel_interval(self) -> EmptiableRelativeInterval {
-        EmptiableRelativeInterval::Empty(self)
+    pub fn to_emptiable_rel_interval(self) -> EmptiableRelInterval {
+        EmptiableRelInterval::Empty(self)
     }
 }
 
@@ -432,30 +424,30 @@ impl HasDuration for EmptyInterval {
     }
 }
 
-impl HasEmptiableAbsoluteBoundPair for EmptyInterval {
-    fn emptiable_abs_bound_pair(&self) -> EmptiableAbsoluteBoundPair {
-        EmptiableAbsoluteBoundPair::Empty
+impl HasEmptiableAbsBoundPair for EmptyInterval {
+    fn emptiable_abs_bound_pair(&self) -> EmptiableAbsBoundPair {
+        EmptiableAbsBoundPair::Empty
     }
 
-    fn partial_abs_start(&self) -> Option<AbsoluteStartBound> {
+    fn partial_abs_start(&self) -> Option<AbsStartBound> {
         None
     }
 
-    fn partial_abs_end(&self) -> Option<AbsoluteEndBound> {
+    fn partial_abs_end(&self) -> Option<AbsEndBound> {
         None
     }
 }
 
-impl HasEmptiableRelativeBoundPair for EmptyInterval {
-    fn emptiable_rel_bound_pair(&self) -> EmptiableRelativeBoundPair {
-        EmptiableRelativeBoundPair::Empty
+impl HasEmptiableRelBoundPair for EmptyInterval {
+    fn emptiable_rel_bound_pair(&self) -> EmptiableRelBoundPair {
+        EmptiableRelBoundPair::Empty
     }
 
-    fn partial_rel_start(&self) -> Option<RelativeStartBound> {
+    fn partial_rel_start(&self) -> Option<RelStartBound> {
         None
     }
 
-    fn partial_rel_end(&self) -> Option<RelativeEndBound> {
+    fn partial_rel_end(&self) -> Option<RelEndBound> {
         None
     }
 }
@@ -466,106 +458,106 @@ impl IsEmpty for EmptyInterval {
     }
 }
 
-/// Error that can occur when trying to convert [`EmptiableAbsoluteBoundPair`] into [`EmptyInterval`]
+/// Error that can occur when trying to convert [`EmptiableAbsBoundPair`] into [`EmptyInterval`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct EmptyIntervalTryFromEmptiableAbsoluteBoundPair;
+pub struct EmptyIntervalTryFromEmptiableAbsBoundPair;
 
-impl Display for EmptyIntervalTryFromEmptiableAbsoluteBoundPair {
+impl Display for EmptyIntervalTryFromEmptiableAbsBoundPair {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "An error occurred when trying to convert `EmptiableAbsoluteBoundPair` into `EmptyInterval`"
+            "An error occurred when trying to convert `EmptiableAbsBoundPair` into `EmptyInterval`"
         )
     }
 }
 
-impl Error for EmptyIntervalTryFromEmptiableAbsoluteBoundPair {}
+impl Error for EmptyIntervalTryFromEmptiableAbsBoundPair {}
 
-impl TryFrom<EmptiableAbsoluteBoundPair> for EmptyInterval {
-    type Error = EmptyIntervalTryFromEmptiableAbsoluteBoundPair;
+impl TryFrom<EmptiableAbsBoundPair> for EmptyInterval {
+    type Error = EmptyIntervalTryFromEmptiableAbsBoundPair;
 
-    fn try_from(value: EmptiableAbsoluteBoundPair) -> Result<Self, Self::Error> {
+    fn try_from(value: EmptiableAbsBoundPair) -> Result<Self, Self::Error> {
         value
             .is_empty()
             .then_some(EmptyInterval)
-            .ok_or(EmptyIntervalTryFromEmptiableAbsoluteBoundPair)
+            .ok_or(EmptyIntervalTryFromEmptiableAbsBoundPair)
     }
 }
 
-/// Error that can occur when trying to convert [`EmptiableAbsoluteInterval`] into [`EmptyInterval`]
+/// Error that can occur when trying to convert [`EmptiableAbsInterval`] into [`EmptyInterval`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct EmptyIntervalTryFromEmptiableAbsoluteInterval;
+pub struct EmptyIntervalTryFromEmptiableAbsInterval;
 
-impl Display for EmptyIntervalTryFromEmptiableAbsoluteInterval {
+impl Display for EmptyIntervalTryFromEmptiableAbsInterval {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "An error occurred when trying to convert `EmptiableAbsoluteInterval` into `EmptyInterval`"
+            "An error occurred when trying to convert `EmptiableAbsInterval` into `EmptyInterval`"
         )
     }
 }
 
-impl Error for EmptyIntervalTryFromEmptiableAbsoluteInterval {}
+impl Error for EmptyIntervalTryFromEmptiableAbsInterval {}
 
-impl TryFrom<EmptiableAbsoluteInterval> for EmptyInterval {
-    type Error = EmptyIntervalTryFromEmptiableAbsoluteInterval;
+impl TryFrom<EmptiableAbsInterval> for EmptyInterval {
+    type Error = EmptyIntervalTryFromEmptiableAbsInterval;
 
-    fn try_from(value: EmptiableAbsoluteInterval) -> Result<Self, Self::Error> {
+    fn try_from(value: EmptiableAbsInterval) -> Result<Self, Self::Error> {
         value
             .is_empty()
             .then_some(EmptyInterval)
-            .ok_or(EmptyIntervalTryFromEmptiableAbsoluteInterval)
+            .ok_or(EmptyIntervalTryFromEmptiableAbsInterval)
     }
 }
 
-/// Error that can occur when trying to convert [`EmptiableRelativeBoundPair`] into [`EmptyInterval`]
+/// Error that can occur when trying to convert [`EmptiableRelBoundPair`] into [`EmptyInterval`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct EmptyIntervalTryFromEmptiableRelativeBoundPair;
+pub struct EmptyIntervalTryFromEmptiableRelBoundPair;
 
-impl Display for EmptyIntervalTryFromEmptiableRelativeBoundPair {
+impl Display for EmptyIntervalTryFromEmptiableRelBoundPair {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "An error occurred when trying to convert `EmptiableRelativeBoundPair` into `EmptyInterval`"
+            "An error occurred when trying to convert `EmptiableRelBoundPair` into `EmptyInterval`"
         )
     }
 }
 
-impl Error for EmptyIntervalTryFromEmptiableRelativeBoundPair {}
+impl Error for EmptyIntervalTryFromEmptiableRelBoundPair {}
 
-impl TryFrom<EmptiableRelativeBoundPair> for EmptyInterval {
-    type Error = EmptyIntervalTryFromEmptiableRelativeBoundPair;
+impl TryFrom<EmptiableRelBoundPair> for EmptyInterval {
+    type Error = EmptyIntervalTryFromEmptiableRelBoundPair;
 
-    fn try_from(value: EmptiableRelativeBoundPair) -> Result<Self, Self::Error> {
+    fn try_from(value: EmptiableRelBoundPair) -> Result<Self, Self::Error> {
         value
             .is_empty()
             .then_some(EmptyInterval)
-            .ok_or(EmptyIntervalTryFromEmptiableRelativeBoundPair)
+            .ok_or(EmptyIntervalTryFromEmptiableRelBoundPair)
     }
 }
 
-/// Error that can occur when trying to convert [`EmptiableRelativeInterval`] into [`EmptyInterval`]
+/// Error that can occur when trying to convert [`EmptiableRelInterval`] into [`EmptyInterval`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct EmptyIntervalTryFromEmptiableRelativeInterval;
+pub struct EmptyIntervalTryFromEmptiableRelInterval;
 
-impl Display for EmptyIntervalTryFromEmptiableRelativeInterval {
+impl Display for EmptyIntervalTryFromEmptiableRelInterval {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "An error occurred when trying to convert `EmptiableRelativeInterval` into `EmptyInterval`"
+            "An error occurred when trying to convert `EmptiableRelInterval` into `EmptyInterval`"
         )
     }
 }
 
-impl Error for EmptyIntervalTryFromEmptiableRelativeInterval {}
+impl Error for EmptyIntervalTryFromEmptiableRelInterval {}
 
-impl TryFrom<EmptiableRelativeInterval> for EmptyInterval {
-    type Error = EmptyIntervalTryFromEmptiableRelativeInterval;
+impl TryFrom<EmptiableRelInterval> for EmptyInterval {
+    type Error = EmptyIntervalTryFromEmptiableRelInterval;
 
-    fn try_from(value: EmptiableRelativeInterval) -> Result<Self, Self::Error> {
+    fn try_from(value: EmptiableRelInterval) -> Result<Self, Self::Error> {
         value
             .is_empty()
             .then_some(EmptyInterval)
-            .ok_or(EmptyIntervalTryFromEmptiableRelativeInterval)
+            .ok_or(EmptyIntervalTryFromEmptiableRelInterval)
     }
 }

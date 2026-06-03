@@ -4,26 +4,26 @@
 //!
 //! Interval refers to an interval, a range, like in mathematics. But if we are
 //! talking strictly about this crate, then an interval, such as
-//! [`AbsoluteInterval`](absolute::AbsoluteInterval)
-//! and [`RelativeInterval`][relative::RelativeInterval] are enumerators
+//! [`AbsInterval`](absolute::AbsInterval)
+//! and [`RelInterval`][relative::RelInterval] are enumerators
 //! over specific intervals, like
-//! [`BoundedAbsoluteInterval`][absolute::BoundedAbsoluteInterval]
-//! or [`HalfBoundedRelativeInterval`][relative::HalfBoundedRelativeInterval].
+//! [`BoundedAbsInterval`][absolute::BoundedAbsInterval]
+//! or [`HalfBoundedRelInterval`][relative::HalfBoundedRelInterval].
 //!
 //! Those specific intervals must conserve their invariants.
 //! A bounded interval must remain bounded, a half-bounded interval must remain
 //! half-bounded.
 //!
 //! All such intervals are can be interpreted of a pair of bounds, like
-//! [`AbsoluteBoundPair`](absolute::AbsoluteBoundPair)
-//! and [`RelativeBoundPair`][relative::RelativeBoundPair], but in practice,
+//! [`AbsBoundPair`](absolute::AbsBoundPair)
+//! and [`RelBoundPair`][relative::RelBoundPair], but in practice,
 //! specific intervals only store the kind of data they absolutely need.
 //! Every interval can be converted to and created from a pair of bounds,
 //! though.
 //!
 //! They may also come in _emptiable_ variants, like
-//! [`EmptiableAbsoluteBoundPair`](absolute::EmptiableAbsoluteBoundPair)
-//! and [`EmptiableRelativeBoundPair`](relative::EmptiableRelativeBoundPair),
+//! [`EmptiableAbsBoundPair`](absolute::EmptiableAbsBoundPair)
+//! and [`EmptiableRelBoundPair`](relative::EmptiableRelBoundPair),
 //! that are similar to the previously mentioned pair of bounds, but support the
 //! representation of [empty intervals](special::EmptyInterval).
 //!
@@ -40,8 +40,8 @@
 //! invariants regarding [openness](meta::Openness) of their bounds.
 //!
 //! A way to represent an individual bound, regardless of its _source_
-//! (start/end) exists: [`AbsoluteBound`](absolute::AbsoluteBoundPair) and
-//! [`RelativeBound`](relative::RelativeBoundPair).
+//! (start/end) exists: [`AbsBound`](absolute::AbsBoundPair) and
+//! [`RelBound`](relative::RelBoundPair).
 //!
 //! While processing intervals through operations like unions and intersections
 //! can yield a different kind of interval, they never mutate themselves in
@@ -50,17 +50,17 @@
 //! an interval and bounds in this crate.
 //!
 //! Pairs of bounds are composed of both a start bound (e.g.
-//! [`AbsoluteStartBound`](absolute::AbsoluteStartBound),
-//! [`RelativeStartBound`](relative::RelativeStartBound))
-//! and an end bound (e.g. [`AbsoluteEndBound`](absolute::AbsoluteEndBound),
-//! [`RelativeEndBound`](relative::RelativeEndBound)).
+//! [`AbsStartBound`](absolute::AbsStartBound),
+//! [`RelStartBound`](relative::RelStartBound))
+//! and an end bound (e.g. [`AbsEndBound`](absolute::AbsEndBound),
+//! [`RelEndBound`](relative::RelEndBound)).
 //!
 //! Those individual bounds represent the start and end of their parent,
 //! supporting an infinite start/end via their `InfinitePast` (for start bounds)
 //! or `InfiniteFuture` (for end bounds) variants. In the case of a finite
 //! bound, they contain an
-//! [`AbsoluteFiniteBoundPosition`](absolute::AbsoluteFiniteBoundPosition) for absolute bounds,
-//! or a [`RelativeFiniteBoundPosition`](relative::RelativeFiniteBoundPosition) for relative
+//! [`AbsFiniteBoundPos`](absolute::AbsFiniteBoundPosition) for absolute bounds,
+//! or a [`RelFiniteBoundPos`](relative::RelFiniteBoundPosition) for relative
 //! bounds.
 //!
 //! The reason why start and end bounds are separate is simple:
@@ -91,19 +91,19 @@
 //! # use std::error::Error;
 //! # use jiff::Timestamp;
 //! # use periodical::intervals::absolute::{
-//! #     AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBoundPosition, AbsoluteInterval, AbsoluteStartBound,
-//! #     BoundedAbsoluteInterval,
+//! #     AbsBoundPair, AbsEndBound, AbsFiniteBoundPos, AbsInterval, AbsStartBound,
+//! #     BoundedAbsInterval,
 //! # };
 //! let from = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
 //! let to = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
 //!
 //! // Creating an interval from a specific interval type
-//! let first_interval = BoundedAbsoluteInterval::new(from, to).to_interval();
+//! let first_interval = BoundedAbsInterval::new(from, to).to_interval();
 //!
 //! // Creating a pair of bounds..
-//! let bounds_for_second_interval = AbsoluteBoundPair::new(
-//!     AbsoluteFiniteBoundPosition::new(from).to_start_bound(),
-//!     AbsoluteEndBound::InfiniteFuture,
+//! let bounds_for_second_interval = AbsBoundPair::new(
+//!     AbsFiniteBoundPos::new(from).to_start_bound(),
+//!     AbsEndBound::InfiniteFuture,
 //! );
 //!
 //! // ..For creating an interval

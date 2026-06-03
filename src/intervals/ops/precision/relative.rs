@@ -9,6 +9,6 @@ mod bound_tests;
 mod interval_tests;
 
 #[doc(inline)]
-pub use bound::PreciseRelativeBound;
+pub use bound::PreciseRelBound;
 #[doc(inline)]
-pub use interval::PreciseRelativeInterval;
+pub use interval::PreciseRelInterval;

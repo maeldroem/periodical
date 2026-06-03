@@ -11,13 +11,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::intervals::meta::{BoundExtremality, HasBoundExtremality};
 use crate::intervals::ops::{BoundEq, BoundOrd, BoundOrdExtremaOps, BoundOrdering, BoundOverlapDisambiguationRuleSet};
-use crate::intervals::relative::{
-    RelativeEndBound,
-    RelativeFiniteBound,
-    RelativeFiniteEndBound,
-    RelativeFiniteStartBound,
-    RelativeStartBound,
-};
+use crate::intervals::relative::{RelEndBound, RelFiniteBound, RelFiniteEndBound, RelFiniteStartBound, RelStartBound};
 
 /// Relative start/end bound
 ///
@@ -27,26 +21,26 @@ use crate::intervals::relative::{
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
-pub enum RelativeBound {
-    Start(RelativeStartBound),
-    End(RelativeEndBound),
+pub enum RelBound {
+    Start(RelStartBound),
+    End(RelEndBound),
 }
 
-impl RelativeBound {
-    /// Returns whether it is of the [`Start`](RelativeBound::Start) variant
+impl RelBound {
+    /// Returns whether it is of the [`Start`](RelBound::Start) variant
     ///
     /// # Examples
     ///
     /// ```
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::{RelativeBound, RelativeFiniteBoundPosition};
+    /// # use periodical::intervals::relative::{RelBound, RelFiniteBoundPos};
     /// let start_offset = SignedDuration::from_hours(8);
     /// let end_offset = SignedDuration::from_hours(16);
     ///
-    /// let start = RelativeFiniteBoundPosition::new(start_offset)
+    /// let start = RelFiniteBoundPos::new(start_offset)
     ///     .to_start_bound()
     ///     .to_bound();
-    /// let end = RelativeFiniteBoundPosition::new(end_offset)
+    /// let end = RelFiniteBoundPos::new(end_offset)
     ///     .to_end_bound()
     ///     .to_bound();
     ///
@@ -58,20 +52,20 @@ impl RelativeBound {
         matches!(self, Self::Start(_))
     }
 
-    /// Returns whether it is of the [`End`](RelativeBound::End) variant
+    /// Returns whether it is of the [`End`](RelBound::End) variant
     ///
     /// # Examples
     ///
     /// ```
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::{RelativeBound, RelativeFiniteBoundPosition};
+    /// # use periodical::intervals::relative::{RelBound, RelFiniteBoundPos};
     /// let start_offset = SignedDuration::from_hours(8);
     /// let end_offset = SignedDuration::from_hours(16);
     ///
-    /// let start = RelativeFiniteBoundPosition::new(start_offset)
+    /// let start = RelFiniteBoundPos::new(start_offset)
     ///     .to_start_bound()
     ///     .to_bound();
-    /// let end = RelativeFiniteBoundPosition::new(end_offset)
+    /// let end = RelFiniteBoundPos::new(end_offset)
     ///     .to_end_bound()
     ///     .to_bound();
     ///
@@ -83,44 +77,44 @@ impl RelativeBound {
         matches!(self, Self::End(_))
     }
 
-    /// Returns the content of the [`Start`](RelativeBound::Start) variant
+    /// Returns the content of the [`Start`](RelBound::Start) variant
     ///
     /// Consumes `self` and puts the content of the
-    /// [`Start`](RelativeBound::Start) variant in an [`Option`]. If instead
+    /// [`Start`](RelBound::Start) variant in an [`Option`]. If instead
     /// `self` is another variant, the method returns [`None`].
     ///
     /// # Examples
     ///
     /// ```
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::{RelativeBound, RelativeFiniteBoundPosition};
+    /// # use periodical::intervals::relative::{RelBound, RelFiniteBoundPos};
     /// let start_offset = SignedDuration::from_hours(8);
     /// let end_offset = SignedDuration::from_hours(16);
     ///
-    /// let start = RelativeFiniteBoundPosition::new(start_offset)
+    /// let start = RelFiniteBoundPos::new(start_offset)
     ///     .to_start_bound()
     ///     .to_bound();
-    /// let end = RelativeFiniteBoundPosition::new(end_offset)
+    /// let end = RelFiniteBoundPos::new(end_offset)
     ///     .to_end_bound()
     ///     .to_bound();
     ///
     /// assert_eq!(
     ///     start.start(),
-    ///     Some(RelativeFiniteBoundPosition::new(start_offset).to_start_bound()),
+    ///     Some(RelFiniteBoundPos::new(start_offset).to_start_bound()),
     /// );
     /// assert_eq!(end.start(), None);
     /// ```
     #[must_use]
-    pub fn start(self) -> Option<RelativeStartBound> {
+    pub fn start(self) -> Option<RelStartBound> {
         match self {
             Self::Start(start) => Some(start),
             Self::End(_) => None,
         }
     }
 
-    /// Returns the content of the [`End`](RelativeBound::End) variant
+    /// Returns the content of the [`End`](RelBound::End) variant
     ///
-    /// Consumes `self` and puts the content of the [`End`](RelativeBound::End)
+    /// Consumes `self` and puts the content of the [`End`](RelBound::End)
     /// variant in an [`Option`]. If instead `self` is another variant, the
     /// method returns [`None`].
     ///
@@ -128,25 +122,25 @@ impl RelativeBound {
     ///
     /// ```
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::{RelativeBound, RelativeFiniteBoundPosition};
+    /// # use periodical::intervals::relative::{RelBound, RelFiniteBoundPos};
     /// let start_offset = SignedDuration::from_hours(8);
     /// let end_offset = SignedDuration::from_hours(16);
     ///
-    /// let start = RelativeFiniteBoundPosition::new(start_offset)
+    /// let start = RelFiniteBoundPos::new(start_offset)
     ///     .to_start_bound()
     ///     .to_bound();
-    /// let end = RelativeFiniteBoundPosition::new(end_offset)
+    /// let end = RelFiniteBoundPos::new(end_offset)
     ///     .to_end_bound()
     ///     .to_bound();
     ///
     /// assert_eq!(
     ///     end.end(),
-    ///     Some(RelativeFiniteBoundPosition::new(end_offset).to_end_bound()),
+    ///     Some(RelFiniteBoundPos::new(end_offset).to_end_bound()),
     /// );
     /// assert_eq!(start.end(), None);
     /// ```
     #[must_use]
-    pub fn end(self) -> Option<RelativeEndBound> {
+    pub fn end(self) -> Option<RelEndBound> {
         match self {
             Self::Start(_) => None,
             Self::End(end) => Some(end),
@@ -155,20 +149,20 @@ impl RelativeBound {
 
     /// Returns the opposite bound type with opposite inclusivity
     ///
-    /// Simply uses [`RelativeStartBound::opposite`] for start bounds,
-    /// and [`RelativeEndBound::opposite`] for end bounds, and then wraps the
-    /// result in [`RelativeBound`].
+    /// Simply uses [`RelStartBound::opposite`] for start bounds,
+    /// and [`RelEndBound::opposite`] for end bounds, and then wraps the
+    /// result in [`RelBound`].
     ///
     /// Returns [`None`] if the bound is infinite.
     ///
     /// # Examples
     ///
     /// ```
-    /// # use periodical::intervals::relative::RelativeBound;
-    /// # let bounds: [RelativeBound; 0] = [];
+    /// # use periodical::intervals::relative::RelBound;
+    /// # let bounds: [RelBound; 0] = [];
     /// struct BoundChange {
-    ///     new_bound: RelativeBound,
-    ///     before_new_bound: Option<RelativeBound>,
+    ///     new_bound: RelBound,
+    ///     before_new_bound: Option<RelBound>,
     /// }
     ///
     /// bounds.into_iter().map(|bound| BoundChange {
@@ -178,7 +172,7 @@ impl RelativeBound {
     /// ```
     ///
     /// A similar process is used in
-    /// [`LayeredRelativeBounds`](crate::iter::intervals::layered_bounds::LayeredRelativeBounds).
+    /// [`LayeredRelBounds`](crate::iter::intervals::layered_bounds::LayeredRelBounds).
     #[must_use]
     pub fn opposite(&self) -> Option<Self> {
         match self {
@@ -188,7 +182,7 @@ impl RelativeBound {
     }
 }
 
-impl HasBoundExtremality for RelativeBound {
+impl HasBoundExtremality for RelBound {
     fn bound_extremality(&self) -> BoundExtremality {
         match self {
             Self::Start(_) => BoundExtremality::Start,
@@ -197,7 +191,7 @@ impl HasBoundExtremality for RelativeBound {
     }
 }
 
-impl BoundEq for RelativeBound {
+impl BoundEq for RelBound {
     fn bound_eq(&self, other: &Self, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
         match self {
             Self::Start(start) => start.bound_eq(other, rule_set),
@@ -206,8 +200,8 @@ impl BoundEq for RelativeBound {
     }
 }
 
-impl BoundEq<RelativeFiniteStartBound> for RelativeBound {
-    fn bound_eq(&self, other: &RelativeFiniteStartBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
+impl BoundEq<RelFiniteStartBound> for RelBound {
+    fn bound_eq(&self, other: &RelFiniteStartBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
         match self {
             Self::Start(start) => start.bound_eq(other, rule_set),
             Self::End(end) => end.bound_eq(other, rule_set),
@@ -215,8 +209,8 @@ impl BoundEq<RelativeFiniteStartBound> for RelativeBound {
     }
 }
 
-impl BoundEq<RelativeFiniteEndBound> for RelativeBound {
-    fn bound_eq(&self, other: &RelativeFiniteEndBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
+impl BoundEq<RelFiniteEndBound> for RelBound {
+    fn bound_eq(&self, other: &RelFiniteEndBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
         match self {
             Self::Start(start) => start.bound_eq(other, rule_set),
             Self::End(end) => end.bound_eq(other, rule_set),
@@ -224,8 +218,8 @@ impl BoundEq<RelativeFiniteEndBound> for RelativeBound {
     }
 }
 
-impl BoundEq<RelativeFiniteBound> for RelativeBound {
-    fn bound_eq(&self, other: &RelativeFiniteBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
+impl BoundEq<RelFiniteBound> for RelBound {
+    fn bound_eq(&self, other: &RelFiniteBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
         match self {
             Self::Start(start) => start.bound_eq(other, rule_set),
             Self::End(end) => end.bound_eq(other, rule_set),
@@ -233,8 +227,8 @@ impl BoundEq<RelativeFiniteBound> for RelativeBound {
     }
 }
 
-impl BoundEq<RelativeStartBound> for RelativeBound {
-    fn bound_eq(&self, other: &RelativeStartBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
+impl BoundEq<RelStartBound> for RelBound {
+    fn bound_eq(&self, other: &RelStartBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
         match self {
             Self::Start(start) => start.bound_eq(other, rule_set),
             Self::End(end) => end.bound_eq(other, rule_set),
@@ -242,8 +236,8 @@ impl BoundEq<RelativeStartBound> for RelativeBound {
     }
 }
 
-impl BoundEq<RelativeEndBound> for RelativeBound {
-    fn bound_eq(&self, other: &RelativeEndBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
+impl BoundEq<RelEndBound> for RelBound {
+    fn bound_eq(&self, other: &RelEndBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
         match self {
             Self::Start(start) => start.bound_eq(other, rule_set),
             Self::End(end) => end.bound_eq(other, rule_set),
@@ -251,7 +245,7 @@ impl BoundEq<RelativeEndBound> for RelativeBound {
     }
 }
 
-impl BoundOrd for RelativeBound {
+impl BoundOrd for RelBound {
     fn bound_cmp(&self, other: &Self) -> BoundOrdering {
         match (self, other) {
             (Self::Start(lhs_start), Self::Start(rhs_start)) => lhs_start.bound_cmp(rhs_start),
@@ -262,10 +256,10 @@ impl BoundOrd for RelativeBound {
     }
 }
 
-impl BoundOrdExtremaOps for RelativeBound {}
+impl BoundOrdExtremaOps for RelBound {}
 
-impl BoundOrd<RelativeFiniteStartBound> for RelativeBound {
-    fn bound_cmp(&self, other: &RelativeFiniteStartBound) -> BoundOrdering {
+impl BoundOrd<RelFiniteStartBound> for RelBound {
+    fn bound_cmp(&self, other: &RelFiniteStartBound) -> BoundOrdering {
         match self {
             Self::Start(start) => start.bound_cmp(other),
             Self::End(end) => end.bound_cmp(other),
@@ -273,8 +267,8 @@ impl BoundOrd<RelativeFiniteStartBound> for RelativeBound {
     }
 }
 
-impl BoundOrd<RelativeFiniteEndBound> for RelativeBound {
-    fn bound_cmp(&self, other: &RelativeFiniteEndBound) -> BoundOrdering {
+impl BoundOrd<RelFiniteEndBound> for RelBound {
+    fn bound_cmp(&self, other: &RelFiniteEndBound) -> BoundOrdering {
         match self {
             Self::Start(start) => start.bound_cmp(other),
             Self::End(end) => end.bound_cmp(other),
@@ -282,8 +276,8 @@ impl BoundOrd<RelativeFiniteEndBound> for RelativeBound {
     }
 }
 
-impl BoundOrd<RelativeFiniteBound> for RelativeBound {
-    fn bound_cmp(&self, other: &RelativeFiniteBound) -> BoundOrdering {
+impl BoundOrd<RelFiniteBound> for RelBound {
+    fn bound_cmp(&self, other: &RelFiniteBound) -> BoundOrdering {
         match self {
             Self::Start(start) => start.bound_cmp(other),
             Self::End(end) => end.bound_cmp(other),
@@ -291,8 +285,8 @@ impl BoundOrd<RelativeFiniteBound> for RelativeBound {
     }
 }
 
-impl BoundOrd<RelativeStartBound> for RelativeBound {
-    fn bound_cmp(&self, other: &RelativeStartBound) -> BoundOrdering {
+impl BoundOrd<RelStartBound> for RelBound {
+    fn bound_cmp(&self, other: &RelStartBound) -> BoundOrdering {
         match self {
             Self::Start(start) => start.bound_cmp(other),
             Self::End(end) => end.bound_cmp(other),
@@ -300,8 +294,8 @@ impl BoundOrd<RelativeStartBound> for RelativeBound {
     }
 }
 
-impl BoundOrd<RelativeEndBound> for RelativeBound {
-    fn bound_cmp(&self, other: &RelativeEndBound) -> BoundOrdering {
+impl BoundOrd<RelEndBound> for RelBound {
+    fn bound_cmp(&self, other: &RelEndBound) -> BoundOrdering {
         match self {
             Self::Start(start) => start.bound_cmp(other),
             Self::End(end) => end.bound_cmp(other),
@@ -309,35 +303,35 @@ impl BoundOrd<RelativeEndBound> for RelativeBound {
     }
 }
 
-impl From<RelativeFiniteStartBound> for RelativeBound {
-    fn from(value: RelativeFiniteStartBound) -> Self {
-        Self::Start(RelativeStartBound::from(value))
+impl From<RelFiniteStartBound> for RelBound {
+    fn from(value: RelFiniteStartBound) -> Self {
+        Self::Start(RelStartBound::from(value))
     }
 }
 
-impl From<RelativeFiniteEndBound> for RelativeBound {
-    fn from(value: RelativeFiniteEndBound) -> Self {
-        Self::End(RelativeEndBound::from(value))
+impl From<RelFiniteEndBound> for RelBound {
+    fn from(value: RelFiniteEndBound) -> Self {
+        Self::End(RelEndBound::from(value))
     }
 }
 
-impl From<RelativeStartBound> for RelativeBound {
-    fn from(value: RelativeStartBound) -> Self {
-        RelativeBound::Start(value)
+impl From<RelStartBound> for RelBound {
+    fn from(value: RelStartBound) -> Self {
+        RelBound::Start(value)
     }
 }
 
-impl From<RelativeEndBound> for RelativeBound {
-    fn from(value: RelativeEndBound) -> Self {
-        RelativeBound::End(value)
+impl From<RelEndBound> for RelBound {
+    fn from(value: RelEndBound) -> Self {
+        RelBound::End(value)
     }
 }
 
-impl From<RelativeFiniteBound> for RelativeBound {
-    fn from(value: RelativeFiniteBound) -> Self {
+impl From<RelFiniteBound> for RelBound {
+    fn from(value: RelFiniteBound) -> Self {
         match value {
-            RelativeFiniteBound::Start(finite_start) => Self::Start(RelativeStartBound::from(finite_start)),
-            RelativeFiniteBound::End(finite_end) => Self::End(RelativeEndBound::from(finite_end)),
+            RelFiniteBound::Start(finite_start) => Self::Start(RelStartBound::from(finite_start)),
+            RelFiniteBound::End(finite_end) => Self::End(RelEndBound::from(finite_end)),
         }
     }
 }

@@ -7,16 +7,16 @@ use arbitrary::{Arbitrary, Error, Unstructured};
 use jiff::Timestamp;
 
 use crate::intervals::absolute::{
-    AbsoluteBoundPair,
-    AbsoluteEndBound,
-    AbsoluteFiniteBoundPosition,
-    AbsoluteStartBound,
-    BoundedAbsoluteInterval,
-    HalfBoundedAbsoluteInterval,
+    AbsBoundPair,
+    AbsEndBound,
+    AbsFiniteBoundPos,
+    AbsStartBound,
+    BoundedAbsInterval,
+    HalfBoundedAbsInterval,
 };
 use crate::intervals::meta::{BoundInclusivity, OpeningDirection};
 
-impl<'a> Arbitrary<'a> for AbsoluteFiniteBoundPosition {
+impl<'a> Arbitrary<'a> for AbsFiniteBoundPos {
     fn arbitrary(u: &mut Unstructured<'a>) -> arbitrary::Result<Self> {
         let timestamp_range = Timestamp::MIN.as_nanosecond()..=Timestamp::MAX.as_nanosecond();
         let timestamp = Timestamp::from_nanosecond(u.int_in_range(timestamp_range)?).or(Err(Error::IncorrectFormat))?;
@@ -25,18 +25,18 @@ impl<'a> Arbitrary<'a> for AbsoluteFiniteBoundPosition {
     }
 }
 
-impl<'a> Arbitrary<'a> for AbsoluteBoundPair {
+impl<'a> Arbitrary<'a> for AbsBoundPair {
     fn arbitrary(u: &mut Unstructured<'a>) -> arbitrary::Result<Self> {
-        let start = AbsoluteStartBound::arbitrary(u)?;
-        let end = AbsoluteEndBound::arbitrary(u)?;
+        let start = AbsStartBound::arbitrary(u)?;
+        let end = AbsEndBound::arbitrary(u)?;
 
-        // We use AbsoluteBoundPair::new so that if start > end, they get swapped
+        // We use AbsBoundPair::new so that if start > end, they get swapped
         // A fuzz test exists to verify that this behavior is correct
-        Ok(AbsoluteBoundPair::new(start, end))
+        Ok(AbsBoundPair::new(start, end))
     }
 }
 
-impl<'a> Arbitrary<'a> for BoundedAbsoluteInterval {
+impl<'a> Arbitrary<'a> for BoundedAbsInterval {
     fn arbitrary(u: &mut Unstructured<'a>) -> arbitrary::Result<Self> {
         let timestamp_range = Timestamp::MIN.as_nanosecond()..=Timestamp::MAX.as_nanosecond();
 
@@ -47,14 +47,14 @@ impl<'a> Arbitrary<'a> for BoundedAbsoluteInterval {
             .or(Err(Error::IncorrectFormat))?;
 
         if start_time == end_time {
-            Ok(BoundedAbsoluteInterval::from_times_incl(
+            Ok(BoundedAbsInterval::from_times_incl(
                 start_time,
                 BoundInclusivity::Inclusive,
                 end_time,
                 BoundInclusivity::Inclusive,
             ))
         } else {
-            Ok(BoundedAbsoluteInterval::from_times_incl(
+            Ok(BoundedAbsInterval::from_times_incl(
                 start_time,
                 BoundInclusivity::arbitrary(u)?,
                 end_time,
@@ -64,13 +64,13 @@ impl<'a> Arbitrary<'a> for BoundedAbsoluteInterval {
     }
 }
 
-impl<'a> Arbitrary<'a> for HalfBoundedAbsoluteInterval {
+impl<'a> Arbitrary<'a> for HalfBoundedAbsInterval {
     fn arbitrary(u: &mut Unstructured<'a>) -> arbitrary::Result<Self> {
         let timestamp_range = Timestamp::MIN.as_nanosecond()..=Timestamp::MAX.as_nanosecond();
 
         let reference = Timestamp::from_nanosecond(u.int_in_range(timestamp_range)?).or(Err(Error::IncorrectFormat))?;
 
-        Ok(HalfBoundedAbsoluteInterval::new_from_time_and_inclusivity(
+        Ok(HalfBoundedAbsInterval::new_from_time_and_inclusivity(
             reference,
             BoundInclusivity::arbitrary(u)?,
             OpeningDirection::arbitrary(u)?,

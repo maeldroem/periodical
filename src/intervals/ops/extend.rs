@@ -13,16 +13,16 @@
 //! ```
 //! # use std::error::Error;
 //! # use jiff::Zoned;
-//! # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
+//! # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos};
 //! # use periodical::intervals::ops::Extensible;
-//! let first_interval = AbsoluteBoundPair::new(
-//!     AbsoluteFiniteBoundPosition::new(
+//! let first_interval = AbsBoundPair::new(
+//!     AbsFiniteBoundPos::new(
 //!         "2025-01-01 08:00:00[Europe/Oslo]"
 //!             .parse::<Zoned>()?
 //!             .timestamp(),
 //!     )
 //!     .to_start_bound(),
-//!     AbsoluteFiniteBoundPosition::new(
+//!     AbsFiniteBoundPos::new(
 //!         "2025-01-01 12:00:00[Europe/Oslo]"
 //!             .parse::<Zoned>()?
 //!             .timestamp(),
@@ -30,14 +30,14 @@
 //!     .to_end_bound(),
 //! );
 //!
-//! let second_interval = AbsoluteBoundPair::new(
-//!     AbsoluteFiniteBoundPosition::new(
+//! let second_interval = AbsBoundPair::new(
+//!     AbsFiniteBoundPos::new(
 //!         "2025-01-01 14:00:00[Europe/Oslo]"
 //!             .parse::<Zoned>()?
 //!             .timestamp(),
 //!     )
 //!     .to_start_bound(),
-//!     AbsoluteFiniteBoundPosition::new(
+//!     AbsFiniteBoundPos::new(
 //!         "2025-01-01 16:00:00[Europe/Oslo]"
 //!             .parse::<Zoned>()?
 //!             .timestamp(),
@@ -47,14 +47,14 @@
 //!
 //! assert_eq!(
 //!     first_interval.extend(&second_interval),
-//!     AbsoluteBoundPair::new(
-//!         AbsoluteFiniteBoundPosition::new(
+//!     AbsBoundPair::new(
+//!         AbsFiniteBoundPos::new(
 //!             "2025-01-01 08:00:00[Europe/Oslo]"
 //!                 .parse::<Zoned>()?
 //!                 .timestamp(),
 //!         )
 //!         .to_start_bound(),
-//!         AbsoluteFiniteBoundPosition::new(
+//!         AbsFiniteBoundPos::new(
 //!             "2025-01-01 16:00:00[Europe/Oslo]"
 //!                 .parse::<Zoned>()?
 //!                 .timestamp(),
@@ -66,29 +66,29 @@
 //! ```
 
 use crate::intervals::absolute::{
-    AbsoluteBoundPair,
-    AbsoluteEndBound,
-    AbsoluteFiniteBoundPosition,
-    AbsoluteInterval,
-    AbsoluteStartBound,
-    BoundedAbsoluteInterval,
-    EmptiableAbsoluteBoundPair,
-    EmptiableAbsoluteInterval,
-    HalfBoundedAbsoluteInterval,
-    HasAbsoluteBoundPair,
-    HasEmptiableAbsoluteBoundPair,
+    AbsBoundPair,
+    AbsEndBound,
+    AbsFiniteBoundPos,
+    AbsInterval,
+    AbsStartBound,
+    BoundedAbsInterval,
+    EmptiableAbsBoundPair,
+    EmptiableAbsInterval,
+    HalfBoundedAbsInterval,
+    HasAbsBoundPair,
+    HasEmptiableAbsBoundPair,
 };
 use crate::intervals::relative::{
-    BoundedRelativeInterval,
-    EmptiableRelativeBoundPair,
-    EmptiableRelativeInterval,
-    HalfBoundedRelativeInterval,
-    HasEmptiableRelativeBoundPair,
-    HasRelativeBoundPair,
-    RelativeBoundPair,
-    RelativeEndBound,
-    RelativeInterval,
-    RelativeStartBound,
+    BoundedRelInterval,
+    EmptiableRelBoundPair,
+    EmptiableRelInterval,
+    HalfBoundedRelInterval,
+    HasEmptiableRelBoundPair,
+    HasRelBoundPair,
+    RelBoundPair,
+    RelEndBound,
+    RelInterval,
+    RelStartBound,
 };
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 
@@ -306,16 +306,16 @@ pub trait Extensible<Rhs = Self> {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
+    /// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos};
     /// # use periodical::intervals::ops::Extensible;
-    /// let first_interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBoundPosition::new(
+    /// let first_interval = AbsBoundPair::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 08:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
     ///     )
     ///     .to_start_bound(),
-    ///     AbsoluteFiniteBoundPosition::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 12:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
@@ -323,14 +323,14 @@ pub trait Extensible<Rhs = Self> {
     ///     .to_end_bound(),
     /// );
     ///
-    /// let second_interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBoundPosition::new(
+    /// let second_interval = AbsBoundPair::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 14:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
     ///     )
     ///     .to_start_bound(),
-    ///     AbsoluteFiniteBoundPosition::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 16:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
@@ -340,14 +340,14 @@ pub trait Extensible<Rhs = Self> {
     ///
     /// assert_eq!(
     ///     first_interval.extend(&second_interval),
-    ///     AbsoluteBoundPair::new(
-    ///         AbsoluteFiniteBoundPosition::new(
+    ///     AbsBoundPair::new(
+    ///         AbsFiniteBoundPos::new(
     ///             "2025-01-01 08:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
     ///         )
     ///         .to_start_bound(),
-    ///         AbsoluteFiniteBoundPosition::new(
+    ///         AbsFiniteBoundPos::new(
     ///             "2025-01-01 16:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
@@ -362,211 +362,211 @@ pub trait Extensible<Rhs = Self> {
 }
 
 // extensible_impl!(
-//     implementor => AbsoluteBoundPair,
-//     rhs => [AbsoluteBoundPair],
-//     output => AbsoluteBoundPair,
+//     implementor => AbsBoundPair,
+//     rhs => [AbsBoundPair],
+//     output => AbsBoundPair,
 //     absolute,
 //     (non_emptiable, non_emptiable),
 // );
 // extensible_impl!(
-//     implementor => AbsoluteBoundPair,
-//     rhs => [EmptiableAbsoluteBoundPair],
-//     output => AbsoluteBoundPair,
+//     implementor => AbsBoundPair,
+//     rhs => [EmptiableAbsBoundPair],
+//     output => AbsBoundPair,
 //     absolute,
 //     (non_emptiable, emptiable),
 // );
 // extensible_impl!(
-//     implementor => EmptiableAbsoluteBoundPair,
-//     rhs => [AbsoluteBoundPair],
-//     output => AbsoluteBoundPair,
+//     implementor => EmptiableAbsBoundPair,
+//     rhs => [AbsBoundPair],
+//     output => AbsBoundPair,
 //     absolute,
 //     (emptiable, non_emptiable),
 // );
 // extensible_impl!(
-//     implementor => EmptiableAbsoluteBoundPair,
-//     rhs => [EmptiableAbsoluteBoundPair],
-//     output => EmptiableAbsoluteBoundPair,
+//     implementor => EmptiableAbsBoundPair,
+//     rhs => [EmptiableAbsBoundPair],
+//     output => EmptiableAbsBoundPair,
 //     absolute,
 //     (emptiable, emptiable),
 // );
 // extensible_impl!(
-//     implementor => AbsoluteInterval,
-//     rhs => [AbsoluteInterval],
-//     output => AbsoluteInterval,
+//     implementor => AbsInterval,
+//     rhs => [AbsInterval],
+//     output => AbsInterval,
 //     absolute,
 //     (non_emptiable, non_emptiable),
 // );
 // extensible_impl!(
-//     implementor => AbsoluteInterval,
-//     rhs => [EmptiableAbsoluteInterval],
-//     output => AbsoluteInterval,
+//     implementor => AbsInterval,
+//     rhs => [EmptiableAbsInterval],
+//     output => AbsInterval,
 //     absolute,
 //     (non_emptiable, emptiable),
 // );
 // extensible_impl!(
-//     implementor => EmptiableAbsoluteInterval,
-//     rhs => [AbsoluteInterval],
-//     output => AbsoluteInterval,
+//     implementor => EmptiableAbsInterval,
+//     rhs => [AbsInterval],
+//     output => AbsInterval,
 //     absolute,
 //     (emptiable, non_emptiable),
 // );
 // extensible_impl!(
-//     implementor => EmptiableAbsoluteInterval,
-//     rhs => [EmptiableAbsoluteInterval],
-//     output => EmptiableAbsoluteInterval,
+//     implementor => EmptiableAbsInterval,
+//     rhs => [EmptiableAbsInterval],
+//     output => EmptiableAbsInterval,
 //     absolute,
 //     (emptiable, emptiable),
 // );
 // extensible_impl!(
-//     implementor => BoundedAbsoluteInterval,
-//     rhs => [BoundedAbsoluteInterval],
-//     output => BoundedAbsoluteInterval,
+//     implementor => BoundedAbsInterval,
+//     rhs => [BoundedAbsInterval],
+//     output => BoundedAbsInterval,
 //     absolute,
 //     (non_emptiable, non_emptiable),
 // );
 // extensible_impl!(
-//     implementor => BoundedAbsoluteInterval,
-//     rhs => [HalfBoundedAbsoluteInterval],
-//     output => HalfBoundedAbsoluteInterval,
+//     implementor => BoundedAbsInterval,
+//     rhs => [HalfBoundedAbsInterval],
+//     output => HalfBoundedAbsInterval,
 //     absolute,
 //     (non_emptiable, non_emptiable),
 // );
 // extensible_impl!(
-//     implementor => BoundedAbsoluteInterval,
+//     implementor => BoundedAbsInterval,
 //     rhs => [UnboundedInterval],
 //     output => clone rhs,
 // );
 // extensible_impl!(
-//     implementor => BoundedAbsoluteInterval,
+//     implementor => BoundedAbsInterval,
 //     rhs => [EmptyInterval],
 //     output => clone lhs,
 // );
 // extensible_impl!(
-//     implementor => HalfBoundedAbsoluteInterval,
-//     rhs => [BoundedAbsoluteInterval],
-//     output => HalfBoundedAbsoluteInterval,
+//     implementor => HalfBoundedAbsInterval,
+//     rhs => [BoundedAbsInterval],
+//     output => HalfBoundedAbsInterval,
 //     absolute,
 //     (non_emptiable, non_emptiable),
 // );
 // extensible_impl!(
-//     implementor => HalfBoundedAbsoluteInterval,
-//     rhs => [HalfBoundedAbsoluteInterval],
-//     output => AbsoluteInterval,
+//     implementor => HalfBoundedAbsInterval,
+//     rhs => [HalfBoundedAbsInterval],
+//     output => AbsInterval,
 //     absolute,
 //     (non_emptiable, non_emptiable),
 // );
 // extensible_impl!(
-//     implementor => HalfBoundedAbsoluteInterval,
+//     implementor => HalfBoundedAbsInterval,
 //     rhs => [UnboundedInterval],
 //     output => clone rhs,
 // );
 // extensible_impl!(
-//     implementor => HalfBoundedAbsoluteInterval,
+//     implementor => HalfBoundedAbsInterval,
 //     rhs => [EmptyInterval],
 //     output => clone lhs,
 // );
 
 // extensible_impl!(
-//     implementor => RelativeBoundPair,
-//     rhs => [RelativeBoundPair],
-//     output => RelativeBoundPair,
+//     implementor => RelBoundPair,
+//     rhs => [RelBoundPair],
+//     output => RelBoundPair,
 //     relative,
 //     (non_emptiable, non_emptiable),
 // );
 // extensible_impl!(
-//     implementor => RelativeBoundPair,
-//     rhs => [EmptiableRelativeBoundPair],
-//     output => RelativeBoundPair,
+//     implementor => RelBoundPair,
+//     rhs => [EmptiableRelBoundPair],
+//     output => RelBoundPair,
 //     relative,
 //     (non_emptiable, emptiable),
 // );
 // extensible_impl!(
-//     implementor => EmptiableRelativeBoundPair,
-//     rhs => [RelativeBoundPair],
-//     output => RelativeBoundPair,
+//     implementor => EmptiableRelBoundPair,
+//     rhs => [RelBoundPair],
+//     output => RelBoundPair,
 //     relative,
 //     (emptiable, non_emptiable),
 // );
 // extensible_impl!(
-//     implementor => EmptiableRelativeBoundPair,
-//     rhs => [EmptiableRelativeBoundPair],
-//     output => EmptiableRelativeBoundPair,
+//     implementor => EmptiableRelBoundPair,
+//     rhs => [EmptiableRelBoundPair],
+//     output => EmptiableRelBoundPair,
 //     relative,
 //     (emptiable, emptiable),
 // );
 // extensible_impl!(
-//     implementor => RelativeInterval,
-//     rhs => [RelativeInterval],
-//     output => RelativeInterval,
+//     implementor => RelInterval,
+//     rhs => [RelInterval],
+//     output => RelInterval,
 //     relative,
 //     (non_emptiable, non_emptiable),
 // );
 // extensible_impl!(
-//     implementor => RelativeInterval,
-//     rhs => [EmptiableRelativeInterval],
-//     output => RelativeInterval,
+//     implementor => RelInterval,
+//     rhs => [EmptiableRelInterval],
+//     output => RelInterval,
 //     relative,
 //     (non_emptiable, emptiable),
 // );
 // extensible_impl!(
-//     implementor => EmptiableRelativeInterval,
-//     rhs => [RelativeInterval],
-//     output => RelativeInterval,
+//     implementor => EmptiableRelInterval,
+//     rhs => [RelInterval],
+//     output => RelInterval,
 //     relative,
 //     (emptiable, non_emptiable),
 // );
 // extensible_impl!(
-//     implementor => EmptiableRelativeInterval,
-//     rhs => [EmptiableRelativeInterval],
-//     output => EmptiableRelativeInterval,
+//     implementor => EmptiableRelInterval,
+//     rhs => [EmptiableRelInterval],
+//     output => EmptiableRelInterval,
 //     relative,
 //     (emptiable, emptiable),
 // );
 // extensible_impl!(
-//     implementor => BoundedRelativeInterval,
-//     rhs => [BoundedRelativeInterval],
-//     output => BoundedRelativeInterval,
+//     implementor => BoundedRelInterval,
+//     rhs => [BoundedRelInterval],
+//     output => BoundedRelInterval,
 //     relative,
 //     (non_emptiable, non_emptiable),
 // );
 // extensible_impl!(
-//     implementor => BoundedRelativeInterval,
-//     rhs => [HalfBoundedRelativeInterval],
-//     output => HalfBoundedRelativeInterval,
+//     implementor => BoundedRelInterval,
+//     rhs => [HalfBoundedRelInterval],
+//     output => HalfBoundedRelInterval,
 //     relative,
 //     (non_emptiable, non_emptiable),
 // );
 // extensible_impl!(
-//     implementor => BoundedRelativeInterval,
+//     implementor => BoundedRelInterval,
 //     rhs => [UnboundedInterval],
 //     output => clone rhs,
 // );
 // extensible_impl!(
-//     implementor => BoundedRelativeInterval,
+//     implementor => BoundedRelInterval,
 //     rhs => [EmptyInterval],
 //     output => clone lhs,
 // );
 // extensible_impl!(
-//     implementor => HalfBoundedRelativeInterval,
-//     rhs => [BoundedRelativeInterval],
-//     output => HalfBoundedRelativeInterval,
+//     implementor => HalfBoundedRelInterval,
+//     rhs => [BoundedRelInterval],
+//     output => HalfBoundedRelInterval,
 //     relative,
 //     (non_emptiable, non_emptiable),
 // );
 // extensible_impl!(
-//     implementor => HalfBoundedRelativeInterval,
-//     rhs => [HalfBoundedRelativeInterval],
-//     output => RelativeInterval,
+//     implementor => HalfBoundedRelInterval,
+//     rhs => [HalfBoundedRelInterval],
+//     output => RelInterval,
 //     relative,
 //     (non_emptiable, non_emptiable),
 // );
 // extensible_impl!(
-//     implementor => HalfBoundedRelativeInterval,
+//     implementor => HalfBoundedRelInterval,
 //     rhs => [UnboundedInterval],
 //     output => clone rhs,
 // );
 // extensible_impl!(
-//     implementor => HalfBoundedRelativeInterval,
+//     implementor => HalfBoundedRelInterval,
 //     rhs => [EmptyInterval],
 //     output => clone lhs,
 // );
@@ -574,10 +574,10 @@ pub trait Extensible<Rhs = Self> {
 // extensible_impl!(
 //     implementor => UnboundedInterval,
 //     rhs => [
-//         BoundedAbsoluteInterval,
-//         HalfBoundedAbsoluteInterval,
-//         BoundedRelativeInterval,
-//         HalfBoundedRelativeInterval,
+//         BoundedAbsInterval,
+//         HalfBoundedAbsInterval,
+//         BoundedRelInterval,
+//         HalfBoundedRelInterval,
 //         UnboundedInterval,
 //         EmptyInterval,
 //     ],
@@ -586,83 +586,85 @@ pub trait Extensible<Rhs = Self> {
 // extensible_impl!(
 //     implementor => EmptyInterval,
 //     rhs => [
-//         BoundedAbsoluteInterval,
-//         HalfBoundedAbsoluteInterval,
-//         BoundedRelativeInterval,
-//         HalfBoundedRelativeInterval,
+//         BoundedAbsInterval,
+//         HalfBoundedAbsInterval,
+//         BoundedRelInterval,
+//         HalfBoundedRelInterval,
 //         UnboundedInterval,
 //         EmptyInterval,
 //     ],
 //     output => clone rhs,
 // );
 
-/// Extends two [`AbsoluteBoundPair`]
+/// Extends two [`AbsBoundPair`]
 ///
 /// See [module documentation](self) for more info.
 #[must_use]
-pub fn extend_abs_bound_pair(
-    lhs_bound_pair: &AbsoluteBoundPair,
-    rhs_bound_pair: &AbsoluteBoundPair,
-) -> AbsoluteBoundPair {
-    let new_start_bound = match (lhs_bound_pair.abs_start(), rhs_bound_pair.abs_start()) {
-        (bound @ AbsoluteStartBound::InfinitePast, _) | (_, bound @ AbsoluteStartBound::InfinitePast) => bound,
-        (lhs_bound @ AbsoluteStartBound::Finite(..), rhs_bound @ AbsoluteStartBound::Finite(..)) => {
-            if lhs_bound <= rhs_bound { lhs_bound } else { rhs_bound }
-        },
-    };
+pub fn extend_abs_bound_pair(lhs_bound_pair: &AbsBoundPair, rhs_bound_pair: &AbsBoundPair) -> AbsBoundPair {
+    let new_start_bound =
+        match (lhs_bound_pair.abs_start(), rhs_bound_pair.abs_start()) {
+            (bound @ AbsStartBound::InfinitePast, _) | (_, bound @ AbsStartBound::InfinitePast) => bound,
+            (lhs_bound @ AbsStartBound::Finite(..), rhs_bound @ AbsStartBound::Finite(..)) => {
+                if lhs_bound <= rhs_bound { lhs_bound } else { rhs_bound }
+            },
+        };
 
     let new_end_bound = match (lhs_bound_pair.abs_end(), rhs_bound_pair.abs_end()) {
-        (bound @ AbsoluteEndBound::InfiniteFuture, _) | (_, bound @ AbsoluteEndBound::InfiniteFuture) => bound,
-        (lhs_bound @ AbsoluteEndBound::Finite(..), rhs_bound @ AbsoluteEndBound::Finite(..)) => {
-            if lhs_bound >= rhs_bound { lhs_bound } else { rhs_bound }
+        (bound @ AbsEndBound::InfiniteFuture, _) | (_, bound @ AbsEndBound::InfiniteFuture) => bound,
+        (lhs_bound @ AbsEndBound::Finite(..), rhs_bound @ AbsEndBound::Finite(..)) => {
+            if lhs_bound >= rhs_bound {
+                lhs_bound
+            } else {
+                rhs_bound
+            }
         },
     };
 
-    AbsoluteBoundPair::new(new_start_bound, new_end_bound)
+    AbsBoundPair::new(new_start_bound, new_end_bound)
 }
 
-/// Extends an [`AbsoluteBoundPair`] with an [`EmptiableAbsoluteBoundPair`]
+/// Extends an [`AbsBoundPair`] with an [`EmptiableAbsBoundPair`]
 ///
 /// See [module documentation](self) for more info.
 #[must_use]
 pub fn extend_abs_bound_pair_with_emptiable_abs_bound_pair(
-    lhs_bound_pair: &AbsoluteBoundPair,
-    rhs_bound_pair: &EmptiableAbsoluteBoundPair,
-) -> AbsoluteBoundPair {
-    let EmptiableAbsoluteBoundPair::Bound(rhs_non_empty_bound_pair) = rhs_bound_pair else {
+    lhs_bound_pair: &AbsBoundPair,
+    rhs_bound_pair: &EmptiableAbsBoundPair,
+) -> AbsBoundPair {
+    let EmptiableAbsBoundPair::Bound(rhs_non_empty_bound_pair) = rhs_bound_pair else {
         return lhs_bound_pair.clone();
     };
 
     extend_abs_bound_pair(lhs_bound_pair, rhs_non_empty_bound_pair)
 }
 
-/// Extends two [`EmptiableAbsoluteBoundPair`]
+/// Extends two [`EmptiableAbsBoundPair`]
 ///
 /// See [module documentation](self) for more info.
 #[must_use]
 pub fn extend_emptiable_abs_bound_pair(
-    lhs_bound_pair: &EmptiableAbsoluteBoundPair,
-    rhs_bound_pair: &EmptiableAbsoluteBoundPair,
-) -> EmptiableAbsoluteBoundPair {
+    lhs_bound_pair: &EmptiableAbsBoundPair,
+    rhs_bound_pair: &EmptiableAbsBoundPair,
+) -> EmptiableAbsBoundPair {
     todo!("fix");
     // match (lhs_bound_pair, rhs_bound_pair) {
-    //     (EmptiableAbsoluteBoundPair::Empty, EmptiableAbsoluteBoundPair::Empty) => EmptiableAbsoluteBoundPair::Empty,
-    //     (EmptiableAbsoluteBoundPair::Empty, bound @ EmptiableAbsoluteBoundPair::Bound(..))
-    //     | (bound @ EmptiableAbsoluteBoundPair::Bound(..), EmptiableAbsoluteBoundPair::Empty) => bound.clone(),
-    //     (EmptiableAbsoluteBoundPair::Bound(lhs_bound_pair), EmptiableAbsoluteBoundPair::Bound(rhs_bound_pair)) => {
-    //         EmptiableAbsoluteBoundPair::Bound(lhs_bound_pair.extend(rhs_bound_pair))
+    //     (EmptiableAbsBoundPair::Empty, EmptiableAbsBoundPair::Empty) => EmptiableAbsBoundPair::Empty,
+    //     (EmptiableAbsBoundPair::Empty, bound @ EmptiableAbsBoundPair::Bound(..))
+    //     | (bound @ EmptiableAbsBoundPair::Bound(..), EmptiableAbsBoundPair::Empty) => bound.clone(),
+    //     (EmptiableAbsBoundPair::Bound(lhs_bound_pair), EmptiableAbsBoundPair::Bound(rhs_bound_pair)) => {
+    //         EmptiableAbsBoundPair::Bound(lhs_bound_pair.extend(rhs_bound_pair))
     //     },
     // }
 }
 
-/// Extends two [`BoundedAbsoluteInterval`]
+/// Extends two [`BoundedAbsInterval`]
 ///
 /// See [module documentation](self) for more info.
 #[must_use]
 pub fn extend_abs_bounded_interval_pair(
-    lhs_bounded: &BoundedAbsoluteInterval,
-    rhs_bounded: &BoundedAbsoluteInterval,
-) -> BoundedAbsoluteInterval {
+    lhs_bounded: &BoundedAbsInterval,
+    rhs_bounded: &BoundedAbsInterval,
+) -> BoundedAbsInterval {
     let Some(lowest_start) = lhs_bounded.abs_start().min(rhs_bounded.abs_start()).finite() else {
         unreachable!("A bounded interval's start bound is always finite.");
     };
@@ -670,66 +672,68 @@ pub fn extend_abs_bounded_interval_pair(
         unreachable!("A bounded interval's end bound is always finite.");
     };
 
-    BoundedAbsoluteInterval::from((lowest_start, highest_end))
+    BoundedAbsInterval::from((lowest_start, highest_end))
 }
 
 // TODO: Same than extend_abs_bounded_interval_pair but for (bounded, half_bounded) and (half_bounded, half_bounded)
 
-/// Extends two [`RelativeBoundPair`]
+/// Extends two [`RelBoundPair`]
 ///
 /// See [module documentation](self) for more info.
 #[must_use]
-pub fn extend_rel_bound_pair(
-    lhs_bound_pair: &RelativeBoundPair,
-    rhs_bound_pair: &RelativeBoundPair,
-) -> RelativeBoundPair {
-    let new_start_bound = match (lhs_bound_pair.rel_start(), rhs_bound_pair.rel_start()) {
-        (bound @ RelativeStartBound::InfinitePast, _) | (_, bound @ RelativeStartBound::InfinitePast) => bound,
-        (lhs_bound @ RelativeStartBound::Finite(..), rhs_bound @ RelativeStartBound::Finite(..)) => {
-            if lhs_bound <= rhs_bound { lhs_bound } else { rhs_bound }
-        },
-    };
+pub fn extend_rel_bound_pair(lhs_bound_pair: &RelBoundPair, rhs_bound_pair: &RelBoundPair) -> RelBoundPair {
+    let new_start_bound =
+        match (lhs_bound_pair.rel_start(), rhs_bound_pair.rel_start()) {
+            (bound @ RelStartBound::InfinitePast, _) | (_, bound @ RelStartBound::InfinitePast) => bound,
+            (lhs_bound @ RelStartBound::Finite(..), rhs_bound @ RelStartBound::Finite(..)) => {
+                if lhs_bound <= rhs_bound { lhs_bound } else { rhs_bound }
+            },
+        };
 
     let new_end_bound = match (lhs_bound_pair.rel_end(), rhs_bound_pair.rel_end()) {
-        (bound @ RelativeEndBound::InfiniteFuture, _) | (_, bound @ RelativeEndBound::InfiniteFuture) => bound,
-        (lhs_bound @ RelativeEndBound::Finite(..), rhs_bound @ RelativeEndBound::Finite(..)) => {
-            if lhs_bound >= rhs_bound { lhs_bound } else { rhs_bound }
+        (bound @ RelEndBound::InfiniteFuture, _) | (_, bound @ RelEndBound::InfiniteFuture) => bound,
+        (lhs_bound @ RelEndBound::Finite(..), rhs_bound @ RelEndBound::Finite(..)) => {
+            if lhs_bound >= rhs_bound {
+                lhs_bound
+            } else {
+                rhs_bound
+            }
         },
     };
 
-    RelativeBoundPair::new(new_start_bound, new_end_bound)
+    RelBoundPair::new(new_start_bound, new_end_bound)
 }
 
-/// Extends an [`RelativeBoundPair`] with an [`EmptiableRelativeBoundPair`]
+/// Extends an [`RelBoundPair`] with an [`EmptiableRelBoundPair`]
 ///
 /// See [module documentation](self) for more info.
 #[must_use]
 pub fn extend_rel_bound_pair_with_emptiable_rel_bound_pair(
-    lhs_bound_pair: &RelativeBoundPair,
-    rhs_bound_pair: &EmptiableRelativeBoundPair,
-) -> RelativeBoundPair {
-    let EmptiableRelativeBoundPair::Bound(rhs_non_empty_bound_pair) = rhs_bound_pair else {
+    lhs_bound_pair: &RelBoundPair,
+    rhs_bound_pair: &EmptiableRelBoundPair,
+) -> RelBoundPair {
+    let EmptiableRelBoundPair::Bound(rhs_non_empty_bound_pair) = rhs_bound_pair else {
         return lhs_bound_pair.clone();
     };
 
     extend_rel_bound_pair(lhs_bound_pair, rhs_non_empty_bound_pair)
 }
 
-/// Extends two [`EmptiableRelativeBoundPair`]
+/// Extends two [`EmptiableRelBoundPair`]
 ///
 /// See [module documentation](self) for more info.
 #[must_use]
 pub fn extend_emptiable_rel_bound_pair(
-    lhs_bound_pair: &EmptiableRelativeBoundPair,
-    rhs_bound_pair: &EmptiableRelativeBoundPair,
-) -> EmptiableRelativeBoundPair {
+    lhs_bound_pair: &EmptiableRelBoundPair,
+    rhs_bound_pair: &EmptiableRelBoundPair,
+) -> EmptiableRelBoundPair {
     todo!("fix");
     // match (lhs_bound_pair, rhs_bound_pair) {
-    //     (EmptiableRelativeBoundPair::Empty, EmptiableRelativeBoundPair::Empty) => EmptiableRelativeBoundPair::Empty,
-    //     (EmptiableRelativeBoundPair::Empty, bound @ EmptiableRelativeBoundPair::Bound(..))
-    //     | (bound @ EmptiableRelativeBoundPair::Bound(..), EmptiableRelativeBoundPair::Empty) => bound.clone(),
-    //     (EmptiableRelativeBoundPair::Bound(lhs_bound_pair), EmptiableRelativeBoundPair::Bound(rhs_bound_pair)) => {
-    //         EmptiableRelativeBoundPair::Bound(lhs_bound_pair.extend(rhs_bound_pair))
+    //     (EmptiableRelBoundPair::Empty, EmptiableRelBoundPair::Empty) => EmptiableRelBoundPair::Empty,
+    //     (EmptiableRelBoundPair::Empty, bound @ EmptiableRelBoundPair::Bound(..))
+    //     | (bound @ EmptiableRelBoundPair::Bound(..), EmptiableRelBoundPair::Empty) => bound.clone(),
+    //     (EmptiableRelBoundPair::Bound(lhs_bound_pair), EmptiableRelBoundPair::Bound(rhs_bound_pair)) => {
+    //         EmptiableRelBoundPair::Bound(lhs_bound_pair.extend(rhs_bound_pair))
     //     },
     // }
 }
