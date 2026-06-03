@@ -54,7 +54,7 @@ mod from_range {
 
         assert_eq!(
             AbsoluteInterval::from_range(start..end),
-            AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times_and_inclusivities(
+            AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times_incl(
                 start,
                 BoundInclusivity::Inclusive,
                 end,
@@ -85,7 +85,7 @@ mod from_range {
 
         assert_eq!(
             AbsoluteInterval::from_range((Bound::Excluded(start), Bound::Included(end))),
-            AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times_and_inclusivities(
+            AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times_incl(
                 start,
                 BoundInclusivity::Exclusive,
                 end,
@@ -102,7 +102,7 @@ mod from_range {
 
         assert_eq!(
             AbsoluteInterval::from_range((Bound::Excluded(start), Bound::Excluded(end))),
-            AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times_and_inclusivities(
+            AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times_incl(
                 start,
                 BoundInclusivity::Exclusive,
                 end,

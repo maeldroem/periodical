@@ -874,14 +874,14 @@ pub fn cut_bounded_abs_interval(
         return CutResult::Uncut;
     }
 
-    let past_split = BoundedAbsoluteInterval::unchecked_from_times_and_inclusivities(
+    let past_split = BoundedAbsoluteInterval::unchecked_from_times_incl(
         interval.start_time(),
         interval.start_inclusivity(),
         at,
         cut_type.past_bound_inclusivity(),
     );
 
-    let future_split = BoundedAbsoluteInterval::unchecked_from_times_and_inclusivities(
+    let future_split = BoundedAbsoluteInterval::unchecked_from_times_incl(
         at,
         cut_type.future_bound_inclusivity(),
         interval.end_time(),
@@ -976,14 +976,14 @@ pub fn cut_bounded_rel_interval(
         return CutResult::Uncut;
     }
 
-    let past_split = BoundedRelativeInterval::unchecked_from_offsets_and_inclusivities(
+    let past_split = BoundedRelativeInterval::unchecked_from_offsets_incl(
         interval.start_offset(),
         interval.start_inclusivity(),
         at,
         cut_type.past_bound_inclusivity(),
     );
 
-    let future_split = BoundedRelativeInterval::unchecked_from_offsets_and_inclusivities(
+    let future_split = BoundedRelativeInterval::unchecked_from_offsets_incl(
         at,
         cut_type.future_bound_inclusivity(),
         interval.end_offset(),

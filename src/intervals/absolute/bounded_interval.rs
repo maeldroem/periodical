@@ -197,7 +197,7 @@ impl BoundedAbsoluteInterval {
     /// let time = "2026-01-01 00:00:00Z".parse::<Timestamp>()?;
     ///
     /// // Even if it violates the same time doubly inclusive invariant
-    /// let bounded_interval = BoundedAbsoluteInterval::unchecked_from_times_and_inclusivities(
+    /// let bounded_interval = BoundedAbsoluteInterval::unchecked_from_times_incl(
     ///     time,
     ///     BoundInclusivity::Inclusive,
     ///     time,
@@ -218,7 +218,7 @@ impl BoundedAbsoluteInterval {
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    pub fn unchecked_from_times_and_inclusivities(
+    pub fn unchecked_from_times_incl(
         start: Timestamp,
         start_inclusivity: BoundInclusivity,
         end: Timestamp,
@@ -245,7 +245,7 @@ impl BoundedAbsoluteInterval {
     /// let start_time = "2026-01-03 00:00:00Z".parse::<Timestamp>()?;
     /// let end_time = "2026-01-05 00:00:00Z".parse::<Timestamp>()?;
     ///
-    /// let bounded_interval = BoundedAbsoluteInterval::from_times_and_inclusivities(
+    /// let bounded_interval = BoundedAbsoluteInterval::from_times_incl(
     ///     start_time,
     ///     BoundInclusivity::Inclusive,
     ///     end_time,
@@ -265,7 +265,7 @@ impl BoundedAbsoluteInterval {
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    pub fn from_times_and_inclusivities(
+    pub fn from_times_incl(
         start: Timestamp,
         start_inclusivity: BoundInclusivity,
         end: Timestamp,
@@ -293,7 +293,7 @@ impl BoundedAbsoluteInterval {
     /// let start = "2026-01-01 00:00:00Z".parse::<Timestamp>()?;
     /// let length = Duration::from_hours(5);
     ///
-    /// let bounded_interval = BoundedAbsoluteInterval::from_start_and_length(start, length)?;
+    /// let bounded_interval = BoundedAbsoluteInterval::from_start_len(start, length)?;
     ///
     /// assert_eq!(bounded_interval.start_time(), start);
     /// assert_eq!(
@@ -302,10 +302,7 @@ impl BoundedAbsoluteInterval {
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
-    pub fn from_start_and_length(
-        start: Timestamp,
-        length: StdDuration,
-    ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
+    pub fn from_start_len(start: Timestamp, length: StdDuration) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
         Ok(Self::unchecked_from_times(
             start,
             start
@@ -332,13 +329,12 @@ impl BoundedAbsoluteInterval {
     /// let start = "2026-01-01 00:00:00Z".parse::<Timestamp>()?;
     ///
     /// // Even if it violates the doubly inclusive variant
-    /// let bounded_interval =
-    ///     BoundedAbsoluteInterval::unchecked_from_start_and_length_and_inclusivities(
-    ///         start,
-    ///         BoundInclusivity::Inclusive,
-    ///         Duration::ZERO,
-    ///         BoundInclusivity::Exclusive,
-    ///     )?;
+    /// let bounded_interval = BoundedAbsoluteInterval::unchecked_from_start_len_incl(
+    ///     start,
+    ///     BoundInclusivity::Inclusive,
+    ///     Duration::ZERO,
+    ///     BoundInclusivity::Exclusive,
+    /// )?;
     ///
     /// // It remains that way
     /// assert_eq!(bounded_interval.start_time(), start);
@@ -353,13 +349,13 @@ impl BoundedAbsoluteInterval {
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
-    pub fn unchecked_from_start_and_length_and_inclusivities(
+    pub fn unchecked_from_start_len_incl(
         start: Timestamp,
         start_inclusivity: BoundInclusivity,
         length: StdDuration,
         end_inclusivity: BoundInclusivity,
     ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
-        Ok(Self::unchecked_from_times_and_inclusivities(
+        Ok(Self::unchecked_from_times_incl(
             start,
             start_inclusivity,
             start
@@ -387,7 +383,7 @@ impl BoundedAbsoluteInterval {
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// let start_time = "2026-01-03 00:00:00Z".parse::<Timestamp>()?;
     ///
-    /// let bounded_interval = BoundedAbsoluteInterval::from_start_and_length_and_inclusivities(
+    /// let bounded_interval = BoundedAbsoluteInterval::from_start_len_incl(
     ///     start_time,
     ///     BoundInclusivity::Inclusive,
     ///     Duration::from_hours(5),
@@ -409,7 +405,7 @@ impl BoundedAbsoluteInterval {
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
-    pub fn from_start_and_length_and_inclusivities(
+    pub fn from_start_len_incl(
         start: Timestamp,
         start_inclusivity: BoundInclusivity,
         length: StdDuration,
@@ -419,7 +415,7 @@ impl BoundedAbsoluteInterval {
             return Ok(Self::unchecked_from_times(start, start));
         }
 
-        Self::unchecked_from_start_and_length_and_inclusivities(start, start_inclusivity, length, end_inclusivity)
+        Self::unchecked_from_start_len_incl(start, start_inclusivity, length, end_inclusivity)
     }
 
     /// Attempts to create a new [`BoundedAbsoluteInterval`] from an end time and a length
@@ -438,7 +434,7 @@ impl BoundedAbsoluteInterval {
     /// let end = "2026-01-01 10:00:00Z".parse::<Timestamp>()?;
     /// let length = Duration::from_hours(5);
     ///
-    /// let bounded_interval = BoundedAbsoluteInterval::from_end_and_length(end, length)?;
+    /// let bounded_interval = BoundedAbsoluteInterval::from_end_len(end, length)?;
     ///
     /// assert_eq!(
     ///     bounded_interval.start_time(),
@@ -447,10 +443,7 @@ impl BoundedAbsoluteInterval {
     /// assert_eq!(bounded_interval.end_time(), end);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
-    pub fn from_end_and_length(
-        end: Timestamp,
-        length: StdDuration,
-    ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
+    pub fn from_end_len(end: Timestamp, length: StdDuration) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
         Ok(Self::unchecked_from_times(
             end.checked_sub(length)
                 .or(Err(BoundedAbsoluteIntervalCreationError::OutOfRangeStart))?,
@@ -476,13 +469,12 @@ impl BoundedAbsoluteInterval {
     /// let end = "2026-01-01 00:00:00Z".parse::<Timestamp>()?;
     ///
     /// // Even if it violates the doubly inclusive variant
-    /// let bounded_interval =
-    ///     BoundedAbsoluteInterval::unchecked_from_end_and_length_and_inclusivities(
-    ///         end,
-    ///         BoundInclusivity::Inclusive,
-    ///         Duration::ZERO,
-    ///         BoundInclusivity::Exclusive,
-    ///     )?;
+    /// let bounded_interval = BoundedAbsoluteInterval::unchecked_from_end_len_incl(
+    ///     end,
+    ///     BoundInclusivity::Inclusive,
+    ///     Duration::ZERO,
+    ///     BoundInclusivity::Exclusive,
+    /// )?;
     ///
     /// // It remains that way
     /// assert_eq!(bounded_interval.start_time(), end);
@@ -497,13 +489,13 @@ impl BoundedAbsoluteInterval {
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
-    pub fn unchecked_from_end_and_length_and_inclusivities(
+    pub fn unchecked_from_end_len_incl(
         end: Timestamp,
         end_inclusivity: BoundInclusivity,
         length: StdDuration,
         start_inclusivity: BoundInclusivity,
     ) -> Result<Self, BoundedAbsoluteIntervalCreationError> {
-        Ok(Self::unchecked_from_times_and_inclusivities(
+        Ok(Self::unchecked_from_times_incl(
             end.checked_sub(length)
                 .or(Err(BoundedAbsoluteIntervalCreationError::OutOfRangeStart))?,
             start_inclusivity,
@@ -530,7 +522,7 @@ impl BoundedAbsoluteInterval {
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// let end_time = "2026-01-03 10:00:00Z".parse::<Timestamp>()?;
     ///
-    /// let bounded_interval = BoundedAbsoluteInterval::from_end_and_length_and_inclusivities(
+    /// let bounded_interval = BoundedAbsoluteInterval::from_end_len_incl(
     ///     end_time,
     ///     BoundInclusivity::Inclusive,
     ///     Duration::from_hours(5),
@@ -552,7 +544,7 @@ impl BoundedAbsoluteInterval {
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
-    pub fn from_end_and_length_and_inclusivities(
+    pub fn from_end_len_incl(
         end: Timestamp,
         end_inclusivity: BoundInclusivity,
         length: StdDuration,
@@ -562,7 +554,7 @@ impl BoundedAbsoluteInterval {
             return Ok(Self::unchecked_from_times(end, end));
         }
 
-        Self::unchecked_from_end_and_length_and_inclusivities(end, end_inclusivity, length, start_inclusivity)
+        Self::unchecked_from_end_len_incl(end, end_inclusivity, length, start_inclusivity)
     }
 
     /// Attempts to create a [`BoundedAbsoluteInterval`] from a [`Timestamp`] range
@@ -605,12 +597,7 @@ impl BoundedAbsoluteInterval {
             Bound::Unbounded => return Err(BoundedAbsoluteIntervalTryFromRangeError),
         };
 
-        Ok(Self::from_times_and_inclusivities(
-            start,
-            start_inclusivity,
-            end,
-            end_inclusivity,
-        ))
+        Ok(Self::from_times_incl(start, start_inclusivity, end, end_inclusivity))
     }
 
     /// Returns the finite start bound
@@ -706,7 +693,7 @@ impl BoundedAbsoluteInterval {
     /// # use jiff::Timestamp;
     /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
     /// # use periodical::intervals::meta::BoundInclusivity;
-    /// let bounded_interval = BoundedAbsoluteInterval::from_times_and_inclusivities(
+    /// let bounded_interval = BoundedAbsoluteInterval::from_times_incl(
     ///     "2025-01-01 08:00:00Z".parse::<Timestamp>()?,
     ///     BoundInclusivity::Inclusive,
     ///     "2025-01-01 16:00:00Z".parse::<Timestamp>()?,
@@ -733,7 +720,7 @@ impl BoundedAbsoluteInterval {
     /// # use jiff::Timestamp;
     /// # use periodical::intervals::absolute::BoundedAbsoluteInterval;
     /// # use periodical::intervals::meta::BoundInclusivity;
-    /// let bounded_interval = BoundedAbsoluteInterval::from_times_and_inclusivities(
+    /// let bounded_interval = BoundedAbsoluteInterval::from_times_incl(
     ///     "2025-01-01 08:00:00Z".parse::<Timestamp>()?,
     ///     BoundInclusivity::Inclusive,
     ///     "2025-01-01 16:00:00Z".parse::<Timestamp>()?,
@@ -1419,7 +1406,7 @@ impl From<((Timestamp, BoundInclusivity), (Timestamp, BoundInclusivity))> for Bo
             (Timestamp, BoundInclusivity),
         ),
     ) -> Self {
-        BoundedAbsoluteInterval::from_times_and_inclusivities(start, start_inclusivity, end, end_inclusivity)
+        BoundedAbsoluteInterval::from_times_incl(start, start_inclusivity, end, end_inclusivity)
     }
 }
 
@@ -1431,7 +1418,7 @@ impl From<(AbsoluteFiniteBoundPosition, AbsoluteFiniteBoundPosition)> for Bounde
 
 impl From<Range<Timestamp>> for BoundedAbsoluteInterval {
     fn from(range: Range<Timestamp>) -> Self {
-        BoundedAbsoluteInterval::from_times_and_inclusivities(
+        BoundedAbsoluteInterval::from_times_incl(
             range.start,
             BoundInclusivity::Inclusive,
             range.end,
@@ -1442,7 +1429,7 @@ impl From<Range<Timestamp>> for BoundedAbsoluteInterval {
 
 impl From<RangeInclusive<Timestamp>> for BoundedAbsoluteInterval {
     fn from(range: RangeInclusive<Timestamp>) -> Self {
-        BoundedAbsoluteInterval::from_times_and_inclusivities(
+        BoundedAbsoluteInterval::from_times_incl(
             *range.start(),
             BoundInclusivity::Inclusive,
             *range.end(),

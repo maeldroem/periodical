@@ -48,14 +48,14 @@ impl<'a> Arbitrary<'a> for BoundedRelativeInterval {
             .ok_or(Error::IncorrectFormat)?;
 
         if start_offset == end_offset {
-            Ok(BoundedRelativeInterval::from_offsets_and_inclusivities(
+            Ok(BoundedRelativeInterval::from_offsets_incl(
                 start_offset,
                 BoundInclusivity::Inclusive,
                 end_offset,
                 BoundInclusivity::Inclusive,
             ))
         } else {
-            Ok(BoundedRelativeInterval::from_offsets_and_inclusivities(
+            Ok(BoundedRelativeInterval::from_offsets_incl(
                 start_offset,
                 BoundInclusivity::arbitrary(u)?,
                 end_offset,
