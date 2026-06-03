@@ -1,14 +1,14 @@
 //! Interval symmetric difference
 
 use crate::intervals::absolute::{
-    AbsoluteBoundPair,
-    AbsoluteInterval,
-    BoundedAbsoluteInterval,
-    EmptiableAbsoluteBoundPair,
-    EmptiableAbsoluteInterval,
-    HalfBoundedAbsoluteInterval,
-    HasAbsoluteBoundPair,
-    HasEmptiableAbsoluteBoundPair,
+    AbsBoundPair,
+    AbsInterval,
+    BoundedAbsInterval,
+    EmptiableAbsBoundPair,
+    EmptiableAbsInterval,
+    HalfBoundedAbsInterval,
+    HasAbsBoundPair,
+    HasEmptiableAbsBoundPair,
 };
 use crate::intervals::meta::Interval;
 use crate::intervals::ops::complement::Complementable;
@@ -19,14 +19,14 @@ use crate::intervals::ops::remove_overlap::{
     OverlapRemovalResult,
 };
 use crate::intervals::relative::{
-    BoundedRelativeInterval,
-    EmptiableRelativeBoundPair,
-    EmptiableRelativeInterval,
-    HalfBoundedRelativeInterval,
-    HasEmptiableRelativeBoundPair,
-    HasRelativeBoundPair,
-    RelativeBoundPair,
-    RelativeInterval,
+    BoundedRelInterval,
+    EmptiableRelBoundPair,
+    EmptiableRelInterval,
+    HalfBoundedRelInterval,
+    HasEmptiableRelBoundPair,
+    HasRelBoundPair,
+    RelBoundPair,
+    RelInterval,
 };
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 use crate::ops::{ComplementResult, SymmetricDifferenceResult};
@@ -46,23 +46,23 @@ use crate::ops::{ComplementResult, SymmetricDifferenceResult};
 /// # use std::error::Error;
 /// # use jiff::Zoned;
 /// # use periodical::ops::SymmetricDifferenceResult;
-/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition, EmptiableAbsoluteBoundPair};
+/// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos, EmptiableAbsBoundPair};
 /// # use periodical::intervals::meta::BoundInclusivity;
 /// # use periodical::intervals::ops::set_ops::SymmetricallyDifferentiable;
-/// let first_interval = AbsoluteBoundPair::new(
-///     AbsoluteFiniteBoundPosition::new(
+/// let first_interval = AbsBoundPair::new(
+///     AbsFiniteBoundPos::new(
 ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///     ).to_start_bound(),
-///     AbsoluteFiniteBoundPosition::new(
+///     AbsFiniteBoundPos::new(
 ///         "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///     ).to_end_bound(),
 /// );
 ///
-/// let second_interval = AbsoluteBoundPair::new(
-///     AbsoluteFiniteBoundPosition::new(
+/// let second_interval = AbsBoundPair::new(
+///     AbsFiniteBoundPos::new(
 ///         "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///     ).to_start_bound(),
-///     AbsoluteFiniteBoundPosition::new(
+///     AbsFiniteBoundPos::new(
 ///         "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///     ).to_end_bound(),
 /// );
@@ -70,21 +70,21 @@ use crate::ops::{ComplementResult, SymmetricDifferenceResult};
 /// assert_eq!(
 ///     first_interval.symmetrically_differentiate(&second_interval),
 ///     SymmetricDifferenceResult::Split(
-///         EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::new(
-///             AbsoluteFiniteBoundPosition::new(
+///         EmptiableAbsBoundPair::Bound(AbsBoundPair::new(
+///             AbsFiniteBoundPos::new(
 ///                 "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///             ).to_start_bound(),
-///             AbsoluteFiniteBoundPosition::new_with_inclusivity(
+///             AbsFiniteBoundPos::new_with_inclusivity(
 ///                 "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///                 BoundInclusivity::Exclusive,
 ///             ).to_end_bound(),
 ///         )),
-///         EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::new(
-///             AbsoluteFiniteBoundPosition::new_with_inclusivity(
+///         EmptiableAbsBoundPair::Bound(AbsBoundPair::new(
+///             AbsFiniteBoundPos::new_with_inclusivity(
 ///                 "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///                 BoundInclusivity::Exclusive,
 ///             ).to_start_bound(),
-///             AbsoluteFiniteBoundPosition::new(
+///             AbsFiniteBoundPos::new(
 ///                 "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///             ).to_end_bound(),
 ///         )),
@@ -99,22 +99,22 @@ use crate::ops::{ComplementResult, SymmetricDifferenceResult};
 /// # use std::error::Error;
 /// # use jiff::Zoned;
 /// # use periodical::ops::SymmetricDifferenceResult;
-/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition, EmptiableAbsoluteBoundPair};
+/// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos, EmptiableAbsBoundPair};
 /// # use periodical::intervals::ops::set_ops::SymmetricallyDifferentiable;
-/// let first_interval = AbsoluteBoundPair::new(
-///     AbsoluteFiniteBoundPosition::new(
+/// let first_interval = AbsBoundPair::new(
+///     AbsFiniteBoundPos::new(
 ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///     ).to_start_bound(),
-///     AbsoluteFiniteBoundPosition::new(
+///     AbsFiniteBoundPos::new(
 ///         "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///     ).to_end_bound(),
 /// );
 ///
-/// let second_interval = AbsoluteBoundPair::new(
-///     AbsoluteFiniteBoundPosition::new(
+/// let second_interval = AbsBoundPair::new(
+///     AbsFiniteBoundPos::new(
 ///         "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///     ).to_start_bound(),
-///     AbsoluteFiniteBoundPosition::new(
+///     AbsFiniteBoundPos::new(
 ///         "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///     ).to_end_bound(),
 /// );
@@ -138,23 +138,23 @@ pub trait SymmetricallyDifferentiable<Rhs = Self> {
     /// # use std::error::Error;
     /// # use jiff::Zoned;
     /// # use periodical::ops::SymmetricDifferenceResult;
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition, EmptiableAbsoluteBoundPair};
+    /// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos, EmptiableAbsBoundPair};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::set_ops::SymmetricallyDifferentiable;
-    /// let first_interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBoundPosition::new(
+    /// let first_interval = AbsBoundPair::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_start_bound(),
-    ///     AbsoluteFiniteBoundPosition::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_end_bound(),
     /// );
     ///
-    /// let second_interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBoundPosition::new(
+    /// let second_interval = AbsBoundPair::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_start_bound(),
-    ///     AbsoluteFiniteBoundPosition::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_end_bound(),
     /// );
@@ -162,21 +162,21 @@ pub trait SymmetricallyDifferentiable<Rhs = Self> {
     /// assert_eq!(
     ///     first_interval.symmetrically_differentiate(&second_interval),
     ///     SymmetricDifferenceResult::Split(
-    ///         AbsoluteBoundPair::new(
-    ///             AbsoluteFiniteBoundPosition::new(
+    ///         AbsBoundPair::new(
+    ///             AbsFiniteBoundPos::new(
     ///                 "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///             ).to_start_bound(),
-    ///             AbsoluteFiniteBoundPosition::new_with_inclusivity(
+    ///             AbsFiniteBoundPos::new_with_inclusivity(
     ///                 "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///                 BoundInclusivity::Exclusive,
     ///             ).to_end_bound(),
     ///         ).to_emptiable(),
-    ///         AbsoluteBoundPair::new(
-    ///             AbsoluteFiniteBoundPosition::new_with_inclusivity(
+    ///         AbsBoundPair::new(
+    ///             AbsFiniteBoundPos::new_with_inclusivity(
     ///                 "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///                 BoundInclusivity::Exclusive,
     ///             ).to_start_bound(),
-    ///             AbsoluteFiniteBoundPosition::new(
+    ///             AbsFiniteBoundPos::new(
     ///                 "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///             ).to_end_bound(),
     ///         ).to_emptiable(),
@@ -195,33 +195,33 @@ pub trait SymmetricallyDifferentiable<Rhs = Self> {
     /// # use std::error::Error;
     /// # use jiff::Zoned;
     /// # use periodical::ops::SymmetricDifferenceResult;
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition, EmptiableAbsoluteBoundPair};
+    /// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos, EmptiableAbsBoundPair};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::overlap::{CanPositionOverlap, DisambiguatedOverlapPosition, OverlapRuleSet};
     /// # use periodical::intervals::ops::set_ops::SymmetricallyDifferentiable;
-    /// let first_interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBoundPosition::new(
+    /// let first_interval = AbsBoundPair::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_start_bound(),
-    ///     AbsoluteFiniteBoundPosition::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_end_bound(),
     /// );
     ///
-    /// let second_interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBoundPosition::new(
+    /// let second_interval = AbsBoundPair::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_start_bound(),
-    ///     AbsoluteFiniteBoundPosition::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_end_bound(),
     /// );
     ///
     /// // Only symmetrical differentiate intervals that crosses
     /// let symmetric_difference_closure = |
-    ///     a: &AbsoluteBoundPair,
-    ///     b: &AbsoluteBoundPair,
-    /// | -> SymmetricDifferenceResult<EmptiableAbsoluteBoundPair> {
+    ///     a: &AbsBoundPair,
+    ///     b: &AbsBoundPair,
+    /// | -> SymmetricDifferenceResult<EmptiableAbsBoundPair> {
     ///     match a.disambiguated_overlap_position(b, OverlapRuleSet::Strict) {
     ///         Ok(DisambiguatedOverlapPosition::CrossesStart | DisambiguatedOverlapPosition::CrossesEnd) => {
     ///             a.symmetrically_differentiate(b)
@@ -233,21 +233,21 @@ pub trait SymmetricallyDifferentiable<Rhs = Self> {
     /// assert_eq!(
     ///     first_interval.symmetrically_differentiate_with(&second_interval, symmetric_difference_closure),
     ///     SymmetricDifferenceResult::Split(
-    ///         AbsoluteBoundPair::new(
-    ///             AbsoluteFiniteBoundPosition::new(
+    ///         AbsBoundPair::new(
+    ///             AbsFiniteBoundPos::new(
     ///                 "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///             ).to_start_bound(),
-    ///             AbsoluteFiniteBoundPosition::new_with_inclusivity(
+    ///             AbsFiniteBoundPos::new_with_inclusivity(
     ///                 "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///                 BoundInclusivity::Exclusive,
     ///             ).to_end_bound(),
     ///         ).to_emptiable(),
-    ///         AbsoluteBoundPair::new(
-    ///             AbsoluteFiniteBoundPosition::new_with_inclusivity(
+    ///         AbsBoundPair::new(
+    ///             AbsFiniteBoundPos::new_with_inclusivity(
     ///                 "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///                 BoundInclusivity::Exclusive,
     ///             ).to_start_bound(),
-    ///             AbsoluteFiniteBoundPosition::new(
+    ///             AbsFiniteBoundPos::new(
     ///                 "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///             ).to_end_bound(),
     ///         ).to_emptiable(),
@@ -264,20 +264,20 @@ pub trait SymmetricallyDifferentiable<Rhs = Self> {
     }
 }
 
-impl<Rhs> SymmetricallyDifferentiable<Rhs> for AbsoluteBoundPair
+impl<Rhs> SymmetricallyDifferentiable<Rhs> for AbsBoundPair
 where
-    Rhs: HasEmptiableAbsoluteBoundPair,
+    Rhs: HasEmptiableAbsBoundPair,
 {
-    type Output = EmptiableAbsoluteBoundPair;
+    type Output = EmptiableAbsBoundPair;
 
     fn symmetrically_differentiate(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
         symmetrically_differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(self, &rhs.emptiable_abs_bound_pair())
     }
 }
 
-impl<Rhs> SymmetricallyDifferentiable<Rhs> for EmptiableAbsoluteBoundPair
+impl<Rhs> SymmetricallyDifferentiable<Rhs> for EmptiableAbsBoundPair
 where
-    Rhs: HasEmptiableAbsoluteBoundPair,
+    Rhs: HasEmptiableAbsBoundPair,
 {
     type Output = Self;
 
@@ -286,11 +286,11 @@ where
     }
 }
 
-impl<Rhs> SymmetricallyDifferentiable<Rhs> for AbsoluteInterval
+impl<Rhs> SymmetricallyDifferentiable<Rhs> for AbsInterval
 where
-    Rhs: HasEmptiableAbsoluteBoundPair,
+    Rhs: HasEmptiableAbsBoundPair,
 {
-    type Output = EmptiableAbsoluteInterval;
+    type Output = EmptiableAbsInterval;
 
     fn symmetrically_differentiate(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
         symmetrically_differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(
@@ -301,9 +301,9 @@ where
     }
 }
 
-impl<Rhs> SymmetricallyDifferentiable<Rhs> for EmptiableAbsoluteInterval
+impl<Rhs> SymmetricallyDifferentiable<Rhs> for EmptiableAbsInterval
 where
-    Rhs: HasEmptiableAbsoluteBoundPair,
+    Rhs: HasEmptiableAbsBoundPair,
 {
     type Output = Self;
 
@@ -316,11 +316,11 @@ where
     }
 }
 
-impl<Rhs> SymmetricallyDifferentiable<Rhs> for BoundedAbsoluteInterval
+impl<Rhs> SymmetricallyDifferentiable<Rhs> for BoundedAbsInterval
 where
-    Rhs: HasEmptiableAbsoluteBoundPair,
+    Rhs: HasEmptiableAbsBoundPair,
 {
-    type Output = EmptiableAbsoluteInterval;
+    type Output = EmptiableAbsInterval;
 
     fn symmetrically_differentiate(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
         symmetrically_differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(
@@ -331,11 +331,11 @@ where
     }
 }
 
-impl<Rhs> SymmetricallyDifferentiable<Rhs> for HalfBoundedAbsoluteInterval
+impl<Rhs> SymmetricallyDifferentiable<Rhs> for HalfBoundedAbsInterval
 where
-    Rhs: HasEmptiableAbsoluteBoundPair,
+    Rhs: HasEmptiableAbsBoundPair,
 {
-    type Output = EmptiableAbsoluteInterval;
+    type Output = EmptiableAbsInterval;
 
     fn symmetrically_differentiate(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
         symmetrically_differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(
@@ -346,20 +346,20 @@ where
     }
 }
 
-impl<Rhs> SymmetricallyDifferentiable<Rhs> for RelativeBoundPair
+impl<Rhs> SymmetricallyDifferentiable<Rhs> for RelBoundPair
 where
-    Rhs: HasEmptiableRelativeBoundPair,
+    Rhs: HasEmptiableRelBoundPair,
 {
-    type Output = EmptiableRelativeBoundPair;
+    type Output = EmptiableRelBoundPair;
 
     fn symmetrically_differentiate(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
         symmetrically_differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(self, &rhs.emptiable_rel_bound_pair())
     }
 }
 
-impl<Rhs> SymmetricallyDifferentiable<Rhs> for EmptiableRelativeBoundPair
+impl<Rhs> SymmetricallyDifferentiable<Rhs> for EmptiableRelBoundPair
 where
-    Rhs: HasEmptiableRelativeBoundPair,
+    Rhs: HasEmptiableRelBoundPair,
 {
     type Output = Self;
 
@@ -368,11 +368,11 @@ where
     }
 }
 
-impl<Rhs> SymmetricallyDifferentiable<Rhs> for RelativeInterval
+impl<Rhs> SymmetricallyDifferentiable<Rhs> for RelInterval
 where
-    Rhs: HasEmptiableRelativeBoundPair,
+    Rhs: HasEmptiableRelBoundPair,
 {
-    type Output = EmptiableRelativeInterval;
+    type Output = EmptiableRelInterval;
 
     fn symmetrically_differentiate(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
         symmetrically_differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(
@@ -383,9 +383,9 @@ where
     }
 }
 
-impl<Rhs> SymmetricallyDifferentiable<Rhs> for EmptiableRelativeInterval
+impl<Rhs> SymmetricallyDifferentiable<Rhs> for EmptiableRelInterval
 where
-    Rhs: HasEmptiableRelativeBoundPair,
+    Rhs: HasEmptiableRelBoundPair,
 {
     type Output = Self;
 
@@ -398,11 +398,11 @@ where
     }
 }
 
-impl<Rhs> SymmetricallyDifferentiable<Rhs> for BoundedRelativeInterval
+impl<Rhs> SymmetricallyDifferentiable<Rhs> for BoundedRelInterval
 where
-    Rhs: HasEmptiableRelativeBoundPair,
+    Rhs: HasEmptiableRelBoundPair,
 {
-    type Output = EmptiableRelativeInterval;
+    type Output = EmptiableRelInterval;
 
     fn symmetrically_differentiate(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
         symmetrically_differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(
@@ -413,11 +413,11 @@ where
     }
 }
 
-impl<Rhs> SymmetricallyDifferentiable<Rhs> for HalfBoundedRelativeInterval
+impl<Rhs> SymmetricallyDifferentiable<Rhs> for HalfBoundedRelInterval
 where
-    Rhs: HasEmptiableRelativeBoundPair,
+    Rhs: HasEmptiableRelBoundPair,
 {
-    type Output = EmptiableRelativeInterval;
+    type Output = EmptiableRelInterval;
 
     fn symmetrically_differentiate(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
         symmetrically_differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(
@@ -428,28 +428,28 @@ where
     }
 }
 
-impl SymmetricallyDifferentiable<AbsoluteBoundPair> for UnboundedInterval {
-    type Output = EmptiableAbsoluteInterval;
+impl SymmetricallyDifferentiable<AbsBoundPair> for UnboundedInterval {
+    type Output = EmptiableAbsInterval;
 
-    fn symmetrically_differentiate(&self, rhs: &AbsoluteBoundPair) -> SymmetricDifferenceResult<Self::Output> {
+    fn symmetrically_differentiate(&self, rhs: &AbsBoundPair) -> SymmetricDifferenceResult<Self::Output> {
         symmetrically_differentiate_abs_bound_pair(&self.abs_bound_pair(), rhs)
             .map_symmetric_difference(Self::Output::from)
     }
 }
 
-impl SymmetricallyDifferentiable<EmptiableAbsoluteBoundPair> for UnboundedInterval {
-    type Output = EmptiableAbsoluteInterval;
+impl SymmetricallyDifferentiable<EmptiableAbsBoundPair> for UnboundedInterval {
+    type Output = EmptiableAbsInterval;
 
-    fn symmetrically_differentiate(&self, rhs: &EmptiableAbsoluteBoundPair) -> SymmetricDifferenceResult<Self::Output> {
+    fn symmetrically_differentiate(&self, rhs: &EmptiableAbsBoundPair) -> SymmetricDifferenceResult<Self::Output> {
         symmetrically_differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(&self.abs_bound_pair(), rhs)
             .map_symmetric_difference(Self::Output::from)
     }
 }
 
-impl SymmetricallyDifferentiable<AbsoluteInterval> for UnboundedInterval {
-    type Output = EmptiableAbsoluteInterval;
+impl SymmetricallyDifferentiable<AbsInterval> for UnboundedInterval {
+    type Output = EmptiableAbsInterval;
 
-    fn symmetrically_differentiate(&self, rhs: &AbsoluteInterval) -> SymmetricDifferenceResult<Self::Output> {
+    fn symmetrically_differentiate(&self, rhs: &AbsInterval) -> SymmetricDifferenceResult<Self::Output> {
         symmetrically_differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(
             &self.abs_bound_pair(),
             &rhs.emptiable_abs_bound_pair(),
@@ -458,10 +458,10 @@ impl SymmetricallyDifferentiable<AbsoluteInterval> for UnboundedInterval {
     }
 }
 
-impl SymmetricallyDifferentiable<BoundedAbsoluteInterval> for UnboundedInterval {
-    type Output = HalfBoundedAbsoluteInterval;
+impl SymmetricallyDifferentiable<BoundedAbsInterval> for UnboundedInterval {
+    type Output = HalfBoundedAbsInterval;
 
-    fn symmetrically_differentiate(&self, rhs: &BoundedAbsoluteInterval) -> SymmetricDifferenceResult<Self::Output> {
+    fn symmetrically_differentiate(&self, rhs: &BoundedAbsInterval) -> SymmetricDifferenceResult<Self::Output> {
         match rhs.complement() {
             ComplementResult::Single(single) => SymmetricDifferenceResult::Single(single),
             ComplementResult::Split(split_before, split_after) => {
@@ -471,13 +471,10 @@ impl SymmetricallyDifferentiable<BoundedAbsoluteInterval> for UnboundedInterval 
     }
 }
 
-impl SymmetricallyDifferentiable<HalfBoundedAbsoluteInterval> for UnboundedInterval {
-    type Output = HalfBoundedAbsoluteInterval;
+impl SymmetricallyDifferentiable<HalfBoundedAbsInterval> for UnboundedInterval {
+    type Output = HalfBoundedAbsInterval;
 
-    fn symmetrically_differentiate(
-        &self,
-        rhs: &HalfBoundedAbsoluteInterval,
-    ) -> SymmetricDifferenceResult<Self::Output> {
+    fn symmetrically_differentiate(&self, rhs: &HalfBoundedAbsInterval) -> SymmetricDifferenceResult<Self::Output> {
         match rhs.complement() {
             ComplementResult::Single(single) => SymmetricDifferenceResult::Single(single),
             ComplementResult::Split(split_before, split_after) => {
@@ -487,28 +484,28 @@ impl SymmetricallyDifferentiable<HalfBoundedAbsoluteInterval> for UnboundedInter
     }
 }
 
-impl SymmetricallyDifferentiable<RelativeBoundPair> for UnboundedInterval {
-    type Output = EmptiableRelativeInterval;
+impl SymmetricallyDifferentiable<RelBoundPair> for UnboundedInterval {
+    type Output = EmptiableRelInterval;
 
-    fn symmetrically_differentiate(&self, rhs: &RelativeBoundPair) -> SymmetricDifferenceResult<Self::Output> {
+    fn symmetrically_differentiate(&self, rhs: &RelBoundPair) -> SymmetricDifferenceResult<Self::Output> {
         symmetrically_differentiate_rel_bound_pair(&self.rel_bound_pair(), rhs)
             .map_symmetric_difference(Self::Output::from)
     }
 }
 
-impl SymmetricallyDifferentiable<EmptiableRelativeBoundPair> for UnboundedInterval {
-    type Output = EmptiableRelativeInterval;
+impl SymmetricallyDifferentiable<EmptiableRelBoundPair> for UnboundedInterval {
+    type Output = EmptiableRelInterval;
 
-    fn symmetrically_differentiate(&self, rhs: &EmptiableRelativeBoundPair) -> SymmetricDifferenceResult<Self::Output> {
+    fn symmetrically_differentiate(&self, rhs: &EmptiableRelBoundPair) -> SymmetricDifferenceResult<Self::Output> {
         symmetrically_differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(&self.rel_bound_pair(), rhs)
             .map_symmetric_difference(Self::Output::from)
     }
 }
 
-impl SymmetricallyDifferentiable<RelativeInterval> for UnboundedInterval {
-    type Output = EmptiableRelativeInterval;
+impl SymmetricallyDifferentiable<RelInterval> for UnboundedInterval {
+    type Output = EmptiableRelInterval;
 
-    fn symmetrically_differentiate(&self, rhs: &RelativeInterval) -> SymmetricDifferenceResult<Self::Output> {
+    fn symmetrically_differentiate(&self, rhs: &RelInterval) -> SymmetricDifferenceResult<Self::Output> {
         symmetrically_differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(
             &self.rel_bound_pair(),
             &rhs.emptiable_rel_bound_pair(),
@@ -517,10 +514,10 @@ impl SymmetricallyDifferentiable<RelativeInterval> for UnboundedInterval {
     }
 }
 
-impl SymmetricallyDifferentiable<EmptiableRelativeInterval> for UnboundedInterval {
-    type Output = EmptiableRelativeInterval;
+impl SymmetricallyDifferentiable<EmptiableRelInterval> for UnboundedInterval {
+    type Output = EmptiableRelInterval;
 
-    fn symmetrically_differentiate(&self, rhs: &EmptiableRelativeInterval) -> SymmetricDifferenceResult<Self::Output> {
+    fn symmetrically_differentiate(&self, rhs: &EmptiableRelInterval) -> SymmetricDifferenceResult<Self::Output> {
         symmetrically_differentiate_emptiable_rel_bound_pair(
             &self.emptiable_rel_bound_pair(),
             &rhs.emptiable_rel_bound_pair(),
@@ -529,10 +526,10 @@ impl SymmetricallyDifferentiable<EmptiableRelativeInterval> for UnboundedInterva
     }
 }
 
-impl SymmetricallyDifferentiable<BoundedRelativeInterval> for UnboundedInterval {
-    type Output = HalfBoundedRelativeInterval;
+impl SymmetricallyDifferentiable<BoundedRelInterval> for UnboundedInterval {
+    type Output = HalfBoundedRelInterval;
 
-    fn symmetrically_differentiate(&self, rhs: &BoundedRelativeInterval) -> SymmetricDifferenceResult<Self::Output> {
+    fn symmetrically_differentiate(&self, rhs: &BoundedRelInterval) -> SymmetricDifferenceResult<Self::Output> {
         match rhs.complement() {
             ComplementResult::Single(single) => SymmetricDifferenceResult::Single(single),
             ComplementResult::Split(split_before, split_after) => {
@@ -542,13 +539,10 @@ impl SymmetricallyDifferentiable<BoundedRelativeInterval> for UnboundedInterval 
     }
 }
 
-impl SymmetricallyDifferentiable<HalfBoundedRelativeInterval> for UnboundedInterval {
-    type Output = HalfBoundedRelativeInterval;
+impl SymmetricallyDifferentiable<HalfBoundedRelInterval> for UnboundedInterval {
+    type Output = HalfBoundedRelInterval;
 
-    fn symmetrically_differentiate(
-        &self,
-        rhs: &HalfBoundedRelativeInterval,
-    ) -> SymmetricDifferenceResult<Self::Output> {
+    fn symmetrically_differentiate(&self, rhs: &HalfBoundedRelInterval) -> SymmetricDifferenceResult<Self::Output> {
         match rhs.complement() {
             ComplementResult::Single(single) => SymmetricDifferenceResult::Single(single),
             ComplementResult::Split(split_before, split_after) => {
@@ -589,14 +583,14 @@ where
     }
 }
 
-/// Symmetrically differentiates two [`AbsoluteBoundPair`]
+/// Symmetrically differentiates two [`AbsBoundPair`]
 ///
 /// See [`SymmetricallyDifferentiable`] for more information.
 #[must_use]
 pub fn symmetrically_differentiate_abs_bound_pair(
-    a: &AbsoluteBoundPair,
-    b: &AbsoluteBoundPair,
-) -> SymmetricDifferenceResult<EmptiableAbsoluteBoundPair> {
+    a: &AbsBoundPair,
+    b: &AbsBoundPair,
+) -> SymmetricDifferenceResult<EmptiableAbsBoundPair> {
     if !a.simple_overlaps(b) {
         return SymmetricDifferenceResult::Separate;
     }
@@ -612,28 +606,20 @@ pub fn symmetrically_differentiate_abs_bound_pair(
 
     match (diff_a_with_b, diff_b_with_a) {
         (
-            OverlapRemovalResult::Single(EmptiableAbsoluteBoundPair::Empty),
-            OverlapRemovalResult::Single(EmptiableAbsoluteBoundPair::Empty),
-        ) => SymmetricDifferenceResult::Single(EmptiableAbsoluteBoundPair::Empty),
-        (
-            OverlapRemovalResult::Single(single_diff),
-            OverlapRemovalResult::Single(EmptiableAbsoluteBoundPair::Empty),
-        )
-        | (
-            OverlapRemovalResult::Single(EmptiableAbsoluteBoundPair::Empty),
-            OverlapRemovalResult::Single(single_diff),
-        ) => SymmetricDifferenceResult::Single(single_diff),
+            OverlapRemovalResult::Single(EmptiableAbsBoundPair::Empty),
+            OverlapRemovalResult::Single(EmptiableAbsBoundPair::Empty),
+        ) => SymmetricDifferenceResult::Single(EmptiableAbsBoundPair::Empty),
+        (OverlapRemovalResult::Single(single_diff), OverlapRemovalResult::Single(EmptiableAbsBoundPair::Empty))
+        | (OverlapRemovalResult::Single(EmptiableAbsBoundPair::Empty), OverlapRemovalResult::Single(single_diff)) => {
+            SymmetricDifferenceResult::Single(single_diff)
+        },
         (OverlapRemovalResult::Single(first_single_diff), OverlapRemovalResult::Single(second_single_diff)) => {
             SymmetricDifferenceResult::Split(first_single_diff, second_single_diff)
         },
-        (
-            OverlapRemovalResult::Split(split1, split2),
-            OverlapRemovalResult::Single(EmptiableAbsoluteBoundPair::Empty),
-        )
-        | (
-            OverlapRemovalResult::Single(EmptiableAbsoluteBoundPair::Empty),
-            OverlapRemovalResult::Split(split1, split2),
-        ) => SymmetricDifferenceResult::Split(split1, split2),
+        (OverlapRemovalResult::Split(split1, split2), OverlapRemovalResult::Single(EmptiableAbsBoundPair::Empty))
+        | (OverlapRemovalResult::Single(EmptiableAbsBoundPair::Empty), OverlapRemovalResult::Split(split1, split2)) => {
+            SymmetricDifferenceResult::Split(split1, split2)
+        },
         (OverlapRemovalResult::Split(..), _) | (_, OverlapRemovalResult::Split(..)) => {
             unreachable!(
                 "No possible interval configuration exist where A \\ B (A diff B) returns a `Split` result, but at \
@@ -643,8 +629,8 @@ pub fn symmetrically_differentiate_abs_bound_pair(
     }
 }
 
-/// Symmetrically differentiates an [`AbsoluteBoundPair`] with an
-/// [`EmptiableAbsoluteBoundPair`]
+/// Symmetrically differentiates an [`AbsBoundPair`] with an
+/// [`EmptiableAbsBoundPair`]
 ///
 /// Empty intervals are not positioned in time, and are always "outside",
 /// therefore cannot be differentiated.
@@ -652,17 +638,17 @@ pub fn symmetrically_differentiate_abs_bound_pair(
 /// See [`SymmetricallyDifferentiable`] for more information.
 #[must_use]
 pub fn symmetrically_differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(
-    a: &AbsoluteBoundPair,
-    b: &EmptiableAbsoluteBoundPair,
-) -> SymmetricDifferenceResult<EmptiableAbsoluteBoundPair> {
-    let EmptiableAbsoluteBoundPair::Bound(b) = b else {
+    a: &AbsBoundPair,
+    b: &EmptiableAbsBoundPair,
+) -> SymmetricDifferenceResult<EmptiableAbsBoundPair> {
+    let EmptiableAbsBoundPair::Bound(b) = b else {
         return SymmetricDifferenceResult::Separate;
     };
 
     symmetrically_differentiate_abs_bound_pair(a, b)
 }
 
-/// Symmetrically differentiates two [`EmptiableAbsoluteBoundPair`]
+/// Symmetrically differentiates two [`EmptiableAbsBoundPair`]
 ///
 /// Empty intervals are not positioned in time, and are always "outside",
 /// therefore cannot be differentiated.
@@ -670,24 +656,24 @@ pub fn symmetrically_differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(
 /// See [`SymmetricallyDifferentiable`] for more information.
 #[must_use]
 pub fn symmetrically_differentiate_emptiable_abs_bound_pair(
-    a: &EmptiableAbsoluteBoundPair,
-    b: &EmptiableAbsoluteBoundPair,
-) -> SymmetricDifferenceResult<EmptiableAbsoluteBoundPair> {
-    let EmptiableAbsoluteBoundPair::Bound(a) = a else {
+    a: &EmptiableAbsBoundPair,
+    b: &EmptiableAbsBoundPair,
+) -> SymmetricDifferenceResult<EmptiableAbsBoundPair> {
+    let EmptiableAbsBoundPair::Bound(a) = a else {
         return SymmetricDifferenceResult::Separate;
     };
 
     symmetrically_differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(a, b)
 }
 
-/// Symmetrically differentiates two [`RelativeBoundPair`]
+/// Symmetrically differentiates two [`RelBoundPair`]
 ///
 /// See [`SymmetricallyDifferentiable`] for more information.
 #[must_use]
 pub fn symmetrically_differentiate_rel_bound_pair(
-    a: &RelativeBoundPair,
-    b: &RelativeBoundPair,
-) -> SymmetricDifferenceResult<EmptiableRelativeBoundPair> {
+    a: &RelBoundPair,
+    b: &RelBoundPair,
+) -> SymmetricDifferenceResult<EmptiableRelBoundPair> {
     if !a.simple_overlaps(b) {
         return SymmetricDifferenceResult::Separate;
     }
@@ -703,28 +689,20 @@ pub fn symmetrically_differentiate_rel_bound_pair(
 
     match (diff_a_with_b, diff_b_with_a) {
         (
-            OverlapRemovalResult::Single(EmptiableRelativeBoundPair::Empty),
-            OverlapRemovalResult::Single(EmptiableRelativeBoundPair::Empty),
-        ) => SymmetricDifferenceResult::Single(EmptiableRelativeBoundPair::Empty),
-        (
-            OverlapRemovalResult::Single(single_diff),
-            OverlapRemovalResult::Single(EmptiableRelativeBoundPair::Empty),
-        )
-        | (
-            OverlapRemovalResult::Single(EmptiableRelativeBoundPair::Empty),
-            OverlapRemovalResult::Single(single_diff),
-        ) => SymmetricDifferenceResult::Single(single_diff),
+            OverlapRemovalResult::Single(EmptiableRelBoundPair::Empty),
+            OverlapRemovalResult::Single(EmptiableRelBoundPair::Empty),
+        ) => SymmetricDifferenceResult::Single(EmptiableRelBoundPair::Empty),
+        (OverlapRemovalResult::Single(single_diff), OverlapRemovalResult::Single(EmptiableRelBoundPair::Empty))
+        | (OverlapRemovalResult::Single(EmptiableRelBoundPair::Empty), OverlapRemovalResult::Single(single_diff)) => {
+            SymmetricDifferenceResult::Single(single_diff)
+        },
         (OverlapRemovalResult::Single(first_single_diff), OverlapRemovalResult::Single(second_single_diff)) => {
             SymmetricDifferenceResult::Split(first_single_diff, second_single_diff)
         },
-        (
-            OverlapRemovalResult::Split(split1, split2),
-            OverlapRemovalResult::Single(EmptiableRelativeBoundPair::Empty),
-        )
-        | (
-            OverlapRemovalResult::Single(EmptiableRelativeBoundPair::Empty),
-            OverlapRemovalResult::Split(split1, split2),
-        ) => SymmetricDifferenceResult::Split(split1, split2),
+        (OverlapRemovalResult::Split(split1, split2), OverlapRemovalResult::Single(EmptiableRelBoundPair::Empty))
+        | (OverlapRemovalResult::Single(EmptiableRelBoundPair::Empty), OverlapRemovalResult::Split(split1, split2)) => {
+            SymmetricDifferenceResult::Split(split1, split2)
+        },
         (OverlapRemovalResult::Split(..), _) | (_, OverlapRemovalResult::Split(..)) => {
             unreachable!(
                 "No possible interval configuration exist where A \\ B (A diff B) returns a `Split` result, but at \
@@ -734,8 +712,8 @@ pub fn symmetrically_differentiate_rel_bound_pair(
     }
 }
 
-/// Symmetrically differentiates an [`RelativeBoundPair`] with an
-/// [`EmptiableRelativeBoundPair`]
+/// Symmetrically differentiates an [`RelBoundPair`] with an
+/// [`EmptiableRelBoundPair`]
 ///
 /// Empty intervals are not positioned in time, and are always "outside",
 /// therefore cannot be differentiated.
@@ -743,17 +721,17 @@ pub fn symmetrically_differentiate_rel_bound_pair(
 /// See [`SymmetricallyDifferentiable`] for more information.
 #[must_use]
 pub fn symmetrically_differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(
-    a: &RelativeBoundPair,
-    b: &EmptiableRelativeBoundPair,
-) -> SymmetricDifferenceResult<EmptiableRelativeBoundPair> {
-    let EmptiableRelativeBoundPair::Bound(b) = b else {
+    a: &RelBoundPair,
+    b: &EmptiableRelBoundPair,
+) -> SymmetricDifferenceResult<EmptiableRelBoundPair> {
+    let EmptiableRelBoundPair::Bound(b) = b else {
         return SymmetricDifferenceResult::Separate;
     };
 
     symmetrically_differentiate_rel_bound_pair(a, b)
 }
 
-/// Symmetrically differentiates two [`EmptiableRelativeBoundPair`]
+/// Symmetrically differentiates two [`EmptiableRelBoundPair`]
 ///
 /// Empty intervals are not positioned in time, and are always "outside",
 /// therefore cannot be differentiated.
@@ -761,10 +739,10 @@ pub fn symmetrically_differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(
 /// See [`SymmetricallyDifferentiable`] for more information.
 #[must_use]
 pub fn symmetrically_differentiate_emptiable_rel_bound_pair(
-    a: &EmptiableRelativeBoundPair,
-    b: &EmptiableRelativeBoundPair,
-) -> SymmetricDifferenceResult<EmptiableRelativeBoundPair> {
-    let EmptiableRelativeBoundPair::Bound(a) = a else {
+    a: &EmptiableRelBoundPair,
+    b: &EmptiableRelBoundPair,
+) -> SymmetricDifferenceResult<EmptiableRelBoundPair> {
+    let EmptiableRelBoundPair::Bound(a) = a else {
         return SymmetricDifferenceResult::Separate;
     };
 

@@ -4,12 +4,12 @@ use jiff::Timestamp;
 use jiff::tz::TimeZone;
 
 use crate::intervals::absolute::{
-    AbsoluteBoundPair,
-    AbsoluteInterval,
-    EmptiableAbsoluteBoundPair,
-    EmptiableAbsoluteInterval,
-    HasAbsoluteBoundPair,
-    HasEmptiableAbsoluteBoundPair,
+    AbsBoundPair,
+    AbsInterval,
+    EmptiableAbsBoundPair,
+    EmptiableAbsInterval,
+    HasAbsBoundPair,
+    HasEmptiableAbsBoundPair,
 };
 use crate::intervals::ops::precision::absolute::bound::{
     precise_abs_end_bound,
@@ -32,16 +32,16 @@ use crate::ops::{Precision, PrecisionOutOfRangeError};
 /// # use jiff::Zoned;
 /// # use jiff::tz::TimeZone;
 /// # use periodical::ops::{Precision, PrecisionMode};
-/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
-/// # use periodical::intervals::ops::precision::PreciseAbsoluteInterval;
-/// let interval = AbsoluteBoundPair::new(
-///     AbsoluteFiniteBoundPosition::new(
+/// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos};
+/// # use periodical::intervals::ops::precision::PreciseAbsInterval;
+/// let interval = AbsBoundPair::new(
+///     AbsFiniteBoundPos::new(
 ///         "2025-01-01 08:03:29.591[Europe/Oslo]"
 ///             .parse::<Zoned>()?
 ///             .timestamp(),
 ///     )
 ///     .to_start_bound(),
-///     AbsoluteFiniteBoundPosition::new(
+///     AbsFiniteBoundPos::new(
 ///         "2025-01-01 15:57:44.041[Europe/Oslo]"
 ///             .parse::<Zoned>()?
 ///             .timestamp(),
@@ -54,14 +54,14 @@ use crate::ops::{Precision, PrecisionOutOfRangeError};
 ///         TimeZone::get("Europe/Oslo")?,
 ///         Precision::new(Duration::from_mins(5), PrecisionMode::ToPast)?,
 ///     ),
-///     Ok(AbsoluteBoundPair::new(
-///         AbsoluteFiniteBoundPosition::new(
+///     Ok(AbsBoundPair::new(
+///         AbsFiniteBoundPos::new(
 ///             "2025-01-01 08:00:00[Europe/Oslo]"
 ///                 .parse::<Zoned>()?
 ///                 .timestamp(),
 ///         )
 ///         .to_start_bound(),
-///         AbsoluteFiniteBoundPosition::new(
+///         AbsFiniteBoundPos::new(
 ///             "2025-01-01 15:55:00[Europe/Oslo]"
 ///                 .parse::<Zoned>()?
 ///                 .timestamp(),
@@ -71,7 +71,7 @@ use crate::ops::{Precision, PrecisionOutOfRangeError};
 /// );
 /// # Ok::<(), Box<dyn Error>>(())
 /// ```
-pub trait PreciseAbsoluteInterval {
+pub trait PreciseAbsInterval {
     /// Output of methods precising an interval
     type PrecisedIntervalOutput;
 
@@ -87,16 +87,16 @@ pub trait PreciseAbsoluteInterval {
     /// # use jiff::Zoned;
     /// # use jiff::tz::TimeZone;
     /// # use periodical::ops::{Precision, PrecisionMode};
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
-    /// # use periodical::intervals::ops::precision::PreciseAbsoluteInterval;
-    /// let interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBoundPosition::new(
+    /// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos};
+    /// # use periodical::intervals::ops::precision::PreciseAbsInterval;
+    /// let interval = AbsBoundPair::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 08:03:29.591[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
     ///     )
     ///     .to_start_bound(),
-    ///     AbsoluteFiniteBoundPosition::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 15:57:44.041[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
@@ -110,14 +110,14 @@ pub trait PreciseAbsoluteInterval {
     ///         Precision::new(Duration::from_mins(5), PrecisionMode::ToPast)?,
     ///         Precision::new(Duration::from_mins(5), PrecisionMode::ToFuture)?,
     ///     ),
-    ///     Ok(AbsoluteBoundPair::new(
-    ///         AbsoluteFiniteBoundPosition::new(
+    ///     Ok(AbsBoundPair::new(
+    ///         AbsFiniteBoundPos::new(
     ///             "2025-01-01 08:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
     ///         )
     ///         .to_start_bound(),
-    ///         AbsoluteFiniteBoundPosition::new(
+    ///         AbsFiniteBoundPos::new(
     ///             "2025-01-01 16:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
@@ -147,16 +147,16 @@ pub trait PreciseAbsoluteInterval {
     /// # use jiff::Zoned;
     /// # use jiff::tz::TimeZone;
     /// # use periodical::ops::{Precision, PrecisionMode};
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
-    /// # use periodical::intervals::ops::precision::PreciseAbsoluteInterval;
-    /// let interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBoundPosition::new(
+    /// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos};
+    /// # use periodical::intervals::ops::precision::PreciseAbsInterval;
+    /// let interval = AbsBoundPair::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 08:03:29.591[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
     ///     )
     ///     .to_start_bound(),
-    ///     AbsoluteFiniteBoundPosition::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 15:57:44.041[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
@@ -169,14 +169,14 @@ pub trait PreciseAbsoluteInterval {
     ///         TimeZone::get("Europe/Oslo")?,
     ///         Precision::new(Duration::from_mins(5), PrecisionMode::ToPast)?,
     ///     ),
-    ///     Ok(AbsoluteBoundPair::new(
-    ///         AbsoluteFiniteBoundPosition::new(
+    ///     Ok(AbsBoundPair::new(
+    ///         AbsFiniteBoundPos::new(
     ///             "2025-01-01 08:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
     ///         )
     ///         .to_start_bound(),
-    ///         AbsoluteFiniteBoundPosition::new(
+    ///         AbsFiniteBoundPos::new(
     ///             "2025-01-01 15:55:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
@@ -204,16 +204,16 @@ pub trait PreciseAbsoluteInterval {
     /// # use jiff::Zoned;
     /// # use jiff::tz::TimeZone;
     /// # use periodical::ops::{Precision, PrecisionMode};
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
-    /// # use periodical::intervals::ops::precision::PreciseAbsoluteInterval;
-    /// let interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBoundPosition::new(
+    /// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos};
+    /// # use periodical::intervals::ops::precision::PreciseAbsInterval;
+    /// let interval = AbsBoundPair::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 08:11:29.591[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
     ///     )
     ///     .to_start_bound(),
-    ///     AbsoluteFiniteBoundPosition::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 15:57:44.041[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
@@ -233,14 +233,14 @@ pub trait PreciseAbsoluteInterval {
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
     ///     ),
-    ///     Ok(AbsoluteBoundPair::new(
-    ///         AbsoluteFiniteBoundPosition::new(
+    ///     Ok(AbsBoundPair::new(
+    ///         AbsFiniteBoundPos::new(
     ///             "2025-01-01 08:14:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
     ///         )
     ///         .to_start_bound(),
-    ///         AbsoluteFiniteBoundPosition::new(
+    ///         AbsFiniteBoundPos::new(
     ///             "2025-01-01 15:56:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
@@ -272,16 +272,16 @@ pub trait PreciseAbsoluteInterval {
     /// # use jiff::Zoned;
     /// # use jiff::tz::TimeZone;
     /// # use periodical::ops::{Precision, PrecisionMode};
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
-    /// # use periodical::intervals::ops::precision::PreciseAbsoluteInterval;
-    /// let interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBoundPosition::new(
+    /// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos};
+    /// # use periodical::intervals::ops::precision::PreciseAbsInterval;
+    /// let interval = AbsBoundPair::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 08:11:29.591[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
     ///     )
     ///     .to_start_bound(),
-    ///     AbsoluteFiniteBoundPosition::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 15:57:44.041[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
@@ -297,14 +297,14 @@ pub trait PreciseAbsoluteInterval {
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
     ///     ),
-    ///     Ok(AbsoluteBoundPair::new(
-    ///         AbsoluteFiniteBoundPosition::new(
+    ///     Ok(AbsBoundPair::new(
+    ///         AbsFiniteBoundPos::new(
     ///             "2025-01-01 08:14:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
     ///         )
     ///         .to_start_bound(),
-    ///         AbsoluteFiniteBoundPosition::new(
+    ///         AbsFiniteBoundPos::new(
     ///             "2025-01-01 16:03:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
@@ -325,7 +325,7 @@ pub trait PreciseAbsoluteInterval {
     }
 }
 
-impl PreciseAbsoluteInterval for AbsoluteBoundPair {
+impl PreciseAbsInterval for AbsBoundPair {
     type PrecisedIntervalOutput = Result<Self, PrecisionOutOfRangeError>;
 
     fn precise_interval_with_different_precisions(
@@ -349,7 +349,7 @@ impl PreciseAbsoluteInterval for AbsoluteBoundPair {
     }
 }
 
-impl PreciseAbsoluteInterval for EmptiableAbsoluteBoundPair {
+impl PreciseAbsInterval for EmptiableAbsBoundPair {
     type PrecisedIntervalOutput = Result<Self, PrecisionOutOfRangeError>;
 
     fn precise_interval_with_different_precisions(
@@ -389,7 +389,7 @@ impl PreciseAbsoluteInterval for EmptiableAbsoluteBoundPair {
     }
 }
 
-impl PreciseAbsoluteInterval for AbsoluteInterval {
+impl PreciseAbsInterval for AbsInterval {
     type PrecisedIntervalOutput = Result<Self, PrecisionOutOfRangeError>;
 
     fn precise_interval_with_different_precisions(
@@ -421,7 +421,7 @@ impl PreciseAbsoluteInterval for AbsoluteInterval {
     }
 }
 
-impl PreciseAbsoluteInterval for EmptiableAbsoluteInterval {
+impl PreciseAbsInterval for EmptiableAbsInterval {
     type PrecisedIntervalOutput = Result<Self, PrecisionOutOfRangeError>;
 
     fn precise_interval_with_different_precisions(
@@ -430,7 +430,7 @@ impl PreciseAbsoluteInterval for EmptiableAbsoluteInterval {
         precision_start: Precision,
         precision_end: Precision,
     ) -> Self::PrecisedIntervalOutput {
-        if let EmptiableAbsoluteBoundPair::Bound(ref abs_bound_pair) = self.emptiable_abs_bound_pair() {
+        if let EmptiableAbsBoundPair::Bound(ref abs_bound_pair) = self.emptiable_abs_bound_pair() {
             Ok(precise_abs_bound_pair(abs_bound_pair, tz, precision_start, precision_end)?.to_emptiable_interval())
         } else {
             Ok(Self::Empty(EmptyInterval))
@@ -445,7 +445,7 @@ impl PreciseAbsoluteInterval for EmptiableAbsoluteInterval {
         precision_end: Precision,
         base_end: Timestamp,
     ) -> Self::PrecisedIntervalOutput {
-        if let EmptiableAbsoluteBoundPair::Bound(ref abs_bound_pair) = self.emptiable_abs_bound_pair() {
+        if let EmptiableAbsBoundPair::Bound(ref abs_bound_pair) = self.emptiable_abs_bound_pair() {
             Ok(precise_abs_bound_pair_with_base_time(
                 abs_bound_pair,
                 tz,
@@ -461,37 +461,37 @@ impl PreciseAbsoluteInterval for EmptiableAbsoluteInterval {
     }
 }
 
-/// Precises [`AbsoluteBoundPair`] with the given [`Precision`]s
+/// Precises [`AbsBoundPair`] with the given [`Precision`]s
 ///
 /// # Errors
 ///
 /// See [`Precision::precise_time`]
 pub fn precise_abs_bound_pair(
-    bound_pair: &AbsoluteBoundPair,
+    bound_pair: &AbsBoundPair,
     tz: TimeZone,
     precision_start: Precision,
     precision_end: Precision,
-) -> Result<AbsoluteBoundPair, PrecisionOutOfRangeError> {
-    Ok(AbsoluteBoundPair::new(
+) -> Result<AbsBoundPair, PrecisionOutOfRangeError> {
+    Ok(AbsBoundPair::new(
         precise_abs_start_bound(&bound_pair.start(), tz.clone(), precision_start)?,
         precise_abs_end_bound(&bound_pair.end(), tz, precision_end)?,
     ))
 }
 
-/// Precises [`AbsoluteBoundPair`] with the given [`Precision`]s and base times
+/// Precises [`AbsBoundPair`] with the given [`Precision`]s and base times
 ///
 /// # Errors
 ///
 /// See [`Precision::precise_time_with_base_time`]
 pub fn precise_abs_bound_pair_with_base_time(
-    bound_pair: &AbsoluteBoundPair,
+    bound_pair: &AbsBoundPair,
     tz: TimeZone,
     precision_start: Precision,
     base_start: Timestamp,
     precision_end: Precision,
     base_end: Timestamp,
-) -> Result<AbsoluteBoundPair, PrecisionOutOfRangeError> {
-    Ok(AbsoluteBoundPair::new(
+) -> Result<AbsBoundPair, PrecisionOutOfRangeError> {
+    Ok(AbsBoundPair::new(
         precise_abs_start_bound_with_base_time(&bound_pair.start(), tz.clone(), precision_start, base_start)?,
         precise_abs_end_bound_with_base_time(&bound_pair.end(), tz, precision_end, base_end)?,
     ))

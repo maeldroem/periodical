@@ -14,14 +14,14 @@ use jiff::Timestamp;
 use serde::{Deserialize, Serialize};
 
 use crate::intervals::absolute::{
-    AbsoluteBoundPair,
-    AbsoluteEndBound,
-    AbsoluteInterval,
-    AbsoluteStartBound,
-    BoundedAbsoluteInterval,
-    EmptiableAbsoluteInterval,
-    HalfBoundedAbsoluteInterval,
-    HasAbsoluteBoundPair,
+    AbsBoundPair,
+    AbsEndBound,
+    AbsInterval,
+    AbsStartBound,
+    BoundedAbsInterval,
+    EmptiableAbsInterval,
+    HalfBoundedAbsInterval,
+    HasAbsBoundPair,
 };
 use crate::intervals::meta::{
     BoundInclusivity,
@@ -38,77 +38,77 @@ use crate::intervals::meta::{
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 
 /// Possession of possibly empty absolute bound pair
-pub trait HasEmptiableAbsoluteBoundPair {
-    /// Returns the [`EmptiableAbsoluteBoundPair`] of the object
+pub trait HasEmptiableAbsBoundPair {
+    /// Returns the [`EmptiableAbsBoundPair`] of the object
     #[must_use]
-    fn emptiable_abs_bound_pair(&self) -> EmptiableAbsoluteBoundPair;
+    fn emptiable_abs_bound_pair(&self) -> EmptiableAbsBoundPair;
 
-    /// Returns [the absolute start bound](AbsoluteStartBound) of the object, if
+    /// Returns [the absolute start bound](AbsStartBound) of the object, if
     /// applicable
     #[must_use]
-    fn partial_abs_start(&self) -> Option<AbsoluteStartBound>;
+    fn partial_abs_start(&self) -> Option<AbsStartBound>;
 
-    /// Returns [the absolute end bound](AbsoluteEndBound) of the object, if
+    /// Returns [the absolute end bound](AbsEndBound) of the object, if
     /// applicable
     #[must_use]
-    fn partial_abs_end(&self) -> Option<AbsoluteEndBound>;
+    fn partial_abs_end(&self) -> Option<AbsEndBound>;
 }
 
-/// All implementors of [`HasAbsoluteBoundPair`] implement
-/// [`HasEmptiableAbsoluteBoundPair`]. This could change in the future to
+/// All implementors of [`HasAbsBoundPair`] implement
+/// [`HasEmptiableAbsBoundPair`]. This could change in the future to
 /// separate emptiable from non-emptiable bound pairs.
-impl<T> HasEmptiableAbsoluteBoundPair for T
+impl<T> HasEmptiableAbsBoundPair for T
 where
-    T: HasAbsoluteBoundPair,
+    T: HasAbsBoundPair,
 {
-    fn emptiable_abs_bound_pair(&self) -> EmptiableAbsoluteBoundPair {
-        EmptiableAbsoluteBoundPair::Bound(self.abs_bound_pair())
+    fn emptiable_abs_bound_pair(&self) -> EmptiableAbsBoundPair {
+        EmptiableAbsBoundPair::Bound(self.abs_bound_pair())
     }
 
-    fn partial_abs_start(&self) -> Option<AbsoluteStartBound> {
+    fn partial_abs_start(&self) -> Option<AbsStartBound> {
         Some(self.abs_start())
     }
 
-    fn partial_abs_end(&self) -> Option<AbsoluteEndBound> {
+    fn partial_abs_end(&self) -> Option<AbsEndBound> {
         Some(self.abs_end())
     }
 }
 
-/// Enum containing [`AbsoluteBoundPair`] but with support for
+/// Enum containing [`AbsBoundPair`] but with support for
 /// [empty intervals](crate::intervals::special::EmptyInterval)
 ///
-/// For more information, check [`AbsoluteBoundPair`],
+/// For more information, check [`AbsBoundPair`],
 /// [`EmptyInterval`], or [`crate::intervals` module documentation](crate::intervals).
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
-pub enum EmptiableAbsoluteBoundPair {
-    Bound(AbsoluteBoundPair),
+pub enum EmptiableAbsBoundPair {
+    Bound(AbsBoundPair),
     Empty,
 }
 
-impl EmptiableAbsoluteBoundPair {
-    /// Creates an [`EmptiableAbsoluteBoundPair`] from a [`Timestamp`] range
+impl EmptiableAbsBoundPair {
+    /// Creates an [`EmptiableAbsBoundPair`] from a [`Timestamp`] range
     ///
     /// # Examples
     ///
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Timestamp;
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition, EmptiableAbsoluteBoundPair};
+    /// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos, EmptiableAbsBoundPair};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// let start = "2026-01-01 08:00:00Z".parse::<Timestamp>()?;
     /// let end = "2026-01-01 16:00:00Z".parse::<Timestamp>()?;
     ///
-    /// let emptiable_bounds = EmptiableAbsoluteBoundPair::from_range(start..end);
+    /// let emptiable_bounds = EmptiableAbsBoundPair::from_range(start..end);
     ///
     /// assert_eq!(
     ///     emptiable_bounds.clone().bound().map(|bounds| bounds.start()),
-    ///     Some(AbsoluteFiniteBoundPosition::new(start).to_start_bound()),
+    ///     Some(AbsFiniteBoundPos::new(start).to_start_bound()),
     /// );
     /// assert_eq!(
     ///     emptiable_bounds.clone().bound().map(|bounds| bounds.end()),
-    ///     Some(AbsoluteFiniteBoundPosition::new_with_inclusivity(end, BoundInclusivity::Exclusive).to_end_bound()),
+    ///     Some(AbsFiniteBoundPos::new_with_inclusivity(end, BoundInclusivity::Exclusive).to_end_bound()),
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
@@ -117,16 +117,16 @@ impl EmptiableAbsoluteBoundPair {
     where
         R: RangeBounds<Timestamp>,
     {
-        AbsoluteBoundPair::from_range(range).to_emptiable()
+        AbsBoundPair::from_range(range).to_emptiable()
     }
 
-    /// Compares two [`EmptiableAbsoluteBoundPair`], but if they have the same
+    /// Compares two [`EmptiableAbsBoundPair`], but if they have the same
     /// start, order by decreasing length
     ///
-    /// Uses [`AbsoluteBoundPair::ord_by_start_and_inv_length`] under the hood
-    /// for the [`Bound`](EmptiableAbsoluteBoundPair::Bound) variants and
-    /// [`EmptiableAbsoluteBoundPair::cmp`]
-    /// for the [`Empty`](EmptiableAbsoluteBoundPair::Empty) variants (which
+    /// Uses [`AbsBoundPair::ord_by_start_and_inv_length`] under the hood
+    /// for the [`Bound`](EmptiableAbsBoundPair::Bound) variants and
+    /// [`EmptiableAbsBoundPair::cmp`]
+    /// for the [`Empty`](EmptiableAbsBoundPair::Empty) variants (which
     /// will just place all empty bounds before any bound bounds).
     ///
     /// Don't rely on this method for checking for equality of start, as it will
@@ -135,26 +135,25 @@ impl EmptiableAbsoluteBoundPair {
     /// # Examples
     ///
     /// ```
-    /// # use periodical::intervals::absolute::EmptiableAbsoluteBoundPair;
-    /// # let mut bounds: [EmptiableAbsoluteBoundPair; 0] = [];
-    /// bounds.sort_by(EmptiableAbsoluteBoundPair::ord_by_start_and_inv_length);
+    /// # use periodical::intervals::absolute::EmptiableAbsBoundPair;
+    /// # let mut bounds: [EmptiableAbsBoundPair; 0] = [];
+    /// bounds.sort_by(EmptiableAbsBoundPair::ord_by_start_and_inv_length);
     /// ```
     #[must_use]
     pub fn ord_by_start_and_inv_length(&self, other: &Self) -> Ordering {
         match (self, other) {
-            (
-                EmptiableAbsoluteBoundPair::Bound(og_abs_bound_pair),
-                EmptiableAbsoluteBoundPair::Bound(other_abs_bound_pair),
-            ) => og_abs_bound_pair.ord_by_start_and_inv_length(other_abs_bound_pair),
+            (EmptiableAbsBoundPair::Bound(og_abs_bound_pair), EmptiableAbsBoundPair::Bound(other_abs_bound_pair)) => {
+                og_abs_bound_pair.ord_by_start_and_inv_length(other_abs_bound_pair)
+            },
             _ => self.cmp(other),
         }
     }
 
-    /// Returns the content of the [`Bound`](EmptiableAbsoluteBoundPair::Bound)
+    /// Returns the content of the [`Bound`](EmptiableAbsBoundPair::Bound)
     /// variant
     ///
     /// Consumes `self` and puts the content of the
-    /// [`Bound`](EmptiableAbsoluteBoundPair::Bound) variant
+    /// [`Bound`](EmptiableAbsBoundPair::Bound) variant
     /// in an [`Option`]. If instead `self` is another variant, the method
     /// returns [`None`].
     ///
@@ -162,49 +161,49 @@ impl EmptiableAbsoluteBoundPair {
     ///
     /// ```
     /// # use periodical::intervals::absolute::{
-    /// #     AbsoluteBoundPair, AbsoluteEndBound, AbsoluteStartBound, EmptiableAbsoluteBoundPair,
+    /// #     AbsBoundPair, AbsEndBound, AbsStartBound, EmptiableAbsBoundPair,
     /// # };
-    /// let bounds = AbsoluteBoundPair::new(
-    ///     AbsoluteStartBound::InfinitePast,
-    ///     AbsoluteEndBound::InfiniteFuture,
+    /// let bounds = AbsBoundPair::new(
+    ///     AbsStartBound::InfinitePast,
+    ///     AbsEndBound::InfiniteFuture,
     /// );
     /// // Cloning is only for making the use of `bounds` okay in the following assertions
-    /// let bound_emptiable_bounds = EmptiableAbsoluteBoundPair::Bound(bounds.clone());
-    /// let empty_emptiable_bounds = EmptiableAbsoluteBoundPair::Empty;
+    /// let bound_emptiable_bounds = EmptiableAbsBoundPair::Bound(bounds.clone());
+    /// let empty_emptiable_bounds = EmptiableAbsBoundPair::Empty;
     ///
     /// assert_eq!(bound_emptiable_bounds.bound(), Some(bounds));
     /// assert_eq!(empty_emptiable_bounds.bound(), None);
     /// ```
     #[must_use]
-    pub fn bound(self) -> Option<AbsoluteBoundPair> {
+    pub fn bound(self) -> Option<AbsBoundPair> {
         match self {
-            EmptiableAbsoluteBoundPair::Empty => None,
-            EmptiableAbsoluteBoundPair::Bound(bound) => Some(bound),
+            EmptiableAbsBoundPair::Empty => None,
+            EmptiableAbsBoundPair::Bound(bound) => Some(bound),
         }
     }
 
-    /// Converts the [`EmptiableAbsoluteBoundPair`] into [`EmptiableAbsoluteInterval`]
+    /// Converts the [`EmptiableAbsBoundPair`] into [`EmptiableAbsInterval`]
     #[must_use]
-    pub fn to_emptiable_interval(self) -> EmptiableAbsoluteInterval {
-        EmptiableAbsoluteInterval::from(self)
+    pub fn to_emptiable_interval(self) -> EmptiableAbsInterval {
+        EmptiableAbsInterval::from(self)
     }
 }
 
-impl Interval for EmptiableAbsoluteBoundPair {}
+impl Interval for EmptiableAbsBoundPair {}
 
-impl HasEmptiableAbsoluteBoundPair for EmptiableAbsoluteBoundPair {
-    fn emptiable_abs_bound_pair(&self) -> EmptiableAbsoluteBoundPair {
+impl HasEmptiableAbsBoundPair for EmptiableAbsBoundPair {
+    fn emptiable_abs_bound_pair(&self) -> EmptiableAbsBoundPair {
         self.clone()
     }
 
-    fn partial_abs_start(&self) -> Option<AbsoluteStartBound> {
+    fn partial_abs_start(&self) -> Option<AbsStartBound> {
         match self {
             Self::Empty => None,
             Self::Bound(bounds) => Some(bounds.start()),
         }
     }
 
-    fn partial_abs_end(&self) -> Option<AbsoluteEndBound> {
+    fn partial_abs_end(&self) -> Option<AbsEndBound> {
         match self {
             Self::Empty => None,
             Self::Bound(bounds) => Some(bounds.end()),
@@ -212,13 +211,13 @@ impl HasEmptiableAbsoluteBoundPair for EmptiableAbsoluteBoundPair {
     }
 }
 
-impl IsEmpty for EmptiableAbsoluteBoundPair {
+impl IsEmpty for EmptiableAbsBoundPair {
     fn is_empty(&self) -> bool {
         matches!(self, Self::Empty)
     }
 }
 
-impl HasDuration for EmptiableAbsoluteBoundPair {
+impl HasDuration for EmptiableAbsBoundPair {
     fn duration(&self) -> IntervalDuration {
         match self {
             Self::Bound(bound) => bound.duration(),
@@ -227,7 +226,7 @@ impl HasDuration for EmptiableAbsoluteBoundPair {
     }
 }
 
-impl HasOpenness for EmptiableAbsoluteBoundPair {
+impl HasOpenness for EmptiableAbsBoundPair {
     fn openness(&self) -> Openness {
         match self {
             Self::Bound(bound) => bound.openness(),
@@ -236,7 +235,7 @@ impl HasOpenness for EmptiableAbsoluteBoundPair {
     }
 }
 
-impl HasRelativity for EmptiableAbsoluteBoundPair {
+impl HasRelativity for EmptiableAbsBoundPair {
     fn relativity(&self) -> Relativity {
         match self {
             Self::Bound(bound) => bound.relativity(),
@@ -245,48 +244,47 @@ impl HasRelativity for EmptiableAbsoluteBoundPair {
     }
 }
 
-impl PartialOrd for EmptiableAbsoluteBoundPair {
+impl PartialOrd for EmptiableAbsBoundPair {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl Ord for EmptiableAbsoluteBoundPair {
+impl Ord for EmptiableAbsBoundPair {
     fn cmp(&self, other: &Self) -> Ordering {
         match (self, other) {
-            (EmptiableAbsoluteBoundPair::Empty, EmptiableAbsoluteBoundPair::Empty) => Ordering::Equal,
-            (EmptiableAbsoluteBoundPair::Empty, EmptiableAbsoluteBoundPair::Bound(_)) => Ordering::Less,
-            (EmptiableAbsoluteBoundPair::Bound(_), EmptiableAbsoluteBoundPair::Empty) => Ordering::Greater,
-            (
-                EmptiableAbsoluteBoundPair::Bound(og_abs_bound_pair),
-                EmptiableAbsoluteBoundPair::Bound(other_abs_bound_pair),
-            ) => og_abs_bound_pair.cmp(other_abs_bound_pair),
+            (EmptiableAbsBoundPair::Empty, EmptiableAbsBoundPair::Empty) => Ordering::Equal,
+            (EmptiableAbsBoundPair::Empty, EmptiableAbsBoundPair::Bound(_)) => Ordering::Less,
+            (EmptiableAbsBoundPair::Bound(_), EmptiableAbsBoundPair::Empty) => Ordering::Greater,
+            (EmptiableAbsBoundPair::Bound(og_abs_bound_pair), EmptiableAbsBoundPair::Bound(other_abs_bound_pair)) => {
+                og_abs_bound_pair.cmp(other_abs_bound_pair)
+            },
         }
     }
 }
 
-/// Converts `Option<(AbsoluteStartBound, AbsoluteEndBound)>` into [`EmptiableAbsoluteBoundPair`]
+/// Converts `Option<(AbsStartBound, AbsEndBound)>` into [`EmptiableAbsBoundPair`]
 ///
 /// The option represents whether the interval is an empty interval.
-impl From<Option<(AbsoluteStartBound, AbsoluteEndBound)>> for EmptiableAbsoluteBoundPair {
-    fn from(opt_start_end: Option<(AbsoluteStartBound, AbsoluteEndBound)>) -> Self {
+impl From<Option<(AbsStartBound, AbsEndBound)>> for EmptiableAbsBoundPair {
+    fn from(opt_start_end: Option<(AbsStartBound, AbsEndBound)>) -> Self {
         if let Some((start, end)) = opt_start_end {
-            Self::from(AbsoluteBoundPair::new(start, end))
+            Self::from(AbsBoundPair::new(start, end))
         } else {
             Self::Empty
         }
     }
 }
 
-/// Converts `Option<(Option<Timestamp>, Option<Timestamp>)>` into [`EmptiableAbsoluteBoundPair`]
+/// Converts `Option<(Option<Timestamp>, Option<Timestamp>)>` into [`EmptiableAbsBoundPair`]
 ///
 /// The option represents whether the interval is an empty interval.
-impl From<Option<(Option<Timestamp>, Option<Timestamp>)>> for EmptiableAbsoluteBoundPair {
+impl From<Option<(Option<Timestamp>, Option<Timestamp>)>> for EmptiableAbsBoundPair {
     fn from(opt_start_opt_end_opt: Option<(Option<Timestamp>, Option<Timestamp>)>) -> Self {
         if let Some((start_opt, end_opt)) = opt_start_opt_end_opt {
-            Self::from(AbsoluteBoundPair::new(
-                AbsoluteStartBound::from(start_opt),
-                AbsoluteEndBound::from(end_opt),
+            Self::from(AbsBoundPair::new(
+                AbsStartBound::from(start_opt),
+                AbsEndBound::from(end_opt),
             ))
         } else {
             Self::Empty
@@ -295,7 +293,7 @@ impl From<Option<(Option<Timestamp>, Option<Timestamp>)>> for EmptiableAbsoluteB
 }
 
 /// Converts `Option<(Option<(Timestamp, BoundInclusivity)>, Option<(Timestamp, BoundInclusivity)>)>`
-/// into [`EmptiableAbsoluteBoundPair`]
+/// into [`EmptiableAbsBoundPair`]
 ///
 /// The option represents whether the interval is an empty interval.
 impl
@@ -304,7 +302,7 @@ impl
             Option<(Timestamp, BoundInclusivity)>,
             Option<(Timestamp, BoundInclusivity)>,
         )>,
-    > for EmptiableAbsoluteBoundPair
+    > for EmptiableAbsBoundPair
 {
     fn from(
         opt_start_incl_opt_end_incl_opt: Option<(
@@ -313,9 +311,9 @@ impl
         )>,
     ) -> Self {
         if let Some((start_incl_opt, end_incl_opt)) = opt_start_incl_opt_end_incl_opt {
-            Self::from(AbsoluteBoundPair::new(
-                AbsoluteStartBound::from(start_incl_opt),
-                AbsoluteEndBound::from(end_incl_opt),
+            Self::from(AbsBoundPair::new(
+                AbsStartBound::from(start_incl_opt),
+                AbsEndBound::from(end_incl_opt),
             ))
         } else {
             Self::Empty
@@ -323,43 +321,43 @@ impl
     }
 }
 
-impl From<AbsoluteBoundPair> for EmptiableAbsoluteBoundPair {
-    fn from(value: AbsoluteBoundPair) -> Self {
-        EmptiableAbsoluteBoundPair::Bound(value)
+impl From<AbsBoundPair> for EmptiableAbsBoundPair {
+    fn from(value: AbsBoundPair) -> Self {
+        EmptiableAbsBoundPair::Bound(value)
     }
 }
 
-impl From<BoundedAbsoluteInterval> for EmptiableAbsoluteBoundPair {
-    fn from(value: BoundedAbsoluteInterval) -> Self {
+impl From<BoundedAbsInterval> for EmptiableAbsBoundPair {
+    fn from(value: BoundedAbsInterval) -> Self {
         value.emptiable_abs_bound_pair()
     }
 }
 
-impl From<HalfBoundedAbsoluteInterval> for EmptiableAbsoluteBoundPair {
-    fn from(value: HalfBoundedAbsoluteInterval) -> Self {
+impl From<HalfBoundedAbsInterval> for EmptiableAbsBoundPair {
+    fn from(value: HalfBoundedAbsInterval) -> Self {
         value.emptiable_abs_bound_pair()
     }
 }
 
-impl From<AbsoluteInterval> for EmptiableAbsoluteBoundPair {
-    fn from(value: AbsoluteInterval) -> Self {
+impl From<AbsInterval> for EmptiableAbsBoundPair {
+    fn from(value: AbsInterval) -> Self {
         value.emptiable_abs_bound_pair()
     }
 }
 
-impl From<EmptiableAbsoluteInterval> for EmptiableAbsoluteBoundPair {
-    fn from(value: EmptiableAbsoluteInterval) -> Self {
+impl From<EmptiableAbsInterval> for EmptiableAbsBoundPair {
+    fn from(value: EmptiableAbsInterval) -> Self {
         value.emptiable_abs_bound_pair()
     }
 }
 
-impl From<UnboundedInterval> for EmptiableAbsoluteBoundPair {
+impl From<UnboundedInterval> for EmptiableAbsBoundPair {
     fn from(value: UnboundedInterval) -> Self {
         value.emptiable_abs_bound_pair()
     }
 }
 
-impl From<EmptyInterval> for EmptiableAbsoluteBoundPair {
+impl From<EmptyInterval> for EmptiableAbsBoundPair {
     fn from(value: EmptyInterval) -> Self {
         value.emptiable_abs_bound_pair()
     }

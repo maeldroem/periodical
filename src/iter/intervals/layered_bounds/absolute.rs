@@ -4,51 +4,51 @@ use std::cmp::Ordering;
 use std::iter::{FusedIterator, Peekable};
 use std::ops::{Add, Sub};
 
-use crate::intervals::absolute::AbsoluteBound;
+use crate::intervals::absolute::AbsBound;
 use crate::intervals::meta::BoundInclusivity;
 use crate::intervals::ops::{BoundEq, BoundOrd, BoundOrdering, BoundOverlapDisambiguationRuleSet};
-use crate::iter::intervals::layered_bounds::abs_state_change::LayeredBoundsStateChangeAtAbsoluteBound;
+use crate::iter::intervals::layered_bounds::abs_state_change::LayeredBoundsStateChangeAtAbsBound;
 use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
 
 /// Iterator tracking which layers of absolute bounds are active
 ///
 /// Tracks the layers by using a [`LayeredBoundsState`] and outputs a
-/// [`LayeredBoundsStateChangeAtAbsoluteBound`] when this state changes.
+/// [`LayeredBoundsStateChangeAtAbsBound`] when this state changes.
 ///
 /// # Examples
 ///
 /// ```
 /// # use std::error::Error;
 /// # use jiff::Zoned;
-/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
+/// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos};
 /// # use periodical::intervals::meta::BoundInclusivity;
-/// # use periodical::iter::intervals::bounds::AbsoluteBoundsIteratorDispatcher;
+/// # use periodical::iter::intervals::bounds::AbsBoundsIteratorDispatcher;
 /// # use periodical::iter::intervals::layered_bounds::{
-/// #     LayeredAbsoluteBounds, LayeredBoundsState, LayeredBoundsStateChangeAtAbsoluteBound,
+/// #     LayeredAbsBounds, LayeredBoundsState, LayeredBoundsStateChangeAtAbsBound,
 /// # };
 /// let first_layer_intervals = [
-///     AbsoluteBoundPair::new(
-///         AbsoluteFiniteBoundPosition::new(
+///     AbsBoundPair::new(
+///         AbsFiniteBoundPos::new(
 ///             "2025-01-01 08:00:00[Europe/Oslo]"
 ///                 .parse::<Zoned>()?
 ///                 .timestamp(),
 ///         )
 ///         .to_start_bound(),
-///         AbsoluteFiniteBoundPosition::new(
+///         AbsFiniteBoundPos::new(
 ///             "2025-01-01 12:00:00[Europe/Oslo]"
 ///                 .parse::<Zoned>()?
 ///                 .timestamp(),
 ///         )
 ///         .to_end_bound(),
 ///     ),
-///     AbsoluteBoundPair::new(
-///         AbsoluteFiniteBoundPosition::new(
+///     AbsBoundPair::new(
+///         AbsFiniteBoundPos::new(
 ///             "2025-01-01 13:00:00[Europe/Oslo]"
 ///                 .parse::<Zoned>()?
 ///                 .timestamp(),
 ///         )
 ///         .to_start_bound(),
-///         AbsoluteFiniteBoundPosition::new(
+///         AbsFiniteBoundPos::new(
 ///             "2025-01-01 16:00:00[Europe/Oslo]"
 ///                 .parse::<Zoned>()?
 ///                 .timestamp(),
@@ -58,28 +58,28 @@ use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
 /// ];
 ///
 /// let second_layer_intervals = [
-///     AbsoluteBoundPair::new(
-///         AbsoluteFiniteBoundPosition::new(
+///     AbsBoundPair::new(
+///         AbsFiniteBoundPos::new(
 ///             "2025-01-01 07:00:00[Europe/Oslo]"
 ///                 .parse::<Zoned>()?
 ///                 .timestamp(),
 ///         )
 ///         .to_start_bound(),
-///         AbsoluteFiniteBoundPosition::new(
+///         AbsFiniteBoundPos::new(
 ///             "2025-01-01 11:00:00[Europe/Oslo]"
 ///                 .parse::<Zoned>()?
 ///                 .timestamp(),
 ///         )
 ///         .to_end_bound(),
 ///     ),
-///     AbsoluteBoundPair::new(
-///         AbsoluteFiniteBoundPosition::new(
+///     AbsBoundPair::new(
+///         AbsFiniteBoundPos::new(
 ///             "2025-01-01 14:00:00[Europe/Oslo]"
 ///                 .parse::<Zoned>()?
 ///                 .timestamp(),
 ///         )
 ///         .to_start_bound(),
-///         AbsoluteFiniteBoundPosition::new(
+///         AbsFiniteBoundPos::new(
 ///             "2025-01-01 18:00:00[Europe/Oslo]"
 ///                 .parse::<Zoned>()?
 ///                 .timestamp(),
@@ -95,11 +95,11 @@ use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
 ///         .layer(second_layer_intervals.abs_bounds_iter().unite_bounds())
 ///         .collect::<Vec<_>>(),
 ///     vec![
-///         LayeredBoundsStateChangeAtAbsoluteBound::new(
+///         LayeredBoundsStateChangeAtAbsBound::new(
 ///             LayeredBoundsState::NoLayers,
 ///             LayeredBoundsState::SecondLayer,
 ///             Some(
-///                 AbsoluteFiniteBoundPosition::new_with_inclusivity(
+///                 AbsFiniteBoundPos::new_with_inclusivity(
 ///                     "2025-01-01 07:00:00[Europe/Oslo]"
 ///                         .parse::<Zoned>()?
 ///                         .timestamp(),
@@ -108,7 +108,7 @@ use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
 ///                 .to_end_bound()
 ///             ),
 ///             Some(
-///                 AbsoluteFiniteBoundPosition::new(
+///                 AbsFiniteBoundPos::new(
 ///                     "2025-01-01 07:00:00[Europe/Oslo]"
 ///                         .parse::<Zoned>()?
 ///                         .timestamp(),
@@ -116,11 +116,11 @@ use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
 ///                 .to_start_bound()
 ///             ),
 ///         ),
-///         LayeredBoundsStateChangeAtAbsoluteBound::new(
+///         LayeredBoundsStateChangeAtAbsBound::new(
 ///             LayeredBoundsState::SecondLayer,
 ///             LayeredBoundsState::BothLayers,
 ///             Some(
-///                 AbsoluteFiniteBoundPosition::new_with_inclusivity(
+///                 AbsFiniteBoundPos::new_with_inclusivity(
 ///                     "2025-01-01 08:00:00[Europe/Oslo]"
 ///                         .parse::<Zoned>()?
 ///                         .timestamp(),
@@ -129,7 +129,7 @@ use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
 ///                 .to_end_bound()
 ///             ),
 ///             Some(
-///                 AbsoluteFiniteBoundPosition::new(
+///                 AbsFiniteBoundPos::new(
 ///                     "2025-01-01 08:00:00[Europe/Oslo]"
 ///                         .parse::<Zoned>()?
 ///                         .timestamp(),
@@ -137,11 +137,11 @@ use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
 ///                 .to_start_bound()
 ///             ),
 ///         ),
-///         LayeredBoundsStateChangeAtAbsoluteBound::new(
+///         LayeredBoundsStateChangeAtAbsBound::new(
 ///             LayeredBoundsState::BothLayers,
 ///             LayeredBoundsState::FirstLayer,
 ///             Some(
-///                 AbsoluteFiniteBoundPosition::new(
+///                 AbsFiniteBoundPos::new(
 ///                     "2025-01-01 11:00:00[Europe/Oslo]"
 ///                         .parse::<Zoned>()?
 ///                         .timestamp(),
@@ -149,7 +149,7 @@ use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
 ///                 .to_end_bound()
 ///             ),
 ///             Some(
-///                 AbsoluteFiniteBoundPosition::new_with_inclusivity(
+///                 AbsFiniteBoundPos::new_with_inclusivity(
 ///                     "2025-01-01 11:00:00[Europe/Oslo]"
 ///                         .parse::<Zoned>()?
 ///                         .timestamp(),
@@ -158,11 +158,11 @@ use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
 ///                 .to_start_bound()
 ///             ),
 ///         ),
-///         LayeredBoundsStateChangeAtAbsoluteBound::new(
+///         LayeredBoundsStateChangeAtAbsBound::new(
 ///             LayeredBoundsState::FirstLayer,
 ///             LayeredBoundsState::NoLayers,
 ///             Some(
-///                 AbsoluteFiniteBoundPosition::new(
+///                 AbsFiniteBoundPos::new(
 ///                     "2025-01-01 12:00:00[Europe/Oslo]"
 ///                         .parse::<Zoned>()?
 ///                         .timestamp(),
@@ -170,7 +170,7 @@ use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
 ///                 .to_end_bound()
 ///             ),
 ///             Some(
-///                 AbsoluteFiniteBoundPosition::new_with_inclusivity(
+///                 AbsFiniteBoundPos::new_with_inclusivity(
 ///                     "2025-01-01 12:00:00[Europe/Oslo]"
 ///                         .parse::<Zoned>()?
 ///                         .timestamp(),
@@ -179,11 +179,11 @@ use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
 ///                 .to_start_bound()
 ///             ),
 ///         ),
-///         LayeredBoundsStateChangeAtAbsoluteBound::new(
+///         LayeredBoundsStateChangeAtAbsBound::new(
 ///             LayeredBoundsState::NoLayers,
 ///             LayeredBoundsState::FirstLayer,
 ///             Some(
-///                 AbsoluteFiniteBoundPosition::new_with_inclusivity(
+///                 AbsFiniteBoundPos::new_with_inclusivity(
 ///                     "2025-01-01 13:00:00[Europe/Oslo]"
 ///                         .parse::<Zoned>()?
 ///                         .timestamp(),
@@ -192,7 +192,7 @@ use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
 ///                 .to_end_bound()
 ///             ),
 ///             Some(
-///                 AbsoluteFiniteBoundPosition::new(
+///                 AbsFiniteBoundPos::new(
 ///                     "2025-01-01 13:00:00[Europe/Oslo]"
 ///                         .parse::<Zoned>()?
 ///                         .timestamp(),
@@ -200,11 +200,11 @@ use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
 ///                 .to_start_bound()
 ///             ),
 ///         ),
-///         LayeredBoundsStateChangeAtAbsoluteBound::new(
+///         LayeredBoundsStateChangeAtAbsBound::new(
 ///             LayeredBoundsState::FirstLayer,
 ///             LayeredBoundsState::BothLayers,
 ///             Some(
-///                 AbsoluteFiniteBoundPosition::new_with_inclusivity(
+///                 AbsFiniteBoundPos::new_with_inclusivity(
 ///                     "2025-01-01 14:00:00[Europe/Oslo]"
 ///                         .parse::<Zoned>()?
 ///                         .timestamp(),
@@ -213,7 +213,7 @@ use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
 ///                 .to_end_bound()
 ///             ),
 ///             Some(
-///                 AbsoluteFiniteBoundPosition::new(
+///                 AbsFiniteBoundPos::new(
 ///                     "2025-01-01 14:00:00[Europe/Oslo]"
 ///                         .parse::<Zoned>()?
 ///                         .timestamp(),
@@ -221,11 +221,11 @@ use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
 ///                 .to_start_bound()
 ///             ),
 ///         ),
-///         LayeredBoundsStateChangeAtAbsoluteBound::new(
+///         LayeredBoundsStateChangeAtAbsBound::new(
 ///             LayeredBoundsState::BothLayers,
 ///             LayeredBoundsState::SecondLayer,
 ///             Some(
-///                 AbsoluteFiniteBoundPosition::new(
+///                 AbsFiniteBoundPos::new(
 ///                     "2025-01-01 16:00:00[Europe/Oslo]"
 ///                         .parse::<Zoned>()?
 ///                         .timestamp(),
@@ -233,7 +233,7 @@ use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
 ///                 .to_end_bound()
 ///             ),
 ///             Some(
-///                 AbsoluteFiniteBoundPosition::new_with_inclusivity(
+///                 AbsFiniteBoundPos::new_with_inclusivity(
 ///                     "2025-01-01 16:00:00[Europe/Oslo]"
 ///                         .parse::<Zoned>()?
 ///                         .timestamp(),
@@ -242,11 +242,11 @@ use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
 ///                 .to_start_bound()
 ///             ),
 ///         ),
-///         LayeredBoundsStateChangeAtAbsoluteBound::new(
+///         LayeredBoundsStateChangeAtAbsBound::new(
 ///             LayeredBoundsState::SecondLayer,
 ///             LayeredBoundsState::NoLayers,
 ///             Some(
-///                 AbsoluteFiniteBoundPosition::new(
+///                 AbsFiniteBoundPos::new(
 ///                     "2025-01-01 18:00:00[Europe/Oslo]"
 ///                         .parse::<Zoned>()?
 ///                         .timestamp(),
@@ -254,7 +254,7 @@ use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
 ///                 .to_end_bound()
 ///             ),
 ///             Some(
-///                 AbsoluteFiniteBoundPosition::new_with_inclusivity(
+///                 AbsFiniteBoundPos::new_with_inclusivity(
 ///                     "2025-01-01 18:00:00[Europe/Oslo]"
 ///                         .parse::<Zoned>()?
 ///                         .timestamp(),
@@ -268,16 +268,16 @@ use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
 /// # Ok::<(), Box<dyn Error>>(())
 /// ```
 #[derive(Debug, Clone, Hash)]
-pub struct LayeredAbsoluteBounds<I1, I2> {
+pub struct LayeredAbsBounds<I1, I2> {
     first_layer: I1,
     second_layer: I2,
     state: LayeredBoundsState,
     // In some cases, the iterator needs to return two results at once
-    queued_result: Option<LayeredBoundsStateChangeAtAbsoluteBound>,
+    queued_result: Option<LayeredBoundsStateChangeAtAbsBound>,
     exhausted: bool,
 }
 
-impl<I1, I2> LayeredAbsoluteBounds<I1, I2> {
+impl<I1, I2> LayeredAbsBounds<I1, I2> {
     /// Returns the current [state](LayeredBoundsState)
     ///
     /// # Examples
@@ -285,35 +285,35 @@ impl<I1, I2> LayeredAbsoluteBounds<I1, I2> {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
+    /// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos};
     /// # use periodical::intervals::meta::BoundInclusivity;
-    /// # use periodical::iter::intervals::bounds::AbsoluteBoundsIteratorDispatcher;
+    /// # use periodical::iter::intervals::bounds::AbsBoundsIteratorDispatcher;
     /// # use periodical::iter::intervals::layered_bounds::{
-    /// #     LayeredAbsoluteBounds, LayeredBoundsState, LayeredBoundsStateChangeAtAbsoluteBound,
+    /// #     LayeredAbsBounds, LayeredBoundsState, LayeredBoundsStateChangeAtAbsBound,
     /// # };
     /// let first_layer_intervals = [
-    ///     AbsoluteBoundPair::new(
-    ///         AbsoluteFiniteBoundPosition::new(
+    ///     AbsBoundPair::new(
+    ///         AbsFiniteBoundPos::new(
     ///             "2025-01-01 08:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
     ///         )
     ///         .to_start_bound(),
-    ///         AbsoluteFiniteBoundPosition::new(
+    ///         AbsFiniteBoundPos::new(
     ///             "2025-01-01 12:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
     ///         )
     ///         .to_end_bound(),
     ///     ),
-    ///     AbsoluteBoundPair::new(
-    ///         AbsoluteFiniteBoundPosition::new(
+    ///     AbsBoundPair::new(
+    ///         AbsFiniteBoundPos::new(
     ///             "2025-01-01 13:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
     ///         )
     ///         .to_start_bound(),
-    ///         AbsoluteFiniteBoundPosition::new(
+    ///         AbsFiniteBoundPos::new(
     ///             "2025-01-01 16:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
@@ -323,28 +323,28 @@ impl<I1, I2> LayeredAbsoluteBounds<I1, I2> {
     /// ];
     ///
     /// let second_layer_intervals = [
-    ///     AbsoluteBoundPair::new(
-    ///         AbsoluteFiniteBoundPosition::new(
+    ///     AbsBoundPair::new(
+    ///         AbsFiniteBoundPos::new(
     ///             "2025-01-01 07:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
     ///         )
     ///         .to_start_bound(),
-    ///         AbsoluteFiniteBoundPosition::new(
+    ///         AbsFiniteBoundPos::new(
     ///             "2025-01-01 11:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
     ///         )
     ///         .to_end_bound(),
     ///     ),
-    ///     AbsoluteBoundPair::new(
-    ///         AbsoluteFiniteBoundPosition::new(
+    ///     AbsBoundPair::new(
+    ///         AbsFiniteBoundPos::new(
     ///             "2025-01-01 14:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
     ///         )
     ///         .to_start_bound(),
-    ///         AbsoluteFiniteBoundPosition::new(
+    ///         AbsFiniteBoundPos::new(
     ///             "2025-01-01 18:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
@@ -369,36 +369,36 @@ impl<I1, I2> LayeredAbsoluteBounds<I1, I2> {
     }
 }
 
-impl<I1, I2> LayeredAbsoluteBounds<I1, I2>
+impl<I1, I2> LayeredAbsBounds<I1, I2>
 where
-    I1: Iterator<Item = AbsoluteBound>,
-    I2: Iterator<Item = AbsoluteBound>,
+    I1: Iterator<Item = AbsBound>,
+    I2: Iterator<Item = AbsBound>,
 {
-    /// Creates a new [`LayeredAbsoluteBounds`]
+    /// Creates a new [`LayeredAbsBounds`]
     ///
     /// # Input requirements
     ///
     /// 1. The bounds in each layer iterator **must be sorted chronologically**
     /// 2. The bounds in each layer iterator **must not be overlapping**
     /// 3. The bounds in each layer iterator **must be paired**, that means there should be an equal amount of
-    ///    [`Start`](AbsoluteBound::Start)s and [`End`](AbsoluteBound::End)s.
+    ///    [`Start`](AbsBound::Start)s and [`End`](AbsBound::End)s.
     ///
     /// The responsibility of verifying those requirements are left to the
     /// caller in order to prevent double-processing.
     ///
     /// Requirements 1 and 2 are automatically guaranteed if the bounds are
     /// obtained from
-    /// [`AbsoluteUnitedBoundsIter`](crate::iter::intervals::united_bounds::AbsoluteUnitedBoundsIter).
+    /// [`AbsUnitedBoundsIter`](crate::iter::intervals::united_bounds::AbsUnitedBoundsIter).
     ///
     /// Requirement 3 is automatically guaranteed if the bounds are obtained
     /// from
-    /// a set of [intervals](crate::intervals::absolute::AbsoluteInterval)
-    /// or from [bound pairs](crate::intervals::absolute::AbsoluteBoundPair) and
+    /// a set of [intervals](crate::intervals::absolute::AbsInterval)
+    /// or from [bound pairs](crate::intervals::absolute::AbsBoundPair) and
     /// then processed through
-    /// [`AbsoluteBoundsIter`](crate::iter::intervals::bounds::AbsoluteBoundsIter).
+    /// [`AbsBoundsIter`](crate::iter::intervals::bounds::AbsBoundsIter).
     #[must_use]
-    pub fn new(first_layer_iter: I1, second_layer_iter: I2) -> LayeredAbsoluteBounds<Peekable<I1>, Peekable<I2>> {
-        LayeredAbsoluteBounds {
+    pub fn new(first_layer_iter: I1, second_layer_iter: I2) -> LayeredAbsBounds<Peekable<I1>, Peekable<I2>> {
+        LayeredAbsBounds {
             first_layer: first_layer_iter.peekable(),
             second_layer: second_layer_iter.peekable(),
             state: LayeredBoundsState::default(),
@@ -408,12 +408,12 @@ where
     }
 }
 
-impl<I1, I2> Iterator for LayeredAbsoluteBounds<Peekable<I1>, Peekable<I2>>
+impl<I1, I2> Iterator for LayeredAbsBounds<Peekable<I1>, Peekable<I2>>
 where
-    I1: Iterator<Item = AbsoluteBound>,
-    I2: Iterator<Item = AbsoluteBound>,
+    I1: Iterator<Item = AbsBound>,
+    I2: Iterator<Item = AbsBound>,
 {
-    type Item = LayeredBoundsStateChangeAtAbsoluteBound;
+    type Item = LayeredBoundsStateChangeAtAbsBound;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.exhausted {
@@ -438,59 +438,56 @@ where
                 self.second_layer.next();
                 None
             },
-            (Some(AbsoluteBound::Start(_)), None) => Some(layered_abs_bounds_change_start_first_layer(
+            (Some(AbsBound::Start(_)), None) => Some(layered_abs_bounds_change_start_first_layer(
                 old_state,
                 &mut self.first_layer,
                 &mut self.state,
             )),
-            (Some(AbsoluteBound::End(_)), None) => Some(layered_abs_bounds_change_end_first_layer(
+            (Some(AbsBound::End(_)), None) => Some(layered_abs_bounds_change_end_first_layer(
                 old_state,
                 &mut self.first_layer,
                 &mut self.state,
             )),
-            (None, Some(AbsoluteBound::Start(_))) => Some(layered_abs_bounds_change_start_second_layer(
+            (None, Some(AbsBound::Start(_))) => Some(layered_abs_bounds_change_start_second_layer(
                 old_state,
                 &mut self.second_layer,
                 &mut self.state,
             )),
-            (None, Some(AbsoluteBound::End(_))) => Some(layered_abs_bounds_change_end_second_layer(
+            (None, Some(AbsBound::End(_))) => Some(layered_abs_bounds_change_end_second_layer(
                 old_state,
                 &mut self.second_layer,
                 &mut self.state,
             )),
-            (
-                Some(AbsoluteBound::Start(first_layer_peeked_start)),
-                Some(AbsoluteBound::Start(second_layer_peeked_start)),
-            ) => Some(layered_abs_bounds_change_start_start(
-                old_state,
-                first_layer_peeked_start.cmp(second_layer_peeked_start),
-                &mut self.first_layer,
-                &mut self.second_layer,
-                &mut self.state,
-            )),
-            (
-                Some(AbsoluteBound::Start(first_layer_peeked_start)),
-                Some(AbsoluteBound::End(second_layer_peeked_end)),
-            ) => Some(layered_abs_bounds_change_start_end(
-                old_state,
-                first_layer_peeked_start.bound_cmp(second_layer_peeked_end),
-                &mut self.first_layer,
-                &mut self.second_layer,
-                &mut self.state,
-                &mut self.queued_result,
-            )),
-            (
-                Some(AbsoluteBound::End(first_layer_peeked_end)),
-                Some(AbsoluteBound::Start(second_layer_peeked_start)),
-            ) => Some(layered_abs_bounds_change_end_start(
-                old_state,
-                first_layer_peeked_end.bound_cmp(second_layer_peeked_start),
-                &mut self.first_layer,
-                &mut self.second_layer,
-                &mut self.state,
-                &mut self.queued_result,
-            )),
-            (Some(AbsoluteBound::End(first_layer_peeked_end)), Some(AbsoluteBound::End(second_layer_peeked_end))) => {
+            (Some(AbsBound::Start(first_layer_peeked_start)), Some(AbsBound::Start(second_layer_peeked_start))) => {
+                Some(layered_abs_bounds_change_start_start(
+                    old_state,
+                    first_layer_peeked_start.cmp(second_layer_peeked_start),
+                    &mut self.first_layer,
+                    &mut self.second_layer,
+                    &mut self.state,
+                ))
+            },
+            (Some(AbsBound::Start(first_layer_peeked_start)), Some(AbsBound::End(second_layer_peeked_end))) => {
+                Some(layered_abs_bounds_change_start_end(
+                    old_state,
+                    first_layer_peeked_start.bound_cmp(second_layer_peeked_end),
+                    &mut self.first_layer,
+                    &mut self.second_layer,
+                    &mut self.state,
+                    &mut self.queued_result,
+                ))
+            },
+            (Some(AbsBound::End(first_layer_peeked_end)), Some(AbsBound::Start(second_layer_peeked_start))) => {
+                Some(layered_abs_bounds_change_end_start(
+                    old_state,
+                    first_layer_peeked_end.bound_cmp(second_layer_peeked_start),
+                    &mut self.first_layer,
+                    &mut self.second_layer,
+                    &mut self.state,
+                    &mut self.queued_result,
+                ))
+            },
+            (Some(AbsBound::End(first_layer_peeked_end)), Some(AbsBound::End(second_layer_peeked_end))) => {
                 Some(layered_abs_bounds_change_end_end(
                     old_state,
                     first_layer_peeked_end.cmp(second_layer_peeked_end),
@@ -517,16 +514,16 @@ where
     }
 }
 
-impl<I1, I2> FusedIterator for LayeredAbsoluteBounds<Peekable<I1>, Peekable<I2>>
+impl<I1, I2> FusedIterator for LayeredAbsBounds<Peekable<I1>, Peekable<I2>>
 where
-    I1: Iterator<Item = AbsoluteBound>,
-    I2: Iterator<Item = AbsoluteBound>,
+    I1: Iterator<Item = AbsBound>,
+    I2: Iterator<Item = AbsBound>,
 {
 }
 
 /// Computes the state change - first layer peeked, start bound
 ///
-/// Computes the [`LayeredBoundsStateChangeAtAbsoluteBound`] when only the first
+/// Computes the [`LayeredBoundsStateChangeAtAbsBound`] when only the first
 /// layer has a peeked value and is a start bound.
 ///
 /// # Panics
@@ -534,20 +531,20 @@ where
 /// Shouldn't panic but could if one of the following is true:
 ///
 /// 1. The peeked start bound of the first layer didn't equal the value returned by `next()` on the first layer
-/// 2. The value returned by `next()` on the first layer wasn't of the [`Start`](AbsoluteBound::Start) variant
+/// 2. The value returned by `next()` on the first layer wasn't of the [`Start`](AbsBound::Start) variant
 #[must_use]
 pub fn layered_abs_bounds_change_start_first_layer(
     old_state: LayeredBoundsState,
-    first_layer: &mut Peekable<impl Iterator<Item = AbsoluteBound>>,
+    first_layer: &mut Peekable<impl Iterator<Item = AbsBound>>,
     state_mut: &mut LayeredBoundsState,
-) -> LayeredBoundsStateChangeAtAbsoluteBound {
-    type Change = LayeredBoundsStateChangeAtAbsoluteBound;
+) -> LayeredBoundsStateChangeAtAbsBound {
+    type Change = LayeredBoundsStateChangeAtAbsBound;
 
     let first_layer_start = first_layer
         .next()
         .expect("Peeked `Some`, got `None` after calling `next()`")
         .start()
-        .expect("Matched for `AbsoluteBound::Start(_)`, destructured to something else");
+        .expect("Matched for `AbsBound::Start(_)`, destructured to something else");
 
     *state_mut = (*state_mut).add(LayeredBoundsState::FirstLayer);
 
@@ -561,7 +558,7 @@ pub fn layered_abs_bounds_change_start_first_layer(
 
 /// Computes the state change - first layer peeked, end bound
 ///
-/// Computes the [`LayeredBoundsStateChangeAtAbsoluteBound`] when only the first
+/// Computes the [`LayeredBoundsStateChangeAtAbsBound`] when only the first
 /// layer has a peeked value and is an end bound.
 ///
 /// # Panics
@@ -569,20 +566,20 @@ pub fn layered_abs_bounds_change_start_first_layer(
 /// Shouldn't panic but could if one of the following is true:
 ///
 /// 1. The peeked end bound of the first layer didn't equal the value returned by `next()` on the first layer
-/// 2. The value returned by `next()` on the first layer wasn't of the [`End`](AbsoluteBound::End) variant
+/// 2. The value returned by `next()` on the first layer wasn't of the [`End`](AbsBound::End) variant
 #[must_use]
 pub fn layered_abs_bounds_change_end_first_layer(
     old_state: LayeredBoundsState,
-    first_layer: &mut Peekable<impl Iterator<Item = AbsoluteBound>>,
+    first_layer: &mut Peekable<impl Iterator<Item = AbsBound>>,
     state_mut: &mut LayeredBoundsState,
-) -> LayeredBoundsStateChangeAtAbsoluteBound {
-    type Change = LayeredBoundsStateChangeAtAbsoluteBound;
+) -> LayeredBoundsStateChangeAtAbsBound {
+    type Change = LayeredBoundsStateChangeAtAbsBound;
 
     let first_layer_end = first_layer
         .next()
         .expect("Peeked `Some`, got `None` after calling `next()`")
         .end()
-        .expect("Matched for `AbsoluteBound::End(_)`, destructured to something else");
+        .expect("Matched for `AbsBound::End(_)`, destructured to something else");
 
     *state_mut = (*state_mut).sub(LayeredBoundsState::FirstLayer);
 
@@ -591,7 +588,7 @@ pub fn layered_abs_bounds_change_end_first_layer(
 
 /// Computes the state change - second layer peeked, start bound
 ///
-/// Computes the [`LayeredBoundsStateChangeAtAbsoluteBound`] when only the
+/// Computes the [`LayeredBoundsStateChangeAtAbsBound`] when only the
 /// second layer has a peeked value and is a start bound.
 ///
 /// # Panics
@@ -599,20 +596,20 @@ pub fn layered_abs_bounds_change_end_first_layer(
 /// Shouldn't panic but could if one of the following is true:
 ///
 /// 1. The peeked start bound of the second layer didn't equal the value returned by `next()` on the second layer
-/// 2. The value returned by `next()` on the second layer wasn't of the [`Start`](AbsoluteBound::Start) variant
+/// 2. The value returned by `next()` on the second layer wasn't of the [`Start`](AbsBound::Start) variant
 #[must_use]
 pub fn layered_abs_bounds_change_start_second_layer(
     old_state: LayeredBoundsState,
-    second_layer: &mut Peekable<impl Iterator<Item = AbsoluteBound>>,
+    second_layer: &mut Peekable<impl Iterator<Item = AbsBound>>,
     state_mut: &mut LayeredBoundsState,
-) -> LayeredBoundsStateChangeAtAbsoluteBound {
-    type Change = LayeredBoundsStateChangeAtAbsoluteBound;
+) -> LayeredBoundsStateChangeAtAbsBound {
+    type Change = LayeredBoundsStateChangeAtAbsBound;
 
     let second_layer_start = second_layer
         .next()
         .expect("Peeked `Some`, got `None` after calling `next()`")
         .start()
-        .expect("Matched for `AbsoluteBound::Start(_)`, destructured to something else");
+        .expect("Matched for `AbsBound::Start(_)`, destructured to something else");
 
     *state_mut = (*state_mut).add(LayeredBoundsState::SecondLayer);
 
@@ -626,7 +623,7 @@ pub fn layered_abs_bounds_change_start_second_layer(
 
 /// Computes the state change - second layer peeked, end bound
 ///
-/// Computes the [`LayeredBoundsStateChangeAtAbsoluteBound`] when only the
+/// Computes the [`LayeredBoundsStateChangeAtAbsBound`] when only the
 /// second layer has a peeked value and is an end bound.
 ///
 /// # Panics
@@ -634,20 +631,20 @@ pub fn layered_abs_bounds_change_start_second_layer(
 /// Shouldn't panic but could if one of the following is true:
 ///
 /// 1. The peeked end bound of the second layer didn't equal the value returned by `next()` on the second layer
-/// 2. The value returned by `next()` on the second layer wasn't of the [`End`](AbsoluteBound::End) variant
+/// 2. The value returned by `next()` on the second layer wasn't of the [`End`](AbsBound::End) variant
 #[must_use]
 pub fn layered_abs_bounds_change_end_second_layer(
     old_state: LayeredBoundsState,
-    second_layer: &mut Peekable<impl Iterator<Item = AbsoluteBound>>,
+    second_layer: &mut Peekable<impl Iterator<Item = AbsBound>>,
     state_mut: &mut LayeredBoundsState,
-) -> LayeredBoundsStateChangeAtAbsoluteBound {
-    type Change = LayeredBoundsStateChangeAtAbsoluteBound;
+) -> LayeredBoundsStateChangeAtAbsBound {
+    type Change = LayeredBoundsStateChangeAtAbsBound;
 
     let second_layer_end = second_layer
         .next()
         .expect("Peeked `Some`, got `None` after calling `next()`")
         .end()
-        .expect("Matched for `AbsoluteBound::End(_)`, destructured to something else");
+        .expect("Matched for `AbsBound::End(_)`, destructured to something else");
 
     *state_mut = (*state_mut).sub(LayeredBoundsState::SecondLayer);
 
@@ -661,7 +658,7 @@ pub fn layered_abs_bounds_change_end_second_layer(
 
 /// Computes the state change - both layers peeked, both start bounds
 ///
-/// Computes the [`LayeredBoundsStateChangeAtAbsoluteBound`] when both layers
+/// Computes the [`LayeredBoundsStateChangeAtAbsBound`] when both layers
 /// have a peeked value and both are start bounds.
 ///
 /// # Panics
@@ -674,11 +671,11 @@ pub fn layered_abs_bounds_change_end_second_layer(
 pub fn layered_abs_bounds_change_start_start(
     old_state: LayeredBoundsState,
     start_start_cmp: Ordering,
-    first_layer: &mut Peekable<impl Iterator<Item = AbsoluteBound>>,
-    second_layer: &mut Peekable<impl Iterator<Item = AbsoluteBound>>,
+    first_layer: &mut Peekable<impl Iterator<Item = AbsBound>>,
+    second_layer: &mut Peekable<impl Iterator<Item = AbsBound>>,
     state_mut: &mut LayeredBoundsState,
-) -> LayeredBoundsStateChangeAtAbsoluteBound {
-    type Change = LayeredBoundsStateChangeAtAbsoluteBound;
+) -> LayeredBoundsStateChangeAtAbsBound {
+    type Change = LayeredBoundsStateChangeAtAbsBound;
 
     match start_start_cmp {
         Ordering::Less => {
@@ -686,7 +683,7 @@ pub fn layered_abs_bounds_change_start_start(
                 .next()
                 .expect("Peeked `Some`, got `None` after calling `next()`")
                 .start()
-                .expect("Matched for `AbsoluteBound::Start(_)`, destructured to something else");
+                .expect("Matched for `AbsBound::Start(_)`, destructured to something else");
 
             *state_mut = (*state_mut).add(LayeredBoundsState::FirstLayer);
 
@@ -702,7 +699,7 @@ pub fn layered_abs_bounds_change_start_start(
                 .next()
                 .expect("Peeked `Some`, got `None` after calling `next()`")
                 .start()
-                .expect("Matched for `AbsoluteBound::Start(_)`, destructured to something else");
+                .expect("Matched for `AbsBound::Start(_)`, destructured to something else");
 
             // Advance the second layer's iterator since both layers' bounds are equal
             second_layer.next();
@@ -723,7 +720,7 @@ pub fn layered_abs_bounds_change_start_start(
                 .next()
                 .expect("Peeked `Some`, got `None` after calling `next()`")
                 .start()
-                .expect("Matched for `AbsoluteBound::Start(_)`, destructured to something else");
+                .expect("Matched for `AbsBound::Start(_)`, destructured to something else");
 
             *state_mut = (*state_mut).add(LayeredBoundsState::SecondLayer);
 
@@ -740,7 +737,7 @@ pub fn layered_abs_bounds_change_start_start(
 /// Computes the state change - both layers peeked, first layer start bound,
 /// second layer end bound
 ///
-/// Computes the [`LayeredBoundsStateChangeAtAbsoluteBound`] when both layers
+/// Computes the [`LayeredBoundsStateChangeAtAbsBound`] when both layers
 /// have a peeked value and the first layer is a start bound and the second
 /// layer is an end bound.
 ///
@@ -750,18 +747,18 @@ pub fn layered_abs_bounds_change_start_start(
 ///
 /// 1. The peeked value of a layer wasn't equal to the value returned by calling `next()` on that layer
 /// 2. The value returned by `next()` on the layer wasn't of the expected variant
-/// 3. The comparison between [`AbsoluteStartBound`](crate::intervals::absolute::AbsoluteStartBound) and
-///    [`AbsoluteEndBound`](crate::intervals::absolute::AbsoluteEndBound) returned [`None`]
+/// 3. The comparison between [`AbsStartBound`](crate::intervals::absolute::AbsStartBound) and
+///    [`AbsEndBound`](crate::intervals::absolute::AbsEndBound) returned [`None`]
 #[must_use]
 pub fn layered_abs_bounds_change_start_end(
     old_state: LayeredBoundsState,
     start_end_cmp: BoundOrdering,
-    first_layer: &mut Peekable<impl Iterator<Item = AbsoluteBound>>,
-    second_layer: &mut Peekable<impl Iterator<Item = AbsoluteBound>>,
+    first_layer: &mut Peekable<impl Iterator<Item = AbsBound>>,
+    second_layer: &mut Peekable<impl Iterator<Item = AbsBound>>,
     state_mut: &mut LayeredBoundsState,
-    queued_result_mut: &mut Option<LayeredBoundsStateChangeAtAbsoluteBound>,
-) -> LayeredBoundsStateChangeAtAbsoluteBound {
-    type Change = LayeredBoundsStateChangeAtAbsoluteBound;
+    queued_result_mut: &mut Option<LayeredBoundsStateChangeAtAbsBound>,
+) -> LayeredBoundsStateChangeAtAbsBound {
+    type Change = LayeredBoundsStateChangeAtAbsBound;
 
     match start_end_cmp.disambiguate(BoundOverlapDisambiguationRuleSet::Lenient) {
         Ordering::Less => {
@@ -769,7 +766,7 @@ pub fn layered_abs_bounds_change_start_end(
                 .next()
                 .expect("Peeked `Some`, got `None` after calling `next()`")
                 .start()
-                .expect("Matched for `AbsoluteBound::Start(_)`, destructured to something else");
+                .expect("Matched for `AbsBound::Start(_)`, destructured to something else");
 
             *state_mut = (*state_mut).add(LayeredBoundsState::FirstLayer);
 
@@ -785,17 +782,17 @@ pub fn layered_abs_bounds_change_start_end(
                 .next()
                 .expect("Peeked `Some`, got `None` after calling `next()`")
                 .start()
-                .expect("Matched for `AbsoluteBound::Start(_)`, destructured to something else")
+                .expect("Matched for `AbsBound::Start(_)`, destructured to something else")
                 .finite()
-                .expect("An AbsoluteStartBound and an AbsoluteEndBound can only be equal if they are finite");
+                .expect("An AbsStartBound and an AbsEndBound can only be equal if they are finite");
 
             let finite_second_layer_end = second_layer
                 .next()
                 .expect("Peeked `Some`, got `None` after calling `next()`")
                 .end()
-                .expect("Matched for `AbsoluteBound::End(_)`, destructured to something else")
+                .expect("Matched for `AbsBound::End(_)`, destructured to something else")
                 .finite()
-                .expect("An AbsoluteStartBound and an AbsoluteEndBound can only be equal if they are finite");
+                .expect("An AbsStartBound and an AbsEndBound can only be equal if they are finite");
 
             if finite_first_layer_start.bound_eq(&finite_second_layer_end, BoundOverlapDisambiguationRuleSet::Strict) {
                 let mut end_of_second_layer = finite_second_layer_end; // Copy
@@ -847,7 +844,7 @@ pub fn layered_abs_bounds_change_start_end(
                 .next()
                 .expect("Peeked `Some`, got `None` after calling `next()`")
                 .end()
-                .expect("Matched for `AbsoluteBound::End(_)`, destructured to something else");
+                .expect("Matched for `AbsBound::End(_)`, destructured to something else");
 
             *state_mut = (*state_mut).sub(LayeredBoundsState::SecondLayer);
 
@@ -864,7 +861,7 @@ pub fn layered_abs_bounds_change_start_end(
 /// Computes the state change - both layers peeked, first layer end bound,
 /// second layer start bound
 ///
-/// Computes the [`LayeredBoundsStateChangeAtAbsoluteBound`] when both layers
+/// Computes the [`LayeredBoundsStateChangeAtAbsBound`] when both layers
 /// have a peeked value and the first layer is an end bound and the second layer
 /// is a start bound.
 ///
@@ -874,18 +871,18 @@ pub fn layered_abs_bounds_change_start_end(
 ///
 /// 1. The peeked value of a layer wasn't equal to the value returned by calling `next()` on that layer
 /// 2. The value returned by `next()` on the layer wasn't of the expected variant
-/// 3. The comparison between [`AbsoluteEndBound`](crate::intervals::absolute::AbsoluteEndBound) and
-///    [`AbsoluteStartBound`](crate::intervals::absolute::AbsoluteStartBound) returned [`None`]
+/// 3. The comparison between [`AbsEndBound`](crate::intervals::absolute::AbsEndBound) and
+///    [`AbsStartBound`](crate::intervals::absolute::AbsStartBound) returned [`None`]
 #[must_use]
 pub fn layered_abs_bounds_change_end_start(
     old_state: LayeredBoundsState,
     end_start_cmp: BoundOrdering,
-    first_layer: &mut Peekable<impl Iterator<Item = AbsoluteBound>>,
-    second_layer: &mut Peekable<impl Iterator<Item = AbsoluteBound>>,
+    first_layer: &mut Peekable<impl Iterator<Item = AbsBound>>,
+    second_layer: &mut Peekable<impl Iterator<Item = AbsBound>>,
     state_mut: &mut LayeredBoundsState,
-    queued_result_mut: &mut Option<LayeredBoundsStateChangeAtAbsoluteBound>,
-) -> LayeredBoundsStateChangeAtAbsoluteBound {
-    type Change = LayeredBoundsStateChangeAtAbsoluteBound;
+    queued_result_mut: &mut Option<LayeredBoundsStateChangeAtAbsBound>,
+) -> LayeredBoundsStateChangeAtAbsBound {
+    type Change = LayeredBoundsStateChangeAtAbsBound;
 
     match end_start_cmp.disambiguate(BoundOverlapDisambiguationRuleSet::Lenient) {
         Ordering::Less => {
@@ -893,7 +890,7 @@ pub fn layered_abs_bounds_change_end_start(
                 .next()
                 .expect("Peeked `Some`, got `None` after calling `next()`")
                 .end()
-                .expect("Matched for `AbsoluteBound::End(_)`, destructured to something else");
+                .expect("Matched for `AbsBound::End(_)`, destructured to something else");
 
             *state_mut = (*state_mut).sub(LayeredBoundsState::FirstLayer);
 
@@ -904,17 +901,17 @@ pub fn layered_abs_bounds_change_end_start(
                 .next()
                 .expect("Peeked `Some`, got `None` after calling `next()`")
                 .end()
-                .expect("Matched for `AbsoluteBound::End(_)`, destructured to something else")
+                .expect("Matched for `AbsBound::End(_)`, destructured to something else")
                 .finite()
-                .expect("An AbsoluteStartBound and an AbsoluteEndBound can only be equal if they are finite");
+                .expect("An AbsStartBound and an AbsEndBound can only be equal if they are finite");
 
             let finite_second_layer_start = second_layer
                 .next()
                 .expect("Peeked `Some`, got `None` after calling `next()`")
                 .start()
-                .expect("Matched for `AbsoluteBound::Start(_)`, destructured to something else")
+                .expect("Matched for `AbsBound::Start(_)`, destructured to something else")
                 .finite()
-                .expect("An AbsoluteStartBound and an AbsoluteEndBound can only be equal if they are finite");
+                .expect("An AbsStartBound and an AbsEndBound can only be equal if they are finite");
 
             if finite_first_layer_end.bound_eq(&finite_second_layer_start, BoundOverlapDisambiguationRuleSet::Strict) {
                 let mut end_of_first_layer = finite_first_layer_end; // Copy
@@ -966,7 +963,7 @@ pub fn layered_abs_bounds_change_end_start(
                 .next()
                 .expect("Peeked `Some`, got `None` after calling `next()`")
                 .start()
-                .expect("Matched for `AbsoluteBound::Start(_)`, destructured to something else");
+                .expect("Matched for `AbsBound::Start(_)`, destructured to something else");
 
             *state_mut = (*state_mut).add(LayeredBoundsState::SecondLayer);
 
@@ -983,7 +980,7 @@ pub fn layered_abs_bounds_change_end_start(
 /// Computes the state change - both layers peeked, first layer end bound,
 /// second layer start bound
 ///
-/// Computes the [`LayeredBoundsStateChangeAtAbsoluteBound`] when both layers
+/// Computes the [`LayeredBoundsStateChangeAtAbsBound`] when both layers
 /// have a peeked value and both are end bounds.
 ///
 /// # Panics
@@ -996,11 +993,11 @@ pub fn layered_abs_bounds_change_end_start(
 pub fn layered_abs_bounds_change_end_end(
     old_state: LayeredBoundsState,
     end_end_cmp: Ordering,
-    first_layer: &mut Peekable<impl Iterator<Item = AbsoluteBound>>,
-    second_layer: &mut Peekable<impl Iterator<Item = AbsoluteBound>>,
+    first_layer: &mut Peekable<impl Iterator<Item = AbsBound>>,
+    second_layer: &mut Peekable<impl Iterator<Item = AbsBound>>,
     state_mut: &mut LayeredBoundsState,
-) -> LayeredBoundsStateChangeAtAbsoluteBound {
-    type Change = LayeredBoundsStateChangeAtAbsoluteBound;
+) -> LayeredBoundsStateChangeAtAbsBound {
+    type Change = LayeredBoundsStateChangeAtAbsBound;
 
     match end_end_cmp {
         Ordering::Less => {
@@ -1008,7 +1005,7 @@ pub fn layered_abs_bounds_change_end_end(
                 .next()
                 .expect("Peeked `Some`, got `None` after calling `next()`")
                 .end()
-                .expect("Matched for `AbsoluteBound::End(_)`, destructured to something else");
+                .expect("Matched for `AbsBound::End(_)`, destructured to something else");
 
             *state_mut = (*state_mut).sub(LayeredBoundsState::FirstLayer);
 
@@ -1019,7 +1016,7 @@ pub fn layered_abs_bounds_change_end_end(
                 .next()
                 .expect("Peeked `Some`, got `None` after calling `next()`")
                 .end()
-                .expect("Matched for `AbsoluteBound::End(_)`, destructured to something else");
+                .expect("Matched for `AbsBound::End(_)`, destructured to something else");
 
             // Advance the second layer's iterator since both layers' bounds are equal
             second_layer.next();
@@ -1033,7 +1030,7 @@ pub fn layered_abs_bounds_change_end_end(
                 .next()
                 .expect("Peeked `Some`, got `None` after calling `next()`")
                 .end()
-                .expect("Matched for `AbsoluteBound::End(_)`, destructured to something else");
+                .expect("Matched for `AbsBound::End(_)`, destructured to something else");
 
             *state_mut = (*state_mut).sub(LayeredBoundsState::SecondLayer);
 

@@ -22,24 +22,24 @@ use arbitrary::Arbitrary;
 use serde::{Deserialize, Serialize};
 
 use crate::intervals::absolute::{
-    AbsoluteBoundPair,
-    AbsoluteEndBound,
-    AbsoluteStartBound,
-    EmptiableAbsoluteBoundPair,
-    HasEmptiableAbsoluteBoundPair,
+    AbsBoundPair,
+    AbsEndBound,
+    AbsStartBound,
+    EmptiableAbsBoundPair,
+    HasEmptiableAbsBoundPair,
 };
 use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
 use crate::intervals::ops::bound_overlap_ambiguity::{
     BoundOverlapAmbiguity,
-    DisambiguatedBoundOverlap,
     BoundOverlapDisambiguationRuleSet,
+    DisambiguatedBoundOverlap,
 };
 use crate::intervals::relative::{
-    EmptiableRelativeBoundPair,
-    HasEmptiableRelativeBoundPair,
-    RelativeBoundPair,
-    RelativeEndBound,
-    RelativeStartBound,
+    EmptiableRelBoundPair,
+    HasEmptiableRelBoundPair,
+    RelBoundPair,
+    RelEndBound,
+    RelStartBound,
 };
 
 /// Bound position relative to an interval
@@ -113,22 +113,22 @@ impl BoundContainmentPosition {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
+    /// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::bound_containment::{
     /// #     CanPositionBoundContainment, BoundContainmentRuleSet, DisambiguatedBoundContainmentPosition,
     /// # };
-    /// let bounds = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBoundPosition::new(
+    /// let bounds = AbsBoundPair::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
     ///     ).to_start_bound(),
-    ///     AbsoluteFiniteBoundPosition::new_with_inclusivity(
+    ///     AbsFiniteBoundPos::new_with_inclusivity(
     ///         "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///         BoundInclusivity::Exclusive,
     ///     ).to_end_bound(),
     /// );
     ///
-    /// let end_bound = AbsoluteFiniteBoundPosition::new(
+    /// let end_bound = AbsFiniteBoundPos::new(
     ///     "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
     /// ).to_end_bound();
     ///
@@ -257,17 +257,23 @@ impl BoundContainmentRuleSet {
     #[must_use]
     pub fn disambiguate(&self, bound_position: BoundContainmentPosition) -> DisambiguatedBoundContainmentPosition {
         match self {
-            Self::Strict => bound_position_rule_set_disambiguation(bound_position, BoundOverlapDisambiguationRuleSet::Strict),
-            Self::Lenient => bound_position_rule_set_disambiguation(bound_position, BoundOverlapDisambiguationRuleSet::Lenient),
+            Self::Strict => {
+                bound_position_rule_set_disambiguation(bound_position, BoundOverlapDisambiguationRuleSet::Strict)
+            },
+            Self::Lenient => {
+                bound_position_rule_set_disambiguation(bound_position, BoundOverlapDisambiguationRuleSet::Lenient)
+            },
             Self::VeryLenient => {
                 bound_position_rule_set_disambiguation(bound_position, BoundOverlapDisambiguationRuleSet::VeryLenient)
             },
-            Self::ContinuousToFuture => {
-                bound_position_rule_set_disambiguation(bound_position, BoundOverlapDisambiguationRuleSet::ContinuousToFuture)
-            },
-            Self::ContinuousToPast => {
-                bound_position_rule_set_disambiguation(bound_position, BoundOverlapDisambiguationRuleSet::ContinuousToPast)
-            },
+            Self::ContinuousToFuture => bound_position_rule_set_disambiguation(
+                bound_position,
+                BoundOverlapDisambiguationRuleSet::ContinuousToFuture,
+            ),
+            Self::ContinuousToPast => bound_position_rule_set_disambiguation(
+                bound_position,
+                BoundOverlapDisambiguationRuleSet::ContinuousToPast,
+            ),
         }
     }
 }
@@ -493,17 +499,17 @@ pub fn deny_on_bounds_containment_rule_counts_as_contained(
 /// ```
 /// # use std::error::Error;
 /// # use jiff::Zoned;
-/// # use periodical::intervals::absolute::{AbsoluteFiniteBoundPosition, BoundedAbsoluteInterval};
+/// # use periodical::intervals::absolute::{AbsFiniteBoundPos, BoundedAbsInterval};
 /// # use periodical::intervals::meta::BoundInclusivity;
 /// # use periodical::intervals::ops::bound_containment::{
 /// #     BoundContainmentRuleSet, CanPositionBoundContainment, DisambiguatedBoundContainmentPosition,
 /// # };
-/// let interval = BoundedAbsoluteInterval::new(
+/// let interval = BoundedAbsInterval::new(
 ///     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///     "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 /// );
 ///
-/// let bound = AbsoluteFiniteBoundPosition::new_with_inclusivity(
+/// let bound = AbsFiniteBoundPos::new_with_inclusivity(
 ///     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///     BoundInclusivity::Exclusive,
 /// ).to_start_bound();
@@ -519,11 +525,11 @@ pub fn deny_on_bounds_containment_rule_counts_as_contained(
 /// ```
 /// # use std::error::Error;
 /// # use jiff::Zoned;
-/// # use periodical::intervals::absolute::{AbsoluteFiniteBoundPosition, BoundedAbsoluteInterval};
+/// # use periodical::intervals::absolute::{AbsFiniteBoundPos, BoundedAbsInterval};
 /// # use periodical::intervals::ops::bound_containment::{
 /// #     CanPositionBoundContainment, DisambiguatedBoundContainmentPosition,
 /// # };
-/// let interval = BoundedAbsoluteInterval::new(
+/// let interval = BoundedAbsInterval::new(
 ///     "2025-01-01 08:00:00[Europe/Oslo]"
 ///         .parse::<Zoned>()?
 ///         .timestamp(),
@@ -532,7 +538,7 @@ pub fn deny_on_bounds_containment_rule_counts_as_contained(
 ///         .timestamp(),
 /// );
 ///
-/// let bound = AbsoluteFiniteBoundPosition::new(
+/// let bound = AbsFiniteBoundPos::new(
 ///     "2025-01-01 10:00:00[Europe/Oslo]"
 ///         .parse::<Zoned>()?
 ///         .timestamp(),
@@ -550,16 +556,16 @@ pub trait CanPositionBoundContainment<B> {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::{AbsoluteFiniteBoundPosition, BoundedAbsoluteInterval};
+    /// # use periodical::intervals::absolute::{AbsFiniteBoundPos, BoundedAbsInterval};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::bound_containment::{BoundContainmentPosition, CanPositionBoundContainment};
     /// # use periodical::intervals::ops::bound_overlap_ambiguity::BoundOverlapAmbiguity;
-    /// let interval = BoundedAbsoluteInterval::new(
+    /// let interval = BoundedAbsInterval::new(
     ///     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     /// );
     ///
-    /// let bound = AbsoluteFiniteBoundPosition::new_with_inclusivity(
+    /// let bound = AbsFiniteBoundPos::new_with_inclusivity(
     ///     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     BoundInclusivity::Exclusive,
     /// ).to_start_bound();
@@ -591,17 +597,17 @@ pub trait CanPositionBoundContainment<B> {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::{AbsoluteFiniteBoundPosition, BoundedAbsoluteInterval};
+    /// # use periodical::intervals::absolute::{AbsFiniteBoundPos, BoundedAbsInterval};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::bound_containment::{
     /// #     BoundContainmentRuleSet, CanPositionBoundContainment, DisambiguatedBoundContainmentPosition,
     /// # };
-    /// let interval = BoundedAbsoluteInterval::new(
+    /// let interval = BoundedAbsInterval::new(
     ///     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     /// );
     ///
-    /// let bound = AbsoluteFiniteBoundPosition::new_with_inclusivity(
+    /// let bound = AbsFiniteBoundPos::new_with_inclusivity(
     ///     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     BoundInclusivity::Exclusive,
     /// ).to_start_bound();
@@ -632,10 +638,10 @@ pub trait CanPositionBoundContainment<B> {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::{AbsoluteFiniteBoundPosition, BoundedAbsoluteInterval};
+    /// # use periodical::intervals::absolute::{AbsFiniteBoundPos, BoundedAbsInterval};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::bound_containment::CanPositionBoundContainment;
-    /// let interval = BoundedAbsoluteInterval::new(
+    /// let interval = BoundedAbsInterval::new(
     ///     "2025-01-01 08:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
@@ -644,7 +650,7 @@ pub trait CanPositionBoundContainment<B> {
     ///         .timestamp(),
     /// );
     ///
-    /// let bound = AbsoluteFiniteBoundPosition::new(
+    /// let bound = AbsFiniteBoundPos::new(
     ///     "2025-01-01 08:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
@@ -673,12 +679,12 @@ pub trait CanPositionBoundContainment<B> {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::{AbsoluteFiniteBoundPosition, BoundedAbsoluteInterval};
+    /// # use periodical::intervals::absolute::{AbsFiniteBoundPos, BoundedAbsInterval};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::bound_containment::{
     /// #     BoundContainmentRule, BoundContainmentRuleSet, CanPositionBoundContainment,
     /// # };
-    /// let interval = BoundedAbsoluteInterval::new(
+    /// let interval = BoundedAbsInterval::new(
     ///     "2025-01-01 08:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
@@ -687,7 +693,7 @@ pub trait CanPositionBoundContainment<B> {
     ///         .timestamp(),
     /// );
     ///
-    /// let bound = AbsoluteFiniteBoundPosition::new_with_inclusivity(
+    /// let bound = AbsFiniteBoundPos::new_with_inclusivity(
     ///     "2025-01-01 08:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
@@ -720,9 +726,9 @@ pub trait CanPositionBoundContainment<B> {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::{AbsoluteFiniteBoundPosition, BoundedAbsoluteInterval};
+    /// # use periodical::intervals::absolute::{AbsFiniteBoundPos, BoundedAbsInterval};
     /// # use periodical::intervals::ops::bound_containment::CanPositionBoundContainment;
-    /// let interval = BoundedAbsoluteInterval::new(
+    /// let interval = BoundedAbsInterval::new(
     ///     "2025-01-01 08:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
@@ -731,7 +737,7 @@ pub trait CanPositionBoundContainment<B> {
     ///         .timestamp(),
     /// );
     ///
-    /// let bound = AbsoluteFiniteBoundPosition::new(
+    /// let bound = AbsFiniteBoundPos::new(
     ///     "2025-01-01 10:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
@@ -759,11 +765,11 @@ pub trait CanPositionBoundContainment<B> {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::{AbsoluteFiniteBoundPosition, BoundedAbsoluteInterval};
+    /// # use periodical::intervals::absolute::{AbsFiniteBoundPos, BoundedAbsInterval};
     /// # use periodical::intervals::ops::bound_containment::{
     /// #     BoundContainmentRuleSet, CanPositionBoundContainment,
     /// # };
-    /// let interval = BoundedAbsoluteInterval::new(
+    /// let interval = BoundedAbsInterval::new(
     ///     "2025-01-01 08:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
@@ -772,7 +778,7 @@ pub trait CanPositionBoundContainment<B> {
     ///         .timestamp(),
     /// );
     ///
-    /// let bound = AbsoluteFiniteBoundPosition::new(
+    /// let bound = AbsFiniteBoundPos::new(
     ///     "2025-01-01 10:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
@@ -797,38 +803,38 @@ pub trait CanPositionBoundContainment<B> {
     }
 }
 
-impl<T> CanPositionBoundContainment<AbsoluteStartBound> for T
+impl<T> CanPositionBoundContainment<AbsStartBound> for T
 where
-    T: HasEmptiableAbsoluteBoundPair,
+    T: HasEmptiableAbsBoundPair,
 {
-    fn bound_position(&self, bound: &AbsoluteStartBound) -> BoundContainmentPosition {
+    fn bound_position(&self, bound: &AbsStartBound) -> BoundContainmentPosition {
         bound_position_abs_start_bound_on_emptiable_abs_bound_pair(&self.emptiable_abs_bound_pair(), bound)
     }
 }
 
-/// Returns the [`BoundContainmentPosition`] of an [`AbsoluteStartBound`]
-/// relative to an [`EmptiableAbsoluteBoundPair`]
+/// Returns the [`BoundContainmentPosition`] of an [`AbsStartBound`]
+/// relative to an [`EmptiableAbsBoundPair`]
 #[must_use]
 pub fn bound_position_abs_start_bound_on_emptiable_abs_bound_pair(
-    emptiable_abs_bound_pair: &EmptiableAbsoluteBoundPair,
-    abs_start_bound: &AbsoluteStartBound,
+    emptiable_abs_bound_pair: &EmptiableAbsBoundPair,
+    abs_start_bound: &AbsStartBound,
 ) -> BoundContainmentPosition {
-    let EmptiableAbsoluteBoundPair::Bound(abs_bound_pair) = emptiable_abs_bound_pair else {
+    let EmptiableAbsBoundPair::Bound(abs_bound_pair) = emptiable_abs_bound_pair else {
         return BoundContainmentPosition::Outside;
     };
 
     bound_position_abs_start_bound_on_abs_bound_pair(abs_bound_pair, abs_start_bound)
 }
 
-/// Returns the [`BoundContainmentPosition`] of an [`AbsoluteStartBound`]
-/// relative to an [`AbsoluteBoundPair`]
+/// Returns the [`BoundContainmentPosition`] of an [`AbsStartBound`]
+/// relative to an [`AbsBoundPair`]
 #[must_use]
 pub fn bound_position_abs_start_bound_on_abs_bound_pair(
-    abs_bound_pair: &AbsoluteBoundPair,
-    abs_start_bound: &AbsoluteStartBound,
+    abs_bound_pair: &AbsBoundPair,
+    abs_start_bound: &AbsStartBound,
 ) -> BoundContainmentPosition {
-    type StartB = AbsoluteStartBound;
-    type EndB = AbsoluteEndBound;
+    type StartB = AbsStartBound;
+    type EndB = AbsEndBound;
 
     match (abs_bound_pair.start(), abs_bound_pair.end(), abs_start_bound) {
         (StartB::InfinitePast, _, StartB::InfinitePast) => BoundContainmentPosition::OnStart(None),
@@ -883,38 +889,38 @@ pub fn bound_position_abs_start_bound_on_abs_bound_pair(
     }
 }
 
-impl<T> CanPositionBoundContainment<AbsoluteEndBound> for T
+impl<T> CanPositionBoundContainment<AbsEndBound> for T
 where
-    T: HasEmptiableAbsoluteBoundPair,
+    T: HasEmptiableAbsBoundPair,
 {
-    fn bound_position(&self, bound: &AbsoluteEndBound) -> BoundContainmentPosition {
+    fn bound_position(&self, bound: &AbsEndBound) -> BoundContainmentPosition {
         bound_position_abs_end_bound_on_emptiable_abs_bound_pair(&self.emptiable_abs_bound_pair(), bound)
     }
 }
 
-/// Returns the [`BoundContainmentPosition`] of an [`AbsoluteEndBound`] relative
-/// to an [`EmptiableAbsoluteBoundPair`]
+/// Returns the [`BoundContainmentPosition`] of an [`AbsEndBound`] relative
+/// to an [`EmptiableAbsBoundPair`]
 #[must_use]
 pub fn bound_position_abs_end_bound_on_emptiable_abs_bound_pair(
-    emptiable_abs_bound_pair: &EmptiableAbsoluteBoundPair,
-    abs_end_bound: &AbsoluteEndBound,
+    emptiable_abs_bound_pair: &EmptiableAbsBoundPair,
+    abs_end_bound: &AbsEndBound,
 ) -> BoundContainmentPosition {
-    let EmptiableAbsoluteBoundPair::Bound(abs_bound_pair) = emptiable_abs_bound_pair else {
+    let EmptiableAbsBoundPair::Bound(abs_bound_pair) = emptiable_abs_bound_pair else {
         return BoundContainmentPosition::Outside;
     };
 
     bound_position_abs_end_bound_on_abs_bound_pair(abs_bound_pair, abs_end_bound)
 }
 
-/// Returns the [`BoundContainmentPosition`] of an [`AbsoluteEndBound`] relative
-/// to an [`AbsoluteBoundPair`]
+/// Returns the [`BoundContainmentPosition`] of an [`AbsEndBound`] relative
+/// to an [`AbsBoundPair`]
 #[must_use]
 pub fn bound_position_abs_end_bound_on_abs_bound_pair(
-    abs_bound_pair: &AbsoluteBoundPair,
-    abs_end_bound: &AbsoluteEndBound,
+    abs_bound_pair: &AbsBoundPair,
+    abs_end_bound: &AbsEndBound,
 ) -> BoundContainmentPosition {
-    type StartB = AbsoluteStartBound;
-    type EndB = AbsoluteEndBound;
+    type StartB = AbsStartBound;
+    type EndB = AbsEndBound;
 
     match (abs_bound_pair.start(), abs_bound_pair.end(), abs_end_bound) {
         (_, EndB::InfiniteFuture, EndB::InfiniteFuture) => BoundContainmentPosition::OnEnd(None),
@@ -969,38 +975,38 @@ pub fn bound_position_abs_end_bound_on_abs_bound_pair(
     }
 }
 
-impl<T> CanPositionBoundContainment<RelativeStartBound> for T
+impl<T> CanPositionBoundContainment<RelStartBound> for T
 where
-    T: HasEmptiableRelativeBoundPair,
+    T: HasEmptiableRelBoundPair,
 {
-    fn bound_position(&self, bound: &RelativeStartBound) -> BoundContainmentPosition {
+    fn bound_position(&self, bound: &RelStartBound) -> BoundContainmentPosition {
         bound_position_rel_start_bound_on_emptiable_rel_bound_pair(&self.emptiable_rel_bound_pair(), bound)
     }
 }
 
-/// Returns the [`BoundContainmentPosition`] of a [`RelativeStartBound`]
-/// relative to an [`EmptiableRelativeBoundPair`]
+/// Returns the [`BoundContainmentPosition`] of a [`RelStartBound`]
+/// relative to an [`EmptiableRelBoundPair`]
 #[must_use]
 pub fn bound_position_rel_start_bound_on_emptiable_rel_bound_pair(
-    emptiable_rel_bound_pair: &EmptiableRelativeBoundPair,
-    rel_start_bound: &RelativeStartBound,
+    emptiable_rel_bound_pair: &EmptiableRelBoundPair,
+    rel_start_bound: &RelStartBound,
 ) -> BoundContainmentPosition {
-    let EmptiableRelativeBoundPair::Bound(rel_bound_pair) = emptiable_rel_bound_pair else {
+    let EmptiableRelBoundPair::Bound(rel_bound_pair) = emptiable_rel_bound_pair else {
         return BoundContainmentPosition::Outside;
     };
 
     bound_position_rel_start_bound_on_rel_bound_pair(rel_bound_pair, rel_start_bound)
 }
 
-/// Returns the [`BoundContainmentPosition`] of a [`RelativeStartBound`]
-/// relative to a [`RelativeBoundPair`]
+/// Returns the [`BoundContainmentPosition`] of a [`RelStartBound`]
+/// relative to a [`RelBoundPair`]
 #[must_use]
 pub fn bound_position_rel_start_bound_on_rel_bound_pair(
-    rel_bound_pair: &RelativeBoundPair,
-    rel_start_bound: &RelativeStartBound,
+    rel_bound_pair: &RelBoundPair,
+    rel_start_bound: &RelStartBound,
 ) -> BoundContainmentPosition {
-    type StartB = RelativeStartBound;
-    type EndB = RelativeEndBound;
+    type StartB = RelStartBound;
+    type EndB = RelEndBound;
 
     match (rel_bound_pair.start(), rel_bound_pair.end(), rel_start_bound) {
         (StartB::InfinitePast, _, StartB::InfinitePast) => BoundContainmentPosition::OnStart(None),
@@ -1055,38 +1061,38 @@ pub fn bound_position_rel_start_bound_on_rel_bound_pair(
     }
 }
 
-impl<T> CanPositionBoundContainment<RelativeEndBound> for T
+impl<T> CanPositionBoundContainment<RelEndBound> for T
 where
-    T: HasEmptiableRelativeBoundPair,
+    T: HasEmptiableRelBoundPair,
 {
-    fn bound_position(&self, bound: &RelativeEndBound) -> BoundContainmentPosition {
+    fn bound_position(&self, bound: &RelEndBound) -> BoundContainmentPosition {
         bound_position_rel_end_bound_on_emptiable_rel_bound_pair(&self.emptiable_rel_bound_pair(), bound)
     }
 }
 
-/// Returns the [`BoundContainmentPosition`] of a [`RelativeEndBound`] relative
-/// to an [`EmptiableRelativeBoundPair`]
+/// Returns the [`BoundContainmentPosition`] of a [`RelEndBound`] relative
+/// to an [`EmptiableRelBoundPair`]
 #[must_use]
 pub fn bound_position_rel_end_bound_on_emptiable_rel_bound_pair(
-    emptiable_rel_bound_pair: &EmptiableRelativeBoundPair,
-    rel_end_bound: &RelativeEndBound,
+    emptiable_rel_bound_pair: &EmptiableRelBoundPair,
+    rel_end_bound: &RelEndBound,
 ) -> BoundContainmentPosition {
-    let EmptiableRelativeBoundPair::Bound(rel_bound_pair) = emptiable_rel_bound_pair else {
+    let EmptiableRelBoundPair::Bound(rel_bound_pair) = emptiable_rel_bound_pair else {
         return BoundContainmentPosition::Outside;
     };
 
     bound_position_rel_end_bound_on_rel_bound_pair(rel_bound_pair, rel_end_bound)
 }
 
-/// Returns the [`BoundContainmentPosition`] of a [`RelativeEndBound`] relative
-/// to a [`RelativeBoundPair`]
+/// Returns the [`BoundContainmentPosition`] of a [`RelEndBound`] relative
+/// to a [`RelBoundPair`]
 #[must_use]
 pub fn bound_position_rel_end_bound_on_rel_bound_pair(
-    rel_bound_pair: &RelativeBoundPair,
-    rel_end_bound: &RelativeEndBound,
+    rel_bound_pair: &RelBoundPair,
+    rel_end_bound: &RelEndBound,
 ) -> BoundContainmentPosition {
-    type StartB = RelativeStartBound;
-    type EndB = RelativeEndBound;
+    type StartB = RelStartBound;
+    type EndB = RelEndBound;
 
     match (rel_bound_pair.start(), rel_bound_pair.end(), rel_end_bound) {
         (_, EndB::InfiniteFuture, EndB::InfiniteFuture) => BoundContainmentPosition::OnEnd(None),

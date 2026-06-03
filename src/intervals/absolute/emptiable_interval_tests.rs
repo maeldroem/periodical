@@ -6,15 +6,15 @@ use jiff::Timestamp;
 
 use super::emptiable_interval::*;
 use crate::intervals::absolute::{
-    AbsoluteBoundPair,
-    AbsoluteEndBound,
-    AbsoluteFiniteBoundPosition,
-    AbsoluteInterval,
-    AbsoluteStartBound,
-    BoundedAbsoluteInterval,
-    EmptiableAbsoluteBoundPair,
-    HalfBoundedAbsoluteInterval,
-    HasEmptiableAbsoluteBoundPair,
+    AbsBoundPair,
+    AbsEndBound,
+    AbsFiniteBoundPos,
+    AbsInterval,
+    AbsStartBound,
+    BoundedAbsInterval,
+    EmptiableAbsBoundPair,
+    HalfBoundedAbsInterval,
+    HasEmptiableAbsBoundPair,
 };
 use crate::intervals::meta::{
     Duration as IntervalDuration,
@@ -34,24 +34,22 @@ fn from_range() -> Result<(), Box<dyn Error>> {
     let start = "2026-01-01 00:00:00Z".parse::<Timestamp>()?;
 
     assert_eq!(
-        EmptiableAbsoluteInterval::from_range(start..),
-        HalfBoundedAbsoluteInterval::new_from_time(start, OpeningDirection::ToFuture).to_emptiable_interval()
+        EmptiableAbsInterval::from_range(start..),
+        HalfBoundedAbsInterval::new_from_time(start, OpeningDirection::ToFuture).to_emptiable_interval()
     );
     Ok(())
 }
 
 #[test]
 fn bound() -> Result<(), Box<dyn Error>> {
-    let interval = HalfBoundedAbsoluteInterval::new_from_time(
-        "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
-        OpeningDirection::ToFuture,
-    );
+    let interval =
+        HalfBoundedAbsInterval::new_from_time("2026-01-01 00:00:00Z".parse::<Timestamp>()?, OpeningDirection::ToFuture);
 
     assert_eq!(
         interval.clone().to_emptiable_interval().bound(),
         Some(interval.to_interval())
     );
-    assert_eq!(EmptiableAbsoluteInterval::Empty(EmptyInterval).bound(), None);
+    assert_eq!(EmptiableAbsInterval::Empty(EmptyInterval).bound(), None);
     Ok(())
 }
 
@@ -61,13 +59,13 @@ mod ord_by_start_and_inv_length {
     #[test]
     fn bounded_bounded_start_less() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times(
+            AbsInterval::Bounded(BoundedAbsInterval::from_times(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 "2026-01-02 00:00:00Z".parse::<Timestamp>()?
             ))
             .to_emptiable()
             .ord_by_start_and_inv_length(
-                &AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times(
+                &AbsInterval::Bounded(BoundedAbsInterval::from_times(
                     "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                     "2026-01-03 00:00:00Z".parse::<Timestamp>()?
                 ))
@@ -81,13 +79,13 @@ mod ord_by_start_and_inv_length {
     #[test]
     fn bounded_bounded_start_equal_length_less() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times(
+            AbsInterval::Bounded(BoundedAbsInterval::from_times(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 "2026-01-02 00:00:00Z".parse::<Timestamp>()?
             ))
             .to_emptiable()
             .ord_by_start_and_inv_length(
-                &AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times(
+                &AbsInterval::Bounded(BoundedAbsInterval::from_times(
                     "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                     "2026-01-03 00:00:00Z".parse::<Timestamp>()?
                 ))
@@ -101,13 +99,13 @@ mod ord_by_start_and_inv_length {
     #[test]
     fn bounded_bounded_start_equal_length_equal() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times(
+            AbsInterval::Bounded(BoundedAbsInterval::from_times(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 "2026-01-02 00:00:00Z".parse::<Timestamp>()?
             ))
             .to_emptiable()
             .ord_by_start_and_inv_length(
-                &AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times(
+                &AbsInterval::Bounded(BoundedAbsInterval::from_times(
                     "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                     "2026-01-02 00:00:00Z".parse::<Timestamp>()?
                 ))
@@ -121,13 +119,13 @@ mod ord_by_start_and_inv_length {
     #[test]
     fn bounded_bounded_start_equal_length_greater() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times(
+            AbsInterval::Bounded(BoundedAbsInterval::from_times(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 "2026-01-03 00:00:00Z".parse::<Timestamp>()?
             ))
             .to_emptiable()
             .ord_by_start_and_inv_length(
-                &AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times(
+                &AbsInterval::Bounded(BoundedAbsInterval::from_times(
                     "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                     "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                 ))
@@ -141,13 +139,13 @@ mod ord_by_start_and_inv_length {
     #[test]
     fn bounded_bounded_start_greater() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times(
+            AbsInterval::Bounded(BoundedAbsInterval::from_times(
                 "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                 "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
             ))
             .to_emptiable()
             .ord_by_start_and_inv_length(
-                &AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times(
+                &AbsInterval::Bounded(BoundedAbsInterval::from_times(
                     "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                     "2026-01-02 00:00:00Z".parse::<Timestamp>()?
                 ))
@@ -161,13 +159,13 @@ mod ord_by_start_and_inv_length {
     #[test]
     fn bounded_half_bounded_start_less() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times(
+            AbsInterval::Bounded(BoundedAbsInterval::from_times(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 "2026-01-02 00:00:00Z".parse::<Timestamp>()?
             ))
             .to_emptiable()
             .ord_by_start_and_inv_length(
-                &AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+                &AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                     "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                     OpeningDirection::ToFuture
                 ))
@@ -181,13 +179,13 @@ mod ord_by_start_and_inv_length {
     #[test]
     fn bounded_half_bounded_start_equal() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times(
+            AbsInterval::Bounded(BoundedAbsInterval::from_times(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 "2026-01-02 00:00:00Z".parse::<Timestamp>()?
             ))
             .to_emptiable()
             .ord_by_start_and_inv_length(
-                &AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+                &AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                     "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                     OpeningDirection::ToFuture
                 ))
@@ -201,13 +199,13 @@ mod ord_by_start_and_inv_length {
     #[test]
     fn bounded_half_bounded_start_greater() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times(
+            AbsInterval::Bounded(BoundedAbsInterval::from_times(
                 "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                 "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
             ))
             .to_emptiable()
             .ord_by_start_and_inv_length(
-                &AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+                &AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                     "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                     OpeningDirection::ToFuture,
                 ))
@@ -221,13 +219,13 @@ mod ord_by_start_and_inv_length {
     #[test]
     fn bounded_half_bounded_start_greater_inf() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times(
+            AbsInterval::Bounded(BoundedAbsInterval::from_times(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
             ))
             .to_emptiable()
             .ord_by_start_and_inv_length(
-                &AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+                &AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                     "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                     OpeningDirection::ToPast
                 ))
@@ -241,12 +239,12 @@ mod ord_by_start_and_inv_length {
     #[test]
     fn bounded_unbounded() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times(
+            AbsInterval::Bounded(BoundedAbsInterval::from_times(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 "2026-01-02 00:00:00Z".parse::<Timestamp>()?
             ))
             .to_emptiable()
-            .ord_by_start_and_inv_length(&AbsoluteInterval::Unbounded(UnboundedInterval).to_emptiable()),
+            .ord_by_start_and_inv_length(&AbsInterval::Unbounded(UnboundedInterval).to_emptiable()),
             Ordering::Greater
         );
         Ok(())
@@ -255,12 +253,12 @@ mod ord_by_start_and_inv_length {
     #[test]
     fn bounded_empty() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times(
+            AbsInterval::Bounded(BoundedAbsInterval::from_times(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 "2026-01-02 00:00:00Z".parse::<Timestamp>()?
             ))
             .to_emptiable()
-            .ord_by_start_and_inv_length(&EmptiableAbsoluteInterval::Empty(EmptyInterval)),
+            .ord_by_start_and_inv_length(&EmptiableAbsInterval::Empty(EmptyInterval)),
             Ordering::Greater
         );
         Ok(())
@@ -269,13 +267,13 @@ mod ord_by_start_and_inv_length {
     #[test]
     fn half_bounded_bounded_start_less() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+            AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 OpeningDirection::ToFuture
             ))
             .to_emptiable()
             .ord_by_start_and_inv_length(
-                &AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times(
+                &AbsInterval::Bounded(BoundedAbsInterval::from_times(
                     "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                     "2026-01-03 00:00:00Z".parse::<Timestamp>()?
                 ))
@@ -289,13 +287,13 @@ mod ord_by_start_and_inv_length {
     #[test]
     fn half_bounded_bounded_start_less_inf() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+            AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 OpeningDirection::ToPast
             ))
             .to_emptiable()
             .ord_by_start_and_inv_length(
-                &AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times(
+                &AbsInterval::Bounded(BoundedAbsInterval::from_times(
                     "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                     "2026-01-02 00:00:00Z".parse::<Timestamp>()?
                 ))
@@ -309,13 +307,13 @@ mod ord_by_start_and_inv_length {
     #[test]
     fn half_bounded_bounded_start_equal() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+            AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 OpeningDirection::ToFuture,
             ))
             .to_emptiable()
             .ord_by_start_and_inv_length(
-                &AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times(
+                &AbsInterval::Bounded(BoundedAbsInterval::from_times(
                     "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                     "2026-01-02 00:00:00Z".parse::<Timestamp>()?
                 ))
@@ -329,13 +327,13 @@ mod ord_by_start_and_inv_length {
     #[test]
     fn half_bounded_bounded_start_greater() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+            AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                 "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                 OpeningDirection::ToFuture
             ))
             .to_emptiable()
             .ord_by_start_and_inv_length(
-                &AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times(
+                &AbsInterval::Bounded(BoundedAbsInterval::from_times(
                     "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                     "2026-01-02 00:00:00Z".parse::<Timestamp>()?
                 ))
@@ -349,13 +347,13 @@ mod ord_by_start_and_inv_length {
     #[test]
     fn half_bounded_half_bounded_start_less() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+            AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 OpeningDirection::ToFuture
             ))
             .to_emptiable()
             .ord_by_start_and_inv_length(
-                &AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+                &AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                     "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                     OpeningDirection::ToFuture
                 ))
@@ -369,13 +367,13 @@ mod ord_by_start_and_inv_length {
     #[test]
     fn half_bounded_half_bounded_start_less_inf() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+            AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 OpeningDirection::ToPast
             ))
             .to_emptiable()
             .ord_by_start_and_inv_length(
-                &AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+                &AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                     "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                     OpeningDirection::ToFuture
                 ))
@@ -389,13 +387,13 @@ mod ord_by_start_and_inv_length {
     #[test]
     fn half_bounded_half_bounded_start_equal() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+            AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 OpeningDirection::ToFuture
             ))
             .to_emptiable()
             .ord_by_start_and_inv_length(
-                &AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+                &AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                     "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                     OpeningDirection::ToFuture,
                 ))
@@ -409,13 +407,13 @@ mod ord_by_start_and_inv_length {
     #[test]
     fn half_bounded_half_bounded_start_equal_inf() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+            AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 OpeningDirection::ToPast
             ))
             .to_emptiable()
             .ord_by_start_and_inv_length(
-                &AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+                &AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                     "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                     OpeningDirection::ToPast
                 ))
@@ -429,13 +427,13 @@ mod ord_by_start_and_inv_length {
     #[test]
     fn half_bounded_half_bounded_start_greater() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+            AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                 "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                 OpeningDirection::ToFuture
             ))
             .to_emptiable()
             .ord_by_start_and_inv_length(
-                &AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+                &AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                     "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                     OpeningDirection::ToFuture
                 ))
@@ -449,13 +447,13 @@ mod ord_by_start_and_inv_length {
     #[test]
     fn half_bounded_half_bounded_start_greater_inf() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+            AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 OpeningDirection::ToFuture
             ))
             .to_emptiable()
             .ord_by_start_and_inv_length(
-                &AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+                &AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                     "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                     OpeningDirection::ToPast
                 ))
@@ -469,12 +467,12 @@ mod ord_by_start_and_inv_length {
     #[test]
     fn half_bounded_empty() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+            AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 OpeningDirection::ToFuture
             ))
             .to_emptiable()
-            .ord_by_start_and_inv_length(&EmptiableAbsoluteInterval::Empty(EmptyInterval)),
+            .ord_by_start_and_inv_length(&EmptiableAbsInterval::Empty(EmptyInterval)),
             Ordering::Greater
         );
         Ok(())
@@ -483,10 +481,10 @@ mod ord_by_start_and_inv_length {
     #[test]
     fn unbounded_bounded() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::Unbounded(UnboundedInterval)
+            AbsInterval::Unbounded(UnboundedInterval)
                 .to_emptiable()
                 .ord_by_start_and_inv_length(
-                    &AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times(
+                    &AbsInterval::Bounded(BoundedAbsInterval::from_times(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?
                     ))
@@ -500,10 +498,10 @@ mod ord_by_start_and_inv_length {
     #[test]
     fn unbounded_half_bounded_start_equal() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::Unbounded(UnboundedInterval)
+            AbsInterval::Unbounded(UnboundedInterval)
                 .to_emptiable()
                 .ord_by_start_and_inv_length(
-                    &AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+                    &AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         OpeningDirection::ToPast
                     ))
@@ -517,10 +515,10 @@ mod ord_by_start_and_inv_length {
     #[test]
     fn unbounded_half_bounded_start_greater() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::Unbounded(UnboundedInterval)
+            AbsInterval::Unbounded(UnboundedInterval)
                 .to_emptiable()
                 .ord_by_start_and_inv_length(
-                    &AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+                    &AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         OpeningDirection::ToFuture
                     ))
@@ -534,9 +532,9 @@ mod ord_by_start_and_inv_length {
     #[test]
     fn unbounded_unbounded() {
         assert_eq!(
-            AbsoluteInterval::Unbounded(UnboundedInterval)
+            AbsInterval::Unbounded(UnboundedInterval)
                 .to_emptiable()
-                .ord_by_start_and_inv_length(&AbsoluteInterval::Unbounded(UnboundedInterval).to_emptiable()),
+                .ord_by_start_and_inv_length(&AbsInterval::Unbounded(UnboundedInterval).to_emptiable()),
             Ordering::Equal
         );
     }
@@ -544,9 +542,9 @@ mod ord_by_start_and_inv_length {
     #[test]
     fn unbounded_empty() {
         assert_eq!(
-            AbsoluteInterval::Unbounded(UnboundedInterval)
+            AbsInterval::Unbounded(UnboundedInterval)
                 .to_emptiable()
-                .ord_by_start_and_inv_length(&EmptiableAbsoluteInterval::Empty(EmptyInterval)),
+                .ord_by_start_and_inv_length(&EmptiableAbsInterval::Empty(EmptyInterval)),
             Ordering::Greater
         );
     }
@@ -554,8 +552,8 @@ mod ord_by_start_and_inv_length {
     #[test]
     fn empty_bounded() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            EmptiableAbsoluteInterval::Empty(EmptyInterval).ord_by_start_and_inv_length(
-                &AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times(
+            EmptiableAbsInterval::Empty(EmptyInterval).ord_by_start_and_inv_length(
+                &AbsInterval::Bounded(BoundedAbsInterval::from_times(
                     "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                     "2026-01-02 00:00:00Z".parse::<Timestamp>()?
                 ))
@@ -569,8 +567,8 @@ mod ord_by_start_and_inv_length {
     #[test]
     fn empty_half_bounded() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            EmptiableAbsoluteInterval::Empty(EmptyInterval).ord_by_start_and_inv_length(
-                &AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+            EmptiableAbsInterval::Empty(EmptyInterval).ord_by_start_and_inv_length(
+                &AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                     "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                     OpeningDirection::ToFuture
                 ))
@@ -584,8 +582,8 @@ mod ord_by_start_and_inv_length {
     #[test]
     fn empty_unbounded() {
         assert_eq!(
-            EmptiableAbsoluteInterval::Empty(EmptyInterval)
-                .ord_by_start_and_inv_length(&AbsoluteInterval::Unbounded(UnboundedInterval).to_emptiable()),
+            EmptiableAbsInterval::Empty(EmptyInterval)
+                .ord_by_start_and_inv_length(&AbsInterval::Unbounded(UnboundedInterval).to_emptiable()),
             Ordering::Less
         );
     }
@@ -593,8 +591,8 @@ mod ord_by_start_and_inv_length {
     #[test]
     fn empty_empty() {
         assert_eq!(
-            EmptiableAbsoluteInterval::Empty(EmptyInterval)
-                .ord_by_start_and_inv_length(&EmptiableAbsoluteInterval::Empty(EmptyInterval)),
+            EmptiableAbsInterval::Empty(EmptyInterval)
+                .ord_by_start_and_inv_length(&EmptiableAbsInterval::Empty(EmptyInterval)),
             Ordering::Equal
         );
     }
@@ -606,7 +604,7 @@ mod duration {
     #[test]
     fn bounded() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times(
+            AbsInterval::Bounded(BoundedAbsInterval::from_times(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 "2026-01-02 00:00:00Z".parse::<Timestamp>()?
             ))
@@ -620,7 +618,7 @@ mod duration {
     #[test]
     fn half_bounded() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+            AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 OpeningDirection::ToFuture
             ))
@@ -634,7 +632,7 @@ mod duration {
     #[test]
     fn unbounded() {
         assert_eq!(
-            AbsoluteInterval::Unbounded(UnboundedInterval).to_emptiable().duration(),
+            AbsInterval::Unbounded(UnboundedInterval).to_emptiable().duration(),
             IntervalDuration::Infinite
         );
     }
@@ -642,7 +640,7 @@ mod duration {
     #[test]
     fn empty() {
         assert_eq!(
-            EmptiableAbsoluteInterval::Empty(EmptyInterval).duration(),
+            EmptiableAbsInterval::Empty(EmptyInterval).duration(),
             IntervalDuration::Finite(Duration::ZERO, Epsilon::None)
         );
     }
@@ -654,13 +652,13 @@ mod relativity {
     #[test]
     fn bounded() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times(
+            AbsInterval::Bounded(BoundedAbsInterval::from_times(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 "2026-01-02 00:00:00Z".parse::<Timestamp>()?
             ))
             .to_emptiable()
             .relativity(),
-            Relativity::Absolute
+            Relativity::Abs
         );
         Ok(())
     }
@@ -668,13 +666,13 @@ mod relativity {
     #[test]
     fn half_bounded() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+            AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 OpeningDirection::ToFuture
             ))
             .to_emptiable()
             .relativity(),
-            Relativity::Absolute
+            Relativity::Abs
         );
         Ok(())
     }
@@ -682,19 +680,14 @@ mod relativity {
     #[test]
     fn unbounded() {
         assert_eq!(
-            AbsoluteInterval::Unbounded(UnboundedInterval)
-                .to_emptiable()
-                .relativity(),
+            AbsInterval::Unbounded(UnboundedInterval).to_emptiable().relativity(),
             Relativity::Any
         );
     }
 
     #[test]
     fn empty() {
-        assert_eq!(
-            EmptiableAbsoluteInterval::Empty(EmptyInterval).relativity(),
-            Relativity::Any
-        );
+        assert_eq!(EmptiableAbsInterval::Empty(EmptyInterval).relativity(), Relativity::Any);
     }
 }
 
@@ -704,7 +697,7 @@ mod openness {
     #[test]
     fn bounded() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times(
+            AbsInterval::Bounded(BoundedAbsInterval::from_times(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 "2026-01-02 00:00:00Z".parse::<Timestamp>()?
             ))
@@ -718,7 +711,7 @@ mod openness {
     #[test]
     fn half_bounded() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+            AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 OpeningDirection::ToFuture
             ))
@@ -732,17 +725,14 @@ mod openness {
     #[test]
     fn unbounded() {
         assert_eq!(
-            AbsoluteInterval::Unbounded(UnboundedInterval).to_emptiable().openness(),
+            AbsInterval::Unbounded(UnboundedInterval).to_emptiable().openness(),
             Openness::Unbounded
         );
     }
 
     #[test]
     fn empty() {
-        assert_eq!(
-            EmptiableAbsoluteInterval::Empty(EmptyInterval).openness(),
-            Openness::Empty
-        );
+        assert_eq!(EmptiableAbsInterval::Empty(EmptyInterval).openness(), Openness::Empty);
     }
 }
 
@@ -752,15 +742,15 @@ mod emptiable_abs_bound_pair {
     #[test]
     fn bounded() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times(
+            AbsInterval::Bounded(BoundedAbsInterval::from_times(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 "2026-01-02 00:00:00Z".parse::<Timestamp>()?
             ))
             .to_emptiable()
             .emptiable_abs_bound_pair(),
-            AbsoluteBoundPair::new(
-                AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound()
+            AbsBoundPair::new(
+                AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound()
             )
             .to_emptiable()
         );
@@ -770,15 +760,15 @@ mod emptiable_abs_bound_pair {
     #[test]
     fn half_bounded() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+            AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 OpeningDirection::ToFuture
             ))
             .to_emptiable()
             .emptiable_abs_bound_pair(),
-            AbsoluteBoundPair::new(
-                AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsoluteEndBound::InfiniteFuture
+            AbsBoundPair::new(
+                AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                AbsEndBound::InfiniteFuture
             )
             .to_emptiable()
         );
@@ -788,18 +778,18 @@ mod emptiable_abs_bound_pair {
     #[test]
     fn unbounded() {
         assert_eq!(
-            AbsoluteInterval::Unbounded(UnboundedInterval)
+            AbsInterval::Unbounded(UnboundedInterval)
                 .to_emptiable()
                 .emptiable_abs_bound_pair(),
-            AbsoluteBoundPair::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture).to_emptiable()
+            AbsBoundPair::new(AbsStartBound::InfinitePast, AbsEndBound::InfiniteFuture).to_emptiable()
         );
     }
 
     #[test]
     fn empty() {
         assert_eq!(
-            EmptiableAbsoluteInterval::Empty(EmptyInterval).emptiable_abs_bound_pair(),
-            EmptiableAbsoluteBoundPair::Empty
+            EmptiableAbsInterval::Empty(EmptyInterval).emptiable_abs_bound_pair(),
+            EmptiableAbsBoundPair::Empty
         );
     }
 }
@@ -810,13 +800,13 @@ mod partial_abs_start {
     #[test]
     fn bounded() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times(
+            AbsInterval::Bounded(BoundedAbsInterval::from_times(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 "2026-01-02 00:00:00Z".parse::<Timestamp>()?
             ))
             .to_emptiable()
             .partial_abs_start(),
-            Some(AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),)
+            Some(AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),)
         );
         Ok(())
     }
@@ -824,13 +814,13 @@ mod partial_abs_start {
     #[test]
     fn half_bounded_to_future() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+            AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 OpeningDirection::ToFuture
             ))
             .to_emptiable()
             .partial_abs_start(),
-            Some(AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),)
+            Some(AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),)
         );
         Ok(())
     }
@@ -838,13 +828,13 @@ mod partial_abs_start {
     #[test]
     fn half_bounded_to_past() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+            AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 OpeningDirection::ToPast
             ))
             .to_emptiable()
             .partial_abs_start(),
-            Some(AbsoluteStartBound::InfinitePast)
+            Some(AbsStartBound::InfinitePast)
         );
         Ok(())
     }
@@ -852,19 +842,16 @@ mod partial_abs_start {
     #[test]
     fn unbounded() {
         assert_eq!(
-            AbsoluteInterval::Unbounded(UnboundedInterval)
+            AbsInterval::Unbounded(UnboundedInterval)
                 .to_emptiable()
                 .partial_abs_start(),
-            Some(AbsoluteStartBound::InfinitePast)
+            Some(AbsStartBound::InfinitePast)
         );
     }
 
     #[test]
     fn empty() {
-        assert_eq!(
-            EmptiableAbsoluteInterval::Empty(EmptyInterval).partial_abs_start(),
-            None
-        );
+        assert_eq!(EmptiableAbsInterval::Empty(EmptyInterval).partial_abs_start(), None);
     }
 }
 
@@ -874,13 +861,13 @@ mod partial_abs_end {
     #[test]
     fn bounded() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times(
+            AbsInterval::Bounded(BoundedAbsInterval::from_times(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 "2026-01-02 00:00:00Z".parse::<Timestamp>()?
             ))
             .to_emptiable()
             .partial_abs_end(),
-            Some(AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),)
+            Some(AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),)
         );
         Ok(())
     }
@@ -888,13 +875,13 @@ mod partial_abs_end {
     #[test]
     fn half_bounded_to_future() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+            AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 OpeningDirection::ToFuture
             ))
             .to_emptiable()
             .partial_abs_end(),
-            Some(AbsoluteEndBound::InfiniteFuture)
+            Some(AbsEndBound::InfiniteFuture)
         );
         Ok(())
     }
@@ -902,13 +889,13 @@ mod partial_abs_end {
     #[test]
     fn half_bounded_to_past() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+            AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 OpeningDirection::ToPast
             ))
             .to_emptiable()
             .partial_abs_end(),
-            Some(AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound())
+            Some(AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound())
         );
         Ok(())
     }
@@ -916,16 +903,16 @@ mod partial_abs_end {
     #[test]
     fn unbounded() {
         assert_eq!(
-            AbsoluteInterval::Unbounded(UnboundedInterval)
+            AbsInterval::Unbounded(UnboundedInterval)
                 .to_emptiable()
                 .partial_abs_end(),
-            Some(AbsoluteEndBound::InfiniteFuture)
+            Some(AbsEndBound::InfiniteFuture)
         );
     }
 
     #[test]
     fn empty() {
-        assert_eq!(EmptiableAbsoluteInterval::Empty(EmptyInterval).partial_abs_end(), None);
+        assert_eq!(EmptiableAbsInterval::Empty(EmptyInterval).partial_abs_end(), None);
     }
 }
 
@@ -935,7 +922,7 @@ mod is_empty {
     #[test]
     fn bounded() -> Result<(), Box<dyn Error>> {
         assert!(
-            !AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times(
+            !AbsInterval::Bounded(BoundedAbsInterval::from_times(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 "2026-01-02 00:00:00Z".parse::<Timestamp>()?
             ))
@@ -948,7 +935,7 @@ mod is_empty {
     #[test]
     fn half_bounded() -> Result<(), Box<dyn Error>> {
         assert!(
-            !AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+            !AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 OpeningDirection::ToFuture
             ))
@@ -960,12 +947,12 @@ mod is_empty {
 
     #[test]
     fn unbounded() {
-        assert!(!AbsoluteInterval::Unbounded(UnboundedInterval).to_emptiable().is_empty());
+        assert!(!AbsInterval::Unbounded(UnboundedInterval).to_emptiable().is_empty());
     }
 
     #[test]
     fn empty() {
-        assert!(EmptiableAbsoluteInterval::Empty(EmptyInterval).is_empty());
+        assert!(EmptiableAbsInterval::Empty(EmptyInterval).is_empty());
     }
 }
 
@@ -975,13 +962,13 @@ mod ord {
     #[test]
     fn bounded_bounded_start_less() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times(
+            AbsInterval::Bounded(BoundedAbsInterval::from_times(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 "2026-01-02 00:00:00Z".parse::<Timestamp>()?
             ))
             .to_emptiable()
             .cmp(
-                &AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times(
+                &AbsInterval::Bounded(BoundedAbsInterval::from_times(
                     "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                     "2026-01-03 00:00:00Z".parse::<Timestamp>()?
                 ))
@@ -995,13 +982,13 @@ mod ord {
     #[test]
     fn bounded_bounded_start_equal_length_less() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times(
+            AbsInterval::Bounded(BoundedAbsInterval::from_times(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 "2026-01-02 00:00:00Z".parse::<Timestamp>()?
             ))
             .to_emptiable()
             .cmp(
-                &AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times(
+                &AbsInterval::Bounded(BoundedAbsInterval::from_times(
                     "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                     "2026-01-03 00:00:00Z".parse::<Timestamp>()?
                 ))
@@ -1015,13 +1002,13 @@ mod ord {
     #[test]
     fn bounded_bounded_start_equal_length_equal() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times(
+            AbsInterval::Bounded(BoundedAbsInterval::from_times(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 "2026-01-02 00:00:00Z".parse::<Timestamp>()?
             ))
             .to_emptiable()
             .cmp(
-                &AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times(
+                &AbsInterval::Bounded(BoundedAbsInterval::from_times(
                     "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                     "2026-01-02 00:00:00Z".parse::<Timestamp>()?
                 ))
@@ -1035,13 +1022,13 @@ mod ord {
     #[test]
     fn bounded_bounded_start_equal_length_greater() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times(
+            AbsInterval::Bounded(BoundedAbsInterval::from_times(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 "2026-01-03 00:00:00Z".parse::<Timestamp>()?
             ))
             .to_emptiable()
             .cmp(
-                &AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times(
+                &AbsInterval::Bounded(BoundedAbsInterval::from_times(
                     "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                     "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                 ))
@@ -1055,13 +1042,13 @@ mod ord {
     #[test]
     fn bounded_bounded_start_greater() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times(
+            AbsInterval::Bounded(BoundedAbsInterval::from_times(
                 "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                 "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
             ))
             .to_emptiable()
             .cmp(
-                &AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times(
+                &AbsInterval::Bounded(BoundedAbsInterval::from_times(
                     "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                     "2026-01-02 00:00:00Z".parse::<Timestamp>()?
                 ))
@@ -1075,13 +1062,13 @@ mod ord {
     #[test]
     fn bounded_half_bounded_start_less() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times(
+            AbsInterval::Bounded(BoundedAbsInterval::from_times(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 "2026-01-02 00:00:00Z".parse::<Timestamp>()?
             ))
             .to_emptiable()
             .cmp(
-                &AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+                &AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                     "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                     OpeningDirection::ToFuture
                 ))
@@ -1095,13 +1082,13 @@ mod ord {
     #[test]
     fn bounded_half_bounded_start_equal() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times(
+            AbsInterval::Bounded(BoundedAbsInterval::from_times(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 "2026-01-02 00:00:00Z".parse::<Timestamp>()?
             ))
             .to_emptiable()
             .cmp(
-                &AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+                &AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                     "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                     OpeningDirection::ToFuture
                 ))
@@ -1115,13 +1102,13 @@ mod ord {
     #[test]
     fn bounded_half_bounded_start_greater() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times(
+            AbsInterval::Bounded(BoundedAbsInterval::from_times(
                 "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                 "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
             ))
             .to_emptiable()
             .cmp(
-                &AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+                &AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                     "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                     OpeningDirection::ToFuture,
                 ))
@@ -1135,13 +1122,13 @@ mod ord {
     #[test]
     fn bounded_half_bounded_start_greater_inf() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times(
+            AbsInterval::Bounded(BoundedAbsInterval::from_times(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
             ))
             .to_emptiable()
             .cmp(
-                &AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+                &AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                     "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                     OpeningDirection::ToPast
                 ))
@@ -1155,12 +1142,12 @@ mod ord {
     #[test]
     fn bounded_unbounded() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times(
+            AbsInterval::Bounded(BoundedAbsInterval::from_times(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 "2026-01-02 00:00:00Z".parse::<Timestamp>()?
             ))
             .to_emptiable()
-            .cmp(&AbsoluteInterval::Unbounded(UnboundedInterval).to_emptiable()),
+            .cmp(&AbsInterval::Unbounded(UnboundedInterval).to_emptiable()),
             Ordering::Greater
         );
         Ok(())
@@ -1169,12 +1156,12 @@ mod ord {
     #[test]
     fn bounded_empty() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times(
+            AbsInterval::Bounded(BoundedAbsInterval::from_times(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 "2026-01-02 00:00:00Z".parse::<Timestamp>()?
             ))
             .to_emptiable()
-            .cmp(&EmptiableAbsoluteInterval::Empty(EmptyInterval)),
+            .cmp(&EmptiableAbsInterval::Empty(EmptyInterval)),
             Ordering::Greater
         );
         Ok(())
@@ -1183,13 +1170,13 @@ mod ord {
     #[test]
     fn half_bounded_bounded_start_less() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+            AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 OpeningDirection::ToFuture
             ))
             .to_emptiable()
             .cmp(
-                &AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times(
+                &AbsInterval::Bounded(BoundedAbsInterval::from_times(
                     "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                     "2026-01-03 00:00:00Z".parse::<Timestamp>()?
                 ))
@@ -1203,13 +1190,13 @@ mod ord {
     #[test]
     fn half_bounded_bounded_start_less_inf() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+            AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 OpeningDirection::ToPast
             ))
             .to_emptiable()
             .cmp(
-                &AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times(
+                &AbsInterval::Bounded(BoundedAbsInterval::from_times(
                     "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                     "2026-01-02 00:00:00Z".parse::<Timestamp>()?
                 ))
@@ -1223,13 +1210,13 @@ mod ord {
     #[test]
     fn half_bounded_bounded_start_equal() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+            AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 OpeningDirection::ToFuture,
             ))
             .to_emptiable()
             .cmp(
-                &AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times(
+                &AbsInterval::Bounded(BoundedAbsInterval::from_times(
                     "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                     "2026-01-02 00:00:00Z".parse::<Timestamp>()?
                 ))
@@ -1243,13 +1230,13 @@ mod ord {
     #[test]
     fn half_bounded_bounded_start_greater() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+            AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                 "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                 OpeningDirection::ToFuture
             ))
             .to_emptiable()
             .cmp(
-                &AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times(
+                &AbsInterval::Bounded(BoundedAbsInterval::from_times(
                     "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                     "2026-01-02 00:00:00Z".parse::<Timestamp>()?
                 ))
@@ -1263,13 +1250,13 @@ mod ord {
     #[test]
     fn half_bounded_half_bounded_start_less() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+            AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 OpeningDirection::ToFuture
             ))
             .to_emptiable()
             .cmp(
-                &AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+                &AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                     "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                     OpeningDirection::ToFuture
                 ))
@@ -1283,13 +1270,13 @@ mod ord {
     #[test]
     fn half_bounded_half_bounded_start_less_inf() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+            AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 OpeningDirection::ToPast
             ))
             .to_emptiable()
             .cmp(
-                &AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+                &AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                     "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                     OpeningDirection::ToFuture
                 ))
@@ -1303,13 +1290,13 @@ mod ord {
     #[test]
     fn half_bounded_half_bounded_start_equal() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+            AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 OpeningDirection::ToFuture
             ))
             .to_emptiable()
             .cmp(
-                &AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+                &AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                     "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                     OpeningDirection::ToFuture,
                 ))
@@ -1323,13 +1310,13 @@ mod ord {
     #[test]
     fn half_bounded_half_bounded_start_equal_inf() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+            AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 OpeningDirection::ToPast
             ))
             .to_emptiable()
             .cmp(
-                &AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+                &AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                     "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                     OpeningDirection::ToPast
                 ))
@@ -1343,13 +1330,13 @@ mod ord {
     #[test]
     fn half_bounded_half_bounded_start_greater() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+            AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                 "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                 OpeningDirection::ToFuture
             ))
             .to_emptiable()
             .cmp(
-                &AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+                &AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                     "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                     OpeningDirection::ToFuture
                 ))
@@ -1363,13 +1350,13 @@ mod ord {
     #[test]
     fn half_bounded_half_bounded_start_greater_inf() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+            AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 OpeningDirection::ToFuture
             ))
             .to_emptiable()
             .cmp(
-                &AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+                &AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                     "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                     OpeningDirection::ToPast
                 ))
@@ -1383,12 +1370,12 @@ mod ord {
     #[test]
     fn half_bounded_empty() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+            AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 OpeningDirection::ToFuture
             ))
             .to_emptiable()
-            .cmp(&EmptiableAbsoluteInterval::Empty(EmptyInterval)),
+            .cmp(&EmptiableAbsInterval::Empty(EmptyInterval)),
             Ordering::Greater
         );
         Ok(())
@@ -1397,8 +1384,8 @@ mod ord {
     #[test]
     fn unbounded_bounded() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::Unbounded(UnboundedInterval).to_emptiable().cmp(
-                &AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times(
+            AbsInterval::Unbounded(UnboundedInterval).to_emptiable().cmp(
+                &AbsInterval::Bounded(BoundedAbsInterval::from_times(
                     "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                     "2026-01-02 00:00:00Z".parse::<Timestamp>()?
                 ))
@@ -1412,8 +1399,8 @@ mod ord {
     #[test]
     fn unbounded_half_bounded_start_equal() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::Unbounded(UnboundedInterval).to_emptiable().cmp(
-                &AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+            AbsInterval::Unbounded(UnboundedInterval).to_emptiable().cmp(
+                &AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                     "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                     OpeningDirection::ToPast
                 ))
@@ -1427,8 +1414,8 @@ mod ord {
     #[test]
     fn unbounded_half_bounded_start_greater() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            AbsoluteInterval::Unbounded(UnboundedInterval).to_emptiable().cmp(
-                &AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+            AbsInterval::Unbounded(UnboundedInterval).to_emptiable().cmp(
+                &AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                     "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                     OpeningDirection::ToFuture
                 ))
@@ -1442,9 +1429,9 @@ mod ord {
     #[test]
     fn unbounded_unbounded() {
         assert_eq!(
-            AbsoluteInterval::Unbounded(UnboundedInterval)
+            AbsInterval::Unbounded(UnboundedInterval)
                 .to_emptiable()
-                .cmp(&AbsoluteInterval::Unbounded(UnboundedInterval).to_emptiable()),
+                .cmp(&AbsInterval::Unbounded(UnboundedInterval).to_emptiable()),
             Ordering::Equal
         );
     }
@@ -1452,9 +1439,9 @@ mod ord {
     #[test]
     fn unbounded_empty() {
         assert_eq!(
-            AbsoluteInterval::Unbounded(UnboundedInterval)
+            AbsInterval::Unbounded(UnboundedInterval)
                 .to_emptiable()
-                .cmp(&EmptiableAbsoluteInterval::Empty(EmptyInterval)),
+                .cmp(&EmptiableAbsInterval::Empty(EmptyInterval)),
             Ordering::Greater
         );
     }
@@ -1462,8 +1449,8 @@ mod ord {
     #[test]
     fn empty_bounded() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            EmptiableAbsoluteInterval::Empty(EmptyInterval).cmp(
-                &AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times(
+            EmptiableAbsInterval::Empty(EmptyInterval).cmp(
+                &AbsInterval::Bounded(BoundedAbsInterval::from_times(
                     "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                     "2026-01-02 00:00:00Z".parse::<Timestamp>()?
                 ))
@@ -1477,8 +1464,8 @@ mod ord {
     #[test]
     fn empty_half_bounded() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            EmptiableAbsoluteInterval::Empty(EmptyInterval).cmp(
-                &AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+            EmptiableAbsInterval::Empty(EmptyInterval).cmp(
+                &AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                     "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                     OpeningDirection::ToFuture
                 ))
@@ -1492,8 +1479,7 @@ mod ord {
     #[test]
     fn empty_unbounded() {
         assert_eq!(
-            EmptiableAbsoluteInterval::Empty(EmptyInterval)
-                .cmp(&AbsoluteInterval::Unbounded(UnboundedInterval).to_emptiable()),
+            EmptiableAbsInterval::Empty(EmptyInterval).cmp(&AbsInterval::Unbounded(UnboundedInterval).to_emptiable()),
             Ordering::Less
         );
     }
@@ -1501,7 +1487,7 @@ mod ord {
     #[test]
     fn empty_empty() {
         assert_eq!(
-            EmptiableAbsoluteInterval::Empty(EmptyInterval).cmp(&EmptiableAbsoluteInterval::Empty(EmptyInterval)),
+            EmptiableAbsInterval::Empty(EmptyInterval).cmp(&EmptiableAbsInterval::Empty(EmptyInterval)),
             Ordering::Equal
         );
     }
@@ -1509,26 +1495,24 @@ mod ord {
 
 #[test]
 fn from_bounded_interval() -> Result<(), Box<dyn Error>> {
-    let bounded = BoundedAbsoluteInterval::from_times(
+    let bounded = BoundedAbsInterval::from_times(
         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
     );
     assert_eq!(
-        EmptiableAbsoluteInterval::from(bounded.clone()),
-        AbsoluteInterval::Bounded(bounded).to_emptiable()
+        EmptiableAbsInterval::from(bounded.clone()),
+        AbsInterval::Bounded(bounded).to_emptiable()
     );
     Ok(())
 }
 
 #[test]
 fn from_half_bounded_interval() -> Result<(), Box<dyn Error>> {
-    let half_bounded = HalfBoundedAbsoluteInterval::new_from_time(
-        "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
-        OpeningDirection::ToFuture,
-    );
+    let half_bounded =
+        HalfBoundedAbsInterval::new_from_time("2026-01-01 00:00:00Z".parse::<Timestamp>()?, OpeningDirection::ToFuture);
     assert_eq!(
-        EmptiableAbsoluteInterval::from(half_bounded.clone()),
-        AbsoluteInterval::HalfBounded(half_bounded).to_emptiable()
+        EmptiableAbsInterval::from(half_bounded.clone()),
+        AbsInterval::HalfBounded(half_bounded).to_emptiable()
     );
     Ok(())
 }
@@ -1536,16 +1520,16 @@ fn from_half_bounded_interval() -> Result<(), Box<dyn Error>> {
 #[test]
 fn from_unbounded_interval() {
     assert_eq!(
-        EmptiableAbsoluteInterval::from(UnboundedInterval),
-        AbsoluteInterval::Unbounded(UnboundedInterval).to_emptiable()
+        EmptiableAbsInterval::from(UnboundedInterval),
+        AbsInterval::Unbounded(UnboundedInterval).to_emptiable()
     );
 }
 
 #[test]
 fn from_empty_interval() {
     assert_eq!(
-        EmptiableAbsoluteInterval::from(EmptyInterval),
-        EmptiableAbsoluteInterval::Empty(EmptyInterval)
+        EmptiableAbsInterval::from(EmptyInterval),
+        EmptiableAbsInterval::Empty(EmptyInterval)
     );
 }
 
@@ -1555,11 +1539,11 @@ mod from_bound_pair {
     #[test]
     fn bounded() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            EmptiableAbsoluteInterval::from(AbsoluteBoundPair::new(
-                AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound()
+            EmptiableAbsInterval::from(AbsBoundPair::new(
+                AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound()
             )),
-            AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times(
+            AbsInterval::Bounded(BoundedAbsInterval::from_times(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 "2026-01-02 00:00:00Z".parse::<Timestamp>()?
             ))
@@ -1571,11 +1555,11 @@ mod from_bound_pair {
     #[test]
     fn half_bounded_to_future() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            EmptiableAbsoluteInterval::from(AbsoluteBoundPair::new(
-                AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsoluteEndBound::InfiniteFuture
+            EmptiableAbsInterval::from(AbsBoundPair::new(
+                AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                AbsEndBound::InfiniteFuture
             )),
-            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+            AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 OpeningDirection::ToFuture
             ))
@@ -1587,11 +1571,11 @@ mod from_bound_pair {
     #[test]
     fn half_bounded_to_past() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            EmptiableAbsoluteInterval::from(AbsoluteBoundPair::new(
-                AbsoluteStartBound::InfinitePast,
-                AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound()
+            EmptiableAbsInterval::from(AbsBoundPair::new(
+                AbsStartBound::InfinitePast,
+                AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound()
             )),
-            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+            AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 OpeningDirection::ToPast
             ))
@@ -1603,11 +1587,11 @@ mod from_bound_pair {
     #[test]
     fn unbounded() {
         assert_eq!(
-            EmptiableAbsoluteInterval::from(AbsoluteBoundPair::new(
-                AbsoluteStartBound::InfinitePast,
-                AbsoluteEndBound::InfiniteFuture
+            EmptiableAbsInterval::from(AbsBoundPair::new(
+                AbsStartBound::InfinitePast,
+                AbsEndBound::InfiniteFuture
             )),
-            AbsoluteInterval::Unbounded(UnboundedInterval).to_emptiable()
+            AbsInterval::Unbounded(UnboundedInterval).to_emptiable()
         );
     }
 }
@@ -1618,14 +1602,14 @@ mod from_emptiable_bound_pair {
     #[test]
     fn bound_bounded() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            EmptiableAbsoluteInterval::from(
-                AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteFiniteBoundPosition::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound()
+            EmptiableAbsInterval::from(
+                AbsBoundPair::new(
+                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound()
                 )
                 .to_emptiable()
             ),
-            AbsoluteInterval::Bounded(BoundedAbsoluteInterval::from_times(
+            AbsInterval::Bounded(BoundedAbsInterval::from_times(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 "2026-01-02 00:00:00Z".parse::<Timestamp>()?
             ))
@@ -1637,14 +1621,14 @@ mod from_emptiable_bound_pair {
     #[test]
     fn bound_half_bounded_to_future() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            EmptiableAbsoluteInterval::from(
-                AbsoluteBoundPair::new(
-                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsoluteEndBound::InfiniteFuture
+            EmptiableAbsInterval::from(
+                AbsBoundPair::new(
+                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                    AbsEndBound::InfiniteFuture
                 )
                 .to_emptiable()
             ),
-            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+            AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 OpeningDirection::ToFuture
             ))
@@ -1656,14 +1640,14 @@ mod from_emptiable_bound_pair {
     #[test]
     fn bound_half_bounded_to_past() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            EmptiableAbsoluteInterval::from(
-                AbsoluteBoundPair::new(
-                    AbsoluteStartBound::InfinitePast,
-                    AbsoluteFiniteBoundPosition::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound()
+            EmptiableAbsInterval::from(
+                AbsBoundPair::new(
+                    AbsStartBound::InfinitePast,
+                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound()
                 )
                 .to_emptiable()
             ),
-            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_from_time(
+            AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
                 "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                 OpeningDirection::ToPast
             ))
@@ -1675,34 +1659,31 @@ mod from_emptiable_bound_pair {
     #[test]
     fn bound_unbounded() {
         assert_eq!(
-            EmptiableAbsoluteInterval::from(
-                AbsoluteBoundPair::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture)
-                    .to_emptiable()
+            EmptiableAbsInterval::from(
+                AbsBoundPair::new(AbsStartBound::InfinitePast, AbsEndBound::InfiniteFuture).to_emptiable()
             ),
-            AbsoluteInterval::Unbounded(UnboundedInterval).to_emptiable()
+            AbsInterval::Unbounded(UnboundedInterval).to_emptiable()
         );
     }
 
     #[test]
     fn empty() {
         assert_eq!(
-            EmptiableAbsoluteInterval::from(EmptiableAbsoluteBoundPair::Empty),
-            EmptiableAbsoluteInterval::Empty(EmptyInterval)
+            EmptiableAbsInterval::from(EmptiableAbsBoundPair::Empty),
+            EmptiableAbsInterval::Empty(EmptyInterval)
         );
     }
 }
 
 #[test]
 fn from_interval() -> Result<(), Box<dyn Error>> {
-    let interval = HalfBoundedAbsoluteInterval::new_from_time(
-        "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
-        OpeningDirection::ToFuture,
-    )
-    .to_interval();
+    let interval =
+        HalfBoundedAbsInterval::new_from_time("2026-01-01 00:00:00Z".parse::<Timestamp>()?, OpeningDirection::ToFuture)
+            .to_interval();
 
     assert_eq!(
-        EmptiableAbsoluteInterval::from(interval.clone()),
-        EmptiableAbsoluteInterval::Bound(interval)
+        EmptiableAbsInterval::from(interval.clone()),
+        EmptiableAbsInterval::Bound(interval)
     );
     Ok(())
 }
@@ -1710,7 +1691,7 @@ fn from_interval() -> Result<(), Box<dyn Error>> {
 #[test]
 fn from_unit_val() {
     assert_eq!(
-        EmptiableAbsoluteInterval::from(()),
-        EmptiableAbsoluteInterval::Empty(EmptyInterval)
+        EmptiableAbsInterval::from(()),
+        EmptiableAbsInterval::Empty(EmptyInterval)
     );
 }

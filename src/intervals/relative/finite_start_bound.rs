@@ -1,7 +1,7 @@
 //! Relative finite start bound
 //!
 //! Represents the finite start bound of an relative interval.
-//! If you need to represent infinity, see [`RelativeStartBound`].
+//! If you need to represent infinity, see [`RelStartBound`].
 
 use std::cmp::Ordering;
 
@@ -20,59 +20,59 @@ use crate::intervals::ops::{
     BoundOverlapDisambiguationRuleSet,
 };
 use crate::intervals::relative::{
-    RelativeBound,
-    RelativeEndBound,
-    RelativeFiniteBound,
-    RelativeFiniteBoundPosition,
-    RelativeFiniteEndBound,
-    RelativeStartBound,
+    RelBound,
+    RelEndBound,
+    RelFiniteBound,
+    RelFiniteBoundPos,
+    RelFiniteEndBound,
+    RelStartBound,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
-pub struct RelativeFiniteStartBound(pub(crate) RelativeFiniteBoundPosition);
+pub struct RelFiniteStartBound(pub(crate) RelFiniteBoundPos);
 
-impl RelativeFiniteStartBound {
-    pub fn new(finite_bound_pos: RelativeFiniteBoundPosition) -> Self {
+impl RelFiniteStartBound {
+    pub fn new(finite_bound_pos: RelFiniteBoundPos) -> Self {
         Self(finite_bound_pos)
     }
 
-    pub fn pos(&self) -> RelativeFiniteBoundPosition {
+    pub fn pos(&self) -> RelFiniteBoundPos {
         self.0
     }
 
-    pub fn pos_mut(&mut self) -> &mut RelativeFiniteBoundPosition {
+    pub fn pos_mut(&mut self) -> &mut RelFiniteBoundPos {
         &mut self.0
     }
 
-    pub fn to_start_bound(self) -> RelativeStartBound {
-        RelativeStartBound::Finite(self)
+    pub fn to_start_bound(self) -> RelStartBound {
+        RelStartBound::Finite(self)
     }
 
-    pub fn to_finite_bound(self) -> RelativeFiniteBound {
-        RelativeFiniteBound::from(self)
+    pub fn to_finite_bound(self) -> RelFiniteBound {
+        RelFiniteBound::from(self)
     }
 
-    pub fn to_bound(self) -> RelativeBound {
-        RelativeBound::from(self)
+    pub fn to_bound(self) -> RelBound {
+        RelBound::from(self)
     }
 
-    pub fn opposite(self) -> RelativeFiniteEndBound {
-        RelativeFiniteEndBound::new(RelativeFiniteBoundPosition::new_with_inclusivity(
+    pub fn opposite(self) -> RelFiniteEndBound {
+        RelFiniteEndBound::new(RelFiniteBoundPos::new_with_inclusivity(
             self.pos().offset(),
             self.pos().inclusivity().opposite(),
         ))
     }
 }
 
-impl PartialOrd for RelativeFiniteStartBound {
+impl PartialOrd for RelFiniteStartBound {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl Ord for RelativeFiniteStartBound {
+impl Ord for RelFiniteStartBound {
     fn cmp(&self, other: &Self) -> Ordering {
         self.pos()
             .cmp(&other.pos())
@@ -85,7 +85,7 @@ impl Ord for RelativeFiniteStartBound {
     }
 }
 
-impl BoundEq for RelativeFiniteStartBound {
+impl BoundEq for RelFiniteStartBound {
     fn bound_eq(&self, other: &Self, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
         self.eq(other)
             && BoundOverlapAmbiguity::BothStarts(self.pos().inclusivity(), other.pos().inclusivity())
@@ -94,16 +94,16 @@ impl BoundEq for RelativeFiniteStartBound {
     }
 }
 
-impl BoundEq<RelativeStartBound> for RelativeFiniteStartBound {
-    fn bound_eq(&self, other: &RelativeStartBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
+impl BoundEq<RelStartBound> for RelFiniteStartBound {
+    fn bound_eq(&self, other: &RelStartBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
         other
             .finite()
             .is_some_and(|finite_start| self.bound_eq(&finite_start, rule_set))
     }
 }
 
-impl BoundEq<RelativeFiniteEndBound> for RelativeFiniteStartBound {
-    fn bound_eq(&self, other: &RelativeFiniteEndBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
+impl BoundEq<RelFiniteEndBound> for RelFiniteStartBound {
+    fn bound_eq(&self, other: &RelFiniteEndBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
         self.pos().eq(&other.pos())
             && BoundOverlapAmbiguity::StartEnd(self.pos().inclusivity(), other.pos().inclusivity())
                 .disambiguate(rule_set)
@@ -111,33 +111,33 @@ impl BoundEq<RelativeFiniteEndBound> for RelativeFiniteStartBound {
     }
 }
 
-impl BoundEq<RelativeEndBound> for RelativeFiniteStartBound {
-    fn bound_eq(&self, other: &RelativeEndBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
+impl BoundEq<RelEndBound> for RelFiniteStartBound {
+    fn bound_eq(&self, other: &RelEndBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
         other
             .finite()
             .is_some_and(|finite_end| self.bound_eq(&finite_end, rule_set))
     }
 }
 
-impl BoundEq<RelativeFiniteBound> for RelativeFiniteStartBound {
-    fn bound_eq(&self, other: &RelativeFiniteBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
+impl BoundEq<RelFiniteBound> for RelFiniteStartBound {
+    fn bound_eq(&self, other: &RelFiniteBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
         match other {
-            RelativeFiniteBound::Start(finite_start) => self.bound_eq(finite_start, rule_set),
-            RelativeFiniteBound::End(finite_end) => self.bound_eq(finite_end, rule_set),
+            RelFiniteBound::Start(finite_start) => self.bound_eq(finite_start, rule_set),
+            RelFiniteBound::End(finite_end) => self.bound_eq(finite_end, rule_set),
         }
     }
 }
 
-impl BoundEq<RelativeBound> for RelativeFiniteStartBound {
-    fn bound_eq(&self, other: &RelativeBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
+impl BoundEq<RelBound> for RelFiniteStartBound {
+    fn bound_eq(&self, other: &RelBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
         match other {
-            RelativeBound::Start(start) => self.bound_eq(start, rule_set),
-            RelativeBound::End(end) => self.bound_eq(end, rule_set),
+            RelBound::Start(start) => self.bound_eq(start, rule_set),
+            RelBound::End(end) => self.bound_eq(end, rule_set),
         }
     }
 }
 
-impl BoundOrd for RelativeFiniteStartBound {
+impl BoundOrd for RelFiniteStartBound {
     fn bound_cmp(&self, other: &Self) -> BoundOrdering {
         match self.pos().cmp(&other.pos()) {
             Ordering::Less => BoundOrdering::Less,
@@ -150,10 +150,10 @@ impl BoundOrd for RelativeFiniteStartBound {
     }
 }
 
-impl BoundOrdExtremaOps for RelativeFiniteStartBound {}
+impl BoundOrdExtremaOps for RelFiniteStartBound {}
 
-impl BoundOrd<RelativeStartBound> for RelativeFiniteStartBound {
-    fn bound_cmp(&self, other: &RelativeStartBound) -> BoundOrdering {
+impl BoundOrd<RelStartBound> for RelFiniteStartBound {
+    fn bound_cmp(&self, other: &RelStartBound) -> BoundOrdering {
         if let Some(finite_start) = other.finite() {
             self.bound_cmp(&finite_start)
         } else {
@@ -162,8 +162,8 @@ impl BoundOrd<RelativeStartBound> for RelativeFiniteStartBound {
     }
 }
 
-impl BoundOrd<RelativeFiniteEndBound> for RelativeFiniteStartBound {
-    fn bound_cmp(&self, other: &RelativeFiniteEndBound) -> BoundOrdering {
+impl BoundOrd<RelFiniteEndBound> for RelFiniteStartBound {
+    fn bound_cmp(&self, other: &RelFiniteEndBound) -> BoundOrdering {
         match self.pos().cmp(&other.pos()) {
             Ordering::Less => BoundOrdering::Less,
             Ordering::Equal => BoundOrdering::Equal(Some(BoundOverlapAmbiguity::StartEnd(
@@ -175,35 +175,35 @@ impl BoundOrd<RelativeFiniteEndBound> for RelativeFiniteStartBound {
     }
 }
 
-impl BoundOrd<RelativeEndBound> for RelativeFiniteStartBound {
-    fn bound_cmp(&self, other: &RelativeEndBound) -> BoundOrdering {
+impl BoundOrd<RelEndBound> for RelFiniteStartBound {
+    fn bound_cmp(&self, other: &RelEndBound) -> BoundOrdering {
         match other {
-            RelativeEndBound::Finite(finite_end) => self.bound_cmp(finite_end),
-            RelativeEndBound::InfiniteFuture => BoundOrdering::Less,
+            RelEndBound::Finite(finite_end) => self.bound_cmp(finite_end),
+            RelEndBound::InfiniteFuture => BoundOrdering::Less,
         }
     }
 }
 
-impl BoundOrd<RelativeFiniteBound> for RelativeFiniteStartBound {
-    fn bound_cmp(&self, other: &RelativeFiniteBound) -> BoundOrdering {
+impl BoundOrd<RelFiniteBound> for RelFiniteStartBound {
+    fn bound_cmp(&self, other: &RelFiniteBound) -> BoundOrdering {
         match other {
-            RelativeFiniteBound::Start(finite_start) => self.bound_cmp(finite_start),
-            RelativeFiniteBound::End(finite_end) => self.bound_cmp(finite_end),
+            RelFiniteBound::Start(finite_start) => self.bound_cmp(finite_start),
+            RelFiniteBound::End(finite_end) => self.bound_cmp(finite_end),
         }
     }
 }
 
-impl BoundOrd<RelativeBound> for RelativeFiniteStartBound {
-    fn bound_cmp(&self, other: &RelativeBound) -> BoundOrdering {
+impl BoundOrd<RelBound> for RelFiniteStartBound {
+    fn bound_cmp(&self, other: &RelBound) -> BoundOrdering {
         match other {
-            RelativeBound::Start(start) => self.bound_cmp(start),
-            RelativeBound::End(end) => self.bound_cmp(end),
+            RelBound::Start(start) => self.bound_cmp(start),
+            RelBound::End(end) => self.bound_cmp(end),
         }
     }
 }
 
-impl From<RelativeFiniteBoundPosition> for RelativeFiniteStartBound {
-    fn from(value: RelativeFiniteBoundPosition) -> Self {
+impl From<RelFiniteBoundPos> for RelFiniteStartBound {
+    fn from(value: RelFiniteBoundPos) -> Self {
         Self::new(value)
     }
 }

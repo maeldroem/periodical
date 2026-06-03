@@ -5,23 +5,23 @@
 //! as a single type, while still conserving its extremality.
 
 use crate::intervals::absolute::{
-    AbsoluteBound,
-    AbsoluteEndBound,
-    AbsoluteFiniteBoundPosition,
-    AbsoluteFiniteEndBound,
-    AbsoluteFiniteStartBound,
-    AbsoluteStartBound,
+    AbsBound,
+    AbsEndBound,
+    AbsFiniteBoundPos,
+    AbsFiniteEndBound,
+    AbsFiniteStartBound,
+    AbsStartBound,
 };
 use crate::intervals::meta::{BoundExtremality, HasBoundExtremality};
 use crate::intervals::ops::{BoundEq, BoundOrd, BoundOrdExtremaOps, BoundOrdering, BoundOverlapDisambiguationRuleSet};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum AbsoluteFiniteBound {
-    Start(AbsoluteFiniteStartBound),
-    End(AbsoluteFiniteEndBound),
+pub enum AbsFiniteBound {
+    Start(AbsFiniteStartBound),
+    End(AbsFiniteEndBound),
 }
 
-impl AbsoluteFiniteBound {
+impl AbsFiniteBound {
     pub fn is_start(&self) -> bool {
         matches!(self, Self::Start(_))
     }
@@ -30,21 +30,21 @@ impl AbsoluteFiniteBound {
         matches!(self, Self::End(_))
     }
 
-    pub fn start(self) -> Option<AbsoluteFiniteStartBound> {
+    pub fn start(self) -> Option<AbsFiniteStartBound> {
         match self {
             Self::Start(start) => Some(start),
             Self::End(_) => None,
         }
     }
 
-    pub fn end(self) -> Option<AbsoluteFiniteEndBound> {
+    pub fn end(self) -> Option<AbsFiniteEndBound> {
         match self {
             Self::Start(_) => None,
             Self::End(end) => Some(end),
         }
     }
 
-    pub fn pos(self) -> AbsoluteFiniteBoundPosition {
+    pub fn pos(self) -> AbsFiniteBoundPos {
         match self {
             Self::Start(start) => start.pos(),
             Self::End(end) => end.pos(),
@@ -58,12 +58,12 @@ impl AbsoluteFiniteBound {
         }
     }
 
-    pub fn to_bound(self) -> AbsoluteBound {
-        AbsoluteBound::from(self)
+    pub fn to_bound(self) -> AbsBound {
+        AbsBound::from(self)
     }
 }
 
-impl HasBoundExtremality for AbsoluteFiniteBound {
+impl HasBoundExtremality for AbsFiniteBound {
     fn bound_extremality(&self) -> BoundExtremality {
         match self {
             Self::Start(_) => BoundExtremality::Start,
@@ -72,7 +72,7 @@ impl HasBoundExtremality for AbsoluteFiniteBound {
     }
 }
 
-impl BoundEq for AbsoluteFiniteBound {
+impl BoundEq for AbsFiniteBound {
     fn bound_eq(&self, other: &Self, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
         match self {
             Self::Start(start) => start.bound_eq(other, rule_set),
@@ -81,8 +81,8 @@ impl BoundEq for AbsoluteFiniteBound {
     }
 }
 
-impl BoundEq<AbsoluteFiniteStartBound> for AbsoluteFiniteBound {
-    fn bound_eq(&self, other: &AbsoluteFiniteStartBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
+impl BoundEq<AbsFiniteStartBound> for AbsFiniteBound {
+    fn bound_eq(&self, other: &AbsFiniteStartBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
         match self {
             Self::Start(finite_start) => finite_start.bound_eq(other, rule_set),
             Self::End(finite_end) => finite_end.bound_eq(other, rule_set),
@@ -90,8 +90,8 @@ impl BoundEq<AbsoluteFiniteStartBound> for AbsoluteFiniteBound {
     }
 }
 
-impl BoundEq<AbsoluteFiniteEndBound> for AbsoluteFiniteBound {
-    fn bound_eq(&self, other: &AbsoluteFiniteEndBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
+impl BoundEq<AbsFiniteEndBound> for AbsFiniteBound {
+    fn bound_eq(&self, other: &AbsFiniteEndBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
         match self {
             Self::Start(finite_start) => finite_start.bound_eq(other, rule_set),
             Self::End(finite_end) => finite_end.bound_eq(other, rule_set),
@@ -99,8 +99,8 @@ impl BoundEq<AbsoluteFiniteEndBound> for AbsoluteFiniteBound {
     }
 }
 
-impl BoundEq<AbsoluteStartBound> for AbsoluteFiniteBound {
-    fn bound_eq(&self, other: &AbsoluteStartBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
+impl BoundEq<AbsStartBound> for AbsFiniteBound {
+    fn bound_eq(&self, other: &AbsStartBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
         match self {
             Self::Start(finite_start) => finite_start.bound_eq(other, rule_set),
             Self::End(finite_end) => finite_end.bound_eq(other, rule_set),
@@ -108,8 +108,8 @@ impl BoundEq<AbsoluteStartBound> for AbsoluteFiniteBound {
     }
 }
 
-impl BoundEq<AbsoluteEndBound> for AbsoluteFiniteBound {
-    fn bound_eq(&self, other: &AbsoluteEndBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
+impl BoundEq<AbsEndBound> for AbsFiniteBound {
+    fn bound_eq(&self, other: &AbsEndBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
         match self {
             Self::Start(finite_start) => finite_start.bound_eq(other, rule_set),
             Self::End(finite_end) => finite_end.bound_eq(other, rule_set),
@@ -117,8 +117,8 @@ impl BoundEq<AbsoluteEndBound> for AbsoluteFiniteBound {
     }
 }
 
-impl BoundEq<AbsoluteBound> for AbsoluteFiniteBound {
-    fn bound_eq(&self, other: &AbsoluteBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
+impl BoundEq<AbsBound> for AbsFiniteBound {
+    fn bound_eq(&self, other: &AbsBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
         match self {
             Self::Start(finite_start) => finite_start.bound_eq(other, rule_set),
             Self::End(finite_end) => finite_end.bound_eq(other, rule_set),
@@ -126,7 +126,7 @@ impl BoundEq<AbsoluteBound> for AbsoluteFiniteBound {
     }
 }
 
-impl BoundOrd for AbsoluteFiniteBound {
+impl BoundOrd for AbsFiniteBound {
     fn bound_cmp(&self, other: &Self) -> BoundOrdering {
         match (self, other) {
             (Self::Start(lhs_finite_start), Self::Start(rhs_finite_start)) => {
@@ -139,10 +139,10 @@ impl BoundOrd for AbsoluteFiniteBound {
     }
 }
 
-impl BoundOrdExtremaOps for AbsoluteFiniteBound {}
+impl BoundOrdExtremaOps for AbsFiniteBound {}
 
-impl BoundOrd<AbsoluteFiniteStartBound> for AbsoluteFiniteBound {
-    fn bound_cmp(&self, other: &AbsoluteFiniteStartBound) -> BoundOrdering {
+impl BoundOrd<AbsFiniteStartBound> for AbsFiniteBound {
+    fn bound_cmp(&self, other: &AbsFiniteStartBound) -> BoundOrdering {
         match self {
             Self::Start(finite_start) => finite_start.bound_cmp(other),
             Self::End(finite_end) => finite_end.bound_cmp(other),
@@ -150,8 +150,8 @@ impl BoundOrd<AbsoluteFiniteStartBound> for AbsoluteFiniteBound {
     }
 }
 
-impl BoundOrd<AbsoluteFiniteEndBound> for AbsoluteFiniteBound {
-    fn bound_cmp(&self, other: &AbsoluteFiniteEndBound) -> BoundOrdering {
+impl BoundOrd<AbsFiniteEndBound> for AbsFiniteBound {
+    fn bound_cmp(&self, other: &AbsFiniteEndBound) -> BoundOrdering {
         match self {
             Self::Start(finite_start) => finite_start.bound_cmp(other),
             Self::End(finite_end) => finite_end.bound_cmp(other),
@@ -159,8 +159,8 @@ impl BoundOrd<AbsoluteFiniteEndBound> for AbsoluteFiniteBound {
     }
 }
 
-impl BoundOrd<AbsoluteStartBound> for AbsoluteFiniteBound {
-    fn bound_cmp(&self, other: &AbsoluteStartBound) -> BoundOrdering {
+impl BoundOrd<AbsStartBound> for AbsFiniteBound {
+    fn bound_cmp(&self, other: &AbsStartBound) -> BoundOrdering {
         match self {
             Self::Start(finite_start) => finite_start.bound_cmp(other),
             Self::End(finite_end) => finite_end.bound_cmp(other),
@@ -168,8 +168,8 @@ impl BoundOrd<AbsoluteStartBound> for AbsoluteFiniteBound {
     }
 }
 
-impl BoundOrd<AbsoluteEndBound> for AbsoluteFiniteBound {
-    fn bound_cmp(&self, other: &AbsoluteEndBound) -> BoundOrdering {
+impl BoundOrd<AbsEndBound> for AbsFiniteBound {
+    fn bound_cmp(&self, other: &AbsEndBound) -> BoundOrdering {
         match self {
             Self::Start(finite_start) => finite_start.bound_cmp(other),
             Self::End(finite_end) => finite_end.bound_cmp(other),
@@ -177,8 +177,8 @@ impl BoundOrd<AbsoluteEndBound> for AbsoluteFiniteBound {
     }
 }
 
-impl BoundOrd<AbsoluteBound> for AbsoluteFiniteBound {
-    fn bound_cmp(&self, other: &AbsoluteBound) -> BoundOrdering {
+impl BoundOrd<AbsBound> for AbsFiniteBound {
+    fn bound_cmp(&self, other: &AbsBound) -> BoundOrdering {
         match self {
             Self::Start(finite_start) => finite_start.bound_cmp(other),
             Self::End(finite_end) => finite_end.bound_cmp(other),
@@ -186,23 +186,23 @@ impl BoundOrd<AbsoluteBound> for AbsoluteFiniteBound {
     }
 }
 
-impl From<AbsoluteFiniteStartBound> for AbsoluteFiniteBound {
-    fn from(value: AbsoluteFiniteStartBound) -> Self {
+impl From<AbsFiniteStartBound> for AbsFiniteBound {
+    fn from(value: AbsFiniteStartBound) -> Self {
         Self::Start(value)
     }
 }
 
-impl From<AbsoluteFiniteEndBound> for AbsoluteFiniteBound {
-    fn from(value: AbsoluteFiniteEndBound) -> Self {
+impl From<AbsFiniteEndBound> for AbsFiniteBound {
+    fn from(value: AbsFiniteEndBound) -> Self {
         Self::End(value)
     }
 }
 
-impl From<(AbsoluteFiniteBoundPosition, BoundExtremality)> for AbsoluteFiniteBound {
-    fn from((finite_pos, extremality): (AbsoluteFiniteBoundPosition, BoundExtremality)) -> Self {
+impl From<(AbsFiniteBoundPos, BoundExtremality)> for AbsFiniteBound {
+    fn from((finite_pos, extremality): (AbsFiniteBoundPos, BoundExtremality)) -> Self {
         match extremality {
-            BoundExtremality::Start => Self::Start(AbsoluteFiniteStartBound::from(finite_pos)),
-            BoundExtremality::End => Self::End(AbsoluteFiniteEndBound::from(finite_pos)),
+            BoundExtremality::Start => Self::Start(AbsFiniteStartBound::from(finite_pos)),
+            BoundExtremality::End => Self::End(AbsFiniteEndBound::from(finite_pos)),
         }
     }
 }

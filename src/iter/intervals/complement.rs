@@ -13,33 +13,33 @@
 //! # use jiff::Zoned;
 //! # use periodical::ops::ComplementResult;
 //! # use periodical::intervals::absolute::{
-//! #     AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBoundPosition, AbsoluteStartBound,
+//! #     AbsBoundPair, AbsEndBound, AbsFiniteBoundPos, AbsStartBound,
 //! # };
 //! # use periodical::intervals::meta::BoundInclusivity;
 //! # use periodical::iter::intervals::complement::ComplementIteratorDispatcher;
 //! let intervals = [
-//!     AbsoluteBoundPair::new(
-//!         AbsoluteFiniteBoundPosition::new(
+//!     AbsBoundPair::new(
+//!         AbsFiniteBoundPos::new(
 //!             "2025-01-01 08:00:00[Europe/Oslo]"
 //!                 .parse::<Zoned>()?
 //!                 .timestamp(),
 //!         )
 //!         .to_start_bound(),
-//!         AbsoluteFiniteBoundPosition::new(
+//!         AbsFiniteBoundPos::new(
 //!             "2025-01-01 11:00:00[Europe/Oslo]"
 //!                 .parse::<Zoned>()?
 //!                 .timestamp(),
 //!         )
 //!         .to_end_bound(),
 //!     ),
-//!     AbsoluteBoundPair::new(
-//!         AbsoluteFiniteBoundPosition::new(
+//!     AbsBoundPair::new(
+//!         AbsFiniteBoundPos::new(
 //!             "2025-01-01 12:00:00[Europe/Oslo]"
 //!                 .parse::<Zoned>()?
 //!                 .timestamp(),
 //!         )
 //!         .to_start_bound(),
-//!         AbsoluteFiniteBoundPosition::new(
+//!         AbsFiniteBoundPos::new(
 //!             "2025-01-01 16:00:00[Europe/Oslo]"
 //!                 .parse::<Zoned>()?
 //!                 .timestamp(),
@@ -52,9 +52,9 @@
 //!     intervals.complement().collect::<Vec<_>>(),
 //!     vec![
 //!         ComplementResult::Split(
-//!             AbsoluteBoundPair::new(
-//!                 AbsoluteStartBound::InfinitePast,
-//!                 AbsoluteFiniteBoundPosition::new_with_inclusivity(
+//!             AbsBoundPair::new(
+//!                 AbsStartBound::InfinitePast,
+//!                 AbsFiniteBoundPos::new_with_inclusivity(
 //!                     "2025-01-01 08:00:00[Europe/Oslo]"
 //!                         .parse::<Zoned>()?
 //!                         .timestamp(),
@@ -63,22 +63,22 @@
 //!                 .to_end_bound(),
 //!             )
 //!             .to_emptiable(),
-//!             AbsoluteBoundPair::new(
-//!                 AbsoluteFiniteBoundPosition::new_with_inclusivity(
+//!             AbsBoundPair::new(
+//!                 AbsFiniteBoundPos::new_with_inclusivity(
 //!                     "2025-01-01 11:00:00[Europe/Oslo]"
 //!                         .parse::<Zoned>()?
 //!                         .timestamp(),
 //!                     BoundInclusivity::Exclusive,
 //!                 )
 //!                 .to_start_bound(),
-//!                 AbsoluteEndBound::InfiniteFuture,
+//!                 AbsEndBound::InfiniteFuture,
 //!             )
 //!             .to_emptiable(),
 //!         ),
 //!         ComplementResult::Split(
-//!             AbsoluteBoundPair::new(
-//!                 AbsoluteStartBound::InfinitePast,
-//!                 AbsoluteFiniteBoundPosition::new_with_inclusivity(
+//!             AbsBoundPair::new(
+//!                 AbsStartBound::InfinitePast,
+//!                 AbsFiniteBoundPos::new_with_inclusivity(
 //!                     "2025-01-01 12:00:00[Europe/Oslo]"
 //!                         .parse::<Zoned>()?
 //!                         .timestamp(),
@@ -87,15 +87,15 @@
 //!                 .to_end_bound(),
 //!             )
 //!             .to_emptiable(),
-//!             AbsoluteBoundPair::new(
-//!                 AbsoluteFiniteBoundPosition::new_with_inclusivity(
+//!             AbsBoundPair::new(
+//!                 AbsFiniteBoundPos::new_with_inclusivity(
 //!                     "2025-01-01 16:00:00[Europe/Oslo]"
 //!                         .parse::<Zoned>()?
 //!                         .timestamp(),
 //!                     BoundInclusivity::Exclusive,
 //!                 )
 //!                 .to_start_bound(),
-//!                 AbsoluteEndBound::InfiniteFuture,
+//!                 AbsEndBound::InfiniteFuture,
 //!             )
 //!             .to_emptiable(),
 //!         ),

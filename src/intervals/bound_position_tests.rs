@@ -3,18 +3,8 @@ use std::error::Error;
 use jiff::{SignedDuration, Timestamp};
 
 use super::bound_position::*;
-use crate::intervals::absolute::{
-    AbsoluteBoundPair,
-    AbsoluteEndBound,
-    AbsoluteFiniteBoundPosition,
-    AbsoluteStartBound,
-};
-use crate::intervals::relative::{
-    RelativeBoundPair,
-    RelativeEndBound,
-    RelativeFiniteBoundPosition,
-    RelativeStartBound,
-};
+use crate::intervals::absolute::{AbsBoundPair, AbsEndBound, AbsFiniteBoundPos, AbsStartBound};
+use crate::intervals::relative::{RelBoundPair, RelEndBound, RelFiniteBoundPos, RelStartBound};
 
 #[test]
 fn default_bound_position() {
@@ -41,25 +31,25 @@ mod get_abs_bound {
     #[test]
     fn start_inside() -> Result<(), Box<dyn Error>> {
         let data = [
-            AbsoluteBoundPair::new(
-                AbsoluteFiniteBoundPosition::new("2025-02-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsoluteFiniteBoundPosition::new("2025-02-05 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            AbsBoundPair::new(
+                AbsFiniteBoundPos::new("2025-02-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                AbsFiniteBoundPos::new("2025-02-05 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
             ),
-            AbsoluteBoundPair::new(
-                AbsoluteStartBound::InfinitePast,
-                AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            AbsBoundPair::new(
+                AbsStartBound::InfinitePast,
+                AbsFiniteBoundPos::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
             ),
-            AbsoluteBoundPair::new(
-                AbsoluteFiniteBoundPosition::new("2025-05-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsoluteFiniteBoundPosition::new("2025-05-04 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            AbsBoundPair::new(
+                AbsFiniteBoundPos::new("2025-05-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                AbsFiniteBoundPos::new("2025-05-04 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
             ),
-            AbsoluteBoundPair::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture),
+            AbsBoundPair::new(AbsStartBound::InfinitePast, AbsEndBound::InfiniteFuture),
         ];
 
         assert_eq!(
             BoundPosition::Start(2).get_abs_bound(data.iter()),
             Some(
-                AbsoluteFiniteBoundPosition::new("2025-05-01 00:00:00Z".parse::<Timestamp>()?)
+                AbsFiniteBoundPos::new("2025-05-01 00:00:00Z".parse::<Timestamp>()?)
                     .to_start_bound()
                     .to_bound()
             ),
@@ -70,19 +60,19 @@ mod get_abs_bound {
     #[test]
     fn start_outside() -> Result<(), Box<dyn Error>> {
         let data = [
-            AbsoluteBoundPair::new(
-                AbsoluteFiniteBoundPosition::new("2025-02-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsoluteFiniteBoundPosition::new("2025-02-05 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            AbsBoundPair::new(
+                AbsFiniteBoundPos::new("2025-02-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                AbsFiniteBoundPos::new("2025-02-05 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
             ),
-            AbsoluteBoundPair::new(
-                AbsoluteStartBound::InfinitePast,
-                AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            AbsBoundPair::new(
+                AbsStartBound::InfinitePast,
+                AbsFiniteBoundPos::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
             ),
-            AbsoluteBoundPair::new(
-                AbsoluteFiniteBoundPosition::new("2025-05-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsoluteFiniteBoundPosition::new("2025-05-04 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            AbsBoundPair::new(
+                AbsFiniteBoundPos::new("2025-05-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                AbsFiniteBoundPos::new("2025-05-04 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
             ),
-            AbsoluteBoundPair::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture),
+            AbsBoundPair::new(AbsStartBound::InfinitePast, AbsEndBound::InfiniteFuture),
         ];
 
         assert_eq!(BoundPosition::Start(5).get_abs_bound(data.iter()), None);
@@ -92,25 +82,25 @@ mod get_abs_bound {
     #[test]
     fn end_inside() -> Result<(), Box<dyn Error>> {
         let data = [
-            AbsoluteBoundPair::new(
-                AbsoluteFiniteBoundPosition::new("2025-02-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsoluteFiniteBoundPosition::new("2025-02-05 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            AbsBoundPair::new(
+                AbsFiniteBoundPos::new("2025-02-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                AbsFiniteBoundPos::new("2025-02-05 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
             ),
-            AbsoluteBoundPair::new(
-                AbsoluteStartBound::InfinitePast,
-                AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            AbsBoundPair::new(
+                AbsStartBound::InfinitePast,
+                AbsFiniteBoundPos::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
             ),
-            AbsoluteBoundPair::new(
-                AbsoluteFiniteBoundPosition::new("2025-05-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsoluteFiniteBoundPosition::new("2025-05-04 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            AbsBoundPair::new(
+                AbsFiniteBoundPos::new("2025-05-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                AbsFiniteBoundPos::new("2025-05-04 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
             ),
-            AbsoluteBoundPair::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture),
+            AbsBoundPair::new(AbsStartBound::InfinitePast, AbsEndBound::InfiniteFuture),
         ];
 
         assert_eq!(
             BoundPosition::End(2).get_abs_bound(data.iter()),
             Some(
-                AbsoluteFiniteBoundPosition::new("2025-05-04 00:00:00Z".parse::<Timestamp>()?)
+                AbsFiniteBoundPos::new("2025-05-04 00:00:00Z".parse::<Timestamp>()?)
                     .to_end_bound()
                     .to_bound()
             ),
@@ -121,19 +111,19 @@ mod get_abs_bound {
     #[test]
     fn end_outside() -> Result<(), Box<dyn Error>> {
         let data = [
-            AbsoluteBoundPair::new(
-                AbsoluteFiniteBoundPosition::new("2025-02-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsoluteFiniteBoundPosition::new("2025-02-05 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            AbsBoundPair::new(
+                AbsFiniteBoundPos::new("2025-02-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                AbsFiniteBoundPos::new("2025-02-05 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
             ),
-            AbsoluteBoundPair::new(
-                AbsoluteStartBound::InfinitePast,
-                AbsoluteFiniteBoundPosition::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            AbsBoundPair::new(
+                AbsStartBound::InfinitePast,
+                AbsFiniteBoundPos::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
             ),
-            AbsoluteBoundPair::new(
-                AbsoluteFiniteBoundPosition::new("2025-05-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsoluteFiniteBoundPosition::new("2025-05-04 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            AbsBoundPair::new(
+                AbsFiniteBoundPos::new("2025-05-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+                AbsFiniteBoundPos::new("2025-05-04 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
             ),
-            AbsoluteBoundPair::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture),
+            AbsBoundPair::new(AbsStartBound::InfinitePast, AbsEndBound::InfiniteFuture),
         ];
 
         assert_eq!(BoundPosition::End(5).get_abs_bound(data.iter()), None);
@@ -147,25 +137,25 @@ mod get_rel_bound {
     #[test]
     fn start_inside() {
         let data = [
-            RelativeBoundPair::new(
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(21)).to_start_bound(),
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(25)).to_end_bound(),
+            RelBoundPair::new(
+                RelFiniteBoundPos::new(SignedDuration::from_hours(21)).to_start_bound(),
+                RelFiniteBoundPos::new(SignedDuration::from_hours(25)).to_end_bound(),
             ),
-            RelativeBoundPair::new(
-                RelativeStartBound::InfinitePast,
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(11)).to_end_bound(),
+            RelBoundPair::new(
+                RelStartBound::InfinitePast,
+                RelFiniteBoundPos::new(SignedDuration::from_hours(11)).to_end_bound(),
             ),
-            RelativeBoundPair::new(
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(51)).to_start_bound(),
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(54)).to_end_bound(),
+            RelBoundPair::new(
+                RelFiniteBoundPos::new(SignedDuration::from_hours(51)).to_start_bound(),
+                RelFiniteBoundPos::new(SignedDuration::from_hours(54)).to_end_bound(),
             ),
-            RelativeBoundPair::new(RelativeStartBound::InfinitePast, RelativeEndBound::InfiniteFuture),
+            RelBoundPair::new(RelStartBound::InfinitePast, RelEndBound::InfiniteFuture),
         ];
 
         assert_eq!(
             BoundPosition::Start(2).get_rel_bound(data.iter()),
             Some(
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(51))
+                RelFiniteBoundPos::new(SignedDuration::from_hours(51))
                     .to_start_bound()
                     .to_bound()
             ),
@@ -175,19 +165,19 @@ mod get_rel_bound {
     #[test]
     fn start_outside() {
         let data = [
-            RelativeBoundPair::new(
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(21)).to_start_bound(),
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(25)).to_end_bound(),
+            RelBoundPair::new(
+                RelFiniteBoundPos::new(SignedDuration::from_hours(21)).to_start_bound(),
+                RelFiniteBoundPos::new(SignedDuration::from_hours(25)).to_end_bound(),
             ),
-            RelativeBoundPair::new(
-                RelativeStartBound::InfinitePast,
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(11)).to_end_bound(),
+            RelBoundPair::new(
+                RelStartBound::InfinitePast,
+                RelFiniteBoundPos::new(SignedDuration::from_hours(11)).to_end_bound(),
             ),
-            RelativeBoundPair::new(
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(51)).to_start_bound(),
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(54)).to_end_bound(),
+            RelBoundPair::new(
+                RelFiniteBoundPos::new(SignedDuration::from_hours(51)).to_start_bound(),
+                RelFiniteBoundPos::new(SignedDuration::from_hours(54)).to_end_bound(),
             ),
-            RelativeBoundPair::new(RelativeStartBound::InfinitePast, RelativeEndBound::InfiniteFuture),
+            RelBoundPair::new(RelStartBound::InfinitePast, RelEndBound::InfiniteFuture),
         ];
 
         assert_eq!(BoundPosition::Start(5).get_rel_bound(data.iter()), None);
@@ -196,25 +186,25 @@ mod get_rel_bound {
     #[test]
     fn end_inside() {
         let data = [
-            RelativeBoundPair::new(
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(21)).to_start_bound(),
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(25)).to_end_bound(),
+            RelBoundPair::new(
+                RelFiniteBoundPos::new(SignedDuration::from_hours(21)).to_start_bound(),
+                RelFiniteBoundPos::new(SignedDuration::from_hours(25)).to_end_bound(),
             ),
-            RelativeBoundPair::new(
-                RelativeStartBound::InfinitePast,
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(11)).to_end_bound(),
+            RelBoundPair::new(
+                RelStartBound::InfinitePast,
+                RelFiniteBoundPos::new(SignedDuration::from_hours(11)).to_end_bound(),
             ),
-            RelativeBoundPair::new(
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(51)).to_start_bound(),
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(54)).to_end_bound(),
+            RelBoundPair::new(
+                RelFiniteBoundPos::new(SignedDuration::from_hours(51)).to_start_bound(),
+                RelFiniteBoundPos::new(SignedDuration::from_hours(54)).to_end_bound(),
             ),
-            RelativeBoundPair::new(RelativeStartBound::InfinitePast, RelativeEndBound::InfiniteFuture),
+            RelBoundPair::new(RelStartBound::InfinitePast, RelEndBound::InfiniteFuture),
         ];
 
         assert_eq!(
             BoundPosition::End(2).get_rel_bound(data.iter()),
             Some(
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(54))
+                RelFiniteBoundPos::new(SignedDuration::from_hours(54))
                     .to_end_bound()
                     .to_bound()
             ),
@@ -224,19 +214,19 @@ mod get_rel_bound {
     #[test]
     fn end_outside() {
         let data = [
-            RelativeBoundPair::new(
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(21)).to_start_bound(),
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(25)).to_end_bound(),
+            RelBoundPair::new(
+                RelFiniteBoundPos::new(SignedDuration::from_hours(21)).to_start_bound(),
+                RelFiniteBoundPos::new(SignedDuration::from_hours(25)).to_end_bound(),
             ),
-            RelativeBoundPair::new(
-                RelativeStartBound::InfinitePast,
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(11)).to_end_bound(),
+            RelBoundPair::new(
+                RelStartBound::InfinitePast,
+                RelFiniteBoundPos::new(SignedDuration::from_hours(11)).to_end_bound(),
             ),
-            RelativeBoundPair::new(
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(51)).to_start_bound(),
-                RelativeFiniteBoundPosition::new(SignedDuration::from_hours(54)).to_end_bound(),
+            RelBoundPair::new(
+                RelFiniteBoundPos::new(SignedDuration::from_hours(51)).to_start_bound(),
+                RelFiniteBoundPos::new(SignedDuration::from_hours(54)).to_end_bound(),
             ),
-            RelativeBoundPair::new(RelativeStartBound::InfinitePast, RelativeEndBound::InfiniteFuture),
+            RelBoundPair::new(RelStartBound::InfinitePast, RelEndBound::InfiniteFuture),
         ];
 
         assert_eq!(BoundPosition::End(5).get_rel_bound(data.iter()), None);

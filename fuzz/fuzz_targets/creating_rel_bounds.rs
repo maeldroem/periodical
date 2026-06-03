@@ -1,10 +1,10 @@
 #![no_main]
 
 use libfuzzer_sys::fuzz_target;
-use periodical::intervals::relative::{RelativeEndBound, RelativeStartBound};
+use periodical::intervals::relative::{RelEndBound, RelStartBound};
 use periodical::prelude::*;
 
-fuzz_target!(|data: (RelativeStartBound, RelativeEndBound)| {
+fuzz_target!(|data: (RelStartBound, RelEndBound)| {
     let (start, end) = data;
-    let _ = RelativeBoundPair::new(start, end);
+    let _ = RelBoundPair::new(start, end);
 });

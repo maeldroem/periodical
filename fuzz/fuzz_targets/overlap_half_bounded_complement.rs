@@ -4,7 +4,7 @@ use libfuzzer_sys::fuzz_target;
 use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
 use periodical::prelude::*;
 
-fuzz_target!(|data: (HalfBoundedAbsoluteInterval, OverlapRuleSet)| {
+fuzz_target!(|data: (HalfBoundedAbsInterval, OverlapRuleSet)| {
     let (source_half_bounded, rule_set) = data;
 
     let complement_half_bounded = source_half_bounded

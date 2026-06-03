@@ -1,9 +1,9 @@
 //! Relative start bound
 //!
 //! Represents the start bound of a relative interval. It can either be finite,
-//! in which case it will contain an [`RelativeFiniteBoundPosition`], or represent an
+//! in which case it will contain an [`RelFiniteBoundPos`], or represent an
 //! open start bound through
-//! the [`InfinitePast`](RelativeStartBound::InfinitePast) variant.
+//! the [`InfinitePast`](RelStartBound::InfinitePast) variant.
 
 use std::cmp::Ordering;
 use std::error::Error;
@@ -26,49 +26,48 @@ use crate::intervals::ops::{
     BoundOverlapDisambiguationRuleSet,
 };
 use crate::intervals::relative::{
-    RelativeBound,
-    RelativeEndBound,
-    RelativeFiniteBound,
-    RelativeFiniteBoundPosition,
-    RelativeFiniteEndBound,
-    RelativeFiniteStartBound,
+    RelBound,
+    RelEndBound,
+    RelFiniteBound,
+    RelFiniteBoundPos,
+    RelFiniteEndBound,
+    RelFiniteStartBound,
 };
 
 /// A relative start bound
 ///
 /// Represents the start bound of an interval, may it be infinitely in the past
 /// or at a precise offset, in which case it contains an
-/// [`RelativeFiniteBoundPosition`].
+/// [`RelFiniteBoundPos`].
 ///
-/// Contrary to specific relative interval types, both [`RelativeStartBound`]
-/// and [`RelativeEndBound`] use an offset, and not an offset for the start and
+/// Contrary to specific relative interval types, both [`RelStartBound`]
+/// and [`RelEndBound`] use an offset, and not an offset for the start and
 /// a length for the end.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
-pub enum RelativeStartBound {
-    Finite(RelativeFiniteStartBound),
+pub enum RelStartBound {
+    Finite(RelFiniteStartBound),
     InfinitePast,
 }
 
-impl RelativeStartBound {
-    /// Wraps the start bound of the corresponding [`RelativeBound`] variant
+impl RelStartBound {
+    /// Wraps the start bound of the corresponding [`RelBound`] variant
     #[must_use]
-    pub fn to_bound(self) -> RelativeBound {
-        RelativeBound::from(self)
+    pub fn to_bound(self) -> RelBound {
+        RelBound::from(self)
     }
 
-    /// Returns whether it is of the [`Finite`](RelativeStartBound::Finite)
+    /// Returns whether it is of the [`Finite`](RelStartBound::Finite)
     /// variant
     ///
     /// # Examples
     ///
     /// ```
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::{RelativeFiniteBoundPosition, RelativeStartBound};
-    /// let infinite_start_bound = RelativeStartBound::InfinitePast;
-    /// let finite_start_bound =
-    ///     RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound();
+    /// # use periodical::intervals::relative::{RelFiniteBoundPos, RelStartBound};
+    /// let infinite_start_bound = RelStartBound::InfinitePast;
+    /// let finite_start_bound = RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound();
     ///
     /// assert!(finite_start_bound.is_finite());
     /// assert!(!infinite_start_bound.is_finite());
@@ -79,16 +78,15 @@ impl RelativeStartBound {
     }
 
     /// Returns whether it is of the
-    /// [`InfinitePast`](RelativeStartBound::InfinitePast) variant
+    /// [`InfinitePast`](RelStartBound::InfinitePast) variant
     ///
     /// # Examples
     ///
     /// ```
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::{RelativeFiniteBoundPosition, RelativeStartBound};
-    /// let infinite_start_bound = RelativeStartBound::InfinitePast;
-    /// let finite_start_bound =
-    ///     RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound();
+    /// # use periodical::intervals::relative::{RelFiniteBoundPos, RelStartBound};
+    /// let infinite_start_bound = RelStartBound::InfinitePast;
+    /// let finite_start_bound = RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound();
     ///
     /// assert!(infinite_start_bound.is_infinite_past());
     /// assert!(!finite_start_bound.is_infinite_past());
@@ -98,44 +96,41 @@ impl RelativeStartBound {
         matches!(self, Self::InfinitePast)
     }
 
-    /// Returns the content of the [`Finite`](RelativeStartBound::Finite)
+    /// Returns the content of the [`Finite`](RelStartBound::Finite)
     /// variant
     ///
     /// Consumes `self` and puts the content of the
-    /// [`Finite`](RelativeStartBound::Finite) variant in an [`Option`]. If
+    /// [`Finite`](RelStartBound::Finite) variant in an [`Option`]. If
     /// instead `self` is another variant, the method returns [`None`].
     ///
     /// # Examples
     ///
     /// ```
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::{RelativeFiniteBoundPosition, RelativeStartBound};
-    /// let infinite_start_bound = RelativeStartBound::InfinitePast;
-    /// let finite_start_bound =
-    ///     RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1)).to_start_bound();
+    /// # use periodical::intervals::relative::{RelFiniteBoundPos, RelStartBound};
+    /// let infinite_start_bound = RelStartBound::InfinitePast;
+    /// let finite_start_bound = RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound();
     ///
     /// assert_eq!(
     ///     finite_start_bound.finite(),
-    ///     Some(RelativeFiniteBoundPosition::new(
-    ///         SignedDuration::from_hours(1)
-    ///     )),
+    ///     Some(RelFiniteBoundPos::new(SignedDuration::from_hours(1))),
     /// );
     /// assert_eq!(infinite_start_bound.finite(), None);
     /// ```
     #[must_use]
-    pub fn finite(self) -> Option<RelativeFiniteStartBound> {
+    pub fn finite(self) -> Option<RelFiniteStartBound> {
         match self {
             Self::Finite(finite) => Some(finite),
             Self::InfinitePast => None,
         }
     }
 
-    /// Returns the opposite [`RelativeEndBound`]
+    /// Returns the opposite [`RelEndBound`]
     ///
-    /// If the [`RelativeStartBound`] is of the
-    /// [`InfinitePast`](RelativeStartBound::InfinitePast) variant, then the
-    /// method returns [`None`]. Otherwise, if the [`RelativeStartBound`] is
-    /// finite, then an [`RelativeEndBound`] is created with the same time,
+    /// If the [`RelStartBound`] is of the
+    /// [`InfinitePast`](RelStartBound::InfinitePast) variant, then the
+    /// method returns [`None`]. Otherwise, if the [`RelStartBound`] is
+    /// finite, then an [`RelEndBound`] is created with the same time,
     /// but the opposite [`BoundInclusivity`].
     ///
     /// This is used for example for determining the last point in time before
@@ -147,7 +142,7 @@ impl RelativeStartBound {
     /// # use std::error::Error;
     /// # use jiff::SignedDuration;
     /// # use periodical::intervals::meta::BoundInclusivity;
-    /// # use periodical::intervals::relative::{RelativeFiniteBoundPosition, RelativeStartBound};
+    /// # use periodical::intervals::relative::{RelFiniteBoundPos, RelStartBound};
     /// #
     /// # #[derive(Debug)]
     /// # struct FiniteBoundPositionExpectedError;
@@ -160,14 +155,14 @@ impl RelativeStartBound {
     /// #
     /// # impl Error for FiniteBoundPositionExpectedError {}
     /// let start_second_part_my_shift =
-    ///     RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_start_bound();
+    ///     RelFiniteBoundPos::new(SignedDuration::from_hours(3)).to_start_bound();
     /// let break_end_before_shift = start_second_part_my_shift
     ///     .opposite()
     ///     .ok_or(FiniteBoundPositionExpectedError)?;
     ///
     /// assert_eq!(
     ///     break_end_before_shift.finite(),
-    ///     Some(RelativeFiniteBoundPosition::new_with_inclusivity(
+    ///     Some(RelFiniteBoundPos::new_with_inclusivity(
     ///         SignedDuration::from_hours(3),
     ///         BoundInclusivity::Exclusive,
     ///     )),
@@ -175,7 +170,7 @@ impl RelativeStartBound {
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    pub fn opposite(&self) -> Option<RelativeEndBound> {
+    pub fn opposite(&self) -> Option<RelEndBound> {
         match self {
             Self::Finite(finite) => Some(finite.opposite().to_end_bound()),
             Self::InfinitePast => None,
@@ -183,19 +178,19 @@ impl RelativeStartBound {
     }
 }
 
-impl HasBoundExtremality for RelativeStartBound {
+impl HasBoundExtremality for RelStartBound {
     fn bound_extremality(&self) -> BoundExtremality {
         BoundExtremality::Start
     }
 }
 
-impl PartialOrd for RelativeStartBound {
+impl PartialOrd for RelStartBound {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl Ord for RelativeStartBound {
+impl Ord for RelStartBound {
     fn cmp(&self, other: &Self) -> Ordering {
         match (self, other) {
             (Self::InfinitePast, Self::InfinitePast) => Ordering::Equal,
@@ -206,7 +201,7 @@ impl Ord for RelativeStartBound {
     }
 }
 
-impl BoundEq for RelativeStartBound {
+impl BoundEq for RelStartBound {
     fn bound_eq(&self, other: &Self, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
         if let Some(rhs_finite_start) = self.finite()
             && let Some(lhs_finite_start) = other.finite()
@@ -218,42 +213,42 @@ impl BoundEq for RelativeStartBound {
     }
 }
 
-impl BoundEq<RelativeFiniteStartBound> for RelativeStartBound {
-    fn bound_eq(&self, other: &RelativeFiniteStartBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
+impl BoundEq<RelFiniteStartBound> for RelStartBound {
+    fn bound_eq(&self, other: &RelFiniteStartBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
         self.finite()
             .is_some_and(|finite_start| finite_start.bound_eq(other, rule_set))
     }
 }
 
-impl BoundEq<RelativeFiniteEndBound> for RelativeStartBound {
-    fn bound_eq(&self, other: &RelativeFiniteEndBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
+impl BoundEq<RelFiniteEndBound> for RelStartBound {
+    fn bound_eq(&self, other: &RelFiniteEndBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
         self.finite()
             .is_some_and(|finite_start| finite_start.bound_eq(other, rule_set))
     }
 }
 
-impl BoundEq<RelativeFiniteBound> for RelativeStartBound {
-    fn bound_eq(&self, other: &RelativeFiniteBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
+impl BoundEq<RelFiniteBound> for RelStartBound {
+    fn bound_eq(&self, other: &RelFiniteBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
         self.finite()
             .is_some_and(|finite_start| finite_start.bound_eq(other, rule_set))
     }
 }
 
-impl BoundEq<RelativeEndBound> for RelativeStartBound {
-    fn bound_eq(&self, other: &RelativeEndBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
+impl BoundEq<RelEndBound> for RelStartBound {
+    fn bound_eq(&self, other: &RelEndBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
         self.finite()
             .is_some_and(|finite_start| finite_start.bound_eq(other, rule_set))
     }
 }
 
-impl BoundEq<RelativeBound> for RelativeStartBound {
-    fn bound_eq(&self, other: &RelativeBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
+impl BoundEq<RelBound> for RelStartBound {
+    fn bound_eq(&self, other: &RelBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
         self.finite()
             .is_some_and(|finite_start| finite_start.bound_eq(other, rule_set))
     }
 }
 
-impl BoundOrd for RelativeStartBound {
+impl BoundOrd for RelStartBound {
     fn bound_cmp(&self, other: &Self) -> BoundOrdering {
         match self.cmp(other) {
             Ordering::Less => BoundOrdering::Less,
@@ -270,10 +265,10 @@ impl BoundOrd for RelativeStartBound {
     }
 }
 
-impl BoundOrdExtremaOps for RelativeStartBound {}
+impl BoundOrdExtremaOps for RelStartBound {}
 
-impl BoundOrd<RelativeFiniteStartBound> for RelativeStartBound {
-    fn bound_cmp(&self, other: &RelativeFiniteStartBound) -> BoundOrdering {
+impl BoundOrd<RelFiniteStartBound> for RelStartBound {
+    fn bound_cmp(&self, other: &RelFiniteStartBound) -> BoundOrdering {
         match self {
             Self::Finite(finite_start) => finite_start.bound_cmp(other),
             Self::InfinitePast => BoundOrdering::Less,
@@ -281,8 +276,8 @@ impl BoundOrd<RelativeFiniteStartBound> for RelativeStartBound {
     }
 }
 
-impl BoundOrd<RelativeFiniteEndBound> for RelativeStartBound {
-    fn bound_cmp(&self, other: &RelativeFiniteEndBound) -> BoundOrdering {
+impl BoundOrd<RelFiniteEndBound> for RelStartBound {
+    fn bound_cmp(&self, other: &RelFiniteEndBound) -> BoundOrdering {
         match self {
             Self::Finite(finite_start) => finite_start.bound_cmp(other),
             Self::InfinitePast => BoundOrdering::Less,
@@ -290,8 +285,8 @@ impl BoundOrd<RelativeFiniteEndBound> for RelativeStartBound {
     }
 }
 
-impl BoundOrd<RelativeFiniteBound> for RelativeStartBound {
-    fn bound_cmp(&self, other: &RelativeFiniteBound) -> BoundOrdering {
+impl BoundOrd<RelFiniteBound> for RelStartBound {
+    fn bound_cmp(&self, other: &RelFiniteBound) -> BoundOrdering {
         match self {
             Self::Finite(finite_start) => finite_start.bound_cmp(other),
             Self::InfinitePast => BoundOrdering::Less,
@@ -299,8 +294,8 @@ impl BoundOrd<RelativeFiniteBound> for RelativeStartBound {
     }
 }
 
-impl BoundOrd<RelativeEndBound> for RelativeStartBound {
-    fn bound_cmp(&self, other: &RelativeEndBound) -> BoundOrdering {
+impl BoundOrd<RelEndBound> for RelStartBound {
+    fn bound_cmp(&self, other: &RelEndBound) -> BoundOrdering {
         match self {
             Self::Finite(finite_start) => finite_start.bound_cmp(other),
             Self::InfinitePast => BoundOrdering::Less,
@@ -308,81 +303,79 @@ impl BoundOrd<RelativeEndBound> for RelativeStartBound {
     }
 }
 
-impl BoundOrd<RelativeBound> for RelativeStartBound {
-    fn bound_cmp(&self, other: &RelativeBound) -> BoundOrdering {
+impl BoundOrd<RelBound> for RelStartBound {
+    fn bound_cmp(&self, other: &RelBound) -> BoundOrdering {
         match other {
-            RelativeBound::Start(start) => self.bound_cmp(start),
-            RelativeBound::End(end) => self.bound_cmp(end),
+            RelBound::Start(start) => self.bound_cmp(start),
+            RelBound::End(end) => self.bound_cmp(end),
         }
     }
 }
 
-impl From<RelativeFiniteStartBound> for RelativeStartBound {
-    fn from(value: RelativeFiniteStartBound) -> Self {
+impl From<RelFiniteStartBound> for RelStartBound {
+    fn from(value: RelFiniteStartBound) -> Self {
         Self::Finite(value)
     }
 }
 
-impl From<RelativeFiniteBoundPosition> for RelativeStartBound {
-    fn from(value: RelativeFiniteBoundPosition) -> Self {
-        Self::Finite(RelativeFiniteStartBound::new(value))
+impl From<RelFiniteBoundPos> for RelStartBound {
+    fn from(value: RelFiniteBoundPos) -> Self {
+        Self::Finite(RelFiniteStartBound::new(value))
     }
 }
 
-impl From<Option<SignedDuration>> for RelativeStartBound {
+impl From<Option<SignedDuration>> for RelStartBound {
     fn from(value: Option<SignedDuration>) -> Self {
         match value {
-            Some(offset) => Self::from(RelativeFiniteBoundPosition::from(offset)),
+            Some(offset) => Self::from(RelFiniteBoundPos::from(offset)),
             None => Self::InfinitePast,
         }
     }
 }
 
-impl From<Option<(SignedDuration, BoundInclusivity)>> for RelativeStartBound {
+impl From<Option<(SignedDuration, BoundInclusivity)>> for RelStartBound {
     fn from(value: Option<(SignedDuration, BoundInclusivity)>) -> Self {
         match value {
-            Some((offset, inclusivity)) => {
-                Self::from(RelativeFiniteBoundPosition::new_with_inclusivity(offset, inclusivity))
-            },
+            Some((offset, inclusivity)) => Self::from(RelFiniteBoundPos::new_with_inclusivity(offset, inclusivity)),
             None => Self::InfinitePast,
         }
     }
 }
 
-impl From<Bound<SignedDuration>> for RelativeStartBound {
+impl From<Bound<SignedDuration>> for RelStartBound {
     fn from(bound: Bound<SignedDuration>) -> Self {
         match bound {
             Bound::Included(offset) => {
-                RelativeFiniteBoundPosition::new_with_inclusivity(offset, BoundInclusivity::Inclusive).to_start_bound()
+                RelFiniteBoundPos::new_with_inclusivity(offset, BoundInclusivity::Inclusive).to_start_bound()
             },
             Bound::Excluded(offset) => {
-                RelativeFiniteBoundPosition::new_with_inclusivity(offset, BoundInclusivity::Exclusive).to_start_bound()
+                RelFiniteBoundPos::new_with_inclusivity(offset, BoundInclusivity::Exclusive).to_start_bound()
             },
-            Bound::Unbounded => RelativeStartBound::InfinitePast,
+            Bound::Unbounded => RelStartBound::InfinitePast,
         }
     }
 }
 
-/// Error that can occur when trying to convert an [`RelativeBound`] into an [`RelativeStartBound`]
+/// Error that can occur when trying to convert an [`RelBound`] into an [`RelStartBound`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct RelativeStartBoundTryFromRelativeBoundError;
+pub struct RelStartBoundTryFromRelBoundError;
 
-impl Display for RelativeStartBoundTryFromRelativeBoundError {
+impl Display for RelStartBoundTryFromRelBoundError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "An error occurred when trying to convert an `RelativeBound` into an `RelativeStartBound`"
+            "An error occurred when trying to convert an `RelBound` into an `RelStartBound`"
         )
     }
 }
 
-impl Error for RelativeStartBoundTryFromRelativeBoundError {}
+impl Error for RelStartBoundTryFromRelBoundError {}
 
-impl TryFrom<RelativeBound> for RelativeStartBound {
-    type Error = RelativeStartBoundTryFromRelativeBoundError;
+impl TryFrom<RelBound> for RelStartBound {
+    type Error = RelStartBoundTryFromRelBoundError;
 
-    fn try_from(value: RelativeBound) -> Result<Self, Self::Error> {
-        value.start().ok_or(RelativeStartBoundTryFromRelativeBoundError)
+    fn try_from(value: RelBound) -> Result<Self, Self::Error> {
+        value.start().ok_or(RelStartBoundTryFromRelBoundError)
     }
 }
 

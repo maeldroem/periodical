@@ -14,18 +14,18 @@
 //! # use std::error::Error;
 //! # use jiff::Zoned;
 //! # use periodical::intervals::absolute::{
-//! #     AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBoundPosition, AbsoluteStartBound,
+//! #     AbsBoundPair, AbsEndBound, AbsFiniteBoundPos, AbsStartBound,
 //! # };
 //! # use periodical::intervals::meta::BoundInclusivity;
 //! # use periodical::intervals::ops::continuation::Continuable;
-//! let interval = AbsoluteBoundPair::new(
-//!     AbsoluteFiniteBoundPosition::new(
+//! let interval = AbsBoundPair::new(
+//!     AbsFiniteBoundPos::new(
 //!         "2025-01-01 08:00:00[Europe/Oslo]"
 //!             .parse::<Zoned>()?
 //!             .timestamp(),
 //!     )
 //!     .to_start_bound(),
-//!     AbsoluteFiniteBoundPosition::new(
+//!     AbsFiniteBoundPos::new(
 //!         "2025-01-01 16:00:00[Europe/Oslo]"
 //!             .parse::<Zoned>()?
 //!             .timestamp(),
@@ -35,9 +35,9 @@
 //!
 //! assert_eq!(
 //!     interval.past_continuation(),
-//!     AbsoluteBoundPair::new(
-//!         AbsoluteStartBound::InfinitePast,
-//!         AbsoluteFiniteBoundPosition::new_with_inclusivity(
+//!     AbsBoundPair::new(
+//!         AbsStartBound::InfinitePast,
+//!         AbsFiniteBoundPos::new_with_inclusivity(
 //!             "2025-01-01 08:00:00[Europe/Oslo]"
 //!                 .parse::<Zoned>()?
 //!                 .timestamp(),
@@ -49,15 +49,15 @@
 //! );
 //! assert_eq!(
 //!     interval.future_continuation(),
-//!     AbsoluteBoundPair::new(
-//!         AbsoluteFiniteBoundPosition::new_with_inclusivity(
+//!     AbsBoundPair::new(
+//!         AbsFiniteBoundPos::new_with_inclusivity(
 //!             "2025-01-01 16:00:00[Europe/Oslo]"
 //!                 .parse::<Zoned>()?
 //!                 .timestamp(),
 //!             BoundInclusivity::Exclusive,
 //!         )
 //!         .to_start_bound(),
-//!         AbsoluteEndBound::InfiniteFuture,
+//!         AbsEndBound::InfiniteFuture,
 //!     )
 //!     .to_emptiable(),
 //! );
@@ -65,29 +65,29 @@
 //! ```
 
 use crate::intervals::absolute::{
-    AbsoluteBoundPair,
-    AbsoluteEndBound,
-    AbsoluteInterval,
-    AbsoluteStartBound,
-    BoundedAbsoluteInterval,
-    EmptiableAbsoluteBoundPair,
-    EmptiableAbsoluteInterval,
-    HalfBoundedAbsoluteInterval,
-    HasAbsoluteBoundPair,
-    HasEmptiableAbsoluteBoundPair,
+    AbsBoundPair,
+    AbsEndBound,
+    AbsInterval,
+    AbsStartBound,
+    BoundedAbsInterval,
+    EmptiableAbsBoundPair,
+    EmptiableAbsInterval,
+    HalfBoundedAbsInterval,
+    HasAbsBoundPair,
+    HasEmptiableAbsBoundPair,
 };
 use crate::intervals::meta::OpeningDirection;
 use crate::intervals::relative::{
-    BoundedRelativeInterval,
-    EmptiableRelativeBoundPair,
-    EmptiableRelativeInterval,
-    HalfBoundedRelativeInterval,
-    HasEmptiableRelativeBoundPair,
-    HasRelativeBoundPair,
-    RelativeBoundPair,
-    RelativeEndBound,
-    RelativeInterval,
-    RelativeStartBound,
+    BoundedRelInterval,
+    EmptiableRelBoundPair,
+    EmptiableRelInterval,
+    HalfBoundedRelInterval,
+    HasEmptiableRelBoundPair,
+    HasRelBoundPair,
+    RelBoundPair,
+    RelEndBound,
+    RelInterval,
+    RelStartBound,
 };
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 
@@ -107,18 +107,18 @@ use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 /// # use std::error::Error;
 /// # use jiff::Zoned;
 /// # use periodical::intervals::absolute::{
-/// #     AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBoundPosition, AbsoluteStartBound,
+/// #     AbsBoundPair, AbsEndBound, AbsFiniteBoundPos, AbsStartBound,
 /// # };
 /// # use periodical::intervals::meta::BoundInclusivity;
 /// # use periodical::intervals::ops::continuation::Continuable;
-/// let interval = AbsoluteBoundPair::new(
-///     AbsoluteFiniteBoundPosition::new(
+/// let interval = AbsBoundPair::new(
+///     AbsFiniteBoundPos::new(
 ///         "2025-01-01 08:00:00[Europe/Oslo]"
 ///             .parse::<Zoned>()?
 ///             .timestamp(),
 ///     )
 ///     .to_start_bound(),
-///     AbsoluteFiniteBoundPosition::new(
+///     AbsFiniteBoundPos::new(
 ///         "2025-01-01 16:00:00[Europe/Oslo]"
 ///             .parse::<Zoned>()?
 ///             .timestamp(),
@@ -128,9 +128,9 @@ use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 ///
 /// assert_eq!(
 ///     interval.past_continuation(),
-///     AbsoluteBoundPair::new(
-///         AbsoluteStartBound::InfinitePast,
-///         AbsoluteFiniteBoundPosition::new_with_inclusivity(
+///     AbsBoundPair::new(
+///         AbsStartBound::InfinitePast,
+///         AbsFiniteBoundPos::new_with_inclusivity(
 ///             "2025-01-01 08:00:00[Europe/Oslo]"
 ///                 .parse::<Zoned>()?
 ///                 .timestamp(),
@@ -142,15 +142,15 @@ use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 /// );
 /// assert_eq!(
 ///     interval.future_continuation(),
-///     AbsoluteBoundPair::new(
-///         AbsoluteFiniteBoundPosition::new_with_inclusivity(
+///     AbsBoundPair::new(
+///         AbsFiniteBoundPos::new_with_inclusivity(
 ///             "2025-01-01 16:00:00[Europe/Oslo]"
 ///                 .parse::<Zoned>()?
 ///                 .timestamp(),
 ///             BoundInclusivity::Exclusive,
 ///         )
 ///         .to_start_bound(),
-///         AbsoluteEndBound::InfiniteFuture,
+///         AbsEndBound::InfiniteFuture,
 ///     )
 ///     .to_emptiable(),
 /// );
@@ -168,18 +168,18 @@ pub trait Continuable {
     /// # use std::error::Error;
     /// # use jiff::Zoned;
     /// # use periodical::intervals::absolute::{
-    /// #     AbsoluteBoundPair, AbsoluteFiniteBoundPosition, AbsoluteStartBound,
+    /// #     AbsBoundPair, AbsFiniteBoundPos, AbsStartBound,
     /// # };
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::continuation::Continuable;
-    /// let interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBoundPosition::new(
+    /// let interval = AbsBoundPair::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 08:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
     ///     )
     ///     .to_start_bound(),
-    ///     AbsoluteFiniteBoundPosition::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 16:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
@@ -189,9 +189,9 @@ pub trait Continuable {
     ///
     /// assert_eq!(
     ///     interval.past_continuation(),
-    ///     AbsoluteBoundPair::new(
-    ///         AbsoluteStartBound::InfinitePast,
-    ///         AbsoluteFiniteBoundPosition::new_with_inclusivity(
+    ///     AbsBoundPair::new(
+    ///         AbsStartBound::InfinitePast,
+    ///         AbsFiniteBoundPos::new_with_inclusivity(
     ///             "2025-01-01 08:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
@@ -214,18 +214,18 @@ pub trait Continuable {
     /// # use std::error::Error;
     /// # use jiff::Zoned;
     /// # use periodical::intervals::absolute::{
-    /// #     AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBoundPosition,
+    /// #     AbsBoundPair, AbsEndBound, AbsFiniteBoundPos,
     /// # };
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::continuation::Continuable;
-    /// let interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBoundPosition::new(
+    /// let interval = AbsBoundPair::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 08:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
     ///     )
     ///     .to_start_bound(),
-    ///     AbsoluteFiniteBoundPosition::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 16:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
@@ -235,15 +235,15 @@ pub trait Continuable {
     ///
     /// assert_eq!(
     ///     interval.future_continuation(),
-    ///     AbsoluteBoundPair::new(
-    ///         AbsoluteFiniteBoundPosition::new_with_inclusivity(
+    ///     AbsBoundPair::new(
+    ///         AbsFiniteBoundPos::new_with_inclusivity(
     ///             "2025-01-01 16:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
     ///             BoundInclusivity::Exclusive,
     ///         )
     ///         .to_start_bound(),
-    ///         AbsoluteEndBound::InfiniteFuture,
+    ///         AbsEndBound::InfiniteFuture,
     ///     )
     ///     .to_emptiable(),
     /// );
@@ -253,8 +253,8 @@ pub trait Continuable {
     fn future_continuation(&self) -> Self::Output;
 }
 
-impl Continuable for AbsoluteBoundPair {
-    type Output = EmptiableAbsoluteBoundPair;
+impl Continuable for AbsBoundPair {
+    type Output = EmptiableAbsBoundPair;
 
     fn past_continuation(&self) -> Self::Output {
         past_continuation_abs_bound_pair(self)
@@ -265,7 +265,7 @@ impl Continuable for AbsoluteBoundPair {
     }
 }
 
-impl Continuable for EmptiableAbsoluteBoundPair {
+impl Continuable for EmptiableAbsBoundPair {
     type Output = Self;
 
     fn past_continuation(&self) -> Self::Output {
@@ -277,8 +277,8 @@ impl Continuable for EmptiableAbsoluteBoundPair {
     }
 }
 
-impl Continuable for AbsoluteInterval {
-    type Output = EmptiableAbsoluteInterval;
+impl Continuable for AbsInterval {
+    type Output = EmptiableAbsInterval;
 
     fn past_continuation(&self) -> Self::Output {
         Self::Output::from(past_continuation_abs_bound_pair(&self.abs_bound_pair()))
@@ -289,7 +289,7 @@ impl Continuable for AbsoluteInterval {
     }
 }
 
-impl Continuable for EmptiableAbsoluteInterval {
+impl Continuable for EmptiableAbsInterval {
     type Output = Self;
 
     fn past_continuation(&self) -> Self::Output {
@@ -305,8 +305,8 @@ impl Continuable for EmptiableAbsoluteInterval {
     }
 }
 
-impl Continuable for BoundedAbsoluteInterval {
-    type Output = HalfBoundedAbsoluteInterval;
+impl Continuable for BoundedAbsInterval {
+    type Output = HalfBoundedAbsInterval;
 
     fn past_continuation(&self) -> Self::Output {
         past_continuation_bounded_abs_interval(self)
@@ -317,8 +317,8 @@ impl Continuable for BoundedAbsoluteInterval {
     }
 }
 
-impl Continuable for HalfBoundedAbsoluteInterval {
-    type Output = EmptiableAbsoluteInterval;
+impl Continuable for HalfBoundedAbsInterval {
+    type Output = EmptiableAbsInterval;
 
     fn past_continuation(&self) -> Self::Output {
         past_continuation_abs_bound_pair(&self.abs_bound_pair()).to_emptiable_interval()
@@ -329,8 +329,8 @@ impl Continuable for HalfBoundedAbsoluteInterval {
     }
 }
 
-impl Continuable for RelativeBoundPair {
-    type Output = EmptiableRelativeBoundPair;
+impl Continuable for RelBoundPair {
+    type Output = EmptiableRelBoundPair;
 
     fn past_continuation(&self) -> Self::Output {
         past_continuation_rel_bound_pair(self)
@@ -341,7 +341,7 @@ impl Continuable for RelativeBoundPair {
     }
 }
 
-impl Continuable for EmptiableRelativeBoundPair {
+impl Continuable for EmptiableRelBoundPair {
     type Output = Self;
 
     fn past_continuation(&self) -> Self::Output {
@@ -353,8 +353,8 @@ impl Continuable for EmptiableRelativeBoundPair {
     }
 }
 
-impl Continuable for RelativeInterval {
-    type Output = EmptiableRelativeInterval;
+impl Continuable for RelInterval {
+    type Output = EmptiableRelInterval;
 
     fn past_continuation(&self) -> Self::Output {
         Self::Output::from(past_continuation_rel_bound_pair(&self.rel_bound_pair()))
@@ -365,7 +365,7 @@ impl Continuable for RelativeInterval {
     }
 }
 
-impl Continuable for EmptiableRelativeInterval {
+impl Continuable for EmptiableRelInterval {
     type Output = Self;
 
     fn past_continuation(&self) -> Self::Output {
@@ -381,8 +381,8 @@ impl Continuable for EmptiableRelativeInterval {
     }
 }
 
-impl Continuable for BoundedRelativeInterval {
-    type Output = HalfBoundedRelativeInterval;
+impl Continuable for BoundedRelInterval {
+    type Output = HalfBoundedRelInterval;
 
     fn past_continuation(&self) -> Self::Output {
         past_continuation_bounded_rel_interval(self)
@@ -393,8 +393,8 @@ impl Continuable for BoundedRelativeInterval {
     }
 }
 
-impl Continuable for HalfBoundedRelativeInterval {
-    type Output = EmptiableRelativeInterval;
+impl Continuable for HalfBoundedRelInterval {
+    type Output = EmptiableRelInterval;
 
     fn past_continuation(&self) -> Self::Output {
         past_continuation_rel_bound_pair(&self.rel_bound_pair()).to_emptiable_interval()
@@ -429,152 +429,148 @@ impl Continuable for EmptyInterval {
     }
 }
 
-/// Returns the past continuation of the given [`AbsoluteBoundPair`]
+/// Returns the past continuation of the given [`AbsBoundPair`]
 ///
 /// See [module documentation](self) for more info.
 #[must_use]
-pub fn past_continuation_abs_bound_pair(bounds: &AbsoluteBoundPair) -> EmptiableAbsoluteBoundPair {
+pub fn past_continuation_abs_bound_pair(bounds: &AbsBoundPair) -> EmptiableAbsBoundPair {
     match bounds.abs_start() {
-        AbsoluteStartBound::InfinitePast => EmptiableAbsoluteBoundPair::Empty,
-        AbsoluteStartBound::Finite(finite_start) => {
-            AbsoluteBoundPair::new(AbsoluteStartBound::InfinitePast, finite_start.opposite().to_end_bound())
-                .to_emptiable()
+        AbsStartBound::InfinitePast => EmptiableAbsBoundPair::Empty,
+        AbsStartBound::Finite(finite_start) => {
+            AbsBoundPair::new(AbsStartBound::InfinitePast, finite_start.opposite().to_end_bound()).to_emptiable()
         },
     }
 }
 
-/// Returns the future continuation of the given [`AbsoluteBoundPair`]
+/// Returns the future continuation of the given [`AbsBoundPair`]
 ///
 /// See [module documentation](self) for more info.
 #[must_use]
-pub fn future_continuation_abs_bound_pair(bounds: &AbsoluteBoundPair) -> EmptiableAbsoluteBoundPair {
+pub fn future_continuation_abs_bound_pair(bounds: &AbsBoundPair) -> EmptiableAbsBoundPair {
     match bounds.abs_end() {
-        AbsoluteEndBound::InfiniteFuture => EmptiableAbsoluteBoundPair::Empty,
-        AbsoluteEndBound::Finite(finite_end) => {
-            AbsoluteBoundPair::new(finite_end.opposite().to_start_bound(), AbsoluteEndBound::InfiniteFuture)
-                .to_emptiable()
+        AbsEndBound::InfiniteFuture => EmptiableAbsBoundPair::Empty,
+        AbsEndBound::Finite(finite_end) => {
+            AbsBoundPair::new(finite_end.opposite().to_start_bound(), AbsEndBound::InfiniteFuture).to_emptiable()
         },
     }
 }
 
-/// Returns the past continuation of the given [`EmptiableAbsoluteBoundPair`]
+/// Returns the past continuation of the given [`EmptiableAbsBoundPair`]
 ///
 /// See [module documentation](self) for more info.
 #[must_use]
-pub fn past_continuation_emptiable_abs_bound_pair(bounds: &EmptiableAbsoluteBoundPair) -> EmptiableAbsoluteBoundPair {
-    let EmptiableAbsoluteBoundPair::Bound(bounds) = bounds else {
-        return EmptiableAbsoluteBoundPair::Empty;
+pub fn past_continuation_emptiable_abs_bound_pair(bounds: &EmptiableAbsBoundPair) -> EmptiableAbsBoundPair {
+    let EmptiableAbsBoundPair::Bound(bounds) = bounds else {
+        return EmptiableAbsBoundPair::Empty;
     };
 
     past_continuation_abs_bound_pair(bounds)
 }
 
-/// Returns the future continuation of the given [`EmptiableAbsoluteBoundPair`]
+/// Returns the future continuation of the given [`EmptiableAbsBoundPair`]
 ///
 /// See [module documentation](self) for more info.
 #[must_use]
-pub fn future_continuation_emptiable_abs_bound_pair(bounds: &EmptiableAbsoluteBoundPair) -> EmptiableAbsoluteBoundPair {
-    let EmptiableAbsoluteBoundPair::Bound(bounds) = bounds else {
-        return EmptiableAbsoluteBoundPair::Empty;
+pub fn future_continuation_emptiable_abs_bound_pair(bounds: &EmptiableAbsBoundPair) -> EmptiableAbsBoundPair {
+    let EmptiableAbsBoundPair::Bound(bounds) = bounds else {
+        return EmptiableAbsBoundPair::Empty;
     };
 
     future_continuation_abs_bound_pair(bounds)
 }
 
-/// Returns the past continuation of the given [`BoundedAbsoluteInterval`]
+/// Returns the past continuation of the given [`BoundedAbsInterval`]
 ///
 /// See [module documentation](self) for more info.
 #[must_use]
-pub fn past_continuation_bounded_abs_interval(interval: &BoundedAbsoluteInterval) -> HalfBoundedAbsoluteInterval {
-    HalfBoundedAbsoluteInterval::new_from_time_and_inclusivity(
+pub fn past_continuation_bounded_abs_interval(interval: &BoundedAbsInterval) -> HalfBoundedAbsInterval {
+    HalfBoundedAbsInterval::new_from_time_and_inclusivity(
         interval.start_time(),
         interval.start_inclusivity().opposite(),
         OpeningDirection::ToPast,
     )
 }
 
-/// Returns the future continuation of the given [`BoundedAbsoluteInterval`]
+/// Returns the future continuation of the given [`BoundedAbsInterval`]
 ///
 /// See [module documentation](self) for more info.
 #[must_use]
-pub fn future_continuation_bounded_abs_interval(interval: &BoundedAbsoluteInterval) -> HalfBoundedAbsoluteInterval {
-    HalfBoundedAbsoluteInterval::new_from_time_and_inclusivity(
+pub fn future_continuation_bounded_abs_interval(interval: &BoundedAbsInterval) -> HalfBoundedAbsInterval {
+    HalfBoundedAbsInterval::new_from_time_and_inclusivity(
         interval.end_time(),
         interval.end_inclusivity().opposite(),
         OpeningDirection::ToFuture,
     )
 }
 
-/// Returns the past continuation of the given [`RelativeBoundPair`]
+/// Returns the past continuation of the given [`RelBoundPair`]
 ///
 /// See [module documentation](self) for more info.
 #[must_use]
-pub fn past_continuation_rel_bound_pair(bounds: &RelativeBoundPair) -> EmptiableRelativeBoundPair {
+pub fn past_continuation_rel_bound_pair(bounds: &RelBoundPair) -> EmptiableRelBoundPair {
     match bounds.rel_start() {
-        RelativeStartBound::InfinitePast => EmptiableRelativeBoundPair::Empty,
-        RelativeStartBound::Finite(finite_start) => {
-            RelativeBoundPair::new(RelativeStartBound::InfinitePast, finite_start.opposite().to_end_bound())
-                .to_emptiable()
+        RelStartBound::InfinitePast => EmptiableRelBoundPair::Empty,
+        RelStartBound::Finite(finite_start) => {
+            RelBoundPair::new(RelStartBound::InfinitePast, finite_start.opposite().to_end_bound()).to_emptiable()
         },
     }
 }
 
-/// Returns the future continuation of the given [`RelativeBoundPair`]
+/// Returns the future continuation of the given [`RelBoundPair`]
 ///
 /// See [module documentation](self) for more info.
 #[must_use]
-pub fn future_continuation_rel_bound_pair(bounds: &RelativeBoundPair) -> EmptiableRelativeBoundPair {
+pub fn future_continuation_rel_bound_pair(bounds: &RelBoundPair) -> EmptiableRelBoundPair {
     match bounds.rel_end() {
-        RelativeEndBound::InfiniteFuture => EmptiableRelativeBoundPair::Empty,
-        RelativeEndBound::Finite(finite_end) => {
-            RelativeBoundPair::new(finite_end.opposite().to_start_bound(), RelativeEndBound::InfiniteFuture)
-                .to_emptiable()
+        RelEndBound::InfiniteFuture => EmptiableRelBoundPair::Empty,
+        RelEndBound::Finite(finite_end) => {
+            RelBoundPair::new(finite_end.opposite().to_start_bound(), RelEndBound::InfiniteFuture).to_emptiable()
         },
     }
 }
 
-/// Returns the past continuation of the given [`EmptiableRelativeBoundPair`]
+/// Returns the past continuation of the given [`EmptiableRelBoundPair`]
 ///
 /// See [module documentation](self) for more info.
 #[must_use]
-pub fn past_continuation_emptiable_rel_bound_pair(bounds: &EmptiableRelativeBoundPair) -> EmptiableRelativeBoundPair {
-    let EmptiableRelativeBoundPair::Bound(bounds) = bounds else {
-        return EmptiableRelativeBoundPair::Empty;
+pub fn past_continuation_emptiable_rel_bound_pair(bounds: &EmptiableRelBoundPair) -> EmptiableRelBoundPair {
+    let EmptiableRelBoundPair::Bound(bounds) = bounds else {
+        return EmptiableRelBoundPair::Empty;
     };
 
     past_continuation_rel_bound_pair(bounds)
 }
 
-/// Returns the future continuation of the given [`EmptiableRelativeBoundPair`]
+/// Returns the future continuation of the given [`EmptiableRelBoundPair`]
 ///
 /// See [module documentation](self) for more info.
 #[must_use]
-pub fn future_continuation_emptiable_rel_bound_pair(bounds: &EmptiableRelativeBoundPair) -> EmptiableRelativeBoundPair {
-    let EmptiableRelativeBoundPair::Bound(bounds) = bounds else {
-        return EmptiableRelativeBoundPair::Empty;
+pub fn future_continuation_emptiable_rel_bound_pair(bounds: &EmptiableRelBoundPair) -> EmptiableRelBoundPair {
+    let EmptiableRelBoundPair::Bound(bounds) = bounds else {
+        return EmptiableRelBoundPair::Empty;
     };
 
     future_continuation_rel_bound_pair(bounds)
 }
 
-/// Returns the past continuation of the given [`BoundedRelativeInterval`]
+/// Returns the past continuation of the given [`BoundedRelInterval`]
 ///
 /// See [module documentation](self) for more info.
 #[must_use]
-pub fn past_continuation_bounded_rel_interval(interval: &BoundedRelativeInterval) -> HalfBoundedRelativeInterval {
-    HalfBoundedRelativeInterval::new_from_offset_and_inclusivity(
+pub fn past_continuation_bounded_rel_interval(interval: &BoundedRelInterval) -> HalfBoundedRelInterval {
+    HalfBoundedRelInterval::new_from_offset_and_inclusivity(
         interval.start_offset(),
         interval.start_inclusivity().opposite(),
         OpeningDirection::ToPast,
     )
 }
 
-/// Returns the future continuation of the given [`BoundedRelativeInterval`]
+/// Returns the future continuation of the given [`BoundedRelInterval`]
 ///
 /// See [module documentation](self) for more info.
 #[must_use]
-pub fn future_continuation_bounded_rel_interval(interval: &BoundedRelativeInterval) -> HalfBoundedRelativeInterval {
-    HalfBoundedRelativeInterval::new_from_offset_and_inclusivity(
+pub fn future_continuation_bounded_rel_interval(interval: &BoundedRelInterval) -> HalfBoundedRelInterval {
+    HalfBoundedRelInterval::new_from_offset_and_inclusivity(
         interval.end_offset(),
         interval.end_inclusivity().opposite(),
         OpeningDirection::ToFuture,

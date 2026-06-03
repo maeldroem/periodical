@@ -21,29 +21,29 @@ mod unite_tests;
 
 #[doc(inline)]
 pub use diff::{
-    LayeredAbsoluteBoundsDifference,
-    LayeredAbsoluteBoundsDifferenceIteratorDispatcher,
-    LayeredRelativeBoundsDifference,
-    LayeredRelativeBoundsDifferenceIteratorDispatcher,
+    LayeredAbsBoundsDifference,
+    LayeredAbsBoundsDifferenceIteratorDispatcher,
+    LayeredRelBoundsDifference,
+    LayeredRelBoundsDifferenceIteratorDispatcher,
 };
 #[doc(inline)]
 pub use intersect::{
-    LayeredAbsoluteBoundsIntersection,
-    LayeredAbsoluteBoundsIntersectionIteratorDispatcher,
-    LayeredRelativeBoundsIntersection,
-    LayeredRelativeBoundsIntersectionIteratorDispatcher,
+    LayeredAbsBoundsIntersection,
+    LayeredAbsBoundsIntersectionIteratorDispatcher,
+    LayeredRelBoundsIntersection,
+    LayeredRelBoundsIntersectionIteratorDispatcher,
 };
 #[doc(inline)]
 pub use sym_diff::{
-    LayeredAbsoluteBoundsSymmetricDifference,
-    LayeredAbsoluteBoundsSymmetricDifferenceIteratorDispatcher,
-    LayeredRelativeBoundsSymmetricDifference,
-    LayeredRelativeBoundsSymmetricDifferenceIteratorDispatcher,
+    LayeredAbsBoundsSymmetricDifference,
+    LayeredAbsBoundsSymmetricDifferenceIteratorDispatcher,
+    LayeredRelBoundsSymmetricDifference,
+    LayeredRelBoundsSymmetricDifferenceIteratorDispatcher,
 };
 #[doc(inline)]
 pub use unite::{
-    LayeredAbsoluteBoundsUnion,
-    LayeredAbsoluteBoundsUnionIteratorDispatcher,
-    LayeredRelativeBoundsUnion,
-    LayeredRelativeBoundsUnionIteratorDispatcher,
+    LayeredAbsBoundsUnion,
+    LayeredAbsBoundsUnionIteratorDispatcher,
+    LayeredRelBoundsUnion,
+    LayeredRelBoundsUnionIteratorDispatcher,
 };

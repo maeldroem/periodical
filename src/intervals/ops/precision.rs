@@ -6,8 +6,8 @@
 //! Precising intervals and bounds works differently depending
 //! on their [`Relativity`](crate::intervals::meta::Relativity).
 //!
-//! For absolute structures, [`PreciseAbsoluteInterval`] handles intervals,
-//! [`PreciseAbsoluteBound`] handles bounds.
+//! For absolute structures, [`PreciseAbsInterval`] handles intervals,
+//! [`PreciseAbsBound`] handles bounds.
 //!
 //! The precision itself is defined by [`Precision`](crate::ops::Precision).
 //!
@@ -19,16 +19,16 @@
 //! # use jiff::Zoned;
 //! # use jiff::tz::TimeZone;
 //! # use periodical::ops::{Precision, PrecisionMode};
-//! # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition};
-//! # use periodical::intervals::ops::precision::PreciseAbsoluteInterval;
-//! let interval = AbsoluteBoundPair::new(
-//!     AbsoluteFiniteBoundPosition::new(
+//! # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos};
+//! # use periodical::intervals::ops::precision::PreciseAbsInterval;
+//! let interval = AbsBoundPair::new(
+//!     AbsFiniteBoundPos::new(
 //!         "2025-01-01 08:03:29.591[Europe/Oslo]"
 //!             .parse::<Zoned>()?
 //!             .timestamp(),
 //!     )
 //!     .to_start_bound(),
-//!     AbsoluteFiniteBoundPosition::new(
+//!     AbsFiniteBoundPos::new(
 //!         "2025-01-01 15:57:44.041[Europe/Oslo]"
 //!             .parse::<Zoned>()?
 //!             .timestamp(),
@@ -41,14 +41,14 @@
 //!         TimeZone::get("Europe/Oslo")?,
 //!         Precision::new(Duration::from_mins(5), PrecisionMode::ToPast)?,
 //!     ),
-//!     Ok(AbsoluteBoundPair::new(
-//!         AbsoluteFiniteBoundPosition::new(
+//!     Ok(AbsBoundPair::new(
+//!         AbsFiniteBoundPos::new(
 //!             "2025-01-01 08:00:00[Europe/Oslo]"
 //!                 .parse::<Zoned>()?
 //!                 .timestamp(),
 //!         )
 //!         .to_start_bound(),
-//!         AbsoluteFiniteBoundPosition::new(
+//!         AbsFiniteBoundPos::new(
 //!             "2025-01-01 15:55:00[Europe/Oslo]"
 //!                 .parse::<Zoned>()?
 //!                 .timestamp(),
@@ -63,6 +63,6 @@ pub mod absolute;
 pub mod relative;
 
 #[doc(inline)]
-pub use absolute::{PreciseAbsoluteBound, PreciseAbsoluteInterval};
+pub use absolute::{PreciseAbsBound, PreciseAbsInterval};
 #[doc(inline)]
-pub use relative::{PreciseRelativeBound, PreciseRelativeInterval};
+pub use relative::{PreciseRelBound, PreciseRelInterval};

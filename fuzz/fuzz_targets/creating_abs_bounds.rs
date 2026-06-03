@@ -1,10 +1,10 @@
 #![no_main]
 
 use libfuzzer_sys::fuzz_target;
-use periodical::intervals::absolute::{AbsoluteEndBound, AbsoluteStartBound};
+use periodical::intervals::absolute::{AbsEndBound, AbsStartBound};
 use periodical::prelude::*;
 
-fuzz_target!(|data: (AbsoluteStartBound, AbsoluteEndBound)| {
+fuzz_target!(|data: (AbsStartBound, AbsEndBound)| {
     let (start, end) = data;
-    let _ = AbsoluteBoundPair::new(start, end);
+    let _ = AbsBoundPair::new(start, end);
 });

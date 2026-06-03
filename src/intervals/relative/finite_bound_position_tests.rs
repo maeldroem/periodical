@@ -5,12 +5,12 @@ use jiff::SignedDuration;
 
 use super::finite_bound_position::*;
 use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
-use crate::intervals::relative::{RelativeEndBound, RelativeStartBound};
+use crate::intervals::relative::{RelStartBound, RelEndBound};
 
 #[test]
 fn new() {
     let offset = SignedDuration::from_hours(1);
-    let rel_finite_bound_position = RelativeFiniteBoundPosition::new(offset);
+    let rel_finite_bound_position = RelFiniteBoundPos::new(offset);
 
     assert_eq!(rel_finite_bound_position.offset(), offset);
     assert_eq!(rel_finite_bound_position.inclusivity(), BoundInclusivity::Inclusive);
@@ -19,8 +19,7 @@ fn new() {
 #[test]
 fn new_with_inclusivity() {
     let offset = SignedDuration::from_hours(1);
-    let rel_finite_bound_position =
-        RelativeFiniteBoundPosition::new_with_inclusivity(offset, BoundInclusivity::Exclusive);
+    let rel_finite_bound_position = RelFiniteBoundPos::new_with_inclusivity(offset, BoundInclusivity::Exclusive);
 
     assert_eq!(rel_finite_bound_position.offset(), offset);
     assert_eq!(rel_finite_bound_position.inclusivity(), BoundInclusivity::Exclusive);
@@ -29,14 +28,14 @@ fn new_with_inclusivity() {
 #[test]
 fn offset() {
     let offset = SignedDuration::from_hours(1);
-    let interval = RelativeFiniteBoundPosition::new_with_inclusivity(offset, BoundInclusivity::Exclusive);
+    let interval = RelFiniteBoundPos::new_with_inclusivity(offset, BoundInclusivity::Exclusive);
 
     assert_eq!(interval.offset(), offset);
 }
 
 #[test]
 fn set_offset() {
-    let mut rel_finite_bound_position = RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1));
+    let mut rel_finite_bound_position = RelFiniteBoundPos::new(SignedDuration::from_hours(1));
 
     rel_finite_bound_position.set_offset(SignedDuration::from_hours(5));
 
@@ -46,7 +45,7 @@ fn set_offset() {
 #[test]
 fn set_inclusivity() {
     let mut rel_finite_bound_position =
-        RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive);
+        RelFiniteBoundPos::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive);
 
     rel_finite_bound_position.set_inclusivity(BoundInclusivity::Inclusive);
 
@@ -56,14 +55,11 @@ fn set_inclusivity() {
 #[test]
 fn to_start_bound() {
     assert_eq!(
-        RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+        RelFiniteBoundPos::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
             .to_start_bound(),
-        RelativeStartBound::Finite(
-            RelativeFiniteBoundPosition::new_with_inclusivity(
-                SignedDuration::from_hours(1),
-                BoundInclusivity::Exclusive
-            )
-            .to_finite_start_bound()
+        RelStartBound::Finite(
+            RelFiniteBoundPos::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+                .to_finite_start_bound()
         )
     );
 }
@@ -71,14 +67,11 @@ fn to_start_bound() {
 #[test]
 fn to_end_bound() {
     assert_eq!(
-        RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+        RelFiniteBoundPos::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
             .to_end_bound(),
-        RelativeEndBound::Finite(
-            RelativeFiniteBoundPosition::new_with_inclusivity(
-                SignedDuration::from_hours(1),
-                BoundInclusivity::Exclusive
-            )
-            .to_finite_end_bound()
+        RelEndBound::Finite(
+            RelFiniteBoundPos::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+                .to_finite_end_bound()
         )
     );
 }
@@ -86,9 +79,9 @@ fn to_end_bound() {
 #[test]
 fn inclusivity() {
     let inclusive =
-        RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Inclusive);
+        RelFiniteBoundPos::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Inclusive);
     let exclusive =
-        RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive);
+        RelFiniteBoundPos::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive);
 
     assert_eq!(inclusive.inclusivity(), BoundInclusivity::Inclusive);
     assert_eq!(exclusive.inclusivity(), BoundInclusivity::Exclusive);
@@ -100,8 +93,8 @@ mod ord {
     #[test]
     fn greater_times() {
         assert_eq!(
-            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2))
-                .cmp(&RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1))),
+            RelFiniteBoundPos::new(SignedDuration::from_hours(2))
+                .cmp(&RelFiniteBoundPos::new(SignedDuration::from_hours(1))),
             Ordering::Greater
         );
     }
@@ -109,8 +102,8 @@ mod ord {
     #[test]
     fn less_times() {
         assert_eq!(
-            RelativeFiniteBoundPosition::new(SignedDuration::from_hours(1))
-                .cmp(&RelativeFiniteBoundPosition::new(SignedDuration::from_hours(2))),
+            RelFiniteBoundPos::new(SignedDuration::from_hours(1))
+                .cmp(&RelFiniteBoundPos::new(SignedDuration::from_hours(2))),
             Ordering::Less
         );
     }
@@ -118,14 +111,11 @@ mod ord {
     #[test]
     fn equal_times_inclusive_inclusive() {
         assert_eq!(
-            RelativeFiniteBoundPosition::new_with_inclusivity(
-                SignedDuration::from_hours(1),
-                BoundInclusivity::Inclusive
-            )
-            .cmp(&RelativeFiniteBoundPosition::new_with_inclusivity(
-                SignedDuration::from_hours(1),
-                BoundInclusivity::Inclusive
-            )),
+            RelFiniteBoundPos::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Inclusive)
+                .cmp(&RelFiniteBoundPos::new_with_inclusivity(
+                    SignedDuration::from_hours(1),
+                    BoundInclusivity::Inclusive
+                )),
             Ordering::Equal
         );
     }
@@ -133,14 +123,11 @@ mod ord {
     #[test]
     fn equal_times_exclusive_exclusive() {
         assert_eq!(
-            RelativeFiniteBoundPosition::new_with_inclusivity(
-                SignedDuration::from_hours(1),
-                BoundInclusivity::Exclusive
-            )
-            .cmp(&RelativeFiniteBoundPosition::new_with_inclusivity(
-                SignedDuration::from_hours(1),
-                BoundInclusivity::Exclusive
-            )),
+            RelFiniteBoundPos::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+                .cmp(&RelFiniteBoundPos::new_with_inclusivity(
+                    SignedDuration::from_hours(1),
+                    BoundInclusivity::Exclusive
+                )),
             Ordering::Equal
         );
     }
@@ -148,14 +135,11 @@ mod ord {
     #[test]
     fn equal_times_inclusive_exclusive() {
         assert_eq!(
-            RelativeFiniteBoundPosition::new_with_inclusivity(
-                SignedDuration::from_hours(1),
-                BoundInclusivity::Inclusive
-            )
-            .cmp(&RelativeFiniteBoundPosition::new_with_inclusivity(
-                SignedDuration::from_hours(1),
-                BoundInclusivity::Exclusive
-            )),
+            RelFiniteBoundPos::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Inclusive)
+                .cmp(&RelFiniteBoundPos::new_with_inclusivity(
+                    SignedDuration::from_hours(1),
+                    BoundInclusivity::Exclusive
+                )),
             Ordering::Equal
         );
     }
@@ -163,14 +147,11 @@ mod ord {
     #[test]
     fn equal_times_exclusive_inclusive() {
         assert_eq!(
-            RelativeFiniteBoundPosition::new_with_inclusivity(
-                SignedDuration::from_hours(1),
-                BoundInclusivity::Exclusive
-            )
-            .cmp(&RelativeFiniteBoundPosition::new_with_inclusivity(
-                SignedDuration::from_hours(1),
-                BoundInclusivity::Inclusive
-            )),
+            RelFiniteBoundPos::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+                .cmp(&RelFiniteBoundPos::new_with_inclusivity(
+                    SignedDuration::from_hours(1),
+                    BoundInclusivity::Inclusive
+                )),
             Ordering::Equal
         );
     }
@@ -179,37 +160,37 @@ mod ord {
 #[test]
 fn from_signed_duration() {
     assert_eq!(
-        RelativeFiniteBoundPosition::from(SignedDuration::from_hours(1)),
-        RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Inclusive),
+        RelFiniteBoundPos::from(SignedDuration::from_hours(1)),
+        RelFiniteBoundPos::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Inclusive),
     );
 }
 
 #[test]
 fn from_signed_duration_inclusivity_pair() {
     assert_eq!(
-        RelativeFiniteBoundPosition::from((SignedDuration::from_hours(1), BoundInclusivity::Exclusive)),
-        RelativeFiniteBoundPosition::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive),
+        RelFiniteBoundPos::from((SignedDuration::from_hours(1), BoundInclusivity::Exclusive)),
+        RelFiniteBoundPos::new_with_inclusivity(SignedDuration::from_hours(1), BoundInclusivity::Exclusive),
     );
 }
 
 #[test]
 fn try_from_bound() {
     assert_eq!(
-        RelativeFiniteBoundPosition::try_from(Bound::Included(SignedDuration::from_hours(1))),
-        Ok(RelativeFiniteBoundPosition::new_with_inclusivity(
+        RelFiniteBoundPos::try_from(Bound::Included(SignedDuration::from_hours(1))),
+        Ok(RelFiniteBoundPos::new_with_inclusivity(
             SignedDuration::from_hours(1),
             BoundInclusivity::Inclusive
         )),
     );
     assert_eq!(
-        RelativeFiniteBoundPosition::try_from(Bound::Excluded(SignedDuration::from_hours(1))),
-        Ok(RelativeFiniteBoundPosition::new_with_inclusivity(
+        RelFiniteBoundPos::try_from(Bound::Excluded(SignedDuration::from_hours(1))),
+        Ok(RelFiniteBoundPos::new_with_inclusivity(
             SignedDuration::from_hours(1),
             BoundInclusivity::Exclusive
         )),
     );
     assert_eq!(
-        RelativeFiniteBoundPosition::try_from(Bound::Unbounded),
-        Err(RelativeFiniteBoundPositionTryFromBoundError),
+        RelFiniteBoundPos::try_from(Bound::Unbounded),
+        Err(RelFiniteBoundPosTryFromBoundError),
     );
 }

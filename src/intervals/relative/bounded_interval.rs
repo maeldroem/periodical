@@ -9,7 +9,7 @@
 //! interval.
 //!
 //! Instead, if you are looking for a relative interval that doesn't keep the
-//! [openness](Openness) invariant, see [`RelativeBoundPair`].
+//! [openness](Openness) invariant, see [`RelBoundPair`].
 
 use std::cmp::Ordering;
 use std::error::Error;
@@ -35,17 +35,17 @@ use crate::intervals::meta::{
     Relativity,
 };
 use crate::intervals::relative::{
-    EmptiableRelativeBoundPair,
-    EmptiableRelativeInterval,
-    HasRelativeBoundPair,
-    RelativeBoundPair,
-    RelativeEndBound,
-    RelativeFiniteBoundPosition,
-    RelativeFiniteEndBound,
-    RelativeFiniteStartBound,
-    RelativeInterval,
-    RelativeStartBound,
-    RelativeStartEndBoundsCheckForIntervalCreationError,
+    EmptiableRelBoundPair,
+    EmptiableRelInterval,
+    HasRelBoundPair,
+    RelBoundPair,
+    RelEndBound,
+    RelFiniteBoundPos,
+    RelFiniteEndBound,
+    RelFiniteStartBound,
+    RelInterval,
+    RelStartBound,
+    RelStartEndBoundsCheckForIntervalCreationError,
     check_relative_finite_start_end_bounds_for_interval_creation,
     prepare_relative_finite_start_end_bounds_for_interval_creation,
 };
@@ -61,41 +61,41 @@ use crate::intervals::relative::{
 /// interval.
 ///
 /// Instead, if you are looking for a relative interval that doesn't keep the
-/// [openness](Openness) invariant, see [`RelativeBoundPair`].
+/// [openness](Openness) invariant, see [`RelBoundPair`].
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
-pub struct BoundedRelativeInterval {
-    start: RelativeFiniteStartBound,
-    end: RelativeFiniteEndBound,
+pub struct BoundedRelInterval {
+    start: RelFiniteStartBound,
+    end: RelFiniteEndBound,
 }
 
-impl BoundedRelativeInterval {
-    /// Creates a new [`BoundedRelativeInterval`] without checking if it violates invariants
+impl BoundedRelInterval {
+    /// Creates a new [`BoundedRelInterval`] without checking if it violates invariants
     ///
     /// # Examples
     ///
     /// ```
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::{RelativeFiniteBoundPosition, BoundedRelativeInterval};
-    /// let start = RelativeFiniteBoundPosition::new(SignedDuration::from_hours(5)).to_finite_start_bound();
-    /// let end = RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3)).to_finite_end_bound();
+    /// # use periodical::intervals::relative::{RelFiniteBoundPos, BoundedRelInterval};
+    /// let start = RelFiniteBoundPos::new(SignedDuration::from_hours(5)).to_finite_start_bound();
+    /// let end = RelFiniteBoundPos::new(SignedDuration::from_hours(3)).to_finite_end_bound();
     ///
     /// // Even though the offsets are not in chronological order
-    /// let bounded_interval = BoundedRelativeInterval::unchecked_new(start, end);
+    /// let bounded_interval = BoundedRelInterval::unchecked_new(start, end);
     ///
     /// // It remains that way
     /// assert_eq!(bounded_interval.start(), start);
     /// assert_eq!(bounded_interval.end(), end);
     /// ```
     #[must_use]
-    pub fn unchecked_new(start: RelativeFiniteStartBound, end: RelativeFiniteEndBound) -> Self {
-        BoundedRelativeInterval {
+    pub fn unchecked_new(start: RelFiniteStartBound, end: RelFiniteEndBound) -> Self {
+        BoundedRelInterval {
             start,
             end,
         }
     }
 
-    /// Creates a new [`BoundedRelativeInterval`]
+    /// Creates a new [`BoundedRelInterval`]
     ///
     /// If the bounds are not in chronological order, it swaps them.
     /// If they are on the same position, it makes them both inclusive.
@@ -104,37 +104,37 @@ impl BoundedRelativeInterval {
     ///
     /// ```
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::{RelativeFiniteBoundPosition, BoundedRelativeInterval};
-    /// let start_pos = RelativeFiniteBoundPosition::new(SignedDuration::from_hours(5));
-    /// let end_pos = RelativeFiniteBoundPosition::new(SignedDuration::from_hours(3));
+    /// # use periodical::intervals::relative::{RelFiniteBoundPos, BoundedRelInterval};
+    /// let start_pos = RelFiniteBoundPos::new(SignedDuration::from_hours(5));
+    /// let end_pos = RelFiniteBoundPos::new(SignedDuration::from_hours(3));
     ///
     /// // Since offsets are not in chronological order
-    /// let bounded_interval = BoundedRelativeInterval::new(start_pos.to_finite_start_bound(), end_pos.to_finite_end_bound());
+    /// let bounded_interval = BoundedRelInterval::new(start_pos.to_finite_start_bound(), end_pos.to_finite_end_bound());
     ///
     /// // They are swapped
     /// assert_eq!(bounded_interval.start(), end_pos.to_finite_start_bound());
     /// assert_eq!(bounded_interval.end(), start_pos.to_finite_end_bound());
     /// ```
     #[must_use]
-    pub fn new(mut start: RelativeFiniteStartBound, mut end: RelativeFiniteEndBound) -> Self {
+    pub fn new(mut start: RelFiniteStartBound, mut end: RelFiniteEndBound) -> Self {
         prepare_relative_finite_start_end_bounds_for_interval_creation(&mut start, &mut end);
 
         Self::unchecked_new(start, end)
     }
 
-    /// Creates a new [`BoundedRelativeInterval`] from offsets without checking if it
+    /// Creates a new [`BoundedRelInterval`] from offsets without checking if it
     /// violates invariants
     ///
     /// # Examples
     ///
     /// ```
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::BoundedRelativeInterval;
+    /// # use periodical::intervals::relative::BoundedRelInterval;
     /// let start = SignedDuration::from_hours(2);
     /// let end = SignedDuration::from_hours(-5);
     ///
     /// // Even though the offsets are not in chronological order
-    /// let bounded_interval = BoundedRelativeInterval::unchecked_from_offsets(start, end);
+    /// let bounded_interval = BoundedRelInterval::unchecked_from_offsets(start, end);
     ///
     /// // It remains that way
     /// assert_eq!(bounded_interval.start_offset(), start);
@@ -143,12 +143,12 @@ impl BoundedRelativeInterval {
     #[must_use]
     pub fn unchecked_from_offsets(start: SignedDuration, end: SignedDuration) -> Self {
         Self::unchecked_new(
-            RelativeFiniteBoundPosition::new(start).to_finite_start_bound(),
-            RelativeFiniteBoundPosition::new(end).to_finite_end_bound(),
+            RelFiniteBoundPos::new(start).to_finite_start_bound(),
+            RelFiniteBoundPos::new(end).to_finite_end_bound(),
         )
     }
 
-    /// Creates a new [`BoundedRelativeInterval`] from offsets with default bound
+    /// Creates a new [`BoundedRelInterval`] from offsets with default bound
     /// inclusivities
     ///
     /// If the offsets are not in chronological order, it swaps them.
@@ -157,12 +157,12 @@ impl BoundedRelativeInterval {
     ///
     /// ```
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::BoundedRelativeInterval;
+    /// # use periodical::intervals::relative::BoundedRelInterval;
     /// let start = SignedDuration::from_hours(16);
     /// let end = SignedDuration::from_hours(8);
     ///
     /// // Offsets that are not in chronological order
-    /// let bounded_interval = BoundedRelativeInterval::from_offsets(start, end);
+    /// let bounded_interval = BoundedRelInterval::from_offsets(start, end);
     ///
     /// // Are swapped
     /// assert_eq!(bounded_interval.start_offset(), end);
@@ -171,24 +171,24 @@ impl BoundedRelativeInterval {
     #[must_use]
     pub fn from_offsets(start: SignedDuration, end: SignedDuration) -> Self {
         Self::new(
-            RelativeFiniteBoundPosition::new(start).to_finite_start_bound(),
-            RelativeFiniteBoundPosition::new(end).to_finite_end_bound(),
+            RelFiniteBoundPos::new(start).to_finite_start_bound(),
+            RelFiniteBoundPos::new(end).to_finite_end_bound(),
         )
     }
 
-    /// Creates a new [`BoundedRelativeInterval`] from offsets and inclusivities without checking
+    /// Creates a new [`BoundedRelInterval`] from offsets and inclusivities without checking
     /// if it violates invariants
     ///
     /// # Examples
     ///
     /// ```
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::BoundedRelativeInterval;
+    /// # use periodical::intervals::relative::BoundedRelInterval;
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// let offset = SignedDuration::from_hours(1);
     ///
     /// // Even if it violates the same offset doubly inclusive invariant
-    /// let bounded_interval = BoundedRelativeInterval::unchecked_from_offsets_incl(
+    /// let bounded_interval = BoundedRelInterval::unchecked_from_offsets_incl(
     ///     offset,
     ///     BoundInclusivity::Inclusive,
     ///     offset,
@@ -215,12 +215,12 @@ impl BoundedRelativeInterval {
         end_inclusivity: BoundInclusivity,
     ) -> Self {
         Self::unchecked_new(
-            RelativeFiniteBoundPosition::new_with_inclusivity(start, start_inclusivity).to_finite_start_bound(),
-            RelativeFiniteBoundPosition::new_with_inclusivity(end, end_inclusivity).to_finite_end_bound(),
+            RelFiniteBoundPos::new_with_inclusivity(start, start_inclusivity).to_finite_start_bound(),
+            RelFiniteBoundPos::new_with_inclusivity(end, end_inclusivity).to_finite_end_bound(),
         )
     }
 
-    /// Creates a new [`BoundedRelativeInterval`] from offsets and inclusivities
+    /// Creates a new [`BoundedRelInterval`] from offsets and inclusivities
     ///
     /// If the bounds are not in chronological order, it swaps them.
     /// If they are on the same position, it makes them both inclusive.
@@ -229,12 +229,12 @@ impl BoundedRelativeInterval {
     ///
     /// ```
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::BoundedRelativeInterval;
+    /// # use periodical::intervals::relative::BoundedRelInterval;
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// let start_offset = SignedDuration::from_hours(3);
     /// let end_offset = SignedDuration::from_hours(5);
     ///
-    /// let bounded_interval = BoundedRelativeInterval::from_offsets_incl(
+    /// let bounded_interval = BoundedRelInterval::from_offsets_incl(
     ///     start_offset,
     ///     BoundInclusivity::Inclusive,
     ///     end_offset,
@@ -260,16 +260,16 @@ impl BoundedRelativeInterval {
         end_inclusivity: BoundInclusivity,
     ) -> Self {
         Self::new(
-            RelativeFiniteBoundPosition::new_with_inclusivity(start, start_inclusivity).to_finite_start_bound(),
-            RelativeFiniteBoundPosition::new_with_inclusivity(end, end_inclusivity).to_finite_end_bound(),
+            RelFiniteBoundPos::new_with_inclusivity(start, start_inclusivity).to_finite_start_bound(),
+            RelFiniteBoundPos::new_with_inclusivity(end, end_inclusivity).to_finite_end_bound(),
         )
     }
 
-    /// Attempts to create a new [`BoundedRelativeInterval`] from a start offset and a length
+    /// Attempts to create a new [`BoundedRelInterval`] from a start offset and a length
     ///
     /// # Errors
     ///
-    /// Returns [`OutOfRangeEnd`](BoundedRelativeIntervalCreationError::OutOfRangeEnd) if `start + length` overflows.
+    /// Returns [`OutOfRangeEnd`](BoundedRelIntervalCreationError::OutOfRangeEnd) if `start + length` overflows.
     ///
     /// # Examples
     ///
@@ -277,11 +277,11 @@ impl BoundedRelativeInterval {
     /// # use std::error::Error;
     /// # use std::time::Duration;
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::BoundedRelativeInterval;
+    /// # use periodical::intervals::relative::BoundedRelInterval;
     /// let start = SignedDuration::from_hours(-1);
     /// let length = Duration::from_hours(5);
     ///
-    /// let bounded_interval = BoundedRelativeInterval::from_start_len(start, length)?;
+    /// let bounded_interval = BoundedRelInterval::from_start_len(start, length)?;
     ///
     /// assert_eq!(
     ///     bounded_interval.start_offset(),
@@ -290,28 +290,25 @@ impl BoundedRelativeInterval {
     /// assert_eq!(bounded_interval.end_offset(), SignedDuration::from_hours(4));
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
-    pub fn from_start_len(
-        start: SignedDuration,
-        length: StdDuration,
-    ) -> Result<Self, BoundedRelativeIntervalCreationError> {
+    pub fn from_start_len(start: SignedDuration, length: StdDuration) -> Result<Self, BoundedRelIntervalCreationError> {
         Ok(Self::unchecked_from_offsets(
             start,
             SignedDuration::try_from_nanos_i128(
                 start
                     .as_nanos()
                     .checked_add_unsigned(length.as_nanos())
-                    .ok_or(BoundedRelativeIntervalCreationError::OutOfRangeEnd)?,
+                    .ok_or(BoundedRelIntervalCreationError::OutOfRangeEnd)?,
             )
-            .ok_or(BoundedRelativeIntervalCreationError::OutOfRangeEnd)?,
+            .ok_or(BoundedRelIntervalCreationError::OutOfRangeEnd)?,
         ))
     }
 
-    /// Attempts to create a new [`BoundedRelativeInterval`] from a start offset, a length, and inclusivities
+    /// Attempts to create a new [`BoundedRelInterval`] from a start offset, a length, and inclusivities
     /// without checking if it violates invariants
     ///
     /// # Errors
     ///
-    /// Returns [`OutOfRangeEnd`](BoundedRelativeIntervalCreationError::OutOfRangeEnd) if `start + length` overflows.
+    /// Returns [`OutOfRangeEnd`](BoundedRelIntervalCreationError::OutOfRangeEnd) if `start + length` overflows.
     ///
     /// # Examples
     ///
@@ -319,12 +316,12 @@ impl BoundedRelativeInterval {
     /// # use std::error::Error;
     /// # use std::time::Duration;
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::BoundedRelativeInterval;
+    /// # use periodical::intervals::relative::BoundedRelInterval;
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// let start = SignedDuration::from_hours(1);
     ///
     /// // Even if it violates the same offset doubly inclusive variant
-    /// let bounded_interval = BoundedRelativeInterval::unchecked_from_start_len_incl(
+    /// let bounded_interval = BoundedRelInterval::unchecked_from_start_len_incl(
     ///     start,
     ///     BoundInclusivity::Inclusive,
     ///     Duration::ZERO,
@@ -349,7 +346,7 @@ impl BoundedRelativeInterval {
         start_inclusivity: BoundInclusivity,
         length: StdDuration,
         end_inclusivity: BoundInclusivity,
-    ) -> Result<Self, BoundedRelativeIntervalCreationError> {
+    ) -> Result<Self, BoundedRelIntervalCreationError> {
         Ok(Self::unchecked_from_offsets_incl(
             start,
             start_inclusivity,
@@ -357,20 +354,20 @@ impl BoundedRelativeInterval {
                 start
                     .as_nanos()
                     .checked_add_unsigned(length.as_nanos())
-                    .ok_or(BoundedRelativeIntervalCreationError::OutOfRangeEnd)?,
+                    .ok_or(BoundedRelIntervalCreationError::OutOfRangeEnd)?,
             )
-            .ok_or(BoundedRelativeIntervalCreationError::OutOfRangeEnd)?,
+            .ok_or(BoundedRelIntervalCreationError::OutOfRangeEnd)?,
             end_inclusivity,
         ))
     }
 
-    /// Attempts to create a new [`BoundedRelativeInterval`] from a start offset, a length, and inclusivities
+    /// Attempts to create a new [`BoundedRelInterval`] from a start offset, a length, and inclusivities
     ///
     /// If the length is zero, then the inclusivities will be set to inclusive.
     ///
     /// # Errors
     ///
-    /// Returns [`OutOfRangeEnd`](BoundedRelativeIntervalCreationError::OutOfRangeEnd) if `start + length` overflows.
+    /// Returns [`OutOfRangeEnd`](BoundedRelIntervalCreationError::OutOfRangeEnd) if `start + length` overflows.
     ///
     /// # Examples
     ///
@@ -378,11 +375,11 @@ impl BoundedRelativeInterval {
     /// # use std::error::Error;
     /// # use std::time::Duration;
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::BoundedRelativeInterval;
+    /// # use periodical::intervals::relative::BoundedRelInterval;
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// let start_offset = SignedDuration::from_hours(-1);
     ///
-    /// let bounded_interval = BoundedRelativeInterval::from_start_len_incl(
+    /// let bounded_interval = BoundedRelInterval::from_start_len_incl(
     ///     start_offset,
     ///     BoundInclusivity::Inclusive,
     ///     Duration::from_hours(5),
@@ -406,7 +403,7 @@ impl BoundedRelativeInterval {
         start_inclusivity: BoundInclusivity,
         length: StdDuration,
         end_inclusivity: BoundInclusivity,
-    ) -> Result<Self, BoundedRelativeIntervalCreationError> {
+    ) -> Result<Self, BoundedRelIntervalCreationError> {
         if length.is_zero() {
             return Ok(Self::unchecked_from_offsets(start, start));
         }
@@ -414,11 +411,11 @@ impl BoundedRelativeInterval {
         Self::unchecked_from_start_len_incl(start, start_inclusivity, length, end_inclusivity)
     }
 
-    /// Attempts to create a new [`BoundedRelativeInterval`] from an end offset and a length
+    /// Attempts to create a new [`BoundedRelInterval`] from an end offset and a length
     ///
     /// # Errors
     ///
-    /// Returns [`OutOfRangeStart`](BoundedRelativeIntervalCreationError::OutOfRangeStart) if `end - length` underflows.
+    /// Returns [`OutOfRangeStart`](BoundedRelIntervalCreationError::OutOfRangeStart) if `end - length` underflows.
     ///
     /// # Examples
     ///
@@ -426,11 +423,11 @@ impl BoundedRelativeInterval {
     /// # use std::error::Error;
     /// # use std::time::Duration;
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::BoundedRelativeInterval;
+    /// # use periodical::intervals::relative::BoundedRelInterval;
     /// let end = SignedDuration::from_hours(5);
     /// let length = Duration::from_hours(6);
     ///
-    /// let bounded_interval = BoundedRelativeInterval::from_end_len(end, length)?;
+    /// let bounded_interval = BoundedRelInterval::from_end_len(end, length)?;
     ///
     /// assert_eq!(
     ///     bounded_interval.start_offset(),
@@ -439,27 +436,24 @@ impl BoundedRelativeInterval {
     /// assert_eq!(bounded_interval.end_offset(), end);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
-    pub fn from_end_len(
-        end: SignedDuration,
-        length: StdDuration,
-    ) -> Result<Self, BoundedRelativeIntervalCreationError> {
+    pub fn from_end_len(end: SignedDuration, length: StdDuration) -> Result<Self, BoundedRelIntervalCreationError> {
         Ok(Self::unchecked_from_offsets(
             SignedDuration::try_from_nanos_i128(
                 end.as_nanos()
                     .checked_sub_unsigned(length.as_nanos())
-                    .ok_or(BoundedRelativeIntervalCreationError::OutOfRangeStart)?,
+                    .ok_or(BoundedRelIntervalCreationError::OutOfRangeStart)?,
             )
-            .ok_or(BoundedRelativeIntervalCreationError::OutOfRangeStart)?,
+            .ok_or(BoundedRelIntervalCreationError::OutOfRangeStart)?,
             end,
         ))
     }
 
-    /// Attempts to create a new [`BoundedRelativeInterval`] from an end offset, a length, and inclusivities
+    /// Attempts to create a new [`BoundedRelInterval`] from an end offset, a length, and inclusivities
     /// without checking if it violates invariants
     ///
     /// # Errors
     ///
-    /// Returns [`OutOfRangeStart`](BoundedRelativeIntervalCreationError::OutOfRangeStart) if `end - length` underflows.
+    /// Returns [`OutOfRangeStart`](BoundedRelIntervalCreationError::OutOfRangeStart) if `end - length` underflows.
     ///
     /// # Examples
     ///
@@ -467,12 +461,12 @@ impl BoundedRelativeInterval {
     /// # use std::error::Error;
     /// # use std::time::Duration;
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::BoundedRelativeInterval;
+    /// # use periodical::intervals::relative::BoundedRelInterval;
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// let end = SignedDuration::from_hours(1);
     ///
     /// // Even if it violates the same offset doubly inclusive variant
-    /// let bounded_interval = BoundedRelativeInterval::unchecked_from_end_len_incl(
+    /// let bounded_interval = BoundedRelInterval::unchecked_from_end_len_incl(
     ///     end,
     ///     BoundInclusivity::Inclusive,
     ///     Duration::ZERO,
@@ -497,27 +491,27 @@ impl BoundedRelativeInterval {
         end_inclusivity: BoundInclusivity,
         length: StdDuration,
         start_inclusivity: BoundInclusivity,
-    ) -> Result<Self, BoundedRelativeIntervalCreationError> {
+    ) -> Result<Self, BoundedRelIntervalCreationError> {
         Ok(Self::unchecked_from_offsets_incl(
             SignedDuration::try_from_nanos_i128(
                 end.as_nanos()
                     .checked_sub_unsigned(length.as_nanos())
-                    .ok_or(BoundedRelativeIntervalCreationError::OutOfRangeStart)?,
+                    .ok_or(BoundedRelIntervalCreationError::OutOfRangeStart)?,
             )
-            .ok_or(BoundedRelativeIntervalCreationError::OutOfRangeStart)?,
+            .ok_or(BoundedRelIntervalCreationError::OutOfRangeStart)?,
             start_inclusivity,
             end,
             end_inclusivity,
         ))
     }
 
-    /// Attempts to create a new [`BoundedRelativeInterval`] from an end offset, a length, and inclusivities
+    /// Attempts to create a new [`BoundedRelInterval`] from an end offset, a length, and inclusivities
     ///
     /// If the length is zero, then the inclusivities will be set to inclusive.
     ///
     /// # Errors
     ///
-    /// Returns [`OutOfRangeStart`](BoundedRelativeIntervalCreationError::OutOfRangeStart) if `end - length` underflows.
+    /// Returns [`OutOfRangeStart`](BoundedRelIntervalCreationError::OutOfRangeStart) if `end - length` underflows.
     ///
     /// # Examples
     ///
@@ -525,11 +519,11 @@ impl BoundedRelativeInterval {
     /// # use std::error::Error;
     /// # use std::time::Duration;
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::BoundedRelativeInterval;
+    /// # use periodical::intervals::relative::BoundedRelInterval;
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// let end_offset = SignedDuration::from_hours(-1);
     ///
-    /// let bounded_interval = BoundedRelativeInterval::from_end_len_incl(
+    /// let bounded_interval = BoundedRelInterval::from_end_len_incl(
     ///     end_offset,
     ///     BoundInclusivity::Inclusive,
     ///     Duration::from_hours(5),
@@ -556,7 +550,7 @@ impl BoundedRelativeInterval {
         end_inclusivity: BoundInclusivity,
         length: StdDuration,
         start_inclusivity: BoundInclusivity,
-    ) -> Result<Self, BoundedRelativeIntervalCreationError> {
+    ) -> Result<Self, BoundedRelIntervalCreationError> {
         if length.is_zero() {
             return Ok(Self::unchecked_from_offsets(end, end));
         }
@@ -564,11 +558,11 @@ impl BoundedRelativeInterval {
         Self::unchecked_from_end_len_incl(end, end_inclusivity, length, start_inclusivity)
     }
 
-    /// Attempts to create a [`BoundedRelativeInterval`] from a [`SignedDuration`] range
+    /// Attempts to create a [`BoundedRelInterval`] from a [`SignedDuration`] range
     ///
     /// # Errors
     ///
-    /// Returns [`BoundedRelativeIntervalTryFromRangeError`] if any range bound is [unbounded](Bound::Unbounded).
+    /// Returns [`BoundedRelIntervalTryFromRangeError`] if any range bound is [unbounded](Bound::Unbounded).
     ///
     /// # Examples
     ///
@@ -576,11 +570,11 @@ impl BoundedRelativeInterval {
     /// # use std::error::Error;
     /// # use jiff::SignedDuration;
     /// # use periodical::intervals::meta::BoundInclusivity;
-    /// # use periodical::intervals::relative::BoundedRelativeInterval;
+    /// # use periodical::intervals::relative::BoundedRelInterval;
     /// let start = SignedDuration::from_hours(8);
     /// let end = SignedDuration::from_hours(16);
     ///
-    /// let interval = BoundedRelativeInterval::try_from_range(start..end)?;
+    /// let interval = BoundedRelInterval::try_from_range(start..end)?;
     ///
     /// assert_eq!(interval.start_offset(), start);
     /// assert_eq!(interval.start_inclusivity(), BoundInclusivity::Inclusive);
@@ -588,20 +582,20 @@ impl BoundedRelativeInterval {
     /// assert_eq!(interval.end_inclusivity(), BoundInclusivity::Exclusive);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
-    pub fn try_from_range<R>(range: R) -> Result<Self, BoundedRelativeIntervalTryFromRangeError>
+    pub fn try_from_range<R>(range: R) -> Result<Self, BoundedRelIntervalTryFromRangeError>
     where
         R: RangeBounds<SignedDuration>,
     {
         let (start, start_inclusivity) = match range.start_bound() {
             Bound::Included(&offset) => (offset, BoundInclusivity::Inclusive),
             Bound::Excluded(&offset) => (offset, BoundInclusivity::Exclusive),
-            Bound::Unbounded => return Err(BoundedRelativeIntervalTryFromRangeError),
+            Bound::Unbounded => return Err(BoundedRelIntervalTryFromRangeError),
         };
 
         let (end, end_inclusivity) = match range.end_bound() {
             Bound::Included(&offset) => (offset, BoundInclusivity::Inclusive),
             Bound::Excluded(&offset) => (offset, BoundInclusivity::Exclusive),
-            Bound::Unbounded => return Err(BoundedRelativeIntervalTryFromRangeError),
+            Bound::Unbounded => return Err(BoundedRelIntervalTryFromRangeError),
         };
 
         Ok(Self::from_offsets_incl(start, start_inclusivity, end, end_inclusivity))
@@ -613,16 +607,16 @@ impl BoundedRelativeInterval {
     ///
     /// ```
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::{RelativeFiniteBoundPosition, BoundedRelativeInterval};
-    /// let start = RelativeFiniteBoundPosition::new(SignedDuration::from_hours(8)).to_finite_start_bound();
-    /// let end = RelativeFiniteBoundPosition::new(SignedDuration::from_hours(16)).to_finite_end_bound();
+    /// # use periodical::intervals::relative::{RelFiniteBoundPos, BoundedRelInterval};
+    /// let start = RelFiniteBoundPos::new(SignedDuration::from_hours(8)).to_finite_start_bound();
+    /// let end = RelFiniteBoundPos::new(SignedDuration::from_hours(16)).to_finite_end_bound();
     ///
-    /// let interval = BoundedRelativeInterval::new(start, end);
+    /// let interval = BoundedRelInterval::new(start, end);
     ///
     /// assert_eq!(interval.start(), start);
     /// ```
     #[must_use]
-    pub fn start(&self) -> RelativeFiniteStartBound {
+    pub fn start(&self) -> RelFiniteStartBound {
         self.start
     }
 
@@ -632,16 +626,16 @@ impl BoundedRelativeInterval {
     ///
     /// ```
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::{RelativeFiniteBoundPosition, BoundedRelativeInterval};
-    /// let start = RelativeFiniteBoundPosition::new(SignedDuration::from_hours(8)).to_finite_start_bound();
-    /// let end = RelativeFiniteBoundPosition::new(SignedDuration::from_hours(16)).to_finite_end_bound();
+    /// # use periodical::intervals::relative::{RelFiniteBoundPos, BoundedRelInterval};
+    /// let start = RelFiniteBoundPos::new(SignedDuration::from_hours(8)).to_finite_start_bound();
+    /// let end = RelFiniteBoundPos::new(SignedDuration::from_hours(16)).to_finite_end_bound();
     ///
-    /// let interval = BoundedRelativeInterval::new(start, end);
+    /// let interval = BoundedRelInterval::new(start, end);
     ///
     /// assert_eq!(interval.end(), end);
     /// ```
     #[must_use]
-    pub fn end(&self) -> RelativeFiniteEndBound {
+    pub fn end(&self) -> RelFiniteEndBound {
         self.end
     }
 
@@ -651,11 +645,11 @@ impl BoundedRelativeInterval {
     ///
     /// ```
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::BoundedRelativeInterval;
+    /// # use periodical::intervals::relative::BoundedRelInterval;
     /// let start = SignedDuration::from_hours(1);
     /// let end = SignedDuration::from_hours(5);
     ///
-    /// let bounded_interval = BoundedRelativeInterval::from_offsets(start, end);
+    /// let bounded_interval = BoundedRelInterval::from_offsets(start, end);
     ///
     /// assert_eq!(bounded_interval.start_offset(), start);
     /// ```
@@ -670,11 +664,11 @@ impl BoundedRelativeInterval {
     ///
     /// ```
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::BoundedRelativeInterval;
+    /// # use periodical::intervals::relative::BoundedRelInterval;
     /// let start = SignedDuration::from_hours(1);
     /// let end = SignedDuration::from_hours(5);
     ///
-    /// let bounded_interval = BoundedRelativeInterval::from_offsets(start, end);
+    /// let bounded_interval = BoundedRelInterval::from_offsets(start, end);
     ///
     /// assert_eq!(bounded_interval.end_offset(), end);
     /// ```
@@ -690,8 +684,8 @@ impl BoundedRelativeInterval {
     /// ```
     /// # use jiff::SignedDuration;
     /// # use periodical::intervals::meta::BoundInclusivity;
-    /// # use periodical::intervals::relative::BoundedRelativeInterval;
-    /// let bounded_interval = BoundedRelativeInterval::from_offsets_incl(
+    /// # use periodical::intervals::relative::BoundedRelInterval;
+    /// let bounded_interval = BoundedRelInterval::from_offsets_incl(
     ///     SignedDuration::from_hours(1),
     ///     BoundInclusivity::Inclusive,
     ///     SignedDuration::from_hours(5),
@@ -715,8 +709,8 @@ impl BoundedRelativeInterval {
     /// ```
     /// # use jiff::SignedDuration;
     /// # use periodical::intervals::meta::BoundInclusivity;
-    /// # use periodical::intervals::relative::BoundedRelativeInterval;
-    /// let bounded_interval = BoundedRelativeInterval::from_offsets_incl(
+    /// # use periodical::intervals::relative::BoundedRelInterval;
+    /// let bounded_interval = BoundedRelInterval::from_offsets_incl(
     ///     SignedDuration::from_hours(1),
     ///     BoundInclusivity::Inclusive,
     ///     SignedDuration::from_hours(5),
@@ -739,8 +733,8 @@ impl BoundedRelativeInterval {
     ///
     /// ```
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::{RelativeFiniteBoundPosition, BoundedRelativeInterval};
-    /// let mut bounded_interval = BoundedRelativeInterval::from_offsets(
+    /// # use periodical::intervals::relative::{RelFiniteBoundPos, BoundedRelInterval};
+    /// let mut bounded_interval = BoundedRelInterval::from_offsets(
     ///     SignedDuration::from_hours(8),
     ///     SignedDuration::from_hours(16)
     /// );
@@ -748,12 +742,12 @@ impl BoundedRelativeInterval {
     /// let new_start_offset = SignedDuration::from_hours(18);
     ///
     /// // Even if the new start offset violates the chronological order invariant
-    /// bounded_interval.unchecked_set_start(RelativeFiniteBoundPosition::new(new_start_offset).to_finite_start_bound());
+    /// bounded_interval.unchecked_set_start(RelFiniteBoundPos::new(new_start_offset).to_finite_start_bound());
     ///
     /// // It remains that way
     /// assert_eq!(bounded_interval.start_offset(), new_start_offset);
     /// ```
-    pub fn unchecked_set_start(&mut self, new_start: RelativeFiniteStartBound) {
+    pub fn unchecked_set_start(&mut self, new_start: RelFiniteStartBound) {
         self.start = new_start;
     }
 
@@ -761,10 +755,10 @@ impl BoundedRelativeInterval {
     ///
     /// # Errors
     ///
-    /// Returns [`ChronologicalOrderViolation`](BoundedRelativeIntervalUpdateError::ChronologicalOrderViolation)
+    /// Returns [`ChronologicalOrderViolation`](BoundedRelIntervalUpdateError::ChronologicalOrderViolation)
     /// if the new start bound violates the chronological order invariant.
     ///
-    /// Returns [`SameOffsetDoublyInclusiveViolation`](BoundedRelativeIntervalUpdateError::SameOffsetDoublyInclusiveViolation)
+    /// Returns [`SameOffsetDoublyInclusiveViolation`](BoundedRelIntervalUpdateError::SameOffsetDoublyInclusiveViolation)
     /// if the new start bound violates the same offset doubly inclusive invariant.
     ///
     /// # Examples
@@ -772,27 +766,27 @@ impl BoundedRelativeInterval {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::{RelativeFiniteBoundPosition, BoundedRelativeInterval};
-    /// let mut bounded_interval = BoundedRelativeInterval::from_offsets(
+    /// # use periodical::intervals::relative::{RelFiniteBoundPos, BoundedRelInterval};
+    /// let mut bounded_interval = BoundedRelInterval::from_offsets(
     ///     SignedDuration::from_hours(8),
     ///     SignedDuration::from_hours(16)
     /// );
     ///
     /// let new_start_offset = SignedDuration::from_hours(10);
     ///
-    /// bounded_interval.set_start(RelativeFiniteBoundPosition::new(new_start_offset).to_finite_start_bound())?;
+    /// bounded_interval.set_start(RelFiniteBoundPos::new(new_start_offset).to_finite_start_bound())?;
     ///
     /// assert_eq!(bounded_interval.start_offset(), new_start_offset);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
-    pub fn set_start(&mut self, new_start: RelativeFiniteStartBound) -> Result<(), BoundedRelativeIntervalUpdateError> {
+    pub fn set_start(&mut self, new_start: RelFiniteStartBound) -> Result<(), BoundedRelIntervalUpdateError> {
         check_relative_finite_start_end_bounds_for_interval_creation(&new_start, &self.end()).map_err(
             |err| match err {
-                RelativeStartEndBoundsCheckForIntervalCreationError::StartPastEnd => {
-                    BoundedRelativeIntervalUpdateError::ChronologicalOrderViolation
+                RelStartEndBoundsCheckForIntervalCreationError::StartPastEnd => {
+                    BoundedRelIntervalUpdateError::ChronologicalOrderViolation
                 },
-                RelativeStartEndBoundsCheckForIntervalCreationError::SameOffsetButNotDoublyInclusive => {
-                    BoundedRelativeIntervalUpdateError::SameOffsetDoublyInclusiveViolation
+                RelStartEndBoundsCheckForIntervalCreationError::SameOffsetButNotDoublyInclusive => {
+                    BoundedRelIntervalUpdateError::SameOffsetDoublyInclusiveViolation
                 },
             },
         )?;
@@ -807,8 +801,8 @@ impl BoundedRelativeInterval {
     ///
     /// ```
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::{RelativeFiniteBoundPosition, BoundedRelativeInterval};
-    /// let mut bounded_interval = BoundedRelativeInterval::from_offsets(
+    /// # use periodical::intervals::relative::{RelFiniteBoundPos, BoundedRelInterval};
+    /// let mut bounded_interval = BoundedRelInterval::from_offsets(
     ///     SignedDuration::from_hours(8),
     ///     SignedDuration::from_hours(16)
     /// );
@@ -816,12 +810,12 @@ impl BoundedRelativeInterval {
     /// let new_end_offset = SignedDuration::from_hours(18);
     ///
     /// // Even if the new end offset violates the chronological order invariant
-    /// bounded_interval.unchecked_set_end(RelativeFiniteBoundPosition::new(new_end_offset).to_finite_end_bound());
+    /// bounded_interval.unchecked_set_end(RelFiniteBoundPos::new(new_end_offset).to_finite_end_bound());
     ///
     /// // It remains that way
     /// assert_eq!(bounded_interval.end_offset(), new_end_offset);
     /// ```
-    pub fn unchecked_set_end(&mut self, new_end: RelativeFiniteEndBound) {
+    pub fn unchecked_set_end(&mut self, new_end: RelFiniteEndBound) {
         self.end = new_end;
     }
 
@@ -829,10 +823,10 @@ impl BoundedRelativeInterval {
     ///
     /// # Errors
     ///
-    /// Returns [`ChronologicalOrderViolation`](BoundedRelativeIntervalUpdateError::ChronologicalOrderViolation)
+    /// Returns [`ChronologicalOrderViolation`](BoundedRelIntervalUpdateError::ChronologicalOrderViolation)
     /// if the new end bound violates the chronological order invariant.
     ///
-    /// Returns [`SameOffsetDoublyInclusiveViolation`](BoundedRelativeIntervalUpdateError::SameOffsetDoublyInclusiveViolation)
+    /// Returns [`SameOffsetDoublyInclusiveViolation`](BoundedRelIntervalUpdateError::SameOffsetDoublyInclusiveViolation)
     /// if the new end bound violates the same offset doubly inclusive invariant.
     ///
     /// # Examples
@@ -840,27 +834,27 @@ impl BoundedRelativeInterval {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::{RelativeFiniteBoundPosition, BoundedRelativeInterval};
-    /// let mut bounded_interval = BoundedRelativeInterval::from_offsets(
+    /// # use periodical::intervals::relative::{RelFiniteBoundPos, BoundedRelInterval};
+    /// let mut bounded_interval = BoundedRelInterval::from_offsets(
     ///     SignedDuration::from_hours(8),
     ///     SignedDuration::from_hours(16)
     /// );
     ///
     /// let new_end_offset = SignedDuration::from_hours(10);
     ///
-    /// bounded_interval.set_end(RelativeFiniteBoundPosition::new(new_end_offset).to_finite_end_bound())?;
+    /// bounded_interval.set_end(RelFiniteBoundPos::new(new_end_offset).to_finite_end_bound())?;
     ///
     /// assert_eq!(bounded_interval.end_offset(), new_end_offset);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
-    pub fn set_end(&mut self, new_end: RelativeFiniteEndBound) -> Result<(), BoundedRelativeIntervalUpdateError> {
+    pub fn set_end(&mut self, new_end: RelFiniteEndBound) -> Result<(), BoundedRelIntervalUpdateError> {
         check_relative_finite_start_end_bounds_for_interval_creation(&self.start(), &new_end).map_err(
             |err| match err {
-                RelativeStartEndBoundsCheckForIntervalCreationError::StartPastEnd => {
-                    BoundedRelativeIntervalUpdateError::ChronologicalOrderViolation
+                RelStartEndBoundsCheckForIntervalCreationError::StartPastEnd => {
+                    BoundedRelIntervalUpdateError::ChronologicalOrderViolation
                 },
-                RelativeStartEndBoundsCheckForIntervalCreationError::SameOffsetButNotDoublyInclusive => {
-                    BoundedRelativeIntervalUpdateError::SameOffsetDoublyInclusiveViolation
+                RelStartEndBoundsCheckForIntervalCreationError::SameOffsetButNotDoublyInclusive => {
+                    BoundedRelIntervalUpdateError::SameOffsetDoublyInclusiveViolation
                 },
             },
         )?;
@@ -875,11 +869,11 @@ impl BoundedRelativeInterval {
     ///
     /// ```
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::BoundedRelativeInterval;
+    /// # use periodical::intervals::relative::BoundedRelInterval;
     /// let start_offset = SignedDuration::from_hours(1);
     /// let end_offset = SignedDuration::from_hours(4);
     ///
-    /// let mut bounded_interval = BoundedRelativeInterval::from_offsets(start_offset, end_offset);
+    /// let mut bounded_interval = BoundedRelInterval::from_offsets(start_offset, end_offset);
     ///
     /// let new_start_offset = SignedDuration::from_hours(10);
     ///
@@ -899,11 +893,11 @@ impl BoundedRelativeInterval {
     ///
     /// ```
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::BoundedRelativeInterval;
+    /// # use periodical::intervals::relative::BoundedRelInterval;
     /// let start_offset = SignedDuration::from_hours(1);
     /// let end_offset = SignedDuration::from_hours(4);
     ///
-    /// let mut bounded_interval = BoundedRelativeInterval::from_offsets(start_offset, end_offset);
+    /// let mut bounded_interval = BoundedRelInterval::from_offsets(start_offset, end_offset);
     ///
     /// let new_end_offset = SignedDuration::from_hours(-5);
     ///
@@ -921,10 +915,10 @@ impl BoundedRelativeInterval {
     ///
     /// # Errors
     ///
-    /// Returns [`ChronologicalOrderViolation`](BoundedRelativeIntervalUpdateError::ChronologicalOrderViolation)
+    /// Returns [`ChronologicalOrderViolation`](BoundedRelIntervalUpdateError::ChronologicalOrderViolation)
     /// if the new start offset violates the chronological order invariant.
     ///
-    /// Returns [`SameOffsetDoublyInclusiveViolation`](BoundedRelativeIntervalUpdateError::SameOffsetDoublyInclusiveViolation)
+    /// Returns [`SameOffsetDoublyInclusiveViolation`](BoundedRelIntervalUpdateError::SameOffsetDoublyInclusiveViolation)
     /// if the new start offset violates the same offset doubly inclusive invariant.
     ///
     /// # Examples
@@ -932,11 +926,11 @@ impl BoundedRelativeInterval {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::BoundedRelativeInterval;
+    /// # use periodical::intervals::relative::BoundedRelInterval;
     /// let start_offset = SignedDuration::from_hours(2);
     /// let end_offset = SignedDuration::from_hours(5);
     ///
-    /// let mut bounded_interval = BoundedRelativeInterval::from_offsets(start_offset, end_offset);
+    /// let mut bounded_interval = BoundedRelInterval::from_offsets(start_offset, end_offset);
     ///
     /// let new_start_offset = SignedDuration::from_hours(4);
     ///
@@ -945,10 +939,7 @@ impl BoundedRelativeInterval {
     /// assert_eq!(bounded_interval.start_offset(), new_start_offset);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
-    pub fn set_start_offset(
-        &mut self,
-        new_start_offset: SignedDuration,
-    ) -> Result<(), BoundedRelativeIntervalUpdateError> {
+    pub fn set_start_offset(&mut self, new_start_offset: SignedDuration) -> Result<(), BoundedRelIntervalUpdateError> {
         match new_start_offset.cmp(&self.end_offset()) {
             Ordering::Less => {
                 self.unchecked_set_start_offset(new_start_offset);
@@ -958,13 +949,13 @@ impl BoundedRelativeInterval {
                 if self.start_inclusivity() != BoundInclusivity::Inclusive
                     || self.end_inclusivity() != BoundInclusivity::Inclusive
                 {
-                    return Err(BoundedRelativeIntervalUpdateError::SameOffsetDoublyInclusiveViolation);
+                    return Err(BoundedRelIntervalUpdateError::SameOffsetDoublyInclusiveViolation);
                 }
 
                 self.unchecked_set_start_offset(new_start_offset);
                 Ok(())
             },
-            Ordering::Greater => Err(BoundedRelativeIntervalUpdateError::ChronologicalOrderViolation),
+            Ordering::Greater => Err(BoundedRelIntervalUpdateError::ChronologicalOrderViolation),
         }
     }
 
@@ -972,10 +963,10 @@ impl BoundedRelativeInterval {
     ///
     /// # Errors
     ///
-    /// Returns [`ChronologicalOrderViolation`](BoundedRelativeIntervalUpdateError::ChronologicalOrderViolation)
+    /// Returns [`ChronologicalOrderViolation`](BoundedRelIntervalUpdateError::ChronologicalOrderViolation)
     /// if the new end offset violates the chronological order invariant.
     ///
-    /// Returns [`SameOffsetDoublyInclusiveViolation`](BoundedRelativeIntervalUpdateError::SameOffsetDoublyInclusiveViolation)
+    /// Returns [`SameOffsetDoublyInclusiveViolation`](BoundedRelIntervalUpdateError::SameOffsetDoublyInclusiveViolation)
     /// if the new end offset violates the same offset doubly inclusive invariant.
     ///
     /// # Examples
@@ -983,11 +974,11 @@ impl BoundedRelativeInterval {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::BoundedRelativeInterval;
+    /// # use periodical::intervals::relative::BoundedRelInterval;
     /// let start_offset = SignedDuration::from_hours(2);
     /// let end_offset = SignedDuration::from_hours(5);
     ///
-    /// let mut bounded_interval = BoundedRelativeInterval::from_offsets(start_offset, end_offset);
+    /// let mut bounded_interval = BoundedRelInterval::from_offsets(start_offset, end_offset);
     ///
     /// let new_end_offset = SignedDuration::from_hours(4);
     ///
@@ -996,7 +987,7 @@ impl BoundedRelativeInterval {
     /// assert_eq!(bounded_interval.end_offset(), new_end_offset);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
-    pub fn set_end_offset(&mut self, new_end_offset: SignedDuration) -> Result<(), BoundedRelativeIntervalUpdateError> {
+    pub fn set_end_offset(&mut self, new_end_offset: SignedDuration) -> Result<(), BoundedRelIntervalUpdateError> {
         match self.start_offset().cmp(&new_end_offset) {
             Ordering::Less => {
                 self.unchecked_set_end_offset(new_end_offset);
@@ -1006,13 +997,13 @@ impl BoundedRelativeInterval {
                 if self.start_inclusivity() != BoundInclusivity::Inclusive
                     || self.end_inclusivity() != BoundInclusivity::Inclusive
                 {
-                    return Err(BoundedRelativeIntervalUpdateError::SameOffsetDoublyInclusiveViolation);
+                    return Err(BoundedRelIntervalUpdateError::SameOffsetDoublyInclusiveViolation);
                 }
 
                 self.unchecked_set_end_offset(new_end_offset);
                 Ok(())
             },
-            Ordering::Greater => Err(BoundedRelativeIntervalUpdateError::ChronologicalOrderViolation),
+            Ordering::Greater => Err(BoundedRelIntervalUpdateError::ChronologicalOrderViolation),
         }
     }
 
@@ -1020,11 +1011,11 @@ impl BoundedRelativeInterval {
     ///
     /// # Errors
     ///
-    /// Returns [`SameOffsetDoublyInclusiveViolation`](BoundedRelativeIntervalUpdateError::SameOffsetDoublyInclusiveViolation)
+    /// Returns [`SameOffsetDoublyInclusiveViolation`](BoundedRelIntervalUpdateError::SameOffsetDoublyInclusiveViolation)
     /// if the given length is zero and the start and end bounds are not
     /// both [`Inclusive`](BoundInclusivity::Inclusive).
     ///
-    /// Returns [`OutOfRange`](BoundedRelativeIntervalUpdateError::OutOfRange)
+    /// Returns [`OutOfRange`](BoundedRelIntervalUpdateError::OutOfRange)
     /// if the given length would result in an out-of-range end offset.
     ///
     /// # Examples
@@ -1033,8 +1024,8 @@ impl BoundedRelativeInterval {
     /// # use std::error::Error;
     /// # use std::time::Duration;
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::BoundedRelativeInterval;
-    /// let mut bounded_interval = BoundedRelativeInterval::from_offsets(
+    /// # use periodical::intervals::relative::BoundedRelInterval;
+    /// let mut bounded_interval = BoundedRelInterval::from_offsets(
     ///     SignedDuration::from_hours(2),
     ///     SignedDuration::from_hours(5),
     /// );
@@ -1047,12 +1038,12 @@ impl BoundedRelativeInterval {
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
-    pub fn set_length_from_start(&mut self, new_length: StdDuration) -> Result<(), BoundedRelativeIntervalUpdateError> {
+    pub fn set_length_from_start(&mut self, new_length: StdDuration) -> Result<(), BoundedRelIntervalUpdateError> {
         if new_length.is_zero()
             && (self.start_inclusivity() != BoundInclusivity::Inclusive
                 || self.end_inclusivity() != BoundInclusivity::Inclusive)
         {
-            return Err(BoundedRelativeIntervalUpdateError::SameOffsetDoublyInclusiveViolation);
+            return Err(BoundedRelIntervalUpdateError::SameOffsetDoublyInclusiveViolation);
         }
 
         self.unchecked_set_end_offset(
@@ -1060,9 +1051,9 @@ impl BoundedRelativeInterval {
                 self.start_offset()
                     .as_nanos()
                     .checked_add_unsigned(new_length.as_nanos())
-                    .ok_or(BoundedRelativeIntervalUpdateError::OutOfRange)?,
+                    .ok_or(BoundedRelIntervalUpdateError::OutOfRange)?,
             )
-            .ok_or(BoundedRelativeIntervalUpdateError::OutOfRange)?,
+            .ok_or(BoundedRelIntervalUpdateError::OutOfRange)?,
         );
 
         Ok(())
@@ -1072,11 +1063,11 @@ impl BoundedRelativeInterval {
     ///
     /// # Errors
     ///
-    /// Returns [`SameTimeDoublyInclusiveViolation`](BoundedRelativeIntervalUpdateError::SameTimeDoublyInclusiveViolation)
+    /// Returns [`SameTimeDoublyInclusiveViolation`](BoundedRelIntervalUpdateError::SameTimeDoublyInclusiveViolation)
     /// if the given length is zero and the start and end bounds are not
     /// both [`Inclusive`](BoundInclusivity::Inclusive).
     ///
-    /// Returns [`OutOfRange`](BoundedRelativeIntervalUpdateError::OutOfRange)
+    /// Returns [`OutOfRange`](BoundedRelIntervalUpdateError::OutOfRange)
     /// if the given length would result in an out-of-range start offset.
     ///
     /// # Examples
@@ -1085,8 +1076,8 @@ impl BoundedRelativeInterval {
     /// # use std::error::Error;
     /// # use std::time::Duration;
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::BoundedRelativeInterval;
-    /// let mut bounded_interval = BoundedRelativeInterval::from_offsets(
+    /// # use periodical::intervals::relative::BoundedRelInterval;
+    /// let mut bounded_interval = BoundedRelInterval::from_offsets(
     ///     SignedDuration::from_hours(2),
     ///     SignedDuration::from_hours(5),
     /// );
@@ -1099,12 +1090,12 @@ impl BoundedRelativeInterval {
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
-    pub fn set_length_from_end(&mut self, new_length: StdDuration) -> Result<(), BoundedRelativeIntervalUpdateError> {
+    pub fn set_length_from_end(&mut self, new_length: StdDuration) -> Result<(), BoundedRelIntervalUpdateError> {
         if new_length.is_zero()
             && (self.start_inclusivity() != BoundInclusivity::Inclusive
                 || self.end_inclusivity() != BoundInclusivity::Inclusive)
         {
-            return Err(BoundedRelativeIntervalUpdateError::SameOffsetDoublyInclusiveViolation);
+            return Err(BoundedRelIntervalUpdateError::SameOffsetDoublyInclusiveViolation);
         }
 
         self.unchecked_set_start_offset(
@@ -1112,9 +1103,9 @@ impl BoundedRelativeInterval {
                 self.end_offset()
                     .as_nanos()
                     .checked_sub_unsigned(new_length.as_nanos())
-                    .ok_or(BoundedRelativeIntervalUpdateError::OutOfRange)?,
+                    .ok_or(BoundedRelIntervalUpdateError::OutOfRange)?,
             )
-            .ok_or(BoundedRelativeIntervalUpdateError::OutOfRange)?,
+            .ok_or(BoundedRelIntervalUpdateError::OutOfRange)?,
         );
 
         Ok(())
@@ -1126,10 +1117,10 @@ impl BoundedRelativeInterval {
     ///
     /// ```
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::BoundedRelativeInterval;
+    /// # use periodical::intervals::relative::BoundedRelInterval;
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// let offset = SignedDuration::from_hours(5);
-    /// let mut bounded_interval = BoundedRelativeInterval::from_offsets(offset, offset);
+    /// let mut bounded_interval = BoundedRelInterval::from_offsets(offset, offset);
     ///
     /// // Even if the new start inclusivity violates the same offset doubly inclusive invariant
     /// bounded_interval.unchecked_set_start_inclusivity(BoundInclusivity::Exclusive);
@@ -1150,10 +1141,10 @@ impl BoundedRelativeInterval {
     ///
     /// ```
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::BoundedRelativeInterval;
+    /// # use periodical::intervals::relative::BoundedRelInterval;
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// let offset = SignedDuration::from_hours(5);
-    /// let mut bounded_interval = BoundedRelativeInterval::from_offsets(offset, offset);
+    /// let mut bounded_interval = BoundedRelInterval::from_offsets(offset, offset);
     ///
     /// // Even if the new end inclusivity violates the same offset doubly inclusive invariant
     /// bounded_interval.unchecked_set_end_inclusivity(BoundInclusivity::Exclusive);
@@ -1172,7 +1163,7 @@ impl BoundedRelativeInterval {
     ///
     /// # Errors
     ///
-    /// Returns [`SameOffsetDoublyInclusiveViolation`](BoundedRelativeIntervalUpdateError::SameOffsetDoublyInclusiveViolation)
+    /// Returns [`SameOffsetDoublyInclusiveViolation`](BoundedRelIntervalUpdateError::SameOffsetDoublyInclusiveViolation)
     /// if the start and end are on the same offset and the given new inclusivity
     /// is not [`Inclusive`](BoundInclusivity::Inclusive).
     ///
@@ -1181,9 +1172,9 @@ impl BoundedRelativeInterval {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::BoundedRelativeInterval;
+    /// # use periodical::intervals::relative::BoundedRelInterval;
     /// # use periodical::intervals::meta::BoundInclusivity;
-    /// let mut bounded_interval = BoundedRelativeInterval::from_offsets(
+    /// let mut bounded_interval = BoundedRelInterval::from_offsets(
     ///     SignedDuration::from_hours(5),
     ///     SignedDuration::from_hours(10),
     /// );
@@ -1203,9 +1194,9 @@ impl BoundedRelativeInterval {
     pub fn set_start_inclusivity(
         &mut self,
         new_inclusivity: BoundInclusivity,
-    ) -> Result<(), BoundedRelativeIntervalUpdateError> {
+    ) -> Result<(), BoundedRelIntervalUpdateError> {
         if self.start_offset() == self.end_offset() && new_inclusivity != BoundInclusivity::Inclusive {
-            return Err(BoundedRelativeIntervalUpdateError::SameOffsetDoublyInclusiveViolation);
+            return Err(BoundedRelIntervalUpdateError::SameOffsetDoublyInclusiveViolation);
         }
 
         self.unchecked_set_start_inclusivity(new_inclusivity);
@@ -1216,7 +1207,7 @@ impl BoundedRelativeInterval {
     ///
     /// # Errors
     ///
-    /// Returns [`SameOffsetDoublyInclusiveViolation`](BoundedRelativeIntervalUpdateError::SameOffsetDoublyInclusiveViolation)
+    /// Returns [`SameOffsetDoublyInclusiveViolation`](BoundedRelIntervalUpdateError::SameOffsetDoublyInclusiveViolation)
     /// if the start and end are on the same offset and the given new inclusivity
     /// is not [`Inclusive`](BoundInclusivity::Inclusive).
     ///
@@ -1225,9 +1216,9 @@ impl BoundedRelativeInterval {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::BoundedRelativeInterval;
+    /// # use periodical::intervals::relative::BoundedRelInterval;
     /// # use periodical::intervals::meta::BoundInclusivity;
-    /// let mut bounded_interval = BoundedRelativeInterval::from_offsets(
+    /// let mut bounded_interval = BoundedRelInterval::from_offsets(
     ///     SignedDuration::from_hours(5),
     ///     SignedDuration::from_hours(10),
     /// );
@@ -1247,38 +1238,38 @@ impl BoundedRelativeInterval {
     pub fn set_end_inclusivity(
         &mut self,
         new_inclusivity: BoundInclusivity,
-    ) -> Result<(), BoundedRelativeIntervalUpdateError> {
+    ) -> Result<(), BoundedRelIntervalUpdateError> {
         if self.start_offset() == self.end_offset() && new_inclusivity != BoundInclusivity::Inclusive {
-            return Err(BoundedRelativeIntervalUpdateError::SameOffsetDoublyInclusiveViolation);
+            return Err(BoundedRelIntervalUpdateError::SameOffsetDoublyInclusiveViolation);
         }
 
         self.unchecked_set_end_inclusivity(new_inclusivity);
         Ok(())
     }
 
-    /// Wraps `self` in a [`RelativeInterval`]
+    /// Wraps `self` in a [`RelInterval`]
     #[must_use]
-    pub fn to_interval(self) -> RelativeInterval {
-        RelativeInterval::from(self)
+    pub fn to_interval(self) -> RelInterval {
+        RelInterval::from(self)
     }
 
-    /// Wraps `self` in an [`EmptiableRelativeInterval`]
+    /// Wraps `self` in an [`EmptiableRelInterval`]
     #[must_use]
-    pub fn to_emptiable_interval(self) -> EmptiableRelativeInterval {
-        EmptiableRelativeInterval::from(self)
+    pub fn to_emptiable_interval(self) -> EmptiableRelInterval {
+        EmptiableRelInterval::from(self)
     }
 }
 
-/// Errors the can occur when creating a [`BoundedRelativeInterval`]
+/// Errors the can occur when creating a [`BoundedRelInterval`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum BoundedRelativeIntervalCreationError {
+pub enum BoundedRelIntervalCreationError {
     /// Provided or computed start bound is out of range
     OutOfRangeStart,
     /// Provided or computed end bound is out of range
     OutOfRangeEnd,
 }
 
-impl Display for BoundedRelativeIntervalCreationError {
+impl Display for BoundedRelIntervalCreationError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::OutOfRangeStart => write!(f, "Provided or computed start bound is out of range"),
@@ -1287,27 +1278,27 @@ impl Display for BoundedRelativeIntervalCreationError {
     }
 }
 
-impl Error for BoundedRelativeIntervalCreationError {}
+impl Error for BoundedRelIntervalCreationError {}
 
-/// Error that can occur when trying to create a [`BoundedRelativeInterval`]
+/// Error that can occur when trying to create a [`BoundedRelInterval`]
 /// from a [`SignedDuration`] range
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct BoundedRelativeIntervalTryFromRangeError;
+pub struct BoundedRelIntervalTryFromRangeError;
 
-impl Display for BoundedRelativeIntervalTryFromRangeError {
+impl Display for BoundedRelIntervalTryFromRangeError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "An error occurred when trying to convert a `SignedDuration` range into a `BoundedRelativeInterval`",
+            "An error occurred when trying to convert a `SignedDuration` range into a `BoundedRelInterval`",
         )
     }
 }
 
-impl Error for BoundedRelativeIntervalTryFromRangeError {}
+impl Error for BoundedRelIntervalTryFromRangeError {}
 
-/// Errors that can occur when updating a [`BoundedRelativeInterval`]
+/// Errors that can occur when updating a [`BoundedRelInterval`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum BoundedRelativeIntervalUpdateError {
+pub enum BoundedRelIntervalUpdateError {
     /// Update would violate the chronological order invariant
     ChronologicalOrderViolation,
     /// Update would violate the same time = doubly inclusive invariant
@@ -1316,7 +1307,7 @@ pub enum BoundedRelativeIntervalUpdateError {
     OutOfRange,
 }
 
-impl Display for BoundedRelativeIntervalUpdateError {
+impl Display for BoundedRelIntervalUpdateError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::ChronologicalOrderViolation => write!(f, "Update would violate the chronological order invariant"),
@@ -1328,23 +1319,23 @@ impl Display for BoundedRelativeIntervalUpdateError {
     }
 }
 
-impl Error for BoundedRelativeIntervalUpdateError {}
+impl Error for BoundedRelIntervalUpdateError {}
 
-impl Interval for BoundedRelativeInterval {}
+impl Interval for BoundedRelInterval {}
 
-impl HasOpenness for BoundedRelativeInterval {
+impl HasOpenness for BoundedRelInterval {
     fn openness(&self) -> Openness {
         Openness::Bounded
     }
 }
 
-impl HasRelativity for BoundedRelativeInterval {
+impl HasRelativity for BoundedRelInterval {
     fn relativity(&self) -> Relativity {
-        Relativity::Relative
+        Relativity::Rel
     }
 }
 
-impl HasDuration for BoundedRelativeInterval {
+impl HasDuration for BoundedRelInterval {
     fn duration(&self) -> IntervalDuration {
         IntervalDuration::Finite(
             self.end_offset().saturating_sub(self.start_offset()).unsigned_abs(),
@@ -1353,58 +1344,58 @@ impl HasDuration for BoundedRelativeInterval {
     }
 }
 
-impl HasRelativeBoundPair for BoundedRelativeInterval {
-    fn rel_bound_pair(&self) -> RelativeBoundPair {
-        RelativeBoundPair::new(self.rel_start(), self.rel_end())
+impl HasRelBoundPair for BoundedRelInterval {
+    fn rel_bound_pair(&self) -> RelBoundPair {
+        RelBoundPair::new(self.rel_start(), self.rel_end())
     }
 
-    fn rel_start(&self) -> RelativeStartBound {
+    fn rel_start(&self) -> RelStartBound {
         self.start().to_start_bound()
     }
 
-    fn rel_end(&self) -> RelativeEndBound {
+    fn rel_end(&self) -> RelEndBound {
         self.end().to_end_bound()
     }
 }
 
-impl IsEmpty for BoundedRelativeInterval {
+impl IsEmpty for BoundedRelInterval {
     fn is_empty(&self) -> bool {
         false
     }
 }
 
-impl From<(RelativeFiniteStartBound, RelativeFiniteEndBound)> for BoundedRelativeInterval {
-    fn from((start, end): (RelativeFiniteStartBound, RelativeFiniteEndBound)) -> Self {
+impl From<(RelFiniteStartBound, RelFiniteEndBound)> for BoundedRelInterval {
+    fn from((start, end): (RelFiniteStartBound, RelFiniteEndBound)) -> Self {
         Self::new(start, end)
     }
 }
 
-impl From<(SignedDuration, SignedDuration)> for BoundedRelativeInterval {
+impl From<(SignedDuration, SignedDuration)> for BoundedRelInterval {
     fn from((start, end): (SignedDuration, SignedDuration)) -> Self {
-        BoundedRelativeInterval::from_offsets(start, end)
+        BoundedRelInterval::from_offsets(start, end)
     }
 }
 
-impl From<((SignedDuration, BoundInclusivity), (SignedDuration, BoundInclusivity))> for BoundedRelativeInterval {
+impl From<((SignedDuration, BoundInclusivity), (SignedDuration, BoundInclusivity))> for BoundedRelInterval {
     fn from(
         ((start, start_inclusivity), (end, end_inclusivity)): (
             (SignedDuration, BoundInclusivity),
             (SignedDuration, BoundInclusivity),
         ),
     ) -> Self {
-        BoundedRelativeInterval::from_offsets_incl(start, start_inclusivity, end, end_inclusivity)
+        BoundedRelInterval::from_offsets_incl(start, start_inclusivity, end, end_inclusivity)
     }
 }
 
-impl From<(RelativeFiniteBoundPosition, RelativeFiniteBoundPosition)> for BoundedRelativeInterval {
-    fn from((start, end): (RelativeFiniteBoundPosition, RelativeFiniteBoundPosition)) -> Self {
+impl From<(RelFiniteBoundPos, RelFiniteBoundPos)> for BoundedRelInterval {
+    fn from((start, end): (RelFiniteBoundPos, RelFiniteBoundPos)) -> Self {
         Self::new(start.to_finite_start_bound(), end.to_finite_end_bound())
     }
 }
 
-impl From<Range<SignedDuration>> for BoundedRelativeInterval {
+impl From<Range<SignedDuration>> for BoundedRelInterval {
     fn from(range: Range<SignedDuration>) -> Self {
-        BoundedRelativeInterval::from_offsets_incl(
+        BoundedRelInterval::from_offsets_incl(
             range.start,
             BoundInclusivity::Inclusive,
             range.end,
@@ -1413,9 +1404,9 @@ impl From<Range<SignedDuration>> for BoundedRelativeInterval {
     }
 }
 
-impl From<RangeInclusive<SignedDuration>> for BoundedRelativeInterval {
+impl From<RangeInclusive<SignedDuration>> for BoundedRelInterval {
     fn from(range: RangeInclusive<SignedDuration>) -> Self {
-        BoundedRelativeInterval::from_offsets_incl(
+        BoundedRelInterval::from_offsets_incl(
             *range.start(),
             BoundInclusivity::Inclusive,
             *range.end(),
@@ -1424,110 +1415,110 @@ impl From<RangeInclusive<SignedDuration>> for BoundedRelativeInterval {
     }
 }
 
-/// Error that can occur when trying to convert [`RelativeBoundPair`] into [`BoundedRelativeInterval`]
+/// Error that can occur when trying to convert [`RelBoundPair`] into [`BoundedRelInterval`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct BoundedRelativeIntervalTryFromRelativeBoundPairError;
+pub struct BoundedRelIntervalTryFromRelBoundPairError;
 
-impl Display for BoundedRelativeIntervalTryFromRelativeBoundPairError {
+impl Display for BoundedRelIntervalTryFromRelBoundPairError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "An error occurred when trying to convert `RelativeBoundPair` into `BoundedRelativeInterval`"
+            "An error occurred when trying to convert `RelBoundPair` into `BoundedRelInterval`"
         )
     }
 }
 
-impl Error for BoundedRelativeIntervalTryFromRelativeBoundPairError {}
+impl Error for BoundedRelIntervalTryFromRelBoundPairError {}
 
-impl TryFrom<RelativeBoundPair> for BoundedRelativeInterval {
-    type Error = BoundedRelativeIntervalTryFromRelativeBoundPairError;
+impl TryFrom<RelBoundPair> for BoundedRelInterval {
+    type Error = BoundedRelIntervalTryFromRelBoundPairError;
 
-    fn try_from(value: RelativeBoundPair) -> Result<Self, Self::Error> {
+    fn try_from(value: RelBoundPair) -> Result<Self, Self::Error> {
         match (value.start(), value.end()) {
-            (RelativeStartBound::Finite(finite_start), RelativeEndBound::Finite(finite_end)) => {
-                Ok(BoundedRelativeInterval::new(finite_start, finite_end))
+            (RelStartBound::Finite(finite_start), RelEndBound::Finite(finite_end)) => {
+                Ok(BoundedRelInterval::new(finite_start, finite_end))
             },
-            _ => Err(BoundedRelativeIntervalTryFromRelativeBoundPairError),
+            _ => Err(BoundedRelIntervalTryFromRelBoundPairError),
         }
     }
 }
 
-/// Error that can occur when trying to convert [`EmptiableRelativeBoundPair`] into [`BoundedRelativeInterval`]
+/// Error that can occur when trying to convert [`EmptiableRelBoundPair`] into [`BoundedRelInterval`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct BoundedRelativeIntervalTryFromEmptiableRelativeBoundPairError;
+pub struct BoundedRelIntervalTryFromEmptiableRelBoundPairError;
 
-impl Display for BoundedRelativeIntervalTryFromEmptiableRelativeBoundPairError {
+impl Display for BoundedRelIntervalTryFromEmptiableRelBoundPairError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "An error occurred when trying to convert `EmptiableRelativeBoundPair` into `BoundedRelativeInterval`"
+            "An error occurred when trying to convert `EmptiableRelBoundPair` into `BoundedRelInterval`"
         )
     }
 }
 
-impl Error for BoundedRelativeIntervalTryFromEmptiableRelativeBoundPairError {}
+impl Error for BoundedRelIntervalTryFromEmptiableRelBoundPairError {}
 
-impl TryFrom<EmptiableRelativeBoundPair> for BoundedRelativeInterval {
-    type Error = BoundedRelativeIntervalTryFromEmptiableRelativeBoundPairError;
+impl TryFrom<EmptiableRelBoundPair> for BoundedRelInterval {
+    type Error = BoundedRelIntervalTryFromEmptiableRelBoundPairError;
 
-    fn try_from(value: EmptiableRelativeBoundPair) -> Result<Self, Self::Error> {
+    fn try_from(value: EmptiableRelBoundPair) -> Result<Self, Self::Error> {
         Self::try_from(
             value
                 .bound()
-                .ok_or(BoundedRelativeIntervalTryFromEmptiableRelativeBoundPairError)?,
+                .ok_or(BoundedRelIntervalTryFromEmptiableRelBoundPairError)?,
         )
-        .or(Err(BoundedRelativeIntervalTryFromEmptiableRelativeBoundPairError))
+        .or(Err(BoundedRelIntervalTryFromEmptiableRelBoundPairError))
     }
 }
 
-/// Error that can occur when trying to convert [`RelativeInterval`] into
-/// [`BoundedRelativeInterval`]
+/// Error that can occur when trying to convert [`RelInterval`] into
+/// [`BoundedRelInterval`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct BoundedRelativeIntervalFromRelativeIntervalError;
+pub struct BoundedRelIntervalFromRelIntervalError;
 
-impl Display for BoundedRelativeIntervalFromRelativeIntervalError {
+impl Display for BoundedRelIntervalFromRelIntervalError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "An error occurred when trying to convert `RelativeInterval` into `BoundedRelativeInterval"
+            "An error occurred when trying to convert `RelInterval` into `BoundedRelInterval"
         )
     }
 }
 
-impl Error for BoundedRelativeIntervalFromRelativeIntervalError {}
+impl Error for BoundedRelIntervalFromRelIntervalError {}
 
-impl TryFrom<RelativeInterval> for BoundedRelativeInterval {
-    type Error = BoundedRelativeIntervalFromRelativeIntervalError;
+impl TryFrom<RelInterval> for BoundedRelInterval {
+    type Error = BoundedRelIntervalFromRelIntervalError;
 
-    fn try_from(value: RelativeInterval) -> Result<Self, Self::Error> {
-        value.bounded().ok_or(BoundedRelativeIntervalFromRelativeIntervalError)
+    fn try_from(value: RelInterval) -> Result<Self, Self::Error> {
+        value.bounded().ok_or(BoundedRelIntervalFromRelIntervalError)
     }
 }
 
-/// Error that can occur when trying to convert [`EmptiableRelativeInterval`] into [`BoundedRelativeInterval`]
+/// Error that can occur when trying to convert [`EmptiableRelInterval`] into [`BoundedRelInterval`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct BoundedRelativeIntervalTryFromEmptiableRelativeIntervalError;
+pub struct BoundedRelIntervalTryFromEmptiableRelIntervalError;
 
-impl Display for BoundedRelativeIntervalTryFromEmptiableRelativeIntervalError {
+impl Display for BoundedRelIntervalTryFromEmptiableRelIntervalError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "An error occurred when trying to convert `EmptiableRelativeInterval` into `BoundedRelativeInterval`"
+            "An error occurred when trying to convert `EmptiableRelInterval` into `BoundedRelInterval`"
         )
     }
 }
 
-impl Error for BoundedRelativeIntervalTryFromEmptiableRelativeIntervalError {}
+impl Error for BoundedRelIntervalTryFromEmptiableRelIntervalError {}
 
-impl TryFrom<EmptiableRelativeInterval> for BoundedRelativeInterval {
-    type Error = BoundedRelativeIntervalTryFromEmptiableRelativeIntervalError;
+impl TryFrom<EmptiableRelInterval> for BoundedRelInterval {
+    type Error = BoundedRelIntervalTryFromEmptiableRelIntervalError;
 
-    fn try_from(value: EmptiableRelativeInterval) -> Result<Self, Self::Error> {
+    fn try_from(value: EmptiableRelInterval) -> Result<Self, Self::Error> {
         Self::try_from(
             value
                 .bound()
-                .ok_or(BoundedRelativeIntervalTryFromEmptiableRelativeIntervalError)?,
+                .ok_or(BoundedRelIntervalTryFromEmptiableRelIntervalError)?,
         )
-        .or(Err(BoundedRelativeIntervalTryFromEmptiableRelativeIntervalError))
+        .or(Err(BoundedRelIntervalTryFromEmptiableRelIntervalError))
     }
 }

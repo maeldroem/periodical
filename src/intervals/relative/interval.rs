@@ -2,21 +2,21 @@
 //!
 //! Represents any form of specific relative intervals,
 //! besides [`EmptyInterval`](crate::intervals::special::EmptyInterval).
-//! That includes [`BoundedRelativeInterval`], [`HalfBoundedRelativeInterval`],
+//! That includes [`BoundedRelInterval`], [`HalfBoundedRelInterval`],
 //! and [`UnboundedInterval`].
 //!
 //! The contained intervals conserve the [openness](Openness) invariant, but the
-//! chosen variant can change. Compared to [`RelativeBoundPair`], thanks to the
+//! chosen variant can change. Compared to [`RelBoundPair`], thanks to the
 //! variants we know exactly the kind of interval that is stored without needing
 //! to check inner data.
 //!
 //! Usually this structure is for dealing with relative intervals as a single
 //! type in a way that conserves the [openness](Openness) invariant, contrary to
-//! [`RelativeBoundPair`].
+//! [`RelBoundPair`].
 //!
 //! If you want to include
 //! [`EmptyInterval`](crate::intervals::special::EmptyInterval) as a possible
-//! variant, see [`EmptiableRelativeInterval`].
+//! variant, see [`EmptiableRelInterval`].
 
 use std::cmp::Ordering;
 use std::error::Error;
@@ -41,16 +41,16 @@ use crate::intervals::meta::{
     Relativity,
 };
 use crate::intervals::relative::{
-    BoundedRelativeInterval,
-    EmptiableRelativeBoundPair,
-    EmptiableRelativeInterval,
-    HalfBoundedRelativeInterval,
-    HalfBoundedToFutureRelativeInterval,
-    HalfBoundedToPastRelativeInterval,
-    HasRelativeBoundPair,
-    RelativeBoundPair,
-    RelativeEndBound,
-    RelativeStartBound,
+    BoundedRelInterval,
+    EmptiableRelBoundPair,
+    EmptiableRelInterval,
+    HalfBoundedRelInterval,
+    HalfBoundedToFutureRelInterval,
+    HalfBoundedToPastRelInterval,
+    HasRelBoundPair,
+    RelBoundPair,
+    RelEndBound,
+    RelStartBound,
 };
 use crate::intervals::special::UnboundedInterval;
 
@@ -58,32 +58,32 @@ use crate::intervals::special::UnboundedInterval;
 ///
 /// Represents any form of specific relative intervals,
 /// besides [`EmptyInterval`](crate::intervals::special::EmptyInterval).
-/// That includes [`BoundedRelativeInterval`], [`HalfBoundedRelativeInterval`],
+/// That includes [`BoundedRelInterval`], [`HalfBoundedRelInterval`],
 /// and [`UnboundedInterval`].
 ///
 /// The contained intervals conserve the [openness](Openness) invariant, but the
-/// chosen variant can change. Compared to [`RelativeBoundPair`], thanks to the
+/// chosen variant can change. Compared to [`RelBoundPair`], thanks to the
 /// variants we know exactly the kind of interval that is stored without needing
 /// to check inner data.
 ///
 /// Usually this structure is for dealing with relative intervals as a single
 /// type in a way that conserves the [openness](Openness) invariant, contrary to
-/// [`RelativeBoundPair`].
+/// [`RelBoundPair`].
 ///
 /// If you want to include
 /// [`EmptyInterval`](crate::intervals::special::EmptyInterval) as a possible
-/// variant, see [`EmptiableRelativeInterval`].
+/// variant, see [`EmptiableRelInterval`].
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
-pub enum RelativeInterval {
-    Bounded(BoundedRelativeInterval),
-    HalfBounded(HalfBoundedRelativeInterval),
+pub enum RelInterval {
+    Bounded(BoundedRelInterval),
+    HalfBounded(HalfBoundedRelInterval),
     Unbounded(UnboundedInterval),
 }
 
-impl RelativeInterval {
-    /// Creates an [`RelativeInterval`] from a [`SignedDuration`] range
+impl RelInterval {
+    /// Creates an [`RelInterval`] from a [`SignedDuration`] range
     ///
     /// # Examples
     ///
@@ -91,19 +91,19 @@ impl RelativeInterval {
     /// # use std::error::Error;
     /// # use jiff::SignedDuration;
     /// # use periodical::intervals::meta::BoundInclusivity;
-    /// # use periodical::intervals::relative::{RelativeFiniteBoundPosition, RelativeInterval, HasRelativeBoundPair};
+    /// # use periodical::intervals::relative::{RelFiniteBoundPos, RelInterval, HasRelBoundPair};
     /// let start = SignedDuration::from_hours(8);
     /// let end = SignedDuration::from_hours(16);
     ///
-    /// let interval = RelativeInterval::from_range(start..end);
+    /// let interval = RelInterval::from_range(start..end);
     ///
     /// assert_eq!(
     ///     interval.rel_start(),
-    ///     RelativeFiniteBoundPosition::new(start).to_start_bound(),
+    ///     RelFiniteBoundPos::new(start).to_start_bound(),
     /// );
     /// assert_eq!(
     ///     interval.rel_end(),
-    ///     RelativeFiniteBoundPosition::new_with_inclusivity(end, BoundInclusivity::Exclusive).to_end_bound(),
+    ///     RelFiniteBoundPos::new_with_inclusivity(end, BoundInclusivity::Exclusive).to_end_bound(),
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
@@ -112,13 +112,13 @@ impl RelativeInterval {
     where
         R: RangeBounds<SignedDuration>,
     {
-        Self::from(RelativeBoundPair::from_range(range))
+        Self::from(RelBoundPair::from_range(range))
     }
 
-    /// Compares two [`RelativeInterval`], but if they have the same start,
+    /// Compares two [`RelInterval`], but if they have the same start,
     /// order by decreasing length
     ///
-    /// Uses [`EmptiableRelativeBoundPair::ord_by_start_and_inv_length`] under
+    /// Uses [`EmptiableRelBoundPair::ord_by_start_and_inv_length`] under
     /// the hood.
     ///
     /// Don't rely on this method for checking for equality of start, as it will
@@ -127,9 +127,9 @@ impl RelativeInterval {
     /// # Examples
     ///
     /// ```
-    /// # use periodical::intervals::relative::RelativeInterval;
-    /// # let mut bounds: [RelativeInterval; 0] = [];
-    /// bounds.sort_by(RelativeInterval::ord_by_start_and_inv_length);
+    /// # use periodical::intervals::relative::RelInterval;
+    /// # let mut bounds: [RelInterval; 0] = [];
+    /// bounds.sort_by(RelInterval::ord_by_start_and_inv_length);
     /// ```
     #[must_use]
     pub fn ord_by_start_and_inv_length(&self, other: &Self) -> Ordering {
@@ -137,9 +137,9 @@ impl RelativeInterval {
             .ord_by_start_and_inv_length(&other.rel_bound_pair())
     }
 
-    /// Returns the content of the [`Bounded`](RelativeInterval::Bounded) variant
+    /// Returns the content of the [`Bounded`](RelInterval::Bounded) variant
     ///
-    /// Consumes `self` and puts the content of the [`Bounded`](RelativeInterval::Bounded) variant
+    /// Consumes `self` and puts the content of the [`Bounded`](RelInterval::Bounded) variant
     /// in an [`Option`]. If instead `self` is another variant, the method returns [`None`].
     ///
     /// # Examples
@@ -147,8 +147,8 @@ impl RelativeInterval {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::BoundedRelativeInterval;
-    /// let bounded_interval = BoundedRelativeInterval::new(
+    /// # use periodical::intervals::relative::BoundedRelInterval;
+    /// let bounded_interval = BoundedRelInterval::new(
     ///     SignedDuration::from_hours(8),
     ///     SignedDuration::from_hours(16),
     /// );
@@ -159,16 +159,16 @@ impl RelativeInterval {
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    pub fn bounded(self) -> Option<BoundedRelativeInterval> {
+    pub fn bounded(self) -> Option<BoundedRelInterval> {
         match self {
             Self::Bounded(interval) => Some(interval),
             _ => None,
         }
     }
 
-    /// Returns the content of the [`HalfBounded`](RelativeInterval::HalfBounded) variant
+    /// Returns the content of the [`HalfBounded`](RelInterval::HalfBounded) variant
     ///
-    /// Consumes `self` and puts the content of the [`HalfBounded`](RelativeInterval::HalfBounded) variant
+    /// Consumes `self` and puts the content of the [`HalfBounded`](RelInterval::HalfBounded) variant
     /// in an [`Option`]. If instead `self` is another variant, the method returns [`None`].
     ///
     /// # Examples
@@ -176,10 +176,10 @@ impl RelativeInterval {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::HalfBoundedRelativeInterval;
+    /// # use periodical::intervals::relative::HalfBoundedRelInterval;
     /// # use periodical::intervals::meta::OpeningDirection;
     /// let half_bounded_interval =
-    ///     HalfBoundedRelativeInterval::new(SignedDuration::from_hours(8), OpeningDirection::ToPast);
+    ///     HalfBoundedRelInterval::new(SignedDuration::from_hours(8), OpeningDirection::ToPast);
     ///
     /// let interval = half_bounded_interval.clone().to_interval();
     ///
@@ -187,24 +187,24 @@ impl RelativeInterval {
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    pub fn half_bounded(self) -> Option<HalfBoundedRelativeInterval> {
+    pub fn half_bounded(self) -> Option<HalfBoundedRelInterval> {
         match self {
             Self::HalfBounded(interval) => Some(interval),
             _ => None,
         }
     }
 
-    /// Returns the content of the [`Unbounded`](RelativeInterval::Unbounded) variant
+    /// Returns the content of the [`Unbounded`](RelInterval::Unbounded) variant
     ///
-    /// Consumes `self` and puts the content of the [`Unbounded`](RelativeInterval::Unbounded) variant
+    /// Consumes `self` and puts the content of the [`Unbounded`](RelInterval::Unbounded) variant
     /// in an [`Option`]. If instead `self` is another variant, the method returns [`None`].
     ///
     /// # Examples
     ///
     /// ```
-    /// # use periodical::intervals::relative::RelativeInterval;
+    /// # use periodical::intervals::relative::RelInterval;
     /// # use periodical::intervals::special::UnboundedInterval;
-    /// let interval = RelativeInterval::Unbounded(UnboundedInterval);
+    /// let interval = RelInterval::Unbounded(UnboundedInterval);
     ///
     /// assert_eq!(interval.unbounded(), Some(UnboundedInterval));
     /// ```
@@ -216,17 +216,17 @@ impl RelativeInterval {
         }
     }
 
-    /// Wraps the interval in [`EmptiableRelativeInterval`]
+    /// Wraps the interval in [`EmptiableRelInterval`]
     #[must_use]
-    pub fn to_emptiable(self) -> EmptiableRelativeInterval {
-        EmptiableRelativeInterval::from(self)
+    pub fn to_emptiable(self) -> EmptiableRelInterval {
+        EmptiableRelInterval::from(self)
     }
 }
 
-impl Interval for RelativeInterval {}
+impl Interval for RelInterval {}
 
-impl HasRelativeBoundPair for RelativeInterval {
-    fn rel_bound_pair(&self) -> RelativeBoundPair {
+impl HasRelBoundPair for RelInterval {
+    fn rel_bound_pair(&self) -> RelBoundPair {
         match self {
             Self::Bounded(bounded) => bounded.rel_bound_pair(),
             Self::HalfBounded(half_bounded) => half_bounded.rel_bound_pair(),
@@ -234,7 +234,7 @@ impl HasRelativeBoundPair for RelativeInterval {
         }
     }
 
-    fn rel_start(&self) -> RelativeStartBound {
+    fn rel_start(&self) -> RelStartBound {
         match self {
             Self::Bounded(bounded) => bounded.rel_start(),
             Self::HalfBounded(half_bounded) => half_bounded.rel_start(),
@@ -242,7 +242,7 @@ impl HasRelativeBoundPair for RelativeInterval {
         }
     }
 
-    fn rel_end(&self) -> RelativeEndBound {
+    fn rel_end(&self) -> RelEndBound {
         match self {
             Self::Bounded(bounded) => bounded.rel_end(),
             Self::HalfBounded(half_bounded) => half_bounded.rel_end(),
@@ -251,7 +251,7 @@ impl HasRelativeBoundPair for RelativeInterval {
     }
 }
 
-impl HasDuration for RelativeInterval {
+impl HasDuration for RelInterval {
     fn duration(&self) -> IntervalDuration {
         match self {
             Self::Bounded(interval) => interval.duration(),
@@ -261,7 +261,7 @@ impl HasDuration for RelativeInterval {
     }
 }
 
-impl HasRelativity for RelativeInterval {
+impl HasRelativity for RelInterval {
     fn relativity(&self) -> Relativity {
         match self {
             Self::Bounded(interval) => interval.relativity(),
@@ -271,7 +271,7 @@ impl HasRelativity for RelativeInterval {
     }
 }
 
-impl HasOpenness for RelativeInterval {
+impl HasOpenness for RelInterval {
     fn openness(&self) -> Openness {
         match self {
             Self::Bounded(interval) => interval.openness(),
@@ -281,78 +281,78 @@ impl HasOpenness for RelativeInterval {
     }
 }
 
-impl PartialOrd for RelativeInterval {
+impl PartialOrd for RelInterval {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl Ord for RelativeInterval {
+impl Ord for RelInterval {
     fn cmp(&self, other: &Self) -> Ordering {
         self.rel_bound_pair().cmp(&other.rel_bound_pair())
     }
 }
 
-impl IsEmpty for RelativeInterval {
+impl IsEmpty for RelInterval {
     fn is_empty(&self) -> bool {
         false
     }
 }
 
-impl From<BoundedRelativeInterval> for RelativeInterval {
-    fn from(value: BoundedRelativeInterval) -> Self {
-        RelativeInterval::Bounded(value)
+impl From<BoundedRelInterval> for RelInterval {
+    fn from(value: BoundedRelInterval) -> Self {
+        RelInterval::Bounded(value)
     }
 }
 
-impl From<HalfBoundedToFutureRelativeInterval> for RelativeInterval {
-    fn from(value: HalfBoundedToFutureRelativeInterval) -> Self {
-        Self::from(HalfBoundedRelativeInterval::from(value))
+impl From<HalfBoundedToFutureRelInterval> for RelInterval {
+    fn from(value: HalfBoundedToFutureRelInterval) -> Self {
+        Self::from(HalfBoundedRelInterval::from(value))
     }
 }
 
-impl From<HalfBoundedToPastRelativeInterval> for RelativeInterval {
-    fn from(value: HalfBoundedToPastRelativeInterval) -> Self {
-        Self::from(HalfBoundedRelativeInterval::from(value))
+impl From<HalfBoundedToPastRelInterval> for RelInterval {
+    fn from(value: HalfBoundedToPastRelInterval) -> Self {
+        Self::from(HalfBoundedRelInterval::from(value))
     }
 }
 
-impl From<HalfBoundedRelativeInterval> for RelativeInterval {
-    fn from(value: HalfBoundedRelativeInterval) -> Self {
-        RelativeInterval::HalfBounded(value)
+impl From<HalfBoundedRelInterval> for RelInterval {
+    fn from(value: HalfBoundedRelInterval) -> Self {
+        RelInterval::HalfBounded(value)
     }
 }
 
-impl From<UnboundedInterval> for RelativeInterval {
+impl From<UnboundedInterval> for RelInterval {
     fn from(value: UnboundedInterval) -> Self {
-        RelativeInterval::Unbounded(value)
+        RelInterval::Unbounded(value)
     }
 }
 
-impl From<RelativeBoundPair> for RelativeInterval {
-    fn from(value: RelativeBoundPair) -> Self {
-        type StartB = RelativeStartBound;
-        type EndB = RelativeEndBound;
+impl From<RelBoundPair> for RelInterval {
+    fn from(value: RelBoundPair) -> Self {
+        type StartB = RelStartBound;
+        type EndB = RelEndBound;
 
         match (value.start(), value.end()) {
-            (StartB::InfinitePast, EndB::InfiniteFuture) => RelativeInterval::Unbounded(UnboundedInterval),
-            (StartB::InfinitePast, EndB::Finite(finite_end)) => RelativeInterval::HalfBounded(
-                HalfBoundedRelativeInterval::new(finite_end.pos(), OpeningDirection::ToPast),
-            ),
-            (StartB::Finite(finite_start), EndB::InfiniteFuture) => RelativeInterval::HalfBounded(
-                HalfBoundedRelativeInterval::new(finite_start.pos(), OpeningDirection::ToFuture),
+            (StartB::InfinitePast, EndB::InfiniteFuture) => RelInterval::Unbounded(UnboundedInterval),
+            (StartB::InfinitePast, EndB::Finite(finite_end)) => {
+                RelInterval::HalfBounded(HalfBoundedRelInterval::new(finite_end.pos(), OpeningDirection::ToPast))
+            },
+            (StartB::Finite(finite_start), EndB::InfiniteFuture) => RelInterval::HalfBounded(
+                HalfBoundedRelInterval::new(finite_start.pos(), OpeningDirection::ToFuture),
             ),
             (StartB::Finite(finite_start), EndB::Finite(finite_end)) => {
-                RelativeInterval::Bounded(BoundedRelativeInterval::unchecked_new(finite_start, finite_end))
+                RelInterval::Bounded(BoundedRelInterval::unchecked_new(finite_start, finite_end))
             },
         }
     }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct RelativeIntervalFromEmptiableRelativeBoundPairError;
+pub struct RelIntervalFromEmptiableRelBoundPairError;
 
-impl Display for RelativeIntervalFromEmptiableRelativeBoundPairError {
+impl Display for RelIntervalFromEmptiableRelBoundPairError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
@@ -361,16 +361,14 @@ impl Display for RelativeIntervalFromEmptiableRelativeBoundPairError {
     }
 }
 
-impl Error for RelativeIntervalFromEmptiableRelativeBoundPairError {}
+impl Error for RelIntervalFromEmptiableRelBoundPairError {}
 
-impl TryFrom<EmptiableRelativeBoundPair> for RelativeInterval {
-    type Error = RelativeIntervalFromEmptiableRelativeBoundPairError;
+impl TryFrom<EmptiableRelBoundPair> for RelInterval {
+    type Error = RelIntervalFromEmptiableRelBoundPairError;
 
-    fn try_from(value: EmptiableRelativeBoundPair) -> Result<Self, Self::Error> {
+    fn try_from(value: EmptiableRelBoundPair) -> Result<Self, Self::Error> {
         Ok(Self::from(
-            value
-                .bound()
-                .ok_or(RelativeIntervalFromEmptiableRelativeBoundPairError)?,
+            value.bound().ok_or(RelIntervalFromEmptiableRelBoundPairError)?,
         ))
     }
 }

@@ -1,14 +1,14 @@
 //! Interval difference
 
 use crate::intervals::absolute::{
-    AbsoluteBoundPair,
-    AbsoluteInterval,
-    BoundedAbsoluteInterval,
-    EmptiableAbsoluteBoundPair,
-    EmptiableAbsoluteInterval,
-    HalfBoundedAbsoluteInterval,
-    HasAbsoluteBoundPair,
-    HasEmptiableAbsoluteBoundPair,
+    AbsBoundPair,
+    AbsInterval,
+    BoundedAbsInterval,
+    EmptiableAbsBoundPair,
+    EmptiableAbsInterval,
+    HalfBoundedAbsInterval,
+    HasAbsBoundPair,
+    HasEmptiableAbsBoundPair,
 };
 use crate::intervals::meta::Interval;
 use crate::intervals::ops::complement::Complementable;
@@ -19,14 +19,14 @@ use crate::intervals::ops::remove_overlap::{
     OverlapRemovalResult,
 };
 use crate::intervals::relative::{
-    BoundedRelativeInterval,
-    EmptiableRelativeBoundPair,
-    EmptiableRelativeInterval,
-    HalfBoundedRelativeInterval,
-    HasEmptiableRelativeBoundPair,
-    HasRelativeBoundPair,
-    RelativeBoundPair,
-    RelativeInterval,
+    BoundedRelInterval,
+    EmptiableRelBoundPair,
+    EmptiableRelInterval,
+    HalfBoundedRelInterval,
+    HasEmptiableRelBoundPair,
+    HasRelBoundPair,
+    RelBoundPair,
+    RelInterval,
 };
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 use crate::ops::{ComplementResult, DifferenceResult};
@@ -37,7 +37,7 @@ use crate::ops::{ComplementResult, DifferenceResult};
 /// an interval with another, the latter being used as the _remover_ of the
 /// former.
 ///
-/// [set difference]: https://en.wikipedia.org/w/index.php?title=Complement_(set_theory)&oldid=1272128427#Relative_complement
+/// [set difference]: https://en.wikipedia.org/w/index.php?title=Complement_(set_theory)&oldid=1272128427#Rel_complement
 ///
 /// # Examples
 ///
@@ -47,34 +47,34 @@ use crate::ops::{ComplementResult, DifferenceResult};
 /// # use std::error::Error;
 /// # use jiff::Zoned;
 /// # use periodical::ops::DifferenceResult;
-/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition, EmptiableAbsoluteBoundPair};
+/// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos, EmptiableAbsBoundPair};
 /// # use periodical::intervals::meta::BoundInclusivity;
 /// # use periodical::intervals::ops::set_ops::Differentiable;
-/// let interval = AbsoluteBoundPair::new(
-///     AbsoluteFiniteBoundPosition::new(
+/// let interval = AbsBoundPair::new(
+///     AbsFiniteBoundPos::new(
 ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///     ).to_start_bound(),
-///     AbsoluteFiniteBoundPosition::new(
+///     AbsFiniteBoundPos::new(
 ///         "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///     ).to_end_bound(),
 /// );
 ///
-/// let remover = AbsoluteBoundPair::new(
-///     AbsoluteFiniteBoundPosition::new(
+/// let remover = AbsBoundPair::new(
+///     AbsFiniteBoundPos::new(
 ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///     ).to_start_bound(),
-///     AbsoluteFiniteBoundPosition::new(
+///     AbsFiniteBoundPos::new(
 ///         "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///     ).to_end_bound(),
 /// );
 ///
 /// assert_eq!(
 ///     interval.differentiate(&remover),
-///     DifferenceResult::Single(EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::new(
-///         AbsoluteFiniteBoundPosition::new(
+///     DifferenceResult::Single(EmptiableAbsBoundPair::Bound(AbsBoundPair::new(
+///         AbsFiniteBoundPos::new(
 ///             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///         ).to_start_bound(),
-///         AbsoluteFiniteBoundPosition::new_with_inclusivity(
+///         AbsFiniteBoundPos::new_with_inclusivity(
 ///             "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///             BoundInclusivity::Exclusive,
 ///         ).to_end_bound(),
@@ -89,22 +89,22 @@ use crate::ops::{ComplementResult, DifferenceResult};
 /// # use std::error::Error;
 /// # use jiff::Zoned;
 /// # use periodical::ops::DifferenceResult;
-/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition, EmptiableAbsoluteBoundPair};
+/// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos, EmptiableAbsBoundPair};
 /// # use periodical::intervals::ops::set_ops::Differentiable;
-/// let interval = AbsoluteBoundPair::new(
-///     AbsoluteFiniteBoundPosition::new(
+/// let interval = AbsBoundPair::new(
+///     AbsFiniteBoundPos::new(
 ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///     ).to_start_bound(),
-///     AbsoluteFiniteBoundPosition::new(
+///     AbsFiniteBoundPos::new(
 ///         "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///     ).to_end_bound(),
 /// );
 ///
-/// let remover = AbsoluteBoundPair::new(
-///     AbsoluteFiniteBoundPosition::new(
+/// let remover = AbsBoundPair::new(
+///     AbsFiniteBoundPos::new(
 ///         "2025-01-01 13:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///     ).to_start_bound(),
-///     AbsoluteFiniteBoundPosition::new(
+///     AbsFiniteBoundPos::new(
 ///         "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///     ).to_end_bound(),
 /// );
@@ -131,34 +131,34 @@ pub trait Differentiable<Rhs = Self> {
     /// # use std::error::Error;
     /// # use jiff::Zoned;
     /// # use periodical::ops::DifferenceResult;
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition, EmptiableAbsoluteBoundPair};
+    /// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos, EmptiableAbsBoundPair};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::set_ops::Differentiable;
-    /// let interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBoundPosition::new(
+    /// let interval = AbsBoundPair::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_start_bound(),
-    ///     AbsoluteFiniteBoundPosition::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_end_bound(),
     /// );
     ///
-    /// let remover = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBoundPosition::new(
+    /// let remover = AbsBoundPair::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_start_bound(),
-    ///     AbsoluteFiniteBoundPosition::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_end_bound(),
     /// );
     ///
     /// assert_eq!(
     ///     interval.differentiate(&remover),
-    ///     DifferenceResult::Single(EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::new(
-    ///         AbsoluteFiniteBoundPosition::new(
+    ///     DifferenceResult::Single(EmptiableAbsBoundPair::Bound(AbsBoundPair::new(
+    ///         AbsFiniteBoundPos::new(
     ///             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///         ).to_start_bound(),
-    ///         AbsoluteFiniteBoundPosition::new_with_inclusivity(
+    ///         AbsFiniteBoundPos::new_with_inclusivity(
     ///             "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///             BoundInclusivity::Exclusive,
     ///         ).to_end_bound(),
@@ -177,34 +177,34 @@ pub trait Differentiable<Rhs = Self> {
     /// # use std::error::Error;
     /// # use jiff::Zoned;
     /// # use periodical::ops::DifferenceResult;
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBoundPosition, EmptiableAbsoluteBoundPair};
+    /// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos, EmptiableAbsBoundPair};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::overlap::{CanPositionOverlap, DisambiguatedOverlapPosition, OverlapRuleSet};
     /// # use periodical::intervals::ops::remove_overlap::OverlapRemovable;
     /// # use periodical::intervals::ops::set_ops::Differentiable;
-    /// let interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBoundPosition::new(
+    /// let interval = AbsBoundPair::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_start_bound(),
-    ///     AbsoluteFiniteBoundPosition::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_end_bound(),
     /// );
     ///
-    /// let remover = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBoundPosition::new(
+    /// let remover = AbsBoundPair::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_start_bound(),
-    ///     AbsoluteFiniteBoundPosition::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_end_bound(),
     /// );
     ///
     /// // Only differentiate if it just crosses the other
     /// let difference_closure = |
-    ///     a: &AbsoluteBoundPair,
-    ///     b: &AbsoluteBoundPair,
-    /// | -> DifferenceResult<EmptiableAbsoluteBoundPair> {
+    ///     a: &AbsBoundPair,
+    ///     b: &AbsBoundPair,
+    /// | -> DifferenceResult<EmptiableAbsBoundPair> {
     ///     match a.disambiguated_overlap_position(b, OverlapRuleSet::Strict) {
     ///         Ok(DisambiguatedOverlapPosition::CrossesStart | DisambiguatedOverlapPosition::CrossesEnd) => {
     ///             DifferenceResult::Single(
@@ -221,11 +221,11 @@ pub trait Differentiable<Rhs = Self> {
     ///
     /// assert_eq!(
     ///     interval.differentiate_with(&remover, difference_closure),
-    ///     DifferenceResult::Single(EmptiableAbsoluteBoundPair::Bound(AbsoluteBoundPair::new(
-    ///         AbsoluteFiniteBoundPosition::new(
+    ///     DifferenceResult::Single(EmptiableAbsBoundPair::Bound(AbsBoundPair::new(
+    ///         AbsFiniteBoundPos::new(
     ///             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///         ).to_start_bound(),
-    ///         AbsoluteFiniteBoundPosition::new_with_inclusivity(
+    ///         AbsFiniteBoundPos::new_with_inclusivity(
     ///             "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///             BoundInclusivity::Exclusive,
     ///         ).to_end_bound(),
@@ -242,20 +242,20 @@ pub trait Differentiable<Rhs = Self> {
     }
 }
 
-impl<Rhs> Differentiable<Rhs> for AbsoluteBoundPair
+impl<Rhs> Differentiable<Rhs> for AbsBoundPair
 where
-    Rhs: HasEmptiableAbsoluteBoundPair,
+    Rhs: HasEmptiableAbsBoundPair,
 {
-    type Output = EmptiableAbsoluteBoundPair;
+    type Output = EmptiableAbsBoundPair;
 
     fn differentiate(&self, rhs: &Rhs) -> DifferenceResult<Self::Output> {
         differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(self, &rhs.emptiable_abs_bound_pair())
     }
 }
 
-impl<Rhs> Differentiable<Rhs> for EmptiableAbsoluteBoundPair
+impl<Rhs> Differentiable<Rhs> for EmptiableAbsBoundPair
 where
-    Rhs: HasEmptiableAbsoluteBoundPair,
+    Rhs: HasEmptiableAbsBoundPair,
 {
     type Output = Self;
 
@@ -264,11 +264,11 @@ where
     }
 }
 
-impl<Rhs> Differentiable<Rhs> for AbsoluteInterval
+impl<Rhs> Differentiable<Rhs> for AbsInterval
 where
-    Rhs: HasEmptiableAbsoluteBoundPair,
+    Rhs: HasEmptiableAbsBoundPair,
 {
-    type Output = EmptiableAbsoluteInterval;
+    type Output = EmptiableAbsInterval;
 
     fn differentiate(&self, rhs: &Rhs) -> DifferenceResult<Self::Output> {
         differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(
@@ -279,9 +279,9 @@ where
     }
 }
 
-impl<Rhs> Differentiable<Rhs> for EmptiableAbsoluteInterval
+impl<Rhs> Differentiable<Rhs> for EmptiableAbsInterval
 where
-    Rhs: HasEmptiableAbsoluteBoundPair,
+    Rhs: HasEmptiableAbsBoundPair,
 {
     type Output = Self;
 
@@ -291,11 +291,11 @@ where
     }
 }
 
-impl<Rhs> Differentiable<Rhs> for BoundedAbsoluteInterval
+impl<Rhs> Differentiable<Rhs> for BoundedAbsInterval
 where
-    Rhs: HasEmptiableAbsoluteBoundPair,
+    Rhs: HasEmptiableAbsBoundPair,
 {
-    type Output = EmptiableAbsoluteInterval;
+    type Output = EmptiableAbsInterval;
 
     fn differentiate(&self, rhs: &Rhs) -> DifferenceResult<Self::Output> {
         differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(
@@ -306,11 +306,11 @@ where
     }
 }
 
-impl<Rhs> Differentiable<Rhs> for HalfBoundedAbsoluteInterval
+impl<Rhs> Differentiable<Rhs> for HalfBoundedAbsInterval
 where
-    Rhs: HasEmptiableAbsoluteBoundPair,
+    Rhs: HasEmptiableAbsBoundPair,
 {
-    type Output = EmptiableAbsoluteInterval;
+    type Output = EmptiableAbsInterval;
 
     fn differentiate(&self, rhs: &Rhs) -> DifferenceResult<Self::Output> {
         differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(
@@ -321,20 +321,20 @@ where
     }
 }
 
-impl<Rhs> Differentiable<Rhs> for RelativeBoundPair
+impl<Rhs> Differentiable<Rhs> for RelBoundPair
 where
-    Rhs: HasEmptiableRelativeBoundPair,
+    Rhs: HasEmptiableRelBoundPair,
 {
-    type Output = EmptiableRelativeBoundPair;
+    type Output = EmptiableRelBoundPair;
 
     fn differentiate(&self, rhs: &Rhs) -> DifferenceResult<Self::Output> {
         differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(self, &rhs.emptiable_rel_bound_pair())
     }
 }
 
-impl<Rhs> Differentiable<Rhs> for EmptiableRelativeBoundPair
+impl<Rhs> Differentiable<Rhs> for EmptiableRelBoundPair
 where
-    Rhs: HasEmptiableRelativeBoundPair,
+    Rhs: HasEmptiableRelBoundPair,
 {
     type Output = Self;
 
@@ -343,11 +343,11 @@ where
     }
 }
 
-impl<Rhs> Differentiable<Rhs> for RelativeInterval
+impl<Rhs> Differentiable<Rhs> for RelInterval
 where
-    Rhs: HasEmptiableRelativeBoundPair,
+    Rhs: HasEmptiableRelBoundPair,
 {
-    type Output = EmptiableRelativeInterval;
+    type Output = EmptiableRelInterval;
 
     fn differentiate(&self, rhs: &Rhs) -> DifferenceResult<Self::Output> {
         differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(
@@ -358,9 +358,9 @@ where
     }
 }
 
-impl<Rhs> Differentiable<Rhs> for EmptiableRelativeInterval
+impl<Rhs> Differentiable<Rhs> for EmptiableRelInterval
 where
-    Rhs: HasEmptiableRelativeBoundPair,
+    Rhs: HasEmptiableRelBoundPair,
 {
     type Output = Self;
 
@@ -370,11 +370,11 @@ where
     }
 }
 
-impl<Rhs> Differentiable<Rhs> for BoundedRelativeInterval
+impl<Rhs> Differentiable<Rhs> for BoundedRelInterval
 where
-    Rhs: HasEmptiableRelativeBoundPair,
+    Rhs: HasEmptiableRelBoundPair,
 {
-    type Output = EmptiableRelativeInterval;
+    type Output = EmptiableRelInterval;
 
     fn differentiate(&self, rhs: &Rhs) -> DifferenceResult<Self::Output> {
         differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(
@@ -385,11 +385,11 @@ where
     }
 }
 
-impl<Rhs> Differentiable<Rhs> for HalfBoundedRelativeInterval
+impl<Rhs> Differentiable<Rhs> for HalfBoundedRelInterval
 where
-    Rhs: HasEmptiableRelativeBoundPair,
+    Rhs: HasEmptiableRelBoundPair,
 {
-    type Output = EmptiableRelativeInterval;
+    type Output = EmptiableRelInterval;
 
     fn differentiate(&self, rhs: &Rhs) -> DifferenceResult<Self::Output> {
         differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(
@@ -400,18 +400,18 @@ where
     }
 }
 
-impl Differentiable<AbsoluteBoundPair> for UnboundedInterval {
-    type Output = EmptiableAbsoluteInterval;
+impl Differentiable<AbsBoundPair> for UnboundedInterval {
+    type Output = EmptiableAbsInterval;
 
-    fn differentiate(&self, rhs: &AbsoluteBoundPair) -> DifferenceResult<Self::Output> {
+    fn differentiate(&self, rhs: &AbsBoundPair) -> DifferenceResult<Self::Output> {
         differentiate_abs_bound_pair(&self.abs_bound_pair(), &rhs.abs_bound_pair()).map_difference(Self::Output::from)
     }
 }
 
-impl Differentiable<EmptiableAbsoluteBoundPair> for UnboundedInterval {
-    type Output = EmptiableAbsoluteInterval;
+impl Differentiable<EmptiableAbsBoundPair> for UnboundedInterval {
+    type Output = EmptiableAbsInterval;
 
-    fn differentiate(&self, rhs: &EmptiableAbsoluteBoundPair) -> DifferenceResult<Self::Output> {
+    fn differentiate(&self, rhs: &EmptiableAbsBoundPair) -> DifferenceResult<Self::Output> {
         differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(
             &self.abs_bound_pair(),
             &rhs.emptiable_abs_bound_pair(),
@@ -420,10 +420,10 @@ impl Differentiable<EmptiableAbsoluteBoundPair> for UnboundedInterval {
     }
 }
 
-impl Differentiable<BoundedAbsoluteInterval> for UnboundedInterval {
-    type Output = HalfBoundedAbsoluteInterval;
+impl Differentiable<BoundedAbsInterval> for UnboundedInterval {
+    type Output = HalfBoundedAbsInterval;
 
-    fn differentiate(&self, rhs: &BoundedAbsoluteInterval) -> DifferenceResult<Self::Output> {
+    fn differentiate(&self, rhs: &BoundedAbsInterval) -> DifferenceResult<Self::Output> {
         match rhs.complement() {
             ComplementResult::Single(single) => DifferenceResult::Single(single),
             ComplementResult::Split(split_before, split_after) => DifferenceResult::Split(split_before, split_after),
@@ -431,10 +431,10 @@ impl Differentiable<BoundedAbsoluteInterval> for UnboundedInterval {
     }
 }
 
-impl Differentiable<HalfBoundedAbsoluteInterval> for UnboundedInterval {
-    type Output = HalfBoundedAbsoluteInterval;
+impl Differentiable<HalfBoundedAbsInterval> for UnboundedInterval {
+    type Output = HalfBoundedAbsInterval;
 
-    fn differentiate(&self, rhs: &HalfBoundedAbsoluteInterval) -> DifferenceResult<Self::Output> {
+    fn differentiate(&self, rhs: &HalfBoundedAbsInterval) -> DifferenceResult<Self::Output> {
         match rhs.complement() {
             ComplementResult::Single(single) => DifferenceResult::Single(single),
             ComplementResult::Split(split_before, split_after) => DifferenceResult::Split(split_before, split_after),
@@ -442,18 +442,18 @@ impl Differentiable<HalfBoundedAbsoluteInterval> for UnboundedInterval {
     }
 }
 
-impl Differentiable<RelativeBoundPair> for UnboundedInterval {
-    type Output = EmptiableRelativeInterval;
+impl Differentiable<RelBoundPair> for UnboundedInterval {
+    type Output = EmptiableRelInterval;
 
-    fn differentiate(&self, rhs: &RelativeBoundPair) -> DifferenceResult<Self::Output> {
+    fn differentiate(&self, rhs: &RelBoundPair) -> DifferenceResult<Self::Output> {
         differentiate_rel_bound_pair(&self.rel_bound_pair(), &rhs.rel_bound_pair()).map_difference(Self::Output::from)
     }
 }
 
-impl Differentiable<EmptiableRelativeBoundPair> for UnboundedInterval {
-    type Output = EmptiableRelativeInterval;
+impl Differentiable<EmptiableRelBoundPair> for UnboundedInterval {
+    type Output = EmptiableRelInterval;
 
-    fn differentiate(&self, rhs: &EmptiableRelativeBoundPair) -> DifferenceResult<Self::Output> {
+    fn differentiate(&self, rhs: &EmptiableRelBoundPair) -> DifferenceResult<Self::Output> {
         differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(
             &self.rel_bound_pair(),
             &rhs.emptiable_rel_bound_pair(),
@@ -462,10 +462,10 @@ impl Differentiable<EmptiableRelativeBoundPair> for UnboundedInterval {
     }
 }
 
-impl Differentiable<BoundedRelativeInterval> for UnboundedInterval {
-    type Output = HalfBoundedRelativeInterval;
+impl Differentiable<BoundedRelInterval> for UnboundedInterval {
+    type Output = HalfBoundedRelInterval;
 
-    fn differentiate(&self, rhs: &BoundedRelativeInterval) -> DifferenceResult<Self::Output> {
+    fn differentiate(&self, rhs: &BoundedRelInterval) -> DifferenceResult<Self::Output> {
         match rhs.complement() {
             ComplementResult::Single(single) => DifferenceResult::Single(single),
             ComplementResult::Split(split_before, split_after) => DifferenceResult::Split(split_before, split_after),
@@ -473,10 +473,10 @@ impl Differentiable<BoundedRelativeInterval> for UnboundedInterval {
     }
 }
 
-impl Differentiable<HalfBoundedRelativeInterval> for UnboundedInterval {
-    type Output = HalfBoundedRelativeInterval;
+impl Differentiable<HalfBoundedRelInterval> for UnboundedInterval {
+    type Output = HalfBoundedRelInterval;
 
-    fn differentiate(&self, rhs: &HalfBoundedRelativeInterval) -> DifferenceResult<Self::Output> {
+    fn differentiate(&self, rhs: &HalfBoundedRelInterval) -> DifferenceResult<Self::Output> {
         match rhs.complement() {
             ComplementResult::Single(single) => DifferenceResult::Single(single),
             ComplementResult::Split(split_before, split_after) => DifferenceResult::Split(split_before, split_after),
@@ -512,14 +512,14 @@ where
     }
 }
 
-/// Differentiates an [`AbsoluteBoundPair`] with another one
+/// Differentiates an [`AbsBoundPair`] with another one
 ///
 /// See [`Differentiable`] for more information.
 #[must_use]
 pub fn differentiate_abs_bound_pair(
-    og_bounds: &AbsoluteBoundPair,
-    other_bounds: &AbsoluteBoundPair,
-) -> DifferenceResult<EmptiableAbsoluteBoundPair> {
+    og_bounds: &AbsBoundPair,
+    other_bounds: &AbsBoundPair,
+) -> DifferenceResult<EmptiableAbsBoundPair> {
     if !og_bounds.simple_overlaps(other_bounds) {
         return DifferenceResult::Separate;
     }
@@ -533,8 +533,8 @@ pub fn differentiate_abs_bound_pair(
     }
 }
 
-/// Differentiates an [`AbsoluteBoundPair`] with an
-/// [`EmptiableAbsoluteBoundPair`]
+/// Differentiates an [`AbsBoundPair`] with an
+/// [`EmptiableAbsBoundPair`]
 ///
 /// Empty intervals are not positioned in time, and are always "outside",
 /// therefore cannot be differentiated.
@@ -542,17 +542,17 @@ pub fn differentiate_abs_bound_pair(
 /// See [`Differentiable`] for more information.
 #[must_use]
 pub fn differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(
-    og_bounds: &AbsoluteBoundPair,
-    other_bounds: &EmptiableAbsoluteBoundPair,
-) -> DifferenceResult<EmptiableAbsoluteBoundPair> {
-    let EmptiableAbsoluteBoundPair::Bound(other_bounds) = other_bounds else {
+    og_bounds: &AbsBoundPair,
+    other_bounds: &EmptiableAbsBoundPair,
+) -> DifferenceResult<EmptiableAbsBoundPair> {
+    let EmptiableAbsBoundPair::Bound(other_bounds) = other_bounds else {
         return DifferenceResult::Separate;
     };
 
     differentiate_abs_bound_pair(og_bounds, other_bounds)
 }
 
-/// Differentiates an [`EmptiableAbsoluteBoundPair`] with another one
+/// Differentiates an [`EmptiableAbsBoundPair`] with another one
 ///
 /// Empty intervals are not positioned in time, and are always "outside",
 /// therefore cannot be differentiated.
@@ -560,24 +560,24 @@ pub fn differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(
 /// See [`Differentiable`] for more information.
 #[must_use]
 pub fn differentiate_emptiable_abs_bound_pair(
-    og_bounds: &EmptiableAbsoluteBoundPair,
-    other_bounds: &EmptiableAbsoluteBoundPair,
-) -> DifferenceResult<EmptiableAbsoluteBoundPair> {
-    let EmptiableAbsoluteBoundPair::Bound(og_bounds) = og_bounds else {
+    og_bounds: &EmptiableAbsBoundPair,
+    other_bounds: &EmptiableAbsBoundPair,
+) -> DifferenceResult<EmptiableAbsBoundPair> {
+    let EmptiableAbsBoundPair::Bound(og_bounds) = og_bounds else {
         return DifferenceResult::Separate;
     };
 
     differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(og_bounds, other_bounds)
 }
 
-/// Differentiates an [`RelativeBoundPair`] with another one
+/// Differentiates an [`RelBoundPair`] with another one
 ///
 /// See [`Differentiable`] for more information.
 #[must_use]
 pub fn differentiate_rel_bound_pair(
-    og_bounds: &RelativeBoundPair,
-    other_bounds: &RelativeBoundPair,
-) -> DifferenceResult<EmptiableRelativeBoundPair> {
+    og_bounds: &RelBoundPair,
+    other_bounds: &RelBoundPair,
+) -> DifferenceResult<EmptiableRelBoundPair> {
     if !og_bounds.simple_overlaps(other_bounds) {
         return DifferenceResult::Separate;
     }
@@ -591,8 +591,8 @@ pub fn differentiate_rel_bound_pair(
     }
 }
 
-/// Differentiates an [`RelativeBoundPair`] with an
-/// [`EmptiableRelativeBoundPair`]
+/// Differentiates an [`RelBoundPair`] with an
+/// [`EmptiableRelBoundPair`]
 ///
 /// Empty intervals are not positioned in time, and are always "outside",
 /// therefore cannot be differentiated.
@@ -600,17 +600,17 @@ pub fn differentiate_rel_bound_pair(
 /// See [`Differentiable`] for more information.
 #[must_use]
 pub fn differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(
-    og_bounds: &RelativeBoundPair,
-    other_bounds: &EmptiableRelativeBoundPair,
-) -> DifferenceResult<EmptiableRelativeBoundPair> {
-    let EmptiableRelativeBoundPair::Bound(other_bounds) = other_bounds else {
+    og_bounds: &RelBoundPair,
+    other_bounds: &EmptiableRelBoundPair,
+) -> DifferenceResult<EmptiableRelBoundPair> {
+    let EmptiableRelBoundPair::Bound(other_bounds) = other_bounds else {
         return DifferenceResult::Separate;
     };
 
     differentiate_rel_bound_pair(og_bounds, other_bounds)
 }
 
-/// Differentiates an [`EmptiableRelativeBoundPair`] with another one
+/// Differentiates an [`EmptiableRelBoundPair`] with another one
 ///
 /// Empty intervals are not positioned in time, and are always "outside",
 /// therefore cannot be differentiated.
@@ -618,10 +618,10 @@ pub fn differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(
 /// See [`Differentiable`] for more information.
 #[must_use]
 pub fn differentiate_emptiable_rel_bound_pair(
-    og_bounds: &EmptiableRelativeBoundPair,
-    other_bounds: &EmptiableRelativeBoundPair,
-) -> DifferenceResult<EmptiableRelativeBoundPair> {
-    let EmptiableRelativeBoundPair::Bound(og_bounds) = og_bounds else {
+    og_bounds: &EmptiableRelBoundPair,
+    other_bounds: &EmptiableRelBoundPair,
+) -> DifferenceResult<EmptiableRelBoundPair> {
+    let EmptiableRelBoundPair::Bound(og_bounds) = og_bounds else {
         return DifferenceResult::Separate;
     };
 
