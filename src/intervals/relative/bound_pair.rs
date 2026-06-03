@@ -222,10 +222,10 @@ impl RelBoundPair {
         self.end
     }
 
-    /// Compares two [`RelBoundPair`], but if they have the same start,
+    /// Compares two [`RelBoundPair`], if they have the same start,
     /// order by decreasing length
     ///
-    /// Don't rely on this method for checking for equality of start, as it will
+    /// Don't rely on this method for checking for equality of starts, as it will
     /// produce other [`Ordering`]s if their lengths don't match too.
     ///
     /// # Examples

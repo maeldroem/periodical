@@ -1,7 +1,7 @@
 //! Emptiable absolute bound pair
 //!
 //! Similar to [absolute bound pair](crate::intervals::absolute::bound_pair),
-//! but has the extra ability of being able to represent an [empty interval](crate::intervals::special::EmptyInterval).
+//! but has the extra ability of being able to represent an [empty interval](EmptyInterval).
 
 use std::cmp::Ordering;
 use std::ops::RangeBounds;
@@ -37,19 +37,17 @@ use crate::intervals::relative::{
 };
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 
-/// Possession of possibly empty relative bound pair
+/// Possession of a possibly empty relative bound pair
 pub trait HasEmptiableRelBoundPair {
-    /// Returns the [`EmptiableRelBoundPair`] of the object
+    /// Returns the emptiable relative bound pair
     #[must_use]
     fn emptiable_rel_bound_pair(&self) -> EmptiableRelBoundPair;
 
-    /// Returns [the relative start bound](RelStartBound) of the object, if
-    /// applicable
+    /// Returns [the relative start bound](RelStartBound), if applicable
     #[must_use]
     fn partial_rel_start(&self) -> Option<RelStartBound>;
 
-    /// Returns [the relative end bound](RelEndBound) of the object, if
-    /// applicable
+    /// Returns [the relative end bound](RelEndBound), if applicable
     #[must_use]
     fn partial_rel_end(&self) -> Option<RelEndBound>;
 }
@@ -74,11 +72,12 @@ where
     }
 }
 
-/// Enum containing [`RelBoundPair`] but with support for
-/// [empty intervals](crate::intervals::special::EmptyInterval)
+/// Emptiable [`RelBoundPair`]
+///
+/// Similar to [`RelBoundPair`], but with support for [empty intervals](EmptyInterval)
 ///
 /// For more information, check [`RelBoundPair`],
-/// [`EmptyInterval`], or [`crate::intervals` module documentation](crate::intervals).
+/// [`EmptyInterval`], or [`intervals` module documentation](crate::intervals).
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
@@ -103,11 +102,11 @@ impl EmptiableRelBoundPair {
     /// let emptiable_bounds = EmptiableRelBoundPair::from_range(start..end);
     ///
     /// assert_eq!(
-    ///     emptiable_bounds.clone().bound().map(|bounds| bounds.start()),
+    ///     emptiable_bounds.clone().bound().map(|bound_pair| bound_pair.start()),
     ///     Some(RelFiniteBoundPos::new(start).to_start_bound()),
     /// );
     /// assert_eq!(
-    ///     emptiable_bounds.clone().bound().map(|bounds| bounds.end()),
+    ///     emptiable_bounds.clone().bound().map(|bound_pair| bound_pair.end()),
     ///     Some(RelFiniteBoundPos::new_with_inclusivity(end, BoundInclusivity::Exclusive).to_end_bound()),
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
@@ -120,16 +119,14 @@ impl EmptiableRelBoundPair {
         RelBoundPair::from_range(range).to_emptiable()
     }
 
-    /// Compares two [`EmptiableRelBoundPair`], but if they have the same
-    /// start, order by decreasing length
+    /// Compares two [`EmptiableRelBoundPair`], if they have the same start, order by decreasing length
     ///
     /// Uses [`RelBoundPair::ord_by_start_and_inv_length`] under the hood
-    /// for the [`Bound`](EmptiableRelBoundPair::Bound) variants and
-    /// [`EmptiableRelBoundPair::cmp`]
-    /// for the [`Empty`](EmptiableRelBoundPair::Empty) variants (which
-    /// will just place all empty bounds before any bound bounds).
+    /// for the [`Bound`](EmptiableRelBoundPair::Bound) variant and
+    /// [`EmptiableRelBoundPair::cmp`] for the [`Empty`](EmptiableRelBoundPair::Empty) variant
+    /// (which will just place all empty bounds before any bound bound pairs).
     ///
-    /// Don't rely on this method for checking for equality of start, as it will
+    /// Don't rely on this method for checking equality of starts, as it will
     /// produce other [`Ordering`]s if their lengths don't match too.
     ///
     /// # Examples
@@ -141,21 +138,20 @@ impl EmptiableRelBoundPair {
     /// ```
     #[must_use]
     pub fn ord_by_start_and_inv_length(&self, other: &Self) -> Ordering {
-        match (self, other) {
-            (EmptiableRelBoundPair::Bound(og_rel_bound_pair), EmptiableRelBoundPair::Bound(other_rel_bound_pair)) => {
-                og_rel_bound_pair.ord_by_start_and_inv_length(other_rel_bound_pair)
-            },
-            _ => self.cmp(other),
+        if let EmptiableRelBoundPair::Bound(lhs_rel_bound_pair) = self
+            && let EmptiableRelBoundPair::Bound(rhs_rel_bound_pair) = other
+        {
+            lhs_rel_bound_pair.ord_by_start_and_inv_length(rhs_rel_bound_pair)
+        } else {
+            self.cmp(other)
         }
     }
 
     /// Returns the content of the [`Bound`](EmptiableRelBoundPair::Bound)
     /// variant
     ///
-    /// Consumes `self` and puts the content of the
-    /// [`Bound`](EmptiableRelBoundPair::Bound) variant
-    /// in an [`Option`]. If instead `self` is another variant, the method
-    /// returns [`None`].
+    /// Consumes `self` and puts the content of the [`Bound`](EmptiableRelBoundPair::Bound) variant in an [`Option`].
+    /// If instead `self` is another variant, the method returns [`None`].
     ///
     /// # Examples
     ///
@@ -163,26 +159,22 @@ impl EmptiableRelBoundPair {
     /// # use periodical::intervals::relative::{
     /// #     EmptiableRelBoundPair, RelBoundPair, RelEndBound, RelStartBound,
     /// # };
-    /// let bounds = RelBoundPair::new(
-    ///     RelStartBound::InfinitePast,
-    ///     RelEndBound::InfiniteFuture,
-    /// );
-    /// // Cloning is only for making the use of `bounds` okay in the following assertions
-    /// let bound_emptiable_bounds = EmptiableRelBoundPair::Bound(bounds.clone());
-    /// let empty_emptiable_bounds = EmptiableRelBoundPair::Empty;
+    /// let bound_pair = RelBoundPair::new(RelStartBound::InfinitePast, RelEndBound::InfiniteFuture);
+    /// let bound_emptiable_bound_pair = EmptiableRelBoundPair::Bound(bound_pair.clone());
+    /// let empty_emptiable_bound_pair = EmptiableRelBoundPair::Empty;
     ///
-    /// assert_eq!(bound_emptiable_bounds.bound(), Some(bounds));
-    /// assert_eq!(empty_emptiable_bounds.bound(), None);
+    /// assert_eq!(bound_emptiable_bound_pair.bound(), Some(bound_pair));
+    /// assert_eq!(empty_emptiable_bound_pair.bound(), None);
     /// ```
     #[must_use]
     pub fn bound(self) -> Option<RelBoundPair> {
         match self {
-            EmptiableRelBoundPair::Empty => None,
             EmptiableRelBoundPair::Bound(bound) => Some(bound),
+            EmptiableRelBoundPair::Empty => None,
         }
     }
 
-    /// Converts the [`EmptiableRelBoundPair`] into [`EmptiableRelInterval`]
+    /// Converts `self` into [`EmptiableRelInterval`]
     #[must_use]
     pub fn to_emptiable_interval(self) -> EmptiableRelInterval {
         EmptiableRelInterval::from(self)
@@ -198,15 +190,15 @@ impl HasEmptiableRelBoundPair for EmptiableRelBoundPair {
 
     fn partial_rel_start(&self) -> Option<RelStartBound> {
         match self {
-            Self::Empty => None,
             Self::Bound(bounds) => Some(bounds.start()),
+            Self::Empty => None,
         }
     }
 
     fn partial_rel_end(&self) -> Option<RelEndBound> {
         match self {
-            Self::Empty => None,
             Self::Bound(bounds) => Some(bounds.end()),
+            Self::Empty => None,
         }
     }
 }
