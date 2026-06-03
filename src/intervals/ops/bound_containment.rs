@@ -122,7 +122,7 @@ impl BoundContainmentPosition {
     ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
     ///     ).to_start_bound(),
-    ///     AbsFiniteBoundPos::new_with_inclusivity(
+    ///     AbsFiniteBoundPos::new_with_incl(
     ///         "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///         BoundInclusivity::Exclusive,
     ///     ).to_end_bound(),
@@ -509,7 +509,7 @@ pub fn deny_on_bounds_containment_rule_counts_as_contained(
 ///     "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 /// );
 ///
-/// let bound = AbsFiniteBoundPos::new_with_inclusivity(
+/// let bound = AbsFiniteBoundPos::new_with_incl(
 ///     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///     BoundInclusivity::Exclusive,
 /// ).to_start_bound();
@@ -565,7 +565,7 @@ pub trait CanPositionBoundContainment<B> {
     ///     "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     /// );
     ///
-    /// let bound = AbsFiniteBoundPos::new_with_inclusivity(
+    /// let bound = AbsFiniteBoundPos::new_with_incl(
     ///     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     BoundInclusivity::Exclusive,
     /// ).to_start_bound();
@@ -607,7 +607,7 @@ pub trait CanPositionBoundContainment<B> {
     ///     "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     /// );
     ///
-    /// let bound = AbsFiniteBoundPos::new_with_inclusivity(
+    /// let bound = AbsFiniteBoundPos::new_with_incl(
     ///     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     BoundInclusivity::Exclusive,
     /// ).to_start_bound();
@@ -693,7 +693,7 @@ pub trait CanPositionBoundContainment<B> {
     ///         .timestamp(),
     /// );
     ///
-    /// let bound = AbsFiniteBoundPos::new_with_inclusivity(
+    /// let bound = AbsFiniteBoundPos::new_with_incl(
     ///     "2025-01-01 08:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),

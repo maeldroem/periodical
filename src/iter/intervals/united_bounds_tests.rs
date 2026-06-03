@@ -92,7 +92,7 @@ mod abs_united_bounds {
             AbsFiniteBoundPos::new("2025-01-25 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
                 .to_end_bound()
                 .to_bound(),
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2025-01-25 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
             )
@@ -196,7 +196,7 @@ mod abs_united_bounds {
                     .to_end_bound(),
             ),
             AbsBoundPair::new(
-                AbsFiniteBoundPos::new_with_inclusivity(
+                AbsFiniteBoundPos::new_with_incl(
                     "2025-01-25 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                 )
@@ -319,7 +319,7 @@ mod rel_united_bounds {
             RelFiniteBoundPos::new(SignedDuration::from_hours(35))
                 .to_end_bound()
                 .to_bound(),
-            RelFiniteBoundPos::new_with_inclusivity(
+            RelFiniteBoundPos::new_with_incl(
                 SignedDuration::from_hours(35),
                 BoundInclusivity::Exclusive,
             )
@@ -407,7 +407,7 @@ mod rel_united_bounds {
                 RelFiniteBoundPos::new(SignedDuration::from_hours(35)).to_end_bound(),
             ),
             RelBoundPair::new(
-                RelFiniteBoundPos::new_with_inclusivity(
+                RelFiniteBoundPos::new_with_incl(
                     SignedDuration::from_hours(35),
                     BoundInclusivity::Exclusive,
                 )

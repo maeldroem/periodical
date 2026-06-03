@@ -99,7 +99,7 @@ use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
 ///             LayeredBoundsState::NoLayers,
 ///             LayeredBoundsState::SecondLayer,
 ///             Some(
-///                 AbsFiniteBoundPos::new_with_inclusivity(
+///                 AbsFiniteBoundPos::new_with_incl(
 ///                     "2025-01-01 07:00:00[Europe/Oslo]"
 ///                         .parse::<Zoned>()?
 ///                         .timestamp(),
@@ -120,7 +120,7 @@ use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
 ///             LayeredBoundsState::SecondLayer,
 ///             LayeredBoundsState::BothLayers,
 ///             Some(
-///                 AbsFiniteBoundPos::new_with_inclusivity(
+///                 AbsFiniteBoundPos::new_with_incl(
 ///                     "2025-01-01 08:00:00[Europe/Oslo]"
 ///                         .parse::<Zoned>()?
 ///                         .timestamp(),
@@ -149,7 +149,7 @@ use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
 ///                 .to_end_bound()
 ///             ),
 ///             Some(
-///                 AbsFiniteBoundPos::new_with_inclusivity(
+///                 AbsFiniteBoundPos::new_with_incl(
 ///                     "2025-01-01 11:00:00[Europe/Oslo]"
 ///                         .parse::<Zoned>()?
 ///                         .timestamp(),
@@ -170,7 +170,7 @@ use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
 ///                 .to_end_bound()
 ///             ),
 ///             Some(
-///                 AbsFiniteBoundPos::new_with_inclusivity(
+///                 AbsFiniteBoundPos::new_with_incl(
 ///                     "2025-01-01 12:00:00[Europe/Oslo]"
 ///                         .parse::<Zoned>()?
 ///                         .timestamp(),
@@ -183,7 +183,7 @@ use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
 ///             LayeredBoundsState::NoLayers,
 ///             LayeredBoundsState::FirstLayer,
 ///             Some(
-///                 AbsFiniteBoundPos::new_with_inclusivity(
+///                 AbsFiniteBoundPos::new_with_incl(
 ///                     "2025-01-01 13:00:00[Europe/Oslo]"
 ///                         .parse::<Zoned>()?
 ///                         .timestamp(),
@@ -204,7 +204,7 @@ use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
 ///             LayeredBoundsState::FirstLayer,
 ///             LayeredBoundsState::BothLayers,
 ///             Some(
-///                 AbsFiniteBoundPos::new_with_inclusivity(
+///                 AbsFiniteBoundPos::new_with_incl(
 ///                     "2025-01-01 14:00:00[Europe/Oslo]"
 ///                         .parse::<Zoned>()?
 ///                         .timestamp(),
@@ -233,7 +233,7 @@ use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
 ///                 .to_end_bound()
 ///             ),
 ///             Some(
-///                 AbsFiniteBoundPos::new_with_inclusivity(
+///                 AbsFiniteBoundPos::new_with_incl(
 ///                     "2025-01-01 16:00:00[Europe/Oslo]"
 ///                         .parse::<Zoned>()?
 ///                         .timestamp(),
@@ -254,7 +254,7 @@ use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
 ///                 .to_end_bound()
 ///             ),
 ///             Some(
-///                 AbsFiniteBoundPos::new_with_inclusivity(
+///                 AbsFiniteBoundPos::new_with_incl(
 ///                     "2025-01-01 18:00:00[Europe/Oslo]"
 ///                         .parse::<Zoned>()?
 ///                         .timestamp(),

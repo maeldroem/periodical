@@ -21,7 +21,7 @@ impl<'a> Arbitrary<'a> for AbsFiniteBoundPos {
         let timestamp_range = Timestamp::MIN.as_nanosecond()..=Timestamp::MAX.as_nanosecond();
         let timestamp = Timestamp::from_nanosecond(u.int_in_range(timestamp_range)?).or(Err(Error::IncorrectFormat))?;
 
-        Ok(Self::new_with_inclusivity(timestamp, BoundInclusivity::arbitrary(u)?))
+        Ok(Self::new_with_incl(timestamp, BoundInclusivity::arbitrary(u)?))
     }
 }
 

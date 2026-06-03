@@ -70,7 +70,7 @@ fn start_finite_opposite() -> Result<(), Box<dyn Error>> {
             .to_bound()
             .opposite(),
         Some(
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
                 BoundInclusivity::Exclusive,
             )
@@ -94,7 +94,7 @@ fn end_finite_opposite() -> Result<(), Box<dyn Error>> {
             .to_bound()
             .opposite(),
         Some(
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
                 BoundInclusivity::Exclusive,
             )

@@ -58,7 +58,7 @@ use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
 ///             LayeredBoundsState::NoLayers,
 ///             LayeredBoundsState::SecondLayer,
 ///             Some(
-///                 RelFiniteBoundPos::new_with_inclusivity(
+///                 RelFiniteBoundPos::new_with_incl(
 ///                     SignedDuration::from_hours(7),
 ///                     BoundInclusivity::Exclusive,
 ///                 )
@@ -70,7 +70,7 @@ use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
 ///             LayeredBoundsState::SecondLayer,
 ///             LayeredBoundsState::BothLayers,
 ///             Some(
-///                 RelFiniteBoundPos::new_with_inclusivity(
+///                 RelFiniteBoundPos::new_with_incl(
 ///                     SignedDuration::from_hours(8),
 ///                     BoundInclusivity::Exclusive,
 ///                 )
@@ -83,7 +83,7 @@ use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
 ///             LayeredBoundsState::FirstLayer,
 ///             Some(RelFiniteBoundPos::new(SignedDuration::from_hours(11),).to_end_bound()),
 ///             Some(
-///                 RelFiniteBoundPos::new_with_inclusivity(
+///                 RelFiniteBoundPos::new_with_incl(
 ///                     SignedDuration::from_hours(11),
 ///                     BoundInclusivity::Exclusive,
 ///                 )
@@ -95,7 +95,7 @@ use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
 ///             LayeredBoundsState::NoLayers,
 ///             Some(RelFiniteBoundPos::new(SignedDuration::from_hours(12),).to_end_bound()),
 ///             Some(
-///                 RelFiniteBoundPos::new_with_inclusivity(
+///                 RelFiniteBoundPos::new_with_incl(
 ///                     SignedDuration::from_hours(12),
 ///                     BoundInclusivity::Exclusive,
 ///                 )
@@ -106,7 +106,7 @@ use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
 ///             LayeredBoundsState::NoLayers,
 ///             LayeredBoundsState::FirstLayer,
 ///             Some(
-///                 RelFiniteBoundPos::new_with_inclusivity(
+///                 RelFiniteBoundPos::new_with_incl(
 ///                     SignedDuration::from_hours(13),
 ///                     BoundInclusivity::Exclusive,
 ///                 )
@@ -118,7 +118,7 @@ use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
 ///             LayeredBoundsState::FirstLayer,
 ///             LayeredBoundsState::BothLayers,
 ///             Some(
-///                 RelFiniteBoundPos::new_with_inclusivity(
+///                 RelFiniteBoundPos::new_with_incl(
 ///                     SignedDuration::from_hours(14),
 ///                     BoundInclusivity::Exclusive,
 ///                 )
@@ -131,7 +131,7 @@ use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
 ///             LayeredBoundsState::SecondLayer,
 ///             Some(RelFiniteBoundPos::new(SignedDuration::from_hours(16),).to_end_bound()),
 ///             Some(
-///                 RelFiniteBoundPos::new_with_inclusivity(
+///                 RelFiniteBoundPos::new_with_incl(
 ///                     SignedDuration::from_hours(16),
 ///                     BoundInclusivity::Exclusive,
 ///                 )
@@ -143,7 +143,7 @@ use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
 ///             LayeredBoundsState::NoLayers,
 ///             Some(RelFiniteBoundPos::new(SignedDuration::from_hours(18),).to_end_bound()),
 ///             Some(
-///                 RelFiniteBoundPos::new_with_inclusivity(
+///                 RelFiniteBoundPos::new_with_incl(
 ///                     SignedDuration::from_hours(18),
 ///                     BoundInclusivity::Exclusive,
 ///                 )

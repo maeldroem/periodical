@@ -162,7 +162,7 @@ impl RelStartBound {
     ///
     /// assert_eq!(
     ///     break_end_before_shift.finite(),
-    ///     Some(RelFiniteBoundPos::new_with_inclusivity(
+    ///     Some(RelFiniteBoundPos::new_with_incl(
     ///         SignedDuration::from_hours(3),
     ///         BoundInclusivity::Exclusive,
     ///     )),
@@ -336,7 +336,7 @@ impl From<Option<SignedDuration>> for RelStartBound {
 impl From<Option<(SignedDuration, BoundInclusivity)>> for RelStartBound {
     fn from(value: Option<(SignedDuration, BoundInclusivity)>) -> Self {
         match value {
-            Some((offset, inclusivity)) => Self::from(RelFiniteBoundPos::new_with_inclusivity(offset, inclusivity)),
+            Some((offset, inclusivity)) => Self::from(RelFiniteBoundPos::new_with_incl(offset, inclusivity)),
             None => Self::InfinitePast,
         }
     }
@@ -346,10 +346,10 @@ impl From<Bound<SignedDuration>> for RelStartBound {
     fn from(bound: Bound<SignedDuration>) -> Self {
         match bound {
             Bound::Included(offset) => {
-                RelFiniteBoundPos::new_with_inclusivity(offset, BoundInclusivity::Inclusive).to_start_bound()
+                RelFiniteBoundPos::new_with_incl(offset, BoundInclusivity::Inclusive).to_start_bound()
             },
             Bound::Excluded(offset) => {
-                RelFiniteBoundPos::new_with_inclusivity(offset, BoundInclusivity::Exclusive).to_start_bound()
+                RelFiniteBoundPos::new_with_incl(offset, BoundInclusivity::Exclusive).to_start_bound()
             },
             Bound::Unbounded => RelStartBound::InfinitePast,
         }

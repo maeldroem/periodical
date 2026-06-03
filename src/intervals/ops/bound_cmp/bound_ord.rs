@@ -29,7 +29,7 @@
 //!     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 //! ).to_start_bound();
 //!
-//! let compared_bound = AbsFiniteBoundPos::new_with_inclusivity(
+//! let compared_bound = AbsFiniteBoundPos::new_with_incl(
 //!     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 //!     BoundInclusivity::Exclusive,
 //! ).to_start_bound();
@@ -106,7 +106,7 @@ impl BoundOrdering {
     ///     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     /// ).to_start_bound();
     ///
-    /// let compared_bound = AbsFiniteBoundPos::new_with_inclusivity(
+    /// let compared_bound = AbsFiniteBoundPos::new_with_incl(
     ///     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     BoundInclusivity::Exclusive,
     /// ).to_start_bound();
@@ -158,12 +158,12 @@ impl BoundOrdering {
     ///     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     /// ).to_start_bound();
     ///
-    /// let mut ref_bound_exclusive = AbsFiniteBoundPos::new_with_inclusivity(
+    /// let mut ref_bound_exclusive = AbsFiniteBoundPos::new_with_incl(
     ///     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     BoundInclusivity::Exclusive,
     /// ).to_start_bound();
     ///
-    /// let compared_bound_exclusive = AbsFiniteBoundPos::new_with_inclusivity(
+    /// let compared_bound_exclusive = AbsFiniteBoundPos::new_with_incl(
     ///     "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     BoundInclusivity::Exclusive,
     /// ).to_start_bound();
@@ -242,7 +242,7 @@ impl BoundOrdering {
 /// )
 /// .to_start_bound();
 ///
-/// let compared_bound = AbsFiniteBoundPos::new_with_inclusivity(
+/// let compared_bound = AbsFiniteBoundPos::new_with_incl(
 ///     "2025-01-01 08:00:00[Europe/Oslo]"
 ///         .parse::<Zoned>()?
 ///         .timestamp(),
@@ -284,7 +284,7 @@ where
     /// )
     /// .to_start_bound();
     ///
-    /// let compared_bound = AbsFiniteBoundPos::new_with_inclusivity(
+    /// let compared_bound = AbsFiniteBoundPos::new_with_incl(
     ///     "2025-01-01 08:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
@@ -325,7 +325,7 @@ where
     /// )
     /// .to_start_bound();
     ///
-    /// let compared_bound = AbsFiniteBoundPos::new_with_inclusivity(
+    /// let compared_bound = AbsFiniteBoundPos::new_with_incl(
     ///     "2025-01-01 08:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
@@ -368,7 +368,7 @@ where
     /// )
     /// .to_start_bound();
     ///
-    /// let compared_bound = AbsFiniteBoundPos::new_with_inclusivity(
+    /// let compared_bound = AbsFiniteBoundPos::new_with_incl(
     ///     "2025-01-01 08:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
@@ -414,7 +414,7 @@ where
     /// )
     /// .to_start_bound();
     ///
-    /// let compared_bound = AbsFiniteBoundPos::new_with_inclusivity(
+    /// let compared_bound = AbsFiniteBoundPos::new_with_incl(
     ///     "2025-01-01 08:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
@@ -457,7 +457,7 @@ where
     /// )
     /// .to_start_bound();
     ///
-    /// let compared_bound = AbsFiniteBoundPos::new_with_inclusivity(
+    /// let compared_bound = AbsFiniteBoundPos::new_with_incl(
     ///     "2025-01-01 08:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),

@@ -59,7 +59,7 @@ impl AbsFiniteStartBound {
     }
 
     pub fn opposite(self) -> AbsFiniteEndBound {
-        AbsFiniteEndBound::new(AbsFiniteBoundPos::new_with_inclusivity(
+        AbsFiniteEndBound::new(AbsFiniteBoundPos::new_with_incl(
             self.pos().time(),
             self.pos().inclusivity().opposite(),
         ))

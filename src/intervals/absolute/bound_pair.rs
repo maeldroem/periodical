@@ -168,7 +168,7 @@ impl AbsBoundPair {
     /// );
     /// assert_eq!(
     ///     bound_pair.end(),
-    ///     AbsFiniteBoundPos::new_with_inclusivity(end, BoundInclusivity::Exclusive).to_end_bound(),
+    ///     AbsFiniteBoundPos::new_with_incl(end, BoundInclusivity::Exclusive).to_end_bound(),
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```

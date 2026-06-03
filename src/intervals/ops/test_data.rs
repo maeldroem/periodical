@@ -64,7 +64,7 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff::Erro
                     AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -78,7 +78,7 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff::Erro
             (
                 AbsBoundPair::new(
                     AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -95,14 +95,14 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff::Erro
             (
                 AbsBoundPair::new(
                     AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound(),
                 ),
                 AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -128,7 +128,7 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff::Erro
             "starts_on_end_incl_excl",
             (
                 AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -150,7 +150,7 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff::Erro
                 ),
                 AbsBoundPair::new(
                     AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -162,7 +162,7 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff::Erro
             "starts_on_end_excl_excl",
             (
                 AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -171,7 +171,7 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff::Erro
                 ),
                 AbsBoundPair::new(
                     AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -239,7 +239,7 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff::Erro
                     AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -252,7 +252,7 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff::Erro
             "inside_and_same_start_excl_incl",
             (
                 AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -269,7 +269,7 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff::Erro
             "inside_and_same_start_excl_excl",
             (
                 AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -277,7 +277,7 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff::Erro
                     AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -308,7 +308,7 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff::Erro
                 ),
                 AbsBoundPair::new(
                     AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -321,7 +321,7 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff::Erro
             (
                 AbsBoundPair::new(
                     AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -338,7 +338,7 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff::Erro
             (
                 AbsBoundPair::new(
                     AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -346,7 +346,7 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff::Erro
                 ),
                 AbsBoundPair::new(
                     AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -376,7 +376,7 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff::Erro
                 ),
                 AbsBoundPair::new(
                     AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -389,7 +389,7 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff::Erro
             (
                 AbsBoundPair::new(
                     AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -406,7 +406,7 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff::Erro
             (
                 AbsBoundPair::new(
                     AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -414,7 +414,7 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff::Erro
                 ),
                 AbsBoundPair::new(
                     AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -430,7 +430,7 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff::Erro
                     AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -447,12 +447,12 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff::Erro
                     AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -465,14 +465,14 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff::Erro
             (
                 AbsBoundPair::new(
                     AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound(),
                 ),
                 AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -486,19 +486,19 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff::Erro
             (
                 AbsBoundPair::new(
                     AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound(),
                 ),
                 AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -510,7 +510,7 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff::Erro
             "equal_start_excl_incl_end_incl_incl",
             (
                 AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -527,7 +527,7 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff::Erro
             "equal_start_excl_incl_end_incl_excl",
             (
                 AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -536,7 +536,7 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff::Erro
                 ),
                 AbsBoundPair::new(
                     AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -548,12 +548,12 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff::Erro
             "equal_start_excl_incl_end_excl_incl",
             (
                 AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -569,12 +569,12 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff::Erro
             "equal_start_excl_incl_end_excl_excl",
             (
                 AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -582,7 +582,7 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff::Erro
                 ),
                 AbsBoundPair::new(
                     AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -594,7 +594,7 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff::Erro
             "equal_start_excl_excl_end_incl_incl",
             (
                 AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -602,7 +602,7 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff::Erro
                     AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -615,7 +615,7 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff::Erro
             "equal_start_excl_excl_end_incl_excl",
             (
                 AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -623,12 +623,12 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff::Erro
                     AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -640,19 +640,19 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff::Erro
             "equal_start_excl_excl_end_excl_incl",
             (
                 AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound(),
                 ),
                 AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -665,24 +665,24 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff::Erro
             "equal_start_excl_excl_end_excl_excl",
             (
                 AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound(),
                 ),
                 AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -711,7 +711,7 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff::Erro
                     AbsFiniteBoundPos::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -724,7 +724,7 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff::Erro
             "contains_and_same_start_excl_incl",
             (
                 AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -741,7 +741,7 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff::Erro
             "contains_and_same_start_excl_excl",
             (
                 AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -749,7 +749,7 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff::Erro
                     AbsFiniteBoundPos::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -780,7 +780,7 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff::Erro
                 ),
                 AbsBoundPair::new(
                     AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -793,7 +793,7 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff::Erro
             (
                 AbsBoundPair::new(
                     AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -810,7 +810,7 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff::Erro
             (
                 AbsBoundPair::new(
                     AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -818,7 +818,7 @@ pub static BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff::Erro
                 ),
                 AbsBoundPair::new(
                     AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -891,7 +891,7 @@ pub static BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff:
                     AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -905,7 +905,7 @@ pub static BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff:
             (
                 AbsBoundPair::new(
                     AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -922,14 +922,14 @@ pub static BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff:
             (
                 AbsBoundPair::new(
                     AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound(),
                 ),
                 AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -960,7 +960,7 @@ pub static BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff:
                 ),
                 AbsBoundPair::new(
                     AbsStartBound::InfinitePast,
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -972,7 +972,7 @@ pub static BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff:
             "starts_on_end_excl_incl",
             (
                 AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -989,7 +989,7 @@ pub static BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff:
             "starts_on_end_excl_excl",
             (
                 AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -998,7 +998,7 @@ pub static BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff:
                 ),
                 AbsBoundPair::new(
                     AbsStartBound::InfinitePast,
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1079,7 +1079,7 @@ pub static BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff:
                     AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1092,7 +1092,7 @@ pub static BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff:
             "inside_and_same_start_excl_incl",
             (
                 AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1109,7 +1109,7 @@ pub static BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff:
             "inside_and_same_start_excl_excl",
             (
                 AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1117,7 +1117,7 @@ pub static BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff:
                     AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1148,7 +1148,7 @@ pub static BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff:
                 ),
                 AbsBoundPair::new(
                     AbsStartBound::InfinitePast,
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1161,7 +1161,7 @@ pub static BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff:
             (
                 AbsBoundPair::new(
                     AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1178,7 +1178,7 @@ pub static BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff:
             (
                 AbsBoundPair::new(
                     AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1186,7 +1186,7 @@ pub static BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff:
                 ),
                 AbsBoundPair::new(
                     AbsStartBound::InfinitePast,
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1247,7 +1247,7 @@ pub static HALF_BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff:
                 ),
                 AbsBoundPair::new(
                     AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1259,7 +1259,7 @@ pub static HALF_BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff:
             "starts_on_end_excl_incl",
             (
                 AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1276,7 +1276,7 @@ pub static HALF_BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff:
             "starts_on_end_excl_excl",
             (
                 AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1285,7 +1285,7 @@ pub static HALF_BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff:
                 ),
                 AbsBoundPair::new(
                     AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1314,7 +1314,7 @@ pub static HALF_BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff:
                     AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1328,7 +1328,7 @@ pub static HALF_BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff:
             (
                 AbsBoundPair::new(
                     AbsStartBound::InfinitePast,
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1345,14 +1345,14 @@ pub static HALF_BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff:
             (
                 AbsBoundPair::new(
                     AbsStartBound::InfinitePast,
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound(),
                 ),
                 AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1408,7 +1408,7 @@ pub static HALF_BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff:
                     AbsEndBound::InfiniteFuture,
                 ),
                 AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1421,7 +1421,7 @@ pub static HALF_BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff:
             "contains_and_same_start_excl_incl",
             (
                 AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1438,7 +1438,7 @@ pub static HALF_BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff:
             "contains_and_same_start_excl_excl",
             (
                 AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1446,7 +1446,7 @@ pub static HALF_BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff:
                     AbsEndBound::InfiniteFuture,
                 ),
                 AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1477,7 +1477,7 @@ pub static HALF_BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff:
                 ),
                 AbsBoundPair::new(
                     AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1490,7 +1490,7 @@ pub static HALF_BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff:
             (
                 AbsBoundPair::new(
                     AbsStartBound::InfinitePast,
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1507,7 +1507,7 @@ pub static HALF_BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff:
             (
                 AbsBoundPair::new(
                     AbsStartBound::InfinitePast,
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1515,7 +1515,7 @@ pub static HALF_BOUNDED_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, jiff:
                 ),
                 AbsBoundPair::new(
                     AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1601,7 +1601,7 @@ pub static HALF_BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, 
                     AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
                 ),
                 AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1615,7 +1615,7 @@ pub static HALF_BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, 
             (
                 AbsBoundPair::new(
                     AbsStartBound::InfinitePast,
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1632,14 +1632,14 @@ pub static HALF_BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, 
             (
                 AbsBoundPair::new(
                     AbsStartBound::InfinitePast,
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound(),
                 ),
                 AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1670,7 +1670,7 @@ pub static HALF_BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, 
                 ),
                 AbsBoundPair::new(
                     AbsStartBound::InfinitePast,
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1682,7 +1682,7 @@ pub static HALF_BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, 
             "starts_on_end_excl_incl",
             (
                 AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1699,7 +1699,7 @@ pub static HALF_BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, 
             "starts_on_end_excl_excl",
             (
                 AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1708,7 +1708,7 @@ pub static HALF_BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, 
                 ),
                 AbsBoundPair::new(
                     AbsStartBound::InfinitePast,
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1789,7 +1789,7 @@ pub static HALF_BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, 
                     AbsEndBound::InfiniteFuture,
                 ),
                 AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1802,7 +1802,7 @@ pub static HALF_BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, 
             "equal_to_future_excl_incl",
             (
                 AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1819,7 +1819,7 @@ pub static HALF_BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, 
             "equal_to_future_excl_excl",
             (
                 AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1827,7 +1827,7 @@ pub static HALF_BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, 
                     AbsEndBound::InfiniteFuture,
                 ),
                 AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1858,7 +1858,7 @@ pub static HALF_BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, 
                 ),
                 AbsBoundPair::new(
                     AbsStartBound::InfinitePast,
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1871,7 +1871,7 @@ pub static HALF_BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, 
             (
                 AbsBoundPair::new(
                     AbsStartBound::InfinitePast,
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1888,7 +1888,7 @@ pub static HALF_BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, 
             (
                 AbsBoundPair::new(
                     AbsStartBound::InfinitePast,
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1896,7 +1896,7 @@ pub static HALF_BOUNDED_HALF_BOUNDED_ABS: FallibleTestDataPairMap<AbsBoundPair, 
                 ),
                 AbsBoundPair::new(
                     AbsStartBound::InfinitePast,
-                    AbsFiniteBoundPos::new_with_inclusivity(
+                    AbsFiniteBoundPos::new_with_incl(
                         "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                         BoundInclusivity::Exclusive,
                     )
@@ -1982,7 +1982,7 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::new(||
                     RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
                 RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -1996,7 +1996,7 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::new(||
             (
                 RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -2013,14 +2013,14 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::new(||
             (
                 RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound(),
                 ),
                 RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -2046,7 +2046,7 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::new(||
             "starts_on_end_incl_excl",
             (
                 RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -2068,7 +2068,7 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::new(||
                 ),
                 RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -2080,7 +2080,7 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::new(||
             "starts_on_end_excl_excl",
             (
                 RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -2089,7 +2089,7 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::new(||
                 ),
                 RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -2157,7 +2157,7 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::new(||
                     RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
                 RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -2170,7 +2170,7 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::new(||
             "inside_and_same_start_excl_incl",
             (
                 RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -2187,7 +2187,7 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::new(||
             "inside_and_same_start_excl_excl",
             (
                 RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -2195,7 +2195,7 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::new(||
                     RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
                 RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -2226,7 +2226,7 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::new(||
                 ),
                 RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(3),
                         BoundInclusivity::Exclusive,
                     )
@@ -2239,7 +2239,7 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::new(||
             (
                 RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(3),
                         BoundInclusivity::Exclusive,
                     )
@@ -2256,7 +2256,7 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::new(||
             (
                 RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(3),
                         BoundInclusivity::Exclusive,
                     )
@@ -2264,7 +2264,7 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::new(||
                 ),
                 RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(3),
                         BoundInclusivity::Exclusive,
                     )
@@ -2294,7 +2294,7 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::new(||
                 ),
                 RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -2307,7 +2307,7 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::new(||
             (
                 RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -2324,7 +2324,7 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::new(||
             (
                 RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -2332,7 +2332,7 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::new(||
                 ),
                 RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -2348,7 +2348,7 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::new(||
                     RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
                 RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -2365,12 +2365,12 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::new(||
                     RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
                 RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -2383,14 +2383,14 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::new(||
             (
                 RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound(),
                 ),
                 RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -2404,19 +2404,19 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::new(||
             (
                 RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound(),
                 ),
                 RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -2428,7 +2428,7 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::new(||
             "equal_start_excl_incl_end_incl_incl",
             (
                 RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -2445,7 +2445,7 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::new(||
             "equal_start_excl_incl_end_incl_excl",
             (
                 RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -2454,7 +2454,7 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::new(||
                 ),
                 RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -2466,12 +2466,12 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::new(||
             "equal_start_excl_incl_end_excl_incl",
             (
                 RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -2487,12 +2487,12 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::new(||
             "equal_start_excl_incl_end_excl_excl",
             (
                 RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -2500,7 +2500,7 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::new(||
                 ),
                 RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -2512,7 +2512,7 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::new(||
             "equal_start_excl_excl_end_incl_incl",
             (
                 RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -2520,7 +2520,7 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::new(||
                     RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
                 RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -2533,7 +2533,7 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::new(||
             "equal_start_excl_excl_end_incl_excl",
             (
                 RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -2541,12 +2541,12 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::new(||
                     RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
                 RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -2558,19 +2558,19 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::new(||
             "equal_start_excl_excl_end_excl_incl",
             (
                 RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound(),
                 ),
                 RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -2583,24 +2583,24 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::new(||
             "equal_start_excl_excl_end_excl_excl",
             (
                 RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound(),
                 ),
                 RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_start_bound(),
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -2629,7 +2629,7 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::new(||
                     RelFiniteBoundPos::new(SignedDuration::from_hours(3)).to_end_bound(),
                 ),
                 RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -2642,7 +2642,7 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::new(||
             "contains_and_same_start_excl_incl",
             (
                 RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -2659,7 +2659,7 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::new(||
             "contains_and_same_start_excl_excl",
             (
                 RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -2667,7 +2667,7 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::new(||
                     RelFiniteBoundPos::new(SignedDuration::from_hours(3)).to_end_bound(),
                 ),
                 RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -2698,7 +2698,7 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::new(||
                 ),
                 RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(3),
                         BoundInclusivity::Exclusive,
                     )
@@ -2711,7 +2711,7 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::new(||
             (
                 RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(3),
                         BoundInclusivity::Exclusive,
                     )
@@ -2728,7 +2728,7 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::new(||
             (
                 RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(3),
                         BoundInclusivity::Exclusive,
                     )
@@ -2736,7 +2736,7 @@ pub static BOUNDED_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::new(||
                 ),
                 RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(3),
                         BoundInclusivity::Exclusive,
                     )
@@ -2809,7 +2809,7 @@ pub static BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::n
                     RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
                 RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -2823,7 +2823,7 @@ pub static BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::n
             (
                 RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -2840,14 +2840,14 @@ pub static BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::n
             (
                 RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound(),
                 ),
                 RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -2878,7 +2878,7 @@ pub static BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::n
                 ),
                 RelBoundPair::new(
                     RelStartBound::InfinitePast,
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -2890,7 +2890,7 @@ pub static BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::n
             "starts_on_end_excl_incl",
             (
                 RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -2907,7 +2907,7 @@ pub static BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::n
             "starts_on_end_excl_excl",
             (
                 RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -2916,7 +2916,7 @@ pub static BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::n
                 ),
                 RelBoundPair::new(
                     RelStartBound::InfinitePast,
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -2997,7 +2997,7 @@ pub static BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::n
                     RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
                 RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -3010,7 +3010,7 @@ pub static BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::n
             "inside_and_same_start_excl_incl",
             (
                 RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -3027,7 +3027,7 @@ pub static BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::n
             "inside_and_same_start_excl_excl",
             (
                 RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -3035,7 +3035,7 @@ pub static BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::n
                     RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
                 ),
                 RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -3066,7 +3066,7 @@ pub static BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::n
                 ),
                 RelBoundPair::new(
                     RelStartBound::InfinitePast,
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -3079,7 +3079,7 @@ pub static BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::n
             (
                 RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -3096,7 +3096,7 @@ pub static BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::n
             (
                 RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -3104,7 +3104,7 @@ pub static BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::n
                 ),
                 RelBoundPair::new(
                     RelStartBound::InfinitePast,
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -3165,7 +3165,7 @@ pub static HALF_BOUNDED_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::n
                 ),
                 RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -3177,7 +3177,7 @@ pub static HALF_BOUNDED_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::n
             "starts_on_end_excl_incl",
             (
                 RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -3194,7 +3194,7 @@ pub static HALF_BOUNDED_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::n
             "starts_on_end_excl_excl",
             (
                 RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -3203,7 +3203,7 @@ pub static HALF_BOUNDED_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::n
                 ),
                 RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -3232,7 +3232,7 @@ pub static HALF_BOUNDED_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::n
                     RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_end_bound(),
                 ),
                 RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -3246,7 +3246,7 @@ pub static HALF_BOUNDED_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::n
             (
                 RelBoundPair::new(
                     RelStartBound::InfinitePast,
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -3263,14 +3263,14 @@ pub static HALF_BOUNDED_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::n
             (
                 RelBoundPair::new(
                     RelStartBound::InfinitePast,
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound(),
                 ),
                 RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -3326,7 +3326,7 @@ pub static HALF_BOUNDED_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::n
                     RelEndBound::InfiniteFuture,
                 ),
                 RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -3339,7 +3339,7 @@ pub static HALF_BOUNDED_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::n
             "contains_and_same_start_excl_incl",
             (
                 RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -3356,7 +3356,7 @@ pub static HALF_BOUNDED_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::n
             "contains_and_same_start_excl_excl",
             (
                 RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -3364,7 +3364,7 @@ pub static HALF_BOUNDED_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::n
                     RelEndBound::InfiniteFuture,
                 ),
                 RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -3395,7 +3395,7 @@ pub static HALF_BOUNDED_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::n
                 ),
                 RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -3408,7 +3408,7 @@ pub static HALF_BOUNDED_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::n
             (
                 RelBoundPair::new(
                     RelStartBound::InfinitePast,
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -3425,7 +3425,7 @@ pub static HALF_BOUNDED_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::n
             (
                 RelBoundPair::new(
                     RelStartBound::InfinitePast,
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -3433,7 +3433,7 @@ pub static HALF_BOUNDED_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLock::n
                 ),
                 RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(2),
                         BoundInclusivity::Exclusive,
                     )
@@ -3519,7 +3519,7 @@ pub static HALF_BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLo
                     RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_end_bound(),
                 ),
                 RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -3533,7 +3533,7 @@ pub static HALF_BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLo
             (
                 RelBoundPair::new(
                     RelStartBound::InfinitePast,
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -3550,14 +3550,14 @@ pub static HALF_BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLo
             (
                 RelBoundPair::new(
                     RelStartBound::InfinitePast,
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
                     .to_end_bound(),
                 ),
                 RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -3588,7 +3588,7 @@ pub static HALF_BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLo
                 ),
                 RelBoundPair::new(
                     RelStartBound::InfinitePast,
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -3600,7 +3600,7 @@ pub static HALF_BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLo
             "starts_on_end_excl_incl",
             (
                 RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -3617,7 +3617,7 @@ pub static HALF_BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLo
             "starts_on_end_excl_excl",
             (
                 RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -3626,7 +3626,7 @@ pub static HALF_BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLo
                 ),
                 RelBoundPair::new(
                     RelStartBound::InfinitePast,
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -3707,7 +3707,7 @@ pub static HALF_BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLo
                     RelEndBound::InfiniteFuture,
                 ),
                 RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -3720,7 +3720,7 @@ pub static HALF_BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLo
             "equal_to_future_excl_incl",
             (
                 RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -3737,7 +3737,7 @@ pub static HALF_BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLo
             "equal_to_future_excl_excl",
             (
                 RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -3745,7 +3745,7 @@ pub static HALF_BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLo
                     RelEndBound::InfiniteFuture,
                 ),
                 RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -3776,7 +3776,7 @@ pub static HALF_BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLo
                 ),
                 RelBoundPair::new(
                     RelStartBound::InfinitePast,
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -3789,7 +3789,7 @@ pub static HALF_BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLo
             (
                 RelBoundPair::new(
                     RelStartBound::InfinitePast,
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -3806,7 +3806,7 @@ pub static HALF_BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLo
             (
                 RelBoundPair::new(
                     RelStartBound::InfinitePast,
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )
@@ -3814,7 +3814,7 @@ pub static HALF_BOUNDED_HALF_BOUNDED_REL: TestDataPairMap<RelBoundPair> = LazyLo
                 ),
                 RelBoundPair::new(
                     RelStartBound::InfinitePast,
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(1),
                         BoundInclusivity::Exclusive,
                     )

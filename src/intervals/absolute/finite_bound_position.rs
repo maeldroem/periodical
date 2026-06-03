@@ -48,7 +48,7 @@ use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
 /// # use jiff::Timestamp;
 /// # use periodical::intervals::absolute::AbsFiniteBoundPos;
 /// # use periodical::intervals::meta::BoundInclusivity;
-/// let finite_bound_position = AbsFiniteBoundPos::new_with_inclusivity(
+/// let finite_bound_position = AbsFiniteBoundPos::new_with_incl(
 ///     "2025-01-01 08:00:00Z".parse::<Timestamp>()?,
 ///     BoundInclusivity::Exclusive,
 /// );
@@ -67,13 +67,13 @@ impl AbsFiniteBoundPos {
     /// This creates a finite bound using the [default `BoundInclusivity`](BoundInclusivity::default).
     #[must_use]
     pub fn new(time: Timestamp) -> Self {
-        Self::new_with_inclusivity(time, BoundInclusivity::default())
+        Self::new_with_incl(time, BoundInclusivity::default())
     }
 
     /// Creates a new [`AbsFiniteBoundPos`] using the given time and
     /// [`BoundInclusivity`]
     #[must_use]
-    pub fn new_with_inclusivity(time: Timestamp, inclusivity: BoundInclusivity) -> Self {
+    pub fn new_with_incl(time: Timestamp, inclusivity: BoundInclusivity) -> Self {
         AbsFiniteBoundPos {
             time,
             inclusivity,
@@ -193,7 +193,7 @@ impl From<Timestamp> for AbsFiniteBoundPos {
 
 impl From<(Timestamp, BoundInclusivity)> for AbsFiniteBoundPos {
     fn from((time, inclusivity): (Timestamp, BoundInclusivity)) -> Self {
-        AbsFiniteBoundPos::new_with_inclusivity(time, inclusivity)
+        AbsFiniteBoundPos::new_with_incl(time, inclusivity)
     }
 }
 
@@ -217,14 +217,8 @@ impl TryFrom<Bound<Timestamp>> for AbsFiniteBoundPos {
 
     fn try_from(value: Bound<Timestamp>) -> Result<Self, Self::Error> {
         match value {
-            Bound::Included(time) => Ok(AbsFiniteBoundPos::new_with_inclusivity(
-                time,
-                BoundInclusivity::Inclusive,
-            )),
-            Bound::Excluded(time) => Ok(AbsFiniteBoundPos::new_with_inclusivity(
-                time,
-                BoundInclusivity::Exclusive,
-            )),
+            Bound::Included(time) => Ok(AbsFiniteBoundPos::new_with_incl(time, BoundInclusivity::Inclusive)),
+            Bound::Excluded(time) => Ok(AbsFiniteBoundPos::new_with_incl(time, BoundInclusivity::Exclusive)),
             Bound::Unbounded => Err(AbsFiniteBoundPosTryFromBoundError),
         }
     }

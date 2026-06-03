@@ -95,7 +95,7 @@ impl HalfBoundedToFutureAbsInterval {
     /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
     /// let ref_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     ///
-    /// let half_bounded_interval = HalfBoundedAbsInterval::new_with_inclusivity(
+    /// let half_bounded_interval = HalfBoundedAbsInterval::new_with_incl(
     ///     ref_time,
     ///     BoundInclusivity::Exclusive,
     ///     OpeningDirection::ToFuture,
@@ -115,7 +115,7 @@ impl HalfBoundedToFutureAbsInterval {
     #[must_use]
     pub fn new_from_time_and_inclusivity(reference: Timestamp, reference_inclusivity: BoundInclusivity) -> Self {
         HalfBoundedToFutureAbsInterval::new(
-            AbsFiniteBoundPos::new_with_inclusivity(reference, reference_inclusivity).to_finite_start_bound(),
+            AbsFiniteBoundPos::new_with_incl(reference, reference_inclusivity).to_finite_start_bound(),
         )
     }
 
@@ -201,7 +201,7 @@ impl HalfBoundedToFutureAbsInterval {
     /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
     /// let ref_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     ///
-    /// let half_bounded_interval = HalfBoundedAbsInterval::new_with_inclusivity(
+    /// let half_bounded_interval = HalfBoundedAbsInterval::new_with_incl(
     ///     ref_time,
     ///     BoundInclusivity::Exclusive,
     ///     OpeningDirection::ToFuture,

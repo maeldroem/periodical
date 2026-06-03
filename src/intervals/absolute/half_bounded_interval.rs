@@ -120,7 +120,7 @@ impl HalfBoundedAbsInterval {
     /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
     /// let ref_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     ///
-    /// let half_bounded_interval = HalfBoundedAbsInterval::new_with_inclusivity(
+    /// let half_bounded_interval = HalfBoundedAbsInterval::new_with_incl(
     ///     ref_time,
     ///     BoundInclusivity::Exclusive,
     ///     OpeningDirection::ToFuture,
@@ -248,7 +248,7 @@ impl HalfBoundedAbsInterval {
     /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
     /// let ref_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     ///
-    /// let half_bounded_interval = HalfBoundedAbsInterval::new_with_inclusivity(
+    /// let half_bounded_interval = HalfBoundedAbsInterval::new_with_incl(
     ///     ref_time,
     ///     BoundInclusivity::Exclusive,
     ///     OpeningDirection::ToFuture,

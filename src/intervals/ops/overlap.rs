@@ -889,7 +889,7 @@ pub fn deny_future_adjacency_overlap_rule_counts_as_overlap(
 /// );
 ///
 /// let reference_interval = AbsBoundPair::new(
-///     AbsFiniteBoundPos::new_with_inclusivity(
+///     AbsFiniteBoundPos::new_with_incl(
 ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///         BoundInclusivity::Exclusive,
 ///     ).to_start_bound(),
@@ -923,7 +923,7 @@ pub fn deny_future_adjacency_overlap_rule_counts_as_overlap(
 /// );
 ///
 /// let reference_interval = AbsBoundPair::new(
-///     AbsFiniteBoundPos::new_with_inclusivity(
+///     AbsFiniteBoundPos::new_with_incl(
 ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///         BoundInclusivity::Exclusive,
 ///     ).to_start_bound(),
@@ -977,7 +977,7 @@ pub trait CanPositionOverlap<Rhs = Self> {
     /// );
     ///
     /// let reference_interval = AbsBoundPair::new(
-    ///     AbsFiniteBoundPos::new_with_inclusivity(
+    ///     AbsFiniteBoundPos::new_with_incl(
     ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///         BoundInclusivity::Exclusive,
     ///     ).to_start_bound(),
@@ -1028,7 +1028,7 @@ pub trait CanPositionOverlap<Rhs = Self> {
     /// );
     ///
     /// let reference_interval = AbsBoundPair::new(
-    ///     AbsFiniteBoundPos::new_with_inclusivity(
+    ///     AbsFiniteBoundPos::new_with_incl(
     ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///         BoundInclusivity::Exclusive,
     ///     ).to_start_bound(),
@@ -1145,7 +1145,7 @@ pub trait CanPositionOverlap<Rhs = Self> {
     /// );
     ///
     /// let reference_interval = AbsBoundPair::new(
-    ///     AbsFiniteBoundPos::new_with_inclusivity(
+    ///     AbsFiniteBoundPos::new_with_incl(
     ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///         BoundInclusivity::Exclusive,
     ///     ).to_start_bound(),
@@ -1209,7 +1209,7 @@ pub trait CanPositionOverlap<Rhs = Self> {
     ///             .timestamp(),
     ///     )
     ///     .to_start_bound(),
-    ///     AbsFiniteBoundPos::new_with_inclusivity(
+    ///     AbsFiniteBoundPos::new_with_incl(
     ///         "2025-01-01 10:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
@@ -1219,7 +1219,7 @@ pub trait CanPositionOverlap<Rhs = Self> {
     /// );
     ///
     /// let reference_interval = AbsBoundPair::new(
-    ///     AbsFiniteBoundPos::new_with_inclusivity(
+    ///     AbsFiniteBoundPos::new_with_incl(
     ///         "2025-01-01 10:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
@@ -1291,14 +1291,14 @@ pub trait CanPositionOverlap<Rhs = Self> {
     ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_start_bound(),
-    ///     AbsFiniteBoundPos::new_with_inclusivity(
+    ///     AbsFiniteBoundPos::new_with_incl(
     ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///         BoundInclusivity::Exclusive,
     ///     ).to_end_bound(),
     /// );
     ///
     /// let reference_interval = AbsBoundPair::new(
-    ///     AbsFiniteBoundPos::new_with_inclusivity(
+    ///     AbsFiniteBoundPos::new_with_incl(
     ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///         BoundInclusivity::Exclusive,
     ///     ).to_start_bound(),

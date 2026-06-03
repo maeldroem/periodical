@@ -59,7 +59,7 @@ impl RelFiniteStartBound {
     }
 
     pub fn opposite(self) -> RelFiniteEndBound {
-        RelFiniteEndBound::new(RelFiniteBoundPos::new_with_inclusivity(
+        RelFiniteEndBound::new(RelFiniteBoundPos::new_with_incl(
             self.pos().offset(),
             self.pos().inclusivity().opposite(),
         ))

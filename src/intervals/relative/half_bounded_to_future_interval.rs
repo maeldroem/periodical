@@ -95,7 +95,7 @@ impl HalfBoundedToFutureRelInterval {
     /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
     /// let ref_offset = "2025-01-01 08:00:00Z".parse::<SignedDuration>()?;
     ///
-    /// let half_bounded_interval = HalfBoundedRelInterval::new_with_inclusivity(
+    /// let half_bounded_interval = HalfBoundedRelInterval::new_with_incl(
     ///     ref_offset,
     ///     BoundInclusivity::Exclusive,
     ///     OpeningDirection::ToFuture,
@@ -115,7 +115,7 @@ impl HalfBoundedToFutureRelInterval {
     #[must_use]
     pub fn new_from_offset_and_inclusivity(reference: SignedDuration, reference_inclusivity: BoundInclusivity) -> Self {
         HalfBoundedToFutureRelInterval::new(
-            RelFiniteBoundPos::new_with_inclusivity(reference, reference_inclusivity).to_finite_start_bound(),
+            RelFiniteBoundPos::new_with_incl(reference, reference_inclusivity).to_finite_start_bound(),
         )
     }
 
@@ -201,7 +201,7 @@ impl HalfBoundedToFutureRelInterval {
     /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
     /// let ref_offset = "2025-01-01 08:00:00Z".parse::<SignedDuration>()?;
     ///
-    /// let half_bounded_interval = HalfBoundedRelInterval::new_with_inclusivity(
+    /// let half_bounded_interval = HalfBoundedRelInterval::new_with_incl(
     ///     ref_offset,
     ///     BoundInclusivity::Exclusive,
     ///     OpeningDirection::ToFuture,

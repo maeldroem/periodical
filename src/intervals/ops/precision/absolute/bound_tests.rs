@@ -12,7 +12,7 @@ use crate::ops::{Precision, PrecisionMode};
 #[test]
 fn finite_bound_position() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        AbsFiniteBoundPos::new_with_inclusivity(
+        AbsFiniteBoundPos::new_with_incl(
             "2025-01-01 10:42:31[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             BoundInclusivity::Exclusive
         )
@@ -20,7 +20,7 @@ fn finite_bound_position() -> Result<(), Box<dyn Error>> {
             TimeZone::get("Europe/Oslo")?,
             Precision::new(Duration::from_mins(5), PrecisionMode::ToNearest)?
         ),
-        Ok(AbsFiniteBoundPos::new_with_inclusivity(
+        Ok(AbsFiniteBoundPos::new_with_incl(
             "2025-01-01 10:45:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             BoundInclusivity::Exclusive,
         )),
@@ -45,7 +45,7 @@ fn start_infinite() -> Result<(), Box<dyn Error>> {
 #[test]
 fn start_common_precision() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        AbsFiniteBoundPos::new_with_inclusivity(
+        AbsFiniteBoundPos::new_with_incl(
             "2025-01-01 02:23:44[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             BoundInclusivity::Exclusive,
         )
@@ -54,7 +54,7 @@ fn start_common_precision() -> Result<(), Box<dyn Error>> {
             TimeZone::get("Europe/Oslo")?,
             Precision::new(Duration::from_mins(5), PrecisionMode::ToFuture)?,
         ),
-        Ok(AbsFiniteBoundPos::new_with_inclusivity(
+        Ok(AbsFiniteBoundPos::new_with_incl(
             "2025-01-01 02:25:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             BoundInclusivity::Exclusive,
         )
@@ -67,7 +67,7 @@ fn start_common_precision() -> Result<(), Box<dyn Error>> {
 #[test]
 fn start_uncommon_precision_with_base() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        AbsFiniteBoundPos::new_with_inclusivity(
+        AbsFiniteBoundPos::new_with_incl(
             "2025-01-01 02:23:44[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             BoundInclusivity::Exclusive,
         )
@@ -80,7 +80,7 @@ fn start_uncommon_precision_with_base() -> Result<(), Box<dyn Error>> {
             )?,
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
         ),
-        Ok(AbsFiniteBoundPos::new_with_inclusivity(
+        Ok(AbsFiniteBoundPos::new_with_incl(
             "2025-01-01 02:30:20[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             BoundInclusivity::Exclusive,
         )
@@ -106,7 +106,7 @@ fn end_infinite() -> Result<(), Box<dyn Error>> {
 #[test]
 fn end_common_precision() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        AbsFiniteBoundPos::new_with_inclusivity(
+        AbsFiniteBoundPos::new_with_incl(
             "2025-01-01 09:56:21[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             BoundInclusivity::Exclusive,
         )
@@ -115,7 +115,7 @@ fn end_common_precision() -> Result<(), Box<dyn Error>> {
             TimeZone::get("Europe/Oslo")?,
             Precision::new(Duration::from_mins(5), PrecisionMode::ToFuture)?,
         ),
-        Ok(AbsFiniteBoundPos::new_with_inclusivity(
+        Ok(AbsFiniteBoundPos::new_with_incl(
             "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             BoundInclusivity::Exclusive,
         )
@@ -128,7 +128,7 @@ fn end_common_precision() -> Result<(), Box<dyn Error>> {
 #[test]
 fn end_uncommon_precision_with_base() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        AbsFiniteBoundPos::new_with_inclusivity(
+        AbsFiniteBoundPos::new_with_incl(
             "2025-01-01 09:56:21[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             BoundInclusivity::Exclusive,
         )
@@ -141,7 +141,7 @@ fn end_uncommon_precision_with_base() -> Result<(), Box<dyn Error>> {
             )?,
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
         ),
-        Ok(AbsFiniteBoundPos::new_with_inclusivity(
+        Ok(AbsFiniteBoundPos::new_with_incl(
             "2025-01-01 10:01:20[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             BoundInclusivity::Exclusive,
         )

@@ -207,7 +207,7 @@ impl<T> OverlapOrGapRemovalResult<T> {
 ///         AbsFiniteBoundPos::new(
 ///             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///         ).to_start_bound(),
-///         AbsFiniteBoundPos::new_with_inclusivity(
+///         AbsFiniteBoundPos::new_with_incl(
 ///             "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///             BoundInclusivity::Exclusive,
 ///         ).to_end_bound(),
@@ -257,13 +257,13 @@ pub trait RemovableOverlapOrGap<Rhs = Self> {
     ///             AbsFiniteBoundPos::new(
     ///                 "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///             ).to_start_bound(),
-    ///             AbsFiniteBoundPos::new_with_inclusivity(
+    ///             AbsFiniteBoundPos::new_with_incl(
     ///                 "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///                 BoundInclusivity::Exclusive,
     ///             ).to_end_bound(),
     ///         ).to_emptiable(),
     ///         AbsBoundPair::new(
-    ///             AbsFiniteBoundPos::new_with_inclusivity(
+    ///             AbsFiniteBoundPos::new_with_incl(
     ///                 "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///                 BoundInclusivity::Exclusive,
     ///             ).to_start_bound(),
@@ -632,7 +632,7 @@ pub fn remove_overlap_or_gap_abs_bound_pair(
                 );
             };
 
-            let new_end_bound = AbsFiniteBoundPos::new_with_inclusivity(
+            let new_end_bound = AbsFiniteBoundPos::new_with_incl(
                 finite_bound_position.pos().time(),
                 finite_bound_position.pos().inclusivity().opposite(), // So that it fully closes the gap
             )
@@ -648,7 +648,7 @@ pub fn remove_overlap_or_gap_abs_bound_pair(
                 );
             };
 
-            let new_start_bound = AbsFiniteBoundPos::new_with_inclusivity(
+            let new_start_bound = AbsFiniteBoundPos::new_with_incl(
                 finite_bound_position.pos().time(),
                 finite_bound_position.pos().inclusivity().opposite(), // So that it fully closes the gap
             )
@@ -664,7 +664,7 @@ pub fn remove_overlap_or_gap_abs_bound_pair(
                 );
             };
 
-            let new_end_bound = AbsFiniteBoundPos::new_with_inclusivity(
+            let new_end_bound = AbsFiniteBoundPos::new_with_incl(
                 finite_bound_position.pos().time(),
                 finite_bound_position.pos().inclusivity().opposite(), // So that it fully closes the gap
             )
@@ -680,7 +680,7 @@ pub fn remove_overlap_or_gap_abs_bound_pair(
                 );
             };
 
-            let new_start_bound = AbsFiniteBoundPos::new_with_inclusivity(
+            let new_start_bound = AbsFiniteBoundPos::new_with_incl(
                 finite_bound_position.pos().time(),
                 finite_bound_position.pos().inclusivity().opposite(), // So that it fully closes the gap
             )
@@ -696,7 +696,7 @@ pub fn remove_overlap_or_gap_abs_bound_pair(
                 );
             };
 
-            let new_end_bound = AbsFiniteBoundPos::new_with_inclusivity(
+            let new_end_bound = AbsFiniteBoundPos::new_with_incl(
                 finite_bound_position.pos().time(),
                 finite_bound_position.pos().inclusivity().opposite(), // So that it fully closes the gap
             )
@@ -712,7 +712,7 @@ pub fn remove_overlap_or_gap_abs_bound_pair(
                 );
             };
 
-            let new_start_bound = AbsFiniteBoundPos::new_with_inclusivity(
+            let new_start_bound = AbsFiniteBoundPos::new_with_incl(
                 finite_bound_position.pos().time(),
                 finite_bound_position.pos().inclusivity().opposite(), // So that it fully closes the gap
             )
@@ -789,7 +789,7 @@ pub fn remove_overlap_or_gap_rel_bound_pair(
                 );
             };
 
-            let new_end_bound = RelFiniteBoundPos::new_with_inclusivity(
+            let new_end_bound = RelFiniteBoundPos::new_with_incl(
                 finite_bound_position.pos().offset(),
                 finite_bound_position.pos().inclusivity().opposite(), // So that it fully closes the gap
             )
@@ -805,7 +805,7 @@ pub fn remove_overlap_or_gap_rel_bound_pair(
                 );
             };
 
-            let new_start_bound = RelFiniteBoundPos::new_with_inclusivity(
+            let new_start_bound = RelFiniteBoundPos::new_with_incl(
                 finite_bound_position.pos().offset(),
                 finite_bound_position.pos().inclusivity().opposite(), // So that it fully closes the gap
             )
@@ -821,7 +821,7 @@ pub fn remove_overlap_or_gap_rel_bound_pair(
                 );
             };
 
-            let new_end_bound = RelFiniteBoundPos::new_with_inclusivity(
+            let new_end_bound = RelFiniteBoundPos::new_with_incl(
                 finite_bound_position.pos().offset(),
                 finite_bound_position.pos().inclusivity().opposite(), // So that it fully closes the gap
             )
@@ -837,7 +837,7 @@ pub fn remove_overlap_or_gap_rel_bound_pair(
                 );
             };
 
-            let new_start_bound = RelFiniteBoundPos::new_with_inclusivity(
+            let new_start_bound = RelFiniteBoundPos::new_with_incl(
                 finite_bound_position.pos().offset(),
                 finite_bound_position.pos().inclusivity().opposite(), // So that it fully closes the gap
             )
@@ -853,7 +853,7 @@ pub fn remove_overlap_or_gap_rel_bound_pair(
                 );
             };
 
-            let new_end_bound = RelFiniteBoundPos::new_with_inclusivity(
+            let new_end_bound = RelFiniteBoundPos::new_with_incl(
                 finite_bound_position.pos().offset(),
                 finite_bound_position.pos().inclusivity().opposite(), // So that it fully closes the gap
             )
@@ -869,7 +869,7 @@ pub fn remove_overlap_or_gap_rel_bound_pair(
                 );
             };
 
-            let new_start_bound = RelFiniteBoundPos::new_with_inclusivity(
+            let new_start_bound = RelFiniteBoundPos::new_with_incl(
                 finite_bound_position.pos().offset(),
                 finite_bound_position.pos().inclusivity().opposite(), // So that it fully closes the gap
             )

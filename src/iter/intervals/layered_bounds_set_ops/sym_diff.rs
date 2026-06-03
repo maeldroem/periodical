@@ -95,7 +95,7 @@
 //!                     .timestamp(),
 //!             )
 //!             .to_start_bound(),
-//!             AbsFiniteBoundPos::new_with_inclusivity(
+//!             AbsFiniteBoundPos::new_with_incl(
 //!                 "2025-01-01 08:00:00[Europe/Oslo]"
 //!                     .parse::<Zoned>()?
 //!                     .timestamp(),
@@ -104,7 +104,7 @@
 //!             .to_end_bound(),
 //!         ),
 //!         AbsBoundPair::new(
-//!             AbsFiniteBoundPos::new_with_inclusivity(
+//!             AbsFiniteBoundPos::new_with_incl(
 //!                 "2025-01-01 11:00:00[Europe/Oslo]"
 //!                     .parse::<Zoned>()?
 //!                     .timestamp(),
@@ -125,7 +125,7 @@
 //!                     .timestamp(),
 //!             )
 //!             .to_start_bound(),
-//!             AbsFiniteBoundPos::new_with_inclusivity(
+//!             AbsFiniteBoundPos::new_with_incl(
 //!                 "2025-01-01 14:00:00[Europe/Oslo]"
 //!                     .parse::<Zoned>()?
 //!                     .timestamp(),
@@ -134,7 +134,7 @@
 //!             .to_end_bound(),
 //!         ),
 //!         AbsBoundPair::new(
-//!             AbsFiniteBoundPos::new_with_inclusivity(
+//!             AbsFiniteBoundPos::new_with_incl(
 //!                 "2025-01-01 16:00:00[Europe/Oslo]"
 //!                     .parse::<Zoned>()?
 //!                     .timestamp(),

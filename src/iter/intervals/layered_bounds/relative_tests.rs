@@ -64,7 +64,7 @@ fn run() {
         ),
         // 6
         RelBoundPair::new(
-            RelFiniteBoundPos::new_with_inclusivity(
+            RelFiniteBoundPos::new_with_incl(
                 SignedDuration::from_hours(205),
                 BoundInclusivity::Exclusive,
             )
@@ -79,7 +79,7 @@ fn run() {
         // 9
         RelBoundPair::new(
             RelFiniteBoundPos::new(SignedDuration::from_hours(226)).to_start_bound(),
-            RelFiniteBoundPos::new_with_inclusivity(
+            RelFiniteBoundPos::new_with_incl(
                 SignedDuration::from_hours(310),
                 BoundInclusivity::Exclusive,
             )
@@ -87,7 +87,7 @@ fn run() {
         ),
         // 11
         RelBoundPair::new(
-            RelFiniteBoundPos::new_with_inclusivity(
+            RelFiniteBoundPos::new_with_incl(
                 SignedDuration::from_hours(310),
                 BoundInclusivity::Exclusive,
             )
@@ -109,7 +109,7 @@ fn run() {
         ),
         // 4
         RelBoundPair::new(
-            RelFiniteBoundPos::new_with_inclusivity(
+            RelFiniteBoundPos::new_with_incl(
                 SignedDuration::from_hours(120),
                 BoundInclusivity::Exclusive,
             )
@@ -129,7 +129,7 @@ fn run() {
         // 10
         RelBoundPair::new(
             RelFiniteBoundPos::new(SignedDuration::from_hours(304)).to_start_bound(),
-            RelFiniteBoundPos::new_with_inclusivity(
+            RelFiniteBoundPos::new_with_incl(
                 SignedDuration::from_hours(310),
                 BoundInclusivity::Exclusive,
             )
@@ -137,7 +137,7 @@ fn run() {
         ),
         // 12
         RelBoundPair::new(
-            RelFiniteBoundPos::new_with_inclusivity(
+            RelFiniteBoundPos::new_with_incl(
                 SignedDuration::from_hours(310),
                 BoundInclusivity::Exclusive,
             )
@@ -164,7 +164,7 @@ fn run() {
                 LayeredBoundsState::NoLayers,
                 LayeredBoundsState::FirstLayer,
                 Some(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(101),
                         BoundInclusivity::Exclusive,
                     )
@@ -178,7 +178,7 @@ fn run() {
                 LayeredBoundsState::NoLayers,
                 Some(RelFiniteBoundPos::new(SignedDuration::from_hours(105)).to_end_bound()),
                 Some(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(105),
                         BoundInclusivity::Exclusive,
                     )
@@ -190,7 +190,7 @@ fn run() {
                 LayeredBoundsState::NoLayers,
                 LayeredBoundsState::SecondLayer,
                 Some(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(110),
                         BoundInclusivity::Exclusive,
                     )
@@ -204,7 +204,7 @@ fn run() {
                 LayeredBoundsState::NoLayers,
                 Some(RelFiniteBoundPos::new(SignedDuration::from_hours(115)).to_end_bound()),
                 Some(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(115),
                         BoundInclusivity::Exclusive,
                     )
@@ -216,7 +216,7 @@ fn run() {
                 LayeredBoundsState::NoLayers,
                 LayeredBoundsState::FirstLayer,
                 Some(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(117),
                         BoundInclusivity::Exclusive,
                     )
@@ -230,7 +230,7 @@ fn run() {
                 LayeredBoundsState::SecondLayer,
                 Some(RelFiniteBoundPos::new(SignedDuration::from_hours(120)).to_end_bound()),
                 Some(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(120),
                         BoundInclusivity::Exclusive,
                     )
@@ -243,7 +243,7 @@ fn run() {
                 LayeredBoundsState::NoLayers,
                 Some(RelFiniteBoundPos::new(SignedDuration::from_hours(125)).to_end_bound()),
                 Some(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(125),
                         BoundInclusivity::Exclusive,
                     )
@@ -255,7 +255,7 @@ fn run() {
                 LayeredBoundsState::NoLayers,
                 LayeredBoundsState::SecondLayer,
                 Some(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(130),
                         BoundInclusivity::Exclusive,
                     )
@@ -269,7 +269,7 @@ fn run() {
                 LayeredBoundsState::FirstLayer,
                 Some(RelFiniteBoundPos::new(SignedDuration::from_hours(205)).to_end_bound()),
                 Some(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(205),
                         BoundInclusivity::Exclusive,
                     )
@@ -282,7 +282,7 @@ fn run() {
                 LayeredBoundsState::NoLayers,
                 Some(RelFiniteBoundPos::new(SignedDuration::from_hours(210)).to_end_bound()),
                 Some(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(210),
                         BoundInclusivity::Exclusive,
                     )
@@ -294,7 +294,7 @@ fn run() {
                 LayeredBoundsState::NoLayers,
                 LayeredBoundsState::FirstLayer,
                 Some(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(215),
                         BoundInclusivity::Exclusive,
                     )
@@ -307,7 +307,7 @@ fn run() {
                 LayeredBoundsState::FirstLayer,
                 LayeredBoundsState::BothLayers,
                 Some(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(220),
                         BoundInclusivity::Exclusive,
                     )
@@ -321,7 +321,7 @@ fn run() {
                 LayeredBoundsState::SecondLayer,
                 Some(RelFiniteBoundPos::new(SignedDuration::from_hours(225)).to_end_bound()),
                 Some(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(225),
                         BoundInclusivity::Exclusive,
                     )
@@ -333,7 +333,7 @@ fn run() {
                 LayeredBoundsState::SecondLayer,
                 LayeredBoundsState::BothLayers,
                 Some(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(226),
                         BoundInclusivity::Exclusive,
                     )
@@ -347,7 +347,7 @@ fn run() {
                 LayeredBoundsState::FirstLayer,
                 Some(RelFiniteBoundPos::new(SignedDuration::from_hours(301)).to_end_bound()),
                 Some(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(301),
                         BoundInclusivity::Exclusive,
                     )
@@ -359,7 +359,7 @@ fn run() {
                 LayeredBoundsState::FirstLayer,
                 LayeredBoundsState::BothLayers,
                 Some(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(304),
                         BoundInclusivity::Exclusive,
                     )
@@ -372,7 +372,7 @@ fn run() {
                 LayeredBoundsState::BothLayers,
                 LayeredBoundsState::NoLayers,
                 Some(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(310),
                         BoundInclusivity::Exclusive,
                     )
@@ -386,7 +386,7 @@ fn run() {
                 LayeredBoundsState::BothLayers,
                 Some(RelFiniteBoundPos::new(SignedDuration::from_hours(310)).to_end_bound()),
                 Some(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(310),
                         BoundInclusivity::Exclusive,
                     )
@@ -399,7 +399,7 @@ fn run() {
                 LayeredBoundsState::SecondLayer,
                 Some(RelFiniteBoundPos::new(SignedDuration::from_hours(315)).to_end_bound()),
                 Some(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(315),
                         BoundInclusivity::Exclusive,
                     )
@@ -411,7 +411,7 @@ fn run() {
                 LayeredBoundsState::SecondLayer,
                 LayeredBoundsState::BothLayers,
                 Some(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(320),
                         BoundInclusivity::Exclusive,
                     )
@@ -425,7 +425,7 @@ fn run() {
                 LayeredBoundsState::FirstLayer,
                 Some(RelFiniteBoundPos::new(SignedDuration::from_hours(320)).to_end_bound()),
                 Some(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(320),
                         BoundInclusivity::Exclusive,
                     )
@@ -438,7 +438,7 @@ fn run() {
                 LayeredBoundsState::NoLayers,
                 Some(RelFiniteBoundPos::new(SignedDuration::from_hours(325)).to_end_bound()),
                 Some(
-                    RelFiniteBoundPos::new_with_inclusivity(
+                    RelFiniteBoundPos::new_with_incl(
                         SignedDuration::from_hours(325),
                         BoundInclusivity::Exclusive,
                     )

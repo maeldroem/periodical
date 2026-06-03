@@ -165,7 +165,7 @@ impl ToAbsolute for RelFiniteBoundPos {
     type AbsType = AbsFiniteBoundPos;
 
     fn to_absolute(&self, reference: Timestamp) -> Self::AbsType {
-        AbsFiniteBoundPos::new_with_inclusivity(reference + self.offset(), self.inclusivity())
+        AbsFiniteBoundPos::new_with_incl(reference + self.offset(), self.inclusivity())
     }
 }
 
@@ -175,7 +175,7 @@ impl ToAbsolute for RelStartBound {
     fn to_absolute(&self, reference: Timestamp) -> Self::AbsType {
         match self {
             RelStartBound::InfinitePast => AbsStartBound::InfinitePast,
-            RelStartBound::Finite(relative_finite) => AbsFiniteBoundPos::new_with_inclusivity(
+            RelStartBound::Finite(relative_finite) => AbsFiniteBoundPos::new_with_incl(
                 reference + relative_finite.pos().offset(),
                 relative_finite.pos().inclusivity(),
             )
@@ -190,7 +190,7 @@ impl ToAbsolute for RelEndBound {
     fn to_absolute(&self, reference: Timestamp) -> Self::AbsType {
         match self {
             RelEndBound::InfiniteFuture => AbsEndBound::InfiniteFuture,
-            RelEndBound::Finite(relative_finite) => AbsFiniteBoundPos::new_with_inclusivity(
+            RelEndBound::Finite(relative_finite) => AbsFiniteBoundPos::new_with_incl(
                 reference + relative_finite.pos().offset(),
                 relative_finite.pos().inclusivity(),
             )
@@ -373,7 +373,7 @@ impl ToRelative for AbsFiniteBoundPos {
     type RelType = RelFiniteBoundPos;
 
     fn to_relative(&self, reference: Timestamp) -> Self::RelType {
-        RelFiniteBoundPos::new_with_inclusivity(self.time().duration_since(reference), self.inclusivity())
+        RelFiniteBoundPos::new_with_incl(self.time().duration_since(reference), self.inclusivity())
     }
 }
 
@@ -383,7 +383,7 @@ impl ToRelative for AbsStartBound {
     fn to_relative(&self, reference: Timestamp) -> Self::RelType {
         match self {
             AbsStartBound::InfinitePast => RelStartBound::InfinitePast,
-            AbsStartBound::Finite(absolute_finite) => RelFiniteBoundPos::new_with_inclusivity(
+            AbsStartBound::Finite(absolute_finite) => RelFiniteBoundPos::new_with_incl(
                 absolute_finite.pos().time().duration_since(reference),
                 absolute_finite.pos().inclusivity(),
             )
@@ -398,7 +398,7 @@ impl ToRelative for AbsEndBound {
     fn to_relative(&self, reference: Timestamp) -> Self::RelType {
         match self {
             AbsEndBound::InfiniteFuture => RelEndBound::InfiniteFuture,
-            AbsEndBound::Finite(absolute_finite) => RelFiniteBoundPos::new_with_inclusivity(
+            AbsEndBound::Finite(absolute_finite) => RelFiniteBoundPos::new_with_incl(
                 absolute_finite.pos().time().duration_since(reference),
                 absolute_finite.pos().inclusivity(),
             )

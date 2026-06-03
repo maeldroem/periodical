@@ -169,7 +169,7 @@ fn past_continuation_abs_bounds_bounded() -> Result<(), Box<dyn Error>> {
         .past_continuation(),
         EmptiableAbsBoundPair::Bound(AbsBoundPair::new(
             AbsStartBound::InfinitePast,
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
             )
@@ -189,7 +189,7 @@ fn future_continuation_abs_bounds_bounded() -> Result<(), Box<dyn Error>> {
         )
         .future_continuation(),
         EmptiableAbsBoundPair::Bound(AbsBoundPair::new(
-            AbsFiniteBoundPos::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
             )
