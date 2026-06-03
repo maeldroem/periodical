@@ -231,6 +231,36 @@ impl AbsBoundPair {
         self.end
     }
 
+    /// Compares two [`AbsBoundPair`], but if they have the same start,
+    /// order by decreasing length
+    ///
+    /// Don't rely on this method for checking for equality of start, as it will
+    /// produce other [`Ordering`]s if their lengths don't match too.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use periodical::intervals::absolute::AbsBoundPair;
+    /// # let mut bound_pairs: [AbsBoundPair; 0] = [];
+    /// bound_pairs.sort_by(AbsBoundPair::ord_by_start_and_inv_length);
+    /// ```
+    #[must_use]
+    pub fn ord_by_start_and_inv_length(&self, other: &Self) -> Ordering {
+        match self
+            .start()
+            .bound_cmp(&other.end())
+            .disambiguate(BoundOverlapDisambiguationRuleSet::Strict)
+        {
+            Ordering::Less => Ordering::Less,
+            Ordering::Equal => self
+                .end()
+                .bound_cmp(&other.end())
+                .disambiguate(BoundOverlapDisambiguationRuleSet::Strict)
+                .reverse(),
+            Ordering::Greater => Ordering::Greater,
+        }
+    }
+
     /// Sets the start bound without checking if it violates invariants
     ///
     /// # Examples
@@ -372,36 +402,6 @@ impl AbsBoundPair {
                 true
             },
             Err(_) => false,
-        }
-    }
-
-    /// Compares two [`AbsBoundPair`], but if they have the same start,
-    /// order by decreasing length
-    ///
-    /// Don't rely on this method for checking for equality of start, as it will
-    /// produce other [`Ordering`]s if their lengths don't match too.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use periodical::intervals::absolute::AbsBoundPair;
-    /// # let mut bound_pairs: [AbsBoundPair; 0] = [];
-    /// bound_pairs.sort_by(AbsBoundPair::ord_by_start_and_inv_length);
-    /// ```
-    #[must_use]
-    pub fn ord_by_start_and_inv_length(&self, other: &Self) -> Ordering {
-        match self
-            .start()
-            .bound_cmp(&other.end())
-            .disambiguate(BoundOverlapDisambiguationRuleSet::Strict)
-        {
-            Ordering::Less => Ordering::Less,
-            Ordering::Equal => self
-                .end()
-                .bound_cmp(&other.end())
-                .disambiguate(BoundOverlapDisambiguationRuleSet::Strict)
-                .reverse(),
-            Ordering::Greater => Ordering::Greater,
         }
     }
 

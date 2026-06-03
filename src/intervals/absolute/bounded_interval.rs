@@ -914,32 +914,6 @@ impl BoundedAbsInterval {
         self.start.pos_mut().set_time(new_start_time);
     }
 
-    /// Sets the end time without checking if it violates invariants
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::error::Error;
-    /// # use jiff::Timestamp;
-    /// # use periodical::intervals::absolute::BoundedAbsInterval;
-    /// let start_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
-    /// let end_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
-    ///
-    /// let mut bounded_interval = BoundedAbsInterval::from_times(start_time, end_time);
-    ///
-    /// let new_end_time = "2025-01-01 06:00:00Z".parse::<Timestamp>()?;
-    ///
-    /// // Even if the new end time violates the chronological order invariant
-    /// bounded_interval.unchecked_set_end_time(new_end_time);
-    ///
-    /// // It remains that way
-    /// assert_eq!(bounded_interval.end_time(), new_end_time);
-    /// # Ok::<(), Box<dyn Error>>(())
-    /// ```
-    pub fn unchecked_set_end_time(&mut self, new_end_time: Timestamp) {
-        self.end.pos_mut().set_time(new_end_time);
-    }
-
     /// Sets the start time
     ///
     /// # Errors
@@ -986,6 +960,32 @@ impl BoundedAbsInterval {
             },
             Ordering::Greater => Err(BoundedAbsIntervalUpdateError::ChronologicalOrderViolation),
         }
+    }
+
+    /// Sets the end time without checking if it violates invariants
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jiff::Timestamp;
+    /// # use periodical::intervals::absolute::BoundedAbsInterval;
+    /// let start_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
+    /// let end_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
+    ///
+    /// let mut bounded_interval = BoundedAbsInterval::from_times(start_time, end_time);
+    ///
+    /// let new_end_time = "2025-01-01 06:00:00Z".parse::<Timestamp>()?;
+    ///
+    /// // Even if the new end time violates the chronological order invariant
+    /// bounded_interval.unchecked_set_end_time(new_end_time);
+    ///
+    /// // It remains that way
+    /// assert_eq!(bounded_interval.end_time(), new_end_time);
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    pub fn unchecked_set_end_time(&mut self, new_end_time: Timestamp) {
+        self.end.pos_mut().set_time(new_end_time);
     }
 
     /// Sets the end time
@@ -1156,32 +1156,6 @@ impl BoundedAbsInterval {
         self.start.pos_mut().set_inclusivity(new_start_inclusivity);
     }
 
-    /// Sets the end bound's inclusivity without checking if it violates invariants
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::error::Error;
-    /// # use jiff::Timestamp;
-    /// # use periodical::intervals::absolute::BoundedAbsInterval;
-    /// # use periodical::intervals::meta::BoundInclusivity;
-    /// let time = "2026-01-01 08:00:00Z".parse::<Timestamp>()?;
-    /// let mut bounded_interval = BoundedAbsInterval::from_times(time, time);
-    ///
-    /// // Even if the new end inclusivity violates the same time doubly inclusive invariant
-    /// bounded_interval.unchecked_set_end_inclusivity(BoundInclusivity::Exclusive);
-    ///
-    /// // It remains that way
-    /// assert_eq!(
-    ///     bounded_interval.end_inclusivity(),
-    ///     BoundInclusivity::Exclusive
-    /// );
-    /// # Ok::<(), Box<dyn Error>>(())
-    /// ```
-    pub fn unchecked_set_end_inclusivity(&mut self, new_end_inclusivity: BoundInclusivity) {
-        self.end.pos_mut().set_inclusivity(new_end_inclusivity);
-    }
-
     /// Sets the start bound's inclusivity
     ///
     /// # Errors
@@ -1224,6 +1198,32 @@ impl BoundedAbsInterval {
 
         self.unchecked_set_start_inclusivity(new_inclusivity);
         Ok(())
+    }
+
+    /// Sets the end bound's inclusivity without checking if it violates invariants
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jiff::Timestamp;
+    /// # use periodical::intervals::absolute::BoundedAbsInterval;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// let time = "2026-01-01 08:00:00Z".parse::<Timestamp>()?;
+    /// let mut bounded_interval = BoundedAbsInterval::from_times(time, time);
+    ///
+    /// // Even if the new end inclusivity violates the same time doubly inclusive invariant
+    /// bounded_interval.unchecked_set_end_inclusivity(BoundInclusivity::Exclusive);
+    ///
+    /// // It remains that way
+    /// assert_eq!(
+    ///     bounded_interval.end_inclusivity(),
+    ///     BoundInclusivity::Exclusive
+    /// );
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    pub fn unchecked_set_end_inclusivity(&mut self, new_end_inclusivity: BoundInclusivity) {
+        self.end.pos_mut().set_inclusivity(new_end_inclusivity);
     }
 
     /// Sets the end bound's inclusivity

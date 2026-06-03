@@ -164,8 +164,7 @@ impl RelBoundPair {
     /// );
     /// assert_eq!(
     ///     bound_pair.end(),
-    ///     RelFiniteBoundPos::new_with_inclusivity(end, BoundInclusivity::Exclusive)
-    ///         .to_end_bound(),
+    ///     RelFiniteBoundPos::new_with_inclusivity(end, BoundInclusivity::Exclusive).to_end_bound(),
     /// );
     /// ```
     #[must_use]
@@ -221,6 +220,36 @@ impl RelBoundPair {
     #[must_use]
     pub fn end(&self) -> RelEndBound {
         self.end
+    }
+
+    /// Compares two [`RelBoundPair`], but if they have the same start,
+    /// order by decreasing length
+    ///
+    /// Don't rely on this method for checking for equality of start, as it will
+    /// produce other [`Ordering`]s if their lengths don't match too.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use periodical::intervals::relative::RelBoundPair;
+    /// # let mut bound_pairs: [RelBoundPair; 0] = [];
+    /// bound_pairs.sort_by(RelBoundPair::ord_by_start_and_inv_length);
+    /// ```
+    #[must_use]
+    pub fn ord_by_start_and_inv_length(&self, other: &Self) -> Ordering {
+        match self
+            .start()
+            .bound_cmp(&other.end())
+            .disambiguate(BoundOverlapDisambiguationRuleSet::Strict)
+        {
+            Ordering::Less => Ordering::Less,
+            Ordering::Equal => self
+                .end()
+                .bound_cmp(&other.end())
+                .disambiguate(BoundOverlapDisambiguationRuleSet::Strict)
+                .reverse(),
+            Ordering::Greater => Ordering::Greater,
+        }
     }
 
     /// Sets the start bound without checking if it violates invariants
@@ -356,36 +385,6 @@ impl RelBoundPair {
                 true
             },
             Err(_) => false,
-        }
-    }
-
-    /// Compares two [`RelBoundPair`], but if they have the same start,
-    /// order by decreasing length
-    ///
-    /// Don't rely on this method for checking for equality of start, as it will
-    /// produce other [`Ordering`]s if their lengths don't match too.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use periodical::intervals::relative::RelBoundPair;
-    /// # let mut bound_pairs: [RelBoundPair; 0] = [];
-    /// bound_pairs.sort_by(RelBoundPair::ord_by_start_and_inv_length);
-    /// ```
-    #[must_use]
-    pub fn ord_by_start_and_inv_length(&self, other: &Self) -> Ordering {
-        match self
-            .start()
-            .bound_cmp(&other.end())
-            .disambiguate(BoundOverlapDisambiguationRuleSet::Strict)
-        {
-            Ordering::Less => Ordering::Less,
-            Ordering::Equal => self
-                .end()
-                .bound_cmp(&other.end())
-                .disambiguate(BoundOverlapDisambiguationRuleSet::Strict)
-                .reverse(),
-            Ordering::Greater => Ordering::Greater,
         }
     }
 
