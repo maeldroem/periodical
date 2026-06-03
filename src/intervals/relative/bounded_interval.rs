@@ -188,7 +188,7 @@ impl BoundedRelativeInterval {
     /// let offset = SignedDuration::from_hours(1);
     ///
     /// // Even if it violates the same offset doubly inclusive invariant
-    /// let bounded_interval = BoundedRelativeInterval::unchecked_from_offsets_and_inclusivities(
+    /// let bounded_interval = BoundedRelativeInterval::unchecked_from_offsets_incl(
     ///     offset,
     ///     BoundInclusivity::Inclusive,
     ///     offset,
@@ -208,7 +208,7 @@ impl BoundedRelativeInterval {
     /// );
     /// ```
     #[must_use]
-    pub fn unchecked_from_offsets_and_inclusivities(
+    pub fn unchecked_from_offsets_incl(
         start: SignedDuration,
         start_inclusivity: BoundInclusivity,
         end: SignedDuration,
@@ -234,7 +234,7 @@ impl BoundedRelativeInterval {
     /// let start_offset = SignedDuration::from_hours(3);
     /// let end_offset = SignedDuration::from_hours(5);
     ///
-    /// let bounded_interval = BoundedRelativeInterval::from_offsets_and_inclusivities(
+    /// let bounded_interval = BoundedRelativeInterval::from_offsets_incl(
     ///     start_offset,
     ///     BoundInclusivity::Inclusive,
     ///     end_offset,
@@ -253,7 +253,7 @@ impl BoundedRelativeInterval {
     /// );
     /// ```
     #[must_use]
-    pub fn from_offsets_and_inclusivities(
+    pub fn from_offsets_incl(
         start: SignedDuration,
         start_inclusivity: BoundInclusivity,
         end: SignedDuration,
@@ -281,7 +281,7 @@ impl BoundedRelativeInterval {
     /// let start = SignedDuration::from_hours(-1);
     /// let length = Duration::from_hours(5);
     ///
-    /// let bounded_interval = BoundedRelativeInterval::from_start_and_length(start, length)?;
+    /// let bounded_interval = BoundedRelativeInterval::from_start_len(start, length)?;
     ///
     /// assert_eq!(
     ///     bounded_interval.start_offset(),
@@ -290,7 +290,7 @@ impl BoundedRelativeInterval {
     /// assert_eq!(bounded_interval.end_offset(), SignedDuration::from_hours(4));
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
-    pub fn from_start_and_length(
+    pub fn from_start_len(
         start: SignedDuration,
         length: StdDuration,
     ) -> Result<Self, BoundedRelativeIntervalCreationError> {
@@ -324,13 +324,12 @@ impl BoundedRelativeInterval {
     /// let start = SignedDuration::from_hours(1);
     ///
     /// // Even if it violates the same offset doubly inclusive variant
-    /// let bounded_interval =
-    ///     BoundedRelativeInterval::unchecked_from_start_and_length_and_inclusivities(
-    ///         start,
-    ///         BoundInclusivity::Inclusive,
-    ///         Duration::ZERO,
-    ///         BoundInclusivity::Exclusive,
-    ///     )?;
+    /// let bounded_interval = BoundedRelativeInterval::unchecked_from_start_len_incl(
+    ///     start,
+    ///     BoundInclusivity::Inclusive,
+    ///     Duration::ZERO,
+    ///     BoundInclusivity::Exclusive,
+    /// )?;
     ///
     /// // It remains that way
     /// assert_eq!(bounded_interval.start_offset(), start);
@@ -345,13 +344,13 @@ impl BoundedRelativeInterval {
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
-    pub fn unchecked_from_start_and_length_and_inclusivities(
+    pub fn unchecked_from_start_len_incl(
         start: SignedDuration,
         start_inclusivity: BoundInclusivity,
         length: StdDuration,
         end_inclusivity: BoundInclusivity,
     ) -> Result<Self, BoundedRelativeIntervalCreationError> {
-        Ok(Self::unchecked_from_offsets_and_inclusivities(
+        Ok(Self::unchecked_from_offsets_incl(
             start,
             start_inclusivity,
             SignedDuration::try_from_nanos_i128(
@@ -383,7 +382,7 @@ impl BoundedRelativeInterval {
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// let start_offset = SignedDuration::from_hours(-1);
     ///
-    /// let bounded_interval = BoundedRelativeInterval::from_start_and_length_and_inclusivities(
+    /// let bounded_interval = BoundedRelativeInterval::from_start_len_incl(
     ///     start_offset,
     ///     BoundInclusivity::Inclusive,
     ///     Duration::from_hours(5),
@@ -402,7 +401,7 @@ impl BoundedRelativeInterval {
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
-    pub fn from_start_and_length_and_inclusivities(
+    pub fn from_start_len_incl(
         start: SignedDuration,
         start_inclusivity: BoundInclusivity,
         length: StdDuration,
@@ -412,7 +411,7 @@ impl BoundedRelativeInterval {
             return Ok(Self::unchecked_from_offsets(start, start));
         }
 
-        Self::unchecked_from_start_and_length_and_inclusivities(start, start_inclusivity, length, end_inclusivity)
+        Self::unchecked_from_start_len_incl(start, start_inclusivity, length, end_inclusivity)
     }
 
     /// Attempts to create a new [`BoundedRelativeInterval`] from an end offset and a length
@@ -431,7 +430,7 @@ impl BoundedRelativeInterval {
     /// let end = SignedDuration::from_hours(5);
     /// let length = Duration::from_hours(6);
     ///
-    /// let bounded_interval = BoundedRelativeInterval::from_end_and_length(end, length)?;
+    /// let bounded_interval = BoundedRelativeInterval::from_end_len(end, length)?;
     ///
     /// assert_eq!(
     ///     bounded_interval.start_offset(),
@@ -440,7 +439,7 @@ impl BoundedRelativeInterval {
     /// assert_eq!(bounded_interval.end_offset(), end);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
-    pub fn from_end_and_length(
+    pub fn from_end_len(
         end: SignedDuration,
         length: StdDuration,
     ) -> Result<Self, BoundedRelativeIntervalCreationError> {
@@ -473,13 +472,12 @@ impl BoundedRelativeInterval {
     /// let end = SignedDuration::from_hours(1);
     ///
     /// // Even if it violates the same offset doubly inclusive variant
-    /// let bounded_interval =
-    ///     BoundedRelativeInterval::unchecked_from_end_and_length_and_inclusivities(
-    ///         end,
-    ///         BoundInclusivity::Inclusive,
-    ///         Duration::ZERO,
-    ///         BoundInclusivity::Exclusive,
-    ///     )?;
+    /// let bounded_interval = BoundedRelativeInterval::unchecked_from_end_len_incl(
+    ///     end,
+    ///     BoundInclusivity::Inclusive,
+    ///     Duration::ZERO,
+    ///     BoundInclusivity::Exclusive,
+    /// )?;
     ///
     /// // It remains that way
     /// assert_eq!(bounded_interval.start_offset(), end);
@@ -494,13 +492,13 @@ impl BoundedRelativeInterval {
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
-    pub fn unchecked_from_end_and_length_and_inclusivities(
+    pub fn unchecked_from_end_len_incl(
         end: SignedDuration,
         end_inclusivity: BoundInclusivity,
         length: StdDuration,
         start_inclusivity: BoundInclusivity,
     ) -> Result<Self, BoundedRelativeIntervalCreationError> {
-        Ok(Self::unchecked_from_offsets_and_inclusivities(
+        Ok(Self::unchecked_from_offsets_incl(
             SignedDuration::try_from_nanos_i128(
                 end.as_nanos()
                     .checked_sub_unsigned(length.as_nanos())
@@ -531,7 +529,7 @@ impl BoundedRelativeInterval {
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// let end_offset = SignedDuration::from_hours(-1);
     ///
-    /// let bounded_interval = BoundedRelativeInterval::from_end_and_length_and_inclusivities(
+    /// let bounded_interval = BoundedRelativeInterval::from_end_len_incl(
     ///     end_offset,
     ///     BoundInclusivity::Inclusive,
     ///     Duration::from_hours(5),
@@ -553,7 +551,7 @@ impl BoundedRelativeInterval {
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
-    pub fn from_end_and_length_and_inclusivities(
+    pub fn from_end_len_incl(
         end: SignedDuration,
         end_inclusivity: BoundInclusivity,
         length: StdDuration,
@@ -563,7 +561,7 @@ impl BoundedRelativeInterval {
             return Ok(Self::unchecked_from_offsets(end, end));
         }
 
-        Self::unchecked_from_end_and_length_and_inclusivities(end, end_inclusivity, length, start_inclusivity)
+        Self::unchecked_from_end_len_incl(end, end_inclusivity, length, start_inclusivity)
     }
 
     /// Attempts to create a [`BoundedRelativeInterval`] from a [`SignedDuration`] range
@@ -606,12 +604,7 @@ impl BoundedRelativeInterval {
             Bound::Unbounded => return Err(BoundedRelativeIntervalTryFromRangeError),
         };
 
-        Ok(Self::from_offsets_and_inclusivities(
-            start,
-            start_inclusivity,
-            end,
-            end_inclusivity,
-        ))
+        Ok(Self::from_offsets_incl(start, start_inclusivity, end, end_inclusivity))
     }
 
     /// Returns the finite start bound
@@ -698,7 +691,7 @@ impl BoundedRelativeInterval {
     /// # use jiff::SignedDuration;
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::relative::BoundedRelativeInterval;
-    /// let bounded_interval = BoundedRelativeInterval::from_offsets_and_inclusivities(
+    /// let bounded_interval = BoundedRelativeInterval::from_offsets_incl(
     ///     SignedDuration::from_hours(1),
     ///     BoundInclusivity::Inclusive,
     ///     SignedDuration::from_hours(5),
@@ -723,7 +716,7 @@ impl BoundedRelativeInterval {
     /// # use jiff::SignedDuration;
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::relative::BoundedRelativeInterval;
-    /// let bounded_interval = BoundedRelativeInterval::from_offsets_and_inclusivities(
+    /// let bounded_interval = BoundedRelativeInterval::from_offsets_incl(
     ///     SignedDuration::from_hours(1),
     ///     BoundInclusivity::Inclusive,
     ///     SignedDuration::from_hours(5),
@@ -1399,7 +1392,7 @@ impl From<((SignedDuration, BoundInclusivity), (SignedDuration, BoundInclusivity
             (SignedDuration, BoundInclusivity),
         ),
     ) -> Self {
-        BoundedRelativeInterval::from_offsets_and_inclusivities(start, start_inclusivity, end, end_inclusivity)
+        BoundedRelativeInterval::from_offsets_incl(start, start_inclusivity, end, end_inclusivity)
     }
 }
 
@@ -1411,7 +1404,7 @@ impl From<(RelativeFiniteBoundPosition, RelativeFiniteBoundPosition)> for Bounde
 
 impl From<Range<SignedDuration>> for BoundedRelativeInterval {
     fn from(range: Range<SignedDuration>) -> Self {
-        BoundedRelativeInterval::from_offsets_and_inclusivities(
+        BoundedRelativeInterval::from_offsets_incl(
             range.start,
             BoundInclusivity::Inclusive,
             range.end,
@@ -1422,7 +1415,7 @@ impl From<Range<SignedDuration>> for BoundedRelativeInterval {
 
 impl From<RangeInclusive<SignedDuration>> for BoundedRelativeInterval {
     fn from(range: RangeInclusive<SignedDuration>) -> Self {
-        BoundedRelativeInterval::from_offsets_and_inclusivities(
+        BoundedRelativeInterval::from_offsets_incl(
             *range.start(),
             BoundInclusivity::Inclusive,
             *range.end(),

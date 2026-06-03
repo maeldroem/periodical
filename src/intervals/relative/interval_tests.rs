@@ -52,7 +52,7 @@ mod from_range {
 
         assert_eq!(
             RelativeInterval::from_range(start..end),
-            RelativeInterval::Bounded(BoundedRelativeInterval::from_offsets_and_inclusivities(
+            RelativeInterval::Bounded(BoundedRelativeInterval::from_offsets_incl(
                 start,
                 BoundInclusivity::Inclusive,
                 end,
@@ -81,7 +81,7 @@ mod from_range {
 
         assert_eq!(
             RelativeInterval::from_range((Bound::Excluded(start), Bound::Included(end))),
-            RelativeInterval::Bounded(BoundedRelativeInterval::from_offsets_and_inclusivities(
+            RelativeInterval::Bounded(BoundedRelativeInterval::from_offsets_incl(
                 start,
                 BoundInclusivity::Exclusive,
                 end,
@@ -97,7 +97,7 @@ mod from_range {
 
         assert_eq!(
             RelativeInterval::from_range((Bound::Excluded(start), Bound::Excluded(end))),
-            RelativeInterval::Bounded(BoundedRelativeInterval::from_offsets_and_inclusivities(
+            RelativeInterval::Bounded(BoundedRelativeInterval::from_offsets_incl(
                 start,
                 BoundInclusivity::Exclusive,
                 end,
