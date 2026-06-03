@@ -109,7 +109,10 @@ impl BoundedRelInterval {
     /// let end_pos = RelFiniteBoundPos::new(SignedDuration::from_hours(3));
     ///
     /// // Since offsets are not in chronological order
-    /// let bounded_interval = BoundedRelInterval::new(start_pos.to_finite_start_bound(), end_pos.to_finite_end_bound());
+    /// let bounded_interval = BoundedRelInterval::new(
+    ///     start_pos.to_finite_start_bound(),
+    ///     end_pos.to_finite_end_bound(),
+    /// );
     ///
     /// // They are swapped
     /// assert_eq!(bounded_interval.start(), end_pos.to_finite_start_bound());
@@ -736,13 +739,14 @@ impl BoundedRelInterval {
     /// # use periodical::intervals::relative::{RelFiniteBoundPos, BoundedRelInterval};
     /// let mut bounded_interval = BoundedRelInterval::from_offsets(
     ///     SignedDuration::from_hours(8),
-    ///     SignedDuration::from_hours(16)
+    ///     SignedDuration::from_hours(16),
     /// );
     ///
     /// let new_start_offset = SignedDuration::from_hours(18);
     ///
     /// // Even if the new start offset violates the chronological order invariant
-    /// bounded_interval.unchecked_set_start(RelFiniteBoundPos::new(new_start_offset).to_finite_start_bound());
+    /// bounded_interval
+    ///     .unchecked_set_start(RelFiniteBoundPos::new(new_start_offset).to_finite_start_bound());
     ///
     /// // It remains that way
     /// assert_eq!(bounded_interval.start_offset(), new_start_offset);
@@ -769,7 +773,7 @@ impl BoundedRelInterval {
     /// # use periodical::intervals::relative::{RelFiniteBoundPos, BoundedRelInterval};
     /// let mut bounded_interval = BoundedRelInterval::from_offsets(
     ///     SignedDuration::from_hours(8),
-    ///     SignedDuration::from_hours(16)
+    ///     SignedDuration::from_hours(16),
     /// );
     ///
     /// let new_start_offset = SignedDuration::from_hours(10);
@@ -804,13 +808,14 @@ impl BoundedRelInterval {
     /// # use periodical::intervals::relative::{RelFiniteBoundPos, BoundedRelInterval};
     /// let mut bounded_interval = BoundedRelInterval::from_offsets(
     ///     SignedDuration::from_hours(8),
-    ///     SignedDuration::from_hours(16)
+    ///     SignedDuration::from_hours(16),
     /// );
     ///
     /// let new_end_offset = SignedDuration::from_hours(18);
     ///
     /// // Even if the new end offset violates the chronological order invariant
-    /// bounded_interval.unchecked_set_end(RelFiniteBoundPos::new(new_end_offset).to_finite_end_bound());
+    /// bounded_interval
+    ///     .unchecked_set_end(RelFiniteBoundPos::new(new_end_offset).to_finite_end_bound());
     ///
     /// // It remains that way
     /// assert_eq!(bounded_interval.end_offset(), new_end_offset);
@@ -837,7 +842,7 @@ impl BoundedRelInterval {
     /// # use periodical::intervals::relative::{RelFiniteBoundPos, BoundedRelInterval};
     /// let mut bounded_interval = BoundedRelInterval::from_offsets(
     ///     SignedDuration::from_hours(8),
-    ///     SignedDuration::from_hours(16)
+    ///     SignedDuration::from_hours(16),
     /// );
     ///
     /// let new_end_offset = SignedDuration::from_hours(10);
@@ -887,30 +892,6 @@ impl BoundedRelInterval {
         self.start.pos_mut().set_offset(new_start_offset);
     }
 
-    /// Sets the end offset without checking if it violates invariants
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::BoundedRelInterval;
-    /// let start_offset = SignedDuration::from_hours(1);
-    /// let end_offset = SignedDuration::from_hours(4);
-    ///
-    /// let mut bounded_interval = BoundedRelInterval::from_offsets(start_offset, end_offset);
-    ///
-    /// let new_end_offset = SignedDuration::from_hours(-5);
-    ///
-    /// // Even if the new end offset violates the chronological order invariant
-    /// bounded_interval.unchecked_set_end_offset(new_end_offset);
-    ///
-    /// // It remains that way
-    /// assert_eq!(bounded_interval.end_offset(), new_end_offset);
-    /// ```
-    pub fn unchecked_set_end_offset(&mut self, new_end_offset: SignedDuration) {
-        self.end.pos_mut().set_offset(new_end_offset);
-    }
-
     /// Sets the start offset
     ///
     /// # Errors
@@ -957,6 +938,30 @@ impl BoundedRelInterval {
             },
             Ordering::Greater => Err(BoundedRelIntervalUpdateError::ChronologicalOrderViolation),
         }
+    }
+
+    /// Sets the end offset without checking if it violates invariants
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use jiff::SignedDuration;
+    /// # use periodical::intervals::relative::BoundedRelInterval;
+    /// let start_offset = SignedDuration::from_hours(1);
+    /// let end_offset = SignedDuration::from_hours(4);
+    ///
+    /// let mut bounded_interval = BoundedRelInterval::from_offsets(start_offset, end_offset);
+    ///
+    /// let new_end_offset = SignedDuration::from_hours(-5);
+    ///
+    /// // Even if the new end offset violates the chronological order invariant
+    /// bounded_interval.unchecked_set_end_offset(new_end_offset);
+    ///
+    /// // It remains that way
+    /// assert_eq!(bounded_interval.end_offset(), new_end_offset);
+    /// ```
+    pub fn unchecked_set_end_offset(&mut self, new_end_offset: SignedDuration) {
+        self.end.pos_mut().set_offset(new_end_offset);
     }
 
     /// Sets the end offset
@@ -1135,30 +1140,6 @@ impl BoundedRelInterval {
         self.start.pos_mut().set_inclusivity(new_inclusivity);
     }
 
-    /// Sets the end bound's inclusivity without checking if it violates invariants
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::BoundedRelInterval;
-    /// # use periodical::intervals::meta::BoundInclusivity;
-    /// let offset = SignedDuration::from_hours(5);
-    /// let mut bounded_interval = BoundedRelInterval::from_offsets(offset, offset);
-    ///
-    /// // Even if the new end inclusivity violates the same offset doubly inclusive invariant
-    /// bounded_interval.unchecked_set_end_inclusivity(BoundInclusivity::Exclusive);
-    ///
-    /// // It remains that way
-    /// assert_eq!(
-    ///     bounded_interval.end_inclusivity(),
-    ///     BoundInclusivity::Exclusive
-    /// );
-    /// ```
-    pub fn unchecked_set_end_inclusivity(&mut self, new_inclusivity: BoundInclusivity) {
-        self.end.pos_mut().set_inclusivity(new_inclusivity);
-    }
-
     /// Sets the start bound's inclusivity
     ///
     /// # Errors
@@ -1201,6 +1182,30 @@ impl BoundedRelInterval {
 
         self.unchecked_set_start_inclusivity(new_inclusivity);
         Ok(())
+    }
+
+    /// Sets the end bound's inclusivity without checking if it violates invariants
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use jiff::SignedDuration;
+    /// # use periodical::intervals::relative::BoundedRelInterval;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// let offset = SignedDuration::from_hours(5);
+    /// let mut bounded_interval = BoundedRelInterval::from_offsets(offset, offset);
+    ///
+    /// // Even if the new end inclusivity violates the same offset doubly inclusive invariant
+    /// bounded_interval.unchecked_set_end_inclusivity(BoundInclusivity::Exclusive);
+    ///
+    /// // It remains that way
+    /// assert_eq!(
+    ///     bounded_interval.end_inclusivity(),
+    ///     BoundInclusivity::Exclusive
+    /// );
+    /// ```
+    pub fn unchecked_set_end_inclusivity(&mut self, new_inclusivity: BoundInclusivity) {
+        self.end.pos_mut().set_inclusivity(new_inclusivity);
     }
 
     /// Sets the end bound's inclusivity
