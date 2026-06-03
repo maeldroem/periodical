@@ -1,21 +1,19 @@
 //! Absolute emptiable interval
 //!
-//! Represents any form of specific absolute intervals, including
-//! [`EmptyInterval`]. That includes [`BoundedAbsInterval`],
-//! [`HalfBoundedAbsInterval`], [`UnboundedInterval`],
+//! Represents any form of specific absolute intervals, including [`EmptyInterval`].
+//! That includes [`BoundedAbsInterval`], [`HalfBoundedAbsInterval`], [`UnboundedInterval`],
 //! and [`EmptyInterval`].
 //!
 //! The contained intervals conserve the [openness](Openness) invariant, but the
 //! chosen variant can change. Compared to [`AbsBoundPair`], thanks to the
-//! variants we know exactly the kind of interval that is stored without needing
+//! variants, we know exactly the kind of interval that is stored without needing
 //! to check inner data.
 //!
 //! Usually this structure is for dealing with absolute intervals as a single
 //! type in a way that conserves the [openness](Openness) invariant, contrary to
 //! [`AbsBoundPair`].
 //!
-//! If you want to exclude [`EmptyInterval`] as a possible variant, see
-//! [`AbsInterval`].
+//! If you want to exclude [`EmptyInterval`] as a possible variant, see [`AbsInterval`].
 
 use std::cmp::Ordering;
 use std::ops::RangeBounds;
@@ -51,6 +49,22 @@ use crate::intervals::meta::{
 };
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 
+/// Absolute emptiable interval
+///
+/// Represents any form of specific absolute intervals, including [`EmptyInterval`].
+/// That includes [`BoundedAbsInterval`], [`HalfBoundedAbsInterval`], [`UnboundedInterval`],
+/// and [`EmptyInterval`].
+///
+/// The contained intervals conserve the [openness](Openness) invariant, but the
+/// chosen variant can change. Compared to [`AbsBoundPair`], thanks to the
+/// variants, we know exactly the kind of interval that is stored without needing
+/// to check inner data.
+///
+/// Usually this structure is for dealing with absolute intervals as a single
+/// type in a way that conserves the [openness](Openness) invariant, contrary to
+/// [`AbsBoundPair`].
+///
+/// If you want to exclude [`EmptyInterval`] as a possible variant, see [`AbsInterval`].
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
@@ -82,7 +96,10 @@ impl EmptiableAbsInterval {
     /// );
     /// assert_eq!(
     ///     interval.partial_abs_end(),
-    ///     Some(AbsFiniteBoundPos::new_with_inclusivity(end, BoundInclusivity::Exclusive).to_end_bound()),
+    ///     Some(
+    ///         AbsFiniteBoundPos::new_with_inclusivity(end, BoundInclusivity::Exclusive)
+    ///             .to_end_bound()
+    ///     ),
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
@@ -103,18 +120,14 @@ impl EmptiableAbsInterval {
     ///
     /// ```
     /// # use std::error::Error;
-    /// # use jiff::Zoned;
+    /// # use jiff::Timestamp;
     /// # use periodical::intervals::absolute::{
     /// #     EmptiableAbsInterval, AbsInterval, BoundedAbsInterval,
     /// # };
     /// # use periodical::intervals::special::EmptyInterval;
-    /// let interval = BoundedAbsInterval::new(
-    ///     "2026-01-01 08:00:00[Europe/Oslo]"
-    ///         .parse::<Zoned>()?
-    ///         .timestamp(),
-    ///     "2026-01-01 16:00:00[Europe/Oslo]"
-    ///         .parse::<Zoned>()?
-    ///         .timestamp(),
+    /// let interval = BoundedAbsInterval::from_times(
+    ///     "2026-01-01 08:00:00Z".parse::<Timestamp>()?,
+    ///     "2026-01-01 16:00:00Z".parse::<Timestamp>()?,
     /// )
     /// .to_interval();
     ///
@@ -133,13 +146,11 @@ impl EmptiableAbsInterval {
         }
     }
 
-    /// Compares two [`AbsInterval`], but if they have the same start,
-    /// order by decreasing length
+    /// Compares two [`AbsInterval`], if they have the same start, order by decreasing length
     ///
-    /// Uses [`EmptiableAbsBoundPair::ord_by_start_and_inv_length`] under
-    /// the hood.
+    /// Uses [`EmptiableAbsBoundPair::ord_by_start_and_inv_length`] under the hood.
     ///
-    /// Don't rely on this method for checking for equality of start, as it will
+    /// Don't rely on this method for checking for equality of starts, as it will
     /// produce other [`Ordering`]s if their lengths don't match too.
     ///
     /// # Examples

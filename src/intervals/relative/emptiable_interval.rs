@@ -1,21 +1,19 @@
 //! Relative emptiable interval
 //!
-//! Represents any form of specific relative intervals, including
-//! [`EmptyInterval`]. That includes [`BoundedRelInterval`],
-//! [`HalfBoundedRelInterval`], [`UnboundedInterval`],
+//! Represents any form of specific relative intervals, including [`EmptyInterval`].
+//! That includes [`BoundedRelInterval`], [`HalfBoundedRelInterval`], [`UnboundedInterval`],
 //! and [`EmptyInterval`].
 //!
 //! The contained intervals conserve the [openness](Openness) invariant, but the
 //! chosen variant can change. Compared to [`RelBoundPair`], thanks to the
-//! variants we know exactly the kind of interval that is stored without needing
+//! variants, we know exactly the kind of interval that is stored without needing
 //! to check inner data.
 //!
 //! Usually this structure is for dealing with relative intervals as a single
 //! type in a way that conserves the [openness](Openness) invariant, contrary to
 //! [`RelBoundPair`].
 //!
-//! If you want to exclude [`EmptyInterval`] as a possible variant, see
-//! [`RelInterval`].
+//! If you want to exclude [`EmptyInterval`] as a possible variant, see [`RelInterval`].
 
 use std::cmp::Ordering;
 use std::ops::RangeBounds;
@@ -51,6 +49,22 @@ use crate::intervals::relative::{
 };
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 
+/// Relative emptiable interval
+///
+/// Represents any form of specific relative intervals, including [`EmptyInterval`].
+/// That includes [`BoundedRelInterval`], [`HalfBoundedRelInterval`], [`UnboundedInterval`],
+/// and [`EmptyInterval`].
+///
+/// The contained intervals conserve the [openness](Openness) invariant, but the
+/// chosen variant can change. Compared to [`RelBoundPair`], thanks to the
+/// variants, we know exactly the kind of interval that is stored without needing
+/// to check inner data.
+///
+/// Usually this structure is for dealing with relative intervals as a single
+/// type in a way that conserves the [openness](Openness) invariant, contrary to
+/// [`RelBoundPair`].
+///
+/// If you want to exclude [`EmptyInterval`] as a possible variant, see [`RelInterval`].
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
@@ -82,7 +96,10 @@ impl EmptiableRelInterval {
     /// );
     /// assert_eq!(
     ///     interval.partial_rel_end(),
-    ///     Some(RelFiniteBoundPos::new_with_inclusivity(end, BoundInclusivity::Exclusive).to_end_bound()),
+    ///     Some(
+    ///         RelFiniteBoundPos::new_with_inclusivity(end, BoundInclusivity::Exclusive)
+    ///             .to_end_bound()
+    ///     ),
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
@@ -107,7 +124,7 @@ impl EmptiableRelInterval {
     /// #     EmptiableRelInterval, RelInterval, BoundedRelInterval,
     /// # };
     /// # use periodical::intervals::special::EmptyInterval;
-    /// let interval = BoundedRelInterval::new(
+    /// let interval = BoundedRelInterval::from_offsets(
     ///     SignedDuration::from_hours(8),
     ///     SignedDuration::from_hours(16),
     /// )
@@ -127,13 +144,11 @@ impl EmptiableRelInterval {
         }
     }
 
-    /// Compares two [`RelInterval`], but if they have the same start,
-    /// order by decreasing length
+    /// Compares two [`RelInterval`], if they have the same start, order by decreasing length
     ///
-    /// Uses [`EmptiableRelBoundPair::ord_by_start_and_inv_length`] under
-    /// the hood.
+    /// Uses [`EmptiableRelBoundPair::ord_by_start_and_inv_length`] under the hood.
     ///
-    /// Don't rely on this method for checking for equality of start, as it will
+    /// Don't rely on this method for checking for equality of starts, as it will
     /// produce other [`Ordering`]s if their lengths don't match too.
     ///
     /// # Examples
