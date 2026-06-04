@@ -47,12 +47,6 @@ pub enum AbsEndBound {
 }
 
 impl AbsEndBound {
-    /// Wraps `self` in the corresponding [`AbsBound`] variant
-    #[must_use]
-    pub fn to_bound(self) -> AbsBound {
-        AbsBound::from(self)
-    }
-
     /// Returns whether it is of the [`Finite`](AbsEndBound::Finite) variant
     ///
     /// # Examples
@@ -95,37 +89,6 @@ impl AbsEndBound {
         matches!(self, Self::InfiniteFuture)
     }
 
-    /// Returns the content of the [`Finite`](AbsEndBound::Finite) variant
-    ///
-    /// Consumes `self` and puts the content of the [`Finite`](AbsEndBound::Finite) variant in an [`Option`].
-    /// If instead `self` is another variant, the method returns [`None`].
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::error::Error;
-    /// # use jiff::Timestamp;
-    /// # use periodical::intervals::absolute::{AbsEndBound, AbsFiniteBoundPos};
-    /// let infinite_end_bound = AbsEndBound::InfiniteFuture;
-    ///
-    /// let time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
-    /// let finite_end_bound = AbsFiniteBoundPos::new(time).to_end_bound();
-    ///
-    /// assert_eq!(
-    ///     finite_end_bound.finite(),
-    ///     Some(AbsFiniteBoundPos::new(time).to_finite_end_bound())
-    /// );
-    /// assert_eq!(infinite_end_bound.finite(), None);
-    /// # Ok::<(), Box<dyn Error>>(())
-    /// ```
-    #[must_use]
-    pub fn finite(self) -> Option<AbsFiniteEndBound> {
-        match self {
-            Self::Finite(finite) => Some(finite),
-            Self::InfiniteFuture => None,
-        }
-    }
-
     /// Returns the opposite [`AbsStartBound`]
     ///
     /// If the [`AbsEndBound`] is of the [`InfiniteFuture`](AbsEndBound::InfiniteFuture) variant,
@@ -157,6 +120,43 @@ impl AbsEndBound {
             Self::Finite(finite) => Some(finite.opposite().to_start_bound()),
             Self::InfiniteFuture => None,
         }
+    }
+
+    /// Returns the content of the [`Finite`](AbsEndBound::Finite) variant
+    ///
+    /// Consumes `self` and puts the content of the [`Finite`](AbsEndBound::Finite) variant in an [`Option`].
+    /// If instead `self` is another variant, the method returns [`None`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jiff::Timestamp;
+    /// # use periodical::intervals::absolute::{AbsEndBound, AbsFiniteBoundPos};
+    /// let infinite_end_bound = AbsEndBound::InfiniteFuture;
+    ///
+    /// let time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
+    /// let finite_end_bound = AbsFiniteBoundPos::new(time).to_end_bound();
+    ///
+    /// assert_eq!(
+    ///     finite_end_bound.finite(),
+    ///     Some(AbsFiniteBoundPos::new(time).to_finite_end_bound())
+    /// );
+    /// assert_eq!(infinite_end_bound.finite(), None);
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    #[must_use]
+    pub fn finite(self) -> Option<AbsFiniteEndBound> {
+        match self {
+            Self::Finite(finite) => Some(finite),
+            Self::InfiniteFuture => None,
+        }
+    }
+
+    /// Wraps `self` in the corresponding [`AbsBound`] variant
+    #[must_use]
+    pub fn to_bound(self) -> AbsBound {
+        AbsBound::from(self)
     }
 }
 
