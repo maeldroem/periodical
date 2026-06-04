@@ -1,9 +1,8 @@
 //! Relative end bound
 //!
-//! Represents the end bound of a relative interval. It can either be finite, in
-//! which case it will contain an [`RelFiniteBoundPos`], or represent an open
-//! end bound through the [`InfiniteFuture`](RelEndBound::InfiniteFuture)
-//! variant.
+//! Represents the end bound of a relative interval. It can either be finite,
+//! in which case it will contain an [`RelFiniteEndBound`], or represent
+//! an open end bound through the [`InfiniteFuture`](RelEndBound::InfiniteFuture) variant.
 
 use std::cmp::Ordering;
 use std::error::Error;
@@ -34,15 +33,11 @@ use crate::intervals::relative::{
     RelStartBound,
 };
 
-/// A relative end interval bound
+/// Relative end bound
 ///
-/// Represents the end bound of an interval, may it be infinitely in the future
-/// or at a precise point in time, in which case it contains an
-/// [`RelFiniteBoundPos`].
-///
-/// Contrary to specific relative interval types, both [`RelStartBound`]
-/// and [`RelEndBound`] use an offset, and not an offset for the start and
-/// a length for the end.
+/// Represents the end bound of a relative interval. It can either be finite,
+/// in which case it will contain an [`RelFiniteEndBound`], or represent
+/// an open end bound through the [`InfiniteFuture`](RelEndBound::InfiniteFuture) variant.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
@@ -52,14 +47,13 @@ pub enum RelEndBound {
 }
 
 impl RelEndBound {
-    /// Wraps the end bound of the corresponding [`RelBound`] variant
+    /// Wraps `self` in the corresponding [`RelBound`] variant
     #[must_use]
     pub fn to_bound(self) -> RelBound {
         RelBound::from(self)
     }
 
-    /// Returns whether it is of the [`Finite`](RelEndBound::Finite)
-    /// variant
+    /// Returns whether it is of the [`Finite`](RelEndBound::Finite) variant
     ///
     /// # Examples
     ///
@@ -67,8 +61,7 @@ impl RelEndBound {
     /// # use jiff::SignedDuration;
     /// # use periodical::intervals::relative::{RelEndBound, RelFiniteBoundPos};
     /// let infinite_end_bound = RelEndBound::InfiniteFuture;
-    /// let finite_end_bound =
-    ///     RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_end_bound();
+    /// let finite_end_bound = RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_end_bound();
     ///
     /// assert!(finite_end_bound.is_finite());
     /// assert!(!infinite_end_bound.is_finite());
@@ -78,8 +71,7 @@ impl RelEndBound {
         matches!(self, Self::Finite(_))
     }
 
-    /// Returns whether it is of the
-    /// [`InfiniteFuture`](RelEndBound::InfiniteFuture) variant
+    /// Returns whether it is of the [`InfiniteFuture`](RelEndBound::InfiniteFuture) variant
     ///
     /// # Examples
     ///
@@ -87,8 +79,7 @@ impl RelEndBound {
     /// # use jiff::SignedDuration;
     /// # use periodical::intervals::relative::{RelEndBound, RelFiniteBoundPos};
     /// let infinite_end_bound = RelEndBound::InfiniteFuture;
-    /// let finite_end_bound =
-    ///     RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_end_bound();
+    /// let finite_end_bound = RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_end_bound();
     ///
     /// assert!(infinite_end_bound.is_infinite_future());
     /// assert!(!finite_end_bound.is_infinite_future());
@@ -100,9 +91,8 @@ impl RelEndBound {
 
     /// Returns the content of the [`Finite`](RelEndBound::Finite) variant
     ///
-    /// Consumes `self` and puts the content of the
-    /// [`Finite`](RelEndBound::Finite) variant in an [`Option`]. If
-    /// instead `self` is another variant, the method returns [`None`].
+    /// Consumes `self` and puts the content of the [`Finite`](RelEndBound::Finite) variant in an [`Option`].
+    /// If instead `self` is another variant, the method returns [`None`].
     ///
     /// # Examples
     ///
@@ -110,12 +100,13 @@ impl RelEndBound {
     /// # use jiff::SignedDuration;
     /// # use periodical::intervals::relative::{RelEndBound, RelFiniteBoundPos};
     /// let infinite_end_bound = RelEndBound::InfiniteFuture;
-    /// let finite_end_bound =
-    ///     RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_end_bound();
+    ///
+    /// let offset = SignedDuration::from_hours(1);
+    /// let finite_end_bound = RelFiniteBoundPos::new(offset).to_end_bound();
     ///
     /// assert_eq!(
     ///     finite_end_bound.finite(),
-    ///     Some(RelFiniteBoundPos::new(SignedDuration::from_hours(1))),
+    ///     Some(RelFiniteBoundPos::new(offset).to_finite_end_bound()),
     /// );
     /// assert_eq!(infinite_end_bound.finite(), None);
     /// ```
@@ -129,15 +120,12 @@ impl RelEndBound {
 
     /// Returns the opposite [`RelStartBound`]
     ///
-    /// If the [`RelEndBound`] is of the
-    /// [`InfiniteFuture`](RelEndBound::InfiniteFuture) variant,
+    /// If the [`RelEndBound`] is of the [`InfiniteFuture`](RelEndBound::InfiniteFuture) variant,
     /// then the method returns [`None`].
-    /// Otherwise, if the [`RelEndBound`] is finite, then a
-    /// [`RelStartBound`] is created with the same time, but the
-    /// opposite [`BoundInclusivity`].
+    /// Otherwise, if the [`RelEndBound`] is finite, then a [`RelStartBound`] is created with the same offset,
+    /// but opposite [`BoundInclusivity`].
     ///
-    /// This is used for example for determining the first point in time after
-    /// this bound ends.
+    /// This is used, for example, for determining the first point in time after this bound ends.
     ///
     /// # Examples
     ///
@@ -146,29 +134,14 @@ impl RelEndBound {
     /// # use jiff::SignedDuration;
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::relative::{RelEndBound, RelFiniteBoundPos};
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FiniteBoundPositionExpectedError;
-    /// #
-    /// # impl std::fmt::Display for FiniteBoundPositionExpectedError {
-    /// #     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
-    /// #         write!(f, "Finite bound expected")
-    /// #     }
-    /// # }
-    /// #
-    /// # impl Error for FiniteBoundPositionExpectedError {}
-    /// let end_first_shift =
-    ///     RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_end_bound();
-    /// let break_start = end_first_shift
-    ///     .opposite()
-    ///     .ok_or(FiniteBoundPositionExpectedError)?;
+    /// let offset = SignedDuration::from_hours(1);
+    /// let end_first_shift = RelFiniteBoundPos::new(offset).to_end_bound();
     ///
     /// assert_eq!(
-    ///     break_start.finite(),
-    ///     Some(RelFiniteBoundPos::new_with_incl(
-    ///         SignedDuration::from_hours(1),
-    ///         BoundInclusivity::Exclusive,
-    ///     )),
+    ///     end_first_shift.opposite(),
+    ///     Some(
+    ///         RelFiniteBoundPos::new_with_incl(offset, BoundInclusivity::Exclusive).to_start_bound()
+    ///     ),
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```

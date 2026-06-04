@@ -31,12 +31,14 @@ TODO: once all done, PR onto dev to sync, then continue unit tests
       - `bounded_interval`
       - `emptiable_bound_pair`
       - `emptiable_interval`
+      - `end_bound`
     - `relative`
       - `bound_pair`
       - `bound`
       - `bounded_interval`
       - `emptiable_bound_pair`
       - `emptiable_interval`
+      - `end_bound`
 
 - Tests to complete code coverage for `time`
 - Tests to complete code coverage for `ops`
