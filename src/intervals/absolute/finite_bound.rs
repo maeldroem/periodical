@@ -1,8 +1,8 @@
-//! Absolute finite bound representation
+//! Absolute finite bound
 //!
-//! Represents an absolute finite bound regardless of its extremality (start/end).
-//! This is particularly useful for representing absolute bounds of an interval
-//! as a single type, while still conserving its extremality.
+//! Represents an absolute finite bound regardless of its extremality.
+//! This is particularly useful for representing finite absolute bounds of an interval
+//! as a single type, while still conserving their extremalities.
 
 use crate::intervals::absolute::{
     AbsBound,
@@ -15,6 +15,11 @@ use crate::intervals::absolute::{
 use crate::intervals::meta::{BoundExtremality, HasBoundExtremality};
 use crate::intervals::ops::{BoundEq, BoundOrd, BoundOrdExtremaOps, BoundOrdering, BoundOverlapDisambiguationRuleSet};
 
+/// Absolute finite bound
+///
+/// Represents an absolute finite bound regardless of its extremality.
+/// This is particularly useful for representing finite absolute bounds of an interval
+/// as a single type, while still conserving their extremalities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum AbsFiniteBound {
     Start(AbsFiniteStartBound),
@@ -22,14 +27,77 @@ pub enum AbsFiniteBound {
 }
 
 impl AbsFiniteBound {
+    /// Returns whether it is of the [`Start`](AbsFiniteBound::Start) variant
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jiff::Timestamp;
+    /// # use periodical::intervals::absolute::finite_bound_position::AbsFiniteBoundPos;
+    /// let finite_bound_start = AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?)
+    ///     .to_finite_start_bound()
+    ///     .to_finite_bound();
+    /// let finite_bound_end = AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?)
+    ///     .to_finite_end_bound()
+    ///     .to_finite_bound();
+    ///
+    /// assert!(finite_bound_start.is_start());
+    /// assert!(!finite_bound_end.is_start());
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    #[must_use]
     pub fn is_start(&self) -> bool {
         matches!(self, Self::Start(_))
     }
 
+    /// Returns whether it is of the [`End`](AbsFiniteBound::End) variant
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jiff::Timestamp;
+    /// # use periodical::intervals::absolute::finite_bound_position::AbsFiniteBoundPos;
+    /// let finite_bound_start = AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?)
+    ///     .to_finite_start_bound()
+    ///     .to_finite_bound();
+    /// let finite_bound_end = AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?)
+    ///     .to_finite_end_bound()
+    ///     .to_finite_bound();
+    ///
+    /// assert!(!finite_bound_start.is_end());
+    /// assert!(finite_bound_end.is_end());
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    #[must_use]
     pub fn is_end(&self) -> bool {
         matches!(self, Self::End(_))
     }
 
+    /// Returns the content of the [`Start`](AbsFiniteBound::Start) variant
+    ///
+    /// Consumes `self` and puts the content of the [`Start`](AbsFiniteBound::Start) variant in an [`Option`].
+    /// If instead `self` is another variant, the method returns [`None`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jiff::Timestamp;
+    /// # use periodical::intervals::absolute::finite_bound_position::AbsFiniteBoundPos;
+    /// let finite_start_bound = AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?)
+    ///     .to_finite_start_bound();
+    /// let finite_bound_start = finite_start_bound.to_finite_bound();
+    /// let finite_bound_end = AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?)
+    ///     .to_finite_end_bound()
+    ///     .to_finite_bound();
+    ///
+    /// assert_eq!(finite_bound_start.start(), Some(finite_start_bound));
+    /// assert_eq!(finite_bound_end.start(), None);
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    #[must_use]
     pub fn start(self) -> Option<AbsFiniteStartBound> {
         match self {
             Self::Start(start) => Some(start),
@@ -37,6 +105,29 @@ impl AbsFiniteBound {
         }
     }
 
+    /// Returns the content of the [`End`](AbsFiniteBound::End) variant
+    ///
+    /// Consumes `self` and puts the content of the [`End`](AbsFiniteBound::End) variant in an [`Option`].
+    /// If instead `self` is another variant, the method returns [`None`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jiff::Timestamp;
+    /// # use periodical::intervals::absolute::finite_bound_position::AbsFiniteBoundPos;
+    /// let finite_bound_start = AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?)
+    ///     .to_finite_start_bound()
+    ///     .to_finite_bound();
+    /// let finite_end_bound =
+    ///     AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_finite_end_bound();
+    /// let finite_bound_end = finite_end_bound.to_finite_bound();
+    ///
+    /// assert_eq!(finite_bound_start.end(), None);
+    /// assert_eq!(finite_bound_end.end(), Some(finite_end_bound));
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    #[must_use]
     pub fn end(self) -> Option<AbsFiniteEndBound> {
         match self {
             Self::Start(_) => None,
@@ -44,6 +135,8 @@ impl AbsFiniteBound {
         }
     }
 
+    /// Returns the finite bound position
+    #[must_use]
     pub fn pos(self) -> AbsFiniteBoundPos {
         match self {
             Self::Start(start) => start.pos(),
@@ -51,6 +144,31 @@ impl AbsFiniteBound {
         }
     }
 
+    /// Returns the opposite finite bound
+    ///
+    /// Returns a finite bound of opposite extremality and bound inclusivity.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jiff::Timestamp;
+    /// # use periodical::intervals::absolute::finite_bound_position::AbsFiniteBoundPos;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// let time = "2026-01-01 00:00:00Z".parse::<Timestamp>()?;
+    /// let start = AbsFiniteBoundPos::new(time)
+    ///     .to_finite_start_bound()
+    ///     .to_finite_bound();
+    ///
+    /// assert_eq!(
+    ///     start.opposite(),
+    ///     AbsFiniteBoundPos::new_with_incl(time, BoundInclusivity::Exclusive)
+    ///         .to_finite_end_bound()
+    ///         .to_finite_bound()
+    /// );
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    #[must_use]
     pub fn opposite(self) -> Self {
         match self {
             Self::Start(start) => Self::End(start.opposite()),
@@ -58,6 +176,8 @@ impl AbsFiniteBound {
         }
     }
 
+    /// Converts `self` into [`AbsBound`]
+    #[must_use]
     pub fn to_bound(self) -> AbsBound {
         AbsBound::from(self)
     }
