@@ -47,12 +47,6 @@ pub enum RelEndBound {
 }
 
 impl RelEndBound {
-    /// Wraps `self` in the corresponding [`RelBound`] variant
-    #[must_use]
-    pub fn to_bound(self) -> RelBound {
-        RelBound::from(self)
-    }
-
     /// Returns whether it is of the [`Finite`](RelEndBound::Finite) variant
     ///
     /// # Examples
@@ -89,35 +83,6 @@ impl RelEndBound {
         matches!(self, Self::InfiniteFuture)
     }
 
-    /// Returns the content of the [`Finite`](RelEndBound::Finite) variant
-    ///
-    /// Consumes `self` and puts the content of the [`Finite`](RelEndBound::Finite) variant in an [`Option`].
-    /// If instead `self` is another variant, the method returns [`None`].
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::{RelEndBound, RelFiniteBoundPos};
-    /// let infinite_end_bound = RelEndBound::InfiniteFuture;
-    ///
-    /// let offset = SignedDuration::from_hours(1);
-    /// let finite_end_bound = RelFiniteBoundPos::new(offset).to_end_bound();
-    ///
-    /// assert_eq!(
-    ///     finite_end_bound.finite(),
-    ///     Some(RelFiniteBoundPos::new(offset).to_finite_end_bound()),
-    /// );
-    /// assert_eq!(infinite_end_bound.finite(), None);
-    /// ```
-    #[must_use]
-    pub fn finite(self) -> Option<RelFiniteEndBound> {
-        match self {
-            Self::Finite(finite) => Some(finite),
-            Self::InfiniteFuture => None,
-        }
-    }
-
     /// Returns the opposite [`RelStartBound`]
     ///
     /// If the [`RelEndBound`] is of the [`InfiniteFuture`](RelEndBound::InfiniteFuture) variant,
@@ -151,6 +116,41 @@ impl RelEndBound {
             Self::Finite(finite) => Some(finite.opposite().to_start_bound()),
             Self::InfiniteFuture => None,
         }
+    }
+
+    /// Returns the content of the [`Finite`](RelEndBound::Finite) variant
+    ///
+    /// Consumes `self` and puts the content of the [`Finite`](RelEndBound::Finite) variant in an [`Option`].
+    /// If instead `self` is another variant, the method returns [`None`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use jiff::SignedDuration;
+    /// # use periodical::intervals::relative::{RelEndBound, RelFiniteBoundPos};
+    /// let infinite_end_bound = RelEndBound::InfiniteFuture;
+    ///
+    /// let offset = SignedDuration::from_hours(1);
+    /// let finite_end_bound = RelFiniteBoundPos::new(offset).to_end_bound();
+    ///
+    /// assert_eq!(
+    ///     finite_end_bound.finite(),
+    ///     Some(RelFiniteBoundPos::new(offset).to_finite_end_bound()),
+    /// );
+    /// assert_eq!(infinite_end_bound.finite(), None);
+    /// ```
+    #[must_use]
+    pub fn finite(self) -> Option<RelFiniteEndBound> {
+        match self {
+            Self::Finite(finite) => Some(finite),
+            Self::InfiniteFuture => None,
+        }
+    }
+
+    /// Wraps `self` in the corresponding [`RelBound`] variant
+    #[must_use]
+    pub fn to_bound(self) -> RelBound {
+        RelBound::from(self)
     }
 }
 
