@@ -1,11 +1,17 @@
-//! Relative finite bound
+//! Relative finite bound position
 //!
-//! A relative finite bound has two components: an offset, represented by a
-//! [`SignedDuration`], and a [bound inclusivity](BoundInclusivity).
+//! A relative finite bound position has two components: an offset, represented
+//! by a [`SignedDuration`], and a [bound inclusivity](BoundInclusivity).
 //!
-//! Relative finite bounds are usually converted into either an
-//! [`RelStartBound`] through the [`to_start_bound`](RelFiniteBoundPos::to_start_bound) method,
-//! or into an [`RelEndBound`] through the [`to_end_bound`](RelFiniteBoundPos::to_end_bound) method.
+//! Relative finite bound positions are essential parts of all interval bounds, as any
+//! finite bound, such as [`RelFiniteStartBound`] and [`RelFiniteEndBound`], use it to
+//! represent their position.
+//!
+//! Therefore, since no extremality is indicated, the contained bound inclusivity is ambiguous.
+//! This is why comparison of two finite bound positions only compare their offsets.
+//! If you need to take into account the bound inclusivity, you need the extra extremality information,
+//! therefore you need to convert the [`RelFiniteBoundPos`] into a bound that can then be compared
+//! using dedicated [bound comparison operations](crate::intervals::ops::bound_cmp).
 
 use std::cmp::Ordering;
 use std::error::Error;
@@ -19,14 +25,20 @@ use serde::{Deserialize, Serialize};
 use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
 use crate::intervals::relative::{RelEndBound, RelFiniteEndBound, RelFiniteStartBound, RelStartBound};
 
-/// A relative finite bound
+/// Relative finite bound position
 ///
-/// Contains an offset [`SignedDuration`] and an ambiguous [`BoundInclusivity`]:
-/// if it is [`Exclusive`](BoundInclusivity::Exclusive), then we additionally
-/// need the _extremality_ (whether it acts as the start or end of an interval) in
-/// order to know what this position truly encompasses.
+/// A relative finite bound position has two components: an offset, represented
+/// by a [`SignedDuration`], and a [bound inclusivity](BoundInclusivity).
 ///
-/// This is why when comparing finite bound positions, only its offset is used.
+/// Relative finite bound positions are essential parts of all interval bounds, as any
+/// finite bound, such as [`RelFiniteStartBound`] and [`RelFiniteEndBound`], use it to
+/// represent their position.
+///
+/// Therefore, since no extremality is indicated, the contained bound inclusivity is ambiguous.
+/// This is why comparison of two finite bound positions only compare their offsets.
+/// If you need to take into account the bound inclusivity, you need the extra extremality information,
+/// therefore you need to convert the [`RelFiniteBoundPos`] into a bound that can then be compared
+/// using dedicated [bound comparison operations](crate::intervals::ops::bound_cmp).
 ///
 /// # Examples
 ///
@@ -65,8 +77,7 @@ impl RelFiniteBoundPos {
         Self::new_with_incl(offset, BoundInclusivity::default())
     }
 
-    /// Creates a new [`RelFiniteBoundPos`] using the given offset and
-    /// [`BoundInclusivity`]
+    /// Creates a new [`RelFiniteBoundPos`] using the given offset and [`BoundInclusivity`]
     #[must_use]
     pub fn new_with_incl(offset: SignedDuration, inclusivity: BoundInclusivity) -> Self {
         RelFiniteBoundPos {
@@ -82,12 +93,10 @@ impl RelFiniteBoundPos {
     /// ```
     /// # use jiff::SignedDuration;
     /// # use periodical::intervals::relative::RelFiniteBoundPos;
-    /// let finite_bound_position = RelFiniteBoundPos::new(SignedDuration::from_hours(12));
+    /// let offset = SignedDuration::from_hours(12);
+    /// let finite_bound_pos = RelFiniteBoundPos::new(offset);
     ///
-    /// assert_eq!(
-    ///     finite_bound_position.offset(),
-    ///     SignedDuration::from_hours(12)
-    /// );
+    /// assert_eq!(finite_bound_pos.offset(), offset);
     /// ```
     #[must_use]
     pub fn offset(&self) -> SignedDuration {
@@ -101,19 +110,18 @@ impl RelFiniteBoundPos {
     /// ```
     /// # use jiff::SignedDuration;
     /// # use periodical::intervals::relative::RelFiniteBoundPos;
-    /// let mut finite_bound_position = RelFiniteBoundPos::new(SignedDuration::from_hours(1));
-    /// finite_bound_position.set_offset(SignedDuration::from_hours(32));
+    /// let new_offset = SignedDuration::from_hours(32);
+    /// let mut finite_bound_pos = RelFiniteBoundPos::new(SignedDuration::from_hours(1));
     ///
-    /// assert_eq!(
-    ///     finite_bound_position.offset(),
-    ///     SignedDuration::from_hours(32)
-    /// );
+    /// finite_bound_pos.set_offset(new_offset);
+    ///
+    /// assert_eq!(finite_bound_pos.offset(), new_offset);
     /// ```
-    pub fn set_offset(&mut self, offset: SignedDuration) {
-        self.offset = offset;
+    pub fn set_offset(&mut self, new_offset: SignedDuration) {
+        self.offset = new_offset;
     }
 
-    /// Sets the inclusivity
+    /// Sets the bound inclusivity
     ///
     /// # Examples
     ///
@@ -121,35 +129,34 @@ impl RelFiniteBoundPos {
     /// # use jiff::SignedDuration;
     /// # use periodical::intervals::relative::RelFiniteBoundPos;
     /// # use periodical::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
-    /// let mut finite_bound_position = RelFiniteBoundPos::new(SignedDuration::from_hours(1));
-    /// finite_bound_position.set_inclusivity(BoundInclusivity::Exclusive);
+    /// let mut finite_bound_pos = RelFiniteBoundPos::new(SignedDuration::from_hours(1));
+    /// finite_bound_pos.set_inclusivity(BoundInclusivity::Exclusive);
     ///
-    /// assert_eq!(
-    ///     finite_bound_position.inclusivity(),
-    ///     BoundInclusivity::Exclusive
-    /// );
+    /// assert_eq!(finite_bound_pos.inclusivity(), BoundInclusivity::Exclusive);
     /// ```
-    pub fn set_inclusivity(&mut self, inclusivity: BoundInclusivity) {
-        self.inclusivity = inclusivity;
+    pub fn set_inclusivity(&mut self, new_inclusivity: BoundInclusivity) {
+        self.inclusivity = new_inclusivity;
     }
 
+    /// Wraps `self` in a [`RelFiniteStartBound`]
     #[must_use]
     pub fn to_finite_start_bound(self) -> RelFiniteStartBound {
         RelFiniteStartBound::new(self)
     }
 
-    /// Wraps the finite bound in an [`RelStartBound`]
+    /// Converts `self` into [`RelStartBound`]
     #[must_use]
     pub fn to_start_bound(self) -> RelStartBound {
         RelStartBound::from(self)
     }
 
+    /// Wraps `self` in a [`RelFiniteEndBound`]
     #[must_use]
     pub fn to_finite_end_bound(self) -> RelFiniteEndBound {
         RelFiniteEndBound::new(self)
     }
 
-    /// Wraps the finite bound in an [`RelEndBound`]
+    /// Converts `self` into [`RelEndBound`]
     #[must_use]
     pub fn to_end_bound(self) -> RelEndBound {
         RelEndBound::from(self)
