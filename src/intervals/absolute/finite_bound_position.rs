@@ -1,11 +1,17 @@
-//! Absolute finite bound
+//! Absolute finite bound position
 //!
-//! An absolute finite bound has two components: an absolute time, represented
+//! An absolute finite bound position has two components: an absolute time, represented
 //! by a [`Timestamp`], and a [bound inclusivity](BoundInclusivity).
 //!
-//! Absolute finite bounds are usually converted into either an [`AbsStartBound`]
-//! through the [`to_start_bound`](AbsFiniteBoundPos::to_start_bound) method,
-//! or into an [`AbsEndBound`] through the [`to_end_bound`](AbsFiniteBoundPos::to_end_bound) method.
+//! Absolute finite bound positions are essential parts of all interval bounds, as any
+//! finite bound, such as [`AbsFiniteStartBound`] and [`AbsFiniteEndBound`], use it to
+//! represent their position.
+//!
+//! Therefore, since no extremality is indicated, the contained bound inclusivity is ambiguous.
+//! This is why comparison of two finite bound positions only compare their times.
+//! If you need to take into account the bound inclusivity, you need the extra extremality information,
+//! therefore you need to convert the [`AbsFiniteBoundPos`] into a bound that can then be compared
+//! using dedicated [bound comparison operations](crate::intervals::ops::bound_cmp).
 
 use std::cmp::Ordering;
 use std::error::Error;
@@ -19,14 +25,20 @@ use serde::{Deserialize, Serialize};
 use crate::intervals::absolute::{AbsEndBound, AbsFiniteEndBound, AbsFiniteStartBound, AbsStartBound};
 use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
 
-/// An absolute finite bound position
+/// Absolute finite bound position
 ///
-/// Contains a time and an ambiguous [`BoundInclusivity`]: if it is
-/// [`Exclusive`](BoundInclusivity::Exclusive), then we additionally need the
-/// _extremality_ (whether it acts as the start or end of an interval) in order to
-/// know what this position truly encompasses.
+/// An absolute finite bound position has two components: an absolute time, represented
+/// by a [`Timestamp`], and a [bound inclusivity](BoundInclusivity).
 ///
-/// This is why when comparing finite bound positions, only its time is compared.
+/// Absolute finite bound positions are essential parts of all interval bounds, as any
+/// finite bound, such as [`AbsFiniteStartBound`] and [`AbsFiniteEndBound`], use it to
+/// represent their position.
+///
+/// Therefore, since no extremality is indicated, the contained bound inclusivity is ambiguous.
+/// This is why comparison of two finite bound positions only compare their times.
+/// If you need to take into account the bound inclusivity, you need the extra extremality information,
+/// therefore you need to convert the [`AbsFiniteBoundPos`] into a bound that can then be compared
+/// using dedicated [bound comparison operations](crate::intervals::ops::bound_cmp).
 ///
 /// # Examples
 ///
@@ -70,8 +82,7 @@ impl AbsFiniteBoundPos {
         Self::new_with_incl(time, BoundInclusivity::default())
     }
 
-    /// Creates a new [`AbsFiniteBoundPos`] using the given time and
-    /// [`BoundInclusivity`]
+    /// Creates a new [`AbsFiniteBoundPos`] using the given time and [`BoundInclusivity`]
     #[must_use]
     pub fn new_with_incl(time: Timestamp, inclusivity: BoundInclusivity) -> Self {
         AbsFiniteBoundPos {
@@ -89,9 +100,9 @@ impl AbsFiniteBoundPos {
     /// # use jiff::Timestamp;
     /// # use periodical::intervals::absolute::AbsFiniteBoundPos;
     /// let time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
-    /// let finite_bound_position = AbsFiniteBoundPos::new(time);
+    /// let finite_bound_pos = AbsFiniteBoundPos::new(time);
     ///
-    /// assert_eq!(finite_bound_position.time(), time);
+    /// assert_eq!(finite_bound_pos.time(), time);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
@@ -107,13 +118,12 @@ impl AbsFiniteBoundPos {
     /// # use std::error::Error;
     /// # use jiff::Timestamp;
     /// # use periodical::intervals::absolute::AbsFiniteBoundPos;
-    /// let time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     /// let new_time = "2025-01-02 16:00:00Z".parse::<Timestamp>()?;
+    /// let mut finite_bound_pos = AbsFiniteBoundPos::new("2025-01-01 08:00:00Z".parse::<Timestamp>()?);
     ///
-    /// let mut finite_bound_position = AbsFiniteBoundPos::new(time);
-    /// finite_bound_position.set_time(new_time);
+    /// finite_bound_pos.set_time(new_time);
     ///
-    /// assert_eq!(finite_bound_position.time(), new_time);
+    /// assert_eq!(finite_bound_pos.time(), new_time);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn set_time(&mut self, new_time: Timestamp) {
@@ -129,38 +139,35 @@ impl AbsFiniteBoundPos {
     /// # use jiff::Timestamp;
     /// # use periodical::intervals::absolute::AbsFiniteBoundPos;
     /// # use periodical::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
-    /// let time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
+    /// let mut finite_bound_pos = AbsFiniteBoundPos::new("2025-01-01 08:00:00Z".parse::<Timestamp>()?);
+    /// finite_bound_pos.set_inclusivity(BoundInclusivity::Exclusive);
     ///
-    /// let mut finite_bound_position = AbsFiniteBoundPos::new(time);
-    /// finite_bound_position.set_inclusivity(BoundInclusivity::Exclusive);
-    ///
-    /// assert_eq!(
-    ///     finite_bound_position.inclusivity(),
-    ///     BoundInclusivity::Exclusive
-    /// );
+    /// assert_eq!(finite_bound_pos.inclusivity(), BoundInclusivity::Exclusive);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn set_inclusivity(&mut self, new_inclusivity: BoundInclusivity) {
         self.inclusivity = new_inclusivity;
     }
 
+    /// Wraps `self` in an [`AbsFiniteStartBound`]
     #[must_use]
     pub fn to_finite_start_bound(self) -> AbsFiniteStartBound {
         AbsFiniteStartBound::new(self)
     }
 
-    /// Wraps the finite bound in an [`AbsStartBound`]
+    /// Converts `self` into [`AbsStartBound`]
     #[must_use]
     pub fn to_start_bound(self) -> AbsStartBound {
         AbsStartBound::from(self)
     }
 
+    /// Wraps `self` in an [`AbsFiniteEndBound`]
     #[must_use]
     pub fn to_finite_end_bound(self) -> AbsFiniteEndBound {
         AbsFiniteEndBound::new(self)
     }
 
-    /// Wraps the finite bound in an [`AbsEndBound`]
+    /// Converts `self` into [`AbsEndBound`]
     #[must_use]
     pub fn to_end_bound(self) -> AbsEndBound {
         AbsEndBound::from(self)

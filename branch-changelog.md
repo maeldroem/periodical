@@ -32,6 +32,7 @@ TODO: once all done, PR onto dev to sync, then continue unit tests
       - `emptiable_bound_pair`
       - `emptiable_interval`
       - `end_bound`
+      - `finite_bound_position`
     - `relative`
       - `bound_pair`
       - `bound`
@@ -39,6 +40,7 @@ TODO: once all done, PR onto dev to sync, then continue unit tests
       - `emptiable_bound_pair`
       - `emptiable_interval`
       - `end_bound`
+      - `finite_bound_position`
 
 - Tests to complete code coverage for `time`
 - Tests to complete code coverage for `ops`
