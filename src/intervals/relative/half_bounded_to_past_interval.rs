@@ -1,3 +1,14 @@
+//! Relative half-bounded interval opened to the past
+//!
+//! A half-bounded interval opened to the past only has an infinite start bound
+//! and a finite end bound.
+//!
+//! Its invariants are that its [openness](Openness) and its [opening direction](OpeningDirection)
+//! cannot change.
+//!
+//! If you are looking for a half-bounded absolute interval that doesn't keep the
+//! [opening direction](OpeningDirection) invariant, see [`HalfBoundedRelInterval`].
+
 use std::error::Error;
 use std::fmt::Display;
 use std::ops::{Bound, RangeBounds, RangeTo, RangeToInclusive};
@@ -33,83 +44,93 @@ use crate::intervals::relative::{
     RelStartBound,
 };
 
-/// A half-bounded relative interval
+/// Relative half-bounded interval opened to the past
 ///
-/// A half-bounded interval has a reference offset and an opening direction.
+/// A half-bounded interval opened to the past only has an infinite start bound
+/// and a finite end bound.
 ///
-/// Similar to the other specific interval types, its [openness](Openness)
-/// cannot change. That is to say a half-bounded interval must remain a
-/// half-bounded interval. It cannot mutate from being a half-bounded interval
-/// to a bounded interval.
+/// Its invariants are that its [openness](Openness) and its [opening direction](OpeningDirection)
+/// cannot change.
 ///
-/// Instead, if you are looking for an relative interval that doesn't keep the
-/// [openness](Openness) invariant, see [`RelBoundPair`].
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+/// If you are looking for a half-bounded absolute interval that doesn't keep the
+/// [opening direction](OpeningDirection) invariant, see [`HalfBoundedRelInterval`].
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct HalfBoundedToPastRelInterval(pub(crate) RelFiniteEndBound);
 
 impl HalfBoundedToPastRelInterval {
-    pub fn new(end: RelFiniteEndBound) -> Self {
-        HalfBoundedToPastRelInterval(end)
-    }
-
-    /// Creates a new [`HalfBoundedRelInterval`]
+    /// Creates a new half-bounded interval opened to the past
     ///
     /// # Examples
     ///
     /// ```
-    /// # use std::error::Error;
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::HalfBoundedRelInterval;
-    /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
-    /// let ref_offset = "2025-01-01 08:00:00Z".parse::<SignedDuration>()?;
+    /// # use periodical::intervals::relative::{
+    /// #     RelFiniteBoundPos,
+    /// #     HalfBoundedToPastRelInterval,
+    /// # };
+    /// # use periodical::intervals::meta::{
+    /// #     BoundInclusivity,
+    /// #     OpeningDirection,
+    /// #     HasOpeningDirection,
+    /// # };
+    /// let offset = SignedDuration::from_hours(10);
+    /// let half_bounded =
+    ///     HalfBoundedToPastRelInterval::new(RelFiniteBoundPos::new(offset).to_finite_end_bound());
     ///
-    /// let half_bounded_interval = HalfBoundedRelInterval::new(ref_offset, OpeningDirection::ToPast);
+    /// assert_eq!(half_bounded.end_offset(), offset);
+    /// assert_eq!(half_bounded.end_inclusivity(), BoundInclusivity::Inclusive);
+    /// assert_eq!(half_bounded.opening_direction(), OpeningDirection::ToPast);
+    /// ```
+    #[must_use]
+    pub fn new(end: RelFiniteEndBound) -> Self {
+        HalfBoundedToPastRelInterval(end)
+    }
+
+    /// Creates a new half-bounded interval opened to the future from an offset
     ///
-    /// assert_eq!(half_bounded_interval.reference(), ref_offset);
-    /// assert_eq!(
-    ///     half_bounded_interval.reference_inclusivity(),
-    ///     BoundInclusivity::Inclusive
-    /// );
-    /// assert_eq!(
-    ///     half_bounded_interval.opening_direction(),
-    ///     OpeningDirection::ToPast
-    /// );
-    /// # Ok::<(), Box<dyn Error>>(())
+    /// # Examples
+    ///
+    /// ```
+    /// # use jiff::SignedDuration;
+    /// # use periodical::intervals::relative::HalfBoundedToPastRelInterval;
+    /// # use periodical::intervals::meta::{
+    /// #     BoundInclusivity,
+    /// #     OpeningDirection,
+    /// #     HasOpeningDirection,
+    /// # };
+    /// let offset = SignedDuration::from_hours(10);
+    /// let half_bounded = HalfBoundedToPastRelInterval::from_offset(offset);
+    ///
+    /// assert_eq!(half_bounded.end_offset(), offset);
+    /// assert_eq!(half_bounded.end_inclusivity(), BoundInclusivity::Inclusive);
+    /// assert_eq!(half_bounded.opening_direction(), OpeningDirection::ToPast);
     /// ```
     #[must_use]
     pub fn from_offset(reference: SignedDuration) -> Self {
         Self::new(RelFiniteBoundPos::new(reference).to_finite_end_bound())
     }
 
-    /// Creates a new [`HalfBoundedRelInterval`] with the given bound
-    /// inclusivities
+    /// Creates a new half-bounded interval opened to the past from an offset
+    /// and a bound inclusivity
     ///
     /// # Examples
     ///
     /// ```
-    /// # use std::error::Error;
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::HalfBoundedRelInterval;
-    /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
-    /// let ref_offset = "2025-01-01 08:00:00Z".parse::<SignedDuration>()?;
+    /// # use periodical::intervals::relative::HalfBoundedToPastRelInterval;
+    /// # use periodical::intervals::meta::{
+    /// #     BoundInclusivity,
+    /// #     OpeningDirection,
+    /// #     HasOpeningDirection,
+    /// # };
+    /// let offset = SignedDuration::from_hours(10);
+    /// let half_bounded =
+    ///     HalfBoundedToPastRelInterval::from_offset_incl(offset, BoundInclusivity::Exclusive);
     ///
-    /// let half_bounded_interval = HalfBoundedRelInterval::new_with_incl(
-    ///     ref_offset,
-    ///     BoundInclusivity::Exclusive,
-    ///     OpeningDirection::ToFuture,
-    /// );
-    ///
-    /// assert_eq!(half_bounded_interval.reference(), ref_offset);
-    /// assert_eq!(
-    ///     half_bounded_interval.reference_inclusivity(),
-    ///     BoundInclusivity::Exclusive
-    /// );
-    /// assert_eq!(
-    ///     half_bounded_interval.opening_direction(),
-    ///     OpeningDirection::ToFuture
-    /// );
-    /// # Ok::<(), Box<dyn Error>>(())
+    /// assert_eq!(half_bounded.end_offset(), offset);
+    /// assert_eq!(half_bounded.end_inclusivity(), BoundInclusivity::Exclusive);
+    /// assert_eq!(half_bounded.opening_direction(), OpeningDirection::ToPast);
     /// ```
     #[must_use]
     pub fn from_offset_incl(reference: SignedDuration, reference_inclusivity: BoundInclusivity) -> Self {
@@ -122,22 +143,21 @@ impl HalfBoundedToPastRelInterval {
     ///
     /// # Errors
     ///
-    /// Returns [`HalfBoundedRelIntervalTryFromRangeError`] if there is not exactly
-    /// one [unbounded](Bound::Unbounded) range bound.
+    /// Returns [`HalfBoundedToPastRelIntervalTryFromRangeError`] if the range's end bound
+    /// is not [`Unbounded`](Bound::Unbounded).
     ///
     /// # Examples
     ///
     /// ```
     /// # use std::error::Error;
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::{HalfBoundedRelInterval, HalfBoundedRelIntervalTryFromRangeError};
+    /// # use periodical::intervals::relative::HalfBoundedToPastRelInterval;
     /// # use periodical::intervals::meta::BoundInclusivity;
-    /// let reference = "2026-01-01 08:00:00Z".parse::<SignedDuration>()?;
+    /// let offset = SignedDuration::from_hours(10);
+    /// let half_bounded = HalfBoundedToPastRelInterval::try_from_range(..offset)?;
     ///
-    /// let interval = HalfBoundedRelInterval::try_from_range(..reference)?;
-    ///
-    /// assert_eq!(interval.reference(), reference);
-    /// assert_eq!(interval.reference_inclusivity(), BoundInclusivity::Exclusive);
+    /// assert_eq!(half_bounded.end_offset(), offset);
+    /// assert_eq!(half_bounded.end_inclusivity(), BoundInclusivity::Exclusive);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn try_from_range<R>(range: R) -> Result<Self, HalfBoundedToPastRelIntervalTryFromRangeError>
@@ -155,135 +175,181 @@ impl HalfBoundedToPastRelInterval {
         }
     }
 
+    /// Returns the infinite start bound
+    #[must_use]
     pub fn start(&self) -> RelStartBound {
         RelStartBound::InfinitePast
     }
 
-    pub fn end(&self) -> RelFiniteEndBound {
-        self.0
-    }
-
-    pub fn end_mut(&mut self) -> &mut RelFiniteEndBound {
-        &mut self.0
-    }
-
-    /// Returns the reference offset
+    /// Returns the finite start bound
     ///
     /// # Examples
     ///
     /// ```
-    /// # use std::error::Error;
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::HalfBoundedRelInterval;
-    /// # use periodical::intervals::meta::OpeningDirection;
-    /// let ref_offset = "2025-01-01 08:00:00Z".parse::<SignedDuration>()?;
+    /// # use periodical::intervals::relative::{
+    /// #     HalfBoundedToPastRelInterval,
+    /// #     RelFiniteBoundPos,
+    /// # };
+    /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
+    /// let offset = SignedDuration::from_hours(10);
+    /// let half_bounded =
+    ///     HalfBoundedToPastRelInterval::from_offset_incl(offset, BoundInclusivity::Exclusive);
     ///
-    /// let half_bounded_interval = HalfBoundedRelInterval::new(ref_offset, OpeningDirection::ToPast);
+    /// assert_eq!(
+    ///     half_bounded.end(),
+    ///     RelFiniteBoundPos::new_with_incl(offset, BoundInclusivity::Exclusive).to_finite_end_bound()
+    /// );
+    /// ```
+    #[must_use]
+    pub fn end(&self) -> RelFiniteEndBound {
+        self.0
+    }
+
+    /// Returns the end offset
     ///
-    /// assert_eq!(half_bounded_interval.reference(), ref_offset);
-    /// # Ok::<(), Box<dyn Error>>(())
+    /// # Examples
+    ///
+    /// ```
+    /// # use jiff::SignedDuration;
+    /// # use periodical::intervals::relative::HalfBoundedToPastRelInterval;
+    /// let offset = SignedDuration::from_hours(10);
+    /// let half_bounded = HalfBoundedToPastRelInterval::from_offset(offset);
+    ///
+    /// assert_eq!(half_bounded.end_offset(), offset);
     /// ```
     #[must_use]
     pub fn end_offset(&self) -> SignedDuration {
         self.end().pos().offset()
     }
 
-    /// Returns the inclusivity of the reference offset
+    /// Returns the end bound's inclusivity
     ///
     /// ```
-    /// # use std::error::Error;
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::HalfBoundedRelInterval;
-    /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
-    /// let ref_offset = "2025-01-01 08:00:00Z".parse::<SignedDuration>()?;
+    /// # use periodical::intervals::relative::HalfBoundedToPastRelInterval;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// let offset = SignedDuration::from_hours(10);
+    /// let half_bounded =
+    ///     HalfBoundedToPastRelInterval::from_offset_incl(offset, BoundInclusivity::Exclusive);
     ///
-    /// let half_bounded_interval = HalfBoundedRelInterval::new_with_incl(
-    ///     ref_offset,
-    ///     BoundInclusivity::Exclusive,
-    ///     OpeningDirection::ToFuture,
-    /// );
-    ///
-    /// assert_eq!(
-    ///     half_bounded_interval.reference_inclusivity(),
-    ///     BoundInclusivity::Exclusive
-    /// );
-    /// # Ok::<(), Box<dyn Error>>(())
+    /// assert_eq!(half_bounded.end_inclusivity(), BoundInclusivity::Exclusive);
     /// ```
     #[must_use]
     pub fn end_inclusivity(&self) -> BoundInclusivity {
         self.end().pos().inclusivity()
     }
 
-    pub fn set_end(&mut self, new_end: RelFiniteEndBound) {
-        self.0 = new_end;
+    /// Returns a mutable pointer to the finite end bound
+    ///
+    /// This is used for mutating which position the end bound represents.
+    pub fn end_mut(&mut self) -> &mut RelFiniteEndBound {
+        &mut self.0
     }
 
-    /// Sets the reference offset
+    /// Sets the finite end bound
     ///
     /// # Examples
     ///
     /// ```
-    /// # use std::error::Error;
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::HalfBoundedRelInterval;
-    /// # use periodical::intervals::meta::OpeningDirection;
-    /// let ref_offset = "2025-01-01 08:00:00Z".parse::<SignedDuration>()?;
+    /// # use periodical::intervals::relative::{
+    /// #     RelFiniteBoundPos,
+    /// #     HalfBoundedToPastRelInterval,
+    /// # };
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// let new_end = RelFiniteBoundPos::new_with_incl(
+    ///     SignedDuration::from_hours(10),
+    ///     BoundInclusivity::Exclusive,
+    /// )
+    /// .to_finite_end_bound();
+    /// let mut half_bounded = HalfBoundedToPastRelInterval::from_offset(SignedDuration::from_hours(2));
     ///
-    /// let mut half_bounded_interval =
-    ///     HalfBoundedRelInterval::new(ref_offset, OpeningDirection::ToFuture);
+    /// half_bounded.set_end(new_end);
     ///
-    /// let new_ref_offset = "2025-01-01 16:00:00Z".parse::<SignedDuration>()?;
+    /// assert_eq!(half_bounded.end(), new_end);
+    /// ```
+    pub fn set_end(&mut self, new_end: RelFiniteEndBound) {
+        self.0 = new_end;
+    }
+
+    /// Sets the end offset
     ///
-    /// half_bounded_interval.set_reference(new_ref_offset);
+    /// # Examples
     ///
-    /// assert_eq!(half_bounded_interval.reference(), new_ref_offset);
-    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    /// # use jiff::SignedDuration;
+    /// # use periodical::intervals::relative::HalfBoundedToPastRelInterval;
+    /// let mut half_bounded = HalfBoundedToPastRelInterval::from_offset(SignedDuration::from_hours(2));
+    ///
+    /// let new_offset = SignedDuration::from_hours(10);
+    ///
+    /// half_bounded.set_end_offset(new_offset);
+    ///
+    /// assert_eq!(half_bounded.end_offset(), new_offset);
     /// ```
     pub fn set_end_offset(&mut self, new_end_offset: SignedDuration) {
         self.end_mut().pos_mut().set_offset(new_end_offset);
     }
 
-    /// Sets the inclusivity of the reference offset
+    /// Sets the end bound's inclusivity
     ///
     /// # Examples
     ///
     /// ```
-    /// # use std::error::Error;
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::HalfBoundedRelInterval;
-    /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
-    /// let ref_offset = "2025-01-01 08:00:00Z".parse::<SignedDuration>()?;
+    /// # use periodical::intervals::relative::HalfBoundedToPastRelInterval;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// let mut half_bounded =
+    ///     HalfBoundedToPastRelInterval::from_offset(SignedDuration::from_hours(10));
     ///
-    /// let mut half_bounded_interval =
-    ///     HalfBoundedRelInterval::new(ref_offset, OpeningDirection::ToFuture);
+    /// half_bounded.set_end_inclusivity(BoundInclusivity::Exclusive);
     ///
-    /// half_bounded_interval.set_reference_inclusivity(BoundInclusivity::Exclusive);
-    ///
-    /// assert_eq!(
-    ///     half_bounded_interval.reference_inclusivity(),
-    ///     BoundInclusivity::Exclusive
-    /// );
-    /// # Ok::<(), Box<dyn Error>>(())
+    /// assert_eq!(half_bounded.end_inclusivity(), BoundInclusivity::Exclusive);
     /// ```
-    pub fn set_reference_inclusivity(&mut self, new_inclusivity: BoundInclusivity) {
+    pub fn set_end_inclusivity(&mut self, new_inclusivity: BoundInclusivity) {
         self.end_mut().pos_mut().set_inclusivity(new_inclusivity);
     }
 
+    /// Returns the opposite half-bounded interval opened to the future
+    ///
+    /// Returns a half-bounded interval of opposite opening direction and bound inclusivity.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use jiff::SignedDuration;
+    /// # use periodical::intervals::relative::{
+    /// #     HalfBoundedToFutureRelInterval,
+    /// #     HalfBoundedToPastRelInterval,
+    /// # };
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// let offset = SignedDuration::from_hours(10);
+    /// let half_bounded = HalfBoundedToPastRelInterval::from_offset(offset);
+    ///
+    /// assert_eq!(
+    ///     half_bounded.opposite(),
+    ///     HalfBoundedToFutureRelInterval::from_offset_incl(offset, BoundInclusivity::Exclusive),
+    /// );
+    /// ```
+    #[must_use]
     pub fn opposite(self) -> HalfBoundedToFutureRelInterval {
         HalfBoundedToFutureRelInterval(self.end().opposite())
     }
 
+    /// Wraps `self` in [`HalfBoundedRelInterval`]
+    #[must_use]
     pub fn to_half_bounded_interval(self) -> HalfBoundedRelInterval {
         HalfBoundedRelInterval::ToPast(self)
     }
 
-    /// Wraps the interval in [`RelInterval`]
+    /// Converts `self` into [`RelInterval`]
     #[must_use]
     pub fn to_interval(self) -> RelInterval {
         RelInterval::from(self)
     }
 
-    /// Wraps the interval in [`EmptiableRelInterval`]
+    /// Converts `self` into [`EmptiableRelInterval`]
     #[must_use]
     pub fn to_emptiable_interval(self) -> EmptiableRelInterval {
         EmptiableRelInterval::from(self)
