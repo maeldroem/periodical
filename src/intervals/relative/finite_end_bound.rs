@@ -28,41 +28,80 @@ use crate::intervals::relative::{
     RelStartBound,
 };
 
+/// Relative finite end bound
+///
+/// Represents the finite end bound of an relative interval.
+/// If you need to represent infinity, see [`RelEndBound`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub struct RelFiniteEndBound(pub(crate) RelFiniteBoundPos);
 
 impl RelFiniteEndBound {
+    /// Creates a new relative finite end bound
+    #[must_use]
     pub fn new(finite_bound_pos: RelFiniteBoundPos) -> Self {
         Self(finite_bound_pos)
     }
 
+    /// Returns the inner relative finite bound position
+    #[must_use]
     pub fn pos(&self) -> RelFiniteBoundPos {
         self.0
     }
 
+    /// Returns a mutable pointer of the inner relative finite bound position
+    ///
+    /// This is used for mutating which position this end bound represents.
+    #[must_use]
     pub fn pos_mut(&mut self) -> &mut RelFiniteBoundPos {
         &mut self.0
     }
 
-    pub fn to_end_bound(self) -> RelEndBound {
-        RelEndBound::Finite(self)
-    }
-
-    pub fn to_finite_bound(self) -> RelFiniteBound {
-        RelFiniteBound::from(self)
-    }
-
-    pub fn to_bound(self) -> RelBound {
-        RelBound::from(self)
-    }
-
+    /// Returns the opposite finite start bound
+    ///
+    /// Returns the opposite relative finite start bound with the same time
+    /// but opposite bound inclusivity.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use jiff::SignedDuration;
+    /// # use periodical::intervals::relative::RelFiniteBoundPos;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// let offset = SignedDuration::from_hours(10);
+    /// let break_end = RelFiniteBoundPos::new(offset).to_finite_end_bound();
+    ///
+    /// assert_eq!(
+    ///     break_end.opposite(),
+    ///     RelFiniteBoundPos::new_with_incl(offset, BoundInclusivity::Exclusive)
+    ///         .to_finite_start_bound()
+    /// );
+    /// ```
+    #[must_use]
     pub fn opposite(self) -> RelFiniteStartBound {
         RelFiniteStartBound::new(RelFiniteBoundPos::new_with_incl(
             self.pos().offset(),
             self.pos().inclusivity().opposite(),
         ))
+    }
+
+    /// Wraps `self` in [`RelEndBound`]
+    #[must_use]
+    pub fn to_end_bound(self) -> RelEndBound {
+        RelEndBound::Finite(self)
+    }
+
+    /// Wraps `self` in the corresponding [`RelFiniteBound`] variant
+    #[must_use]
+    pub fn to_finite_bound(self) -> RelFiniteBound {
+        RelFiniteBound::from(self)
+    }
+
+    /// Converts `self` into [`RelBound`]
+    #[must_use]
+    pub fn to_bound(self) -> RelBound {
+        RelBound::from(self)
     }
 }
 
