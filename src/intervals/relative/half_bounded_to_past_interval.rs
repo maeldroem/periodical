@@ -64,8 +64,7 @@ impl HalfBoundedToPastRelInterval {
     /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
     /// let ref_offset = "2025-01-01 08:00:00Z".parse::<SignedDuration>()?;
     ///
-    /// let half_bounded_interval =
-    ///     HalfBoundedRelInterval::new(ref_offset, OpeningDirection::ToPast);
+    /// let half_bounded_interval = HalfBoundedRelInterval::new(ref_offset, OpeningDirection::ToPast);
     ///
     /// assert_eq!(half_bounded_interval.reference(), ref_offset);
     /// assert_eq!(
@@ -79,7 +78,7 @@ impl HalfBoundedToPastRelInterval {
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    pub fn new_from_offset(reference: SignedDuration) -> Self {
+    pub fn from_offset(reference: SignedDuration) -> Self {
         Self::new(RelFiniteBoundPos::new(reference).to_finite_end_bound())
     }
 
@@ -113,7 +112,7 @@ impl HalfBoundedToPastRelInterval {
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    pub fn new_from_offset_and_inclusivity(reference: SignedDuration, reference_inclusivity: BoundInclusivity) -> Self {
+    pub fn from_offset_incl(reference: SignedDuration, reference_inclusivity: BoundInclusivity) -> Self {
         HalfBoundedToPastRelInterval::new(
             RelFiniteBoundPos::new_with_incl(reference, reference_inclusivity).to_finite_end_bound(),
         )
@@ -146,14 +145,12 @@ impl HalfBoundedToPastRelInterval {
         R: RangeBounds<SignedDuration>,
     {
         match (range.start_bound(), range.end_bound()) {
-            (Bound::Unbounded, Bound::Included(&reference)) => Ok(Self::new_from_offset_and_inclusivity(
-                reference,
-                BoundInclusivity::Inclusive,
-            )),
-            (Bound::Unbounded, Bound::Excluded(&reference)) => Ok(Self::new_from_offset_and_inclusivity(
-                reference,
-                BoundInclusivity::Exclusive,
-            )),
+            (Bound::Unbounded, Bound::Included(&reference)) => {
+                Ok(Self::from_offset_incl(reference, BoundInclusivity::Inclusive))
+            },
+            (Bound::Unbounded, Bound::Excluded(&reference)) => {
+                Ok(Self::from_offset_incl(reference, BoundInclusivity::Exclusive))
+            },
             _ => Err(HalfBoundedToPastRelIntervalTryFromRangeError),
         }
     }
@@ -181,8 +178,7 @@ impl HalfBoundedToPastRelInterval {
     /// # use periodical::intervals::meta::OpeningDirection;
     /// let ref_offset = "2025-01-01 08:00:00Z".parse::<SignedDuration>()?;
     ///
-    /// let half_bounded_interval =
-    ///     HalfBoundedRelInterval::new(ref_offset, OpeningDirection::ToPast);
+    /// let half_bounded_interval = HalfBoundedRelInterval::new(ref_offset, OpeningDirection::ToPast);
     ///
     /// assert_eq!(half_bounded_interval.reference(), ref_offset);
     /// # Ok::<(), Box<dyn Error>>(())
@@ -379,13 +375,13 @@ impl IsEmpty for HalfBoundedToPastRelInterval {
 
 impl From<SignedDuration> for HalfBoundedToPastRelInterval {
     fn from(offset: SignedDuration) -> Self {
-        HalfBoundedToPastRelInterval::new_from_offset(offset)
+        HalfBoundedToPastRelInterval::from_offset(offset)
     }
 }
 
 impl From<(SignedDuration, BoundInclusivity)> for HalfBoundedToPastRelInterval {
     fn from((offset, inclusivity): (SignedDuration, BoundInclusivity)) -> Self {
-        HalfBoundedToPastRelInterval::new_from_offset_and_inclusivity(offset, inclusivity)
+        HalfBoundedToPastRelInterval::from_offset_incl(offset, inclusivity)
     }
 }
 
@@ -403,13 +399,13 @@ impl From<RelFiniteEndBound> for HalfBoundedToPastRelInterval {
 
 impl From<RangeTo<SignedDuration>> for HalfBoundedToPastRelInterval {
     fn from(range: RangeTo<SignedDuration>) -> Self {
-        HalfBoundedToPastRelInterval::new_from_offset_and_inclusivity(range.end, BoundInclusivity::Exclusive)
+        HalfBoundedToPastRelInterval::from_offset_incl(range.end, BoundInclusivity::Exclusive)
     }
 }
 
 impl From<RangeToInclusive<SignedDuration>> for HalfBoundedToPastRelInterval {
     fn from(range: RangeToInclusive<SignedDuration>) -> Self {
-        HalfBoundedToPastRelInterval::new_from_offset_and_inclusivity(range.end, BoundInclusivity::Inclusive)
+        HalfBoundedToPastRelInterval::from_offset_incl(range.end, BoundInclusivity::Inclusive)
     }
 }
 

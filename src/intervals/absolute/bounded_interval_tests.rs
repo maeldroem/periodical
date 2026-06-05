@@ -1037,7 +1037,7 @@ mod try_from_interval {
     fn half_bounded() -> Result<(), Box<dyn Error>> {
         assert_eq!(
             BoundedAbsInterval::try_from(
-                HalfBoundedAbsInterval::new_from_time(
+                HalfBoundedAbsInterval::from_time(
                     "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                     OpeningDirection::ToFuture
                 )
@@ -1078,7 +1078,7 @@ mod try_from_emptiable_interval {
     fn bound_half_bounded() -> Result<(), Box<dyn Error>> {
         assert_eq!(
             BoundedAbsInterval::try_from(
-                HalfBoundedAbsInterval::new_from_time(
+                HalfBoundedAbsInterval::from_time(
                     "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
                     OpeningDirection::ToFuture
                 )

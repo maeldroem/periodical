@@ -4,10 +4,16 @@
 //!
 //! Similar to the other specific interval types, its [openness](Openness)
 //! cannot change. That is to say a half-bounded interval must remain a
-//! half-bounded interval. It cannot mutate from being a half-bounded interval
-//! to a bounded interval.
+//! half-bounded interval.
 //!
-//! Instead, if you are looking for an absolute interval that doesn't keep the
+//! However, similar to [`AbsInterval`], you can switch between one variant
+//! and another, but the contained half-bounded interval must retain its own
+//! [opening direction](OpeningDirection) invariant.
+//!
+//! Usually this structure is for dealing with half-bounded intervals, regardless
+//! of their opening direction, as a single type.
+//!
+//! If you are looking for an absolute interval that doesn't keep the
 //! [openness](Openness) invariant, see [`AbsBoundPair`].
 
 use std::error::Error;
@@ -45,16 +51,22 @@ use crate::intervals::meta::{
     Relativity,
 };
 
-/// A half-bounded absolute interval
+/// Absolute half-bounded interval
 ///
 /// A half-bounded interval has a reference time and an opening direction.
 ///
 /// Similar to the other specific interval types, its [openness](Openness)
 /// cannot change. That is to say a half-bounded interval must remain a
-/// half-bounded interval. It cannot mutate from being a half-bounded interval
-/// to a bounded interval.
+/// half-bounded interval.
 ///
-/// Instead, if you are looking for an absolute interval that doesn't keep the
+/// However, similar to [`AbsInterval`], you can switch between one variant
+/// and another, but the contained half-bounded interval must retain its own
+/// [opening direction](OpeningDirection) invariant.
+///
+/// Usually this structure is for dealing with half-bounded intervals, regardless
+/// of their opening direction, as a single type.
+///
+/// If you are looking for an absolute interval that doesn't keep the
 /// [openness](Openness) invariant, see [`AbsBoundPair`].
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
@@ -64,6 +76,31 @@ pub enum HalfBoundedAbsInterval {
 }
 
 impl HalfBoundedAbsInterval {
+    /// Creates a new half-bounded absolute interval
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jiff::Timestamp;
+    /// # use periodical::intervals::absolute::{
+    /// #     AbsFiniteBoundPos,
+    /// #     HalfBoundedAbsInterval,
+    /// #     HalfBoundedToFutureAbsInterval,
+    /// # };
+    /// # use periodical::intervals::meta::OpeningDirection;
+    /// let pos = AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?);
+    /// let half_bounded = HalfBoundedAbsInterval::new(pos, OpeningDirection::ToFuture);
+    ///
+    /// assert_eq!(
+    ///     half_bounded,
+    ///     HalfBoundedAbsInterval::ToFuture(HalfBoundedToFutureAbsInterval::new(
+    ///         pos.to_finite_start_bound()
+    ///     ))
+    /// );
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    #[must_use]
     pub fn new(reference: AbsFiniteBoundPos, opening_direction: OpeningDirection) -> Self {
         match opening_direction {
             OpeningDirection::ToFuture => {
@@ -75,7 +112,7 @@ impl HalfBoundedAbsInterval {
         }
     }
 
-    /// Creates a new [`HalfBoundedAbsInterval`]
+    /// Creates a new half-bounded absolute interval from a given time and opening direction
     ///
     /// # Examples
     ///
@@ -83,13 +120,12 @@ impl HalfBoundedAbsInterval {
     /// # use std::error::Error;
     /// # use jiff::Timestamp;
     /// # use periodical::intervals::absolute::HalfBoundedAbsInterval;
-    /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
+    /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection, HasOpeningDirection};
     /// let ref_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
-    ///
     /// let half_bounded_interval =
-    ///     HalfBoundedAbsInterval::new(ref_time, OpeningDirection::ToPast);
+    ///     HalfBoundedAbsInterval::from_time(ref_time, OpeningDirection::ToPast);
     ///
-    /// assert_eq!(half_bounded_interval.reference(), ref_time);
+    /// assert_eq!(half_bounded_interval.reference_time(), ref_time);
     /// assert_eq!(
     ///     half_bounded_interval.reference_inclusivity(),
     ///     BoundInclusivity::Inclusive
@@ -101,15 +137,14 @@ impl HalfBoundedAbsInterval {
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    pub fn new_from_time(reference: Timestamp, opening_direction: OpeningDirection) -> Self {
+    pub fn from_time(reference: Timestamp, opening_direction: OpeningDirection) -> Self {
         match opening_direction {
-            OpeningDirection::ToFuture => Self::ToFuture(HalfBoundedToFutureAbsInterval::new_from_time(reference)),
-            OpeningDirection::ToPast => Self::ToPast(HalfBoundedToPastAbsInterval::new_from_time(reference)),
+            OpeningDirection::ToFuture => Self::ToFuture(HalfBoundedToFutureAbsInterval::from_time(reference)),
+            OpeningDirection::ToPast => Self::ToPast(HalfBoundedToPastAbsInterval::from_time(reference)),
         }
     }
 
-    /// Creates a new [`HalfBoundedAbsInterval`] with the given bound
-    /// inclusivities
+    /// Creates a new [`HalfBoundedAbsInterval`] from a given time, bound inclusivity, and opening direction
     ///
     /// # Examples
     ///
@@ -117,16 +152,15 @@ impl HalfBoundedAbsInterval {
     /// # use std::error::Error;
     /// # use jiff::Timestamp;
     /// # use periodical::intervals::absolute::HalfBoundedAbsInterval;
-    /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
+    /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection, HasOpeningDirection};
     /// let ref_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
-    ///
-    /// let half_bounded_interval = HalfBoundedAbsInterval::new_with_incl(
+    /// let half_bounded_interval = HalfBoundedAbsInterval::from_time_incl(
     ///     ref_time,
     ///     BoundInclusivity::Exclusive,
     ///     OpeningDirection::ToFuture,
     /// );
     ///
-    /// assert_eq!(half_bounded_interval.reference(), ref_time);
+    /// assert_eq!(half_bounded_interval.reference_time(), ref_time);
     /// assert_eq!(
     ///     half_bounded_interval.reference_inclusivity(),
     ///     BoundInclusivity::Exclusive
@@ -138,16 +172,17 @@ impl HalfBoundedAbsInterval {
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    pub fn new_from_time_and_inclusivity(
+    pub fn from_time_incl(
         reference: Timestamp,
         reference_inclusivity: BoundInclusivity,
         opening_direction: OpeningDirection,
     ) -> Self {
         match opening_direction {
-            OpeningDirection::ToFuture => Self::ToFuture(
-                HalfBoundedToFutureAbsInterval::new_from_time_and_inclusivity(reference, reference_inclusivity),
-            ),
-            OpeningDirection::ToPast => Self::ToPast(HalfBoundedToPastAbsInterval::new_from_time_and_inclusivity(
+            OpeningDirection::ToFuture => Self::ToFuture(HalfBoundedToFutureAbsInterval::from_time_incl(
+                reference,
+                reference_inclusivity,
+            )),
+            OpeningDirection::ToPast => Self::ToPast(HalfBoundedToPastAbsInterval::from_time_incl(
                 reference,
                 reference_inclusivity,
             )),
@@ -166,14 +201,14 @@ impl HalfBoundedAbsInterval {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Timestamp;
-    /// # use periodical::intervals::absolute::{HalfBoundedAbsInterval, HalfBoundedAbsIntervalTryFromRangeError};
-    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// # use periodical::intervals::absolute::HalfBoundedAbsInterval;
+    /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection, HasOpeningDirection};
     /// let reference = "2026-01-01 08:00:00Z".parse::<Timestamp>()?;
-    ///
     /// let interval = HalfBoundedAbsInterval::try_from_range(..reference)?;
     ///
-    /// assert_eq!(interval.reference(), reference);
+    /// assert_eq!(interval.reference_time(), reference);
     /// assert_eq!(interval.reference_inclusivity(), BoundInclusivity::Exclusive);
+    /// assert_eq!(interval.opening_direction(), OpeningDirection::ToPast);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn try_from_range<R>(range: R) -> Result<Self, HalfBoundedAbsIntervalTryFromRangeError>
@@ -183,22 +218,22 @@ impl HalfBoundedAbsInterval {
         match (range.start_bound(), range.end_bound()) {
             (Bound::Included(_) | Bound::Excluded(_), Bound::Included(_) | Bound::Excluded(_))
             | (Bound::Unbounded, Bound::Unbounded) => Err(HalfBoundedAbsIntervalTryFromRangeError),
-            (Bound::Unbounded, Bound::Included(&reference)) => Ok(Self::new_from_time_and_inclusivity(
+            (Bound::Unbounded, Bound::Included(&reference)) => Ok(Self::from_time_incl(
                 reference,
                 BoundInclusivity::Inclusive,
                 OpeningDirection::ToPast,
             )),
-            (Bound::Unbounded, Bound::Excluded(&reference)) => Ok(Self::new_from_time_and_inclusivity(
+            (Bound::Unbounded, Bound::Excluded(&reference)) => Ok(Self::from_time_incl(
                 reference,
                 BoundInclusivity::Exclusive,
                 OpeningDirection::ToPast,
             )),
-            (Bound::Included(&reference), Bound::Unbounded) => Ok(Self::new_from_time_and_inclusivity(
+            (Bound::Included(&reference), Bound::Unbounded) => Ok(Self::from_time_incl(
                 reference,
                 BoundInclusivity::Inclusive,
                 OpeningDirection::ToFuture,
             )),
-            (Bound::Excluded(&reference), Bound::Unbounded) => Ok(Self::new_from_time_and_inclusivity(
+            (Bound::Excluded(&reference), Bound::Unbounded) => Ok(Self::from_time_incl(
                 reference,
                 BoundInclusivity::Exclusive,
                 OpeningDirection::ToFuture,
@@ -206,6 +241,27 @@ impl HalfBoundedAbsInterval {
         }
     }
 
+    /// Returns the reference's finite bound
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jiff::Timestamp;
+    /// # use periodical::intervals::absolute::{AbsFiniteBoundPos, HalfBoundedAbsInterval};
+    /// # use periodical::intervals::meta::OpeningDirection;
+    /// let time = "2026-01-01 00:00:00Z".parse::<Timestamp>()?;
+    /// let half_bounded = HalfBoundedAbsInterval::from_time(time, OpeningDirection::ToFuture);
+    ///
+    /// assert_eq!(
+    ///     half_bounded.reference(),
+    ///     AbsFiniteBoundPos::new(time)
+    ///         .to_finite_start_bound()
+    ///         .to_finite_bound()
+    /// );
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    #[must_use]
     pub fn reference(&self) -> AbsFiniteBound {
         match self {
             Self::ToFuture(hb_to_future) => hb_to_future.start().to_finite_bound(),
@@ -213,11 +269,27 @@ impl HalfBoundedAbsInterval {
         }
     }
 
+    /// Returns the reference's finite bound position
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jiff::Timestamp;
+    /// # use periodical::intervals::absolute::{AbsFiniteBoundPos, HalfBoundedAbsInterval};
+    /// # use periodical::intervals::meta::OpeningDirection;
+    /// let ref_pos = AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?);
+    /// let half_bounded = HalfBoundedAbsInterval::new(ref_pos, OpeningDirection::ToFuture);
+    ///
+    /// assert_eq!(half_bounded.reference_pos(), ref_pos);
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    #[must_use]
     pub fn reference_pos(&self) -> AbsFiniteBoundPos {
         self.reference().pos()
     }
 
-    /// Returns the reference time
+    /// Returns the reference's time
     ///
     /// # Examples
     ///
@@ -227,11 +299,9 @@ impl HalfBoundedAbsInterval {
     /// # use periodical::intervals::absolute::HalfBoundedAbsInterval;
     /// # use periodical::intervals::meta::OpeningDirection;
     /// let ref_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
+    /// let half_bounded = HalfBoundedAbsInterval::from_time(ref_time, OpeningDirection::ToPast);
     ///
-    /// let half_bounded_interval =
-    ///     HalfBoundedAbsInterval::new(ref_time, OpeningDirection::ToPast);
-    ///
-    /// assert_eq!(half_bounded_interval.reference(), ref_time);
+    /// assert_eq!(half_bounded.reference_time(), ref_time);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
@@ -239,7 +309,7 @@ impl HalfBoundedAbsInterval {
         self.reference().pos().time()
     }
 
-    /// Returns the inclusivity of the reference time
+    /// Returns the reference's inclusivity
     ///
     /// ```
     /// # use std::error::Error;
@@ -247,15 +317,14 @@ impl HalfBoundedAbsInterval {
     /// # use periodical::intervals::absolute::HalfBoundedAbsInterval;
     /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
     /// let ref_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
-    ///
-    /// let half_bounded_interval = HalfBoundedAbsInterval::new_with_incl(
+    /// let half_bounded = HalfBoundedAbsInterval::from_time_incl(
     ///     ref_time,
     ///     BoundInclusivity::Exclusive,
     ///     OpeningDirection::ToFuture,
     /// );
     ///
     /// assert_eq!(
-    ///     half_bounded_interval.reference_inclusivity(),
+    ///     half_bounded.reference_inclusivity(),
     ///     BoundInclusivity::Exclusive
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
@@ -265,15 +334,73 @@ impl HalfBoundedAbsInterval {
         self.reference().pos().inclusivity()
     }
 
+    /// Sets the reference to a new finite bound
+    ///
+    /// Since [`AbsFiniteBound`] contains information about extremality, this operation can change
+    /// the opening direction of the stored half-bounded interval.
+    /// For example, if a finite bound of [`Start`](AbsFiniteBound::Start) variant is given, it will
+    /// result in this instance becoming a half-bounded interval of [`ToFuture`](OpeningDirection::ToFuture)
+    /// opening direction.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jiff::Timestamp;
+    /// # use periodical::intervals::absolute::{HalfBoundedAbsInterval, AbsFiniteBoundPos};
+    /// # use periodical::intervals::meta::{OpeningDirection, HasOpeningDirection};
+    /// let mut half_bounded = HalfBoundedAbsInterval::from_time(
+    ///     "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
+    ///     OpeningDirection::ToFuture,
+    /// );
+    ///
+    /// let new_time = "2027-01-01 00:00:00Z".parse::<Timestamp>()?;
+    /// half_bounded.set_reference(
+    ///     AbsFiniteBoundPos::new(new_time)
+    ///         .to_finite_end_bound()
+    ///         .to_finite_bound(),
+    /// );
+    ///
+    /// assert_eq!(half_bounded.reference_time(), new_time);
+    /// assert_eq!(half_bounded.opening_direction(), OpeningDirection::ToPast);
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
     pub fn set_reference(&mut self, new_reference: AbsFiniteBound) {
         match new_reference {
             AbsFiniteBound::Start(finite_start) => {
-                *self = Self::ToFuture(HalfBoundedToFutureAbsInterval::new(finite_start))
+                *self = Self::ToFuture(HalfBoundedToFutureAbsInterval::new(finite_start));
             },
             AbsFiniteBound::End(finite_end) => *self = Self::ToPast(HalfBoundedToPastAbsInterval::new(finite_end)),
         }
     }
 
+    /// Sets the reference's bound position
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jiff::Timestamp;
+    /// # use periodical::intervals::absolute::{AbsFiniteBoundPos, HalfBoundedAbsInterval};
+    /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
+    /// let mut half_bounded = HalfBoundedAbsInterval::from_time(
+    ///     "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
+    ///     OpeningDirection::ToFuture,
+    /// );
+    ///
+    /// let new_time = "2027-01-01 00:00:00Z".parse::<Timestamp>()?;
+    /// half_bounded.set_reference_pos(AbsFiniteBoundPos::new_with_incl(
+    ///     new_time,
+    ///     BoundInclusivity::Exclusive,
+    /// ));
+    ///
+    /// assert_eq!(half_bounded.reference_time(), new_time);
+    /// assert_eq!(
+    ///     half_bounded.reference_inclusivity(),
+    ///     BoundInclusivity::Exclusive
+    /// );
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
     pub fn set_reference_pos(&mut self, new_reference_pos: AbsFiniteBoundPos) {
         match self {
             Self::ToFuture(hb_to_future) => *hb_to_future.start_mut().pos_mut() = new_reference_pos,
@@ -281,7 +408,7 @@ impl HalfBoundedAbsInterval {
         }
     }
 
-    /// Sets the reference time
+    /// Sets the reference's time
     ///
     /// # Examples
     ///
@@ -290,16 +417,15 @@ impl HalfBoundedAbsInterval {
     /// # use jiff::Timestamp;
     /// # use periodical::intervals::absolute::HalfBoundedAbsInterval;
     /// # use periodical::intervals::meta::OpeningDirection;
-    /// let ref_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
+    /// let mut half_bounded = HalfBoundedAbsInterval::from_time(
+    ///     "2025-01-01 08:00:00Z".parse::<Timestamp>()?,
+    ///     OpeningDirection::ToFuture,
+    /// );
     ///
-    /// let mut half_bounded_interval =
-    ///     HalfBoundedAbsInterval::new(ref_time, OpeningDirection::ToFuture);
+    /// let new_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
+    /// half_bounded.set_reference_time(new_time);
     ///
-    /// let new_ref_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
-    ///
-    /// half_bounded_interval.set_reference(new_ref_time);
-    ///
-    /// assert_eq!(half_bounded_interval.reference(), new_ref_time);
+    /// assert_eq!(half_bounded.reference_time(), new_time);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn set_reference_time(&mut self, new_reference_time: Timestamp) {
@@ -309,7 +435,7 @@ impl HalfBoundedAbsInterval {
         }
     }
 
-    /// Sets the inclusivity of the reference time
+    /// Sets the reference's bound inclusivity
     ///
     /// # Examples
     ///
@@ -318,15 +444,15 @@ impl HalfBoundedAbsInterval {
     /// # use jiff::Timestamp;
     /// # use periodical::intervals::absolute::HalfBoundedAbsInterval;
     /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
-    /// let ref_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
+    /// let mut half_bounded = HalfBoundedAbsInterval::from_time(
+    ///     "2025-01-01 08:00:00Z".parse::<Timestamp>()?,
+    ///     OpeningDirection::ToFuture,
+    /// );
     ///
-    /// let mut half_bounded_interval =
-    ///     HalfBoundedAbsInterval::new(ref_time, OpeningDirection::ToFuture);
-    ///
-    /// half_bounded_interval.set_reference_inclusivity(BoundInclusivity::Exclusive);
+    /// half_bounded.set_reference_inclusivity(BoundInclusivity::Exclusive);
     ///
     /// assert_eq!(
-    ///     half_bounded_interval.reference_inclusivity(),
+    ///     half_bounded.reference_inclusivity(),
     ///     BoundInclusivity::Exclusive
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
@@ -346,18 +472,15 @@ impl HalfBoundedAbsInterval {
     /// # use std::error::Error;
     /// # use jiff::Timestamp;
     /// # use periodical::intervals::absolute::HalfBoundedAbsInterval;
-    /// # use periodical::intervals::meta::OpeningDirection;
-    /// let ref_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
-    ///
-    /// let mut half_bounded_interval =
-    ///     HalfBoundedAbsInterval::new(ref_time, OpeningDirection::ToFuture);
-    ///
-    /// half_bounded_interval.set_opening_direction(OpeningDirection::ToPast);
-    ///
-    /// assert_eq!(
-    ///     half_bounded_interval.opening_direction(),
-    ///     OpeningDirection::ToPast
+    /// # use periodical::intervals::meta::{OpeningDirection, HasOpeningDirection};
+    /// let mut half_bounded = HalfBoundedAbsInterval::from_time(
+    ///     "2025-01-01 08:00:00Z".parse::<Timestamp>()?,
+    ///     OpeningDirection::ToFuture,
     /// );
+    ///
+    /// half_bounded.set_opening_direction(OpeningDirection::ToPast);
+    ///
+    /// assert_eq!(half_bounded.opening_direction(), OpeningDirection::ToPast);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn set_opening_direction(&mut self, new_opening_direction: OpeningDirection) {
@@ -375,6 +498,31 @@ impl HalfBoundedAbsInterval {
         }
     }
 
+    /// Returns the opposite half-bounded interval
+    ///
+    /// Returns a half-bounded interval of opposite opening direction and opposite bound inclusivity.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jiff::Timestamp;
+    /// # use periodical::intervals::absolute::{AbsFiniteBoundPos, HalfBoundedAbsInterval};
+    /// # use periodical::intervals::meta::{OpeningDirection, BoundInclusivity};
+    /// let time = "2026-01-01 00:00:00Z".parse::<Timestamp>()?;
+    /// let half_bounded = HalfBoundedAbsInterval::from_time(time, OpeningDirection::ToFuture);
+    ///
+    /// assert_eq!(
+    ///     half_bounded.opposite(),
+    ///     HalfBoundedAbsInterval::from_time_incl(
+    ///         time,
+    ///         BoundInclusivity::Exclusive,
+    ///         OpeningDirection::ToPast
+    ///     )
+    /// );
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    #[must_use]
     pub fn opposite(self) -> Self {
         match self {
             Self::ToFuture(hb_to_future) => Self::ToPast(hb_to_future.opposite()),
@@ -382,6 +530,43 @@ impl HalfBoundedAbsInterval {
         }
     }
 
+    /// Returns the content of the [`ToFuture`](HalfBoundedAbsInterval::ToFuture) variant
+    ///
+    /// Consumes `self` and puts the content of the [`ToFuture`](HalfBoundedAbsInterval::ToFuture)
+    /// variant in an [`Option`].
+    /// If instead `self` is another variant, the method returns [`None`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jiff::Timestamp;
+    /// # use periodical::intervals::absolute::{
+    /// #     HalfBoundedAbsInterval,
+    /// #     HalfBoundedToFutureAbsInterval,
+    /// #     HalfBoundedToPastAbsInterval,
+    /// # };
+    /// # use periodical::intervals::meta::OpeningDirection;
+    /// let time = "2026-01-01 00:00:00Z".parse::<Timestamp>()?;
+    /// let half_bounded_to_future = HalfBoundedToFutureAbsInterval::from_time(time);
+    /// let half_bounded_to_past = HalfBoundedToPastAbsInterval::from_time(time);
+    ///
+    /// assert_eq!(
+    ///     half_bounded_to_future
+    ///         .clone()
+    ///         .to_half_bounded_interval()
+    ///         .half_bounded_to_future(),
+    ///     Some(half_bounded_to_future)
+    /// );
+    /// assert_eq!(
+    ///     half_bounded_to_past
+    ///         .to_half_bounded_interval()
+    ///         .half_bounded_to_future(),
+    ///     None
+    /// );
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    #[must_use]
     pub fn half_bounded_to_future(self) -> Option<HalfBoundedToFutureAbsInterval> {
         match self {
             Self::ToFuture(hb_to_future) => Some(hb_to_future),
@@ -389,6 +574,43 @@ impl HalfBoundedAbsInterval {
         }
     }
 
+    /// Returns the content of the [`ToPast`](HalfBoundedAbsInterval::ToPast) variant
+    ///
+    /// Consumes `self` and puts the content of the [`ToPast`](HalfBoundedAbsInterval::ToPast)
+    /// variant in an [`Option`].
+    /// If instead `self` is another variant, the method returns [`None`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jiff::Timestamp;
+    /// # use periodical::intervals::absolute::{
+    /// #     HalfBoundedAbsInterval,
+    /// #     HalfBoundedToFutureAbsInterval,
+    /// #     HalfBoundedToPastAbsInterval,
+    /// # };
+    /// # use periodical::intervals::meta::{OpeningDirection, HasOpeningDirection};
+    /// let time = "2026-01-01 00:00:00Z".parse::<Timestamp>()?;
+    /// let half_bounded_to_future = HalfBoundedToFutureAbsInterval::from_time(time);
+    /// let half_bounded_to_past = HalfBoundedToPastAbsInterval::from_time(time);
+    ///
+    /// assert_eq!(
+    ///     half_bounded_to_future
+    ///         .to_half_bounded_interval()
+    ///         .half_bounded_to_past(),
+    ///     None
+    /// );
+    /// assert_eq!(
+    ///     half_bounded_to_past
+    ///         .clone()
+    ///         .to_half_bounded_interval()
+    ///         .half_bounded_to_past(),
+    ///     Some(half_bounded_to_past)
+    /// );
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    #[must_use]
     pub fn half_bounded_to_past(self) -> Option<HalfBoundedToPastAbsInterval> {
         match self {
             Self::ToFuture(_) => None,
@@ -396,13 +618,13 @@ impl HalfBoundedAbsInterval {
         }
     }
 
-    /// Wraps the interval in [`AbsInterval`]
+    /// Wraps `self` in [`AbsInterval`]
     #[must_use]
     pub fn to_interval(self) -> AbsInterval {
         AbsInterval::from(self)
     }
 
-    /// Wraps the interval in [`EmptiableAbsInterval`]
+    /// Converts `self` into [`EmptiableAbsInterval`]
     #[must_use]
     pub fn to_emptiable_interval(self) -> EmptiableAbsInterval {
         EmptiableAbsInterval::from(self)
@@ -503,49 +725,37 @@ impl IsEmpty for HalfBoundedAbsInterval {
 
 impl From<(Timestamp, OpeningDirection)> for HalfBoundedAbsInterval {
     fn from((time, direction): (Timestamp, OpeningDirection)) -> Self {
-        HalfBoundedAbsInterval::new_from_time(time, direction)
+        HalfBoundedAbsInterval::from_time(time, direction)
     }
 }
 
 impl From<(Timestamp, BoundInclusivity, OpeningDirection)> for HalfBoundedAbsInterval {
     fn from((time, inclusivity, direction): (Timestamp, BoundInclusivity, OpeningDirection)) -> Self {
-        HalfBoundedAbsInterval::new_from_time_and_inclusivity(time, inclusivity, direction)
+        HalfBoundedAbsInterval::from_time_incl(time, inclusivity, direction)
     }
 }
 
 impl From<(AbsFiniteBoundPos, OpeningDirection)> for HalfBoundedAbsInterval {
     fn from((reference, opening_direction): (AbsFiniteBoundPos, OpeningDirection)) -> Self {
-        Self::new_from_time_and_inclusivity(reference.time(), reference.inclusivity(), opening_direction)
+        Self::from_time_incl(reference.time(), reference.inclusivity(), opening_direction)
     }
 }
 
 impl From<RangeFrom<Timestamp>> for HalfBoundedAbsInterval {
     fn from(range: RangeFrom<Timestamp>) -> Self {
-        HalfBoundedAbsInterval::new_from_time_and_inclusivity(
-            range.start,
-            BoundInclusivity::Inclusive,
-            OpeningDirection::ToFuture,
-        )
+        HalfBoundedAbsInterval::from_time_incl(range.start, BoundInclusivity::Inclusive, OpeningDirection::ToFuture)
     }
 }
 
 impl From<RangeTo<Timestamp>> for HalfBoundedAbsInterval {
     fn from(range: RangeTo<Timestamp>) -> Self {
-        HalfBoundedAbsInterval::new_from_time_and_inclusivity(
-            range.end,
-            BoundInclusivity::Exclusive,
-            OpeningDirection::ToPast,
-        )
+        HalfBoundedAbsInterval::from_time_incl(range.end, BoundInclusivity::Exclusive, OpeningDirection::ToPast)
     }
 }
 
 impl From<RangeToInclusive<Timestamp>> for HalfBoundedAbsInterval {
     fn from(range: RangeToInclusive<Timestamp>) -> Self {
-        HalfBoundedAbsInterval::new_from_time_and_inclusivity(
-            range.end,
-            BoundInclusivity::Inclusive,
-            OpeningDirection::ToPast,
-        )
+        HalfBoundedAbsInterval::from_time_incl(range.end, BoundInclusivity::Inclusive, OpeningDirection::ToPast)
     }
 }
 

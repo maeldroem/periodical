@@ -64,8 +64,7 @@ impl HalfBoundedToFutureAbsInterval {
     /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
     /// let ref_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     ///
-    /// let half_bounded_interval =
-    ///     HalfBoundedAbsInterval::new(ref_time, OpeningDirection::ToPast);
+    /// let half_bounded_interval = HalfBoundedAbsInterval::new(ref_time, OpeningDirection::ToPast);
     ///
     /// assert_eq!(half_bounded_interval.reference(), ref_time);
     /// assert_eq!(
@@ -79,7 +78,7 @@ impl HalfBoundedToFutureAbsInterval {
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    pub fn new_from_time(reference: Timestamp) -> Self {
+    pub fn from_time(reference: Timestamp) -> Self {
         Self::new(AbsFiniteBoundPos::new(reference).to_finite_start_bound())
     }
 
@@ -113,7 +112,7 @@ impl HalfBoundedToFutureAbsInterval {
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    pub fn new_from_time_and_inclusivity(reference: Timestamp, reference_inclusivity: BoundInclusivity) -> Self {
+    pub fn from_time_incl(reference: Timestamp, reference_inclusivity: BoundInclusivity) -> Self {
         HalfBoundedToFutureAbsInterval::new(
             AbsFiniteBoundPos::new_with_incl(reference, reference_inclusivity).to_finite_start_bound(),
         )
@@ -146,14 +145,12 @@ impl HalfBoundedToFutureAbsInterval {
         R: RangeBounds<Timestamp>,
     {
         match (range.start_bound(), range.end_bound()) {
-            (Bound::Included(&reference), Bound::Unbounded) => Ok(Self::new_from_time_and_inclusivity(
-                reference,
-                BoundInclusivity::Inclusive,
-            )),
-            (Bound::Excluded(&reference), Bound::Unbounded) => Ok(Self::new_from_time_and_inclusivity(
-                reference,
-                BoundInclusivity::Exclusive,
-            )),
+            (Bound::Included(&reference), Bound::Unbounded) => {
+                Ok(Self::from_time_incl(reference, BoundInclusivity::Inclusive))
+            },
+            (Bound::Excluded(&reference), Bound::Unbounded) => {
+                Ok(Self::from_time_incl(reference, BoundInclusivity::Exclusive))
+            },
             _ => Err(HalfBoundedToFutureAbsIntervalTryFromRangeError),
         }
     }
@@ -181,8 +178,7 @@ impl HalfBoundedToFutureAbsInterval {
     /// # use periodical::intervals::meta::OpeningDirection;
     /// let ref_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     ///
-    /// let half_bounded_interval =
-    ///     HalfBoundedAbsInterval::new(ref_time, OpeningDirection::ToPast);
+    /// let half_bounded_interval = HalfBoundedAbsInterval::new(ref_time, OpeningDirection::ToPast);
     ///
     /// assert_eq!(half_bounded_interval.reference(), ref_time);
     /// # Ok::<(), Box<dyn Error>>(())
@@ -379,13 +375,13 @@ impl IsEmpty for HalfBoundedToFutureAbsInterval {
 
 impl From<Timestamp> for HalfBoundedToFutureAbsInterval {
     fn from(time: Timestamp) -> Self {
-        HalfBoundedToFutureAbsInterval::new_from_time(time)
+        HalfBoundedToFutureAbsInterval::from_time(time)
     }
 }
 
 impl From<(Timestamp, BoundInclusivity)> for HalfBoundedToFutureAbsInterval {
     fn from((time, inclusivity): (Timestamp, BoundInclusivity)) -> Self {
-        HalfBoundedToFutureAbsInterval::new_from_time_and_inclusivity(time, inclusivity)
+        HalfBoundedToFutureAbsInterval::from_time_incl(time, inclusivity)
     }
 }
 
@@ -403,7 +399,7 @@ impl From<AbsFiniteStartBound> for HalfBoundedToFutureAbsInterval {
 
 impl From<RangeFrom<Timestamp>> for HalfBoundedToFutureAbsInterval {
     fn from(range: RangeFrom<Timestamp>) -> Self {
-        HalfBoundedToFutureAbsInterval::new_from_time_and_inclusivity(range.start, BoundInclusivity::Inclusive)
+        HalfBoundedToFutureAbsInterval::from_time_incl(range.start, BoundInclusivity::Inclusive)
     }
 }
 

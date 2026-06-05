@@ -32,7 +32,7 @@ impl HalfBoundedAbsInterval {
     /// ```
     #[must_use]
     pub fn since_now(inclusivity: BoundInclusivity) -> Self {
-        Self::new_from_time_and_inclusivity(Timestamp::now(), inclusivity, OpeningDirection::ToFuture)
+        Self::from_time_incl(Timestamp::now(), inclusivity, OpeningDirection::ToFuture)
     }
 
     /// Creates a new [`HalfBoundedAbsInterval`] that spans until now
@@ -49,7 +49,7 @@ impl HalfBoundedAbsInterval {
     /// ```
     #[must_use]
     pub fn until_now(inclusivity: BoundInclusivity) -> Self {
-        Self::new_from_time_and_inclusivity(Timestamp::now(), inclusivity, OpeningDirection::ToPast)
+        Self::from_time_incl(Timestamp::now(), inclusivity, OpeningDirection::ToPast)
     }
 
     /// Creates a new [`HalfBoundedAbsInterval`] that spans since the start
@@ -99,7 +99,7 @@ impl HalfBoundedAbsInterval {
             .or(Err(HalfBoundedAbsIntervalCreationError::OutOfRangeReference))?
             .timestamp();
 
-        Ok(Self::new_from_time(reference, OpeningDirection::ToFuture))
+        Ok(Self::from_time(reference, OpeningDirection::ToFuture))
     }
 
     /// Creates a new [`HalfBoundedAbsInterval`] that spans until the start
@@ -149,7 +149,7 @@ impl HalfBoundedAbsInterval {
             .or(Err(HalfBoundedAbsIntervalCreationError::OutOfRangeReference))?
             .timestamp();
 
-        Ok(Self::new_from_time_and_inclusivity(
+        Ok(Self::from_time_incl(
             reference,
             BoundInclusivity::Exclusive,
             OpeningDirection::ToPast,
@@ -220,8 +220,7 @@ impl HalfBoundedAbsInterval {
     /// # use std::error::Error;
     /// # use jiff::tz::TimeZone;
     /// # use periodical::intervals::absolute::HalfBoundedAbsInterval;
-    /// let since_tomorrow =
-    ///     HalfBoundedAbsInterval::since_tomorrow(TimeZone::get("Europe/Oslo")?)?;
+    /// let since_tomorrow = HalfBoundedAbsInterval::since_tomorrow(TimeZone::get("Europe/Oslo")?)?;
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn since_tomorrow(tz: TimeZone) -> Result<Self, HalfBoundedAbsIntervalCreationError> {
@@ -258,8 +257,7 @@ impl HalfBoundedAbsInterval {
     /// # use std::error::Error;
     /// # use jiff::tz::TimeZone;
     /// # use periodical::intervals::absolute::HalfBoundedAbsInterval;
-    /// let until_tomorrow =
-    ///     HalfBoundedAbsInterval::until_tomorrow(TimeZone::get("Europe/Oslo")?)?;
+    /// let until_tomorrow = HalfBoundedAbsInterval::until_tomorrow(TimeZone::get("Europe/Oslo")?)?;
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn until_tomorrow(tz: TimeZone) -> Result<Self, HalfBoundedAbsIntervalCreationError> {
@@ -296,8 +294,7 @@ impl HalfBoundedAbsInterval {
     /// # use std::error::Error;
     /// # use jiff::tz::TimeZone;
     /// # use periodical::intervals::absolute::HalfBoundedAbsInterval;
-    /// let since_yesterday =
-    ///     HalfBoundedAbsInterval::since_yesterday(TimeZone::get("Europe/Oslo")?)?;
+    /// let since_yesterday = HalfBoundedAbsInterval::since_yesterday(TimeZone::get("Europe/Oslo")?)?;
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn since_yesterday(tz: TimeZone) -> Result<Self, HalfBoundedAbsIntervalCreationError> {
@@ -337,8 +334,7 @@ impl HalfBoundedAbsInterval {
     /// # use std::error::Error;
     /// # use jiff::tz::TimeZone;
     /// # use periodical::intervals::absolute::HalfBoundedAbsInterval;
-    /// let until_yesterday =
-    ///     HalfBoundedAbsInterval::until_yesterday(TimeZone::get("Europe/Oslo")?)?;
+    /// let until_yesterday = HalfBoundedAbsInterval::until_yesterday(TimeZone::get("Europe/Oslo")?)?;
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn until_yesterday(tz: TimeZone) -> Result<Self, HalfBoundedAbsIntervalCreationError> {
@@ -698,8 +694,7 @@ impl HalfBoundedAbsInterval {
     /// # use std::error::Error;
     /// # use jiff::tz::TimeZone;
     /// # use periodical::intervals::absolute::HalfBoundedAbsInterval;
-    /// let since_this_month =
-    ///     HalfBoundedAbsInterval::since_this_month(TimeZone::get("Europe/Oslo")?)?;
+    /// let since_this_month = HalfBoundedAbsInterval::since_this_month(TimeZone::get("Europe/Oslo")?)?;
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn since_this_month(tz: TimeZone) -> Result<Self, HalfBoundedAbsIntervalCreationError> {
@@ -727,8 +722,7 @@ impl HalfBoundedAbsInterval {
     /// # use std::error::Error;
     /// # use jiff::tz::TimeZone;
     /// # use periodical::intervals::absolute::HalfBoundedAbsInterval;
-    /// let until_this_month =
-    ///     HalfBoundedAbsInterval::until_this_month(TimeZone::get("Europe/Oslo")?)?;
+    /// let until_this_month = HalfBoundedAbsInterval::until_this_month(TimeZone::get("Europe/Oslo")?)?;
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn until_this_month(tz: TimeZone) -> Result<Self, HalfBoundedAbsIntervalCreationError> {
@@ -835,8 +829,7 @@ impl HalfBoundedAbsInterval {
     /// # use std::error::Error;
     /// # use jiff::tz::TimeZone;
     /// # use periodical::intervals::absolute::HalfBoundedAbsInterval;
-    /// let since_this_year =
-    ///     HalfBoundedAbsInterval::since_this_year(TimeZone::get("Europe/Oslo")?)?;
+    /// let since_this_year = HalfBoundedAbsInterval::since_this_year(TimeZone::get("Europe/Oslo")?)?;
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn since_this_year(tz: TimeZone) -> Result<Self, HalfBoundedAbsIntervalCreationError> {
@@ -857,8 +850,7 @@ impl HalfBoundedAbsInterval {
     /// # use std::error::Error;
     /// # use jiff::tz::TimeZone;
     /// # use periodical::intervals::absolute::HalfBoundedAbsInterval;
-    /// let until_this_year =
-    ///     HalfBoundedAbsInterval::until_this_year(TimeZone::get("Europe/Oslo")?)?;
+    /// let until_this_year = HalfBoundedAbsInterval::until_this_year(TimeZone::get("Europe/Oslo")?)?;
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn until_this_year(tz: TimeZone) -> Result<Self, HalfBoundedAbsIntervalCreationError> {

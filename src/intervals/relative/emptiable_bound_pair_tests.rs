@@ -361,7 +361,7 @@ mod to_emptiable_interval {
             )
             .to_emptiable()
             .to_emptiable_interval(),
-            EmptiableRelInterval::Bound(RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+            EmptiableRelInterval::Bound(RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                 reference,
                 OpeningDirection::ToFuture
             )))
@@ -840,7 +840,7 @@ fn from_bounded_interval() {
 #[test]
 fn from_half_bounded_interval() {
     assert_eq!(
-        EmptiableRelBoundPair::from(HalfBoundedRelInterval::new_from_offset(
+        EmptiableRelBoundPair::from(HalfBoundedRelInterval::from_offset(
             SignedDuration::from_hours(1),
             OpeningDirection::ToFuture,
         )),

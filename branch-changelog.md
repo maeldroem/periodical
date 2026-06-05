@@ -36,6 +36,7 @@ TODO: once all done, PR onto dev to sync, then continue unit tests
       - `finite_bound`
       - `finite_end_bound`
       - `finite_start_bound`
+      - `half_bounded_interval`
     - `relative`
       - `bound_pair`
       - `bound`
@@ -47,6 +48,7 @@ TODO: once all done, PR onto dev to sync, then continue unit tests
       - `finite_bound`
       - `finite_end_bound`
       - `finite_start_bound`
+      - `half_bounded_interval`
 
 - Tests to complete code coverage for `time`
 - Tests to complete code coverage for `ops`

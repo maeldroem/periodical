@@ -238,7 +238,7 @@ impl ToAbsolute for HalfBoundedRelInterval {
     type AbsType = HalfBoundedAbsInterval;
 
     fn to_absolute(&self, reference: Timestamp) -> Self::AbsType {
-        HalfBoundedAbsInterval::new_from_time_and_inclusivity(
+        HalfBoundedAbsInterval::from_time_incl(
             reference + self.reference_offset(),
             self.reference_inclusivity(),
             self.opening_direction(),
@@ -446,7 +446,7 @@ impl ToRelative for HalfBoundedAbsInterval {
     type RelType = HalfBoundedRelInterval;
 
     fn to_relative(&self, reference: Timestamp) -> Self::RelType {
-        HalfBoundedRelInterval::new_from_offset_and_inclusivity(
+        HalfBoundedRelInterval::from_offset_incl(
             self.reference_time().duration_since(reference),
             self.reference_inclusivity(),
             self.opening_direction(),

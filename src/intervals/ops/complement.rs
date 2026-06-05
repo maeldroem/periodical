@@ -278,13 +278,13 @@ pub fn complement_emptiable_abs_bound_pair(
 
 #[must_use]
 pub fn complement_bounded_abs_interval(interval: &BoundedAbsInterval) -> ComplementResult<HalfBoundedAbsInterval> {
-    let until_start = HalfBoundedAbsInterval::new_from_time_and_inclusivity(
+    let until_start = HalfBoundedAbsInterval::from_time_incl(
         interval.start_time(),
         interval.start_inclusivity().opposite(),
         OpeningDirection::ToPast,
     );
 
-    let since_end = HalfBoundedAbsInterval::new_from_time_and_inclusivity(
+    let since_end = HalfBoundedAbsInterval::from_time_incl(
         interval.end_time(),
         interval.end_inclusivity().opposite(),
         OpeningDirection::ToFuture,
@@ -297,7 +297,7 @@ pub fn complement_bounded_abs_interval(interval: &BoundedAbsInterval) -> Complem
 pub fn complement_half_bounded_abs_interval(
     interval: &HalfBoundedAbsInterval,
 ) -> ComplementResult<HalfBoundedAbsInterval> {
-    ComplementResult::Single(HalfBoundedAbsInterval::new_from_time_and_inclusivity(
+    ComplementResult::Single(HalfBoundedAbsInterval::from_time_incl(
         interval.reference_time(),
         interval.reference_inclusivity().opposite(),
         interval.opening_direction().opposite(),
@@ -343,13 +343,13 @@ pub fn complement_emptiable_rel_bound_pair(
 
 #[must_use]
 pub fn complement_bounded_rel_interval(interval: &BoundedRelInterval) -> ComplementResult<HalfBoundedRelInterval> {
-    let until_start = HalfBoundedRelInterval::new_from_offset_and_inclusivity(
+    let until_start = HalfBoundedRelInterval::from_offset_incl(
         interval.start_offset(),
         interval.start_inclusivity().opposite(),
         OpeningDirection::ToPast,
     );
 
-    let since_end = HalfBoundedRelInterval::new_from_offset_and_inclusivity(
+    let since_end = HalfBoundedRelInterval::from_offset_incl(
         interval.end_offset(),
         interval.end_inclusivity().opposite(),
         OpeningDirection::ToFuture,
@@ -362,7 +362,7 @@ pub fn complement_bounded_rel_interval(interval: &BoundedRelInterval) -> Complem
 pub fn complement_half_bounded_rel_interval(
     interval: &HalfBoundedRelInterval,
 ) -> ComplementResult<HalfBoundedRelInterval> {
-    ComplementResult::Single(HalfBoundedRelInterval::new_from_offset_and_inclusivity(
+    ComplementResult::Single(HalfBoundedRelInterval::from_offset_incl(
         interval.reference_offset(),
         interval.reference_inclusivity().opposite(),
         interval.opening_direction().opposite(),

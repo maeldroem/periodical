@@ -935,7 +935,7 @@ fn from_bounded_relative_interval() {
 fn from_half_bounded_relative_interval() {
     let reference = SignedDuration::from_hours(8);
 
-    let half_bounded = HalfBoundedRelInterval::new_from_offset(reference, OpeningDirection::ToFuture);
+    let half_bounded = HalfBoundedRelInterval::from_offset(reference, OpeningDirection::ToFuture);
 
     assert_eq!(
         RelBoundPair::from(half_bounded),
@@ -967,7 +967,7 @@ mod from_rel_interval {
     fn from_rel_interval_half_bounded() {
         let reference = SignedDuration::from_hours(8);
 
-        let interval = HalfBoundedRelInterval::new_from_offset(reference, OpeningDirection::ToFuture).to_interval();
+        let interval = HalfBoundedRelInterval::from_offset(reference, OpeningDirection::ToFuture).to_interval();
 
         assert_eq!(
             RelBoundPair::from(interval),

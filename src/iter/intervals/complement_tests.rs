@@ -21,7 +21,7 @@ fn create() -> Result<(), Box<dyn Error>> {
             "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
         )),
         AbsInterval::Unbounded(UnboundedInterval),
-        AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
+        AbsInterval::HalfBounded(HalfBoundedAbsInterval::from_time(
             "2025-01-05 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             OpeningDirection::ToFuture,
         )),
@@ -40,7 +40,7 @@ fn run() -> Result<(), Box<dyn Error>> {
             "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
         )),
         AbsInterval::Unbounded(UnboundedInterval),
-        AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
+        AbsInterval::HalfBounded(HalfBoundedAbsInterval::from_time(
             "2025-01-05 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             OpeningDirection::ToFuture,
         )),
@@ -50,13 +50,13 @@ fn run() -> Result<(), Box<dyn Error>> {
         intervals.complement().collect::<Vec<_>>(),
         vec![
             ComplementResult::Split(
-                AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time_and_inclusivity(
+                AbsInterval::HalfBounded(HalfBoundedAbsInterval::from_time_incl(
                     "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                     OpeningDirection::ToPast,
                 ))
                 .to_emptiable(),
-                AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time_and_inclusivity(
+                AbsInterval::HalfBounded(HalfBoundedAbsInterval::from_time_incl(
                     "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                     OpeningDirection::ToFuture,
@@ -65,7 +65,7 @@ fn run() -> Result<(), Box<dyn Error>> {
             ),
             ComplementResult::Single(EmptiableAbsInterval::Empty(EmptyInterval)),
             ComplementResult::Single(
-                AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time_and_inclusivity(
+                AbsInterval::HalfBounded(HalfBoundedAbsInterval::from_time_incl(
                     "2025-01-05 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                     OpeningDirection::ToPast,
@@ -86,7 +86,7 @@ fn run_reverse() -> Result<(), Box<dyn Error>> {
             "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
         )),
         AbsInterval::Unbounded(UnboundedInterval),
-        AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
+        AbsInterval::HalfBounded(HalfBoundedAbsInterval::from_time(
             "2025-01-05 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             OpeningDirection::ToFuture,
         )),
@@ -96,7 +96,7 @@ fn run_reverse() -> Result<(), Box<dyn Error>> {
         intervals.complement().rev().collect::<Vec<_>>(),
         vec![
             ComplementResult::Single(
-                AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time_and_inclusivity(
+                AbsInterval::HalfBounded(HalfBoundedAbsInterval::from_time_incl(
                     "2025-01-05 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                     OpeningDirection::ToPast,
@@ -105,13 +105,13 @@ fn run_reverse() -> Result<(), Box<dyn Error>> {
             ),
             ComplementResult::Single(EmptiableAbsInterval::Empty(EmptyInterval)),
             ComplementResult::Split(
-                AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time_and_inclusivity(
+                AbsInterval::HalfBounded(HalfBoundedAbsInterval::from_time_incl(
                     "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                     OpeningDirection::ToPast,
                 ))
                 .to_emptiable(),
-                AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time_and_inclusivity(
+                AbsInterval::HalfBounded(HalfBoundedAbsInterval::from_time_incl(
                     "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                     OpeningDirection::ToFuture,

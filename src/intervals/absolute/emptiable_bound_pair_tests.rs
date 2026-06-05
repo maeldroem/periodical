@@ -378,7 +378,7 @@ mod to_emptiable_interval {
             )
             .to_emptiable()
             .to_emptiable_interval(),
-            EmptiableAbsInterval::Bound(AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
+            EmptiableAbsInterval::Bound(AbsInterval::HalfBounded(HalfBoundedAbsInterval::from_time(
                 reference,
                 OpeningDirection::ToFuture
             )))
@@ -920,7 +920,7 @@ fn from_bounded_interval() -> Result<(), Box<dyn Error>> {
 #[test]
 fn from_half_bounded_interval() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        EmptiableAbsBoundPair::from(HalfBoundedAbsInterval::new_from_time(
+        EmptiableAbsBoundPair::from(HalfBoundedAbsInterval::from_time(
             "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
             OpeningDirection::ToFuture,
         )),
