@@ -28,41 +28,81 @@ use crate::intervals::ops::{
     BoundOverlapDisambiguationRuleSet,
 };
 
+/// Absolute finite start bound
+///
+/// Represents the finite start bound of an absolute interval.
+/// If you need to represent infinity, see [`AbsStartBound`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub struct AbsFiniteStartBound(pub(crate) AbsFiniteBoundPos);
 
 impl AbsFiniteStartBound {
+    /// Creates a new absolute finite start bound
+    #[must_use]
     pub fn new(finite_bound_pos: AbsFiniteBoundPos) -> Self {
         Self(finite_bound_pos)
     }
 
+    /// Returns the inner absolute finite bound position
+    #[must_use]
     pub fn pos(&self) -> AbsFiniteBoundPos {
         self.0
     }
 
+    /// Returns a mutable pointer of the inner absolute finite bound position
+    ///
+    /// This is used for mutating which position this start bound represents.
+    #[must_use]
     pub fn pos_mut(&mut self) -> &mut AbsFiniteBoundPos {
         &mut self.0
     }
 
-    pub fn to_start_bound(self) -> AbsStartBound {
-        AbsStartBound::Finite(self)
-    }
-
-    pub fn to_finite_bound(self) -> AbsFiniteBound {
-        AbsFiniteBound::from(self)
-    }
-
-    pub fn to_bound(self) -> AbsBound {
-        AbsBound::from(self)
-    }
-
+    /// Returns the opposite finite end bound
+    ///
+    /// Returns the opposite absolute finite end bound with the same time
+    /// but opposite bound inclusivity.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jiff::Timestamp;
+    /// # use periodical::intervals::absolute::AbsFiniteBoundPos;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// let time = "2026-01-01 10:00:00Z".parse::<Timestamp>()?;
+    /// let shift_start = AbsFiniteBoundPos::new(time).to_finite_start_bound();
+    ///
+    /// assert_eq!(
+    ///     shift_start.opposite(),
+    ///     AbsFiniteBoundPos::new_with_incl(time, BoundInclusivity::Exclusive).to_finite_end_bound()
+    /// );
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    #[must_use]
     pub fn opposite(self) -> AbsFiniteEndBound {
         AbsFiniteEndBound::new(AbsFiniteBoundPos::new_with_incl(
             self.pos().time(),
             self.pos().inclusivity().opposite(),
         ))
+    }
+
+    /// Wraps `self` in [`AbsStartBound`]
+    #[must_use]
+    pub fn to_start_bound(self) -> AbsStartBound {
+        AbsStartBound::Finite(self)
+    }
+
+    /// Wraps `self` in the corresponding [`AbsFiniteBound`] variant
+    #[must_use]
+    pub fn to_finite_bound(self) -> AbsFiniteBound {
+        AbsFiniteBound::from(self)
+    }
+
+    /// Converts `self` into [`AbsBound`]
+    #[must_use]
+    pub fn to_bound(self) -> AbsBound {
+        AbsBound::from(self)
     }
 }
 
