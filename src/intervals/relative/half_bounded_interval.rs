@@ -68,8 +68,8 @@ use crate::intervals::relative::{
 ///
 /// If you are looking for an absolute interval that doesn't keep the
 /// [openness](Openness) invariant, see [`RelBoundPair`].
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum HalfBoundedRelInterval {
     ToFuture(HalfBoundedToFutureRelInterval),
     ToPast(HalfBoundedToPastRelInterval),
