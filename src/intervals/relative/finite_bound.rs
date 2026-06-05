@@ -33,7 +33,7 @@ impl RelFiniteBound {
     ///
     /// ```
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::finite_bound_position::RelFiniteBoundPos;
+    /// # use periodical::intervals::relative::RelFiniteBoundPos;
     /// let finite_bound_start = RelFiniteBoundPos::new(SignedDuration::from_hours(2))
     ///     .to_finite_start_bound()
     ///     .to_finite_bound();
@@ -55,7 +55,7 @@ impl RelFiniteBound {
     ///
     /// ```
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::finite_bound_position::RelFiniteBoundPos;
+    /// # use periodical::intervals::relative::RelFiniteBoundPos;
     /// let finite_bound_start = RelFiniteBoundPos::new(SignedDuration::from_hours(2))
     ///     .to_finite_start_bound()
     ///     .to_finite_bound();
@@ -80,7 +80,7 @@ impl RelFiniteBound {
     ///
     /// ```
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::finite_bound_position::RelFiniteBoundPos;
+    /// # use periodical::intervals::relative::RelFiniteBoundPos;
     /// let finite_start_bound =
     ///     RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_finite_start_bound();
     /// let finite_bound_start = finite_start_bound.to_finite_bound();
@@ -108,7 +108,7 @@ impl RelFiniteBound {
     ///
     /// ```
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::finite_bound_position::RelFiniteBoundPos;
+    /// # use periodical::intervals::relative::RelFiniteBoundPos;
     /// let finite_bound_start = RelFiniteBoundPos::new(SignedDuration::from_hours(2))
     ///     .to_finite_start_bound()
     ///     .to_finite_bound();
@@ -144,7 +144,7 @@ impl RelFiniteBound {
     ///
     /// ```
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::finite_bound_position::RelFiniteBoundPos;
+    /// # use periodical::intervals::relative::RelFiniteBoundPos;
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// let offset = SignedDuration::from_hours(10);
     /// let start = RelFiniteBoundPos::new(offset)

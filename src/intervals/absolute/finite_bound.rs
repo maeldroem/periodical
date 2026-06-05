@@ -34,7 +34,7 @@ impl AbsFiniteBound {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Timestamp;
-    /// # use periodical::intervals::absolute::finite_bound_position::AbsFiniteBoundPos;
+    /// # use periodical::intervals::absolute::AbsFiniteBoundPos;
     /// let finite_bound_start = AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?)
     ///     .to_finite_start_bound()
     ///     .to_finite_bound();
@@ -58,7 +58,7 @@ impl AbsFiniteBound {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Timestamp;
-    /// # use periodical::intervals::absolute::finite_bound_position::AbsFiniteBoundPos;
+    /// # use periodical::intervals::absolute::AbsFiniteBoundPos;
     /// let finite_bound_start = AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?)
     ///     .to_finite_start_bound()
     ///     .to_finite_bound();
@@ -85,7 +85,7 @@ impl AbsFiniteBound {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Timestamp;
-    /// # use periodical::intervals::absolute::finite_bound_position::AbsFiniteBoundPos;
+    /// # use periodical::intervals::absolute::AbsFiniteBoundPos;
     /// let finite_start_bound = AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?)
     ///     .to_finite_start_bound();
     /// let finite_bound_start = finite_start_bound.to_finite_bound();
@@ -115,7 +115,7 @@ impl AbsFiniteBound {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Timestamp;
-    /// # use periodical::intervals::absolute::finite_bound_position::AbsFiniteBoundPos;
+    /// # use periodical::intervals::absolute::AbsFiniteBoundPos;
     /// let finite_bound_start = AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?)
     ///     .to_finite_start_bound()
     ///     .to_finite_bound();
@@ -153,7 +153,7 @@ impl AbsFiniteBound {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Timestamp;
-    /// # use periodical::intervals::absolute::finite_bound_position::AbsFiniteBoundPos;
+    /// # use periodical::intervals::absolute::AbsFiniteBoundPos;
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// let time = "2026-01-01 00:00:00Z".parse::<Timestamp>()?;
     /// let start = AbsFiniteBoundPos::new(time)
