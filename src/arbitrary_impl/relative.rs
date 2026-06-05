@@ -72,7 +72,7 @@ impl<'a> Arbitrary<'a> for HalfBoundedRelInterval {
         let reference_offset = SignedDuration::try_from_nanos_i128(u.int_in_range(signed_duration_range.clone())?)
             .ok_or(Error::IncorrectFormat)?;
 
-        Ok(HalfBoundedRelInterval::new_from_offset_and_inclusivity(
+        Ok(HalfBoundedRelInterval::from_offset_incl(
             reference_offset,
             BoundInclusivity::arbitrary(u)?,
             OpeningDirection::arbitrary(u)?,

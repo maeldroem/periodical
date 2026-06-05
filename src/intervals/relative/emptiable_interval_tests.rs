@@ -34,13 +34,13 @@ fn from_range() {
 
     assert_eq!(
         EmptiableRelInterval::from_range(start..),
-        HalfBoundedRelInterval::new_from_offset(start, OpeningDirection::ToFuture).to_emptiable_interval()
+        HalfBoundedRelInterval::from_offset(start, OpeningDirection::ToFuture).to_emptiable_interval()
     );
 }
 
 #[test]
 fn bound() {
-    let interval = HalfBoundedRelInterval::new_from_offset(SignedDuration::from_hours(1), OpeningDirection::ToFuture);
+    let interval = HalfBoundedRelInterval::from_offset(SignedDuration::from_hours(1), OpeningDirection::ToFuture);
 
     assert_eq!(
         interval.clone().to_emptiable_interval().bound(),
@@ -156,7 +156,7 @@ mod ord_by_start_and_inv_length {
             ))
             .to_emptiable()
             .ord_by_start_and_inv_length(
-                &RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+                &RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                     SignedDuration::from_hours(2),
                     OpeningDirection::ToFuture
                 ))
@@ -175,7 +175,7 @@ mod ord_by_start_and_inv_length {
             ))
             .to_emptiable()
             .ord_by_start_and_inv_length(
-                &RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+                &RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                     SignedDuration::from_hours(1),
                     OpeningDirection::ToFuture
                 ))
@@ -194,7 +194,7 @@ mod ord_by_start_and_inv_length {
             ))
             .to_emptiable()
             .ord_by_start_and_inv_length(
-                &RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+                &RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                     SignedDuration::from_hours(1),
                     OpeningDirection::ToFuture,
                 ))
@@ -213,7 +213,7 @@ mod ord_by_start_and_inv_length {
             ))
             .to_emptiable()
             .ord_by_start_and_inv_length(
-                &RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+                &RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                     SignedDuration::from_hours(1),
                     OpeningDirection::ToPast
                 ))
@@ -252,7 +252,7 @@ mod ord_by_start_and_inv_length {
     #[test]
     fn half_bounded_bounded_start_less() {
         assert_eq!(
-            RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+            RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                 SignedDuration::from_hours(1),
                 OpeningDirection::ToFuture
             ))
@@ -271,7 +271,7 @@ mod ord_by_start_and_inv_length {
     #[test]
     fn half_bounded_bounded_start_less_inf() {
         assert_eq!(
-            RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+            RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                 SignedDuration::from_hours(1),
                 OpeningDirection::ToPast
             ))
@@ -290,7 +290,7 @@ mod ord_by_start_and_inv_length {
     #[test]
     fn half_bounded_bounded_start_equal() {
         assert_eq!(
-            RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+            RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                 SignedDuration::from_hours(1),
                 OpeningDirection::ToFuture,
             ))
@@ -309,7 +309,7 @@ mod ord_by_start_and_inv_length {
     #[test]
     fn half_bounded_bounded_start_greater() {
         assert_eq!(
-            RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+            RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                 SignedDuration::from_hours(2),
                 OpeningDirection::ToFuture
             ))
@@ -328,13 +328,13 @@ mod ord_by_start_and_inv_length {
     #[test]
     fn half_bounded_half_bounded_start_less() {
         assert_eq!(
-            RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+            RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                 SignedDuration::from_hours(1),
                 OpeningDirection::ToFuture
             ))
             .to_emptiable()
             .ord_by_start_and_inv_length(
-                &RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+                &RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                     SignedDuration::from_hours(2),
                     OpeningDirection::ToFuture
                 ))
@@ -347,13 +347,13 @@ mod ord_by_start_and_inv_length {
     #[test]
     fn half_bounded_half_bounded_start_less_inf() {
         assert_eq!(
-            RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+            RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                 SignedDuration::from_hours(1),
                 OpeningDirection::ToPast
             ))
             .to_emptiable()
             .ord_by_start_and_inv_length(
-                &RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+                &RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                     SignedDuration::from_hours(1),
                     OpeningDirection::ToFuture
                 ))
@@ -366,13 +366,13 @@ mod ord_by_start_and_inv_length {
     #[test]
     fn half_bounded_half_bounded_start_equal() {
         assert_eq!(
-            RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+            RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                 SignedDuration::from_hours(1),
                 OpeningDirection::ToFuture
             ))
             .to_emptiable()
             .ord_by_start_and_inv_length(
-                &RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+                &RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                     SignedDuration::from_hours(1),
                     OpeningDirection::ToFuture,
                 ))
@@ -385,13 +385,13 @@ mod ord_by_start_and_inv_length {
     #[test]
     fn half_bounded_half_bounded_start_equal_inf() {
         assert_eq!(
-            RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+            RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                 SignedDuration::from_hours(1),
                 OpeningDirection::ToPast
             ))
             .to_emptiable()
             .ord_by_start_and_inv_length(
-                &RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+                &RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                     SignedDuration::from_hours(1),
                     OpeningDirection::ToPast
                 ))
@@ -404,13 +404,13 @@ mod ord_by_start_and_inv_length {
     #[test]
     fn half_bounded_half_bounded_start_greater() {
         assert_eq!(
-            RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+            RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                 SignedDuration::from_hours(2),
                 OpeningDirection::ToFuture
             ))
             .to_emptiable()
             .ord_by_start_and_inv_length(
-                &RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+                &RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                     SignedDuration::from_hours(1),
                     OpeningDirection::ToFuture
                 ))
@@ -423,13 +423,13 @@ mod ord_by_start_and_inv_length {
     #[test]
     fn half_bounded_half_bounded_start_greater_inf() {
         assert_eq!(
-            RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+            RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                 SignedDuration::from_hours(1),
                 OpeningDirection::ToFuture
             ))
             .to_emptiable()
             .ord_by_start_and_inv_length(
-                &RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+                &RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                     SignedDuration::from_hours(1),
                     OpeningDirection::ToPast
                 ))
@@ -442,7 +442,7 @@ mod ord_by_start_and_inv_length {
     #[test]
     fn half_bounded_empty() {
         assert_eq!(
-            RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+            RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                 SignedDuration::from_hours(1),
                 OpeningDirection::ToFuture
             ))
@@ -474,7 +474,7 @@ mod ord_by_start_and_inv_length {
             RelInterval::Unbounded(UnboundedInterval)
                 .to_emptiable()
                 .ord_by_start_and_inv_length(
-                    &RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+                    &RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                         SignedDuration::from_hours(1),
                         OpeningDirection::ToPast
                     ))
@@ -490,7 +490,7 @@ mod ord_by_start_and_inv_length {
             RelInterval::Unbounded(UnboundedInterval)
                 .to_emptiable()
                 .ord_by_start_and_inv_length(
-                    &RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+                    &RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                         SignedDuration::from_hours(1),
                         OpeningDirection::ToFuture
                     ))
@@ -538,7 +538,7 @@ mod ord_by_start_and_inv_length {
     fn empty_half_bounded() {
         assert_eq!(
             EmptiableRelInterval::Empty(EmptyInterval).ord_by_start_and_inv_length(
-                &RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+                &RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                     SignedDuration::from_hours(1),
                     OpeningDirection::ToFuture
                 ))
@@ -586,7 +586,7 @@ mod duration {
     #[test]
     fn half_bounded() {
         assert_eq!(
-            RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+            RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                 SignedDuration::from_hours(1),
                 OpeningDirection::ToFuture
             ))
@@ -632,7 +632,7 @@ mod relativity {
     #[test]
     fn half_bounded() {
         assert_eq!(
-            RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+            RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                 SignedDuration::from_hours(1),
                 OpeningDirection::ToFuture
             ))
@@ -675,7 +675,7 @@ mod openness {
     #[test]
     fn half_bounded() {
         assert_eq!(
-            RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+            RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                 SignedDuration::from_hours(1),
                 OpeningDirection::ToFuture
             ))
@@ -722,7 +722,7 @@ mod emptiable_rel_bound_pair {
     #[test]
     fn half_bounded() {
         assert_eq!(
-            RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+            RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                 SignedDuration::from_hours(1),
                 OpeningDirection::ToFuture
             ))
@@ -774,7 +774,7 @@ mod partial_rel_start {
     #[test]
     fn half_bounded_to_future() {
         assert_eq!(
-            RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+            RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                 SignedDuration::from_hours(1),
                 OpeningDirection::ToFuture
             ))
@@ -787,7 +787,7 @@ mod partial_rel_start {
     #[test]
     fn half_bounded_to_past() {
         assert_eq!(
-            RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+            RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                 SignedDuration::from_hours(1),
                 OpeningDirection::ToPast
             ))
@@ -832,7 +832,7 @@ mod partial_rel_end {
     #[test]
     fn half_bounded_to_future() {
         assert_eq!(
-            RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+            RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                 SignedDuration::from_hours(1),
                 OpeningDirection::ToFuture
             ))
@@ -845,7 +845,7 @@ mod partial_rel_end {
     #[test]
     fn half_bounded_to_past() {
         assert_eq!(
-            RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+            RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                 SignedDuration::from_hours(1),
                 OpeningDirection::ToPast
             ))
@@ -889,7 +889,7 @@ mod is_empty {
     #[test]
     fn half_bounded() {
         assert!(
-            !RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+            !RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                 SignedDuration::from_hours(1),
                 OpeningDirection::ToFuture
             ))
@@ -1016,7 +1016,7 @@ mod ord {
             ))
             .to_emptiable()
             .cmp(
-                &RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+                &RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                     SignedDuration::from_hours(2),
                     OpeningDirection::ToFuture
                 ))
@@ -1035,7 +1035,7 @@ mod ord {
             ))
             .to_emptiable()
             .cmp(
-                &RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+                &RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                     SignedDuration::from_hours(1),
                     OpeningDirection::ToFuture
                 ))
@@ -1054,7 +1054,7 @@ mod ord {
             ))
             .to_emptiable()
             .cmp(
-                &RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+                &RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                     SignedDuration::from_hours(1),
                     OpeningDirection::ToFuture,
                 ))
@@ -1073,7 +1073,7 @@ mod ord {
             ))
             .to_emptiable()
             .cmp(
-                &RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+                &RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                     SignedDuration::from_hours(1),
                     OpeningDirection::ToPast
                 ))
@@ -1112,7 +1112,7 @@ mod ord {
     #[test]
     fn half_bounded_bounded_start_less() {
         assert_eq!(
-            RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+            RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                 SignedDuration::from_hours(1),
                 OpeningDirection::ToFuture
             ))
@@ -1131,7 +1131,7 @@ mod ord {
     #[test]
     fn half_bounded_bounded_start_less_inf() {
         assert_eq!(
-            RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+            RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                 SignedDuration::from_hours(1),
                 OpeningDirection::ToPast
             ))
@@ -1150,7 +1150,7 @@ mod ord {
     #[test]
     fn half_bounded_bounded_start_equal() {
         assert_eq!(
-            RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+            RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                 SignedDuration::from_hours(1),
                 OpeningDirection::ToFuture,
             ))
@@ -1169,7 +1169,7 @@ mod ord {
     #[test]
     fn half_bounded_bounded_start_greater() {
         assert_eq!(
-            RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+            RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                 SignedDuration::from_hours(2),
                 OpeningDirection::ToFuture
             ))
@@ -1188,13 +1188,13 @@ mod ord {
     #[test]
     fn half_bounded_half_bounded_start_less() {
         assert_eq!(
-            RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+            RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                 SignedDuration::from_hours(1),
                 OpeningDirection::ToFuture
             ))
             .to_emptiable()
             .cmp(
-                &RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+                &RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                     SignedDuration::from_hours(2),
                     OpeningDirection::ToFuture
                 ))
@@ -1207,13 +1207,13 @@ mod ord {
     #[test]
     fn half_bounded_half_bounded_start_less_inf() {
         assert_eq!(
-            RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+            RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                 SignedDuration::from_hours(1),
                 OpeningDirection::ToPast
             ))
             .to_emptiable()
             .cmp(
-                &RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+                &RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                     SignedDuration::from_hours(1),
                     OpeningDirection::ToFuture
                 ))
@@ -1226,13 +1226,13 @@ mod ord {
     #[test]
     fn half_bounded_half_bounded_start_equal() {
         assert_eq!(
-            RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+            RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                 SignedDuration::from_hours(1),
                 OpeningDirection::ToFuture
             ))
             .to_emptiable()
             .cmp(
-                &RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+                &RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                     SignedDuration::from_hours(1),
                     OpeningDirection::ToFuture,
                 ))
@@ -1245,13 +1245,13 @@ mod ord {
     #[test]
     fn half_bounded_half_bounded_start_equal_inf() {
         assert_eq!(
-            RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+            RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                 SignedDuration::from_hours(1),
                 OpeningDirection::ToPast
             ))
             .to_emptiable()
             .cmp(
-                &RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+                &RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                     SignedDuration::from_hours(1),
                     OpeningDirection::ToPast
                 ))
@@ -1264,13 +1264,13 @@ mod ord {
     #[test]
     fn half_bounded_half_bounded_start_greater() {
         assert_eq!(
-            RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+            RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                 SignedDuration::from_hours(2),
                 OpeningDirection::ToFuture
             ))
             .to_emptiable()
             .cmp(
-                &RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+                &RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                     SignedDuration::from_hours(1),
                     OpeningDirection::ToFuture
                 ))
@@ -1283,13 +1283,13 @@ mod ord {
     #[test]
     fn half_bounded_half_bounded_start_greater_inf() {
         assert_eq!(
-            RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+            RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                 SignedDuration::from_hours(1),
                 OpeningDirection::ToFuture
             ))
             .to_emptiable()
             .cmp(
-                &RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+                &RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                     SignedDuration::from_hours(1),
                     OpeningDirection::ToPast
                 ))
@@ -1302,7 +1302,7 @@ mod ord {
     #[test]
     fn half_bounded_empty() {
         assert_eq!(
-            RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+            RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                 SignedDuration::from_hours(1),
                 OpeningDirection::ToFuture
             ))
@@ -1330,7 +1330,7 @@ mod ord {
     fn unbounded_half_bounded_start_equal() {
         assert_eq!(
             RelInterval::Unbounded(UnboundedInterval).to_emptiable().cmp(
-                &RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+                &RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                     SignedDuration::from_hours(1),
                     OpeningDirection::ToPast
                 ))
@@ -1344,7 +1344,7 @@ mod ord {
     fn unbounded_half_bounded_start_greater() {
         assert_eq!(
             RelInterval::Unbounded(UnboundedInterval).to_emptiable().cmp(
-                &RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+                &RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                     SignedDuration::from_hours(1),
                     OpeningDirection::ToFuture
                 ))
@@ -1392,7 +1392,7 @@ mod ord {
     fn empty_half_bounded() {
         assert_eq!(
             EmptiableRelInterval::Empty(EmptyInterval).cmp(
-                &RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+                &RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                     SignedDuration::from_hours(1),
                     OpeningDirection::ToFuture
                 ))
@@ -1431,7 +1431,7 @@ fn from_bounded_interval() {
 #[test]
 fn from_half_bounded_interval() {
     let half_bounded =
-        HalfBoundedRelInterval::new_from_offset(SignedDuration::from_hours(1), OpeningDirection::ToFuture);
+        HalfBoundedRelInterval::from_offset(SignedDuration::from_hours(1), OpeningDirection::ToFuture);
     assert_eq!(
         EmptiableRelInterval::from(half_bounded.clone()),
         RelInterval::HalfBounded(half_bounded).to_emptiable()
@@ -1479,7 +1479,7 @@ mod from_bound_pair {
                 RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
                 RelEndBound::InfiniteFuture
             )),
-            RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+            RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                 SignedDuration::from_hours(1),
                 OpeningDirection::ToFuture
             ))
@@ -1494,7 +1494,7 @@ mod from_bound_pair {
                 RelStartBound::InfinitePast,
                 RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_end_bound()
             )),
-            RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+            RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                 SignedDuration::from_hours(1),
                 OpeningDirection::ToPast
             ))
@@ -1545,7 +1545,7 @@ mod from_emptiable_bound_pair {
                 )
                 .to_emptiable()
             ),
-            RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+            RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                 SignedDuration::from_hours(1),
                 OpeningDirection::ToFuture
             ))
@@ -1563,7 +1563,7 @@ mod from_emptiable_bound_pair {
                 )
                 .to_emptiable()
             ),
-            RelInterval::HalfBounded(HalfBoundedRelInterval::new_from_offset(
+            RelInterval::HalfBounded(HalfBoundedRelInterval::from_offset(
                 SignedDuration::from_hours(1),
                 OpeningDirection::ToPast
             ))
@@ -1592,7 +1592,7 @@ mod from_emptiable_bound_pair {
 
 #[test]
 fn from_interval() {
-    let interval = HalfBoundedRelInterval::new_from_offset(SignedDuration::from_hours(1), OpeningDirection::ToFuture)
+    let interval = HalfBoundedRelInterval::from_offset(SignedDuration::from_hours(1), OpeningDirection::ToFuture)
         .to_interval();
 
     assert_eq!(

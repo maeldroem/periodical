@@ -50,11 +50,11 @@ fn emptiable_abs_bound_pair_empty_emptiable_abs_bound_pair_empty() {
 #[test]
 fn two_overlapping_half_bounded() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        HalfBoundedAbsInterval::new_from_time(
+        HalfBoundedAbsInterval::from_time(
             "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             OpeningDirection::ToPast
         )
-        .fill_gap(&HalfBoundedAbsInterval::new_from_time(
+        .fill_gap(&HalfBoundedAbsInterval::from_time(
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             OpeningDirection::ToFuture
         )),
@@ -67,16 +67,16 @@ fn two_overlapping_half_bounded() -> Result<(), Box<dyn Error>> {
 #[test]
 fn two_non_overlapping_half_bounded() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        HalfBoundedAbsInterval::new_from_time(
+        HalfBoundedAbsInterval::from_time(
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             OpeningDirection::ToPast
         )
-        .fill_gap(&HalfBoundedAbsInterval::new_from_time(
+        .fill_gap(&HalfBoundedAbsInterval::from_time(
             "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             OpeningDirection::ToFuture
         )),
         Ok(AbsInterval::HalfBounded(
-            HalfBoundedAbsInterval::new_from_time_and_inclusivity(
+            HalfBoundedAbsInterval::from_time_incl(
                 "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
                 OpeningDirection::ToPast,
@@ -90,11 +90,11 @@ fn two_non_overlapping_half_bounded() -> Result<(), Box<dyn Error>> {
 #[test]
 fn two_strictly_adjacent_half_bounded() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        HalfBoundedAbsInterval::new_from_time(
+        HalfBoundedAbsInterval::from_time(
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             OpeningDirection::ToPast
         )
-        .fill_gap(&HalfBoundedAbsInterval::new_from_time(
+        .fill_gap(&HalfBoundedAbsInterval::from_time(
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             OpeningDirection::ToFuture
         )),
@@ -107,17 +107,17 @@ fn two_strictly_adjacent_half_bounded() -> Result<(), Box<dyn Error>> {
 #[test]
 fn two_leniently_adjacent_half_bounded() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        HalfBoundedAbsInterval::new_from_time_and_inclusivity(
+        HalfBoundedAbsInterval::from_time_incl(
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             BoundInclusivity::Exclusive,
             OpeningDirection::ToPast,
         )
-        .fill_gap(&HalfBoundedAbsInterval::new_from_time(
+        .fill_gap(&HalfBoundedAbsInterval::from_time(
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             OpeningDirection::ToFuture
         )),
         Ok(AbsInterval::HalfBounded(
-            HalfBoundedAbsInterval::new_from_time_and_inclusivity(
+            HalfBoundedAbsInterval::from_time_incl(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
                 OpeningDirection::ToPast,
@@ -131,18 +131,18 @@ fn two_leniently_adjacent_half_bounded() -> Result<(), Box<dyn Error>> {
 #[test]
 fn two_very_leniently_adjacent_half_bounded() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        HalfBoundedAbsInterval::new_from_time_and_inclusivity(
+        HalfBoundedAbsInterval::from_time_incl(
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             BoundInclusivity::Exclusive,
             OpeningDirection::ToPast,
         )
-        .fill_gap(&HalfBoundedAbsInterval::new_from_time_and_inclusivity(
+        .fill_gap(&HalfBoundedAbsInterval::from_time_incl(
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             BoundInclusivity::Exclusive,
             OpeningDirection::ToFuture,
         )),
         Ok(AbsInterval::HalfBounded(
-            HalfBoundedAbsInterval::new_from_time_and_inclusivity(
+            HalfBoundedAbsInterval::from_time_incl(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Inclusive,
                 OpeningDirection::ToPast,

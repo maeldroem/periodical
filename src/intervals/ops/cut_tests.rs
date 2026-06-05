@@ -119,12 +119,12 @@ mod cut_at {
                 CutType::new(BoundInclusivity::Inclusive, BoundInclusivity::Inclusive)
             ),
             CutResult::Cut(
-                AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time_and_inclusivity(
+                AbsInterval::HalfBounded(HalfBoundedAbsInterval::from_time_incl(
                     "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Inclusive,
                     OpeningDirection::ToPast,
                 )),
-                AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time_and_inclusivity(
+                AbsInterval::HalfBounded(HalfBoundedAbsInterval::from_time_incl(
                     "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Inclusive,
                     OpeningDirection::ToFuture,
@@ -143,12 +143,12 @@ mod cut_at {
                 CutType::new(BoundInclusivity::Inclusive, BoundInclusivity::Exclusive)
             ),
             CutResult::Cut(
-                AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time_and_inclusivity(
+                AbsInterval::HalfBounded(HalfBoundedAbsInterval::from_time_incl(
                     "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Inclusive,
                     OpeningDirection::ToPast,
                 )),
-                AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time_and_inclusivity(
+                AbsInterval::HalfBounded(HalfBoundedAbsInterval::from_time_incl(
                     "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                     OpeningDirection::ToFuture,
@@ -167,12 +167,12 @@ mod cut_at {
                 CutType::new(BoundInclusivity::Exclusive, BoundInclusivity::Inclusive)
             ),
             CutResult::Cut(
-                AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time_and_inclusivity(
+                AbsInterval::HalfBounded(HalfBoundedAbsInterval::from_time_incl(
                     "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                     OpeningDirection::ToPast,
                 )),
-                AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time_and_inclusivity(
+                AbsInterval::HalfBounded(HalfBoundedAbsInterval::from_time_incl(
                     "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Inclusive,
                     OpeningDirection::ToFuture,
@@ -191,12 +191,12 @@ mod cut_at {
                 CutType::new(BoundInclusivity::Exclusive, BoundInclusivity::Exclusive)
             ),
             CutResult::Cut(
-                AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time_and_inclusivity(
+                AbsInterval::HalfBounded(HalfBoundedAbsInterval::from_time_incl(
                     "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                     OpeningDirection::ToPast,
                 )),
-                AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time_and_inclusivity(
+                AbsInterval::HalfBounded(HalfBoundedAbsInterval::from_time_incl(
                     "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                     OpeningDirection::ToFuture,
@@ -210,7 +210,7 @@ mod cut_at {
     #[test]
     fn cut_at_half_unbounded_interval() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            HalfBoundedAbsInterval::new_from_time(
+            HalfBoundedAbsInterval::from_time(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 OpeningDirection::ToFuture
             )
@@ -225,7 +225,7 @@ mod cut_at {
                     "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Inclusive,
                 )),
-                AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time_and_inclusivity(
+                AbsInterval::HalfBounded(HalfBoundedAbsInterval::from_time_incl(
                     "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                     OpeningDirection::ToFuture,

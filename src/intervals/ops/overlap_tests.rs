@@ -136,11 +136,11 @@ mod overlap_position {
     #[test]
     fn half_bounded_equal() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            HalfBoundedAbsInterval::new_from_time(
+            HalfBoundedAbsInterval::from_time(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 OpeningDirection::ToFuture
             )
-            .overlap_position(&HalfBoundedAbsInterval::new_from_time(
+            .overlap_position(&HalfBoundedAbsInterval::from_time(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 OpeningDirection::ToFuture
             )),
@@ -159,12 +159,12 @@ mod overlap_position {
     #[test]
     fn half_bounded_exclusive_inclusive() -> Result<(), Box<dyn Error>> {
         assert_eq!(
-            HalfBoundedAbsInterval::new_from_time_and_inclusivity(
+            HalfBoundedAbsInterval::from_time_incl(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
                 OpeningDirection::ToFuture,
             )
-            .overlap_position(&HalfBoundedAbsInterval::new_from_time_and_inclusivity(
+            .overlap_position(&HalfBoundedAbsInterval::from_time_incl(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Inclusive,
                 OpeningDirection::ToFuture,

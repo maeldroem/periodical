@@ -484,7 +484,7 @@ pub fn future_continuation_emptiable_abs_bound_pair(bounds: &EmptiableAbsBoundPa
 /// See [module documentation](self) for more info.
 #[must_use]
 pub fn past_continuation_bounded_abs_interval(interval: &BoundedAbsInterval) -> HalfBoundedAbsInterval {
-    HalfBoundedAbsInterval::new_from_time_and_inclusivity(
+    HalfBoundedAbsInterval::from_time_incl(
         interval.start_time(),
         interval.start_inclusivity().opposite(),
         OpeningDirection::ToPast,
@@ -496,7 +496,7 @@ pub fn past_continuation_bounded_abs_interval(interval: &BoundedAbsInterval) -> 
 /// See [module documentation](self) for more info.
 #[must_use]
 pub fn future_continuation_bounded_abs_interval(interval: &BoundedAbsInterval) -> HalfBoundedAbsInterval {
-    HalfBoundedAbsInterval::new_from_time_and_inclusivity(
+    HalfBoundedAbsInterval::from_time_incl(
         interval.end_time(),
         interval.end_inclusivity().opposite(),
         OpeningDirection::ToFuture,
@@ -558,7 +558,7 @@ pub fn future_continuation_emptiable_rel_bound_pair(bounds: &EmptiableRelBoundPa
 /// See [module documentation](self) for more info.
 #[must_use]
 pub fn past_continuation_bounded_rel_interval(interval: &BoundedRelInterval) -> HalfBoundedRelInterval {
-    HalfBoundedRelInterval::new_from_offset_and_inclusivity(
+    HalfBoundedRelInterval::from_offset_incl(
         interval.start_offset(),
         interval.start_inclusivity().opposite(),
         OpeningDirection::ToPast,
@@ -570,7 +570,7 @@ pub fn past_continuation_bounded_rel_interval(interval: &BoundedRelInterval) -> 
 /// See [module documentation](self) for more info.
 #[must_use]
 pub fn future_continuation_bounded_rel_interval(interval: &BoundedRelInterval) -> HalfBoundedRelInterval {
-    HalfBoundedRelInterval::new_from_offset_and_inclusivity(
+    HalfBoundedRelInterval::from_offset_incl(
         interval.end_offset(),
         interval.end_inclusivity().opposite(),
         OpeningDirection::ToFuture,

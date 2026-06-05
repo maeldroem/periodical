@@ -995,11 +995,8 @@ mod try_from_emptiable_bound_pair {
 
         assert_eq!(
             BoundedRelInterval::try_from(
-                RelBoundPair::new(
-                    RelStartBound::InfinitePast,
-                    RelFiniteBoundPos::new(end).to_end_bound()
-                )
-                .to_emptiable()
+                RelBoundPair::new(RelStartBound::InfinitePast, RelFiniteBoundPos::new(end).to_end_bound())
+                    .to_emptiable()
             ),
             Err(BoundedRelIntervalTryFromEmptiableRelBoundPairError)
         );
@@ -1038,7 +1035,7 @@ mod try_from_interval {
     fn half_bounded() {
         assert_eq!(
             BoundedRelInterval::try_from(
-                HalfBoundedRelInterval::new_from_offset(SignedDuration::from_hours(1), OpeningDirection::ToFuture)
+                HalfBoundedRelInterval::from_offset(SignedDuration::from_hours(1), OpeningDirection::ToFuture)
                     .to_interval()
             ),
             Err(BoundedRelIntervalFromRelIntervalError)
@@ -1071,7 +1068,7 @@ mod try_from_emptiable_interval {
     fn bound_half_bounded() {
         assert_eq!(
             BoundedRelInterval::try_from(
-                HalfBoundedRelInterval::new_from_offset(SignedDuration::from_hours(1), OpeningDirection::ToFuture)
+                HalfBoundedRelInterval::from_offset(SignedDuration::from_hours(1), OpeningDirection::ToFuture)
                     .to_emptiable_interval()
             ),
             Err(BoundedRelIntervalTryFromEmptiableRelIntervalError)

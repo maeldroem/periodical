@@ -22,7 +22,7 @@ fn create() -> Result<(), Box<dyn Error>> {
         ))
         .to_emptiable(),
         EmptiableAbsInterval::Empty(EmptyInterval),
-        AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
+        AbsInterval::HalfBounded(HalfBoundedAbsInterval::from_time(
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             OpeningDirection::ToPast,
         ))
@@ -45,7 +45,7 @@ fn run() -> Result<(), Box<dyn Error>> {
         .to_emptiable(),
         EmptiableAbsInterval::Empty(EmptyInterval),
         EmptiableAbsInterval::Empty(EmptyInterval),
-        AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
+        AbsInterval::HalfBounded(HalfBoundedAbsInterval::from_time(
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             OpeningDirection::ToPast,
         ))
@@ -62,7 +62,7 @@ fn run() -> Result<(), Box<dyn Error>> {
                 "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
             ))
             .to_emptiable(),
-            AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
+            AbsInterval::HalfBounded(HalfBoundedAbsInterval::from_time(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 OpeningDirection::ToPast
             ))
@@ -84,7 +84,7 @@ fn run_reverse() -> Result<(), Box<dyn Error>> {
         .to_emptiable(),
         EmptiableAbsInterval::Empty(EmptyInterval),
         EmptiableAbsInterval::Empty(EmptyInterval),
-        AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
+        AbsInterval::HalfBounded(HalfBoundedAbsInterval::from_time(
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             OpeningDirection::ToPast,
         ))
@@ -95,7 +95,7 @@ fn run_reverse() -> Result<(), Box<dyn Error>> {
     assert_eq!(
         intervals.remove_empty_intervals().rev().collect::<Vec<_>>(),
         vec![
-            AbsInterval::HalfBounded(HalfBoundedAbsInterval::new_from_time(
+            AbsInterval::HalfBounded(HalfBoundedAbsInterval::from_time(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 OpeningDirection::ToPast
             ))
