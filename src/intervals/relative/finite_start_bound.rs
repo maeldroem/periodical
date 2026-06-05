@@ -1,6 +1,6 @@
 //! Relative finite start bound
 //!
-//! Represents the finite start bound of an relative interval.
+//! Represents the finite start bound of a relative interval.
 //! If you need to represent infinity, see [`RelStartBound`].
 
 use std::cmp::Ordering;
@@ -28,41 +28,79 @@ use crate::intervals::relative::{
     RelStartBound,
 };
 
+/// Relative finite start bound
+///
+/// Represents the finite start bound of a relative interval.
+/// If you need to represent infinity, see [`RelStartBound`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub struct RelFiniteStartBound(pub(crate) RelFiniteBoundPos);
 
 impl RelFiniteStartBound {
+    /// Creates a new relative finite start bound
+    #[must_use]
     pub fn new(finite_bound_pos: RelFiniteBoundPos) -> Self {
         Self(finite_bound_pos)
     }
 
+    /// Returns the inner relative finite bound position
+    #[must_use]
     pub fn pos(&self) -> RelFiniteBoundPos {
         self.0
     }
 
+    /// Returns a mutable pointer of the inner relative finite bound position
+    ///
+    /// This is used for mutating which position this start bound represents.
+    #[must_use]
     pub fn pos_mut(&mut self) -> &mut RelFiniteBoundPos {
         &mut self.0
     }
 
-    pub fn to_start_bound(self) -> RelStartBound {
-        RelStartBound::Finite(self)
-    }
-
-    pub fn to_finite_bound(self) -> RelFiniteBound {
-        RelFiniteBound::from(self)
-    }
-
-    pub fn to_bound(self) -> RelBound {
-        RelBound::from(self)
-    }
-
+    /// Returns the opposite finite end bound
+    ///
+    /// Returns the opposite relative finite end bound with the same offset
+    /// but opposite bound inclusivity.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use jiff::SignedDuration;
+    /// # use periodical::intervals::relative::RelFiniteBoundPos;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// let offset = SignedDuration::from_hours(10);
+    /// let shift_start = RelFiniteBoundPos::new(offset).to_finite_start_bound();
+    ///
+    /// assert_eq!(
+    ///     shift_start.opposite(),
+    ///     RelFiniteBoundPos::new_with_incl(offset, BoundInclusivity::Exclusive).to_finite_end_bound()
+    /// );
+    /// ```
+    #[must_use]
     pub fn opposite(self) -> RelFiniteEndBound {
         RelFiniteEndBound::new(RelFiniteBoundPos::new_with_incl(
             self.pos().offset(),
             self.pos().inclusivity().opposite(),
         ))
+    }
+
+    /// Wraps `self` in [`RelStartBound`]
+    #[must_use]
+    pub fn to_start_bound(self) -> RelStartBound {
+        RelStartBound::Finite(self)
+    }
+
+    /// Wraps `self` in the corresponding [`RelFiniteBound`] variant
+    #[must_use]
+    pub fn to_finite_bound(self) -> RelFiniteBound {
+        RelFiniteBound::from(self)
+    }
+
+    /// Converts `self` into [`RelBound`]
+    #[must_use]
+    pub fn to_bound(self) -> RelBound {
+        RelBound::from(self)
     }
 }
 

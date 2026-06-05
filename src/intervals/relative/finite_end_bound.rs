@@ -1,6 +1,6 @@
 //! Relative finite end bound
 //!
-//! Represents the finite end bound of an relative interval.
+//! Represents the finite end bound of a relative interval.
 //! If you need to represent infinity, see [`RelEndBound`].
 
 use std::cmp::Ordering;
@@ -60,7 +60,7 @@ impl RelFiniteEndBound {
 
     /// Returns the opposite finite start bound
     ///
-    /// Returns the opposite relative finite start bound with the same time
+    /// Returns the opposite relative finite start bound with the same offset
     /// but opposite bound inclusivity.
     ///
     /// # Examples
