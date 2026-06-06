@@ -1476,7 +1476,7 @@ mod try_from_emptiable_bound_pair {
     fn empty() {
         assert_eq!(
             RelInterval::try_from(EmptiableRelBoundPair::Empty),
-            Err(RelIntervalFromEmptiableRelBoundPairError)
+            Err(RelIntervalTryFromEmptiableRelBoundPairError)
         );
     }
 }
