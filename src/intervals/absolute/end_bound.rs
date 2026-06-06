@@ -23,15 +23,8 @@ use crate::intervals::absolute::{
     AbsFiniteStartBound,
     AbsStartBound,
 };
-use crate::intervals::meta::{BoundExtremality, BoundInclusivity, HasBoundExtremality, HasBoundInclusivity};
-use crate::intervals::ops::{
-    BoundEq,
-    BoundOrd,
-    BoundOrdExtremaOps,
-    BoundOrdering,
-    BoundOverlapAmbiguity,
-    BoundOverlapDisambiguationRuleSet,
-};
+use crate::intervals::meta::{BoundExtremality, BoundInclusivity, HasBoundExtremality};
+use crate::intervals::ops::{BoundEq, BoundOrd, BoundOrdExtremaOps, BoundOrdering, BoundOverlapDisambiguationRuleSet};
 
 /// Absolute end bound
 ///
@@ -232,17 +225,11 @@ impl BoundEq<AbsBound> for AbsEndBound {
 
 impl BoundOrd for AbsEndBound {
     fn bound_cmp(&self, other: &Self) -> BoundOrdering {
-        match self.cmp(other) {
-            Ordering::Less => BoundOrdering::Less,
-            Ordering::Equal => BoundOrdering::Equal(self.finite().zip(other.finite()).map(
-                |(lhs_finite_end, rhs_finite_end)| {
-                    BoundOverlapAmbiguity::BothEnds(
-                        lhs_finite_end.pos().inclusivity(),
-                        rhs_finite_end.pos().inclusivity(),
-                    )
-                },
-            )),
-            Ordering::Greater => BoundOrdering::Greater,
+        match (self, other) {
+            (Self::InfiniteFuture, Self::InfiniteFuture) => BoundOrdering::Equal(None),
+            (Self::InfiniteFuture, Self::Finite(_)) => BoundOrdering::Greater,
+            (Self::Finite(_), Self::InfiniteFuture) => BoundOrdering::Less,
+            (Self::Finite(lhs_finite_end), Self::Finite(rhs_finite_end)) => lhs_finite_end.bound_cmp(rhs_finite_end),
         }
     }
 }

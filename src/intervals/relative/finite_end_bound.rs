@@ -178,7 +178,7 @@ impl BoundEq<RelBound> for RelFiniteEndBound {
 
 impl BoundOrd for RelFiniteEndBound {
     fn bound_cmp(&self, other: &Self) -> BoundOrdering {
-        match self.pos().cmp(&other.pos()) {
+        match self.pos().offset().cmp(&other.pos().offset()) {
             Ordering::Less => BoundOrdering::Less,
             Ordering::Equal => BoundOrdering::Equal(Some(BoundOverlapAmbiguity::BothEnds(
                 self.pos().inclusivity(),
@@ -203,7 +203,7 @@ impl BoundOrd<RelEndBound> for RelFiniteEndBound {
 
 impl BoundOrd<RelFiniteStartBound> for RelFiniteEndBound {
     fn bound_cmp(&self, other: &RelFiniteStartBound) -> BoundOrdering {
-        match self.pos().cmp(&other.pos()) {
+        match self.pos().offset().cmp(&other.pos().offset()) {
             Ordering::Less => BoundOrdering::Less,
             Ordering::Equal => BoundOrdering::Equal(Some(BoundOverlapAmbiguity::EndStart(
                 self.pos().inclusivity(),

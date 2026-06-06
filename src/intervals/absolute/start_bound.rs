@@ -23,15 +23,8 @@ use crate::intervals::absolute::{
     AbsFiniteEndBound,
     AbsFiniteStartBound,
 };
-use crate::intervals::meta::{BoundExtremality, BoundInclusivity, HasBoundExtremality, HasBoundInclusivity};
-use crate::intervals::ops::{
-    BoundEq,
-    BoundOrd,
-    BoundOrdExtremaOps,
-    BoundOrdering,
-    BoundOverlapAmbiguity,
-    BoundOverlapDisambiguationRuleSet,
-};
+use crate::intervals::meta::{BoundExtremality, BoundInclusivity, HasBoundExtremality};
+use crate::intervals::ops::{BoundEq, BoundOrd, BoundOrdExtremaOps, BoundOrdering, BoundOverlapDisambiguationRuleSet};
 
 /// Absolute start bound
 ///
@@ -232,17 +225,13 @@ impl BoundEq<AbsBound> for AbsStartBound {
 
 impl BoundOrd for AbsStartBound {
     fn bound_cmp(&self, other: &Self) -> BoundOrdering {
-        match self.cmp(other) {
-            Ordering::Less => BoundOrdering::Less,
-            Ordering::Equal => BoundOrdering::Equal(self.finite().zip(other.finite()).map(
-                |(lhs_finite_start, rhs_finite_start)| {
-                    BoundOverlapAmbiguity::BothStarts(
-                        lhs_finite_start.pos().inclusivity(),
-                        rhs_finite_start.pos().inclusivity(),
-                    )
-                },
-            )),
-            Ordering::Greater => BoundOrdering::Greater,
+        match (self, other) {
+            (Self::InfinitePast, Self::InfinitePast) => BoundOrdering::Equal(None),
+            (Self::InfinitePast, Self::Finite(_)) => BoundOrdering::Less,
+            (Self::Finite(_), Self::InfinitePast) => BoundOrdering::Greater,
+            (Self::Finite(lhs_finite_start), Self::Finite(rhs_finite_start)) => {
+                lhs_finite_start.bound_cmp(rhs_finite_start)
+            },
         }
     }
 }
