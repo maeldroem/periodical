@@ -1,9 +1,8 @@
 //! Relative start bound
 //!
 //! Represents the start bound of a relative interval. It can either be finite,
-//! in which case it will contain an [`RelFiniteBoundPos`], or represent an
-//! open start bound through
-//! the [`InfinitePast`](RelStartBound::InfinitePast) variant.
+//! in which case it will contain an [`RelFiniteStartBound`], or represent
+//! an open start bound through the [`InfinitePast`](RelStartBound::InfinitePast) variant.
 
 use std::cmp::Ordering;
 use std::error::Error;
@@ -34,15 +33,11 @@ use crate::intervals::relative::{
     RelFiniteStartBound,
 };
 
-/// A relative start bound
+/// Relative start bound
 ///
-/// Represents the start bound of an interval, may it be infinitely in the past
-/// or at a precise offset, in which case it contains an
-/// [`RelFiniteBoundPos`].
-///
-/// Contrary to specific relative interval types, both [`RelStartBound`]
-/// and [`RelEndBound`] use an offset, and not an offset for the start and
-/// a length for the end.
+/// Represents the start bound of a relative interval. It can either be finite,
+/// in which case it will contain an [`RelFiniteStartBound`], or represent
+/// an open start bound through the [`InfinitePast`](RelStartBound::InfinitePast) variant.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
@@ -52,20 +47,13 @@ pub enum RelStartBound {
 }
 
 impl RelStartBound {
-    /// Wraps the start bound of the corresponding [`RelBound`] variant
-    #[must_use]
-    pub fn to_bound(self) -> RelBound {
-        RelBound::from(self)
-    }
-
-    /// Returns whether it is of the [`Finite`](RelStartBound::Finite)
-    /// variant
+    /// Returns whether it is of the [`Finite`](RelStartBound::Finite) variant
     ///
     /// # Examples
     ///
     /// ```
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::{RelFiniteBoundPos, RelStartBound};
+    /// # use periodical::intervals::relative::{RelStartBound, RelFiniteBoundPos};
     /// let infinite_start_bound = RelStartBound::InfinitePast;
     /// let finite_start_bound = RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound();
     ///
@@ -77,14 +65,13 @@ impl RelStartBound {
         matches!(self, Self::Finite(_))
     }
 
-    /// Returns whether it is of the
-    /// [`InfinitePast`](RelStartBound::InfinitePast) variant
+    /// Returns whether it is of the [`InfinitePast`](RelStartBound::InfinitePast) variant
     ///
     /// # Examples
     ///
     /// ```
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::{RelFiniteBoundPos, RelStartBound};
+    /// # use periodical::intervals::relative::{RelStartBound, RelFiniteBoundPos};
     /// let infinite_start_bound = RelStartBound::InfinitePast;
     /// let finite_start_bound = RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound();
     ///
@@ -96,24 +83,55 @@ impl RelStartBound {
         matches!(self, Self::InfinitePast)
     }
 
-    /// Returns the content of the [`Finite`](RelStartBound::Finite)
-    /// variant
+    /// Returns the opposite [`RelEndBound`]
     ///
-    /// Consumes `self` and puts the content of the
-    /// [`Finite`](RelStartBound::Finite) variant in an [`Option`]. If
-    /// instead `self` is another variant, the method returns [`None`].
+    /// If the [`RelStartBound`] is of the [`InfinitePast`](RelStartBound::InfinitePast) variant,
+    /// then the method returns [`None`].
+    /// Otherwise, if the [`RelStartBound`] is finite, then an [`RelEndBound`] is created with the same offset,
+    /// but opposite [`BoundInclusivity`].
+    ///
+    /// This is used, for example, for determining the last point in time before which this bound starts.
     ///
     /// # Examples
     ///
     /// ```
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::{RelFiniteBoundPos, RelStartBound};
+    /// # use periodical::intervals::relative::{RelStartBound, RelFiniteBoundPos};
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// let offset = SignedDuration::from_hours(1);
+    /// let start_second_shift = RelFiniteBoundPos::new(offset).to_start_bound();
+    ///
+    /// assert_eq!(
+    ///     start_second_shift.opposite(),
+    ///     Some(RelFiniteBoundPos::new_with_incl(offset, BoundInclusivity::Exclusive).to_end_bound()),
+    /// );
+    /// ```
+    #[must_use]
+    pub fn opposite(&self) -> Option<RelEndBound> {
+        match self {
+            Self::Finite(finite) => Some(finite.opposite().to_end_bound()),
+            Self::InfinitePast => None,
+        }
+    }
+
+    /// Returns the content of the [`Finite`](RelStartBound::Finite) variant
+    ///
+    /// Consumes `self` and puts the content of the [`Finite`](RelStartBound::Finite) variant in an [`Option`].
+    /// If instead `self` is another variant, the method returns [`None`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use jiff::SignedDuration;
+    /// # use periodical::intervals::relative::{RelStartBound, RelFiniteBoundPos};
     /// let infinite_start_bound = RelStartBound::InfinitePast;
-    /// let finite_start_bound = RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound();
+    ///
+    /// let offset = SignedDuration::from_hours(1);
+    /// let finite_start_bound = RelFiniteBoundPos::new(offset).to_start_bound();
     ///
     /// assert_eq!(
     ///     finite_start_bound.finite(),
-    ///     Some(RelFiniteBoundPos::new(SignedDuration::from_hours(1))),
+    ///     Some(RelFiniteBoundPos::new(offset).to_finite_start_bound()),
     /// );
     /// assert_eq!(infinite_start_bound.finite(), None);
     /// ```
@@ -125,56 +143,10 @@ impl RelStartBound {
         }
     }
 
-    /// Returns the opposite [`RelEndBound`]
-    ///
-    /// If the [`RelStartBound`] is of the
-    /// [`InfinitePast`](RelStartBound::InfinitePast) variant, then the
-    /// method returns [`None`]. Otherwise, if the [`RelStartBound`] is
-    /// finite, then an [`RelEndBound`] is created with the same time,
-    /// but the opposite [`BoundInclusivity`].
-    ///
-    /// This is used for example for determining the last point in time before
-    /// this bound begins.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::error::Error;
-    /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::meta::BoundInclusivity;
-    /// # use periodical::intervals::relative::{RelFiniteBoundPos, RelStartBound};
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FiniteBoundPositionExpectedError;
-    /// #
-    /// # impl std::fmt::Display for FiniteBoundPositionExpectedError {
-    /// #     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
-    /// #         write!(f, "Finite bound expected")
-    /// #     }
-    /// # }
-    /// #
-    /// # impl Error for FiniteBoundPositionExpectedError {}
-    /// let start_second_part_my_shift =
-    ///     RelFiniteBoundPos::new(SignedDuration::from_hours(3)).to_start_bound();
-    /// let break_end_before_shift = start_second_part_my_shift
-    ///     .opposite()
-    ///     .ok_or(FiniteBoundPositionExpectedError)?;
-    ///
-    /// assert_eq!(
-    ///     break_end_before_shift.finite(),
-    ///     Some(RelFiniteBoundPos::new_with_incl(
-    ///         SignedDuration::from_hours(3),
-    ///         BoundInclusivity::Exclusive,
-    ///     )),
-    /// );
-    /// # Ok::<(), Box<dyn Error>>(())
-    /// ```
+    /// Wraps `self` in the corresponding [`RelBound`] variant
     #[must_use]
-    pub fn opposite(&self) -> Option<RelEndBound> {
-        match self {
-            Self::Finite(finite) => Some(finite.opposite().to_end_bound()),
-            Self::InfinitePast => None,
-        }
+    pub fn to_bound(self) -> RelBound {
+        RelBound::from(self)
     }
 }
 
