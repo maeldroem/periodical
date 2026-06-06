@@ -40,6 +40,7 @@ TODO: once all done, PR onto dev to sync, then continue unit tests
       - `half_bounded_to_future_interval`
       - `half_bounded_to_past_interval`
       - `interval`
+      - `start_bound`
     - `relative`
       - `bound_pair`
       - `bound`
@@ -55,6 +56,7 @@ TODO: once all done, PR onto dev to sync, then continue unit tests
       - `half_bounded_to_future_interval`
       - `half_bounded_to_past_interval`
       - `interval`
+      - `start_bound`
 
 - Tests to complete code coverage for `time`
 - Tests to complete code coverage for `ops`

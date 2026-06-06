@@ -1,9 +1,8 @@
 //! Absolute start bound
 //!
 //! Represents the start bound of an absolute interval. It can either be finite,
-//! in which case it will contain an [`AbsFiniteBoundPos`], or represent an
-//! open start bound through
-//! the [`InfinitePast`](AbsStartBound::InfinitePast) variant.
+//! in which case it will contain an [`AbsFiniteStartBound`], or represent
+//! an open start bound through the [`InfinitePast`](AbsStartBound::InfinitePast) variant.
 
 use std::cmp::Ordering;
 use std::error::Error;
@@ -34,11 +33,11 @@ use crate::intervals::ops::{
     BoundOverlapDisambiguationRuleSet,
 };
 
-/// An absolute start bound
+/// Absolute start bound
 ///
-/// Represents the start bound of an interval, may it be infinitely in the past
-/// or at a precise point in time, in which case it contains an
-/// [`AbsFiniteStartBound`].
+/// Represents the start bound of an absolute interval. It can either be finite,
+/// in which case it will contain an [`AbsFiniteStartBound`], or represent
+/// an open start bound through the [`InfinitePast`](AbsStartBound::InfinitePast) variant.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
@@ -48,25 +47,17 @@ pub enum AbsStartBound {
 }
 
 impl AbsStartBound {
-    /// Wraps the start bound in the corresponding [`AbsBound`] variant
-    #[must_use]
-    pub fn to_bound(self) -> AbsBound {
-        AbsBound::from(self)
-    }
-
-    /// Returns whether it is of the [`Finite`](AbsStartBound::Finite)
-    /// variant
+    /// Returns whether it is of the [`Finite`](AbsStartBound::Finite) variant
     ///
     /// # Examples
     ///
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Timestamp;
-    /// # use periodical::intervals::absolute::{AbsFiniteBoundPos, AbsStartBound};
+    /// # use periodical::intervals::absolute::{AbsStartBound, AbsFiniteBoundPos};
     /// let infinite_start_bound = AbsStartBound::InfinitePast;
-    ///
-    /// let time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
-    /// let finite_start_bound = AbsFiniteBoundPos::new(time).to_start_bound();
+    /// let finite_start_bound =
+    ///     AbsFiniteBoundPos::new("2025-01-01 08:00:00Z".parse::<Timestamp>()?).to_start_bound();
     ///
     /// assert!(finite_start_bound.is_finite());
     /// assert!(!infinite_start_bound.is_finite());
@@ -77,19 +68,17 @@ impl AbsStartBound {
         matches!(self, Self::Finite(_))
     }
 
-    /// Returns whether it is of the
-    /// [`InfinitePast`](AbsStartBound::InfinitePast) variant
+    /// Returns whether it is of the [`InfinitePast`](AbsStartBound::InfinitePast) variant
     ///
     /// # Examples
     ///
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Timestamp;
-    /// # use periodical::intervals::absolute::{AbsFiniteBoundPos, AbsStartBound};
+    /// # use periodical::intervals::absolute::{AbsStartBound, AbsFiniteBoundPos};
     /// let infinite_start_bound = AbsStartBound::InfinitePast;
-    ///
-    /// let time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
-    /// let finite_start_bound = AbsFiniteBoundPos::new(time).to_start_bound();
+    /// let finite_start_bound =
+    ///     AbsFiniteBoundPos::new("2025-01-01 08:00:00Z".parse::<Timestamp>()?).to_start_bound();
     ///
     /// assert!(infinite_start_bound.is_infinite_past());
     /// assert!(!finite_start_bound.is_infinite_past());
@@ -100,19 +89,50 @@ impl AbsStartBound {
         matches!(self, Self::InfinitePast)
     }
 
-    /// Returns the content of the [`Finite`](AbsStartBound::Finite)
-    /// variant
+    /// Returns the opposite [`AbsEndBound`]
     ///
-    /// Consumes `self` and puts the content of the
-    /// [`Finite`](AbsStartBound::Finite) variant in an [`Option`]. If
-    /// instead `self` is another variant, the method returns [`None`].
+    /// If the [`AbsStartBound`] is of the [`InfinitePast`](AbsStartBound::InfinitePast) variant,
+    /// then the method returns [`None`].
+    /// Otherwise, if the [`AbsStartBound`] is finite, then an [`AbsEndBound`] is created with the same time,
+    /// but opposite [`BoundInclusivity`].
+    ///
+    /// This is used, for example, for determining the last point in time before which this bound starts.
     ///
     /// # Examples
     ///
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Timestamp;
-    /// # use periodical::intervals::absolute::{AbsFiniteBoundPos, AbsStartBound};
+    /// # use periodical::intervals::absolute::{AbsStartBound, AbsFiniteBoundPos};
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// let time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
+    /// let start_second_shift = AbsFiniteBoundPos::new(time).to_start_bound();
+    ///
+    /// assert_eq!(
+    ///     start_second_shift.opposite(),
+    ///     Some(AbsFiniteBoundPos::new_with_incl(time, BoundInclusivity::Exclusive).to_end_bound()),
+    /// );
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    #[must_use]
+    pub fn opposite(&self) -> Option<AbsEndBound> {
+        match self {
+            Self::Finite(finite) => Some(finite.opposite().to_end_bound()),
+            Self::InfinitePast => None,
+        }
+    }
+
+    /// Returns the content of the [`Finite`](AbsStartBound::Finite) variant
+    ///
+    /// Consumes `self` and puts the content of the [`Finite`](AbsStartBound::Finite) variant in an [`Option`].
+    /// If instead `self` is another variant, the method returns [`None`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jiff::Timestamp;
+    /// # use periodical::intervals::absolute::{AbsStartBound, AbsFiniteBoundPos};
     /// let infinite_start_bound = AbsStartBound::InfinitePast;
     ///
     /// let time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
@@ -120,7 +140,7 @@ impl AbsStartBound {
     ///
     /// assert_eq!(
     ///     finite_start_bound.finite(),
-    ///     Some(AbsFiniteBoundPos::new(time))
+    ///     Some(AbsFiniteBoundPos::new(time).to_finite_start_bound())
     /// );
     /// assert_eq!(infinite_start_bound.finite(), None);
     /// # Ok::<(), Box<dyn Error>>(())
@@ -133,57 +153,10 @@ impl AbsStartBound {
         }
     }
 
-    /// Returns the opposite [`AbsEndBound`]
-    ///
-    /// If the [`AbsStartBound`] is of the
-    /// [`InfinitePast`](AbsStartBound::InfinitePast) variant, then the
-    /// method returns [`None`]. Otherwise, if the [`AbsStartBound`] is
-    /// finite, then an [`AbsEndBound`] is created with the same time,
-    /// but the opposite [`BoundInclusivity`].
-    ///
-    /// This is used for example for determining the last point in time before
-    /// this bound begins.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::error::Error;
-    /// # use jiff::Timestamp;
-    /// # use periodical::intervals::absolute::{AbsFiniteBoundPos, AbsStartBound};
-    /// # use periodical::intervals::meta::BoundInclusivity;
-    /// #
-    /// # #[derive(Debug)]
-    /// # struct FiniteBoundPositionExpectedError;
-    /// #
-    /// # impl std::fmt::Display for FiniteBoundPositionExpectedError {
-    /// #     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
-    /// #         write!(f, "Finite bound expected")
-    /// #     }
-    /// # }
-    /// #
-    /// # impl Error for FiniteBoundPositionExpectedError {}
-    /// let time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
-    ///
-    /// let start_second_part_my_shift = AbsFiniteBoundPos::new(time).to_start_bound();
-    /// let break_end_before_shift = start_second_part_my_shift
-    ///     .opposite()
-    ///     .ok_or(FiniteBoundPositionExpectedError)?;
-    ///
-    /// assert_eq!(
-    ///     break_end_before_shift.finite(),
-    ///     Some(AbsFiniteBoundPos::new_with_incl(
-    ///         time,
-    ///         BoundInclusivity::Exclusive,
-    ///     )),
-    /// );
-    /// # Ok::<(), Box<dyn Error>>(())
-    /// ```
+    /// Wraps `self` in the corresponding [`AbsBound`] variant
     #[must_use]
-    pub fn opposite(&self) -> Option<AbsEndBound> {
-        match self {
-            Self::Finite(finite) => Some(finite.opposite().to_end_bound()),
-            Self::InfinitePast => None,
-        }
+    pub fn to_bound(self) -> AbsBound {
+        AbsBound::from(self)
     }
 }
 
