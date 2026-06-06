@@ -33,8 +33,8 @@ use crate::intervals::absolute::{
     EmptiableAbsBoundPair,
     EmptiableAbsInterval,
     HasAbsBoundPair,
-    check_absolute_finite_start_end_bounds_for_interval_creation,
-    prepare_absolute_finite_start_end_bounds_for_interval_creation,
+    check_abs_finite_start_end_bounds_for_interval_creation,
+    prepare_abs_finite_start_end_bounds_for_interval_creation,
 };
 use crate::intervals::meta::{
     BoundInclusivity,
@@ -126,7 +126,7 @@ impl BoundedAbsInterval {
     /// ```
     #[must_use]
     pub fn new(mut start: AbsFiniteStartBound, mut end: AbsFiniteEndBound) -> Self {
-        prepare_absolute_finite_start_end_bounds_for_interval_creation(&mut start, &mut end);
+        prepare_abs_finite_start_end_bounds_for_interval_creation(&mut start, &mut end);
 
         Self::unchecked_new(start, end)
     }
@@ -803,16 +803,14 @@ impl BoundedAbsInterval {
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn set_start(&mut self, new_start: AbsFiniteStartBound) -> Result<(), BoundedAbsIntervalUpdateError> {
-        check_absolute_finite_start_end_bounds_for_interval_creation(&new_start, &self.end()).map_err(
-            |err| match err {
-                AbsStartEndBoundsCheckForIntervalCreationError::StartPastEnd => {
-                    BoundedAbsIntervalUpdateError::ChronologicalOrderViolation
-                },
-                AbsStartEndBoundsCheckForIntervalCreationError::SameTimeButNotDoublyInclusive => {
-                    BoundedAbsIntervalUpdateError::SameTimeDoublyInclusiveViolation
-                },
+        check_abs_finite_start_end_bounds_for_interval_creation(&new_start, &self.end()).map_err(|err| match err {
+            AbsStartEndBoundsCheckForIntervalCreationError::StartPastEnd => {
+                BoundedAbsIntervalUpdateError::ChronologicalOrderViolation
             },
-        )?;
+            AbsStartEndBoundsCheckForIntervalCreationError::SameTimeButNotDoublyInclusive => {
+                BoundedAbsIntervalUpdateError::SameTimeDoublyInclusiveViolation
+            },
+        })?;
 
         self.unchecked_set_start(new_start);
         Ok(())
@@ -873,16 +871,14 @@ impl BoundedAbsInterval {
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn set_end(&mut self, new_end: AbsFiniteEndBound) -> Result<(), BoundedAbsIntervalUpdateError> {
-        check_absolute_finite_start_end_bounds_for_interval_creation(&self.start(), &new_end).map_err(
-            |err| match err {
-                AbsStartEndBoundsCheckForIntervalCreationError::StartPastEnd => {
-                    BoundedAbsIntervalUpdateError::ChronologicalOrderViolation
-                },
-                AbsStartEndBoundsCheckForIntervalCreationError::SameTimeButNotDoublyInclusive => {
-                    BoundedAbsIntervalUpdateError::SameTimeDoublyInclusiveViolation
-                },
+        check_abs_finite_start_end_bounds_for_interval_creation(&self.start(), &new_end).map_err(|err| match err {
+            AbsStartEndBoundsCheckForIntervalCreationError::StartPastEnd => {
+                BoundedAbsIntervalUpdateError::ChronologicalOrderViolation
             },
-        )?;
+            AbsStartEndBoundsCheckForIntervalCreationError::SameTimeButNotDoublyInclusive => {
+                BoundedAbsIntervalUpdateError::SameTimeDoublyInclusiveViolation
+            },
+        })?;
 
         self.unchecked_set_end(new_end);
         Ok(())

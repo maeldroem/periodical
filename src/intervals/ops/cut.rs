@@ -196,7 +196,7 @@ use crate::intervals::absolute::{
     HalfBoundedAbsInterval,
     HasAbsBoundPair,
     HasEmptiableAbsBoundPair,
-    check_absolute_start_end_bounds_for_interval_creation,
+    check_abs_start_end_bounds_for_interval_creation,
 };
 use crate::intervals::meta::BoundInclusivity;
 use crate::intervals::relative::{
@@ -209,7 +209,7 @@ use crate::intervals::relative::{
     RelBoundPair,
     RelFiniteBoundPos,
     RelInterval,
-    check_relative_start_end_bounds_for_interval_creation,
+    check_rel_start_end_bounds_for_interval_creation,
 };
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 
@@ -799,11 +799,10 @@ pub fn cut_abs_bound_pair(bounds: &AbsBoundPair, at: Timestamp, cut_type: CutTyp
     }
 
     let past_cut_end = AbsFiniteBoundPos::new_with_incl(at, cut_type.past_bound_inclusivity()).to_end_bound();
-    let future_cut_start =
-        AbsFiniteBoundPos::new_with_incl(at, cut_type.future_bound_inclusivity()).to_start_bound();
+    let future_cut_start = AbsFiniteBoundPos::new_with_incl(at, cut_type.future_bound_inclusivity()).to_start_bound();
 
-    if check_absolute_start_end_bounds_for_interval_creation(&bounds.start(), &past_cut_end).is_err()
-        || check_absolute_start_end_bounds_for_interval_creation(&future_cut_start, &bounds.end()).is_err()
+    if check_abs_start_end_bounds_for_interval_creation(&bounds.start(), &past_cut_end).is_err()
+        || check_abs_start_end_bounds_for_interval_creation(&future_cut_start, &bounds.end()).is_err()
     {
         return CutResult::Uncut;
     }
@@ -813,8 +812,7 @@ pub fn cut_abs_bound_pair(bounds: &AbsBoundPair, at: Timestamp, cut_type: CutTyp
 
     past_split.set_end(AbsFiniteBoundPos::new_with_incl(at, cut_type.past_bound_inclusivity()).to_end_bound());
 
-    future_split
-        .set_start(AbsFiniteBoundPos::new_with_incl(at, cut_type.future_bound_inclusivity()).to_start_bound());
+    future_split.set_start(AbsFiniteBoundPos::new_with_incl(at, cut_type.future_bound_inclusivity()).to_start_bound());
 
     CutResult::Cut(past_split, future_split)
 }
@@ -852,11 +850,10 @@ pub fn cut_bounded_abs_interval(
 
     let past_cut_end = AbsFiniteBoundPos::new_with_incl(at, cut_type.past_bound_inclusivity()).to_end_bound();
 
-    let future_cut_start =
-        AbsFiniteBoundPos::new_with_incl(at, cut_type.future_bound_inclusivity()).to_start_bound();
+    let future_cut_start = AbsFiniteBoundPos::new_with_incl(at, cut_type.future_bound_inclusivity()).to_start_bound();
 
-    if check_absolute_start_end_bounds_for_interval_creation(&interval.abs_start(), &past_cut_end).is_err()
-        || check_absolute_start_end_bounds_for_interval_creation(&future_cut_start, &interval.abs_end()).is_err()
+    if check_abs_start_end_bounds_for_interval_creation(&interval.abs_start(), &past_cut_end).is_err()
+        || check_abs_start_end_bounds_for_interval_creation(&future_cut_start, &interval.abs_end()).is_err()
     {
         return CutResult::Uncut;
     }
@@ -888,11 +885,10 @@ pub fn cut_rel_bound_pair(bounds: &RelBoundPair, at: SignedDuration, cut_type: C
     }
 
     let past_cut_end = RelFiniteBoundPos::new_with_incl(at, cut_type.past_bound_inclusivity()).to_end_bound();
-    let future_cut_start =
-        RelFiniteBoundPos::new_with_incl(at, cut_type.future_bound_inclusivity()).to_start_bound();
+    let future_cut_start = RelFiniteBoundPos::new_with_incl(at, cut_type.future_bound_inclusivity()).to_start_bound();
 
-    if check_relative_start_end_bounds_for_interval_creation(&bounds.start(), &past_cut_end).is_err()
-        || check_relative_start_end_bounds_for_interval_creation(&future_cut_start, &bounds.end()).is_err()
+    if check_rel_start_end_bounds_for_interval_creation(&bounds.start(), &past_cut_end).is_err()
+        || check_rel_start_end_bounds_for_interval_creation(&future_cut_start, &bounds.end()).is_err()
     {
         return CutResult::Uncut;
     }
@@ -902,8 +898,7 @@ pub fn cut_rel_bound_pair(bounds: &RelBoundPair, at: SignedDuration, cut_type: C
 
     past_split.set_end(RelFiniteBoundPos::new_with_incl(at, cut_type.past_bound_inclusivity()).to_end_bound());
 
-    future_split
-        .set_start(RelFiniteBoundPos::new_with_incl(at, cut_type.future_bound_inclusivity()).to_start_bound());
+    future_split.set_start(RelFiniteBoundPos::new_with_incl(at, cut_type.future_bound_inclusivity()).to_start_bound());
 
     CutResult::Cut(past_split, future_split)
 }
@@ -941,11 +936,10 @@ pub fn cut_bounded_rel_interval(
 
     let past_cut_end = RelFiniteBoundPos::new_with_incl(at, cut_type.past_bound_inclusivity()).to_end_bound();
 
-    let future_cut_start =
-        RelFiniteBoundPos::new_with_incl(at, cut_type.future_bound_inclusivity()).to_start_bound();
+    let future_cut_start = RelFiniteBoundPos::new_with_incl(at, cut_type.future_bound_inclusivity()).to_start_bound();
 
-    if check_relative_start_end_bounds_for_interval_creation(&interval.rel_start(), &past_cut_end).is_err()
-        || check_relative_start_end_bounds_for_interval_creation(&future_cut_start, &interval.rel_end()).is_err()
+    if check_rel_start_end_bounds_for_interval_creation(&interval.rel_start(), &past_cut_end).is_err()
+        || check_rel_start_end_bounds_for_interval_creation(&future_cut_start, &interval.rel_end()).is_err()
     {
         return CutResult::Uncut;
     }

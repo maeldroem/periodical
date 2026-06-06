@@ -10,7 +10,7 @@ fn absolute_start_bound_inf_absolute_end_bound_inf_swap() {
     let mut start = AbsStartBound::InfinitePast;
     let mut end = AbsEndBound::InfiniteFuture;
 
-    swap_absolute_start_end_bounds(&mut start, &mut end);
+    swap_abs_start_end_bounds(&mut start, &mut end);
 
     assert_eq!(start, AbsStartBound::InfinitePast);
     assert_eq!(end, AbsEndBound::InfiniteFuture);
@@ -25,7 +25,7 @@ fn absolute_start_bound_inf_absolute_end_bound_finite_swap() -> Result<(), Box<d
     )
     .to_end_bound();
 
-    swap_absolute_start_end_bounds(&mut start, &mut end);
+    swap_abs_start_end_bounds(&mut start, &mut end);
 
     assert_eq!(
         start,
@@ -49,7 +49,7 @@ fn absolute_start_bound_finite_absolute_end_bound_inf_swap() -> Result<(), Box<d
     .to_start_bound();
     let mut end = AbsEndBound::InfiniteFuture;
 
-    swap_absolute_start_end_bounds(&mut start, &mut end);
+    swap_abs_start_end_bounds(&mut start, &mut end);
 
     assert_eq!(start, AbsStartBound::InfinitePast);
     assert_eq!(
@@ -77,7 +77,7 @@ fn absolute_start_bound_finite_absolute_end_bound_finite_swap() -> Result<(), Bo
     )
     .to_end_bound();
 
-    swap_absolute_start_end_bounds(&mut start, &mut end);
+    swap_abs_start_end_bounds(&mut start, &mut end);
 
     assert_eq!(
         start,
@@ -102,10 +102,7 @@ fn absolute_start_bound_finite_absolute_end_bound_finite_swap() -> Result<(), Bo
 #[test]
 fn check_absolute_bound_pair_for_interval_creation_inf_past_inf_future() {
     assert_eq!(
-        check_absolute_start_end_bounds_for_interval_creation(
-            &AbsStartBound::InfinitePast,
-            &AbsEndBound::InfiniteFuture,
-        ),
+        check_abs_start_end_bounds_for_interval_creation(&AbsStartBound::InfinitePast, &AbsEndBound::InfiniteFuture,),
         Ok(()),
     );
 }
@@ -113,7 +110,7 @@ fn check_absolute_bound_pair_for_interval_creation_inf_past_inf_future() {
 #[test]
 fn check_absolute_bound_pair_for_interval_creation_inf_past_finite() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        check_absolute_start_end_bounds_for_interval_creation(
+        check_abs_start_end_bounds_for_interval_creation(
             &AbsStartBound::InfinitePast,
             &AbsFiniteBoundPos::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
         ),
@@ -126,7 +123,7 @@ fn check_absolute_bound_pair_for_interval_creation_inf_past_finite() -> Result<(
 #[test]
 fn check_absolute_bound_pair_for_interval_creation_finite_inf_future() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        check_absolute_start_end_bounds_for_interval_creation(
+        check_abs_start_end_bounds_for_interval_creation(
             &AbsFiniteBoundPos::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
             &AbsEndBound::InfiniteFuture,
         ),
@@ -140,7 +137,7 @@ fn check_absolute_bound_pair_for_interval_creation_finite_inf_future() -> Result
 fn check_absolute_bound_pair_for_interval_creation_finite_finite_different_times_correct_order()
 -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        check_absolute_start_end_bounds_for_interval_creation(
+        check_abs_start_end_bounds_for_interval_creation(
             &AbsFiniteBoundPos::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
             &AbsFiniteBoundPos::new("2025-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
         ),
@@ -154,7 +151,7 @@ fn check_absolute_bound_pair_for_interval_creation_finite_finite_different_times
 fn check_absolute_bound_pair_for_interval_creation_finite_finite_different_times_wrong_order()
 -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        check_absolute_start_end_bounds_for_interval_creation(
+        check_abs_start_end_bounds_for_interval_creation(
             &AbsFiniteBoundPos::new("2025-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
             &AbsFiniteBoundPos::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
         ),
@@ -168,7 +165,7 @@ fn check_absolute_bound_pair_for_interval_creation_finite_finite_different_times
 fn check_absolute_bound_pair_for_interval_creation_finite_finite_same_time_inclusive_inclusive()
 -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        check_absolute_start_end_bounds_for_interval_creation(
+        check_abs_start_end_bounds_for_interval_creation(
             &AbsFiniteBoundPos::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
             &AbsFiniteBoundPos::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
         ),
@@ -182,7 +179,7 @@ fn check_absolute_bound_pair_for_interval_creation_finite_finite_same_time_inclu
 fn check_absolute_bound_pair_for_interval_creation_finite_finite_same_time_inclusive_exclusive()
 -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        check_absolute_start_end_bounds_for_interval_creation(
+        check_abs_start_end_bounds_for_interval_creation(
             &AbsFiniteBoundPos::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
             &AbsFiniteBoundPos::new_with_incl(
                 "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
@@ -201,7 +198,7 @@ fn prepare_absolute_bound_pair_for_interval_creation_inf_past_inf_future() {
     let mut start = AbsStartBound::InfinitePast;
     let mut end = AbsEndBound::InfiniteFuture;
 
-    let was_changed = prepare_absolute_bound_pair_for_interval_creation(&mut start, &mut end);
+    let was_changed = prepare_abs_bound_pair_for_interval_creation(&mut start, &mut end);
 
     assert!(!was_changed);
     assert_eq!(start, AbsStartBound::InfinitePast);
@@ -213,7 +210,7 @@ fn prepare_absolute_bound_pair_for_interval_creation_inf_past_finite() -> Result
     let mut start = AbsStartBound::InfinitePast;
     let mut end = AbsFiniteBoundPos::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound();
 
-    let was_changed = prepare_absolute_bound_pair_for_interval_creation(&mut start, &mut end);
+    let was_changed = prepare_abs_bound_pair_for_interval_creation(&mut start, &mut end);
 
     assert!(!was_changed);
     assert_eq!(start, AbsStartBound::InfinitePast);
@@ -230,7 +227,7 @@ fn prepare_absolute_bound_pair_for_interval_creation_finite_inf_future() -> Resu
     let mut start = AbsFiniteBoundPos::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound();
     let mut end = AbsEndBound::InfiniteFuture;
 
-    let was_changed = prepare_absolute_bound_pair_for_interval_creation(&mut start, &mut end);
+    let was_changed = prepare_abs_bound_pair_for_interval_creation(&mut start, &mut end);
 
     assert!(!was_changed);
     assert_eq!(
@@ -248,7 +245,7 @@ fn prepare_absolute_bound_pair_for_interval_creation_finite_finite_different_tim
     let mut start = AbsFiniteBoundPos::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound();
     let mut end = AbsFiniteBoundPos::new("2025-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound();
 
-    let was_changed = prepare_absolute_bound_pair_for_interval_creation(&mut start, &mut end);
+    let was_changed = prepare_abs_bound_pair_for_interval_creation(&mut start, &mut end);
 
     assert!(!was_changed);
     assert_eq!(
@@ -269,7 +266,7 @@ fn prepare_absolute_bound_pair_for_interval_creation_finite_finite_different_tim
     let mut start = AbsFiniteBoundPos::new("2025-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound();
     let mut end = AbsFiniteBoundPos::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound();
 
-    let was_changed = prepare_absolute_bound_pair_for_interval_creation(&mut start, &mut end);
+    let was_changed = prepare_abs_bound_pair_for_interval_creation(&mut start, &mut end);
 
     assert!(was_changed);
     assert_eq!(
@@ -290,7 +287,7 @@ fn prepare_absolute_bound_pair_for_interval_creation_finite_finite_same_time_inc
     let mut start = AbsFiniteBoundPos::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound();
     let mut end = AbsFiniteBoundPos::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound();
 
-    let was_changed = prepare_absolute_bound_pair_for_interval_creation(&mut start, &mut end);
+    let was_changed = prepare_abs_bound_pair_for_interval_creation(&mut start, &mut end);
 
     assert!(!was_changed);
     assert_eq!(
@@ -315,7 +312,7 @@ fn prepare_absolute_bound_pair_for_interval_creation_finite_finite_same_time_inc
     )
     .to_end_bound();
 
-    let was_changed = prepare_absolute_bound_pair_for_interval_creation(&mut start, &mut end);
+    let was_changed = prepare_abs_bound_pair_for_interval_creation(&mut start, &mut end);
 
     assert!(was_changed);
     assert_eq!(

@@ -46,8 +46,8 @@ use crate::intervals::relative::{
     RelInterval,
     RelStartBound,
     RelStartEndBoundsCheckForIntervalCreationError,
-    check_relative_finite_start_end_bounds_for_interval_creation,
-    prepare_relative_finite_start_end_bounds_for_interval_creation,
+    check_rel_finite_start_end_bounds_for_interval_creation,
+    prepare_rel_finite_start_end_bounds_for_interval_creation,
 };
 
 /// Relative bounded interval
@@ -120,7 +120,7 @@ impl BoundedRelInterval {
     /// ```
     #[must_use]
     pub fn new(mut start: RelFiniteStartBound, mut end: RelFiniteEndBound) -> Self {
-        prepare_relative_finite_start_end_bounds_for_interval_creation(&mut start, &mut end);
+        prepare_rel_finite_start_end_bounds_for_interval_creation(&mut start, &mut end);
 
         Self::unchecked_new(start, end)
     }
@@ -784,16 +784,14 @@ impl BoundedRelInterval {
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn set_start(&mut self, new_start: RelFiniteStartBound) -> Result<(), BoundedRelIntervalUpdateError> {
-        check_relative_finite_start_end_bounds_for_interval_creation(&new_start, &self.end()).map_err(
-            |err| match err {
-                RelStartEndBoundsCheckForIntervalCreationError::StartPastEnd => {
-                    BoundedRelIntervalUpdateError::ChronologicalOrderViolation
-                },
-                RelStartEndBoundsCheckForIntervalCreationError::SameOffsetButNotDoublyInclusive => {
-                    BoundedRelIntervalUpdateError::SameOffsetDoublyInclusiveViolation
-                },
+        check_rel_finite_start_end_bounds_for_interval_creation(&new_start, &self.end()).map_err(|err| match err {
+            RelStartEndBoundsCheckForIntervalCreationError::StartPastEnd => {
+                BoundedRelIntervalUpdateError::ChronologicalOrderViolation
             },
-        )?;
+            RelStartEndBoundsCheckForIntervalCreationError::SameOffsetButNotDoublyInclusive => {
+                BoundedRelIntervalUpdateError::SameOffsetDoublyInclusiveViolation
+            },
+        })?;
 
         self.unchecked_set_start(new_start);
         Ok(())
@@ -853,16 +851,14 @@ impl BoundedRelInterval {
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn set_end(&mut self, new_end: RelFiniteEndBound) -> Result<(), BoundedRelIntervalUpdateError> {
-        check_relative_finite_start_end_bounds_for_interval_creation(&self.start(), &new_end).map_err(
-            |err| match err {
-                RelStartEndBoundsCheckForIntervalCreationError::StartPastEnd => {
-                    BoundedRelIntervalUpdateError::ChronologicalOrderViolation
-                },
-                RelStartEndBoundsCheckForIntervalCreationError::SameOffsetButNotDoublyInclusive => {
-                    BoundedRelIntervalUpdateError::SameOffsetDoublyInclusiveViolation
-                },
+        check_rel_finite_start_end_bounds_for_interval_creation(&self.start(), &new_end).map_err(|err| match err {
+            RelStartEndBoundsCheckForIntervalCreationError::StartPastEnd => {
+                BoundedRelIntervalUpdateError::ChronologicalOrderViolation
             },
-        )?;
+            RelStartEndBoundsCheckForIntervalCreationError::SameOffsetButNotDoublyInclusive => {
+                BoundedRelIntervalUpdateError::SameOffsetDoublyInclusiveViolation
+            },
+        })?;
 
         self.unchecked_set_end(new_end);
         Ok(())
