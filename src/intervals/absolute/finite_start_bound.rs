@@ -179,7 +179,7 @@ impl BoundEq<AbsBound> for AbsFiniteStartBound {
 
 impl BoundOrd for AbsFiniteStartBound {
     fn bound_cmp(&self, other: &Self) -> BoundOrdering {
-        match self.pos().cmp(&other.pos()) {
+        match self.pos().time().cmp(&other.pos().time()) {
             Ordering::Less => BoundOrdering::Less,
             Ordering::Equal => BoundOrdering::Equal(Some(BoundOverlapAmbiguity::BothStarts(
                 self.pos().inclusivity(),
@@ -204,7 +204,7 @@ impl BoundOrd<AbsStartBound> for AbsFiniteStartBound {
 
 impl BoundOrd<AbsFiniteEndBound> for AbsFiniteStartBound {
     fn bound_cmp(&self, other: &AbsFiniteEndBound) -> BoundOrdering {
-        match self.pos().cmp(&other.pos()) {
+        match self.pos().time().cmp(&other.pos().time()) {
             Ordering::Less => BoundOrdering::Less,
             Ordering::Equal => BoundOrdering::Equal(Some(BoundOverlapAmbiguity::StartEnd(
                 self.pos().inclusivity(),

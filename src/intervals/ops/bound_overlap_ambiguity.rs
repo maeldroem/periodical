@@ -77,11 +77,9 @@ pub enum BoundOverlapAmbiguity {
     BothStarts(BoundInclusivity, BoundInclusivity),
     /// Inclusivities come from two end bounds
     BothEnds(BoundInclusivity, BoundInclusivity),
-    /// Inclusivities come from a start bound (reference) and an end bound
-    /// (compared)
+    /// Inclusivities come from a start bound (reference) and an end bound (compared)
     StartEnd(BoundInclusivity, BoundInclusivity),
-    /// Inclusivities come from an end bound (reference) and a start bound
-    /// (compared)
+    /// Inclusivities come from an end bound (reference) and a start bound (compared)
     EndStart(BoundInclusivity, BoundInclusivity),
 }
 
@@ -273,20 +271,20 @@ pub fn strict_bound_overlap_disambiguation(ambiguity: BoundOverlapAmbiguity) -> 
     type Bi = BoundInclusivity;
 
     match ambiguity {
-        Boa::BothStarts(Bi::Exclusive, Bi::Inclusive)
-        | Boa::BothEnds(Bi::Inclusive, Bi::Exclusive)
-        | Boa::StartEnd(Bi::Inclusive, Bi::Exclusive)
-        | Boa::StartEnd(Bi::Exclusive, Bi::Inclusive | Bi::Exclusive) => DisambiguatedBoundOverlap::Before,
+        Boa::BothStarts(Bi::Inclusive, Bi::Exclusive)
+        | Boa::BothEnds(Bi::Exclusive, Bi::Inclusive)
+        | Boa::StartEnd(Bi::Exclusive, Bi::Inclusive)
+        | Boa::StartEnd(Bi::Inclusive | Bi::Exclusive, Bi::Exclusive) => DisambiguatedBoundOverlap::Before,
         Boa::BothStarts(Bi::Inclusive, Bi::Inclusive)
         | Boa::BothStarts(Bi::Exclusive, Bi::Exclusive)
         | Boa::BothEnds(Bi::Inclusive, Bi::Inclusive)
         | Boa::BothEnds(Bi::Exclusive, Bi::Exclusive)
         | Boa::StartEnd(Bi::Inclusive, Bi::Inclusive)
         | Boa::EndStart(Bi::Inclusive, Bi::Inclusive) => DisambiguatedBoundOverlap::Equal,
-        Boa::BothStarts(Bi::Inclusive, Bi::Exclusive)
-        | Boa::BothEnds(Bi::Exclusive, Bi::Inclusive)
-        | Boa::EndStart(Bi::Inclusive, Bi::Exclusive)
-        | Boa::EndStart(Bi::Exclusive, Bi::Inclusive | Bi::Exclusive) => DisambiguatedBoundOverlap::After,
+        Boa::BothStarts(Bi::Exclusive, Bi::Inclusive)
+        | Boa::BothEnds(Bi::Inclusive, Bi::Exclusive)
+        | Boa::EndStart(Bi::Exclusive, Bi::Inclusive)
+        | Boa::EndStart(Bi::Inclusive | Bi::Exclusive, Bi::Exclusive) => DisambiguatedBoundOverlap::After,
     }
 }
 
@@ -300,10 +298,10 @@ pub fn lenient_bound_overlap_disambiguation(ambiguity: BoundOverlapAmbiguity) ->
         Boa::StartEnd(Bi::Exclusive, Bi::Exclusive) => DisambiguatedBoundOverlap::Before,
         Boa::BothStarts(Bi::Inclusive | Bi::Exclusive, Bi::Inclusive | Bi::Exclusive)
         | Boa::BothEnds(Bi::Inclusive | Bi::Exclusive, Bi::Inclusive | Bi::Exclusive)
-        | Boa::StartEnd(Bi::Inclusive, Bi::Inclusive | Bi::Exclusive)
-        | Boa::StartEnd(Bi::Exclusive, Bi::Inclusive)
-        | Boa::EndStart(Bi::Inclusive, Bi::Inclusive | Bi::Exclusive)
-        | Boa::EndStart(Bi::Exclusive, Bi::Inclusive) => DisambiguatedBoundOverlap::Equal,
+        | Boa::StartEnd(Bi::Inclusive | Bi::Exclusive, Bi::Inclusive)
+        | Boa::StartEnd(Bi::Inclusive, Bi::Exclusive)
+        | Boa::EndStart(Bi::Inclusive | Bi::Exclusive, Bi::Inclusive)
+        | Boa::EndStart(Bi::Inclusive, Bi::Exclusive) => DisambiguatedBoundOverlap::Equal,
         Boa::EndStart(Bi::Exclusive, Bi::Exclusive) => DisambiguatedBoundOverlap::After,
     }
 }
@@ -325,18 +323,18 @@ pub fn continuous_to_future_bound_overlap_disambiguation(
     type Bi = BoundInclusivity;
 
     match ambiguity {
-        Boa::BothStarts(Bi::Exclusive, Bi::Inclusive)
-        | Boa::BothEnds(Bi::Inclusive, Bi::Exclusive)
-        | Boa::StartEnd(Bi::Exclusive, Bi::Inclusive | Bi::Exclusive) => DisambiguatedBoundOverlap::Before,
+        Boa::BothStarts(Bi::Inclusive, Bi::Exclusive)
+        | Boa::BothEnds(Bi::Exclusive, Bi::Inclusive)
+        | Boa::StartEnd(Bi::Inclusive | Bi::Exclusive, Bi::Exclusive) => DisambiguatedBoundOverlap::Before,
         Boa::BothStarts(Bi::Inclusive, Bi::Inclusive)
         | Boa::BothStarts(Bi::Exclusive, Bi::Exclusive)
         | Boa::BothEnds(Bi::Inclusive, Bi::Inclusive)
         | Boa::BothEnds(Bi::Exclusive, Bi::Exclusive)
-        | Boa::StartEnd(Bi::Inclusive, Bi::Inclusive | Bi::Exclusive)
-        | Boa::EndStart(Bi::Inclusive | Bi::Exclusive, Bi::Inclusive) => DisambiguatedBoundOverlap::Equal,
-        Boa::BothStarts(Bi::Inclusive, Bi::Exclusive)
-        | Boa::BothEnds(Bi::Exclusive, Bi::Inclusive)
-        | Boa::EndStart(Bi::Inclusive | Bi::Exclusive, Bi::Exclusive) => DisambiguatedBoundOverlap::After,
+        | Boa::StartEnd(Bi::Inclusive | Bi::Exclusive, Bi::Inclusive)
+        | Boa::EndStart(Bi::Inclusive, Bi::Inclusive | Bi::Exclusive) => DisambiguatedBoundOverlap::Equal,
+        Boa::BothStarts(Bi::Exclusive, Bi::Inclusive)
+        | Boa::BothEnds(Bi::Inclusive, Bi::Exclusive)
+        | Boa::EndStart(Bi::Exclusive, Bi::Inclusive | Bi::Exclusive) => DisambiguatedBoundOverlap::After,
     }
 }
 
@@ -348,18 +346,18 @@ pub fn continuous_to_past_bound_overlap_disambiguation(ambiguity: BoundOverlapAm
     type Bi = BoundInclusivity;
 
     match ambiguity {
-        Boa::BothStarts(Bi::Exclusive, Bi::Inclusive)
-        | Boa::BothEnds(Bi::Inclusive, Bi::Exclusive)
-        | Boa::StartEnd(Bi::Inclusive | Bi::Exclusive, Bi::Exclusive) => DisambiguatedBoundOverlap::Before,
+        Boa::BothStarts(Bi::Inclusive, Bi::Exclusive)
+        | Boa::BothEnds(Bi::Exclusive, Bi::Inclusive)
+        | Boa::StartEnd(Bi::Exclusive, Bi::Inclusive | Bi::Exclusive) => DisambiguatedBoundOverlap::Before,
         Boa::BothStarts(Bi::Inclusive, Bi::Inclusive)
         | Boa::BothStarts(Bi::Exclusive, Bi::Exclusive)
         | Boa::BothEnds(Bi::Inclusive, Bi::Inclusive)
         | Boa::BothEnds(Bi::Exclusive, Bi::Exclusive)
-        | Boa::StartEnd(Bi::Inclusive | Bi::Exclusive, Bi::Inclusive)
-        | Boa::EndStart(Bi::Inclusive, Bi::Inclusive | Bi::Exclusive) => DisambiguatedBoundOverlap::Equal,
-        Boa::BothStarts(Bi::Inclusive, Bi::Exclusive)
-        | Boa::BothEnds(Bi::Exclusive, Bi::Inclusive)
-        | Boa::EndStart(Bi::Exclusive, Bi::Inclusive | Bi::Exclusive) => DisambiguatedBoundOverlap::After,
+        | Boa::StartEnd(Bi::Inclusive, Bi::Inclusive | Bi::Exclusive)
+        | Boa::EndStart(Bi::Inclusive | Bi::Exclusive, Bi::Inclusive) => DisambiguatedBoundOverlap::Equal,
+        Boa::BothStarts(Bi::Exclusive, Bi::Inclusive)
+        | Boa::BothEnds(Bi::Inclusive, Bi::Exclusive)
+        | Boa::EndStart(Bi::Inclusive | Bi::Exclusive, Bi::Exclusive) => DisambiguatedBoundOverlap::After,
     }
 }
 
@@ -380,22 +378,27 @@ pub enum DisambiguatedBoundOverlap {
 }
 
 impl DisambiguatedBoundOverlap {
+    #[must_use]
     pub fn is_before(&self) -> bool {
         matches!(self, Self::Before)
     }
 
+    #[must_use]
     pub fn is_equal(&self) -> bool {
         matches!(self, Self::Equal)
     }
 
+    #[must_use]
     pub fn is_after(&self) -> bool {
         matches!(self, Self::After)
     }
 
+    #[must_use]
     pub fn is_before_or_equal(&self) -> bool {
         matches!(self, Self::Before | Self::Equal)
     }
 
+    #[must_use]
     pub fn is_after_or_equal(&self) -> bool {
         matches!(self, Self::After | Self::Equal)
     }
