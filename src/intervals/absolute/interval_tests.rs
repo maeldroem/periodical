@@ -1586,7 +1586,7 @@ mod try_from_emptiable_bound_pair {
     fn empty() {
         assert_eq!(
             AbsInterval::try_from(EmptiableAbsBoundPair::Empty),
-            Err(AbsIntervalFromEmptiableAbsBoundPairError)
+            Err(AbsIntervalTryFromEmptiableAbsBoundPairError)
         );
     }
 }

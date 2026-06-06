@@ -10,7 +10,7 @@
 //! variants we know exactly the kind of interval that is stored without needing
 //! to check inner data.
 //!
-//! Usually this structure is for dealing with absolute intervals as a single
+//! Usually this structure is used for dealing with absolute intervals as a single
 //! type in a way that conserves the [openness](Openness) invariant, contrary to
 //! [`AbsBoundPair`].
 //!
@@ -66,16 +66,16 @@ use crate::intervals::special::UnboundedInterval;
 /// variants we know exactly the kind of interval that is stored without needing
 /// to check inner data.
 ///
-/// Usually this structure is for dealing with absolute intervals as a single
+/// Usually this structure is used for dealing with absolute intervals as a single
 /// type in a way that conserves the [openness](Openness) invariant, contrary to
 /// [`AbsBoundPair`].
 ///
 /// If you want to include
 /// [`EmptyInterval`](crate::intervals::special::EmptyInterval) as a possible
 /// variant, see [`EmptiableAbsInterval`].
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum AbsInterval {
     Bounded(BoundedAbsInterval),
     HalfBounded(HalfBoundedAbsInterval),
@@ -118,10 +118,7 @@ impl AbsInterval {
     /// Compares two [`AbsInterval`], but if they have the same start,
     /// order by decreasing length
     ///
-    /// Uses [`EmptiableAbsBoundPair::ord_by_start_and_inv_length`] under
-    /// the hood.
-    ///
-    /// Don't rely on this method for checking for equality of start, as it will
+    /// Don't rely on this method for checking for equality of starts, as it will
     /// produce other [`Ordering`]s if their lengths don't match too.
     ///
     /// # Examples
@@ -146,15 +143,11 @@ impl AbsInterval {
     ///
     /// ```
     /// # use std::error::Error;
-    /// # use jiff::Zoned;
+    /// # use jiff::Timestamp;
     /// # use periodical::intervals::absolute::BoundedAbsInterval;
-    /// let bounded_interval = BoundedAbsInterval::new(
-    ///     "2026-01-01 08:00:00[Europe/Oslo]"
-    ///         .parse::<Zoned>()?
-    ///         .timestamp(),
-    ///     "2026-01-01 16:00:00[Europe/Oslo]"
-    ///         .parse::<Zoned>()?
-    ///         .timestamp(),
+    /// let bounded_interval = BoundedAbsInterval::from_times(
+    ///     "2026-01-01 08:00:00Z".parse::<Timestamp>()?,
+    ///     "2026-01-01 16:00:00Z".parse::<Timestamp>()?,
     /// );
     ///
     /// let interval = bounded_interval.clone().to_interval();
@@ -179,13 +172,11 @@ impl AbsInterval {
     ///
     /// ```
     /// # use std::error::Error;
-    /// # use jiff::Zoned;
+    /// # use jiff::Timestamp;
     /// # use periodical::intervals::absolute::HalfBoundedAbsInterval;
     /// # use periodical::intervals::meta::OpeningDirection;
-    /// let half_bounded_interval = HalfBoundedAbsInterval::new(
-    ///     "2026-01-01 08:00:00[Europe/Oslo]"
-    ///         .parse::<Zoned>()?
-    ///         .timestamp(),
+    /// let half_bounded_interval = HalfBoundedAbsInterval::from_time(
+    ///     "2026-01-01 08:00:00Z".parse::<Timestamp>()?,
     ///     OpeningDirection::ToPast,
     /// );
     ///
@@ -224,7 +215,7 @@ impl AbsInterval {
         }
     }
 
-    /// Wraps the interval in [`EmptiableAbsInterval`]
+    /// Wraps `self` in [`EmptiableAbsInterval`]
     #[must_use]
     pub fn to_emptiable(self) -> EmptiableAbsInterval {
         EmptiableAbsInterval::from(self)
@@ -357,10 +348,11 @@ impl From<AbsBoundPair> for AbsInterval {
     }
 }
 
+/// Error that can occur when converting an [`EmptiableAbsBoundPair`] to [`AbsInterval`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AbsIntervalFromEmptiableAbsBoundPairError;
+pub struct AbsIntervalTryFromEmptiableAbsBoundPairError;
 
-impl Display for AbsIntervalFromEmptiableAbsBoundPairError {
+impl Display for AbsIntervalTryFromEmptiableAbsBoundPairError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
@@ -369,14 +361,14 @@ impl Display for AbsIntervalFromEmptiableAbsBoundPairError {
     }
 }
 
-impl Error for AbsIntervalFromEmptiableAbsBoundPairError {}
+impl Error for AbsIntervalTryFromEmptiableAbsBoundPairError {}
 
 impl TryFrom<EmptiableAbsBoundPair> for AbsInterval {
-    type Error = AbsIntervalFromEmptiableAbsBoundPairError;
+    type Error = AbsIntervalTryFromEmptiableAbsBoundPairError;
 
     fn try_from(value: EmptiableAbsBoundPair) -> Result<Self, Self::Error> {
         Ok(Self::from(
-            value.bound().ok_or(AbsIntervalFromEmptiableAbsBoundPairError)?,
+            value.bound().ok_or(AbsIntervalTryFromEmptiableAbsBoundPairError)?,
         ))
     }
 }

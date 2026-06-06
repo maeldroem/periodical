@@ -10,7 +10,7 @@
 //! variants we know exactly the kind of interval that is stored without needing
 //! to check inner data.
 //!
-//! Usually this structure is for dealing with relative intervals as a single
+//! Usually this structure is used for dealing with relative intervals as a single
 //! type in a way that conserves the [openness](Openness) invariant, contrary to
 //! [`RelBoundPair`].
 //!
@@ -66,16 +66,16 @@ use crate::intervals::special::UnboundedInterval;
 /// variants we know exactly the kind of interval that is stored without needing
 /// to check inner data.
 ///
-/// Usually this structure is for dealing with relative intervals as a single
+/// Usually this structure is used for dealing with relative intervals as a single
 /// type in a way that conserves the [openness](Openness) invariant, contrary to
 /// [`RelBoundPair`].
 ///
 /// If you want to include
 /// [`EmptyInterval`](crate::intervals::special::EmptyInterval) as a possible
 /// variant, see [`EmptiableRelInterval`].
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum RelInterval {
     Bounded(BoundedRelInterval),
     HalfBounded(HalfBoundedRelInterval),
@@ -88,7 +88,6 @@ impl RelInterval {
     /// # Examples
     ///
     /// ```
-    /// # use std::error::Error;
     /// # use jiff::SignedDuration;
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::relative::{RelFiniteBoundPos, RelInterval, HasRelBoundPair};
@@ -105,7 +104,6 @@ impl RelInterval {
     ///     interval.rel_end(),
     ///     RelFiniteBoundPos::new_with_incl(end, BoundInclusivity::Exclusive).to_end_bound(),
     /// );
-    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
     pub fn from_range<R>(range: R) -> Self
@@ -118,10 +116,7 @@ impl RelInterval {
     /// Compares two [`RelInterval`], but if they have the same start,
     /// order by decreasing length
     ///
-    /// Uses [`EmptiableRelBoundPair::ord_by_start_and_inv_length`] under
-    /// the hood.
-    ///
-    /// Don't rely on this method for checking for equality of start, as it will
+    /// Don't rely on this method for checking for equality of starts, as it will
     /// produce other [`Ordering`]s if their lengths don't match too.
     ///
     /// # Examples
@@ -145,10 +140,9 @@ impl RelInterval {
     /// # Examples
     ///
     /// ```
-    /// # use std::error::Error;
     /// # use jiff::SignedDuration;
     /// # use periodical::intervals::relative::BoundedRelInterval;
-    /// let bounded_interval = BoundedRelInterval::new(
+    /// let bounded_interval = BoundedRelInterval::from_offsets(
     ///     SignedDuration::from_hours(8),
     ///     SignedDuration::from_hours(16),
     /// );
@@ -156,7 +150,6 @@ impl RelInterval {
     /// let interval = bounded_interval.clone().to_interval();
     ///
     /// assert_eq!(interval.bounded(), Some(bounded_interval));
-    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
     pub fn bounded(self) -> Option<BoundedRelInterval> {
@@ -174,17 +167,17 @@ impl RelInterval {
     /// # Examples
     ///
     /// ```
-    /// # use std::error::Error;
     /// # use jiff::SignedDuration;
     /// # use periodical::intervals::relative::HalfBoundedRelInterval;
     /// # use periodical::intervals::meta::OpeningDirection;
-    /// let half_bounded_interval =
-    ///     HalfBoundedRelInterval::new(SignedDuration::from_hours(8), OpeningDirection::ToPast);
+    /// let half_bounded_interval = HalfBoundedRelInterval::from_offset(
+    ///     SignedDuration::from_hours(8),
+    ///     OpeningDirection::ToPast,
+    /// );
     ///
     /// let interval = half_bounded_interval.clone().to_interval();
     ///
     /// assert_eq!(interval.half_bounded(), Some(half_bounded_interval));
-    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
     pub fn half_bounded(self) -> Option<HalfBoundedRelInterval> {
@@ -216,7 +209,7 @@ impl RelInterval {
         }
     }
 
-    /// Wraps the interval in [`EmptiableRelInterval`]
+    /// Wraps `self` in [`EmptiableRelInterval`]
     #[must_use]
     pub fn to_emptiable(self) -> EmptiableRelInterval {
         EmptiableRelInterval::from(self)
@@ -349,10 +342,11 @@ impl From<RelBoundPair> for RelInterval {
     }
 }
 
+/// Error that can occur when converting an [`EmptiableRelBoundPair`] to [`RelInterval`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct RelIntervalFromEmptiableRelBoundPairError;
+pub struct RelIntervalTryFromEmptiableRelBoundPairError;
 
-impl Display for RelIntervalFromEmptiableRelBoundPairError {
+impl Display for RelIntervalTryFromEmptiableRelBoundPairError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
@@ -361,14 +355,14 @@ impl Display for RelIntervalFromEmptiableRelBoundPairError {
     }
 }
 
-impl Error for RelIntervalFromEmptiableRelBoundPairError {}
+impl Error for RelIntervalTryFromEmptiableRelBoundPairError {}
 
 impl TryFrom<EmptiableRelBoundPair> for RelInterval {
-    type Error = RelIntervalFromEmptiableRelBoundPairError;
+    type Error = RelIntervalTryFromEmptiableRelBoundPairError;
 
     fn try_from(value: EmptiableRelBoundPair) -> Result<Self, Self::Error> {
         Ok(Self::from(
-            value.bound().ok_or(RelIntervalFromEmptiableRelBoundPairError)?,
+            value.bound().ok_or(RelIntervalTryFromEmptiableRelBoundPairError)?,
         ))
     }
 }
