@@ -1,7 +1,7 @@
 //! Relative intervals
 //!
-//! Relative intervals contain an offset duration and a length instead of being
-//! fixed in offset.
+//! Relative intervals are set in relative time, that is to say that are bound to
+//! [offset(s) as `SignedDuration`](jiff::SignedDuration) when applicable.
 //!
 //! The most common relative interval objects you will encounter are
 //!
@@ -9,6 +9,8 @@
 //! - [`EmptiableRelBoundPair`]
 //! - [`BoundedRelInterval`]
 //! - [`HalfBoundedRelInterval`]
+//!
+//! Refer to [the `intervals` module](crate::intervals) for more information about how intervals are structured.
 
 use std::error::Error;
 use std::fmt::Display;
@@ -84,17 +86,35 @@ pub use interval::*;
 #[doc(inline)]
 pub use start_bound::*;
 
-pub fn swap_relative_finite_start_end_bounds(
-    finite_start: &mut RelFiniteStartBound,
-    finite_end: &mut RelFiniteEndBound,
-) {
+/// Swaps a relative finite start bound with a relative finite end bound
+///
+/// # Examples
+///
+/// ```
+/// # use jiff::SignedDuration;
+/// # use periodical::intervals::relative::{
+/// #     RelFiniteBoundPos,
+/// #     swap_rel_finite_start_end_bounds,
+/// # };
+/// let first_offset = SignedDuration::from_hours(2);
+/// let second_offset = SignedDuration::from_hours(7);
+///
+/// let mut start = RelFiniteBoundPos::new(first_offset).to_finite_start_bound();
+/// let mut end = RelFiniteBoundPos::new(second_offset).to_finite_end_bound();
+///
+/// swap_rel_finite_start_end_bounds(&mut start, &mut end);
+///
+/// assert_eq!(start.pos().offset(), second_offset);
+/// assert_eq!(end.pos().offset(), first_offset);
+/// ```
+pub fn swap_rel_finite_start_end_bounds(finite_start: &mut RelFiniteStartBound, finite_end: &mut RelFiniteEndBound) {
     let RelFiniteStartBound(finite_start_pos) = finite_start;
     let RelFiniteEndBound(finite_end_pos) = finite_end;
 
     std::mem::swap(finite_start_pos, finite_end_pos);
 }
 
-/// Swaps an relative start bound with an relative end bound
+/// Swaps a relative start bound with a relative end bound
 ///
 /// This method is primarily used in the case where a start bound and an end
 /// bound are not in chronological order.
@@ -102,22 +122,20 @@ pub fn swap_relative_finite_start_end_bounds(
 /// # Examples
 ///
 /// ```
-/// # use std::error::Error;
-/// # use jiff::Offsetstamp;
-/// # use periodical::intervals::relative::{RelFiniteBoundPos, swap_relative_bound_pair};
-/// let start_offset = "2025-01-01 16:00:00Z".parse::<Offsetstamp>()?;
-/// let end_offset = "2025-01-01 08:00:00Z".parse::<Offsetstamp>()?;
+/// # use jiff::SignedDuration;
+/// # use periodical::intervals::relative::{RelFiniteBoundPos, swap_rel_start_end_bounds};
+/// let start_offset = SignedDuration::from_hours(2);
+/// let end_offset = SignedDuration::from_hours(7);
 ///
 /// let mut start = RelFiniteBoundPos::new(start_offset).to_start_bound();
 /// let mut end = RelFiniteBoundPos::new(end_offset).to_end_bound();
 ///
-/// swap_relative_bound_pair(&mut start, &mut end);
+/// swap_rel_start_end_bounds(&mut start, &mut end);
 ///
 /// assert_eq!(start, RelFiniteBoundPos::new(end_offset).to_start_bound());
 /// assert_eq!(end, RelFiniteBoundPos::new(start_offset).to_end_bound());
-/// # Ok::<(), Box<dyn Error>>(())
 /// ```
-pub fn swap_relative_start_end_bounds(start: &mut RelStartBound, end: &mut RelEndBound) {
+pub fn swap_rel_start_end_bounds(start: &mut RelStartBound, end: &mut RelEndBound) {
     // We temporarily reborrow start and end for the match arms so that when a
     // pattern matches, they move out of their temporary scope and we can use
     // the original mutable references without guard patterns shenanigans.
@@ -135,7 +153,7 @@ pub fn swap_relative_start_end_bounds(start: &mut RelStartBound, end: &mut RelEn
             *start = RelStartBound::InfinitePast;
         },
         (RelStartBound::Finite(finite_start), RelEndBound::Finite(finite_end)) => {
-            swap_relative_finite_start_end_bounds(finite_start, finite_end);
+            swap_rel_finite_start_end_bounds(finite_start, finite_end);
         },
     }
 }
@@ -146,8 +164,7 @@ pub fn swap_relative_start_end_bounds(start: &mut RelStartBound, end: &mut RelEn
 pub enum RelStartEndBoundsCheckForIntervalCreationError {
     /// Start bound is past the end bound
     StartPastEnd,
-    /// Both bounds are on the same offset but don't have only inclusive bound
-    /// inclusivities
+    /// Both bounds are on the same offset but don't have only inclusive bound inclusivities
     SameOffsetButNotDoublyInclusive,
 }
 
@@ -165,7 +182,74 @@ impl Display for RelStartEndBoundsCheckForIntervalCreationError {
 
 impl Error for RelStartEndBoundsCheckForIntervalCreationError {}
 
-pub fn check_relative_finite_start_end_bounds_for_interval_creation(
+/// Checks whether the given finite start and finite end bounds are fit for creating an interval
+///
+/// # Errors
+///
+/// Returns [`StartPastEnd`](RelStartEndBoundsCheckForIntervalCreationError::StartPastEnd)
+/// if the start bound is positioned after the end bound.
+///
+/// Returns [`SameOffsetButNotDoublyInclusive`](RelStartEndBoundsCheckForIntervalCreationError::SameOffsetButNotDoublyInclusive)
+/// if the bounds are positioned on the same offset but are not doubly inclusive.
+///
+/// # Examples
+///
+/// ## Start past end
+///
+/// ```
+/// # use jiff::SignedDuration;
+/// # use periodical::intervals::relative::{
+/// #     RelFiniteBoundPos,
+/// #     RelStartEndBoundsCheckForIntervalCreationError,
+/// #     check_rel_finite_start_end_bounds_for_interval_creation,
+/// # };
+/// let start = RelFiniteBoundPos::new(SignedDuration::from_hours(16)).to_finite_start_bound();
+/// let end = RelFiniteBoundPos::new(SignedDuration::from_hours(8)).to_finite_end_bound();
+///
+/// assert_eq!(
+///     check_rel_finite_start_end_bounds_for_interval_creation(&start, &end),
+///     Err(RelStartEndBoundsCheckForIntervalCreationError::StartPastEnd)
+/// );
+/// ```
+///
+/// ## Same time but not doubly inclusive
+///
+/// ```
+/// # use jiff::SignedDuration;
+/// # use periodical::intervals::relative::{
+/// #     RelFiniteBoundPos,
+/// #     RelStartEndBoundsCheckForIntervalCreationError,
+/// #     check_rel_finite_start_end_bounds_for_interval_creation,
+/// # };
+/// # use periodical::intervals::meta::BoundInclusivity;
+/// let offset = SignedDuration::from_hours(10);
+/// let start = RelFiniteBoundPos::new_with_incl(offset, BoundInclusivity::Exclusive)
+///     .to_finite_start_bound();
+/// let end = RelFiniteBoundPos::new(offset).to_finite_end_bound();
+///
+/// assert_eq!(
+///     check_rel_finite_start_end_bounds_for_interval_creation(&start, &end),
+///     Err(RelStartEndBoundsCheckForIntervalCreationError::SameOffsetButNotDoublyInclusive)
+/// );
+/// ```
+///
+/// ## OK
+///
+/// ```
+/// # use jiff::SignedDuration;
+/// # use periodical::intervals::relative::{
+/// #     RelFiniteBoundPos,
+/// #     check_rel_finite_start_end_bounds_for_interval_creation,
+/// # };
+/// let start = RelFiniteBoundPos::new(SignedDuration::from_hours(8)).to_finite_start_bound();
+/// let end = RelFiniteBoundPos::new(SignedDuration::from_hours(16)).to_finite_end_bound();
+///
+/// assert_eq!(
+///     check_rel_finite_start_end_bounds_for_interval_creation(&start, &end),
+///     Ok(())
+/// );
+/// ```
+pub fn check_rel_finite_start_end_bounds_for_interval_creation(
     start: &RelFiniteStartBound,
     end: &RelFiniteEndBound,
 ) -> Result<(), RelStartEndBoundsCheckForIntervalCreationError> {
@@ -183,69 +267,119 @@ pub fn check_relative_finite_start_end_bounds_for_interval_creation(
     }
 }
 
-/// Checks if the given start and end bound are ready for creating an interval
-///
-/// This method is used as part of
-/// [`prepare_relative_bound_pair_for_interval_creation`], which is used by
-/// [`RelBoundPair::new`], but also in other places where we want to make
-/// sure that a start and end bound are ready to be used as part of the interval
-/// without using methods like [`RelBoundPair::new`] that already go
-/// through this process.
+/// Checks whether the given start and end bounds are fit for creating an interval
 ///
 /// # Errors
 ///
-/// If the start bound is past the end bound,
-/// it returns
-/// [`StartPastEnd`](RelBoundPairCheckForIntervalCreationError::StartPastEnd).
+/// Returns [`StartPastEnd`](RelStartEndBoundsCheckForIntervalCreationError::StartPastEnd)
+/// if the start bound is positioned after the end bound.
 ///
-///
-/// If both bounds have the same offset, but at least one of them has an exclusive
-/// bound inclusivity, it returns
-/// [`SameOffsetButNotDoublyInclusive`](RelBoundPairCheckForIntervalCreationError::SameOffsetButNotDoublyInclusive).
+/// Returns [`SameOffsetButNotDoublyInclusive`](RelStartEndBoundsCheckForIntervalCreationError::SameOffsetButNotDoublyInclusive)
+/// if the bounds are positioned on the same offset but are not doubly inclusive.
 ///
 /// # Examples
 ///
+/// ## Start past end
+///
 /// ```
+/// # use jiff::SignedDuration;
 /// # use periodical::intervals::relative::{
-/// #     RelBoundPairCheckForIntervalCreationError, RelEndBound, RelStartBound,
-/// #     check_relative_bound_pair_for_interval_creation,
+/// #     RelFiniteBoundPos,
+/// #     RelStartEndBoundsCheckForIntervalCreationError,
+/// #     check_rel_start_end_bounds_for_interval_creation,
 /// # };
-/// fn validate_bounds_from_user(
-///     start: &RelStartBound,
-///     end: &RelEndBound,
-/// ) -> Result<(), String> {
-///     type IntervalCreaErr = RelBoundPairCheckForIntervalCreationError;
-///     match check_relative_bound_pair_for_interval_creation(start, end) {
-///         Ok(()) => Ok(()),
-///         Err(IntervalCreaErr::StartPastEnd) => Err(
-///             "Start and end must be in chronological order!".to_string()
-///         ),
-///         Err(IntervalCreaErr::SameOffsetButNotDoublyInclusive) => Err(
-///             "To represent a single point in offset, both inclusivities must be inclusive!".to_string()
-///         ),
-///     }
-/// }
+/// let start = RelFiniteBoundPos::new(SignedDuration::from_hours(16)).to_start_bound();
+/// let end = RelFiniteBoundPos::new(SignedDuration::from_hours(8)).to_end_bound();
+///
+/// assert_eq!(
+///     check_rel_start_end_bounds_for_interval_creation(&start, &end),
+///     Err(RelStartEndBoundsCheckForIntervalCreationError::StartPastEnd)
+/// );
 /// ```
-pub fn check_relative_start_end_bounds_for_interval_creation(
+///
+/// ## Same time but not doubly inclusive
+///
+/// ```
+/// # use jiff::SignedDuration;
+/// # use periodical::intervals::relative::{
+/// #     RelFiniteBoundPos,
+/// #     RelStartEndBoundsCheckForIntervalCreationError,
+/// #     check_rel_start_end_bounds_for_interval_creation,
+/// # };
+/// # use periodical::intervals::meta::BoundInclusivity;
+/// let offset = SignedDuration::from_hours(10);
+/// let start =
+///     RelFiniteBoundPos::new_with_incl(offset, BoundInclusivity::Exclusive).to_start_bound();
+/// let end = RelFiniteBoundPos::new(offset).to_end_bound();
+///
+/// assert_eq!(
+///     check_rel_start_end_bounds_for_interval_creation(&start, &end),
+///     Err(RelStartEndBoundsCheckForIntervalCreationError::SameOffsetButNotDoublyInclusive)
+/// );
+/// ```
+///
+/// ## OK
+///
+/// ```
+/// # use jiff::SignedDuration;
+/// # use periodical::intervals::relative::{
+/// #     RelFiniteBoundPos,
+/// #     check_rel_start_end_bounds_for_interval_creation,
+/// # };
+/// let start = RelFiniteBoundPos::new(SignedDuration::from_hours(8)).to_start_bound();
+/// let end = RelFiniteBoundPos::new(SignedDuration::from_hours(16)).to_end_bound();
+///
+/// assert_eq!(
+///     check_rel_start_end_bounds_for_interval_creation(&start, &end),
+///     Ok(())
+/// );
+/// ```
+pub fn check_rel_start_end_bounds_for_interval_creation(
     start: &RelStartBound,
     end: &RelEndBound,
 ) -> Result<(), RelStartEndBoundsCheckForIntervalCreationError> {
     match (start, end) {
         (RelStartBound::InfinitePast, _) | (_, RelEndBound::InfiniteFuture) => Ok(()),
         (RelStartBound::Finite(finite_start), RelEndBound::Finite(finite_end)) => {
-            check_relative_finite_start_end_bounds_for_interval_creation(finite_start, finite_end)
+            check_rel_finite_start_end_bounds_for_interval_creation(finite_start, finite_end)
         },
     }
 }
 
-pub fn prepare_relative_finite_start_end_bounds_for_interval_creation(
+/// Prepares a finite start and a finite end bound to be used for an interval
+///
+/// Checks whether the bounds are fit for creating an interval and automatically corrects
+/// any problem.
+///
+/// If the start bound is past the end bound, they are swapped.
+/// If the bounds are positioned on the same time but are not doubly inclusive, their bound inclusivities
+/// are set to [`Inclusive`](BoundInclusivity::Inclusive).
+///
+/// # Examples
+///
+/// ```
+/// # use jiff::SignedDuration;
+/// # use periodical::intervals::relative::{
+/// #     RelFiniteBoundPos,
+/// #     RelStartEndBoundsCheckForIntervalCreationError,
+/// #     prepare_rel_finite_start_end_bounds_for_interval_creation,
+/// # };
+/// let mut start = RelFiniteBoundPos::new(SignedDuration::from_hours(16)).to_finite_start_bound();
+/// let mut end = RelFiniteBoundPos::new(SignedDuration::from_hours(8)).to_finite_end_bound();
+///
+/// prepare_rel_finite_start_end_bounds_for_interval_creation(&mut start, &mut end);
+///
+/// assert_eq!(start.pos().offset(), SignedDuration::from_hours(8));
+/// assert_eq!(end.pos().offset(), SignedDuration::from_hours(16));
+/// ```
+pub fn prepare_rel_finite_start_end_bounds_for_interval_creation(
     start: &mut RelFiniteStartBound,
     end: &mut RelFiniteEndBound,
 ) -> bool {
-    match check_relative_finite_start_end_bounds_for_interval_creation(start, end) {
+    match check_rel_finite_start_end_bounds_for_interval_creation(start, end) {
         Ok(()) => false,
         Err(RelStartEndBoundsCheckForIntervalCreationError::StartPastEnd) => {
-            swap_relative_finite_start_end_bounds(start, end);
+            swap_rel_finite_start_end_bounds(start, end);
             true
         },
         Err(RelStartEndBoundsCheckForIntervalCreationError::SameOffsetButNotDoublyInclusive) => {
@@ -260,41 +394,43 @@ pub fn prepare_relative_finite_start_end_bounds_for_interval_creation(
     }
 }
 
-/// Prepares a start and end bound for being used as part of an interval
+/// Prepares a start and an end bound to be used for an interval
 ///
-/// If some problems are present, see
-/// [`check_relative_bound_pair_for_interval_creation`], it resolves them
-/// automatically by modifying the passed mutable references for the start and
-/// end bound.
+/// Checks whether the bounds are fit for creating an interval and automatically corrects
+/// any problem.
 ///
-/// The returned boolean indicates whether a change was operated in order to fix
-/// the given bounds.
+/// If the start bound is past the end bound, they are swapped.
+/// If the bounds are positioned on the same time but are not doubly inclusive, their bound inclusivities
+/// are set to [`Inclusive`](BoundInclusivity::Inclusive).
 ///
 /// # Examples
 ///
 /// ```
-/// # use std::error::Error;
-/// # use jiff::Offsetstamp;
-/// # use periodical::intervals::relative::{RelFiniteBoundPos, prepare_relative_bound_pair_for_interval_creation};
-/// let start_offset = "2025-01-01 16:00:00Z".parse::<Offsetstamp>()?;
-/// let end_offset = "2025-01-01 08:00:00Z".parse::<Offsetstamp>()?;
+/// # use jiff::SignedDuration;
+/// # use periodical::intervals::relative::{
+/// #     RelFiniteBoundPos,
+/// #     RelStartEndBoundsCheckForIntervalCreationError,
+/// #     prepare_rel_bound_pair_for_interval_creation,
+/// # };
+/// let mut start = RelFiniteBoundPos::new(SignedDuration::from_hours(16)).to_start_bound();
+/// let mut end = RelFiniteBoundPos::new(SignedDuration::from_hours(8)).to_end_bound();
 ///
-/// // Warning: not in chronological order!
-/// let mut start = RelFiniteBoundPos::new(start_offset).to_start_bound();
-/// let mut end = RelFiniteBoundPos::new(end_offset).to_end_bound();
+/// prepare_rel_bound_pair_for_interval_creation(&mut start, &mut end);
 ///
-/// let was_changed = prepare_relative_bound_pair_for_interval_creation(&mut start, &mut end);
-///
-/// if was_changed {
-///     // Prompt the user for confirmation regarding the fixed bounds
-/// }
-/// # Ok::<(), Box<dyn Error>>(())
+/// assert_eq!(
+///     start,
+///     RelFiniteBoundPos::new(SignedDuration::from_hours(8)).to_start_bound()
+/// );
+/// assert_eq!(
+///     end,
+///     RelFiniteBoundPos::new(SignedDuration::from_hours(16)).to_end_bound()
+/// );
 /// ```
-pub fn prepare_relative_bound_pair_for_interval_creation(start: &mut RelStartBound, end: &mut RelEndBound) -> bool {
-    match check_relative_start_end_bounds_for_interval_creation(start, end) {
+pub fn prepare_rel_bound_pair_for_interval_creation(start: &mut RelStartBound, end: &mut RelEndBound) -> bool {
+    match check_rel_start_end_bounds_for_interval_creation(start, end) {
         Ok(()) => false,
         Err(RelStartEndBoundsCheckForIntervalCreationError::StartPastEnd) => {
-            swap_relative_start_end_bounds(start, end);
+            swap_rel_start_end_bounds(start, end);
             true
         },
         Err(RelStartEndBoundsCheckForIntervalCreationError::SameOffsetButNotDoublyInclusive) => {

@@ -28,7 +28,7 @@ use crate::intervals::absolute::{
     HalfBoundedAbsInterval,
     HasAbsBoundPair,
     HasEmptiableAbsBoundPair,
-    swap_absolute_start_end_bounds,
+    swap_abs_start_end_bounds,
 };
 use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
 use crate::intervals::ops::{BoundOrd, BoundOrdering, BoundOverlapAmbiguity};
@@ -43,7 +43,7 @@ use crate::intervals::relative::{
     RelEndBound,
     RelInterval,
     RelStartBound,
-    swap_relative_start_end_bounds,
+    swap_rel_start_end_bounds,
 };
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 
@@ -668,7 +668,7 @@ pub fn abridge_abs_bound_pair(lhs_bound_pair: &AbsBoundPair, rhs_bound_pair: &Ab
             }
         },
         BoundOrdering::Greater => {
-            swap_absolute_start_end_bounds(&mut highest_start, &mut lowest_end);
+            swap_abs_start_end_bounds(&mut highest_start, &mut lowest_end);
 
             if let AbsStartBound::Finite(ref mut finite_start) = highest_start {
                 let new_incl = finite_start.pos().inclusivity().opposite();
@@ -770,7 +770,7 @@ pub fn abridge_rel_bound_pair(lhs_bound_pair: &RelBoundPair, rhs_bound_pair: &Re
             }
         },
         BoundOrdering::Greater => {
-            swap_relative_start_end_bounds(&mut highest_start, &mut lowest_end);
+            swap_rel_start_end_bounds(&mut highest_start, &mut lowest_end);
 
             if let RelStartBound::Finite(ref mut finite_start) = highest_start {
                 let new_incl = finite_start.pos().inclusivity().opposite();

@@ -44,8 +44,8 @@ use crate::intervals::relative::{
     RelEndBound,
     RelInterval,
     RelStartBound,
-    check_relative_start_end_bounds_for_interval_creation,
-    prepare_relative_bound_pair_for_interval_creation,
+    check_rel_start_end_bounds_for_interval_creation,
+    prepare_rel_bound_pair_for_interval_creation,
 };
 use crate::intervals::special::UnboundedInterval;
 
@@ -141,7 +141,7 @@ impl RelBoundPair {
     /// ```
     #[must_use]
     pub fn new(mut start: RelStartBound, mut end: RelEndBound) -> Self {
-        prepare_relative_bound_pair_for_interval_creation(&mut start, &mut end);
+        prepare_rel_bound_pair_for_interval_creation(&mut start, &mut end);
         Self::unchecked_new(start, end)
     }
 
@@ -340,7 +340,7 @@ impl RelBoundPair {
     /// assert_eq!(bound_pair.end(), end);
     /// ```
     pub fn set_start(&mut self, new_start: RelStartBound) -> bool {
-        match check_relative_start_end_bounds_for_interval_creation(&new_start, &self.end()) {
+        match check_rel_start_end_bounds_for_interval_creation(&new_start, &self.end()) {
             Ok(()) => {
                 self.unchecked_set_start(new_start);
                 true
@@ -379,7 +379,7 @@ impl RelBoundPair {
     /// assert_eq!(bound_pair.end(), end);
     /// ```
     pub fn set_end(&mut self, new_end: RelEndBound) -> bool {
-        match check_relative_start_end_bounds_for_interval_creation(&self.start(), &new_end) {
+        match check_rel_start_end_bounds_for_interval_creation(&self.start(), &new_end) {
             Ok(()) => {
                 self.unchecked_set_end(new_end);
                 true

@@ -30,8 +30,8 @@ use crate::intervals::absolute::{
     EmptiableAbsInterval,
     HalfBoundedAbsInterval,
     HasEmptiableAbsBoundPair,
-    check_absolute_start_end_bounds_for_interval_creation,
-    prepare_absolute_bound_pair_for_interval_creation,
+    check_abs_start_end_bounds_for_interval_creation,
+    prepare_abs_bound_pair_for_interval_creation,
 };
 use crate::intervals::meta::{
     BoundInclusivity,
@@ -144,7 +144,7 @@ impl AbsBoundPair {
     /// ```
     #[must_use]
     pub fn new(mut start: AbsStartBound, mut end: AbsEndBound) -> Self {
-        prepare_absolute_bound_pair_for_interval_creation(&mut start, &mut end);
+        prepare_abs_bound_pair_for_interval_creation(&mut start, &mut end);
         Self::unchecked_new(start, end)
     }
 
@@ -355,7 +355,7 @@ impl AbsBoundPair {
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn set_start(&mut self, new_start: AbsStartBound) -> bool {
-        match check_absolute_start_end_bounds_for_interval_creation(&new_start, &self.end()) {
+        match check_abs_start_end_bounds_for_interval_creation(&new_start, &self.end()) {
             Ok(()) => {
                 self.unchecked_set_start(new_start);
                 true
@@ -396,7 +396,7 @@ impl AbsBoundPair {
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn set_end(&mut self, new_end: AbsEndBound) -> bool {
-        match check_absolute_start_end_bounds_for_interval_creation(&self.start(), &new_end) {
+        match check_abs_start_end_bounds_for_interval_creation(&self.start(), &new_end) {
             Ok(()) => {
                 self.unchecked_set_end(new_end);
                 true
