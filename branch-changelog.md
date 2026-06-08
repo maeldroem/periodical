@@ -70,6 +70,7 @@ TODO: once all done, PR onto dev to sync, then continue unit tests
           - `interval`
       - `set_ops`
         - `diff`
+        - `intersect`
 
 - Tests to complete code coverage for `time`
 - Tests to complete code coverage for `ops`

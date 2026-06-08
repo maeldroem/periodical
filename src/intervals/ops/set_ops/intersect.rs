@@ -1,4 +1,4 @@
-//! Interval intersection
+//! Intersection between two intervals
 
 use crate::intervals::absolute::{
     AbsBoundPair,
@@ -34,55 +34,25 @@ use crate::ops::IntersectionResult;
 ///
 /// ```
 /// # use std::error::Error;
-/// # use jiff::Zoned;
+/// # use jiff::Timestamp;
 /// # use periodical::ops::IntersectionResult;
 /// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos};
 /// # use periodical::intervals::ops::set_ops::Intersectable;
 /// let first_interval = AbsBoundPair::new(
-///     AbsFiniteBoundPos::new(
-///         "2025-01-01 08:00:00[Europe/Oslo]"
-///             .parse::<Zoned>()?
-///             .timestamp(),
-///     )
-///     .to_start_bound(),
-///     AbsFiniteBoundPos::new(
-///         "2025-01-01 14:00:00[Europe/Oslo]"
-///             .parse::<Zoned>()?
-///             .timestamp(),
-///     )
-///     .to_end_bound(),
+///     AbsFiniteBoundPos::new("2025-01-01 08:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+///     AbsFiniteBoundPos::new("2025-01-01 14:00:00Z".parse::<Timestamp>()?).to_end_bound(),
 /// );
 ///
 /// let second_interval = AbsBoundPair::new(
-///     AbsFiniteBoundPos::new(
-///         "2025-01-01 12:00:00[Europe/Oslo]"
-///             .parse::<Zoned>()?
-///             .timestamp(),
-///     )
-///     .to_start_bound(),
-///     AbsFiniteBoundPos::new(
-///         "2025-01-01 18:00:00[Europe/Oslo]"
-///             .parse::<Zoned>()?
-///             .timestamp(),
-///     )
-///     .to_end_bound(),
+///     AbsFiniteBoundPos::new("2025-01-01 12:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+///     AbsFiniteBoundPos::new("2025-01-01 18:00:00Z".parse::<Timestamp>()?).to_end_bound(),
 /// );
 ///
 /// assert_eq!(
 ///     first_interval.intersect(&second_interval),
 ///     IntersectionResult::Intersected(AbsBoundPair::new(
-///         AbsFiniteBoundPos::new(
-///             "2025-01-01 12:00:00[Europe/Oslo]"
-///                 .parse::<Zoned>()?
-///                 .timestamp(),
-///         )
-///         .to_start_bound(),
-///         AbsFiniteBoundPos::new(
-///             "2025-01-01 14:00:00[Europe/Oslo]"
-///                 .parse::<Zoned>()?
-///                 .timestamp(),
-///         )
-///         .to_end_bound(),
+///         AbsFiniteBoundPos::new("2025-01-01 12:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+///         AbsFiniteBoundPos::new("2025-01-01 14:00:00Z".parse::<Timestamp>()?).to_end_bound(),
 ///     )),
 /// );
 /// # Ok::<(), Box<dyn Error>>(())
@@ -92,38 +62,18 @@ use crate::ops::IntersectionResult;
 ///
 /// ```
 /// # use std::error::Error;
-/// # use jiff::Zoned;
+/// # use jiff::Timestamp;
 /// # use periodical::ops::IntersectionResult;
 /// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos};
 /// # use periodical::intervals::ops::set_ops::Intersectable;
 /// let first_interval = AbsBoundPair::new(
-///     AbsFiniteBoundPos::new(
-///         "2025-01-01 08:00:00[Europe/Oslo]"
-///             .parse::<Zoned>()?
-///             .timestamp(),
-///     )
-///     .to_start_bound(),
-///     AbsFiniteBoundPos::new(
-///         "2025-01-01 12:00:00[Europe/Oslo]"
-///             .parse::<Zoned>()?
-///             .timestamp(),
-///     )
-///     .to_end_bound(),
+///     AbsFiniteBoundPos::new("2025-01-01 08:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+///     AbsFiniteBoundPos::new("2025-01-01 12:00:00Z".parse::<Timestamp>()?).to_end_bound(),
 /// );
 ///
 /// let second_interval = AbsBoundPair::new(
-///     AbsFiniteBoundPos::new(
-///         "2025-01-01 14:00:00[Europe/Oslo]"
-///             .parse::<Zoned>()?
-///             .timestamp(),
-///     )
-///     .to_start_bound(),
-///     AbsFiniteBoundPos::new(
-///         "2025-01-01 18:00:00[Europe/Oslo]"
-///             .parse::<Zoned>()?
-///             .timestamp(),
-///     )
-///     .to_end_bound(),
+///     AbsFiniteBoundPos::new("2025-01-01 14:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+///     AbsFiniteBoundPos::new("2025-01-01 18:00:00Z".parse::<Timestamp>()?).to_end_bound(),
 /// );
 ///
 /// assert_eq!(
@@ -133,7 +83,7 @@ use crate::ops::IntersectionResult;
 /// # Ok::<(), Box<dyn Error>>(())
 /// ```
 pub trait Intersectable<Rhs = Self> {
-    /// Output type
+    /// Type of the resulting intersected interval
     type Output;
 
     /// Intersects two intervals using the default overlap rules
@@ -142,55 +92,25 @@ pub trait Intersectable<Rhs = Self> {
     ///
     /// ```
     /// # use std::error::Error;
-    /// # use jiff::Zoned;
+    /// # use jiff::Timestamp;
     /// # use periodical::ops::IntersectionResult;
     /// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos};
     /// # use periodical::intervals::ops::set_ops::Intersectable;
     /// let first_interval = AbsBoundPair::new(
-    ///     AbsFiniteBoundPos::new(
-    ///         "2025-01-01 08:00:00[Europe/Oslo]"
-    ///             .parse::<Zoned>()?
-    ///             .timestamp(),
-    ///     )
-    ///     .to_start_bound(),
-    ///     AbsFiniteBoundPos::new(
-    ///         "2025-01-01 14:00:00[Europe/Oslo]"
-    ///             .parse::<Zoned>()?
-    ///             .timestamp(),
-    ///     )
-    ///     .to_end_bound(),
+    ///     AbsFiniteBoundPos::new("2025-01-01 08:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+    ///     AbsFiniteBoundPos::new("2025-01-01 14:00:00Z".parse::<Timestamp>()?).to_end_bound(),
     /// );
     ///
     /// let second_interval = AbsBoundPair::new(
-    ///     AbsFiniteBoundPos::new(
-    ///         "2025-01-01 12:00:00[Europe/Oslo]"
-    ///             .parse::<Zoned>()?
-    ///             .timestamp(),
-    ///     )
-    ///     .to_start_bound(),
-    ///     AbsFiniteBoundPos::new(
-    ///         "2025-01-01 18:00:00[Europe/Oslo]"
-    ///             .parse::<Zoned>()?
-    ///             .timestamp(),
-    ///     )
-    ///     .to_end_bound(),
+    ///     AbsFiniteBoundPos::new("2025-01-01 12:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+    ///     AbsFiniteBoundPos::new("2025-01-01 18:00:00Z".parse::<Timestamp>()?).to_end_bound(),
     /// );
     ///
     /// assert_eq!(
     ///     first_interval.intersect(&second_interval),
     ///     IntersectionResult::Intersected(AbsBoundPair::new(
-    ///         AbsFiniteBoundPos::new(
-    ///             "2025-01-01 12:00:00[Europe/Oslo]"
-    ///                 .parse::<Zoned>()?
-    ///                 .timestamp(),
-    ///         )
-    ///         .to_start_bound(),
-    ///         AbsFiniteBoundPos::new(
-    ///             "2025-01-01 14:00:00[Europe/Oslo]"
-    ///                 .parse::<Zoned>()?
-    ///                 .timestamp(),
-    ///         )
-    ///         .to_end_bound(),
+    ///         AbsFiniteBoundPos::new("2025-01-01 12:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+    ///         AbsFiniteBoundPos::new("2025-01-01 14:00:00Z".parse::<Timestamp>()?).to_end_bound(),
     ///     )),
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
@@ -204,53 +124,49 @@ pub trait Intersectable<Rhs = Self> {
     ///
     /// ```
     /// # use std::error::Error;
-    /// # use jiff::Zoned;
+    /// # use jiff::Timestamp;
     /// # use periodical::ops::IntersectionResult;
-    /// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos, EmptiableAbsBoundPair};
+    /// # use periodical::intervals::absolute::{
+    /// #     AbsBoundPair,
+    /// #     AbsFiniteBoundPos,
+    /// #     EmptiableAbsBoundPair,
+    /// # };
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::abridge::Abridgable;
     /// # use periodical::intervals::ops::set_ops::Intersectable;
     /// let first_interval = AbsBoundPair::new(
-    ///     AbsFiniteBoundPos::new(
-    ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_start_bound(),
-    ///     AbsFiniteBoundPos::new(
-    ///         "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_end_bound(),
+    ///     AbsFiniteBoundPos::new("2025-01-01 08:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+    ///     AbsFiniteBoundPos::new("2025-01-01 12:00:00Z".parse::<Timestamp>()?).to_end_bound(),
     /// );
     ///
     /// let second_interval = AbsBoundPair::new(
-    ///     AbsFiniteBoundPos::new(
-    ///         "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_start_bound(),
-    ///     AbsFiniteBoundPos::new(
-    ///         "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_end_bound(),
+    ///     AbsFiniteBoundPos::new("2025-01-01 14:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+    ///     AbsFiniteBoundPos::new("2025-01-01 18:00:00Z".parse::<Timestamp>()?).to_end_bound(),
     /// );
     ///
-    /// let intersection_closure = |
-    ///     a: &AbsBoundPair,
-    ///     b: &AbsBoundPair,
-    /// | -> IntersectionResult<AbsBoundPair> {
-    ///     // Always abridge intervals
-    ///     if let EmptiableAbsBoundPair::Bound(abridged) = a.abridge(b) {
-    ///         IntersectionResult::Intersected(abridged)
-    ///     } else {
-    ///         IntersectionResult::Separate
-    ///     }
-    /// };
+    /// let intersection_closure =
+    ///     |a: &AbsBoundPair, b: &AbsBoundPair| -> IntersectionResult<AbsBoundPair> {
+    ///         // Always abridge intervals
+    ///         if let EmptiableAbsBoundPair::Bound(abridged) = a.abridge(b) {
+    ///             IntersectionResult::Intersected(abridged)
+    ///         } else {
+    ///             IntersectionResult::Separate
+    ///         }
+    ///     };
     ///
     /// assert_eq!(
     ///     first_interval.intersect_with(&second_interval, intersection_closure),
     ///     IntersectionResult::Intersected(AbsBoundPair::new(
     ///         AbsFiniteBoundPos::new_with_incl(
-    ///             "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///             "2025-01-01 12:00:00Z".parse::<Timestamp>()?,
     ///             BoundInclusivity::Exclusive,
-    ///         ).to_start_bound(),
+    ///         )
+    ///         .to_start_bound(),
     ///         AbsFiniteBoundPos::new_with_incl(
-    ///             "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+    ///             "2025-01-01 14:00:00Z".parse::<Timestamp>()?,
     ///             BoundInclusivity::Exclusive,
-    ///         ).to_end_bound(),
+    ///         )
+    ///         .to_end_bound(),
     ///     )),
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
@@ -523,8 +439,7 @@ where
 ///
 /// # Panics
 ///
-/// Panics if two strictly overlapping bounds, when abridged, returns
-/// [`EmptiableAbsBoundPair::Empty`]
+/// Panics if two strictly overlapping bounds, when abridged, returns [`EmptiableAbsBoundPair::Empty`]
 #[must_use]
 pub fn intersect_abs_bound_pair(a: &AbsBoundPair, b: &AbsBoundPair) -> IntersectionResult<AbsBoundPair> {
     if !a.simple_overlaps(b) {
@@ -547,8 +462,7 @@ pub fn intersect_abs_bound_pair(a: &AbsBoundPair, b: &AbsBoundPair) -> Intersect
 ///
 /// # Panics
 ///
-/// Panics if two strictly overlapping bounds, when abridged, returns
-/// [`EmptiableAbsBoundPair::Empty`]
+/// Panics if two strictly overlapping bounds, when abridged, returns [`EmptiableAbsBoundPair::Empty`]
 #[must_use]
 pub fn intersect_abs_bound_pair_with_emptiable_abs_bound_pair(
     a: &AbsBoundPair,
@@ -589,8 +503,7 @@ pub fn intersect_emptiable_abs_bound_pair(
 ///
 /// # Panics
 ///
-/// Panics if two strictly overlapping bounds, when abridged, returns
-/// [`EmptiableRelBoundPair::Empty`]
+/// Panics if two strictly overlapping bounds, when abridged, returns [`EmptiableRelBoundPair::Empty`]
 #[must_use]
 pub fn intersect_rel_bound_pair(a: &RelBoundPair, b: &RelBoundPair) -> IntersectionResult<RelBoundPair> {
     if !a.simple_overlaps(b) {
@@ -613,8 +526,7 @@ pub fn intersect_rel_bound_pair(a: &RelBoundPair, b: &RelBoundPair) -> Intersect
 ///
 /// # Panics
 ///
-/// Panics if two strictly overlapping bounds, when abridged, returns
-/// [`EmptiableRelBoundPair::Empty`]
+/// Panics if two strictly overlapping bounds, when abridged, returns [`EmptiableRelBoundPair::Empty`]
 #[must_use]
 pub fn intersect_rel_bound_pair_with_emptiable_rel_bound_pair(
     a: &RelBoundPair,
