@@ -73,6 +73,7 @@ TODO: once all done, PR onto dev to sync, then continue unit tests
         - `intersect`
         - `sym_diff`
         - `unite`
+      - `bound_containment`
 
 - Tests to complete code coverage for `time`
 - Tests to complete code coverage for `ops`
@@ -147,6 +148,8 @@ TODO: once all done, PR onto dev to sync, then continue unit tests
 - Renamed `new_with_inclusivity` on `*FiniteBoundPos` to `new_with_incl` to reduce space taken
 - Renamed `Differentiable`'s methods to reduce space taken
 - Renamed `SymmetricallyDifferentiable`'s methods to reduce space taken
+- Renamed `BoundContainmentPosition` to `BoundContainmentPos` to reduce space taken
+- Renamed `DisambiguatedBoundContainmentPosition` to `DisambiguatedBoundContainmentPos` to reduce space taken
 
 ## Deprecated
 
