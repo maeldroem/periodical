@@ -1,4 +1,4 @@
-//! Interval difference
+//! Difference between two intervals
 
 use crate::intervals::absolute::{
     AbsBoundPair,
@@ -37,7 +37,7 @@ use crate::ops::{ComplementResult, DifferenceResult};
 /// an interval with another, the latter being used as the _remover_ of the
 /// former.
 ///
-/// [set difference]: https://en.wikipedia.org/w/index.php?title=Complement_(set_theory)&oldid=1272128427#Rel_complement
+/// [set difference]: https://en.wikipedia.org/w/index.php?title=Complement_(set_theory)&oldid=1355557106#Relative_complement
 ///
 /// # Examples
 ///
@@ -45,40 +45,40 @@ use crate::ops::{ComplementResult, DifferenceResult};
 ///
 /// ```
 /// # use std::error::Error;
-/// # use jiff::Zoned;
+/// # use jiff::Timestamp;
 /// # use periodical::ops::DifferenceResult;
 /// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos, EmptiableAbsBoundPair};
 /// # use periodical::intervals::meta::BoundInclusivity;
 /// # use periodical::intervals::ops::set_ops::Differentiable;
 /// let interval = AbsBoundPair::new(
 ///     AbsFiniteBoundPos::new(
-///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///         "2025-01-01 08:00:00Z".parse::<Timestamp>()?,
 ///     ).to_start_bound(),
 ///     AbsFiniteBoundPos::new(
-///         "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///         "2025-01-01 14:00:00Z".parse::<Timestamp>()?,
 ///     ).to_end_bound(),
 /// );
 ///
 /// let remover = AbsBoundPair::new(
 ///     AbsFiniteBoundPos::new(
-///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///         "2025-01-01 10:00:00Z".parse::<Timestamp>()?,
 ///     ).to_start_bound(),
 ///     AbsFiniteBoundPos::new(
-///         "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///         "2025-01-01 18:00:00Z".parse::<Timestamp>()?,
 ///     ).to_end_bound(),
 /// );
 ///
 /// assert_eq!(
 ///     interval.differentiate(&remover),
-///     DifferenceResult::Single(EmptiableAbsBoundPair::Bound(AbsBoundPair::new(
+///     DifferenceResult::Single(AbsBoundPair::new(
 ///         AbsFiniteBoundPos::new(
-///             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///             "2025-01-01 08:00:00Z".parse::<Timestamp>()?,
 ///         ).to_start_bound(),
 ///         AbsFiniteBoundPos::new_with_incl(
-///             "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///             "2025-01-01 10:00:00Z".parse::<Timestamp>()?,
 ///             BoundInclusivity::Exclusive,
 ///         ).to_end_bound(),
-///     ))),
+///     ).to_emptiable()),
 /// );
 /// # Ok::<(), Box<dyn Error>>(())
 /// ```
@@ -87,40 +87,28 @@ use crate::ops::{ComplementResult, DifferenceResult};
 ///
 /// ```
 /// # use std::error::Error;
-/// # use jiff::Zoned;
+/// # use jiff::Timestamp;
 /// # use periodical::ops::DifferenceResult;
-/// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos, EmptiableAbsBoundPair};
+/// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos};
 /// # use periodical::intervals::ops::set_ops::Differentiable;
 /// let interval = AbsBoundPair::new(
-///     AbsFiniteBoundPos::new(
-///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-///     ).to_start_bound(),
-///     AbsFiniteBoundPos::new(
-///         "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-///     ).to_end_bound(),
+///     AbsFiniteBoundPos::new("2025-01-01 08:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+///     AbsFiniteBoundPos::new("2025-01-01 12:00:00Z".parse::<Timestamp>()?).to_end_bound(),
 /// );
 ///
 /// let remover = AbsBoundPair::new(
-///     AbsFiniteBoundPos::new(
-///         "2025-01-01 13:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-///     ).to_start_bound(),
-///     AbsFiniteBoundPos::new(
-///         "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-///     ).to_end_bound(),
+///     AbsFiniteBoundPos::new("2025-01-01 13:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+///     AbsFiniteBoundPos::new("2025-01-01 18:00:00Z".parse::<Timestamp>()?).to_end_bound(),
 /// );
 ///
-/// assert_eq!(
-///     interval.differentiate(&remover),
-///     DifferenceResult::Separate,
-/// );
+/// assert_eq!(interval.differentiate(&remover), DifferenceResult::Separate,);
 /// # Ok::<(), Box<dyn Error>>(())
 /// ```
 pub trait Differentiable<Rhs = Self> {
-    /// Output type
+    /// Type of the resulting differentiated interval
     type Output;
 
-    /// Differentiates the interval with the given one using default overlap
-    /// rules
+    /// Differentiates the interval with the given one using default overlap rules
     ///
     /// `self` is the one differentiated by the given other interval: same
     /// operand order as the mathematical expression for a set difference.
@@ -129,40 +117,35 @@ pub trait Differentiable<Rhs = Self> {
     ///
     /// ```
     /// # use std::error::Error;
-    /// # use jiff::Zoned;
+    /// # use jiff::Timestamp;
     /// # use periodical::ops::DifferenceResult;
-    /// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos, EmptiableAbsBoundPair};
+    /// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::set_ops::Differentiable;
     /// let interval = AbsBoundPair::new(
-    ///     AbsFiniteBoundPos::new(
-    ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_start_bound(),
-    ///     AbsFiniteBoundPos::new(
-    ///         "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_end_bound(),
+    ///     AbsFiniteBoundPos::new("2025-01-01 08:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+    ///     AbsFiniteBoundPos::new("2025-01-01 14:00:00Z".parse::<Timestamp>()?).to_end_bound(),
     /// );
     ///
     /// let remover = AbsBoundPair::new(
-    ///     AbsFiniteBoundPos::new(
-    ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_start_bound(),
-    ///     AbsFiniteBoundPos::new(
-    ///         "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_end_bound(),
+    ///     AbsFiniteBoundPos::new("2025-01-01 10:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+    ///     AbsFiniteBoundPos::new("2025-01-01 18:00:00Z".parse::<Timestamp>()?).to_end_bound(),
     /// );
     ///
     /// assert_eq!(
     ///     interval.differentiate(&remover),
-    ///     DifferenceResult::Single(EmptiableAbsBoundPair::Bound(AbsBoundPair::new(
-    ///         AbsFiniteBoundPos::new(
-    ///             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///         ).to_start_bound(),
-    ///         AbsFiniteBoundPos::new_with_incl(
-    ///             "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///             BoundInclusivity::Exclusive,
-    ///         ).to_end_bound(),
-    ///     ))),
+    ///     DifferenceResult::Single(
+    ///         AbsBoundPair::new(
+    ///             AbsFiniteBoundPos::new("2025-01-01 08:00:00Z".parse::<Timestamp>()?)
+    ///                 .to_start_bound(),
+    ///             AbsFiniteBoundPos::new_with_incl(
+    ///                 "2025-01-01 10:00:00Z".parse::<Timestamp>()?,
+    ///                 BoundInclusivity::Exclusive,
+    ///             )
+    ///             .to_end_bound(),
+    ///         )
+    ///         .to_emptiable()
+    ///     ),
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
@@ -175,61 +158,65 @@ pub trait Differentiable<Rhs = Self> {
     ///
     /// ```
     /// # use std::error::Error;
-    /// # use jiff::Zoned;
+    /// # use jiff::Timestamp;
     /// # use periodical::ops::DifferenceResult;
-    /// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos, EmptiableAbsBoundPair};
+    /// # use periodical::intervals::absolute::{
+    /// #     AbsBoundPair,
+    /// #     AbsFiniteBoundPos,
+    /// #     EmptiableAbsBoundPair,
+    /// # };
     /// # use periodical::intervals::meta::BoundInclusivity;
-    /// # use periodical::intervals::ops::overlap::{CanPositionOverlap, DisambiguatedOverlapPosition, OverlapRuleSet};
+    /// # use periodical::intervals::ops::overlap::{
+    /// #     CanPositionOverlap,
+    /// #     DisambiguatedOverlapPosition,
+    /// #     OverlapRuleSet,
+    /// # };
     /// # use periodical::intervals::ops::remove_overlap::OverlapRemovable;
     /// # use periodical::intervals::ops::set_ops::Differentiable;
     /// let interval = AbsBoundPair::new(
-    ///     AbsFiniteBoundPos::new(
-    ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_start_bound(),
-    ///     AbsFiniteBoundPos::new(
-    ///         "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_end_bound(),
+    ///     AbsFiniteBoundPos::new("2025-01-01 08:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+    ///     AbsFiniteBoundPos::new("2025-01-01 14:00:00Z".parse::<Timestamp>()?).to_end_bound(),
     /// );
     ///
     /// let remover = AbsBoundPair::new(
-    ///     AbsFiniteBoundPos::new(
-    ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_start_bound(),
-    ///     AbsFiniteBoundPos::new(
-    ///         "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///     ).to_end_bound(),
+    ///     AbsFiniteBoundPos::new("2025-01-01 10:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+    ///     AbsFiniteBoundPos::new("2025-01-01 18:00:00Z".parse::<Timestamp>()?).to_end_bound(),
     /// );
     ///
     /// // Only differentiate if it just crosses the other
-    /// let difference_closure = |
-    ///     a: &AbsBoundPair,
-    ///     b: &AbsBoundPair,
-    /// | -> DifferenceResult<EmptiableAbsBoundPair> {
+    /// let difference_closure = |a: &AbsBoundPair,
+    ///                           b: &AbsBoundPair|
+    ///  -> DifferenceResult<EmptiableAbsBoundPair> {
     ///     match a.disambiguated_overlap_position(b, OverlapRuleSet::Strict) {
-    ///         Ok(DisambiguatedOverlapPosition::CrossesStart | DisambiguatedOverlapPosition::CrossesEnd) => {
-    ///             DifferenceResult::Single(
-    ///                 a
-    ///                 .remove_overlap(b)
+    ///         Ok(
+    ///             DisambiguatedOverlapPosition::CrossesStart
+    ///             | DisambiguatedOverlapPosition::CrossesEnd,
+    ///         ) => DifferenceResult::Single(
+    ///             a.remove_overlap(b)
     ///                 .expect("They overlap already")
     ///                 .single()
-    ///                 .expect("Since they only cross each other, only a single element will be produced")
-    ///             )
-    ///         },
+    ///                 .expect(
+    ///                     "Since they only cross each other, only a single element will be produced",
+    ///                 ),
+    ///         ),
     ///         _ => DifferenceResult::Separate,
     ///     }
     /// };
     ///
     /// assert_eq!(
     ///     interval.differentiate_with(&remover, difference_closure),
-    ///     DifferenceResult::Single(EmptiableAbsBoundPair::Bound(AbsBoundPair::new(
-    ///         AbsFiniteBoundPos::new(
-    ///             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///         ).to_start_bound(),
-    ///         AbsFiniteBoundPos::new_with_incl(
-    ///             "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-    ///             BoundInclusivity::Exclusive,
-    ///         ).to_end_bound(),
-    ///     ))),
+    ///     DifferenceResult::Single(
+    ///         AbsBoundPair::new(
+    ///             AbsFiniteBoundPos::new("2025-01-01 08:00:00Z".parse::<Timestamp>()?)
+    ///                 .to_start_bound(),
+    ///             AbsFiniteBoundPos::new_with_incl(
+    ///                 "2025-01-01 10:00:00Z".parse::<Timestamp>()?,
+    ///                 BoundInclusivity::Exclusive,
+    ///             )
+    ///             .to_end_bound(),
+    ///         )
+    ///         .to_emptiable()
+    ///     ),
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
