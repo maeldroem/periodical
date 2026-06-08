@@ -1,8 +1,7 @@
 //! Interval abridging
 //!
-//! Abridging is similar to the inverse of
-//! [`Extensible`](crate::intervals::ops::extend::Extensible). That is to say it
-//! will take the _highest_ start bound and link it to the _lowest_ end bound.
+//! Abridging is similar to the inverse of [`Extensible`](crate::intervals::ops::extend::Extensible).
+//! That is to say it will take the _highest_ start bound and link it to the _lowest_ end bound.
 //!
 //! If the highest start and the lowest end are equal and both are inclusive or
 //! exclusive, it returns a bound of this instant.
@@ -31,7 +30,13 @@ use crate::intervals::absolute::{
     swap_abs_start_end_bounds,
 };
 use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
-use crate::intervals::ops::{BoundOrd, BoundOrdering, BoundOverlapAmbiguity};
+use crate::intervals::ops::{
+    BoundOrd,
+    BoundOrdExtremaOps,
+    BoundOrdering,
+    BoundOverlapAmbiguity,
+    BoundOverlapDisambiguationRuleSet,
+};
 use crate::intervals::relative::{
     BoundedRelInterval,
     EmptiableRelBoundPair,
@@ -218,9 +223,8 @@ macro_rules! abridgable_impl {
 
 /// Capacity to abridge an interval with another
 ///
-/// Abridging is similar to the inverse of
-/// [`Extensible`](crate::intervals::ops::extend::Extensible). That is to say it
-/// will take the _highest_ start bound and link it to the _lowest_ end bound.
+/// Abridging is similar to the inverse of [`Extensible`](crate::intervals::ops::extend::Extensible).
+/// That is to say it will take the _highest_ start bound and link it to the _lowest_ end bound.
 ///
 /// If the highest start and the lowest end are equal and both are inclusive or
 /// exclusive, it returns a bound of this instant.
@@ -237,28 +241,20 @@ macro_rules! abridgable_impl {
 ///
 /// ```
 /// # use std::error::Error;
-/// # use jiff::Zoned;
+/// # use jiff::Timestamp;
 /// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos};
 /// # use periodical::intervals::meta::BoundInclusivity;
 /// # use periodical::intervals::ops::abridge::Abridgable;
-/// let first_start_time = "2025-01-01 08:00:00[Europe/Oslo]"
-///     .parse::<Zoned>()?
-///     .timestamp();
-/// let first_end_time = "2025-01-01 11:00:00[Europe/Oslo]"
-///     .parse::<Zoned>()?
-///     .timestamp();
+/// let first_start_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
+/// let first_end_time = "2025-01-01 11:00:00Z".parse::<Timestamp>()?;
 ///
 /// let first_interval = AbsBoundPair::new(
 ///     AbsFiniteBoundPos::new(first_start_time).to_start_bound(),
 ///     AbsFiniteBoundPos::new(first_end_time).to_end_bound(),
 /// );
 ///
-/// let second_start_time = "2025-01-01 13:00:00[Europe/Oslo]"
-///     .parse::<Zoned>()?
-///     .timestamp();
-/// let second_end_time = "2025-01-01 16:00:00[Europe/Oslo]"
-///     .parse::<Zoned>()?
-///     .timestamp();
+/// let second_start_time = "2025-01-01 13:00:00Z".parse::<Timestamp>()?;
+/// let second_end_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
 ///
 /// let second_interval = AbsBoundPair::new(
 ///     AbsFiniteBoundPos::new(second_start_time).to_start_bound(),
@@ -277,7 +273,7 @@ macro_rules! abridgable_impl {
 ///         .bound()
 ///         .ok_or("Empty abridged interval")?
 ///         .start(),
-///     AbsFiniteBoundPos::new_with_incl(first_end_time, BoundInclusivity::Exclusive,)
+///     AbsFiniteBoundPos::new_with_incl(first_end_time, BoundInclusivity::Exclusive)
 ///         .to_start_bound(),
 /// );
 /// assert_eq!(
@@ -286,7 +282,7 @@ macro_rules! abridgable_impl {
 ///         .bound()
 ///         .ok_or("Empty abridged interval")?
 ///         .end(),
-///     AbsFiniteBoundPos::new_with_incl(second_start_time, BoundInclusivity::Exclusive,)
+///     AbsFiniteBoundPos::new_with_incl(second_start_time, BoundInclusivity::Exclusive)
 ///         .to_end_bound(),
 /// );
 /// # Ok::<(), Box<dyn Error>>(())
@@ -296,28 +292,20 @@ macro_rules! abridgable_impl {
 ///
 /// ```
 /// # use std::error::Error;
-/// # use jiff::Zoned;
+/// # use jiff::Timestamp;
 /// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos};
 /// # use periodical::intervals::meta::BoundInclusivity;
 /// # use periodical::intervals::ops::abridge::Abridgable;
-/// let first_start_time = "2025-01-01 08:00:00[Europe/Oslo]"
-///     .parse::<Zoned>()?
-///     .timestamp();
-/// let first_end_time = "2025-01-01 13:00:00[Europe/Oslo]"
-///     .parse::<Zoned>()?
-///     .timestamp();
+/// let first_start_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
+/// let first_end_time = "2025-01-01 13:00:00Z".parse::<Timestamp>()?;
 ///
 /// let first_interval = AbsBoundPair::new(
 ///     AbsFiniteBoundPos::new(first_start_time).to_start_bound(),
 ///     AbsFiniteBoundPos::new(first_end_time).to_end_bound(),
 /// );
 ///
-/// let second_start_time = "2025-01-01 11:00:00[Europe/Oslo]"
-///     .parse::<Zoned>()?
-///     .timestamp();
-/// let second_end_time = "2025-01-01 16:00:00[Europe/Oslo]"
-///     .parse::<Zoned>()?
-///     .timestamp();
+/// let second_start_time = "2025-01-01 11:00:00Z".parse::<Timestamp>()?;
+/// let second_end_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
 ///
 /// let second_interval = AbsBoundPair::new(
 ///     AbsFiniteBoundPos::new(second_start_time).to_start_bound(),
@@ -336,7 +324,7 @@ macro_rules! abridgable_impl {
 ///         .bound()
 ///         .ok_or("Empty abridged interval")?
 ///         .start(),
-///     AbsFiniteBoundPos::new_with_incl(second_start_time, BoundInclusivity::Inclusive,)
+///     AbsFiniteBoundPos::new_with_incl(second_start_time, BoundInclusivity::Inclusive)
 ///         .to_start_bound(),
 /// );
 /// assert_eq!(
@@ -345,7 +333,7 @@ macro_rules! abridgable_impl {
 ///         .bound()
 ///         .ok_or("Empty abridged interval")?
 ///         .end(),
-///     AbsFiniteBoundPos::new_with_incl(first_end_time, BoundInclusivity::Inclusive,)
+///     AbsFiniteBoundPos::new_with_incl(first_end_time, BoundInclusivity::Inclusive)
 ///         .to_end_bound(),
 /// );
 /// # Ok::<(), Box<dyn Error>>(())
@@ -355,26 +343,28 @@ macro_rules! abridgable_impl {
 ///
 /// ```
 /// # use std::error::Error;
-/// # use jiff::Zoned;
-/// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos, EmptiableAbsBoundPair};
+/// # use jiff::Timestamp;
+/// # use periodical::intervals::absolute::{
+/// #     AbsBoundPair,
+/// #     AbsFiniteBoundPos,
+/// #     EmptiableAbsBoundPair,
+/// # };
 /// # use periodical::intervals::meta::BoundInclusivity;
 /// # use periodical::intervals::ops::abridge::Abridgable;
-/// let first_start_time = "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp();
-/// let first_end_time = "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp();
+/// let first_start_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
+/// let first_end_time = "2025-01-01 12:00:00Z".parse::<Timestamp>()?;
 ///
 /// let first_interval = AbsBoundPair::new(
 ///     AbsFiniteBoundPos::new(first_start_time).to_start_bound(),
 ///     AbsFiniteBoundPos::new(first_end_time).to_end_bound(),
 /// );
 ///
-/// let second_start_time = "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp();
-/// let second_end_time = "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp();
+/// let second_start_time = "2025-01-01 12:00:00Z".parse::<Timestamp>()?;
+/// let second_end_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
 ///
 /// let second_interval = AbsBoundPair::new(
-///     AbsFiniteBoundPos::new_with_incl(
-///         second_start_time,
-///         BoundInclusivity::Exclusive,
-///     ).to_start_bound(),
+///     AbsFiniteBoundPos::new_with_incl(second_start_time, BoundInclusivity::Exclusive)
+///         .to_start_bound(),
 ///     AbsFiniteBoundPos::new(second_end_time).to_end_bound(),
 /// );
 ///
@@ -615,56 +605,42 @@ abridgable_impl!(
 /// Abridges two [`AbsBoundPair`]s
 #[must_use]
 pub fn abridge_abs_bound_pair(lhs_bound_pair: &AbsBoundPair, rhs_bound_pair: &AbsBoundPair) -> EmptiableAbsBoundPair {
-    let mut highest_start =
-        match (lhs_bound_pair.abs_start(), rhs_bound_pair.abs_start()) {
-            (AbsStartBound::InfinitePast, bound @ AbsStartBound::Finite(..))
-            | (bound @ (AbsStartBound::Finite(..) | AbsStartBound::InfinitePast), AbsStartBound::InfinitePast) => bound,
-            (lhs_bound @ AbsStartBound::Finite(..), rhs_bound @ AbsStartBound::Finite(..)) => {
-                if lhs_bound >= rhs_bound { lhs_bound } else { rhs_bound }
-            },
-        };
-
-    let mut lowest_end = match (lhs_bound_pair.abs_end(), rhs_bound_pair.abs_end()) {
-        (AbsEndBound::InfiniteFuture, bound @ AbsEndBound::Finite(..))
-        | (bound @ (AbsEndBound::Finite(..) | AbsEndBound::InfiniteFuture), AbsEndBound::InfiniteFuture) => bound,
-        (lhs_bound @ AbsEndBound::Finite(..), rhs_bound @ AbsEndBound::Finite(..)) => {
-            if lhs_bound <= rhs_bound {
-                lhs_bound
-            } else {
-                rhs_bound
-            }
-        },
-    };
+    let mut highest_start = lhs_bound_pair
+        .start()
+        .bound_max(rhs_bound_pair.start(), BoundOverlapDisambiguationRuleSet::Strict);
+    let mut lowest_end = lhs_bound_pair
+        .end()
+        .bound_min(rhs_bound_pair.end(), BoundOverlapDisambiguationRuleSet::Strict);
 
     match highest_start.bound_cmp(&lowest_end) {
-        BoundOrdering::Less => EmptiableAbsBoundPair::Bound(AbsBoundPair::unchecked_new(highest_start, lowest_end)),
+        BoundOrdering::Less => AbsBoundPair::unchecked_new(highest_start, lowest_end).to_emptiable(),
         BoundOrdering::Equal(None) => {
             unreachable!("Comparing a start bound to an end bound can never result in the ambiguity being `None`");
         },
         BoundOrdering::Equal(Some(ambiguity)) => {
-            if let BoundOverlapAmbiguity::EndStart(reference_inclusivity, compared_inclusivity) = ambiguity {
-                match (reference_inclusivity, compared_inclusivity) {
+            if let BoundOverlapAmbiguity::StartEnd(start_inclusivity, end_inclusivity) = ambiguity {
+                match (start_inclusivity, end_inclusivity) {
                     (BoundInclusivity::Inclusive, BoundInclusivity::Inclusive) => {
-                        EmptiableAbsBoundPair::Bound(AbsBoundPair::unchecked_new(highest_start, lowest_end))
+                        AbsBoundPair::unchecked_new(highest_start, lowest_end).to_emptiable()
                     },
                     (BoundInclusivity::Inclusive, BoundInclusivity::Exclusive)
                     | (BoundInclusivity::Exclusive, BoundInclusivity::Inclusive) => EmptiableAbsBoundPair::Empty,
                     (BoundInclusivity::Exclusive, BoundInclusivity::Exclusive) => {
-                        if let AbsStartBound::Finite(ref mut finite_start) = highest_start {
-                            let new_incl = finite_start.pos().inclusivity().opposite();
-                            finite_start.pos_mut().set_inclusivity(new_incl);
+                        if let AbsStartBound::Finite(ref mut finite_highest_start) = highest_start {
+                            finite_highest_start
+                                .pos_mut()
+                                .set_inclusivity(BoundInclusivity::Inclusive);
                         }
 
-                        if let AbsEndBound::Finite(ref mut finite_end) = lowest_end {
-                            let new_incl = finite_end.pos().inclusivity().opposite();
-                            finite_end.pos_mut().set_inclusivity(new_incl);
+                        if let AbsEndBound::Finite(ref mut finite_lowest_end) = lowest_end {
+                            finite_lowest_end.pos_mut().set_inclusivity(BoundInclusivity::Inclusive);
                         }
 
-                        EmptiableAbsBoundPair::Bound(AbsBoundPair::unchecked_new(highest_start, lowest_end))
+                        AbsBoundPair::unchecked_new(highest_start, lowest_end).to_emptiable()
                     },
                 }
             } else {
-                unreachable!("Comparing a start bound to an end bound always results in a `EndStart` ambiguity");
+                unreachable!("Comparing a start bound to an end bound always results in a `StartEnd` ambiguity");
             }
         },
         BoundOrdering::Greater => {
@@ -680,7 +656,7 @@ pub fn abridge_abs_bound_pair(lhs_bound_pair: &AbsBoundPair, rhs_bound_pair: &Ab
                 finite_end.pos_mut().set_inclusivity(new_incl);
             }
 
-            EmptiableAbsBoundPair::Bound(AbsBoundPair::unchecked_new(highest_start, lowest_end))
+            AbsBoundPair::unchecked_new(highest_start, lowest_end).to_emptiable()
         },
     }
 }
@@ -717,56 +693,42 @@ pub fn abridge_emptiable_abs_bound_pair(
 /// Abridges two [`RelBoundPair`]s
 #[must_use]
 pub fn abridge_rel_bound_pair(lhs_bound_pair: &RelBoundPair, rhs_bound_pair: &RelBoundPair) -> EmptiableRelBoundPair {
-    let mut highest_start =
-        match (lhs_bound_pair.rel_start(), rhs_bound_pair.rel_start()) {
-            (RelStartBound::InfinitePast, bound @ RelStartBound::Finite(..))
-            | (bound @ (RelStartBound::Finite(..) | RelStartBound::InfinitePast), RelStartBound::InfinitePast) => bound,
-            (lhs_bound @ RelStartBound::Finite(..), rhs_bound @ RelStartBound::Finite(..)) => {
-                if lhs_bound >= rhs_bound { lhs_bound } else { rhs_bound }
-            },
-        };
-
-    let mut lowest_end = match (lhs_bound_pair.rel_end(), rhs_bound_pair.rel_end()) {
-        (RelEndBound::InfiniteFuture, bound @ RelEndBound::Finite(..))
-        | (bound @ (RelEndBound::Finite(..) | RelEndBound::InfiniteFuture), RelEndBound::InfiniteFuture) => bound,
-        (lhs_bound @ RelEndBound::Finite(..), rhs_bound @ RelEndBound::Finite(..)) => {
-            if lhs_bound <= rhs_bound {
-                lhs_bound
-            } else {
-                rhs_bound
-            }
-        },
-    };
+    let mut highest_start = lhs_bound_pair
+        .start()
+        .bound_max(rhs_bound_pair.start(), BoundOverlapDisambiguationRuleSet::Strict);
+    let mut lowest_end = lhs_bound_pair
+        .end()
+        .bound_min(rhs_bound_pair.end(), BoundOverlapDisambiguationRuleSet::Strict);
 
     match highest_start.bound_cmp(&lowest_end) {
-        BoundOrdering::Less => EmptiableRelBoundPair::Bound(RelBoundPair::unchecked_new(highest_start, lowest_end)),
+        BoundOrdering::Less => RelBoundPair::unchecked_new(highest_start, lowest_end).to_emptiable(),
         BoundOrdering::Equal(None) => {
             unreachable!("Comparing a start bound to an end bound can never result in the ambiguity being `None`");
         },
         BoundOrdering::Equal(Some(ambiguity)) => {
-            if let BoundOverlapAmbiguity::EndStart(reference_inclusivity, compared_inclusivity) = ambiguity {
-                match (reference_inclusivity, compared_inclusivity) {
+            if let BoundOverlapAmbiguity::StartEnd(start_inclusivity, end_inclusivity) = ambiguity {
+                match (start_inclusivity, end_inclusivity) {
                     (BoundInclusivity::Inclusive, BoundInclusivity::Inclusive) => {
-                        EmptiableRelBoundPair::Bound(RelBoundPair::unchecked_new(highest_start, lowest_end))
+                        RelBoundPair::unchecked_new(highest_start, lowest_end).to_emptiable()
                     },
                     (BoundInclusivity::Inclusive, BoundInclusivity::Exclusive)
                     | (BoundInclusivity::Exclusive, BoundInclusivity::Inclusive) => EmptiableRelBoundPair::Empty,
                     (BoundInclusivity::Exclusive, BoundInclusivity::Exclusive) => {
-                        if let RelStartBound::Finite(ref mut finite_start) = highest_start {
-                            let new_incl = finite_start.pos().inclusivity().opposite();
-                            finite_start.pos_mut().set_inclusivity(new_incl);
+                        if let RelStartBound::Finite(ref mut finite_highest_start) = highest_start {
+                            finite_highest_start
+                                .pos_mut()
+                                .set_inclusivity(BoundInclusivity::Inclusive);
                         }
 
-                        if let RelEndBound::Finite(ref mut finite_end) = lowest_end {
-                            let new_incl = finite_end.pos().inclusivity().opposite();
-                            finite_end.pos_mut().set_inclusivity(new_incl);
+                        if let RelEndBound::Finite(ref mut finite_lowest_end) = lowest_end {
+                            finite_lowest_end.pos_mut().set_inclusivity(BoundInclusivity::Inclusive);
                         }
 
-                        EmptiableRelBoundPair::Bound(RelBoundPair::unchecked_new(highest_start, lowest_end))
+                        RelBoundPair::unchecked_new(highest_start, lowest_end).to_emptiable()
                     },
                 }
             } else {
-                unreachable!("Comparing a start bound to an end bound always results in a `EndStart` ambiguity");
+                unreachable!("Comparing a start bound to an end bound always results in a `StartEnd` ambiguity");
             }
         },
         BoundOrdering::Greater => {
@@ -782,7 +744,7 @@ pub fn abridge_rel_bound_pair(lhs_bound_pair: &RelBoundPair, rhs_bound_pair: &Re
                 finite_end.pos_mut().set_inclusivity(new_incl);
             }
 
-            EmptiableRelBoundPair::Bound(RelBoundPair::unchecked_new(highest_start, lowest_end))
+            RelBoundPair::unchecked_new(highest_start, lowest_end).to_emptiable()
         },
     }
 }
