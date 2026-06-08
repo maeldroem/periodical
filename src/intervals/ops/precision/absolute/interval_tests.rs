@@ -24,7 +24,7 @@ fn abs_bound_pair_same_precision() -> Result<(), Box<dyn Error>> {
             )
             .to_end_bound(),
         )
-        .precise_interval(
+        .precise(
             TimeZone::get("Europe/Oslo")?,
             Precision::new(Duration::from_mins(5), PrecisionMode::ToFuture)?
         ),
@@ -60,7 +60,7 @@ fn abs_bound_pair_different_precisions() -> Result<(), Box<dyn Error>> {
             )
             .to_end_bound(),
         )
-        .precise_interval_with_different_precisions(
+        .precise_different_precisions(
             TimeZone::get("Europe/Oslo")?,
             Precision::new(Duration::from_mins(5), PrecisionMode::ToFuture)?,
             Precision::new(Duration::from_mins(5), PrecisionMode::ToPast)?,
@@ -85,7 +85,7 @@ fn abs_bound_pair_different_precisions() -> Result<(), Box<dyn Error>> {
 #[test]
 fn start_empty() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        EmptiableAbsBoundPair::Empty.precise_interval(
+        EmptiableAbsBoundPair::Empty.precise(
             TimeZone::get("Europe/Oslo")?,
             Precision::new(Duration::from_mins(5), PrecisionMode::ToFuture)?,
         ),
@@ -98,7 +98,7 @@ fn start_empty() -> Result<(), Box<dyn Error>> {
 #[test]
 fn end_empty() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        EmptiableAbsBoundPair::Empty.precise_interval(
+        EmptiableAbsBoundPair::Empty.precise(
             TimeZone::get("Europe/Oslo")?,
             Precision::new(Duration::from_mins(5), PrecisionMode::ToFuture)?,
         ),

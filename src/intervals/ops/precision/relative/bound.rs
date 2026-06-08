@@ -39,7 +39,7 @@ use crate::prelude::HasBoundInclusivity;
 /// .to_start_bound();
 ///
 /// assert_eq!(
-///     bound.precise_bound(Precision::new(
+///     bound.precise(Precision::new(
 ///         Duration::from_mins(5),
 ///         PrecisionMode::ToFuture
 ///     )?),
@@ -76,7 +76,7 @@ pub trait PreciseRelBound {
     /// .to_start_bound();
     ///
     /// assert_eq!(
-    ///     bound.precise_bound(Precision::new(
+    ///     bound.precise(Precision::new(
     ///         Duration::from_mins(5),
     ///         PrecisionMode::ToFuture
     ///     )?),
@@ -89,7 +89,7 @@ pub trait PreciseRelBound {
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    fn precise_bound(&self, precision: Precision) -> Self::PrecisedBoundOutput;
+    fn precise(&self, precision: Precision) -> Self::PrecisedBoundOutput;
 
     /// Precises the bound with the given precision and base offset
     ///
@@ -112,7 +112,7 @@ pub trait PreciseRelBound {
     /// .to_start_bound();
     ///
     /// assert_eq!(
-    ///     bound.precise_bound_with_base_offset(
+    ///     bound.precise_with_base_offset(
     ///         Precision::new(Duration::from_mins(5), PrecisionMode::ToFuture)?,
     ///         SignedDuration::from_mins(2)
     ///     ),
@@ -125,17 +125,17 @@ pub trait PreciseRelBound {
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    fn precise_bound_with_base_offset(&self, precision: Precision, base: SignedDuration) -> Self::PrecisedBoundOutput;
+    fn precise_with_base_offset(&self, precision: Precision, base: SignedDuration) -> Self::PrecisedBoundOutput;
 }
 
 impl PreciseRelBound for RelFiniteBoundPos {
     type PrecisedBoundOutput = Result<Self, PrecisionOutOfRangeError>;
 
-    fn precise_bound(&self, precision: Precision) -> Self::PrecisedBoundOutput {
+    fn precise(&self, precision: Precision) -> Self::PrecisedBoundOutput {
         precise_rel_finite_bound_pos(self, precision)
     }
 
-    fn precise_bound_with_base_offset(&self, precision: Precision, base: SignedDuration) -> Self::PrecisedBoundOutput {
+    fn precise_with_base_offset(&self, precision: Precision, base: SignedDuration) -> Self::PrecisedBoundOutput {
         precise_rel_finite_bound_pos_with_base_offset(self, precision, base)
     }
 }
@@ -143,11 +143,11 @@ impl PreciseRelBound for RelFiniteBoundPos {
 impl PreciseRelBound for RelFiniteStartBound {
     type PrecisedBoundOutput = Result<Self, PrecisionOutOfRangeError>;
 
-    fn precise_bound(&self, precision: Precision) -> Self::PrecisedBoundOutput {
+    fn precise(&self, precision: Precision) -> Self::PrecisedBoundOutput {
         precise_rel_finite_start_bound(self, precision)
     }
 
-    fn precise_bound_with_base_offset(&self, precision: Precision, base: SignedDuration) -> Self::PrecisedBoundOutput {
+    fn precise_with_base_offset(&self, precision: Precision, base: SignedDuration) -> Self::PrecisedBoundOutput {
         precise_rel_finite_start_bound_with_base_offset(self, precision, base)
     }
 }
@@ -155,11 +155,11 @@ impl PreciseRelBound for RelFiniteStartBound {
 impl PreciseRelBound for RelFiniteEndBound {
     type PrecisedBoundOutput = Result<Self, PrecisionOutOfRangeError>;
 
-    fn precise_bound(&self, precision: Precision) -> Self::PrecisedBoundOutput {
+    fn precise(&self, precision: Precision) -> Self::PrecisedBoundOutput {
         precise_rel_finite_end_bound(self, precision)
     }
 
-    fn precise_bound_with_base_offset(&self, precision: Precision, base: SignedDuration) -> Self::PrecisedBoundOutput {
+    fn precise_with_base_offset(&self, precision: Precision, base: SignedDuration) -> Self::PrecisedBoundOutput {
         precise_rel_finite_end_bound_with_base_offset(self, precision, base)
     }
 }
@@ -167,11 +167,11 @@ impl PreciseRelBound for RelFiniteEndBound {
 impl PreciseRelBound for RelFiniteBound {
     type PrecisedBoundOutput = Result<Self, PrecisionOutOfRangeError>;
 
-    fn precise_bound(&self, precision: Precision) -> Self::PrecisedBoundOutput {
+    fn precise(&self, precision: Precision) -> Self::PrecisedBoundOutput {
         precise_rel_finite_bound(self, precision)
     }
 
-    fn precise_bound_with_base_offset(&self, precision: Precision, base: SignedDuration) -> Self::PrecisedBoundOutput {
+    fn precise_with_base_offset(&self, precision: Precision, base: SignedDuration) -> Self::PrecisedBoundOutput {
         precise_rel_finite_bound_with_base_offset(self, precision, base)
     }
 }
@@ -179,11 +179,11 @@ impl PreciseRelBound for RelFiniteBound {
 impl PreciseRelBound for RelStartBound {
     type PrecisedBoundOutput = Result<Self, PrecisionOutOfRangeError>;
 
-    fn precise_bound(&self, precision: Precision) -> Self::PrecisedBoundOutput {
+    fn precise(&self, precision: Precision) -> Self::PrecisedBoundOutput {
         precise_rel_start_bound(self, precision)
     }
 
-    fn precise_bound_with_base_offset(&self, precision: Precision, base: SignedDuration) -> Self::PrecisedBoundOutput {
+    fn precise_with_base_offset(&self, precision: Precision, base: SignedDuration) -> Self::PrecisedBoundOutput {
         precise_rel_start_bound_with_base_offset(self, precision, base)
     }
 }
@@ -191,11 +191,11 @@ impl PreciseRelBound for RelStartBound {
 impl PreciseRelBound for RelEndBound {
     type PrecisedBoundOutput = Result<Self, PrecisionOutOfRangeError>;
 
-    fn precise_bound(&self, precision: Precision) -> Self::PrecisedBoundOutput {
+    fn precise(&self, precision: Precision) -> Self::PrecisedBoundOutput {
         precise_rel_end_bound(self, precision)
     }
 
-    fn precise_bound_with_base_offset(&self, precision: Precision, base: SignedDuration) -> Self::PrecisedBoundOutput {
+    fn precise_with_base_offset(&self, precision: Precision, base: SignedDuration) -> Self::PrecisedBoundOutput {
         precise_rel_end_bound_with_base_offset(self, precision, base)
     }
 }
@@ -203,11 +203,11 @@ impl PreciseRelBound for RelEndBound {
 impl PreciseRelBound for RelBound {
     type PrecisedBoundOutput = Result<Self, PrecisionOutOfRangeError>;
 
-    fn precise_bound(&self, precision: Precision) -> Self::PrecisedBoundOutput {
+    fn precise(&self, precision: Precision) -> Self::PrecisedBoundOutput {
         precise_rel_bound(self, precision)
     }
 
-    fn precise_bound_with_base_offset(&self, precision: Precision, base: SignedDuration) -> Self::PrecisedBoundOutput {
+    fn precise_with_base_offset(&self, precision: Precision, base: SignedDuration) -> Self::PrecisedBoundOutput {
         precise_rel_bound_with_base_offset(self, precision, base)
     }
 }
