@@ -3,11 +3,14 @@
 //! This module is in charge of handling the act of changing the precision of
 //! intervals and bounds: (re-)_precising_.
 //!
-//! Precising intervals and bounds works differently depending
+//! Precising intervals and bounds work differently depending
 //! on their [`Relativity`](crate::intervals::meta::Relativity).
 //!
 //! For absolute structures, [`PreciseAbsInterval`] handles intervals,
 //! [`PreciseAbsBound`] handles bounds.
+//!
+//! For relative structures, [`PreciseRelInterval`] handles intervals,
+//! [`PreciseRelBound`] handles bounds.
 //!
 //! The precision itself is defined by [`Precision`](crate::ops::Precision).
 //!
@@ -37,7 +40,7 @@
 //! );
 //!
 //! assert_eq!(
-//!     interval.precise_interval(
+//!     interval.precise(
 //!         TimeZone::get("Europe/Oslo")?,
 //!         Precision::new(Duration::from_mins(5), PrecisionMode::ToPast)?,
 //!     ),
