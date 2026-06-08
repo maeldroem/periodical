@@ -60,6 +60,7 @@ TODO: once all done, PR onto dev to sync, then continue unit tests
     - `convenience`
       - `absolute`
         - `bounded_interval`
+        - `half_bounded_interval`
     - `ops`
       - `bound_cmp`
         - `bound_eq`
