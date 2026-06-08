@@ -33,6 +33,7 @@ TODO: once all done, PR onto dev to sync, then continue unit tests
     - `ops`
       - `bound_cmp`
         - `bound_ord`
+      - `bound_containment`
 
 - Checked, fixed, and completed documentation for…
   - `intervals`

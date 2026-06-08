@@ -62,8 +62,8 @@ fn disambiguate_position_on_start_no_ambiguity() {
 fn disambiguate_position_on_start_bound_before() {
     assert_eq!(
         BoundContainmentPos::OnStart(Some(BoundOverlapAmbiguity::BothStarts(
-            BoundInclusivity::Exclusive,
-            BoundInclusivity::Inclusive
+            BoundInclusivity::Inclusive,
+            BoundInclusivity::Exclusive
         )))
         .disambiguate_using_rule_set(BoundContainmentRuleSet::Strict),
         DisambiguatedBoundContainmentPos::OutsideBefore,
@@ -86,8 +86,8 @@ fn disambiguate_position_on_start_bound_equal() {
 fn disambiguate_position_on_start_bound_after() {
     assert_eq!(
         BoundContainmentPos::OnStart(Some(BoundOverlapAmbiguity::BothStarts(
-            BoundInclusivity::Inclusive,
-            BoundInclusivity::Exclusive
+            BoundInclusivity::Exclusive,
+            BoundInclusivity::Inclusive
         )),)
         .disambiguate_using_rule_set(BoundContainmentRuleSet::Strict),
         DisambiguatedBoundContainmentPos::Inside,
@@ -106,8 +106,8 @@ fn disambiguate_position_on_end_no_ambiguity() {
 fn disambiguate_position_on_end_bound_before() {
     assert_eq!(
         BoundContainmentPos::OnEnd(Some(BoundOverlapAmbiguity::BothStarts(
-            BoundInclusivity::Exclusive,
-            BoundInclusivity::Inclusive
+            BoundInclusivity::Inclusive,
+            BoundInclusivity::Exclusive
         )))
         .disambiguate_using_rule_set(BoundContainmentRuleSet::Strict),
         DisambiguatedBoundContainmentPos::Inside,
@@ -130,8 +130,8 @@ fn disambiguate_position_on_end_bound_equal() {
 fn disambiguate_position_on_end_bound_after() {
     assert_eq!(
         BoundContainmentPos::OnEnd(Some(BoundOverlapAmbiguity::BothStarts(
-            BoundInclusivity::Inclusive,
-            BoundInclusivity::Exclusive
+            BoundInclusivity::Exclusive,
+            BoundInclusivity::Inclusive
         )))
         .disambiguate_using_rule_set(BoundContainmentRuleSet::Strict),
         DisambiguatedBoundContainmentPos::OutsideAfter,
