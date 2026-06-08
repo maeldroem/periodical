@@ -126,6 +126,7 @@ TODO: once all done, PR onto dev to sync, then continue unit tests
 - Added `bound_max` and `bound_min` functions to complete bound comparison toolbox
 - Added length-related creation methods on absolute and relative bounded intervals
 - Added `set_length_from_start` and `set_length_from_end` on absolute bounded intervals
+- Added `swap_reference_and_compared` on `BoundOverlapAmbiguity`
 
 ## Changed
 

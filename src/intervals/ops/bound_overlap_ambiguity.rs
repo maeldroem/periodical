@@ -4,8 +4,8 @@
 //! that have the same position, like time for absolute bounds, or offset for
 //! relative bounds.
 //!
-//! The ambiguity is stored in [`BoundOverlapAmbiguity`]. It stores the source
-//! of the bounds (start/end) and their inclusivities.
+//! The ambiguity is stored in [`BoundOverlapAmbiguity`].
+//! It stores the extremality of the bounds (start/end) and their inclusivities.
 //! From that structure, you can then choose how to disambiguate it.
 //! This is most commonly done using a [`BoundOverlapDisambiguationRuleSet`],
 //! but you can also use your own closure for disambiguation.
@@ -33,7 +33,7 @@
 //! );
 //!
 //! assert_eq!(
-//!     ambiguity.disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Strict),
+//!     ambiguity.disambiguate(BoundOverlapDisambiguationRuleSet::Strict),
 //!     DisambiguatedBoundOverlap::Before,
 //! );
 //! ```
@@ -112,6 +112,37 @@ impl BoundOverlapAmbiguity {
         matches!(self, Self::EndStart(..))
     }
 
+    /// Swaps the inclusivities of the reference and the compared
+    ///
+    /// This is used if, for clarity, the comparison that created the ambiguity was
+    /// in the "wrong" direction, and therefore the ambiguity's inclusivities need to be swapped
+    /// as the result expects a different definition of what is the reference and what is the compared.
+    ///
+    /// Usually calls to this method should be avoided or clarified with a comment.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use periodical::intervals::ops::BoundOverlapAmbiguity;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// let ambiguity =
+    ///     BoundOverlapAmbiguity::StartEnd(BoundInclusivity::Inclusive, BoundInclusivity::Exclusive);
+    ///
+    /// assert_eq!(
+    ///     ambiguity.swap_reference_and_compared(),
+    ///     BoundOverlapAmbiguity::StartEnd(BoundInclusivity::Exclusive, BoundInclusivity::Inclusive),
+    /// );
+    /// ```
+    #[must_use]
+    pub fn swap_reference_and_compared(self) -> Self {
+        match self {
+            Self::BothStarts(ref_incl, comp_incl) => Self::BothStarts(comp_incl, ref_incl),
+            Self::BothEnds(ref_incl, comp_incl) => Self::BothEnds(comp_incl, ref_incl),
+            Self::StartEnd(ref_incl, comp_incl) => Self::StartEnd(comp_incl, ref_incl),
+            Self::EndStart(ref_incl, comp_incl) => Self::EndStart(comp_incl, ref_incl),
+        }
+    }
+
     /// Disambiguates the ambiguity using the given
     /// [`BoundOverlapDisambiguationRuleSet`]
     ///
@@ -128,7 +159,7 @@ impl BoundOverlapAmbiguity {
     /// );
     ///
     /// assert_eq!(
-    ///     ambiguity.disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Strict),
+    ///     ambiguity.disambiguate(BoundOverlapDisambiguationRuleSet::Strict),
     ///     DisambiguatedBoundOverlap::Before,
     /// );
     /// ```
