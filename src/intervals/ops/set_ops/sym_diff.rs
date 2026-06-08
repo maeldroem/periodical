@@ -59,7 +59,7 @@ use crate::ops::{ComplementResult, SymmetricDifferenceResult};
 /// );
 ///
 /// assert_eq!(
-///     first_interval.symmetrically_differentiate(&second_interval),
+///     first_interval.sym_diff(&second_interval),
 ///     SymmetricDifferenceResult::Split(
 ///         AbsBoundPair::new(
 ///             AbsFiniteBoundPos::new("2025-01-01 08:00:00Z".parse::<Timestamp>()?)
@@ -112,7 +112,7 @@ use crate::ops::{ComplementResult, SymmetricDifferenceResult};
 /// );
 ///
 /// assert_eq!(
-///     first_interval.symmetrically_differentiate(&second_interval),
+///     first_interval.sym_diff(&second_interval),
 ///     SymmetricDifferenceResult::Separate,
 /// );
 /// # Ok::<(), Box<dyn Error>>(())
@@ -143,7 +143,7 @@ pub trait SymmetricallyDifferentiable<Rhs = Self> {
     /// );
     ///
     /// assert_eq!(
-    ///     first_interval.symmetrically_differentiate(&second_interval),
+    ///     first_interval.sym_diff(&second_interval),
     ///     SymmetricDifferenceResult::Split(
     ///         AbsBoundPair::new(
     ///             AbsFiniteBoundPos::new("2025-01-01 08:00:00Z".parse::<Timestamp>()?)
@@ -169,7 +169,7 @@ pub trait SymmetricallyDifferentiable<Rhs = Self> {
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    fn symmetrically_differentiate(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output>;
+    fn sym_diff(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output>;
 
     /// Symmetrically differentiates the two intervals using the given closure
     ///
@@ -208,14 +208,13 @@ pub trait SymmetricallyDifferentiable<Rhs = Self> {
     ///             Ok(
     ///                 DisambiguatedOverlapPosition::CrossesStart
     ///                 | DisambiguatedOverlapPosition::CrossesEnd,
-    ///             ) => a.symmetrically_differentiate(b),
+    ///             ) => a.sym_diff(b),
     ///             _ => SymmetricDifferenceResult::Separate,
     ///         }
     ///     };
     ///
     /// assert_eq!(
-    ///     first_interval
-    ///         .symmetrically_differentiate_with(&second_interval, symmetric_difference_closure),
+    ///     first_interval.sym_diff_with(&second_interval, symmetric_difference_closure),
     ///     SymmetricDifferenceResult::Split(
     ///         AbsBoundPair::new(
     ///             AbsFiniteBoundPos::new("2025-01-01 08:00:00Z".parse::<Timestamp>()?)
@@ -241,7 +240,7 @@ pub trait SymmetricallyDifferentiable<Rhs = Self> {
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    fn symmetrically_differentiate_with<F>(&self, rhs: &Rhs, mut f: F) -> SymmetricDifferenceResult<Self::Output>
+    fn sym_diff_with<F>(&self, rhs: &Rhs, mut f: F) -> SymmetricDifferenceResult<Self::Output>
     where
         F: FnMut(&Self, &Rhs) -> SymmetricDifferenceResult<Self::Output>,
     {
@@ -255,8 +254,8 @@ where
 {
     type Output = EmptiableAbsBoundPair;
 
-    fn symmetrically_differentiate(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
-        symmetrically_differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(self, &rhs.emptiable_abs_bound_pair())
+    fn sym_diff(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
+        sym_diff_abs_bound_pair_with_emptiable_abs_bound_pair(self, &rhs.emptiable_abs_bound_pair())
     }
 }
 
@@ -266,8 +265,8 @@ where
 {
     type Output = Self;
 
-    fn symmetrically_differentiate(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
-        symmetrically_differentiate_emptiable_abs_bound_pair(self, &rhs.emptiable_abs_bound_pair())
+    fn sym_diff(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
+        sym_diff_emptiable_abs_bound_pair(self, &rhs.emptiable_abs_bound_pair())
     }
 }
 
@@ -277,12 +276,9 @@ where
 {
     type Output = EmptiableAbsInterval;
 
-    fn symmetrically_differentiate(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
-        symmetrically_differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(
-            &self.abs_bound_pair(),
-            &rhs.emptiable_abs_bound_pair(),
-        )
-        .map_symmetric_difference(Self::Output::from)
+    fn sym_diff(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
+        sym_diff_abs_bound_pair_with_emptiable_abs_bound_pair(&self.abs_bound_pair(), &rhs.emptiable_abs_bound_pair())
+            .map_symmetric_difference(Self::Output::from)
     }
 }
 
@@ -292,12 +288,9 @@ where
 {
     type Output = Self;
 
-    fn symmetrically_differentiate(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
-        symmetrically_differentiate_emptiable_abs_bound_pair(
-            &self.emptiable_abs_bound_pair(),
-            &rhs.emptiable_abs_bound_pair(),
-        )
-        .map_symmetric_difference(Self::Output::from)
+    fn sym_diff(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
+        sym_diff_emptiable_abs_bound_pair(&self.emptiable_abs_bound_pair(), &rhs.emptiable_abs_bound_pair())
+            .map_symmetric_difference(Self::Output::from)
     }
 }
 
@@ -307,12 +300,9 @@ where
 {
     type Output = EmptiableAbsInterval;
 
-    fn symmetrically_differentiate(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
-        symmetrically_differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(
-            &self.abs_bound_pair(),
-            &rhs.emptiable_abs_bound_pair(),
-        )
-        .map_symmetric_difference(Self::Output::from)
+    fn sym_diff(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
+        sym_diff_abs_bound_pair_with_emptiable_abs_bound_pair(&self.abs_bound_pair(), &rhs.emptiable_abs_bound_pair())
+            .map_symmetric_difference(Self::Output::from)
     }
 }
 
@@ -322,12 +312,9 @@ where
 {
     type Output = EmptiableAbsInterval;
 
-    fn symmetrically_differentiate(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
-        symmetrically_differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(
-            &self.abs_bound_pair(),
-            &rhs.emptiable_abs_bound_pair(),
-        )
-        .map_symmetric_difference(Self::Output::from)
+    fn sym_diff(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
+        sym_diff_abs_bound_pair_with_emptiable_abs_bound_pair(&self.abs_bound_pair(), &rhs.emptiable_abs_bound_pair())
+            .map_symmetric_difference(Self::Output::from)
     }
 }
 
@@ -337,8 +324,8 @@ where
 {
     type Output = EmptiableRelBoundPair;
 
-    fn symmetrically_differentiate(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
-        symmetrically_differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(self, &rhs.emptiable_rel_bound_pair())
+    fn sym_diff(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
+        sym_diff_rel_bound_pair_with_emptiable_rel_bound_pair(self, &rhs.emptiable_rel_bound_pair())
     }
 }
 
@@ -348,8 +335,8 @@ where
 {
     type Output = Self;
 
-    fn symmetrically_differentiate(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
-        symmetrically_differentiate_emptiable_rel_bound_pair(self, &rhs.emptiable_rel_bound_pair())
+    fn sym_diff(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
+        sym_diff_emptiable_rel_bound_pair(self, &rhs.emptiable_rel_bound_pair())
     }
 }
 
@@ -359,12 +346,9 @@ where
 {
     type Output = EmptiableRelInterval;
 
-    fn symmetrically_differentiate(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
-        symmetrically_differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(
-            &self.rel_bound_pair(),
-            &rhs.emptiable_rel_bound_pair(),
-        )
-        .map_symmetric_difference(Self::Output::from)
+    fn sym_diff(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
+        sym_diff_rel_bound_pair_with_emptiable_rel_bound_pair(&self.rel_bound_pair(), &rhs.emptiable_rel_bound_pair())
+            .map_symmetric_difference(Self::Output::from)
     }
 }
 
@@ -374,12 +358,9 @@ where
 {
     type Output = Self;
 
-    fn symmetrically_differentiate(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
-        symmetrically_differentiate_emptiable_rel_bound_pair(
-            &self.emptiable_rel_bound_pair(),
-            &rhs.emptiable_rel_bound_pair(),
-        )
-        .map_symmetric_difference(Self::Output::from)
+    fn sym_diff(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
+        sym_diff_emptiable_rel_bound_pair(&self.emptiable_rel_bound_pair(), &rhs.emptiable_rel_bound_pair())
+            .map_symmetric_difference(Self::Output::from)
     }
 }
 
@@ -389,12 +370,9 @@ where
 {
     type Output = EmptiableRelInterval;
 
-    fn symmetrically_differentiate(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
-        symmetrically_differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(
-            &self.rel_bound_pair(),
-            &rhs.emptiable_rel_bound_pair(),
-        )
-        .map_symmetric_difference(Self::Output::from)
+    fn sym_diff(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
+        sym_diff_rel_bound_pair_with_emptiable_rel_bound_pair(&self.rel_bound_pair(), &rhs.emptiable_rel_bound_pair())
+            .map_symmetric_difference(Self::Output::from)
     }
 }
 
@@ -404,29 +382,25 @@ where
 {
     type Output = EmptiableRelInterval;
 
-    fn symmetrically_differentiate(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
-        symmetrically_differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(
-            &self.rel_bound_pair(),
-            &rhs.emptiable_rel_bound_pair(),
-        )
-        .map_symmetric_difference(Self::Output::from)
+    fn sym_diff(&self, rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
+        sym_diff_rel_bound_pair_with_emptiable_rel_bound_pair(&self.rel_bound_pair(), &rhs.emptiable_rel_bound_pair())
+            .map_symmetric_difference(Self::Output::from)
     }
 }
 
 impl SymmetricallyDifferentiable<AbsBoundPair> for UnboundedInterval {
     type Output = EmptiableAbsInterval;
 
-    fn symmetrically_differentiate(&self, rhs: &AbsBoundPair) -> SymmetricDifferenceResult<Self::Output> {
-        symmetrically_differentiate_abs_bound_pair(&self.abs_bound_pair(), rhs)
-            .map_symmetric_difference(Self::Output::from)
+    fn sym_diff(&self, rhs: &AbsBoundPair) -> SymmetricDifferenceResult<Self::Output> {
+        sym_diff_abs_bound_pair(&self.abs_bound_pair(), rhs).map_symmetric_difference(Self::Output::from)
     }
 }
 
 impl SymmetricallyDifferentiable<EmptiableAbsBoundPair> for UnboundedInterval {
     type Output = EmptiableAbsInterval;
 
-    fn symmetrically_differentiate(&self, rhs: &EmptiableAbsBoundPair) -> SymmetricDifferenceResult<Self::Output> {
-        symmetrically_differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(&self.abs_bound_pair(), rhs)
+    fn sym_diff(&self, rhs: &EmptiableAbsBoundPair) -> SymmetricDifferenceResult<Self::Output> {
+        sym_diff_abs_bound_pair_with_emptiable_abs_bound_pair(&self.abs_bound_pair(), rhs)
             .map_symmetric_difference(Self::Output::from)
     }
 }
@@ -434,19 +408,16 @@ impl SymmetricallyDifferentiable<EmptiableAbsBoundPair> for UnboundedInterval {
 impl SymmetricallyDifferentiable<AbsInterval> for UnboundedInterval {
     type Output = EmptiableAbsInterval;
 
-    fn symmetrically_differentiate(&self, rhs: &AbsInterval) -> SymmetricDifferenceResult<Self::Output> {
-        symmetrically_differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(
-            &self.abs_bound_pair(),
-            &rhs.emptiable_abs_bound_pair(),
-        )
-        .map_symmetric_difference(Self::Output::from)
+    fn sym_diff(&self, rhs: &AbsInterval) -> SymmetricDifferenceResult<Self::Output> {
+        sym_diff_abs_bound_pair_with_emptiable_abs_bound_pair(&self.abs_bound_pair(), &rhs.emptiable_abs_bound_pair())
+            .map_symmetric_difference(Self::Output::from)
     }
 }
 
 impl SymmetricallyDifferentiable<BoundedAbsInterval> for UnboundedInterval {
     type Output = HalfBoundedAbsInterval;
 
-    fn symmetrically_differentiate(&self, rhs: &BoundedAbsInterval) -> SymmetricDifferenceResult<Self::Output> {
+    fn sym_diff(&self, rhs: &BoundedAbsInterval) -> SymmetricDifferenceResult<Self::Output> {
         match rhs.complement() {
             ComplementResult::Single(single) => SymmetricDifferenceResult::Single(single),
             ComplementResult::Split(split_before, split_after) => {
@@ -459,7 +430,7 @@ impl SymmetricallyDifferentiable<BoundedAbsInterval> for UnboundedInterval {
 impl SymmetricallyDifferentiable<HalfBoundedAbsInterval> for UnboundedInterval {
     type Output = HalfBoundedAbsInterval;
 
-    fn symmetrically_differentiate(&self, rhs: &HalfBoundedAbsInterval) -> SymmetricDifferenceResult<Self::Output> {
+    fn sym_diff(&self, rhs: &HalfBoundedAbsInterval) -> SymmetricDifferenceResult<Self::Output> {
         match rhs.complement() {
             ComplementResult::Single(single) => SymmetricDifferenceResult::Single(single),
             ComplementResult::Split(split_before, split_after) => {
@@ -472,17 +443,16 @@ impl SymmetricallyDifferentiable<HalfBoundedAbsInterval> for UnboundedInterval {
 impl SymmetricallyDifferentiable<RelBoundPair> for UnboundedInterval {
     type Output = EmptiableRelInterval;
 
-    fn symmetrically_differentiate(&self, rhs: &RelBoundPair) -> SymmetricDifferenceResult<Self::Output> {
-        symmetrically_differentiate_rel_bound_pair(&self.rel_bound_pair(), rhs)
-            .map_symmetric_difference(Self::Output::from)
+    fn sym_diff(&self, rhs: &RelBoundPair) -> SymmetricDifferenceResult<Self::Output> {
+        sym_diff_rel_bound_pair(&self.rel_bound_pair(), rhs).map_symmetric_difference(Self::Output::from)
     }
 }
 
 impl SymmetricallyDifferentiable<EmptiableRelBoundPair> for UnboundedInterval {
     type Output = EmptiableRelInterval;
 
-    fn symmetrically_differentiate(&self, rhs: &EmptiableRelBoundPair) -> SymmetricDifferenceResult<Self::Output> {
-        symmetrically_differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(&self.rel_bound_pair(), rhs)
+    fn sym_diff(&self, rhs: &EmptiableRelBoundPair) -> SymmetricDifferenceResult<Self::Output> {
+        sym_diff_rel_bound_pair_with_emptiable_rel_bound_pair(&self.rel_bound_pair(), rhs)
             .map_symmetric_difference(Self::Output::from)
     }
 }
@@ -490,31 +460,25 @@ impl SymmetricallyDifferentiable<EmptiableRelBoundPair> for UnboundedInterval {
 impl SymmetricallyDifferentiable<RelInterval> for UnboundedInterval {
     type Output = EmptiableRelInterval;
 
-    fn symmetrically_differentiate(&self, rhs: &RelInterval) -> SymmetricDifferenceResult<Self::Output> {
-        symmetrically_differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(
-            &self.rel_bound_pair(),
-            &rhs.emptiable_rel_bound_pair(),
-        )
-        .map_symmetric_difference(Self::Output::from)
+    fn sym_diff(&self, rhs: &RelInterval) -> SymmetricDifferenceResult<Self::Output> {
+        sym_diff_rel_bound_pair_with_emptiable_rel_bound_pair(&self.rel_bound_pair(), &rhs.emptiable_rel_bound_pair())
+            .map_symmetric_difference(Self::Output::from)
     }
 }
 
 impl SymmetricallyDifferentiable<EmptiableRelInterval> for UnboundedInterval {
     type Output = EmptiableRelInterval;
 
-    fn symmetrically_differentiate(&self, rhs: &EmptiableRelInterval) -> SymmetricDifferenceResult<Self::Output> {
-        symmetrically_differentiate_emptiable_rel_bound_pair(
-            &self.emptiable_rel_bound_pair(),
-            &rhs.emptiable_rel_bound_pair(),
-        )
-        .map_symmetric_difference(Self::Output::from)
+    fn sym_diff(&self, rhs: &EmptiableRelInterval) -> SymmetricDifferenceResult<Self::Output> {
+        sym_diff_emptiable_rel_bound_pair(&self.emptiable_rel_bound_pair(), &rhs.emptiable_rel_bound_pair())
+            .map_symmetric_difference(Self::Output::from)
     }
 }
 
 impl SymmetricallyDifferentiable<BoundedRelInterval> for UnboundedInterval {
     type Output = HalfBoundedRelInterval;
 
-    fn symmetrically_differentiate(&self, rhs: &BoundedRelInterval) -> SymmetricDifferenceResult<Self::Output> {
+    fn sym_diff(&self, rhs: &BoundedRelInterval) -> SymmetricDifferenceResult<Self::Output> {
         match rhs.complement() {
             ComplementResult::Single(single) => SymmetricDifferenceResult::Single(single),
             ComplementResult::Split(split_before, split_after) => {
@@ -527,7 +491,7 @@ impl SymmetricallyDifferentiable<BoundedRelInterval> for UnboundedInterval {
 impl SymmetricallyDifferentiable<HalfBoundedRelInterval> for UnboundedInterval {
     type Output = HalfBoundedRelInterval;
 
-    fn symmetrically_differentiate(&self, rhs: &HalfBoundedRelInterval) -> SymmetricDifferenceResult<Self::Output> {
+    fn sym_diff(&self, rhs: &HalfBoundedRelInterval) -> SymmetricDifferenceResult<Self::Output> {
         match rhs.complement() {
             ComplementResult::Single(single) => SymmetricDifferenceResult::Single(single),
             ComplementResult::Split(split_before, split_after) => {
@@ -540,7 +504,7 @@ impl SymmetricallyDifferentiable<HalfBoundedRelInterval> for UnboundedInterval {
 impl SymmetricallyDifferentiable<UnboundedInterval> for UnboundedInterval {
     type Output = EmptyInterval;
 
-    fn symmetrically_differentiate(&self, _rhs: &UnboundedInterval) -> SymmetricDifferenceResult<Self::Output> {
+    fn sym_diff(&self, _rhs: &UnboundedInterval) -> SymmetricDifferenceResult<Self::Output> {
         SymmetricDifferenceResult::Single(EmptyInterval)
     }
 }
@@ -548,7 +512,7 @@ impl SymmetricallyDifferentiable<UnboundedInterval> for UnboundedInterval {
 impl SymmetricallyDifferentiable<EmptyInterval> for UnboundedInterval {
     type Output = ();
 
-    fn symmetrically_differentiate(&self, _rhs: &EmptyInterval) -> SymmetricDifferenceResult<Self::Output> {
+    fn sym_diff(&self, _rhs: &EmptyInterval) -> SymmetricDifferenceResult<Self::Output> {
         // An empty interval is nowhere, and therefore cannot be differentiated with
         // anything
         SymmetricDifferenceResult::Separate
@@ -561,7 +525,7 @@ where
 {
     type Output = ();
 
-    fn symmetrically_differentiate(&self, _rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
+    fn sym_diff(&self, _rhs: &Rhs) -> SymmetricDifferenceResult<Self::Output> {
         // An empty interval is nowhere, and therefore cannot be differentiated with
         // anything
         SymmetricDifferenceResult::Separate
@@ -572,10 +536,7 @@ where
 ///
 /// See [`SymmetricallyDifferentiable`] for more information.
 #[must_use]
-pub fn symmetrically_differentiate_abs_bound_pair(
-    a: &AbsBoundPair,
-    b: &AbsBoundPair,
-) -> SymmetricDifferenceResult<EmptiableAbsBoundPair> {
+pub fn sym_diff_abs_bound_pair(a: &AbsBoundPair, b: &AbsBoundPair) -> SymmetricDifferenceResult<EmptiableAbsBoundPair> {
     if !a.simple_overlaps(b) {
         return SymmetricDifferenceResult::Separate;
     }
@@ -622,7 +583,7 @@ pub fn symmetrically_differentiate_abs_bound_pair(
 ///
 /// See [`SymmetricallyDifferentiable`] for more information.
 #[must_use]
-pub fn symmetrically_differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(
+pub fn sym_diff_abs_bound_pair_with_emptiable_abs_bound_pair(
     a: &AbsBoundPair,
     b: &EmptiableAbsBoundPair,
 ) -> SymmetricDifferenceResult<EmptiableAbsBoundPair> {
@@ -630,7 +591,7 @@ pub fn symmetrically_differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(
         return SymmetricDifferenceResult::Separate;
     };
 
-    symmetrically_differentiate_abs_bound_pair(a, b)
+    sym_diff_abs_bound_pair(a, b)
 }
 
 /// Symmetrically differentiates two [`EmptiableAbsBoundPair`]
@@ -640,7 +601,7 @@ pub fn symmetrically_differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(
 ///
 /// See [`SymmetricallyDifferentiable`] for more information.
 #[must_use]
-pub fn symmetrically_differentiate_emptiable_abs_bound_pair(
+pub fn sym_diff_emptiable_abs_bound_pair(
     a: &EmptiableAbsBoundPair,
     b: &EmptiableAbsBoundPair,
 ) -> SymmetricDifferenceResult<EmptiableAbsBoundPair> {
@@ -648,17 +609,14 @@ pub fn symmetrically_differentiate_emptiable_abs_bound_pair(
         return SymmetricDifferenceResult::Separate;
     };
 
-    symmetrically_differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(a, b)
+    sym_diff_abs_bound_pair_with_emptiable_abs_bound_pair(a, b)
 }
 
 /// Symmetrically differentiates two [`RelBoundPair`]
 ///
 /// See [`SymmetricallyDifferentiable`] for more information.
 #[must_use]
-pub fn symmetrically_differentiate_rel_bound_pair(
-    a: &RelBoundPair,
-    b: &RelBoundPair,
-) -> SymmetricDifferenceResult<EmptiableRelBoundPair> {
+pub fn sym_diff_rel_bound_pair(a: &RelBoundPair, b: &RelBoundPair) -> SymmetricDifferenceResult<EmptiableRelBoundPair> {
     if !a.simple_overlaps(b) {
         return SymmetricDifferenceResult::Separate;
     }
@@ -705,7 +663,7 @@ pub fn symmetrically_differentiate_rel_bound_pair(
 ///
 /// See [`SymmetricallyDifferentiable`] for more information.
 #[must_use]
-pub fn symmetrically_differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(
+pub fn sym_diff_rel_bound_pair_with_emptiable_rel_bound_pair(
     a: &RelBoundPair,
     b: &EmptiableRelBoundPair,
 ) -> SymmetricDifferenceResult<EmptiableRelBoundPair> {
@@ -713,7 +671,7 @@ pub fn symmetrically_differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(
         return SymmetricDifferenceResult::Separate;
     };
 
-    symmetrically_differentiate_rel_bound_pair(a, b)
+    sym_diff_rel_bound_pair(a, b)
 }
 
 /// Symmetrically differentiates two [`EmptiableRelBoundPair`]
@@ -723,7 +681,7 @@ pub fn symmetrically_differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(
 ///
 /// See [`SymmetricallyDifferentiable`] for more information.
 #[must_use]
-pub fn symmetrically_differentiate_emptiable_rel_bound_pair(
+pub fn sym_diff_emptiable_rel_bound_pair(
     a: &EmptiableRelBoundPair,
     b: &EmptiableRelBoundPair,
 ) -> SymmetricDifferenceResult<EmptiableRelBoundPair> {
@@ -731,5 +689,5 @@ pub fn symmetrically_differentiate_emptiable_rel_bound_pair(
         return SymmetricDifferenceResult::Separate;
     };
 
-    symmetrically_differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(a, b)
+    sym_diff_rel_bound_pair_with_emptiable_rel_bound_pair(a, b)
 }

@@ -126,7 +126,7 @@ where
             return None;
         };
 
-        match current.symmetrically_differentiate(peeked) {
+        match current.sym_diff(peeked) {
             SymmetricDifferenceResult::Single(shrunk) => Some((shrunk, None)),
             SymmetricDifferenceResult::Split(split_first_part, split_second_part) => {
                 Some((split_first_part, Some(split_second_part)))

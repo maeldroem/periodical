@@ -160,7 +160,7 @@ where
             return None;
         };
 
-        match current.differentiate(peeked) {
+        match current.diff(peeked) {
             DifferenceResult::Single(shrunk) => Some((shrunk, None)),
             DifferenceResult::Split(split_first_part, split_second_part) => {
                 Some((split_first_part, Some(split_second_part)))
