@@ -80,12 +80,12 @@ pub use abridge::Abridgable;
 pub use bound_cmp::{BoundEq, BoundOrd, BoundOrdExtremaOps, BoundOrdering, bound_max, bound_min};
 #[doc(inline)]
 pub use bound_containment::{
-    BoundContainmentPosition,
+    BoundContainmentPos,
     BoundContainmentRule,
     BoundContainmentRuleSet,
     CanPositionBoundContainment,
     DEFAULT_BOUND_CONTAINMENT_RULES,
-    DisambiguatedBoundContainmentPosition,
+    DisambiguatedBoundContainmentPos,
 };
 #[doc(inline)]
 pub use bound_overlap_ambiguity::{
