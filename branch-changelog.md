@@ -73,6 +73,7 @@ TODO: once all done, PR onto dev to sync, then continue unit tests
         - `intersect`
         - `sym_diff`
         - `unite`
+      - `abridge`
       - `bound_containment`
 
 - Tests to complete code coverage for `time`
