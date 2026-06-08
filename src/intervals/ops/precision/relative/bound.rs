@@ -1,4 +1,6 @@
 //! Precision change for relative bounds
+//!
+//! See [module documentation](crate::intervals::ops::precision) for more info.
 
 use jiff::SignedDuration;
 
@@ -17,6 +19,8 @@ use crate::prelude::HasBoundInclusivity;
 /// Ability to precise relative bounds
 ///
 /// The precision itself is defined by [`Precision`].
+///
+/// See [module documentation](crate::intervals::ops::precision) for more info.
 ///
 /// # Examples
 ///
@@ -48,7 +52,7 @@ use crate::prelude::HasBoundInclusivity;
 /// # Ok::<(), Box<dyn Error>>(())
 /// ```
 pub trait PreciseRelBound {
-    /// Output of methods precising a bound
+    /// Type of the resulting precised bound
     type PrecisedBoundOutput;
 
     /// Precises the bound with the given precision
@@ -128,11 +132,11 @@ impl PreciseRelBound for RelFiniteBoundPos {
     type PrecisedBoundOutput = Result<Self, PrecisionOutOfRangeError>;
 
     fn precise_bound(&self, precision: Precision) -> Self::PrecisedBoundOutput {
-        precise_rel_finite_bound_position(self, precision)
+        precise_rel_finite_bound_pos(self, precision)
     }
 
     fn precise_bound_with_base_offset(&self, precision: Precision, base: SignedDuration) -> Self::PrecisedBoundOutput {
-        precise_rel_finite_bound_position_with_base_offset(self, precision, base)
+        precise_rel_finite_bound_pos_with_base_offset(self, precision, base)
     }
 }
 
@@ -213,7 +217,7 @@ impl PreciseRelBound for RelBound {
 /// # Errors
 ///
 /// See [`Precision::precise_signed_duration`]
-pub fn precise_rel_finite_bound_position(
+pub fn precise_rel_finite_bound_pos(
     bound: &RelFiniteBoundPos,
     precision: Precision,
 ) -> Result<RelFiniteBoundPos, PrecisionOutOfRangeError> {
@@ -223,12 +227,12 @@ pub fn precise_rel_finite_bound_position(
     ))
 }
 
-/// Precises an [`RelFiniteBoundPos`] with the given [`Precision`] and base time
+/// Precises an [`RelFiniteBoundPos`] with the given [`Precision`] and base offset
 ///
 /// # Errors
 ///
 /// See [`Precision::precise_signed_duration_with_base_offset`]
-pub fn precise_rel_finite_bound_position_with_base_offset(
+pub fn precise_rel_finite_bound_pos_with_base_offset(
     bound: &RelFiniteBoundPos,
     precision: Precision,
     base: SignedDuration,
@@ -239,46 +243,75 @@ pub fn precise_rel_finite_bound_position_with_base_offset(
     ))
 }
 
+/// Precises an [`RelFiniteStartBound`] with the given [`Precision`]
+///
+/// # Errors
+///
+/// See [`precise_rel_finite_bound_pos`]
 pub fn precise_rel_finite_start_bound(
     bound: &RelFiniteStartBound,
     precision: Precision,
 ) -> Result<RelFiniteStartBound, PrecisionOutOfRangeError> {
-    Ok(RelFiniteStartBound::new(precise_rel_finite_bound_position(
+    Ok(RelFiniteStartBound::new(precise_rel_finite_bound_pos(
         &bound.pos(),
         precision,
     )?))
 }
 
+/// Precises an [`RelFiniteStartBound`] with the given [`Precision`] and base offset
+///
+/// # Errors
+///
+/// See [`precise_rel_finite_bound_pos_with_base_offset`]
 pub fn precise_rel_finite_start_bound_with_base_offset(
     bound: &RelFiniteStartBound,
     precision: Precision,
     base: SignedDuration,
 ) -> Result<RelFiniteStartBound, PrecisionOutOfRangeError> {
-    Ok(RelFiniteStartBound::new(
-        precise_rel_finite_bound_position_with_base_offset(&bound.pos(), precision, base)?,
-    ))
+    Ok(RelFiniteStartBound::new(precise_rel_finite_bound_pos_with_base_offset(
+        &bound.pos(),
+        precision,
+        base,
+    )?))
 }
 
+/// Precises an [`RelFiniteEndBound`] with the given [`Precision`]
+///
+/// # Errors
+///
+/// See [`precise_rel_finite_bound_pos`]
 pub fn precise_rel_finite_end_bound(
     bound: &RelFiniteEndBound,
     precision: Precision,
 ) -> Result<RelFiniteEndBound, PrecisionOutOfRangeError> {
-    Ok(RelFiniteEndBound::new(precise_rel_finite_bound_position(
+    Ok(RelFiniteEndBound::new(precise_rel_finite_bound_pos(
         &bound.pos(),
         precision,
     )?))
 }
 
+/// Precises an [`RelFiniteEndBound`] with the given [`Precision`] and base offset
+///
+/// # Errors
+///
+/// See [`precise_rel_finite_bound_pos_with_base_offset`]
 pub fn precise_rel_finite_end_bound_with_base_offset(
     bound: &RelFiniteEndBound,
     precision: Precision,
     base: SignedDuration,
 ) -> Result<RelFiniteEndBound, PrecisionOutOfRangeError> {
-    Ok(RelFiniteEndBound::new(
-        precise_rel_finite_bound_position_with_base_offset(&bound.pos(), precision, base)?,
-    ))
+    Ok(RelFiniteEndBound::new(precise_rel_finite_bound_pos_with_base_offset(
+        &bound.pos(),
+        precision,
+        base,
+    )?))
 }
 
+/// Precises an [`RelFiniteBound`] with the given [`Precision`]
+///
+/// # Errors
+///
+/// See [`precise_rel_finite_bound_pos`]
 pub fn precise_rel_finite_bound(
     bound: &RelFiniteBound,
     precision: Precision,
@@ -291,6 +324,11 @@ pub fn precise_rel_finite_bound(
     })
 }
 
+/// Precises an [`RelFiniteBound`] with the given [`Precision`] and base offset
+///
+/// # Errors
+///
+/// See [`precise_rel_finite_bound_pos_with_base_offset`]
 pub fn precise_rel_finite_bound_with_base_offset(
     bound: &RelFiniteBound,
     precision: Precision,
@@ -308,6 +346,11 @@ pub fn precise_rel_finite_bound_with_base_offset(
     })
 }
 
+/// Precises an [`RelStartBound`] with the given [`Precision`]
+///
+/// # Errors
+///
+/// See [`precise_rel_finite_start_bound`]
 pub fn precise_rel_start_bound(
     bound: &RelStartBound,
     precision: Precision,
@@ -320,6 +363,11 @@ pub fn precise_rel_start_bound(
     })
 }
 
+/// Precises an [`RelStartBound`] with the given [`Precision`] and base offset
+///
+/// # Errors
+///
+/// See [`precise_rel_finite_start_bound_with_base_offset`]
 pub fn precise_rel_start_bound_with_base_offset(
     bound: &RelStartBound,
     precision: Precision,
@@ -335,6 +383,11 @@ pub fn precise_rel_start_bound_with_base_offset(
     })
 }
 
+/// Precises an [`RelEndBound`] with the given [`Precision`]
+///
+/// # Errors
+///
+/// See [`precise_rel_finite_end_bound`]
 pub fn precise_rel_end_bound(
     bound: &RelEndBound,
     precision: Precision,
@@ -345,6 +398,11 @@ pub fn precise_rel_end_bound(
     })
 }
 
+/// Precises an [`RelEndBound`] with the given [`Precision`] and base offset
+///
+/// # Errors
+///
+/// See [`precise_rel_finite_end_bound_with_base_offset`]
 pub fn precise_rel_end_bound_with_base_offset(
     bound: &RelEndBound,
     precision: Precision,
@@ -358,6 +416,11 @@ pub fn precise_rel_end_bound_with_base_offset(
     })
 }
 
+/// Precises an [`RelBound`] with the given [`Precision`]
+///
+/// # Errors
+///
+/// See [`precise_rel_finite_bound`]
 pub fn precise_rel_bound(bound: &RelBound, precision: Precision) -> Result<RelBound, PrecisionOutOfRangeError> {
     Ok(match bound {
         RelBound::Start(start_bound) => RelBound::Start(precise_rel_start_bound(start_bound, precision)?),
@@ -365,6 +428,11 @@ pub fn precise_rel_bound(bound: &RelBound, precision: Precision) -> Result<RelBo
     })
 }
 
+/// Precises an [`RelBound`] with the given [`Precision`] and base offset
+///
+/// # Errors
+///
+/// See [`precise_rel_finite_bound_with_base_offset`]
 pub fn precise_rel_bound_with_base_offset(
     bound: &RelBound,
     precision: Precision,
