@@ -1,4 +1,4 @@
-//! Interval union
+//! Union between two intervals
 
 use crate::intervals::absolute::{
     AbsBoundPair,
@@ -34,55 +34,25 @@ use crate::ops::UnionResult;
 ///
 /// ```
 /// # use std::error::Error;
-/// # use jiff::Zoned;
+/// # use jiff::Timestamp;
 /// # use periodical::ops::UnionResult;
 /// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos};
 /// # use periodical::intervals::ops::set_ops::Unitable;
 /// let first_interval = AbsBoundPair::new(
-///     AbsFiniteBoundPos::new(
-///         "2025-01-01 08:00:00[Europe/Oslo]"
-///             .parse::<Zoned>()?
-///             .timestamp(),
-///     )
-///     .to_start_bound(),
-///     AbsFiniteBoundPos::new(
-///         "2025-01-01 14:00:00[Europe/Oslo]"
-///             .parse::<Zoned>()?
-///             .timestamp(),
-///     )
-///     .to_end_bound(),
+///     AbsFiniteBoundPos::new("2025-01-01 08:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+///     AbsFiniteBoundPos::new("2025-01-01 14:00:00Z".parse::<Timestamp>()?).to_end_bound(),
 /// );
 ///
 /// let second_interval = AbsBoundPair::new(
-///     AbsFiniteBoundPos::new(
-///         "2025-01-01 12:00:00[Europe/Oslo]"
-///             .parse::<Zoned>()?
-///             .timestamp(),
-///     )
-///     .to_start_bound(),
-///     AbsFiniteBoundPos::new(
-///         "2025-01-01 18:00:00[Europe/Oslo]"
-///             .parse::<Zoned>()?
-///             .timestamp(),
-///     )
-///     .to_end_bound(),
+///     AbsFiniteBoundPos::new("2025-01-01 12:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+///     AbsFiniteBoundPos::new("2025-01-01 18:00:00Z".parse::<Timestamp>()?).to_end_bound(),
 /// );
 ///
 /// assert_eq!(
 ///     first_interval.unite(&second_interval),
 ///     UnionResult::United(AbsBoundPair::new(
-///         AbsFiniteBoundPos::new(
-///             "2025-01-01 08:00:00[Europe/Oslo]"
-///                 .parse::<Zoned>()?
-///                 .timestamp(),
-///         )
-///         .to_start_bound(),
-///         AbsFiniteBoundPos::new(
-///             "2025-01-01 18:00:00[Europe/Oslo]"
-///                 .parse::<Zoned>()?
-///                 .timestamp(),
-///         )
-///         .to_end_bound(),
+///         AbsFiniteBoundPos::new("2025-01-01 08:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+///         AbsFiniteBoundPos::new("2025-01-01 18:00:00Z".parse::<Timestamp>()?).to_end_bound(),
 ///     )),
 /// );
 /// # Ok::<(), Box<dyn Error>>(())
@@ -92,38 +62,18 @@ use crate::ops::UnionResult;
 ///
 /// ```
 /// # use std::error::Error;
-/// # use jiff::Zoned;
+/// # use jiff::Timestamp;
 /// # use periodical::ops::UnionResult;
 /// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos};
 /// # use periodical::intervals::ops::set_ops::Unitable;
 /// let first_interval = AbsBoundPair::new(
-///     AbsFiniteBoundPos::new(
-///         "2025-01-01 08:00:00[Europe/Oslo]"
-///             .parse::<Zoned>()?
-///             .timestamp(),
-///     )
-///     .to_start_bound(),
-///     AbsFiniteBoundPos::new(
-///         "2025-01-01 12:00:00[Europe/Oslo]"
-///             .parse::<Zoned>()?
-///             .timestamp(),
-///     )
-///     .to_end_bound(),
+///     AbsFiniteBoundPos::new("2025-01-01 08:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+///     AbsFiniteBoundPos::new("2025-01-01 12:00:00Z".parse::<Timestamp>()?).to_end_bound(),
 /// );
 ///
 /// let second_interval = AbsBoundPair::new(
-///     AbsFiniteBoundPos::new(
-///         "2025-01-01 14:00:00[Europe/Oslo]"
-///             .parse::<Zoned>()?
-///             .timestamp(),
-///     )
-///     .to_start_bound(),
-///     AbsFiniteBoundPos::new(
-///         "2025-01-01 18:00:00[Europe/Oslo]"
-///             .parse::<Zoned>()?
-///             .timestamp(),
-///     )
-///     .to_end_bound(),
+///     AbsFiniteBoundPos::new("2025-01-01 14:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+///     AbsFiniteBoundPos::new("2025-01-01 18:00:00Z".parse::<Timestamp>()?).to_end_bound(),
 /// );
 ///
 /// assert_eq!(
@@ -133,7 +83,7 @@ use crate::ops::UnionResult;
 /// # Ok::<(), Box<dyn Error>>(())
 /// ```
 pub trait Unitable<Rhs = Self> {
-    /// Output type
+    /// Type of the resulting united interval
     type Output;
 
     /// Unites two intervals using default overlap rules
@@ -142,55 +92,25 @@ pub trait Unitable<Rhs = Self> {
     ///
     /// ```
     /// # use std::error::Error;
-    /// # use jiff::Zoned;
+    /// # use jiff::Timestamp;
     /// # use periodical::ops::UnionResult;
     /// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos};
     /// # use periodical::intervals::ops::set_ops::Unitable;
     /// let first_interval = AbsBoundPair::new(
-    ///     AbsFiniteBoundPos::new(
-    ///         "2025-01-01 08:00:00[Europe/Oslo]"
-    ///             .parse::<Zoned>()?
-    ///             .timestamp(),
-    ///     )
-    ///     .to_start_bound(),
-    ///     AbsFiniteBoundPos::new(
-    ///         "2025-01-01 14:00:00[Europe/Oslo]"
-    ///             .parse::<Zoned>()?
-    ///             .timestamp(),
-    ///     )
-    ///     .to_end_bound(),
+    ///     AbsFiniteBoundPos::new("2025-01-01 08:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+    ///     AbsFiniteBoundPos::new("2025-01-01 14:00:00Z".parse::<Timestamp>()?).to_end_bound(),
     /// );
     ///
     /// let second_interval = AbsBoundPair::new(
-    ///     AbsFiniteBoundPos::new(
-    ///         "2025-01-01 12:00:00[Europe/Oslo]"
-    ///             .parse::<Zoned>()?
-    ///             .timestamp(),
-    ///     )
-    ///     .to_start_bound(),
-    ///     AbsFiniteBoundPos::new(
-    ///         "2025-01-01 18:00:00[Europe/Oslo]"
-    ///             .parse::<Zoned>()?
-    ///             .timestamp(),
-    ///     )
-    ///     .to_end_bound(),
+    ///     AbsFiniteBoundPos::new("2025-01-01 12:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+    ///     AbsFiniteBoundPos::new("2025-01-01 18:00:00Z".parse::<Timestamp>()?).to_end_bound(),
     /// );
     ///
     /// assert_eq!(
     ///     first_interval.unite(&second_interval),
     ///     UnionResult::United(AbsBoundPair::new(
-    ///         AbsFiniteBoundPos::new(
-    ///             "2025-01-01 08:00:00[Europe/Oslo]"
-    ///                 .parse::<Zoned>()?
-    ///                 .timestamp(),
-    ///         )
-    ///         .to_start_bound(),
-    ///         AbsFiniteBoundPos::new(
-    ///             "2025-01-01 18:00:00[Europe/Oslo]"
-    ///                 .parse::<Zoned>()?
-    ///                 .timestamp(),
-    ///         )
-    ///         .to_end_bound(),
+    ///         AbsFiniteBoundPos::new("2025-01-01 08:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+    ///         AbsFiniteBoundPos::new("2025-01-01 18:00:00Z".parse::<Timestamp>()?).to_end_bound(),
     ///     )),
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
@@ -204,62 +124,31 @@ pub trait Unitable<Rhs = Self> {
     ///
     /// ```
     /// # use std::error::Error;
-    /// # use jiff::Zoned;
+    /// # use jiff::Timestamp;
     /// # use periodical::ops::UnionResult;
     /// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos};
     /// # use periodical::intervals::ops::extend::Extensible;
     /// # use periodical::intervals::ops::set_ops::Unitable;
     /// let first_interval = AbsBoundPair::new(
-    ///     AbsFiniteBoundPos::new(
-    ///         "2025-01-01 08:00:00[Europe/Oslo]"
-    ///             .parse::<Zoned>()?
-    ///             .timestamp(),
-    ///     )
-    ///     .to_start_bound(),
-    ///     AbsFiniteBoundPos::new(
-    ///         "2025-01-01 12:00:00[Europe/Oslo]"
-    ///             .parse::<Zoned>()?
-    ///             .timestamp(),
-    ///     )
-    ///     .to_end_bound(),
+    ///     AbsFiniteBoundPos::new("2025-01-01 08:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+    ///     AbsFiniteBoundPos::new("2025-01-01 12:00:00Z".parse::<Timestamp>()?).to_end_bound(),
     /// );
     ///
     /// let second_interval = AbsBoundPair::new(
-    ///     AbsFiniteBoundPos::new(
-    ///         "2025-01-01 14:00:00[Europe/Oslo]"
-    ///             .parse::<Zoned>()?
-    ///             .timestamp(),
-    ///     )
-    ///     .to_start_bound(),
-    ///     AbsFiniteBoundPos::new(
-    ///         "2025-01-01 18:00:00[Europe/Oslo]"
-    ///             .parse::<Zoned>()?
-    ///             .timestamp(),
-    ///     )
-    ///     .to_end_bound(),
+    ///     AbsFiniteBoundPos::new("2025-01-01 14:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+    ///     AbsFiniteBoundPos::new("2025-01-01 18:00:00Z".parse::<Timestamp>()?).to_end_bound(),
     /// );
     ///
-    /// let union_closure =
-    ///     |a: &AbsBoundPair, b: &AbsBoundPair| -> UnionResult<AbsBoundPair> {
-    ///         // Always unite
-    ///         UnionResult::United(a.extend(b))
-    ///     };
+    /// let union_closure = |a: &AbsBoundPair, b: &AbsBoundPair| -> UnionResult<AbsBoundPair> {
+    ///     // Always unite
+    ///     UnionResult::United(a.extend(b))
+    /// };
     ///
     /// assert_eq!(
     ///     first_interval.unite_with(&second_interval, union_closure),
     ///     UnionResult::United(AbsBoundPair::new(
-    ///         AbsFiniteBoundPos::new(
-    ///             "2025-01-01 08:00:00[Europe/Oslo]"
-    ///                 .parse::<Zoned>()?
-    ///                 .timestamp(),
-    ///         )
-    ///         .to_start_bound(),
-    ///         AbsFiniteBoundPos::new(
-    ///             "2025-01-01 18:00:00[Europe/Oslo]"
-    ///                 .parse::<Zoned>()?
-    ///                 .timestamp(),
-    ///         )
-    ///         .to_end_bound(),
+    ///         AbsFiniteBoundPos::new("2025-01-01 08:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+    ///         AbsFiniteBoundPos::new("2025-01-01 18:00:00Z".parse::<Timestamp>()?).to_end_bound(),
     ///     )),
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
