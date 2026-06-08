@@ -25,6 +25,8 @@ use crate::intervals::absolute::{
     EmptiableAbsBoundPair,
     EmptiableAbsInterval,
     HalfBoundedAbsInterval,
+    HalfBoundedToFutureAbsInterval,
+    HalfBoundedToPastAbsInterval,
     HasAbsBoundPair,
     HasEmptiableAbsBoundPair,
     swap_abs_start_end_bounds,
@@ -42,6 +44,8 @@ use crate::intervals::relative::{
     EmptiableRelBoundPair,
     EmptiableRelInterval,
     HalfBoundedRelInterval,
+    HalfBoundedToFutureRelInterval,
+    HalfBoundedToPastRelInterval,
     HasEmptiableRelBoundPair,
     HasRelBoundPair,
     RelBoundPair,
@@ -53,7 +57,49 @@ use crate::intervals::relative::{
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 
 macro_rules! abridgable_impl {
-    (implementor => $implementor:ty, rhs => [$($rhs:ty),*$(,)?], output => clone rhs $(,)?) => {
+    () => {};
+
+    (@select_method; $lhs:ident; $rhs:ident; abs; non_emptiable; non_emptiable) => {
+        abridge_abs_bound_pair(&$lhs.abs_bound_pair(), &$rhs.abs_bound_pair())
+    };
+    (@select_method; $lhs:ident; $rhs:ident; abs; non_emptiable; emptiable) => {
+        abridge_abs_bound_pair_with_emptiable_abs_bound_pair(&$lhs.abs_bound_pair(), &$rhs.emptiable_abs_bound_pair())
+    };
+    (@select_method; $lhs:ident; $rhs:ident; abs; emptiable; non_emptiable) => {
+        abridgable_impl!(@select_method; $lhs; $rhs; abs; emptiable; emptiable)
+    };
+    (@select_method; $lhs:ident; $rhs:ident; abs; emptiable; emptiable) => {
+        abridge_emptiable_abs_bound_pair(&$lhs.emptiable_abs_bound_pair(), &$rhs.emptiable_abs_bound_pair())
+    };
+    (@select_method; $lhs:ident; $rhs:ident; rel; non_emptiable; non_emptiable) => {
+        abridge_rel_bound_pair(&$lhs.rel_bound_pair(), &$rhs.rel_bound_pair())
+    };
+    (@select_method; $lhs:ident; $rhs:ident; rel; non_emptiable; emptiable) => {
+        abridge_rel_bound_pair_with_emptiable_rel_bound_pair(&$lhs.rel_bound_pair(), &$rhs.emptiable_rel_bound_pair())
+    };
+    (@select_method; $lhs:ident; $rhs:ident; rel; emptiable; non_emptiable) => {
+        abridgable_impl!(@select_method; $lhs; $rhs; rel; emptiable; emptiable)
+    };
+    (@select_method; $lhs:ident; $rhs:ident; rel; emptiable; emptiable) => {
+        abridge_emptiable_rel_bound_pair(&$lhs.emptiable_rel_bound_pair(), &$rhs.emptiable_rel_bound_pair())
+    };
+
+    // Syntax sucks a bit, but doing match arms of different custom syntax is not possible declaratively
+    // and annoying to parse in a proc macro.
+    (for $implementor:ty [map rhs] $(|)? $($rhs:ty)|+ => lhs.clone(); $($tail:tt)*) => {
+        $(
+            impl Abridgable<$rhs> for $implementor {
+                type Output = $implementor;
+
+                fn abridge(&self, _rhs: &$rhs) -> Self::Output {
+                    self.clone()
+                }
+            }
+        )+
+
+        abridgable_impl!($($tail)*);
+    };
+    (for $implementor:ty [map rhs] $(|)? $($rhs:ty)|+ => rhs.clone(); $($tail:tt)*) => {
         $(
             impl Abridgable<$rhs> for $implementor {
                 type Output = $rhs;
@@ -62,162 +108,24 @@ macro_rules! abridgable_impl {
                     rhs.clone()
                 }
             }
-        )*
-    };
-    (implementor => $implementor:ty, rhs => [$($rhs:ty),*$(,)?], output => clone lhs $(,)?) => {
-        $(
-            impl Abridgable<$rhs> for $implementor {
-                type Output = Self;
+        )+
 
-                fn abridge(&self, _rhs: &$rhs) -> Self::Output {
-                    self.clone()
-                }
-            }
-        )*
+        abridgable_impl!($($tail)*);
     };
-    (
-        implementor => $implementor:ty,
-        rhs => [$($rhs:ty),*$(,)?],
-        output => $output:ty,
-        absolute,
-        (non_emptiable, non_emptiable $(,)?) $(,)?
-    ) => {
+    (for $implementor:ty [map rhs] $(|)? $($rhs:ty)|+ => $output:ty [via] (
+        $relativity:ident, $lhs_type:ident, $rhs_type:ident $(,)?
+    ); $($tail:tt)*) => {
         $(
             impl Abridgable<$rhs> for $implementor {
                 type Output = $output;
 
                 fn abridge(&self, rhs: &$rhs) -> Self::Output {
-                    Self::Output::from(abridge_abs_bound_pair(&self.abs_bound_pair(), &rhs.abs_bound_pair()))
+                    Self::Output::from(abridgable_impl!(@select_method; self; rhs; $relativity; $lhs_type; $rhs_type))
                 }
             }
-        )*
-    };
-    (
-        implementor => $implementor:ty,
-        rhs => [$($rhs:ty),*$(,)?],
-        output => $output:ty,
-        absolute,
-        (non_emptiable, emptiable $(,)?) $(,)?
-    ) => {
-        $(
-            impl Abridgable<$rhs> for $implementor {
-                type Output = $output;
+        )+
 
-                fn abridge(&self, rhs: &$rhs) -> Self::Output {
-                    Self::Output::from(abridge_abs_bound_pair_with_emptiable_abs_bound_pair(
-                        &self.abs_bound_pair(),
-                        &rhs.emptiable_abs_bound_pair()
-                    ))
-                }
-            }
-        )*
-    };
-    (
-        implementor => $implementor:ty,
-        rhs => [$($rhs:ty),*$(,)?],
-        output => $output:ty,
-        absolute,
-        (emptiable, non_emptiable $(,)?) $(,)?
-    ) => {
-        abridgable_impl!(
-            implementor => $implementor,
-            rhs => [$($rhs),*],
-            output => $output,
-            absolute,
-            (emptiable, emptiable),
-        );
-    };
-    (
-        implementor => $implementor:ty,
-        rhs => [$($rhs:ty),*$(,)?],
-        output => $output:ty,
-        absolute,
-        (emptiable, emptiable $(,)?) $(,)?
-    ) => {
-        $(
-            impl Abridgable<$rhs> for $implementor {
-                type Output = $output;
-
-                fn abridge(&self, rhs: &$rhs) -> Self::Output {
-                    Self::Output::from(abridge_emptiable_abs_bound_pair(
-                        &self.emptiable_abs_bound_pair(),
-                        &rhs.emptiable_abs_bound_pair()
-                    ))
-                }
-            }
-        )*
-    };
-    (
-        implementor => $implementor:ty,
-        rhs => [$($rhs:ty),*$(,)?],
-        output => $output:ty,
-        relative,
-        (non_emptiable, non_emptiable $(,)?) $(,)?
-    ) => {
-        $(
-            impl Abridgable<$rhs> for $implementor {
-                type Output = $output;
-
-                fn abridge(&self, rhs: &$rhs) -> Self::Output {
-                    Self::Output::from(abridge_rel_bound_pair(&self.rel_bound_pair(), &rhs.rel_bound_pair()))
-                }
-            }
-        )*
-    };
-    (
-        implementor => $implementor:ty,
-        rhs => [$($rhs:ty),*$(,)?],
-        output => $output:ty,
-        relative,
-        (non_emptiable, emptiable $(,)?) $(,)?
-    ) => {
-        $(
-            impl Abridgable<$rhs> for $implementor {
-                type Output = $output;
-
-                fn abridge(&self, rhs: &$rhs) -> Self::Output {
-                    Self::Output::from(abridge_rel_bound_pair_with_emptiable_rel_bound_pair(
-                        &self.rel_bound_pair(),
-                        &rhs.emptiable_rel_bound_pair()
-                    ))
-                }
-            }
-        )*
-    };
-    (
-        implementor => $implementor:ty,
-        rhs => [$($rhs:ty),*$(,)?],
-        output => $output:ty,
-        relative,
-        (emptiable, non_emptiable $(,)?) $(,)?
-    ) => {
-        abridgable_impl!(
-            implementor => $implementor,
-            rhs => [$($rhs),*],
-            output => $output,
-            relative,
-            (emptiable, emptiable),
-        );
-    };
-    (
-        implementor => $implementor:ty,
-        rhs => [$($rhs:ty),*$(,)?],
-        output => $output:ty,
-        relative,
-        (emptiable, emptiable $(,)?) $(,)?
-    ) => {
-        $(
-            impl Abridgable<$rhs> for $implementor {
-                type Output = $output;
-
-                fn abridge(&self, rhs: &$rhs) -> Self::Output {
-                    Self::Output::from(abridge_emptiable_rel_bound_pair(
-                        &self.emptiable_rel_bound_pair(),
-                        &rhs.emptiable_rel_bound_pair()
-                    ))
-                }
-            }
-        )*
+        abridgable_impl!($($tail)*);
     };
 }
 
@@ -408,198 +316,90 @@ pub trait Abridgable<Rhs = Self> {
 }
 
 abridgable_impl!(
-    implementor => AbsBoundPair,
-    rhs => [AbsBoundPair],
-    output => EmptiableAbsBoundPair,
-    absolute,
-    (non_emptiable, non_emptiable),
-);
-abridgable_impl!(
-    implementor => AbsBoundPair,
-    rhs => [EmptiableAbsBoundPair],
-    output => EmptiableAbsBoundPair,
-    absolute,
-    (non_emptiable, emptiable),
-);
-abridgable_impl!(
-    implementor => EmptiableAbsBoundPair,
-    rhs => [AbsBoundPair],
-    output => EmptiableAbsBoundPair,
-    absolute,
-    (emptiable, non_emptiable),
-);
-abridgable_impl!(
-    implementor => EmptiableAbsBoundPair,
-    rhs => [EmptiableAbsBoundPair],
-    output => EmptiableAbsBoundPair,
-    absolute,
-    (emptiable, emptiable),
-);
-abridgable_impl!(
-    implementor => AbsInterval,
-    rhs => [AbsInterval],
-    output => EmptiableAbsInterval,
-    absolute,
-    (non_emptiable, non_emptiable),
-);
-abridgable_impl!(
-    implementor => AbsInterval,
-    rhs => [EmptiableAbsInterval],
-    output => EmptiableAbsInterval,
-    absolute,
-    (non_emptiable, emptiable),
-);
-abridgable_impl!(
-    implementor => EmptiableAbsInterval,
-    rhs => [AbsInterval],
-    output => EmptiableAbsInterval,
-    absolute,
-    (emptiable, non_emptiable),
-);
-abridgable_impl!(
-    implementor => EmptiableAbsInterval,
-    rhs => [EmptiableAbsInterval],
-    output => EmptiableAbsInterval,
-    absolute,
-    (emptiable, emptiable),
-);
-abridgable_impl!(
-    implementor => BoundedAbsInterval,
-    rhs => [BoundedAbsInterval, HalfBoundedAbsInterval],
-    output => EmptiableAbsInterval,
-    absolute,
-    (non_emptiable, non_emptiable),
-);
-abridgable_impl!(
-    implementor => BoundedAbsInterval,
-    rhs => [UnboundedInterval, EmptyInterval],
-    output => clone lhs,
-);
-abridgable_impl!(
-    implementor => HalfBoundedAbsInterval,
-    rhs => [BoundedAbsInterval, HalfBoundedAbsInterval],
-    output => EmptiableAbsInterval,
-    absolute,
-    (non_emptiable, non_emptiable),
-);
-abridgable_impl!(
-    implementor => HalfBoundedAbsInterval,
-    rhs => [UnboundedInterval, EmptyInterval],
-    output => clone lhs,
-);
+    // Absolute
+    for AbsBoundPair [map rhs]
+        AbsBoundPair => EmptiableAbsBoundPair [via] (abs, non_emptiable, non_emptiable);
+    for AbsBoundPair [map rhs]
+        EmptiableAbsBoundPair => EmptiableAbsBoundPair [via] (abs, non_emptiable, emptiable);
 
-abridgable_impl!(
-    implementor => RelBoundPair,
-    rhs => [RelBoundPair],
-    output => EmptiableRelBoundPair,
-    relative,
-    (non_emptiable, non_emptiable),
-);
-abridgable_impl!(
-    implementor => RelBoundPair,
-    rhs => [EmptiableRelBoundPair],
-    output => EmptiableRelBoundPair,
-    relative,
-    (non_emptiable, emptiable),
-);
-abridgable_impl!(
-    implementor => EmptiableRelBoundPair,
-    rhs => [RelBoundPair],
-    output => EmptiableRelBoundPair,
-    relative,
-    (emptiable, non_emptiable),
-);
-abridgable_impl!(
-    implementor => EmptiableRelBoundPair,
-    rhs => [EmptiableRelBoundPair],
-    output => EmptiableRelBoundPair,
-    relative,
-    (emptiable, emptiable),
-);
-abridgable_impl!(
-    implementor => RelInterval,
-    rhs => [RelInterval],
-    output => EmptiableRelInterval,
-    relative,
-    (non_emptiable, non_emptiable),
-);
-abridgable_impl!(
-    implementor => RelInterval,
-    rhs => [EmptiableRelInterval],
-    output => EmptiableRelInterval,
-    relative,
-    (non_emptiable, emptiable),
-);
-abridgable_impl!(
-    implementor => EmptiableRelInterval,
-    rhs => [RelInterval],
-    output => EmptiableRelInterval,
-    relative,
-    (emptiable, non_emptiable),
-);
-abridgable_impl!(
-    implementor => EmptiableRelInterval,
-    rhs => [EmptiableRelInterval],
-    output => EmptiableRelInterval,
-    relative,
-    (emptiable, emptiable),
-);
-abridgable_impl!(
-    implementor => BoundedRelInterval,
-    rhs => [BoundedRelInterval, HalfBoundedRelInterval],
-    output => EmptiableRelInterval,
-    relative,
-    (non_emptiable, non_emptiable),
-);
-abridgable_impl!(
-    implementor => BoundedRelInterval,
-    rhs => [UnboundedInterval, EmptyInterval],
-    output => clone lhs,
-);
-abridgable_impl!(
-    implementor => HalfBoundedRelInterval,
-    rhs => [BoundedRelInterval, HalfBoundedRelInterval],
-    output => EmptiableRelInterval,
-    relative,
-    (non_emptiable, non_emptiable),
-);
-abridgable_impl!(
-    implementor => HalfBoundedRelInterval,
-    rhs => [UnboundedInterval, EmptyInterval],
-    output => clone lhs,
-);
+    for EmptiableAbsBoundPair [map rhs]
+        EmptiableAbsBoundPair => EmptiableAbsBoundPair [via] (abs, emptiable, emptiable);
 
-abridgable_impl!(
-    implementor => UnboundedInterval,
-    rhs => [
-        BoundedAbsInterval,
-        HalfBoundedAbsInterval,
-        BoundedRelInterval,
-        HalfBoundedRelInterval,
-    ],
-    output => clone rhs,
-);
-abridgable_impl!(
-    implementor => UnboundedInterval,
-    rhs => [UnboundedInterval, EmptyInterval],
-    output => clone lhs,
-);
+    for AbsInterval [map rhs] AbsInterval => EmptiableAbsInterval [via] (abs, non_emptiable, non_emptiable);
+    for AbsInterval [map rhs] EmptiableAbsInterval => EmptiableAbsInterval [via] (abs, non_emptiable, emptiable);
 
-abridgable_impl!(
-    implementor => EmptyInterval,
-    rhs => [
-        BoundedAbsInterval,
-        HalfBoundedAbsInterval,
-        BoundedRelInterval,
-        HalfBoundedRelInterval,
-        UnboundedInterval,
-    ],
-    output => clone rhs,
-);
-abridgable_impl!(
-    implementor => EmptyInterval,
-    rhs => [EmptyInterval],
-    output => clone lhs,
+    for EmptiableAbsInterval [map rhs] AbsInterval => EmptiableAbsInterval [via] (abs, emptiable, non_emptiable);
+    for EmptiableAbsInterval [map rhs] EmptiableAbsInterval => EmptiableAbsInterval [via] (abs, emptiable, emptiable);
+
+    for BoundedAbsInterval [map rhs]
+        BoundedAbsInterval | HalfBoundedAbsInterval | HalfBoundedToFutureAbsInterval | HalfBoundedToPastAbsInterval
+        => EmptiableAbsInterval [via] (abs, non_emptiable, non_emptiable);
+    for BoundedAbsInterval [map rhs] UnboundedInterval | EmptyInterval => lhs.clone();
+
+    for HalfBoundedAbsInterval [map rhs]
+        BoundedAbsInterval | HalfBoundedAbsInterval | HalfBoundedToFutureAbsInterval | HalfBoundedToPastAbsInterval
+        => EmptiableAbsInterval [via] (abs, non_emptiable, non_emptiable);
+    for HalfBoundedAbsInterval [map rhs] UnboundedInterval | EmptyInterval => lhs.clone();
+
+    for HalfBoundedToFutureAbsInterval [map rhs]
+        BoundedAbsInterval | HalfBoundedAbsInterval | HalfBoundedToFutureAbsInterval | HalfBoundedToPastAbsInterval
+        => EmptiableAbsInterval [via] (abs, non_emptiable, non_emptiable);
+    for HalfBoundedToFutureAbsInterval [map rhs] UnboundedInterval | EmptyInterval => lhs.clone();
+
+    for HalfBoundedToPastAbsInterval [map rhs]
+        BoundedAbsInterval | HalfBoundedAbsInterval | HalfBoundedToFutureAbsInterval | HalfBoundedToPastAbsInterval
+        => EmptiableAbsInterval [via] (abs, non_emptiable, non_emptiable);
+    for HalfBoundedToPastAbsInterval [map rhs] UnboundedInterval | EmptyInterval => lhs.clone();
+
+    // Relative
+    for RelBoundPair [map rhs]
+        RelBoundPair => EmptiableRelBoundPair [via] (rel, non_emptiable, non_emptiable);
+    for RelBoundPair [map rhs]
+        EmptiableRelBoundPair => EmptiableRelBoundPair [via] (rel, non_emptiable, emptiable);
+
+    for EmptiableRelBoundPair [map rhs]
+        EmptiableRelBoundPair => EmptiableRelBoundPair [via] (rel, emptiable, emptiable);
+
+    for RelInterval [map rhs] RelInterval => EmptiableRelInterval [via] (rel, non_emptiable, non_emptiable);
+    for RelInterval [map rhs] EmptiableRelInterval => EmptiableRelInterval [via] (rel, non_emptiable, emptiable);
+
+    for EmptiableRelInterval [map rhs] RelInterval => EmptiableRelInterval [via] (rel, emptiable, non_emptiable);
+    for EmptiableRelInterval [map rhs] EmptiableRelInterval => EmptiableRelInterval [via] (rel, emptiable, emptiable);
+
+    for BoundedRelInterval [map rhs]
+        BoundedRelInterval | HalfBoundedRelInterval | HalfBoundedToFutureRelInterval | HalfBoundedToPastRelInterval
+        => EmptiableRelInterval [via] (rel, non_emptiable, non_emptiable);
+    for BoundedRelInterval [map rhs] UnboundedInterval | EmptyInterval => lhs.clone();
+
+    for HalfBoundedRelInterval [map rhs]
+        BoundedRelInterval | HalfBoundedRelInterval | HalfBoundedToFutureRelInterval | HalfBoundedToPastRelInterval
+        => EmptiableRelInterval [via] (rel, non_emptiable, non_emptiable);
+    for HalfBoundedRelInterval [map rhs] UnboundedInterval | EmptyInterval => lhs.clone();
+
+    for HalfBoundedToFutureRelInterval [map rhs]
+        BoundedRelInterval | HalfBoundedRelInterval | HalfBoundedToFutureRelInterval | HalfBoundedToPastRelInterval
+        => EmptiableRelInterval [via] (rel, non_emptiable, non_emptiable);
+    for HalfBoundedToFutureRelInterval [map rhs] UnboundedInterval | EmptyInterval => lhs.clone();
+
+    for HalfBoundedToPastRelInterval [map rhs]
+        BoundedRelInterval | HalfBoundedRelInterval | HalfBoundedToFutureRelInterval | HalfBoundedToPastRelInterval
+        => EmptiableRelInterval [via] (rel, non_emptiable, non_emptiable);
+    for HalfBoundedToPastRelInterval [map rhs] UnboundedInterval | EmptyInterval => lhs.clone();
+
+    // Special
+    for UnboundedInterval [map rhs]
+        BoundedAbsInterval | HalfBoundedAbsInterval | HalfBoundedToFutureAbsInterval | HalfBoundedToPastAbsInterval
+        | BoundedRelInterval | HalfBoundedRelInterval | HalfBoundedToFutureRelInterval | HalfBoundedToPastRelInterval
+        => rhs.clone();
+    for UnboundedInterval [map rhs] UnboundedInterval | EmptyInterval => lhs.clone();
+
+    for EmptyInterval [map rhs]
+        BoundedAbsInterval | HalfBoundedAbsInterval | HalfBoundedToFutureAbsInterval | HalfBoundedToPastAbsInterval
+        | BoundedRelInterval | HalfBoundedRelInterval | HalfBoundedToFutureRelInterval | HalfBoundedToPastRelInterval
+        | UnboundedInterval
+        => rhs.clone();
+    for EmptyInterval [map rhs] EmptyInterval => lhs.clone();
+
 );
 
 /// Abridges two [`AbsBoundPair`]s
