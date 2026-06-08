@@ -22,8 +22,7 @@ impl BoundedAbsInterval {
     /// timezone
     ///
     /// If you wish to create a [`BoundedAbsInterval`] of a date to which
-    /// an offset is applied, consider using
-    /// [`checked_add_calendar_anchor_offset_to_date`] or
+    /// an offset is applied, consider using [`checked_add_calendar_anchor_offset_to_date`] or
     /// [`checked_sub_calendar_anchor_offset_to_date`] before using this
     /// method to get the interval.
     ///
@@ -48,14 +47,14 @@ impl BoundedAbsInterval {
     /// let interval = BoundedAbsInterval::from_date(date, TimeZone::get("Europe/Oslo")?)?;
     ///
     /// assert_eq!(
-    ///     interval.start(),
+    ///     interval.start_time(),
     ///     "2026-01-05 00:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
     /// );
     /// assert_eq!(interval.start_inclusivity(), BoundInclusivity::Inclusive);
     /// assert_eq!(
-    ///     interval.end(),
+    ///     interval.end_time(),
     ///     "2026-01-06 00:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
@@ -120,14 +119,14 @@ impl BoundedAbsInterval {
     /// )?;
     ///
     /// assert_eq!(
-    ///     interval.start(),
+    ///     interval.start_time(),
     ///     "2026-05-06 00:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
     /// );
     /// assert_eq!(interval.start_inclusivity(), BoundInclusivity::Inclusive);
     /// assert_eq!(
-    ///     interval.end(),
+    ///     interval.end_time(),
     ///     "2026-05-07 00:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
@@ -182,14 +181,14 @@ impl BoundedAbsInterval {
     /// )?;
     ///
     /// assert_eq!(
-    ///     interval.start(),
+    ///     interval.start_time(),
     ///     "2026-04-26 00:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
     /// );
     /// assert_eq!(interval.start_inclusivity(), BoundInclusivity::Inclusive);
     /// assert_eq!(
-    ///     interval.end(),
+    ///     interval.end_time(),
     ///     "2026-04-27 00:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
@@ -364,14 +363,14 @@ impl BoundedAbsInterval {
     /// )?;
     ///
     /// assert_eq!(
-    ///     interval.start(),
+    ///     interval.start_time(),
     ///     "2026-01-04 00:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
     /// );
     /// assert_eq!(interval.start_inclusivity(), BoundInclusivity::Inclusive);
     /// assert_eq!(
-    ///     interval.end(),
+    ///     interval.end_time(),
     ///     "2026-01-11 00:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
@@ -432,13 +431,11 @@ impl BoundedAbsInterval {
     /// # use periodical::intervals::absolute::BoundedAbsInterval;
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::time::OffsetIsoWeek;
-    /// let week_interval = BoundedAbsInterval::from_week(
-    ///     OffsetIsoWeek::new(2026, 5)?,
-    ///     TimeZone::get("Europe/Oslo")?,
-    /// )?;
+    /// let week_interval =
+    ///     BoundedAbsInterval::from_week(OffsetIsoWeek::new(2026, 5)?, TimeZone::get("Europe/Oslo")?)?;
     ///
     /// assert_eq!(
-    ///     week_interval.start(),
+    ///     week_interval.start_time(),
     ///     "2026-01-26 00:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
@@ -448,7 +445,7 @@ impl BoundedAbsInterval {
     ///     BoundInclusivity::Inclusive
     /// );
     /// assert_eq!(
-    ///     week_interval.end(),
+    ///     week_interval.end_time(),
     ///     "2026-02-02 00:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
@@ -506,14 +503,14 @@ impl BoundedAbsInterval {
     /// )?;
     ///
     /// assert_eq!(
-    ///     interval.start(),
+    ///     interval.start_time(),
     ///     "2026-01-24 00:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp()
     /// );
     /// assert_eq!(interval.start_inclusivity(), BoundInclusivity::Inclusive);
     /// assert_eq!(
-    ///     interval.end(),
+    ///     interval.end_time(),
     ///     "2026-01-31 00:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp()
@@ -571,14 +568,14 @@ impl BoundedAbsInterval {
     /// )?;
     ///
     /// assert_eq!(
-    ///     interval.start(),
+    ///     interval.start_time(),
     ///     "2026-01-26 00:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp()
     /// );
     /// assert_eq!(interval.start_inclusivity(), BoundInclusivity::Inclusive);
     /// assert_eq!(
-    ///     interval.end(),
+    ///     interval.end_time(),
     ///     "2026-02-02 00:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp()
@@ -634,14 +631,14 @@ impl BoundedAbsInterval {
     /// )?;
     ///
     /// assert_eq!(
-    ///     interval.start(),
+    ///     interval.start_time(),
     ///     "2026-01-03 00:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp()
     /// );
     /// assert_eq!(interval.start_inclusivity(), BoundInclusivity::Inclusive);
     /// assert_eq!(
-    ///     interval.end(),
+    ///     interval.end_time(),
     ///     "2026-01-10 00:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp()
@@ -699,14 +696,14 @@ impl BoundedAbsInterval {
     /// )?;
     ///
     /// assert_eq!(
-    ///     interval.start(),
+    ///     interval.start_time(),
     ///     "2026-01-05 00:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp()
     /// );
     /// assert_eq!(interval.start_inclusivity(), BoundInclusivity::Inclusive);
     /// assert_eq!(
-    ///     interval.end(),
+    ///     interval.end_time(),
     ///     "2026-01-12 00:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp()
@@ -983,8 +980,7 @@ impl BoundedAbsInterval {
     /// # use std::error::Error;
     /// # use jiff::tz::TimeZone;
     /// # use periodical::intervals::absolute::BoundedAbsInterval;
-    /// let interval =
-    ///     BoundedAbsInterval::previous_offset_week(-2, TimeZone::get("Europe/Oslo")?)?;
+    /// let interval = BoundedAbsInterval::previous_offset_week(-2, TimeZone::get("Europe/Oslo")?)?;
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn previous_offset_week(week_start_offset: i8, tz: TimeZone) -> Result<Self, BoundedAbsIntervalCreationError> {
@@ -1048,21 +1044,18 @@ impl BoundedAbsInterval {
     /// let start = OffsetIsoWeek::new_with_offset(2026, 10, -1)?; // Sunday week
     /// let end = OffsetIsoWeek::new_with_offset(2026, 14, 2)?; // Wednesday week
     ///
-    /// let interval = BoundedAbsInterval::from_inclusive_week_range(
-    ///     start,
-    ///     end,
-    ///     TimeZone::get("Europe/Oslo")?,
-    /// )?;
+    /// let interval =
+    ///     BoundedAbsInterval::from_inclusive_week_range(start, end, TimeZone::get("Europe/Oslo")?)?;
     ///
     /// assert_eq!(
-    ///     interval.start(),
+    ///     interval.start_time(),
     ///     "2026-03-01 00:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
     /// );
     /// assert_eq!(interval.start_inclusivity(), BoundInclusivity::Inclusive);
     /// assert_eq!(
-    ///     interval.end(),
+    ///     interval.end_time(),
     ///     "2026-04-08 00:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
@@ -1111,20 +1104,18 @@ impl BoundedAbsInterval {
     /// # use periodical::time::Month;
     /// # use periodical::intervals::absolute::BoundedAbsInterval;
     /// # use periodical::intervals::meta::BoundInclusivity;
-    /// let month = BoundedAbsInterval::from_month(
-    ///     Month::May.with_year(2026),
-    ///     TimeZone::get("Europe/Oslo")?,
-    /// )?;
+    /// let month =
+    ///     BoundedAbsInterval::from_month(Month::May.with_year(2026), TimeZone::get("Europe/Oslo")?)?;
     ///
     /// assert_eq!(
-    ///     month.start(),
+    ///     month.start_time(),
     ///     "2026-05-01 00:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
     /// );
     /// assert_eq!(month.start_inclusivity(), BoundInclusivity::Inclusive);
     /// assert_eq!(
-    ///     month.end(),
+    ///     month.end_time(),
     ///     "2026-06-01 00:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
@@ -1177,14 +1168,14 @@ impl BoundedAbsInterval {
     /// )?;
     ///
     /// assert_eq!(
-    ///     interval.start(),
+    ///     interval.start_time(),
     ///     "2026-01-01 00:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
     /// );
     /// assert_eq!(interval.start_inclusivity(), BoundInclusivity::Inclusive);
     /// assert_eq!(
-    ///     interval.end(),
+    ///     interval.end_time(),
     ///     "2026-06-01 00:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
@@ -1247,14 +1238,14 @@ impl BoundedAbsInterval {
     /// )?;
     ///
     /// assert_eq!(
-    ///     interval.start(),
+    ///     interval.start_time(),
     ///     "2026-03-01 00:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
     /// );
     /// assert_eq!(interval.start_inclusivity(), BoundInclusivity::Inclusive);
     /// assert_eq!(
-    ///     interval.end(),
+    ///     interval.end_time(),
     ///     "2026-04-01 00:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
@@ -1315,14 +1306,14 @@ impl BoundedAbsInterval {
     /// )?;
     ///
     /// assert_eq!(
-    ///     interval.start(),
+    ///     interval.start_time(),
     ///     "2026-02-01 00:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
     /// );
     /// assert_eq!(interval.start_inclusivity(), BoundInclusivity::Inclusive);
     /// assert_eq!(
-    ///     interval.end(),
+    ///     interval.end_time(),
     ///     "2026-03-01 00:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
@@ -1498,14 +1489,14 @@ impl BoundedAbsInterval {
     /// let year = BoundedAbsInterval::from_year(2026, TimeZone::get("Europe/Oslo")?)?;
     ///
     /// assert_eq!(
-    ///     year.start(),
+    ///     year.start_time(),
     ///     "2026-01-01 00:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
     /// );
     /// assert_eq!(year.start_inclusivity(), BoundInclusivity::Inclusive);
     /// assert_eq!(
-    ///     year.end(),
+    ///     year.end_time(),
     ///     "2027-01-01 00:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
@@ -1545,21 +1536,18 @@ impl BoundedAbsInterval {
     /// # use jiff::tz::TimeZone;
     /// # use periodical::intervals::absolute::BoundedAbsInterval;
     /// # use periodical::intervals::meta::BoundInclusivity;
-    /// let years = BoundedAbsInterval::from_inclusive_year_range(
-    ///     2025,
-    ///     2030,
-    ///     TimeZone::get("Europe/Oslo")?,
-    /// )?;
+    /// let years =
+    ///     BoundedAbsInterval::from_inclusive_year_range(2025, 2030, TimeZone::get("Europe/Oslo")?)?;
     ///
     /// assert_eq!(
-    ///     years.start(),
+    ///     years.start_time(),
     ///     "2025-01-01 00:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
     /// );
     /// assert_eq!(years.start_inclusivity(), BoundInclusivity::Inclusive);
     /// assert_eq!(
-    ///     years.end(),
+    ///     years.end_time(),
     ///     "2031-01-01 00:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
@@ -1620,14 +1608,14 @@ impl BoundedAbsInterval {
     /// )?;
     ///
     /// assert_eq!(
-    ///     year.start(),
+    ///     year.start_time(),
     ///     "2027-01-01 00:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
     /// );
     /// assert_eq!(year.start_inclusivity(), BoundInclusivity::Inclusive);
     /// assert_eq!(
-    ///     year.end(),
+    ///     year.end_time(),
     ///     "2028-01-01 00:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
@@ -1684,14 +1672,14 @@ impl BoundedAbsInterval {
     /// )?;
     ///
     /// assert_eq!(
-    ///     year.start(),
+    ///     year.start_time(),
     ///     "2025-01-01 00:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
     /// );
     /// assert_eq!(year.start_inclusivity(), BoundInclusivity::Inclusive);
     /// assert_eq!(
-    ///     year.end(),
+    ///     year.end_time(),
     ///     "2026-01-01 00:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
