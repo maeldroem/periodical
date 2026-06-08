@@ -16,7 +16,7 @@ fn finite_bound_position() -> Result<(), Box<dyn Error>> {
             "2025-01-01 10:42:31[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             BoundInclusivity::Exclusive
         )
-        .precise_bound(
+        .precise(
             TimeZone::get("Europe/Oslo")?,
             Precision::new(Duration::from_mins(5), PrecisionMode::ToNearest)?
         ),
@@ -32,7 +32,7 @@ fn finite_bound_position() -> Result<(), Box<dyn Error>> {
 #[test]
 fn start_infinite() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        AbsStartBound::InfinitePast.precise_bound(
+        AbsStartBound::InfinitePast.precise(
             TimeZone::get("Europe/Oslo")?,
             Precision::new(Duration::from_mins(5), PrecisionMode::ToFuture)?,
         ),
@@ -50,7 +50,7 @@ fn start_common_precision() -> Result<(), Box<dyn Error>> {
             BoundInclusivity::Exclusive,
         )
         .to_start_bound()
-        .precise_bound(
+        .precise(
             TimeZone::get("Europe/Oslo")?,
             Precision::new(Duration::from_mins(5), PrecisionMode::ToFuture)?,
         ),
@@ -72,7 +72,7 @@ fn start_uncommon_precision_with_base() -> Result<(), Box<dyn Error>> {
             BoundInclusivity::Exclusive,
         )
         .to_start_bound()
-        .precise_bound_with_base_time(
+        .precise_with_base_time(
             TimeZone::get("Europe/Oslo")?,
             Precision::new(
                 Duration::from_mins(7) + Duration::from_secs(31),
@@ -93,7 +93,7 @@ fn start_uncommon_precision_with_base() -> Result<(), Box<dyn Error>> {
 #[test]
 fn end_infinite() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        AbsEndBound::InfiniteFuture.precise_bound(
+        AbsEndBound::InfiniteFuture.precise(
             TimeZone::get("Europe/Oslo")?,
             Precision::new(Duration::from_mins(5), PrecisionMode::ToFuture)?,
         ),
@@ -111,7 +111,7 @@ fn end_common_precision() -> Result<(), Box<dyn Error>> {
             BoundInclusivity::Exclusive,
         )
         .to_end_bound()
-        .precise_bound(
+        .precise(
             TimeZone::get("Europe/Oslo")?,
             Precision::new(Duration::from_mins(5), PrecisionMode::ToFuture)?,
         ),
@@ -133,7 +133,7 @@ fn end_uncommon_precision_with_base() -> Result<(), Box<dyn Error>> {
             BoundInclusivity::Exclusive,
         )
         .to_end_bound()
-        .precise_bound_with_base_time(
+        .precise_with_base_time(
             TimeZone::get("Europe/Oslo")?,
             Precision::new(
                 Duration::from_mins(7) + Duration::from_secs(31),

@@ -1,4 +1,6 @@
 //! Precision change for absolute intervals
+//!
+//! See [module documentation](crate::intervals::ops::precision) for more info.
 
 use jiff::Timestamp;
 use jiff::tz::TimeZone;
@@ -23,6 +25,8 @@ use crate::ops::{Precision, PrecisionOutOfRangeError};
 /// Ability to precise absolute intervals
 ///
 /// The precision itself is defined by [`Precision`].
+///
+/// See [module documentation](crate::intervals::ops::precision) for more info.
 ///
 /// # Examples
 ///
@@ -50,7 +54,7 @@ use crate::ops::{Precision, PrecisionOutOfRangeError};
 /// );
 ///
 /// assert_eq!(
-///     interval.precise_interval(
+///     interval.precise(
 ///         TimeZone::get("Europe/Oslo")?,
 ///         Precision::new(Duration::from_mins(5), PrecisionMode::ToPast)?,
 ///     ),
@@ -72,7 +76,7 @@ use crate::ops::{Precision, PrecisionOutOfRangeError};
 /// # Ok::<(), Box<dyn Error>>(())
 /// ```
 pub trait PreciseAbsInterval {
-    /// Output of methods precising an interval
+    /// Precised interval type
     type PrecisedIntervalOutput;
 
     /// Precises the start and end bounds with different [`Precision`]s
@@ -105,7 +109,7 @@ pub trait PreciseAbsInterval {
     /// );
     ///
     /// assert_eq!(
-    ///     interval.precise_interval_with_different_precisions(
+    ///     interval.precise_different_precisions(
     ///         TimeZone::get("Europe/Oslo")?,
     ///         Precision::new(Duration::from_mins(5), PrecisionMode::ToPast)?,
     ///         Precision::new(Duration::from_mins(5), PrecisionMode::ToFuture)?,
@@ -128,7 +132,7 @@ pub trait PreciseAbsInterval {
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    fn precise_interval_with_different_precisions(
+    fn precise_different_precisions(
         &self,
         tz: TimeZone,
         precision_start: Precision,
@@ -165,7 +169,7 @@ pub trait PreciseAbsInterval {
     /// );
     ///
     /// assert_eq!(
-    ///     interval.precise_interval(
+    ///     interval.precise(
     ///         TimeZone::get("Europe/Oslo")?,
     ///         Precision::new(Duration::from_mins(5), PrecisionMode::ToPast)?,
     ///     ),
@@ -187,8 +191,8 @@ pub trait PreciseAbsInterval {
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    fn precise_interval(&self, tz: TimeZone, precision: Precision) -> Self::PrecisedIntervalOutput {
-        self.precise_interval_with_different_precisions(tz, precision, precision)
+    fn precise(&self, tz: TimeZone, precision: Precision) -> Self::PrecisedIntervalOutput {
+        self.precise_different_precisions(tz, precision, precision)
     }
 
     /// Precises the start and end bounds with different precisions and base
@@ -222,7 +226,7 @@ pub trait PreciseAbsInterval {
     /// );
     ///
     /// assert_eq!(
-    ///     interval.precise_interval_with_different_precisions_with_base_time(
+    ///     interval.precise_different_precisions_with_base_time(
     ///         TimeZone::get("Europe/Oslo")?,
     ///         Precision::new(Duration::from_mins(7), PrecisionMode::ToFuture)?,
     ///         "2025-01-01 08:00:00[Europe/Oslo]"
@@ -251,7 +255,7 @@ pub trait PreciseAbsInterval {
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    fn precise_interval_with_different_precisions_with_base_time(
+    fn precise_different_precisions_with_base_time(
         &self,
         tz: TimeZone,
         precision_start: Precision,
@@ -290,7 +294,7 @@ pub trait PreciseAbsInterval {
     /// );
     ///
     /// assert_eq!(
-    ///     interval.precise_interval_with_base_time(
+    ///     interval.precise_with_base_time(
     ///         TimeZone::get("Europe/Oslo")?,
     ///         Precision::new(Duration::from_mins(7), PrecisionMode::ToFuture)?,
     ///         "2025-01-01 08:00:00[Europe/Oslo]"
@@ -315,20 +319,20 @@ pub trait PreciseAbsInterval {
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    fn precise_interval_with_base_time(
+    fn precise_with_base_time(
         &self,
         tz: TimeZone,
         precision: Precision,
         base: Timestamp,
     ) -> Self::PrecisedIntervalOutput {
-        self.precise_interval_with_different_precisions_with_base_time(tz, precision, base, precision, base)
+        self.precise_different_precisions_with_base_time(tz, precision, base, precision, base)
     }
 }
 
 impl PreciseAbsInterval for AbsBoundPair {
     type PrecisedIntervalOutput = Result<Self, PrecisionOutOfRangeError>;
 
-    fn precise_interval_with_different_precisions(
+    fn precise_different_precisions(
         &self,
         tz: TimeZone,
         precision_start: Precision,
@@ -337,7 +341,7 @@ impl PreciseAbsInterval for AbsBoundPair {
         precise_abs_bound_pair(self, tz, precision_start, precision_end)
     }
 
-    fn precise_interval_with_different_precisions_with_base_time(
+    fn precise_different_precisions_with_base_time(
         &self,
         tz: TimeZone,
         precision_start: Precision,
@@ -352,7 +356,7 @@ impl PreciseAbsInterval for AbsBoundPair {
 impl PreciseAbsInterval for EmptiableAbsBoundPair {
     type PrecisedIntervalOutput = Result<Self, PrecisionOutOfRangeError>;
 
-    fn precise_interval_with_different_precisions(
+    fn precise_different_precisions(
         &self,
         tz: TimeZone,
         start_precision: Precision,
@@ -365,7 +369,7 @@ impl PreciseAbsInterval for EmptiableAbsBoundPair {
         }
     }
 
-    fn precise_interval_with_different_precisions_with_base_time(
+    fn precise_different_precisions_with_base_time(
         &self,
         tz: TimeZone,
         precision_start: Precision,
@@ -392,7 +396,7 @@ impl PreciseAbsInterval for EmptiableAbsBoundPair {
 impl PreciseAbsInterval for AbsInterval {
     type PrecisedIntervalOutput = Result<Self, PrecisionOutOfRangeError>;
 
-    fn precise_interval_with_different_precisions(
+    fn precise_different_precisions(
         &self,
         tz: TimeZone,
         precision_start: Precision,
@@ -401,7 +405,7 @@ impl PreciseAbsInterval for AbsInterval {
         Ok(precise_abs_bound_pair(&self.abs_bound_pair(), tz, precision_start, precision_end)?.to_interval())
     }
 
-    fn precise_interval_with_different_precisions_with_base_time(
+    fn precise_different_precisions_with_base_time(
         &self,
         tz: TimeZone,
         precision_start: Precision,
@@ -424,7 +428,7 @@ impl PreciseAbsInterval for AbsInterval {
 impl PreciseAbsInterval for EmptiableAbsInterval {
     type PrecisedIntervalOutput = Result<Self, PrecisionOutOfRangeError>;
 
-    fn precise_interval_with_different_precisions(
+    fn precise_different_precisions(
         &self,
         tz: TimeZone,
         precision_start: Precision,
@@ -437,7 +441,7 @@ impl PreciseAbsInterval for EmptiableAbsInterval {
         }
     }
 
-    fn precise_interval_with_different_precisions_with_base_time(
+    fn precise_different_precisions_with_base_time(
         &self,
         tz: TimeZone,
         precision_start: Precision,
