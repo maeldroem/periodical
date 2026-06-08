@@ -22,6 +22,13 @@ TODO: checks tests again after the refactoring
 TODO: add missing conversions, rework conversions
 TODO: once all done, PR onto dev to sync, then continue unit tests
 
+- TEMP: Fixed/checked tests/relevant tested code for…
+  - `intervals`
+    - `absolute`
+      - `bound_pair`
+    - `relative`
+      - `bound_pair`
+
 - Checked, fixed, and completed documentation for…
   - `intervals`
     - `absolute`

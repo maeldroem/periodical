@@ -248,7 +248,7 @@ impl AbsBoundPair {
     pub fn ord_by_start_and_inv_length(&self, other: &Self) -> Ordering {
         match self
             .start()
-            .bound_cmp(&other.end())
+            .bound_cmp(&other.start())
             .disambiguate(BoundOverlapDisambiguationRuleSet::Strict)
         {
             Ordering::Less => Ordering::Less,
