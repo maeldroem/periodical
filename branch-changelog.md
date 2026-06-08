@@ -30,6 +30,9 @@ TODO: once all done, PR onto dev to sync, then continue unit tests
     - `relative`
       - `bound_pair`
       - `bound`
+    - `ops`
+      - `bound_cmp`
+        - `bound_ord`
 
 - Checked, fixed, and completed documentation for…
   - `intervals`
