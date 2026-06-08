@@ -26,8 +26,10 @@ TODO: once all done, PR onto dev to sync, then continue unit tests
   - `intervals`
     - `absolute`
       - `bound_pair`
+      - `bound`
     - `relative`
       - `bound_pair`
+      - `bound`
 
 - Checked, fixed, and completed documentation for…
   - `intervals`
