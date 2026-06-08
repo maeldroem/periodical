@@ -3,20 +3,14 @@ use std::error::Error;
 use jiff::Zoned;
 
 use super::diff::*;
-use crate::intervals::absolute::{
-    AbsBoundPair,
-    AbsEndBound,
-    AbsFiniteBoundPos,
-    AbsStartBound,
-    EmptiableAbsBoundPair,
-};
+use crate::intervals::absolute::{AbsBoundPair, AbsEndBound, AbsFiniteBoundPos, AbsStartBound, EmptiableAbsBoundPair};
 use crate::intervals::meta::BoundInclusivity;
 use crate::ops::DifferenceResult;
 
 #[test]
 fn empty_empty() {
     assert_eq!(
-        EmptiableAbsBoundPair::Empty.differentiate(&EmptiableAbsBoundPair::Empty),
+        EmptiableAbsBoundPair::Empty.diff(&EmptiableAbsBoundPair::Empty),
         DifferenceResult::Separate,
     );
 }
@@ -24,7 +18,7 @@ fn empty_empty() {
 #[test]
 fn empty_unbounded() {
     assert_eq!(
-        EmptiableAbsBoundPair::Empty.differentiate(&AbsBoundPair::new(
+        EmptiableAbsBoundPair::Empty.diff(&AbsBoundPair::new(
             AbsStartBound::InfinitePast,
             AbsEndBound::InfiniteFuture,
         )),
@@ -36,7 +30,7 @@ fn empty_unbounded() {
 fn unbounded_empty() {
     assert_eq!(
         AbsBoundPair::new(AbsStartBound::InfinitePast, AbsEndBound::InfiniteFuture,)
-            .differentiate(&EmptiableAbsBoundPair::Empty),
+            .diff(&EmptiableAbsBoundPair::Empty),
         DifferenceResult::Separate,
     );
 }
@@ -44,9 +38,10 @@ fn unbounded_empty() {
 #[test]
 fn unbounded_unbounded() {
     assert_eq!(
-        AbsBoundPair::new(AbsStartBound::InfinitePast, AbsEndBound::InfiniteFuture,).differentiate(
-            &AbsBoundPair::new(AbsStartBound::InfinitePast, AbsEndBound::InfiniteFuture,)
-        ),
+        AbsBoundPair::new(AbsStartBound::InfinitePast, AbsEndBound::InfiniteFuture,).diff(&AbsBoundPair::new(
+            AbsStartBound::InfinitePast,
+            AbsEndBound::InfiniteFuture,
+        )),
         DifferenceResult::Single(EmptiableAbsBoundPair::Empty),
     );
 }
@@ -58,7 +53,7 @@ fn bounded_no_overlap() -> Result<(), Box<dyn Error>> {
             AbsFiniteBoundPos::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_start_bound(),
             AbsFiniteBoundPos::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_end_bound(),
         )
-        .differentiate(&AbsBoundPair::new(
+        .diff(&AbsBoundPair::new(
             AbsFiniteBoundPos::new("2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_start_bound(),
             AbsFiniteBoundPos::new("2025-01-04 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_end_bound(),
         )),
@@ -83,7 +78,7 @@ fn bounded_adjacent_inclusive_inclusive() -> Result<(), Box<dyn Error>> {
             )
             .to_end_bound(),
         )
-        .differentiate(&AbsBoundPair::new(
+        .diff(&AbsBoundPair::new(
             AbsFiniteBoundPos::new_with_incl(
                 "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Inclusive,
@@ -127,7 +122,7 @@ fn bounded_adjacent_inclusive_exclusive() -> Result<(), Box<dyn Error>> {
             )
             .to_end_bound(),
         )
-        .differentiate(&AbsBoundPair::new(
+        .diff(&AbsBoundPair::new(
             AbsFiniteBoundPos::new_with_incl(
                 "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
@@ -160,7 +155,7 @@ fn bounded_adjacent_exclusive_inclusive() -> Result<(), Box<dyn Error>> {
             )
             .to_end_bound(),
         )
-        .differentiate(&AbsBoundPair::new(
+        .diff(&AbsBoundPair::new(
             AbsFiniteBoundPos::new_with_incl(
                 "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Inclusive,
@@ -193,7 +188,7 @@ fn bounded_adjacent_exclusive_exclusive() -> Result<(), Box<dyn Error>> {
             )
             .to_end_bound(),
         )
-        .differentiate(&AbsBoundPair::new(
+        .diff(&AbsBoundPair::new(
             AbsFiniteBoundPos::new_with_incl(
                 "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
@@ -218,7 +213,7 @@ fn bounded_clear_overlap() -> Result<(), Box<dyn Error>> {
             AbsFiniteBoundPos::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_start_bound(),
             AbsFiniteBoundPos::new("2025-01-03 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_end_bound(),
         )
-        .differentiate(&AbsBoundPair::new(
+        .diff(&AbsBoundPair::new(
             AbsFiniteBoundPos::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_start_bound(),
             AbsFiniteBoundPos::new("2025-01-04 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_end_bound(),
         )),
@@ -242,7 +237,7 @@ fn bounded_on_unbounded() -> Result<(), Box<dyn Error>> {
             AbsFiniteBoundPos::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_start_bound(),
             AbsFiniteBoundPos::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_end_bound(),
         )
-        .differentiate(&AbsBoundPair::new(
+        .diff(&AbsBoundPair::new(
             AbsStartBound::InfinitePast,
             AbsEndBound::InfiniteFuture,
         )),
@@ -255,14 +250,10 @@ fn bounded_on_unbounded() -> Result<(), Box<dyn Error>> {
 #[test]
 fn unbounded_on_bounded() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        AbsBoundPair::new(AbsStartBound::InfinitePast, AbsEndBound::InfiniteFuture,).differentiate(
-            &AbsBoundPair::new(
-                AbsFiniteBoundPos::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
-                    .to_start_bound(),
-                AbsFiniteBoundPos::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp())
-                    .to_end_bound(),
-            )
-        ),
+        AbsBoundPair::new(AbsStartBound::InfinitePast, AbsEndBound::InfiniteFuture,).diff(&AbsBoundPair::new(
+            AbsFiniteBoundPos::new("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_start_bound(),
+            AbsFiniteBoundPos::new("2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()).to_end_bound(),
+        )),
         DifferenceResult::Split(
             EmptiableAbsBoundPair::Bound(AbsBoundPair::new(
                 AbsStartBound::InfinitePast,

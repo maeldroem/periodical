@@ -145,6 +145,8 @@ TODO: once all done, PR onto dev to sync, then continue unit tests
 - Renamed `Absolute`/`Relative` by `Abs`/`Rel` to reduce space taken
 - Renamed `*FiniteBoundPosition` to `*FiniteBoundPos` to reduce space taken
 - Renamed `new_with_inclusivity` on `*FiniteBoundPos` to `new_with_incl` to reduce space taken
+- Renamed `Differentiable`'s methods to reduce space taken
+- Renamed `SymmetricallyDifferentiable`'s methods to reduce space taken
 
 ## Deprecated
 

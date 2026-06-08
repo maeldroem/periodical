@@ -69,7 +69,7 @@ use crate::ops::{ComplementResult, DifferenceResult};
 /// );
 ///
 /// assert_eq!(
-///     interval.differentiate(&remover),
+///     interval.diff(&remover),
 ///     DifferenceResult::Single(AbsBoundPair::new(
 ///         AbsFiniteBoundPos::new(
 ///             "2025-01-01 08:00:00Z".parse::<Timestamp>()?,
@@ -101,7 +101,7 @@ use crate::ops::{ComplementResult, DifferenceResult};
 ///     AbsFiniteBoundPos::new("2025-01-01 18:00:00Z".parse::<Timestamp>()?).to_end_bound(),
 /// );
 ///
-/// assert_eq!(interval.differentiate(&remover), DifferenceResult::Separate,);
+/// assert_eq!(interval.diff(&remover), DifferenceResult::Separate,);
 /// # Ok::<(), Box<dyn Error>>(())
 /// ```
 pub trait Differentiable<Rhs = Self> {
@@ -133,7 +133,7 @@ pub trait Differentiable<Rhs = Self> {
     /// );
     ///
     /// assert_eq!(
-    ///     interval.differentiate(&remover),
+    ///     interval.diff(&remover),
     ///     DifferenceResult::Single(
     ///         AbsBoundPair::new(
     ///             AbsFiniteBoundPos::new("2025-01-01 08:00:00Z".parse::<Timestamp>()?)
@@ -150,7 +150,7 @@ pub trait Differentiable<Rhs = Self> {
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    fn differentiate(&self, rhs: &Rhs) -> DifferenceResult<Self::Output>;
+    fn diff(&self, rhs: &Rhs) -> DifferenceResult<Self::Output>;
 
     /// Differentiates the interval with the given one using the given closure
     ///
@@ -204,7 +204,7 @@ pub trait Differentiable<Rhs = Self> {
     /// };
     ///
     /// assert_eq!(
-    ///     interval.differentiate_with(&remover, difference_closure),
+    ///     interval.diff_with(&remover, difference_closure),
     ///     DifferenceResult::Single(
     ///         AbsBoundPair::new(
     ///             AbsFiniteBoundPos::new("2025-01-01 08:00:00Z".parse::<Timestamp>()?)
@@ -221,7 +221,7 @@ pub trait Differentiable<Rhs = Self> {
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    fn differentiate_with<F>(&self, rhs: &Rhs, mut f: F) -> DifferenceResult<Self::Output>
+    fn diff_with<F>(&self, rhs: &Rhs, mut f: F) -> DifferenceResult<Self::Output>
     where
         F: FnMut(&Self, &Rhs) -> DifferenceResult<Self::Output>,
     {
@@ -235,8 +235,8 @@ where
 {
     type Output = EmptiableAbsBoundPair;
 
-    fn differentiate(&self, rhs: &Rhs) -> DifferenceResult<Self::Output> {
-        differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(self, &rhs.emptiable_abs_bound_pair())
+    fn diff(&self, rhs: &Rhs) -> DifferenceResult<Self::Output> {
+        diff_abs_bound_pair_with_emptiable_abs_bound_pair(self, &rhs.emptiable_abs_bound_pair())
     }
 }
 
@@ -246,8 +246,8 @@ where
 {
     type Output = Self;
 
-    fn differentiate(&self, rhs: &Rhs) -> DifferenceResult<Self::Output> {
-        differentiate_emptiable_abs_bound_pair(self, &rhs.emptiable_abs_bound_pair())
+    fn diff(&self, rhs: &Rhs) -> DifferenceResult<Self::Output> {
+        diff_emptiable_abs_bound_pair(self, &rhs.emptiable_abs_bound_pair())
     }
 }
 
@@ -257,12 +257,9 @@ where
 {
     type Output = EmptiableAbsInterval;
 
-    fn differentiate(&self, rhs: &Rhs) -> DifferenceResult<Self::Output> {
-        differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(
-            &self.abs_bound_pair(),
-            &rhs.emptiable_abs_bound_pair(),
-        )
-        .map_difference(Self::Output::from)
+    fn diff(&self, rhs: &Rhs) -> DifferenceResult<Self::Output> {
+        diff_abs_bound_pair_with_emptiable_abs_bound_pair(&self.abs_bound_pair(), &rhs.emptiable_abs_bound_pair())
+            .map_difference(Self::Output::from)
     }
 }
 
@@ -272,8 +269,8 @@ where
 {
     type Output = Self;
 
-    fn differentiate(&self, rhs: &Rhs) -> DifferenceResult<Self::Output> {
-        differentiate_emptiable_abs_bound_pair(&self.emptiable_abs_bound_pair(), &rhs.emptiable_abs_bound_pair())
+    fn diff(&self, rhs: &Rhs) -> DifferenceResult<Self::Output> {
+        diff_emptiable_abs_bound_pair(&self.emptiable_abs_bound_pair(), &rhs.emptiable_abs_bound_pair())
             .map_difference(Self::Output::from)
     }
 }
@@ -284,12 +281,9 @@ where
 {
     type Output = EmptiableAbsInterval;
 
-    fn differentiate(&self, rhs: &Rhs) -> DifferenceResult<Self::Output> {
-        differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(
-            &self.abs_bound_pair(),
-            &rhs.emptiable_abs_bound_pair(),
-        )
-        .map_difference(Self::Output::from)
+    fn diff(&self, rhs: &Rhs) -> DifferenceResult<Self::Output> {
+        diff_abs_bound_pair_with_emptiable_abs_bound_pair(&self.abs_bound_pair(), &rhs.emptiable_abs_bound_pair())
+            .map_difference(Self::Output::from)
     }
 }
 
@@ -299,12 +293,9 @@ where
 {
     type Output = EmptiableAbsInterval;
 
-    fn differentiate(&self, rhs: &Rhs) -> DifferenceResult<Self::Output> {
-        differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(
-            &self.abs_bound_pair(),
-            &rhs.emptiable_abs_bound_pair(),
-        )
-        .map_difference(Self::Output::from)
+    fn diff(&self, rhs: &Rhs) -> DifferenceResult<Self::Output> {
+        diff_abs_bound_pair_with_emptiable_abs_bound_pair(&self.abs_bound_pair(), &rhs.emptiable_abs_bound_pair())
+            .map_difference(Self::Output::from)
     }
 }
 
@@ -314,8 +305,8 @@ where
 {
     type Output = EmptiableRelBoundPair;
 
-    fn differentiate(&self, rhs: &Rhs) -> DifferenceResult<Self::Output> {
-        differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(self, &rhs.emptiable_rel_bound_pair())
+    fn diff(&self, rhs: &Rhs) -> DifferenceResult<Self::Output> {
+        diff_rel_bound_pair_with_emptiable_rel_bound_pair(self, &rhs.emptiable_rel_bound_pair())
     }
 }
 
@@ -325,8 +316,8 @@ where
 {
     type Output = Self;
 
-    fn differentiate(&self, rhs: &Rhs) -> DifferenceResult<Self::Output> {
-        differentiate_emptiable_rel_bound_pair(self, &rhs.emptiable_rel_bound_pair())
+    fn diff(&self, rhs: &Rhs) -> DifferenceResult<Self::Output> {
+        diff_emptiable_rel_bound_pair(self, &rhs.emptiable_rel_bound_pair())
     }
 }
 
@@ -336,12 +327,9 @@ where
 {
     type Output = EmptiableRelInterval;
 
-    fn differentiate(&self, rhs: &Rhs) -> DifferenceResult<Self::Output> {
-        differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(
-            &self.rel_bound_pair(),
-            &rhs.emptiable_rel_bound_pair(),
-        )
-        .map_difference(Self::Output::from)
+    fn diff(&self, rhs: &Rhs) -> DifferenceResult<Self::Output> {
+        diff_rel_bound_pair_with_emptiable_rel_bound_pair(&self.rel_bound_pair(), &rhs.emptiable_rel_bound_pair())
+            .map_difference(Self::Output::from)
     }
 }
 
@@ -351,8 +339,8 @@ where
 {
     type Output = Self;
 
-    fn differentiate(&self, rhs: &Rhs) -> DifferenceResult<Self::Output> {
-        differentiate_emptiable_rel_bound_pair(&self.emptiable_rel_bound_pair(), &rhs.emptiable_rel_bound_pair())
+    fn diff(&self, rhs: &Rhs) -> DifferenceResult<Self::Output> {
+        diff_emptiable_rel_bound_pair(&self.emptiable_rel_bound_pair(), &rhs.emptiable_rel_bound_pair())
             .map_difference(Self::Output::from)
     }
 }
@@ -363,12 +351,9 @@ where
 {
     type Output = EmptiableRelInterval;
 
-    fn differentiate(&self, rhs: &Rhs) -> DifferenceResult<Self::Output> {
-        differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(
-            &self.rel_bound_pair(),
-            &rhs.emptiable_rel_bound_pair(),
-        )
-        .map_difference(Self::Output::from)
+    fn diff(&self, rhs: &Rhs) -> DifferenceResult<Self::Output> {
+        diff_rel_bound_pair_with_emptiable_rel_bound_pair(&self.rel_bound_pair(), &rhs.emptiable_rel_bound_pair())
+            .map_difference(Self::Output::from)
     }
 }
 
@@ -378,39 +363,33 @@ where
 {
     type Output = EmptiableRelInterval;
 
-    fn differentiate(&self, rhs: &Rhs) -> DifferenceResult<Self::Output> {
-        differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(
-            &self.rel_bound_pair(),
-            &rhs.emptiable_rel_bound_pair(),
-        )
-        .map_difference(Self::Output::from)
+    fn diff(&self, rhs: &Rhs) -> DifferenceResult<Self::Output> {
+        diff_rel_bound_pair_with_emptiable_rel_bound_pair(&self.rel_bound_pair(), &rhs.emptiable_rel_bound_pair())
+            .map_difference(Self::Output::from)
     }
 }
 
 impl Differentiable<AbsBoundPair> for UnboundedInterval {
     type Output = EmptiableAbsInterval;
 
-    fn differentiate(&self, rhs: &AbsBoundPair) -> DifferenceResult<Self::Output> {
-        differentiate_abs_bound_pair(&self.abs_bound_pair(), &rhs.abs_bound_pair()).map_difference(Self::Output::from)
+    fn diff(&self, rhs: &AbsBoundPair) -> DifferenceResult<Self::Output> {
+        diff_abs_bound_pair(&self.abs_bound_pair(), &rhs.abs_bound_pair()).map_difference(Self::Output::from)
     }
 }
 
 impl Differentiable<EmptiableAbsBoundPair> for UnboundedInterval {
     type Output = EmptiableAbsInterval;
 
-    fn differentiate(&self, rhs: &EmptiableAbsBoundPair) -> DifferenceResult<Self::Output> {
-        differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(
-            &self.abs_bound_pair(),
-            &rhs.emptiable_abs_bound_pair(),
-        )
-        .map_difference(Self::Output::from)
+    fn diff(&self, rhs: &EmptiableAbsBoundPair) -> DifferenceResult<Self::Output> {
+        diff_abs_bound_pair_with_emptiable_abs_bound_pair(&self.abs_bound_pair(), &rhs.emptiable_abs_bound_pair())
+            .map_difference(Self::Output::from)
     }
 }
 
 impl Differentiable<BoundedAbsInterval> for UnboundedInterval {
     type Output = HalfBoundedAbsInterval;
 
-    fn differentiate(&self, rhs: &BoundedAbsInterval) -> DifferenceResult<Self::Output> {
+    fn diff(&self, rhs: &BoundedAbsInterval) -> DifferenceResult<Self::Output> {
         match rhs.complement() {
             ComplementResult::Single(single) => DifferenceResult::Single(single),
             ComplementResult::Split(split_before, split_after) => DifferenceResult::Split(split_before, split_after),
@@ -421,7 +400,7 @@ impl Differentiable<BoundedAbsInterval> for UnboundedInterval {
 impl Differentiable<HalfBoundedAbsInterval> for UnboundedInterval {
     type Output = HalfBoundedAbsInterval;
 
-    fn differentiate(&self, rhs: &HalfBoundedAbsInterval) -> DifferenceResult<Self::Output> {
+    fn diff(&self, rhs: &HalfBoundedAbsInterval) -> DifferenceResult<Self::Output> {
         match rhs.complement() {
             ComplementResult::Single(single) => DifferenceResult::Single(single),
             ComplementResult::Split(split_before, split_after) => DifferenceResult::Split(split_before, split_after),
@@ -432,27 +411,24 @@ impl Differentiable<HalfBoundedAbsInterval> for UnboundedInterval {
 impl Differentiable<RelBoundPair> for UnboundedInterval {
     type Output = EmptiableRelInterval;
 
-    fn differentiate(&self, rhs: &RelBoundPair) -> DifferenceResult<Self::Output> {
-        differentiate_rel_bound_pair(&self.rel_bound_pair(), &rhs.rel_bound_pair()).map_difference(Self::Output::from)
+    fn diff(&self, rhs: &RelBoundPair) -> DifferenceResult<Self::Output> {
+        diff_rel_bound_pair(&self.rel_bound_pair(), &rhs.rel_bound_pair()).map_difference(Self::Output::from)
     }
 }
 
 impl Differentiable<EmptiableRelBoundPair> for UnboundedInterval {
     type Output = EmptiableRelInterval;
 
-    fn differentiate(&self, rhs: &EmptiableRelBoundPair) -> DifferenceResult<Self::Output> {
-        differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(
-            &self.rel_bound_pair(),
-            &rhs.emptiable_rel_bound_pair(),
-        )
-        .map_difference(Self::Output::from)
+    fn diff(&self, rhs: &EmptiableRelBoundPair) -> DifferenceResult<Self::Output> {
+        diff_rel_bound_pair_with_emptiable_rel_bound_pair(&self.rel_bound_pair(), &rhs.emptiable_rel_bound_pair())
+            .map_difference(Self::Output::from)
     }
 }
 
 impl Differentiable<BoundedRelInterval> for UnboundedInterval {
     type Output = HalfBoundedRelInterval;
 
-    fn differentiate(&self, rhs: &BoundedRelInterval) -> DifferenceResult<Self::Output> {
+    fn diff(&self, rhs: &BoundedRelInterval) -> DifferenceResult<Self::Output> {
         match rhs.complement() {
             ComplementResult::Single(single) => DifferenceResult::Single(single),
             ComplementResult::Split(split_before, split_after) => DifferenceResult::Split(split_before, split_after),
@@ -463,7 +439,7 @@ impl Differentiable<BoundedRelInterval> for UnboundedInterval {
 impl Differentiable<HalfBoundedRelInterval> for UnboundedInterval {
     type Output = HalfBoundedRelInterval;
 
-    fn differentiate(&self, rhs: &HalfBoundedRelInterval) -> DifferenceResult<Self::Output> {
+    fn diff(&self, rhs: &HalfBoundedRelInterval) -> DifferenceResult<Self::Output> {
         match rhs.complement() {
             ComplementResult::Single(single) => DifferenceResult::Single(single),
             ComplementResult::Split(split_before, split_after) => DifferenceResult::Split(split_before, split_after),
@@ -474,7 +450,7 @@ impl Differentiable<HalfBoundedRelInterval> for UnboundedInterval {
 impl Differentiable<UnboundedInterval> for UnboundedInterval {
     type Output = EmptyInterval;
 
-    fn differentiate(&self, _rhs: &UnboundedInterval) -> DifferenceResult<Self::Output> {
+    fn diff(&self, _rhs: &UnboundedInterval) -> DifferenceResult<Self::Output> {
         DifferenceResult::Single(EmptyInterval)
     }
 }
@@ -482,7 +458,7 @@ impl Differentiable<UnboundedInterval> for UnboundedInterval {
 impl Differentiable<EmptyInterval> for UnboundedInterval {
     type Output = UnboundedInterval;
 
-    fn differentiate(&self, _rhs: &EmptyInterval) -> DifferenceResult<Self::Output> {
+    fn diff(&self, _rhs: &EmptyInterval) -> DifferenceResult<Self::Output> {
         DifferenceResult::Single(UnboundedInterval)
     }
 }
@@ -493,7 +469,7 @@ where
 {
     type Output = ();
 
-    fn differentiate(&self, _rhs: &Rhs) -> DifferenceResult<Self::Output> {
+    fn diff(&self, _rhs: &Rhs) -> DifferenceResult<Self::Output> {
         // An empty interval is nowhere, and therefore cannot be used in a difference
         DifferenceResult::Separate
     }
@@ -503,7 +479,7 @@ where
 ///
 /// See [`Differentiable`] for more information.
 #[must_use]
-pub fn differentiate_abs_bound_pair(
+pub fn diff_abs_bound_pair(
     og_bounds: &AbsBoundPair,
     other_bounds: &AbsBoundPair,
 ) -> DifferenceResult<EmptiableAbsBoundPair> {
@@ -528,7 +504,7 @@ pub fn differentiate_abs_bound_pair(
 ///
 /// See [`Differentiable`] for more information.
 #[must_use]
-pub fn differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(
+pub fn diff_abs_bound_pair_with_emptiable_abs_bound_pair(
     og_bounds: &AbsBoundPair,
     other_bounds: &EmptiableAbsBoundPair,
 ) -> DifferenceResult<EmptiableAbsBoundPair> {
@@ -536,7 +512,7 @@ pub fn differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(
         return DifferenceResult::Separate;
     };
 
-    differentiate_abs_bound_pair(og_bounds, other_bounds)
+    diff_abs_bound_pair(og_bounds, other_bounds)
 }
 
 /// Differentiates an [`EmptiableAbsBoundPair`] with another one
@@ -546,7 +522,7 @@ pub fn differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(
 ///
 /// See [`Differentiable`] for more information.
 #[must_use]
-pub fn differentiate_emptiable_abs_bound_pair(
+pub fn diff_emptiable_abs_bound_pair(
     og_bounds: &EmptiableAbsBoundPair,
     other_bounds: &EmptiableAbsBoundPair,
 ) -> DifferenceResult<EmptiableAbsBoundPair> {
@@ -554,14 +530,14 @@ pub fn differentiate_emptiable_abs_bound_pair(
         return DifferenceResult::Separate;
     };
 
-    differentiate_abs_bound_pair_with_emptiable_abs_bound_pair(og_bounds, other_bounds)
+    diff_abs_bound_pair_with_emptiable_abs_bound_pair(og_bounds, other_bounds)
 }
 
 /// Differentiates an [`RelBoundPair`] with another one
 ///
 /// See [`Differentiable`] for more information.
 #[must_use]
-pub fn differentiate_rel_bound_pair(
+pub fn diff_rel_bound_pair(
     og_bounds: &RelBoundPair,
     other_bounds: &RelBoundPair,
 ) -> DifferenceResult<EmptiableRelBoundPair> {
@@ -586,7 +562,7 @@ pub fn differentiate_rel_bound_pair(
 ///
 /// See [`Differentiable`] for more information.
 #[must_use]
-pub fn differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(
+pub fn diff_rel_bound_pair_with_emptiable_rel_bound_pair(
     og_bounds: &RelBoundPair,
     other_bounds: &EmptiableRelBoundPair,
 ) -> DifferenceResult<EmptiableRelBoundPair> {
@@ -594,7 +570,7 @@ pub fn differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(
         return DifferenceResult::Separate;
     };
 
-    differentiate_rel_bound_pair(og_bounds, other_bounds)
+    diff_rel_bound_pair(og_bounds, other_bounds)
 }
 
 /// Differentiates an [`EmptiableRelBoundPair`] with another one
@@ -604,7 +580,7 @@ pub fn differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(
 ///
 /// See [`Differentiable`] for more information.
 #[must_use]
-pub fn differentiate_emptiable_rel_bound_pair(
+pub fn diff_emptiable_rel_bound_pair(
     og_bounds: &EmptiableRelBoundPair,
     other_bounds: &EmptiableRelBoundPair,
 ) -> DifferenceResult<EmptiableRelBoundPair> {
@@ -612,5 +588,5 @@ pub fn differentiate_emptiable_rel_bound_pair(
         return DifferenceResult::Separate;
     };
 
-    differentiate_rel_bound_pair_with_emptiable_rel_bound_pair(og_bounds, other_bounds)
+    diff_rel_bound_pair_with_emptiable_rel_bound_pair(og_bounds, other_bounds)
 }
