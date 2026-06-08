@@ -68,6 +68,8 @@ TODO: once all done, PR onto dev to sync, then continue unit tests
         - `relative`
           - `bound`
           - `interval`
+      - `set_ops`
+        - `diff`
 
 - Tests to complete code coverage for `time`
 - Tests to complete code coverage for `ops`
