@@ -71,14 +71,18 @@ impl HalfBoundedAbsInterval {
     /// # use jiff::civil::Date;
     /// # use jiff::tz::TimeZone;
     /// # use periodical::intervals::absolute::HalfBoundedAbsInterval;
-    /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
+    /// # use periodical::intervals::meta::{
+    /// #     BoundInclusivity,
+    /// #     OpeningDirection,
+    /// #     HasOpeningDirection,
+    /// # };
     /// let from_first_of_may = HalfBoundedAbsInterval::since_date(
     ///     "2026-05-01".parse::<Date>()?,
     ///     TimeZone::get("Europe/Oslo")?,
     /// )?;
     ///
     /// assert_eq!(
-    ///     from_first_of_may.reference(),
+    ///     from_first_of_may.reference_time(),
     ///     "2026-05-01 00:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
@@ -121,14 +125,18 @@ impl HalfBoundedAbsInterval {
     /// # use jiff::civil::Date;
     /// # use jiff::tz::TimeZone;
     /// # use periodical::intervals::absolute::HalfBoundedAbsInterval;
-    /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
+    /// # use periodical::intervals::meta::{
+    /// #     BoundInclusivity,
+    /// #     OpeningDirection,
+    /// #     HasOpeningDirection,
+    /// # };
     /// let until_first_of_may = HalfBoundedAbsInterval::until_date(
     ///     "2026-05-01".parse::<Date>()?,
     ///     TimeZone::get("Europe/Oslo")?,
     /// )?;
     ///
     /// assert_eq!(
-    ///     until_first_of_may.reference(),
+    ///     until_first_of_may.reference_time(),
     ///     "2026-05-01 00:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
@@ -367,7 +375,11 @@ impl HalfBoundedAbsInterval {
     /// # use jiff::Zoned;
     /// # use jiff::tz::TimeZone;
     /// # use periodical::intervals::absolute::HalfBoundedAbsInterval;
-    /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
+    /// # use periodical::intervals::meta::{
+    /// #     BoundInclusivity,
+    /// #     OpeningDirection,
+    /// #     HasOpeningDirection,
+    /// # };
     /// # use periodical::time::OffsetIsoWeek;
     /// let interval = HalfBoundedAbsInterval::since_week(
     ///     OffsetIsoWeek::new(2026, 5)?,
@@ -375,7 +387,7 @@ impl HalfBoundedAbsInterval {
     /// )?;
     ///
     /// assert_eq!(
-    ///     interval.reference(),
+    ///     interval.reference_time(),
     ///     "2026-01-26 00:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
@@ -413,7 +425,11 @@ impl HalfBoundedAbsInterval {
     /// # use jiff::Zoned;
     /// # use jiff::tz::TimeZone;
     /// # use periodical::intervals::absolute::HalfBoundedAbsInterval;
-    /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
+    /// # use periodical::intervals::meta::{
+    /// #     BoundInclusivity,
+    /// #     OpeningDirection,
+    /// #     HasOpeningDirection,
+    /// # };
     /// # use periodical::time::OffsetIsoWeek;
     /// let interval = HalfBoundedAbsInterval::until_week(
     ///     OffsetIsoWeek::new(2026, 5)?,
@@ -421,7 +437,7 @@ impl HalfBoundedAbsInterval {
     /// )?;
     ///
     /// assert_eq!(
-    ///     interval.reference(),
+    ///     interval.reference_time(),
     ///     "2026-01-26 00:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
@@ -601,7 +617,11 @@ impl HalfBoundedAbsInterval {
     /// # use jiff::Zoned;
     /// # use jiff::tz::TimeZone;
     /// # use periodical::intervals::absolute::HalfBoundedAbsInterval;
-    /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
+    /// # use periodical::intervals::meta::{
+    /// #     BoundInclusivity,
+    /// #     OpeningDirection,
+    /// #     HasOpeningDirection,
+    /// # };
     /// # use periodical::time::Month;
     /// let since_month = HalfBoundedAbsInterval::since_month(
     ///     Month::March.with_year(2026),
@@ -609,7 +629,7 @@ impl HalfBoundedAbsInterval {
     /// )?;
     ///
     /// assert_eq!(
-    ///     since_month.reference(),
+    ///     since_month.reference_time(),
     ///     "2026-03-01 00:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
@@ -648,7 +668,11 @@ impl HalfBoundedAbsInterval {
     /// # use jiff::Zoned;
     /// # use jiff::tz::TimeZone;
     /// # use periodical::intervals::absolute::HalfBoundedAbsInterval;
-    /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
+    /// # use periodical::intervals::meta::{
+    /// #     BoundInclusivity,
+    /// #     OpeningDirection,
+    /// #     HasOpeningDirection,
+    /// # };
     /// # use periodical::time::Month;
     /// let until_month = HalfBoundedAbsInterval::until_month(
     ///     Month::March.with_year(2026),
@@ -656,7 +680,7 @@ impl HalfBoundedAbsInterval {
     /// )?;
     ///
     /// assert_eq!(
-    ///     until_month.reference(),
+    ///     until_month.reference_time(),
     ///     "2026-03-01 00:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
@@ -751,11 +775,15 @@ impl HalfBoundedAbsInterval {
     /// # use jiff::Zoned;
     /// # use jiff::tz::TimeZone;
     /// # use periodical::intervals::absolute::HalfBoundedAbsInterval;
-    /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
+    /// # use periodical::intervals::meta::{
+    /// #     BoundInclusivity,
+    /// #     OpeningDirection,
+    /// #     HasOpeningDirection,
+    /// # };
     /// let since_year = HalfBoundedAbsInterval::since_year(2026, TimeZone::get("Europe/Oslo")?)?;
     ///
     /// assert_eq!(
-    ///     since_year.reference(),
+    ///     since_year.reference_time(),
     ///     "2026-01-01 00:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
@@ -792,11 +820,15 @@ impl HalfBoundedAbsInterval {
     /// # use jiff::Zoned;
     /// # use jiff::tz::TimeZone;
     /// # use periodical::intervals::absolute::HalfBoundedAbsInterval;
-    /// # use periodical::intervals::meta::{BoundInclusivity, OpeningDirection};
+    /// # use periodical::intervals::meta::{
+    /// #     BoundInclusivity,
+    /// #     OpeningDirection,
+    /// #     HasOpeningDirection,
+    /// # };
     /// let until_year = HalfBoundedAbsInterval::until_year(2026, TimeZone::get("Europe/Oslo")?)?;
     ///
     /// assert_eq!(
-    ///     until_year.reference(),
+    ///     until_year.reference_time(),
     ///     "2026-01-01 00:00:00[Europe/Oslo]"
     ///         .parse::<Zoned>()?
     ///         .timestamp(),
