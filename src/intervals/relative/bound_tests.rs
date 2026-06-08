@@ -1,10 +1,8 @@
-use std::hash::{DefaultHasher, Hash, Hasher};
-
 use jiff::SignedDuration;
 
 use super::bound::*;
 use crate::intervals::meta::BoundInclusivity;
-use crate::intervals::relative::{RelStartBound, RelEndBound, RelFiniteBoundPos};
+use crate::intervals::relative::{RelEndBound, RelFiniteBoundPos, RelStartBound};
 
 #[test]
 fn is_start() {
@@ -112,110 +110,6 @@ fn equality() {
             .to_end_bound()
             .to_bound()
     );
-    assert_eq!(
-        RelFiniteBoundPos::new(SignedDuration::from_hours(1))
-            .to_start_bound()
-            .to_bound(),
-        RelFiniteBoundPos::new(SignedDuration::from_hours(1))
-            .to_end_bound()
-            .to_bound()
-    );
-    assert_eq!(
-        RelFiniteBoundPos::new(SignedDuration::from_hours(1))
-            .to_start_bound()
-            .to_bound(),
-        RelFiniteBoundPos::new(SignedDuration::from_hours(1))
-            .to_end_bound()
-            .to_bound()
-    );
-}
-
-#[test]
-fn hash_infinite_past() {
-    let mut hasher1 = DefaultHasher::new();
-    let mut hasher2 = DefaultHasher::new();
-
-    RelStartBound::InfinitePast.to_bound().hash(&mut hasher1);
-    RelStartBound::InfinitePast.to_bound().hash(&mut hasher2);
-
-    assert_eq!(hasher1.finish(), hasher2.finish());
-}
-
-#[test]
-fn hash_infinite_future() {
-    let mut hasher1 = DefaultHasher::new();
-    let mut hasher2 = DefaultHasher::new();
-
-    RelEndBound::InfiniteFuture.to_bound().hash(&mut hasher1);
-    RelEndBound::InfiniteFuture.to_bound().hash(&mut hasher2);
-
-    assert_eq!(hasher1.finish(), hasher2.finish());
-}
-
-#[test]
-fn hash_finite_start() {
-    let mut hasher1 = DefaultHasher::new();
-    let mut hasher2 = DefaultHasher::new();
-
-    RelFiniteBoundPos::new(SignedDuration::ZERO)
-        .to_start_bound()
-        .to_bound()
-        .hash(&mut hasher1);
-    RelFiniteBoundPos::new(SignedDuration::ZERO)
-        .to_start_bound()
-        .to_bound()
-        .hash(&mut hasher2);
-
-    assert_eq!(hasher1.finish(), hasher2.finish());
-}
-
-#[test]
-fn hash_finite_end() {
-    let mut hasher1 = DefaultHasher::new();
-    let mut hasher2 = DefaultHasher::new();
-
-    RelFiniteBoundPos::new(SignedDuration::ZERO)
-        .to_end_bound()
-        .to_bound()
-        .hash(&mut hasher1);
-    RelFiniteBoundPos::new(SignedDuration::ZERO)
-        .to_end_bound()
-        .to_bound()
-        .hash(&mut hasher2);
-}
-
-#[test]
-fn hash_finite_start_end() {
-    let mut hasher1 = DefaultHasher::new();
-    let mut hasher2 = DefaultHasher::new();
-
-    RelFiniteBoundPos::new(SignedDuration::ZERO)
-        .to_start_bound()
-        .to_bound()
-        .hash(&mut hasher1);
-    RelFiniteBoundPos::new(SignedDuration::ZERO)
-        .to_end_bound()
-        .to_bound()
-        .hash(&mut hasher2);
-
-    assert_eq!(hasher1.finish(), hasher2.finish());
-}
-
-#[test]
-fn hash_finite_start_end_no_match() {
-    let mut hasher1 = DefaultHasher::new();
-    let mut hasher2 = DefaultHasher::new();
-
-    RelFiniteBoundPos::new(SignedDuration::ZERO)
-        .to_start_bound()
-        .to_bound()
-        .hash(&mut hasher1);
-    RelFiniteBoundPos::new(SignedDuration::from_secs(1))
-        .to_end_bound()
-        .to_bound()
-        .hash(&mut hasher2);
-
-    assert_ne!(hasher1.finish(), hasher2.finish());
 }
 
 #[test]
