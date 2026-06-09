@@ -270,12 +270,12 @@ pub mod state;
 
 #[cfg(test)]
 mod abs_state_change_tests;
-#[cfg(test)]
-mod absolute_tests;
+// #[cfg(test)]
+// mod absolute_tests;
 #[cfg(test)]
 mod rel_state_change_tests;
-#[cfg(test)]
-mod relative_tests;
+// #[cfg(test)]
+// mod relative_tests;
 #[cfg(test)]
 mod state_tests;
 

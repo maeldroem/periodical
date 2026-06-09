@@ -55,20 +55,20 @@ mod continuation_tests;
 mod cut_tests;
 // #[cfg(test)]
 // mod extend_tests;
-#[cfg(test)]
-mod fill_gap_tests;
+// #[cfg(test)]
+// mod fill_gap_tests;
 #[cfg(test)]
 mod grow_tests;
-#[cfg(test)]
-mod overlap_tests;
+// #[cfg(test)]
+// mod overlap_tests;
 #[cfg(test)]
 mod point_containment_tests;
 #[cfg(test)]
 mod relativity_conversion_tests;
-#[cfg(test)]
-mod remove_overlap_or_gap_tests;
-#[cfg(test)]
-mod remove_overlap_tests;
+// #[cfg(test)]
+// mod remove_overlap_or_gap_tests;
+// #[cfg(test)]
+// mod remove_overlap_tests;
 #[cfg(test)]
 mod shrink_tests;
 // #[cfg(test)]

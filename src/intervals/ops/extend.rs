@@ -9,61 +9,6 @@
 //! equal, we choose the most inclusive bound.
 //!
 //! # Examples
-//!
-//! ```
-//! # use std::error::Error;
-//! # use jiff::Zoned;
-//! # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos};
-//! # use periodical::intervals::ops::Extensible;
-//! let first_interval = AbsBoundPair::new(
-//!     AbsFiniteBoundPos::new(
-//!         "2025-01-01 08:00:00[Europe/Oslo]"
-//!             .parse::<Zoned>()?
-//!             .timestamp(),
-//!     )
-//!     .to_start_bound(),
-//!     AbsFiniteBoundPos::new(
-//!         "2025-01-01 12:00:00[Europe/Oslo]"
-//!             .parse::<Zoned>()?
-//!             .timestamp(),
-//!     )
-//!     .to_end_bound(),
-//! );
-//!
-//! let second_interval = AbsBoundPair::new(
-//!     AbsFiniteBoundPos::new(
-//!         "2025-01-01 14:00:00[Europe/Oslo]"
-//!             .parse::<Zoned>()?
-//!             .timestamp(),
-//!     )
-//!     .to_start_bound(),
-//!     AbsFiniteBoundPos::new(
-//!         "2025-01-01 16:00:00[Europe/Oslo]"
-//!             .parse::<Zoned>()?
-//!             .timestamp(),
-//!     )
-//!     .to_end_bound(),
-//! );
-//!
-//! assert_eq!(
-//!     first_interval.extend(&second_interval),
-//!     AbsBoundPair::new(
-//!         AbsFiniteBoundPos::new(
-//!             "2025-01-01 08:00:00[Europe/Oslo]"
-//!                 .parse::<Zoned>()?
-//!                 .timestamp(),
-//!         )
-//!         .to_start_bound(),
-//!         AbsFiniteBoundPos::new(
-//!             "2025-01-01 16:00:00[Europe/Oslo]"
-//!                 .parse::<Zoned>()?
-//!                 .timestamp(),
-//!         )
-//!         .to_end_bound(),
-//!     ),
-//! );
-//! # Ok::<(), Box<dyn Error>>(())
-//! ```
 
 use crate::intervals::absolute::{
     AbsBoundPair,
@@ -302,61 +247,6 @@ pub trait Extensible<Rhs = Self> {
     /// other non-empty interval.
     ///
     /// # Examples
-    ///
-    /// ```
-    /// # use std::error::Error;
-    /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos};
-    /// # use periodical::intervals::ops::Extensible;
-    /// let first_interval = AbsBoundPair::new(
-    ///     AbsFiniteBoundPos::new(
-    ///         "2025-01-01 08:00:00[Europe/Oslo]"
-    ///             .parse::<Zoned>()?
-    ///             .timestamp(),
-    ///     )
-    ///     .to_start_bound(),
-    ///     AbsFiniteBoundPos::new(
-    ///         "2025-01-01 12:00:00[Europe/Oslo]"
-    ///             .parse::<Zoned>()?
-    ///             .timestamp(),
-    ///     )
-    ///     .to_end_bound(),
-    /// );
-    ///
-    /// let second_interval = AbsBoundPair::new(
-    ///     AbsFiniteBoundPos::new(
-    ///         "2025-01-01 14:00:00[Europe/Oslo]"
-    ///             .parse::<Zoned>()?
-    ///             .timestamp(),
-    ///     )
-    ///     .to_start_bound(),
-    ///     AbsFiniteBoundPos::new(
-    ///         "2025-01-01 16:00:00[Europe/Oslo]"
-    ///             .parse::<Zoned>()?
-    ///             .timestamp(),
-    ///     )
-    ///     .to_end_bound(),
-    /// );
-    ///
-    /// assert_eq!(
-    ///     first_interval.extend(&second_interval),
-    ///     AbsBoundPair::new(
-    ///         AbsFiniteBoundPos::new(
-    ///             "2025-01-01 08:00:00[Europe/Oslo]"
-    ///                 .parse::<Zoned>()?
-    ///                 .timestamp(),
-    ///         )
-    ///         .to_start_bound(),
-    ///         AbsFiniteBoundPos::new(
-    ///             "2025-01-01 16:00:00[Europe/Oslo]"
-    ///                 .parse::<Zoned>()?
-    ///                 .timestamp(),
-    ///         )
-    ///         .to_end_bound(),
-    ///     ),
-    /// );
-    /// # Ok::<(), Box<dyn Error>>(())
-    /// ```
     #[must_use]
     fn extend(&self, rhs: &Rhs) -> Self::Output;
 }

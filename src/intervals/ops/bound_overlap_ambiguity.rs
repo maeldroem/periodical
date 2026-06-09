@@ -34,7 +34,7 @@
 //!
 //! assert_eq!(
 //!     ambiguity.disambiguate(BoundOverlapDisambiguationRuleSet::Strict),
-//!     DisambiguatedBoundOverlap::Before,
+//!     DisambiguatedBoundOverlap::After,
 //! );
 //! ```
 
@@ -173,7 +173,7 @@ impl BoundOverlapAmbiguity {
     ///
     /// assert_eq!(
     ///     ambiguity.disambiguate(BoundOverlapDisambiguationRuleSet::Strict),
-    ///     DisambiguatedBoundOverlap::Before,
+    ///     DisambiguatedBoundOverlap::After,
     /// );
     /// ```
     #[must_use]
@@ -293,7 +293,7 @@ impl BoundOverlapDisambiguationRuleSet {
     ///
     /// assert_eq!(
     ///     BoundOverlapDisambiguationRuleSet::Strict.disambiguate(ambiguity),
-    ///     DisambiguatedBoundOverlap::Before,
+    ///     DisambiguatedBoundOverlap::After,
     /// );
     /// ```
     #[must_use]

@@ -244,15 +244,13 @@ impl BoundContainmentRuleSet {
     /// #     DisambiguatedBoundContainmentPos,
     /// #     BoundOverlapAmbiguity,
     /// # };
-    /// let bound_position = BoundContainmentPos::OnStart(Some(BoundOverlapAmbiguity::StartEnd(
-    ///     BoundInclusivity::Inclusive,
+    /// let bound_position = BoundContainmentPos::OnStart(Some(BoundOverlapAmbiguity::EndStart(
     ///     BoundInclusivity::Exclusive,
+    ///     BoundInclusivity::Inclusive,
     /// )));
     ///
-    /// let disambiguated_bound_position = BoundContainmentRuleSet::Strict.disambiguate(bound_position);
-    ///
     /// assert_eq!(
-    ///     disambiguated_bound_position,
+    ///     BoundContainmentRuleSet::Strict.disambiguate(bound_position),
     ///     DisambiguatedBoundContainmentPos::OutsideBefore,
     /// );
     /// ```
