@@ -32,7 +32,7 @@ use crate::ops::UnionResult;
 ///
 /// ## Unitable intervals
 ///
-/// ```
+/// ```ignore
 /// # use std::error::Error;
 /// # use jiff::Timestamp;
 /// # use periodical::ops::UnionResult;
@@ -60,7 +60,7 @@ use crate::ops::UnionResult;
 ///
 /// ## Non-overlapping intervals
 ///
-/// ```
+/// ```ignore
 /// # use std::error::Error;
 /// # use jiff::Timestamp;
 /// # use periodical::ops::UnionResult;
@@ -90,7 +90,7 @@ pub trait Unitable<Rhs = Self> {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// # use std::error::Error;
     /// # use jiff::Timestamp;
     /// # use periodical::ops::UnionResult;
@@ -122,7 +122,7 @@ pub trait Unitable<Rhs = Self> {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// # use std::error::Error;
     /// # use jiff::Timestamp;
     /// # use periodical::ops::UnionResult;

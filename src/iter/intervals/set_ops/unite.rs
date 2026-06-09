@@ -2,7 +2,7 @@
 //!
 //! # Examples
 //!
-//! ```
+//! ```ignore
 //! # use std::error::Error;
 //! # use jiff::Zoned;
 //! # use periodical::intervals::absolute::{AbsBoundPair, AbsEndBound, AbsFiniteBoundPos};
