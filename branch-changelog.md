@@ -34,6 +34,7 @@ TODO: once all done, PR onto dev to sync, then continue unit tests
       - `bound_cmp`
         - `bound_ord`
       - `bound_containment`
+      - `bound_overlap_ambiguity`
 
 - Checked, fixed, and completed documentation for…
   - `intervals`
